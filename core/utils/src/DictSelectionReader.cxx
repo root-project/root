@@ -14,8 +14,8 @@
 
 //______________________________________________________________________________
 DictSelectionReader::DictSelectionReader(SelectionRules &selectionRules,
-      const clang::ASTContext &C)
-   : fSelectionRules(selectionRules), fIsFirstPass(true)
+      const clang::ASTContext &C, ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+   : fSelectionRules(selectionRules), fIsFirstPass(true), fNormCtxt(normCtxt)
 {
    clang::TranslationUnitDecl *translUnitDecl = C.getTranslationUnitDecl();
    // Inspect the AST
@@ -23,7 +23,7 @@ DictSelectionReader::DictSelectionReader(SelectionRules &selectionRules,
 
    // Now re-inspect the AST to find autoselected classes (double-tap)
    fIsFirstPass = false;
-   if (!fTemplateInstanceNamePatternsArgsToKeep.empty() ||
+   if (!fTemplateInfoMap.empty() ||
          !fAutoSelectedClassFieldNames.empty() ||
          !fNoAutoSelectedClassFieldNames.empty())
       TraverseDecl(translUnitDecl);
@@ -133,45 +133,50 @@ DictSelectionReader::ExtractTemplateArgValue(const T &myClass,
  **/
 void DictSelectionReader::ManageFields(const clang::RecordDecl &recordDecl,
                                        const std::string &className,
-                                       ClassSelectionRule &csr)
+                                       ClassSelectionRule &csr,
+                                       bool autoselect)
 {
    // Iterate on the members to see if
    // 1) They are transient
    // 2) They imply further selection
 
-   std::string fieldClassName;
+   std::string pattern = className.substr(0, className.find_first_of("<"));
 
-   for (clang::RecordDecl::field_iterator fieldsIt = recordDecl.field_begin();
-         fieldsIt != recordDecl.field_end();
-         ++fieldsIt) {
+   for (auto fieldPtr : recordDecl.fields()) {
 
       unsigned int attrCode =
-         ExtractTemplateArgValue(**fieldsIt, "MemberAttributes");
+         ExtractTemplateArgValue(*fieldPtr, "MemberAttributes");
 
       if (attrCode == ROOT::Meta::Selection::kMemberNullProperty) continue;
 
+      const char *fieldName = fieldPtr->getName().data();
+
       if (attrCode & ROOT::Meta::Selection::kNonSplittable) {
-         VariableSelectionRule vsr(BaseSelectionRule::kYes);
-         vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name,
-                               fieldsIt->getNameAsString());
-         vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment, "||");
-         csr.AddFieldSelectionRule(vsr);
+         if (!autoselect) {
+            fTemplateInfoMap[pattern].fUnsplittableMembers.insert(fieldName);
+         } else {
+            VariableSelectionRule vsr(BaseSelectionRule::kYes);
+            vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name, fieldName);
+            vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment, "||");
+            csr.AddFieldSelectionRule(vsr);
+         }
       }
 
       if (attrCode & ROOT::Meta::Selection::kTransient) {
-         VariableSelectionRule vsr(BaseSelectionRule::kYes);
-         vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name,
-                               fieldsIt->getNameAsString());
-         vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment, "!");
-         csr.AddFieldSelectionRule(vsr);
+         if (!autoselect) {
+            fTemplateInfoMap[pattern].fTransientMembers.insert(fieldName);
+         } else {
+            VariableSelectionRule vsr(BaseSelectionRule::kYes);
+            vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name, fieldName);
+            vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment, "!");
+            csr.AddFieldSelectionRule(vsr);
+         }
       }
 
       if (attrCode & ROOT::Meta::Selection::kAutoSelected)
-         fAutoSelectedClassFieldNames[className].insert(
-            fieldsIt->getNameAsString());
+         fAutoSelectedClassFieldNames[className].insert(fieldName);
       else if (attrCode & ROOT::Meta::Selection::kNoAutoSelected)
-         fNoAutoSelectedClassFieldNames[className].insert(
-            fieldsIt->getNameAsString());
+         fNoAutoSelectedClassFieldNames[className].insert(fieldName);
 
    } // end loop on fields
 }
@@ -191,7 +196,7 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl &recordDecl,
 void
 DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl &cxxRcrdDecl,
                                        const std::string &className,
-                                       ClassSelectionRule &csr)
+                                       bool &autoselect)
 {
    // Check the traits of the class. Useful information may be there
    // extract mothers, make a switchcase:
@@ -199,18 +204,23 @@ DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl &cxxRcrdDecl,
    // 2) There are properties. Make a loop. make a switch:
    //  2a) Is splittable
 
-   for (clang::CXXRecordDecl::base_class_const_iterator baseIt =
-            cxxRcrdDecl.bases_begin();
-         baseIt != cxxRcrdDecl.bases_end();
-         baseIt++) {
+   std::string baseName;
+   clang::ASTContext &C = cxxRcrdDecl.getASTContext();
+   for (auto & base : cxxRcrdDecl.bases()) {
 
-      if (unsigned int nArgsToKeep = ExtractTemplateArgValue(*baseIt, "Keep")) {
+      if (unsigned int nArgsToKeep = ExtractTemplateArgValue(base, "Keep")) {
          std::string pattern =
             className.substr(0, className.find_first_of("<"));
          // Fill the structure holding the template and the number of args to
          // skip
-         fTemplateInstanceNamePatternsArgsToKeep.push_back(
-            std::make_pair(pattern, nArgsToKeep));
+         fTemplateInfoMap[pattern] = TemplateInfo(nArgsToKeep);
+      }
+
+      // at most one string comparison...
+      if (autoselect) {
+         auto qt = base.getType();
+         ROOT::TMetaUtils::GetFullyQualifiedTypeName(baseName, qt, C);
+         if (baseName == "ROOT::Meta::Selection::SelectNoInstance") autoselect = false;
       }
 
    } // end loop on base classes
@@ -236,6 +246,11 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl &recordDecl)
 
    if (!fSelectedRecordDecls.insert(&recordDecl).second) return true;
 
+   bool autoselect = true;
+   if (auto cxxRcrdDecl = llvm::dyn_cast<clang::CXXRecordDecl>(&recordDecl)) {
+      ManageBaseClasses(*cxxRcrdDecl, className, autoselect);
+   }
+
    ClassSelectionRule csr(BaseSelectionRule::kYes);
    const size_t lWedgePos(className.find_first_of("<"));
    std::string patternName("");
@@ -248,17 +263,13 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl &recordDecl)
       csr.SetAttributeValue(ROOT::TMetaUtils::propNames::name, className);
    }
 
-   ManageFields(recordDecl, className, csr);
+   ManageFields(recordDecl, className, csr, autoselect);
 
-   if (const clang::CXXRecordDecl *cxxRcrdDecl =
-            llvm::dyn_cast<clang::CXXRecordDecl>(&recordDecl)) {
-      ManageBaseClasses(*cxxRcrdDecl, className, csr);
-   }
+   if (!autoselect) return true;
 
    // Finally add the selection rule
    fClassNameSelectionRuleMap[patternName.empty() ? className : patternName] =
       csr;
-   // fSelectionRules.AddClassSelectionRule(csr);
 
    return true;
 }
@@ -280,12 +291,13 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl &recordDecl)
  **/
 bool DictSelectionReader::SecondPass(const clang::RecordDecl &recordDecl)
 {
+   using namespace ROOT::TMetaUtils;
+
    // No interest if we are in the selction namespace
    if (InSelectionNamespace(recordDecl)) return true;
 
    std::string className;
-   ROOT::TMetaUtils::GetQualifiedName(
-      className, *recordDecl.getTypeForDecl(), recordDecl);
+   GetQualifiedName(className, *recordDecl.getTypeForDecl(), recordDecl);
 
    // If the class is not among those which have fields the type of which are to
    // be autoselected or excluded
@@ -305,9 +317,9 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl &recordDecl)
          if (!selected && !excluded)
             continue;
          ClassSelectionRule aSelCsr(excluded ? BaseSelectionRule::kNo : BaseSelectionRule::kYes);
-         ROOT::TMetaUtils::GetFullyQualifiedTypeName(typeName, filedsIt->getType(), C);
+         GetFullyQualifiedTypeName(typeName, filedsIt->getType(), C);
          GetPointeeType(typeName);
-         aSelCsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name, typeName);
+         aSelCsr.SetAttributeValue(propNames::name, typeName);
          fSelectionRules.AddClassSelectionRule(aSelCsr);
       }
    }
@@ -316,22 +328,40 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl &recordDecl)
    // patterns
 
    // We don't want anything different from templ specialisations
-   if (!llvm::isa<clang::ClassTemplateSpecializationDecl>(recordDecl))
-      return true;
+   if (auto tmplSpecDecl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&recordDecl)) {
+      for (auto & patternInfoPair : fTemplateInfoMap) {
+         const std::string &pattern = patternInfoPair.first;
+         const TemplateInfo &tInfo = patternInfoPair.second;
+         // Check if we have to add a selection rule for this class
+         if (className.find(pattern) != 0) continue;
 
-   unsigned int nArgsToKeep;
-   std::list<std::pair<std::string, unsigned int> >::iterator it =
-      fTemplateInstanceNamePatternsArgsToKeep.begin();
-   for (; it != fTemplateInstanceNamePatternsArgsToKeep.end(); ++it) {
-      std::string &pattern = it->first;
-      nArgsToKeep = it->second;
-      // Check if we have to add a selection rule for this class
-      if (className.find(pattern) == 0) {
-         fClassNameSelectionRuleMap[PatternifyName(className)]
-         .SetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep,
-                            std::to_string(nArgsToKeep));
-      }
+         // Take care of the args to keep
+         auto ctd = tmplSpecDecl->getSpecializedTemplate();
+         if (tInfo.fArgsToKeep != -1 && ctd) {
+            fNormCtxt.AddTemplAndNargsToKeep(ctd->getCanonicalDecl(), tInfo.fArgsToKeep);
+         }
+
+         // Now we take care of the transient and unsplittable members
+         if (tInfo.fTransientMembers.empty() && tInfo.fUnsplittableMembers.empty()) continue;
+         clang::ASTContext &C = recordDecl.getASTContext();
+         clang::SourceRange commentRange; // Empty: this is a fake comment
+         std::string userDefinedProperty;
+         userDefinedProperty.reserve(100);
+         for (auto fieldPtr : recordDecl.fields()) {
+            const auto fieldName = fieldPtr->getName().data();
+            if (tInfo.fTransientMembers.count(fieldName) == 1) {
+               userDefinedProperty = "!";
+            } else if (tInfo.fUnsplittableMembers.count(fieldName) == 1) {
+               userDefinedProperty = propNames::comment + propNames::separator + "||";
+            }
+            if (!userDefinedProperty.empty()) {
+               fieldPtr->addAttr(new(C) clang::AnnotateAttr(commentRange, C, userDefinedProperty, 0));
+               userDefinedProperty = "";
+            }
+         }
+      } // End loop on template info
    }
+
    return true;
 }
 

@@ -4141,7 +4141,7 @@ int RootCling(int argc,
    clang::CompilerInstance *CI = interp.getCI();
    const unsigned int selRulesInitialSize = selectionRules.Size();
    if (dictSelection && !onepcm)
-      DictSelectionReader dictSelReader(selectionRules, CI->getASTContext());
+      DictSelectionReader dictSelReader(selectionRules, CI->getASTContext(), normCtxt);
 
    bool dictSelRulesPresent = selectionRules.Size() > selRulesInitialSize;
 

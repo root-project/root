@@ -8,7 +8,11 @@ namespace ROOT{
 // Indentation to the left: we know that everything is in this namespace and we
 // don't sacrifice 12 chars to underline this.
 
+///\brief Used to specify the number of arguments to be kept
 template <unsigned int I> class KeepFirstTemplateArguments{};
+
+///\brief Used to avoid to select all instances of a template
+class SelectNoInstance{};
 
 ///\brief Describes the attributes of a class
 enum EClassAttributes {
