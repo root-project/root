@@ -12,15 +12,19 @@ set(TestSource
     testSortOrder.cxx
     stressTMath.cxx
     stressTF1.cxx
+    stressGoFTest.cxx
     testIntegration.cxx
     testRootFinder.cxx
-    kDTreeTest.cxx
+    testSampleQuantiles.cxx
+    kDTreeTest.cxx 
+    newKDTreeTest.cxx 
     binarySearchTime.cxx
     stdsort.cxx
     testSpecFuncErf.cxx
     testSpecFuncGamma.cxx
     testSpecFuncBeta.cxx
-    testSpecFuncBetaI.cxx
+    testSpecFuncBetaI.cxx 
+    testSpecFuncSiCi.cxx 
     testIntegrationMultiDim.cxx
     fit/testFit.cxx
     fit/testGraphFit.cxx
