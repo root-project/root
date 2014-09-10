@@ -327,6 +327,16 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6);
       //NOTE: Should we also check the end of the type for 'const'?
       fElements[i] = TClassEdit::ShortType(fElements[i].c_str(),mode);
+      if (mode&kResolveTypedef) {
+         // We 'just' need to check whether the outer type is a typedef or not;
+         // this also will add the default template parameter if any needs to
+         // be added.
+         string typeresult;
+         if (gInterpreterHelper->ExistingTypeCheck(fElements[i], typeresult)
+             || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(fElements[i], typeresult)) {
+            if (!typeresult.empty()) fElements[i] = typeresult;
+         }
+      }
       if (hasconst && !(mode & TClassEdit::kKeepOuterConst)) {
          // if mode is set to keep the outer const, it will be kept
          // and we do not need to put it back ...
