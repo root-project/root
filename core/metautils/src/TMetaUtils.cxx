@@ -2650,7 +2650,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    bool isStdDropDefault = TSTdecl && IsStdDropDefaultClass(*TSTdecl);
 
    bool mightHaveChanged = false;
-   if (TST && TSTdecl && !isStdDropDefault) {
+   if (TST && TSTdecl) {
 
       clang::Sema& S = interpreter.getCI()->getSema();
       clang::TemplateDecl *Template = TSTdecl->getSpecializedTemplate()->getMostRecentDecl();
@@ -2705,17 +2705,20 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             clang::QualType SubTy = I->getAsType();
 
             // Check if the type needs more desugaring and recurse.
-            if (llvm::isa<clang::TemplateSpecializationType>(SubTy)
-                || llvm::isa<clang::ElaboratedType>(SubTy) ) {
+            // (Originally this was limited to elaborated and templated type,
+            // but we also need to do it for pointer and reference type
+            // and who knows what, so do it always)
+            clang::QualType newSubTy = AddDefaultParameters(SubTy,
+                                                            interpreter,
+                                                            normCtxt);
+            if (SubTy != newSubTy) {
                mightHaveChanged = true;
-               desArgs.push_back(clang::TemplateArgument(AddDefaultParameters(SubTy,
-                                                                              interpreter,
-                                                                              normCtxt)));
+               desArgs.push_back(clang::TemplateArgument(newSubTy));
             } else {
                desArgs.push_back(*I);
             }
             // Converted.push_back(TemplateArgument(ArgTypeForTemplate));
-         } else if (Idecl < maxAddArg) {
+         } else if (!isStdDropDefault && Idecl < maxAddArg) {
 
             mightHaveChanged = true;
 
