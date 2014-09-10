@@ -424,7 +424,7 @@ void TKey::Browse(TBrowser *b)
    TClass *objcl = TClass::GetClass(GetClassName());
 
    void* obj = fMotherDir->GetList()->FindObject(GetName());
-   if (obj && objcl->InheritsFrom(TObject::Class())) {
+   if (obj && objcl->IsTObject()) {
       TObject *tobj = (TObject*)obj;
       if (!tobj->IsFolder()) {
          if (tobj->InheritsFrom(TCollection::Class()))
@@ -646,7 +646,7 @@ Bool_t TKey::IsFolder() const
    Bool_t ret = kFALSE;
 
    TClass *classPtr = TClass::GetClass((const char *) fClassName);
-   if (classPtr && classPtr->GetState() > TClass::kEmulated && classPtr->InheritsFrom(TObject::Class())) {
+   if (classPtr && classPtr->GetState() > TClass::kEmulated && classPtr->IsTObject()) {
       TObject *obj = (TObject *) classPtr->New(TClass::kDummyNew);
       if (obj) {
          ret = obj->IsFolder();
@@ -721,7 +721,7 @@ TObject *TKey::ReadObj()
       Error("ReadObj", "Unknown class %s", fClassName.Data());
       return 0;
    }
-   if (!cl->InheritsFrom(TObject::Class())) {
+   if (!cl->IsTObject()) {
       // in principle user should call TKey::ReadObjectAny!
       return (TObject*)ReadObjectAny(0);
    }
@@ -863,7 +863,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       Error("ReadObjWithBuffer", "Unknown class %s", fClassName.Data());
       return 0;
    }
-   if (!cl->InheritsFrom(TObject::Class())) {
+   if (!cl->IsTObject()) {
       // in principle user should call TKey::ReadObjectAny!
       return (TObject*)ReadObjectAny(0);
    }
@@ -1086,7 +1086,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       cl->Streamer((void*)pobj, *fBufferRef, clOnfile);    //read object
    }
 
-   if (cl->InheritsFrom(TObject::Class())) {
+   if (cl->IsTObject()) {
       baseOffset = cl->GetBaseClassOffset(TObject::Class());
       if (baseOffset==-1) {
          Fatal("ReadObj","Incorrect detection of the inheritance from TObject for class %s.\n",

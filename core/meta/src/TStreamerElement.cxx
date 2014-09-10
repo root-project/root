@@ -385,7 +385,7 @@ void TStreamerElement::Init(TObject *)
    // Initliaze the element.
 
    fClassObject = GetClassPointer();
-   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+   if (fClassObject && fClassObject->IsTObject()) {
       fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
    }
 }
@@ -529,7 +529,7 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
 
    if (fClassObject == oldClass) {
       fClassObject = newClass;
-      if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+      if (fClassObject && fClassObject->IsTObject()) {
          fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
       }
    } else if (fClassObject==0) {
@@ -539,7 +539,7 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
       // for reading STL containers).
       fClassObject = (TClass*)-1;
       GetClassPointer(); //force fClassObject
-      if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+      if (fClassObject && fClassObject->IsTObject()) {
          fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
       }
    }
@@ -781,7 +781,7 @@ void TStreamerBase::Update(const TClass *oldClass, TClass *newClass)
       GetClassPointer(); //force fClassObject
    }
    if (fClassObject != (TClass*)-1 &&
-       fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+       fClassObject && fClassObject->IsTObject()) {
       fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
    }
    InitStreaming();
@@ -1176,7 +1176,7 @@ void TStreamerObject::Init(TObject *)
    // Setup the element.
 
    fClassObject = GetClassPointer();
-   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+   if (fClassObject && fClassObject->IsTObject()) {
       fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
    }
 }
@@ -1267,7 +1267,7 @@ void TStreamerObjectAny::Init(TObject *)
    // Setup the element.
 
    fClassObject = GetClassPointer();
-   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+   if (fClassObject && fClassObject->IsTObject()) {
       fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
    }
 }
@@ -1363,7 +1363,7 @@ void TStreamerObjectPointer::Init(TObject *)
    // Setup the element.
 
    fClassObject = GetClassPointer();
-   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+   if (fClassObject && fClassObject->IsTObject()) {
       fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
    }
 }
@@ -1466,7 +1466,7 @@ void TStreamerObjectAnyPointer::Init(TObject *)
    // Setup the element.
 
    fClassObject = GetClassPointer();
-   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+   if (fClassObject && fClassObject->IsTObject()) {
       fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
    }
 }

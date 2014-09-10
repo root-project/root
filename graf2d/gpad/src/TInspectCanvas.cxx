@@ -135,7 +135,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
    TClass *cl = obj->IsA();
    if (cl == 0) return;
    TInspectorObject *proxy=0;
-   if (!cl->InheritsFrom(TObject::Class())) {
+   if (!cl->IsTObject()) {
       // This is possible only if obj is actually a TInspectorObject
       // wrapping a non-TObject.
       proxy = (TInspectorObject*)obj;

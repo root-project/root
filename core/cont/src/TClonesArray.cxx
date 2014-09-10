@@ -689,7 +689,7 @@ void TClonesArray::SetClass(const TClass *cl, Int_t s)
       return;
    }
    const char *classname = fClass->GetName();
-   if (!fClass->InheritsFrom(TObject::Class())) {
+   if (!fClass->IsTObject()) {
       MakeZombie();
       Error("SetClass", "%s does not inherit from TObject", classname);
       return;

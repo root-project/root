@@ -1729,7 +1729,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
       Error("BranchOld", "Cannot find class: '%s'", classname);
       return 0;
    }
-   if (!cl->InheritsFrom(TObject::Class())) {
+   if (!cl->IsTObject()) {
       if (fgBranchStyle == 0) {
         Fatal("BranchOld", "The requested class ('%s') does not inherit from TObject.\n"
               "\tfgBranchStyle is set to zero requesting by default to use BranchOld.\n"
@@ -1859,7 +1859,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
             // We have a pointer to an object.
             //
             // It must be a TObject object.
-            if (!clobj->InheritsFrom(TObject::Class())) {
+            if (!clobj->IsTObject()) {
                continue;
             }
             branch1 = new TBranchObject(branch, dname, clobj->GetName(), pointer, bufsize, 0);
@@ -2155,7 +2155,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
       hasCustomStreamer = kTRUE;
    }
 
-   if (splitlevel < 0 || ((splitlevel == 0) && hasCustomStreamer && cl->InheritsFrom(TObject::Class()))) {
+   if (splitlevel < 0 || ((splitlevel == 0) && hasCustomStreamer && cl->IsTObject())) {
       TBranchObject* branch = new TBranchObject(this, name, classname, addr, bufsize, 0, /*compress=*/ -1, isptrptr);
       fBranches.Add(branch);
       return branch;

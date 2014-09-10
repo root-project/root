@@ -274,7 +274,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
                if (!element) {
                   continue;
                }
-               if (clProxy->InheritsFrom(TObject::Class())) {
+               if (clProxy->IsTObject()) {
                   name = ((TObject*) element)->GetName();
                }
 
@@ -414,7 +414,7 @@ void TStructViewer::Prepare()
    ULong_t size = fPointerClass->Size();
 
    TString name = "Main pointer";
-   if (fPointerClass->InheritsFrom(TObject::Class())) {
+   if (fPointerClass->IsTObject()) {
       name = ((TObject*) fPointer)->GetName();
    }
    fTopNode = new TStructNode(name, fPointerClass->GetName(), fPointer, NULL, size, kClass);
