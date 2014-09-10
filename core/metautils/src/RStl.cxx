@@ -16,6 +16,7 @@
 #include "TClassEdit.h"
 #include "TMetaUtils.h"
 using namespace TClassEdit;
+
 #include <stdio.h>
 
 #include "clang/AST/Decl.h"
@@ -184,7 +185,8 @@ void ROOT::RStl::WriteClassInit(std::ostream &ostr,
                                 const cling::Interpreter &interp,
                                 const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
                                 const ROOT::TMetaUtils::RConstructorTypes& ctorTypes,
-                                bool &needCollectionProxy)
+                                bool &needCollectionProxy,
+                                void (*emitStreamerInfo)(const char*) )
 {
    // This function writes the TGeneraticClassInfo initialiser
    // and the auxiliary functions (new and delete wrappers) for
@@ -214,11 +216,13 @@ void ROOT::RStl::WriteClassInit(std::ostream &ostr,
          result = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
       }
 
-      // std::string fullname = R__GetQualifiedName(*iter->GetRecordDecl());
-      // fprintf(stderr,"RStl is generating TClass for %ld %s %s %s\n",iter->GetRuleIndex(),iter->GetRequestedName(),iter->GetNormalizedName(),fullname.c_str());
+//      std::string fullname = TMetaUtils::GetQualifiedName(*iter->GetRecordDecl());
+//      fprintf(stderr,"RStl is generating TClass for %ld %s %s %s\n",iter->GetRuleIndex(),iter->GetRequestedName(),iter->GetNormalizedName(),fullname.c_str());
 
       ROOT::TMetaUtils::WriteClassInit(ostr, *iter, result, interp, normCtxt, ctorTypes, needCollectionProxy);
       ROOT::TMetaUtils::WriteAuxFunctions(ostr, *iter, result, interp, ctorTypes, normCtxt);
+
+      if (emitStreamerInfo) emitStreamerInfo(iter->GetNormalizedName());
    }
 }
 

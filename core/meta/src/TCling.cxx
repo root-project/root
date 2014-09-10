@@ -195,6 +195,7 @@ namespace {
 
 R__EXTERN int optind;
 
+
 // The functions are used to bridge cling/clang/llvm compiled with no-rtti and
 // ROOT (which uses rtti)
 

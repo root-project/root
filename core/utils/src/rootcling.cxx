@@ -324,7 +324,7 @@ struct SetROOTSYS {
 
 //______________________________________________________________________________
 #ifndef ROOT_STAGE1_BUILD
-static void EmitStreamerInfo(const char *normName)
+void EmitStreamerInfo(const char *normName)
 {
    AddStreamerInfoToROOTFile(normName);
 }
@@ -344,7 +344,7 @@ static void EmitEnums(const std::vector<clang::EnumDecl *> &enumvec)
    }
 }
 #else
-static void EmitStreamerInfo(const char *) { }
+void EmitStreamerInfo(const char *) { }
 #endif
 
 //______________________________________________________________________________
@@ -2948,19 +2948,10 @@ int GenerateFullDict(std::ostream &dictStream,
             RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
          } else {
             ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
+            EmitStreamerInfo(selClass.GetNormalizedName());
          }
-         EmitStreamerInfo(selClass.GetNormalizedName());
       }
    }
-
-#ifndef ROOT_STAGE1_BUILD
-   EmitTypedefs(scan.fSelectedTypedefs);
-   EmitEnums(scan.fSelectedEnums);
-   // Make up for skipping RegisterModule, now that dictionary parsing
-   // is done and these headers cannot be selected anymore.
-   int finRetCode = FinalizeStreamerInfoWriting(interp);
-   if (finRetCode != 0) return finRetCode;
-#endif
 
    //
    // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
@@ -2981,7 +2972,7 @@ int GenerateFullDict(std::ostream &dictStream,
    }
 
    // LINKDEF SELECTION LOOP
-   // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
+   // Loop to get the shadow class for the class marked 'RequestOnlyTClass' (but not the
    // STL class which is done via RStl::Instance().WriteClassInit(0);
    // and the ClassInit
 
@@ -2994,6 +2985,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
       if (!ROOT::TMetaUtils::IsSTLContainer(selClass)) {
          ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
+         EmitStreamerInfo(selClass.GetNormalizedName());
       }
    }
    // Loop to write all the ClassCode
@@ -3009,7 +3001,16 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // Loop on the registered collections internally
    // coverity[fun_call_w_exception] - that's just fine.
-   ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy);
+   ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
+
+#ifndef ROOT_STAGE1_BUILD
+   EmitTypedefs(scan.fSelectedTypedefs);
+   EmitEnums(scan.fSelectedEnums);
+   // Make up for skipping RegisterModule, now that dictionary parsing
+   // is done and these headers cannot be selected anymore.
+   int finRetCode = FinalizeStreamerInfoWriting(interp);
+   if (finRetCode != 0) return finRetCode;
+#endif
 
    return 0;
 }
