@@ -15,6 +15,9 @@ set(TestSource
     testIntegration.cxx
     testRootFinder.cxx
     kDTreeTest.cxx
+    newKDTreeTest.cxx
+    testSampleQuantiles.cxx
+    stressGoFTest.cxx
     fit/testFit.cxx )
 
 
@@ -25,6 +28,7 @@ set(TestSourceGraphics
     testSpecFuncGamma.cxx
     testSpecFuncBeta.cxx
     testSpecFuncBetaI.cxx
+    testSpecFuncSiCi.cxx
     testIntegrationMultiDim.cxx
     fit/SparseDataComparer.cxx
     fit/SparseFit4.cxx 

@@ -336,6 +336,7 @@ struct GoFTStress {
       // need to specify min and max otherwise pdf does not converge
       ROOT::Math::GoFTest* goft = new ROOT::Math::GoFTest(nEvents, sample); 
 
+
       ROOT::Math::Functor1D userPdf(&TMath::Landau);
       // need to use a reasanble range for the Landau 
       // but must be bigger than xmin and xmax 
