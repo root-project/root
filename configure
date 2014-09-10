@@ -1319,7 +1319,7 @@ conftest.out: conftest.h
 EOF
 
     $gnumake -f conftest.mk >> $logfile 2>&1
-    if test $? -eq 0 ; then
+    if test $? -eq 0 && test -f conftest.out; then
         preprocessor_output="`grep '^[^#]' conftest.out`"
         logmsg " Preprocessing OK"
     else
