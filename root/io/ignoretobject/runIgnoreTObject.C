@@ -54,6 +54,7 @@ UInt_t test3() {
          ++failcount;
       }
    }
+
    delete tree;
    delete file;
 
