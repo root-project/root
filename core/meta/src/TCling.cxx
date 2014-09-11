@@ -840,7 +840,7 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
 
    //if (strchr(tname.c_str(),'[')!=0) fprintf(stderr,"DEBUG: checking on %s vs %s %lu %lu\n",tname.c_str(),inner,offset,end);
    if (gROOT->GetListOfClasses()->FindObject(inner)
-       || TClassTable::GetDictNorm(inner) ) {
+       || TClassTable::Check(inner,result) ) {
       // This is a known class.
       return true;
    }
