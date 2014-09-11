@@ -105,14 +105,14 @@ inline Short_t TMath::Abs(Short_t d)
 { return (d >= 0) ? d : Short_t(-d); }
 
 inline Int_t TMath::Abs(Int_t d)
-{ return ::abs(d); }
+{ return std::abs(d); }
 
 inline Long_t TMath::Abs(Long_t d)
-{ return ::labs(d); }
+{ return std::labs(d); }
 
 inline Long64_t TMath::Abs(Long64_t d)
 #if __cplusplus >= 201103
-{ return ::llabs(d); }
+{ return std::llabs(d); }
 #else
 { return (d >= 0) ? d : -d;  }
 #endif

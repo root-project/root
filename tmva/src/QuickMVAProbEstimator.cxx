@@ -26,7 +26,7 @@ Double_t TMVA::QuickMVAProbEstimator::GetMVAProbAt(Double_t value){
 
 
    if (!fIsSorted) {
-      sort(fEvtVector.begin(),fEvtVector.end(),TMVA::QuickMVAProbEstimator::compare), fIsSorted=true;
+      std::sort(fEvtVector.begin(),fEvtVector.end(),TMVA::QuickMVAProbEstimator::compare), fIsSorted=true;
    }
 
    Double_t     percentage = 0.1;

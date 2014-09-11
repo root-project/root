@@ -28,6 +28,9 @@
 #ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
 #endif
+#ifndef ROOT_TPoint
+#include "TPoint.h"
+#endif
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
 #endif
@@ -38,7 +41,7 @@ class TBrowser;
 class TBox;
 class TLegend;
 class TArrow;
-class TPoint;
+
 
 class TPad : public TVirtualPad, public TAttBBox2D {
 
