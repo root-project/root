@@ -31,18 +31,8 @@
 
 class TProtoClass;
 
-class TClassRec {
-public:
-   char            *fName;
-   Version_t        fId;
-   Int_t            fBits;
-   DictFuncPtr_t    fDict;
-   const type_info *fInfo;
-   TProtoClass     *fProto;
-   TClassRec       *fNext;
-};
-
 namespace ROOT {
+   class TClassRec;
    class TMapTypeToClassRec;
 }
 
@@ -54,8 +44,8 @@ friend  class TROOT;
 private:
    typedef ROOT::TMapTypeToClassRec IdMap_t;
 
-   static TClassRec  **fgTable;
-   static TClassRec  **fgSortedTable;
+   static ROOT::TClassRec **fgTable;
+   static ROOT::TClassRec **fgSortedTable;
    static IdMap_t     *fgIdMap;
    static UInt_t       fgSize;
    static UInt_t       fgTally;
@@ -64,8 +54,8 @@ private:
 
    TClassTable();
 
-   static TClassRec   *FindElementImpl(const char *cname, Bool_t insert);
-   static TClassRec   *FindElement(const char *cname, Bool_t insert=kFALSE);
+   static ROOT::TClassRec   *FindElementImpl(const char *cname, Bool_t insert);
+   static ROOT::TClassRec   *FindElement(const char *cname, Bool_t insert=kFALSE);
    static void         SortTable();
 
 public:

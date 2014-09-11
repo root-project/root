@@ -39,6 +39,8 @@
 
 #include "TInterpreter.h"
 
+using namespace ROOT;
+
 TClassTable *gClassTable;
 
 TClassRec  **TClassTable::fgTable;
@@ -53,6 +55,17 @@ ClassImp(TClassTable)
 
 //______________________________________________________________________________
 namespace ROOT {
+
+   class TClassRec {
+   public:
+      char            *fName;
+      Version_t        fId;
+      Int_t            fBits;
+      DictFuncPtr_t    fDict;
+      const type_info *fInfo;
+      TProtoClass     *fProto;
+      TClassRec       *fNext;
+   };
 
    class TMapTypeToClassRec {
 #if defined R__USE_STD_MAP
