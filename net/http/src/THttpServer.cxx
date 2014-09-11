@@ -15,6 +15,7 @@
 
 #include <string>
 #include <cstdlib>
+#include <stdlib.h>
 
 extern "C" unsigned long crc32(unsigned long crc, const unsigned char* buf, unsigned int buflen);
 extern "C" unsigned long R__memcompress(char* tgt, unsigned long tgtsize, char* src, unsigned long srcsize);
