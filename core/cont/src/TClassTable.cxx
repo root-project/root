@@ -519,6 +519,22 @@ TProtoClass *TClassTable::GetProto(const char *cname)
 }
 
 //______________________________________________________________________________
+TProtoClass *TClassTable::GetProtoNorm(const char *cname)
+{
+   // Given the class normalized name returns the TClassProto object for the class.
+   // (uses hash of name).
+
+   if (gDebug > 9) {
+      ::Info("GetDict", "searches for %s", cname);
+      fgIdMap->Print();
+   }
+
+   TClassRec *r = FindElementImpl(cname,kFALSE);
+   if (r) return r->fProto;
+   return 0;
+}
+
+//______________________________________________________________________________
 extern "C" {
    static int ClassComp(const void *a, const void *b)
    {

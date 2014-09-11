@@ -1279,7 +1279,7 @@ void TClass::Init(const char *name, Version_t cversion,
          // instantiation.
          fCanLoadClassInfo = kTRUE;
          // Here we check and grab the info from the rootpcm.
-         TProtoClass *proto = TClassTable::GetProto(GetName());
+         TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
          if (proto && proto->FillTClass(this)) {
             fHasRootPcmInfo = kTRUE;
          }
@@ -3237,7 +3237,7 @@ TList *TClass::GetListOfBases()
       if (fCanLoadClassInfo) {
          if (fState == kHasTClassInit) {
             // The bases are in our ProtoClass; we don't need the class info.
-            TProtoClass *proto = TClassTable::GetProto(GetName());
+            TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
             if (proto && proto->FillTClass(this)) {
                fHasRootPcmInfo = kTRUE;
             }
@@ -3281,7 +3281,7 @@ TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
    if (!fData) {
       if (fCanLoadClassInfo && fState == kHasTClassInit) {
          // The members are in our ProtoClass; we don't need the class info.
-         TProtoClass *proto = TClassTable::GetProto(GetName());
+         TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
          if (proto && proto->FillTClass(this)) {
             fHasRootPcmInfo = kTRUE;
             return fData;

@@ -89,6 +89,7 @@ public:
    static DictFuncPtr_t GetDict(const type_info& info);
    static DictFuncPtr_t GetDictNorm(const char *cname);
    static TProtoClass  *GetProto(const char *cname);
+   static TProtoClass  *GetProtoNorm(const char *cname);
    static void          Init();
    static char         *Next();
    void                 Print(Option_t *option="") const;
