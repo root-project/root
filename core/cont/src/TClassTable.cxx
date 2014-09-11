@@ -62,6 +62,13 @@ namespace ROOT {
         fName(0), fId(0), fDict(0), fInfo(0), fProto(0), fNext(next)
       {}
 
+      ~TClassRec() {
+         // TClassTable::fgIdMap->Remove(r->fInfo->name());
+         delete [] fName;
+         delete fProto;
+         delete fNext;
+      }
+
       char            *fName;
       Version_t        fId;
       Int_t            fBits;
@@ -205,13 +212,7 @@ TClassTable::~TClassTable()
    if (gClassTable != this) return;
 
    for (UInt_t i = 0; i < fgSize; i++) {
-      TClassRec *r = fgTable[i];
-      while (r) {
-         delete [] r->fName;
-         TClassRec *next = r->fNext;
-         delete r;
-         r = next;
-      }
+      delete fgTable[i]; // Will delete all the elements in the chain.
    }
    delete [] fgTable; fgTable = 0;
    delete [] fgSortedTable; fgSortedTable = 0;
@@ -394,8 +395,7 @@ void TClassTable::Remove(const char *cname)
          else
             fgTable[slot] = r->fNext;
          fgIdMap->Remove(r->fInfo->name());
-         delete [] r->fName;
-         delete r->fProto;
+         r->fNext = 0; // Do not delete the others.
          delete r;
          fgTally--;
          fgSorted = kFALSE;
@@ -627,13 +627,8 @@ void TClassTable::Terminate()
 
    if (gClassTable) {
       for (UInt_t i = 0; i < fgSize; i++)
-         for (TClassRec *r = fgTable[i]; r; ) {
-            TClassRec *t = r;
-            r = r->fNext;
-            fgIdMap->Remove(r->fInfo->name());
-            delete [] t->fName;
-            delete t;
-         }
+         delete fgTable[i]; // Will delete all the elements in the chain.
+
       delete [] fgTable; fgTable = 0;
       delete [] fgSortedTable; fgSortedTable = 0;
       delete fgIdMap; fgIdMap = 0;
