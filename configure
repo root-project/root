@@ -4845,19 +4845,22 @@ if test ! "x$enable_ruby" = "xno" ; then
         rubyincdir="$rubyincdir $found_dir"
     fi
 
-    if test "x$arch" = "xwin32" || \
-       test "x$enable_shared" = "xno" ; then
-        check_library_options=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["LIBRUBY_A"]' | sed 's|\.a.*||'`
-    else
-        check_library_options=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["LIBRUBY"]' | sed 's|\.so.*||'`
+    rubylib=""
+    if test ! "x$myruby" = "x" && test -x "$myruby" ; then
+       if test "x$arch" = "xwin32" || \
+          test "x$enable_shared" = "xno" ; then
+           check_library_options=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["LIBRUBY_A"]' | sed 's|\.a.*||'`
+        else
+           check_library_options=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["LIBRUBY"]' | sed 's|\.so.*||'`
+        fi
+        check_library "$check_library_options" \
+           "$enable_shared" "$rubylibdir" \
+           $RUBYDIR ${RUBYDIR:+$RUBYDIR/lib} \
+           $rubysyslibdir \
+           /usr/local/lib /usr/lib
+        rubylib=$found_lib
+        rubylibdir=$found_dir
     fi
-    check_library "$check_library_options" \
-        "$enable_shared" "$rubylibdir" \
-        $RUBYDIR ${RUBYDIR:+$RUBYDIR/lib} \
-        $rubysyslibdir \
-        /usr/local/lib /usr/lib
-    rubylib=$found_lib
-    rubylibdir=$found_dir
 
     if test "x$rubyincdir" = "x" || test "x$rubylib" = "x"; then
         enable_ruby="no"
