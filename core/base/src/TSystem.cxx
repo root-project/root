@@ -2625,6 +2625,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    //     O : optimized the code
    //     c : compile only, do not attempt to load the library.
    //     s : silence all informational output
+   //     v : output all information output
+   //     d : debug ACLiC, keep all the output files.
    //     - : if buildir is set, use a flat structure (see buildir below)
    //
    // If library_specified is specified, CompileMacro generates the file
@@ -2736,6 +2738,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    EAclicMode mode = fAclicMode;
    Bool_t loadLib = kTRUE;
    Bool_t withInfo = kTRUE;
+   Bool_t verbose = kFALSE;
+   Bool_t internalDebug = kFALSE;
    if (opt) {
       keep = (strchr(opt,'k')!=0);
       recompile = (strchr(opt,'f')!=0);
@@ -2749,6 +2753,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          loadLib = kFALSE;
       }
       withInfo = strchr(opt, 's') == 0;
+      verbose = strchr(opt, 'v') != 0;
+      internalDebug = strchr(opt, 'd') != 0;
    }
    if (mode==kDefault) {
       TString rootbuild = ROOTBUILD;
@@ -2758,6 +2764,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          mode=kDebug;
       }
    }
+   UInt_t verboseLevel = verbose ? 7 : gDebug;
    Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (strchr(opt,'-')!=0);
 
    // if non-zero, build_loc indicates where to build the shared library.
@@ -3285,7 +3292,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       extra_linkdef.Append(extensions[i]);
       name = Which(incPath,extra_linkdef);
       if (name) {
-         if (gDebug>4 && withInfo) {
+         if (verboseLevel>4 && withInfo) {
             Info("ACLiC","including extra linkdef file: %s",name);
          }
          linkdefFile << "#include \"" << name << "\"" << std::endl;
@@ -3293,7 +3300,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
 
-   if (gDebug>5 && withInfo) {
+   if (verboseLevel>5 && withInfo) {
       Info("ACLiC","looking for header in: %s",incPath.Data());
    }
    for (i = 0; i < 6; i++ ) {
@@ -3399,9 +3406,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // ======= Run rootcint
    if (withInfo) {
-      if (gDebug>3) {
+      if (verboseLevel>3) {
          ::Info("ACLiC","creating the dictionary files");
-         if (gDebug>4)  ::Info("ACLiC", "%s", rcling.Data());
+         if (verboseLevel>4)  ::Info("ACLiC", "%s", rcling.Data());
       }
    }
 
@@ -3544,9 +3551,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // ======= Build the library
    if (result) {
-      if (gDebug>3 && withInfo) {
+      if (verboseLevel>3 && withInfo) {
          ::Info("ACLiC","compiling the dictionary and script files");
-         if (gDebug>4)  ::Info("ACLiC", "%s", cmd.Data());
+         if (verboseLevel>4)  ::Info("ACLiC", "%s", cmd.Data());
       }
       Int_t compilationResult = gSystem->Exec( cmd );
       if (compilationResult) {
@@ -3571,14 +3578,14 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (needLoadMap) {
           gInterpreter->LoadLibraryMap(libmapfilename);
       }
-      if (gDebug>3 && withInfo)  ::Info("ACLiC","loading the shared library");
+      if (verboseLevel>3 && withInfo)  ::Info("ACLiC","loading the shared library");
       if (loadLib) result = !gSystem->Load(library);
       else result = kTRUE;
 
       if ( !result ) {
-         if (gDebug>3 && withInfo) {
+         if (verboseLevel>3 && withInfo) {
             ::Info("ACLiC","testing for missing symbols:");
-            if (gDebug>4)  ::Info("ACLiC", "%s", testcmd.Data());
+            if (verboseLevel>4)  ::Info("ACLiC", "%s", testcmd.Data());
          }
          gSystem->Exec(testcmd);
          gSystem->Unlink( exec );
@@ -3586,7 +3593,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    };
 
-   if (gDebug<=5) {
+   if (verboseLevel<=5 && !internalDebug) {
       gSystem->Unlink( dict );
       gSystem->Unlink( dicth );
       gSystem->Unlink( dictObj );
@@ -3596,7 +3603,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       gSystem->Unlink( fakeMain );
       gSystem->Unlink( exec );
    }
-   if (gDebug>6) {
+   if (verboseLevel>6) {
       rcling.Prepend("echo ");
       cmd.Prepend("echo \" ").Append(" \" ");
       testcmd.Prepend("echo \" ").Append(" \" ");
@@ -3943,7 +3950,7 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
                                 TString &arguments, TString &io) const
 {
    // This method split a filename of the form:
-   //   [path/]macro.C[+|++[k|f|g|O|c|s|-]][(args)].
+   //   [path/]macro.C[+|++[k|f|g|O|c|s|d|v|-]][(args)].
    // It stores the ACliC mode [+|++[options]] in 'mode',
    // the arguments (including paranthesis) in arg
    // and the I/O indirection in io
@@ -3994,7 +4001,7 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
    int len = strlen(fname);
    TString mode;
    while (len > 1) {
-      if (strchr("kfgOcs-", fname[len - 1])) {
+      if (strchr("kfgOcsdv-", fname[len - 1])) {
          mode += fname[len - 1];
          --len;
       } else {
