@@ -173,6 +173,18 @@ int execResolveTypedef()
    TClassEdit::GetNormalizedName(output,"pair<vector<Long_t>,vector<Long_t>::value_type>");
    testing("pair<vector<long>,long>",output);
 
+   TClassEdit::GetNormalizedName(output,"NS::Inner<Int_t>");
+   testing("NS::Inner<int,Object>",output);
+
+   TClassEdit::GetNormalizedName(output,"Wrapper<NS::Inner<Int_t> >");
+   testing("Wrapper<NS::Inner<int,Object> >",output);
+
+   TClassEdit::GetNormalizedName(output,"vector2<NS::Inner<Int_t> >");
+   testing("vector2<NS::Inner<int,Object> >",output);
+
+   TClassEdit::GetNormalizedName(output,"vector<NS::Inner<Int_t> >");
+   testing("vector<NS::Inner<int,Object> >",output);
+
    // Add an example like pair<...::type_t,int>
 
    return 0;
