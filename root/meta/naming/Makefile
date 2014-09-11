@@ -31,3 +31,6 @@ endif
 
 
 execCheckNaming.log: execCheckNaming.C
+
+execNamingMatches.clog: NamingMatches_cxx.$(DllSuf)
+execNamingMatchesNoHeader.clog: NamingMatches_cxx.$(DllSuf)
