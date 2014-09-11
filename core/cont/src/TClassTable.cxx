@@ -43,10 +43,10 @@ TClassTable *gClassTable;
 
 TClassRec  **TClassTable::fgTable;
 TClassRec  **TClassTable::fgSortedTable;
-int          TClassTable::fgSize;
-int          TClassTable::fgTally;
+UInt_t       TClassTable::fgSize;
+UInt_t       TClassTable::fgTally;
 Bool_t       TClassTable::fgSorted;
-int          TClassTable::fgCursor;
+UInt_t       TClassTable::fgCursor;
 TClassTable::IdMap_t *TClassTable::fgIdMap;
 
 ClassImp(TClassTable)
@@ -160,7 +160,7 @@ TClassTable::TClassTable()
 
    if (gClassTable) return;
 
-   fgSize  = 1009;  //this is thge result of (int)TMath::NextPrime(1000);
+   fgSize  = 1009;  //this is the result of (int)TMath::NextPrime(1000);
    fgTable = new TClassRec* [fgSize];
    fgIdMap = new IdMap_t;
    memset(fgTable, 0, fgSize*sizeof(TClassRec*));
@@ -175,7 +175,7 @@ TClassTable::~TClassTable()
    // Try to avoid spurrious warning from memory leak checkers.
    if (gClassTable != this) return;
 
-   for (Int_t i = 0; i < fgSize; i++) {
+   for (UInt_t i = 0; i < fgSize; i++) {
       TClassRec *r = fgTable[i];
       while (r) {
          delete [] r->fName;
@@ -210,7 +210,7 @@ void TClassTable::Print(Option_t *option) const
    Printf("\nDefined classes");
    Printf("class                                 version  bits  initialized");
    Printf("================================================================");
-   for (int i = 0; i < fgTally; i++) {
+   for (UInt_t i = 0; i < fgTally; i++) {
       TClassRec *r = fgSortedTable[i];
       if (!r) break;
       n++;
@@ -231,7 +231,7 @@ void TClassTable::Print(Option_t *option) const
 //---- static members --------------------------------------------------------
 
 //______________________________________________________________________________
-char *TClassTable::At(int index)
+char *TClassTable::At(UInt_t index)
 {
     // Returns class at index from sorted class table. Don't use this iterator
     // while modifying the class table. The class table can be modified
@@ -239,7 +239,7 @@ char *TClassTable::At(int index)
     // Returns 0 if index points beyond last class name.
 
    SortTable();
-   if (index >= 0 && index < fgTally) {
+   if (index < fgTally) {
       TClassRec *r = fgSortedTable[index];
       if (r) return r->fName;
    }
@@ -574,8 +574,8 @@ void TClassTable::PrintTable()
    Printf("\nDefined classes");
    Printf("class                                 version  bits  initialized");
    Printf("================================================================");
-   int last = fgTally;
-   for (int i = 0; i < last; i++) {
+   UInt_t last = fgTally;
+   for (UInt_t i = 0; i < last; i++) {
       TClassRec *r = fgSortedTable[i];
       if (!r) break;
       n++;
@@ -601,7 +601,7 @@ void TClassTable::SortTable()
       fgSortedTable = new TClassRec* [fgTally];
 
       int j = 0;
-      for (int i = 0; i < fgSize; i++)
+      for (UInt_t i = 0; i < fgSize; i++)
          for (TClassRec *r = fgTable[i]; r; r = r->fNext)
             fgSortedTable[j++] = r;
 
@@ -616,7 +616,7 @@ void TClassTable::Terminate()
    // Deletes the class table (this static class function calls the dtor).
 
    if (gClassTable) {
-      for (int i = 0; i < fgSize; i++)
+      for (UInt_t i = 0; i < fgSize; i++)
          for (TClassRec *r = fgTable[i]; r; ) {
             TClassRec *t = r;
             r = r->fNext;

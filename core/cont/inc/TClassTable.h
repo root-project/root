@@ -57,10 +57,10 @@ private:
    static TClassRec  **fgTable;
    static TClassRec  **fgSortedTable;
    static IdMap_t     *fgIdMap;
-   static int          fgSize;
-   static int          fgTally;
+   static UInt_t       fgSize;
+   static UInt_t       fgTally;
    static Bool_t       fgSorted;
-   static int          fgCursor;
+   static UInt_t       fgCursor;
 
    TClassTable();
 
@@ -81,7 +81,7 @@ public:
                             const type_info &info, DictFuncPtr_t dict,
                             Int_t pragmabits);
    static void          Add(TProtoClass *protoClass);
-   static char         *At(int index);
+   static char         *At(UInt_t index);
    int                  Classes();
    static Version_t     GetID(const char *cname);
    static Int_t         GetPragmaBits(const char *name);
