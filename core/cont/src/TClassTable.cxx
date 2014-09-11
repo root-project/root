@@ -43,6 +43,7 @@ using namespace ROOT;
 
 TClassTable *gClassTable;
 
+TClassAlt  **TClassTable::fgAlternate;
 TClassRec  **TClassTable::fgTable;
 TClassRec  **TClassTable::fgSortedTable;
 UInt_t       TClassTable::fgSize;
@@ -214,8 +215,10 @@ TClassTable::TClassTable()
 
    fgSize  = 1009;  //this is the result of (int)TMath::NextPrime(1000);
    fgTable = new TClassRec* [fgSize];
+   fgAlternate = new TClassAlt* [fgSize];
    fgIdMap = new IdMap_t;
    memset(fgTable, 0, fgSize*sizeof(TClassRec*));
+   memset(fgAlternate, 0, fgSize*sizeof(TClassAlt*));
    gClassTable = this;
 }
 
@@ -391,6 +394,49 @@ void TClassTable::Add(TProtoClass *proto)
    fgSorted = kFALSE;
 }
 
+//______________________________________________________________________________
+void TClassTable::AddAlternate(const char *normName, const char *alternate)
+{
+   if (!gClassTable)
+      new TClassTable;
+
+   UInt_t slot = ROOT::ClassTableHash(alternate, fgSize);
+
+   for (const TClassAlt *a = fgAlternate[slot]; a; a = a->fNext.get()) {
+      if (strcmp(alternate,a->fName)==0) {
+         if (strcmp(normName,a->fNormName) != 0) {
+            fprintf(stderr,"Error in TClassTable::AddAlternate: "
+                    "Second registration of %s with a different normalized name (old: '%s', new: '%s')\n",
+                    alternate, a->fNormName, normName);
+            return;
+         }
+      }
+   }
+
+   fgAlternate[slot] = new TClassAlt(alternate,normName,fgAlternate[slot]);
+}
+
+//______________________________________________________________________________
+Bool_t TClassTable::Check(const char *cname, std::string &normname)
+{
+   if (!gClassTable || !fgTable) return kFALSE;
+
+   UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
+
+   // Check if 'cname' is a known normalized name.
+   for (TClassRec *r = fgTable[slot]; r; r = r->fNext)
+      if (strcmp(cname,r->fName)==0) return kTRUE;
+
+   // See if 'cname' is register in the list of alternate names
+   for (const TClassAlt *a = fgAlternate[slot]; a; a = a->fNext.get()) {
+      if (strcmp(cname,a->fName)==0) {
+         normname = a->fNormName;
+         return kTRUE;
+      }
+   }
+
+   return kFALSE;
+}
 
 //______________________________________________________________________________
 void TClassTable::Remove(const char *cname)

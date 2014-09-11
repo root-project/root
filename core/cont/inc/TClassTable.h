@@ -32,6 +32,7 @@
 class TProtoClass;
 
 namespace ROOT {
+   class TClassAlt;
    class TClassRec;
    class TMapTypeToClassRec;
 }
@@ -44,6 +45,7 @@ friend  class TROOT;
 private:
    typedef ROOT::TMapTypeToClassRec IdMap_t;
 
+   static ROOT::TClassAlt **fgAlternate;
    static ROOT::TClassRec **fgTable;
    static ROOT::TClassRec **fgSortedTable;
    static IdMap_t     *fgIdMap;
@@ -71,8 +73,10 @@ public:
                             const type_info &info, DictFuncPtr_t dict,
                             Int_t pragmabits);
    static void          Add(TProtoClass *protoClass);
+   static void          AddAlternate(const char *normname, const char *alternate);
    static char         *At(UInt_t index);
    int                  Classes();
+   static Bool_t        Check(const char *cname, std::string &normname);
    static Version_t     GetID(const char *cname);
    static Int_t         GetPragmaBits(const char *name);
    static DictFuncPtr_t GetDict(const char *cname);
