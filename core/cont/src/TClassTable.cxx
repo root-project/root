@@ -712,6 +712,15 @@ void ROOT::AddClass(const char *cname, Version_t id,
 }
 
 //______________________________________________________________________________
+void ROOT::AddClassAlternate(const char *normName, const char *alternate)
+{
+   // Global function called by GenerateInitInstance.
+   // (see the ClassImp macro).
+
+   TClassTable::AddAlternate(normName,alternate);
+}
+
+//______________________________________________________________________________
 void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 {
    // Global function to update the version number.

@@ -154,6 +154,7 @@ namespace ROOT {
                         DictFuncPtr_t dict, Int_t pragmabits);
    extern void RemoveClass(const char *cname);
    extern void ResetClassVersion(TClass*, const char*, Short_t);
+   extern void AddClassAlternate(const char *normName, const char *alternate);
 
    extern TNamed *RegisterClassTemplate(const char *name,
                                         const char *file, Int_t line);
