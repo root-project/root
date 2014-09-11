@@ -1763,6 +1763,14 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    }
 
    //---------------------------------------------------------------------------
+   // Register Altenate spelling of the class name.
+   //---------------------------------------------------------------------------
+   if (cl.GetRequestedName()[0] && classname != cl.GetRequestedName()) {
+      finalString << "\n" << "      ROOT::AddClassAlternate(\""
+                  << classname << "\",\"" << cl.GetRequestedName() << "\");\n";
+   }
+
+   //---------------------------------------------------------------------------
    // Pass the schema evolution rules to TGenericClassInfo
    //---------------------------------------------------------------------------
    if( (rulesIt1 != ROOT::gReadRules.end() && rulesIt1->second.size()>0) || (rulesIt2 != ROOT::gReadRawRules.end()  && rulesIt2->second.size()>0) ) {
