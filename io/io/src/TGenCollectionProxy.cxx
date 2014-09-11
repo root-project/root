@@ -34,6 +34,8 @@
 #include "Riostream.h"
 #include "TVirtualMutex.h"
 #include "TStreamerInfoActions.h"
+#include "THashTable.h"
+#include "THashList.h"
 #include <stdlib.h>
 
 #include "TInterpreter.h" // For gInterpreterMutex
@@ -380,10 +382,15 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
       // might fail because CINT does not known the nesting
       // scope, so let's first look for an emulated class:
       fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
+      if (!fType) TClass::GetClass(intype.c_str(),kTRUE,silent);
+
       if (fType && !fType->IsLoaded()) {
          if (intype != inside) {
             fCase |= kIsPointer;
             fSize = sizeof(void*);
+            if (fType == TString::Class()) {
+               fCase |= kBIT_ISTSTRING;
+            }
          }
          fCase  |= kIsClass;
          fCtor   = fType->GetNew();
@@ -392,81 +399,115 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
       } else {
          R__LOCKGUARD2(gInterpreterMutex);
 
-#if defined(NOT_YET)
-         // Because the TStreamerInfo of the contained classes
-         // is stored only when tbere at least one element in
-         // the collection, we might not even have an emulated
-         // class.  So go the long route to avoid errors
-         // issued by CINT ....
-         G__value gval = G__string2type_body(inside.c_str(),2);
-         G__TypeInfo ti(gval);
-#else
-         //G__TypeInfo ti(inside.c_str());
-         TypeInfo_t *ti = gCling->TypeInfo_Factory();
-         gCling->TypeInfo_Init(ti,inside.c_str());
-#endif
-         if ( !gCling->TypeInfo_IsValid(ti) ) {
+         // Try to avoid autoparsing.
+
+         THashTable *typeTable = dynamic_cast<THashTable*>( gROOT->GetListOfTypes() );
+         THashList *enumTable = dynamic_cast<THashList*>( gROOT->GetListOfEnums() );
+
+         assert(typeTable && "The type of the list of type has changed");
+         assert(enumTable && "The type of the list of enum has changed");
+
+         TDataType *fundType = (TDataType *)typeTable->THashTable::FindObject( intype.c_str() );
+         if (fundType && fundType->GetType() < 0x17 && fundType->GetType() > 0) {
+            fKind = (EDataType)fundType->GetType();
+            if ( 0 == strcmp("bool",fundType->GetFullTypeName()) ) {
+               fKind = (EDataType)kBOOL_t;
+            }
+            // R__ASSERT((fKind>0 && fKind<0x17) || (fKind==-1&&(prop&kIsPointer)) );
+
+            fCase |= kIsFundamental;
+            if (intype != inside) {
+               fCase |= kIsPointer;
+               fSize = sizeof(void*);
+            } else {
+               fSize = fundType->Size();
+            }
+         } else if (enumTable->THashList::FindObject( intype.c_str() ) ) {
+            // This is a known enum.
+            fCase = kIsEnum;
+            fSize = sizeof(Int_t);
+            fKind = kInt_t;
             if (intype != inside) {
                fCase |= kIsPointer;
                fSize = sizeof(void*);
             }
-            fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
-            if (fType) {
-               fCase  |= kIsClass;
-               fCtor   = fType->GetNew();
-               fDtor   = fType->GetDestructor();
-               fDelete = fType->GetDelete();
-            }
-            else {
-               // either we have an Emulated enum or a really unknown class!
-               // let's just claim its an enum :(
-               fCase = kIsEnum;
-               fSize = sizeof(Int_t);
-               fKind = kInt_t;
-            }
-         }
-         else {
-            Long_t prop = gCling->TypeInfo_Property(ti);
-            if ( prop&kIsPointer ) {
-               fSize = sizeof(void*);
-            }
-            if ( prop&kIsStruct ) {
-               prop |= kIsClass;
-            }
-            if ( prop&kIsClass ) {
+         } else {
+            // This fallback solution should be hardly used ...
+            // One of the common use case is to 'discover' that this is a
+            // collection for the content of which we do not have a dictionary
+            // which can happen at least in the following cases:
+            //    - empty emulated collection
+            //    - emulated collection of enums
+            // In those two cases there is no StreamerInfo stored in the file
+            // for the content.
+
+            // R__ASSERT("FallBack, should be hardly used.");
+
+            TypeInfo_t *ti = gCling->TypeInfo_Factory();
+            gCling->TypeInfo_Init(ti,inside.c_str());
+            if ( !gCling->TypeInfo_IsValid(ti) ) {
+               if (intype != inside) {
+                  fCase |= kIsPointer;
+                  fSize = sizeof(void*);
+               }
                fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
-               R__ASSERT(fType);
-               fCtor   = fType->GetNew();
-               fDtor   = fType->GetDestructor();
-               fDelete = fType->GetDelete();
-            }
-            else if ( prop&kIsFundamental ) {
-               TDataType *fundType = gROOT->GetType( intype.c_str() );
-               if (fundType==0) {
-                  if (intype != "long double") {
-                     Error("TGenCollectionProxy","Unknown fundamental type %s",intype.c_str());
-                  }
-                  fSize = sizeof(int);
+               if (fType) {
+                  fCase  |= kIsClass;
+                  fCtor   = fType->GetNew();
+                  fDtor   = fType->GetDestructor();
+                  fDelete = fType->GetDelete();
+               }
+               else {
+                  // either we have an Emulated enum or a really unknown class!
+                  // let's just claim its an enum :(
+                  fCase = kIsEnum;
+                  fSize = sizeof(Int_t);
                   fKind = kInt_t;
-               } else {
-                  fKind = (EDataType)fundType->GetType();
-                  if ( 0 == strcmp("bool",fundType->GetFullTypeName()) ) {
-                     fKind = (EDataType)kBOOL_t;
-                  }
-                  fSize = gCling->TypeInfo_Size(ti);
-                  R__ASSERT((fKind>0 && fKind<0x17) || (fKind==-1&&(prop&kIsPointer)) );
                }
             }
-            else if ( prop&kIsEnum ) {
-               fSize = sizeof(int);
-               fKind = kInt_t;
+            else {
+               Long_t prop = gCling->TypeInfo_Property(ti);
+               if ( prop&kIsPointer ) {
+                  fSize = sizeof(void*);
+               }
+               if ( prop&kIsStruct ) {
+                  prop |= kIsClass;
+               }
+               if ( prop&kIsClass ) {
+                  fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
+                  R__ASSERT(fType);
+                  fCtor   = fType->GetNew();
+                  fDtor   = fType->GetDestructor();
+                  fDelete = fType->GetDelete();
+               }
+               else if ( prop&kIsFundamental ) {
+                  fundType = gROOT->GetType( intype.c_str() );
+                  if (fundType==0) {
+                     if (intype != "long double") {
+                        Error("TGenCollectionProxy","Unknown fundamental type %s",intype.c_str());
+                     }
+                     fSize = sizeof(int);
+                     fKind = kInt_t;
+                  } else {
+                     fKind = (EDataType)fundType->GetType();
+                     if ( 0 == strcmp("bool",fundType->GetFullTypeName()) ) {
+                        fKind = (EDataType)kBOOL_t;
+                     }
+                     fSize = gCling->TypeInfo_Size(ti);
+                     R__ASSERT((fKind>0 && fKind<0x17) || (fKind==-1&&(prop&kIsPointer)) );
+                  }
+               }
+               else if ( prop&kIsEnum ) {
+                  fSize = sizeof(int);
+                  fKind = kInt_t;
+               }
+               fCase = prop & (kIsPointer|kIsFundamental|kIsEnum|kIsClass);
+               if (fType == TString::Class() && (fCase&kIsPointer)) {
+                  fCase |= kBIT_ISTSTRING;
+               }
             }
-            fCase = prop & (kIsPointer|kIsFundamental|kIsEnum|kIsClass);
-            if (fType == TString::Class() && (fCase&kIsPointer)) {
-               fCase |= kBIT_ISTSTRING;
-            }
+            gCling->TypeInfo_Delete(ti);
          }
-         gCling->TypeInfo_Delete(ti);
       }
       if (fType) {
          TVirtualCollectionProxy *proxy = fType->GetCollectionProxy();
