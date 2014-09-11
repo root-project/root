@@ -24,6 +24,7 @@
 #include <map>
 #include <typeinfo>
 #include "Riostream.h"
+#include <memory>
 
 #include "TClassTable.h"
 #include "TClass.h"
@@ -38,7 +39,6 @@
 #include "TMap.h"
 
 #include "TInterpreter.h"
-
 using namespace ROOT;
 
 TClassTable *gClassTable;
