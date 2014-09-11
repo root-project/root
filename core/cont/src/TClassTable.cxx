@@ -58,6 +58,10 @@ namespace ROOT {
 
    class TClassRec {
    public:
+      TClassRec(TClassRec *next) :
+        fName(0), fId(0), fDict(0), fInfo(0), fProto(0), fNext(next)
+      {}
+
       char            *fName;
       Version_t        fId;
       Int_t            fBits;
@@ -410,24 +414,15 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
 
    UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
 
-   TClassRec *r;
-
-   for (r = fgTable[slot]; r; r = r->fNext)
+   for (TClassRec *r = fgTable[slot]; r; r = r->fNext)
       if (strcmp(cname,r->fName)==0) return r;
 
    if (!insert) return 0;
 
-   r = new TClassRec;
-   r->fName = 0;
-   r->fId   = 0;
-   r->fDict = 0;
-   r->fInfo = 0;
-   r->fProto= 0;
-   r->fNext = fgTable[slot];
-   fgTable[slot] = r;
+   fgTable[slot] = new TClassRec(fgTable[slot]);
 
    fgTally++;
-   return r;
+   return fgTable[slot];
 }
 
 //______________________________________________________________________________
