@@ -78,6 +78,22 @@ namespace ROOT {
       TClassRec       *fNext;
    };
 
+   class TClassAlt {
+   public:
+      TClassAlt(const char*alternate, const char *normName, TClassAlt *next) :
+         fName(alternate), fNormName(normName), fNext(next)
+      {}
+
+      ~TClassAlt() {
+         // Nothing more to delete.
+      }
+
+      const char *fName;     // Do not own
+      const char *fNormName; // Do not own
+      std::unique_ptr<TClassAlt> fNext;
+   };
+
+
    class TMapTypeToClassRec {
 #if defined R__USE_STD_MAP
      // This wrapper class allow to avoid putting #include <map> in the
