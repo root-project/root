@@ -1106,9 +1106,8 @@ void RScanner::Scan(const clang::ASTContext &C)
 
 //    if (fVerboseLevel >= 3) fSelectionRules.PrintSelectionRules();
 
-   if (fVerboseLevel > 0)  {
-      if (fSelectionRules.GetHasFileNameRule())
-         std::cout<<"File name detected"<<std::endl;
+   if (fVerboseLevel > 0 && fSelectionRules.GetHasFileNameRule())  {
+      std::cout<<"File name detected"<<std::endl;
    }
 
    if (fScanType == EScanType::kTwoPasses)
