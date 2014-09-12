@@ -80,51 +80,6 @@ TModuleGenerator::~TModuleGenerator()
 }
 
 //______________________________________________________________________________
-void TModuleGenerator::ConvertToCppString(std::string &text) const
-{
-   // Convert input string to cpp code
-   // FIXME: Optimisations for size could be put in
-   // * Remove empty lines
-   // * Remove comments
-
-   typedef std::vector<std::pair<std::string, std::string> > strPairs;
-
-   // Will be replaced by an initialiser list
-   strPairs fromToPatterns;
-   fromToPatterns.reserve(4);
-   // \r -> "" (carriage return, empty char )
-   fromToPatterns.push_back(std::make_pair("\r", ""));
-   // \ -> \\'
-   fromToPatterns.push_back(std::make_pair("\\", "\\\\"));
-   // " -> \"
-   fromToPatterns.push_back(std::make_pair("\"", "\\\""));
-   // \n -> \\n"\n" (new line, ",new line, ")
-   fromToPatterns.push_back(std::make_pair("\n", "\\n\"\n\""));
-
-   for (auto const & fromTo : fromToPatterns) {
-      size_t start_pos = 0;
-      const std::string &from = fromTo.first;
-      const std::string &to = fromTo.second;
-      while ((start_pos = text.find(from, start_pos)) != std::string::npos) {
-         text.replace(start_pos, from.length(), to);
-         start_pos += to.length();
-      }
-   }
-   size_t textSize(text.length());
-   if (textSize >= 2 && text[textSize - 1] == '"' && text[textSize - 2] == '\n') {
-      text.erase(textSize - 1);
-      textSize -= 1;
-   }
-   if (textSize >= 1 && text[textSize - 1] != '\"' && text[textSize - 1] != '\n') {
-      text += '\"';
-   }
-
-
-   text = "\"" + text;
-
-}
-
-//______________________________________________________________________________
 TModuleGenerator::ESourceFileKind
 TModuleGenerator::GetSourceFileKind(const char *filename) const
 {
@@ -385,9 +340,6 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
                   inlinedHeaders + "\n"
                   "#undef  _BACKWARD_BACKWARD_WARNING_H\n";
 
-   // Make it usable as string
-   ConvertToCppString(payloadCode);
-
    // Dictionary initialization code for loading the module
    out << "namespace {\n"
        "  void TriggerDictionaryInitialization_"
@@ -403,7 +355,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
    WriteIncludePathArray(out) <<
                               "    };\n"
                               "    static const char* fwdDeclCode = \n" << fwdDeclString << ";\n"
-                              "    static const char* payloadCode = \n" << payloadCode << ";\n"
+                              "    static const char* payloadCode = R\"DICTPAYLOAD(\n" << payloadCode << ")DICTPAYLOAD\";\n"
                               "    " << headersClassesMapString << "\n"
                               "    static bool isInitialized = false;\n"
                               "    if (!isInitialized) {\n"
