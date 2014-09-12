@@ -1,3 +1,5 @@
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *pcm *o *rflx.* dummy*
+
 ifeq ($(strip $(ROOTTEST_HOME)),)
    export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
    ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -9,3 +11,10 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
+include $(ROOTTEST_HOME)/scripts/Reflex.mk
+
+
+execTypedefSelection.log: libtypedefSelection_dictrflx.$(DllSuf)
+
+
+
