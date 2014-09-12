@@ -2091,19 +2091,11 @@ Bool_t TClass::CanSplit() const
    if (this == TObject::Class())  { This->fCanSplit = 1; return kTRUE; }
    if (fName == "TClonesArray")   { This->fCanSplit = 1; return kTRUE; }
    if (fRefProxy)                 { This->fCanSplit = 0; return kFALSE; }
-   if (InheritsFrom("TRef"))      { This->fCanSplit = 0; return kFALSE; }
-   if (InheritsFrom("TRefArray")) { This->fCanSplit = 0; return kFALSE; }
-   if (InheritsFrom("TArray"))    { This->fCanSplit = 0; return kFALSE; }
    if (fName.BeginsWith("TVectorT<")) { This->fCanSplit = 0; return kFALSE; }
    if (fName.BeginsWith("TMatrixT<")) { This->fCanSplit = 0; return kFALSE; }
-   if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) { This->fCanSplit = 0; return kFALSE; }
-   if (InheritsFrom("TTree"))     { This->fCanSplit = 0; return kFALSE; }
    if (fName == "string")         { This->fCanSplit = 0; return kFALSE; }
    if (fName == "std::string")    { This->fCanSplit = 0; return kFALSE; }
 
-   // If we do not have a showMembers or a fClassInfo and we have a streamer,
-   // we are in the case of class that can never be split since it is
-   // opaque to us.
    if (GetCollectionProxy()!=0) {
       // For STL collection we need to look inside.
 
@@ -2132,7 +2124,9 @@ Bool_t TClass::CanSplit() const
       This->fCanSplit = 1;
       return kTRUE;
 
-   } else if (GetStreamer()!=0) {
+   }
+
+   if (GetStreamer()!=0) {
 
       // We have an external custom streamer provided by the user, we must not
       // split it.
@@ -2152,6 +2146,13 @@ Bool_t TClass::CanSplit() const
       This->fCanSplit = 0;
       return kFALSE;
    }
+
+   // Calls to InheritsFrom for STL collection might cause unnecessary autoparsing.
+   if (InheritsFrom("TRef"))      { This->fCanSplit = 0; return kFALSE; }
+   if (InheritsFrom("TRefArray")) { This->fCanSplit = 0; return kFALSE; }
+   if (InheritsFrom("TArray"))    { This->fCanSplit = 0; return kFALSE; }
+   if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) { This->fCanSplit = 0; return kFALSE; }
+   if (InheritsFrom("TTree"))     { This->fCanSplit = 0; return kFALSE; }
 
    TClass *ncThis = const_cast<TClass*>(this);
    TIter nextb(ncThis->GetListOfBases());
