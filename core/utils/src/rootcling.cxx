@@ -3457,7 +3457,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
                     buffer,
                     &fwdDecls);
       if (retCode == 0 && fwdDecls.insert(buffer).second) {
-         fwdDeclString += "R\"FWDDECL(" + buffer + ")FWDDECL\"\n";
+         fwdDeclString += "\nR\"FWDDECL(" + buffer + ")FWDDECL\"";
       }
    }
 
