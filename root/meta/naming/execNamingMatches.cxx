@@ -41,9 +41,9 @@ int CheckDictionary(TObjArray *proto, const char *longname, const char *shortnam
 int CheckDictionary() {
    int failedtest = 0;
 
-   TFile *pcm = new TFile("NamingMatches_cxx_ACLiC_dict_rdict.pcm");
+   TFile *pcm = new TFile("namingMatches_cxx_ACLiC_dict_rdict.pcm");
    if (!pcm) {
-      Error("CheckDictionary","Can not open root pcm file: %s","NamingMatches_cxx_ACLiC_dict_rdict.pcm");
+      Error("CheckDictionary","Can not open root pcm file: %s","namingMatches_cxx_ACLiC_dict_rdict.pcm");
       return 1;
    }
    TObjArray *proto; pcm->GetObject("__ProtoClasses",proto);
@@ -95,7 +95,7 @@ int CheckGetClass() {
 int execNamingMatches() {
    int failedtest = 0;
 
-   gROOT->ProcessLine(".L NamingMatches.cxx+s");
+   gROOT->ProcessLine(".L namingMatches.cxx+s");
 
    THashTable result;
    TClass *c = TClass::GetClass("Holder");
