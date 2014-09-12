@@ -4556,23 +4556,36 @@ const std::string& ROOT::TMetaUtils::GetPathSeparator()
 }
 
 //______________________________________________________________________________
-const std::string ROOT::TMetaUtils::AST2SourceTools::Decl2FwdDecl(const clang::Decl &decl,
-      const cling::Interpreter &interp)
+static void addDeclToTransaction(clang::Decl *decl,
+                                 cling::Transaction &theTransaction,
+                                 std::set<clang::Decl *> &addedDecls)
 {
-   // Ugly const removal: wrong cling interfaces
-   clang::Decl *ncDecl = const_cast<clang::Decl *>(&decl);
-   cling::Interpreter *ncInterp = const_cast<cling::Interpreter *>(&interp);
-   clang::Sema &sema = ncInterp->getSema();
-   cling::Transaction theTransaction(sema);
-   theTransaction.append(ncDecl);
-   if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(ncDecl)) {
-      theTransaction.append(tsd->getSpecializedTemplate());
+   if (decl->isFromASTFile()) return;
+
+//    if (auto *nDecl = llvm::dyn_cast<clang::NamedDecl>(decl)) {
+//       if (cling::utils::Analyze::IsStdOrCompilerDetails(*nDecl)){
+//          return;
+//       }
+//    }
+
+   // Templates
+   if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
+      auto templ = tsd->getSpecializedTemplate();
+      if (addedDecls.insert(templ).second) // no duplicates
+         theTransaction.append(tsd->getSpecializedTemplate());
    }
-   std::string newFwdDecl;
-   llvm::raw_string_ostream llvmOstr(newFwdDecl);
-   ncInterp->forwardDeclare(theTransaction, sema.getSourceManager(), llvmOstr, true, nullptr);
-   llvmOstr.flush();
-   return newFwdDecl;
+
+   // Contexts
+   auto *declForRecursion = decl;
+   while (auto *ctxt = declForRecursion->getDeclContext()) {
+      declForRecursion = llvm::dyn_cast_or_null<clang::Decl>(ctxt);
+      if (llvm::isa<clang::NamedDecl>(declForRecursion) && // stop recursion at the last class/struct/ns
+            (addedDecls.insert(declForRecursion).second)) { // no duplicates
+         theTransaction.append(declForRecursion);
+      } else {
+         break;
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -4583,13 +4596,11 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::v
    cling::Interpreter *ncInterp = const_cast<cling::Interpreter *>(&interp);
    clang::Sema &sema = ncInterp->getSema();
    cling::Transaction theTransaction(sema);
+   std::set<clang::Decl *> addedDecls;
    for (auto decl : decls) {
       // again waiting for cling
       clang::Decl *ncDecl = const_cast<clang::Decl *>(decl);
-      theTransaction.append(ncDecl);
-      if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
-         theTransaction.append(tsd->getSpecializedTemplate());
-      }
+      addDeclToTransaction(ncDecl, theTransaction, addedDecls);
    }
    std::string newFwdDecl;
    llvm::raw_string_ostream llvmOstr(newFwdDecl);
