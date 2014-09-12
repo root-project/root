@@ -76,7 +76,8 @@ private:
       kBeginIoreadRaw,
       kEndIoreadRaw,
       kInvalid,
-      kNumTagNames
+      kNumTagNames,
+      kTypedef
    };
 
    // used to create string to tag kind association to use in switch constructions
