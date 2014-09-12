@@ -1115,6 +1115,9 @@ void RScanner::Scan(const clang::ASTContext &C)
 
    fFirstPass=false;
    fselectedRecordDecls.clear();
+   fSelectedEnums.clear();
+   fSelectedTypedefs.clear();
+   fSelectedFunctions.clear();
    TraverseDecl(C.getTranslationUnitDecl());
 
    // And finally resort the results according to the rule ordering.
