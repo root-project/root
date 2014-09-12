@@ -620,7 +620,7 @@ inline bool IsTemplate(const clang::Decl &cl)
 const clang::FunctionDecl* ROOT::TMetaUtils::ClassInfo__HasMethod(const clang::DeclContext *cl, const char* name,
                                                             const cling::Interpreter& interp)
 {
-   clang::Sema* S = const_cast<clang::Sema*>(&interp.getSema());
+   clang::Sema* S = &interp.getSema();
    const clang::NamedDecl* ND = cling::utils::Lookup::Named(S, name, cl);
    if (ND == (clang::NamedDecl*)-1)
       return (clang::FunctionDecl*)-1;
@@ -4592,9 +4592,7 @@ static void addDeclToTransaction(clang::Decl *decl,
 const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls,
       const cling::Interpreter &interp)
 {
-   // Ugly const removal: wrong cling interfaces
-   cling::Interpreter *ncInterp = const_cast<cling::Interpreter *>(&interp);
-   clang::Sema &sema = ncInterp->getSema();
+   clang::Sema &sema = interp.getSema();
    cling::Transaction theTransaction(sema);
    std::set<clang::Decl *> addedDecls;
    for (auto decl : decls) {
@@ -4604,7 +4602,7 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::v
    }
    std::string newFwdDecl;
    llvm::raw_string_ostream llvmOstr(newFwdDecl);
-   ncInterp->forwardDeclare(theTransaction, sema.getSourceManager(), llvmOstr, true, nullptr);
+   interp.forwardDeclare(theTransaction, sema.getSourceManager(), llvmOstr, true, nullptr);
    llvmOstr.flush();
    return newFwdDecl;
 }
