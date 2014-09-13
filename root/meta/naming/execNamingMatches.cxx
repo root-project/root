@@ -52,7 +52,7 @@ int CheckDictionary() {
       return 1;
    }
    failedtest += CheckDictionary(proto,"vector<Wrapper<int,Object> >","vector<Wrapper<int>");
-   failedtest += CheckDictionary(proto,"atomic<vector<Wrapper<int,Object> >*>","atomic<vector<Wrapper<int> >*>");
+//   failedtest += CheckDictionary(proto,"atomic<vector<Wrapper<int,Object> >*>","atomic<vector<Wrapper<int> >*>");
    failedtest += CheckDictionary(proto,"list<Wrapper<int,Object> >","list<Wrapper<int> >");
 
    return failedtest;
