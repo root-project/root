@@ -26,7 +26,7 @@ public:
    value_t fContainer;
    vector<Wrapper<int> > fValues;
    //vector<Wrapper<int, Object> > fValues2;
-   std::atomic<vector<Wrapper<int> >*> fAtom;
+   std::atomic<vector<Wrapper<int> >*> fAtom; //!
 };
 
 #endif
