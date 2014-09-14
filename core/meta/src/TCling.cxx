@@ -182,6 +182,36 @@ char *dlerror() {
 #endif
 #endif
 
+//______________________________________________________________________________
+// These functions are helpers for debugging issues with non-LLVMDEV builds.
+//
+clang::DeclContext* TCling__DEBUG__getDeclContext(clang::Decl* D) {
+   return D->getDeclContext();
+}
+clang::NamespaceDecl* TCling__DEBUG__DCtoNamespace(clang::DeclContext* DC) {
+   return llvm::dyn_cast<clang::NamespaceDecl>(DC);
+}
+clang::RecordDecl* TCling__DEBUG__DCtoRecordDecl(clang::DeclContext* DC) {
+   return llvm::dyn_cast<clang::RecordDecl>(DC);
+}
+void TCling__DEBUG__dump(clang::DeclContext* DC) {
+   return DC->dump();
+}
+void TCling__DEBUG__dump(clang::Decl* D) {
+   return D->dump();
+}
+void TCling__DEBUG__printName(clang::Decl* D) {
+   if (clang::NamedDecl* ND = dyn_cast<NamedDecl>(D)) {
+      std::string name;
+      {
+         llvm::raw_string_ostream OS;
+         ND->getNameForDiagnostic(name, D->getASTContext()->getPrintingPolicy(),
+                                  true /*Qualified*/);
+      }
+      printf("%s\n", name.c_str());
+   }
+}
+
 
 using namespace std;
 using namespace clang;
