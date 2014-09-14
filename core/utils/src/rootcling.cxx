@@ -3414,17 +3414,14 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 
    using namespace ROOT::TMetaUtils::AST2SourceTools;
 
-   const char *emptyString = "\"\"";
-
    std::string fwdDeclString;
    std::string buffer;
    std::unordered_set<std::string> fwdDecls;
 
    // Classes
-
+/*
    for (auto const & annRcd : scan.fSelectedClasses) {
       const auto rcdDeclPtr = annRcd.GetRecordDecl();
-//       newFwdDeclString += Decl2FwdDecl(*rcdDeclPtr,interp);
 
       int retCode = FwdDeclFromRcdDecl(*rcdDeclPtr, interp, buffer);
       if (-1 == retCode) {
@@ -3436,9 +3433,23 @@ std::string GenerateFwdDeclString(const RScanner &scan,
       if (retCode == 0 && fwdDecls.insert(buffer).second)
          fwdDeclString += "\"" + buffer + "\"\n";
    }
+*/
+   // Build the input for a transaction containing all of the selected declarations
+   // Cling will produce the fwd declaration payload.
+
+   std::vector<const clang::Decl *> selectedDecls(scan.fSelectedClasses.size());
+
+   // Pick only RecordDecls
+   std::transform (scan.fSelectedClasses.begin(),
+                   scan.fSelectedClasses.end(),
+                   selectedDecls.begin(),
+                   [](const ROOT::TMetaUtils::AnnotatedRecordDecl& rcd){return rcd.GetRecordDecl();});
+
+   fwdDeclString += "R\"DICTFWDDCLS(\n";
+   fwdDeclString += Decls2FwdDecls(selectedDecls,interp);
+   fwdDeclString += ")DICTFWDDCLS\"";
 
    // Typedefs
-
    for (auto const & tdNameDeclPtr : scan.fSelectedTypedefs) {
       buffer = "";
       int retCode = FwdDeclFromTypeDefNameDecl(*tdNameDeclPtr,
@@ -3446,8 +3457,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
                     buffer,
                     &fwdDecls);
       if (retCode == 0 && fwdDecls.insert(buffer).second) {
-         fwdDeclString += "\"" + buffer + "\"\n";
-
+         fwdDeclString += "\nR\"FWDDECL(" + buffer + ")FWDDECL\"";
       }
    }
 
@@ -3465,14 +3475,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 //          fwdDeclString+="\""+buffer+"\"\n";
 //    }
 
-   if (fwdDeclString.empty()) fwdDeclString = emptyString;
-
-//    std::cout << "\n======================" << std::endl
-//              << "OLD: " << fwdDeclString
-//              << "\n======================" << std::endl
-//              << "NEW: " << newFwdDeclString
-//              << "\n======================" << std::endl;
-
+   if (fwdDeclString.empty()) fwdDeclString = R"("")";
    return fwdDeclString;
 }
 

@@ -1106,9 +1106,8 @@ void RScanner::Scan(const clang::ASTContext &C)
 
 //    if (fVerboseLevel >= 3) fSelectionRules.PrintSelectionRules();
 
-   if (fVerboseLevel > 0)  {
-      if (fSelectionRules.GetHasFileNameRule())
-         std::cout<<"File name detected"<<std::endl;
+   if (fVerboseLevel > 0 && fSelectionRules.GetHasFileNameRule())  {
+      std::cout<<"File name detected"<<std::endl;
    }
 
    if (fScanType == EScanType::kTwoPasses)
@@ -1116,6 +1115,9 @@ void RScanner::Scan(const clang::ASTContext &C)
 
    fFirstPass=false;
    fselectedRecordDecls.clear();
+   fSelectedEnums.clear();
+   fSelectedTypedefs.clear();
+   fSelectedFunctions.clear();
    TraverseDecl(C.getTranslationUnitDecl());
 
    // And finally resort the results according to the rule ordering.

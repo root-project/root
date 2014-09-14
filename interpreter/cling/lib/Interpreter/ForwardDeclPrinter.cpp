@@ -2,6 +2,7 @@
 
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Transaction.h"
+#include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -160,10 +161,25 @@ namespace cling {
       PLocs.push_back(PLoc);
       PLoc = m_SMgr.getPresumedLoc(PLoc.getIncludeLoc());
     }
-    std::string file = PLocs[PLocs.size() -1].getFilename();
+
+    clang::SourceLocation includeLoc = m_SMgr.getSpellingLoc(PLocs[PLocs.size() - 1].getIncludeLoc());
+    bool invalid = true;
+    const char* includeText = m_SMgr.getCharacterData(includeLoc, &invalid);
+    assert(!invalid && "Invalid source data");
+    assert(includeText && "Cannot find #include location");
+    assert((includeText[0] == '<' || includeText[0] == '"')
+           && "Unexpected #include delimiter");
+    char endMarker = includeText[0] == '<' ? '>' : '"';
+    ++includeText;
+    const char* includeEnd = includeText;
+    while (*includeEnd != endMarker && *includeEnd) {
+      ++includeEnd;
+    }
+    assert(includeEnd && "Cannot find end of #include file name");
+
 //    assert ( file.length() != 0 && "Filename Should not be blank");
-    Out() << " __attribute__((annotate(\""
-          << file;
+    Out() << " __attribute__((annotate(\"$clingAutoload$"
+          << llvm::StringRef(includeText, includeEnd - includeText);
     if (!extra.empty())
       Out() << " " << extra;
     Out() << "\"))) ";
@@ -805,14 +821,20 @@ namespace cling {
 
         Out() << *TTP;
 
+        QualType ArgQT;
         if (Args) {
-          Out() << " = ";
-          Args->get(i).print(m_Policy, Out());
+           ArgQT = Args->get(i).getAsType();
         }
         else if (TTP->hasDefaultArgument() &&
                  !TTP->defaultArgumentWasInherited()) {
+           ArgQT = TTP->getDefaultArgument();
+        }
+        if (!ArgQT.isNull()) {
+          QualType ArgFQQT
+             = utils::TypeName::GetFullyQualifiedType(ArgQT,
+                                                      TTP->getASTContext());
           Out() << " = ";
-          Out() << TTP->getDefaultArgument().getAsString(m_Policy);
+          ArgFQQT.print(Out(), m_Policy);
         }
       }
       else if (const NonTypeTemplateParmDecl *NTTP =

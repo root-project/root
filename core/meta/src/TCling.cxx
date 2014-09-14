@@ -117,6 +117,7 @@ class TProtoClass;
 #include <stdexcept>
 #include <stdint.h>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <typeinfo>
 #include <unordered_map>
@@ -1388,13 +1389,67 @@ void TCling::RegisterModule(const char* modulename,
    if (fHeaderParsingOnDemand){
       // We now parse the forward declarations. All the classes are then modified
       // in order for them to have an external lexical storage.
-      auto compRes = fInterpreter->declare(fwdDeclsCode, &T);
+      std::string fwdDeclsCodeLessEnums;
+      {
+         // Search for enum forward decls and only declare them if no
+         // declaration exists yet.
+         std::string fwdDeclsLine;
+         std::istringstream fwdDeclsCodeStr(fwdDeclsCode);
+         std::vector<std::string> scope;
+         while (std::getline(fwdDeclsCodeStr, fwdDeclsLine)) {
+            if (fwdDeclsLine.find("namespace ") == 0) {
+               // skip leading "namespace ", trailing " {"
+               scope.push_back(fwdDeclsLine.substr(10,
+                                                   fwdDeclsLine.length() - 10 - 2));
+            } else if (fwdDeclsLine == "}") {
+               scope.pop_back();
+            } else if (fwdDeclsLine.find("enum  __attribute__((annotate(\"") == 0) {
+               clang::DeclContext* DC = 0;
+               for (auto &&aScope: scope) {
+                  DC = cling::utils::Lookup::Namespace(&fInterpreter->getSema(), aScope.c_str(), DC);
+                  if (!DC) {
+                     // No decl context means we have to fwd declare the enum.
+                     break;
+                  }
+               }
+               if (scope.empty() || DC) {
+                  // We know the scope; let's look for the enum.
+                  size_t posEnumName = fwdDeclsLine.find("\"))) ", 32);
+                  R__ASSERT(posEnumName != std::string::npos && "Inconsistent enum fwd decl!");
+                  posEnumName += 5; // skip "\"))) "
+                  while (isspace(fwdDeclsLine[posEnumName]))
+                     ++posEnumName;
+                  size_t posEnumNameEnd = fwdDeclsLine.find(" : ", posEnumName);
+                  R__ASSERT(posEnumNameEnd  != std::string::npos && "Inconsistent enum fwd decl (end)!");
+                  while (isspace(fwdDeclsLine[posEnumNameEnd]))
+                     --posEnumNameEnd;
+                  // posEnumNameEnd now points to the last character of the name.
+
+                  std::string enumName = fwdDeclsLine.substr(posEnumName,
+                                                             posEnumNameEnd - posEnumName + 1);
+
+                  if (clang::NamedDecl* enumDecl
+                      = cling::utils::Lookup::Named(&fInterpreter->getSema(),
+                                                    enumName.c_str(), DC)) {
+                     // We have an existing enum decl (forward or definition);
+                     // skip this.
+                     R__ASSERT(llvm::dyn_cast<clang::EnumDecl>(enumDecl) && "not an enum decl!");
+                     (void)enumDecl;
+                     continue;
+                  }
+               }
+            }
+            fwdDeclsCodeLessEnums += fwdDeclsLine + "\n";
+         }
+      }
+
+      auto compRes = fInterpreter->declare(fwdDeclsCodeLessEnums, &T);
       assert(cling::Interpreter::kSuccess == compRes &&
             "The forward declarations could not be compiled");
       if (compRes!=cling::Interpreter::kSuccess){
          Warning("TCling::RegisterModule",
                "Problems in compiling forward declarations for module %s: '%s'",
-               modulename, fwdDeclsCode) ;
+                 modulename, fwdDeclsCodeLessEnums.c_str()) ;
       }
       else if (T){
          // Loop over all decls in the transaction and go through them all
