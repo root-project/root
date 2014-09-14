@@ -1427,7 +1427,8 @@ void TCling::RegisterModule(const char* modulename,
          std::istringstream fwdDeclsCodeStr(fwdDeclsCode);
          std::vector<std::string> scope;
          while (std::getline(fwdDeclsCodeStr, fwdDeclsLine)) {
-            if (fwdDeclsLine.find("namespace ") == 0) {
+            if (fwdDeclsLine.find("namespace ") == 0
+                || fwdDeclsLine.find("inline namespace ") == 0) {
                // skip leading "namespace ", trailing " {"
                scope.push_back(fwdDeclsLine.substr(10,
                                                    fwdDeclsLine.length() - 10 - 2));
