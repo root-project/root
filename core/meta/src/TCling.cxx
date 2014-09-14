@@ -195,17 +195,17 @@ clang::RecordDecl* TCling__DEBUG__DCtoRecordDecl(clang::DeclContext* DC) {
    return llvm::dyn_cast<clang::RecordDecl>(DC);
 }
 void TCling__DEBUG__dump(clang::DeclContext* DC) {
-   return DC->dump();
+   return DC->dumpDeclContext();
 }
 void TCling__DEBUG__dump(clang::Decl* D) {
    return D->dump();
 }
 void TCling__DEBUG__printName(clang::Decl* D) {
-   if (clang::NamedDecl* ND = dyn_cast<NamedDecl>(D)) {
+   if (clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(D)) {
       std::string name;
       {
-         llvm::raw_string_ostream OS;
-         ND->getNameForDiagnostic(name, D->getASTContext()->getPrintingPolicy(),
+         llvm::raw_string_ostream OS(name);
+         ND->getNameForDiagnostic(OS, D->getASTContext().getPrintingPolicy(),
                                   true /*Qualified*/);
       }
       printf("%s\n", name.c_str());
