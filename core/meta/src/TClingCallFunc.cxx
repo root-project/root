@@ -442,7 +442,7 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
                  << i << "]";
       } else {
          // pointer falls back to non-pointer case; the argument preserves
-         // the "pointerness" (i.e. doesn't refernce the value).
+         // the "pointerness" (i.e. doesn't reference the value).
          callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
       }
    }
