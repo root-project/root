@@ -13,3 +13,5 @@ if(CTEST_BUILD_NAME MATCHES icc14)  #  sse tests of vc fail for icc compiler
       vc-math_sse
       vc-math_VC_LOG_ILP2_sse
       vc-math_VC_LOG_ILP_sse)
+endif()
+
