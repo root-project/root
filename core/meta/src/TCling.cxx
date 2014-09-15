@@ -2921,51 +2921,7 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
       return kFALSE;
    }
 
-   Int_t nch = strlen(name) * 2;
-   char* classname = new char[nch];
-   strlcpy(classname, name, nch);
-   char* current = classname;
-   while (*current) {
-      while (*current && *current != ':' && *current != '<') {
-         current++;
-      }
-      if (!*current) {
-         break;
-      }
-      if (*current == '<') {
-         int level = 1;
-         current++;
-         while (*current && level > 0) {
-            if (*current == '<') {
-               level++;
-            }
-            if (*current == '>') {
-               level--;
-            }
-            current++;
-         }
-         continue;
-      }
-      // *current == ':', must be a "::"
-      if (*(current + 1) != ':') {
-         Error("CheckClassInfo", "unexpected token : in %s", classname);
-         delete[] classname;
-         return kFALSE;
-      }
-      *current = '\0';
-      if (0 == strncmp(name,anonEnum,cmplen)) {
-         delete[] classname;
-         return kFALSE;
-      }
-      TClingClassInfo info(fInterpreter, classname);
-      if (!info.IsValid()) {
-         delete[] classname;
-         return kFALSE;
-      }
-      *current = ':';
-      current += 2;
-   }
-   strlcpy(classname, name, nch);
+   const char *classname = name;
 
    int storeAutoload = SetClassAutoloading(autoload);
 
@@ -2990,7 +2946,6 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
                           : cling::LookupHelper::NoDiagnostics,
                           &type,false);
    }
-   delete[] classname;
 
    if (type) {
       // If decl==0 and the type is valid, then we have a forward declaration.
