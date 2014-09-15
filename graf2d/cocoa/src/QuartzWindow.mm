@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <cassert>
+#include <vector>
 
 #include "ROOTOpenGLView.h"
 #include "QuartzWindow.h"
@@ -509,6 +510,43 @@ NSView<X11Window> *FindViewForPointerEvent(NSEvent *pointerEvent)
    }
 
    return nil;
+}
+
+#pragma mark - Downscale image ("reading color bits" on retina macs).
+
+//Hoho, we support C++11?? Let's return by value then!!!
+std::vector<unsigned char> DownscaledImageData(unsigned w, unsigned h, CGImageRef image)
+{
+   assert(w != 0 && h != 0 && "DownscaledImageData, invalid geometry");
+   assert(image != nullptr && "DonwscaledImageData, invalid parameter 'image'");
+
+   std::vector<unsigned char> result;
+   try {
+      result.resize(w * h * 4);
+   } catch (const std::bad_alloc &) {
+      //TODO: check that 'resize' has no side effects in case of exception.
+      NSLog(@"DownscaledImageData, memory allocation failed");
+      return result;
+   }
+
+   //TODO: device RGB? should it be generic?
+   const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());//[1]
+   if (!colorSpace.Get()) {
+      NSLog(@"DownscaledImageData, CGColorSpaceCreateDeviceRGB failed");
+      return result;
+   }
+
+   Util::CFScopeGuard<CGContextRef> ctx(CGBitmapContextCreateWithData(&result[0], w, h, 8,
+                                                                      w * 4, colorSpace.Get(),
+                                                                      kCGImageAlphaPremultipliedLast, NULL, 0));
+   if (!ctx.Get()) {
+      NSLog(@"DownscaledImageData, CGBitmapContextCreateWithData failed");
+      return result;
+   }
+
+   CGContextDrawImage(ctx.Get(), CGRectMake(0, 0, w, h), image);
+
+   return result;
 }
 
 #pragma mark - "Focus management" - just make another window key window.
@@ -2098,48 +2136,62 @@ void print_mask_info(ULong_t mask)
 
    assert(area.fWidth && area.fHeight && "-readColorBits:, area to copy is empty");
 
+   //int, not unsigned or something - to keep it simple.
    const NSRect visRect = [self visibleRect];
    const X11::Rectangle srcRect(int(visRect.origin.x), int(visRect.origin.y),
                                 unsigned(visRect.size.width), unsigned(visRect.size.height));
 
    if (!X11::AdjustCropArea(srcRect, area)) {
       NSLog(@"QuartzView: -readColorBits:, visible rect of view and copy area do not intersect");
-      return 0;
+      return nullptr;
    }
 
    //imageRep is autoreleased.
    NSBitmapImageRep * const imageRep = [self bitmapImageRepForCachingDisplayInRect : visRect];
    if (!imageRep) {
       NSLog(@"QuartzView: -readColorBits:, bitmapImageRepForCachingDisplayInRect failed");
-      return 0;
+      return nullptr;
    }
-
+   
    CGContextRef ctx = self.fContext; //Save old context if any.
    [self cacheDisplayInRect : visRect toBitmapImageRep : imageRep];
    self.fContext = ctx; //Restore old context.
    //
-   const unsigned char *srcData = [imageRep bitmapData];
-   //We have a source data now. Let's allocate buffer for ROOT's GUI and convert source data.
-   unsigned char *data = 0;
+   const NSInteger bitsPerPixel = [imageRep bitsPerPixel];
+   //TODO: ohhh :(((
+   assert(bitsPerPixel == 32 && "-readColorBits:, no alpha channel???");
+   const NSInteger bytesPerRow = [imageRep bytesPerRow];
+   unsigned dataWidth = bytesPerRow / (bitsPerPixel / 8);//assume an octet :(
 
+   unsigned char *srcData = nullptr;
+   std::vector<unsigned char> downscaled;
+   if ([[NSScreen mainScreen] backingScaleFactor] > 1 && imageRep.CGImage) {
+      downscaled = X11::DownscaledImageData(area.fWidth, area.fHeight, imageRep.CGImage);
+      if (downscaled.size())
+         srcData = &downscaled[0];
+      dataWidth = area.fWidth;
+   } else
+      srcData = [imageRep bitmapData];
+
+   if (!srcData) {
+      NSLog(@"QuartzView: -readColorBits:, failed to obtain backing store contents");
+      return nullptr;
+   }
+
+   //We have a source data now. Let's allocate buffer for ROOT's GUI and convert source data.
+   unsigned char *data = nullptr;
+   
    try {
       data = new unsigned char[area.fWidth * area.fHeight * 4];//bgra?
    } catch (const std::bad_alloc &) {
       NSLog(@"QuartzView: -readColorBits:, memory allocation failed");
-      return 0;
+      return nullptr;
    }
-
-   const NSInteger bitsPerPixel = [imageRep bitsPerPixel];
-   //TODO: ohhh :(((
-   assert(bitsPerPixel == 32 && "-readColorBits:, no alpha channel???");
-
-   const NSInteger bytesPerRow = [imageRep bytesPerRow];
-   const unsigned dataWidth = bytesPerRow / (bitsPerPixel / 8);//assume an octet :(
 
    unsigned char *dstPixel = data;
    const unsigned char *line = srcData + area.fY * dataWidth * 4;
    const unsigned char *srcPixel = line + area.fX * 4;
-
+      
    for (unsigned i = 0; i < area.fHeight; ++i) {
       for (unsigned j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
          dstPixel[0] = srcPixel[2];
@@ -2151,10 +2203,9 @@ void print_mask_info(ULong_t mask)
       line += dataWidth * 4;
       srcPixel = line + area.fX * 4;
    }
-
+   
    return data;
 }
-
 
 //______________________________________________________________________________
 - (void) setFBackgroundPixmap : (QuartzImage *) pixmap
