@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *rflx*
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += headerParsingOnDemand
+TEST_TARGETS += headerParsingOnDemand scopedEnums
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -68,4 +68,12 @@ headerParsingOnDemand.log: FullheaderParsingOnDemand.log
 headerParsingOnDemand: headerParsingOnDemand.log
 	$(TestDiff)
 
+scopedEnums.log: libscopedEnums_dictrflx.$(DllSuf)
+
+# We chase the Autoparsing message
+trimmedScopedEnums.log: scopedEnums.log
+	$(CMDECHO) cat scopedEnums.log |grep -v TRint|grep -v "loaded library" > trimmedScopedEnums.log 2>&1
+
+scopedEnums: trimmedScopedEnums.log
+	$(TestDiff)
 
