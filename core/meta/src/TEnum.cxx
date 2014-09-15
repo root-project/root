@@ -157,12 +157,12 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          return en;
       }
 
-      if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
-         theEnum = findEnumInList(scope->GetListOfEnums(sa & kInterpLookup), enName);
+      if (auto tClassScope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
+         theEnum = findEnumInList(tClassScope->GetListOfEnums(sa & kInterpLookup), enName);
       }
       // Check if the scope is still a protoclass
-      else if (auto scope = static_cast<TProtoClass *>((gClassTable->GetProtoNorm(scopeName)))) {
-         auto listOfEnums = scope->GetListOfEnums();
+      else if (auto tProtoClassscope = static_cast<TProtoClass *>((gClassTable->GetProtoNorm(scopeName)))) {
+         auto listOfEnums = tProtoClassscope->GetListOfEnums();
          if (listOfEnums) theEnum = findEnumInList(listOfEnums, enName);
       }
       return theEnum;
