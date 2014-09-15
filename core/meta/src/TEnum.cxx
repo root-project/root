@@ -133,7 +133,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
    TEnum *theEnum = nullptr;
 
    // Wrap some gymnastic around the enum finding. The special treatment of the
-   // ListOfEnums objects is locaed in this routine.
+   // ListOfEnums objects is located in this routine.
    auto findEnumInList = [sa](const TCollection * l, const char * enName) {
       TObject *obj;
       if (sa & kInterpLookup) {
