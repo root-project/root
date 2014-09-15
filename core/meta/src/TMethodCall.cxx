@@ -467,6 +467,12 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
    // Since finding the return type is expensive the result is cached.
 
    if ( fRetType == kNone) {
+      R__LOCKGUARD2(gCINTMutex);
+
+      if ( fRetType != kNone) {
+         return fRetType;
+      }
+
       TFunction *func = GetMethod();
       if (func == 0) {
          fRetType = kOther;
