@@ -17,6 +17,7 @@ set(TestSource
     testRootFinder.cxx
     testSampleQuantiles.cxx
     kDTreeTest.cxx 
+    testkdTreeBinning.cxx
     newKDTreeTest.cxx 
     binarySearchTime.cxx
     stdsort.cxx
