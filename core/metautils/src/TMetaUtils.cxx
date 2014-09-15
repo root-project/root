@@ -4071,7 +4071,7 @@ bool ROOT::TMetaUtils::IsOfType(const clang::CXXRecordDecl &cl, const std::strin
    if (! thisDecl){
       Error("IsOfType","Record decl of type %s not found in the AST.", typ.c_str());
       return false;
-      }
+   }
 
    // Now loop on all previous decls to seek a match
    const clang::CXXRecordDecl *mostRecentDecl = thisDecl->getMostRecentDecl();
