@@ -123,7 +123,8 @@ namespace ROOT
 			    const int &noisy, const int &nrestarts,
 			    const double &ftarget,
 			    const std::string &fplot,
-			    const bool &withnumgradient);
+			    const bool &withnumgradient,
+			    const bool &mtfeval);
       
       /** 
 	  method to perform the minimization. 
