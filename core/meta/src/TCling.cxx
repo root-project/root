@@ -68,9 +68,9 @@
 #include "TListOfEnums.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
+#include "TProtoClass.h"
 
 #include "TFile.h"
-class TProtoClass;
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -897,13 +897,41 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
       if (result == tname) result.clear();
       return true;
    }
-   THashList *enumTable = dynamic_cast<THashList*>( gROOT->GetListOfEnums() );
-   if (enumTable->THashList::FindObject( inner ) ) {
-      // This is a known enum.
-      return true;
+
+   // Check if the name is an enumerator
+   const auto lastPos = strrchr(inner, ':');
+   if (lastPos != nullptr)   // Main switch: case 1 - scoped enum, case 2 global enum
+   {
+      // We have a scope
+      // All of this C gymnastic is here to get the scope name and to avoid
+      // allocations on the heap
+      const auto enName = lastPos + 1;
+      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)inner) / sizeof(decltype(*lastPos)) - 1;
+      char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
+      strncpy(scopeName, inner, scopeNameSize);
+      scopeName[scopeNameSize] = '\0';
+      // Check if the scope is in the list of classes
+      if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
+         auto enumTable = dynamic_cast<const THashList *>(scope->GetListOfEnums(false));
+         if (enumTable && enumTable->THashList::FindObject(enName)) return true;
+      }
+      // It may still be in one of the loaded protoclasses
+      else if (auto scope = static_cast<TProtoClass *>(gClassTable->GetProtoNorm(scopeName))) {
+         auto listOfEnums = scope->GetListOfEnums();
+         if (listOfEnums) { // it could be null: no enumerators in the protoclass
+            auto enumTable = dynamic_cast<const THashList *>(listOfEnums);
+            if (enumTable && enumTable->THashList::FindObject(enName)) return true;
+         }
+      }
+   } else
+   {
+      // We don't have any scope: this could only be a global enum
+      auto enumTable = dynamic_cast<const THashList *>(gROOT->GetListOfEnums());
+      if (enumTable && enumTable->THashList::FindObject(inner)) return true;
    }
 
-   if (gCling->GetClassSharedLibs( inner )) {
+   if (gCling->GetClassSharedLibs(inner))
+   {
       // This is a class name.
       return true;
    }

@@ -42,30 +42,44 @@ class TEnum : public TDictionary {
 
 private:
    THashList fConstantList;     //list of constants the enum type
-   void*     fInfo;             //!interpreter implementation provided declaration
-   TClass*   fClass;            //!owning class
+   void     *fInfo;             //!interpreter implementation provided declaration
+   TClass   *fClass;            //!owning class
 
 public:
 
+   enum ESearchAction {kNone                 = 0,
+                       kAutoload             = 1,
+                       kInterpLookup         = 2,
+                       kALoadAndInterpLookup = 3
+                      };
+
    TEnum(): fInfo(0) {}
-   TEnum(const char* name, void* info, TClass* cls);
+   TEnum(const char *name, void *info, TClass *cls);
    virtual ~TEnum();
 
-   void                  AddConstant(TEnumConstant* constant);
-   TClass*               GetClass() const { return fClass; }
-   const TSeqCollection* GetConstants() const { return &fConstantList; }
-   const TEnumConstant*  GetConstant(const char* name) const {
-      return (TEnumConstant*) fConstantList.FindObject(name);
+   void                  AddConstant(TEnumConstant *constant);
+   TClass               *GetClass() const {
+      return fClass;
    }
-   DeclId_t              GetDeclId() const { return (DeclId_t)fInfo; }
+   const TSeqCollection *GetConstants() const {
+      return &fConstantList;
+   }
+   const TEnumConstant  *GetConstant(const char *name) const {
+      return (TEnumConstant *) fConstantList.FindObject(name);
+   }
+   DeclId_t              GetDeclId() const {
+      return (DeclId_t)fInfo;
+   }
    Bool_t                IsValid();
    Long_t                Property() const;
-   void                  SetClass(TClass* cl) { fClass = cl; }
+   void                  SetClass(TClass *cl) {
+      fClass = cl;
+   }
    void                  Update(DeclId_t id);
-   static TEnum*         GetEnum(const std::type_info& ti);
-   static TEnum*         GetEnum(const char* enumName);
+   static TEnum         *GetEnum(const std::type_info &ti, ESearchAction sa = kALoadAndInterpLookup);
+   static TEnum         *GetEnum(const char *enumName, ESearchAction sa = kALoadAndInterpLookup);
 
-   ClassDef(TEnum,2)  //Enum type class
+   ClassDef(TEnum, 2) //Enum type class
 };
 
 #endif
