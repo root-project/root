@@ -2921,6 +2921,17 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
       return kFALSE;
    }
 
+   // Avoid the double search below in case the name is a fundamental type
+   // or typedef to a fundamental type.
+   THashTable *typeTable = dynamic_cast<THashTable*>( gROOT->GetListOfTypes() );
+   TDataType *fundType = (TDataType *)typeTable->THashTable::FindObject( name );
+
+   if (fundType && fundType->GetType() < TVirtualStreamerInfo::kObject
+       && fundType->GetType() > 0) {
+      // Fundamental type, no a class.
+      return kFALSE;
+   }
+
    const char *classname = name;
 
    int storeAutoload = SetClassAutoloading(autoload);
