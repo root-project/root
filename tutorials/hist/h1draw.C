@@ -17,12 +17,7 @@ void h1draw()
    // or $PWD/hsimple.root
    // We draw one histogram in different formats
    //Author: Rene Brun
-   
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
-   dir.ReplaceAll("h1draw.C","../hsimple.C");
-   dir.ReplaceAll("/./","/");
-   if (gBenchmark->GetBench("hsimple") < 0) gInterpreter->LoadMacro(dir.Data());
-   TFile *example = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
+   TFile *example = TFile::Open("hsimple.root");
    if (!example) return;
    
    example->ls();
