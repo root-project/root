@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <cassert>
+#include <vector>
 
 #include "ROOTOpenGLView.h"
 #include "QuartzWindow.h"
