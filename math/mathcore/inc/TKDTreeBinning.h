@@ -30,6 +30,7 @@ private:
    Double_t** fData; // The data from which a KDTree partition is computed for binning
    std::vector<Double_t> fBinMinEdges; // The minimum values for the bins' edges for each dimension
    std::vector<Double_t> fBinMaxEdges; // The maximum values for the bins' edges for each dimension
+   std::vector<UInt_t>   fIndices;     // Index of the bins in the kd-tree (needed when bins are sorted)
    TKDTreeID* fDataBins; // The binning inner structure.
    UInt_t fNBins; // The number of bins
    UInt_t fDim; // The data dimension
@@ -37,8 +38,8 @@ private:
    std::vector<std::pair<Double_t, Double_t> > fDataThresholds; // Minimum and maximum data values.
    std::vector<std::vector<std::pair<Bool_t, Bool_t> > > fCheckedBinEdges; // Auxiliary structure for readjusting the bin edges. Flags if the bin edge was processed in  the algorithm
    std::vector<std::map<Double_t, std::vector<UInt_t> > > fCommonBinEdges; // Auxiliary structure for readjusting the bin edges. Keeps the common bin boundaries
-   Bool_t fIsSorted; // Flags if the bin edges are sorted densitywise
-   Bool_t fIsSortedAsc; // Flags if the bin edges are sorted densitywise in ascending order
+   Bool_t fIsSorted; // Flags if the bin edges are sorted densitywise (or by bin endges in case of 1-dim )
+   Bool_t fIsSortedAsc; // Flags if the bin edges are sorted densitywise (or by bin-edge for 1D) in ascending order
    std::vector<UInt_t> fBinsContent; // Holds the contents of the bins
    struct CompareAsc; // Predicate for ascending sort
    friend struct CompareAsc;
@@ -89,6 +90,7 @@ public:
    const Double_t* GetOneDimBinEdges() const;
    const Double_t* SortOneDimBinEdges(Bool_t sortAsc = kTRUE); 
    void FillBinData(ROOT::Fit::BinData & data) const;
+   UInt_t FindBin(const Double_t * point) const; 
 
    ClassDef(TKDTreeBinning, 1)
 
