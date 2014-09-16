@@ -381,10 +381,12 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
       // calling G__TypeInfo ti(inside.c_str());
       // might fail because CINT does not known the nesting
       // scope, so let's first look for an emulated class:
+
+      // Why the double tap?
       fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
       if (!fType) TClass::GetClass(intype.c_str(),kTRUE,silent);
 
-      if (fType && !fType->IsLoaded()) {
+      if (fType) {
          if (intype != inside) {
             fCase |= kIsPointer;
             fSize = sizeof(void*);
