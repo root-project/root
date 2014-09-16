@@ -52,7 +52,7 @@ ClassImp(TMVA::DecisionTreeNode)
 
 TMVA::MsgLogger* TMVA::DecisionTreeNode::fgLogger = 0;
 bool     TMVA::DecisionTreeNode::fgIsTraining = false;
-
+UInt_t   TMVA::DecisionTreeNode::fgTmva_Version_Code = 0;
 //_______________________________________________________________________
 TMVA::DecisionTreeNode::DecisionTreeNode()
    : TMVA::Node(),
@@ -151,12 +151,9 @@ Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
    Bool_t result;
    // first check if the fisher criterium is used or ordinary cuts:
    if (GetNFisherCoeff() == 0){
-      
+   
       result = (e.GetValue(this->GetSelector()) >= this->GetCutValue() );
-      result = !( (this->GetCutValue() - e.GetValue(this->GetSelector()) ) >= std::numeric_limits<double>::epsilon() );
-      //      if ( TMath::Abs(e.GetValue(this->GetSelector()) - this->GetCutValue()) < 0.2  && !result )
-      //      std::cout << e.GetValue(this->GetSelector()) << "  ? >= ? " << this->GetCutValue() << " result="<<result << std::endl;
-
+   
    }else{
       
       Double_t fisher = this->GetFisherCoeff(fFisherCoeff.size()-1); // the offset
@@ -264,7 +261,7 @@ void TMVA::DecisionTreeNode::PrintRec(std::ostream& os) const
 Bool_t TMVA::DecisionTreeNode::ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code )
 {
    // Read the data block
-
+   fgTmva_Version_Code=tmva_Version_Code;
    string tmp;
 
    Float_t cutVal, cutType, nsig, nbkg, nEv, nsig_unweighted, nbkg_unweighted, nEv_unweighted;
