@@ -10,7 +10,7 @@
 //
 // ------------------------------------------------------------------------
 
-#include <math.h>
+#include <cmath>
 
 #include "TKDTreeBinning.h"
 #include "TH2D.h"
@@ -49,7 +49,7 @@ void testkdTreeBinning() {
       for (UInt_t j = 0; j < DATASZ; ++j)
          smp[DATASZ * i + j] = r.Gaus(mu[i], sig[i]);
 
-   UInt_t h1bins = (UInt_t) sqrt(NBINS);
+   UInt_t h1bins = (UInt_t) std::sqrt(double(NBINS));
 
    TH2D* h1 = new TH2D("h1BinTest", "Regular binning", h1bins, -5., 5., h1bins, -5., 5.);
    for (UInt_t j = 0; j < DATASZ; ++j)
