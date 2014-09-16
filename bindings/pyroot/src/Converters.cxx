@@ -79,7 +79,8 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject*, void* )               \
 static inline Bool_t VerifyPyBool( PyObject* pyobject )
 {
    Long_t l = PyLong_AsLong( pyobject );
-   if ( ! ( l == 0 || l == 1 ) ) {
+// fail to pass float -> bool; the problem is rounding (0.1 -> 0 -> False)
+   if ( ! ( l == 0 || l == 1 ) || PyFloat_Check( pyobject) ) {
       PyErr_SetString( PyExc_ValueError, "boolean value should be bool, or integer 1 or 0" );
       return kFALSE;
    }
