@@ -142,6 +142,7 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
 endif()
 
 #---Configure Testing using CTest----------------------------------------------------------------
+configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 if(testing)
   if(gnuinstall)
     message(FATAL_ERROR "You cannot enable to run the tests in the build directory (testing=ON) and at the same time select a GNU style installation (gnuinstall=ON). This is because the code is built with the final installation location (CMAKE_INSTALL_PREFIX) for many ancillary files (tutorials, etc, icons, macros, etc.) and these are not available before installation. Tests can be run against the installation once is completed. See the instructions in the web")
