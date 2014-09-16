@@ -4675,6 +4675,9 @@ static void addDeclsToTransactionForType(const clang::Type* typ,
          case clang::TemplateArgument::Pack:
             addDeclsToTransactionForTemplateName(TA.getAsTemplateOrTemplatePattern(), theTransaction, addedDecls);
             break;
+         case clang::TemplateArgument::Expression:
+            // Nothing to fwd declare, hopefully...
+            break;
          default:
             ROOT::TMetaUtils::Error("addDeclsToTransactionForType", "Unexpected TemplateSpecializationType %s\n",
                                     typ->getTypeClassName());
