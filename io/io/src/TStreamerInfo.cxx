@@ -3005,7 +3005,7 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
 
    TIter next(GetElements());
    TStreamerElement *el;
-   while ( (el=(TStreamerElement*)next()) && !TClassEdit::IsSTLCont(name) { // loop over bases if not stl
+   while ( (el=(TStreamerElement*)next()) && !TClassEdit::IsSTLCont(name)) { // loop over bases if not stl
       if (el->IsBase()) {
          name = el->GetName();
          il = name.Length();
