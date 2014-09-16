@@ -16,7 +16,7 @@ using namespace std;
 
 int run()
 {
-   bool result = 0;
+   int result = 0;
 
    TROOT s("simple", "Example of creation of a tree");
    TFile *h = new TFile("Event.root", "RECREATE", "ROOT file");
@@ -52,7 +52,8 @@ int run()
       result = 1;
    } else if (hist0->GetMean()!=4.5) {
       cerr << "Histograms for f.i improperly created mean is "
-      << hist0->GetMean() << " instead of 4.5" << endl;
+           << hist0->GetMean() << " instead of 4.5" << endl;
+      result = 2;
    }
 
    tree->Draw("f[].i>>hist1");
@@ -62,7 +63,8 @@ int run()
       result = 1;
    } else if (hist1->GetMean()!=4.5) {
       cerr << "Histograms for f[].i improperly created mean is "
-      << hist1->GetMean() << " instead of 4.5" << endl;
+           << hist1->GetMean() << " instead of 4.5" << endl;
+      result = 2;
    }
 
    tree->Draw("f>>hist2");
@@ -72,7 +74,8 @@ int run()
       result = 1;
    } else if (hist2->GetMean()!=9) {
       cerr << "Histograms for f[].i improperly created mean is "
-      << hist2->GetMean() << " instead of 9" << endl;
+           << hist2->GetMean() << " instead of 9" << endl;
+      result = 2;
    }
 
    h->Close();
