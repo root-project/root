@@ -382,9 +382,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
       // might fail because CINT does not known the nesting
       // scope, so let's first look for an emulated class:
 
-      // Why the double tap?
       fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
-      if (!fType) TClass::GetClass(intype.c_str(),kTRUE,silent);
 
       if (fType) {
          if (intype != inside) {
@@ -452,20 +450,22 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
                   fCase |= kIsPointer;
                   fSize = sizeof(void*);
                }
-               fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
-               if (fType) {
-                  fCase  |= kIsClass;
-                  fCtor   = fType->GetNew();
-                  fDtor   = fType->GetDestructor();
-                  fDelete = fType->GetDelete();
-               }
-               else {
+               // Since we already search for GetClass earlier, this should
+               // never be true.
+//               fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
+//               if (fType) {
+//                  fCase  |= kIsClass;
+//                  fCtor   = fType->GetNew();
+//                  fDtor   = fType->GetDestructor();
+//                  fDelete = fType->GetDelete();
+//               }
+//               else {
                   // either we have an Emulated enum or a really unknown class!
                   // let's just claim its an enum :(
                   fCase = kIsEnum;
                   fSize = sizeof(Int_t);
                   fKind = kInt_t;
-               }
+//               }
             }
             else {
                Long_t prop = gCling->TypeInfo_Property(ti);
@@ -475,14 +475,18 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
                if ( prop&kIsStruct ) {
                   prop |= kIsClass;
                }
-               if ( prop&kIsClass ) {
-                  fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
-                  R__ASSERT(fType);
-                  fCtor   = fType->GetNew();
-                  fDtor   = fType->GetDestructor();
-                  fDelete = fType->GetDelete();
-               }
-               else if ( prop&kIsFundamental ) {
+               // Since we already searched GetClass earlier, this should
+               // never be true.
+               R__ASSERT(! (prop&kIsClass) && "Impossible code path" );
+//               if ( prop&kIsClass ) {
+//                  fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
+//                  R__ASSERT(fType);
+//                  fCtor   = fType->GetNew();
+//                  fDtor   = fType->GetDestructor();
+//                  fDelete = fType->GetDelete();
+//               }
+//               else
+               if ( prop&kIsFundamental ) {
                   fundType = gROOT->GetType( intype.c_str() );
                   if (fundType==0) {
                      if (intype != "long double") {
