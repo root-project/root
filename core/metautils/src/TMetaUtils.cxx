@@ -1587,7 +1587,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    //--------------------------------------------------------------------------
    if( rulesIt1 != ROOT::gReadRules.end() ) {
       int i = 0;
-      finalString << "\n" << "   // Schema evolution read functions" << "\n";
+      finalString << "\n   // Schema evolution read functions\n";
       std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt1->second.begin();
       while( rIt != rulesIt1->second.end() ) {
 
@@ -1600,7 +1600,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          }
 
          //---------------------------------------------------------------------
-         // Write the conversion function if necassary
+         // Write the conversion function if necessary
          //---------------------------------------------------------------------
          if( rIt->find( "code" ) != rIt->end() ) {
             WriteReadRuleFunc( *rIt, i++, mappedname, nameTypeMap, finalString );
