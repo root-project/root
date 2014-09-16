@@ -392,10 +392,13 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
 
                   // creates new Attributes object and pushes it back in the vector
                   // then Sets the variables in the initial state - if there are other attributes to be read
-                  if (attr_name == "proto_pattern") {
-                     //int pos = attr_value.find_last_of("(");
-                     printf("XMLReader::GetAttributes(): proto_pattern selection not implemented yet!\n");
-                  }
+
+                  // For the moment the proto pattern is not implemented. The current ROOT6 architecture
+                  // relies on ABI compatibility for calling functions, no stub functions are present.
+                  // The concept of selecting/excluding functions is not defined.
+//                   if (attr_name == "proto_pattern") {
+//                      printf("XMLReader::GetAttributes(): proto_pattern selection not implemented yet!\n");
+//                   }
                   ROOT::TMetaUtils::Info(0, "*** Attribute: %s = \"%s\"\n", attr_name.c_str(), attr_value.c_str());
                   out.emplace_back(attr_name, attr_value);
                   attr_name = "";
