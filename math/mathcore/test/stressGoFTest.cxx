@@ -5,8 +5,8 @@
 #include "TSystem.h"
 #include "TStopwatch.h"
 
+#ifdef R__HAS_MATHMORE
 #include "Math/GSLRndmEngines.h"
-#if not defined(__CINT__)
 #include "Math/Random.h"
 #endif
 
@@ -161,7 +161,13 @@ struct GoFTStress {
    }
    
    Int_t UnitTest3() {
+
       std::cout << "UNIT TEST 3" << std::endl;
+
+#ifndef R__HAS_MATHMORE
+      std::cout << "SKIPPED (Mathmore is not present) " << std::endl;
+      return 0; 
+#else
       
       UInt_t nEvents = 1000;
       UInt_t nsmps = 1;
@@ -199,6 +205,7 @@ struct GoFTStress {
    
       delete goft;
       return result;
+#endif      
    }
    
    Int_t UnitTest4() {
