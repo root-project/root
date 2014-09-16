@@ -3566,7 +3566,7 @@ static void KeepNParams(clang::QualType& normalizedType,
                         thisArgQualType,
                         interp,
                         normCtxt);
-            mightHaveChanged = (thisNormQualType != thisArgQualType);
+            mightHaveChanged |= (thisNormQualType != thisArgQualType);
             NormTArg = TemplateArgument(thisNormQualType);
          }
          argsToKeep.push_back(NormTArg);
