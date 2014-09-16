@@ -3307,7 +3307,7 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    if (!ttpdPtr->hasDefaultArgument()) return false; // we should not be here in this case, but we protect us.
 
    // Try the fast solution
-   const QualType tParQualType = ttpdPtr->getDefaultArgument();
+   QualType tParQualType = ttpdPtr->getDefaultArgument();
    const QualType tArgQualType = tArg.getAsType();
 
    // Now the equality tests for non template specialisations.
@@ -3325,6 +3325,13 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    // So:
 
    // Take the template out of the parameter
+
+   const clang::ElaboratedType* etype
+      = llvm::dyn_cast<clang::ElaboratedType>(tParQualType.getTypePtr());
+   while (etype) {
+      tParQualType = clang::QualType(etype->getNamedType().getTypePtr(),0);
+      etype = llvm::dyn_cast<clang::ElaboratedType>(tParQualType.getTypePtr());
+   }
 
    const TemplateSpecializationType* tst =
             llvm::dyn_cast<TemplateSpecializationType>(tParQualType.getTypePtr());
