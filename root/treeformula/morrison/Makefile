@@ -22,8 +22,11 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 #ArraySyntax: Event.root
 #	@echo built
 
-ArraySyntax: main_C.$(DllSuf)  $(ROOTCORELIBS) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q run.C > ArraySyntax.log
+ArraySyntax.log: main_C.$(DllSuf)  $(ROOTCORELIBS) $(ROOTV)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q run.C > ArraySyntax.log 2>&1
+
+ArraySyntax: ArraySyntax.log
+	$(TestDiff)
 
 #main$(ExeSuf) $(ROOT_LOC)/lib/libTreePlayer.$(DllSuf)
 #	$(CMDECHO) ./main
