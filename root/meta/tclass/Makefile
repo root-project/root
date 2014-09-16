@@ -20,6 +20,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
+include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 myclass.root: RunMyClass_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q RunMyClass.C+ > myclass_root.log
@@ -49,4 +50,6 @@ execInterpClassNew.log: classlib_cxx.$(DllSuf)
 execReadTmplt.clog: execTmpltD.success execTmpltD32.success 
 
 execState.log: libState_cxx.$(DllSuf)
+
+execSimpleVector.log: libsimpleVector_dictrflx.$(DllSuf)
 
