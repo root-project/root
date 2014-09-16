@@ -1617,7 +1617,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    //--------------------------------------------------------------------------
    if( rulesIt2 != ROOT::gReadRawRules.end() ) {
       int i = 0;
-      finalString << "\n << ";   // Schema evolution read raw functions << "\n";
+      finalString << "\n   // Schema evolution read raw functions\n";
       std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt2->second.begin();
       while( rIt != rulesIt2->second.end() ) {
 
