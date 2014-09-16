@@ -599,8 +599,10 @@ if(builtin_xrootd)
   set(xrootd_version 3.3.6)
   set(xrootd_versionnum 300030006)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
-  string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                        # Otherwise it produces tones of warnings
-  string(REPLACE "-W " "" __cxxflags "${__cxxflags} -Wno-deprecated-declarations -Wno-duplicate-decl-specifier")
+  string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
+  string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
+  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-duplicate-decl-specifier)
+  ROOT_ADD_CXX_FLAG(__cxxflags -Wno-deprecated-declarations)
   ExternalProject_Add(
     XROOTD
     URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
@@ -721,9 +723,12 @@ if(davix OR builtin_davix)
     set(DAVIX_VERSION 0.3.6)
     message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
     string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                      # Otherwise it produces tones of warnings
-    string(REPLACE "-W " "" __cxxflags "${__cxxflags} -Wno-unused-const-variable")
+    string(REPLACE "-W " "" __cxxflags "${__cxxflags}")
     string(REPLACE "-Wall " "" __cflags "${CMAKE_C_FLAGS}")                          # Otherwise it produces tones of warnings
-    string(REPLACE "-W " "" __cflags "${__cflags} -Wno-format -Wno-implicit-function-declaration")
+    string(REPLACE "-W " "" __cflags "${__cflags}")
+    ROOT_ADD_CXX_FLAG(__cxxflags -Wno-unused-const-variable)
+    ROOT_ADD_C_FLAG(__cflags -Wno-format)
+    ROOT_ADD_C_FLAG(__cflags -Wno-implicit-function-declaration)
     ExternalProject_Add(
       DAVIX
       PREFIX DAVIX

@@ -64,6 +64,7 @@ endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
 #---Check for cxx11 option------------------------------------------------------------
 if(cxx11)
   CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
