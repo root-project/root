@@ -119,8 +119,8 @@ public:
 /*
   The Anderson-Darling K-Sample Test algorithm is described and taken from 
   http://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/andeksam.htm
-  and described and taken from (1)
-  Scholz F.W., Stephens M.A. (1987), K-sample Anderson-Darling Tests, Journal of the American Statistical Association, 82, 918–924. (2-samples variant implemented)
+  and described and taken from
+   (1) Scholz F.W., Stephens M.A. (1987), K-sample Anderson-Darling Tests, Journal of the American Statistical Association, 82, 918–924. (2-samples variant implemented)
 */ void AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) const;
    Double_t AndersonDarling2SamplesTest(const Char_t* option = "p") const; // Returns default p-value; option "t" returns the test statistic value "A2"
 
@@ -152,7 +152,15 @@ public:
 
    // The class's unary functions
    void operator()(ETestType test, Double_t& pvalue, Double_t& testStat) const;
-   Double_t operator()(ETestType test = kAD, const Char_t* option = "p") const; // Returns default Anderson Darling 1-Sample Test and default p-value; option "t" returns the test statistic value specific to the test type
+
+   // Returns default Anderson Darling 1-Sample Test and default p-value; option "t" returns the test statistic value
+   // specific to the test type
+   Double_t operator()(ETestType test = kAD, const Char_t* option = "p") const; 
+ 
+   // Computation of the K-Sample Anderson-Darling Test's p-value as described in (1) 
+   // given a normalized test statistic. The first variant described in the paper is used 
+   static Double_t PValueADKSamples(UInt_t nsamples, Double_t A2 ); 
+ 
 
 private:
   
@@ -183,15 +191,11 @@ private:
    Double_t LogNormalCDF(Double_t x) const;
    Double_t GaussianCDF(Double_t x) const;
    Double_t ExponentialCDF(Double_t x) const;
-  
-   Double_t GetSigmaN(UInt_t N) const; // Computation of sigma_N as described in (1) 
-  
-   Double_t InterpolatePValues(Double_t dA2, Int_t bin) const; // Linear interpolation used in GoFTest::PValueAD2Samples
-  
-   Double_t PValueAD2Samples(Double_t& A2, UInt_t N) const; // Computation of the 2-Sample Anderson-Darling Test's p-value as described in (1)
-  
-   Double_t PValueAD1Sample(Double_t A2) const; // Computation of the 1-Sample Anderson-Darling Test's p-value 
-    
+
+   Double_t GetSigmaN(UInt_t N) const; // Computation of sigma_N as described in (1)
+
+   Double_t PValueAD1Sample(Double_t A2) const; // Computation of the 1-Sample Anderson-Darling Test's p-value
+
    void LogSample(); // Applies the logarithm to the sample when the specified distribution to test is LogNormal
     
    void SetSamples(std::vector<const Double_t*> samples, const std::vector<UInt_t> samplesSizes);
