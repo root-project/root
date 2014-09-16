@@ -6,4 +6,5 @@
 . PyROOT_overloadtests.py::TestClassOVERLOADS::()::test06_double_int_overloads
 . PyROOT_overloadtests.py::TestClassOVERLOADS::()::test07_mean_overloads
 . PyROOT_overloadtests.py::TestClassOVERLOADS::()::test08_templated_mean_overloads
+. PyROOT_overloadtests.py::TestClassOVERLOADS::()::test09_more_builtin_overloads
 

@@ -183,6 +183,29 @@ class TestClassOVERLOADS:
             a = array.array(l, numbers)
             assert round(cmean(len(a), a) - mean, 8) == 0
 
+    def test09_more_builtin_overloads(self):
+        """Overloads on bool/int/double"""
+
+        import cppyy
+        d = cppyy.gbl.MoreBuiltinOverloads()
+
+        assert d.method(0.0)    == "double"
+        assert d.method(0.1234) == "double"
+        assert d.method(1234)   == "int"
+        assert d.method(-1234)  == "int"
+        assert d.method(True)   == "bool"
+        assert d.method(False)  == "bool"
+
+        # allow bool -> int
+        assert d.method2(True)  == "int"
+
+        # allow int(0) and int(1) -> bool (even over int)
+        assert d.method3(0)     == "bool"
+        assert d.method3(1)     == "bool"
+
+        # do not allow 0.0 -> bool
+        raises(ValueError, d.method3, 0.0)
+
 
 ## actual test run
 if __name__ == '__main__':

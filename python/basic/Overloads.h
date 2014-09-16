@@ -105,6 +105,17 @@ public:
 
 
 //===========================================================================
+class MoreBuiltinOverloads {
+public:
+    std::string method(int arg);
+    std::string method(double arg);
+    std::string method(bool arg);
+    std::string method2(int arg);
+    std::string method3(bool arg);
+};
+
+
+//===========================================================================
 double calc_mean(long n, const float* a);
 double calc_mean(long n, const double* a);
 double calc_mean(long n, const int* a);

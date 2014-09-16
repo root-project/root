@@ -62,6 +62,14 @@ std::string MoreOverloads2::call(const OlDD&, int) { return "OlDD&"; }
 
 
 //===========================================================================
+std::string MoreBuiltinOverloads::method(int arg)    { return "int"; }
+std::string MoreBuiltinOverloads::method(double arg) { return "double"; }
+std::string MoreBuiltinOverloads::method(bool arg)   { return "bool"; }
+std::string MoreBuiltinOverloads::method2(int arg)   { return "int"; }
+std::string MoreBuiltinOverloads::method3(bool arg)  { return "bool"; }
+
+
+//===========================================================================
 double calc_mean(long n, const float* a)  { return calc_mean_templ<float>(n, a); }
 double calc_mean(long n, const double* a) { return calc_mean_templ<double>(n, a); }
 double calc_mean(long n, const int* a)    { return calc_mean_templ<int>(n, a); }
