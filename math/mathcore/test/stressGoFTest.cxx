@@ -17,6 +17,8 @@
 #include <cassert>
 
 /*N.B.: The tests' expected values (expectedDn and expectedA2) were computed on Pcphsft54.cern.ch i386 GNU/Linux computer (slc4_ia32_gcc34)
+
+  LM. (16/9/14)  Expected values for AD2 test have been computed with R kSamples package
 */
 struct GoFTStress {
 
@@ -88,6 +90,7 @@ struct GoFTStress {
    /*
       Data set adapted from the paper (1)
       "K-Sample Anderson-Darling Tests of Fit for continuous and discrete cases" by Scholz and Stephens
+      values of expected A2 taken by running R kSamples code
    */
       const Double_t smp1[smpSize1] = {194, 15, 41, 29, 33, 181, 413, 14, 58, 37, 100, 65, 9, 169, 447, 18, 4, 36, 201, 118, 34, 31, 18, 18, 67, 57, 62, 7, 22, 34, 90, 10, 60, 186, 61, 49, 14, 24, 56, 20, 79, 84, 44, 59, 29, 118, 25, 156, 310, 76, 26, 44, 23, 62, 130, 208, 70, 101, 208, 74, 57, 48, 29, 502, 12, 70, 21, 29, 386, 59, 27};
 
@@ -99,11 +102,11 @@ struct GoFTStress {
    //     Double_t pvalueAD = goft->AndersonDarling2SamplesTest();
       Double_t pvalueAD = (*goft)(ROOT::Math::GoFTest::kAD2s);
 
-      Double_t expectedA2_akN = 1.58334 ; // A2_akN in (1)
+      Double_t expectedA2_akN = 1.5686 ; // A2_akN in (1)
 
       Double_t sigmaN = 0.754539;    // sigmaN in (1)
 
-      Double_t zScore = 0.773108;    // zScore in (1)
+      Double_t zScore = 0.75360;    // zScore in (1)
 
       Int_t result = PrintResultAD2Samples(nsmps, A2, expectedA2_akN, sigmaN, zScore, pvalueAD);
 
@@ -137,11 +140,11 @@ struct GoFTStress {
       Double_t A2 = (*goft)(ROOT::Math::GoFTest::kAD2s, "t");
       Double_t pvalueAD = goft->AndersonDarling2SamplesTest();
 
-      Double_t expectedA2_akN = 4.5735; // unstandardized A2_akN in (1)
+      Double_t expectedA2_akN = 4.5516; // unstandardized A2_akN in (1) (values verified and obtained with R kSamples )
 
-      Double_t sigmaN = 0.719388;   // sigmaN in (1)
+      Double_t sigmaN = 0.71939;   // sigmaN in (1)
 
-      Double_t zScore = 4.96748;    // zScore in (1)
+      Double_t zScore = 4.9369;    // zScore in (1) (version 1)
 
       Int_t result = PrintResultAD2Samples(nsmps, A2, expectedA2_akN, sigmaN, zScore, pvalueAD);
 
