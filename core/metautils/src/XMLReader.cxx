@@ -394,7 +394,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
                   // then Sets the variables in the initial state - if there are other attributes to be read
                   if (attr_name == "proto_pattern") {
                      //int pos = attr_value.find_last_of("(");
-                     printf("NOT IMPLEMENTED YET!\n");
+                     printf("XMLReader::GetAttributes(): proto_pattern selection not implemented yet!\n");
                   }
                   ROOT::TMetaUtils::Info(0, "*** Attribute: %s = \"%s\"\n", attr_name.c_str(), attr_value.c_str());
                   out.emplace_back(attr_name, attr_value);
