@@ -819,7 +819,8 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
    }
 
 // downcast to real class for object returns
-   if ( clActual && klass != clActual ) {
+   if ( clActual && klass != clActual &&
+        clActual->GetClassInfo() && gInterpreter->ClassInfo_IsValid( clActual->GetClassInfo() ) ) {
       address = (void*)((Long_t)address + Utility::DowncastOffset( clActual, klass, address, false /*derivedObj*/ ) );
       klass = clActual;
    }
