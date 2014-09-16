@@ -79,7 +79,6 @@ int run()
    }
 
    h->Close();
-
    return result;
 }
 
