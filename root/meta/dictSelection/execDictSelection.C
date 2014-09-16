@@ -45,10 +45,9 @@ int execDictSelection()
       "myVector<float>",
       "myVector<myVector<myVector<myVector<float>>>>",  
       "myVector<float,myAllocator<float>>",
-      "classTemplateElaborate<char>",
-      "classAutoExcluded"
+      "classTemplateElaborate<char>"
    };
-   
+
    // Start the tests
    for (auto& className : classNames)
       printClassInfo(className,Nullproperties,false);
