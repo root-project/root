@@ -200,12 +200,6 @@ Class category: foreign.
   * classVanilla transientMember [ isTransient "!" ]
   * classAutoselectedFromTemplateElaborate2 autoselectedMemberAndTransientMemberMember [ isTransient "!" ]
 --- End Class classTemplateElaborate<char>
-
---- Class classAutoExcluded
-Class category: foreign.
- * Version: 1 --> Class available to the interpreter but not Selected!
- o Members (0):
---- End Class classAutoExcluded
 classVanilla --> classVanilla
 classTemplateVanilla<char> --> classTemplateVanilla<char>
 classTransientMember --> classTransientMember
@@ -238,5 +232,4 @@ myVector<float> --> myVector<float>
 myVector<myVector<myVector<myVector<float>>>> --> myVector<myVector<myVector<myVector<float> > > >
 myVector<float,myAllocator<float>> --> myVector<float>
 classTemplateElaborate<char> --> classTemplateElaborate<char>
-classAutoExcluded --> classAutoExcluded
 (int) 0
