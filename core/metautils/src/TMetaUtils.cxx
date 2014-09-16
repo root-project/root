@@ -4751,6 +4751,9 @@ static void addDeclToTransaction(clang::Decl *decl,
       // do not add the "T" of template <typename T> to the
       // transaction.
       return;
+   } else if (auto *td = llvm::dyn_cast<clang::TypedefDecl>(decl)) {
+      addDeclsToTransactionForType(td->getUnderlyingType().getTypePtr(),
+                                   theTransaction, addedDecls);
    }
 
 
