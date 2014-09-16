@@ -43,6 +43,8 @@ typedef multi_index_container< ComplexElement*,
                                                          >
                               > > > ClassFail;
 
+#include "cmsExample01.h"
+
 bool test(const std::string &input)
 {
    std::string output;
@@ -68,6 +70,14 @@ bool test(const std::string &input,const char *expected)
 }
 
 int execClassEditNormalize() {
+
+    if (!test("edm::ValueMap<std::vector<edm::Ref<std::vector<reco::PFCandidate>,"
+                           "reco::PFCandidate,"
+                           "edm::refhelper::FindUsingAdvance<std::vector<reco::PFCandidate>,reco::PFCandidate> > > >"
+                "::value_type",
+             "vector<edm::Ref<vector<reco::PFCandidate>,"
+                    "reco::PFCandidate,"
+                    "edm::refhelper::FindUsingAdvance<vector<reco::PFCandidate>,reco::PFCandidate> > >")) return 21;
 
    if (!test("const std::string","const string")) return 20;
    if (!test("pair<const std::string,int>","pair<const string,int>")) return 19;
