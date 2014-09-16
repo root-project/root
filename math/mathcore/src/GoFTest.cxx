@@ -319,7 +319,7 @@ namespace Math {
       b = (2 * g - 4) * k2 + 8 * h * k + (2 * g - 14 * h - 4) * H - 8 * h + 4 * g - 6;
       c = (6 * h + 2 * g - 2) * k2 + (4 * h - 4 *g + 6) * k + (2 * h - 6) * H + 4 * h;
       d = (2 * h + 6) * k2 - 4 * h * k;
-      sigmaN +=  a * std::pow(N, 3) + b * std::pow(N, 2) + c * N + d;
+      sigmaN +=  a * N * N * N + b * N * N + c * N + d;
       sigmaN /= ( double(N - 1) * double(N - 2) * double(N - 3) );
       sigmaN = TMath::Sqrt(sigmaN);
       return sigmaN;
