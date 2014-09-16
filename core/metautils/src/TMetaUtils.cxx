@@ -4679,8 +4679,8 @@ static void addDeclsToTransactionForType(const clang::Type* typ,
             // Nothing to fwd declare, hopefully...
             break;
          default:
-            ROOT::TMetaUtils::Error("addDeclsToTransactionForType", "Unexpected TemplateSpecializationType %s\n",
-                                    typ->getTypeClassName());
+            ROOT::TMetaUtils::Error("addDeclsToTransactionForType", "Unexpected TemplateSpecializationType %d\n",
+                                    (int)TA.getKind());
          break;
          }
       }
