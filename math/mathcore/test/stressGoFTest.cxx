@@ -20,6 +20,11 @@
 
   LM. (16/9/14)  Expected values for AD2 test have been computed with R kSamples package
 */
+
+#ifndef R__HAS_CXX11
+double landau(double x) { return TMath::Landau(x); }
+#endif
+
 struct GoFTStress {
 
    static enum EDebugLevelTypes {
@@ -346,8 +351,11 @@ struct GoFTStress {
       // need to specify min and max otherwise pdf does not converge
       ROOT::Math::GoFTest* goft = new ROOT::Math::GoFTest(nEvents, sample); 
 
-
-      ROOT::Math::Functor1D userPdf(&TMath::Landau);
+#ifdef R__USE_CXX11
+      ROOT::Math::Functor1D userPdf([](double x){ return TMath::Landau(x);});
+#else
+      ROOT::Math::Functor1D userPdf(&landau);
+#endif
       // need to use a reasanble range for the Landau 
       // but must be bigger than xmin and xmax 
       double xmin = 3*TMath::MinElement(nEvents, sample);
