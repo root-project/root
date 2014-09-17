@@ -33,12 +33,13 @@
 
 #include <stdlib.h>
 
+const char *item_prop_kind = "_kind";
+const char *item_prop_more = "_more";
+const char *item_prop_title = "_title";
+const char *item_prop_realname = "_realname"; // real object name
 
-const char *dabc_prop_kind = "dabc:kind";
-const char *dabc_prop_masteritem = "dabc:master";
-const char *dabc_prop_more = "dabc:more";
-const char *dabc_prop_realname = "dabc:realname"; // real object name
-const char *dabc_prop_itemname = "dabc:itemname"; // item name in dabc hierarchy
+//extern "C" unsigned long R__memcompress(char* tgt, unsigned long tgtsize, char* src, unsigned long srcsize);
+extern "C" void R__zip(int cxlevel, int *srcsize, char* src, int *tgtsize, char* tgt, int* irep);
 
 // ============================================================================
 
@@ -96,63 +97,47 @@ void TRootSnifferScanRec::BeforeNextChild()
 }
 
 //______________________________________________________________________________
-void TRootSnifferScanRec::MakeItemName(const char *objname, TString &_itemname, Bool_t cut_slashes)
+void TRootSnifferScanRec::MakeItemName(const char *objname, TString& itemname)
 {
    // constructs item name from object name
    // if special symbols like '/', '#', ':', '&', '?'  are used in object name
    // they will be replaced with '_'.
    // To avoid item name duplication, additional id number can be appended
-   // If specified, object name until slash will be removed at all
 
    std::string nnn = objname;
 
-   size_t pos = nnn.find_last_of("/");
-   if (cut_slashes && (pos != std::string::npos)) nnn = nnn.substr(pos + 1);
-   if (nnn.empty()) nnn = "item";
+   size_t pos;
 
-   // replace all special symbols which can make problem in http (not in xml)
-   while ((pos = nnn.find_first_of("#:&?/\'")) != std::string::npos)
+   // replace all special symbols which can make problem to navigate in hierarchy
+   while ((pos = nnn.find_first_of("- []<>#:&?/\'\"\\")) != std::string::npos)
       nnn.replace(pos, 1, "_");
 
-   _itemname = nnn.c_str();
+   itemname = nnn.c_str();
    Int_t cnt = 0;
 
-   while (fItemsNames.FindObject(_itemname.Data())) {
-      _itemname.Form("%s_%d", nnn.c_str(), cnt++);
+   while (fItemsNames.FindObject(itemname.Data())) {
+      itemname.Form("%s_%d", nnn.c_str(), cnt++);
    }
 
-   fItemsNames.Add(new TObjString(_itemname.Data()));
+   fItemsNames.Add(new TObjString(itemname.Data()));
 }
 
 //______________________________________________________________________________
-void TRootSnifferScanRec::CreateNode(const char *_node_name, const char *_obj_name)
+void TRootSnifferScanRec::CreateNode(const char *_node_name)
 {
    // creates new node with specified name
    // if special symbols like "[]&<>" are used, node name
    // will be replaced by default name like "extra_item_N" and
-   // original node name will be recorded as "dabc:itemname" field
-   // Optionally, object name can be recorded as "dabc:realname" field
+   // original node name will be recorded as "_original_name" field
+   // Optionally, object name can be recorded as "_realname" field
 
    if (!CanSetFields()) return;
 
    started_node = _node_name;
-   TString real_item_name;
-
-   // this is for XML
-   if (started_node.First("[]&<>-\"\' ") != kNPOS) {
-      real_item_name = started_node;
-      MakeItemName("extra_item", started_node); // we generate abstract item just to be safe with syntax
-   }
 
    if (parent) parent->BeforeNextChild();
 
    if (store) store->CreateNode(lvl, started_node.Data());
-
-   if (real_item_name.Length() > 0)
-      SetField(dabc_prop_itemname, real_item_name.Data());
-
-   if (_obj_name && (started_node != _obj_name))
-      SetField(dabc_prop_realname, _obj_name);
 }
 
 //______________________________________________________________________________
@@ -173,18 +158,8 @@ void TRootSnifferScanRec::SetRootClass(TClass *cl)
    // in addition, path to master item (streamer info) specified
    // Such master item required to correctly unstream data on JavaScript
 
-   if ((cl == 0) || !CanSetFields())  return;
-
-   SetField(dabc_prop_kind, TString::Format("ROOT.%s", cl->GetName()));
-
-   if (TRootSniffer::IsDrawableClass(cl)) {
-      // only drawable class can be fetched from the server
-      TString master;
-      Int_t depth = Depth();
-      for (Int_t n = 1; n < depth; n++) master.Append("../");
-      master.Append("StreamerInfo");
-      SetField(dabc_prop_masteritem, master.Data());
-   }
+   if ((cl != 0) && CanSetFields())
+      SetField(item_prop_kind, TString::Format("ROOT.%s", cl->GetName()));
 }
 
 //______________________________________________________________________________
@@ -309,7 +284,19 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 
    TString obj_item_name;
 
-   super.MakeItemName(obj_name, obj_item_name, obj && obj->InheritsFrom(TDirectoryFile::Class()));
+   const char* full_name = 0;
+
+   // remove slashes from file names
+   if (obj && obj->InheritsFrom(TDirectoryFile::Class())) {
+      const char* slash = strrchr(obj_name, '/');
+      if (slash!=0) {
+         full_name = obj_name;
+         obj_name = slash+1;
+         if (*obj_name == 0) obj_name = "file";
+      }
+   }
+
+   super.MakeItemName(obj_name, obj_item_name);
 
    lvl = super.lvl;
    store = super.store;
@@ -343,7 +330,13 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
       }
    }
 
-   CreateNode(obj_item_name.Data(), obj ? obj->GetName() : 0);
+   CreateNode(obj_item_name.Data());
+
+   if ((obj_name!=0) && (obj_item_name != obj_name))
+      SetField(item_prop_realname, obj_name);
+
+   if (full_name != 0)
+      SetField("_fullname", full_name);
 
    return kTRUE;
 }
@@ -442,14 +435,13 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
 
          Bool_t iscollection = (coll_offset >= 0);
          if (iscollection) {
-            chld.SetField(dabc_prop_more, "true");
+            chld.SetField(item_prop_more, "true");
             chld.has_more = kTRUE;
          }
 
          if (chld.SetResult(member_ptr, mcl, member)) break;
 
-         if (IsDrawableClass(mcl))
-            chld.SetRootClass(mcl);
+         chld.SetRootClass(mcl);
 
          if (chld.CanExpandItem()) {
             if (iscollection) {
@@ -472,13 +464,6 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
 
    if (obj == 0) return;
 
-   //if (rec.mask & mask_Expand)
-   //   printf("EXPAND OBJECT %s can expand %s mask %u\n", obj->GetName(),
-   //          DBOOL(rec.CanExpandItem()), rec.mask);
-
-   // mark object as expandable for direct child of extra folder
-   // or when non drawable object is scanned
-
    if (!fReadOnly && obj->InheritsFrom(TKey::Class()) && rec.IsReadyForResult()) {
       TObject* keyobj = ((TKey*) obj)->ReadObj();
       if (keyobj!=0)
@@ -487,10 +472,14 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
 
    if (rec.SetResult(obj, obj->IsA())) return;
 
+   const char* title = obj->GetTitle();
+   if ((title!=0) && (*title!=0))
+      rec.SetField(item_prop_title, title);
+
    int isextra = rec.ExtraFolderLevel();
 
    if ((isextra == 1) || ((isextra > 1) && !IsDrawableClass(obj->IsA()))) {
-      rec.SetField(dabc_prop_more, "true");
+      rec.SetField(item_prop_more, "true");
       rec.has_more = kTRUE;
    }
 
@@ -509,7 +498,7 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
                obj_class = dir->IsA();
             }
          } else {
-            rec.SetField(dabc_prop_more, "true");
+            rec.SetField(item_prop_more, "true");
             rec.has_more = kTRUE;
          }
       } else {
@@ -573,12 +562,20 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
 
       if (keys_lst!=0) {
          TIter iter(keys_lst);
-         TObject *obj(0);
+         TObject *kobj(0);
 
-         while ((obj = iter()) != 0) {
-            if ((lst!=0) && lst->FindObject(obj->GetName())) continue;
+         while ((kobj = iter()) != 0) {
+            TKey* key = dynamic_cast<TKey*> (kobj);
+            if (key == 0) continue;
+            TObject* obj = (lst == 0) ? 0 : lst->FindObject(key->GetName());
+            if ((obj!=0) && (master.mask & mask_Scan)) continue;
+
+            if (obj==0) obj = key; // if object exists, provide it to for scan instead of  key
+
             TRootSnifferScanRec chld;
-            if (chld.GoInside(master, obj)) {
+            TString fullname = TString::Format("%s;%d", key->GetName(), key->GetCycle());
+
+            if (chld.GoInside(master, obj, fullname.Data())) {
                ScanObject(chld, obj);
                if (chld.Done()) break;
             }
@@ -598,12 +595,14 @@ void TRootSniffer::ScanRoot(TRootSnifferScanRec &rec)
    // One could reimplement this method to provide alternative
    // scan methods or to extend some collection kinds
 
-   rec.SetField(dabc_prop_kind, "ROOT.Session");
+   rec.SetField(item_prop_kind, "ROOT.Session");
 
    {
       TRootSnifferScanRec chld;
-      if (chld.GoInside(rec, 0, "StreamerInfo"))
-         chld.SetField(dabc_prop_kind, "ROOT.TList");
+      if (chld.GoInside(rec, 0, "StreamerInfo")) {
+         chld.SetField(item_prop_kind, "ROOT.TStreamerInfoList");
+         chld.SetField(item_prop_title, "List of streamer infos for binary I/O");
+      }
    }
 
    TFolder *topf = dynamic_cast<TFolder *>(gROOT->FindObject(TString::Format("//root/%s", fObjectsPath.Data())));
@@ -910,11 +909,11 @@ Bool_t TRootSniffer::IsStreamerInfoItem(const char *itemname)
 }
 
 //______________________________________________________________________________
-Bool_t TRootSniffer::ProduceBinary(const char *path, const char *, void *&ptr,
+Bool_t TRootSniffer::ProduceBinary(const char *path, const char* query, void *&ptr,
                                    Long_t &length)
 {
    // produce binary data for specified item
-   // It is 20 bytes for header plus compressed content of TBuffer
+   // if "zipped" option specified in query, buffer will be compressed
 
    if ((path == 0) || (*path == 0)) return kFALSE;
 
@@ -1007,9 +1006,25 @@ Bool_t TRootSniffer::ProduceBinary(const char *path, const char *, void *&ptr,
 
    if (sbuf==0) return kFALSE;
 
-   ptr = malloc(sbuf->Length());
-   memcpy(ptr, sbuf->Buffer(), sbuf->Length());
-   length = sbuf->Length();
+   if ((query!=0) && (strstr(query,"zipped")!=0)) {
+      Int_t buflen = 20 + sbuf->Length() + sbuf->Length()/20; // keep safety margin
+      if (buflen<512) buflen = 512;
+
+      ptr = malloc(buflen);
+
+      int irep(0), srcsize(sbuf->Length()), tgtsize(buflen);
+
+      R__zip(5, &srcsize, (char*) sbuf->Buffer(), &tgtsize, (char*) ptr, &irep);
+
+      length = irep;
+
+   } else {
+      ptr = malloc(sbuf->Length());
+      memcpy(ptr, sbuf->Buffer(), sbuf->Length());
+      length = sbuf->Length();
+   }
+
+
 
    return kTRUE;
 }
@@ -1172,7 +1187,7 @@ Bool_t TRootSniffer::Produce(const char *path, const char *file,
 Bool_t TRootSniffer::RegisterObject(const char *subfolder, TObject *obj)
 {
    // register object in subfolder structure
-   // subfolder paramerer can have many levels like:
+   // subfolder parameter can have many levels like:
    //
    // TRootSniffer* sniff = new TRootSniffer("sniff");
    // sniff->RegisterObject("/my/sub/subfolder", h1);
