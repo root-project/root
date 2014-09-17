@@ -1891,7 +1891,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    // will load and initialize graphics libraries if
    // TApplication::NeedGraphicsLibs() has been called by a
    // library static initializer.
-   if (gApplication) gApplication->InitializeGraphics();
+//   if (gApplication) gApplication->InitializeGraphics();
 
    if (!entry || !entry[0] || ret < 0) return ret;
 
