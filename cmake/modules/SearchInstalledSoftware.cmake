@@ -23,7 +23,9 @@ if(NOT builtin_zlib)
    endif()
 endif()
 if(builtin_zlib)
-  set(ZLIB_LIBRARY "")
+  if(WIN32)
+    set(ZLIB_LIBRARY "")
+  endif()
 endif()
 
 #---Check for Freetype---------------------------------------------------------------
@@ -181,6 +183,7 @@ if(asimage)
   find_Package(PNG)
   if(PNG_FOUND)
     set(ASEXTRA_LIBRARIES ${ASEXTRA_LIBRARIES} ${PNG_LIBRARIES})
+    list(GET PNG_INCLUDE_DIRS 0 PNG_INCLUDE_DIR)
   endif()
   find_Package(JPEG)
   if(JPEG_FOUND)
@@ -206,7 +209,7 @@ if(mathmore OR builtin_gsl)
       GSL
       URL http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CFLAGS=${CMAKE_C_FLAGS}
     )
     set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
     foreach(l gsl gslcblas)
@@ -615,7 +618,7 @@ if(builtin_xrootd)
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   install(DIRECTORY ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/ DESTINATION ${CMAKE_INSTALL_LIBDIR}
                     COMPONENT libraries
-                    FILES_MATCHING PATTERN "libXrd*${CMAKE_SHARED_LIBRARY_SUFFIX}")
+                    FILES_MATCHING PATTERN "libXrd*")
   set(xrootd ON CACHE BOOL "" FORCE)
 endif()
 if(xrootd AND xrootd_versionnum VERSION_GREATER 300030005)
@@ -830,8 +833,8 @@ if(vc)
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16.0)  # equivalent to MSVC 2010
-      message(STATUS "VC requires MSVC version >= 2010; switching OFF 'vc' option")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)  # equivalent to MSVC 2010
+      message(STATUS "VC requires MSVC version >= 2011; switching OFF 'vc' option")
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
   endif()
