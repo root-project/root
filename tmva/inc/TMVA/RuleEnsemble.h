@@ -56,7 +56,6 @@ class TH1F;
 
 namespace TMVA {
 
-   class TBits;
    class MethodBase;
    class RuleFit;
    class MethodRuleFit;
