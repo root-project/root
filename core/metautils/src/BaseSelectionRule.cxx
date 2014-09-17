@@ -310,18 +310,38 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
       return kNoMatch;
    }
 
-   if (fHasPatternAttribute){
-      bool patternMatched=CheckPattern(name, pattern_value, fSubPatterns, isLinkdef);
-      if (!patternMatched && !isLinkdef){
-         std::string nameNoSpaces(name);
-         nameNoSpaces.erase(std::remove_if(nameNoSpaces.begin(),nameNoSpaces.end(),isspace),
-                      nameNoSpaces.end());
-         if (name.size()!=nameNoSpaces.size()){
-            patternMatched=CheckPattern(nameNoSpaces, pattern_value, fSubPatterns, isLinkdef);
+   if (fHasPatternAttribute)
+   {
+      bool patternMatched = CheckPattern(name, pattern_value, fSubPatterns, isLinkdef);
+      if (!patternMatched && !isLinkdef) {
+         std::string auxName(name);
+         std::string &nameNoSpaces = auxName;
+         nameNoSpaces.erase(std::remove_if(nameNoSpaces.begin(), nameNoSpaces.end(), isspace),
+                           nameNoSpaces.end());
+         if (name.size() != nameNoSpaces.size()) {
+            patternMatched = CheckPattern(nameNoSpaces, pattern_value, fSubPatterns, isLinkdef);
          }
+
+         // For ROOT-6704: use normalised name for matching if the class is in stl
+         // The reason for this check is that we have rules like std::map<*, int>
+         // We do not know how the internal representation of the innocuous "map"
+         // is. We therefore have to act on a nicer name, obtained with TClassEdit
+         // The check ROOT::TMetaUtils::IsStdDropDefaultClass is there to call
+         // TClassEdit only when necessary as it can be expensive, a performance
+         // optimisation.
+         if (!patternMatched &&
+               D &&
+               ROOT::TMetaUtils::IsStdDropDefaultClass(*D)) {
+            TClassEdit::GetNormalizedName(auxName, name.c_str());
+            if (name.size() != auxName.size()) {
+               auxName = TClassEdit::InsertStd(auxName.c_str());
+               patternMatched = CheckPattern(auxName, pattern_value, fSubPatterns, isLinkdef);
+            }
+         }
+
       }
-      if (patternMatched){
-         const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
+      if (patternMatched) {
+         const_cast<BaseSelectionRule *>(this)->SetMatchFound(true);
          return kPattern;
       }
    }
