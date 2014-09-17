@@ -52,8 +52,8 @@ public:
       return (mask & mask_Scan) && (store != 0);
    }
 
-   /** Starts new xml node, must be closed at the end */
-   void CreateNode(const char *_node_name, const char *_obj_name = 0);
+   /** Starts new node, must be closed at the end */
+   void CreateNode(const char *_node_name);
 
    void BeforeNextChild();
 
@@ -82,7 +82,7 @@ public:
    Bool_t Done() const;
 
    /** Construct item name, using object name as basis */
-   void MakeItemName(const char *objname, TString &itemname, Bool_t cut_slashes = kFALSE);
+   void MakeItemName(const char *objname, TString& itemname);
 
    Bool_t GoInside(TRootSnifferScanRec &super, TObject *obj, const char *obj_name = 0);
 

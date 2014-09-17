@@ -184,9 +184,7 @@ protected:
 
    Long_t       fMainThrdId;  //! id of the main ROOT process
 
-   TString      fHttpSys;     //! location of http plugin, need to read special files
-   TString      fRootSys;     //! location of ROOT (if any)
-   TString      fJSRootIOSys; //! location of JSRootIO (if any)
+   TString      fJsRootSys;   //! location of Root JS (if any)
    TString      fTopName;     //! name of top folder, default - "ROOT"
 
    TString      fDefaultPage; //! file name for default page name

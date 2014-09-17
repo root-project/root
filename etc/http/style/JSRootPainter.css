@@ -1,0 +1,134 @@
+/* Interface stylesheet for Javascript ROOT Web Page. */
+
+/*--------------------------------------------------|
+| dTree 2.05 | www.destroydrop.com/javascript/tree/ |
+|---------------------------------------------------|
+| Copyright (c) 2002-2003 Geir Landrö               |
+|--------------------------------------------------*/
+
+.dtree {
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	color: #666;
+	white-space: nowrap;
+}
+.dtree img {
+	border: 0px;
+	vertical-align: middle;
+}
+.dtree a {
+	color: #333;
+	text-decoration: none;
+}
+.dtree a.node, .dtree a.nodeSel {
+	white-space: nowrap;
+	padding: 1px 2px 1px 2px;
+}
+.dtree a.node:hover, .dtree a.nodeSel:hover {
+	color: #333;
+	text-decoration: underline;
+}
+.dtree a.nodeSel {
+	background-color: #c0d2ec;
+}
+.dtree .clip {
+	overflow: hidden;
+}
+
+/*--------------------------------------------------|
+| tooltip style                                     |
+|--------------------------------------------------*/
+
+#tt {
+   position:absolute;
+   display:block;
+}
+#tttop {
+   display:block;
+   height:5px;
+   margin-left:5px;
+   overflow:hidden;
+}
+#ttcont {
+   display:block;
+   padding:2px 12px 3px 7px;
+   margin-left:5px;
+   font-size: 11px;
+   background:#777;
+   color:#fff;
+}
+#ttbot {
+   display:block;
+   height:5px;
+   margin-left:5px;
+   overflow:hidden;
+}
+
+/* from JSRootD3Painter */
+.xaxis path, .xaxis line, .yaxis path, .yaxis line, .zaxis path, .zaxis line {
+   fill: none;
+   stroke: #000;
+   shape-rendering: crispEdges;
+}
+
+.brush .extent {
+    stroke: #fff;
+    fill-opacity: .125;
+    shape-rendering: crispEdges;
+}
+
+rect.zoom {
+    stroke: steelblue;
+    fill-opacity: 0.1;
+}
+/* Correct overflow not hidden in IE9 */
+svg:not(:root) { overflow: hidden; }
+
+
+/*--------------------------------------------------|
+| context menu                                      |
+|--------------------------------------------------*/
+
+.ctxmenu
+{
+  position:absolute;   
+  min-width:64px;
+  height:auto;
+  padding: 4px;
+  margin:0;
+  margin-left:0px;
+  margin-top:0px;
+  border: 1px solid #999;
+  background: #F8F8F8;
+  box-shadow: 2px 2px 2px #AAA;
+  z-index:11;
+  overflow: visible;
+}
+.ctxline
+{
+  display:block;
+  margin:0px;
+  padding:2px 2px 2px 8px;
+  border:1px solid #F8F8F8;
+  border-radius:3px;
+  font-size:13px;
+  font-family:Arial, Helvetica, sans-serif;
+  overflow:visible;
+}
+.ctxline:hover
+{
+  border:1px solid #BBB;
+  background-color: #F0F0F0;
+  background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: -ms-linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%,
+    from(#ffffff), to(#e6e6e6));
+  background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: linear-gradient(top, #ffffff, #e6e6e6);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff',
+    endColorstr='#e6e6e6', GradientType=0);
+}
+
+
