@@ -2000,6 +2000,7 @@ static TConfiguredAction GetNumericCollectionReadAction(Int_t type, TConfigSTL *
          break;
       }
    }
+   Fatal("GetNumericCollectionReadAction","Is confused about %d",type);
    R__ASSERT(0); // We should never be here
    return TConfiguredAction();
 }
