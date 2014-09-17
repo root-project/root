@@ -336,7 +336,7 @@ void TDataType::SetType(const char *name)
       fType = kDouble_t;
       fSize = sizeof(Double_t);
    } else if (!strcmp("signed char", name)) {
-      fType = kDataTypeAliasSignedChar_t;
+      fType = kChar_t; // kDataTypeAliasSignedChar_t;
       fSize = sizeof(Char_t);
    }
 
