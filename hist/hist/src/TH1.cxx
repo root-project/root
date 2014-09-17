@@ -5905,6 +5905,14 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       oldErrors = new Double_t[nbins+2];
       for (bin=0;bin<nbins+2;bin++) oldErrors[bin] = GetBinError(bin);
    }
+   // rebin will not include underflow/overflow if new axis range is larger than old axis range 
+   if (xbins) {  
+      if (xbins[0] < fXaxis.GetXmin() && oldBins[0] != 0 )
+         Warning("Rebin","underflow entries will not be used when rebinning");
+      if (xbins[newbins] > fXaxis.GetXmax() && oldBins[nbins+1] != 0 )
+         Warning("Rebin","overflow entries will not be used when rebinning");
+   }
+
 
    // create a clone of the old histogram if newname is specified
    TH1 *hnew = this;
@@ -5977,7 +5985,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       Int_t imax = ngroup;
       Double_t xbinmax = hnew->GetXaxis()->GetBinUpEdge(bin);
       for (i=0;i<ngroup;i++) {
-         if( (hnew == this && (oldbin+i > nbins)) ||
+         if( (oldbin+i > nbins) ||
              ( hnew != this && (fXaxis.GetBinCenter(oldbin+i) > xbinmax)) ) {
             imax = i;
             break;
@@ -5989,6 +5997,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       if (oldErrors) hnew->SetBinError(bin,TMath::Sqrt(binError));
       oldbin += imax;
    }
+
    // sum underflow and overflow contents until startbin
    binContent = 0;
    binError = 0;
