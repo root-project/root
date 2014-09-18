@@ -54,21 +54,26 @@ struct GoFTStress {
       Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
       printf("******************************************************************\n");
       if (UNIX) {
-         FILE *fp = gSystem->OpenPipe("uname -a", "r");
-         Char_t line[60];
-         fgets(line,60,fp); line[59] = 0;
-         printf("*  SYS: %s\n",line);
-         gSystem->ClosePipe(fp);
+         TString sp = gSystem->GetFromPipe("uname -a");
+         sp.Resize(60);
+         printf("*  SYS: %s\n",sp.Data());
+         if (strstr(gSystem->GetBuildNode(),"Linux")) {
+            sp = gSystem->GetFromPipe("lsb_release -d -s");
+            printf("*  SYS: %s\n",sp.Data());
+         }
+         if (strstr(gSystem->GetBuildNode(),"Darwin")) {
+            sp  = gSystem->GetFromPipe("sw_vers -productVersion");
+            sp += " Mac OS X ";
+            printf("*  SYS: %s\n",sp.Data());
+         }
       } else {
          const Char_t *os = gSystem->Getenv("OS");
          if (!os) {
          printf("*  SYS: Windows 95\n");
          } else {
-         printf("*  SYS: %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
+            printf("*  SYS: %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
          }
-      }
-         
-      printf("*****************************************************************************************\n");
+      }printf("*****************************************************************************************\n");
       gBenchmark->Print("GoFTestStress");
 #ifdef __CINT__
       Double_t reftime = 0.02 ; // slc4rabacal interpreted (CPU time taken to run complete tests with ACLiC)
