@@ -96,6 +96,7 @@ public:
    virtual TObject   *DrawClone(Option_t * /*option*/ ="") const {return 0;}
    virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Int_t      FindBin(Double_t x);
+   virtual Int_t      FindBin(Double_t x) const { return FindFixBin(x); }
    virtual Int_t      FindBin(const char *label);
    virtual Int_t      FindFixBin(Double_t x) const;
    virtual Double_t   GetBinCenter(Int_t bin) const;
