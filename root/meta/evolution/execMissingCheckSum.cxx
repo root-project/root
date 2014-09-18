@@ -9,7 +9,7 @@ public:
 #include <stdint.h>
 #include <vector>
 
-struct HcalFlagHFDigiTimeParam{
+struct HcalFlagHFDigiTimeParam {
    HcalFlagHFDigiTimeParam() : mId(0), mHFdigiflagFirstSample(0), mHFdigiflagSamplesToAdd(0),mHFdigiflagExpectedPeak(0),mHFdigiflagMinEthreshold(0.0) {}
 
    uint32_t mId; // detector ID
@@ -28,9 +28,16 @@ struct WithLongLong {
 };
 
 #include "cmsCond01.h"
+#include "signedchar.h"
 
 #ifdef __ROOTCLING__
+// These two are also on by default since we build the library with ACLiC
+// from this file, but still add them here from symetry reasons.
+#pragma link C++ class HcalFlagHFDigiTimeParam+;
+#pragma link C++ class WithLongLong+;
+
 #pragma link C++ class L1GtCondition+;
+#pragma link C++ class TQuality+;
 #endif
 
 void DropStreamerInfo(const char *name) {
@@ -56,5 +63,6 @@ void execMissingCheckSum()
    CheckFile("missingCheckSum2.root","timeParam","HcalFlagHFDigiTimeParam");
    CheckFile("missingCheckSum2.root","withLL","WithLongLong");
    CheckFile("checksumReflexEnum_v5.root","cond","L1GtCondition");
+   CheckFile("checksumSignedChar_v5.root","q","TQuality");
 }
 
