@@ -5720,7 +5720,7 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
    for (int i=0; i<il; i++) id = id*3+name[i];
 
    TList *tlb = ((TClass*)this)->GetListOfBases();
-   if (tlb && !TClassEdit::IsSTLCont(name)) {   // Loop over bases if not stl
+   if (tlb && !GetCollectionProxy()) {   // Loop over bases if not a proxied collection
 
       TIter nextBase(tlb);
 
