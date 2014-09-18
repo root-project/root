@@ -69,8 +69,8 @@ namespace ROOT { namespace Cintex {
    static void writeArrayIndex(ostream &ost, const Type& array)
    {
       Type toArray = array.ToType();
-      if ( toArray.IsArray() ) writeArrayIndex(ost,toArray);
       ost << "[" << array.ArrayLength() << "]";
+      if ( toArray.IsArray() ) writeArrayIndex(ost,toArray);
    }
  
    void CINTVariableBuilder::Setup(const Member& dm ) {
