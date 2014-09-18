@@ -39,9 +39,9 @@ public:
       };
    public:
       TProtoRealData() {}
-      TProtoRealData(const TRealData* rd);
+      TProtoRealData(const TRealData *rd);
       virtual ~TProtoRealData();
-      TRealData* CreateRealData(TClass* currentClass, TClass* parent) const;
+      TRealData *CreateRealData(TClass *currentClass, TClass *parent) const;
       ClassDef(TProtoRealData, 2);//Persistent version of TRealData
    };
 
@@ -57,23 +57,26 @@ private:
    Long_t   fClassProperty; // Class C++ properties, see EClassProperties
    Long_t   fOffsetStreamer; // Offset to streamer function
 
-   TProtoClass(const TProtoClass&) = delete;
-   TProtoClass& operator=(const TProtoClass&) = delete;
+   TProtoClass(const TProtoClass &) = delete;
+   TProtoClass &operator=(const TProtoClass &) = delete;
 
 public:
    TProtoClass():
       fBase(0), fData(0), fEnums(0), fPRealData(0), fSizeof(0), fCanSplit(0),
       fStreamerType(0), fProperty(0), fClassProperty(0),
-      fOffsetStreamer(0)
-   {}
+      fOffsetStreamer(0) {
+   }
 
-   TProtoClass(TClass* cl);
+   TProtoClass(TClass *cl);
    virtual ~TProtoClass();
 
-   Bool_t FillTClass(TClass* pcl);
-   void Delete(Option_t* opt = "");
+   Bool_t FillTClass(TClass *pcl);
+   const TList *GetListOfEnums() {
+      return fEnums;
+   };
+   void Delete(Option_t *opt = "");
 
-   ClassDef(TProtoClass,2); //Persistent TClass
+   ClassDef(TProtoClass, 2); //Persistent TClass
 };
 
 #endif

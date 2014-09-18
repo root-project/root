@@ -24,6 +24,7 @@
 #include <map>
 #include <typeinfo>
 #include "Riostream.h"
+#include <memory>
 
 #include "TClassTable.h"
 #include "TClass.h"
@@ -38,21 +39,61 @@
 #include "TMap.h"
 
 #include "TInterpreter.h"
+using namespace ROOT;
 
 TClassTable *gClassTable;
 
+TClassAlt  **TClassTable::fgAlternate;
 TClassRec  **TClassTable::fgTable;
 TClassRec  **TClassTable::fgSortedTable;
-int          TClassTable::fgSize;
-int          TClassTable::fgTally;
+UInt_t       TClassTable::fgSize;
+UInt_t       TClassTable::fgTally;
 Bool_t       TClassTable::fgSorted;
-int          TClassTable::fgCursor;
+UInt_t       TClassTable::fgCursor;
 TClassTable::IdMap_t *TClassTable::fgIdMap;
 
 ClassImp(TClassTable)
 
 //______________________________________________________________________________
 namespace ROOT {
+
+   class TClassRec {
+   public:
+      TClassRec(TClassRec *next) :
+        fName(0), fId(0), fDict(0), fInfo(0), fProto(0), fNext(next)
+      {}
+
+      ~TClassRec() {
+         // TClassTable::fgIdMap->Remove(r->fInfo->name());
+         delete [] fName;
+         delete fProto;
+         delete fNext;
+      }
+
+      char            *fName;
+      Version_t        fId;
+      Int_t            fBits;
+      DictFuncPtr_t    fDict;
+      const type_info *fInfo;
+      TProtoClass     *fProto;
+      TClassRec       *fNext;
+   };
+
+   class TClassAlt {
+   public:
+      TClassAlt(const char*alternate, const char *normName, TClassAlt *next) :
+         fName(alternate), fNormName(normName), fNext(next)
+      {}
+
+      ~TClassAlt() {
+         // Nothing more to delete.
+      }
+
+      const char *fName;     // Do not own
+      const char *fNormName; // Do not own
+      std::unique_ptr<TClassAlt> fNext;
+   };
+
 
    class TMapTypeToClassRec {
 #if defined R__USE_STD_MAP
@@ -151,6 +192,18 @@ namespace ROOT {
       }
 #endif
    };
+
+   static UInt_t ClassTableHash(const char *name, UInt_t size)
+   {
+      const char *p = name;
+      Int_t slot = 0;
+
+      while (*p) slot = slot<<1 ^ *p++;
+      if (slot < 0) slot = -slot;
+      slot %= size;
+
+      return slot;
+   }
 }
 
 //______________________________________________________________________________
@@ -160,10 +213,12 @@ TClassTable::TClassTable()
 
    if (gClassTable) return;
 
-   fgSize  = 1009;  //this is thge result of (int)TMath::NextPrime(1000);
+   fgSize  = 1009;  //this is the result of (int)TMath::NextPrime(1000);
    fgTable = new TClassRec* [fgSize];
+   fgAlternate = new TClassAlt* [fgSize];
    fgIdMap = new IdMap_t;
    memset(fgTable, 0, fgSize*sizeof(TClassRec*));
+   memset(fgAlternate, 0, fgSize*sizeof(TClassAlt*));
    gClassTable = this;
 }
 
@@ -175,14 +230,8 @@ TClassTable::~TClassTable()
    // Try to avoid spurrious warning from memory leak checkers.
    if (gClassTable != this) return;
 
-   for (Int_t i = 0; i < fgSize; i++) {
-      TClassRec *r = fgTable[i];
-      while (r) {
-         delete [] r->fName;
-         TClassRec *next = r->fNext;
-         delete r;
-         r = next;
-      }
+   for (UInt_t i = 0; i < fgSize; i++) {
+      delete fgTable[i]; // Will delete all the elements in the chain.
    }
    delete [] fgTable; fgTable = 0;
    delete [] fgSortedTable; fgSortedTable = 0;
@@ -210,7 +259,7 @@ void TClassTable::Print(Option_t *option) const
    Printf("\nDefined classes");
    Printf("class                                 version  bits  initialized");
    Printf("================================================================");
-   for (int i = 0; i < fgTally; i++) {
+   for (UInt_t i = 0; i < fgTally; i++) {
       TClassRec *r = fgSortedTable[i];
       if (!r) break;
       n++;
@@ -231,7 +280,7 @@ void TClassTable::Print(Option_t *option) const
 //---- static members --------------------------------------------------------
 
 //______________________________________________________________________________
-char *TClassTable::At(int index)
+char *TClassTable::At(UInt_t index)
 {
     // Returns class at index from sorted class table. Don't use this iterator
     // while modifying the class table. The class table can be modified
@@ -239,7 +288,7 @@ char *TClassTable::At(int index)
     // Returns 0 if index points beyond last class name.
 
    SortTable();
-   if (index >= 0 && index < fgTally) {
+   if (index < fgTally) {
       TClassRec *r = fgSortedTable[index];
       if (r) return r->fName;
    }
@@ -345,6 +394,49 @@ void TClassTable::Add(TProtoClass *proto)
    fgSorted = kFALSE;
 }
 
+//______________________________________________________________________________
+void TClassTable::AddAlternate(const char *normName, const char *alternate)
+{
+   if (!gClassTable)
+      new TClassTable;
+
+   UInt_t slot = ROOT::ClassTableHash(alternate, fgSize);
+
+   for (const TClassAlt *a = fgAlternate[slot]; a; a = a->fNext.get()) {
+      if (strcmp(alternate,a->fName)==0) {
+         if (strcmp(normName,a->fNormName) != 0) {
+            fprintf(stderr,"Error in TClassTable::AddAlternate: "
+                    "Second registration of %s with a different normalized name (old: '%s', new: '%s')\n",
+                    alternate, a->fNormName, normName);
+            return;
+         }
+      }
+   }
+
+   fgAlternate[slot] = new TClassAlt(alternate,normName,fgAlternate[slot]);
+}
+
+//______________________________________________________________________________
+Bool_t TClassTable::Check(const char *cname, std::string &normname)
+{
+   if (!gClassTable || !fgTable) return kFALSE;
+
+   UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
+
+   // Check if 'cname' is a known normalized name.
+   for (TClassRec *r = fgTable[slot]; r; r = r->fNext)
+      if (strcmp(cname,r->fName)==0) return kTRUE;
+
+   // See if 'cname' is register in the list of alternate names
+   for (const TClassAlt *a = fgAlternate[slot]; a; a = a->fNext.get()) {
+      if (strcmp(cname,a->fName)==0) {
+         normname = a->fNormName;
+         return kTRUE;
+      }
+   }
+
+   return kFALSE;
+}
 
 //______________________________________________________________________________
 void TClassTable::Remove(const char *cname)
@@ -354,12 +446,7 @@ void TClassTable::Remove(const char *cname)
 
    if (!gClassTable || !fgTable) return;
 
-   int slot = 0;
-   const char *p = cname;
-
-   while (*p) slot = slot<<1 ^ *p++;
-   if (slot < 0) slot = -slot;
-   slot %= fgSize;
+   UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
 
    TClassRec *r;
    TClassRec *prev = 0;
@@ -370,8 +457,7 @@ void TClassTable::Remove(const char *cname)
          else
             fgTable[slot] = r->fNext;
          fgIdMap->Remove(r->fInfo->name());
-         delete [] r->fName;
-         delete r->fProto;
+         r->fNext = 0; // Do not delete the others.
          delete r;
          fgTally--;
          fgSorted = kFALSE;
@@ -388,31 +474,17 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    // 0 if the class is not in the table. Unless arguments insert is true in
    // which case a new entry is created and returned.
 
-   int slot = 0;
-   const char *p = cname;
+   UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
 
-   while (*p) slot = slot<<1 ^ *p++;
-   if (slot < 0) slot = -slot;
-   slot %= fgSize;
-
-   TClassRec *r;
-
-   for (r = fgTable[slot]; r; r = r->fNext)
+   for (TClassRec *r = fgTable[slot]; r; r = r->fNext)
       if (strcmp(cname,r->fName)==0) return r;
 
    if (!insert) return 0;
 
-   r = new TClassRec;
-   r->fName = 0;
-   r->fId   = 0;
-   r->fDict = 0;
-   r->fInfo = 0;
-   r->fProto= 0;
-   r->fNext = fgTable[slot];
-   fgTable[slot] = r;
+   fgTable[slot] = new TClassRec(fgTable[slot]);
 
    fgTally++;
-   return r;
+   return fgTable[slot];
 }
 
 //______________________________________________________________________________
@@ -519,6 +591,22 @@ TProtoClass *TClassTable::GetProto(const char *cname)
 }
 
 //______________________________________________________________________________
+TProtoClass *TClassTable::GetProtoNorm(const char *cname)
+{
+   // Given the class normalized name returns the TClassProto object for the class.
+   // (uses hash of name).
+
+   if (gDebug > 9) {
+      ::Info("GetDict", "searches for %s", cname);
+      fgIdMap->Print();
+   }
+
+   TClassRec *r = FindElementImpl(cname,kFALSE);
+   if (r) return r->fProto;
+   return 0;
+}
+
+//______________________________________________________________________________
 extern "C" {
    static int ClassComp(const void *a, const void *b)
    {
@@ -558,8 +646,8 @@ void TClassTable::PrintTable()
    Printf("\nDefined classes");
    Printf("class                                 version  bits  initialized");
    Printf("================================================================");
-   int last = fgTally;
-   for (int i = 0; i < last; i++) {
+   UInt_t last = fgTally;
+   for (UInt_t i = 0; i < last; i++) {
       TClassRec *r = fgSortedTable[i];
       if (!r) break;
       n++;
@@ -585,7 +673,7 @@ void TClassTable::SortTable()
       fgSortedTable = new TClassRec* [fgTally];
 
       int j = 0;
-      for (int i = 0; i < fgSize; i++)
+      for (UInt_t i = 0; i < fgSize; i++)
          for (TClassRec *r = fgTable[i]; r; r = r->fNext)
             fgSortedTable[j++] = r;
 
@@ -600,14 +688,9 @@ void TClassTable::Terminate()
    // Deletes the class table (this static class function calls the dtor).
 
    if (gClassTable) {
-      for (int i = 0; i < fgSize; i++)
-         for (TClassRec *r = fgTable[i]; r; ) {
-            TClassRec *t = r;
-            r = r->fNext;
-            fgIdMap->Remove(r->fInfo->name());
-            delete [] t->fName;
-            delete t;
-         }
+      for (UInt_t i = 0; i < fgSize; i++)
+         delete fgTable[i]; // Will delete all the elements in the chain.
+
       delete [] fgTable; fgTable = 0;
       delete [] fgSortedTable; fgSortedTable = 0;
       delete fgIdMap; fgIdMap = 0;
@@ -626,6 +709,15 @@ void ROOT::AddClass(const char *cname, Version_t id,
    // (see the ClassImp macro).
 
    TClassTable::Add(cname, id, info, dict, pragmabits);
+}
+
+//______________________________________________________________________________
+void ROOT::AddClassAlternate(const char *normName, const char *alternate)
+{
+   // Global function called by GenerateInitInstance.
+   // (see the ClassImp macro).
+
+   TClassTable::AddAlternate(normName,alternate);
 }
 
 //______________________________________________________________________________

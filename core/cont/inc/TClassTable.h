@@ -31,18 +31,9 @@
 
 class TProtoClass;
 
-class TClassRec {
-public:
-   char            *fName;
-   Version_t        fId;
-   Int_t            fBits;
-   DictFuncPtr_t    fDict;
-   const type_info *fInfo;
-   TProtoClass     *fProto;
-   TClassRec       *fNext;
-};
-
 namespace ROOT {
+   class TClassAlt;
+   class TClassRec;
    class TMapTypeToClassRec;
 }
 
@@ -54,18 +45,19 @@ friend  class TROOT;
 private:
    typedef ROOT::TMapTypeToClassRec IdMap_t;
 
-   static TClassRec  **fgTable;
-   static TClassRec  **fgSortedTable;
+   static ROOT::TClassAlt **fgAlternate;
+   static ROOT::TClassRec **fgTable;
+   static ROOT::TClassRec **fgSortedTable;
    static IdMap_t     *fgIdMap;
-   static int          fgSize;
-   static int          fgTally;
+   static UInt_t       fgSize;
+   static UInt_t       fgTally;
    static Bool_t       fgSorted;
-   static int          fgCursor;
+   static UInt_t       fgCursor;
 
    TClassTable();
 
-   static TClassRec   *FindElementImpl(const char *cname, Bool_t insert);
-   static TClassRec   *FindElement(const char *cname, Bool_t insert=kFALSE);
+   static ROOT::TClassRec   *FindElementImpl(const char *cname, Bool_t insert);
+   static ROOT::TClassRec   *FindElement(const char *cname, Bool_t insert=kFALSE);
    static void         SortTable();
 
 public:
@@ -81,14 +73,17 @@ public:
                             const type_info &info, DictFuncPtr_t dict,
                             Int_t pragmabits);
    static void          Add(TProtoClass *protoClass);
-   static char         *At(int index);
+   static void          AddAlternate(const char *normname, const char *alternate);
+   static char         *At(UInt_t index);
    int                  Classes();
+   static Bool_t        Check(const char *cname, std::string &normname);
    static Version_t     GetID(const char *cname);
    static Int_t         GetPragmaBits(const char *name);
    static DictFuncPtr_t GetDict(const char *cname);
    static DictFuncPtr_t GetDict(const type_info& info);
    static DictFuncPtr_t GetDictNorm(const char *cname);
    static TProtoClass  *GetProto(const char *cname);
+   static TProtoClass  *GetProtoNorm(const char *cname);
    static void          Init();
    static char         *Next();
    void                 Print(Option_t *option="") const;

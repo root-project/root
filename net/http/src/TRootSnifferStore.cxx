@@ -131,7 +131,8 @@ void TRootSnifferStoreJson::CreateNode(Int_t lvl, const char *nodename)
 {
    // starts new json object, will be closed by CloseNode
 
-   buf->Append(TString::Format("%*s\"%s\" : {", lvl * 4, "", nodename));
+   buf->Append(TString::Format("%*s{", compact ? 0 : lvl * 4, ""));
+   SetField(lvl, "_name", nodename, -1);
 }
 
 //______________________________________________________________________________
@@ -140,27 +141,20 @@ void TRootSnifferStoreJson::SetField(Int_t lvl, const char *field,
 {
    // set field (json field) in current node
 
-   if (nfld == 0)
-      buf->Append("\n");
-   else
-      buf->Append(",\n");
-   buf->Append(TString::Format("%*s\"%s\" : \"%s\"", lvl * 4 + 2, "", field, value));
+   if (nfld>=0) buf->Append(",");
+   if (!compact) buf->Append("\n");
+   buf->Append(TString::Format("%*s\"%s\"%s\"%s\"", compact ? 0 : lvl * 4 + 2, "", field, (compact ? ":" : " : "), value));
 }
 
 //______________________________________________________________________________
-void TRootSnifferStoreJson::BeforeNextChild(Int_t lvl, Int_t nchld, Int_t nfld)
+void TRootSnifferStoreJson::BeforeNextChild(Int_t lvl, Int_t nchld, Int_t)
 {
    // called before next child node created
 
-   if (nchld == 0) {
-      if (nfld == 0)
-         buf->Append("\n");
-      else
-         buf->Append(",\n");
-      buf->Append(TString::Format("%*s\"childs\" : [\n", lvl * 4 + 2, ""));
-   } else {
-      buf->Append(",\n");
-   }
+   buf->Append(",");
+   if (!compact) buf->Append("\n");
+   if (nchld == 0)
+      buf->Append(TString::Format("%*s\"_childs\" : [\n", compact ? 0 : lvl * 4 + 2, ""));
 }
 
 //______________________________________________________________________________
@@ -170,7 +164,7 @@ void TRootSnifferStoreJson::CloseNode(Int_t lvl, const char *, Int_t numchilds)
    // depending from number of childs different xml format is applied
 
    if (numchilds > 0)
-      buf->Append(TString::Format("\n%*s]", lvl * 4 + 2, ""));
-   buf->Append(TString::Format("\n%*s}", lvl * 4, ""));
+      buf->Append(TString::Format("\n%*s]", compact ? 0 : lvl * 4 + 2, ""));
+   buf->Append(TString::Format("\n%*s}", compact ? 0 : lvl * 4, ""));
 }
 

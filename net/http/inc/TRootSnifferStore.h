@@ -48,6 +48,8 @@ public:
       return fResNumChilds;
    }
 
+   virtual Bool_t IsXml() const { return kFALSE; }
+
    ClassDef(TRootSnifferStore, 0) // structure for results store of objects sniffer
 };
 
@@ -69,6 +71,8 @@ public:
    virtual void BeforeNextChild(Int_t lvl, Int_t nchld, Int_t);
    virtual void CloseNode(Int_t lvl, const char *nodename, Int_t numchilds);
 
+   virtual Bool_t IsXml() const { return kTRUE; }
+
    ClassDef(TRootSnifferStoreXml, 0) // xml results store of objects sniffer
 };
 
@@ -78,10 +82,12 @@ public:
 class TRootSnifferStoreJson : public TRootSnifferStore {
 protected:
    TString *buf;     //! output buffer
+   Bool_t compact;   //! produce compact json code
 public:
-   TRootSnifferStoreJson(TString &_buf) :
+   TRootSnifferStoreJson(TString &_buf, Bool_t _compact) :
       TRootSnifferStore(),
-      buf(&_buf) {}
+      buf(&_buf),
+      compact(_compact) {}
    virtual ~TRootSnifferStoreJson() {}
 
    virtual void CreateNode(Int_t lvl, const char *nodename);

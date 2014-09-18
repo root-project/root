@@ -63,9 +63,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
+
 #---Check for cxx11 option------------------------------------------------------------
 if(cxx11)
-  include(CheckCXXCompilerFlag)
   CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
   if(NOT HAS_CXX11)
     message(STATUS "Current compiler does not suppport -std=c++11 option. Switching OFF cxx11 option")
@@ -75,7 +77,6 @@ endif()
 
 #---Check for libcxx option------------------------------------------------------------
 if(libcxx)
-  include(CheckCXXCompilerFlag)
   CHECK_CXX_COMPILER_FLAG("-stdlib=libc++" HAS_LIBCXX11)
   if(NOT HAS_LIBCXX11)
     message(STATUS "Current compiler does not suppport -stdlib=libc++ option. Switching OFF libcxx option")

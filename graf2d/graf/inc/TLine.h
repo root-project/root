@@ -30,11 +30,13 @@
 #ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
 #endif
+#ifndef ROOT_TPoint
+#include "TPoint.h"
+#endif
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
 #endif
 
-class TPoint;
 
 class TLine : public TObject, public TAttLine, public TAttBBox2D {
 

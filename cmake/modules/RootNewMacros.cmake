@@ -879,4 +879,24 @@ macro(ROOT_ADD_BUILTIN_DEPENDENCIES target EXTERNAL)
   add_dependencies(${target} ${EXTERNAL}LIBS)
 endmacro()
 
+#----------------------------------------------------------------------------
+# ROOT_ADD_CXX_FLAG(var flag)
+#----------------------------------------------------------------------------
+function(ROOT_ADD_CXX_FLAG var flag)
+  string(REGEX REPLACE "[-.+/:= ]" "_" flag_esc "${flag}")
+  CHECK_CXX_COMPILER_FLAG("${flag}" CXX_HAS${flag_esc})
+  if(CXX_HAS${flag_esc})
+    set(${var} "${${var}} ${flag}" PARENT_SCOPE)
+  endif()
+endfunction()
+#----------------------------------------------------------------------------
+# ROOT_ADD_C_FLAG(var flag)
+#----------------------------------------------------------------------------
+function(ROOT_ADD_C_FLAG var flag)
+  string(REGEX REPLACE "[-.+/:= ]" "_" flag_esc "${flag}")
+  CHECK_C_COMPILER_FLAG("${flag}" C_HAS${flag_esc})
+  if(C_HAS${flag_esc})
+    set(${var} "${${var}} ${flag}" PARENT_SCOPE)
+  endif()
+endfunction()
 

@@ -11,18 +11,18 @@
 
 //________________________________________________________________________
 //
-// Class for serializing/deserializing object to/from xml.
+// Class for serializing object into JSON format.
 // It redefines most of TBuffer class function to convert simple types,
-// array of simple types and objects to/from xml.
-// Instead of writing a binary data it creates a set of xml structures as
-// nodes and attributes
+// array of simple types and objects to text JSON representation.
 // TBufferJSON class uses streaming mechanism, provided by ROOT system,
-// therefore most of ROOT and user classes can be stored to xml. There are
-// limitations for complex objects like TTree, which can not be yet converted to xml.
+// therefore most of ROOT and user classes can be stored. There are
+// limitations for complex objects like TTree, which can not be yet converted to JSON.
 //________________________________________________________________________
 
 
 #include "TBufferJSON.h"
+
+#include <typeinfo>
 
 #include "Compression.h"
 
@@ -659,7 +659,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl)
       stack = PushStack(2);
       AppendOutput("{", "\"_typename\"");
       AppendOutput(fSemicolon.Data());
-      AppendOutput("\"JSROOTIO.");
+      AppendOutput("\"");
       AppendOutput(cl->GetName());
       AppendOutput("\"");
    } else {
@@ -805,7 +805,7 @@ void  TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
       stack = PushStack(2);
       AppendOutput("\" : {", "\"_typename\"");
       AppendOutput(fSemicolon.Data());
-      AppendOutput("\"JSROOTIO.");
+      AppendOutput("\"");
       AppendOutput(cl->GetName());
       AppendOutput("\"");
    } else {

@@ -865,31 +865,23 @@ const BaseSelectionRule *SelectionRules::IsVarSelected(clang::VarDecl* D, const 
    return selector;
 }
 
-const BaseSelectionRule *SelectionRules::IsFunSelected(clang::FunctionDecl* D, const std::string& qual_name) const
+const BaseSelectionRule *SelectionRules::IsFunSelected(clang::FunctionDecl *D, const std::string &qual_name) const
 {
-   std::list<VariableSelectionRule>::const_iterator it;
-   std::list<VariableSelectionRule>::const_iterator it_end;
    std::string prototype;
-
    GetFunctionPrototype(D, prototype);
    prototype = qual_name + prototype;
-#ifdef SELECTION_DEBUG
-   std::cout<<"\tIn isFunSelected()"<<prototype<<std::endl;
-#endif
-   it = fFunctionSelectionRules.begin();
-   it_end = fFunctionSelectionRules.end();
 
-   const BaseSelectionRule *selector = 0;
+   const BaseSelectionRule *selector = nullptr;
    // iterate through all the rules
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
    // if we have No - it is veto even if we have explicit yes as well
-   for(; it != it_end; ++it) {
-      if (BaseSelectionRule::kNoMatch != it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, false)) {
-         if (it->GetSelected() == BaseSelectionRule::kNo) {
+   for (const auto & rule : fFunctionSelectionRules) {
+      if (BaseSelectionRule::kNoMatch != rule.Match(D, qual_name, prototype, false)) {
+         if (rule.GetSelected() == BaseSelectionRule::kNo) {
             // The rule did explicitly request to not select this entity.
-            return 0;
+            return nullptr;
          } else {
-            selector = &(*it);
+            selector = &(rule);
          }
       }
    }

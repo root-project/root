@@ -37,6 +37,7 @@
 #include "TClassTable.h"
 #include "TDataMember.h"
 #include "TDataType.h"
+#include "TEnum.h" 
 #include "TError.h"
 #include "TExMap.h"
 #include "TFunctionTemplate.h"
@@ -1279,7 +1280,7 @@ void TClass::Init(const char *name, Version_t cversion,
          // instantiation.
          fCanLoadClassInfo = kTRUE;
          // Here we check and grab the info from the rootpcm.
-         TProtoClass *proto = TClassTable::GetProto(GetName());
+         TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
          if (proto && proto->FillTClass(this)) {
             fHasRootPcmInfo = kTRUE;
          }
@@ -2091,19 +2092,11 @@ Bool_t TClass::CanSplit() const
    if (this == TObject::Class())  { This->fCanSplit = 1; return kTRUE; }
    if (fName == "TClonesArray")   { This->fCanSplit = 1; return kTRUE; }
    if (fRefProxy)                 { This->fCanSplit = 0; return kFALSE; }
-   if (InheritsFrom("TRef"))      { This->fCanSplit = 0; return kFALSE; }
-   if (InheritsFrom("TRefArray")) { This->fCanSplit = 0; return kFALSE; }
-   if (InheritsFrom("TArray"))    { This->fCanSplit = 0; return kFALSE; }
    if (fName.BeginsWith("TVectorT<")) { This->fCanSplit = 0; return kFALSE; }
    if (fName.BeginsWith("TMatrixT<")) { This->fCanSplit = 0; return kFALSE; }
-   if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) { This->fCanSplit = 0; return kFALSE; }
-   if (InheritsFrom("TTree"))     { This->fCanSplit = 0; return kFALSE; }
    if (fName == "string")         { This->fCanSplit = 0; return kFALSE; }
    if (fName == "std::string")    { This->fCanSplit = 0; return kFALSE; }
 
-   // If we do not have a showMembers or a fClassInfo and we have a streamer,
-   // we are in the case of class that can never be split since it is
-   // opaque to us.
    if (GetCollectionProxy()!=0) {
       // For STL collection we need to look inside.
 
@@ -2132,7 +2125,9 @@ Bool_t TClass::CanSplit() const
       This->fCanSplit = 1;
       return kTRUE;
 
-   } else if (GetStreamer()!=0) {
+   }
+
+   if (GetStreamer()!=0) {
 
       // We have an external custom streamer provided by the user, we must not
       // split it.
@@ -2152,6 +2147,13 @@ Bool_t TClass::CanSplit() const
       This->fCanSplit = 0;
       return kFALSE;
    }
+
+   // Calls to InheritsFrom for STL collection might cause unnecessary autoparsing.
+   if (InheritsFrom("TRef"))      { This->fCanSplit = 0; return kFALSE; }
+   if (InheritsFrom("TRefArray")) { This->fCanSplit = 0; return kFALSE; }
+   if (InheritsFrom("TArray"))    { This->fCanSplit = 0; return kFALSE; }
+   if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) { This->fCanSplit = 0; return kFALSE; }
+   if (InheritsFrom("TTree"))     { This->fCanSplit = 0; return kFALSE; }
 
    TClass *ncThis = const_cast<TClass*>(this);
    TIter nextb(ncThis->GetListOfBases());
@@ -2808,6 +2810,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
    }
 
+   // Try to see if this is an enumerator
+   if(TEnum::GetEnum(name,load ? TEnum::kAutoload : TEnum::kNone)) return nullptr;
+
    // Check the interpreter only after autoparsing the template if any.
    {
       std::string::size_type posLess = normalizedName.find('<');
@@ -3237,7 +3242,7 @@ TList *TClass::GetListOfBases()
       if (fCanLoadClassInfo) {
          if (fState == kHasTClassInit) {
             // The bases are in our ProtoClass; we don't need the class info.
-            TProtoClass *proto = TClassTable::GetProto(GetName());
+            TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
             if (proto && proto->FillTClass(this)) {
                fHasRootPcmInfo = kTRUE;
             }
@@ -3281,7 +3286,7 @@ TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
    if (!fData) {
       if (fCanLoadClassInfo && fState == kHasTClassInit) {
          // The members are in our ProtoClass; we don't need the class info.
-         TProtoClass *proto = TClassTable::GetProto(GetName());
+         TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
          if (proto && proto->FillTClass(this)) {
             fHasRootPcmInfo = kTRUE;
             return fData;
@@ -5715,7 +5720,7 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
    for (int i=0; i<il; i++) id = id*3+name[i];
 
    TList *tlb = ((TClass*)this)->GetListOfBases();
-   if (tlb) {   // Loop over bases
+   if (tlb && !TClassEdit::IsSTLCont(name)) {   // Loop over bases if not stl
 
       TIter nextBase(tlb);
 

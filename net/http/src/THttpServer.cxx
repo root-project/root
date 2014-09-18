@@ -8,6 +8,7 @@
 #include "TImage.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "RVersion.h"
 
 #include "THttpEngine.h"
 #include "TRootSniffer.h"
@@ -15,16 +16,25 @@
 
 #include <string>
 #include <cstdlib>
+#include <stdlib.h>
 
-extern "C" unsigned long crc32(unsigned long crc, const unsigned char* buf, unsigned int buflen);
-extern "C" unsigned long R__memcompress(char* tgt, unsigned long tgtsize, char* src, unsigned long srcsize);
+#ifdef COMPILED_WITH_DABC
+   extern "C" unsigned long crc32(unsigned long crc, const unsigned char* buf, unsigned int buflen);
+   extern "C" unsigned long R__memcompress(char* tgt, unsigned long tgtsize, char* src, unsigned long srcsize);
+
+   unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int buflen)
+   { return crc32(crc, buf, buflen); }
+#else
+   #include "RZip.h"
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // THttpCallArg                                                         //
 //                                                                      //
 // Contains arguments for single HTTP call                              //
-// Must be used in THttpEngine to process icomming http requests        //
+// Must be used in THttpEngine to process incoming http requests        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -184,9 +194,7 @@ THttpServer::THttpServer(const char *engine) :
    fTimer(0),
    fSniffer(0),
    fMainThrdId(0),
-   fHttpSys(),
-   fRootSys(),
-   fJSRootIOSys(),
+   fJsRootSys(),
    fTopName("ROOT"),
    fMutex(),
    fCallArgs()
@@ -207,29 +215,24 @@ THttpServer::THttpServer(const char *engine) :
 
    // Info("THttpServer", "Create %p in thrd %ld", this, (long) fMainThrdId);
 
-   const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (rootsys != 0) fRootSys = rootsys;
-
 #ifdef COMPILED_WITH_DABC
 
    const char *dabcsys = gSystem->Getenv("DABCSYS");
-   if (dabcsys != 0) fHttpSys = TString::Format("%s/plugins/http", dabcsys);
+   if (dabcsys != 0)
+      fJsRootSys = TString::Format("%s/plugins/root/js", dabcsys);
 
 #else
-   if (fRootSys.Length() > 0)
-      fHttpSys = TString::Format("%s/etc/http", fRootSys.Data());
+   const char *rootsys = gSystem->Getenv("ROOTSYS");
+
+   if (rootsys != 0)
+      fJsRootSys = TString::Format("%s/etc/http", rootsys);
 #endif
 
-   if (fHttpSys.IsNull()) fHttpSys = ".";
+   const char* jsrootsys = getenv("JSROOTSYS");
+   if (jsrootsys!=0) fJsRootSys = jsrootsys;
 
-   const char *jsrootiosys = gSystem->Getenv("JSROOTIOSYS");
-   if (jsrootiosys != 0)
-      fJSRootIOSys = jsrootiosys;
-   else
-      fJSRootIOSys = fHttpSys + "/JSRootIO";
-
-   fDefaultPage = fHttpSys + "/files/main.htm";
-   fDrawPage = fHttpSys + "/files/single.htm";
+   fDefaultPage = fJsRootSys + "/files/online.htm";
+   fDrawPage = fJsRootSys + "/files/draw.htm";
 
    SetSniffer(new TRootSniffer("sniff"));
 
@@ -348,37 +351,20 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 {
    // verifies that request just file name
-   // File names typically contains prefix like "httpsys/" or "jsrootiosys/"
+   // File names typically contains prefix like "jsrootsys/"
    // If true, method returns real name of the file,
    // which should be delivered to the client
    // Method is thread safe and can be called from any thread
 
    if ((uri == 0) || (strlen(uri) == 0)) return kFALSE;
 
-   std::string fname = uri;
-   size_t pos = fname.rfind("httpsys/");
-   if (pos != std::string::npos) {
-      fname.erase(0, pos + 7);
-      res = fHttpSys + fname.c_str();
+   TString fname = uri;
+
+   Ssiz_t pos = fname.Index("jsrootsys/");
+   if (pos != kNPOS) {
+      fname.Remove(0, pos + 9);
+      res = fJsRootSys + fname;
       return kTRUE;
-   }
-
-   if (!fRootSys.IsNull()) {
-      pos = fname.rfind("rootsys/");
-      if (pos != std::string::npos) {
-         fname.erase(0, pos + 7);
-         res = fRootSys + fname.c_str();
-         return kTRUE;
-      }
-   }
-
-   if (!fJSRootIOSys.IsNull()) {
-      pos = fname.rfind("jsrootiosys/");
-      if (pos != std::string::npos) {
-         fname.erase(0, pos + 11);
-         res = fJSRootIOSys + fname.c_str();
-         return kTRUE;
-      }
    }
 
    return kFALSE;
@@ -514,18 +500,13 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    if (filename == "h.json")  {
 
-      arg->fContent.Append("{\n");
+      TRootSnifferStoreJson store(arg->fContent, arg->fQuery.Index("compact")!=kNPOS);
 
-      {
-         TRootSnifferStoreJson store(arg->fContent);
+      const char *topname = fTopName.Data();
+      if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
 
-         const char *topname = fTopName.Data();
-         if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
+      fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
 
-         fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
-      }
-
-      arg->fContent.Append("\n}\n");
       arg->SetJson();
    } else
 
@@ -545,8 +526,8 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       char *objbuf = (char*) arg->GetContent();
       Long_t objlen = arg->GetContentLength();
 
-      unsigned long objcrc = crc32(0, NULL, 0);
-      objcrc = crc32(objcrc, (const unsigned char*) objbuf, objlen);
+      unsigned long objcrc = R__crc32(0, NULL, 0);
+      objcrc = R__crc32(objcrc, (const unsigned char*) objbuf, objlen);
 
       // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
       Int_t buflen = 10 + objlen + 8;

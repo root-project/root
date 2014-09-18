@@ -1323,7 +1323,7 @@ conftest.out: conftest.h
 EOF
 
     $gnumake -f conftest.mk >> $logfile 2>&1
-    if test $? -eq 0 ; then
+    if test $? -eq 0 && test -f conftest.out; then
         preprocessor_output="`grep '^[^#]' conftest.out`"
         logmsg " Preprocessing OK"
     else
@@ -4852,19 +4852,22 @@ if test ! "x$enable_ruby" = "xno" ; then
         rubyincdir="$rubyincdir $found_dir"
     fi
 
-    if test "x$arch" = "xwin32" || \
-       test "x$enable_shared" = "xno" ; then
-        check_library_options=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["LIBRUBY_A"]' | sed 's|\.a.*||'`
-    else
-        check_library_options=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["LIBRUBY"]' | sed 's|\.so.*||'`
+    rubylib=""
+    if test ! "x$myruby" = "x" && test -x "$myruby" ; then
+       if test "x$arch" = "xwin32" || \
+          test "x$enable_shared" = "xno" ; then
+           check_library_options=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["LIBRUBY_A"]' | sed 's|\.a.*||'`
+        else
+           check_library_options=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["LIBRUBY"]' | sed 's|\.so.*||'`
+        fi
+        check_library "$check_library_options" \
+           "$enable_shared" "$rubylibdir" \
+           $RUBYDIR ${RUBYDIR:+$RUBYDIR/lib} \
+           $rubysyslibdir \
+           /usr/local/lib /usr/lib
+        rubylib=$found_lib
+        rubylibdir=$found_dir
     fi
-    check_library "$check_library_options" \
-        "$enable_shared" "$rubylibdir" \
-        $RUBYDIR ${RUBYDIR:+$RUBYDIR/lib} \
-        $rubysyslibdir \
-        /usr/local/lib /usr/lib
-    rubylib=$found_lib
-    rubylibdir=$found_dir
 
     if test "x$rubyincdir" = "x" || test "x$rubylib" = "x"; then
         enable_ruby="no"
@@ -5090,7 +5093,7 @@ if test "x$enable_xrootd" = "xyes" ; then
          fi
          if test "x$oldver" = "xyes" ; then
             decver=`echo $tmpver | sed 's|[^0-9]||g' | cut -c1-8`
-	       fi
+         fi
       fi
    fi
    if test "x$xrdver" = "xunknown" ; then
@@ -6253,18 +6256,18 @@ if test "x$enable_vc" = "xyes"; then
     message "Checking required compiler/assembler workarounds"
     # with GCC and Open64 check the binutils version. If it's less than 2.18.93 the assembler doesn't know xgetbv
     case $arch in
-	macos*)
-	    ;;
-	linuxppc*)
-	    enable_vc="no"
-	    ;;
-	*)
-	    as=`${altcxx} -print-prog-name=as`
-            as_version=`${as} --version|head -n1|sed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
-	    if test $as_version -lt 2018093; then
-		vcflags="$vcflags -DVC_NO_XGETBV"
-	    fi
-	    ;;
+    macos*)
+       ;;
+    linuxppc*)
+       enable_vc="no"
+       ;;
+    *)
+       as=`${altcxx} -print-prog-name=as`
+       as_version=`${as} --version|head -n1|sed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
+       if test $as_version -lt 2018093; then
+          vcflags="$vcflags -DVC_NO_XGETBV"
+       fi
+       ;;
     esac
     invoke_preprocessor <<EOF
 #define _MAKE_VERSION(A, B, C) A##.##B##.##C
@@ -6377,17 +6380,17 @@ EOF
 
     # check for ABI version compiler flags
     case $compiler in
-	GCC)
-	    message "Checking ABI version compiler flags"
-	    abiversioncxxflag=""
-	    for flag in '-fabi-version=0' '-fabi-version=4'; do
-		check_cxxopt $flag
-		if test $cxxopt_result -eq 1; then
-		    abiversioncxxflag="$flag"
-		    break;
-		fi
-	    done
-	    test -n "$abiversioncxxflag" && result "$abiversioncxxflag" || result 'N/A'
+    GCC)
+       message "Checking ABI version compiler flags"
+       abiversioncxxflag=""
+       for flag in '-fabi-version=0' '-fabi-version=4'; do
+          check_cxxopt $flag
+          if test $cxxopt_result -eq 1; then
+             abiversioncxxflag="$flag"
+             break;
+          fi
+       done
+       test -n "$abiversioncxxflag" && result "$abiversioncxxflag" || result 'N/A'
     esac
 fi
 

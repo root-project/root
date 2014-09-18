@@ -1,0 +1,100 @@
+This is further development of JSRootIO, original version was download from  
+https://root.cern.ch/svn/root/trunk/js
+
+At its current state code is very differ from original
+project of Bertrand Bellenot, but provides at most similar functionality.
+Main motivation for changes - fix different errors,
+make JavaScript code more flexible and applicable for online environment. 
+
+September 2014:
+1. First try to handle resize of canvas in the browser, for the 
+   moment works only with collapsible layout
+2. Also first try to interactively move separation line between
+   browser and drawing field.
+3. Small fix of minor ticks drawing on the axis
+4. Introduce display class for MDI drawing. Provide two implementations - 
+   'collapsible' for old kind and 'tabs' for new kinds.  
+5. Adjust size of color palette drawing when labels would take more place as provided.
+6. Add correct filling of statistic for TProfile, fix small problem with underflow/overflow bins.
+7. Provide way to select display kind ('collapsible', 'tabs') in the simple GUI.
+ 
+
+August 2014:
+1. All communication between server and browser done with JSON format.
+2. Fix small error in dtree.js - one should always set 
+   last sibling (_ls) property while tree can be dynamically changed.  
+3. In JSRootCore.js provide central function, which handles different kinds 
+   of XMLHttpRequest.  Use only async requests, also when getting file header.
+4. Fully reorganize data management in file/tree/directory/collection hierarchical
+   display. Now complete description collected in HPainter class and decoupled from
+   visualization, performed with dTree.js. 
+5. Remove all global variables from the code.
+6. Automatic scripts/style loading handled via JSROOT.loadScript() function.
+   One can specify arbitrary scripts list, which asynchronously loaded by browser.
+7. Method to build simple GUI changed and more simplified :). The example in index.htm.
+   While loadScript and AssertPrerequisites functions moved to JSROOT, one
+   can easily build many different kinds of GUIs, reusing provided JSRootCore.js functions.         
+8. In example.htm also use AssertPrerequisites to load necessary scripts.
+   This helps to keep code up-to-date even by big changes in JavaScript code.
+9. Provide monitoring of online THttpServer with similar interface as for ROOT files.
+10.Fix several errors in TKey Streamer, use member names as in ROOT itself.        
+11.Keep the only version identifier JSROOT.version for JS code
+12.One can specify in JSROOT.AssertPrerequisites functionality which is required.
+   One could specify '2d', 'io' (default) or '3d'.
+13.Use new AssertPrerequisites functionality to load only required functionality.
+14.When displaying single element, one could specify draw options and monitor property like:
+       http://localhost:8080/Files/job1.root/hpxpy/draw.htm?opt=col&monitor=2000
+   Such link is best possibility to integrate display into different HTML pages,
+   using <iframe/> tag like:
+      <iframe src="http://localhost:8080/Files/job1.root/hpx/draw.htm" 
+             style="width: 800px; height:600px"></iframe>
+15.Remove 'JSROOTIO.' prefix from _typename. Now real class name is used.   
+16.Use in all scripts JSROOT as central 'namespace'
+17.Introduce context menu in 3D, use it for switch between 2D/3D modes
+18.Use own code to generate hierarchical structure in HTML, replace dtree.js which is 
+   extremely slow for complex hierarchies. Dramatically improve performance for
+   structures with large (~1000) number of items. 
+19.Deliver to the server title of the objects, display it as hint in the browser.
+20.Better handling of special characters in the hierarchies - allows to display
+   symbols like ' or " in the file structure. 
+
+
+July 2014:
+1. Migration to d3.v3.js and jQuery v2.1.1
+2. Fix errors in filling of histogram statbox
+3. Possibility of move and resize of statbox, title, color palete
+4. Remove many (not all) global variables
+5. Example with direct usage of JSRootIO graphics
+6. Example of inserting ROOT graphics from THttpServer into <iframe></iframe> 
+
+May 2014:
+1. This JSRootIO code together with THttpServer class included
+   in ROOT repository 
+
+March 2014:
+1. Introduce JSROOT.TBuffer class, which plays similar role 
+   as TBuffer in native ROOT I/O. Simplifies I/O logic,
+   reduce duplication of code in many places, fix errors.
+   Main advantage - one could try to keep code synchronous with C++.
+2. Avoid objects cloning when object referenced several times.
+3. Treat special cases (collection, arrays) in one place.
+   This is major advantage, while any new classes need to be implemented only once.
+4. Object representation, produced by JSRootIO is similar to
+   objects, produced by TBufferJSON class. By this one can exchange
+   I/O engine and use same JavaSctript graphic for display.
+5. More clear functions to display different elements of the file.
+   In the future functions should be fully separated from I/O part
+   and organized in similar way as online part.    
+6. Eliminate usage of gFile pointer in the I/O part. 
+7. Provide TBufferJSON::JsonWriteMember method. It allows to stream any 
+   selected data member of the class. Supported are: 
+   basic data types, arrays of basic data types, TString, TArray classes. 
+   Also any object as data member can be streamed.
+8. TRootSniffer do not creates sublevels for base classes
+   
+    
+To do:
+1. Redraw of canvas do not work at all.    
+3. In JSROOT.R__unzip buffers bigger than 16 MB (0xfffffff) are not 
+   treated correctly. In TKey.cxx, lines 259-275, big raw buffer cutted on blocks of 16MB.
+    

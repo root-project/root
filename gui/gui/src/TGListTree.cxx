@@ -40,6 +40,7 @@
 #include <stdlib.h>
 
 #include "TROOT.h"
+#include "TClass.h"
 #include "TGListTree.h"
 #include "TGPicture.h"
 #include "TGCanvas.h"
@@ -899,7 +900,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
          // must derive from TObject (in principle user can put pointer
          // to anything in user data field). Add check.
          TObject *obj = (TObject *)item->GetUserData();
-         if (obj && obj->InheritsFrom(TObject::Class())) {
+         if (obj && obj->IsA()->IsTObject()) {
             SetToolTipText(obj->GetTitle(), item->fXtext,
                            item->fY - pos.fY + item->fHeight, 1000);
          }

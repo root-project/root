@@ -46,6 +46,8 @@ void XMLReader::PopulateMap(){
    XMLReader::fgMapTagNames["/member"] = kEndField; // field and member treated identically
    XMLReader::fgMapTagNames["lcgdict"] = kLcgdict;
    XMLReader::fgMapTagNames["/lcgdict"] = kEndLcgdict;
+   XMLReader::fgMapTagNames["rootdict"] = kLcgdict;
+   XMLReader::fgMapTagNames["/rootdict"] = kEndLcgdict;
    XMLReader::fgMapTagNames["selection"] = kSelection;
    XMLReader::fgMapTagNames["/selection"] = kEndSelection;
    XMLReader::fgMapTagNames["exclusion"] = kExclusion;
@@ -58,6 +60,7 @@ void XMLReader::PopulateMap(){
    XMLReader::fgMapTagNames["/read"] = kEndIoread;
    XMLReader::fgMapTagNames["readraw"] = kBeginIoreadRaw;
    XMLReader::fgMapTagNames["/readraw"] = kEndIoreadRaw;
+   XMLReader::fgMapTagNames["typedef"] = kTypedef;
 }
 
 /*
@@ -389,13 +392,15 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
 
                   // creates new Attributes object and pushes it back in the vector
                   // then Sets the variables in the initial state - if there are other attributes to be read
-                  if (attr_name == "proto_pattern") {
-                     //int pos = attr_value.find_last_of("(");
-                     printf("NOT IMPLEMENTED YET!\n");
-                  }
+
+                  // For the moment the proto pattern is not implemented. The current ROOT6 architecture
+                  // relies on ABI compatibility for calling functions, no stub functions are present.
+                  // The concept of selecting/excluding functions is not defined.
+//                   if (attr_name == "proto_pattern") {
+//                      printf("XMLReader::GetAttributes(): proto_pattern selection not implemented yet!\n");
+//                   }
                   ROOT::TMetaUtils::Info(0, "*** Attribute: %s = \"%s\"\n", attr_name.c_str(), attr_value.c_str());
-                  Attributes at(attr_name, attr_value);
-                  out.push_back(at);
+                  out.emplace_back(attr_name, attr_value);
                   attr_name = "";
                   attr_value = "";
                   namefound = false;
@@ -482,10 +487,10 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
       }
 
       if (!tagStr.empty()){
-         std::vector<Attributes> attr;
+         std::vector<Attributes> attrs;
          std::string name;
          ETagNames tagKind = GetNameOfTag(tagStr, name);
-         bool attrError = GetAttributes(tagStr, attr);
+         bool attrError = GetAttributes(tagStr, attrs);
          if (!attrError) {
             ROOT::TMetaUtils::Error(0,"Attribute at line %s. Bad tag: %s\n", lineNumCharp, tagStrCharp);
             out.ClearSelectionRules();
@@ -582,8 +587,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   file.getline(lineChars,lineCharsSize);
                   lineStr=lineChars;
                }
-               Attributes at("code", codeAttrVal);
-               attr.push_back(at);
+               attrs.emplace_back("code", codeAttrVal);
                break;
             }
             case kEndIoread:
@@ -645,7 +649,6 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   out.ClearSelectionRules();
                   return false;
                }
-               // DEBUG std::cout<<std::endl<<"---------Exclusion part----------"<<std::endl<<std::endl;
                exclusion=true;
                break;
             }
@@ -760,6 +763,19 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                bsr = vsr;
                break;
             }
+            case kTypedef:
+            {
+               if (inClass){
+                  //this is an error
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s inside a <class> element\n", lineNumCharp,tagStrCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }
+               csr = new ClassSelectionRule(fCount++, fInterp);
+               attrs.emplace_back("fromTypedef", "true");
+               bsr = csr;
+               break;
+            }
             case kEnum:
             {
                if (inClass){
@@ -791,7 +807,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
          // Take care of ioread rules
          if (tagKind == kBeginIoread || tagKind == kBeginIoreadRaw){
             // A first sanity check
-            if (attr.empty()){
+            if (attrs.empty()){
                ROOT::TMetaUtils::Error(0,"At line %s. ioread element has no attributes.\n",lineNumCharp);
                return false;
             }
@@ -805,8 +821,8 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             // The check for the sanity of the pragma is delegated to the ProcessReadPragma routine
 
             std::map<std::string,std::string> pragmaArgs;
-            for (int i = 0, n = attr.size(); i < n; ++i) {
-               pragmaArgs[attr[i].fName]=attr[i].fValue;
+            for (int i = 0, n = attrs.size(); i < n; ++i) {
+               pragmaArgs[attrs[i].fName]=attrs[i].fValue;
             }
 
             std::stringstream pragmaLineStream;
@@ -890,13 +906,13 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
 //             // DEBUG else std::cout<<"No"<<std::endl;
 
 
-            if (!attr.empty()){
+            if (!attrs.empty()){
                // Cache the name and the value
                std::string iAttrName;
                std::string iAttrValue;
-               for (int i = 0, n = attr.size(); i < n; ++i) {
-                  iAttrName=attr[i].fName;
-                  iAttrValue=attr[i].fValue;
+               for (int i = 0, n = attrs.size(); i < n; ++i) {
+                  iAttrName=attrs[i].fName;
+                  iAttrValue=attrs[i].fValue;
                   // Set the class version
                   if (tagKind == kClass &&
                       csr &&
@@ -906,6 +922,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   }
 
                   if (tagKind == kClass ||
+                      tagKind == kTypedef ||
                       tagKind == kProperties ||
                       tagKind == kEnum ||
                       tagKind == kFunction ||
@@ -951,6 +968,9 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
          switch(tagKind) {
             case kClass:
                if (!inClass) out.AddClassSelectionRule(*csr);
+               break;
+            case kTypedef:
+               out.AddClassSelectionRule(*csr);
                break;
             case kFunction:
                out.AddFunctionSelectionRule(*fsr);

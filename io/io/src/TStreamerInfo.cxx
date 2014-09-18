@@ -456,7 +456,7 @@ void TStreamerInfo::Build()
                if (dmCounter) {
                   element = new TStreamerLoop(dmName, dmTitle, offset, dm->GetArrayIndex(), dmCounter->GetClass()->GetName(), dmCounter->GetClass()->GetClassVersion(), dmFull);
                } else {
-                  if (clm->InheritsFrom(TObject::Class())) {
+                  if (clm->IsTObject()) {
                      element = new TStreamerObjectPointer(dmName, dmTitle, offset, dmFull);
                   } else {
                      element = new TStreamerObjectAnyPointer(dmName, dmTitle, offset, dmFull);
@@ -465,7 +465,7 @@ void TStreamerInfo::Build()
                      }
                   }
                }
-            } else if (clm->InheritsFrom(TObject::Class())) {
+            } else if (clm->IsTObject()) {
                element = new TStreamerObject(dmName, dmTitle, offset, dmFull);
             } else if ((clm == TString::Class()) && !dmIsPtr) {
                element = new TStreamerString(dmName, dmTitle, offset);
@@ -2096,7 +2096,7 @@ void TStreamerInfo::BuildOld()
                if (dm->IsaPointer()) {
                   if (strncmp(dm->GetTitle(),"->",2)==0) {
                      // We are fine, nothing to do.
-                     if (newClass->InheritsFrom(TObject::Class())) {
+                     if (newClass->IsTObject()) {
                         newType = kObjectp;
                      } else if (newClass->GetCollectionProxy()) {
                         newType = kSTLp;
@@ -2104,7 +2104,7 @@ void TStreamerInfo::BuildOld()
                         newType = kAnyp;
                      }
                   } else {
-                     if (TClass::GetClass(dm->GetTypeName())->InheritsFrom(TObject::Class())) {
+                     if (TClass::GetClass(dm->GetTypeName())->IsTObject()) {
                         newType = kObjectP;
                      } else if (newClass->GetCollectionProxy()) {
                         newType = kSTLp;
@@ -2121,7 +2121,7 @@ void TStreamerInfo::BuildOld()
                      newType = kTObject;
                   } else if (newClass == TNamed::Class()) {
                      newType = kTNamed;
-                  } else if (newClass->InheritsFrom(TObject::Class())) {
+                  } else if (newClass->IsTObject()) {
                      newType = kObject;
                   } else {
                      newType = kAny;
@@ -3005,7 +3005,7 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
 
    TIter next(GetElements());
    TStreamerElement *el;
-   while ( (el=(TStreamerElement*)next()) ) {
+   while ( (el=(TStreamerElement*)next()) && !TClassEdit::IsSTLCont(name)) { // loop over bases if not stl
       if (el->IsBase()) {
          name = el->GetName();
          il = name.Length();
@@ -3508,7 +3508,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    }
 
    TClass *cl = gROOT->GetClass(GetName());
-   if (fClassVersion > 1 || (cl && cl->InheritsFrom(TObject::Class())) ) {
+   if (fClassVersion > 1 || (cl && cl->IsTObject()) ) {
       // add 1 to class version in case we didn't manage reproduce the class layout to 100%.
       if (fClassVersion == 0) {
          // If the class was declared 'transient', keep it that way.

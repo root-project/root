@@ -33,7 +33,10 @@
 #include "TTree.h"
 #include "TBranch.h"
 #include "TBranchElement.h"
+#include "TBranchObject.h"
 #include "TLeaf.h"
+#include "TLeafElement.h"
+#include "TLeafObject.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 
@@ -1265,13 +1268,15 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          }
 
       // for return of a full object
-         TClass* klass = TClass::GetClass( branch->GetClassName() );
-         if ( klass && branch->GetAddress() )
-            return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
+         if ( branch->IsA() == TBranchElement::Class() || branch->IsA() == TBranchObject::Class() ) {
+            TClass* klass = TClass::GetClass( branch->GetClassName() );
+            if ( klass && branch->GetAddress() )
+               return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
 
-      // try leaf, otherwise indicate failure by returning a typed null-object
-         if ( ! tree->GetLeaf( name ) )
-            return BindRootObjectNoCast( NULL, klass );
+         // try leaf, otherwise indicate failure by returning a typed null-object
+            if ( klass && ! tree->GetLeaf( name ) )
+               return BindRootObjectNoCast( NULL, klass );
+         }
       }
 
    // if not, try leaf
@@ -1306,7 +1311,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          // value types
             TConverter* pcnv = CreateConverter( leaf->GetTypeName() );
             PyObject* value = 0;
-            if ( TClass::GetClass( leaf->GetTypeName() ) )
+            if ( leaf->IsA() == TLeafElement::Class() || leaf->IsA() == TLeafObject::Class() )
                value = pcnv->FromMemory( (void*)*(char**)leaf->GetValuePointer() );
             else
                value = pcnv->FromMemory( (void*)leaf->GetValuePointer() );

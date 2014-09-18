@@ -367,20 +367,22 @@ Int_t PyROOT::TMethodHolder::GetPriority()
       // argument), NOT for unknown classes as that concept no longer exists
          if ( strstr( aname.c_str(), "void*" ) )
          // TODO: figure out in general all void* converters
-            priority -= 100;  // void*/void** shouldn't be too greedy
+            priority -= 10000;     // void*/void** shouldn't be too greedy
          else if ( strstr( aname.c_str(), "float" ) )
-            priority -= 30;   // double preferred over float (no float in python)
+            priority -= 1000;      // double preferred (no float in python)
          else if ( strstr( aname.c_str(), "long double" ) )
-            priority -= 15;   // id, but better than float
+            priority -= 100;       // id, but better than float
          else if ( strstr( aname.c_str(), "double" ) )
-            priority -= 10;   // char, int, long preferred over double
-
+            priority -= 10;        // char, int, long can't convert float,
+                                   // but vv. works, so prefer the int types
+         else if ( strstr( aname.c_str(), "bool" ) )
+            priority += 1;         // bool over int (does accept 1 and 0)
       } else if ( ! arg.IsComplete() ) {
       // class is known, but no dictionary available, 2 more cases: * and &
          if ( aname[ aname.size() - 1 ] == '&' )
-            priority -= 3000;
+            priority -= 1000000;
          else
-            priority -= 1000; // prefer pointer passing over reference
+            priority -= 100000; // prefer pointer passing over reference
 
       } else {
       // resolve a few special cases (these are valid & known, but are lined up
@@ -545,7 +547,7 @@ Bool_t PyROOT::TMethodHolder::SetMethodArgs( PyObject* args, Long_t user )
 PyObject* PyROOT::TMethodHolder::Execute( void* self, Bool_t release_gil )
 {
 // call the interface method
-   R__LOCKGUARD2( gGlobalMutex );
+
    PyObject* result = 0;
 
    if ( Utility::gSignalPolicy == Utility::kFast ) {

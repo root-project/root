@@ -60,7 +60,8 @@ namespace ROOT {
                           const cling::Interpreter &interp,
                           const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
                           const ROOT::TMetaUtils::RConstructorTypes&,
-                          bool &needCollectionProxy);
+                          bool &needCollectionProxy,
+                          void (*emitStreamerInfo)(const char*) );
 //       void WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl);
 //       void WriteStreamer(FILE *file);
 

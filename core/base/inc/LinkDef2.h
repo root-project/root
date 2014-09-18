@@ -20,7 +20,6 @@
 
 #pragma extra_include "vector";
 #pragma extra_include "string";
-#pragma extra_include "iostream";
 
 #pragma create TClass string;
 #pragma link C++ class std::vector<string>;

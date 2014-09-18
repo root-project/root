@@ -41,15 +41,11 @@
 #include "THashList.h"
 #endif
 
-#include "XrdOuc/XrdOucString.hh"
-#include "XrdClient/XrdClientVector.hh"
-
 class XrdClientAdmin;
 class TCollection;
 class TXNetSystemConnectGuard;
 
-typedef XrdClientVector<XrdOucString> vecString;
-typedef XrdClientVector<bool>         vecBool;
+typedef /*XrdClientVector<XrdOucString>*/ void* VecStringVP_t;
 
 class TXrdClientAdminWrapper : public TNamed {
 public:
@@ -67,8 +63,7 @@ private:
    Bool_t          fIsXRootd;     // Nature of remote file server
    TString         fDir;          // Current directory
    void           *fDirp;         // Directory pointer
-   vecString       fDirList;      // Buffer for directory content
-   Bool_t          fDirListValid; // fDirList content valid ?
+   VecStringVP_t   fDirList;      // Buffer for directory content
    TString         fDirEntry;     // Last dir entry
    TString         fUrl;          // Initial url
 

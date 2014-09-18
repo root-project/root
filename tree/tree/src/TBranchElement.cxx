@@ -363,7 +363,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
       if (fBranchClass.GetClass()) {
          Bool_t hasCustomStreamer = kFALSE;
          Bool_t canSelfReference = CanSelfReference(fBranchClass);
-         if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
+         if (fBranchClass.GetClass()->IsTObject()) {
             if (canSelfReference) SetBit(kBranchObject);
             hasCustomStreamer = (!fBranchClass.GetClass()->GetCollectionProxy() && fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
          } else {
@@ -382,7 +382,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
          // flag it so that later during i/o we will register the object
          // with the buffer so that pointers are handled correctly.
          if (CanSelfReference(fBranchClass)) {
-            if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
+            if (fBranchClass.GetClass()->IsTObject()) {
                SetBit(kBranchObject);
             } else {
                SetBit(kBranchAny);
@@ -2669,7 +2669,7 @@ void TBranchElement::InitializeOffsets()
    if (fID < 0) {
       // -- We are a top-level branch.  Let's mark whether we need to use MapObject.
       if (CanSelfReference(fBranchClass)) {
-         if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
+         if (fBranchClass.GetClass()->IsTObject()) {
             SetBit(kBranchObject);
          } else {
             SetBit(kBranchAny);
@@ -4627,7 +4627,7 @@ void TBranchElement::SetAddress(void* addr)
                return;
             }
          }
-         else if ((newType == TClonesArray::Class()) && (oldProxy->GetValueClass() && !oldProxy->HasPointers() && oldProxy->GetValueClass()->InheritsFrom(TObject::Class())))
+         else if ((newType == TClonesArray::Class()) && (oldProxy->GetValueClass() && !oldProxy->HasPointers() && oldProxy->GetValueClass()->IsTObject()))
          {
             // The new collection and the old collection are not compatible,
             // we cannot use the new collection to read the data.

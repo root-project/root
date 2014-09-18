@@ -247,7 +247,7 @@ void *TFastCgi::run_func(void *args)
          } else {
             int i, ch;
 
-            FCGX_FPrintF(request.out, "Standard input:<br>\n<pre>\n");
+            FCGX_FPrintF(request.out, "Standard input:<br/>\n<pre>\n");
             for (i = 0; i < len; i++) {
                if ((ch = FCGX_GetChar(request.in)) < 0) {
                   FCGX_FPrintF(request.out,
@@ -264,7 +264,7 @@ void *TFastCgi::run_func(void *args)
          FCGX_FPrintF(request.out, "QUERY:    %s<p>\n", arg.GetQuery());
          FCGX_FPrintF(request.out, "<p>\n");
 
-         FCGX_FPrintF(request.out, "Environment:<br>\n<pre>\n");
+         FCGX_FPrintF(request.out, "Environment:<br/>\n<pre>\n");
          for (char **envp = request.envp; *envp != NULL; envp++) {
             FCGX_FPrintF(request.out, "%s\n", *envp);
          }

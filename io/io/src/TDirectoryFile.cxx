@@ -969,7 +969,7 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
 
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
-   if (expectedClass==0 || expectedClass->InheritsFrom(TObject::Class())) {
+   if (expectedClass==0 || expectedClass->IsTObject()) {
       TObject *objcur = fList->FindObject(namobj);
       if (objcur) {
          if (objcur==this && strlen(namobj)!=0) {

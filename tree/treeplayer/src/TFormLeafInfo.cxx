@@ -2777,7 +2777,7 @@ TFormLeafInfoCast::TFormLeafInfoCast(TClass* classptr, TClass* casted) :
 
    if (casted) { fCastedName = casted->GetName(); }
    fMultiplicity = -1;
-   fIsTObject = fClass->InheritsFrom(TObject::Class()) && fCasted->IsLoaded();
+   fIsTObject = fClass->IsTObject() && fCasted->IsLoaded();
 }
 
 //______________________________________________________________________________

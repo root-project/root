@@ -11,6 +11,7 @@
 
 #include "TransactionUnloader.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -85,6 +86,58 @@ namespace cling {
 
   LookupHelper::~LookupHelper() {}
 
+  static
+  DeclContext* getContextAndSpec(CXXScopeSpec &SS,
+                                 const Decl* scopeDecl,
+                                 ASTContext& Context, Sema &S);
+
+  static void prepareForParsing(Parser& P,
+                                const Interpreter* Interp,
+                                llvm::StringRef code,
+                                llvm::StringRef bufferName,
+                                LookupHelper::DiagSetting diagOnOff) {
+    //Parser& P = *m_Parser;
+    Sema& S = P.getActions();
+    Preprocessor& PP = P.getPreprocessor();
+    //
+    //  Tell the diagnostic engine to ignore all diagnostics.
+    //
+    PP.getDiagnostics().setSuppressAllDiagnostics(
+                                                  diagOnOff == LookupHelper::NoDiagnostics);
+    //
+    //  Tell the parser to not attempt spelling correction.
+    //
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
+    //
+    //  Turn on ignoring of the main file eof token.
+    //
+    //  Note: We need this because token readahead in the following
+    //        routine calls ends up parsing it multiple times.
+    //
+    if (!PP.isIncrementalProcessingEnabled()) {
+      PP.enableIncrementalProcessing();
+    }
+    assert(!code.empty()&&"prepareForParsing should only be called when needd");
+
+    //
+    //  Create a fake file to parse the type name.
+    //
+    llvm::MemoryBuffer* SB
+      = llvm::MemoryBuffer::getMemBufferCopy(code.str() + "\n",
+                                             bufferName.str());
+    SourceLocation NewLoc = Interp->getNextAvailableLoc();
+    FileID FID = S.getSourceManager().createFileID(SB, SrcMgr::C_User,
+                                                   /*LoadedID*/0,
+                                                   /*LoadedOffset*/0, NewLoc);
+    //
+    //  Switch to the new file the way #include does.
+    //
+    //  Note: To switch back to the main file we must consume an eof token.
+    //
+    PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
+    PP.Lex(const_cast<Token&>(P.getCurToken()));
+  }
+
   QualType LookupHelper::findType(llvm::StringRef typeName,
                                   DiagSetting diagOnOff) const {
     //
@@ -100,7 +153,8 @@ namespace cling {
     // Use P for shortness
     Parser& P = *m_Parser;
     ParserStateRAII ResetParserState(P);
-    prepareForParsing(typeName, llvm::StringRef("lookup.type.by.name.file"),
+    prepareForParsing(P,m_Interpreter,
+                      typeName, llvm::StringRef("lookup.type.by.name.file"),
                       diagOnOff);
     //
     //  Try parsing the type name.
@@ -119,10 +173,36 @@ namespace cling {
     return TheQT;
   }
 
+  static const TagDecl* RequireCompleteDeclContext(Sema& S,
+                                                   Preprocessor& PP,
+                                                   const TagDecl *tobeCompleted,
+                                                   LookupHelper::DiagSetting diagOnOff)
+  {
+    // getContextAndSpec create the CXXScopeSpec and requires the scope
+    // to be complete, so this is exactly what we need.
+
+    bool OldSuppressAllDiagnostics(PP.getDiagnostics()
+                                   .getSuppressAllDiagnostics());
+    PP.getDiagnostics().setSuppressAllDiagnostics(
+                                      diagOnOff == LookupHelper::NoDiagnostics);
+
+    CXXScopeSpec SS;
+    ASTContext& Context = S.getASTContext();
+    DeclContext* complete = getContextAndSpec(SS,tobeCompleted,Context,S);
+
+    PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+
+    if (complete) {
+      const TagDecl *result = dyn_cast<TagDecl>(complete);
+      return result->getDefinition();
+    } else return 0;
+  }
+
   const Decl* LookupHelper::findScope(llvm::StringRef className,
                                       DiagSetting diagOnOff,
                                       const Type** resultType /* = 0 */,
                                       bool instantiateTemplate/*=true*/) const {
+
     //
     //  Some utilities.
     //
@@ -132,13 +212,151 @@ namespace cling {
     Preprocessor& PP = P.getPreprocessor();
     ASTContext& Context = S.getASTContext();
 
+    // See if we can find it without a buffer and any clang parsing,
+    // We need to go scope by scope.
+    if (1) {
+      const clang::DeclContext *sofar = 0;
+      const clang::Decl *next = 0;
+      for(size_t c = 0, last = 0; c < className.size(); ++c) {
+        if ( className[c] == '<' || className[c] == '>') {
+          // For now we do not know how to deal with
+          // template instances.
+          break;
+        }
+        if ( className[c] == ':' ) {
+          if ( c+2 >= className.size() || className[c+1] != ':' ) {
+            // Looks like an invalid name, we won't find anything.
+            return 0;
+          }
+          next = utils::Lookup::Named(&S,className.substr(last,c-last),sofar);
+          if (next && next != (void*)-1) {
+            // Need to handle typedef here too.
+            const TypedefNameDecl *typedefDecl=dyn_cast<TypedefNameDecl>(next);
+            if (typedefDecl) {
+              // We are stripping the typedef, this is technically incorrect,
+              // as the result (if resultType has been specified) will not be
+              // an accurate representation of the input string.
+              // As we strip the typedef we ought to rebuild the nested name
+              // specifier.
+              // Since we do not use this path for template handling, this
+              // is not relevant for ROOT itself ....
+              QualType T = Context.getTypedefType(typedefDecl);
+              const TagType* TagTy = T->getAs<TagType>();
+              if (TagTy) next = TagTy->getDecl();
+            }
+
+            // To use Lookup::Named we need to fit the assertion:
+            //    ((!isa<TagDecl>(LookupCtx) || LookupCtx->isDependentContext()
+            //     || cast<TagDecl>(LookupCtx)->isCompleteDefinition()
+            //     || cast<TagDecl>(LookupCtx)->isBeingDefined()) &&
+            //      "Declaration context must already be complete!"),
+            //      function LookupQualifiedName, file SemaLookup.cpp, line 1614.
+
+            const clang::TagDecl *tdecl = dyn_cast<TagDecl>(next);
+            if (tdecl && !(next = tdecl->getDefinition())) {
+              //fprintf(stderr,"Incomplete (inner) type for %s (part %s).\n",
+              //        className.str().c_str(),
+              //        className.substr(last,c-last).str().c_str());
+              // Incomplete type we will not be able to go on.
+
+              // We always require completeness of the scope, if the caller
+              // want piece-meal instantiation, the calling code will need to
+              // split the call to findScope.
+
+              // if (instantiateTemplate) {
+              if (dyn_cast<ClassTemplateSpecializationDecl>(tdecl)) {
+                // Go back to the normal schedule since we need a valid point
+                // of instantiation:
+                // Assertion failed: (Loc.isValid() &&
+                //    "point of instantiation must be valid!"),
+                //    function setPointOfInstantiation, file DeclTemplate.h,
+                //    line 1520.
+                // Which can happen here because the simple name maybe a
+                // typedef to a template (for example std::string).
+                break;
+              }
+              next = RequireCompleteDeclContext(S,PP,tdecl,diagOnOff);
+              // } else {
+              //   return 0;
+              // }
+            }
+            sofar = dyn_cast_or_null<DeclContext>(next);
+          } else {
+            sofar = 0;
+          }
+          if (!sofar) {
+            // We are looking into something that is not a decl context,
+            // we won't find anything.
+            return 0;
+          }
+          last = c+2;
+          ++c; // Consume the second ':'
+        } else if ( c+1 == className.size() ) {
+          // End of the line.
+          next = utils::Lookup::Named(&S,className.substr(last,c+1-last),sofar);
+          if (next == (void*)-1) next = 0;
+          if (next) {
+
+            const TagDecl *tagdecl = dyn_cast<TagDecl>(next);
+            const TypedefNameDecl *typedefDecl=dyn_cast<TypedefNameDecl>(next);
+            if (typedefDecl) {
+              QualType T = Context.getTypedefType(typedefDecl);
+              const TagType* TagTy = T->getAs<TagType>();
+              if (TagTy) tagdecl = TagTy->getDecl();
+              // NOTE: Should we instantiate here? ... maybe ...
+              if (tagdecl && resultType) *resultType = T.getTypePtr();
+
+            } else if (tagdecl && resultType) {
+              *resultType = tagdecl->getTypeForDecl();
+            }
+
+            // fprintf(stderr,"Short cut taken for %s.\n",className.str().c_str());
+            if (tagdecl) {
+              const TagDecl *defdecl = tagdecl->getDefinition();
+              if (!defdecl || !defdecl->isCompleteDefinition()) {
+                // fprintf(stderr,"Incomplete type for %s.\n",className.str().c_str());
+                if (instantiateTemplate) {
+                  if (dyn_cast<ClassTemplateSpecializationDecl>(tagdecl)) {
+                    // Go back to the normal schedule since we need a valid point
+                    // of instantiation:
+                    // Assertion failed: (Loc.isValid() &&
+                    //    "point of instantiation must be valid!"),
+                    //    function setPointOfInstantiation, file DeclTemplate.h,
+                    //    line 1520.
+                    // Which can happen here because the simple name maybe a
+                    // typedef to a template (for example std::string).
+                    break;
+                  }
+                  return RequireCompleteDeclContext(S,PP,tagdecl,diagOnOff);
+                } else {
+                  return 0;
+                }
+              }
+              return defdecl; // now pointing to the definition.
+            } else if (isa<NamespaceDecl>(next)) {
+              return next->getCanonicalDecl();
+            } else if (auto alias = dyn_cast<NamespaceAliasDecl>(next) ) {
+              return alias->getNamespace()->getCanonicalDecl();
+            } else {
+              //fprintf(stderr,"Not a scope decl for %s.\n",className.str().c_str());
+              // The name exist and does not point to a 'scope' decl.
+              return 0;
+            }
+          } else {
+            return 0;
+          }
+        }
+      }
+    }
+
     // The user wants to see the template instantiation, existing or not.
     // Here we might not have an active transaction to handle
     // the caused instantiation decl.
     Interpreter::PushTransactionRAII pushedT(m_Interpreter);
 
     ParserStateRAII ResetParserState(P);
-    prepareForParsing(className.str() + "::",
+    prepareForParsing(P,m_Interpreter,
+                      className.str() + "::",
                       llvm::StringRef("lookup.class.by.name.file"), diagOnOff);
     //
     //  Our return values.
@@ -149,8 +367,6 @@ namespace cling {
       setResultType = resultType;
     *setResultType = 0;
 
-    Decl* TheDecl = 0;
-
     //
     //  Prevent failing on an assert in TryAnnotateCXXScopeToken.
     //
@@ -160,15 +376,18 @@ namespace cling {
              && P.NextToken().is(clang::tok::coloncolon))
         && !P.getCurToken().is(clang::tok::kw_decltype)) {
       // error path
-      return TheDecl;
+      return 0;
     }
     //
     //  Try parsing the name as a nested-name-specifier.
     //
     if (P.TryAnnotateCXXScopeToken(false)) {
       // error path
-      return TheDecl;
+      return 0;
     }
+
+    Decl* TheDecl = 0;
+
     if (P.getCurToken().getKind() == tok::annot_cxxscope) {
       CXXScopeSpec SS;
       S.RestoreNestedNameSpecifierAnnotation(P.getCurToken().getAnnotationValue(),
@@ -273,10 +492,10 @@ namespace cling {
     llvm::MemoryBuffer* SB =
       llvm::MemoryBuffer::getMemBufferCopy(className.str() + "\n",
                                            "lookup.type.file");
-      SourceLocation NewLoc = m_Interpreter->getNextAvailableLoc();
-      FileID FID = S.getSourceManager().createFileID(SB, SrcMgr::C_User,
-                                                     /*LoadedID*/0,
-                                                     /*LoadedOffset*/0, NewLoc);
+    SourceLocation NewLoc = m_Interpreter->getNextAvailableLoc();
+    FileID FID = S.getSourceManager().createFileID(SB, SrcMgr::C_User,
+                                                   /*LoadedID*/0,
+                                                   /*LoadedOffset*/0, NewLoc);
     PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
     PP.Lex(const_cast<clang::Token&>(P.getCurToken()));
 
@@ -285,7 +504,7 @@ namespace cling {
     //
     if (P.TryAnnotateTypeOrScopeToken(false, false)) {
       // error path
-      return TheDecl;
+      return 0;
     }
     if (P.getCurToken().getKind() == tok::annot_typename) {
       ParsedType T = P.getTypeAnnotation(const_cast<Token&>(P.getCurToken()));
@@ -318,7 +537,8 @@ namespace cling {
     Sema& S = P.getActions();
     ASTContext& Context = S.getASTContext();
     ParserStateRAII ResetParserState(P);
-    prepareForParsing(Name.str(),
+    prepareForParsing(P,m_Interpreter,
+                      Name.str(),
                       llvm::StringRef("lookup.class.by.name.file"), diagOnOff);
 
     //
@@ -449,7 +669,8 @@ namespace cling {
       // Passed decl is a template, we cannot use it.
       return 0;
     }
-    SS.MakeTrivial(Context, classNNS, SourceRange());
+    // We pass a 'random' but valid source range.
+    SS.MakeTrivial(Context, classNNS, scopeDecl->getSourceRange());
     if (S.RequireCompleteDeclContext(SS, foundDC)) {
       // Forward decl or instantiation failure, we cannot use it.
       return 0;
@@ -806,7 +1027,6 @@ namespace cling {
     return true;
   }
 
-
   template <typename T>
   T findFunction(DeclContext* foundDC, CXXScopeSpec &SS,
                  llvm::StringRef funcName,
@@ -907,88 +1127,184 @@ namespace cling {
                             Context, P, S);
   }
 
-  static
-  bool getExprProto(llvm::SmallVectorImpl<ExprAlloc> &ExprMemory,
-                    llvm::SmallVectorImpl<Expr*> &GivenArgs,
-                    const llvm::SmallVectorImpl<QualType> &GivenTypes) {
-    //
-    //  Create the array of Expr from the array of Types.
-    //
+  template <typename DigestArgsInput, typename returnType>
+  returnType execFindFunction(Parser &P,
+                              Interpreter* Interp,
+                              const clang::Decl* scopeDecl,
+                              llvm::StringRef funcName,
+                              const typename DigestArgsInput::ArgsInput &funcArgs,
+                              bool objectIsConst,
+                            returnType (*functionSelector)(DeclContext* foundDC,
+                                                             bool objectIsConst,
+                                  const llvm::SmallVectorImpl<Expr*> &GivenArgs,
+                                                           LookupResult &Result,
+                                              DeclarationNameInfo &FuncNameInfo,
+                               const TemplateArgumentListInfo* FuncTemplateArgs,
+                                       ASTContext& Context, Parser &P, Sema &S),
+                              LookupHelper::DiagSetting diagOnOff
+                              )
+  {
 
-    typedef llvm::SmallVectorImpl<QualType>::const_iterator iterator;
-    for(iterator iter = GivenTypes.begin(), end = GivenTypes.end();
-        iter != end;
-        ++iter) {
-      const clang::QualType QT = iter->getCanonicalType();
-      {
-        ExprValueKind VK = VK_RValue;
-        if (QT->getAs<LValueReferenceType>()) {
-          VK = VK_LValue;
+    assert(scopeDecl && "Decl cannot be null");
+    //
+    //  Some utilities.
+    //
+    Sema& S = P.getActions();
+    ASTContext& Context = S.getASTContext();
+
+    //
+    //  Convert the passed decl into a nested name specifier,
+    //  a scope spec, and a decl context.
+    //
+    //  Do this 'early' to save on the expansive parser setup,
+    //  in case of failure.
+    //
+    CXXScopeSpec SS;
+    DeclContext* foundDC = getContextAndSpec(SS,scopeDecl,Context,S);
+    if (!foundDC) return 0;
+
+    DigestArgsInput inputEval;
+    llvm::SmallVector<Expr*, 4> GivenArgs;
+    if (!inputEval(GivenArgs,funcArgs,diagOnOff,P,Interp)) return 0;
+
+    Interpreter::PushTransactionRAII pushedT(Interp);
+    return findFunction(foundDC, SS,
+                        funcName, GivenArgs, objectIsConst,
+                        Context, Interp, functionSelector,
+                        diagOnOff);
+  }
+
+  struct NoParse {
+
+    typedef const char* ArgsInput;
+
+    bool operator()(llvm::SmallVectorImpl<Expr*> & /* GivenArgs */,
+                    const ArgsInput &/* funcArgs */,
+                    LookupHelper::DiagSetting /* diagOnOff */,
+                    Parser & /* P */, const Interpreter* /* Interp */)
+    {
+      return true;
+    }
+  };
+
+  struct ExprFromTypes {
+
+    typedef llvm::SmallVectorImpl<QualType> ArgsInput;
+
+    llvm::SmallVector<ExprAlloc, 4> ExprMemory;
+
+    bool operator()(llvm::SmallVectorImpl<Expr*> &GivenArgs,
+                    const ArgsInput &GivenTypes,
+                    LookupHelper::DiagSetting /* diagOnOff */,
+                    Parser & /* P */, const Interpreter* /* Interp */) {
+
+      if (GivenTypes.empty()) return true;
+      else return getExprProto(GivenArgs,GivenTypes);
+    }
+
+    bool getExprProto(llvm::SmallVectorImpl<Expr*> &GivenArgs,
+                      const llvm::SmallVectorImpl<QualType> &GivenTypes) {
+      //
+      //  Create the array of Expr from the array of Types.
+      //
+
+      typedef llvm::SmallVectorImpl<QualType>::const_iterator iterator;
+      for(iterator iter = GivenTypes.begin(), end = GivenTypes.end();
+          iter != end;
+          ++iter) {
+        const clang::QualType QT = iter->getCanonicalType();
+        {
+          ExprValueKind VK = VK_RValue;
+          if (QT->getAs<LValueReferenceType>()) {
+            VK = VK_LValue;
+          }
+          clang::QualType NonRefQT(QT.getNonReferenceType());
+          unsigned int slot = ExprMemory.size();
+          ExprMemory.resize(slot+1);
+          Expr* val = new (&ExprMemory[slot]) OpaqueValueExpr(SourceLocation(),
+                                                              NonRefQT, VK);
+          GivenArgs.push_back(val);
         }
-        clang::QualType NonRefQT(QT.getNonReferenceType());
-        unsigned int slot = ExprMemory.size();
-        ExprMemory.resize(slot+1);
-        Expr* val = new (&ExprMemory[slot]) OpaqueValueExpr(SourceLocation(),
-                                                            NonRefQT, VK);
+      }
+      return true;
+    }
+  };
+
+  struct ParseProto {
+
+    typedef llvm::StringRef ArgsInput;
+
+    llvm::SmallVector<ExprAlloc, 4> ExprMemory;
+
+    bool operator()(llvm::SmallVectorImpl<Expr*> &GivenArgs,
+                    const ArgsInput &funcProto,
+                    LookupHelper::DiagSetting diagOnOff,
+                    Parser &P, const Interpreter* Interp) {
+
+      if (funcProto.empty()) return true;
+      else return Parse(GivenArgs,funcProto,diagOnOff,P,Interp);
+    }
+
+    bool Parse(llvm::SmallVectorImpl<Expr*> &GivenArgs,
+               const ArgsInput &funcProto,
+               LookupHelper::DiagSetting diagOnOff,
+               Parser &P, const Interpreter* Interp) {
+
+      //
+      //  Parse the prototype now.
+      //
+
+      ParserStateRAII ResetParserState(P);
+      prepareForParsing(P,Interp,
+                        funcProto, llvm::StringRef("func.prototype.file"), diagOnOff);
+
+      unsigned int nargs = 0;
+      while (P.getCurToken().isNot(tok::eof)) {
+        TypeResult Res(P.ParseTypeName());
+        if (!Res.isUsable()) {
+          // Bad parse, done.
+          return false;
+        }
+        TypeSourceInfo *TSI = 0;
+        clang::QualType QT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
+        QT = QT.getCanonicalType();
+        {
+          ExprValueKind VK = VK_RValue;
+          if (QT->getAs<LValueReferenceType>()) {
+            VK = VK_LValue;
+          }
+          clang::QualType NonRefQT(QT.getNonReferenceType());
+          ExprMemory.resize(++nargs);
+          new (&ExprMemory[nargs-1]) OpaqueValueExpr(TSI->getTypeLoc().getLocStart(),
+                                                     NonRefQT, VK);
+        }
+        // Type names should be comma separated.
+        // FIXME: Here if we have type followed by name won't work. Eg int f, ...
+        if (!P.getCurToken().is(clang::tok::comma)) {
+          break;
+        }
+        // Eat the comma.
+        P.ConsumeToken();
+      }
+      for(unsigned int slot = 0; slot < nargs; ++slot) {
+        Expr* val = (OpaqueValueExpr*)( &ExprMemory[slot] );
         GivenArgs.push_back(val);
       }
-    }
-    return true;
-  }
-
-  static
-  bool ParseProto(llvm::SmallVectorImpl<ExprAlloc> &ExprMemory,
-                  llvm::SmallVectorImpl<Expr*> &GivenArgs,
-                  ASTContext& Context, Parser &P,Sema &S) {
-    //
-    //  Parse the prototype now.
-    //
-
-    unsigned int nargs = 0;
-    while (P.getCurToken().isNot(tok::eof)) {
-      TypeResult Res(P.ParseTypeName());
-      if (!Res.isUsable()) {
-        // Bad parse, done.
+      if (P.getCurToken().isNot(tok::eof)) {
+        // We did not consume all of the prototype, bad parse.
         return false;
       }
-      TypeSourceInfo *TSI = 0;
-      clang::QualType QT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
-      QT = QT.getCanonicalType();
-      {
-        ExprValueKind VK = VK_RValue;
-        if (QT->getAs<LValueReferenceType>()) {
-          VK = VK_LValue;
-        }
-        clang::QualType NonRefQT(QT.getNonReferenceType());
-        ExprMemory.resize(++nargs);
-        new (&ExprMemory[nargs-1]) OpaqueValueExpr(TSI->getTypeLoc().getLocStart(),
-                                                   NonRefQT, VK);
-      }
-      // Type names should be comma separated.
-      // FIXME: Here if we have type followed by name won't work. Eg int f, ...
-      if (!P.getCurToken().is(clang::tok::comma)) {
-        break;
-      }
-      // Eat the comma.
-      P.ConsumeToken();
-    }
-    for(unsigned int slot = 0; slot < nargs; ++slot) {
-       Expr* val = (OpaqueValueExpr*)( &ExprMemory[slot] );
-       GivenArgs.push_back(val);
-    }
-    if (P.getCurToken().isNot(tok::eof)) {
-      // We did not consume all of the prototype, bad parse.
-      return false;
-    }
-    //
-    //  Cleanup after prototype parse.
-    //
-    P.SkipUntil(clang::tok::eof);
-    // Doesn't reset the diagnostic mappings
-    S.getDiagnostics().Reset(/*soft=*/true);
+      //
+      //  Cleanup after prototype parse.
+      //
+      P.SkipUntil(clang::tok::eof);
+      // Doesn't reset the diagnostic mappings
+      Sema& S = P.getActions();
+      S.getDiagnostics().Reset(/*soft=*/true);
 
-    return true;
-  }
+      return true;
+    }
+  };
 
   static
   const FunctionTemplateDecl* findFunctionTemplateSelector(DeclContext* ,
@@ -1026,35 +1342,12 @@ namespace cling {
                                      bool objectIsConst) const {
     // Lookup a function template based on its Decl(Context), name.
 
-    //FIXME: remove code duplication with findFunctionArgs() and friends.
-
-    assert(scopeDecl && "Decl cannot be null");
-    //
-    //  Some utilities.
-    //
-    Parser& P = *m_Parser;
-    Sema& S = P.getActions();
-    ASTContext& Context = S.getASTContext();
-
-    //
-    //  Convert the passed decl into a nested name specifier,
-    //  a scope spec, and a decl context.
-    //
-    //  Do this 'early' to save on the expansive parser setup,
-    //  in case of failure.
-    //
-    CXXScopeSpec SS;
-    DeclContext* foundDC = getContextAndSpec(SS,scopeDecl,Context,S);
-    if (!foundDC) return 0;
-
-    ParserStateRAII ResetParserState(P);
-    llvm::SmallVector<Expr*, 4> GivenArgs;
-
-    Interpreter::PushTransactionRAII pushedT(m_Interpreter);
-    return findFunction(foundDC, SS,
-                        templateName, GivenArgs, objectIsConst,
-                        Context, m_Interpreter, findFunctionTemplateSelector,
-                        diagOnOff);
+    return execFindFunction<NoParse>(*m_Parser, m_Interpreter,
+                                     scopeDecl,
+                                     templateName, "",
+                                     objectIsConst,
+                                     findFunctionTemplateSelector,
+                                     diagOnOff);
   }
 
   static
@@ -1120,35 +1413,12 @@ namespace cling {
                                                     DiagSetting diagOnOff,
                                                     bool objectIsConst) const {
 
-    //FIXME: remove code duplication with findFunctionArgs() and friends.
-
-    assert(scopeDecl && "Decl cannot be null");
-    //
-    //  Some utilities.
-    //
-    Parser& P = *m_Parser;
-    Sema& S = P.getActions();
-    ASTContext& Context = S.getASTContext();
-
-    //
-    //  Convert the passed decl into a nested name specifier,
-    //  a scope spec, and a decl context.
-    //
-    //  Do this 'early' to save on the expansive parser setup,
-    //  in case of failure.
-    //
-    CXXScopeSpec SS;
-    DeclContext* foundDC = getContextAndSpec(SS,scopeDecl,Context,S);
-    if (!foundDC) return 0;
-
-    ParserStateRAII ResetParserState(P);
-    llvm::SmallVector<Expr*, 4> GivenArgs;
-
-    Interpreter::PushTransactionRAII pushedT(m_Interpreter);
-    return findFunction(foundDC, SS,
-                        funcName, GivenArgs, objectIsConst,
-                        Context, m_Interpreter, findAnyFunctionSelector,
-                        diagOnOff);
+    return execFindFunction<NoParse>(*m_Parser, m_Interpreter,
+                                     scopeDecl,
+                                     funcName, "",
+                                     objectIsConst,
+                                     findAnyFunctionSelector,
+                                     diagOnOff);
   }
 
   const FunctionDecl*
@@ -1157,44 +1427,14 @@ namespace cling {
                                  const llvm::SmallVectorImpl<QualType>& funcProto,
                                   DiagSetting diagOnOff, bool objectIsConst) const {
     assert(scopeDecl && "Decl cannot be null");
-    //
-    //  Some utilities.
-    //
-    // Use P for shortness
-    Parser& P = *m_Parser;
-    Sema& S = P.getActions();
-    ASTContext& Context = S.getASTContext();
 
-    //
-    //  Convert the passed decl into a nested name specifier,
-    //  a scope spec, and a decl context.
-    //
-    //  Do this 'early' to save on the expansive parser setup,
-    //  in case of failure.
-    //
-    CXXScopeSpec SS;
-    DeclContext* foundDC = getContextAndSpec(SS,scopeDecl,Context,S);
-    if (!foundDC) return 0;
-
-    llvm::SmallVector<ExprAlloc, 4> ExprMemory;
-    llvm::SmallVector<Expr*, 4> GivenArgs;
-    if (!funcProto.empty()) {
-      if (!getExprProto(ExprMemory, GivenArgs, funcProto) ) {
-        return 0;
-      }
-    }
-
-    //
-    //  Parse the prototype now.
-    //
-    ParserStateRAII ResetParserState(P);
-    prepareForParsing("", llvm::StringRef("func.prototype.file"), diagOnOff);
-    Interpreter::PushTransactionRAII pushedT(m_Interpreter);
-    return findFunction(foundDC, SS,
-                        funcName, GivenArgs, objectIsConst,
-                        Context, m_Interpreter,
-                        overloadFunctionSelector,
-                        diagOnOff);
+    return execFindFunction<ExprFromTypes>(*m_Parser, m_Interpreter,
+                                           scopeDecl,
+                                           funcName,
+                                           funcProto,
+                                           objectIsConst,
+                                           overloadFunctionSelector,
+                                           diagOnOff);
   }
 
   const FunctionDecl* LookupHelper::findFunctionProto(const Decl* scopeDecl,
@@ -1203,45 +1443,14 @@ namespace cling {
                                                       DiagSetting diagOnOff,
                                                       bool objectIsConst) const{
     assert(scopeDecl && "Decl cannot be null");
-    //
-    //  Some utilities.
-    //
-    // Use P for shortness
-    Parser& P = *m_Parser;
-    Sema& S = P.getActions();
-    ASTContext& Context = S.getASTContext();
 
-    //
-    //  Convert the passed decl into a nested name specifier,
-    //  a scope spec, and a decl context.
-    //
-    //  Do this 'early' to save on the expansive parser setup,
-    //  in case of failure.
-    //
-    CXXScopeSpec SS;
-    DeclContext* foundDC = getContextAndSpec(SS,scopeDecl,Context,S);
-    if (!foundDC) return 0;
-
-    //
-    //  Parse the prototype now.
-    //
-    ParserStateRAII ResetParserState(P);
-    prepareForParsing(funcProto, llvm::StringRef("func.prototype.file"), diagOnOff);
-
-    llvm::SmallVector<ExprAlloc, 4> ExprMemory;
-    llvm::SmallVector<Expr*, 4> GivenArgs;
-    if (!funcProto.empty()) {
-      if (!ParseProto(ExprMemory, GivenArgs,Context,P,S) ) {
-        return 0;
-      }
-    }
-
-    Interpreter::PushTransactionRAII pushedT(m_Interpreter);
-    return findFunction(foundDC, SS,
-                        funcName, GivenArgs, objectIsConst,
-                        Context, m_Interpreter,
-                        overloadFunctionSelector,
-                        diagOnOff);
+    return execFindFunction<ParseProto>(*m_Parser, m_Interpreter,
+                                        scopeDecl,
+                                        funcName,
+                                        funcProto,
+                                        objectIsConst,
+                                        overloadFunctionSelector,
+                                        diagOnOff);
   }
 
   const FunctionDecl*
@@ -1251,45 +1460,14 @@ namespace cling {
                                    DiagSetting diagOnOff,
                                    bool objectIsConst) const {
     assert(scopeDecl && "Decl cannot be null");
-    //
-    //  Some utilities.
-    //
-    // Use P for shortness
-    Parser& P = *m_Parser;
-    Sema& S = P.getActions();
-    ASTContext& Context = S.getASTContext();
 
-    //
-    //  Convert the passed decl into a nested name specifier,
-    //  a scope spec, and a decl context.
-    //
-    //  Do this 'early' to save on the expansive parser setup,
-    //  in case of failure.
-    //
-    CXXScopeSpec SS;
-    DeclContext* foundDC = getContextAndSpec(SS,scopeDecl,Context,S);
-    if (!foundDC) return 0;
-
-    //
-    //  Parse the prototype now.
-    //
-    ParserStateRAII ResetParserState(P);
-    prepareForParsing(funcProto, llvm::StringRef("func.prototype.file"), diagOnOff);
-
-    llvm::SmallVector<ExprAlloc, 4> ExprMemory;
-    llvm::SmallVector<Expr*, 4> GivenArgs;
-    if (!funcProto.empty()) {
-      if (!ParseProto(ExprMemory,GivenArgs,Context,P,S) ) {
-        return 0;
-      }
-    }
-
-    Interpreter::PushTransactionRAII pushedT(m_Interpreter);
-    return findFunction(foundDC, SS,
-                        funcName, GivenArgs, objectIsConst,
-                        Context, m_Interpreter,
-                        matchFunctionSelector,
-                        diagOnOff);
+    return execFindFunction<ParseProto>(*m_Parser, m_Interpreter,
+                                        scopeDecl,
+                                        funcName,
+                                        funcProto,
+                                        objectIsConst,
+                                        matchFunctionSelector,
+                                        diagOnOff);
   }
 
   const FunctionDecl*
@@ -1299,100 +1477,93 @@ namespace cling {
                                    DiagSetting diagOnOff,
                                    bool objectIsConst) const {
     assert(scopeDecl && "Decl cannot be null");
-    //
-    //  Some utilities.
-    //
-    // Use P for shortness
-    Parser& P = *m_Parser;
-    Sema& S = P.getActions();
-    ASTContext& Context = S.getASTContext();
 
-    //
-    //  Convert the passed decl into a nested name specifier,
-    //  a scope spec, and a decl context.
-    //
-    //  Do this 'early' to save on the expansive parser setup,
-    //  in case of failure.
-    //
-    CXXScopeSpec SS;
-    DeclContext* foundDC = getContextAndSpec(SS,scopeDecl,Context,S);
-    if (!foundDC) return 0;
+    return execFindFunction<ExprFromTypes>(*m_Parser, m_Interpreter,
+                                           scopeDecl,
+                                           funcName,
+                                           funcProto,
+                                           objectIsConst,
+                                           matchFunctionSelector,
+                                           diagOnOff);
+  }
 
+  struct ParseArgs {
+
+    typedef llvm::StringRef ArgsInput;
 
     llvm::SmallVector<ExprAlloc, 4> ExprMemory;
-    llvm::SmallVector<Expr*, 4> GivenArgs;
-    if (!funcProto.empty()) {
-      if (!getExprProto(ExprMemory, GivenArgs, funcProto) ) {
-        return 0;
-      }
+
+    bool operator()(llvm::SmallVectorImpl<Expr*> &GivenArgs,
+                    const ArgsInput &funcArgs,
+                    LookupHelper::DiagSetting diagOnOff,
+                    Parser &P, const Interpreter* Interp) {
+
+      if (funcArgs.empty()) return true;
+      else return Parse(GivenArgs,funcArgs,diagOnOff,P,Interp);
     }
 
-    //
-    //  Parse the prototype now.
-    //
-    ParserStateRAII ResetParserState(P);
-    prepareForParsing("", llvm::StringRef("func.prototype.file"), diagOnOff);
-    Interpreter::PushTransactionRAII pushedT(m_Interpreter);
-    return findFunction(foundDC, SS,
-                        funcName, GivenArgs, objectIsConst,
-                        Context, m_Interpreter,
-                        matchFunctionSelector,
-                        diagOnOff);
-  }
+    bool Parse(llvm::SmallVectorImpl<Expr*> &GivenArgs,
+                 llvm::StringRef funcArgs,
+                 LookupHelper::DiagSetting diagOnOff,
+                 Parser &P, const Interpreter* Interp) {
 
-  static
-  bool ParseArgs(llvm::SmallVectorImpl<Expr*> &GivenArgs,
-                 ASTContext& Context, Parser &P, Sema &S) {
+      //
+      //  Parse the arguments now.
+      //
 
-    //
-    //  Parse the arguments now.
-    //
+      ParserStateRAII ResetParserState(P);
+      prepareForParsing(P,Interp,
+                        funcArgs, llvm::StringRef("func.args.file"), diagOnOff);
 
-    PrintingPolicy Policy(Context.getPrintingPolicy());
-    Policy.SuppressTagKeyword = true;
-    Policy.SuppressUnwrittenScope = true;
-    Policy.SuppressInitializers = true;
-    Policy.AnonymousTagLocations = false;
-    std::string proto;
-    {
-      bool first_time = true;
-      while (P.getCurToken().isNot(tok::eof)) {
-        ExprResult Res = P.ParseAssignmentExpression();
-        if (Res.isUsable()) {
-          Expr* expr = Res.get();
-          GivenArgs.push_back(expr);
-          if (first_time) {
-            first_time = false;
+      Sema& S = P.getActions();
+      ASTContext& Context = S.getASTContext();
+
+      PrintingPolicy Policy(Context.getPrintingPolicy());
+      Policy.SuppressTagKeyword = true;
+      Policy.SuppressUnwrittenScope = true;
+      Policy.SuppressInitializers = true;
+      Policy.AnonymousTagLocations = false;
+      std::string proto;
+      {
+        bool first_time = true;
+        while (P.getCurToken().isNot(tok::eof)) {
+          ExprResult Res = P.ParseAssignmentExpression();
+          if (Res.isUsable()) {
+            Expr* expr = Res.get();
+            GivenArgs.push_back(expr);
+            if (first_time) {
+              first_time = false;
+            }
+            else {
+              proto += ',';
+            }
+            std::string empty;
+            llvm::raw_string_ostream tmp(empty);
+            expr->printPretty(tmp, /*PrinterHelper=*/0, Policy,
+                              /*Indentation=*/0);
+            proto += tmp.str();
           }
-          else {
-            proto += ',';
+          if (!P.getCurToken().is(tok::comma)) {
+            break;
           }
-          std::string empty;
-          llvm::raw_string_ostream tmp(empty);
-          expr->printPretty(tmp, /*PrinterHelper=*/0, Policy,
-                            /*Indentation=*/0);
-          proto += tmp.str();
+          P.ConsumeToken();
         }
-        if (!P.getCurToken().is(tok::comma)) {
-          break;
-        }
-        P.ConsumeToken();
       }
+      // For backward compatibility with CINT accept (for now?) a trailing close
+      // parenthesis.
+      if (P.getCurToken().isNot(tok::eof) && P.getCurToken().isNot(tok::r_paren) ) {
+        // We did not consume all of the arg list, bad parse.
+        return false;
+      }
+      //
+      //  Cleanup after the arg list parse.
+      //
+      P.SkipUntil(clang::tok::eof);
+      // Doesn't reset the diagnostic mappings
+      S.getDiagnostics().Reset(/*soft=*/true);
+      return true;
     }
-    // For backward compatibility with CINT accept (for now?) a trailing close
-    // parenthesis.
-    if (P.getCurToken().isNot(tok::eof) && P.getCurToken().isNot(tok::r_paren) ) {
-      // We did not consume all of the arg list, bad parse.
-      return false;
-    }
-    //
-    //  Cleanup after the arg list parse.
-    //
-    P.SkipUntil(clang::tok::eof);
-    // Doesn't reset the diagnostic mappings
-    S.getDiagnostics().Reset(/*soft=*/true);
-    return true;
-  }
+  };
 
   const FunctionDecl*
   LookupHelper::findFunctionArgs(const Decl* scopeDecl,
@@ -1401,43 +1572,14 @@ namespace cling {
                                  DiagSetting diagOnOff,
                                  bool objectIsConst) const {
     assert(scopeDecl && "Decl cannot be null");
-    //
-    //  Some utilities.
-    //
-    // Use P for shortness
-    Parser& P = *m_Parser;
-    Sema& S = P.getActions();
-    ASTContext& Context = S.getASTContext();
 
-    //
-    //  Convert the passed decl into a nested name specifier,
-    //  a scope spec, and a decl context.
-    //
-    //  Do this 'early' to save on the expansive parser setup,
-    //  in case of failure.
-    //
-    CXXScopeSpec SS;
-    DeclContext* foundDC = getContextAndSpec(SS,scopeDecl,Context,S);
-    if (!foundDC) return 0;
-
-    //
-    //  Parse the arguments now.
-    //
-    ParserStateRAII ResetParserState(P);
-    prepareForParsing(funcArgs, llvm::StringRef("func.args.file"), diagOnOff);
-
-    llvm::SmallVector<Expr*, 4> GivenArgs;
-    if (!funcArgs.empty()) {
-      if (!ParseArgs(GivenArgs,Context,P,S) ) {
-        return 0;
-      }
-    }
-
-    Interpreter::PushTransactionRAII pushedT(m_Interpreter);
-    return findFunction(foundDC, SS,
-                        funcName, GivenArgs, objectIsConst,
-                        Context, m_Interpreter, overloadFunctionSelector,
-                        diagOnOff);
+    return execFindFunction<ParseArgs>(*m_Parser, m_Interpreter,
+                                       scopeDecl,
+                                       funcName,
+                                       funcArgs,
+                                       objectIsConst,
+                                       overloadFunctionSelector,
+                                       diagOnOff);
   }
 
   void LookupHelper::findArgList(llvm::StringRef argList,
@@ -1451,7 +1593,8 @@ namespace cling {
     // Use P for shortness
     Parser& P = *m_Parser;
     ParserStateRAII ResetParserState(P);
-    prepareForParsing(argList, llvm::StringRef("arg.list.file"), diagOnOff);
+    prepareForParsing(P,m_Interpreter,
+                      argList, llvm::StringRef("arg.list.file"), diagOnOff);
     //
     //  Parse the arguments now.
     //
@@ -1474,50 +1617,6 @@ namespace cling {
       if (hasUnusableResult)
         // if one of the arguments is not usable return empty.
         argExprs.clear();
-    }
-  }
-
-  void LookupHelper::prepareForParsing(llvm::StringRef code,
-                                       llvm::StringRef bufferName,
-                                       DiagSetting diagOnOff) const {
-    Parser& P = *m_Parser;
-    Sema& S = P.getActions();
-    Preprocessor& PP = P.getPreprocessor();
-    //
-    //  Tell the diagnostic engine to ignore all diagnostics.
-    //
-    PP.getDiagnostics().setSuppressAllDiagnostics(diagOnOff == NoDiagnostics);
-    //
-    //  Tell the parser to not attempt spelling correction.
-    //
-    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
-    //
-    //  Turn on ignoring of the main file eof token.
-    //
-    //  Note: We need this because token readahead in the following
-    //        routine calls ends up parsing it multiple times.
-    //
-    if (!PP.isIncrementalProcessingEnabled()) {
-      PP.enableIncrementalProcessing();
-    }
-    if (!code.empty()) {
-      //
-      //  Create a fake file to parse the type name.
-      //
-      llvm::MemoryBuffer* SB
-         = llvm::MemoryBuffer::getMemBufferCopy(code.str() + "\n",
-                                                bufferName.str());
-      SourceLocation NewLoc = m_Interpreter->getNextAvailableLoc();
-      FileID FID = S.getSourceManager().createFileID(SB, SrcMgr::C_User,
-                                                     /*LoadedID*/0,
-                                                     /*LoadedOffset*/0, NewLoc);
-      //
-      //  Switch to the new file the way #include does.
-      //
-      //  Note: To switch back to the main file we must consume an eof token.
-      //
-      PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
-      PP.Lex(const_cast<Token&>(P.getCurToken()));
     }
   }
 
@@ -1544,34 +1643,11 @@ namespace cling {
                                  llvm::StringRef funcName,
                                  DiagSetting diagOnOff) const {
 
-    //FIXME: remove code duplication with findFunctionArgs() and friends.
-
-    assert(scopeDecl && "Decl cannot be null");
-    //
-    //  Some utilities.
-    //
-    Parser& P = *m_Parser;
-    Sema& S = P.getActions();
-    ASTContext& Context = S.getASTContext();
-
-    //
-    //  Convert the passed decl into a nested name specifier,
-    //  a scope spec, and a decl context.
-    //
-    //  Do this 'early' to save on the expansive parser setup,
-    //  in case of failure.
-    //
-    CXXScopeSpec SS;
-    DeclContext* foundDC = getContextAndSpec(SS,scopeDecl,Context,S);
-    if (!foundDC) return 0;
-
-    ParserStateRAII ResetParserState(P);
-    llvm::SmallVector<Expr*, 4> GivenArgs;
-
-    Interpreter::PushTransactionRAII pushedT(m_Interpreter);
-    return findFunction(foundDC, SS,
-                        funcName, GivenArgs, false /* objectIsConst */,
-                        Context, m_Interpreter, hasFunctionSelector,
-                        diagOnOff);
+    return execFindFunction<NoParse>(*m_Parser, m_Interpreter,
+                                     scopeDecl,
+                                     funcName, "",
+                                     false /* objectIsConst */,
+                                     hasFunctionSelector,
+                                     diagOnOff);
   }
 } // end namespace cling

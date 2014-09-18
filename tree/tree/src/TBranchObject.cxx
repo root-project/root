@@ -466,7 +466,7 @@ void TBranchObject::SetAddress(void* add)
                fullname[pos] = '\0';
                branch = (TBranch*) fBranches.FindObject(fullname);
             } else {
-               if (!clobj->InheritsFrom(TObject::Class())) {
+               if (!clobj->IsTObject()) {
                   continue;
                }
                if (isDot) {

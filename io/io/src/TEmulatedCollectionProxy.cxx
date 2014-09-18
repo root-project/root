@@ -645,14 +645,14 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
       }
       // a pointer to a class
       if ( dmIsPtr ) {
-         if (clm->InheritsFrom(TObject::Class())) {
+         if (clm->IsTObject()) {
             return new TStreamerObjectPointer(dmName,dmTitle,offset,dmFull);
          } else {
             return new TStreamerObjectAnyPointer(dmName,dmTitle,offset,dmFull);
          }
       }
       // a class
-      if (clm->InheritsFrom(TObject::Class())) {
+      if (clm->IsTObject()) {
          return new TStreamerObject(dmName,dmTitle,offset,dmFull);
       } else if(clm == TString::Class() && !dmIsPtr) {
          return new TStreamerString(dmName,dmTitle,offset);

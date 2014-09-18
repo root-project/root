@@ -68,9 +68,9 @@
 #include "TListOfEnums.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
+#include "TProtoClass.h"
 
 #include "TFile.h"
-class TProtoClass;
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -117,6 +117,7 @@ class TProtoClass;
 #include <stdexcept>
 #include <stdint.h>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <typeinfo>
 #include <unordered_map>
@@ -181,6 +182,36 @@ char *dlerror() {
 #endif
 #endif
 
+//______________________________________________________________________________
+// These functions are helpers for debugging issues with non-LLVMDEV builds.
+//
+clang::DeclContext* TCling__DEBUG__getDeclContext(clang::Decl* D) {
+   return D->getDeclContext();
+}
+clang::NamespaceDecl* TCling__DEBUG__DCtoNamespace(clang::DeclContext* DC) {
+   return llvm::dyn_cast<clang::NamespaceDecl>(DC);
+}
+clang::RecordDecl* TCling__DEBUG__DCtoRecordDecl(clang::DeclContext* DC) {
+   return llvm::dyn_cast<clang::RecordDecl>(DC);
+}
+void TCling__DEBUG__dump(clang::DeclContext* DC) {
+   return DC->dumpDeclContext();
+}
+void TCling__DEBUG__dump(clang::Decl* D) {
+   return D->dump();
+}
+void TCling__DEBUG__printName(clang::Decl* D) {
+   if (clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(D)) {
+      std::string name;
+      {
+         llvm::raw_string_ostream OS(name);
+         ND->getNameForDiagnostic(OS, D->getASTContext().getPrintingPolicy(),
+                                  true /*Qualified*/);
+      }
+      printf("%s\n", name.c_str());
+   }
+}
+
 
 using namespace std;
 using namespace clang;
@@ -194,6 +225,7 @@ namespace {
 }
 
 R__EXTERN int optind;
+
 
 // The functions are used to bridge cling/clang/llvm compiled with no-rtti and
 // ROOT (which uses rtti)
@@ -839,7 +871,7 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
 
    //if (strchr(tname.c_str(),'[')!=0) fprintf(stderr,"DEBUG: checking on %s vs %s %lu %lu\n",tname.c_str(),inner,offset,end);
    if (gROOT->GetListOfClasses()->FindObject(inner)
-       || TClassTable::GetDictNorm(inner) ) {
+       || TClassTable::Check(inner,result) ) {
       // This is a known class.
       return true;
    }
@@ -865,13 +897,41 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
       if (result == tname) result.clear();
       return true;
    }
-   THashList *enumTable = dynamic_cast<THashList*>( gROOT->GetListOfEnums() );
-   if (enumTable->THashList::FindObject( inner ) ) {
-      // This is a known enum.
-      return true;
+
+   // Check if the name is an enumerator
+   const auto lastPos = strrchr(inner, ':');
+   if (lastPos != nullptr)   // Main switch: case 1 - scoped enum, case 2 global enum
+   {
+      // We have a scope
+      // All of this C gymnastic is here to get the scope name and to avoid
+      // allocations on the heap
+      const auto enName = lastPos + 1;
+      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)inner) / sizeof(decltype(*lastPos)) - 1;
+      char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
+      strncpy(scopeName, inner, scopeNameSize);
+      scopeName[scopeNameSize] = '\0';
+      // Check if the scope is in the list of classes
+      if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
+         auto enumTable = dynamic_cast<const THashList *>(scope->GetListOfEnums(false));
+         if (enumTable && enumTable->THashList::FindObject(enName)) return true;
+      }
+      // It may still be in one of the loaded protoclasses
+      else if (auto scope = static_cast<TProtoClass *>(gClassTable->GetProtoNorm(scopeName))) {
+         auto listOfEnums = scope->GetListOfEnums();
+         if (listOfEnums) { // it could be null: no enumerators in the protoclass
+            auto enumTable = dynamic_cast<const THashList *>(listOfEnums);
+            if (enumTable && enumTable->THashList::FindObject(enName)) return true;
+         }
+      }
+   } else
+   {
+      // We don't have any scope: this could only be a global enum
+      auto enumTable = dynamic_cast<const THashList *>(gROOT->GetListOfEnums());
+      if (enumTable && enumTable->THashList::FindObject(inner)) return true;
    }
 
-   if (gCling->GetClassSharedLibs( inner )) {
+   if (gCling->GetClassSharedLibs(inner))
+   {
       // This is a class name.
       return true;
    }
@@ -1387,13 +1447,68 @@ void TCling::RegisterModule(const char* modulename,
    if (fHeaderParsingOnDemand){
       // We now parse the forward declarations. All the classes are then modified
       // in order for them to have an external lexical storage.
-      auto compRes = fInterpreter->declare(fwdDeclsCode, &T);
+      std::string fwdDeclsCodeLessEnums;
+      {
+         // Search for enum forward decls and only declare them if no
+         // declaration exists yet.
+         std::string fwdDeclsLine;
+         std::istringstream fwdDeclsCodeStr(fwdDeclsCode);
+         std::vector<std::string> scope;
+         while (std::getline(fwdDeclsCodeStr, fwdDeclsLine)) {
+            if (fwdDeclsLine.find("namespace ") == 0
+                || fwdDeclsLine.find("inline namespace ") == 0) {
+               // skip leading "namespace ", trailing " {"
+               scope.push_back(fwdDeclsLine.substr(10,
+                                                   fwdDeclsLine.length() - 10 - 2));
+            } else if (fwdDeclsLine == "}") {
+               scope.pop_back();
+            } else if (fwdDeclsLine.find("enum  __attribute__((annotate(\"") == 0) {
+               clang::DeclContext* DC = 0;
+               for (auto &&aScope: scope) {
+                  DC = cling::utils::Lookup::Namespace(&fInterpreter->getSema(), aScope.c_str(), DC);
+                  if (!DC) {
+                     // No decl context means we have to fwd declare the enum.
+                     break;
+                  }
+               }
+               if (scope.empty() || DC) {
+                  // We know the scope; let's look for the enum.
+                  size_t posEnumName = fwdDeclsLine.find("\"))) ", 32);
+                  R__ASSERT(posEnumName != std::string::npos && "Inconsistent enum fwd decl!");
+                  posEnumName += 5; // skip "\"))) "
+                  while (isspace(fwdDeclsLine[posEnumName]))
+                     ++posEnumName;
+                  size_t posEnumNameEnd = fwdDeclsLine.find(" : ", posEnumName);
+                  R__ASSERT(posEnumNameEnd  != std::string::npos && "Inconsistent enum fwd decl (end)!");
+                  while (isspace(fwdDeclsLine[posEnumNameEnd]))
+                     --posEnumNameEnd;
+                  // posEnumNameEnd now points to the last character of the name.
+
+                  std::string enumName = fwdDeclsLine.substr(posEnumName,
+                                                             posEnumNameEnd - posEnumName + 1);
+
+                  if (clang::NamedDecl* enumDecl
+                      = cling::utils::Lookup::Named(&fInterpreter->getSema(),
+                                                    enumName.c_str(), DC)) {
+                     // We have an existing enum decl (forward or definition);
+                     // skip this.
+                     R__ASSERT(llvm::dyn_cast<clang::EnumDecl>(enumDecl) && "not an enum decl!");
+                     (void)enumDecl;
+                     continue;
+                  }
+               }
+            }
+            fwdDeclsCodeLessEnums += fwdDeclsLine + "\n";
+         }
+      }
+
+      auto compRes = fInterpreter->declare(fwdDeclsCodeLessEnums, &T);
       assert(cling::Interpreter::kSuccess == compRes &&
             "The forward declarations could not be compiled");
       if (compRes!=cling::Interpreter::kSuccess){
          Warning("TCling::RegisterModule",
                "Problems in compiling forward declarations for module %s: '%s'",
-               modulename, fwdDeclsCode) ;
+                 modulename, fwdDeclsCodeLessEnums.c_str()) ;
       }
       else if (T){
          // Loop over all decls in the transaction and go through them all
@@ -2806,51 +2921,18 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
       return kFALSE;
    }
 
-   Int_t nch = strlen(name) * 2;
-   char* classname = new char[nch];
-   strlcpy(classname, name, nch);
-   char* current = classname;
-   while (*current) {
-      while (*current && *current != ':' && *current != '<') {
-         current++;
-      }
-      if (!*current) {
-         break;
-      }
-      if (*current == '<') {
-         int level = 1;
-         current++;
-         while (*current && level > 0) {
-            if (*current == '<') {
-               level++;
-            }
-            if (*current == '>') {
-               level--;
-            }
-            current++;
-         }
-         continue;
-      }
-      // *current == ':', must be a "::"
-      if (*(current + 1) != ':') {
-         Error("CheckClassInfo", "unexpected token : in %s", classname);
-         delete[] classname;
-         return kFALSE;
-      }
-      *current = '\0';
-      if (0 == strncmp(name,anonEnum,cmplen)) {
-         delete[] classname;
-         return kFALSE;
-      }
-      TClingClassInfo info(fInterpreter, classname);
-      if (!info.IsValid()) {
-         delete[] classname;
-         return kFALSE;
-      }
-      *current = ':';
-      current += 2;
+   // Avoid the double search below in case the name is a fundamental type
+   // or typedef to a fundamental type.
+   THashTable *typeTable = dynamic_cast<THashTable*>( gROOT->GetListOfTypes() );
+   TDataType *fundType = (TDataType *)typeTable->THashTable::FindObject( name );
+
+   if (fundType && fundType->GetType() < TVirtualStreamerInfo::kObject
+       && fundType->GetType() > 0) {
+      // Fundamental type, no a class.
+      return kFALSE;
    }
-   strlcpy(classname, name, nch);
+
+   const char *classname = name;
 
    int storeAutoload = SetClassAutoloading(autoload);
 
@@ -2875,7 +2957,6 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
                           : cling::LookupHelper::NoDiagnostics,
                           &type,false);
    }
-   delete[] classname;
 
    if (type) {
       // If decl==0 and the type is valid, then we have a forward declaration.
@@ -3540,13 +3621,12 @@ TString TCling::GetMangledNameWithPrototype(TClass* cl, const char* method,
    // prototype, i.e. "char*,int,float". If the class is 0 the global function
    // list will be searched.
    R__LOCKGUARD2(gInterpreterMutex);
-   Long_t offset;
    if (cl) {
       return ((TClingClassInfo*)cl->GetClassInfo())->
-         GetMethod(method, proto, objectIsConst, &offset, mode).GetMangledName();
+         GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).GetMangledName();
    }
    TClingClassInfo gcl(fInterpreter);
-   return gcl.GetMethod(method, proto, objectIsConst, &offset, mode).GetMangledName();
+   return gcl.GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).GetMangledName();
 }
 
 //______________________________________________________________________________
@@ -3636,14 +3716,12 @@ void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
    R__LOCKGUARD2(gInterpreterMutex);
    void* f;
    if (cl) {
-      Long_t offset;
       f = ((TClingClassInfo*)cl->GetClassInfo())->
-         GetMethod(method, proto, objectIsConst, &offset, mode).InterfaceMethod(*fNormalizedCtxt);
+         GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).InterfaceMethod(*fNormalizedCtxt);
    }
    else {
-      Long_t offset;
       TClingClassInfo gcl(fInterpreter);
-      f = gcl.GetMethod(method, proto, objectIsConst, &offset, mode).InterfaceMethod(*fNormalizedCtxt);
+      f = gcl.GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).InterfaceMethod(*fNormalizedCtxt);
    }
    return f;
 }
@@ -3660,13 +3738,11 @@ TInterpreter::DeclId_t TCling::GetFunctionWithValues(ClassInfo_t *opaque_cl, con
    DeclId_t f;
    TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
    if (cl) {
-      Long_t offset;
-      f = cl->GetMethodWithArgs(method, params, objectIsConst, &offset).GetDeclId();
+      f = cl->GetMethodWithArgs(method, params, objectIsConst, 0 /*poffset*/).GetDeclId();
    }
    else {
-      Long_t offset;
       TClingClassInfo gcl(fInterpreter);
-      f = gcl.GetMethod(method, params, objectIsConst, &offset).GetDeclId();
+      f = gcl.GetMethod(method, params, objectIsConst, 0 /*poffset*/).GetDeclId();
    }
    return f;
 }
@@ -3684,13 +3760,11 @@ TInterpreter::DeclId_t TCling::GetFunctionWithPrototype(ClassInfo_t *opaque_cl, 
    DeclId_t f;
    TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
    if (cl) {
-      Long_t offset;
-      f = cl->GetMethod(method, proto, objectIsConst, &offset, mode).GetDeclId();
+      f = cl->GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).GetDeclId();
    }
    else {
-      Long_t offset;
       TClingClassInfo gcl(fInterpreter);
-      f = gcl.GetMethod(method, proto, objectIsConst, &offset, mode).GetDeclId();
+      f = gcl.GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).GetDeclId();
    }
    return f;
 }

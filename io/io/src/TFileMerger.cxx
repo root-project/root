@@ -572,7 +572,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      inputs.Delete();
                   }
                }
-            } else if (cl->InheritsFrom(TObject::Class()) &&
+            } else if (cl->IsTObject() &&
                        cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*") ) {
                // Object implements Merge(TCollection*,TFileMergeInfo*) and has a reflex dictionary ...
 
@@ -635,7 +635,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      listH.Delete();
                   }
                }
-            } else if (cl->InheritsFrom(TObject::Class()) &&
+            } else if (cl->IsTObject() &&
                        cl->GetMethodWithPrototype("Merge", "TCollection*") ) {
                // Object implements Merge(TCollection*) and has a reflex dictionary ...
 

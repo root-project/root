@@ -324,7 +324,7 @@ struct SetROOTSYS {
 
 //______________________________________________________________________________
 #ifndef ROOT_STAGE1_BUILD
-static void EmitStreamerInfo(const char *normName)
+void EmitStreamerInfo(const char *normName)
 {
    AddStreamerInfoToROOTFile(normName);
 }
@@ -344,7 +344,7 @@ static void EmitEnums(const std::vector<clang::EnumDecl *> &enumvec)
    }
 }
 #else
-static void EmitStreamerInfo(const char *) { }
+void EmitStreamerInfo(const char *) { }
 #endif
 
 //______________________________________________________________________________
@@ -2164,31 +2164,20 @@ static bool InjectModuleUtilHeader(const char *argv0,
 {
    // Write the extra header injected into the module:
    // umbrella header if (umbrella) else content header.
-   const std::string &hdrName
-      = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
-   {
-      std::ofstream out(hdrName);
-      if (!out) {
-         ROOT::TMetaUtils::Error(0, "%s: failed to open header output %s\n",
-                                 argv0, hdrName.c_str());
-         return false;
-      }
-      if (umbrella) {
-         // This will duplicate the -D,-U from clingArgs - but as they are surrounded
-         // by #ifndef there is no problem here.
-         modGen.WriteUmbrellaHeader(out);
-      } else {
-         modGen.WriteContentHeader(out);
-      }
+   std::ostringstream out;
+   if (umbrella) {
+      // This will duplicate the -D,-U from clingArgs - but as they are surrounded
+      // by #ifndef there is no problem here.
+      modGen.WriteUmbrellaHeader(out);
+   } else {
+      modGen.WriteContentHeader(out);
    }
-   {
-      std::string includeDirective("#include \"");
-      includeDirective += hdrName + "\"";
-      if (interp.declare(includeDirective) != cling::Interpreter::kSuccess) {
-         ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
-                                 hdrName.c_str());
-         return false;
-      }
+   if (interp.declare(out.str()) != cling::Interpreter::kSuccess) {
+      const std::string &hdrName
+         = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
+      ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
+                              hdrName.c_str());
+      return false;
    }
    return true;
 }
@@ -2959,19 +2948,10 @@ int GenerateFullDict(std::ostream &dictStream,
             RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
          } else {
             ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
+            EmitStreamerInfo(selClass.GetNormalizedName());
          }
-         EmitStreamerInfo(selClass.GetNormalizedName());
       }
    }
-
-#ifndef ROOT_STAGE1_BUILD
-   EmitTypedefs(scan.fSelectedTypedefs);
-   EmitEnums(scan.fSelectedEnums);
-   // Make up for skipping RegisterModule, now that dictionary parsing
-   // is done and these headers cannot be selected anymore.
-   int finRetCode = FinalizeStreamerInfoWriting(interp);
-   if (finRetCode != 0) return finRetCode;
-#endif
 
    //
    // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
@@ -2992,7 +2972,7 @@ int GenerateFullDict(std::ostream &dictStream,
    }
 
    // LINKDEF SELECTION LOOP
-   // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
+   // Loop to get the shadow class for the class marked 'RequestOnlyTClass' (but not the
    // STL class which is done via RStl::Instance().WriteClassInit(0);
    // and the ClassInit
 
@@ -3005,6 +2985,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
       if (!ROOT::TMetaUtils::IsSTLContainer(selClass)) {
          ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
+         EmitStreamerInfo(selClass.GetNormalizedName());
       }
    }
    // Loop to write all the ClassCode
@@ -3020,7 +3001,16 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // Loop on the registered collections internally
    // coverity[fun_call_w_exception] - that's just fine.
-   ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy);
+   ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
+
+#ifndef ROOT_STAGE1_BUILD
+   EmitTypedefs(scan.fSelectedTypedefs);
+   EmitEnums(scan.fSelectedEnums);
+   // Make up for skipping RegisterModule, now that dictionary parsing
+   // is done and these headers cannot be selected anymore.
+   int finRetCode = FinalizeStreamerInfoWriting(interp);
+   if (finRetCode != 0) return finRetCode;
+#endif
 
    return 0;
 }
@@ -3424,17 +3414,14 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 
    using namespace ROOT::TMetaUtils::AST2SourceTools;
 
-   const char *emptyString = "\"\"";
-
    std::string fwdDeclString;
    std::string buffer;
    std::unordered_set<std::string> fwdDecls;
 
    // Classes
-
+/*
    for (auto const & annRcd : scan.fSelectedClasses) {
       const auto rcdDeclPtr = annRcd.GetRecordDecl();
-//       newFwdDeclString += Decl2FwdDecl(*rcdDeclPtr,interp);
 
       int retCode = FwdDeclFromRcdDecl(*rcdDeclPtr, interp, buffer);
       if (-1 == retCode) {
@@ -3446,9 +3433,23 @@ std::string GenerateFwdDeclString(const RScanner &scan,
       if (retCode == 0 && fwdDecls.insert(buffer).second)
          fwdDeclString += "\"" + buffer + "\"\n";
    }
+*/
+   // Build the input for a transaction containing all of the selected declarations
+   // Cling will produce the fwd declaration payload.
+
+   std::vector<const clang::Decl *> selectedDecls(scan.fSelectedClasses.size());
+
+   // Pick only RecordDecls
+   std::transform (scan.fSelectedClasses.begin(),
+                   scan.fSelectedClasses.end(),
+                   selectedDecls.begin(),
+                   [](const ROOT::TMetaUtils::AnnotatedRecordDecl& rcd){return rcd.GetRecordDecl();});
+
+   fwdDeclString += "R\"DICTFWDDCLS(\n";
+   fwdDeclString += Decls2FwdDecls(selectedDecls,interp);
+   fwdDeclString += ")DICTFWDDCLS\"";
 
    // Typedefs
-
    for (auto const & tdNameDeclPtr : scan.fSelectedTypedefs) {
       buffer = "";
       int retCode = FwdDeclFromTypeDefNameDecl(*tdNameDeclPtr,
@@ -3456,8 +3457,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
                     buffer,
                     &fwdDecls);
       if (retCode == 0 && fwdDecls.insert(buffer).second) {
-         fwdDeclString += "\"" + buffer + "\"\n";
-
+         fwdDeclString += "\nR\"FWDDECL(" + buffer + ")FWDDECL\"";
       }
    }
 
@@ -3475,14 +3475,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 //          fwdDeclString+="\""+buffer+"\"\n";
 //    }
 
-   if (fwdDeclString.empty()) fwdDeclString = emptyString;
-
-//    std::cout << "\n======================" << std::endl
-//              << "OLD: " << fwdDeclString
-//              << "\n======================" << std::endl
-//              << "NEW: " << newFwdDeclString
-//              << "\n======================" << std::endl;
-
+   if (fwdDeclString.empty()) fwdDeclString = R"("")";
    return fwdDeclString;
 }
 
@@ -4152,7 +4145,7 @@ int RootCling(int argc,
    clang::CompilerInstance *CI = interp.getCI();
    const unsigned int selRulesInitialSize = selectionRules.Size();
    if (dictSelection && !onepcm)
-      DictSelectionReader dictSelReader(selectionRules, CI->getASTContext());
+      DictSelectionReader dictSelReader(selectionRules, CI->getASTContext(), normCtxt);
 
    bool dictSelRulesPresent = selectionRules.Size() > selRulesInitialSize;
 

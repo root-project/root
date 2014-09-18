@@ -64,6 +64,11 @@ namespace {
       }
    };
 
+template<class T>
+inline static bool IsElementPresent(const std::vector<T> &v, const T &el){
+   return std::find(v.begin(),v.end(),el) != v.end();
+}
+
 }
 
 using namespace ROOT;
@@ -761,10 +766,16 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
       // Save the typedef
       if (selectedFromTypedef){
-         if (std::find(fSelectedTypedefs.begin(),fSelectedTypedefs.end(),typedefNameDecl) == fSelectedTypedefs.end())
+         if (!IsElementPresent(fSelectedTypedefs, typedefNameDecl))
             fSelectedTypedefs.push_back(typedefNameDecl);
          // Early exit here if we are not in presence of XML
          if (!fSelectionRules.IsSelectionXMLFile()) return true;
+      }
+
+      if (fSelectionRules.IsSelectionXMLFile() && selected->IsFromTypedef()) {
+         if (!IsElementPresent(fSelectedTypedefs, typedefNameDecl))
+            fSelectedTypedefs.push_back(typedefNameDecl);
+         return true;
       }
 
       if (typedefNameDecl)
@@ -896,7 +907,7 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
       return true;
 
    if(fSelectionRules.IsDeclSelected(D) &&
-      std::find(fSelectedEnums.begin(),fSelectedEnums.end(),D) == fSelectedEnums.end()){ // Removal of duplicates.
+      !IsElementPresent(fSelectedEnums, D)){ // Removal of duplicates.
       fSelectedEnums.push_back(D);
    }
 
@@ -1095,9 +1106,8 @@ void RScanner::Scan(const clang::ASTContext &C)
 
 //    if (fVerboseLevel >= 3) fSelectionRules.PrintSelectionRules();
 
-   if (fVerboseLevel > 0)  {
-      if (fSelectionRules.GetHasFileNameRule())
-         std::cout<<"File name detected"<<std::endl;
+   if (fVerboseLevel > 0 && fSelectionRules.GetHasFileNameRule())  {
+      std::cout<<"File name detected"<<std::endl;
    }
 
    if (fScanType == EScanType::kTwoPasses)
@@ -1105,6 +1115,9 @@ void RScanner::Scan(const clang::ASTContext &C)
 
    fFirstPass=false;
    fselectedRecordDecls.clear();
+   fSelectedEnums.clear();
+   fSelectedTypedefs.clear();
+   fSelectedFunctions.clear();
    TraverseDecl(C.getTranslationUnitDecl());
 
    // And finally resort the results according to the rule ordering.

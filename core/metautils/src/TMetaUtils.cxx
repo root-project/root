@@ -32,10 +32,11 @@
 #include "RStl.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attr.h"
+#include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclTemplate.h"
-#include "clang/AST/CXXInheritance.h"
-#include "clang/AST/Attr.h"
+#include "clang/AST/Type.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/ModuleMap.h"
@@ -620,7 +621,7 @@ inline bool IsTemplate(const clang::Decl &cl)
 const clang::FunctionDecl* ROOT::TMetaUtils::ClassInfo__HasMethod(const clang::DeclContext *cl, const char* name,
                                                             const cling::Interpreter& interp)
 {
-   clang::Sema* S = const_cast<clang::Sema*>(&interp.getSema());
+   clang::Sema* S = &interp.getSema();
    const clang::NamedDecl* ND = cling::utils::Lookup::Named(S, name, cl);
    if (ND == (clang::NamedDecl*)-1)
       return (clang::FunctionDecl*)-1;
@@ -1586,7 +1587,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    //--------------------------------------------------------------------------
    if( rulesIt1 != ROOT::gReadRules.end() ) {
       int i = 0;
-      finalString << "\n" << "   // Schema evolution read functions" << "\n";
+      finalString << "\n   // Schema evolution read functions\n";
       std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt1->second.begin();
       while( rIt != rulesIt1->second.end() ) {
 
@@ -1599,7 +1600,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          }
 
          //---------------------------------------------------------------------
-         // Write the conversion function if necassary
+         // Write the conversion function if necessary
          //---------------------------------------------------------------------
          if( rIt->find( "code" ) != rIt->end() ) {
             WriteReadRuleFunc( *rIt, i++, mappedname, nameTypeMap, finalString );
@@ -1616,7 +1617,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    //--------------------------------------------------------------------------
    if( rulesIt2 != ROOT::gReadRawRules.end() ) {
       int i = 0;
-      finalString << "\n << ";   // Schema evolution read raw functions << "\n";
+      finalString << "\n   // Schema evolution read raw functions\n";
       std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt2->second.begin();
       while( rIt != rulesIt2->second.end() ) {
 
@@ -1760,6 +1761,14 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classname.c_str() << " >()));" << "\n";
 
       needCollectionProxy = true;
+   }
+
+   //---------------------------------------------------------------------------
+   // Register Altenate spelling of the class name.
+   //---------------------------------------------------------------------------
+   if (cl.GetRequestedName()[0] && classname != cl.GetRequestedName()) {
+      finalString << "\n" << "      ROOT::AddClassAlternate(\""
+                  << classname << "\",\"" << cl.GetRequestedName() << "\");\n";
    }
 
    //---------------------------------------------------------------------------
@@ -2594,10 +2603,13 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    if (llvm::isa<clang::PointerType>(instanceType.getTypePtr())) {
       // Get the qualifiers.
       clang::Qualifiers quals = instanceType.getQualifiers();
-      instanceType = AddDefaultParameters(instanceType->getPointeeType(), interpreter, normCtxt);
-      instanceType = Ctx.getPointerType(instanceType);
-      // Add back the qualifiers.
-      instanceType = Ctx.getQualifiedType(instanceType, quals);
+      clang::QualType newPointee = AddDefaultParameters(instanceType->getPointeeType(), interpreter, normCtxt);
+      if (newPointee != instanceType->getPointeeType()) {
+         instanceType = Ctx.getPointerType(newPointee);
+         // Add back the qualifiers.
+         instanceType = Ctx.getQualifiedType(instanceType, quals);
+      }
+      return instanceType;
    }
 
    // In case of Int_t& we need to strip the pointer first, desugar and attach
@@ -2606,15 +2618,18 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       // Get the qualifiers.
       bool isLValueRefTy = llvm::isa<clang::LValueReferenceType>(instanceType.getTypePtr());
       clang::Qualifiers quals = instanceType.getQualifiers();
-      instanceType = AddDefaultParameters(instanceType->getPointeeType(), interpreter, normCtxt);
+      clang::QualType newPointee = AddDefaultParameters(instanceType->getPointeeType(), interpreter, normCtxt);
 
-      // Add the r- or l- value reference type back to the desugared one
-      if (isLValueRefTy)
-        instanceType = Ctx.getLValueReferenceType(instanceType);
-      else
-        instanceType = Ctx.getRValueReferenceType(instanceType);
-      // Add back the qualifiers.
-      instanceType = Ctx.getQualifiedType(instanceType, quals);
+      if (newPointee != instanceType->getPointeeType()) {
+         // Add the r- or l- value reference type back to the desugared one
+         if (isLValueRefTy)
+            instanceType = Ctx.getLValueReferenceType(newPointee);
+         else
+            instanceType = Ctx.getRValueReferenceType(newPointee);
+         // Add back the qualifiers.
+         instanceType = Ctx.getQualifiedType(instanceType, quals);
+      }
+      return instanceType;
    }
 
    // Treat the Scope.
@@ -2650,7 +2665,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    bool isStdDropDefault = TSTdecl && IsStdDropDefaultClass(*TSTdecl);
 
    bool mightHaveChanged = false;
-   if (TST && TSTdecl && !isStdDropDefault) {
+   if (TST && TSTdecl) {
 
       clang::Sema& S = interpreter.getCI()->getSema();
       clang::TemplateDecl *Template = TSTdecl->getSpecializedTemplate()->getMostRecentDecl();
@@ -2705,17 +2720,20 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             clang::QualType SubTy = I->getAsType();
 
             // Check if the type needs more desugaring and recurse.
-            if (llvm::isa<clang::TemplateSpecializationType>(SubTy)
-                || llvm::isa<clang::ElaboratedType>(SubTy) ) {
+            // (Originally this was limited to elaborated and templated type,
+            // but we also need to do it for pointer and reference type
+            // and who knows what, so do it always)
+            clang::QualType newSubTy = AddDefaultParameters(SubTy,
+                                                            interpreter,
+                                                            normCtxt);
+            if (SubTy != newSubTy) {
                mightHaveChanged = true;
-               desArgs.push_back(clang::TemplateArgument(AddDefaultParameters(SubTy,
-                                                                              interpreter,
-                                                                              normCtxt)));
+               desArgs.push_back(clang::TemplateArgument(newSubTy));
             } else {
                desArgs.push_back(*I);
             }
             // Converted.push_back(TemplateArgument(ArgTypeForTemplate));
-         } else if (Idecl < maxAddArg) {
+         } else if (!isStdDropDefault && Idecl < maxAddArg) {
 
             mightHaveChanged = true;
 
@@ -3289,7 +3307,7 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    if (!ttpdPtr->hasDefaultArgument()) return false; // we should not be here in this case, but we protect us.
 
    // Try the fast solution
-   const QualType tParQualType = ttpdPtr->getDefaultArgument();
+   QualType tParQualType = ttpdPtr->getDefaultArgument();
    const QualType tArgQualType = tArg.getAsType();
 
    // Now the equality tests for non template specialisations.
@@ -3307,6 +3325,13 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    // So:
 
    // Take the template out of the parameter
+
+   const clang::ElaboratedType* etype
+      = llvm::dyn_cast<clang::ElaboratedType>(tParQualType.getTypePtr());
+   while (etype) {
+      tParQualType = clang::QualType(etype->getNamedType().getTypePtr(),0);
+      etype = llvm::dyn_cast<clang::ElaboratedType>(tParQualType.getTypePtr());
+   }
 
    const TemplateSpecializationType* tst =
             llvm::dyn_cast<TemplateSpecializationType>(tParQualType.getTypePtr());
@@ -3548,7 +3573,7 @@ static void KeepNParams(clang::QualType& normalizedType,
                         thisArgQualType,
                         interp,
                         normCtxt);
-            mightHaveChanged = (thisNormQualType != thisArgQualType);
+            mightHaveChanged |= (thisNormQualType != thisArgQualType);
             NormTArg = TemplateArgument(thisNormQualType);
          }
          argsToKeep.push_back(NormTArg);
@@ -4053,7 +4078,7 @@ bool ROOT::TMetaUtils::IsOfType(const clang::CXXRecordDecl &cl, const std::strin
    if (! thisDecl){
       Error("IsOfType","Record decl of type %s not found in the AST.", typ.c_str());
       return false;
-      }
+   }
 
    // Now loop on all previous decls to seek a match
    const clang::CXXRecordDecl *mostRecentDecl = thisDecl->getMostRecentDecl();
@@ -4538,45 +4563,237 @@ const std::string& ROOT::TMetaUtils::GetPathSeparator()
    return gPathSeparator;
 }
 
+
+static void addDeclToTransaction(clang::Decl *decl,
+                                 cling::Transaction &theTransaction,
+                                 std::set<clang::Decl *> &addedDecls);
+static void addDeclsToTransactionForType(const clang::Type* typ,
+                                        cling::Transaction &theTransaction,
+                                        std::set<clang::Decl *> &addedDecls);
+
 //______________________________________________________________________________
-const std::string ROOT::TMetaUtils::AST2SourceTools::Decl2FwdDecl(const clang::Decl &decl,
-      const cling::Interpreter &interp)
-{
-   // Ugly const removal: wrong cling interfaces
-   clang::Decl *ncDecl = const_cast<clang::Decl *>(&decl);
-   cling::Interpreter *ncInterp = const_cast<cling::Interpreter *>(&interp);
-   clang::Sema &sema = ncInterp->getSema();
-   cling::Transaction theTransaction(sema);
-   theTransaction.append(ncDecl);
-   if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(ncDecl)) {
-      theTransaction.append(tsd->getSpecializedTemplate());
+static void addDeclsToTransactionForNNS(const clang::NestedNameSpecifier* NNS,
+                                       cling::Transaction &theTransaction,
+                                       std::set<clang::Decl *> &addedDecls) {
+   if (const clang::NestedNameSpecifier* Prefix = NNS->getPrefix())
+      addDeclsToTransactionForNNS(Prefix, theTransaction, addedDecls);
+
+   switch (NNS->getKind()) {
+   case clang::NestedNameSpecifier::Namespace:
+      addDeclToTransaction(NNS->getAsNamespace(), theTransaction, addedDecls);
+      break;
+   case clang::NestedNameSpecifier::TypeSpec: // fall-through:
+   case clang::NestedNameSpecifier::TypeSpecWithTemplate:
+      addDeclsToTransactionForType(NNS->getAsType(), theTransaction, addedDecls);
+      break;
+   default:
+      ROOT::TMetaUtils::Error("addDeclsToTransactionForNNS", "Unexpected kind %d\n",
+                              (int)NNS->getKind());
+      break;
+
+   };
+}
+
+static void addDeclsToTransactionForTemplateName(clang::TemplateName tName,
+                                                cling::Transaction &theTransaction,
+                                                std::set<clang::Decl *> &addedDecls) {
+   switch (tName.getKind()) {
+   case clang::TemplateName::Template:
+      addDeclToTransaction(tName.getAsTemplateDecl(), theTransaction, addedDecls);
+      break;
+   case clang::TemplateName::QualifiedTemplate:
+      addDeclToTransaction(tName.getAsQualifiedTemplateName()->getTemplateDecl(), theTransaction, addedDecls);
+      break;
+   case clang::TemplateName::DependentTemplate:
+      addDeclsToTransactionForNNS(tName.getAsDependentTemplateName()->getQualifier(), theTransaction, addedDecls);
+      break;
+   case clang::TemplateName::SubstTemplateTemplateParm:
+      addDeclsToTransactionForTemplateName(tName.getAsSubstTemplateTemplateParm()->getReplacement(), theTransaction, addedDecls);
+      break;
+      /* needs TemplateArgument handling to be refactored
+   case clang::TemplateName::SubstTemplateTemplateParmPack:
+      addDeclsToTransactionForTemplateArgument(tName.getAsSubstTemplateTemplateParmPack()->getArgumentPack(), theTransaction, addedDecls);
+      break;
+      */
+   default:
+      ROOT::TMetaUtils::Error("addDeclsToTransactionForTemplateName", "Unexpected kind %s\n",
+                              tName.getKind());
+      break;
    }
-   std::string newFwdDecl;
-   llvm::raw_string_ostream llvmOstr(newFwdDecl);
-   ncInterp->forwardDeclare(theTransaction, sema.getSourceManager(), llvmOstr, true, nullptr);
-   llvmOstr.flush();
-   return newFwdDecl;
+}
+
+//______________________________________________________________________________
+static void addDeclsToTransactionForType(const clang::Type* typ,
+                                        cling::Transaction &theTransaction,
+                                        std::set<clang::Decl *> &addedDecls) {
+   switch (typ->getTypeClass()) {
+
+#define R__ADD_UNDERLYING(WHAT, HOW)                \
+   case clang::Type::WHAT: \
+      addDeclsToTransactionForType(static_cast<const clang::WHAT##Type*>(typ)->HOW().getTypePtr(), \
+                                  theTransaction, addedDecls); \
+      break
+      R__ADD_UNDERLYING(ConstantArray, getElementType);
+      R__ADD_UNDERLYING(DependentSizedArray, getElementType);
+      R__ADD_UNDERLYING(IncompleteArray, getElementType);
+      R__ADD_UNDERLYING(VariableArray, getElementType);
+      R__ADD_UNDERLYING(Atomic, getValueType);
+      R__ADD_UNDERLYING(Auto, getDeducedType);
+      R__ADD_UNDERLYING(Decltype, getUnderlyingType);
+      R__ADD_UNDERLYING(Paren, getInnerType);
+      R__ADD_UNDERLYING(Pointer, getPointeeType);
+      R__ADD_UNDERLYING(LValueReference, getPointeeType);
+      R__ADD_UNDERLYING(RValueReference, getPointeeType);
+      R__ADD_UNDERLYING(TypeOf, getUnderlyingType);
+      R__ADD_UNDERLYING(Elaborated, getNamedType);
+      R__ADD_UNDERLYING(UnaryTransform, getUnderlyingType);
+#undef R__ADD_UNDERLYING
+
+   case clang::Type::DependentName: {
+         const clang::NestedNameSpecifier* NNS = static_cast<const clang::DependentNameType*>(typ)->getQualifier();
+         addDeclsToTransactionForNNS(NNS, theTransaction, addedDecls);
+      }
+      break;
+
+   case clang::Type::MemberPointer:
+      addDeclsToTransactionForType(static_cast<const clang::MemberPointerType*>(typ)->getPointeeType().getTypePtr(),
+                                  theTransaction, addedDecls);
+      addDeclsToTransactionForType(static_cast<const clang::MemberPointerType*>(typ)->getClass(),
+                                  theTransaction, addedDecls);
+      break;
+
+   case clang::Type::Enum:
+      // intentional fall-through
+   case clang::Type::Record:
+      addDeclToTransaction(static_cast<const clang::TagType*>(typ)->getDecl(),
+                           theTransaction, addedDecls);
+      break;
+   case clang::Type::TemplateSpecialization: {
+      const clang::TemplateSpecializationType* TST = static_cast<const clang::TemplateSpecializationType*>(typ);
+      for (const clang::TemplateArgument& TA: *TST) {
+         switch (TA.getKind()) {
+         case clang::TemplateArgument::Type:
+            addDeclsToTransactionForType(TA.getAsType().getTypePtr(), theTransaction, addedDecls);
+            break;
+         case clang::TemplateArgument::Declaration:
+            addDeclToTransaction(TA.getAsDecl(), theTransaction, addedDecls);
+            break;
+         case clang::TemplateArgument::Template: // intentional fall-through:
+         case clang::TemplateArgument::Pack:
+            addDeclsToTransactionForTemplateName(TA.getAsTemplateOrTemplatePattern(), theTransaction, addedDecls);
+            break;
+         case clang::TemplateArgument::Expression:
+            // Nothing to fwd declare, hopefully...
+            break;
+         default:
+            ROOT::TMetaUtils::Error("addDeclsToTransactionForType", "Unexpected TemplateSpecializationType %d\n",
+                                    (int)TA.getKind());
+         break;
+         }
+      }
+      addDeclsToTransactionForTemplateName(TST->getTemplateName(), theTransaction, addedDecls);
+   }
+      break;
+   case clang::Type::Typedef:
+      addDeclToTransaction(static_cast<const clang::TypedefType*>(typ)->getDecl(),
+                           theTransaction, addedDecls);
+      break;
+
+   case clang::Type::TemplateTypeParm:
+      addDeclToTransaction(static_cast<const clang::TemplateTypeParmType*>(typ)->getDecl(),
+                           theTransaction, addedDecls);
+      break;
+
+   case clang::Type::Builtin:
+      // Nothing to do.
+      break;
+   case clang::Type::TypeOfExpr:
+      // Nothing to do.
+      break;
+
+   default:
+      ROOT::TMetaUtils::Error("addDeclsToTransactionForType", "Unexpected %s\n",
+                              typ->getTypeClassName());
+      break;
+   }
+
+}
+
+//______________________________________________________________________________
+static void addDeclToTransaction(clang::Decl *decl,
+                                 cling::Transaction &theTransaction,
+                                 std::set<clang::Decl *> &addedDecls)
+{
+   if (decl->isFromASTFile()) return;
+   if (!addedDecls.insert(decl).second) // no duplicates
+      return;
+
+//    if (auto *nDecl = llvm::dyn_cast<clang::NamedDecl>(decl)) {
+//       if (cling::utils::Analyze::IsStdOrCompilerDetails(*nDecl)){
+//          return;
+//       }
+//    }
+
+   // Class template instances
+   if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
+      addDeclToTransaction(tsd->getSpecializedTemplate(), theTransaction,
+                              addedDecls);
+   } else if (auto *td = llvm::dyn_cast<clang::TemplateDecl>(decl)) {
+      // default args of type params might need to be fwd declared, as in
+      //   template <class A, class B = X<A>> struct Y;
+      // needs X!
+      clang::TemplateParameterList &tdPars = *td->getTemplateParameters();
+      // iterate over defaults.
+      for (int iArg = tdPars.getMinRequiredArguments(),
+              nArgs = tdPars.size(); iArg < nArgs; ++iArg) {
+         if (auto *ttpd = llvm::dyn_cast<clang::TemplateTypeParmDecl>(tdPars.getParam(iArg))) {
+            addDeclToTransaction(ttpd, theTransaction, addedDecls);
+         }
+      }
+   } else if (auto *ttpd = llvm::dyn_cast<clang::TemplateTypeParmDecl>(decl)) {
+      if (ttpd->hasDefaultArgument() && !ttpd->defaultArgumentWasInherited()) {
+         addDeclsToTransactionForType(ttpd->getDefaultArgument().getTypePtr(),
+                                     theTransaction, addedDecls);
+      }
+      // do not add the "T" of template <typename T> to the
+      // transaction.
+      return;
+   } else if (auto *td = llvm::dyn_cast<clang::TypedefDecl>(decl)) {
+      addDeclsToTransactionForType(td->getUnderlyingType().getTypePtr(),
+                                   theTransaction, addedDecls);
+   }
+
+
+   // Contexts
+   auto *declForRecursion = decl;
+   while (auto *ctxt = declForRecursion->getDeclContext()) {
+      declForRecursion = llvm::dyn_cast_or_null<clang::Decl>(ctxt);
+      if (llvm::isa<clang::NamedDecl>(declForRecursion) && // stop recursion at the last class/struct/ns
+            (addedDecls.insert(declForRecursion).second)) { // no duplicates
+         theTransaction.append(declForRecursion);
+      } else {
+         break;
+      }
+   }
+
+   theTransaction.append(decl);
 }
 
 //______________________________________________________________________________
 const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls,
       const cling::Interpreter &interp)
 {
-   // Ugly const removal: wrong cling interfaces
-   cling::Interpreter *ncInterp = const_cast<cling::Interpreter *>(&interp);
-   clang::Sema &sema = ncInterp->getSema();
+   clang::Sema &sema = interp.getSema();
    cling::Transaction theTransaction(sema);
+   std::set<clang::Decl *> addedDecls;
    for (auto decl : decls) {
       // again waiting for cling
       clang::Decl *ncDecl = const_cast<clang::Decl *>(decl);
-      theTransaction.append(ncDecl);
-      if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
-         theTransaction.append(tsd->getSpecializedTemplate());
-      }
+      addDeclToTransaction(ncDecl, theTransaction, addedDecls);
    }
    std::string newFwdDecl;
    llvm::raw_string_ostream llvmOstr(newFwdDecl);
-   ncInterp->forwardDeclare(theTransaction, sema.getSourceManager(), llvmOstr, true, nullptr);
+   interp.forwardDeclare(theTransaction, sema.getSourceManager(), llvmOstr, true, nullptr);
    llvmOstr.flush();
    return newFwdDecl;
 }

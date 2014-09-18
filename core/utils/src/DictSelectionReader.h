@@ -17,10 +17,18 @@
 #include <llvm/ADT/StringMap.h>
 
 #include <set>
+#include <unordered_set>
 #include <string>
+#include <unordered_map>
 
 class SelectionRules;
 class ClassSelectionRule;
+namespace ROOT {
+   namespace TMetaUtils {
+      class TNormalizedCtxt;
+   }
+}
+
 namespace clang {
    class ASTContext;
 //    class DeclContext;
@@ -206,6 +214,21 @@ ROOT::Selection::NS::C.
  * specifying that @c transientMember is transient, @c classTestAutoselect and
  * @c classAutoselected.
  *
+ * Another trait class present in the @c ROOT::Meta::Selection is
+ * @c SelectNoInstance. If a template in the selection namespace inherits from
+ * this class, none of its instantiations will be automatically selected but
+ * all of the properties specified otherwise, like transient members or
+ * number of template arguments to keep, will be transmitted to all of the
+ * instantiations selected by other means.
+ * For example
+ * @code
+ * [...]
+ * template< class T, class BASE >
+ * class MyDataVector : KeepFirstTemplateArguments< 1 >, SelectNoInstance {
+ *     MemberAttributes< kTransient + kAutoSelected > m_isMostDerived;
+ *     MemberAttributes< kNonSplittable+ kAutoSelected > m_isNonSplit;
+ *  };
+ * [...]
  *
  **/
 class DictSelectionReader
@@ -213,7 +236,7 @@ class DictSelectionReader
 public:
    /// Take the selection rules as input (for consistency w/ other selector
    /// interfaces)
-   DictSelectionReader(SelectionRules &, const clang::ASTContext &);
+   DictSelectionReader(SelectionRules &, const clang::ASTContext &, ROOT::TMetaUtils::TNormalizedCtxt &);
 
    /// Visit the entities that needs to be selected
    bool VisitRecordDecl(clang::RecordDecl *);
@@ -223,6 +246,16 @@ public:
    }
 
 private:
+
+
+   struct TemplateInfo { /// < Class to store the information about templates upon parsing
+      TemplateInfo(int argsToKeep): fArgsToKeep(argsToKeep) {};
+      TemplateInfo() {};
+      int fArgsToKeep = -1;
+      std::unordered_set<std::string> fTransientMembers {};
+      std::unordered_set<std::string> fUnsplittableMembers {};
+   };
+
    inline bool
    InSelectionNamespace(const clang::RecordDecl &,
                         const std::string &str =
@@ -233,11 +266,12 @@ private:
    ///information of the first
    ///one
    inline void
-   ManageFields(const clang::RecordDecl &, const std::string &,
-                ClassSelectionRule &); ///< Take care of the class fields
+   ManageFields(const clang::RecordDecl &,
+                const std::string &,
+                ClassSelectionRule &,
+                bool); ///< Take care of the class fields
    inline void
-   ManageBaseClasses(const clang::CXXRecordDecl &, const std::string &,
-                     ClassSelectionRule &); ///< Take care of the class bases
+   ManageBaseClasses(const clang::CXXRecordDecl &, const std::string &, bool &); ///< Take care of the class bases
    template <class T>
    inline unsigned int ExtractTemplateArgValue(
       const T &,
@@ -258,12 +292,11 @@ private:
    fAutoSelectedClassFieldNames; ///< Collect the autoselected classes
    llvm::StringMap<std::set<std::string> >
    fNoAutoSelectedClassFieldNames; ///< Collect the autoexcluded classes
-   std::list<std::pair<std::string, unsigned int> >
-   fTemplateInstanceNamePatternsArgsToKeep; ///< List of pattern-# of args to
-   ///hide pairs
+   std::unordered_map<std::string, TemplateInfo> fTemplateInfoMap; ///< List template name - properties map
    llvm::StringMap<ClassSelectionRule>
    fClassNameSelectionRuleMap; /// < Map of the already built sel rules
    bool fIsFirstPass; ///< Keep trance of the number of passes through the AST
+   ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt; /// < The reference to the normalized context
 };
 
 #endif

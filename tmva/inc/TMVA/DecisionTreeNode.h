@@ -351,6 +351,7 @@ namespace TMVA {
       void     SetSampleMax(UInt_t ivar, Float_t xmax);
 
       static bool fgIsTraining; // static variable to flag training phase in which we need fTrainInfo
+      static UInt_t fgTmva_Version_Code;  // set only when read from weightfile 
 
    protected:
 
