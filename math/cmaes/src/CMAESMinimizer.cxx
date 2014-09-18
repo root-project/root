@@ -348,10 +348,11 @@ namespace ROOT
 					 const double &ftarget,
 					 const std::string &fplot,
 					 const bool &withnumgradient,
-					 const bool &mtfeval)
+					 const bool &mtfeval,
+					 const bool &quiet)
     {
       cmaparams.set_algo(fMinimizer);
-      if (gDebug > 0)
+      if (gDebug > 0 || !quiet)
 	cmaparams.set_quiet(false);
       else cmaparams.set_quiet(true);
       for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
@@ -445,6 +446,7 @@ namespace ROOT
       std::string fplot;
       int withnumgradient = 0; // whether to use numerical gradient injection.
       int mtfeval = 0; // parallel execution of objective function
+      int quiet = 0;
       
       // set hyper-parameters according to IOptions object.
       if (cmaesOpt)
@@ -458,6 +460,7 @@ namespace ROOT
 	  cmaesOpt->GetValue("lscaling",fWithLinearScaling);
 	  cmaesOpt->GetValue("numgradient",withnumgradient);
 	  cmaesOpt->GetValue("mt_feval",mtfeval);
+	  cmaesOpt->GetValue("quiet",quiet);
 	}
       
       if (gDebug > 0)
@@ -476,7 +479,7 @@ namespace ROOT
 	      //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
 	      GenoPheno<pwqBoundStrategy,linScalingStrategy> gp(vscaling,vshift,&fLBounds.front(),&fUBounds.front());
 	      CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0,gp);
-	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet);
 	      fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy,linScalingStrategy>>(ffit,cmaparams);
 	      fCMAparams_lb = cmaparams;
 	    }
@@ -485,7 +488,7 @@ namespace ROOT
 	      //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
 	      GenoPheno<NoBoundStrategy,linScalingStrategy> gp(vscaling,vshift);
 	      CMAParameters<GenoPheno<NoBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0,gp);
-	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet);
 	      fCMAsols = libcmaes::cmaes<GenoPheno<NoBoundStrategy,linScalingStrategy>>(ffit,cmaparams);
 	      fCMAparams_l = cmaparams;
 	    }
@@ -497,14 +500,14 @@ namespace ROOT
 	      Info("CMAESMinimizer","Minimizing with bounds");
 	      GenoPheno<pwqBoundStrategy,NoScalingStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
 	      CMAParameters<GenoPheno<pwqBoundStrategy,NoScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0,gp);
-	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet);
 	      fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>(ffit,cmaparams);
 	      fCMAparams_b = cmaparams;
 	    }
 	  else
 	    {
 	      CMAParameters<GenoPheno<NoBoundStrategy,NoScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0);
-	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet);
 	      fCMAsols = libcmaes::cmaes<GenoPheno<NoBoundStrategy,NoScalingStrategy>>(ffit,cmaparams);
 	      fCMAparams = cmaparams;
 	    }
