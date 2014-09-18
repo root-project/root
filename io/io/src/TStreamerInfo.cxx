@@ -3058,6 +3058,10 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       if (code == TClass::kReflex || code == TClass::kReflexNoComment) {
          type.ReplaceAll("ULong64_t","unsigned long long");
          type.ReplaceAll("Long64_t","long long");
+         type.ReplaceAll("signed char","char");
+         type.ReplaceAll("<signed char","<char");
+         type.ReplaceAll(",signed char",",char");
+         if (type=="signed char") type = "char";
       }
 
       il = type.Length();

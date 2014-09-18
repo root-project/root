@@ -5771,6 +5771,9 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
                } else {
                   type.ReplaceAll("ULong64_t","unsigned long long");
                   type.ReplaceAll("Long64_t","long long");
+                  type.ReplaceAll("<signed char","<char");
+                  type.ReplaceAll(",signed char",",char");
+                  if (type=="signed char") type = "char";
                }
             }
          } else {
