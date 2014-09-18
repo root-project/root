@@ -139,8 +139,9 @@ Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) con
 
   // check to see if integral of a subrange is requested
   if (rangeName && 0 != rangeName[0]) {
-    assert(xminfull <= _x.min(rangeName) && _x.min(rangeName) <= xmaxfull);
-    assert(xminfull <= _x.max(rangeName) && _x.max(rangeName) <= xmaxfull);
+    // LM: no reason to assrt there (see ROOT-6664)
+    //assert(xminfull <= _x.min(rangeName) && _x.min(rangeName) <= xmaxfull);
+    //assert(xminfull <= _x.max(rangeName) && _x.max(rangeName) <= xmaxfull);
     minScaled = -1. + 2. * (_x.min(rangeName) - xminfull) / fullRange;
     maxScaled = +1. - 2. * (xmaxfull - _x.max(rangeName)) / fullRange;
   }
