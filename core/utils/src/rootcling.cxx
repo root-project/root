@@ -1014,7 +1014,11 @@ string GetNonConstMemberName(const clang::FieldDecl &m, const string &prefix = "
       string ret = "const_cast< ";
       string type_name;
       ROOT::TMetaUtils::GetQualifiedName(type_name, m.getType(), m);
-      ret += type_name;
+      if (type_name.substr(0,6)=="const ") {
+         ret += type_name.c_str()+6;
+      } else {
+         ret += type_name;
+      }
       ret += " &>( ";
       ret += prefix;
       ret += m.getName().str();
