@@ -25,11 +25,6 @@
 #include "TCollection.h"
 #include <set>
 
-#ifndef __CINT__
-#include <XrdCl/XrdClXRootDResponses.hh>
-#include <XrdCl/XrdClURL.hh>
-#endif
-
 namespace XrdCl {
    class FileSystem;
    class URL;
