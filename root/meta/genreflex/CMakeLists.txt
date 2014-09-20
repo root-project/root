@@ -14,7 +14,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-stlPatternSelection
                   OUTREF execstlPatternSelection.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(CheckComplicatedAllocator complicatedAllocator.h SELECTION complicatedAllocator_selection.xml)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(complicatedAllocator complicatedAllocator.h SELECTION complicatedAllocator_selection.xml)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-CheckComplicatedAllocator
                   MACRO execCheckComplicatedAllocator.C

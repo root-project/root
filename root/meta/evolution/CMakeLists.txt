@@ -101,6 +101,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execCheckSum
 
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execMissingCheckSum
                   COPY_TO_BUILDDIR missingCheckSum.root missingCheckSum2.root checksumReflexEnum_v5.root 
+                                   checksumSignedChar_v5.root
                   MACRO execMissingCheckSum.cxx+
                   OUTREF execMissingCheckSum.ref)
 
