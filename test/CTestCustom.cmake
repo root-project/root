@@ -20,8 +20,8 @@ if(CTEST_BUILD_NAME MATCHES mac107)  #  sse tests of vc fail for mac107 compiler
   set(CTEST_CUSTOM_TESTS_IGNORE ${CTEST_CUSTOM_TESTS_IGNORE}
       vc-gather_VC_USE_BSF_GATHERS_sse
       vc-gather_VC_USE_SET_GATHERS_sse
-      vc-load-sse
-      vc-math-sse
+      vc-load_sse
+      vc-math_sse
       vc-math_VC_LOG_ILP2_sse
       vc-math_VC_LOG_ILP_sse
       vc-scalaraccess_sse
