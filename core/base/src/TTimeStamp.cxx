@@ -813,7 +813,7 @@ void TTimeStamp::DumpTMStruct(const tm_t &tmstruct)
           tmstruct.tm_isdst);
 #if (defined(linux) && !defined(R__WINGCC)) || defined(R__MACOSX)
    printf(",\n      tm_gmtoff %6ld, tm_zone \"%s\"",
-#if defined(__USE_BSD) || defined(R__MACOSX)
+#if defined(__USE_BSD) || defined(R__MACOSX) || defined(__USE_MISC)
    tmstruct.tm_gmtoff, tmstruct.tm_zone);
 #else
    tmstruct.__tm_gmtoff, tmstruct.__tm_zone);
