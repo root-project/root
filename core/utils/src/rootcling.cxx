@@ -4852,7 +4852,7 @@ namespace genreflex {
 } // end genreflex namespace
 
 //______________________________________________________________________________
-int extractMultipleOptions(std::vector<option::Option> &options,
+int extractMultipleOptions(std::vector<ROOT::option::Option> &options,
                            int oIndex,
                            std::vector<std::string> &values)
 {
@@ -4862,7 +4862,7 @@ int extractMultipleOptions(std::vector<option::Option> &options,
       const int nVals = options[oIndex].count();
       values.reserve(nVals);
       int optionIndex = 0;
-      for (option::Option *opt = options[oIndex]; opt; opt = opt->next()) {
+      for (ROOT::option::Option *opt = options[oIndex]; opt; opt = opt->next()) {
          if (genreflex::verbose) std::cout << "Extracting multiple args: "
                                               << optionIndex << "/" << nVals << " "
                                               << opt->arg << std::endl;
@@ -4875,7 +4875,7 @@ int extractMultipleOptions(std::vector<option::Option> &options,
 }
 
 //______________________________________________________________________________
-void RiseWarningIfPresent(std::vector<option::Option> &options,
+void RiseWarningIfPresent(std::vector<ROOT::option::Option> &options,
                           int optionIndex,
                           const char *descriptor)
 {
@@ -5048,12 +5048,12 @@ int GenReflex(int argc, char **argv)
       "--rootmap-lib\tLibrary name for the rootmap file.\n";
 
    // The Descriptor
-   const option::Descriptor genreflexUsageDescriptor[] = {
+   const ROOT::option::Descriptor genreflexUsageDescriptor[] = {
       {
          UNKNOWN,
          NOTYPE,
          "", "",
-         option::Arg::None,
+         ROOT::option::Arg::None,
          genreflexUsage
       },
 
@@ -5061,7 +5061,7 @@ int GenReflex(int argc, char **argv)
          OFILENAME,
          STRING ,
          "o" , "output" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          outputFilenameUsage
       },
 
@@ -5069,7 +5069,7 @@ int GenReflex(int argc, char **argv)
          TARGETLIB,
          STRING ,
          "l" , "library" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          targetLib
       },
 
@@ -5077,7 +5077,7 @@ int GenReflex(int argc, char **argv)
          MULTIDICT,
          NOTYPE ,
          "" , "multiDict" ,
-         option::FullArg::None,
+         ROOT::option::FullArg::None,
          "--multiDict\tSupport for many dictionaries in one library\n"
          "      Form correct pcm names if multiple dictionaries will be in the same\n"
          "      library (needs target library switch. See its documentation).\n"
@@ -5087,7 +5087,7 @@ int GenReflex(int argc, char **argv)
          SELECTIONFILENAME,
          STRING ,
          "s" , "selection_file" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          selectionFilenameUsage
       },
 
@@ -5095,7 +5095,7 @@ int GenReflex(int argc, char **argv)
          ROOTMAP,
          STRING ,
          "" , "rootmap" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          rootmapUsage
       },
 
@@ -5103,7 +5103,7 @@ int GenReflex(int argc, char **argv)
          ROOTMAPLIB,
          STRING ,
          "" , "rootmap-lib" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          rootmapLibUsage
       },
 
@@ -5111,7 +5111,7 @@ int GenReflex(int argc, char **argv)
          CAPABILITIESFILENAME,
          STRING ,
          "c" , "capabilities" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          "-c, --capabilities\tName of the output capabilities file\n"
       },
 
@@ -5119,7 +5119,7 @@ int GenReflex(int argc, char **argv)
          INTERPRETERONLY,
          NOTYPE,
          "" , "interpreteronly",
-         option::Arg::None,
+         ROOT::option::Arg::None,
          "--interpreteronly\tDo not generate I/O related information.\n"
          "      Generate minimal dictionary required for interactivity.\n"
       },
@@ -5128,7 +5128,7 @@ int GenReflex(int argc, char **argv)
          SPLIT,
          NOTYPE,
          "" , "split",
-         option::Arg::None,
+         ROOT::option::Arg::None,
          "--split\tSplit the dictionary\n"
          "      Split in two the dictionary, isolating the part with\n"
          "      ClassDef related functions in a separate file.\n"
@@ -5138,7 +5138,7 @@ int GenReflex(int argc, char **argv)
          PCMFILENAME,
          STRING ,
          "m" , "" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          "-m \tPcm file loaded before any header (option can be repeated).\n"
       },
 
@@ -5146,7 +5146,7 @@ int GenReflex(int argc, char **argv)
          DEEP,  // Not active. Will be removed for 6.2
          NOTYPE ,
          "" , "deep",
-         option::Arg::None,
+         ROOT::option::Arg::None,
          ""
       },
       //"--deep\tGenerate dictionaries for all dependent classes (ignored).\n"
@@ -5155,7 +5155,7 @@ int GenReflex(int argc, char **argv)
          DEBUG,
          NOTYPE ,
          "" , "debug",
-         option::Arg::None,
+         ROOT::option::Arg::None,
          "--debug\tPrint debug information.\n"
       },
 
@@ -5163,7 +5163,7 @@ int GenReflex(int argc, char **argv)
          QUIET,
          NOTYPE ,
          "" , "quiet",
-         option::Arg::None,
+         ROOT::option::Arg::None,
          "--quiet\tPrint no information at all.\n"
       },
 
@@ -5171,7 +5171,7 @@ int GenReflex(int argc, char **argv)
          HELP,
          NOTYPE,
          "h" , "help",
-         option::Arg::None,
+         ROOT::option::Arg::None,
          "--help\tPrint usage and exit.\n"
       },
 
@@ -5180,7 +5180,7 @@ int GenReflex(int argc, char **argv)
          INCLUDE,
          STRING ,
          "I" , "" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          ""
       },
 
@@ -5188,7 +5188,7 @@ int GenReflex(int argc, char **argv)
          PREPROCDEFINE,
          STRING ,
          "D" , "" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          ""
       },
 
@@ -5196,7 +5196,7 @@ int GenReflex(int argc, char **argv)
          PREPROCUNDEFINE,
          STRING ,
          "U" , "" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          ""
       },
 
@@ -5204,7 +5204,7 @@ int GenReflex(int argc, char **argv)
          WARNING,
          STRING ,
          "W" , "" ,
-         option::FullArg::Required,
+         ROOT::option::FullArg::Required,
          ""
       },
 
@@ -5212,7 +5212,7 @@ int GenReflex(int argc, char **argv)
          NOMEMBERTYPEDEFS, // Option which is not meant for the user: deprecated
          STRING ,
          "" , "no_membertypedefs" ,
-         option::FullArg::None,
+         ROOT::option::FullArg::None,
          ""
       },
 
@@ -5220,7 +5220,7 @@ int GenReflex(int argc, char **argv)
          NOTEMPLATETYPEDEFS, // Option which is not meant for the user: deprecated
          STRING ,
          "" , "no_templatetypedefs" ,
-         option::FullArg::None,
+         ROOT::option::FullArg::None,
          ""
       },
 
@@ -5228,7 +5228,7 @@ int GenReflex(int argc, char **argv)
          OLDRMFFORMAT, // Option which is not meant for the user: deprecated
          NOTYPE ,
          "" , "oldRmfFormat",
-         option::Arg::None,
+         ROOT::option::Arg::None,
          ""
       },
 
@@ -5245,13 +5245,13 @@ int GenReflex(int argc, char **argv)
    argv += offset;
 
    // Parse the options
-   option::Stats  stats(genreflexUsageDescriptor,  argc, argv);
-   std::vector<option::Option> options(stats.options_max);// non POD var size arrays are not C++!
-   std::vector<option::Option> buffer(stats.buffer_max);
+   ROOT::option::Stats  stats(genreflexUsageDescriptor,  argc, argv);
+   std::vector<ROOT::option::Option> options(stats.options_max);// non POD var size arrays are not C++!
+   std::vector<ROOT::option::Option> buffer(stats.buffer_max);
    // The 4 is the minimum size of the abbreviation lenght.
    // For example, --selction_file can be abbreviated with --sele at least.
 
-   option::Parser parse(genreflexUsageDescriptor, argc, argv, &options[0], &buffer[0], 5);
+   ROOT::option::Parser parse(genreflexUsageDescriptor, argc, argv, &options[0], &buffer[0], 5);
 
    if (parse.error()) {
       ROOT::TMetaUtils::Error(0, "Argument parsing error!\n");
@@ -5260,7 +5260,7 @@ int GenReflex(int argc, char **argv)
 
    // Print help if needed
    if (options[HELP] || originalArgc == 1) {
-      option::printUsage(std::cout, genreflexUsageDescriptor);
+      ROOT::option::printUsage(std::cout, genreflexUsageDescriptor);
       return 0;
    }
    // See if no header was provided
