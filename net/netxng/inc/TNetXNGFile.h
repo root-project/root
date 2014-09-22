@@ -23,20 +23,26 @@
 
 #include "TFile.h"
 #include "TSemaphore.h"
-#ifndef __CINT__
-#include <XrdSys/XrdSysPthread.hh>
+#ifndef __CLING__
 #include <XrdCl/XrdClFileSystem.hh>
-#include <XrdCl/XrdClXRootDResponses.hh>
 #endif
 
 namespace XrdCl {
    class File;
-   class ResponseHandler;
+   class URL;
 }
+class XrdSysCondVar;
+
+#ifdef __CLING__
+namespace XrdCl {
+   struct OpenFlags {
+      enum    Flags {None = 0};
+   };
+}
+#endif
 
 class TNetXNGFile: public TFile {
 private:
-#ifndef __CINT__
    XrdCl::File            *fFile;        // Underlying XRootD file
    XrdCl::URL             *fUrl;         // URL of the current file
    XrdCl::OpenFlags::Flags fMode;        // Open mode of the current file
@@ -44,7 +50,6 @@ private:
                                          // if requested
    Int_t                   fReadvIorMax; // Max size of a single readv chunk
    Int_t                   fReadvIovMax; // Max number of readv chunks
-#endif
 
 public:
    TNetXNGFile() : TFile(),
@@ -72,9 +77,7 @@ private:
    virtual Bool_t IsUseable() const;
    virtual Bool_t GetVectorReadLimits();
    virtual void   SetEnv();
-#ifndef __CINT__
    XrdCl::OpenFlags::Flags ParseOpenMode(Option_t *modestr);
-#endif
 
    TNetXNGFile(const TNetXNGFile &other);             // Not implemented
    TNetXNGFile &operator =(const TNetXNGFile &other); // Not implemented
