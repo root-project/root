@@ -48,23 +48,11 @@ in this Software without prior written authorization from the X Consortium.
 
 #include <stdarg.h>
 #ifndef WIN32
+#include <sys/stat.h>
 #include <unistd.h>
 #else
 #include <io.h>
 #endif
-#if !defined(__hpux)
-# if defined(__APPLE__)
-#  include <AvailabilityMacros.h>
-#  if !defined(MAC_OS_X_VERSION_10_4)
-extern int fchmod(int, int);
-#  endif
-# elif defined(__CYGWIN__)
-extern int fchmod(int, mode_t);
-# elif !defined(__GLIBC__) || __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 16)
-extern int fchmod(int, int);
-# endif
-#endif
-
 #ifdef MINIX
 #define USE_CHMOD 1
 #endif
