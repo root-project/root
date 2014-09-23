@@ -29,6 +29,13 @@ if(CMD)
   endif()
 endif()
 
+if(COPY)
+  string(REPLACE "^" ";" _copy_files ${COPY})
+  if(DBG)
+    message(STATUS "files to copy: ${_copy_files}")
+  endif()
+endif()
+
 if(PRE)
   string(REPLACE "^" ";" _pre ${PRE})
   if(DBG)
@@ -76,6 +83,17 @@ if(WIN32 AND SYS)
   set(ENV{PATH} "${_path};$ENV{PATH}")
 endif()
 
+#---Copy files to current direcotory----------------------------------------------------------------
+if(COPY)
+  foreach(copyfile ${_copy_files})
+    execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${copyfile} ${CMAKE_CURRENT_BINARY_DIR}
+                    RESULT_VARIABLE _rc)
+    if(_rc)
+      message(FATAL_ERROR "Copying file ${copyfile} to ${CMAKE_CURRENT_BINARY_DIR} failed! Error code : ${_rc}")
+    endif()
+  endforeach()
+endif()
+
 #---Execute pre-command-----------------------------------------------------------------------------
 if(PRE)
   execute_process(COMMAND ${_pre} ${_cwd} RESULT_VARIABLE _rc)
@@ -87,7 +105,6 @@ endif()
 if(CMD)
   #---Execute the actual test ------------------------------------------------------------------------
   string (REPLACE ";" " " _strcmd "${_cmd}")
-  message("Command: ${_strcmd}")
   if(OUT)
 
     # log stdout
@@ -98,31 +115,46 @@ if(CMD)
     endif()
 
     # log stderr
-    if(CHECKERR)
+    if(CHECKERR AND NOT ERRREF)
       set(_chkerr ERROR_VARIABLE _outvar)
+    elseif(ERRREF)
+      set(_chkerr ERROR_VARIABLE _errvar)
     else()
       set(_chkerr "")
     endif()
 
     execute_process(COMMAND ${_cmd} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
-    
+
+    string(REGEX REPLACE "([.]*)[;][-][e][;]([^;]+)([.]*)" "\\1;-e '\\2\\3'" res "${_cmd}")
+    string(REPLACE ";" " " res "${res}")
+    message("-- TEST COMMAND -- ")
+    message("cd ${CWD}")
+    message("${res}")
     message("-- BEGIN TEST OUTPUT --")
     message("${_outvar}")
     message("-- END TEST OUTPUT --")
+    if(_errvar)
+      message("-- BEGIN TEST ERROR --")
+      message("${_errvar}")
+      message("-- END TEST ERROR --")
+    endif()
 
     file(WRITE ${OUT} "${_outvar}")
+    if(ERR)
+      file(WRITE ${ERR} "${_errvar}")
+    endif()
 
     if(DEFINED RC AND (NOT _rc EQUAL RC))
       message(FATAL_ERROR "error code: ${_rc}")
     elseif(NOT DEFINED RC AND _rc)
       message(FATAL_ERROR "error code: ${_rc}")
     endif()
-    
+
     if(CNVCMD)
       set(_outvar, "")
       string(REPLACE "^" ";" _outcnvcmd "${CNVCMD}^${OUT}")
       execute_process(COMMAND ${_outcnvcmd} ${_chkout} ${_chkerr} RESULT_VARIABLE _rc)
-      file(WRITE ${OUT} ${_outvar})
+      file(WRITE ${OUT} "${_outvar}")
 
       if(DEFINED RC AND (NOT _rc EQUAL RC))
         message(FATAL_ERROR "error code: ${_rc}")
@@ -157,18 +189,38 @@ endif()
 
 #---Execute post-command-----------------------------------------------------------------------------
 if(POST)
-  execute_process(COMMAND ${_post} ${_cwd} RESULT_VARIABLE _rc)
+  execute_process(COMMAND ${_post} ${_cwd} OUTPUT_VARIABLE _outvar ERROR_VARIABLE _outvar RESULT_VARIABLE _rc)
+  if(_outvar)
+    message("-- BEGIN POST OUTPUT --")
+    message("${_outvar}")
+    message("-- END POST OUTPUT --")
+  endif()
   if(_rc)
     message(FATAL_ERROR "post-command error code : ${_rc}")
   endif()
 endif()
 
-if(CMPOUTPUT)
-  set(command COMMAND ${diff_cmd} ${OUT} ${CMPOUTPUT})
-
-  execute_process(${command} ${OUT} ${CMPOUTPUT} RESULT_VARIABLE _rc)
-
+if(OUTREF)
+  execute_process(COMMAND ${diff_cmd} ${OUT} ${OUTREF} OUTPUT_VARIABLE _outvar ERROR_VARIABLE _outvar RESULT_VARIABLE _rc)
+  if(_outvar)
+    message("-- BEGIN OUTDIFF OUTPUT --")
+    message("${_outvar}")
+    message("-- END OUTDIFF OUTPUT --")
+  endif()
   if(_rc)
-    message(FATAL_ERROR "compare output error: ${_rc}")
+    message(FATAL_ERROR "compare 'stdout' error: ${_rc}")
   endif()
 endif()
+
+if(ERRREF)
+  execute_process(COMMAND ${diff_cmd} ${ERR} ${ERRREF} OUTPUT_VARIABLE _outvar ERROR_VARIABLE _outvar RESULT_VARIABLE _rc)
+  if(_outvar)
+    message("-- BEGIN ERRDIFF OUTPUT --")
+    message("${_outvar}")
+    message("-- END ERRDIFF OUTPUT --")
+  endif()
+  if(_rc)
+    message(FATAL_ERROR "compare 'stderr' error: ${_rc}")
+  endif()
+endif()
+

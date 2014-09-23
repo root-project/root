@@ -544,12 +544,12 @@ macro(ROOT_CHECK_OUT_OF_SOURCE_BUILD)
 endmacro()
 
 #----------------------------------------------------------------------------
-# function ROOT_ADD_TEST( <name> COMMAND cmd [arg1... ] 
+# function ROOT_ADD_TEST( <name> COMMAND cmd [arg1... ]
 #                        [PRECMD cmd [arg1...]] [POSTCMD cmd [arg1...]]
 #                        [OUTPUT outfile] [ERROR errfile]
 #                        [ENVIRONMENT var1=val1 var2=val2 ...
 #                        [DEPENDS test1 ...]
-#                        [TIMEOUT seconds] 
+#                        [TIMEOUT seconds]
 #                        [DEBUG]
 #                        [SOURCE_DIR dir] [BINARY_DIR dir]
 #                        [WORKING_DIR dir]
@@ -560,7 +560,7 @@ endmacro()
 function(ROOT_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR"
                              "TIMEOUT;BUILD;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
-                             "COMMAND;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;CMPOUTPUT;FAILREGEX;LABELS"
+                             "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS"
                             ${ARGN})
 
   #- Handle COMMAND argument
@@ -610,8 +610,12 @@ function(ROOT_ADD_TEST test)
     set(_command ${_command} -DOUT=${ARG_OUTPUT})
   endif()
 
-  if(ARG_CMPOUTPUT)
-    set(_command ${_command} -DCMPOUTPUT=${ARG_CMPOUTPUT})
+  if(ARG_OUTREF)
+    set(_command ${_command} -DOUTREF=${ARG_OUTREF})
+  endif()
+
+  if(ARG_ERRREF)
+    set(_command ${_command} -DERRREF=${ARG_ERRREF})
   endif()
 
   if(ARG_ERROR)
@@ -652,7 +656,7 @@ function(ROOT_ADD_TEST test)
   if(ARG_CHECKERR)
     set(_command ${_command} -DCHECKERR=true)
   endif()
- 
+
   set(_command ${_command} -DSYS=${ROOTSYS})
 
   #- Handle ENVIRONMENT argument
@@ -660,6 +664,12 @@ function(ROOT_ADD_TEST test)
     string(REPLACE ";" "#" _env "${ARG_ENVIRONMENT}")
     string(REPLACE "=" "@" _env "${_env}")
     set(_command ${_command} -DENV=${_env})
+  endif()
+
+  #- Copy files to the build directory.
+  if(ARG_COPY_TO_BUILDDIR)
+    string(REPLACE ";" "^" _copy_files "${ARG_COPY_TO_BUILDDIR}")
+    set(_command ${_command} -DCOPY=${_copy_files})
   endif()
 
   #- Locate the test driver
