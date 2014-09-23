@@ -4789,7 +4789,8 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::v
    for (auto decl : decls) {
       // again waiting for cling
       clang::Decl *ncDecl = const_cast<clang::Decl *>(decl);
-      addDeclToTransaction(ncDecl, theTransaction, addedDecls);
+      //addDeclToTransaction(ncDecl, theTransaction, addedDecls);
+      theTransaction.append(ncDecl);
    }
    std::string newFwdDecl;
    llvm::raw_string_ostream llvmOstr(newFwdDecl);
