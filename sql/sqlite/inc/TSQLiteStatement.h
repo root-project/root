@@ -44,7 +44,7 @@ class TSQLiteStatement : public TSQLStatement {
 private:
    SQLite3_Stmt_t       *fStmt;           //! executed statement
    Int_t                 fWorkingMode;    //! 1 - setting parameters, 2 - retrieving results
-   Int_t                 fNumPars;        //! Number of bindable parameters
+   Int_t                 fNumPars;        //! Number of bindable / gettable parameters
    Int_t                 fIterationCount; //! Iteration count
 
    Bool_t      IsSetParsMode() const { return fWorkingMode==1; }
