@@ -612,6 +612,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    char chcoded[8];
    TLine *linegrid;
    TString timeformat;
+   TString typolabel;
    time_t timelabel;
    Double_t timed, wTimeIni;
    struct tm* utctis;
@@ -1587,11 +1588,13 @@ L110:
                   if (!optionText) {
                      if (first > last)  strncpy(chtemp, " ", 256);
                      else               strncpy(chtemp, &label[first], 256);
+                     typolabel = chtemp;
+                     typolabel.ReplaceAll("-", "#minus");
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                            0,
                            textaxis->GetTextSize(),
-                           chtemp);
+                           typolabel.Data());
                   }
                   else  {
                      if (optionText == 1) textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
@@ -1614,11 +1617,13 @@ L110:
                         if (lnlen == 0) strncpy(chtemp, " ", 256);
                         else            strncpy(chtemp, "1", 256);
                      }
+                     typolabel = chtemp;
+                     typolabel.ReplaceAll("-", "#minus");
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                            0,
                            textaxis->GetTextSize(),
-                           chtemp);
+                           typolabel.Data());
                      yy -= charheight*1.3;
                   }
                }
@@ -1642,11 +1647,13 @@ L110:
                   xx = xx + fYAxisExpXOffset;
                   yy = yy + fYAxisExpYOffset;
                }
+               typolabel = label;
+               typolabel.ReplaceAll("-", "#minus");
                textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                            0,
                            textaxis->GetTextSize(),
-                           label);
+                           typolabel.Data());
             }
          }
       }
@@ -1774,9 +1781,11 @@ L110:
                      textaxis->PaintTextNDC(xx,yy,&label[first]);
                   } else {
                         snprintf(chtemp,256, "10^{%d}", labelnumber);
+                        typolabel = chtemp;
+                        typolabel.ReplaceAll("-", "#minus");
                         textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                                              gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
-                                             0, textaxis->GetTextSize(), chtemp);
+                                             0, textaxis->GetTextSize(), typolabel.Data());
 
                   }
                }
@@ -1861,7 +1870,9 @@ L160:
                      xi1 = gPad->XtoAbsPixel(u);
                      yi1 = gPad->YtoAbsPixel(v);
                      firstintlab = kFALSE;
-                     textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),chtemp);
+                     typolabel = chtemp;
+                     typolabel.ReplaceAll("-", "#minus");
+                     textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),typolabel.Data());
                   } else {
                      xi2 = gPad->XtoAbsPixel(u);
                      yi2 = gPad->YtoAbsPixel(v);
@@ -1873,7 +1884,9 @@ L160:
                         xi1 = xi2;
                         yi1 = yi2;
                         textaxis->GetBoundingBox(wi, hi); wi=(UInt_t)(wi*1.3); hi=(UInt_t)(hi*1.3);
-                        textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),chtemp);
+                        typolabel = chtemp;
+                        typolabel.ReplaceAll("-", "#minus");
+                        textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),typolabel.Data());
                      }
                   }
                }
@@ -1888,7 +1901,7 @@ L160:
          }  //endfor (k=2;k<10;k++)
       } //endfor (j=1; j<=nbinin; j++)
 L200:
-      Int_t kuku=0; if (kuku) { }
+      Int_t dummy = 0; if (dummy) { }
    }  //endif (optionLog && ndiv)
 
 
@@ -2216,7 +2229,7 @@ void TGaxis::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
    // It is in % of the pad size. It can be negative.
    // axis specifies which axis ("x","y"), default = "x"
    // if axis="xz" set the two axes
-   
+
    TString opt = axis;
    opt.ToLower();
 

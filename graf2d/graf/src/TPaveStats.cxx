@@ -336,6 +336,7 @@ void TPaveStats::Paint(Option_t *option)
    TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
 
    if (!fLines) return;
+   TString typolabel;
    Double_t y2ref = TMath::Max(fY1,fY2);
    Double_t x1ref = TMath::Min(fX1,fX2);
    Double_t x2ref = TMath::Max(fX1,fX2);
@@ -432,21 +433,17 @@ void TPaveStats::Paint(Option_t *option)
             st = strtok(sl, "=");
             Int_t halign = 12;
             while ( st !=0 ) {
+               typolabel = st;
                latex->SetTextAlign(halign);
                if (halign == 12) xtext = x1ref + margin;
                if (halign == 32) {
                   xtext = x2ref - margin;
-                  // Clean trailing blanks in case of right alignment.
-                  char *stc;
-                  stc=st+strlen(st)-1;
-                  while (*stc == ' ') {
-                     *stc = '\0';
-                     --stc;
-                  }
+                  typolabel = typolabel.Strip();
+                  typolabel.ReplaceAll("-","#minus");
                }
                latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                              latex->GetTextSize(),
-                                             st);
+                                             typolabel.Data());
                st = strtok(0, "=");
                halign = 32;
             }
@@ -466,9 +463,11 @@ void TPaveStats::Paint(Option_t *option)
                if (theIndex == 0) xtext = 0.5*(x1ref+xline1);
                if (theIndex == 1) xtext = 0.5*(x1ref+x2ref);
                if (theIndex == 2) xtext = 0.5*(xline2+x2ref);
+               typolabel = st;
+               typolabel.ReplaceAll("-", "#minus");
                latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                              latex->GetTextSize(),
-                                             st);
+                                             typolabel.Data());
                theIndex++;
                st = strtok(0, "|");
             }
