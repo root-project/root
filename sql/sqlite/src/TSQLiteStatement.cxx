@@ -37,13 +37,14 @@ TSQLiteStatement::TSQLiteStatement(SQLite3_Stmt_t* stmt, Bool_t errout):
    // Normal constructor.
    // Checks if statement contains parameters tags.
 
-   unsigned long paramcount = sqlite3_bind_parameter_count(fStmt->fRes);
-   fNumPars = paramcount;
+   unsigned long bindParamcount = sqlite3_bind_parameter_count(fStmt->fRes);
 
-   if (paramcount > 0) {
+   if (bindParamcount > 0) {
       fWorkingMode = 1;
+      fNumPars = bindParamcount;
    } else {
       fWorkingMode = 2;
+      fNumPars = sqlite3_column_count(fStmt->fRes);
    }
 }
 
@@ -200,11 +201,7 @@ Int_t TSQLiteStatement::GetNumFields()
 {
    // Return number of fields in result set.
 
-   if (fWorkingMode == 1)
-      return sqlite3_bind_parameter_count(fStmt->fRes);
-   if (fWorkingMode == 2)
-      return sqlite3_column_count(fStmt->fRes);
-   return -1;
+   return fNumPars;
 }
 
 //______________________________________________________________________________
@@ -272,6 +269,8 @@ const char* TSQLiteStatement::ConvertToString(Int_t npar)
 {
    // Convert field value to string.
 
+   CheckGetField("ConvertToString", "");
+
    return reinterpret_cast<const char *>(sqlite3_column_text(fStmt->fRes, npar));
 }
 
@@ -279,6 +278,8 @@ const char* TSQLiteStatement::ConvertToString(Int_t npar)
 long double TSQLiteStatement::ConvertToNumeric(Int_t npar)
 {
    // Convert field to numeric.
+
+   CheckGetField("ConvertToNumeric", -1);
 
    return (long double) sqlite3_column_double(fStmt->fRes, npar);
 }
@@ -298,6 +299,8 @@ Int_t TSQLiteStatement::GetInt(Int_t npar)
 {
    // Get integer.
 
+   CheckGetField("GetInt", -1);
+
    return (Int_t) sqlite3_column_int(fStmt->fRes, npar);
 }
 
@@ -305,6 +308,8 @@ Int_t TSQLiteStatement::GetInt(Int_t npar)
 UInt_t TSQLiteStatement::GetUInt(Int_t npar)
 {
    // Get unsigned integer.
+
+   CheckGetField("GetUInt", 0);
 
    return (UInt_t) sqlite3_column_int(fStmt->fRes, npar);
 }
@@ -314,6 +319,8 @@ Long_t TSQLiteStatement::GetLong(Int_t npar)
 {
    // Get long.
 
+   CheckGetField("GetLong", -1);
+
    return (Long_t) sqlite3_column_int64(fStmt->fRes, npar);
 }
 
@@ -321,6 +328,8 @@ Long_t TSQLiteStatement::GetLong(Int_t npar)
 Long64_t TSQLiteStatement::GetLong64(Int_t npar)
 {
    // Get long64.
+
+   CheckGetField("GetLong64", -1);
 
    return (Long64_t) sqlite3_column_int64(fStmt->fRes, npar);
 }
@@ -330,6 +339,8 @@ ULong64_t TSQLiteStatement::GetULong64(Int_t npar)
 {
    // Return field value as unsigned 64-bit integer
 
+   CheckGetField("GetULong64", 0);
+
    return (ULong64_t) sqlite3_column_int64(fStmt->fRes, npar);
 }
 
@@ -338,6 +349,8 @@ Double_t TSQLiteStatement::GetDouble(Int_t npar)
 {
    // Return field value as double.
 
+   CheckGetField("GetDouble", -1);
+
    return (Double_t) sqlite3_column_double(fStmt->fRes, npar);
 }
 
@@ -345,6 +358,8 @@ Double_t TSQLiteStatement::GetDouble(Int_t npar)
 const char *TSQLiteStatement::GetString(Int_t npar)
 {
    // Return field value as string.
+
+   CheckGetField("GetString", "");
 
    return reinterpret_cast<const char *>(sqlite3_column_text(fStmt->fRes, npar));
 }
@@ -355,6 +370,8 @@ Bool_t TSQLiteStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
    // Return field value as binary array.
    // Memory at 'mem' will be reallocated and size updated
    // to fit the data if not large enough.
+
+   CheckGetField("GetBinary", kFALSE);
 
    // As we retrieve "as blob", we do NOT call sqlite3_column_text() before
    // sqlite3_column_bytes(), which might leave us with a non-zero terminated
@@ -376,6 +393,8 @@ Bool_t TSQLiteStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& d
 {
    // Return field value as date.
 
+   CheckGetField("GetDate", kFALSE);
+
    TString val = reinterpret_cast<const char*>(sqlite3_column_text(fStmt->fRes, npar));
    TDatime d = TDatime(val.Data());
    year = d.GetYear();
@@ -390,6 +409,8 @@ Bool_t TSQLiteStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec
 {
    // Return field as time.
 
+   CheckGetField("GetTime", kFALSE);
+
    TString val = reinterpret_cast<const char*>(sqlite3_column_text(fStmt->fRes, npar));
    TDatime d = TDatime(val.Data());
    hour = d.GetHour();
@@ -403,6 +424,8 @@ Bool_t TSQLiteStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec
 Bool_t TSQLiteStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
    // Return field value as date & time.
+
+   CheckGetField("GetDatime", kFALSE);
 
    TString val = reinterpret_cast<const char*>(sqlite3_column_text(fStmt->fRes, npar));
    TDatime d = TDatime(val.Data());
@@ -421,6 +444,8 @@ Bool_t TSQLiteStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int
 {
    // Return field as timestamp.
    // Second fraction is in milliseconds, which is also the precision all date and time functions of sqlite use.
+
+   CheckGetField("GetTimestamp", kFALSE);
 
    TString val = reinterpret_cast<const char*>(sqlite3_column_text(fStmt->fRes, npar));
 
