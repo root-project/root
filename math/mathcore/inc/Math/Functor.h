@@ -420,12 +420,6 @@ public:
    {}
 
 
-   //implement for interpreted CINT functions
-#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
-   Functor(void * p, unsigned int dim, const char * className = 0, const char * methodName = 0);
-#endif
-
-
    /**
       Destructor (no operations)
    */
@@ -504,7 +498,6 @@ public:
    */
    Functor1D ()  : fImpl(0) {}
 
-#ifndef __CINT__
    /**
       construct from a callable object with the right signature
       implementing operator() (double x)
@@ -513,7 +506,6 @@ public:
    Functor1D(const Func & f) :
       fImpl(new FunctorHandler<Functor1D,Func>(f) )
    {}
-#endif
 
 
    /**
@@ -524,12 +516,6 @@ public:
       : fImpl(new MemFunHandler<Functor1D, PtrObj, MemFn>(p, memFn))
    {}
 
-
-   //implement for interpreted CINT functions
-#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
-   Functor1D(void * p, const char * className = 0, const char * methodName = 0);
-
-#endif
 
    /**
       Destructor (no operations)
@@ -640,11 +626,6 @@ public:
       fImpl(new FunctorGradHandler<GradFunctor,Func,GradFunc>(dim, f, g) )
    { }
 
-   // for interpreted CINT functions
-#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
-   GradFunctor(void * p1, unsigned int dim, const char * className, const char * methodName, const char * derivName);
-   GradFunctor(void * p1, void * p2, unsigned int dim);
-#endif
 
    /**
       Destructor (no operations)
@@ -733,7 +714,6 @@ public:
    GradFunctor1D ()  : fImpl(0) {}
 
 
-#ifndef __CINT__
    /**
       construct from an object with the right signature
       implementing both operator() (double x) and Derivative(double x)
@@ -742,7 +722,6 @@ public:
    GradFunctor1D(const Func & f) :
       fImpl(new FunctorHandler<GradFunctor1D,Func>(f) )
    {}
-#endif
 
 
    /**
@@ -756,12 +735,6 @@ public:
    {}
 
 
-
-   // eventually implement for interpreted CINT functions
-#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
-   GradFunctor1D(void * p1, const char * className, const char * methodName, const char * derivName);
-   GradFunctor1D(void * p1, void * p2);
-#endif
 
    /**
       construct from two 1D function objects
