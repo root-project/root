@@ -16,3 +16,10 @@
 
 - The marker definition is now inside the picture definition. Being outside
   produced some side effect on the picture positioning. (cf Jira Report 6470).
+
+### Typographically correct minus sign
+
+- Negative values as well as negative exponents were typeset with a hyphen
+  instead of a real minus sign in axis labels and statistics numbers. Now is the
+  TLatex `#minus` sign is used instead, which improve the appearance of the plots
+  and make them even better for publications.
