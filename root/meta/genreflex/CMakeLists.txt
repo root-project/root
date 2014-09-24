@@ -20,3 +20,10 @@ ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-CheckComplicatedAllocator
                   MACRO execCheckComplicatedAllocator.C
                   OUTREF execCheckComplicatedAllocator.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
+
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(ns ns.h SELECTION ns_selection.xml)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-ns
+                  MACRO execns.C
+                  OUTREF execns.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST})

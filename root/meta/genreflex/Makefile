@@ -17,6 +17,7 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 execTypedefSelection.log: libtypedefSelection_dictrflx.$(DllSuf)
 execstlPatternSelection.log: libstlPatternSelection_dictrflx.$(DllSuf)
 execCheckComplicatedAllocator.log: libcomplicatedAllocator_dictrflx.$(DllSuf)
+execns.log: libns_dictrflx.$(DllSuf)
 
 
 
