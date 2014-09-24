@@ -1589,7 +1589,7 @@ L110:
                      if (first > last)  strncpy(chtemp, " ", 256);
                      else               strncpy(chtemp, &label[first], 256);
                      typolabel = chtemp;
-                     typolabel.ReplaceAll("-", "#minus");
+                     if (!optionTime) typolabel.ReplaceAll("-", "#minus");
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                            0,
