@@ -3449,21 +3449,12 @@ std::string GenerateFwdDeclString(const RScanner &scan,
                    selectedDecls.begin(),
                    [](const ROOT::TMetaUtils::AnnotatedRecordDecl& rcd){return rcd.GetRecordDecl();});
 
+   for (auto* TD: scan.fSelectedTypedefs)
+      selectedDecls.push_back(TD);
+
    fwdDeclString += "R\"DICTFWDDCLS(\n";
    fwdDeclString += Decls2FwdDecls(selectedDecls,interp);
    fwdDeclString += ")DICTFWDDCLS\"";
-
-   // Typedefs
-   for (auto const & tdNameDeclPtr : scan.fSelectedTypedefs) {
-      buffer = "";
-      int retCode = FwdDeclFromTypeDefNameDecl(*tdNameDeclPtr,
-                    interp,
-                    buffer,
-                    &fwdDecls);
-      if (retCode == 0 && fwdDecls.insert(buffer).second) {
-         fwdDeclString += "\nR\"FWDDECL(" + buffer + ")FWDDECL\"";
-      }
-   }
 
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
