@@ -1258,8 +1258,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
       // for partial return of a split object
          if ( branch->InheritsFrom(TBranchElement::Class()) ) {
-            TBranchElement* be = (TBranchElement*)branch;
-            if ( be->GetCurrentClass() != be->GetTargetClass() && 0 <= be->GetID() ) {
+            TBranchElement* be = (TBranchElement*)branch; 
+            if ( be->GetCurrentClass() && (be->GetCurrentClass() != be->GetTargetClass()) && (0 <= be->GetID()) ) {
                Long_t offset = ((TStreamerElement*)be->GetInfo()->GetElements()->At(be->GetID()))->GetOffset();
                return BindRootObjectNoCast( be->GetObject() + offset, be->GetCurrentClass() );
             }
