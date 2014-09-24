@@ -137,6 +137,7 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
       // vector::iterator is a typedef to pointer or a
       // class.
 
+#if __cplusplus >= 201103L
       static std::set<std::string> sSTLTypes;
       if (sSTLTypes.empty()) {
          sSTLTypes.insert("vector");
@@ -151,7 +152,9 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
          sSTLTypes.insert("stack");
          sSTLTypes.insert("iterator");
       }
-
+#else
+      static const std::set<std::string> sSTLTypes {"vector","list","deque","map","multimap","set","multiset","queue","priority_queue","stack","iterator"};
+#endif
       std::vector<std::string>::const_iterator it;
       std::string fileContent ("");
 
@@ -1546,10 +1549,13 @@ const char *TCint::TypeName(const char *typeDesc)
 
    if (typeDesc == 0) return "";
 
+#if __cplusplus >= 201103L
    static char *t = 0;
    static unsigned int tlen = 0;
-
-   R__LOCKGUARD(gCINTMutex); // Because of the static array.
+#else
+   thread_local static char *t = 0;
+   thread_local static unsigned int tlen = 0;
+#endif
 
    unsigned int dlen = strlen(typeDesc);
    if (dlen > tlen) {
@@ -2088,6 +2094,7 @@ void *TCint::FindSpecialObject(const char *item, G__ClassInfo *type,
    // This functions has been registered by the TCint ctor.
 
    if (!*prevObj || *assocPtr != gDirectory) {
+   R__LOCKGUARD(gCINTMutex);
       *prevObj = gROOT->FindSpecialObject(item, *assocPtr);
       if (!fgSetOfSpecials) fgSetOfSpecials = new std::set<TObject*>;
       if (*prevObj) ((std::set<TObject*>*)fgSetOfSpecials)->insert((TObject*)*prevObj);
@@ -2230,7 +2237,7 @@ const char* TCint::GetSharedLibs()
       Bool_t needToSkip = kFALSE;
       if ( len>5 && ( (strcmp(end-4,".dll") == 0 ) || (strstr(filename,"Dict.")!=0)  || (strstr(filename,"MetaTCint")!=0)  ) ) {
          // Filter out the cintdlls
-         static const char *excludelist [] = {
+         static const char * const excludelist [] = {
             "stdfunc.dll","stdcxxfunc.dll","posix.dll","ipc.dll","posix.dll"
             "string.dll","vector.dll","vectorbool.dll","list.dll","deque.dll",
             "map.dll", "map2.dll","set.dll","multimap.dll","multimap2.dll",
@@ -2414,7 +2421,11 @@ const char *TCint::GetIncludePath()
 const char *TCint::GetSTLIncludePath() const
 {
    // Return the directory containing CINT's stl cintdlls.
+#if __cplusplus >= 201103L
+   thread_local static TString stldir;
+#else
    static TString stldir;
+#endif
    if (!stldir.Length()) {
 #ifdef CINTINCDIR
       stldir = CINTINCDIR;
