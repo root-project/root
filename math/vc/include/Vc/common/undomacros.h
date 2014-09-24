@@ -102,7 +102,7 @@
 #undef VC_ALIGNED_PARAMETER
 #undef VC_OFFSETOF
 
-#if VC_GCC && !__OPTIMIZE__
+#if VC_GCC && !defined(__OPTIMIZE__)
 #pragma GCC diagnostic pop
 #endif
 

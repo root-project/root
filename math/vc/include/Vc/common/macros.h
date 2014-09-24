@@ -23,7 +23,7 @@
 
 #include <Vc/global.h>
 
-#if VC_GCC && !__OPTIMIZE__
+#if VC_GCC && !defined(__OPTIMIZE__)
 // GCC uses lots of old-style-casts in macros that disguise as intrinsics
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
