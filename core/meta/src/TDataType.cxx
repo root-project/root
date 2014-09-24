@@ -21,6 +21,7 @@
 #include "TDataType.h"
 #include "TInterpreter.h"
 #include "TCollection.h"
+#include "TVirtualMutex.h"
 #ifdef R__SOLARIS
 #include <typeinfo>
 #endif
@@ -38,6 +39,7 @@ TDataType::TDataType(TypedefInfo_t *info) : TDictionary()
    fInfo = info;
 
    if (fInfo) {
+      R__LOCKGUARD2(gCINTMutex);
       SetName(gCint->TypedefInfo_Name(fInfo));
       SetTitle(gCint->TypedefInfo_Title(fInfo));
       SetType(gCint->TypedefInfo_TrueName(fInfo));
@@ -350,6 +352,7 @@ void TDataType::CheckInfo()
 
    // This intentionally cast the constness away so that
    // we can call CheckInfo from const data members.
+   R__LOCKGUARD2(gCINTMutex);
 
    if (!gCint->TypedefInfo_IsValid(fInfo) ||
        strcmp(gCint->TypedefInfo_Name(fInfo),fName.Data())!=0) {
