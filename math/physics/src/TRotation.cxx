@@ -41,7 +41,7 @@ Declaration, Access, Comparisons</H3>
 <TT>&nbsp; TRotation r;&nbsp;&nbsp;&nbsp; // r initialized as identity</TT>
 <BR><TT>&nbsp; TRotation m(r); // m = r</TT>
 
-<P>There is no direct way to to set the matrix elements - to ensure that
+<P>There is no direct way to set the matrix elements - to ensure that
 a <TT>TRotation</TT> object always describes a real rotation. But you can get the
 values by the member functions <TT>XX()..ZZ()</TT> or the<TT> (,)</TT>
 operator:

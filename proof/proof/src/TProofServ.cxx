@@ -505,7 +505,7 @@ Bool_t TReaperTimer::Notify()
    return kTRUE;
 }
 
-//--- Special timer to to terminate idle sessions ----------------------------//
+//--- Special timer to terminate idle sessions ----------------------------//
 //______________________________________________________________________________
 Bool_t TIdleTOTimer::Notify()
 {
