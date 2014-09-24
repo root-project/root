@@ -1407,7 +1407,7 @@ void TCling::RegisterModule(const char* modulename,
 
       // Drill through namespaces recursively until the template is found
       if(ClassTemplateDecl* TD = FindTemplateInNamespace(T->getFirstDecl().getSingleDecl())){
-         fNormalizedCtxt->AddTemplAndNargsToKeep(TD, nArgsToSkip);
+         fNormalizedCtxt->AddTemplAndNargsToKeep(TD->getCanonicalDecl(), nArgsToSkip);
       }
 
    }
