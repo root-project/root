@@ -927,7 +927,7 @@ public:   // reloadable methods
    virtual int IsVisited(const char * /*url*/)
       { return kFALSE; }
 
-   // User function to to process tokens of the given type
+   // User function to process tokens of the given type
    virtual int ProcessToken(TGHtmlElement * /*pElem*/, const char * /*name*/, int /*type*/)
       { return kFALSE; }
 

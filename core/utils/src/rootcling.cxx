@@ -3539,7 +3539,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
       return;
    }
 
-   // We need to to go back to CINT to preserve functionality.
+   // We need to go back to CINT to preserve functionality.
    G__ClassInfo clinfo( cl_input.GetRequestedName()[0] ? cl_input.GetRequestedName() : R__GetQualifiedName(cl_input).c_str() );
 
    // coverity[fun_call_w_exception] - that's just fine.

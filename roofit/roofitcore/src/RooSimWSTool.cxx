@@ -20,7 +20,7 @@
 // can clone p.d.f.s into a series of variations that are joined together
 // into a RooSimultanous p.d.f.
 //
-// The simplest use case to to take a workspace p.d.f as prototype and
+// The simplest use case to take a workspace p.d.f as prototype and
 // 'split' a parameter of that p.d.f into two specialized parameters
 // depending on a category in the dataset. 
 // 

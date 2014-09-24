@@ -596,7 +596,7 @@ XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointe
 
          //Get name of the Isotope (
          TString lname = myIsotope->GetName();
-         //_iso suffix is added to to avoid problems with same names
+         //_iso suffix is added to avoid problems with same names
          //for material, element and isotopes
          lname = TString::Format("%s_iso", lname.Data());
 
@@ -657,7 +657,7 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
       //NOTE: that for element - GetTitle() returns the "name" tag
       //and GetName() returns "formula" tag (see createElementN)
       TString lname = myElement->GetTitle();
-      //_elm suffix is added to to avoid problems with same names
+      //_elm suffix is added to avoid problems with same names
       //for material and element
       lname = TString::Format("%s_elm", lname.Data());
 
