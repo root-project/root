@@ -301,6 +301,10 @@ E: Gerardo.Ganis@cern.ch
 D: all matters related to client/server authentication
 D: PROOF developments
 
+N: Davide Gerbaudo
+E: davide.gerbaudo@gmail.com
+D: VIOLIN drawing option for 2D histograms.
+
 N: Nerses Gevorgyan
 E: nerses@crdlx5.yerphi.am
 D: support for exporting Neural Nets into Fortran code

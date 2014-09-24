@@ -97,6 +97,7 @@
 <li><a href="#HP13">The BOX option</li></a>
 <li><a href="#HP14">The COLor option</li></a>
 <li><a href="#HP140">The CANDLE option</li></a>
+<li><a href="#HP141">The VIOLIN option</li></a>
 <li><a href="#HP15">The TEXT and TEXTnn Option</li></a>
 <li><a href="#HP16">The CONTour options</li></a>
 <ul>
@@ -431,6 +432,18 @@ Same as "CANDLE".
 
 <tr><th valign=top>"CANDLEY"</th><td>
 Draw a candle plot along Y axis.
+</td></tr>
+
+<tr><th valign=top>"VIOLIN"</th><td>
+Draw a violin plot along X axis.
+</td></tr>
+
+<tr><th valign=top>"VIOLINX"</th><td>
+Same as "VIOLIN".
+</td></tr>
+
+<tr><th valign=top>"VIOLINY"</th><td>
+Draw a violin plot along Y axis.
 </td></tr>
 
 <tr><th valign=top>"CONT"</th><td>
@@ -1289,9 +1302,10 @@ Begin_Html
 <a name="HP140"></a><h3>The CANDLE option</h3>
 
 
-A Candle plot (also known as a "box-and whisker plot" or simply "box plot")
-is a convenient way to describe graphically a data distribution (D) with
-only the five numbers. It was invented in 1977 by John Tukey.
+<a href="http://en.wikipedia.org/wiki/Box_plot">A Candle plot</a> (also known as
+a "box-and whisker plot" or simply "box plot") is a convenient way to describe
+graphically a data distribution (D) with only the five numbers. It was invented
+in 1977 by John Tukey.
 <p>
 With the option CANDLEX five numbers are:
 <ol>
@@ -1324,6 +1338,53 @@ Begin_Macro(source)
    hcandle->SetMarkerSize(0.5);
    hcandle->Draw("CANDLE");
    return c1;
+}
+End_Macro
+Begin_Html
+
+<a name="HP141"></a><h3>The VIOLIN option</h3>
+
+
+<a href="http://en.wikipedia.org/wiki/Violin_plot">A violin plot</a> is a box plot
+that also encodes the pdf information at each point.
+
+<p>
+Quartiles and mean are also represented at each point, with a marker
+and two lines.
+</p>
+<p>
+In this implementation a TH2 is considered as a collection of TH1 along
+X (option <tt>VIOLIN</tt> or <tt>VIOLINX</tt>) or Y (option <tt>VIOLINY</tt>).
+</p>
+<p>
+A solid fill style is recommended for this plot (as opposed to a hollow or
+hashed style).
+</p>
+
+End_Html
+Begin_Macro(source)
+{
+    TCanvas *c1 = new TCanvas("c1","c1",600,400);
+    Int_t nx(6), ny(40);
+    Double_t xmin(0.0), xmax(+6.0), ymin(0.0), ymax(+4.0);
+    TH2F* hviolin = new TH2F("hviolin", "Option VIOLIN example", nx, xmin, xmax, ny, ymin, ymax);
+    TF1 f1("f1", "gaus", +0,0 +4.0);
+    Double_t x,y;
+    for (Int_t iBin=1; iBin<hviolin->GetNbinsX(); ++iBin) {
+        Double_t xc = hviolin->GetXaxis()->GetBinCenter(iBin);
+        f1.SetParameters(1, 2.0+TMath::Sin(1.0+xc), 0.2+0.1*(xc-xmin)/xmax);
+        for(Int_t i=0; i<10000; ++i){
+            x = xc;
+            y = f1.GetRandom();
+            hviolin->Fill(x, y);
+        }
+    }
+    hviolin->SetFillColor(kGray);
+    hviolin->SetMarkerStyle(20);
+    hviolin->SetMarkerSize(0.5);
+    hviolin->Draw("VIOLIN");
+    c1->Update();
+    return c1;
 }
 End_Macro
 Begin_Html
@@ -3538,14 +3599,14 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    strlcpy(chopt,choptin,128);
    Int_t hdim = fH->GetDimension();
 
-   Hoption.Axis = Hoption.Bar    = Hoption.Curve   = Hoption.Error = 0;
-   Hoption.Hist = Hoption.Line   = Hoption.Mark    = Hoption.Fill  = 0;
-   Hoption.Same = Hoption.Func   = Hoption.Scat    = 0;
-   Hoption.Star = Hoption.Arrow  = Hoption.Box     = Hoption.Text  = 0;
-   Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
-   Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
+   Hoption.Axis = Hoption.Bar    = Hoption.Curve   = Hoption.Error   = 0;
+   Hoption.Hist = Hoption.Line   = Hoption.Mark    = Hoption.Fill    = 0;
+   Hoption.Same = Hoption.Func   = Hoption.Scat                      = 0;
+   Hoption.Star = Hoption.Arrow  = Hoption.Box     = Hoption.Text    = 0;
+   Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx    = 0;
+   Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf    = 0;
    Hoption.Off  = Hoption.Tri    = Hoption.Proj    = Hoption.AxisPos = 0;
-   Hoption.Spec = Hoption.Pie    = Hoption.Candle  = 0;
+   Hoption.Spec = Hoption.Pie    = Hoption.Candle  = Hoption.Violin  = 0;
 
    //    special 2D options
    Hoption.List     = 0;
@@ -3628,6 +3689,15 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       strncpy(l,"   ",6);
       if (l[6] == 'X') { Hoption.Candle = 1; l[6] = ' '; }
       if (l[6] == 'Y') { Hoption.Candle = 2; l[6] = ' '; }
+   }
+
+   l = strstr(chopt,"VIOLIN");
+   if (l) {
+      Hoption.Scat = 0;
+      Hoption.Violin = 1;
+      strncpy(l,"   ",6);
+      if (l[6] == 'X') { Hoption.Violin = 1; l[6] = ' '; }
+      if (l[6] == 'Y') { Hoption.Violin = 2; l[6] = ' '; }
    }
 
    l = strstr(chopt,"LEGO");
@@ -4909,6 +4979,119 @@ void THistPainter::PaintCandlePlot(Option_t *)
    delete [] quantiles;
 }
 
+//______________________________________________________________________________
+void THistPainter::PaintViolinPlot(Option_t *)
+{
+    /* Begin_html
+       <a href="#HP141">Control function to draw a 2D histogram as a violin plot.</a>
+       End_html */
+
+   Double_t x,y,w;
+   Double_t bw, bcen, bcon;
+   Double_t xpm[1], ypm[1];
+
+   TH1D *hp;
+   TH2D *h2 = (TH2D*)fH;
+
+   Double_t *quantiles = new Double_t[5];
+   quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.; quantiles[3] = 0.; quantiles[4] = 0.;
+   Double_t *prob = new Double_t[5];
+   prob[0]=1E-15; prob[1]=0.25; prob[2]=0.5; prob[3]=0.75; prob[4]=1-1E-15;
+
+   Style_t fillsav   = h2->GetFillStyle();
+   Style_t colsav    = h2->GetFillColor();
+   Style_t linesav   = h2->GetLineStyle();
+   Style_t widthsav  = h2->GetLineWidth();
+   Style_t pmssav    = h2->GetMarkerStyle();
+
+   if (h2->GetFillColor() == 0)  h2->SetFillStyle(0);
+
+   h2->SetMarkerStyle(pmssav);
+   h2->TAttLine::Modify();
+   h2->TAttFill::Modify();
+   h2->TAttMarker::Modify();
+
+   // Violin plot along X
+   if (Hoption.Violin == 1) {
+      for (Int_t i=Hparam.xfirst; i<=Hparam.xlast; i++) {
+         x = fXaxis->GetBinCenter(i);
+         w = fXaxis->GetBinWidth(i);
+         hp = h2->ProjectionY("_px", i, i);
+         if (hp->GetEntries() !=0 && hp->GetMaximum()!=0) {
+             hp->Scale(1.0/hp->Integral());
+             hp->Scale(w/hp->GetMaximum());
+             hp->GetQuantiles(5, quantiles, prob);
+             ypm[0] = hp->GetMean();
+
+             TAxis *ax = hp->GetXaxis();
+             for(Int_t j=ax->GetFirst(); j<ax->GetLast(); ++j){
+                 bw = ax->GetBinWidth(j);
+                 bcen = ax->GetBinCenter(j);
+                 bcon = hp->GetBinContent(j);
+                 gPad->PaintBox(x-0.5*bcon, bcen-0.5*bw, x+0.5*bcon, bcen+0.5*bw);
+             }
+
+             h2->SetLineWidth(widthsav);
+             h2->TAttLine::Modify();
+
+             h2->SetLineStyle(linesav);
+             h2->TAttLine::Modify();
+             gPad->PaintLine(x, quantiles[3], x, quantiles[4]);
+             gPad->PaintLine(x, quantiles[0], x, quantiles[1]);
+
+             xpm[0] = x;
+             gPad->PaintPolyMarker(1,xpm,ypm);
+         }
+      }
+   // Violin plot along Y
+   } else {
+       for (Int_t i=Hparam.yfirst; i<=Hparam.ylast; i++) {
+           y = fYaxis->GetBinCenter(i);
+           w = fYaxis->GetBinWidth(i);
+           hp = h2->ProjectionX("_py", i, i);
+           if (hp->GetEntries() !=0 && hp->GetMaximum()!=0) {
+             hp->Scale(1.0/hp->Integral());
+             hp->Scale(w/hp->GetMaximum());
+             hp->GetQuantiles(5, quantiles, prob);
+             xpm[0] = hp->GetMean();
+
+             h2->SetLineWidth(0);
+             h2->TAttLine::Modify();
+             TAxis *ax = hp->GetXaxis();
+             for(Int_t j=ax->GetFirst(); j<ax->GetLast(); ++j){
+                 bw = ax->GetBinWidth(j);
+                 bcen = ax->GetBinCenter(j);
+                 bcon = hp->GetBinContent(j);
+                 gPad->PaintBox(bcen-0.5*bw, y-0.5*bcon, bcen+0.5*bw, y+0.5*bcon);
+             }
+
+             hp->GetQuantiles(5, quantiles, prob);
+             xpm[0] = hp->GetMean();
+
+             h2->SetLineWidth(widthsav);
+             h2->SetLineStyle(2);
+             h2->TAttLine::Modify();
+             gPad->PaintLine(quantiles[3], y, quantiles[4], y);
+             gPad->PaintLine(quantiles[0], y, quantiles[1], y);
+
+             ypm[0] = y;
+             gPad->PaintPolyMarker(1,xpm,ypm);
+           }
+       }
+   }
+
+   h2->SetFillStyle(fillsav);
+   h2->SetFillColor(colsav);
+   h2->SetLineStyle(linesav);
+   h2->SetMarkerStyle(pmssav);
+   h2->SetLineWidth(widthsav);
+   h2->TAttFill::Modify();
+   h2->TAttLine::Modify();
+   h2->TAttMarker::Modify();
+
+   delete [] prob;
+   delete [] quantiles;
+}
 
 //______________________________________________________________________________
 void THistPainter::PaintColorLevels(Option_t *)
@@ -8414,6 +8597,7 @@ void THistPainter::PaintTable(Option_t *option)
          if (Hoption.Text)         PaintText(option);
          if (Hoption.Error >= 100) Paint2DErrors(option);
          if (Hoption.Candle)       PaintCandlePlot(option);
+         if (Hoption.Violin)       PaintViolinPlot(option);
       }
       if (Hoption.Lego)                     PaintLego(option);
       if (Hoption.Surf && !Hoption.Contour) PaintSurface(option);
