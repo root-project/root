@@ -3505,7 +3505,16 @@ static void KeepNParams(clang::QualType& normalizedType,
       normalizedType = clang::QualType(etype->getNamedType().getTypePtr(),0);
    }
 
-   TemplateParameterList* tParsPtr = ctd->getTemplateParameters();
+   // The canonical decl does not necessarily have the template default arguments.
+   // Need to walk through the redecl chain to find it (we know tehre will be no
+   // inconsistencies, at least)
+   const clang::ClassTemplateDecl* ctdWithDefaultArgs = ctd;
+   for (const RedeclarableTemplateDecl* rd: ctdWithDefaultArgs->redecls()) {
+      clang::TemplateParameterList* tpl = rd->getTemplateParameters();
+      if (tpl->getMinRequiredArguments () < tpl->size())
+         ctdWithDefaultArgs = llvm::dyn_cast<clang::ClassTemplateDecl>(rd);
+   }
+   TemplateParameterList* tParsPtr = ctdWithDefaultArgs->getTemplateParameters();
    const TemplateParameterList& tPars = *tParsPtr;
    const TemplateArgumentList& tArgs = ctsd->getTemplateArgs();
 
