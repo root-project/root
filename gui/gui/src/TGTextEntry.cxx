@@ -363,7 +363,7 @@ void TGTextEntry::Init()
                          kButtonPressMask | kButtonReleaseMask |
                          kButtonMotionMask, kNone, kNone);
 
-   AddInput(kKeyPressMask | kFocusChangeMask |
+   AddInput(kKeyPressMask | kFocusChangeMask | kStructureNotifyMask |
             kEnterWindowMask | kLeaveWindowMask);
 
    SetWindowAttributes_t wattr;
@@ -1444,7 +1444,15 @@ Bool_t TGTextEntry::HandleConfigureNotify(Event_t* event)
    // Handles resize events for this widget.
 
    TGFrame::HandleConfigureNotify(event);
+   Bool_t wasSelection = fSelectionOn;
+   Int_t end = fEndIX, start = fStartIX;
+   fSelectionOn = kFALSE;
    UpdateOffset();
+   SetCursorPosition(fCursorIX);
+   fSelectionOn = wasSelection;
+   fEndIX = end;
+   fStartIX = start;
+   if (fSelectionOn) NewMark(fEndIX);
    return kTRUE;
 }
 
@@ -1635,12 +1643,12 @@ void TGTextEntry::UpdateOffset()
       offset = 2;
    Int_t w = GetWidth() - 2 * offset;   // subtract border twice
 
+   if (fAlignment == kTextRight) fOffset = w - textWidth - 1;
+   else if (fAlignment == kTextCenterX) fOffset = (w - textWidth)/2;
+   else if (fAlignment == kTextLeft) fOffset = 0;
    if (textWidth > 0 && textWidth > w) { // may need to scroll.
       if (IsCursorOutOfFrame()) ScrollByChar();
    }
-   else if (fAlignment == kTextRight)   fOffset = w - textWidth - 1;
-   else if (fAlignment == kTextCenterX) fOffset = (w - textWidth)/2;
-   else if (fAlignment == kTextLeft)    fOffset = 0;
 }
 
 //______________________________________________________________________________
