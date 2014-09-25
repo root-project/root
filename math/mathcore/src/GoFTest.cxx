@@ -23,6 +23,8 @@
 
 #include "Math/GoFTest.h"
 
+#include "Fit/BinData.h"
+
 #include "TStopwatch.h"
 
 /* Note: The references mentioned here are stated in GoFTest.h */
@@ -299,19 +301,27 @@ namespace Math {
       SetParameters();
    }
 
-/*
+/* 
   Taken from (1)
-*/ Double_t GoFTest::GetSigmaN(UInt_t N) const {
-      Double_t sigmaN = 0.0, h = 0.0, H = 0.0, g = 0.0, a, b, c, d, k = fSamples.size();
-      for (UInt_t i = 0; i < k; ++i) {
-         H += 1.0 /  fSamples[i].size();
+*/ 
+   Double_t GoFTest::GetSigmaN(const std::vector<UInt_t> & ns, UInt_t N) {
+      // compute moments of AD distribution (from Scholz-Stephen paper, paragraph 3)
+
+      Double_t sigmaN = 0.0, h = 0.0, H = 0.0, g = 0.0, a, b, c, d, k = ns.size();
+
+      for (UInt_t i = 0; i < ns.size(); ++i) {
+         H += 1.0 /  double( ns[i] );
       }
+      // cache Sum( 1 / i)
+      std::vector<double> invI(N); 
       for (UInt_t i = 1; i <= N - 1; ++i) {
-         h += 1.0 / i;
+         invI[i] = 1.0 / i; 
+         h += invI[i]; 
       }
       for (UInt_t i = 1; i <= N - 2; ++i) {
+         double tmp = invI[N-i];
          for (UInt_t j = i + 1; j <= N - 1; ++j) {
-            g += 1.0 / (double(N - i) * double(j));
+            g += tmp * invI[j];
          }
       }
       double k2 = std::pow(k,2);
@@ -519,12 +529,13 @@ int getSum(const int *x, int n) {
 }
 
 
-   void adkTestStat(double *adk, int k, const std::vector<std::vector<double> > & samples, const std::vector<double> & zstar) {
+   void adkTestStat(double *adk, const std::vector<std::vector<double> > & samples, const std::vector<double> & zstar) {
 
 	int i;
 	int j;
 	
 	int nsum; /* total sample size = n_1 + ... + n_k */
+        int k = samples.size();
         int l = zstar.size(); 
 	
 	/* fij records the number of observations in the ith sample coinciding
@@ -633,12 +644,13 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       std::vector<UInt_t> h; // h_j's in (1)
       std::vector<Double_t> H; // H_j's in (1)
       UInt_t N = fCombinedSamples.size();
-      unsigned int nSamples = fSamples.size();
       Double_t A2 = 0.0; // Anderson-Darling A^2 Test Statistic
 
 #ifdef USE_OLDIMPL      
 
       TStopwatch w; w.Start();
+
+      unsigned int nSamples = fSamples.size();
 
       // old implementation 
       for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
@@ -679,8 +691,6 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       // w.Start();
 
       double adk[2] = {0,0};
-      std::vector<int> ns(nSamples);
-      for (unsigned int i = 0; i < nSamples; ++i) ns[i] = fSamples[i].size(); 
 
       //debug
       // std::cout << "combined samples\n";
@@ -694,7 +704,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       // std::cout << std::endl;
 
       // use function from kSamples code
-      adkTestStat(adk, nSamples, fSamples, z );
+      adkTestStat(adk, fSamples, z );
       // w.Print();
       // std::cout << "A2 - new kSamples  code " << adk[0] << "  " << adk[1]  << std::endl;
 
@@ -702,7 +712,9 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
 
       // compute the normalized test statistic 
 
-      Double_t sigmaN = GetSigmaN(N);
+      std::vector<UInt_t> ns(fSamples.size());
+      for (unsigned int k = 0; k < ns.size(); ++k) ns[k] = fSamples[k].size();
+      Double_t sigmaN = GetSigmaN(ns, N);
       A2 -= fSamples.size() - 1;
       A2 /= sigmaN; // standartized test statistic
 
@@ -710,7 +722,121 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       testStat = A2;
       return;
    }
-   
+
+
+/*
+   Compute Anderson Darling test for two binned data set. 
+   A binned data set can be seen as many identical observation happening at the center of the bin
+   In this way it is trivial to apply the formula (6) in the paper of W. Scholz, M. Stephens, "K-Sample Anderson-Darling Tests"
+   to the case of histograms. See also http://arxiv.org/pdf/0804.0380v1.pdf paragraph  3.3.5
+   It is importat that empty bins are not present 
+*/
+   void GoFTest::AndersonDarling2SamplesTest(const ROOT::Fit::BinData &data1, const ROOT::Fit::BinData & data2, Double_t& pvalue, Double_t& testStat)  {
+      pvalue = -1;
+      testStat = -1;
+      // 
+      // compute cumulative sum of bin counts 
+      // std::vector<double> sum1(data1.Size() ); 
+      // std::vector<double> sum2(data2.Size() ); 
+      // std::vector<double> sumAll(data1.Size() + data2.Size() ); 
+      
+      if (data1.NDim() != 1 && data2.NDim() != 1) {
+            MATH_ERROR_MSG("AndersonDarling2SamplesTest", "Bin Data set must be one-dimensional ");
+            return;
+      }
+      unsigned int n1 = data1.Size(); 
+      unsigned int n2 = data2.Size(); 
+      double ntot1 = 0; 
+      double ntot2 = 0;
+      
+
+      // make a combined data set and sort it 
+      std::vector<double> xdata(n1+n2); 
+      double value = 0; 
+      for (unsigned int i = 0; i < n1; ++i) {
+         const double * x = data1.GetPoint(i, value);
+         xdata[i] = *x; 
+         ntot1 += value; 
+         // sum1[i] = value; 
+         // if (i > 0) sum1[i] += sum1[i-1];
+      }
+      for (unsigned int i = 0; i < n2; ++i) {
+         const double * x = data2.GetPoint(i, value);
+         xdata[n1+i] = *x;
+         ntot2 += value; 
+         // sum2[i] = value; 
+         // if (i > 0) sum2[i] += sum2[i-1];
+      }
+      double nall = ntot1+ntot2; 
+      // sort the combined data 
+      std::vector<unsigned int> index(n1+n2);
+      TMath::Sort(n1+n2, &xdata[0], &index[0], false );  
+
+      // now compute the sums for the tests 
+      double sum1 = 0; 
+      double sum2 = 0;
+      double sumAll = 0; 
+      double adsum = 0;
+      unsigned int j = 0; 
+
+      while( j < n1+n2 ) { 
+//      for (unsigned int j = 0; j < n1+n2; ++j) { 
+         // skip equal observations
+         double x = xdata[ index[j] ]; 
+         unsigned int k = j; 
+         // loop on the bins with the same center value 
+         double t = 0;
+         do { 
+            unsigned int i = index[k];
+            double value = 0; 
+            if (i < n1 ) {
+               value = data1.Value(i); 
+               sum1 += value;
+            }
+            else { 
+               // from data2
+               i -= n1;
+               assert(i < n2);
+               value = data2.Value(i); 
+               sum2 += value; 
+            }
+            sumAll += value;
+            t += value; 
+            //std::cout << "j " << j << " k " << k << " data " << x << " index " << index[k] << " value " << value << std::endl;
+            k++;
+         } while ( k < n1+n2 && xdata[ index[k] ] == x  );
+
+
+         j = k; 
+         // skip last point
+         if (j < n1+n2) {
+            double tmp1 =  ( nall * sum1 - ntot1 * sumAll );
+            double tmp2 =  ( nall * sum2 - ntot2 * sumAll );
+            adsum += t * (tmp1*tmp1/ntot1 + tmp2*tmp2/ntot2) / ( sumAll *  (nall - sumAll) ) ;
+
+            //std::cout << "comp sum " << adsum << "  " << t << "  " << sumAll << " s1 " << sum1 << " s2 " << sum2 << " tmp1 " << tmp1 << " tmp2 " << tmp2 << std::endl;
+         }
+      }
+      double A2 = adsum / nall; 
+
+      // compute the normalized test statistic 
+      std::vector<unsigned int> ns(2); 
+      ns[0] = ntot1; 
+      ns[1] = ntot2;
+      //std::cout << " ad2 = " << A2 << " nall " << nall;
+
+      Double_t sigmaN = GetSigmaN(ns,nall);
+      A2 -= 1;
+      A2 /= sigmaN; // standartized test statistic
+
+      //std::cout << " sigmaN " << sigmaN << " new A2 " << A2;
+
+      pvalue = PValueADKSamples(2,A2); 
+      //std::cout << " pvalue = " << pvalue << std::endl;
+      testStat = A2;
+      return;
+   }
+
    Double_t GoFTest::AndersonDarling2SamplesTest(const Char_t* option) const {
       Double_t pvalue, testStat;
       AndersonDarling2SamplesTest(pvalue, testStat);

@@ -310,6 +310,8 @@ public:
    virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
            Bool_t   IsBinOverflow(Int_t bin) const;
            Bool_t   IsBinUnderflow(Int_t bin) const;
+   virtual Double_t AndersonDarlingTest(const TH1 *h2, Option_t *option="") const;
+   virtual Double_t AndersonDarlingTest(const TH1 *h2, Double_t &advalue) const;
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual void     LabelsDeflate(Option_t *axis="X");
    virtual void     LabelsInflate(Option_t *axis="X");
