@@ -2200,7 +2200,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    Double_t temp, xmin,xmax;
    Bool_t opaque  = gPad->OpaqueMoving();
    static TBox *zoombox;
-   Double_t zbx1,zbx2,zby1,zby2;
+   Double_t zbx1=0,zbx2=0,zby1=0,zby2=0;
 
    // The CONT4 option, used to paint TH2, is a special case; it uses a 3D
    // drawing technique to paint a 2D plot.
