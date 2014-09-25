@@ -25,6 +25,10 @@
 */
 
 namespace ROOT {
+
+   namespace Fit { 
+      class BinData; 
+   }
 namespace Math {
 
 class GoFTest {
@@ -160,7 +164,9 @@ public:
    // Computation of the K-Sample Anderson-Darling Test's p-value as described in (1) 
    // given a normalized test statistic. The first variant described in the paper is used 
    static Double_t PValueADKSamples(UInt_t nsamples, Double_t A2 ); 
- 
+
+   // Compute The 2-Sample Anderson Darling test for binned data
+   static void  AndersonDarling2SamplesTest(const ROOT::Fit::BinData & data1, const ROOT::Fit::BinData & data2, Double_t& pvalue, Double_t& testStat);
 
 private:
 
@@ -192,8 +198,7 @@ private:
    Double_t GaussianCDF(Double_t x) const;
    Double_t ExponentialCDF(Double_t x) const;
 
-   Double_t GetSigmaN(UInt_t N) const; // Computation of sigma_N as described in (1)
-
+   static Double_t GetSigmaN(const std::vector<UInt_t> & ns, UInt_t N); // Computation of sigma_N as described in (1)
 
    static Double_t InterpolatePValues(int nsamples,Double_t A2); // Linear interpolation used in GoFTest::PValueAD2Samples
 
