@@ -752,20 +752,17 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
 
       // make a combined data set and sort it 
       std::vector<double> xdata(n1+n2); 
-      double value = 0; 
       for (unsigned int i = 0; i < n1; ++i) {
+         double value = 0; 
          const double * x = data1.GetPoint(i, value);
          xdata[i] = *x; 
          ntot1 += value; 
-         // sum1[i] = value; 
-         // if (i > 0) sum1[i] += sum1[i-1];
       }
       for (unsigned int i = 0; i < n2; ++i) {
+         double value = 0;
          const double * x = data2.GetPoint(i, value);
          xdata[n1+i] = *x;
          ntot2 += value; 
-         // sum2[i] = value; 
-         // if (i > 0) sum2[i] += sum2[i-1];
       }
       double nall = ntot1+ntot2; 
       // sort the combined data 
