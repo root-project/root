@@ -395,6 +395,10 @@ RooNDKeysPdf::initialize() const
   _nEventsM  = _nEvents;
   _fixedShape= kFALSE;
 
+  _netFluxZ = kFALSE;
+  _nEventsBW = 0; 
+  _nEventsBMSW = 0; 
+
   if(_nDim==0) {
     coutE(InputArguments) << "ERROR:  RooNDKeysPdf::initialize() : The observable list is empty. "
 			  << "Unable to begin generating the PDF." << endl;
