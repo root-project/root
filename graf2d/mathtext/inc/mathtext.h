@@ -189,6 +189,7 @@ namespace mathtext {
          bool _vertical;
          std::wstring _string;
          box_t(void)
+         : _vertical(false)
          {
          }
          box_t(std::wstring string)

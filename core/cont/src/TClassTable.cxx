@@ -301,11 +301,10 @@ void TClassTable::Remove(const char *cname)
 
    if (!gClassTable || !fgTable) return;
 
-   int slot = 0;
+   unsigned int slot = 0;
    const char *p = cname;
 
    while (*p) slot = slot<<1 ^ *p++;
-   if (slot < 0) slot = -slot;
    slot %= fgSize;
 
    TClassRec *r;
@@ -334,7 +333,7 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    // 0 if the class is not in the table. Unless arguments insert is true in
    // which case a new entry is created and returned.
 
-   int slot = 0;
+   unsigned int slot = 0;
    const char *p = cname;
 
    while (*p) slot = slot<<1 ^ *p++;
