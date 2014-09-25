@@ -2189,8 +2189,8 @@ void TFile::Streamer(TBuffer &b)
 void TFile::SumBuffer(Int_t bufsize)
 {
    fWritten++;
-   fSumBuffer  += bufsize;
-   fSum2Buffer += bufsize*bufsize;
+   fSumBuffer  += double(bufsize);
+   fSum2Buffer += double(bufsize) * double(bufsize); // avoid reaching MAXINT for temporary
 }
 
 ////////////////////////////////////////////////////////////////////////////////

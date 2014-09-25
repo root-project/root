@@ -132,13 +132,12 @@ void TRandom2::SetSeed(UInt_t seed)
       TUUID u;
       UChar_t uuid[16];
       u.GetUUID(uuid);
-      fSeed  =  int(uuid[3])*16777216 + int(uuid[2])*65536 + int(uuid[1])*256 + int(uuid[0]);
-      fSeed1  =  int(uuid[7])*16777216 + int(uuid[6])*65536 + int(uuid[5])*256 + int(uuid[4]);
-      fSeed2  =  int(uuid[11])*16777216 + int(uuid[10])*65536 + int(uuid[9])*256 + int(uuid[8]);
+      fSeed  =  UInt_t(uuid[3])*16777216 + UInt_t(uuid[2])*65536 + UInt_t(uuid[1])*256 + UInt_t(uuid[0]);
+      fSeed1  =  UInt_t(uuid[7])*16777216 + UInt_t(uuid[6])*65536 + UInt_t(uuid[5])*256 + UInt_t(uuid[4]);
+      fSeed2  =  UInt_t(uuid[11])*16777216 + UInt_t(uuid[10])*65536 + UInt_t(uuid[9])*256 + UInt_t(uuid[8]);
       // use also the other bytes
-      UInt_t seed3 = int(uuid[15])*16777216 + int(uuid[14])*65536 + int(uuid[13])*256 + int(uuid[12]);
+      UInt_t seed3 = UInt_t(uuid[15])*16777216 + UInt_t(uuid[14])*65536 + UInt_t(uuid[13])*256 + int(uuid[12]);
       fSeed2 += seed3;
-
 
 
       //    TRandom r3(0);

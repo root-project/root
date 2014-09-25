@@ -196,10 +196,9 @@ namespace ROOT {
    static UInt_t ClassTableHash(const char *name, UInt_t size)
    {
       const char *p = name;
-      Int_t slot = 0;
+      UInt_t slot = 0;
 
       while (*p) slot = slot<<1 ^ *p++;
-      if (slot < 0) slot = -slot;
       slot %= size;
 
       return slot;

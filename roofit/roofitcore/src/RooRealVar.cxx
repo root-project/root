@@ -872,7 +872,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const
     leadingDigitVal = (Int_t)floor(log10(fabs(_value+1e-10)));
     if (_value==0) leadingDigitVal=0 ;
   }
-  Int_t leadingDigitErr= (Int_t)floor(log10(fabs(_error)));
+  Int_t leadingDigitErr= (Int_t)floor(log10(fabs(_error+1e-10)));
   Int_t whereVal= leadingDigitVal - sigDigits + 1;
   Int_t whereErr= leadingDigitErr - sigDigits + 1;
   char fmtVal[16], fmtErr[16];

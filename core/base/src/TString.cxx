@@ -788,13 +788,13 @@ UInt_t TString::Hash(const void *txt, Int_t ntxt)
             ret ^= itxt[1];
          }
       } else {
-         const char* ctxt = (const char*) txt;
-         for (int i = 0; i < 4; ++i) {
+         const unsigned char* ctxt = (const unsigned char*) txt;
+         for (unsigned int i = 0; i < 4; ++i) {
             ret ^= ctxt[i] << (i * 8);
          }
          if (sizeof(void*) > sizeof(UInt_t)) {
             ctxt += 4;
-            for (int i = 0; i < 4; ++i) {
+            for (unsigned int i = 0; i < 4; ++i) {
                ret ^= ctxt[i] << (i * 8);
             }
          }
