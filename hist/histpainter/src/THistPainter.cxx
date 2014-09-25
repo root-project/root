@@ -3231,6 +3231,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    static Int_t bin, px1, py1, px2, py2, pyold;
    static TBox *zoombox;
+   Double_t zbx1,zbx2,zby1,zby2;
 
    Int_t bin1, bin2;
    Double_t xlow, xup, ylow, binval, x, baroffset, barwidth, binwidth;
@@ -3267,8 +3268,19 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       fH->TAttLine::Modify();
 
       if (opaque && dimension ==2) {
-         zoombox = new TBox(gPad->AbsPixeltoX(px), gPad->AbsPixeltoY(py),
-                            gPad->AbsPixeltoX(px), gPad->AbsPixeltoY(py));
+         zbx1 = gPad->AbsPixeltoX(px);
+         zbx2 = gPad->AbsPixeltoX(px);
+         zby1 = gPad->AbsPixeltoY(py);
+         zby2 = gPad->AbsPixeltoY(py);
+         if (gPad->GetLogx()) {
+            zbx1 = TMath::Power(10,zbx1);
+            zbx2 = TMath::Power(10,zbx2);
+         }
+         if (gPad->GetLogy()) {
+            zby1 = TMath::Power(10,zby1);
+            zby2 = TMath::Power(10,zby2);
+         }
+         zoombox = new TBox(zbx1, zby1, zbx2, zby2);
          Int_t ci = TColor::GetColor("#7d7dff");
          TColor *zoomcolor = gROOT->GetColor(ci);
          if (!TCanvas::SupportAlpha()) zoombox->SetFillStyle(3002);
@@ -3329,8 +3341,12 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       if (opaque && dimension ==2) {
-         zoombox->SetX2(gPad->AbsPixeltoX(px));
-         zoombox->SetY2(gPad->AbsPixeltoY(py));
+         zbx2 = gPad->AbsPixeltoX(px);
+         zby2 = gPad->AbsPixeltoY(py);
+         if (gPad->GetLogx()) zbx2 = TMath::Power(10,zbx2);
+         if (gPad->GetLogy()) zby2 = TMath::Power(10,zby2);
+         zoombox->SetX2(zbx2);
+         zoombox->SetY2(zby2);
          gPad->Modified();
          gPad->Update();
       }
