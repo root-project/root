@@ -337,7 +337,6 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    const char *p = cname;
 
    while (*p) slot = slot<<1 ^ *p++;
-   if (slot < 0) slot = -slot;
    slot %= fgSize;
 
    TClassRec *r;
