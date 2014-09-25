@@ -41,6 +41,8 @@
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
+#include "Fit/BinData.h"
+#include "Math/GoFTest.h"
 #include "Math/MinimizerOptions.h"
 #include "Math/QuantFuncMathCore.h"
 
@@ -7323,6 +7325,63 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
    return integral;
 }
 
+
+//______________________________________________________________________________
+Double_t TH1::AndersonDarlingTest(const TH1 *h2, Option_t *option) const
+{
+   //  Statistical test of compatibility in shape between
+   //  this histogram and h2, using the Anderson-Darling 2 sample test.
+   //  The AD 2 sample test formula are derived from the paper 
+   //  F.W Scholz, M.A. Stephens "k-Sample Anderson-Darling Test". 
+   //  The test is implemented in root in the ROOT::Math::GoFTest class
+   //  It is the same formula ( (6) in the paper), and also shown in this preprint
+   //  http://arxiv.org/pdf/0804.0380v1.pdf
+   //  Binned data are considered as un-binned data 
+   //   with identical observation happening in the bin center. 
+   //
+   //     option is a character string to specify options
+   //         "D" Put out a line of "Debug" printout
+   //         "T" Return the normalized A-D test statistic
+   // 
+   //  Note1: Underflow and overflow are not considered in the test
+   //  Note2:  The test works only for un-weighted histogram (i.e. representing counts)
+   //  Note3:  The histograms are not required to have the same X axis
+   //  Note4:  The test works only for 1-dimensional histograms
+
+   Double_t advalue = 0; 
+   Double_t pvalue = AndersonDarlingTest(h2, advalue); 
+
+   TString opt = option;
+   opt.ToUpper();
+   if (opt.Contains("D") ) {
+      printf(" AndersonDarlingTest Prob     = %g, AD TestStatistic  = %g\n",pvalue,advalue);
+   } 
+   if (opt.Contains("T") ) return advalue; 
+
+   return pvalue;    
+}
+
+//______________________________________________________________________________
+Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
+{
+   // Same funciton as above but returning also the test statistic value
+
+   if (GetDimension() != 1 || h2->GetDimension() != 1) {
+      Error("AndersonDarlingTest","Histograms must be 1-D");
+      return -1; 
+   }
+
+   // use the BinData class 
+   ROOT::Fit::BinData data1; 
+   ROOT::Fit::BinData data2; 
+   ROOT::Fit::FillData(data1, this, 0);
+   ROOT::Fit::FillData(data2, h2, 0);
+
+   double pvalue; 
+   ROOT::Math::GoFTest::AndersonDarling2SamplesTest(data1,data2, pvalue,advalue);
+
+   return pvalue; 
+}
 
 //______________________________________________________________________________
 Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
