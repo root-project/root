@@ -18,8 +18,12 @@
 #include "TGraph.h"
 #include "TStopwatch.h"
 #include "TKDTree.h"
+#include "TApplication.h"
+#include "TCanvas.h"
+#include <iostream>
 
 
+bool showGraphics = false;
 
 
 void TestBuild(const Int_t npoints = 1000000, const Int_t bsize = 100);
@@ -258,6 +262,7 @@ void TestSpeed(Int_t npower2, Int_t bsize)
      if (gPad) gPad->Update();
   }
   if (verbose) g->Print();
+
   delete[] data0;
   return;
 }
@@ -549,21 +554,31 @@ void TestRange()
 
 
 //______________________________________________________________________
-int main(int argc,  char *argv[]) {  
 
+int main(int argc, char **argv) {
 
-   // Parse command line arguments
-   for (Int_t i = 1 ;  i < argc ; i++) {
-      std::string arg = argv[i] ;
-      
-      if (arg == "-v") {
-         std::cout << "kDTreeTest: running in verbose mode" << std::endl;
-         verbose = 1;
-      } 
-      if (arg == "-g") {
-         std::cout << "kDTreeTest: running showing the graphics" << std::endl;
-         showGraphics = true;
-      } 
+  // Parse command line arguments
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-v") {
+        std::cout << "kDTreeTest: running in verbose mode" << std::endl;
+        showGraphics = true;
+        verbose = 1;
+     }
+     if (arg == "-g") {
+        std::cout << "kDTreeTest: running showing the graphics" << std::endl;
+        showGraphics = true;
+     }
+
+     if (arg == "-h") {
+        std::cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
+        std::cerr << "  where:\n";
+        std::cerr << "     -g : graphics mode\n";
+        std::cerr << "     -v : verbose  mode";
+        std::cerr << std::endl;
+        return -1;
+     }
+
    }
 
    TApplication* theApp = 0;
@@ -571,7 +586,7 @@ int main(int argc,  char *argv[]) {
       theApp = new TApplication("App",&argc,argv);
 
    kDTreeTest();
-   
+
    if ( showGraphics )
    {
       theApp->Run();
@@ -579,5 +594,5 @@ int main(int argc,  char *argv[]) {
       theApp = 0;
    }
 
-   return 0; 
+   return 0;
 }
