@@ -122,7 +122,8 @@ This version does not deal with this issue, but it will be addressed in a future
 using namespace RooFit;
 using namespace RooStats;
 
-
+bool useProof = false;  // flag to control whether to use Proof
+int nworkers = 0;   // number of workers (default use all available cores)
 
 /////////////////////////////////////////////////////////////////////////
 // The actual macro
@@ -141,8 +142,8 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
 #endif
 
   double confidenceLevel=0.95;
-  int nPointsToScan = 30;
-  int nToyMC = 500;
+  int nPointsToScan = 20;
+  int nToyMC = 200;
 
   /////////////////////////////////////////////////////////////
   // First part is just to access a user-defined file
@@ -260,13 +261,16 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // in your $ROOTSYS/roofit/roostats/inc directory,
   // add the additional line to the LinkDef.h file,
   // and recompile root.
-  ProofConfig pc(*w, 4, "workers=4");
-  if(mc->GetGlobalObservables()){
-    cout << "will use global observables for unconditional ensemble"<<endl;
-    mc->GetGlobalObservables()->Print();
-    toymcsampler->SetGlobalObservables(*mc->GetGlobalObservables());
+  if (useProof) { 
+     ProofConfig pc(*w, nworkers, "", false);
+     toymcsampler->SetProofConfig(&pc); // enable proof
   }
-  toymcsampler->SetProofConfig(&pc); // enable proof
+
+  if(mc->GetGlobalObservables()){
+     cout << "will use global observables for unconditional ensemble"<<endl;
+     mc->GetGlobalObservables()->Print();
+     toymcsampler->SetGlobalObservables(*mc->GetGlobalObservables());
+  }
 
 
   // Now get the interval
@@ -302,7 +306,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // For FeldmanCousins, the lower cut off is always 0
   for(Int_t i=0; i<parameterScan->numEntries(); ++i){
     tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
-    cout <<"get threshold"<<endl;
+    //cout <<"get threshold"<<endl;
     double arMax = belt->GetAcceptanceRegionMax(*tmpPoint);
     double poiVal = tmpPoint->getRealValue(firstPOI->GetName()) ;
     histOfThresholds->Fill(poiVal,arMax);

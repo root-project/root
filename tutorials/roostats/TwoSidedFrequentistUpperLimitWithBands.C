@@ -120,7 +120,7 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-bool useProof = true;  // flag to control whether to use Proof
+bool useProof = false;  // flag to control whether to use Proof
 int nworkers = 0;   // number of workers (default use all available cores)
 
 /////////////////////////////////////////////////////////////////////////
@@ -256,14 +256,15 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // and recompile root.
   if (useProof) {
      ProofConfig pc(*w, nworkers, "",false);
-     if(mc->GetGlobalObservables()){
-        cout << "will use global observables for unconditional ensemble"<<endl;
-        mc->GetGlobalObservables()->Print();
-        toymcsampler->SetGlobalObservables(*mc->GetGlobalObservables());
-     }
      toymcsampler->SetProofConfig(&pc); // enable proof
   }
 
+  if(mc->GetGlobalObservables()){
+     cout << "will use global observables for unconditional ensemble"<<endl;
+     mc->GetGlobalObservables()->Print();
+     toymcsampler->SetGlobalObservables(*mc->GetGlobalObservables());
+  }
+ 
 
   // Now get the interval
   PointSetInterval* interval = fc.GetInterval();
