@@ -2902,20 +2902,24 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 }
 
 //______________________________________________________________________________
-Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
+Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/, Bool_t isClassOrNamespaceOnly /* = kFALSE*/ )
 {
-   // Checks if a class with the specified name is defined in Cling.
-   // Returns kFALSE is class is not defined.
+   // Checks if an entity with the specified name is defined in Cling.
+   // Returns kFALSE if the entity is not defined.
+   // By default, structs, namespaces, classes, enums and unions are looked for.
+   // If the flag isClassOrNamespaceOnly is true, classes, structs and
+   // namespaces only are considered. I.e. if the name is an enum or a union,
+   // the returned value is false.
    // In the case where the class is not loaded and belongs to a namespace
    // or is nested, looking for the full class name is outputing a lots of
    // (expected) error messages.  Currently the only way to avoid this is to
    // specifically check that each level of nesting is already loaded.
    // In case of templates the idea is that everything between the outer
-   // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
+   // '<' and '>' has to be skipped, e.g.: aap<pippo<noot>::klaas>::a_class
 
    R__LOCKGUARD(gInterpreterMutex);
    static const char *anonEnum = "anonymous enum ";
-   static int cmplen = strlen(anonEnum);
+   static const int cmplen = strlen(anonEnum);
 
    if (0 == strncmp(name,anonEnum,cmplen)) {
       return kFALSE;
@@ -2990,7 +2994,10 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
          SetClassAutoloading(storeAutoload);
          return kFALSE;
       }
-      if (tci.Property() & (kIsEnum | kIsClass | kIsStruct | kIsUnion | kIsNamespace)) {
+      auto propertiesMask = isClassOrNamespaceOnly ? kIsClass | kIsStruct | kIsNamespace :
+                                                     kIsClass | kIsStruct | kIsNamespace | kIsEnum | kIsUnion;
+
+      if (tci.Property() & propertiesMask) {
          // We are now sure that the entry is not in fact an autoload entry.
          SetClassAutoloading(storeAutoload);
          return kTRUE;

@@ -2822,7 +2822,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    }
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   if (gInterpreter->CheckClassInfo(normalizedName.c_str())) {
+   if (gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */, kTRUE /*Only class, structs and ns*/)) {
       // Get the normalized name based on the decl (currently the only way
       // to get the part to add or drop the default arguments as requested by the user)
       std::string alternative;
