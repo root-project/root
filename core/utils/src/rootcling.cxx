@@ -295,9 +295,15 @@ bool buildingROOT = false;
 # define R__LLVMDIR "./interpreter/llvm/inst" // only works for rootbuild for now!
 #endif
 
-template <typename T> struct IsPointer {
-   enum { kVal = 0 };
-};
+namespace {
+   // Copy-pasted from TClass.h We cannot #include TClass.h because we are compiling in -fno-rtti mode
+   template <typename T> struct IsPointerTClassCopy {
+      enum { kVal = 0 };
+   };
+   template <typename T> struct IsPointerTClassCopy<T*> {
+      enum { kVal = 1 };
+   };
+}
 
 // Maybe too ugly? let's see how it performs.
 using HeadersDeclsMap_t = std::map<std::string, std::list<std::string>>;
@@ -3691,7 +3697,7 @@ int RootCling(int argc,
    clingArgs.push_back("-I.");
 
    // Is this needed at all or just historical?
-   if (! IsPointer<std::vector<int>::iterator>::kVal) {
+   if (! IsPointerTClassCopy<std::vector<int>::iterator>::kVal) {
       // Tell cling (for parsing pragma) that std::vector's iterator is a class
       clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
    }
