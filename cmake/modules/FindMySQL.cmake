@@ -4,16 +4,9 @@
 #  MYSQL_LIBRARIES   - List of libraries when using MySQL.
 #  MYSQL_FOUND       - True if MySQL found.
 
-if(MYSQL_INCLUDE_DIR OR MYSQL_)
-  # Already in cache, be silent
-  SET(MYSQL_FIND_QUIETLY TRUE)
-endif()
-
 if(NOT WIN32)
-  find_program(MYSQL_CONFIG_EXECUTABLE mysql_config
-    /usr/bin/
-    /usr/local/bin
-    ${MYSQL_DIR}/bin $ENV{MYSQL_DIR}/bin 
+  find_program(MYSQL_CONFIG_EXECUTABLE NAMES mysql_config
+    HINTS ${MYSQL_DIR}/bin $ENV{MYSQL_DIR}/bin 
   )
 endif()
 
@@ -28,18 +21,12 @@ if(MYSQL_CONFIG_EXECUTABLE)
   string( REGEX REPLACE "-I[^;]+;" "" MYSQL_CFLAGS "${MYSQL_CFLAGS}" )
   execute_process(COMMAND ${MYSQL_CONFIG_EXECUTABLE} --libs OUTPUT_VARIABLE MYSQL_LIBRARIES OUTPUT_STRIP_TRAILING_WHITESPACE)
 else()
-  find_path(MYSQL_INCLUDE_DIR mysql.h
-    /usr/local/mysql/include
-    /usr/local/include/mysql
-    /usr/local/include
-    /usr/include/mysql
-    /usr/include
-    /usr/mysql/include
-    $ENV{MYSQL_DIR}/include
+  find_path(MYSQL_INCLUDE_DIR NAMES mysql.h
+    HINTS ${MYSQL_DIR}/include $ENV{MYSQL_DIR}/include
   )
   set(MYSQL_NAMES mysqlclient mysqlclient_r)
   find_library(MYSQL_LIBRARY NAMES ${MYSQL_NAMES}
-    PATHS /usr/local/mysql/lib /usr/local/lib /usr/lib $ENV{MYSQL_DIR}/lib $ENV{MYSQL_DIR}/lib/opt
+    HINTS ${MYSQL_DIR}/lib $ENV{MYSQL_DIR}/lib 
   )
   set(MYSQL_LIBRARIES ${MYSQL_LIBRARY})
 endif()

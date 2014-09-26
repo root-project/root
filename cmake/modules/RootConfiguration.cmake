@@ -233,9 +233,9 @@ set(pythia8lib ${PYTHIA8_LIBRARY})
 set(pythia8cppflags)
 
 set(buildfftw3 ${value${fftw3}})
-set(fftw3libdir ${FFTW3_LIBRARY_DIR})
-set(fftw3lib ${FFTW3_LIBRARY})
-set(fftw3incdir ${FFTW3_INCLUDE_DIR})
+set(fftw3libdir ${FFTW_LIBRARY_DIR})
+set(fftw3lib ${FFTW_LIBRARY})
+set(fftw3incdir ${FFTW_INCLUDE_DIR})
 
 set(buildfitsio ${value${fitsio}})
 set(fitsiolibdir ${FITSIO_LIBRARY_DIR})

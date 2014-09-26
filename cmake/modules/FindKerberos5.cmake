@@ -8,18 +8,18 @@
 #  KRB5_FOUND       - True if Kerberos 5 libraries found.
 
 find_path(KRB5_INCLUDE_DIR NAMES krb5.h 
-  HINTS  $ENV{KRB5_DIR} ${KRB5_DIR}
+  HINTS  ${KRB5_DIR}/include $ENV{KRB5_DIR}/include
   PATH_SUFFIXES include kerberos krb5)
 
 set(KRB5_INCLUDE_DIRS ${KRB5_INCLUDE_DIR})
 
 find_library(KRB5_LIBRARY NAMES krb5
-  HINTS $ENV{KRB5_DIR} ${KRB5_DIR}
+  HINTS ${KRB5_DIR}/lib $ENV{KRB5_DIR}/lib
   PATH_SUFFIXES kerberos krb5)
 set(KRB5_LIBRARIES ${KRB5_LIBRARY})
 
 find_library(KRB5_MIT_LIBRARY NAMES k5crypto
-  HINTS $ENV{KRB5_DIR} ${KRB5_DIR}
+  HINTS ${KRB5_DIR}/lib $ENV{KRB5_DIR}/lib
   PATH_SUFFIXES kerberos krb5)
 
 if(KRB5_MIT_LIBRARY)

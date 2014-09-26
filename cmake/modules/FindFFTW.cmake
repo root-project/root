@@ -11,21 +11,13 @@ if(FFTW_LIBRARY AND FFTW_INCLUDE_DIR)
   set(FFTW_FIND_QUIETLY TRUE)
 endif()
 
-find_path(FFTW_INCLUDE_DIR fftw3.h
-  $ENV{FFTW_DIR}/include
-  $ENV{FFTW3} $ENV{FFTW3}/include $ENV{FFTW3}/api
-  /usr/local/include
-  /usr/include
-  /opt/fftw3/include
+find_path(FFTW_INCLUDE_DIR NAMES fftw3.h
+  HINTS ${FFTW_DIR}/include $ENV{FFTW_DIR}/include
   DOC "Specify the directory containing fftw3.h"
 )
 
-find_library(FFTW_LIBRARY NAMES fftw3 fftw3-3 PATHS
-  $ENV{FFTW_DIR}/lib
-  $ENV{FFTW3} $ENV{FFTW3}/lib $ENV{FFTW3}/.libs
-  /usr/local/lib
-  /usr/lib 
-  /opt/fftw3/lib
+find_library(FFTW_LIBRARY NAMES fftw3
+  HINTS ${FFTW_DIR}/lib $ENV{FFTW_DIR}/lib
   DOC "Specify the fttw3 library here."
 )
 

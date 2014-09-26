@@ -4,7 +4,9 @@
 #  GCCXML_FOUND       - True if GCCXML found.
 
 
-find_program(GCCXML_EXECUTABLE NAMES gccxml)
+find_program(GCCXML_EXECUTABLE NAMES gccxml
+     PATHS ${GCCXML_DIR}/bin $ENV{GCCXML_DIR}/bin
+)
 
 if(GCCXML_EXECUTABLE)
   set(GCCXML_FOUND TRUE)

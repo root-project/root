@@ -6,8 +6,10 @@
 #  DCAP_INCLUDE_DIRS (not cached)
 #  DCAP_LIBRARIES
 
-find_path(DCAP_INCLUDE_DIR NAMES dcap.h  HINTS ${DCAP_DIR}/include $ENV{DCAP_DIR}/inlcude)
-find_library(DCAP_LIBRARY NAMES dcap HINTS ${DCAP_DIR}/lib $ENV{DCAP_DIR}/lib)
+find_path(DCAP_INCLUDE_DIR NAMES dcap.h
+          HINTS ${DCAP_DIR}/include $ENV{DCAP_DIR}/include)
+find_library(DCAP_LIBRARY NAMES dcap 
+             HINTS ${DCAP_DIR}/lib64 $ENV{DCAP_DIR}/lib64)
 
 set(DCAP_INCLUDE_DIRS ${DCAP_INCLUDE_DIR})
 set(DCAP_LIBRARIES ${DCAP_LIBRARY})

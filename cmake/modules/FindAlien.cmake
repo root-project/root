@@ -17,6 +17,7 @@ find_path(ALIEN_INCLUDE_DIR gapiUI.h
   /opt/alien/api/include 
   /opt/monalisa/include 
   /usr/include
+  PATH_SUFFIXES api
   DOC "Specify the directory containing gapiUI.h"
 )
 
@@ -26,6 +27,7 @@ find_library(ALIEN_LIBRARY NAMES gapiUI PATHS
   /opt/alien/api/lib
   /opt/monalisa/lib 
   /usr/lib
+  PATH_SUFFIXES api
   DOC "Specify the libgapiUI library here."
 )
 

@@ -1,4 +1,4 @@
-# - Try to find Sqlite
+# - Try tof ind Sqlite
 # Once done this will define
 #
 #  SQLITE_FOUND - system has Sqlite
@@ -31,15 +31,11 @@ if( NOT WIN32 )
 endif( NOT WIN32 )
 
 find_path(SQLITE_INCLUDE_DIR NAMES sqlite3.h
-  PATHS
-  ${PC_SQLITE_INCLUDEDIR}
-  ${PC_SQLITE_INCLUDE_DIRS}
+  HINTS ${SQLITE_DIR}/include $ENV{SQLITE_DIR}/include
 )
 
 find_library(SQLITE_LIBRARIES NAMES sqlite3
-  PATHS
-  ${PC_SQLITE_LIBDIR}
-  ${PC_SQLITE_LIBRARY_DIRS}
+  HINTS ${SQLITE_DIR}/lib $ENV{SQLITE_DIR}/lib
 )
 
 include(FindPackageHandleStandardArgs)

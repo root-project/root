@@ -24,6 +24,7 @@ find_path(CASTOR_INCLUDE_DIR NAMES rfio_api.h PATHS
   /usr/local/include/shift 
   /usr/include 
   /usr/local/include
+  PATH_SUFFIXES shift
 )
 if(CASTOR_INCLUDE_DIR)
   file(READ ${CASTOR_INCLUDE_DIR}/patchlevel.h contents)

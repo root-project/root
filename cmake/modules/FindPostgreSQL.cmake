@@ -17,13 +17,16 @@ if (POSTGRESQL_INCLUDE_DIR AND POSTGRESQL_LIBRARIES)
 endif (POSTGRESQL_INCLUDE_DIR AND POSTGRESQL_LIBRARIES)
 
 
-find_path(POSTGRESQL_INCLUDE_DIR libpq-fe.h
+find_path(POSTGRESQL_INCLUDE_DIR NAMES libpq-fe.h
+   PATHS ${POSTGRESQL_DIR}/include $ENV{POSTGRESQL_DIR}/include
    /usr/include/pgsql/
    /usr/local/include/pgsql/
    /usr/include/postgresql/
 )
 
-find_library(POSTGRESQL_LIBRARIES NAMES pq)
+find_library(POSTGRESQL_LIBRARIES NAMES pq
+   PATHS ${POSTGRESQL_DIR}/lib $ENV{POSTGRESQL_DIR}/lib				  
+)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PostgreSQL DEFAULT_MSG
