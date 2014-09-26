@@ -256,6 +256,7 @@ const char *rootClingHelp =
 #include "DictSelectionReader.h"
 #include "SelectionRules.h"
 #include "Scanner.h"
+#include "strlcpy.h"
 
 #include "OptionParser.h"
 
