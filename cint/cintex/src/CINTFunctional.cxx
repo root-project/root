@@ -469,6 +469,58 @@ namespace ROOT { namespace Cintex {
 #define DATAPATTERN 0xDADADADAL
 #endif
 
+#if defined(__arm__)
+    __attribute__((naked, used))
+    static void f0a() {
+    __asm__ __volatile__ ("push    {fp, lr}\n\t"
+                          "add     fp, sp, #4\n\t"
+                          "ldr     r3, [pc, #8]\n\t"
+                          "ldr     r0, [pc, #8]\n\t"
+                          "blx     r3\n\t"
+                          "pop     {fp, pc}\n\t"
+                          ".word   0xfafafafa\n\t"
+                          ".word   0xdadadada");
+    }
+
+    __attribute__((naked, used))
+    static void f1a(void* a0) {
+    __asm__ __volatile__ ("push    {fp, lr}\n\t"
+                          "add     fp, sp, #4\n\t"
+                          "sub     sp, sp, #8\n\t"
+                          "str     r0, [fp, #-8]\n\t"
+                          "ldr     r3, [pc, #16]\n\t"
+                          "ldr     r0, [pc, #16]\n\t"
+                          "ldr     r1, [fp, #-8]\n\t"
+                          "blx     r3\n\t"
+                          "sub     sp, fp, #4\n\t"
+                          "pop     {fp, pc}\n\t"
+                          ".word   0xfafafafa\n\t"
+                          ".word   0xdadadada");
+    }
+
+    __attribute__((naked, used))
+    static void f4a(void* a0, void* a1, void* a2, void* a3) {
+    __asm__ __volatile__ ("push    {fp, lr}\n\t"
+                          "add     fp, sp, #4\n\t"
+                          "sub     sp, sp, #24\n\t"
+                          "str     r0, [fp, #-8]\n\t"
+                          "str     r1, [fp, #-12]\n\t"
+                          "str     r2, [fp, #-16]\n\t"
+                          "str     r3, [fp, #-20]\n\t"
+                          "ldr     r3, [fp, #-20]\n\t"
+                          "str     r3, [sp]\n\t"
+                          "ldr     ip, [pc, #24]\n\t"
+                          "ldr     r0, [pc, #24]\n\t"
+                          "ldr     r1, [fp, #-8]\n\t"
+                          "ldr     r2, [fp, #-12]\n\t"
+                          "ldr     r3, [fp, #-16]\n\t"
+                          "blx     ip\n\t"
+                          "sub     sp, fp, #4\n\t"
+                          "pop     {fp, pc}\n\t"
+                          ".word   0xfafafafa\n\t"
+                          ".word   0xdadadada");
+    }
+#else
    static void f0a() {
       typedef void (*f_t)(void*);
       ((f_t)FUNCPATTERN)((void*)DATAPATTERN);
@@ -481,6 +533,7 @@ namespace ROOT { namespace Cintex {
       typedef void (*f_t)(void*,void*,void*,void*,void*);
       ((f_t)FUNCPATTERN)((void*)DATAPATTERN, a0, a1, a2, a3);
    }
+#endif /* defined(__arm__) */
 
    struct FunctionCode_t {
       FunctionCode_t(int narg) : f_offset(0), fa_offset(0), fSize(0) {
