@@ -3272,6 +3272,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          zbx2 = gPad->AbsPixeltoX(px);
          zby1 = gPad->AbsPixeltoY(py);
          zby2 = gPad->AbsPixeltoY(py);
+         px1 = px;
+         py1 = py;
          if (gPad->GetLogx()) {
             zbx1 = TMath::Power(10,zbx1);
             zbx2 = TMath::Power(10,zbx2);
@@ -3341,14 +3343,16 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       if (opaque && dimension ==2) {
-         zbx2 = gPad->AbsPixeltoX(px);
-         zby2 = gPad->AbsPixeltoY(py);
-         if (gPad->GetLogx()) zbx2 = TMath::Power(10,zbx2);
-         if (gPad->GetLogy()) zby2 = TMath::Power(10,zby2);
-         zoombox->SetX2(zbx2);
-         zoombox->SetY2(zby2);
-         gPad->Modified();
-         gPad->Update();
+         if (TMath::Abs(px1-px)>5 && TMath::Abs(py1-py)>5) {
+            zbx2 = gPad->AbsPixeltoX(px);
+            zby2 = gPad->AbsPixeltoY(py);
+            if (gPad->GetLogx()) zbx2 = TMath::Power(10,zbx2);
+            if (gPad->GetLogy()) zby2 = TMath::Power(10,zby2);
+            zoombox->SetX2(zbx2);
+            zoombox->SetY2(zby2);
+            gPad->Modified();
+            gPad->Update();
+         }
       }
 
       break;
