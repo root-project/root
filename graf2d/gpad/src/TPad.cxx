@@ -2200,6 +2200,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    Double_t temp, xmin,xmax;
    Bool_t opaque  = gPad->OpaqueMoving();
    static TBox *zoombox;
+   Double_t zbx1=0,zbx2=0,zby1=0,zby2=0;
 
    // The CONT4 option, used to paint TH2, is a special case; it uses a 3D
    // drawing technique to paint a 2D plot.
@@ -2252,12 +2253,25 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
          } else {
             if (axisNumber == 1) {
-               zoombox = new TBox(AbsPixeltoX(px1old), GetUymin(),
-                                  AbsPixeltoX(px2old), GetUymax());
+               zbx1 = AbsPixeltoX(px1old);
+               zbx2 = AbsPixeltoX(px2old);
+               zby1 = GetUymin();
+               zby2 = GetUymax();
             } else if (axisNumber == 2) {
-               zoombox = new TBox(GetUxmin(), AbsPixeltoY(py1old),
-                                  GetUxmax(), AbsPixeltoY(py2old));
+               zbx1 = GetUxmin();
+               zbx2 = GetUxmax();
+               zby1 = AbsPixeltoY(py1old);
+               zby2 = AbsPixeltoY(py2old);
             }
+            if (GetLogx()) {
+               zbx1 = TMath::Power(10,zbx1);
+               zbx2 = TMath::Power(10,zbx2);
+            }
+            if (GetLogy()) {
+               zby1 = TMath::Power(10,zby1);
+               zby2 = TMath::Power(10,zby2);
+            }
+            zoombox = new TBox(zbx1, zby1, zbx2, zby2);
             Int_t ci = TColor::GetColor("#7d7dff");
             TColor *zoomcolor = gROOT->GetColor(ci);
             if (!TCanvas::SupportAlpha()) zoombox->SetFillStyle(3002);
@@ -2287,16 +2301,28 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
          } else {
             if (axisNumber == 1) {
-               zoombox->SetX1(AbsPixeltoX(px1old));
-               zoombox->SetY1(GetUymin());
-               zoombox->SetX2(AbsPixeltoX(px2old));
-               zoombox->SetY2(GetUymax());
+               zbx1 = AbsPixeltoX(px1old);
+               zbx2 = AbsPixeltoX(px2old);
+               zby1 = GetUymin();
+               zby2 = GetUymax();
             } else if (axisNumber == 2) {
-               zoombox->SetX1(GetUxmin());
-               zoombox->SetY1(AbsPixeltoY(py1old));
-               zoombox->SetX2(GetUxmax());
-               zoombox->SetY2(AbsPixeltoY(py2old));
+               zbx1 = GetUxmin();
+               zbx2 = GetUxmax();
+               zby1 = AbsPixeltoY(py1old);
+               zby2 = AbsPixeltoY(py2old);
             }
+            if (GetLogx()) {
+               zbx1 = TMath::Power(10,zbx1);
+               zbx2 = TMath::Power(10,zbx2);
+            }
+            if (GetLogy()) {
+               zby1 = TMath::Power(10,zby1);
+               zby2 = TMath::Power(10,zby2);
+            }
+            zoombox->SetX1(zbx1);
+            zoombox->SetY1(zby1);
+            zoombox->SetX2(zbx2);
+            zoombox->SetY2(zby2);
             gPad->Modified();
             gPad->Update();
          }
