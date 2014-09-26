@@ -970,6 +970,7 @@ TClass::TClass(const char *name, Bool_t silent) :
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    TDictionary(name),
+   fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
@@ -995,6 +996,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t silent) :
    TDictionary(name),
+   fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
@@ -1031,6 +1033,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
 TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
    TDictionary(""),
+   fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
