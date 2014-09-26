@@ -140,8 +140,9 @@ Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) con
 
   // check to see if integral of a subrange is requested
   if (rangeName && 0 != rangeName[0]) {
-    R__ASSERT(xminfull <= _x.min(rangeName) && _x.min(rangeName) <= xmaxfull);
-    R__ASSERT(xminfull <= _x.max(rangeName) && _x.max(rangeName) <= xmaxfull);
+     // no reason to be there (see ROOT-6664)
+    // R__ASSERT(xminfull <= _x.min(rangeName) && _x.min(rangeName) <= xmaxfull);
+    // R__ASSERT(xminfull <= _x.max(rangeName) && _x.max(rangeName) <= xmaxfull);
     minScaled = -1. + 2. * (_x.min(rangeName) - xminfull) / fullRange;
     maxScaled = +1. - 2. * (xmaxfull - _x.max(rangeName)) / fullRange;
   }

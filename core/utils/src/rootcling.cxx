@@ -1014,7 +1014,11 @@ string GetNonConstMemberName(const clang::FieldDecl &m, const string &prefix = "
       string ret = "const_cast< ";
       string type_name;
       ROOT::TMetaUtils::GetQualifiedName(type_name, m.getType(), m);
-      ret += type_name;
+      if (type_name.substr(0,6)=="const ") {
+         ret += type_name.c_str()+6;
+      } else {
+         ret += type_name;
+      }
       ret += " &>( ";
       ret += prefix;
       ret += m.getName().str();
@@ -3445,21 +3449,12 @@ std::string GenerateFwdDeclString(const RScanner &scan,
                    selectedDecls.begin(),
                    [](const ROOT::TMetaUtils::AnnotatedRecordDecl& rcd){return rcd.GetRecordDecl();});
 
+   for (auto* TD: scan.fSelectedTypedefs)
+      selectedDecls.push_back(TD);
+
    fwdDeclString += "R\"DICTFWDDCLS(\n";
    fwdDeclString += Decls2FwdDecls(selectedDecls,interp);
    fwdDeclString += ")DICTFWDDCLS\"";
-
-   // Typedefs
-   for (auto const & tdNameDeclPtr : scan.fSelectedTypedefs) {
-      buffer = "";
-      int retCode = FwdDeclFromTypeDefNameDecl(*tdNameDeclPtr,
-                    interp,
-                    buffer,
-                    &fwdDecls);
-      if (retCode == 0 && fwdDecls.insert(buffer).second) {
-         fwdDeclString += "\nR\"FWDDECL(" + buffer + ")FWDDECL\"";
-      }
-   }
 
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){

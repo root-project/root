@@ -50,12 +50,13 @@ typedef struct Hoption_t {
    int Tri;         // "TRI"    Draw 2D plot with Delaunay triangles.
    int Pie;         // "PIE"    Draw 1D plot as a pie chart.
    int Candle;      // "CANDLE" Draw a 2D histogram as candle/box plot.
+   int Violin;      // "VIOLIN" Draw a 2D histogram as violin plot.
    int System;      // type of coordinate system(1=car,2=pol,3=cyl,4=sph,5=psr)
    int Zscale;      // "Z"   to display the Z scale (color palette)
    int FrontBox;    //  = 0 to suppress the front box
    int BackBox;     //  = 0 to suppress the back box
    int List;        //  = 1 to generate the TObjArray "contours"
-   int Proj;        //  = 1 to get an Aitoff projection, usefull for skymaps or exposure maps..
+   int Proj;        //  = 1 to get an Aitoff projection, usefull for skymaps or exposure maps.
                     //  = 2 to get a Mercator ptojection
                     //  = 3 to get a Sinusoidal ptojection
                     //  = 4 to get a Parabolic ptojection

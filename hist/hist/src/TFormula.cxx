@@ -226,7 +226,7 @@ TFormula::TFormula(const char *name,const char *expression) :
          if ( tmp.Contains("landau") )
             Warning("TFormula","Cannot use both landau and landaun - landau will be treated as landaun");
       }
-      // need to to the replacement here for the error message before
+      // need to the replacement here for the error message before
       if (gausNorm)
          chaine.ReplaceAll("gausn","gaus");
       if (landauNorm)

@@ -25,11 +25,6 @@
 #include "TCollection.h"
 #include <set>
 
-#ifndef __CINT__
-#include <XrdCl/XrdClXRootDResponses.hh>
-#include <XrdCl/XrdClURL.hh>
-#endif
-
 namespace XrdCl {
    class FileSystem;
    class URL;
@@ -39,7 +34,7 @@ namespace XrdCl {
 class TNetXNGSystem: public TSystem {
 
 private:
-   std::set<void*>    fDirPtrs;
+   std::set<void *>    fDirPtrs;
 #ifndef __CINT__
 private:
    XrdCl::URL        *fUrl;        // URL of this TSystem
@@ -52,19 +47,19 @@ public:
    TNetXNGSystem(const char *url, Bool_t owner = kTRUE);
    virtual ~TNetXNGSystem();
 
-   virtual void*       OpenDirectory(const char* dir);
-   virtual Int_t       MakeDirectory(const char* dir);
+   virtual void       *OpenDirectory(const char *dir);
+   virtual Int_t       MakeDirectory(const char *dir);
    virtual void        FreeDirectory(void *dirp);
-   virtual const char* GetDirEntry(void *dirp);
-   virtual Int_t       GetPathInfo(const char* path, FileStat_t &buf);
+   virtual const char *GetDirEntry(void *dirp);
+   virtual Int_t       GetPathInfo(const char *path, FileStat_t &buf);
    virtual Bool_t      ConsistentWith(const char *path, void *dirptr);
    virtual int         Unlink(const char *path);
    virtual Bool_t      IsPathLocal(const char *path);
-   virtual Int_t       Locate(const char* path, TString &endurl);
-   virtual Int_t       Stage(const char* path, UChar_t priority);
+   virtual Int_t       Locate(const char *path, TString &endurl);
+   virtual Int_t       Stage(const char *path, UChar_t priority);
    virtual Int_t       Stage(TCollection *files, UChar_t priority);
 
-   ClassDef(TNetXNGSystem, 0 ) // ROOT class definition
+   ClassDef(TNetXNGSystem, 0)  // ROOT class definition
 };
 
 #endif

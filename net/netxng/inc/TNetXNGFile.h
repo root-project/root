@@ -23,35 +23,40 @@
 
 #include "TFile.h"
 #include "TSemaphore.h"
-#ifndef __CINT__
-#include <XrdSys/XrdSysPthread.hh>
+#ifndef __CLING__
 #include <XrdCl/XrdClFileSystem.hh>
-#include <XrdCl/XrdClXRootDResponses.hh>
 #endif
 
 namespace XrdCl {
    class File;
-   class ResponseHandler;
+   class URL;
 }
+class XrdSysCondVar;
+
+#ifdef __CLING__
+namespace XrdCl {
+   struct OpenFlags {
+      enum    Flags {None = 0};
+   };
+}
+#endif
 
 class TNetXNGFile: public TFile {
 private:
-#ifndef __CINT__
    XrdCl::File            *fFile;        // Underlying XRootD file
    XrdCl::URL             *fUrl;         // URL of the current file
    XrdCl::OpenFlags::Flags fMode;        // Open mode of the current file
    XrdSysCondVar          *fInitCondVar; // Used to block an async open request
-                                         // if requested
+   // if requested
    Int_t                   fReadvIorMax; // Max size of a single readv chunk
    Int_t                   fReadvIovMax; // Max number of readv chunks
-#endif
 
 public:
    TNetXNGFile() : TFile(),
-         fFile(0), fUrl(0), fMode(XrdCl::OpenFlags::None), fInitCondVar(0),
-         fReadvIorMax(0), fReadvIovMax(0){}
+      fFile(0), fUrl(0), fMode(XrdCl::OpenFlags::None), fInitCondVar(0),
+      fReadvIorMax(0), fReadvIovMax(0) {}
    TNetXNGFile(const char *url, Option_t *mode = "", const char *title = "",
-         Int_t compress = 1, Int_t netopt = 0, Bool_t parallelopen = kFALSE);
+               Int_t compress = 1, Int_t netopt = 0, Bool_t parallelopen = kFALSE);
    virtual ~TNetXNGFile();
 
    virtual void     Init(Bool_t create);
@@ -72,14 +77,12 @@ private:
    virtual Bool_t IsUseable() const;
    virtual Bool_t GetVectorReadLimits();
    virtual void   SetEnv();
-#ifndef __CINT__
    XrdCl::OpenFlags::Flags ParseOpenMode(Option_t *modestr);
-#endif
 
    TNetXNGFile(const TNetXNGFile &other);             // Not implemented
    TNetXNGFile &operator =(const TNetXNGFile &other); // Not implemented
 
-   ClassDef( TNetXNGFile, 0 ) // ROOT class definition
+   ClassDef(TNetXNGFile, 0)   // ROOT class definition
 };
 
 #endif // ROOT_TNetXNGFile

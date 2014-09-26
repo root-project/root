@@ -15,8 +15,12 @@
 #include "TGraph.h"
 #include "TStopwatch.h"
 #include "TKDTree.h"
+#include "TApplication.h"
+#include "TCanvas.h"
+#include <iostream>
 
 
+bool showGraphics = false;
 
 
 void TestBuild(const Int_t npoints = 1000000, const Int_t bsize = 100);
@@ -249,7 +253,11 @@ void TestSpeed(Int_t npower2, Int_t bsize)
     //timer.Print("u");
     delete kdtree;
   }
-  g->Draw("apl");
+  if (showGraphics) {
+     g->Draw("apl");
+     gPad->Update();
+  }
+
   delete[] data0;
   return;
 }
@@ -541,7 +549,40 @@ void TestRange()
 
 
 //______________________________________________________________________
-int main() {
+int main(int argc, char **argv) {
+
+  // Parse command line arguments
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-g") {
+      showGraphics = true;
+     }
+     // if (arg == "-v") {
+     //  showGraphics = true;
+     //  verbose = true;
+     // }
+     if (arg == "-h") {
+        std::cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
+        std::cerr << "  where:\n";
+        std::cerr << "     -g : graphics mode\n";
+        //std::cerr << "     -v : verbose  mode";
+        std::cerr << std::endl;
+        return -1;
+     }
+   }
+
+   TApplication* theApp = 0;
+   if ( showGraphics )
+      theApp = new TApplication("App",&argc,argv);
+
    kDTreeTest();
+
+   if ( showGraphics )
+   {
+      theApp->Run();
+      delete theApp;
+      theApp = 0;
+   }
+
    return 0;
 }

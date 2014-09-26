@@ -194,7 +194,7 @@ protected:
    TList        fCallArgs;    //! submitted arguments
 
    // Here any request can be processed
-   void ProcessRequest(THttpCallArg *arg);
+   virtual void ProcessRequest(THttpCallArg *arg);
 
 public:
 

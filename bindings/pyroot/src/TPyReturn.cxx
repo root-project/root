@@ -149,7 +149,7 @@ TPyReturn::operator ULong_t() const
 //____________________________________________________________________________
 TPyReturn::operator Double_t() const
 {
-// Cast python return value to to C++ double (may fail).
+// Cast python return value to C++ double (may fail).
    Double_t d = PyFloat_AsDouble( fPyObject );
 
    if ( PyErr_Occurred() )

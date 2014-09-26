@@ -3005,7 +3005,7 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
 
    TIter next(GetElements());
    TStreamerElement *el;
-   while ( (el=(TStreamerElement*)next()) && !TClassEdit::IsSTLCont(name)) { // loop over bases if not stl
+   while ( (el=(TStreamerElement*)next()) && !fClass->GetCollectionProxy()) { // loop over bases if not a proxied collection
       if (el->IsBase()) {
          name = el->GetName();
          il = name.Length();
@@ -3058,6 +3058,10 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       if (code == TClass::kReflex || code == TClass::kReflexNoComment) {
          type.ReplaceAll("ULong64_t","unsigned long long");
          type.ReplaceAll("Long64_t","long long");
+         type.ReplaceAll("signed char","char");
+         type.ReplaceAll("<signed char","<char");
+         type.ReplaceAll(",signed char",",char");
+         if (type=="signed char") type = "char";
       }
 
       il = type.Length();

@@ -10615,9 +10615,11 @@ bool Sema::CheckEnumRedeclaration(SourceLocation EnumLoc, bool IsScoped,
       return true;
     }
   } else if (IsFixed != Prev->isFixed()) {
+#if 0
     Diag(EnumLoc, diag::err_enum_redeclare_fixed_mismatch)
       << Prev->isFixed();
     Diag(Prev->getLocation(), diag::note_previous_declaration);
+#endif
     return true;
   }
 

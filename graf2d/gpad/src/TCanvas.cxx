@@ -803,6 +803,12 @@ void TCanvas::Draw(Option_t *)
    //     Root > Tfile f("file.root");
    //     Root > canvas.Draw();
 
+   // Load and initialize graphics libraries if
+   // TApplication::NeedGraphicsLibs() has been called by a
+   // library static initializer.
+   if (gApplication)
+      gApplication->InitializeGraphics();
+
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(GetName());
    if (old == this) {
       Paint();

@@ -30,6 +30,7 @@
 #include "TSystem.h"
 #include "TMath.h"
 #include "KeySymbols.h"
+#include "TCutG.h"
 
 
 
@@ -683,10 +684,8 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
          if (mode == kPolyLine) {
             fgPolyLine = new TGraph(1);
             fgPolyLine->ResetBit(TGraph::kClipFrame);
-         } else {
-            fgPolyLine = (TGraph*)gROOT->ProcessLineFast(
-                 Form("new %s(\"CUTG\",%d",
-                      gROOT->GetCutClassName(),1));
+         } else { // TCutG case
+            fgPolyLine = (TGraph*) new TCutG("CUTG",1);
          }
          fgPolyLine->SetPoint(0, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
                          gPad->PadtoY(gPad->AbsPixeltoY(pynew)));

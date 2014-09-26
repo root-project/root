@@ -24,6 +24,10 @@
 #include "cling/Interpreter/AutoloadCallback.h"
 #include "cling/Interpreter/Transaction.h"
 
+namespace {
+  constexpr const char annoTag[] = "$clingAutoload$";
+  constexpr const size_t lenAnnoTag = sizeof(annoTag) - 1;
+}
 
 using namespace clang;
 
@@ -40,15 +44,14 @@ namespace cling {
       = sema.getDiagnostics().getCustomDiagID(DiagnosticsEngine::Level::Note,
                                                 "Type : %0 , Full Path: %1")*/;
 
-    sema.Diags.Report(l, id) << name << header.drop_front(15);
+    if (header.startswith(llvm::StringRef(annoTag, lenAnnoTag)))
+      sema.Diags.Report(l, id) << name << header.drop_front(lenAnnoTag);
 
   }
 
   bool AutoloadCallback::LookupObject (TagDecl *t) {
-#if 0
-    if (t->hasAttr<AnnotateAttr>())
+    if (m_ShowSuggestions && t->hasAttr<AnnotateAttr>())
       report(t->getLocation(),t->getNameAsString(),t->getAttr<AnnotateAttr>()->getAnnotation());
-#endif
     return false;
   }
 
@@ -61,7 +64,7 @@ namespace cling {
     void InsertIntoAutoloadingState (Decl* decl, llvm::StringRef annotation) {
 
       assert(!annotation.empty() && "Empty annotation!");
-      if (annotation != llvm::StringRef("$clingAutoload$", 15)) {
+      if (!annotation.startswith(llvm::StringRef(annoTag, lenAnnoTag))) {
         // not an autoload annotation.
         return;
       }
@@ -74,7 +77,8 @@ namespace cling {
       const DirectoryLookup* LookupFrom = 0;
       const DirectoryLookup* CurDir = 0;
 
-      FE = m_PP->LookupFile(fileNameLoc, annotation.data() + 15, isAngled,
+      FE = m_PP->LookupFile(fileNameLoc,
+                            annotation.drop_front(lenAnnoTag), isAngled,
                             LookupFrom, CurDir, /*SearchPath*/0,
                             /*RelativePath*/ 0, /*suggestedModule*/0,
                             /*SkipCache*/false, /*OpenFile*/ false,

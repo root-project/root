@@ -4031,6 +4031,12 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
 
    TVirtualStreamerInfo *guess = fLastReadInfo;
    if (guess && guess->GetClassVersion() == version) {
+      // NOTE: race condition on IsCompiled() ... either TestBit or fBits becomes
+      // atomic or we make sure that the following code is no longer necessary
+      // by making sure that the StreamerInfo assigned to fLastReadInfo is
+      // already compiled (see FindStreamerInfo for example of possible break of
+      // this contract).
+
       // If it was assigned to fLastReadInfo, it was already used
       // and thus already properly setup
       if (!guess->IsCompiled()) {
@@ -5720,7 +5726,7 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
    for (int i=0; i<il; i++) id = id*3+name[i];
 
    TList *tlb = ((TClass*)this)->GetListOfBases();
-   if (tlb && !TClassEdit::IsSTLCont(name)) {   // Loop over bases if not stl
+   if (tlb && !GetCollectionProxy()) {   // Loop over bases if not a proxied collection
 
       TIter nextBase(tlb);
 
@@ -5771,6 +5777,9 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
                } else {
                   type.ReplaceAll("ULong64_t","unsigned long long");
                   type.ReplaceAll("Long64_t","long long");
+                  type.ReplaceAll("<signed char","<char");
+                  type.ReplaceAll(",signed char",",char");
+                  if (type=="signed char") type = "char";
                }
             }
          } else {
