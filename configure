@@ -2015,6 +2015,9 @@ if test "x$platform" = "xlinux" ; then
        if lsb_release -d | grep -i 'mint' > /dev/null 2>& 1; then
           linuxdist="multiarch"
        fi
+       if lsb_release -d | grep -i 'LMDE' > /dev/null 2>& 1; then
+          linuxdist="multiarch"
+       fi
     fi
 
     debmultiarch=
@@ -6448,6 +6451,10 @@ if test ! "x$enable_cintex" = "xno"; then
         *)
             case `uname -m` in
                 i*86 | x86_64)
+                    enable_cintex="yes"
+                    result "yes"
+                    ;;
+                armv7l)
                     enable_cintex="yes"
                     result "yes"
                     ;;
