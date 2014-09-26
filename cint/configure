@@ -22,7 +22,7 @@ shift
 
 # configure settings to build CINT
 
-ARCHS=(linux linuxicc macos macosx64 djgpp cygwin mingw mwerks hpux aix msvc7 msvc8 msvc9 msvc10 solaris solarisgcc freebsd)
+ARCHS=(linux linuxarm64 linuxicc macos macosx64 djgpp cygwin mingw mwerks hpux aix msvc7 msvc8 msvc9 msvc10 solaris solarisgcc freebsd)
 
 #############################################################
 ###
@@ -117,6 +117,16 @@ function config_freebsd {
     CXXFLAGS="${CXXFLAGS} -fPIC"
     DEFAULTLIBS="`echo $DEFAULTLIBS | sed 's/-ldl//'`"
 }
+
+function config_linuxarm64 {
+    config_GCC_defaults
+
+    EXTRA_LIB_DIR="/usr/local/lib64 /usr/lib64"
+    CPP="gcc -E -C"
+    CXXFLAGS="-fPIC -DG__64BIT ${CXXFLAGS}"
+    CFLAGS="-fPIC -DG__64BIT ${CFLAGS}"
+}
+
 
 function config_linuxx8664gcc {
     config_GCC_defaults
@@ -402,6 +412,7 @@ function guess_arch {
 #        hurd*:*:*)             arch=hurddeb         ;;
 #        linux:ia64:*)          arch=linuxia64gcc    ;;
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
+        linux:aarch64:*)       arch=linuxarm64      ;;
 #        linux:alpha:*)         arch=linuxalphagcc   ;;
 #        linux:arm*:*)          arch=linuxarm        ;;
 #        linux:ppc64*:*)        arch=linuxppc64gcc   ;;

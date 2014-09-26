@@ -222,6 +222,14 @@
 #   define NEED_SIGJMP
 #endif
 
+#if defined(linux) && defined(__aarch64__)
+#   define R__LINUX
+#   define R__UNIX
+#   define R__BYTESWAP
+#   define R__B64
+#   define NEED_SIGJMP
+#endif
+
 #if defined(linux) && defined(__alpha__)
 #   define R__LINUX
 #   define R__UNIX

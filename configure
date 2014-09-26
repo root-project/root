@@ -1355,6 +1355,7 @@ guess_architecture() {
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
         linux:alpha:*)         arch=linuxalphagcc   ;;
         linux:arm*:*)          arch=linuxarm        ;;
+        linux:aarch64:*)       arch=linuxarm64      ;;
         linux:hppa*:*)         arch=linux           ;;
         linux:mips:*)          arch=linuxmips       ;;
         linux:sparc*:*)        arch=linux           ;;
@@ -1898,6 +1899,10 @@ linuxx8664k1om*)
    enable_tmva="no"
    ;;
 linuxx8664*)
+   logmsg "Will check 64bit libraries"
+   checklinux64="yes"
+   checklib64="yes" ;;
+linuxarm64)
    logmsg "Will check 64bit libraries"
    checklinux64="yes"
    checklib64="yes" ;;
@@ -6455,6 +6460,10 @@ if test ! "x$enable_cintex" = "xno"; then
                     result "yes"
                     ;;
                 armv7l)
+                    enable_cintex="yes"
+                    result "yes"
+                    ;;
+                aarch64)
                     enable_cintex="yes"
                     result "yes"
                     ;;
