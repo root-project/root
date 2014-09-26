@@ -48,8 +48,9 @@ in this Software without prior written authorization from the X Consortium.
 
 #include <stdarg.h>
 #ifndef WIN32
-#include <sys/stat.h>
 #include <unistd.h>
+#define _BSD_SOURCE /* for fchmod */
+#include <sys/stat.h>
 #else
 #include <io.h>
 #endif
