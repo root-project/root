@@ -1717,7 +1717,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       out.open(fname, std::ios::out);
    }
    if (!out.good ()) {
-      Printf("SaveSource cannot open file: %s",fname);
+      Error("SaveSource", "Cannot open file: %s",fname);
       if (!lenfile) delete [] fname;
       return;
    }
@@ -1731,6 +1731,10 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    Float_t cx = gStyle->GetScreenFactor();
    Int_t topx,topy;
    UInt_t w, h;
+   if (!fCanvasImp) {
+      Error("SaveSource", "Cannot open TCanvas");
+      return;
+   }
    UInt_t editorWidth = fCanvasImp->GetWindowGeometry(topx,topy,w,h);
    w = UInt_t((fWindowWidth - editorWidth)/cx);
    h = UInt_t((fWindowHeight)/cx);
