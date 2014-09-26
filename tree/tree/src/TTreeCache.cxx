@@ -276,7 +276,7 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
    fReadDirectionSet(kFALSE),
    fEnabled(kTRUE),
    fPrefillType(GetConfiguredPrefillType()),
-   fAutoSized(kFALSE)
+   fAutoCreated(kFALSE)
 {
    // Default Constructor.
 }
@@ -305,7 +305,7 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
    fReadDirectionSet(kFALSE),
    fEnabled(kTRUE),
    fPrefillType(GetConfiguredPrefillType()),
-   fAutoSized(kFALSE)
+   fAutoCreated(kFALSE)
 {
    // Constructor.
 
