@@ -31,6 +31,7 @@
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
+#include "RooNameReg.h"
 
 #if defined(__my_func__)
 #undef __my_func__
@@ -44,7 +45,6 @@
 ClassImp(RooChebychev)
 ;
 
-
 //_____________________________________________________________________________
 RooChebychev::RooChebychev()
 {
@@ -56,7 +56,8 @@ RooChebychev::RooChebychev(const char* name, const char* title,
                            RooAbsReal& x, const RooArgList& coefList): 
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
-  _coefList("coefficients","List of coefficients",this)
+  _coefList("coefficients","List of coefficients",this),
+  _refRangeName(0)
 {
   // Constructor
   TIterator* coefIter = coefList.createIterator() ;
@@ -70,6 +71,7 @@ RooChebychev::RooChebychev(const char* name, const char* title,
     }
     _coefList.add(*coef) ;
   }
+
   delete coefIter ;
 }
 
@@ -79,7 +81,8 @@ RooChebychev::RooChebychev(const char* name, const char* title,
 RooChebychev::RooChebychev(const RooChebychev& other, const char* name) :
   RooAbsPdf(other, name), 
   _x("x", this, other._x), 
-  _coefList("coefList",this,other._coefList)
+  _coefList("coefList",this,other._coefList),
+  _refRangeName(other._refRangeName)
 {
 }
 
@@ -91,10 +94,22 @@ inline static double p3(double t,double a,double b,double c,double d) { return p
 
 
 //_____________________________________________________________________________
+void RooChebychev::selectNormalizationRange(const char* rangeName, Bool_t force) 
+{
+  if (rangeName && (force || !_refRangeName)) {
+    _refRangeName = (TNamed*) RooNameReg::instance().constPtr(rangeName) ;
+  }
+  if (!rangeName) {
+    _refRangeName = 0 ;
+  }
+}
+
+
+//_____________________________________________________________________________
 Double_t RooChebychev::evaluate() const 
 {
-
-  Double_t xmin = _x.min(); Double_t xmax = _x.max();
+  
+  Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0) ; Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
   Double_t x(-1+2*(_x-xmin)/(xmax-xmin));
   Double_t x2(x*x);
   Double_t sum(0) ;
@@ -127,28 +142,27 @@ Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 //_____________________________________________________________________________
 Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  (void)code;
-  assert(1 == code);
+
+  R__ASSERT(1 == code);
 
   // the full range of the function is mapped to the normalised [-1, 1] range
-  const Double_t xminfull(_x.min()), xmaxfull(_x.max());
+
+  const Double_t xminfull(_x.min(_refRangeName?_refRangeName->GetName():0)) ;
+  const Double_t xmaxfull(_x.max(_refRangeName?_refRangeName->GetName():0)) ;
+
   const Double_t fullRange = xmaxfull - xminfull;
 
   // define limits of the integration range on a normalised scale
   Double_t minScaled = -1., maxScaled = +1.;
 
-  // check to see if integral of a subrange is requested
-  if (rangeName && 0 != rangeName[0]) {
-    // LM: no reason to assrt there (see ROOT-6664)
-    //assert(xminfull <= _x.min(rangeName) && _x.min(rangeName) <= xmaxfull);
-    //assert(xminfull <= _x.max(rangeName) && _x.max(rangeName) <= xmaxfull);
-    minScaled = -1. + 2. * (_x.min(rangeName) - xminfull) / fullRange;
-    maxScaled = +1. - 2. * (xmaxfull - _x.max(rangeName)) / fullRange;
-  }
+  minScaled = -1. + 2. * (_x.min(rangeName) - xminfull) / fullRange;
+  maxScaled = +1. - 2. * (xmaxfull - _x.max(rangeName)) / fullRange;
 
   // return half of the range since the normalised range runs from -1 to 1
   // which has a range of two
-  return 0.5 * fullRange * (evalAnaInt(maxScaled) - evalAnaInt(minScaled));
+  double val =  0.5 * fullRange * (evalAnaInt(maxScaled) - evalAnaInt(minScaled));
+  //std::cout << " integral = " << val << std::endl;
+  return val;
 }
 
 Double_t RooChebychev::evalAnaInt(const Double_t x) const
@@ -168,7 +182,7 @@ Double_t RooChebychev::evalAnaInt(const Double_t x) const
     default: std::cerr << "In " << __my_func__ << " (" << __FILE__ << ", line " <<
 	     __LINE__ << "): Higher order Chebychev polynomials currently "
 		 "unimplemented." << std::endl;
-	     assert(false);
+	     R__ASSERT(false);
   }
   return sum;
 }
