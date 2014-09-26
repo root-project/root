@@ -60,7 +60,7 @@ protected:
    Bool_t          fEnabled;     //! cache enabled for cached reading
    EPrefillType    fPrefillType; // Whether a prefilling is enabled (and if applicable which type)
    static  Int_t   fgLearnEntries; // number of entries used for learning mode
-   Bool_t          fAutoSized;   //! true if cache size was calculated automatically
+   Bool_t          fAutoCreated; //! true if cache was automatically created
 
 private:
    TTreeCache(const TTreeCache &);            //this class cannot be copied
@@ -86,7 +86,7 @@ public:
    static Int_t         GetLearnEntries();
    virtual EPrefillType GetLearnPrefill() const {return fPrefillType;}
    TTree               *GetTree() const {return fTree;}
-   Bool_t               IsAutoSized() const {return fAutoSized;}
+   Bool_t               IsAutoCreated() const {return fAutoCreated;}
    virtual Bool_t       IsEnabled() const {return fEnabled;}
    virtual Bool_t       IsLearning() const {return fIsLearning;}
 
@@ -98,7 +98,7 @@ public:
    virtual Int_t        ReadBufferNormal(char *buf, Long64_t pos, Int_t len); 
    virtual Int_t        ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
    virtual void         ResetCache();
-   void                 SetAutoSized(Bool_t val) {fAutoSized = val;}
+   void                 SetAutoCreated(Bool_t val) {fAutoCreated = val;}
    virtual void         SetEntryRange(Long64_t emin,   Long64_t emax);
    virtual void         SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect);
    virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);
