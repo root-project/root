@@ -273,9 +273,9 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       form     = -form;
       SetBit(kMenuBar,0);
    }
-   
+
    fCanvas = this;
-   
+
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
    if (old && old->IsOnHeap()) {
@@ -313,10 +313,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       if (form == 4) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 5) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 50, 50, UInt_t(cx*500), UInt_t(cx*500));
       if (!fCanvasImp) return;
-      
+
       if (!gROOT->IsBatch() && fCanvasID == -1)
          fCanvasID = fCanvasImp->InitWindow();
-      
+
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
@@ -389,7 +389,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, UInt_t(cx*ww), UInt_t(cx*wh));
       if (!fCanvasImp) return;
-      
+
       if (!gROOT->IsBatch() && fCanvasID == -1)
          fCanvasID = fCanvasImp->InitWindow();
 
@@ -473,7 +473,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       if (!fCanvasImp) return;
 
       if (!gROOT->IsBatch() && fCanvasID == -1)
-         fCanvasID = fCanvasImp->InitWindow();      
+         fCanvasID = fCanvasImp->InitWindow();
 
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
@@ -1180,7 +1180,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       // mouse enters canvas
       if (!fDoubleBuffer) FeedbackMode(kTRUE);
       break;
-      
+
    case kMouseLeave:
       // mouse leaves canvas
       {
@@ -1720,7 +1720,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       out.open(fname, ios::out);
    }
    if (!out.good ()) {
-      Printf("SaveSource cannot open file: %s",fname);
+      Error("SaveSource", "Cannot open file: %s",fname);
       if (!lenfile) delete [] fname;
       return;
    }
@@ -1734,6 +1734,10 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    Float_t cx = gStyle->GetScreenFactor();
    Int_t topx,topy;
    UInt_t w, h;
+   if (!fCanvasImp) {
+      Error("SaveSource", "Cannot open TCanvas");
+      return;
+   }
    UInt_t editorWidth = fCanvasImp->GetWindowGeometry(topx,topy,w,h);
    w = UInt_t((fWindowWidth - editorWidth)/cx);
    h = UInt_t((fWindowHeight)/cx);
@@ -2127,7 +2131,7 @@ void TCanvas::Update()
    // Update canvas pad buffers.
 
    if (fUpdating) return;
-   
+
    if (fPixmapID == -1) return;
 
    if (gThreadXAR) {
@@ -2222,7 +2226,7 @@ TVirtualPadPainter *TCanvas::GetCanvasPainter()
 void TCanvas::DeleteCanvasPainter()
 {
    //assert on IsBatch() == false?
-   
+
    if (fGLDevice != -1) {
       //fPainter has a font manager.
       //Font manager will delete textures.
@@ -2230,10 +2234,10 @@ void TCanvas::DeleteCanvasPainter()
       //wrong texture will be deleted, damaging some of our fonts.
       gGLManager->MakeCurrent(fGLDevice);
    }
-   
+
    delete fPainter;
    fPainter = 0;
-   
+
    if (fGLDevice != -1) {
       gGLManager->DeleteGLContext(fGLDevice);//?
       fGLDevice = -1;
