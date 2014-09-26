@@ -633,7 +633,7 @@ namespace ROOT { namespace Cintex {
       static FunctionCode_t s_func1arg(1);
       char* code = Allocate_code(s_func1arg.fCode, s_func1arg.fSize);
       *(ptrdiff_t **)&code[s_func1arg.fa_offset] = (ptrdiff_t *)obj;
-      *(ptrdiff_t **)&code[s_func1arg.fa_offset] = (ptrdiff_t *)fun;
+      *(ptrdiff_t **)&code[s_func1arg.f_offset] = (ptrdiff_t *)fun;
       return (FuncArg1Ptr_t)code;
    }
 
