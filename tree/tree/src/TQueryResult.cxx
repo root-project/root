@@ -203,8 +203,9 @@ void TQueryResult::SaveSelector(const char *selector)
       // Locate the implementation file
       char *selc = gSystem->Which(TROOT::GetMacroPath(), selec, kReadPermission);
       if (!selc) {
-         Warning("SaveSelector",
-                 "could not locate selector implementation file (%s)", selec.Data());
+         if (gDebug > 0)
+            Warning("SaveSelector",
+                    "could not locate selector implementation file (%s)", selec.Data());
          return;
       }
 
@@ -218,16 +219,18 @@ void TQueryResult::SaveSelector(const char *selector)
       if (p) {
          strlcpy(p+1,"h",strlen(p));
       } else {
-         Warning("SaveSelector",
-                 "bad formatted name (%s): could not build header file name", selc);
+         if (gDebug > 0)
+            Warning("SaveSelector",
+                    "bad formatted name (%s): could not build header file name", selc);
       }
       if (!(gSystem->AccessPathName(selc, kReadPermission))) {
          fSelecHdr->ReadFile(selc);
          fSelecHdr->SetName(gSystem->BaseName(selc));
          fSelecHdr->SetTitle(selname);
       } else {
-         Warning("SaveSelector",
-                 "could not locate selector header file (%s)", selc);
+         if (gDebug > 0)
+            Warning("SaveSelector",
+                    "could not locate selector header file (%s)", selc);
       }
 
       delete[] selc;
