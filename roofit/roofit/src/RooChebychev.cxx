@@ -48,7 +48,7 @@ ClassImp(RooChebychev)
 ;
 
 //_____________________________________________________________________________
-RooChebychev::RooChebychev()
+RooChebychev::RooChebychev() : _refRangeName(0)
 {
 }
 
