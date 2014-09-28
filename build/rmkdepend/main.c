@@ -27,6 +27,10 @@ in this Software without prior written authorization from the X Consortium.
 
 */
 
+#if !defined(USGISH) || !defined(_SEQUENT_) || !defined(USE_CHMOD)
+#define _BSD_SOURCE /* def.h includes sys/stat and we need _BSD_SOURCE for fchmod see man fchmod */
+#endif
+
 #include "def.h"
 #ifdef __hpux
 #define sigvec sigvector
@@ -49,8 +53,6 @@ in this Software without prior written authorization from the X Consortium.
 #include <stdarg.h>
 #ifndef WIN32
 #include <unistd.h>
-#define _BSD_SOURCE /* for fchmod */
-#include <sys/stat.h>
 #else
 #include <io.h>
 #endif
