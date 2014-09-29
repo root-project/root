@@ -4925,9 +4925,16 @@ Int_t TCling::AutoParse(const char *cls)
             for (auto & hName : hNamesPtrs) {
                if (fParsedPayloadsAddresses.count(hName) == 1) continue;
                if (0 != fPayloads.count(normNameHash)) {
+                  float initRSSval=0.f, initVSIZEval=0.f;
+                  (void) initRSSval; // Avoid unused var warning
+                  (void) initVSIZEval;
                   if (gDebug > 0) {
                      Info("AutoParse",
                           "Parsing full payload for %s", apKey);
+                     ProcInfo_t info;
+                     gSystem->GetProcInfo(&info);
+                     initRSSval = 1e-3*info.fMemResident;
+                     initVSIZEval = 1e-3*info.fMemVirtual;
                   }
                   auto cRes = ExecAutoParse(hName, kFALSE, fInterpreter);
                   if (cRes != cling::Interpreter::kSuccess) {
@@ -4936,6 +4943,14 @@ Int_t TCling::AutoParse(const char *cls)
                   } else {
                      fParsedPayloadsAddresses.insert(hName);
                      nHheadersParsed++;
+                     if (gDebug > 0){
+                        ProcInfo_t info;
+                        gSystem->GetProcInfo(&info);
+                        float endRSSval = 1e-3*info.fMemResident;
+                        float endVSIZEval = 1e-3*info.fMemVirtual;
+                        Info("Autoparse", ">>> RSS key %s - before %.3f MB - after %.3f MB - delta %.3f MB", apKey, initRSSval, endRSSval, endRSSval-initRSSval);
+                        Info("Autoparse", ">>> VSIZE key %s - before %.3f MB - after %.3f MB - delta %.3f MB", apKey, initVSIZEval, endVSIZEval, endVSIZEval-initVSIZEval);
+                     }
                   }
                } else if (!IsLoaded(hName)) {
                   if (gDebug > 0) {
