@@ -413,17 +413,17 @@ public:
    static  TH1     *TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option);
 
 
-   // TODO: Remove obsolete methods in v6-02
+   // TODO: Remove obsolete methods in v6-04
    virtual Double_t GetCellContent(Int_t binx, Int_t biny) const
-                        { Obsolete("GetCellContent", "v6-00", "v6-02"); return GetBinContent(GetBin(binx, biny)); }
+                        { Obsolete("GetCellContent", "v6-00", "v6-04"); return GetBinContent(GetBin(binx, biny)); }
    virtual Double_t GetCellError(Int_t binx, Int_t biny) const
-                        { Obsolete("GetCellError", "v6-00", "v6-02"); return GetBinError(binx, biny); }
+                        { Obsolete("GetCellError", "v6-00", "v6-04"); return GetBinError(binx, biny); }
    virtual void     RebinAxis(Double_t x, TAxis *axis)
-                        { Obsolete("RebinAxis", "v6-00", "v6-02"); ExtendAxis(x, axis); }
+                        { Obsolete("RebinAxis", "v6-00", "v6-04"); ExtendAxis(x, axis); }
    virtual void     SetCellContent(Int_t binx, Int_t biny, Double_t content)
-                        { Obsolete("SetCellContent", "v6-00", "v6-02"); SetBinContent(GetBin(binx, biny), content); }
+                        { Obsolete("SetCellContent", "v6-00", "v6-04"); SetBinContent(GetBin(binx, biny), content); }
    virtual void     SetCellError(Int_t binx, Int_t biny, Double_t content)
-                        { Obsolete("SetCellError", "v6-00", "v6-02"); SetBinError(binx, biny, content); }
+                        { Obsolete("SetCellError", "v6-00", "v6-04"); SetBinError(binx, biny, content); }
 
    ClassDef(TH1,7)  //1-Dim histogram base class
 
