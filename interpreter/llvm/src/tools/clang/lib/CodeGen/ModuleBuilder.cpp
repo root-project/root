@@ -213,6 +213,14 @@ namespace clang {
           break;
         }
       }
+
+      for(auto I = Builder->DeferredDeclsToEmit.begin(),
+             E = Builder->DeferredDeclsToEmit.end(); I != E; ++I) {
+         if (I->GV == GV) {
+          Builder->DeferredDeclsToEmit.erase(I);
+          break;
+        }
+      }
     }
 
     void Initialize(ASTContext &Context) override {
