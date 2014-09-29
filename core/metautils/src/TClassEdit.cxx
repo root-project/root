@@ -692,7 +692,11 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, const char *name)
       if (gInterpreterHelper->ExistingTypeCheck(norm_name, typeresult)
           || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(norm_name, typeresult)) {
 
-         if (!typeresult.empty()) norm_name = typeresult;
+         if (!typeresult.empty()) {
+            norm_name = typeresult;
+            TClassEdit::TSplitType splitnameInternal(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
+            splitnameInternal.ShortType(norm_name,TClassEdit::kDropStlDefault );
+         }
       }
    }
 }
