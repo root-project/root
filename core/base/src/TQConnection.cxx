@@ -285,24 +285,52 @@ inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
             type = dt->GetFullTypeName();
          if (arg->Property() & (kIsPointer | kIsArray | kIsReference))
             gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, void *));
-         else if (type == "bool")
-            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int)); // bool is promoted to int
-         else if (type == "char" || type == "unsigned char")
-            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int)); // char is promoted to int
-         else if (type == "short" || type == "unsigned short")
-            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int)); // short is promoted to int
-         else if (type == "int" || type == "unsigned int")
-            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int));
-         else if (type == "long" || type == "unsigned long")
-            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, long));
-         else if (type == "long long")
-            gCling->CallFunc_SetArg(fFunc, (Long64_t) va_arg(local_ap, Long64_t));
-         else if (type == "unsigned long long")
-            gCling->CallFunc_SetArg(fFunc, (ULong64_t) va_arg(local_ap, ULong64_t));
-         else if (type == "float")
-            gCling->CallFunc_SetArg(fFunc, (Double_t) va_arg(local_ap, double)); // float is promoted to double
-         else if (type == "double")
-            gCling->CallFunc_SetArg(fFunc, (Double_t) va_arg(local_ap, double));
+         else {
+            switch (dt->GetType()) {
+               case kBool_t:
+                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int));  // bool is promoted to int
+                  break;
+               case kChar_t:
+               case kUChar_t:
+               case kchar:
+                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int));  // char is promoted to int
+                  break;
+               case kShort_t:
+               case kUShort_t:
+                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int));  // short is promoted to int
+                  break;
+               case kInt_t:
+               case kUInt_t:
+                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int));
+                  break;
+               case kCounter:
+               case kLong_t:
+               case kULong_t:
+               case kBits:
+                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, long));
+                  break;
+               case kFloat_t:
+               case kFloat16_t:
+                  gCling->CallFunc_SetArg(fFunc, (Double_t) va_arg(local_ap, double));  // float is promoted to double by va_arg
+                  break;
+               case kDouble_t:
+               case kDouble32_t:
+
+                  gCling->CallFunc_SetArg(fFunc, (Double_t) va_arg(local_ap, double));
+                  break;
+               case kLong64_t:
+                  gCling->CallFunc_SetArg(fFunc, (Long64_t) va_arg(local_ap, Long64_t));
+                  break;
+               case kULong64_t:
+                  gCling->CallFunc_SetArg(fFunc, (ULong64_t) va_arg(local_ap, ULong64_t));
+                  break;
+               case kCharStar:
+                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, void*));
+                  break;
+               default:
+                  if (gDebug>1) Warning("ExecuteMethod","Param of type %s not handled\n",type.Data());
+            }
+         }
       }
       va_end(local_ap);
    }
