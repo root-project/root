@@ -33,6 +33,8 @@
 #include "RooArgList.h"
 #include "RooNameReg.h"
 
+#include "TError.h"
+
 #if defined(__my_func__)
 #undef __my_func__
 #endif
