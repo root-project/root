@@ -84,6 +84,7 @@ public:
    void     SetParamPtrs(void *paramArr, Int_t nparam = -1);
    void     ResetParam();
    void     SetParam(Long_t l);
+   void     SetParam(Float_t d);
    void     SetParam(Double_t d);
    void     SetParam(Long64_t ll);
    void     SetParam(ULong64_t ull);

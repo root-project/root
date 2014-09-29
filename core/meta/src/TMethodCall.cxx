@@ -589,6 +589,15 @@ void TMethodCall::SetParam(Long_t l)
 }
 
 //______________________________________________________________________________
+void TMethodCall::SetParam(Float_t f)
+{
+   // Add a double method parameter.
+
+   if (!fFunc) return;
+   gCling->CallFunc_SetArg(fFunc,f);
+}
+
+//______________________________________________________________________________
 void TMethodCall::SetParam(Double_t d)
 {
    // Add a double method parameter.

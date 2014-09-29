@@ -2300,6 +2300,13 @@ void TClingCallFunc::SetArg(long param)
    fArgVals.back().getLL() = param;
 }
 
+void TClingCallFunc::SetArg(float param)
+{
+   ASTContext &C = fInterp->getCI()->getASTContext();
+   fArgVals.push_back(cling::Value(C.FloatTy, *fInterp));
+   fArgVals.back().getFloat() = param;
+}
+
 void TClingCallFunc::SetArg(double param)
 {
    ASTContext &C = fInterp->getCI()->getASTContext();
