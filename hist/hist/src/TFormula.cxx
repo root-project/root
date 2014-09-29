@@ -22,6 +22,7 @@
 #include "TObjString.h"
 #include "TError.h"
 #include "TFormulaPrimitive.h"
+#include "TVirtualMutex.h"
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -225,16 +226,18 @@ TFormula::TFormula(const char *name,const char *expression) :
 
    // Store formula in linked list of formula in ROOT
 
-   TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
-   if (old) {
-      gROOT->GetListOfFunctions()->Remove(old);
-   }
+
    if (strcmp(name,"x")==0 || strcmp(name,"y")==0 ||
        strcmp(name,"z")==0 || strcmp(name,"t")==0 )
    {
       Error("TFormula","The name \'%s\' is reserved as a TFormula variable name.\n"
          "\tThis function will not be registered in the list of functions",name);
    } else {
+      R__LOCKGUARD2(gROOTMutex);
+      TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
+      if (old) {
+	gROOT->GetListOfFunctions()->Remove(old);
+      }
       gROOT->GetListOfFunctions()->Add(this);
    }
 }
@@ -284,7 +287,10 @@ TFormula::~TFormula()
 {
    // Formula default destructor.
 
-   if (gROOT) gROOT->GetListOfFunctions()->Remove(this);
+   if (gROOT) {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfFunctions()->Remove(this);
+   }
 
    ClearFormula();
 }
@@ -673,7 +679,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    TString s1,s2,s3,ctemp;
 
    TString chaine = schain;
-   TFormula *oldformula;
+   const TFormula *oldformula;
    Int_t modulo,plus,puiss10,puiss10bis,moins,multi,divi,puiss,et,ou,petit,grand,egal,diff,peteg,grdeg,etx,oux,rshift,lshift,tercond,terelse;
    char t;
    TString slash("/"), escapedSlash("\\/");
@@ -1299,7 +1305,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    // Look for an already defined expression
 
                   if (find==0) {
-                     oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
+		     {
+                        R__LOCKGUARD2(gROOTMutex);
+		        oldformula = (const TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
+		     }
                      if (oldformula && strcmp(schain,oldformula->GetTitle())) {
                         Int_t nprior = fNpar;
                         Analyze(oldformula->GetExpFormula(),err,fNpar);
@@ -3271,7 +3280,10 @@ void TFormula::ProcessLinear(TString &formula)
          Error("TFormula", "f_linear not allocated");
          return;
       }
-      gROOT->GetListOfFunctions()->Remove(f);
+      {
+         R__LOCKGUARD2(gROOTMutex);
+         gROOT->GetListOfFunctions()->Remove(f);
+      }
       f->SetBit(kNotGlobal, 1);
       fLinearParts.Add(f);
    }
@@ -3385,7 +3397,10 @@ void TFormula::Streamer(TBuffer &b)
             return;
          }
          b.ReadClassBuffer(TFormula::Class(), this, v, R__s, R__c);
-         if (!TestBit(kNotGlobal)) gROOT->GetListOfFunctions()->Add(this);
+         if (!TestBit(kNotGlobal)) {
+ 	    R__LOCKGUARD2(gROOTMutex);
+	    gROOT->GetListOfFunctions()->Add(this);
+	 }
 
          // We need to reinstate (if possible) the TMethodCall.
          if (fFunctions.GetLast()>=0) {
@@ -3428,9 +3443,12 @@ void TFormula::Streamer(TBuffer &b)
       }
       Int_t i;
       for (i=0;i<fNoper;i++)  fExpr[i].Streamer(b);
-      for (i=0;i<fNpar;i++)   fNames[i].Streamer(b);
-      if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
-      gROOT->GetListOfFunctions()->Add(this);
+      for (i=0;i<fNpar;i++)   fNames[i].Streamer(b); 
+      {
+         R__LOCKGUARD2(gROOTMutex);
+	 if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
+	 gROOT->GetListOfFunctions()->Add(this);
+      }
       b.CheckByteCount(R__s, R__c, TFormula::IsA());
 
       Convert(v);
