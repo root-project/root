@@ -184,7 +184,7 @@ void TProofLog::Prt(const char *what, Bool_t newline)
    if (what) {
       if (LogToBox()) {
          // Send to log box:
-         Emit("Prt(const char*)", what);
+         EmitVA("Prt(const char*)", 2, what, kFALSE);
       } else {
          FILE *where = (fFILE) ? (FILE *)fFILE : stderr;
          fputs(what, where);
