@@ -65,13 +65,18 @@ foreach(var ${variables})
 endforeach()
 
 #---Move (copy) the headers and other directories to binary tree---------------------------------
-add_custom_target(move_headers  COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR} -DCOMPONENTS="headers"
-                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials)
+set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_headers.stamp)
+add_custom_command(OUTPUT ${stamp_file}
+                   COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR} -DCOMPONENTS="headers"
+                                            -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials
+                   COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
+                   COMMENT "Moving headers and other directorties such as etc, icons, fonts,...")
+add_custom_target(move_headers DEPENDS ${stamp_file})
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
