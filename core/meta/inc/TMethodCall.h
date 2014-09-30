@@ -102,6 +102,11 @@ public:
    void     SetParam(Long64_t ll);
    void     SetParam(ULong64_t ull);
 
+   template <typename... T> void SetParams(const T&... params) {
+      if (!fFunc) return;
+      gInterpreter->CallFunc_SetArguments(fFunc,params...);
+   }
+
    void     Execute(void *object);
    void     Execute(void *object, const char *params);
    void     Execute(void *object, Long_t &retLong);
