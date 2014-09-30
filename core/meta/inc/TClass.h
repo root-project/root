@@ -149,7 +149,11 @@ private:
 
    TVirtualIsAProxy  *fIsA;             //!pointer to the class's IsA proxy.
    IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
+#if __cplusplus > 199711L
+   mutable std::atomic<TMethodCall*> fIsAMethod;       //!saved info to call a IsA member function
+#else
    mutable TMethodCall *fIsAMethod;       //!saved info to call a IsA member function
+#endif
 
    ROOT::MergeFunc_t   fMerge;          //pointer to a function implementing Merging objects of this class.
    ROOT::ResetAfterMergeFunc_t fResetAfterMerge; //pointer to a function implementing Merging objects of this class.
