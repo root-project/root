@@ -6,7 +6,7 @@ ROOT_LINKER_LIBRARY(base base_cling.cxx testobject.cpp testobjectderived.cpp TES
 set(RootExeOptions -e "gSystem->Load(\"libbase\")")   # Adding a ; to avoid the output is complicated
 
 ROOTTEST_ADD_TEST(roottest-root-io-transient-base-WriteFile
-                  PRECMD make base/fast
+                  PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target base${fast}
                   MACRO execWriteFile.cxx+
                   OUTREF execWriteFile.ref)
 

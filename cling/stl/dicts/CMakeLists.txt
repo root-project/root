@@ -7,4 +7,4 @@ ROOT_LINKER_LIBRARY(stldictTest TEST MyClass1.cpp MyClass2.cpp MyClass3.cpp
                                 LIBRARIES ${ROOT_LIBRARIES})
 
 ROOT_ADD_TEST(roottest-cling-stl-dicts-build 
-              COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR} stldictTest/fast)
+              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target stldictTest${fast})

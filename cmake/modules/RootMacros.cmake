@@ -6,6 +6,9 @@
 #
 #-------------------------------------------------------------------------------
 
+if(CMAKE_GENERATOR MATCHES Makefiles)
+  set(fast /fast)
+endif()
 #-------------------------------------------------------------------------------
 #
 #  function ROOTTEST_ADD_TESTDIRS( )
@@ -197,7 +200,8 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   set(COMPILE_MACRO_TEST ${COMPILE_MACRO_TEST}-build)
 
   add_test(NAME ${COMPILE_MACRO_TEST}
-           COMMAND make VERBOSE=1 -C ${CMAKE_CURRENT_BINARY_DIR} ${compile_target}/fast)
+           COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                                    --target ${compile_target}${fast})
 
 endmacro(ROOTTEST_COMPILE_MACRO)
 
@@ -249,9 +253,9 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   add_dependencies(${targetname_libgen} ${dictname})
   
   add_test(NAME ${GENERATE_DICTIONARY_TEST}
-           COMMAND make VERBOSE=1 -C ${CMAKE_CURRENT_BINARY_DIR}
-                           ${dictname}/fast
-                           ${targetname_libgen}/fast)
+           COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                                    --target  ${dictname}${fast}
+                                    --target  ${targetname_libgen}${fast})
 
 endmacro(ROOTTEST_GENERATE_DICTIONARY)
 
@@ -321,9 +325,9 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   set(GENERATE_REFLEX_TEST ${targetname_libgen}-build)
 
   add_test(NAME ${GENERATE_REFLEX_TEST}
-           COMMAND make VERBOSE=1 -C ${CMAKE_CURRENT_BINARY_DIR}
-                           ${targetname_dictgen}/fast
-                           ${targetname_libgen}/fast)
+           COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                                    --target ${targetname_dictgen}${fast}
+                                    --target ${targetname_libgen}${fast})
 
 endmacro(ROOTTEST_GENERATE_REFLEX_DICTIONARY)
 
@@ -370,7 +374,8 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   set(GENERATE_EXECUTABLE_TEST ${GENERATE_EXECUTABLE_TEST}-build)
 
   add_test(NAME ${GENERATE_EXECUTABLE_TEST}
-           COMMAND make VERBOSE=1 -C ${CMAKE_CURRENT_BINARY_DIR} ${executable}/fast)
+           COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                                    --target ${executable}${fast})
 
 endmacro()
 
