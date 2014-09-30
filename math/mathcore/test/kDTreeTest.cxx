@@ -23,9 +23,6 @@
 #include <iostream>
 
 
-bool showGraphics = false;
-
-
 void TestBuild(const Int_t npoints = 1000000, const Int_t bsize = 100);
 void TestConstr(const Int_t npoints = 1000000, const Int_t bsize = 100);
 void TestSpeed(Int_t npower2 = 20, Int_t bsize = 10);
