@@ -255,15 +255,15 @@ public:
    virtual Bool_t CallFunc_IsValid(CallFunc_t * /* func */) const {return 0;}
    virtual CallFuncIFacePtr_t CallFunc_IFacePtr(CallFunc_t * /* func */) const {return CallFuncIFacePtr_t();}
    virtual void   CallFunc_ResetArg(CallFunc_t * /* func */) const {;}
-   virtual void   CallFunc_SetArg(CallFunc_t * /*func */, Long_t /* param */) const {;}
-   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Float_t /* param */) const {;}
-   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Double_t /* param */) const {;}
-   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Long64_t /* param */) const {;}
-   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, ULong64_t /* param */) const {;}
    virtual void   CallFunc_SetArgArray(CallFunc_t * /* func */, Long_t * /* paramArr */, Int_t /* nparam */) const {;}
    virtual void   CallFunc_SetArgs(CallFunc_t * /* func */, const char * /* param */) const {;}
 
+   virtual void   CallFunc_SetArg(CallFunc_t * /*func */, Long_t /* param */) const = 0;
    virtual void   CallFunc_SetArg(CallFunc_t * /*func */, ULong_t /* param */) const = 0;
+   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Float_t /* param */) const = 0;
+   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Double_t /* param */) const = 0;
+   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Long64_t /* param */) const = 0;
+   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, ULong64_t /* param */) const = 0;
 
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, bool /* objectIsConst */, Long_t * /* Offset */) const {;}
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, Long_t * /* Offset */) const {;}
