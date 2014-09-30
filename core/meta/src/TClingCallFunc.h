@@ -168,6 +168,7 @@ public:
    const clang::FunctionDecl* GetDecl() const { return fMethod->GetMethodDecl(); }
    void ResetArg();
    void SetArg(long arg);
+   void SetArg(unsigned long arg);
    void SetArg(float arg);
    void SetArg(double arg);
    void SetArg(long long arg);

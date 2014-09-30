@@ -6027,6 +6027,13 @@ void TCling::CallFunc_SetArg(CallFunc_t* func, Long_t param) const
 }
 
 //______________________________________________________________________________
+void TCling::CallFunc_SetArg(CallFunc_t* func, ULong_t param) const
+{
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   f->SetArg(param);
+}
+
+//______________________________________________________________________________
 void TCling::CallFunc_SetArg(CallFunc_t* func, Float_t param) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
