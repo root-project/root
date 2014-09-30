@@ -2185,8 +2185,8 @@ void TFile::SumBuffer(Int_t bufsize)
    // Increment statistics for buffer sizes of objects in this file.
 
    fWritten++;
-   fSumBuffer  += bufsize;
-   fSum2Buffer += bufsize*bufsize;
+   fSumBuffer  += double(bufsize);
+   fSum2Buffer += double(bufsize) * double(bufsize); // avoid reaching MAXINT for temporary
 }
 
 //______________________________________________________________________________
