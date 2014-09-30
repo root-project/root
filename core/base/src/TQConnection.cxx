@@ -62,12 +62,17 @@ public:
    TQSlot(const char *class_name, const char *funcname);
    virtual ~TQSlot();
 
+   Bool_t      CheckSlot(Int_t nargs) const;
+   Long_t      GetOffset() const { return fOffset; }
+   CallFunc_t *StartExecuting();
+   void        EndExecuting();
+
    const char *GetName() const {
       return fName.Data();
    }
 
+   void ExecuteMethod(void *object, Int_t nargs, va_list ap) = delete;
    void ExecuteMethod(void *object);
-   void ExecuteMethod(void *object, Int_t nargs, va_list ap);
    void ExecuteMethod(void *object, Long_t param);
    void ExecuteMethod(void *object, Long64_t param);
    void ExecuteMethod(void *object, Double_t param);
@@ -241,103 +246,46 @@ inline void TQSlot::ExecuteMethod(void *object)
    // ExecuteMethod the method (with preset arguments) for
    // the specified object.
 
-   ExecuteMethod(object, nullptr, 0);
+   ExecuteMethod(object, (Long_t*)nullptr, 0);
 
 }
 
 //______________________________________________________________________________
-inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
+inline Bool_t TQSlot::CheckSlot(Int_t nargs) const
 {
-   // ExecuteMethod the method for the specified object and
-   // with variable argument list.
+   // Return true if the method is valid and the number of arguments is
+   // acceptable.
 
    if (!fMethod) {
       Error("ExecuteMethod", "method %s not found,"
             "\n(note: interpreted methods are not supported with varargs)",
             fName.Data());
-      return;
+      return kFALSE;
    }
 
    if (nargs < fMethod->GetNargs() - fMethod->GetNargsOpt() ||
-         nargs > fMethod->GetNargs()) {
+       nargs > fMethod->GetNargs()) {
       Error("ExecuteMethod", "nargs (%d) not consistent with expected number of arguments ([%d-%d])",
             nargs, fMethod->GetNargs() - fMethod->GetNargsOpt(),
             fMethod->GetNargs());
-      return;
+      return kFALSE;
    }
 
-   void *address = 0;
-   R__LOCKGUARD2(gInterpreterMutex);
+   return kTRUE;
+}
 
-   gCling->CallFunc_ResetArg(fFunc);
+//______________________________________________________________________________
+CallFunc_t *TQSlot::StartExecuting() {
+   // Mark the slot as executing.
 
-   if (nargs > 0) {
-      TIter next(fMethod->GetListOfMethodArgs());
-      TMethodArg *arg;
-      va_list local_ap;
-      R__VA_COPY(local_ap, ap);
-
-      for (int i = 0; i < nargs; i++) {
-         arg = (TMethodArg *) next();
-         TString type = arg->GetFullTypeName();
-         TDataType *dt = gROOT->GetType(type);
-         if (dt)
-            type = dt->GetFullTypeName();
-         if (arg->Property() & (kIsPointer | kIsArray | kIsReference))
-            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, void *));
-         else {
-            switch (dt->GetType()) {
-               case kBool_t:
-                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int));  // bool is promoted to int
-                  break;
-               case kChar_t:
-               case kUChar_t:
-               case kchar:
-                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int));  // char is promoted to int
-                  break;
-               case kShort_t:
-               case kUShort_t:
-                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int));  // short is promoted to int
-                  break;
-               case kInt_t:
-               case kUInt_t:
-                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int));
-                  break;
-               case kCounter:
-               case kLong_t:
-               case kULong_t:
-               case kBits:
-                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, long));
-                  break;
-               case kFloat_t:
-               case kFloat16_t:
-                  gCling->CallFunc_SetArg(fFunc, (Double_t) va_arg(local_ap, double));  // float is promoted to double by va_arg
-                  break;
-               case kDouble_t:
-               case kDouble32_t:
-
-                  gCling->CallFunc_SetArg(fFunc, (Double_t) va_arg(local_ap, double));
-                  break;
-               case kLong64_t:
-                  gCling->CallFunc_SetArg(fFunc, (Long64_t) va_arg(local_ap, Long64_t));
-                  break;
-               case kULong64_t:
-                  gCling->CallFunc_SetArg(fFunc, (ULong64_t) va_arg(local_ap, ULong64_t));
-                  break;
-               case kCharStar:
-                  gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, void*));
-                  break;
-               default:
-                  if (gDebug>1) Warning("ExecuteMethod","Param of type %s not handled\n",type.Data());
-            }
-         }
-      }
-      va_end(local_ap);
-   }
-
-   if (object) address = (void *)((Long_t)object + fOffset);
    fExecuting++;
-   gCling->CallFunc_Exec(fFunc, address);
+   return fFunc;
+}
+
+//______________________________________________________________________________
+void TQSlot::EndExecuting() {
+   // Mark the slot as no longer executing and cleanup if need be.
+
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
       gCling->CallFunc_Delete(fFunc);
@@ -623,20 +571,6 @@ void TQConnection::ExecuteMethod()
 }
 
 //______________________________________________________________________________
-void TQConnection::ExecuteMethod(Int_t nargs, va_list va)
-{
-   // Apply slot-method to the fReceiver object with
-   // variable argument list.
-
-   // This connection might be deleted in result of the method execution
-   // (for example in case of a Disconnect).  Hence we do not assume
-   // the object is still valid on return.
-   TQSlot *s = fSlot;
-   fSlot->ExecuteMethod(fReceiver, nargs, va);
-   if (s->References() <= 0) delete s;
-}
-
-//______________________________________________________________________________
 void TQConnection::ExecuteMethod(Long_t param)
 {
    // Apply slot-method to the fReceiver object with
@@ -704,4 +638,37 @@ void TQConnection::ExecuteMethod(const char *param)
    TQSlot *s = fSlot;
    fSlot->ExecuteMethod(fReceiver, param);
    if (s->References() <= 0) delete s;
+}
+
+//______________________________________________________________________________
+Bool_t TQConnection::CheckSlot(Int_t nargs) const {
+   // Return true if the underlying method is value and the number of argument
+   // is compatible.
+
+   return fSlot->CheckSlot(nargs);
+}
+
+//______________________________________________________________________________
+void *TQConnection::GetSlotAddress() const {
+   // Return the object address to be passed to the function.
+
+   if (fReceiver) return (void *)((Long_t)fReceiver + fSlot->GetOffset());
+   else return nullptr;
+}
+
+//______________________________________________________________________________
+CallFunc_t *TQConnection::LockSlot() const {
+   // Lock the interpreter and mark the slot as executing.
+
+   if (gInterpreterMutex) gInterpreterMutex->Lock();
+   return fSlot->StartExecuting();
+}
+
+//______________________________________________________________________________
+void TQConnection::UnLockSlot(TQSlot *s) const {
+   // Unlock the interpreter and mark the slot as no longer executing.
+
+   s->EndExecuting();
+   if (s->References() <= 0) delete s;
+   if (gInterpreterMutex) gInterpreterMutex->UnLock();
 }

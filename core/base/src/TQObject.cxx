@@ -604,61 +604,6 @@ void TQObject::Emit(const char *signal_name)
 }
 
 //______________________________________________________________________________
-void TQObject::EmitVA(const char *signal_name, Int_t va_(nargs), ...)
-{
-   // Activate signal with variable argument list.
-   // Example:
-   //          theButton->EmitVA("Clicked(int,float)", 2, id, fid)
-
-   va_list ap;
-   va_start(ap, va_(nargs));
-
-   EmitVA(signal_name, va_(nargs), ap);
-
-   va_end(ap);
-}
-
-//______________________________________________________________________________
-void TQObject::EmitVA(const char *signal_name, Int_t nargs, va_list ap)
-{
-   // Activate signal with variable argument list.
-   // For internal use and for var arg EmitVA() in RQ_OBJECT.h.
-
-   if (fSignalsBlocked || fgAllSignalsBlocked) return;
-
-   TList classSigLists;
-   CollectClassSignalLists(classSigLists, IsA());
-
-   if (classSigLists.IsEmpty() && !fListOfSignals)
-      return;
-
-   TString signal = CompressName(signal_name);
-
-   TQConnection *connection = 0;
-
-   // execute class signals
-   TList *sigList;
-   TIter  nextSigList(&classSigLists);
-   while ((sigList = (TList*) nextSigList()))
-   {
-      TIter nextcl((TQConnectionList*) sigList->FindObject(signal));
-      while ((connection = (TQConnection*)nextcl())) {
-         gTQSender = GetSender();
-         connection->ExecuteMethod(nargs, ap);
-      }
-   }
-   if (!fListOfSignals)
-      return;
-
-   // execute object signals
-   TIter next((TQConnectionList*) fListOfSignals->FindObject(signal));
-   while (fListOfSignals && (connection = (TQConnection*)next())) {
-      gTQSender = GetSender();
-      connection->ExecuteMethod(nargs, ap);
-   }
-}
-
-//______________________________________________________________________________
 void TQObject::Emit(const char *signal_name, Long_t param)
 {
    // Activate signal with single parameter.
