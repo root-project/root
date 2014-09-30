@@ -295,7 +295,7 @@ public: // Public Interface
    const ROOT::TMetaUtils::TNormalizedCtxt& GetNormalizedContext() const {return *fNormalizedCtxt;};
 
    // core/meta helper functions.
-   virtual TMethodCall::EReturnType MethodCallReturnType(TFunction *func) const;
+   virtual EReturnType MethodCallReturnType(TFunction *func) const;
    virtual void GetFunctionName(const clang::FunctionDecl *decl, std::string &name) const;
 
    // CallFunc interface
@@ -434,7 +434,7 @@ public: // Public Interface
    virtual Long_t MethodInfo_Property(MethodInfo_t* minfo) const;
    virtual Long_t MethodInfo_ExtraProperty(MethodInfo_t* minfo) const;
    virtual TypeInfo_t*  MethodInfo_Type(MethodInfo_t* minfo) const;
-   virtual TMethodCall::EReturnType MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const;
+   virtual EReturnType MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const;
    virtual const char* MethodInfo_GetMangledName(MethodInfo_t* minfo) const;
    virtual const char* MethodInfo_GetPrototype(MethodInfo_t* minfo) const;
    virtual const char* MethodInfo_Name(MethodInfo_t* minfo) const;

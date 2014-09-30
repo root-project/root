@@ -6998,39 +6998,39 @@ const char* TCling::MethodInfo_Title(MethodInfo_t* minfo) const
 }
 
 //______________________________________________________________________________
-TMethodCall::EReturnType TCling::MethodCallReturnType(TFunction *func) const
+auto TCling::MethodCallReturnType(TFunction *func) const -> EReturnType
 {
    if (func) {
       return MethodInfo_MethodCallReturnType(func->fInfo);
    } else {
-      return TMethodCall::kOther;
+      return EReturnType::kOther;
    }
 }
 
 //______________________________________________________________________________
-TMethodCall::EReturnType TCling::MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const
+auto TCling::MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const -> EReturnType
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    if (info && info->IsValid()) {
       TClingTypeInfo *typeinfo = info->Type();
       clang::QualType QT( typeinfo->GetQualType().getCanonicalType() );
       if (QT->isEnumeralType()) {
-         return TMethodCall::kLong;
+         return EReturnType::kLong;
       } else if (QT->isPointerType()) {
          // Look for char*
          QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
          if ( QT->isCharType() ) {
-            return TMethodCall::kString;
+            return EReturnType::kString;
          } else {
-            return TMethodCall::kOther;
+            return EReturnType::kOther;
          }
       } else if ( QT->isFloatingType() ) {
          int sz = typeinfo->Size();
          if (sz == 4 || sz == 8) {
             // Support only float and double.
-            return TMethodCall::kDouble;
+            return EReturnType::kDouble;
          } else {
-            return TMethodCall::kOther;
+            return EReturnType::kOther;
          }
       } else if ( QT->isIntegerType() ) {
          int sz = typeinfo->Size();
@@ -7042,15 +7042,15 @@ TMethodCall::EReturnType TCling::MethodInfo_MethodCallReturnType(MethodInfo_t* m
             // was not making the distinction so we let it go
             // as is for now, but we really need to upgrade
             // TMethodCall::Execute ...
-            return TMethodCall::kLong;
+            return EReturnType::kLong;
          } else {
-            return TMethodCall::kOther;
+            return EReturnType::kOther;
          }
       } else {
-         return TMethodCall::kOther;
+         return EReturnType::kOther;
       }
    } else {
-      return TMethodCall::kOther;
+      return EReturnType::kOther;
    }
 }
 

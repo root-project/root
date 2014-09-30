@@ -31,13 +31,26 @@
 #include "TDictionary.h"
 #endif
 
+#ifndef ROOT_TInterpreter
+#include "TInterpreter.h"
+#endif
+
 class TClass;
 class TFunction;
 
 class TMethodCall : public TObject {
 
 public:
-   enum EReturnType { kLong, kDouble, kString, kOther, kNone };
+   using EReturnType = TInterpreter::EReturnType;
+
+   // For backward compatibility:
+   static const EReturnType kLong = TInterpreter::EReturnType::kLong;
+   static const EReturnType kDouble = TInterpreter::EReturnType::kDouble;
+   static const EReturnType kString = TInterpreter::EReturnType::kString;
+   static const EReturnType kOther = TInterpreter::EReturnType::kOther;
+   static const EReturnType kNone = TInterpreter::EReturnType::kNone;
+
+   // enum EReturnType { kLong, kDouble, kString, kOther, kNone };
 
 private:
    CallFunc_t    *fFunc;      //CINT method invocation environment
