@@ -76,7 +76,9 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
    fEditDisabled = (fId != gVirtualX->GetDefaultRootWindow()) && fParent ?
                     (fParent->fEditDisabled == kEditDisable) : 0;
 
-   SetWindowName();
+   // add protection for the root window on Cocoa (MacOS X)
+   if (fClient && fClient->GetDefaultRoot())
+      SetWindowName();
 }
 
 //______________________________________________________________________________
