@@ -26,6 +26,9 @@
 #include "TDictionary.h"
 #endif
 
+#ifndef ROOT_TVirtualMutex
+#include "TVirtualMutex.h"
+#endif
 
 #include <typeinfo>
 #include <vector>
@@ -36,7 +39,6 @@ class TFunction;
 class TInterpreterValue;
 class TMethod;
 class TObjArray;
-class TVirtualMutex;
 class TEnum;
 
 R__EXTERN TVirtualMutex *gInterpreterMutex;
@@ -264,6 +266,51 @@ public:
    virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Double_t /* param */) const = 0;
    virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Long64_t /* param */) const = 0;
    virtual void   CallFunc_SetArg(CallFunc_t * /* func */, ULong64_t /* param */) const = 0;
+
+   void CallFunc_SetArg(CallFunc_t * func, Char_t param) const { CallFunc_SetArg(func,(Long_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, Short_t param) const { CallFunc_SetArg(func,(Long_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, Int_t param) const { CallFunc_SetArg(func,(Long_t)param); }
+
+   void CallFunc_SetArg(CallFunc_t * func, UChar_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, UShort_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, UInt_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
+
+   void CallFunc_SetArg(CallFunc_t *func, void *arg)
+   {
+      CallFunc_SetArg(func,(Long_t) arg);
+   }
+
+   template <typename T>
+   void CallFunc_SetArg(CallFunc_t *func, const T *arg)
+   {
+      CallFunc_SetArg(func,(Long_t) arg);
+   }
+
+   void CallFunc_SetArgImpl(CallFunc_t * /* func */)
+   {
+   }
+
+   template <typename U>
+   void CallFunc_SetArgImpl(CallFunc_t *func, const U& head)
+   {
+      CallFunc_SetArg(func, head);
+   }
+
+   template <typename U, typename... T>
+   void CallFunc_SetArgImpl(CallFunc_t *func, const U& head, const T&... tail)
+   {
+      CallFunc_SetArg(func, head);
+      CallFunc_SetArgImpl(func, tail...);
+   }
+
+   template <typename... T>
+   void CallFunc_SetArguments(CallFunc_t *func, const T&... args)
+   {
+      R__LOCKGUARD2(gInterpreterMutex);
+
+      CallFunc_ResetArg(func);
+      CallFunc_SetArgImpl(func,args...);
+   }
 
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, bool /* objectIsConst */, Long_t * /* Offset */) const {;}
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, Long_t * /* Offset */) const {;}
