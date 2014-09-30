@@ -48,7 +48,9 @@ public:
    static const EReturnType kDouble = TInterpreter::EReturnType::kDouble;
    static const EReturnType kString = TInterpreter::EReturnType::kString;
    static const EReturnType kOther = TInterpreter::EReturnType::kOther;
-   static const EReturnType kNone = TInterpreter::EReturnType::kNone;
+   static const EReturnType kNoReturnType = TInterpreter::EReturnType::kNoReturnType;
+   // Historical name.
+   static const EReturnType kNone = TInterpreter::EReturnType::kNoReturnType;
 
    // enum EReturnType { kLong, kDouble, kString, kOther, kNone };
 

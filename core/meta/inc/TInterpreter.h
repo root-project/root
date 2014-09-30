@@ -57,7 +57,7 @@ public:
       kProcessing  = 99
    };
 
-   enum class EReturnType { kLong, kDouble, kString, kOther, kNone };
+   enum class EReturnType { kLong, kDouble, kString, kOther, kNoReturnType };
 
    struct CallFuncIFacePtr_t {
       enum EKind {
