@@ -77,6 +77,7 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Moving headers and other directorties such as etc, icons, fonts,...")
 add_custom_target(move_headers DEPENDS ${stamp_file})
+include_directories(${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
@@ -129,11 +130,13 @@ add_dependencies(onepcm ${__allTargets})
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
-add_custom_target(hsimple ALL DEPENDS hsimple.root)
-add_dependencies(hsimple onepcm)
-ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
-add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
-install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
+  add_custom_target(hsimple ALL DEPENDS hsimple.root)
+  add_dependencies(hsimple onepcm)
+  ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
+  add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
+  install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+endif()
 
 #---version--------------------------------------------------------------------------------------
 add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
