@@ -91,11 +91,9 @@ ClassImpQ(TQObjSender)
 ClassImpQ(TQClass)
 
 ////////////////////////////// internal functions //////////////////////////////
-namespace
-{
 
 //______________________________________________________________________________
-TString CompressName(const char *method_name)
+TString TQObject::CompressName(const char *method_name)
 {
    // Removes "const" words and blanks from full (with prototype)
    // method name and resolve any typedefs in the method signature.
@@ -151,6 +149,8 @@ TString CompressName(const char *method_name)
    res += ")";
    return res;
 }
+
+namespace {
 
 //______________________________________________________________________________
 TMethod *GetMethodWithPrototype(TClass *cl, const char *method,

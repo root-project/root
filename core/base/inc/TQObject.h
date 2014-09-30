@@ -76,6 +76,8 @@ protected:
                                  TClass *sender_class, const char *signal,
                                  TClass *receiver_class, const char *slot);
 
+   static TString CompressName(const char *method_name);
+
 private:
    TQObject(const TQObject& tqo);            // not implemented
    TQObject& operator=(const TQObject& tqo); // not implemented
