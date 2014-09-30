@@ -2293,6 +2293,13 @@ void TClingCallFunc::ResetArg()
    fArgVals.clear();
 }
 
+void TClingCallFunc::SetArg(unsigned long param)
+{
+   ASTContext &C = fInterp->getCI()->getASTContext();
+   fArgVals.push_back(cling::Value(C.UnsignedLongTy, *fInterp));
+   fArgVals.back().getLL() = param;
+}
+
 void TClingCallFunc::SetArg(long param)
 {
    ASTContext &C = fInterp->getCI()->getASTContext();

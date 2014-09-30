@@ -317,6 +317,7 @@ public: // Public Interface
    virtual CallFuncIFacePtr_t CallFunc_IFacePtr(CallFunc_t * func) const;
    virtual void   CallFunc_ResetArg(CallFunc_t* func) const;
    virtual void   CallFunc_SetArg(CallFunc_t* func, Long_t param) const;
+   virtual void   CallFunc_SetArg(CallFunc_t* func, ULong_t param) const;
    virtual void   CallFunc_SetArg(CallFunc_t* func, Float_t param) const;
    virtual void   CallFunc_SetArg(CallFunc_t* func, Double_t param) const;
    virtual void   CallFunc_SetArg(CallFunc_t* func, Long64_t param) const;
