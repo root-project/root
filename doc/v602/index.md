@@ -4,7 +4,7 @@
 
 ## Introduction
 
-ROOT version 6.02/00 has been released on [      ].
+ROOT version 6.02/00 has been released on September 30, 2014.
 
 For more information, see:
 
