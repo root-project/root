@@ -40,11 +40,15 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TList
+#include "TList.h"
+#endif
 
-class TList;
 class TObject;
 class TQConnection;
 class TClass;
+
+R__EXTERN void *gTQSender;   // the latest sender object
 
 class TQObject {
 
@@ -96,8 +100,9 @@ public:
 
    void  CollectClassSignalLists(TList& list, TClass* cls);
 
-   void  EmitVA(const char *signal, Int_t nargs, ...);
-   void  EmitVA(const char *signal, Int_t nargs, va_list va);
+   template <typename... T> void EmitVA(const char *signal_name, Int_t /* nargs */, const T&... params);
+   // void  EmitVA(const char *signal, Int_t nargs, ...);
+   void  EmitVA(const char *signal, Int_t nargs, va_list va) = delete;
    void  Emit(const char *signal);
    void  Emit(const char *signal, Long_t *paramArr);
    void  Emit(const char *signal, const char *params);
@@ -182,8 +187,6 @@ public:
 };
 
 
-R__EXTERN void *gTQSender;   // the latest sender object
-
 class TQObjSender : public TQObject {
 
 protected:
@@ -207,6 +210,10 @@ public:
    ClassDef(TQObjSender,0) //Used to "delegate" TQObject functionality
                            //to interpreted classes, see also RQ_OBJECT.h
 };
+
+#ifndef ROOT_TQConnection
+#include "TQObjectEmitVA.h"
+#endif
 
 // Global function which simplifies making connections in interpreted
 // ROOT session

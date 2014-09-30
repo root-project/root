@@ -36,6 +36,9 @@
 #ifndef ROOT_Varargs
 #include "Varargs.h"
 #endif
+#ifndef ROOT_TInterpreter
+#include "TInterpreter.h"
+#endif
 
 class TQSlot;
 
@@ -49,8 +52,12 @@ protected:
 
    virtual void PrintCollectionHeader(Option_t* option) const;
 
-private:
-   TQConnection &operator=(const TQConnection &); // Not yet implemented.
+   Bool_t      CheckSlot(Int_t nargs) const;
+   void       *GetSlotAddress() const;
+   CallFunc_t *LockSlot() const;
+   void        UnLockSlot(TQSlot *) const;
+
+   TQConnection &operator=(const TQConnection &) = delete;
 
 public:
    TQConnection();
@@ -65,7 +72,30 @@ public:
    const char *GetClassName() const { return fClassName; }
    void Destroyed();         // *SIGNAL*
    void ExecuteMethod();
-   void ExecuteMethod(Int_t nargs, va_list va);
+
+   void ExecuteMethod(Int_t nargs, va_list va) = delete;
+
+   template <typename... T> inline void ExecuteMethod(const T&... params)
+   {
+      if (!CheckSlot(sizeof...(params))) return;
+
+      CallFunc_t *func = LockSlot();
+
+      void *address = GetSlotAddress();
+      TQSlot *s = fSlot;
+
+      gInterpreter->CallFunc_SetArguments(func,params...);
+      gInterpreter->CallFunc_Exec(func, address);
+
+      UnLockSlot(s);
+   }
+
+   template <typename... T> inline void ExecuteMethod(Int_t /* nargs */, const T&... params)
+   {
+      ExecuteMethod(params...);
+   }
+
+   //void ExecuteMethod(Int_t nargs, va_list va);
    void ExecuteMethod(Long_t param);
    void ExecuteMethod(Long64_t param);
    void ExecuteMethod(Double_t param);
@@ -77,5 +107,9 @@ public:
 };
 
 R__EXTERN char *gTQSlotParams; // used to pass string parameters
+
+#ifndef ROOT_TQObjectEmitVA
+#include "TQObjectEmitVA.h"
+#endif
 
 #endif

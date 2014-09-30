@@ -73,7 +73,8 @@ Bool_t Connect(const char *sig,const char *cl,void *rcvr,const char *slt)\
 Bool_t Disconnect(const char *sig=0,void *rcvr=0,const char *slt=0){return fQObject.Disconnect(sig,rcvr,slt);}\
 void HighPriority(const char *signal_name,const char *slot_name=0){fQObject.HighPriority(signal_name,slot_name);}\
 void LowPriority(const char *signal_name,const char *slot_name=0){fQObject.LowPriority(signal_name,slot_name);}\
-void EmitVA(const char *signal,Int_t nargs, ...){va_list ap;va_start(ap,nargs);fQObject.EmitVA(signal,nargs,ap);va_end(ap);}\
+template <typename... T> void EmitVA(const char *signal_name, Int_t nargs, const T&... params) \
+{ fQObject.EmitVA(signal_name,nargs,params...); } \
 void Emit(const char *signal){fQObject.Emit(signal);}\
 void Emit(const char *signal,const char *params){fQObject.Emit(signal,params);}\
 void Emit(const char *signal,Long_t *paramArr){fQObject.Emit(signal,paramArr);}\
