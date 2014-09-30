@@ -91,6 +91,15 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TMethodCall
+#include "TMethodCall.h"
+#endif
+#ifndef ROOT_TVirtualMutex
+#include "TVirtualMutex.h"
+#endif
+#ifndef ROOT_TInterpreter
+#include "TInterpreter.h"
+#endif
 
 class TEnv;
 class TList;
@@ -137,11 +146,35 @@ private:
    Bool_t CanHandle(const char *base, const char *uri);
    void   SetupCallEnv();
 
+   Bool_t CheckForExecPlugin(Int_t nargs);
+
 public:
    const char *GetClass() const { return fClass; }
    Int_t       CheckPlugin() const;
    Int_t       LoadPlugin();
-   Long_t      ExecPlugin(Int_t nargs, ...);
+
+   template <typename... T> Long_t ExecPluginImpl(const T&... params)
+   {
+      auto nargs = sizeof...(params);
+      if (!CheckForExecPlugin(nargs)) return 0;
+
+      fCallEnv->SetParams(params...);
+
+      Long_t ret;
+      fCallEnv->Execute(ret);
+
+      return ret;
+   }
+
+   template <typename... T> Long_t ExecPlugin(int nargs, const T&... params)
+   {
+      // For backward compatibility.
+      if (gDebug > 1) {
+         Warning("ExecPlugin","Announced number of args different from the real number %d vs %ld",
+                 nargs, sizeof...(params) );
+      }
+      return ExecPluginImpl(params...);
+   }
 
    void        Print(Option_t *opt = "") const;
 
