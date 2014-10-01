@@ -614,7 +614,7 @@ bool InheritsFromTObject(const clang::RecordDecl *cl,
       = ROOT::TMetaUtils::ScopeSearch("TObject", interp, true /*diag*/, 0);
 
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
-   return ROOT::TMetaUtils::IsBase(clxx, TObject_decl);
+   return ROOT::TMetaUtils::IsBase(clxx, TObject_decl, nullptr, interp);
 }
 
 //______________________________________________________________________________
@@ -624,7 +624,7 @@ bool InheritsFromTSelector(const clang::RecordDecl *cl,
    static const clang::CXXRecordDecl *TObject_decl
       = ROOT::TMetaUtils::ScopeSearch("TSelector", interp, true /*diag*/, 0);
 
-   return ROOT::TMetaUtils::IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
+   return ROOT::TMetaUtils::IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl, nullptr, interp);
 }
 
 //______________________________________________________________________________

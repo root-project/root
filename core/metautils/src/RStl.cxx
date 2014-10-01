@@ -96,12 +96,7 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Int
                const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
                if (clxx) {
                   if (!clxx->isCompleteDefinition()) {
-                     clang::SourceLocation Loc = clxx->getLocation ();
-                     clang::Sema& S = interp.getCI()->getSema();
-                     // Here we might not have an active transaction to handle
-                     // the caused instantiation decl.
-                     cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interp));
-                     /* bool result = */ S.RequireCompleteType( Loc,  arg.getAsType() , 0);
+                     /* bool result = */ ROOT::TMetaUtils::RequireCompleteType(interp, clxx->getLocation(), arg.getAsType());
                   }
                   // Do we need to strip the qualifier?
                   GenerateTClassFor(arg.getAsType(),interp,normCtxt);
@@ -150,12 +145,7 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
                const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
                if (clxx) {
                   if (!clxx->isCompleteDefinition()) {
-                     clang::SourceLocation Loc = clxx->getLocation ();
-                     clang::Sema& S = interp.getCI()->getSema();
-                     // Here we might not have an active transaction to handle
-                     // the caused instantiation decl.
-                     cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interp));
-                     /* bool result = */ S.RequireCompleteType( Loc,  arg.getAsType() , 0);
+                     /* bool result = */ ROOT::TMetaUtils::RequireCompleteType(interp, clxx->getLocation (), arg.getAsType());
                      clxx = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
                   }
                   if (!splitType.fElements.empty()) {
