@@ -128,6 +128,7 @@ namespace clang {
   typedef ArrayRef<std::pair<IdentifierInfo *, SourceLocation>> ModuleIdPath;
   class ModuleLoader;
   class MultiLevelTemplateArgumentList;
+  class MultiplexExternalSemaSource;
   class NamedDecl;
   class NonNullAttr;
   class ObjCCategoryDecl;
@@ -212,8 +213,9 @@ class Sema {
   ///\brief Source of additional semantic information.
   ExternalSemaSource *ExternalSource;
 
-  ///\brief Whether Sema has generated a multiplexer and has to delete it.
-  bool isMultiplexExternalSource;
+  ///\brief Source of additional semantic information if it is a multiplexer.
+  llvm::IntrusiveRefCntPtr<MultiplexExternalSemaSource>
+      MultiplexExternalSource;
 
   static bool mightHaveNonExternalLinkage(const DeclaratorDecl *FD);
 
