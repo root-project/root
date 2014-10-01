@@ -653,13 +653,36 @@ ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp
    return result;
 }
 
+
+//______________________________________________________________________________
+bool ROOT::TMetaUtils::RequireCompleteType(const cling::Interpreter &interp, const clang::CXXRecordDecl *cl)
+{
+   clang::QualType qType(cl->getTypeForDecl(),0);
+   return RequireCompleteType(interp,cl->getLocation(),qType);
+}
+
+//______________________________________________________________________________
+bool ROOT::TMetaUtils::RequireCompleteType(const cling::Interpreter &interp, clang::SourceLocation Loc, clang::QualType Type)
+{
+   clang::Sema& S = interp.getCI()->getSema();
+   // Here we might not have an active transaction to handle
+   // the caused instantiation decl.
+   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interp));
+   return S.RequireCompleteType( Loc, Type , 0);
+}
+
 //______________________________________________________________________________
 bool ROOT::TMetaUtils::IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base,
-                                 const clang::CXXRecordDecl *context /*=0*/)
+                              const clang::CXXRecordDecl *context, const cling::Interpreter &interp)
 {
    if (!cl || !base) {
       return false;
    }
+
+   if (!cl->getDefinition() || !cl->isCompleteDefinition()) {
+      RequireCompleteType(interp,cl);
+   }
+
    if (!CheckDefinition(cl, context) || !CheckDefinition(base, context)) {
       return false;
    }
@@ -684,7 +707,7 @@ bool ROOT::TMetaUtils::IsBase(const clang::FieldDecl &m, const char* basename, c
 
    if (base) {
       return IsBase(CRD, llvm::dyn_cast<clang::CXXRecordDecl>( base ),
-                       llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext()));
+                    llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext()),interp);
    }
    return false;
 }
@@ -722,7 +745,7 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
 
    clang::CXXRecordDecl *cxxtype = rawtype->getAsCXXRecordDecl() ;
    int isStre = cxxtype && ROOT::TMetaUtils::ClassInfo__HasMethod(cxxtype,"Streamer",interp);
-   int isTObj = cxxtype && (IsBase(cxxtype,TObject_decl) || rawname == "TObject");
+   int isTObj = cxxtype && (IsBase(cxxtype,TObject_decl,nullptr,interp) || rawname == "TObject");
 
    long kase = 0;
 

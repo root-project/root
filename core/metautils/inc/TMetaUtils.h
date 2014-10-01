@@ -310,6 +310,12 @@ bool ExtractAttrIntPropertyFromName(const clang::Decl& decl,
                                     int& propValue);
 
 //______________________________________________________________________________
+bool RequireCompleteType(const cling::Interpreter &interp, const clang::CXXRecordDecl *cl);
+
+//______________________________________________________________________________
+bool RequireCompleteType(const cling::Interpreter &interp, clang::SourceLocation Loc, clang::QualType Type);
+
+//______________________________________________________________________________
 // Add default template parameters.
 clang::QualType AddDefaultParameters(clang::QualType instanceType,
                                      const cling::Interpreter &interpret,
@@ -337,14 +343,14 @@ int ElementStreamer(std::ostream& finalString,
                     const clang::QualType &qti,
                     const char *t,
                     int rwmode,
-                    const cling::Interpreter &gInterp,
+                    const cling::Interpreter &interp,
                     const char *tcl=0);
 
 //______________________________________________________________________________
-bool IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context = 0);
+bool IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context,const cling::Interpreter &interp);
 
 //______________________________________________________________________________
-bool IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &gInterp);
+bool IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &interp);
 
 //______________________________________________________________________________
 bool HasCustomOperatorNewArrayPlacement(clang::RecordDecl const&, const cling::Interpreter &interp);
