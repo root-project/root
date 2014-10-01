@@ -610,8 +610,8 @@ namespace ROOT { namespace Cintex {
       // Allocate a stub function.
       static FunctionCode_t s_func4arg(4);
       char* code = Allocate_code(s_func4arg.fCode, s_func4arg.fSize );
-      *(ptrdiff_t **)&code[s_func4arg.fa_offset] = (ptrdiff_t *)obj;
-      *(ptrdiff_t **)&code[s_func4arg.f_offset] = (ptrdiff_t *)fun;
+      *(unsigned long **)&code[s_func4arg.fa_offset] = (unsigned long *)obj;
+      *(unsigned long **)&code[s_func4arg.f_offset] = (unsigned long *)fun;
       obj->fMethodCode = (G__InterfaceMethod)code;
       return obj->fMethodCode;
    }
@@ -622,8 +622,8 @@ namespace ROOT { namespace Cintex {
       // Allocate a stub function.
       static FunctionCode_t s_func0arg(0);
       char* code = Allocate_code(s_func0arg.fCode, s_func0arg.fSize);
-      *(ptrdiff_t **)&code[s_func0arg.fa_offset] = (ptrdiff_t *)obj;
-      *(ptrdiff_t **)&code[s_func0arg.f_offset] = (ptrdiff_t *)fun;
+      *(unsigned long **)&code[s_func0arg.fa_offset] = (unsigned long *)obj;
+      *(unsigned long **)&code[s_func0arg.f_offset] = (unsigned long *)fun;
       return (FuncVoidPtr_t)code;
    }
 
@@ -632,8 +632,8 @@ namespace ROOT { namespace Cintex {
       // Allocate a stub function.
       static FunctionCode_t s_func1arg(1);
       char* code = Allocate_code(s_func1arg.fCode, s_func1arg.fSize);
-      *(ptrdiff_t **)&code[s_func1arg.fa_offset] = (ptrdiff_t *)obj;
-      *(ptrdiff_t **)&code[s_func1arg.f_offset] = (ptrdiff_t *)fun;
+      *(unsigned long **)&code[s_func1arg.fa_offset] = (unsigned long *)obj;
+      *(unsigned long **)&code[s_func1arg.f_offset] = (unsigned long *)fun;
       return (FuncArg1Ptr_t)code;
    }
 
