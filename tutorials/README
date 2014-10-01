@@ -42,7 +42,6 @@ The $ROOTSYS/tutorials directory include several sub-directories
 -splot:    Example of the TSplot class (signal/background estimator)
 -sql:      Interfaces to SQL (mysql, oracle, etc)
 -thread:   Using Threads
--tmva:     Examples of the MultiVariate Analysis classes
 -tree:     Creating Trees, Playing with Trees
 -unuran:   Interface with the unuram random generator library
 -xml:      Writing/Reading xml files
