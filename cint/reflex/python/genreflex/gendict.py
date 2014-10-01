@@ -2223,7 +2223,7 @@ class genDictionary(object) :
         dtorscope = '::' + cl + '::'
     dtorimpl = '%svoid destructor%s(void*, void * o, const std::vector<void*>&, void *) {\n' % ( static, attrs['id'])
     if (attrs['name'][0] != '.'):
-      return dtorimpl + '(((::%s*)o)->%s~%s)();\n}' % ( cl, dtorscope, attrs['name'] )
+      return dtorimpl + '((::%s*)o)->%s~%s();\n}' % ( cl, dtorscope, attrs['name'] )
     else:
       # unnamed; can't call.
       return dtorimpl + '  // unnamed, cannot call destructor\n}'
