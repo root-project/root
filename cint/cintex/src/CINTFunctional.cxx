@@ -463,11 +463,11 @@ namespace ROOT { namespace Cintex {
 
    //------ Function models-------------------------------------------------------------------
 #ifdef R__B64
-#define FUNCPATTERN 0xFAFAFAFAFAFAFAFAL
-#define DATAPATTERN 0xDADADADADADADADAL
+#define FUNCPATTERN 0xFAFAFAFAFAFAFAFAUL
+#define DATAPATTERN 0xDADADADADADADADAUL
 #else
-#define FUNCPATTERN 0xFAFAFAFAL
-#define DATAPATTERN 0xDADADADAL
+#define FUNCPATTERN 0xFAFAFAFAUL
+#define DATAPATTERN 0xDADADADAUL
 #endif
 
 #if defined(__arm__)
@@ -587,8 +587,8 @@ namespace ROOT { namespace Cintex {
          else if (narg == 4) fCode = (char*)f4a;
          char* b = fCode;
          for ( size_t o = 0; o < 1000; o++, b++) {
-            if ( *(ptrdiff_t*)b == DATAPATTERN ) fa_offset = o;
-            if ( *(ptrdiff_t*)b == FUNCPATTERN ) f_offset = o;
+            if ( *(unsigned long*)b == DATAPATTERN ) fa_offset = o;
+            if ( *(unsigned long*)b == FUNCPATTERN ) f_offset = o;
             if ( f_offset && fa_offset ) {
                fSize = (o + 256) & ~0xF;
                break;
