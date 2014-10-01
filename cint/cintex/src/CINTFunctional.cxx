@@ -15,6 +15,7 @@
 #include "Api.h"
 #include "CINTFunctional.h"
 #include "RConfig.h"
+#include <stddef.h>
 
 #ifndef CINTEX_USE_MMAP
 # if (defined(__linux) || defined(R__MACOSX)) && ! defined(DATA_EXECUTABLE)
@@ -469,6 +470,102 @@ namespace ROOT { namespace Cintex {
 #define DATAPATTERN 0xDADADADAL
 #endif
 
+#if defined(__arm__)
+    __attribute__((naked, used))
+    static void f0a() {
+    __asm__ __volatile__ ("push    {fp, lr}\n\t"
+                          "add     fp, sp, #4\n\t"
+                          "ldr     r3, [pc, #8]\n\t"
+                          "ldr     r0, [pc, #8]\n\t"
+                          "blx     r3\n\t"
+                          "pop     {fp, pc}\n\t"
+                          ".word   0xfafafafa\n\t"
+                          ".word   0xdadadada");
+    }
+
+    __attribute__((naked, used))
+    static void f1a(void* a0) {
+    __asm__ __volatile__ ("push    {fp, lr}\n\t"
+                          "add     fp, sp, #4\n\t"
+                          "sub     sp, sp, #8\n\t"
+                          "str     r0, [fp, #-8]\n\t"
+                          "ldr     r3, [pc, #16]\n\t"
+                          "ldr     r0, [pc, #16]\n\t"
+                          "ldr     r1, [fp, #-8]\n\t"
+                          "blx     r3\n\t"
+                          "sub     sp, fp, #4\n\t"
+                          "pop     {fp, pc}\n\t"
+                          ".word   0xfafafafa\n\t"
+                          ".word   0xdadadada");
+    }
+
+    __attribute__((naked, used))
+    static void f4a(void* a0, void* a1, void* a2, void* a3) {
+    __asm__ __volatile__ ("push    {fp, lr}\n\t"
+                          "add     fp, sp, #4\n\t"
+                          "sub     sp, sp, #24\n\t"
+                          "str     r0, [fp, #-8]\n\t"
+                          "str     r1, [fp, #-12]\n\t"
+                          "str     r2, [fp, #-16]\n\t"
+                          "str     r3, [fp, #-20]\n\t"
+                          "ldr     r3, [fp, #-20]\n\t"
+                          "str     r3, [sp]\n\t"
+                          "ldr     ip, [pc, #24]\n\t"
+                          "ldr     r0, [pc, #24]\n\t"
+                          "ldr     r1, [fp, #-8]\n\t"
+                          "ldr     r2, [fp, #-12]\n\t"
+                          "ldr     r3, [fp, #-16]\n\t"
+                          "blx     ip\n\t"
+                          "sub     sp, fp, #4\n\t"
+                          "pop     {fp, pc}\n\t"
+                          ".word   0xfafafafa\n\t"
+                          ".word   0xdadadada");
+    }
+#elif defined(__aarch64__)
+    __attribute__((used))
+    static void f0a() {
+    __asm__ __volatile__ ("stp      x29, x30, [sp,#-16]!\n\t"
+                          "mov      x29, sp\n\t"
+                          "ldr      x1, #20\n\t"
+                          "ldr      x0, #24\n\t"
+                          "blr      x1\n\t"
+                          "ldp      x29, x30, [sp],#16\n\t"
+                          "ret\n\t"
+                          ".dword   0xfafafafafafafafa\n\t"
+                          ".dword   0xdadadadadadadada\n\t");
+    }
+
+    __attribute__((used))
+    static void f1a() {
+    __asm__ __volatile__ ("stp      x29, x30, [sp,#-16]!\n\t"
+                          "mov      x29, sp\n\t"
+                          "ldr      x2, #24\n\t"
+                          "mov      x1, x0\n\t"
+                          "ldr      x0, #24\n\t"
+                          "blr      x2\n\t"
+                          "ldp      x29, x30, [sp],#16\n\t"
+                          "ret\n\t"
+                          ".dword   0xfafafafafafafafa\n\t"
+                          ".dword   0xdadadadadadadada\n\t");
+    }
+
+    __attribute__((used))
+    static void f4a() {
+    __asm__ __volatile__ ("stp      x29, x30, [sp,#-16]!\n\t"
+                          "mov      x29, sp\n\t"
+                          "ldr      x5, #36\n\t"
+                          "mov      x4, x3\n\t"
+                          "mov      x3, x2\n\t"
+                          "mov      x2, x1\n\t"
+                          "mov      x1, x0\n\t"
+                          "ldr      x0, #24\n\t"
+                          "blr      x5\n\t"
+                          "ldp      x29, x30, [sp],#16\n\t"
+                          "ret\n\t"
+                          ".dword   0xfafafafafafafafa\n\t"
+                          ".dword   0xdadadadadadadada\n\t");
+    }
+#else
    static void f0a() {
       typedef void (*f_t)(void*);
       ((f_t)FUNCPATTERN)((void*)DATAPATTERN);
@@ -481,6 +578,7 @@ namespace ROOT { namespace Cintex {
       typedef void (*f_t)(void*,void*,void*,void*,void*);
       ((f_t)FUNCPATTERN)((void*)DATAPATTERN, a0, a1, a2, a3);
    }
+#endif
 
    struct FunctionCode_t {
       FunctionCode_t(int narg) : f_offset(0), fa_offset(0), fSize(0) {
@@ -489,8 +587,8 @@ namespace ROOT { namespace Cintex {
          else if (narg == 4) fCode = (char*)f4a;
          char* b = fCode;
          for ( size_t o = 0; o < 1000; o++, b++) {
-            if ( *(size_t*)b == DATAPATTERN ) fa_offset = o;
-            if ( *(size_t*)b == FUNCPATTERN ) f_offset = o;
+            if ( *(ptrdiff_t*)b == DATAPATTERN ) fa_offset = o;
+            if ( *(ptrdiff_t*)b == FUNCPATTERN ) f_offset = o;
             if ( f_offset && fa_offset ) {
                fSize = (o + 256) & ~0xF;
                break;
@@ -512,8 +610,8 @@ namespace ROOT { namespace Cintex {
       // Allocate a stub function.
       static FunctionCode_t s_func4arg(4);
       char* code = Allocate_code(s_func4arg.fCode, s_func4arg.fSize );
-      *(void**)&code[s_func4arg.fa_offset] = (void*)obj;
-      *(void**)&code[s_func4arg.f_offset] = (void*)fun;
+      *(ptrdiff_t **)&code[s_func4arg.fa_offset] = (ptrdiff_t *)obj;
+      *(ptrdiff_t **)&code[s_func4arg.f_offset] = (ptrdiff_t *)fun;
       obj->fMethodCode = (G__InterfaceMethod)code;
       return obj->fMethodCode;
    }
@@ -524,8 +622,8 @@ namespace ROOT { namespace Cintex {
       // Allocate a stub function.
       static FunctionCode_t s_func0arg(0);
       char* code = Allocate_code(s_func0arg.fCode, s_func0arg.fSize);
-      *(void**)&code[s_func0arg.fa_offset] = (void*)obj;
-      *(void**)&code[s_func0arg.f_offset] = (void*)fun;
+      *(ptrdiff_t **)&code[s_func0arg.fa_offset] = (ptrdiff_t *)obj;
+      *(ptrdiff_t **)&code[s_func0arg.f_offset] = (ptrdiff_t *)fun;
       return (FuncVoidPtr_t)code;
    }
 
@@ -534,8 +632,8 @@ namespace ROOT { namespace Cintex {
       // Allocate a stub function.
       static FunctionCode_t s_func1arg(1);
       char* code = Allocate_code(s_func1arg.fCode, s_func1arg.fSize);
-      *(void**)&code[s_func1arg.fa_offset] = (void*)obj;
-      *(void**)&code[s_func1arg.fa_offset] = (void*)fun;
+      *(ptrdiff_t **)&code[s_func1arg.fa_offset] = (ptrdiff_t *)obj;
+      *(ptrdiff_t **)&code[s_func1arg.f_offset] = (ptrdiff_t *)fun;
       return (FuncArg1Ptr_t)code;
    }
 

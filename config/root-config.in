@@ -328,6 +328,11 @@ linuxarm)
    auxcflags="-fsigned-char"
    auxlibs="-lm -ldl -rdynamic"
    ;;
+linuxarm64)
+   # ARMv8 64-bit (AArch64) Linux with gcc with glibc
+   auxcflags="-fsigned-char"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
 mklinux)
    # MkLinux with libc5
    auxcflags="-fsigned-char -I/usr/X11/include -I/usr/include/g++"

@@ -389,6 +389,15 @@ LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
+ifeq ($(ARCH),linuxarm64)
+# ARM Linux with gcc and glibc
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),mklinux)
 # MkLinux with libc5
 CXX           = g++

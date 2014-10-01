@@ -16,6 +16,7 @@ linux                for i386 Linux with gcc >= 3
 linuxicc             for i386 Linux with Intel's icc
 linuxalphagcc        for Alpha Linux with gcc
 linuxarm             for ARM Linux with gcc
+linuxarm64           for ARMv8 64-bit (AArch64) Linux with gcc and glibc
 linuxhppa            for HPPA Linux with gcc
 linuxia64ecc         for Itanium Linux with Intel icc
 linuxia64gcc         for Itanium Linux with gcc >= 3
