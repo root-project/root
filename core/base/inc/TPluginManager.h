@@ -170,8 +170,8 @@ public:
    {
       // For backward compatibility.
       if (gDebug > 1) {
-         Warning("ExecPlugin","Announced number of args different from the real number %d vs %ld",
-                 nargs, sizeof...(params) );
+         Warning("ExecPlugin","Announced number of args different from the real number of argument passed %d vs %lu",
+                 nargs, (unsigned long)sizeof...(params) );
       }
       return ExecPluginImpl(params...);
    }
