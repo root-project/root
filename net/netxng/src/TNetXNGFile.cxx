@@ -130,6 +130,9 @@ TNetXNGFile::TNetXNGFile(const char *url,
    fInitCondVar = new XrdSysCondVar();
    fUrl->SetProtocol(std::string("root"));
    fMode = ParseOpenMode(mode);
+   fQueryReadVParams = 1;
+   fReadvIorMax = 2097136;
+   fReadvIovMax = 1024;
 
    // Map ROOT and xrootd environment
    SetEnv();
@@ -651,12 +654,12 @@ Bool_t TNetXNGFile::GetVectorReadLimits()
 
    using namespace XrdCl;
 
-   fReadvIorMax = 2097136;
-   fReadvIovMax = 1024;
-
    // Check the file isn't a zombie or closed
    if (!IsUseable())
       return kFALSE;
+
+   if (!fQueryReadVParams)
+      return kTRUE;
 
 #if XrdVNUMBER >= 40000
    std::string dataServerStr;
@@ -766,6 +769,8 @@ void TNetXNGFile::SetEnv()
    if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_CLIENTMONITORPARAM"))
                             || strlen(cenv) <= 0))
       env->PutString("ClientMonitorParam", val.Data());
+
+   fQueryReadVParams = gEnv->GetValue("NetXNG.QueryReadVParams", 1);
 
    // Old style netrc file
    TString netrc;

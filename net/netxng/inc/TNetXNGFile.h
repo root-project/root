@@ -50,6 +50,7 @@ private:
    // if requested
    Int_t                   fReadvIorMax; // Max size of a single readv chunk
    Int_t                   fReadvIovMax; // Max number of readv chunks
+   Int_t                   fQueryReadVParams;
 
 public:
    TNetXNGFile() : TFile(),
