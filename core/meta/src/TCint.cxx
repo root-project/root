@@ -839,13 +839,23 @@ void TCint::UpdateListOfGlobalFunctions()
    // Update the list of pointers to global functions. This function
    // is called by TROOT::GetListOfGlobalFunctions().
 
-   if (!gROOT->fGlobalFunctions) {
+   bool globalFunctionsAvailable = false;
+   {
+     R__LOCKGUARD(gROOTMutex);
+     globalFunctionsAvailable = gROOT->fGlobalFunctions != 0;
+   }
+   if (!globalFunctionsAvailable) {
       // No global functions registered yet, trigger it:
       gROOT->GetListOfGlobalFunctions();
       // We were already called by TROOT::GetListOfGlobalFunctions()
       return;
    }
-
+   
+   //NOTE: At the moment gROOTMutex== gCINTMutex so we only need to lock one.
+   // In the future, if they are seperated, then the locks must be taken in 
+   // the proper order.
+   // gROOTMutex is used to protect gROOT->fGlobalFunctions
+   //R__LOCKGUARD2(gROOTMutex);
    R__LOCKGUARD2(gCINTMutex);
 
    G__MethodInfo t, *a;
