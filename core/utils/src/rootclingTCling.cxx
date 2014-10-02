@@ -95,6 +95,10 @@ bool CloseStreamerInfoROOTFile()
                    << normName << '\n';
          return false;
       }
+      // Never store a proto class for a class which rootcling already has
+      // an 'official' TClass (i.e. the dictionary is in libCore or libRIO).
+      if (cl->IsLoaded()) continue;
+
       // We include transient classes as they could be used by a derived
       // class which may have rules setting the member of the transient class.
       // (And the derived class RealData *do* contain member from the transient
