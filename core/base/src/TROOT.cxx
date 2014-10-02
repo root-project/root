@@ -1296,12 +1296,14 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
    // global functions from Cling.
    // The param string must be of the form: "3189,\"aap\",1.3".
 
-   if (!params)
+   if (!params) {
+      R__LOCKGUARD2(gROOTMutex);
       return (TFunction *)GetListOfGlobalFunctions(load)->FindObject(function);
-   else {
+   } else {
       if (!fInterpreter)
          Fatal("GetGlobalFunction", "fInterpreter not initialized");
 
+      R__LOCKGUARD2(gROOTMutex);
       TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithValues(0,
                                                                  function, params,
                                                                  false);
@@ -1327,12 +1329,14 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
    // of all currently defined global functions from CINT (more expensive).
    // The proto string must be of the form: "int, char*, float".
 
-   if (!proto)
+   if (!proto) {
+      R__LOCKGUARD2(gROOTMutex);
       return (TFunction *)GetListOfGlobalFunctions(load)->FindObject(function);
-   else {
+   } else {
       if (!fInterpreter)
          Fatal("GetGlobalFunctionWithPrototype", "fInterpreter not initialized");
 
+      R__LOCKGUARD2(gROOTMutex);
       TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithPrototype(0,
                                                                            function, proto);
 
