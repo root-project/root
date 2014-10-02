@@ -688,6 +688,12 @@ Bool_t TNetXNGFile::GetVectorReadLimits()
    }
 
    delete response;
+
+   // this is to workaround a dCache bug reported here:
+   // https://sft.its.cern.ch/jira/browse/ROOT-6639
+   if( fReadvIovMax == 0x7FFFFFFF )
+     fReadvIovMax = 1024;
+
    return kTRUE;
 }
 
