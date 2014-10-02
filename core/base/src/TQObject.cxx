@@ -338,8 +338,7 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
    TFunction *slotMethod = 0;
    if (!receiver_class) {
       // case of slot_method is compiled/intrepreted function
-      slotMethod = (TFunction*)gROOT->GetListOfGlobalFunctions(kTRUE)->
-                                             FindObject(slot_method);
+      slotMethod = gROOT->GetGlobalFunction(slot_method,0,kTRUE);
    } else {
       slotMethod  = !slot_params ?
                           GetMethodWithPrototype(receiver_class,
