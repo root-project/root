@@ -244,7 +244,7 @@ Long_t TMacro::Exec(const char *params, Int_t* error)
    // if macro has been executed, look for global function with name
    // of macro and re-execute this global function, if not found then
    // macro is unnamed macro, which we re-execute from file
-   if (gROOT->GetListOfGlobalFunctions(kTRUE)->FindObject(GetName())) {
+   if ( gROOT->GetGlobalFunction(GetName(), 0, kTRUE) ) {
       gROOT->SetExecutingMacro(kTRUE);
       TString exec = GetName();
       TString p = params;
