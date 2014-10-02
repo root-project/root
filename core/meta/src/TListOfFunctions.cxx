@@ -386,6 +386,7 @@ void TListOfFunctions::Load()
          Get(mid);
       }
    }
+   gInterpreter->MethodInfo_Delete(t);
    if (!fClass) gInterpreter->ClassInfo_Delete(info);
 }
 

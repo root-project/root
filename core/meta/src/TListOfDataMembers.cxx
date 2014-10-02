@@ -424,6 +424,7 @@ void TListOfDataMembers::Load()
          Get(t);
       }
    }
+   gInterpreter->DataMemberInfo_Delete(t);
    if (!fClass) gInterpreter->ClassInfo_Delete(info);
 }
 
