@@ -137,7 +137,7 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
       // vector::iterator is a typedef to pointer or a
       // class.
 
-#if __cplusplus >= 201103L
+#if __cplusplus < 201103L
       static std::set<std::string> sSTLTypes;
       if (sSTLTypes.empty()) {
          sSTLTypes.insert("vector");
