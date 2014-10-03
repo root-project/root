@@ -4074,7 +4074,7 @@ const char* TCling::TypeName(const char* typeDesc)
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
    // You need to use the result immediately before it is being overwritten.
    thread_local char* t = 0;
-   thread_local int tlen = 0;
+   thread_local unsigned int tlen = 0;
 
    unsigned int dlen = strlen(typeDesc);
    if (dlen > tlen) {
