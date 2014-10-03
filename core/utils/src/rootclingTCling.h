@@ -27,5 +27,5 @@ extern "C" {
    void AddTypedefToROOTFile(const char *tdname);
    void AddEnumToROOTFile(const char *tdname);
    void AddAncestorPCMROOTFile(const char *pcmName);
-   bool CloseStreamerInfoROOTFile();
+   bool CloseStreamerInfoROOTFile(bool buildingROOT);
 }

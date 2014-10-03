@@ -2888,7 +2888,7 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp)
                          "#include \"TDictAttributeMap.h\"\n"
                          "#include \"TMessageHandler.h\"\n"
                         );
-   if (!CloseStreamerInfoROOTFile()) {
+   if (!CloseStreamerInfoROOTFile(buildingROOT)) {
       return 1;
    }
    return 0;
