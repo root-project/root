@@ -1,4 +1,7 @@
-{
+#include "tmvaglob.C"
+
+
+void TMVAlogon() {
    // --------- S t y l e ---------------------------
    const Bool_t UsePaperStyle = 0;
    // -----------------------------------------------
@@ -19,9 +22,9 @@
    // welcome the user
    TMVA::gTools().TMVAWelcomeMessage();
    
-#include "tmvaglob.C"
    
-   TMVAGlob::SetTMVAStyle();
-   cout << "TMVAlogon: use \"" << gStyle->GetName() << "\" style [" << gStyle->GetTitle() << "]" << endl;
-   cout << endl;
+    TMVAGlob::SetTMVAStyle();
+    cout << "TMVAlogon: use \"" << gStyle->GetName() << "\" style [" << gStyle->GetTitle() << "]" << endl;
+    cout << endl;
+
 }
