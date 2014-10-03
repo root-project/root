@@ -1559,13 +1559,8 @@ const char *TCint::TypeName(const char *typeDesc)
 
    if (typeDesc == 0) return "";
 
-#if __cplusplus >= 201103L
-   static char *t = 0;
-   static unsigned int tlen = 0;
-#else
-   thread_local static char *t = 0;
-   thread_local static unsigned int tlen = 0;
-#endif
+   TTHREAD_TLS(char*) t(0);
+   TTHREAD_TLS(unsigned int) tlen(0);
 
    unsigned int dlen = strlen(typeDesc);
    if (dlen > tlen) {
