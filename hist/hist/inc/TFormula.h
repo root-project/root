@@ -244,8 +244,8 @@ public:
    virtual void        GetParameters(Double_t *params){for(Int_t i=0;i<fNpar;i++) params[i] = fParams[i];}
    virtual const char *GetParName(Int_t ipar) const;
    virtual Int_t       GetParNumber(const char *name) const;
-   virtual Bool_t      IsLinear() {return TestBit(kLinear);}
-   virtual Bool_t      IsNormalized() {return TestBit(kNormalized);}
+   virtual Bool_t      IsLinear() const {return TestBit(kLinear);}
+   virtual Bool_t      IsNormalized() const {return TestBit(kNormalized);}
    virtual void        Print(Option_t *option="") const; // *MENU*
    virtual void        ProcessLinear(TString &replaceformula);
    virtual void        SetNumber(Int_t number) {fNumber = number;}
