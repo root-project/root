@@ -206,3 +206,6 @@ math/testUnfold5d.log: math/testUnfold5c.log
 math/testUnfold5c.log: math/testUnfold5b.log
 math/testUnfold5b.log: math/testUnfold5a.log
 
+tree/cernstaff.log: tree/cernbuild.log
+
+
