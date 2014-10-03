@@ -149,7 +149,7 @@ private:
 
    TVirtualIsAProxy  *fIsA;             //!pointer to the class's IsA proxy.
    IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
    mutable std::atomic<TMethodCall*> fIsAMethod;       //!saved info to call a IsA member function
 #else
    mutable TMethodCall *fIsAMethod;       //!saved info to call a IsA member function

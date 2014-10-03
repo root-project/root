@@ -1326,7 +1326,7 @@ TClass::~TClass()
 
    delete fStreamer;
    delete fCollectionProxy;
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
    delete fIsAMethod.load();
 #else
    delete fIsAMethod;
@@ -2279,7 +2279,7 @@ TClass *TClass::GetActualClass(const void *object) const
             Error("IsA","Can not find any IsA function for %s!",GetName());
             return (TClass*)this;
          }
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
          //Force cache to be updated here so do not have to worry about concurrency
          temp->ReturnType();
 
