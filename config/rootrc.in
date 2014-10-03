@@ -684,6 +684,7 @@ XNet.UseOldClient: @useoldnetx@
 # NetXNG.ClientMonitorParam   - Additional optional parameters that will be
 #                               passed to the monitoring object on initialization.
 # NetXNG.QueryReadVParams     - Query the server for acceptable vector read parameters
+NetXNG.QueryReadVParams: $(ROOT_XRD_QUERY_READV_PARAMS)
 
 # Parameters that influence the behavior of TDavixFile/TDavixSystem. These
 # classes give a comprehensive client side support for HTTP and WebDAV,
