@@ -40,7 +40,7 @@ TDataType::TDataType(TypedefInfo_t *info) : TDictionary(),
    fInfo = info;
 
    if (fInfo) {
-      R__LOCKGUARD2(gCINTMutex);
+      R__LOCKGUARD2(gInterpreterMutex);
       SetName(gCling->TypedefInfo_Name(fInfo));
       SetTitle(gCling->TypedefInfo_Title(fInfo));
       SetType(gCling->TypedefInfo_TrueName(fInfo));
@@ -376,7 +376,7 @@ void TDataType::CheckInfo()
 
    // This intentionally cast the constness away so that
    // we can call CheckInfo from const data members.
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
 
    if (!gCling->TypedefInfo_IsValid(fInfo) ||
        strcmp(gCling->TypedefInfo_Name(fInfo),fName.Data())!=0) {
