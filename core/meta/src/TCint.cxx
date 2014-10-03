@@ -850,9 +850,9 @@ void TCint::UpdateListOfGlobalFunctions()
       // We were already called by TROOT::GetListOfGlobalFunctions()
       return;
    }
-   
+
    //NOTE: At the moment gROOTMutex== gCINTMutex so we only need to lock one.
-   // In the future, if they are seperated, then the locks must be taken in 
+   // In the future, if they are seperated, then the locks must be taken in
    // the proper order.
    // gROOTMutex is used to protect gROOT->fGlobalFunctions
    //R__LOCKGUARD2(gROOTMutex);

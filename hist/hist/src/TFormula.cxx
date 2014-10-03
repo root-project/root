@@ -236,7 +236,7 @@ TFormula::TFormula(const char *name,const char *expression) :
       R__LOCKGUARD2(gROOTMutex);
       TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
       if (old) {
-	gROOT->GetListOfFunctions()->Remove(old);
+         gROOT->GetListOfFunctions()->Remove(old);
       }
       gROOT->GetListOfFunctions()->Add(this);
    }
@@ -1302,13 +1302,13 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      else find = kTRUE;
                   }
 
-   // Look for an already defined expression
+                  // Look for an already defined expression
 
                   if (find==0) {
-		     {
+                     {
                         R__LOCKGUARD2(gROOTMutex);
-		        oldformula = (const TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
-		     }
+                        oldformula = (const TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
+                     }
                      if (oldformula && strcmp(schain,oldformula->GetTitle())) {
                         Int_t nprior = fNpar;
                         Analyze(oldformula->GetExpFormula(),err,fNpar);
@@ -3398,9 +3398,9 @@ void TFormula::Streamer(TBuffer &b)
          }
          b.ReadClassBuffer(TFormula::Class(), this, v, R__s, R__c);
          if (!TestBit(kNotGlobal)) {
- 	    R__LOCKGUARD2(gROOTMutex);
-	    gROOT->GetListOfFunctions()->Add(this);
-	 }
+            R__LOCKGUARD2(gROOTMutex);
+            gROOT->GetListOfFunctions()->Add(this);
+         }
 
          // We need to reinstate (if possible) the TMethodCall.
          if (fFunctions.GetLast()>=0) {
@@ -3443,11 +3443,11 @@ void TFormula::Streamer(TBuffer &b)
       }
       Int_t i;
       for (i=0;i<fNoper;i++)  fExpr[i].Streamer(b);
-      for (i=0;i<fNpar;i++)   fNames[i].Streamer(b); 
+      for (i=0;i<fNpar;i++)   fNames[i].Streamer(b);
       {
          R__LOCKGUARD2(gROOTMutex);
-	 if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
-	 gROOT->GetListOfFunctions()->Add(this);
+         if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
+         gROOT->GetListOfFunctions()->Add(this);
       }
       b.CheckByteCount(R__s, R__c, TFormula::IsA());
 

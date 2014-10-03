@@ -522,9 +522,9 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
       fNumber = -1;
       {
          R__LOCKGUARD2(gROOTMutex);
-	 TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-	 gROOT->GetListOfFunctions()->Remove(f1old);
-	 gROOT->GetListOfFunctions()->Add(this);
+         TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+         gROOT->GetListOfFunctions()->Remove(f1old);
+         gROOT->GetListOfFunctions()->Add(this);
       }
       if (! fMethodCall->IsValid() ) {
          Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",name);
@@ -618,8 +618,8 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
       {
          R__LOCKGUARD2(gROOTMutex);
          TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-	 gROOT->GetListOfFunctions()->Remove(f1old);
-	 gROOT->GetListOfFunctions()->Add(this);
+         gROOT->GetListOfFunctions()->Remove(f1old);
+         gROOT->GetListOfFunctions()->Add(this);
       }
       if (! fMethodCall->IsValid() ) {
          Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",funcname);
@@ -700,7 +700,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
       gROOT->GetListOfFunctions()->Remove(f1old);
       gROOT->GetListOfFunctions()->Add(this);
    }
-      
+
    if (!gStyle) return;
    SetLineColor(gStyle->GetFuncColor());
    SetLineWidth(gStyle->GetFuncWidth());
@@ -1002,10 +1002,10 @@ void TF1::CreateFromCintClass(const char *name,void *ptr, Double_t xmin, Double_
 
       fNumber = -1;
       {
-	 R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD2(gROOTMutex);
          TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-	 gROOT->GetListOfFunctions()->Remove(f1old);
-	 gROOT->GetListOfFunctions()->Add(this);
+         gROOT->GetListOfFunctions()->Remove(f1old);
+         gROOT->GetListOfFunctions()->Add(this);
       }
       if (! fMethodCall->IsValid() ) {
          if (methodName)
