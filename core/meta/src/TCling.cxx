@@ -661,20 +661,7 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
       // vector is special: we need to check whether
       // vector::iterator is a typedef to pointer or a
       // class.
-      static std::set<std::string> sSTLTypes;
-      if (sSTLTypes.empty()) {
-         sSTLTypes.insert("vector");
-         sSTLTypes.insert("list");
-         sSTLTypes.insert("deque");
-         sSTLTypes.insert("map");
-         sSTLTypes.insert("multimap");
-         sSTLTypes.insert("set");
-         sSTLTypes.insert("multiset");
-         sSTLTypes.insert("queue");
-         sSTLTypes.insert("priority_queue");
-         sSTLTypes.insert("stack");
-         sSTLTypes.insert("iterator");
-      }
+      static const std::set<std::string> sSTLTypes {"vector","list","deque","map","multimap","set","multiset","queue","priority_queue","stack","iterator"};
       std::vector<std::string>::const_iterator it;
       std::string fileContent("");
       for (it = headers.begin(); it != headers.end(); ++it) {
@@ -4086,9 +4073,9 @@ const char* TCling::TypeName(const char* typeDesc)
    // Return the absolute type of typeDesc.
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
    // You need to use the result immediately before it is being overwritten.
-   static char* t = 0;
-   static unsigned int tlen = 0;
-   R__LOCKGUARD(gInterpreterMutex); // Because of the static array.
+   thread_local char* t = 0;
+   thread_local int tlen = 0;
+
    unsigned int dlen = strlen(typeDesc);
    if (dlen > tlen) {
       delete[] t;
