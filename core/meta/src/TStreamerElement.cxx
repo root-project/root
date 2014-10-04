@@ -639,14 +639,14 @@ void TStreamerBase::InitStreaming()
 
    if (fNewBaseClass) {
       fStreamerFunc = fNewBaseClass->GetStreamerFunc();
-      if (fBaseVersion > 0 || fBaseClass == 0) {
+      if (fBaseVersion > 0 || fBaseCheckSum == 0) {
          fStreamerInfo = fNewBaseClass->GetConversionStreamerInfo(fBaseClass,fBaseVersion);
       } else {
          fStreamerInfo = fNewBaseClass->FindConversionStreamerInfo(fBaseClass,fBaseCheckSum);
       }
    } else if (fBaseClass && fBaseClass != (TClass*)-1) {
       fStreamerFunc = fBaseClass->GetStreamerFunc();
-      if (fBaseVersion >= 0 || fBaseClass == 0) {
+      if (fBaseVersion >= 0 || fBaseCheckSum == 0) {
          fStreamerInfo = fBaseClass->GetStreamerInfo(fBaseVersion);
       } else {
          fStreamerInfo = fBaseClass->FindStreamerInfo(fBaseCheckSum);
