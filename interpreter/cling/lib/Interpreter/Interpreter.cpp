@@ -1038,7 +1038,8 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::loadFile(const std::string& filename,
-                        bool allowSharedLib /*=true*/) {
+                        bool allowSharedLib /*=true*/,
+                        Transaction** T /*= 0*/) {
     DynamicLibraryManager* DLM = getDynamicLibraryManager();
     std::string canonicalLib = DLM->lookupLibrary(filename);
     if (allowSharedLib && !canonicalLib.empty()) {
@@ -1057,7 +1058,7 @@ namespace cling {
 
     std::string code;
     code += "#include \"" + filename + "\"";
-    CompilationResult res = declare(code);
+    CompilationResult res = declare(code, T);
     return res;
   }
 
