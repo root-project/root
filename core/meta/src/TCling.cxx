@@ -1084,13 +1084,13 @@ TCling::TCling(const char *name, const char *title)
    //optind = 1;  // make sure getopt() works in the main program
 #endif // R__WIN32
 
-   if (!fromRootCling) {
-      fInterpreter->enableDynamicLookup();
-   }
-
    // Attach cling callbacks
    fClingCallbacks = new TClingCallbacks(fInterpreter);
    fInterpreter->setCallbacks(fClingCallbacks);
+
+   if (!fromRootCling) {
+      fInterpreter->enableDynamicLookup();
+   }
 }
 
 
@@ -1190,6 +1190,13 @@ bool TCling::LoadPCM(TString pcmFileName,
 
    if (!gSystem->FindFile(searchPath, pcmFileName))
       return kFALSE;
+
+   // Prevent the ROOT-PCMs hitting this during auto-load during
+   // JITting - which will cause recursive compilation. The PCMs that
+   // have their headers in the PCH have empty keys which don't trigger
+   // TVirtualStreamerInfo::Factory() - which means that the plugin gets
+   // called and JITted during some random library load instead.
+   TVirtualStreamerInfo::Factory();
 
    if (gROOT->IsRootFile(pcmFileName)) {
       Int_t oldDebug = gDebug;
