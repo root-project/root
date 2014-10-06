@@ -34,7 +34,10 @@ void CorrGui(  TString fin = "TMVA.root", TString dirName = "InputVariables_Id",
 
    // configure buttons      
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   TFile *file = (TFile*)gROOT->GetListOfFiles()->FindObject(fin);
+   if (!file || !file->IsOpen()) {
+         file = new TFile(fin);
+   }
 
    TDirectory* dir = (TDirectory*)gDirectory->Get( dirName );
    if (!dir) {

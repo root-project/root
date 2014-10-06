@@ -109,7 +109,7 @@ void compareClassApp( TString finAn = "TMVA.root", TString finApp = "TMVApp.root
          Float_t ymin = 0;
          Float_t ymax = TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*1.2 ;
          
-         if (Draw_CFANN_Logy && mvaName[imva] == "CFANN") ymin = 0.01;
+         if (Draw_CFANN_Logy && methodName == "CFANN") ymin = 0.01;
          
          // build a frame
          Int_t nb = 500;
@@ -127,7 +127,7 @@ void compareClassApp( TString finAn = "TMVA.root", TString finApp = "TMVApp.root
          c->GetPad(0)->SetLeftMargin( 0.105 );
          frame->GetYaxis()->SetTitleOffset( 1.2 );
          
-         if (Draw_CFANN_Logy && mvaName[imva] == "CFANN") c->SetLogy();
+         if (Draw_CFANN_Logy && methodName == "CFANN") c->SetLogy();
          
          // Draw legend               
          TLegend *legend= new TLegend( c->GetLeftMargin(), 1 - c->GetTopMargin() - 0.12, 

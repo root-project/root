@@ -58,8 +58,7 @@ void bdtcontrolplots( TDirectory *bdtdir ) {
 
    for (Int_t i=0; i<nPlots; i++){
       Int_t color = 4; 
-      TPad * cPad;
-      cPad = (TPad*)c->cd(i+1);
+      c->cd(i+1);
       TH1 *h = (TH1*) bdtdir->Get(hname[i]);
       
       if (h){
@@ -107,13 +106,13 @@ void bdtcontrolplots( TDirectory *bdtdir ) {
          TObject *obj=key->ReadObj();
          if (obj->IsA()->InheritsFrom(TH1::Class())){   
             TH1F *hx = (TH1F*)obj;
-            TString hname(Form("%s",obj->GetTitle()));
-            if (hname.Contains("BoostWeightsInTreeB")){ 
+            TString hhname(Form("%s",obj->GetTitle()));
+            if (hhname.Contains("BoostWeightsInTreeB")){ 
                c2->cd(ipad++);
                hx->SetLineColor(4);
                hx->Draw();
-               hname.ReplaceAll("TreeB","TreeS");
-               bdtdir->GetObject(hname.Data(),hx);
+               hhname.ReplaceAll("TreeB","TreeS");
+               bdtdir->GetObject(hhname.Data(),hx);
                if (hx) {
                   hx->SetLineColor(2);
                   hx->Draw("same");

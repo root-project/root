@@ -24,9 +24,6 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
    TFile* file = TMVAGlob::OpenFile( fin );  
 
    // define Canvas layout here!
-   Int_t xPad = 1; // no of plots in x
-   Int_t yPad = 1; // no of plots in y
-   Int_t noPad = xPad * yPad ; 
    const Int_t width = 600;   // size of canvas
 
    // this defines how many canvases we need

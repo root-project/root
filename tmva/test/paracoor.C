@@ -1,4 +1,11 @@
 #include "tmvaglob.C"
+#include "TROOT.h"
+#include "TTree.h"
+#include "TLeaf.h"
+#include "TParallelCoord.h"
+#include "TParallelCoordVar.h"
+#include "TParallelCoordRange.h"
+
 
 // plot parallel coordinates
 
@@ -42,23 +49,23 @@ void paracoor( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    
 
    TString type[2] = { "Signal", "Background" };
-   const Int_t nmva = mvas.size();
+   const UInt_t nmva = mvas.size();
    TCanvas* csig[nmva];
    TCanvas* cbkg[nmva];
-   for (Int_t imva=0; imva<mvas.size(); imva++) {
+   for (UInt_t imva=0; imva<mvas.size(); imva++) {
       cout << "--- Plotting parallel coordinates for : " << mvas[imva] << " & input variables" << endl;
 
       for (Int_t itype=0; itype<2; itype++) {
 
          // create draw option
          TString varstr = mvas[imva] + ":";
-         for (Int_t ivar=0; ivar<vars.size(); ivar++) varstr += vars[ivar] + ":";
+         for (UInt_t ivar=0; ivar<vars.size(); ivar++) varstr += vars[ivar] + ":";
          varstr.Resize( varstr.Last( ':' ) );
 
          // create canvas
          TString mvashort = mvas[imva]; mvashort.ReplaceAll("MVA_","");
          TCanvas* c1 = (itype == 0) ? csig[imva] : cbkg[imva];
-         c1 = new TCanvas( Form( "c1_%i",itype ), 
+         c1 = new TCanvas( Form( "c1_%i_%s",itype,mvashort.Data() ), 
                            Form( "Parallel coordinate representation for %s and input variables (%s events)", 
                                  mvashort.Data(), type[itype].Data() ), 
                            50*(itype), 50*(itype), 750, 500 );      
