@@ -680,12 +680,19 @@ Bool_t TNetXNGFile::GetVectorReadLimits()
 
    Ssiz_t from = 0;
    TString token;
-   fReadvIorMax = fReadvIovMax = 0;
 
-   while (TString(response->ToString()).Tokenize(token, from, "\n")) {
-      if (fReadvIorMax == 0)      fReadvIorMax = token.Atoi();
-      else if (fReadvIovMax == 0) fReadvIovMax = token.Atoi();
-   }
+   std::vector<TString> resps;
+   while (TString(response->ToString()).Tokenize(token, from, "\n"))
+      resps.push_back(token);
+
+   if (resps.size() != 2)
+      return kFALSE;
+
+   if (resps[0].IsDigit())
+      fReadvIorMax = resps[0].Atoi();
+
+   if (resps[1].IsDigit())
+      fReadvIovMax = resps[1].Atoi();
 
    delete response;
 
