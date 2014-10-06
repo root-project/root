@@ -1135,18 +1135,21 @@ llvm::Constant *CodeGenModule::EmitAnnotationString(StringRef Str) {
 
 llvm::Constant *CodeGenModule::EmitAnnotationUnit(SourceLocation Loc) {
   SourceManager &SM = getContext().getSourceManager();
-  PresumedLoc PLoc = SM.getPresumedLoc(Loc);
-  if (PLoc.isValid())
-    return EmitAnnotationString(PLoc.getFilename());
+  //PresumedLoc PLoc = SM.getPresumedLoc(Loc);
+  //if (PLoc.isValid())
+  //  return EmitAnnotationString(PLoc.getFilename());
   return EmitAnnotationString(SM.getBufferName(Loc));
 }
 
 llvm::Constant *CodeGenModule::EmitAnnotationLineNo(SourceLocation L) {
+  return llvm::ConstantInt::get(Int32Ty, 1);
+#if 0
   SourceManager &SM = getContext().getSourceManager();
   PresumedLoc PLoc = SM.getPresumedLoc(L);
   unsigned LineNo = PLoc.isValid() ? PLoc.getLine() :
     SM.getExpansionLineNumber(L);
   return llvm::ConstantInt::get(Int32Ty, LineNo);
+#endif
 }
 
 llvm::Constant *CodeGenModule::EmitAnnotateAttr(llvm::GlobalValue *GV,
