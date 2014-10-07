@@ -35,7 +35,12 @@ void runMemberComments() {
    TH1F::Class()->GetListOfAllPublicDataMembers()->ls("noaddr");
 
    printf("\nTArrow::Class()->GetListOfAllPublicMethods():\n");
-   TArrow::Class()->GetListOfAllPublicMethods()->ls("noaddr");
+   TList arrowPubMeths;
+   for (TObject* pubMeth: *TArrow::Class()->GetListOfAllPublicMethods()) {
+      arrowPubMeths.AddLast(pubMeth);
+   }
+   arrowPubMeths.Sort();
+   arrowPubMeths.ls("noaddr");
 
    TList menuItems;
    printf("\nTH1::Class()->GetMenuItems():\n");
