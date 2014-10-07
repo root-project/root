@@ -962,7 +962,7 @@ public:
       }
       //std::cout << typeName << std::endl;
 
-      TBranch * br = tree.Branch("Vector branch",typeName.c_str(),&v1);
+      TBranch * br = tree.Branch("Vector_branch",typeName.c_str(),&v1);
       if (br == 0) {
          std::cout << "Error creating branch for" << typeName << "\n\t typeid is "
                    << typeid(*v1).name() << std::endl;
@@ -1013,7 +1013,7 @@ public:
       //std::cout << "reading typeID  : " << typeid(*v1).name() << std::endl;
 
       // cast to void * to avoid a warning
-      tree->SetBranchAddress("Vector branch",(void *) &v1);
+      tree->SetBranchAddress("Vector_branch",(void *) &v1);
 
       Timer timer;
       int n = (int) tree->GetEntries();
