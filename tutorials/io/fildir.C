@@ -1,4 +1,4 @@
-void fildir() {
+{
    //
    // This macro displays the ROOT Directory data structure
    //Author: Rene Brun
