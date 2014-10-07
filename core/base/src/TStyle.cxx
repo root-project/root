@@ -411,6 +411,9 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fStripDecimals  = fStripDecimals;
    ((TStyle&)obj).fNumberContours = fNumberContours;
    ((TStyle&)obj).fLegendBorderSize = fLegendBorderSize;
+   ((TStyle&)obj).fLegendFillColor  = fLegendFillColor;
+   ((TStyle&)obj).fLegendFont       = fLegendFont;
+
    Int_t i;
    for (i=0;i<30;i++) {
       ((TStyle&)obj).fLineStyle[i]     = fLineStyle[i];
@@ -539,6 +542,7 @@ void TStyle::Reset(Option_t *opt)
    fNumberContours = 20;
    fLegendBorderSize= 4;
    fLegendFont      = 62;
+   fLegendFillColor = 0;
 
    SetDateX();
    SetDateY();
