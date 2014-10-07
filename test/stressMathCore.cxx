@@ -1476,8 +1476,6 @@ int testSMatrix(int ngen,bool io) {
 
 int testCompositeObj(int ngen) {
 
-   int iret = 0;
-
    std::cout <<"******************************************************************************\n";
    std::cout << "\tTest of a Composite Object (containing Vector's and Matrices)\n";
    std::cout <<"******************************************************************************\n";
@@ -1489,8 +1487,13 @@ int testCompositeObj(int ngen) {
    std::cout << "Test Using CINT library\n\n";
 
    // put path relative to LD_LIBRARY_PATH
-   iret = gSystem->Load("../test/libTrackMathCoreDict");
-   if (iret !=0) {
+
+   const char* dynPath = gSystem->DynamicPathName("../test/libTrackMathCoreDict",
+                                                  /*quiet*/ true);
+   int iret = -1;
+   if (dynPath)
+      iret = gSystem->Load("../test/libTrackMathCoreDict");
+   if (iret != 0) {
       // if not assume running from top ROOT dir (case of roottest)
       iret = gSystem->Load("test/libTrackMathCoreDict");
       if (iret !=0) {
