@@ -1899,14 +1899,17 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 
    const clang::ASTContext& astContext = fInterpreter->getCI()->getASTContext();
    const clang::Decl *scopeDecl = 0;
+   const clang::Type *recordType = 0;
 
    if (cl->GetClassInfo()) {
       TClingClassInfo * clingCI = (TClingClassInfo *)cl->GetClassInfo();
       scopeDecl = clingCI->GetDecl();
+      recordType = clingCI->GetType();
    } else {
       const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
       // Diags will complain about private classes:
-      scopeDecl = lh.findScope(clname, cling::LookupHelper::NoDiagnostics);
+      scopeDecl = lh.findScope(clname, cling::LookupHelper::NoDiagnostics,
+                               &recordType);
    }
    if (!scopeDecl) {
       Error("InspectMembers", "Cannot find Decl for class %s", clname);
@@ -1941,7 +1944,13 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
         eField = recordDecl->field_end(); iField != eField;
         ++iField, ++iNField) {
 
-      clang::QualType memberQT = cling::utils::Transform::GetPartiallyDesugaredType(astContext, iField->getType(), fNormalizedCtxt->GetConfig(), false /* fully qualify */);
+
+      clang::QualType memberQT = iField->getType();
+      if (recordType) {
+         // if (we_need_to_do_the_subst_because_the_class_is_a_template_instance_of_double32_t)
+         memberQT = ROOT::TMetaUtils::ReSubstTemplateArg(memberQT, recordType);
+      }
+      memberQT = cling::utils::Transform::GetPartiallyDesugaredType(astContext, memberQT, fNormalizedCtxt->GetConfig(), false /* fully qualify */);
       if (memberQT.isNull()) {
          std::string memberName;
          llvm::raw_string_ostream stream(memberName);
@@ -1970,6 +1979,10 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
          ispointer = true;
          clang::QualType ptrQT
             = memNonPtrType->getAs<clang::PointerType>()->getPointeeType();
+         if (recordType) {
+            // if (we_need_to_do_the_subst_because_the_class_is_a_template_instance_of_double32_t)
+            ptrQT = ROOT::TMetaUtils::ReSubstTemplateArg(ptrQT, recordType);
+         }
          ptrQT = cling::utils::Transform::GetPartiallyDesugaredType(astContext, ptrQT, fNormalizedCtxt->GetConfig(), false /* fully qualify */);
          if (ptrQT.isNull()) {
             std::string memberName;
