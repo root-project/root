@@ -2803,6 +2803,19 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (gInterpreter->AutoLoad(normalizedName.c_str(),kTRUE)) {
          loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
       }
+      // Maybe this was a typedef: let's try to see if this is the case
+      if (!loadedcl){
+         if (TDataType* theDataType = gROOT->GetType(normalizedName.c_str())){
+            // We have a typedef: we get the name of the underlying type
+            auto underlyingTypeName = theDataType->GetTypeName().Data();
+            // We see if we can bootstrap a class with it
+            auto underlyingTypeDict = TClassTable::GetDictNorm(underlyingTypeName);
+            if (underlyingTypeDict){
+               loadedcl = underlyingTypeDict();
+            }
+
+         }
+      }
    }
    if (loadedcl) return loadedcl;
 
