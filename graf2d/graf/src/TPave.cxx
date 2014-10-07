@@ -649,9 +649,11 @@ void TPave::SetX1(Double_t x1)
    // Set the X1 value
 
    fX1 = x1;
-   Double_t dpx  = gPad->GetX2() - gPad->GetX1();
-   Double_t xp1  = gPad->GetX1();
-   fX1NDC = (fX1-xp1)/dpx;
+   if (gPad) {
+      Double_t dpx  = gPad->GetX2() - gPad->GetX1();
+      Double_t xp1  = gPad->GetX1();
+      fX1NDC = (fX1-xp1)/dpx;
+   }
 }
 
 
@@ -661,9 +663,11 @@ void TPave::SetX2(Double_t x2)
    // Set the X2 value
 
    fX2 = x2;
-   Double_t dpx  = gPad->GetX2() - gPad->GetX1();
-   Double_t xp1  = gPad->GetX1();
-   fX2NDC = (fX2-xp1)/dpx;
+   if (gPad) {
+      Double_t dpx  = gPad->GetX2() - gPad->GetX1();
+      Double_t xp1  = gPad->GetX1();
+      fX2NDC = (fX2-xp1)/dpx;
+   }
 }
 
 
@@ -673,9 +677,11 @@ void TPave::SetY1(Double_t y1)
    // Set the Y1 value
 
    fY1 = y1;
-   Double_t dpy  = gPad->GetY2() - gPad->GetY1();
-   Double_t yp1  = gPad->GetY1();
-   fY1NDC = (fY1-yp1)/dpy;
+   if (gPad) {
+      Double_t dpy  = gPad->GetY2() - gPad->GetY1();
+      Double_t yp1  = gPad->GetY1();
+      fY1NDC = (fY1-yp1)/dpy;
+   }
 }
 
 
@@ -685,9 +691,11 @@ void TPave::SetY2(Double_t y2)
    // Set the Y2 value
 
    fY2 = y2;
-   Double_t dpy  = gPad->GetY2() - gPad->GetY1();
-   Double_t yp1  = gPad->GetY1();
-   fY2NDC = (fY2-yp1)/dpy;
+   if (gPad) {
+      Double_t dpy  = gPad->GetY2() - gPad->GetY1();
+      Double_t yp1  = gPad->GetY1();
+      fY2NDC = (fY2-yp1)/dpy;
+   }
 }
 
 
