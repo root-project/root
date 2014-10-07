@@ -564,40 +564,46 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
 } // end namespace TMetaUtils
 
 //______________________________________________________________________________
+void ROOT::TMetaUtils::TNormalizedCtxt::keepTypedef(const cling::LookupHelper &lh,
+                                                    const char* name,
+                                                    bool replace /*=false*/) {
+   // Insert the type with name into the collection of typedefs to keep.
+   // if replace, replace occurrences of the canonical type by name.
+   clang::QualType toSkip = lh.findType(name, cling::LookupHelper::WithDiagnostics);
+   if (const clang::Type* T = toSkip.getTypePtr()) {
+      clang::Decl* D = llvm::dyn_cast<clang::TypedefType>(T)->getDecl();
+      fConfig.m_toSkip.insert(D);
+      if (replace) {
+         clang::QualType canon = toSkip->getCanonicalTypeInternal();
+         fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),T));
+      } else {
+         fTypeWithAlternative.insert(T);
+      }
+   }
+}
+
+//______________________________________________________________________________
 ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh)
 {
    // Initialize the list of typedef to keep (i.e. make them opaque for normalization)
    // and the list of typedef whose semantic is different from their underlying type
    // (Double32_t and Float16_t).
    // This might be specific to an interpreter.
+   keepTypedef(lh, "Double32_t");
+   keepTypedef(lh, "Float16_t");
+   keepTypedef(lh, "Long64_t", true);
+   keepTypedef(lh, "ULong64_t", true);
 
-   clang::QualType toSkip = lh.findType("Double32_t", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) {
-      fConfig.m_toSkip.insert(toSkip.getTypePtr());
-      fTypeWithAlternative.insert(toSkip.getTypePtr());
-   }
-   toSkip = lh.findType("Float16_t", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) {
-      fConfig.m_toSkip.insert(toSkip.getTypePtr());
-      fTypeWithAlternative.insert(toSkip.getTypePtr());
-   }
-   toSkip = lh.findType("Long64_t", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) {
-      fConfig.m_toSkip.insert(toSkip.getTypePtr());
-      clang::QualType canon = toSkip->getCanonicalTypeInternal();
-      fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),toSkip.getTypePtr()));
-   }
-   toSkip = lh.findType("ULong64_t", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) {
-      fConfig.m_toSkip.insert(toSkip.getTypePtr());
-      clang::QualType canon = toSkip->getCanonicalTypeInternal();
-      fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),toSkip.getTypePtr()));
-   }
-   toSkip = lh.findType("string", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
+   clang::QualType toSkip = lh.findType("string", cling::LookupHelper::WithDiagnostics);
+   if (const clang::TypedefType* TT
+       = llvm::dyn_cast_or_null<clang::TypedefType>(toSkip.getTypePtr()))
+      fConfig.m_toSkip.insert(TT->getDecl());
+
    toSkip = lh.findType("std::string", cling::LookupHelper::WithDiagnostics);
    if (!toSkip.isNull()) {
-      fConfig.m_toSkip.insert(toSkip.getTypePtr());
+      if (const clang::TypedefType* TT
+          = llvm::dyn_cast_or_null<clang::TypedefType>(toSkip.getTypePtr()))
+         fConfig.m_toSkip.insert(TT->getDecl());
 
       clang::QualType canon = toSkip->getCanonicalTypeInternal();
       fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),toSkip.getTypePtr()));

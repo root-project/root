@@ -116,6 +116,7 @@ const int kMaxLen   =   1024;
 //______________________________________________________________________________
 class TNormalizedCtxt {
    using TypesCont_t = llvm::SmallSet<const clang::Type*, 4>;
+   using DeclsCont_t = llvm::SmallSet<const clang::Decl*, 4>;
    using Config_t = cling::utils::Transform::Config;
    using TemplPtrIntMap_t = std::map<const clang::ClassTemplateDecl*, int>;
 private:
@@ -126,12 +127,13 @@ public:
    TNormalizedCtxt(const cling::LookupHelper &lh);
 
    const Config_t    &GetConfig() const { return fConfig; }
-   const TypesCont_t &GetTypeToSkip() const { return fConfig.m_toSkip; }
+   const DeclsCont_t &GetTypeToSkip() const { return fConfig.m_toSkip; }
    const TypesCont_t &GetTypeWithAlternative() const { return fTypeWithAlternative; }
    void AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i);
    int GetNargsToKeep(const clang::ClassTemplateDecl* templ) const;
    const TemplPtrIntMap_t GetTemplNargsToKeepMap() const { return fTemplatePtrArgsToKeepMap; }
-
+   void keepTypedef(const cling::LookupHelper &lh, const char* name,
+                    bool replace = false);
 };
 
 //______________________________________________________________________________
