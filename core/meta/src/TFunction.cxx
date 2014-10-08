@@ -50,7 +50,7 @@ TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
 
    if (orig.fInfo) {
       fInfo = gCling->MethodInfo_FactoryCopy(orig.fInfo);
-      fMangledName = gCling->MethodInfo_GetMangledName(fInfo);
+      fMangledName = orig.fMangledName;
    } else
       fInfo = 0;
    fMethodArgs = 0;
