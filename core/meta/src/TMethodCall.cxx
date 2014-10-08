@@ -230,7 +230,7 @@ void TMethodCall::Init(TFunction *function)
 
    TMethod *m = dynamic_cast<TMethod*>(function);
    fClass = m ? m->GetClass() : 0;
-   fMetPtr = function;
+   fMetPtr = (TFunction*)function->Clone();
    fMethod = function->GetName();
    fParams = "";
    fProto  = function->GetSignature()+1; // skip leading )
