@@ -134,7 +134,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
 
    // Wrap some gymnastic around the enum finding. The special treatment of the
    // ListOfEnums objects is located in this routine.
-   auto findEnumInList = [sa](const TCollection * l, const char * enName) {
+   auto findEnumInList = [](const TCollection * l, const char * enName, ESearchAction sa) {
       TObject *obj;
       if (sa & kInterpLookup) {
          obj = l->FindObject(enName);
@@ -148,22 +148,22 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
    // Helper routine to look fo the scope::enum in the typesystem.
    // If autoload and interpreter lookup is allowed, TClass::GetClass is called.
    // If not, the list of classes and the list of protoclasses is inspected.
-   auto searchEnum = [&](const char * scopeName, const char * enName) {
+   auto searchEnum = [&theEnum, findEnumInList](const char * scopeName, const char * enName, ESearchAction sa) {
       // Check if the scope is a class
       if (sa == (kALoadAndInterpLookup)) {
          auto scope = TClass::GetClass(scopeName, true);
          TEnum *en = nullptr;
-         if (scope) en = findEnumInList(scope->GetListOfEnums(), enName);
+         if (scope) en = findEnumInList(scope->GetListOfEnums(), enName, sa);
          return en;
       }
 
       if (auto tClassScope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
-         theEnum = findEnumInList(tClassScope->GetListOfEnums(sa & kInterpLookup), enName);
+         theEnum = findEnumInList(tClassScope->GetListOfEnums(sa & kInterpLookup), enName, sa);
       }
       // Check if the scope is still a protoclass
       else if (auto tProtoClassscope = static_cast<TProtoClass *>((gClassTable->GetProtoNorm(scopeName)))) {
          auto listOfEnums = tProtoClassscope->GetListOfEnums();
-         if (listOfEnums) theEnum = findEnumInList(listOfEnums, enName);
+         if (listOfEnums) theEnum = findEnumInList(listOfEnums, enName, sa);
       }
       return theEnum;
    };
@@ -177,16 +177,25 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
       strncpy(scopeName, enumName, scopeNameSize);
       scopeName[scopeNameSize] = '\0';
-      theEnum = searchEnum(scopeName, enName);
-      if ((sa & kAutoload) && !theEnum) {
-         // If we did not find anything and if we are allowed to load, try to load the library
-         // containing with the scope
+      // Three levels of search
+      theEnum = searchEnum(scopeName, enName, kNone);
+      if (!theEnum && (sa & kAutoload)){
          gInterpreter->AutoLoad(scopeName);
-         theEnum = searchEnum(scopeName, enName);
+         theEnum = searchEnum(scopeName, enName, kAutoload);
+      }
+      if (!theEnum && (sa == kALoadAndInterpLookup)){
+         theEnum = searchEnum(scopeName, enName, kALoadAndInterpLookup);
       }
    } else {
       // We don't have any scope: this is a global enum
-      theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName);
+      theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kNone);
+      if (!theEnum && (sa & kAutoload)){
+         gInterpreter->AutoLoad(enumName);
+         theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kAutoload);
+      }
+      if (!theEnum && (sa & kALoadAndInterpLookup)){
+         theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kALoadAndInterpLookup);
+      }
    }
 
    return theEnum;
