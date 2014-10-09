@@ -1030,7 +1030,7 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load, Bool_t silent) const
    // return a TClass object corresponding to 'name' assuming it is an STL container.
    // In particular we looking for possible alternative name (default template
    // parameter, typedefs template arguments, typedefed name).
-
+   R__LOCKGUARD(gCINTMutex);
    return R__FindSTLClass(name,load,silent,name);
 }
 
@@ -1498,7 +1498,10 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 
    if (!dict) {
       // Try to remove the ROOT typedefs
-      resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
+      {
+         R__LOCKGUARD(gCINTMutex);
+	 resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
+      }
       if (resolved != classname) {
          dict = TClassTable::GetDict(resolved.Data());
       } else {
