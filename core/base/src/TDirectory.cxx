@@ -268,7 +268,10 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
 
    // if no default ctor return immediately (error issued by New())
    char *pobj = (char*)obj->IsA()->New();
-   if (!pobj) return 0;
+   if (!pobj) {
+     Fatal("CloneObject","Failed to create new object");
+     return 0;
+   }
 
    Int_t baseOffset = obj->IsA()->GetBaseClassOffset(TObject::Class());
    if (baseOffset==-1) {
@@ -284,7 +287,10 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
    //We are forced to go via the I/O package (ie TBufferFile).
    //Invoking TBufferFile via CINT will automatically load the I/O library
    TBuffer *buffer = R__CreateBuffer();
-   if (!buffer) return 0;
+   if (!buffer) {
+      Fatal("CloneObject","Not able to create a TBuffer!");
+      return 0;
+   }
    buffer->MapObject(obj);  //register obj in map to handle self reference
    const_cast<TObject*>(obj)->Streamer(*buffer);
 
