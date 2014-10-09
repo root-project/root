@@ -440,6 +440,9 @@ T* TProfileHelper::RebinAxis(T* p, Double_t x, TAxis *axis)
 
    //save a copy of this histogram
    T *hold = (T*)p->Clone();
+   if(nullptr ==hold) {
+     Fatal("RebinAxis","Call to Clone returned a null");
+   }
    hold->SetDirectory(0);
    //set new axis limits
    axis->SetLimits(xmin,xmax);
