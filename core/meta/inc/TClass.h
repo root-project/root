@@ -188,9 +188,9 @@ private:
    ClassStreamerFunc_t fStreamerFunc;   //Wrapper around this class custom Streamer member function.
    Int_t               fSizeof;         //Sizeof the class.
 
-           Int_t      fCanSplit;        //!Indicates whether this class can be split or not.
-   mutable Long_t     fProperty;        //!Property
-   mutable Long_t     fClassProperty;   //!C++ Property of the class (is abstract, has virtual table, etc.)
+           Int_t      fCanSplit;          //!Indicates whether this class can be split or not.
+   mutable std::atomic<Long_t> fProperty; //!Property
+   mutable Long_t     fClassProperty;     //!C++ Property of the class (is abstract, has virtual table, etc.)
 
            Bool_t     fHasRootPcmInfo : 1;      //!Whether info was loaded from a root pcm.
    mutable Bool_t     fCanLoadClassInfo : 1;    //!Indicates whether the ClassInfo is supposed to be available.
@@ -272,8 +272,8 @@ private:
    static THashTable* fgClassTypedefHash;
 
 private:
-   TClass(const TClass& tc);
-   TClass& operator=(const TClass&);
+   TClass(const TClass& tc) = delete;
+   TClass& operator=(const TClass&) = delete;
 
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
