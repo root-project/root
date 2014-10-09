@@ -1,11 +1,9 @@
-{
+void gaxis(){
 //Simple example illustrating how to draw TGaxis objects in various formats.
 //To see the output of this macro, click begin_html <a href="gif/gaxis.gif" >here</a> end_html
 //Author: Rene Brun
 
-  gROOT->Reset();
-
-  c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
+  TCanvas *c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
 
   c1->Range(-10,-1,10,1);
 
