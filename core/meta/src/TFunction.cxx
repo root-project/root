@@ -25,6 +25,7 @@
 #include "Strlen.h"
 
 #include <iostream>
+#include "TVirtualMutex.h"
 
 ClassImp(TFunction)
 
@@ -49,6 +50,7 @@ TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
    // Copy operator.
 
    if (orig.fInfo) {
+      R__LOCKGUARD(gInterpreterMutex);
       fInfo = gCling->MethodInfo_FactoryCopy(orig.fInfo);
       fMangledName = orig.fMangledName;
    } else
@@ -62,6 +64,7 @@ TFunction& TFunction::operator=(const TFunction &rhs)
    // Assignment operator.
 
    if (this != &rhs) {
+      R__LOCKGUARD(gInterpreterMutex);
       gCling->MethodInfo_Delete(fInfo);
       if (fMethodArgs) fMethodArgs->Delete();
       delete fMethodArgs;
@@ -82,6 +85,7 @@ TFunction::~TFunction()
 {
    // TFunction dtor deletes adopted CINT MethodInfo.
 
+   R__LOCKGUARD(gInterpreterMutex);
    gCling->MethodInfo_Delete(fInfo);
 
    if (fMethodArgs) fMethodArgs->Delete();
@@ -103,6 +107,7 @@ void TFunction::CreateSignature()
 {
    // Using the CINT method arg information to create a complete signature string.
 
+   R__LOCKGUARD(gInterpreterMutex);
    gCling->MethodInfo_CreateSignature(fInfo, fSignature);
 }
 
@@ -136,6 +141,7 @@ const char *TFunction::GetReturnTypeName() const
 {
    // Get full type description of function return type, e,g.: "class TDirectory*".
 
+   R__LOCKGUARD2(gInterpreterMutex);
    if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCling->MethodInfo_TypeName(fInfo);
 }
@@ -149,6 +155,7 @@ std::string TFunction::GetReturnTypeNormalizedName() const
    // also has std:: removed [This is subject to change].
    //
 
+   R__LOCKGUARD2(gInterpreterMutex);
    if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCling->MethodInfo_TypeNormalizedName(fInfo);
 }
@@ -238,9 +245,10 @@ const char *TFunction::GetPrototype() const
    // Returns the prototype of a function as defined by CINT, or 0 in
    // case of error.
 
-   if (fInfo)
+   if (fInfo) {
+      R__LOCKGUARD2(gInterpreterMutex);
       return gCling->MethodInfo_GetPrototype(fInfo);
-   else
+   } else
       return 0;
 }
 

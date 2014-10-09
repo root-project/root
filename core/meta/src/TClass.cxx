@@ -5032,6 +5032,8 @@ TClass *TClass::LoadClass(const char *requestedname, Bool_t silent)
    // This function does not (and should not) attempt to check in the
    // list of loaded classes or in the typedef.
 
+   R__LOCKGUARD(gInterpreterMutex);
+
    TClass *result = LoadClassDefault(requestedname, silent);
 
    if (result) return result;

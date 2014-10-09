@@ -1122,6 +1122,8 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load, Bool_t silent) const
    //   which can provoke the parsing of the header files (and/or the loading
    //   of clang pcms information).
 
+   R__LOCKGUARD(gInterpreterMutex);
+
    // Remove std::, allocator, typedef, add Long64_t, etc. in just one call.
    std::string normalized;
    TClassEdit::GetNormalizedName(normalized, name);

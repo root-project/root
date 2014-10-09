@@ -206,6 +206,8 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
       // TStreamerBase case; fTypeName should stay "BASE".
       fTypeName = typeName;
    } else {
+      //must protect call into the interpreter
+      R__LOCKGUARD2(gInterpreterMutex);
       fTypeName    = TClassEdit::ResolveTypedef(typeName);
    }
    fStreamer    = 0;
