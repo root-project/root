@@ -3473,8 +3473,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    ClassTemplateDecl* ctd;
    if (! QualType2Template(vanillaType, ctd,  ctsd)) return ;
 
-   // We cannot return now as one of the arguments may require to drop a template
-   // argument
+   // Even if this is a template, if we don't keep any argument, return
    const int nArgsToKeep = normCtxt.GetNargsToKeep(ctd);
 
    // Important in case of early return: we must restore the original qualtype
@@ -3681,11 +3680,7 @@ clang::QualType ROOT::TMetaUtils::GetNormalizedType(const clang::QualType &type,
    normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, interpreter, normCtxt);
 
    // Get the number of arguments to keep in case they are not default.
-   // Do not visit the function if there is no template for which arguments are
-   // to be skipped.
-   if (!normCtxt.GetTemplNargsToKeepMap().empty()){
-      KeepNParams(normalizedType,type,interpreter,normCtxt);
-   }
+   KeepNParams(normalizedType,type,interpreter,normCtxt);
 
    return normalizedType;
 }
