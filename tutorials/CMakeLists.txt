@@ -168,6 +168,9 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  hist/ContourList.C hist/hstack.C
                  hist/h2proj.C
                  hist/th2polyBoxes.C
+                 hist/statsEditing.C
+                 tree/h1analysis.C
+                 io/fildir.C
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
 set(math-testUnfold5d-depends tutorial-math-testUnfold5c)
