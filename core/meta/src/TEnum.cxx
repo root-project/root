@@ -134,9 +134,9 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
 
    // Wrap some gymnastic around the enum finding. The special treatment of the
    // ListOfEnums objects is located in this routine.
-   auto findEnumInList = [](const TCollection * l, const char * enName, ESearchAction sa) {
+   auto findEnumInList = [](const TCollection * l, const char * enName, ESearchAction sa_local) {
       TObject *obj;
-      if (sa & kInterpLookup) {
+      if (sa_local & kInterpLookup) {
          obj = l->FindObject(enName);
       } else {
          auto enumTable = dynamic_cast<const THashList *>(l);
@@ -148,22 +148,22 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
    // Helper routine to look fo the scope::enum in the typesystem.
    // If autoload and interpreter lookup is allowed, TClass::GetClass is called.
    // If not, the list of classes and the list of protoclasses is inspected.
-   auto searchEnum = [&theEnum, findEnumInList](const char * scopeName, const char * enName, ESearchAction sa) {
+   auto searchEnum = [&theEnum, findEnumInList](const char * scopeName, const char * enName, ESearchAction sa_local) {
       // Check if the scope is a class
-      if (sa == (kALoadAndInterpLookup)) {
+      if (sa_local == (kALoadAndInterpLookup)) {
          auto scope = TClass::GetClass(scopeName, true);
          TEnum *en = nullptr;
-         if (scope) en = findEnumInList(scope->GetListOfEnums(), enName, sa);
+         if (scope) en = findEnumInList(scope->GetListOfEnums(), enName, sa_local);
          return en;
       }
 
       if (auto tClassScope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
-         theEnum = findEnumInList(tClassScope->GetListOfEnums(sa & kInterpLookup), enName, sa);
+         theEnum = findEnumInList(tClassScope->GetListOfEnums(sa_local & kInterpLookup), enName, sa_local);
       }
       // Check if the scope is still a protoclass
       else if (auto tProtoClassscope = static_cast<TProtoClass *>((gClassTable->GetProtoNorm(scopeName)))) {
          auto listOfEnums = tProtoClassscope->GetListOfEnums();
-         if (listOfEnums) theEnum = findEnumInList(listOfEnums, enName, sa);
+         if (listOfEnums) theEnum = findEnumInList(listOfEnums, enName, sa_local);
       }
       return theEnum;
    };
