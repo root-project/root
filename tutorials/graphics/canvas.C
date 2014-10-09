@@ -1,19 +1,18 @@
-{
+void canvas(){
 //Example of primitives in a canvas
 // To see the output of this macro, click begin_html <a href="gif/canvas.gif" >here</a> end_html
 // One of the first actions in a ROOT session is the creation of a Canvas.
 // Here we create a Canvas named "c1"
 //Author: Rene Brun
 
-  gROOT->Reset();
-  c1 = new TCanvas("c1","Canvas Example",200,10,600,480);
+  TCanvas *c1 = new TCanvas("c1","Canvas Example",200,10,600,480);
 
   gBenchmark->Start("canvas");
 //
 // Inside this canvas, we create two pads
 //
-  pad1 = new TPad("pad1","This is pad1",0.05,0.52,0.95,0.97);
-  pad2 = new TPad("pad2","This is pad2",0.05,0.02,0.95,0.47);
+  TPad *pad1 = new TPad("pad1","This is pad1",0.05,0.52,0.95,0.97);
+  TPad *pad2 = new TPad("pad2","This is pad2",0.05,0.02,0.95,0.47);
   pad1->SetFillColor(11);
   pad2->SetFillColor(11);
   pad1->Draw();
@@ -24,8 +23,8 @@
 // Note that the current pad is always highlighted.
 //
   pad2->cd();
-  pad21 = new TPad("pad21","First subpad of pad2",0.02,0.05,0.48,0.95,17,3);
-  pad22 = new TPad("pad22","Second subpad of pad2",0.52,0.05,0.98,0.95,17,3);
+  TPad *pad21 = new TPad("pad21","First subpad of pad2",0.02,0.05,0.48,0.95,17,3);
+  TPad *pad22 = new TPad("pad22","Second subpad of pad2",0.52,0.05,0.98,0.95,17,3);
   pad21->Draw();
   pad22->Draw();
 //
@@ -34,39 +33,39 @@
   pad1->cd();
   float xt1 = 0.5;
   float yt1 = 0.1;
-  t1 = new TText(0.5,yt1,"ROOT");
+  TText *t1 = new TText(0.5,yt1,"ROOT");
   t1->SetTextAlign(22);
   t1->SetTextSize(0.05);
   t1->Draw();
-  line1 = new TLine(0.05,0.05,0.80,0.70);
+  TLine *line1 = new TLine(0.05,0.05,0.80,0.70);
   line1->SetLineWidth(8);
   line1->SetLineColor(2);
   line1->Draw();
   line1->DrawLine(0.6,0.1,0.9,0.9);
-  line2 = new TLine(0.05,0.70,0.50,0.10);
+  TLine *line2 = new TLine(0.05,0.70,0.50,0.10);
   line2->SetLineWidth(4);
   line2->SetLineColor(5);
   line2->Draw();
 //
   pad21->cd();
-  t21 = new TText(0.05,0.8,"This is pad21");
+  TText *t21 = new TText(0.05,0.8,"This is pad21");
   t21->SetTextSize(0.1);
   t21->Draw();
   float xp2 = 0.5;
   float yp2 = 0.4;
-  paves = new TPavesText(0.1,0.1,xp2,yp2);
+  TPavesText *paves = new TPavesText(0.1,0.1,xp2,yp2);
   paves->AddText("This is a PavesText");
   paves->AddText("You can add new lines");
   paves->AddText("Text formatting is automatic");
   paves->SetFillColor(43);
   paves->Draw();
   pad22->cd();
-  t22 = new TText(0.05,0.8,"This is pad22");
+  TText *t22 = new TText(0.05,0.8,"This is pad22");
   t22->SetTextSize(0.1);
   t22->Draw();
   float xlc = 0.01;
   float ylc = 0.01;
-  label = new TPaveLabel(xlc, ylc, xlc+0.8, ylc+0.1,"This is a PaveLabel");
+  TPaveLabel *label = new TPaveLabel(xlc, ylc, xlc+0.8, ylc+0.1,"This is a PaveLabel");
   label->SetFillColor(24);
   label->Draw();
 

@@ -1,17 +1,17 @@
-{
+void basic3d(){
    // Show 3-D polylines and markers
    // To see the output of this macro, click begin_html <a href="gif/basic3d.gif">here</a> end_html
    //
-   gROOT->Reset();
-   c1 = new TCanvas("c1","PolyLine3D & PolyMarker3D Window",200,10,700,500);
+
+   TCanvas *c1 = new TCanvas("c1","PolyLine3D & PolyMarker3D Window",200,10,700,500);
 
    // create a pad
-   p1 = new TPad("p1","p1",0.05,0.02,0.95,0.82,46,3,1);
+   TPad *p1 = new TPad("p1","p1",0.05,0.02,0.95,0.82,46,3,1);
    p1->Draw();
    p1->cd();
 
    // creating a view
-   view = TView::CreateView(1);
+   TView *view = TView::CreateView(1);
    view->SetRange(5,5,5,25,25,25);
 
    // create a first PolyLine3D
