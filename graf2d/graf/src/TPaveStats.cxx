@@ -29,8 +29,13 @@ ClassImp(TPaveStats)
 /* Begin_Html
 <center><h2>The histogram statistics painter class</h2></center>
 A PaveStats is a PaveText to draw histogram statistics and fit parameters.
+<ul>
+<li><a href="#PS01">Statistics Display</a>
+<li><a href="#PS02">Fit Statistics</a>
+<li><a href="#PS03">Statistics box editing</a>
+</ul>
 
-<a name="HP07"></a><h3>Statistics Display</h3>
+<a name="PS01"></a><h3>Statistics Display</h3>
 
 The type of information shown in the histogram statistics box can be selected
 with:
@@ -171,7 +176,7 @@ and activate it again with:
 </pre>
 
 
-<a name="HP08"></a><h3>Fit Statistics</h3>
+<a name="PS02"></a><h3>Fit Statistics</h3>
 
 
 The type of information about fit parameters printed in the histogram statistics
@@ -195,7 +200,15 @@ print fit probability, parameter names/values and errors.
 </ol>
 Note: <tt>gStyle->SetOptFit(1)</tt> means "default value", so it is equivalent
 to <tt>gStyle->SetOptFit(111)</tt>
-End_Html */
+
+
+<a name="PS03"></a><h3>Statistics box editing</h3>
+
+The following example show how to remove and add a line in a statistics box.
+End_Html
+Begin_Macro(source)
+../../../tutorials/hist/statsEditing.C
+End_Macro */
 
 
 const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
