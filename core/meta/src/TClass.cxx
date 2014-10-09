@@ -1416,80 +1416,6 @@ void TClass::Init(const char *name, Version_t cversion,
 }
 
 //______________________________________________________________________________
-TClass::TClass(const TClass& cl) :
-  TDictionary(cl),
-  fPersistentRef(0),
-  fStreamerInfo(cl.fStreamerInfo),
-  fConversionStreamerInfo(0),
-  fRealData(cl.fRealData),
-  fBase(cl.fBase),
-  fData(cl.fData),
-  fEnums(cl.fEnums),
-  fFuncTemplate(cl.fFuncTemplate),
-  fMethod(cl.fMethod),
-  fAllPubData(cl.fAllPubData),
-  fAllPubMethod(cl.fAllPubMethod),
-  fClassMenuList(0),
-  fDeclFileName(cl.fDeclFileName),
-  fImplFileName(cl.fImplFileName),
-  fDeclFileLine(cl.fDeclFileLine),
-  fImplFileLine(cl.fImplFileLine),
-  fInstanceCount(cl.fInstanceCount),
-  fOnHeap(cl.fOnHeap),
-  fCheckSum(cl.fCheckSum),
-  fCollectionProxy(cl.fCollectionProxy),
-  fClassVersion(cl.fClassVersion),
-  fClassInfo(cl.fClassInfo),
-  fContextMenuTitle(cl.fContextMenuTitle),
-  fTypeInfo(cl.fTypeInfo),
-  fShowMembers(cl.fShowMembers),
-  fStreamer(cl.fStreamer),
-  fSharedLibs(cl.fSharedLibs),
-  fIsA(cl.fIsA),
-  fGlobalIsA(cl.fGlobalIsA),
-  fIsAMethod(0),
-  fMerge(cl.fMerge),
-  fResetAfterMerge(cl.fResetAfterMerge),
-  fNew(cl.fNew),
-  fNewArray(cl.fNewArray),
-  fDelete(cl.fDelete),
-  fDeleteArray(cl.fDeleteArray),
-  fDestructor(cl.fDestructor),
-  fDirAutoAdd(cl.fDirAutoAdd),
-  fStreamerFunc(cl.fStreamerFunc),
-  fSizeof(cl.fSizeof),
-  fCanSplit(cl.fCanSplit),
-  fProperty(cl.fProperty),
-  fClassProperty(cl.fClassProperty),
-  fCanLoadClassInfo(cl.fCanLoadClassInfo),
-  fIsOffsetStreamerSet(cl.fIsOffsetStreamerSet),
-  fVersionUsed(kFALSE),
-  fOffsetStreamer(cl.fOffsetStreamer),
-  fStreamerType(cl.fStreamerType),
-  fState(cl.fState),
-  fCurrentInfo(0),
-  fLastReadInfo(0),
-  fRefProxy(cl.fRefProxy),
-  fSchemaRules(cl.fSchemaRules),
-  fStreamerImpl(0)
-{
-   //copy constructor
-
-   R__ASSERT(0 /* TClass Object are not copyable */ );
-}
-
-//______________________________________________________________________________
-TClass& TClass::operator=(const TClass& cl)
-{
-   //assignement operator
-   if(this!=&cl) {
-      R__ASSERT(0 /* TClass Object are not copyable */ );
-   }
-   return *this;
-}
-
-
-//______________________________________________________________________________
 TClass::~TClass()
 {
    // TClass dtor. Deletes all list that might have been created.
@@ -4485,6 +4411,8 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
       // Register the object for special handling in the destructor.
       if (p) {
          RegisterAddressInRepository("New",p,this);
+      } else {
+         Error("New", "Failed to construct class '%s' using streamer info", GetName());
       }
    } else {
       Fatal("New", "This cannot happen!");
@@ -5381,9 +5309,6 @@ Long_t TClass::Property() const
 
    if (HasInterpreterInfo()) {
 
-      kl->fProperty = gCling->ClassInfo_Property(GetClassInfo());
-      kl->fClassProperty = gCling->ClassInfo_ClassProperty(GetClassInfo());
-
       // This code used to use ClassInfo_Has|IsValidMethod but since v6
       // they return true if the routine is defined in the class or any of
       // its parent.  We explicitly want to know whether the function is
@@ -5410,6 +5335,10 @@ Long_t TClass::Property() const
          kl->fStreamerType  = kExternal;
          kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
+      //must set this last since other threads may read fProperty
+      // and think all test bits have been properly set
+      kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
+      kl->fClassProperty = gCling->ClassInfo_ClassProperty(GetClassInfo());
 
    } else {
 
