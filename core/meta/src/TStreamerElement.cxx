@@ -202,7 +202,11 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fNewType     = fType;
    fArrayDim    = 0;
    fArrayLength = 0;
-   fTypeName    = TClassEdit::ResolveTypedef(typeName);
+   {
+      //must protect call into the interpreter
+      R__LOCKGUARD2(gCINTMutex);
+      fTypeName    = TClassEdit::ResolveTypedef(typeName);
+   }
    fStreamer    = 0;
    fClassObject = (TClass*)(-1);
    fNewClass    = 0;

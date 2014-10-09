@@ -2098,8 +2098,9 @@ void *TCint::FindSpecialObject(const char *item, G__ClassInfo *type,
    // This function tries to find the UO in the ROOT files, directories, etc.
    // This functions has been registered by the TCint ctor.
 
-   if (!*prevObj || *assocPtr != gDirectory) {
+   //must protect calls to fgSetOfSpecials and call to G__ClassInfo::Init
    R__LOCKGUARD(gCINTMutex);
+   if (!*prevObj || *assocPtr != gDirectory) {
       *prevObj = gROOT->FindSpecialObject(item, *assocPtr);
       if (!fgSetOfSpecials) fgSetOfSpecials = new std::set<TObject*>;
       if (*prevObj) ((std::set<TObject*>*)fgSetOfSpecials)->insert((TObject*)*prevObj);
