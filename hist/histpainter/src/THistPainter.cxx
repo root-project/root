@@ -726,9 +726,9 @@ with:
 <pre>
       gStyle->SetOptStat(mode);
 </pre>
-The "<tt>mode</tt>" has up to nine digits that can be set to on(1 or 2), off(0).
+The "<tt>mode</tt>" has up to nine digits that can be set to on (1 or 2), off (0).
 <pre>
-      mode = iourmen  (default = 000001111)
+      mode = ksiourmen  (default = 000001111)
       k = 1;  kurtosis printed
       k = 2;  kurtosis and kurtosis error printed
       s = 1;  skewness printed
@@ -756,7 +756,7 @@ displays the name of histogram, mean value and RMS.
 
 <p><b>WARNING 1:</b> never do:
 <pre>
-      <s>gStyle->SetOptStat(000111);</s>
+      <s>gStyle->SetOptStat(0001111);</s>
 </pre>
 but instead do:
 <pre>
