@@ -135,7 +135,7 @@ if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
   add_custom_target(hsimple ALL DEPENDS hsimple.root)
   add_dependencies(hsimple onepcm)
   ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
-  add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
+  add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe DEPENDS Cling)
   install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 endif()
 
