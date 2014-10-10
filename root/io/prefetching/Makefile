@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog atlasFlushed/atlasFlushed.*  atlasFlushed/*.log  atlasFlushed/atlasFlushedProjectDict*
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog atlasFlushed/atlasFlushed.*  atlasFlushed/*.$(ObjSuf) atlasFlushed/*.pcm atlasFlushed/*.log  atlasFlushed/atlasFlushedProjectDict*
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -96,8 +96,11 @@ PrefetchReading: PrefetchReading.clog
 	$(TestDiff)
 endif
 
-%.$(ObjSuf): atlasFlushed/%.cxx
+# We should really generate a .d file
+%.$(ObjSuf): atlasFlushed/%.cxx $(ROOTCORELIBS)
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cxx.build.log 2>&1
+
+atlasFlushed/atlasFlushedProjectDict1.$(ObjSuf) atlasFlushed/atlasFlushedProjectDict2.$(ObjSuf) atlasFlushed/atlasFlushedProjectSource.$(ObjSuf): $(ROOTCORELIBS)
 
 atlasFlushed/atlasFlushedProjectDict1.cxx: atlasFlushed/atlasFlushedLinkDef1.h
 	$(CMDECHO) cd atlasFlushed; rootcint -f atlasFlushedProjectDict1.cxx -c atlasFlushedProjectHeaders.h atlasFlushedLinkDef1.h
