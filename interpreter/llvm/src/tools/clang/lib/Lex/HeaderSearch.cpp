@@ -988,7 +988,7 @@ static void mergeHeaderFileInfo(HeaderFileInfo &HFI,
 
   if (HFI.Framework.empty())
     HFI.Framework = OtherHFI.Framework;
-  
+
   HFI.Resolved = true;
 }
                                 
@@ -1001,6 +1001,11 @@ HeaderFileInfo &HeaderSearch::getFileInfo(const FileEntry *FE) {
   HeaderFileInfo &HFI = FileInfo[FE->getUID()];
   if (ExternalSource && !HFI.Resolved)
     mergeHeaderFileInfo(HFI, ExternalSource->GetHeaderFileInfo(FE));
+
+  // Is the file open even though its content comes from an external source?
+  if (HFI.External && FE->File)
+    FE->closeFile();
+
   HFI.IsValid = 1;
   return HFI;
 }
@@ -1025,6 +1030,10 @@ bool HeaderSearch::isFileMultipleIncludeGuarded(const FileEntry *File) {
   HeaderFileInfo &HFI = FileInfo[File->getUID()];
   if (ExternalSource && !HFI.Resolved)
     mergeHeaderFileInfo(HFI, ExternalSource->GetHeaderFileInfo(File));
+
+  // Is the file open even though its content comes from an external source?
+  if (HFI.External && File->File)
+    File->closeFile();
 
   return HFI.isPragmaOnce || HFI.isImport ||
       HFI.ControllingMacro || HFI.ControllingMacroID;
