@@ -1,6 +1,6 @@
 //Draw arrows
 //Author: Rene Brun
-void arrow(){
+TCanvas *arrow(){
    TCanvas *c1 = new TCanvas("c1");
    c1->Range(0,0,1,1);
 

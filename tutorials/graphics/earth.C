@@ -1,4 +1,4 @@
-{
+TCanvas *earth(){
   //this tutorial illustrate the special contour options
   //    "AITOFF"     : Draw a contour via an AITOFF projection
   //    "MERCATOR"   : Draw a contour via an Mercator projection

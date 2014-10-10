@@ -1,6 +1,6 @@
 //Draw ellipses
 //Author: Rene Brun
-void ellipse(){
+TCanvas *ellipse(){
    TCanvas *c1 = new TCanvas("c1");
    c1->Range(0,0,1,1);
    TPaveLabel *pel = new TPaveLabel(0.1,0.8,0.9,0.95,"Examples of Ellipses");
