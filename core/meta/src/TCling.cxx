@@ -3484,7 +3484,8 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
       // If it is a global enum.
       possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name);
    }
-   if (possibleEnum && isa<clang::EnumDecl>(possibleEnum)) {
+   if (possibleEnum && (possibleEnum != (clang::Decl*)-1)
+       && isa<clang::EnumDecl>(possibleEnum)) {
       return possibleEnum;
    }
    return 0;
