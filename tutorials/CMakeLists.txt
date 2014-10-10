@@ -191,13 +191,13 @@ foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBay
 endforeach()
 
 #--With ACLiC---------------------------------------------------------
-set(fit-combinedFit-aclic +)
-set(fit-line3Dfit-aclic +) 
-set(fit-TwoHistoFit2D-aclic +)
-set(math-testUnfold4-aclic +)
-set(io-double32-aclic +)
-set(tree-hvector-aclic +)
-set(math-testrandom-aclic +)
+set(fit-combinedFit-aclic ++)
+set(fit-line3Dfit-aclic ++)
+set(fit-TwoHistoFit2D-aclic ++)
+set(math-testUnfold4-aclic ++)
+set(io-double32-aclic ++)
+set(tree-hvector-aclic ++)
+set(math-testrandom-aclic ++)
 
 #---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
