@@ -215,9 +215,10 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
    // 'methodname' should NOT have any scope information in it.  The scope
    // information should be passed via the TClass or CINT ClassInfo.
 
-   if (!fFunc)
+   if (!fFunc) {
+      R__LOCKGUARD2(gCINTMutex);
       fFunc = gCint->CallFunc_Factory();
-   else
+   } else
       gCint->CallFunc_Init(fFunc);
 
    fClass    = cl;
