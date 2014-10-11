@@ -169,7 +169,11 @@ struct G__ifunc_table* Cint::G__MethodInfo::ifunc()
 ///////////////////////////////////////////////////////////////////////////
 const char* Cint::G__MethodInfo::Title() 
 {
-  THREAD_LOCAL static char buf[G__INFO_TITLELEN];
+#if __cplusplus >= 201103L
+   thread_local char buf[G__INFO_TITLELEN];
+#else
+   THREAD_LOCAL static char buf[G__INFO_TITLELEN];
+#endif
   buf[0]='\0';
   if(IsValid()) {
     struct G__ifunc_table_internal *ifunc2;
@@ -600,7 +604,11 @@ int Cint::G__MethodInfo::IsBusy()
 ///////////////////////////////////////////////////////////////////////////
 char* Cint::G__MethodInfo::GetPrototype()
 {
+#if __cplusplus >= 201103L
+  thread_local G__FastAllocString *buf_ptr = new G__FastAllocString(G__LONGLINE);
+#else
   THREAD_LOCAL static G__FastAllocString *buf_ptr = new G__FastAllocString(G__LONGLINE);
+#endif
   G__FastAllocString &buf(*buf_ptr);  // valid until the next call of GetPrototype, just like any static
 
   if (!IsValid()) return 0;

@@ -122,7 +122,11 @@ int Cint::G__TypeInfo::operator!=(const G__TypeInfo& a)
 ///////////////////////////////////////////////////////////////////////////
 const char* Cint::G__TypeInfo::TrueName() 
 {
+#if __cplusplus >= 201103L
+   thread_local G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
+#else
    THREAD_LOCAL static G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
+#endif
    G__FastAllocString &buf(*buf_ptr);
 
    buf = G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst);
@@ -131,7 +135,11 @@ const char* Cint::G__TypeInfo::TrueName()
 ///////////////////////////////////////////////////////////////////////////
 const char* Cint::G__TypeInfo::Name() 
 {
+#if __cplusplus >= 201103L
+   thread_local G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
+#else
    THREAD_LOCAL static G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
+#endif
    G__FastAllocString &buf(*buf_ptr);
 
    buf = G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
