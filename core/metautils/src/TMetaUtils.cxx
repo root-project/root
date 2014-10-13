@@ -37,6 +37,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeVisitor.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/ModuleMap.h"
@@ -4151,6 +4152,59 @@ ROOT::ESTLType ROOT::TMetaUtils::IsSTLCont(const clang::RecordDecl &cl)
    return STLKind(cl.getName());
 }
 
+static bool hasSomeTypedefSomewhere(const clang::Type* T) {
+  using namespace clang;
+  struct SearchTypedef: public TypeVisitor<SearchTypedef, bool> {
+    bool VisitTypedefType(const TypedefType* TD) {
+      return true;
+    }
+    bool VisitArrayType(const ArrayType* AT) {
+      return Visit(AT->getElementType().getTypePtr());
+    }
+    bool VisitDecltypeType(const DecltypeType* DT) {
+      return Visit(DT->getUnderlyingType().getTypePtr());
+    }
+    bool VisitPointerType(const PointerType* PT) {
+      return Visit(PT->getPointeeType().getTypePtr());
+    }
+    bool VisitReferenceType(const ReferenceType* RT) {
+      return Visit(RT->getPointeeType().getTypePtr());
+    }
+    bool VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* STST) {
+      return Visit(STST->getReplacementType().getTypePtr());
+    }
+    bool VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
+      for (int I = 0, N = TST->getNumArgs(); I < N; ++I) {
+        const TemplateArgument& TA = TST->getArg(I);
+        if (TA.getKind() == TemplateArgument::Type
+            && Visit(TA.getAsType().getTypePtr()))
+          return true;
+      }
+      return false;
+    }
+    bool VisitTemplateTypeParmType(const TemplateTypeParmType* TTPT) {
+      return false; // shrug...
+    }
+    bool VisitTypeOfType(const TypeOfType* TOT) {
+      return TOT->getUnderlyingType().getTypePtr();
+    }
+    bool VisitElaboratedType(const ElaboratedType* ET) {
+      NestedNameSpecifier* NNS = ET->getQualifier();
+      while (NNS) {
+        if (NNS->getKind() == NestedNameSpecifier::TypeSpec) {
+          if (Visit(NNS->getAsType()))
+            return true;
+        }
+        NNS = NNS->getPrefix();
+      }
+      return Visit(ET->getNamedType().getTypePtr());
+    }
+  };
+
+  SearchTypedef ST;
+  return ST.Visit(T);
+}
+
 //______________________________________________________________________________
 clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, const clang::Type *instance)
 {
@@ -4159,6 +4213,10 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
    // partially sugared types we have from 'instance'.
 
    if (!instance) return input;
+   // if there is no typedef in instance then there is nothing guiding any
+   // template parameter typedef replacement.
+   if (!hasSomeTypedefSomewhere(instance))
+     return input;
 
    using namespace llvm;
    using namespace clang;
