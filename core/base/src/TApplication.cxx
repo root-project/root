@@ -44,6 +44,7 @@
 #include "TClassTable.h"
 #include "TBrowser.h"
 #include "TUrl.h"
+#include "TVirtualMutex.h"
 
 #include <stdlib.h>
 
@@ -115,7 +116,7 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    // except if you want to by-pass the argv processing by GetOptions()
    // in which case you should specify numOptions<0. All options will
    // still be available via the Argv() method for later use.
-
+   R__LOCKGUARD2(gCINTMutex);
    if (gApplication && gApplication->TestBit(kDefaultApplication)) {
       // allow default TApplication to be replaced by a "real" TApplication
       delete gApplication;
@@ -140,7 +141,6 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
       atexit(CallEndOfProcessCleanups);
    }
    gApplication = this;
-   gROOT->SetApplication(this);
    gROOT->SetName(appClassName);
 
    // Create the list of applications the first time
@@ -200,6 +200,10 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
          gROOT->ProcessLine(Form("new TMemStat(\"%s\",%d,%d);",ssystem,buffersize,maxcalls));
       }
    }
+
+   //Needs to be done last
+   gROOT->SetApplication(this);
+
 }
 
 //______________________________________________________________________________
