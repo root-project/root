@@ -37,7 +37,7 @@ writes them to the file.
    }
    // open a file and write the array to the file
    TFile f("demo.root","recreate");
-   Hlist->Write();
+   Hlist.Write();
    f.Close();
 }
 ```
