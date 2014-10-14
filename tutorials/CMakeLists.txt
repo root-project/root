@@ -16,7 +16,13 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
     set(ROOT_environ PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
   endif()
 else()                       # testing using an installation
-  include(${ROOT_USE_FILE})
+  if(DEFINED ROOT_USE_FILE)
+    include(${ROOT_USE_FILE})
+  else()  #---If ROOT was built with the classic configure/make---
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
+    include(RootNewMacros)
+    set(ROOT_root_CMD root.exe)
+  endif()
   enable_testing()
 endif()
 
