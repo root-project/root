@@ -524,7 +524,7 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
       const Font_t oldFont = gVirtualX->GetTextFont();
       if (gVirtualX->InheritsFrom("TGCocoa"))
          gVirtualX->SetTextFont(fTextFont);
-      gVirtualX->SetTextSize((int)tsize);
+      gVirtualX->SetTextSize(tsize);
       a = gVirtualX->GetFontAscent(text);
       if (!a) {
          UInt_t w;
@@ -556,7 +556,7 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) cons
       a = TTF::GetBox().yMax;
       d = TMath::Abs(TTF::GetBox().yMin);
    } else {
-      gVirtualX->SetTextSize((int)tsize);
+      gVirtualX->SetTextSize(tsize);
       a = gVirtualX->GetFontAscent();
       if (!a) {
          UInt_t w;
@@ -588,7 +588,7 @@ void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
       const Font_t oldFont = gVirtualX->GetTextFont();
       if (gVirtualX->InheritsFrom("TGCocoa"))
          gVirtualX->SetTextFont(fTextFont);
-      gVirtualX->SetTextSize((int)tsize);
+      gVirtualX->SetTextSize(tsize);
       gVirtualX->GetTextExtent(w, h, (char*)text);
       if (gVirtualX->InheritsFrom("TGCocoa"))
          gVirtualX->SetTextFont(oldFont);
@@ -618,7 +618,7 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
       TTF::SetKerning(kernsave);
    } else {
       UInt_t h;
-      gVirtualX->SetTextSize((int)tsize);
+      gVirtualX->SetTextSize(tsize);
       gVirtualX->GetTextExtent(a, h, (char*)text);
    }
 }
@@ -642,7 +642,7 @@ void TText::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text) const
       TTF::SetTextSize(tsize);
       TTF::GetTextExtent(w, h, (wchar_t*)text);
    } else {
-      gVirtualX->SetTextSize((int)tsize);
+      gVirtualX->SetTextSize(tsize);
       gVirtualX->GetTextExtent(w, h, (wchar_t*)text);
    }
 }
