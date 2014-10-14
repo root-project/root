@@ -164,7 +164,7 @@ void printTreeSummary(TTree *t)
 
 int printSizes()
 {
-   TFile *f = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
+   TFile *f = TFile::Open("hsimple.root");
    if (!f) return 1;
    TTree *t; f->GetObject("ntuple",t);
    if (!t) return 1;
