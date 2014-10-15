@@ -11,4 +11,5 @@ ROOTTEST_ADD_TEST(roottest-root-html-runFindSource
 ROOTTEST_ADD_TEST(roottest-root-html-runMakeIndex
                   MACRO runMakeIndex.C
                   OUTCNV MakeIndex_convert.sh
-                  OUTREF MakeIndex.ref)
+                  OUTREF MakeIndex.oref
+                  ERRREF MakeIndex.eref)
