@@ -2423,7 +2423,8 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || strstr(filename, "/usr/lib/liblangid")
        || strstr(filename, "/usr/lib/libCRFSuite")
        || strstr(filename, "/usr/lib/libpam")
-       || strstr(filename, "/usr/lib/libOpenScriptingUtil"))
+       || strstr(filename, "/usr/lib/libOpenScriptingUtil")
+       || strstr(filename, "/usr/lib/libextension"))
       return;
 #elif defined(__CYGWIN__)
    // Check that this is not a system library
