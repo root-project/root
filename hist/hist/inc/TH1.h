@@ -199,6 +199,7 @@ public:
    virtual Double_t Chisquare(TF1 * f1, Option_t *option = "") const;
    virtual void     ClearUnderflowAndOverflow();
    virtual Double_t ComputeIntegral(Bool_t onlyPositive = false);
+   TObject*         Clone(const char* newname=0) const;
    virtual void     Copy(TObject &hnew) const;
    virtual void     DirectoryAutoAdd(TDirectory *);
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
