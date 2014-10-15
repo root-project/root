@@ -33,12 +33,24 @@ find_library(PYTHIA6_LIBRARY NAMES pythia6 Pythia6
              DOC "Specify the Pythia6 library here.")
 
 set(PYTHIA6_LIBRARIES ${PYTHIA6_LIBRARY})
+
+find_library(PYTHIA6_rootinterface_LIBRARY NAMES rootinterface
+             HINTS ${_pythia6dirs}
+             PATH_SUFFIXES lib
+             DOC "Specify the Pythia rootinterface library here.")
+
+if(PYTHIA6_rootinterface_LIBRARY)
+  list(APPEND PYTHIA6_LIBRARIES ${PYTHIA6_rootinterface_LIBRARY})
+endif()
+
 get_filename_component(PYTHIA6_LIBRARY_DIR ${PYTHIA6_LIBRARY} PATH)
 
 # handle the QUIETLY and REQUIRED arguments and set PHOTOS_FOUND to TRUE if
 # all listed variables are TRUE
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Pythia6 DEFAULT_MSG PYTHIA6_LIBRARY)
+find_package_handle_standard_args(Pythia6 DEFAULT_MSG PYTHIA6_INCLUDE_DIR PYTHIA6_LIBRARY)
 
-mark_as_advanced(PYTHIA6_INCLUDE_DIR PYTHIA6_LIBRARY)
+mark_as_advanced(PYTHIA6_INCLUDE_DIR
+                 PYTHIA6_LIBRARY
+                 PYTHIA6_rootinterface_LIBRARY)
