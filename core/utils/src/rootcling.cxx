@@ -2401,9 +2401,13 @@ int CreateCapabilitiesFile(const std::string &capaFileName,
 
    std::list<std::string> new_lines;
 
-   for (std::list<std::string>::const_iterator lineIt = classesNames.begin();
-         lineIt != classesNames.end(); ++lineIt) {
-      new_lines.push_back(" \"" + capaPre + "/" + TClassEdit::InsertStd(lineIt->c_str()) + "\",\n");
+   std::string classNameWithStd;
+   for (auto const className : classesNames){
+      classNameWithStd = TClassEdit::InsertStd(className.c_str());
+      new_lines.push_back(" \"" + capaPre + "/" + classNameWithStd + "\",\n");
+      if (className!=classNameWithStd) {
+         new_lines.push_back(" \"" + capaPre + "/" + className.c_str() + "\",\n");
+      }
    }
 
    std::ifstream ifile(capaFileName.c_str());
