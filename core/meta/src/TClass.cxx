@@ -1288,7 +1288,7 @@ void TClass::Init(const char *name, Version_t cversion,
             fHasRootPcmInfo = kTRUE;
          }
       }
-      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName)) {
+      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
          if (!fClassInfo) {
             if (IsZombie()) {
