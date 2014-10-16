@@ -64,6 +64,11 @@ if(NOT ROOT_xml_FOUND)
                 histfactory/*.C)   # histfactory requires xml
 endif()
 
+if(WIN32)
+  set(histfactory_veto histfactory/*.C
+                       roostats/StandardFrequentistDiscovery.C) # histfactory doesn't work on Windows
+endif()
+
 if(NOT ROOT_fitsio_FOUND)
   set(fitsio_veto  fitsio/*.C)
 endif()
@@ -86,6 +91,10 @@ if(NOT ROOT_fftw3_FOUND)
                  roofit/rf211_paramconv.C
                  roofit/rf512_wsfactory_oper.C
                  fft/FFT.C)
+endif()
+
+if(NOT ROOT_opengl_FOUND)
+  set(opengl_veto tree/staff.C)
 endif()
 
 if(NOT GRAPHVIZ_FOUND)
@@ -144,7 +153,9 @@ set(all_veto hsimple.C
              ${fitsio_veto}
              ${mathmore_veto}
              ${fftw3_veto}
-             ${gviz_veto})
+             ${opengl_veto}
+             ${gviz_veto}
+             ${histfactory_veto})
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
@@ -236,7 +247,7 @@ if(ROOT_python_FOUND)
 
   #---Python tutorials dependencies--------------------------------------
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
-  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple)
+  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple tutorial-pyroot-fillrandom)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
   set(pyroot-na49view-depends tutorial-geom-geometry)
 
