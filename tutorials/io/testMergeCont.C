@@ -31,12 +31,14 @@ TSeqCollection *GetCollection()
 #ifndef ClingWorkAroundMissingDynamicScope
 # define ClingWorkAroundMissingDynamicScope
 #endif
+   f = TFile::Open("hsimple.root");
+   if( !f ) {
 #ifdef ClingWorkAroundMissingDynamicScope
-   f = (TFile*)gROOT->ProcessLine("hsimple(1);");
+     f = (TFile*)gROOT->ProcessLine("hsimple(1);");
 #else
-   f = hsimple(1);
+     f = hsimple(1);
 #endif
-
+   }
    gROOT->cd();
    TList *l0 = new TList();
    TList *l01 = new TList();
