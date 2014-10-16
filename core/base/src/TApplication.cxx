@@ -78,9 +78,9 @@ ClassImp(TApplication)
 
 static void CallEndOfProcessCleanups()
 {
-  // Insure that the files, canvases and sockets are closed.
+   // Insure that the files, canvases and sockets are closed.
 
-  gROOT->EndOfProcessCleanups();
+   gROOT->EndOfProcessCleanups();
 }
 
 //______________________________________________________________________________
