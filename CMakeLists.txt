@@ -176,6 +176,9 @@ if(testing)
     execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(GIT_BRANCH STREQUAL HEAD)
+      string(REPLACE "origin/" "" GIT_BRANCH "$ENV{GIT_BRANCH}")  # Comming from Jenkins checkout
+    endif()
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       execute_process(COMMAND ${GIT_EXECUTABLE} clean -xfdq WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       execute_process(COMMAND ${GIT_EXECUTABLE} checkout ${GIT_BRANCH} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
