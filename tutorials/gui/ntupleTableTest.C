@@ -69,7 +69,7 @@ TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
    DontCallClose() ;
    
    // Open root file for the tree
-   fFile = new TFile("$ROOTSYS/tutorials/hsimple.root");
+   fFile = new TFile("hsimple.root");
 
    if (!fFile || fFile->IsZombie()) {
       printf("Please run <ROOT location>/tutorials/hsimple.C first.");

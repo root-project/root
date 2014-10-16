@@ -51,7 +51,7 @@ if(NOT ROOT_minuit2_FOUND)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
-  set(roofit_veto  fit/RoofitDemo.C 
+  set(roofit_veto  fit/RoofitDemo.C
                    roofit/*.C roostats/*.C histfactory/*.C)
 endif()
 
@@ -74,8 +74,8 @@ if(NOT ROOT_fitsio_FOUND)
 endif()
 
 if(NOT ROOT_mathmore_FOUND)
-  set(mathmore_veto 
-      math/quasirandom.C 
+  set(mathmore_veto
+      math/quasirandom.C
       math/exampleMultiRoot.C
       math/Bessel.C
       math/LegendreAssoc.C
@@ -93,6 +93,10 @@ if(NOT ROOT_fftw3_FOUND)
                  fft/FFT.C)
 endif()
 
+if(NOT ROOT_opengl_FOUND)
+  set(opengl_veto tree/staff.C)
+endif()
+
 if(NOT GRAPHVIZ_FOUND)
   set(gviz_veto graphs/graphstruct.C)
 endif()
@@ -103,7 +107,7 @@ set(gui_veto fit/fitpanel_playback.C
              geom/*.C
              gl/*.C
              gui/*.C
-             hist/exec1.C 
+             hist/exec1.C
              hist/exec2.C
              image/*.C
              graphics/psview.C graphics/gtime.C
@@ -126,18 +130,18 @@ set(extra_veto
   pythia/*.C
   sql/*.C
   tree/hsimpleProxy.C  # A driver uses this macro which cannot be executed directly
-  tree/tree0.C 
-  tree/tree2a.C 
+  tree/tree0.C
+  tree/tree2a.C
   tree/tree4.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
   roostats/rs_bernsteinCorrection.C # Takes too much output :-)
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
-  tree/copytree2.C 
-  tree/copytree3.C 
+  tree/copytree2.C
+  tree/copytree3.C
   tree/copytree.C
   http/*.C)
-  
+
 set(all_veto hsimple.C
              ${extra_veto}
              ${gui_veto}
@@ -148,9 +152,10 @@ set(all_veto hsimple.C
              ${fitsio_veto}
              ${mathmore_veto}
              ${fftw3_veto}
+             ${opengl_veto}
              ${gviz_veto}
              ${histfactory_veto})
-             
+
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
 
@@ -170,12 +175,12 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphs/exclusiongraph.C graphs/multigraph.C
                  graphs/multipalette.C
                  graphs/graphstruct.C
-                 hist/ContourList.C hist/hstack.C 
-                 hist/h2proj.C 
+                 hist/ContourList.C hist/hstack.C
+                 hist/h2proj.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C
                  tree/h1analysis.C
-                 io/fildir.C 
+                 io/fildir.C
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
 set(math-testUnfold5d-depends tutorial-math-testUnfold5c)
@@ -188,9 +193,9 @@ set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
 set(tree-staff-depends  tutorial-tree-cernbuild)
-#--many roostats tutorials depending on having creating the file first with histfactory 
+#--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
-               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
+               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo
                StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
                OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands)
   set(roostats-${tname}-depends tutorial-roostats-StandardProfileLikelihoodDemo)
@@ -221,7 +226,7 @@ foreach(t ${tutorials})
   endif()
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
-  ROOT_ADD_TEST(tutorial-${tname} 
+  ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
@@ -267,7 +272,7 @@ endif()
 
 
 
-                   
+
 
 
 

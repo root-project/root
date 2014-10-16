@@ -26,7 +26,8 @@ void testMergeCont()
 TSeqCollection *GetCollection()
 {
    TObject *obj;
-   f = hsimple(1);
+   f = TFile::Open("hsimple.root");
+   if ( !f ) f = hsimple(1);
    gROOT->cd();
    TList *l0 = new TList();
    TList *l01 = new TList();

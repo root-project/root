@@ -60,7 +60,7 @@ TFile *hsimple(Int_t get=0)
    TNtuple *ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
 
    gBenchmark->Start("hsimple");
-  
+
    // Create a new canvas.
    TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
    c1->SetFillColor(42);
@@ -97,7 +97,7 @@ TFile *hsimple(Int_t get=0)
    hpx->SetFillColor(48);
    c1->Modified();
    return hfile;
-  
+
 // Note that the file is automatically close when application terminates
 // or when the file destructor is called.
 }
