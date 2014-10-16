@@ -2826,6 +2826,9 @@ void TCling::UpdateListOfTypes()
 void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 {
    // Set pointer to the TClingClassInfo in TClass.
+   // If 'reload' is true, (attempt to) generate a new ClassInfo even if we
+   // already have one.
+
    R__LOCKGUARD2(gInterpreterMutex);
    if (cl->fClassInfo && !reload) {
       return;
