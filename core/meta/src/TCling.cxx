@@ -977,6 +977,9 @@ TCling::TCling(const char *name, const char *title)
       clingArgsStorage.push_back(interpInclude);
 
       std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
+      if (gSystem->Getenv("ROOT_PCH")) {
+         pchFilename = gSystem->Getenv("ROOT_PCH");
+      }
       clingArgsStorage.push_back("-include-pch");
       clingArgsStorage.push_back(pchFilename);
 
