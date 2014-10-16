@@ -508,7 +508,8 @@ STATICOBJLIST := $(ROOT_SRCDIR)/build/unix/staticobjectlist.sh
 MAKESTATICLIB := $(ROOT_SRCDIR)/build/unix/makestaticlib.sh
 MAKESTATIC    := $(ROOT_SRCDIR)/build/unix/makestatic.sh
 RECONFIGURE   := $(ROOT_SRCDIR)/build/unix/reconfigure.sh
-MAKEONEPCM    := $(ROOT_SRCDIR)/build/unix/makeonepcm.sh
+MAKEPCHINPUT  := $(ROOT_SRCDIR)/build/unix/makepchinput.sh
+MAKEPCH       := build/unix/makepch.sh
 ifeq ($(PLATFORM),win32)
 MAKELIB       := $(ROOT_SRCDIR)/build/win/makelib.sh
 MAKECOMPDATA  := $(ROOT_SRCDIR)/build/win/compiledata.sh
@@ -1097,8 +1098,13 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 
-$(ROOTPCH): $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	@$(MAKEONEPCM) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH)
+$(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
+	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH)
+	@$(MAKEPCH) $@
+
+$(MAKEPCH): $(ROOT_SRCDIR)/$(MAKEPCH)
+	@mkdir -p $(dir $@)
+	@cp $< $@
 
 ifeq ($(BUILDX11),yes)
 ifeq ($(BUILDASIMAGE),yes)
