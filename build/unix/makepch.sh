@@ -34,21 +34,20 @@ if ! [ -f $rootdir/$allheaders ]; then
     fi
 fi
 
-cxxflags="-D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -I$rootdir/include -I$rootdir/etc -I$rootdir/etc/cling `cat $cppflags`"
+cxxflags="-D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -I$rootdir/include -I$rootdir/etc -I$rootdir/etc/cling `cat $rootdir/$cppflags`"
 
 if ! [ "x$1" = "x" ]; then
     cxxflags="$cxxflags $1"
 fi
 
-# generate one large pcm
-rm -f allDict.* lib/allDict_rdict.pc*
+# generate pch
 touch allDict.cxx.h
-core/utils/src/rootcling_tmp -1 -f allDict.cxx -noDictSelection -c $cxxflags $allheaders $@ $alllinkdefs
+$rootdir/bin/rootcling -1 -f allDict.cxx -noDictSelection -c $cxxflags $allheaders $@ $alllinkdefs
 res=$?
 if [ $res -eq 0 ] ; then
   mv allDict_rdict.pch $pch
   res=$?
 fi
-rm -f allDict.* lib/allDict_rdict.pc*
+rm -f allDict.*
 
 exit $res
