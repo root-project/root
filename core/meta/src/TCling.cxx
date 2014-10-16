@@ -2894,7 +2894,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 }
 
 //______________________________________________________________________________
-Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/, Bool_t isClassOrNamespaceOnly /* = kFALSE*/ )
+Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/ )
 {
    // Checks if an entity with the specified name is defined in Cling.
    // Returns kFALSE if the entity is not defined.
