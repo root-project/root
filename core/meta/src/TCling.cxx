@@ -2843,26 +2843,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    std::string name(cl->GetName());
    TClingClassInfo* info = new TClingClassInfo(fInterpreter, name.c_str());
    if (!info->IsValid()) {
-      bool cint_class_exists = CheckClassInfo(name.c_str());
-      if (!cint_class_exists) {
-         // Try resolving all the typedefs (even Float_t and Long64_t).
-         name = TClassEdit::ResolveTypedef(name.c_str(), kTRUE);
-         if (name == cl->GetName()) {
-            // No typedefs found, all done.
-            return;
-         }
-         // Try the new name.
-         cint_class_exists = CheckClassInfo(name.c_str());
-         if (!cint_class_exists) {
-            // Nothing found, nothing to do.
-            return;
-         }
-      }
-      info = new TClingClassInfo(fInterpreter, name.c_str());
-      if (!info->IsValid()) {
-         // Failed, done.
-         return;
-      }
+      return;
    }
    cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transfering ownership here.
    // In case a class contains an external enum, the enum will be seen as a
@@ -3821,11 +3802,6 @@ void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   // This first step is likely redundant if
-   // the next step never issue any warnings.
-   if (!CheckClassInfo(name)) {
-      return ;
-   }
    TClingClassInfo cl(fInterpreter, name);
    if (!cl.IsValid()) {
       return ;
