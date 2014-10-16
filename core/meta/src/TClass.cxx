@@ -2844,6 +2844,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    }
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
+   if (gDebug>0){
+      printf("TClass::GetClass: Header Parsing - The representation of %s was not found in the type system. A lookup in the interpreter is about to be tried: this can cause parsing. This can be avoided selecting %s in the linkdef/selection file.\n",normalizedName.c_str(), normalizedName.c_str());
+   }
    if (gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */, kTRUE /*Only class, structs and ns*/)) {
       // Get the normalized name based on the decl (currently the only way
       // to get the part to add or drop the default arguments as requested by the user)
@@ -3349,7 +3352,10 @@ TList *TClass::GetListOfMethods(Bool_t load /* = kTRUE */)
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!fMethod) fMethod = new TListOfFunctions(this);
-   if (load) fMethod->Load();
+   if (load) {
+      if (gDebug>0) Info("GetListOfMethods","Header Parsing - Asking for all the methods of class %s: this can involve parsing.",GetName());
+      fMethod->Load();
+   }
    return fMethod;
 }
 
@@ -3378,7 +3384,10 @@ const TList *TClass::GetListOfAllPublicMethods(Bool_t load /* = kTRUE */)
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!fAllPubMethod) fAllPubMethod = new TViewPubFunctions(this);
-   if (load) fAllPubMethod->Load();
+   if (load) {
+      if (gDebug>0) Info("GetListOfAllPublicMethods","Header Parsing - Asking for all the methods of class %s: this can involve parsing.",GetName());
+      fAllPubMethod->Load();
+   }
    return fAllPubMethod;
 }
 
