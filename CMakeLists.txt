@@ -173,16 +173,21 @@ if(testing)
   include(RootCTest)
   if(roottest)
     find_package(Git REQUIRED)
+    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       execute_process(COMMAND ${GIT_EXECUTABLE} clean -xfdq WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-      execute_process(COMMAND ${GIT_EXECUTABLE} pull WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+      execute_process(COMMAND ${GIT_EXECUTABLE} checkout ${GIT_BRANCH} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+      execute_process(COMMAND ${GIT_EXECUTABLE} fetch origin WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+      execute_process(COMMAND ${GIT_EXECUTABLE} rebase origin/${GIT_BRANCH} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
       add_subdirectory(roottest)
     elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../roottest)
       add_subdirectory(../roottest roottest)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone http://root.cern.ch/git/roottest.git
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} http://root.cern.ch/git/roottest.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
     endif()
