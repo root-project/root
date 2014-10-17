@@ -2436,20 +2436,23 @@ void TH1::Copy(TObject &obj) const
 //______________________________________________________________________________
 TObject* TH1::Clone(const char* newname) const
 {
-  TH1* obj = (TH1*)IsA()->GetNew()(0);
-  Copy(*obj);
+   // Make a complete copy of the underlying object.  If 'newname' is set,
+   // the copy's name will be set to that name.
 
-  //Now handle the parts that Copy doesn't do
-  if(fFunctions) {
-    if(not obj->fFunctions) {
-      obj->fFunctions = new TList;
-    }
-    fFunctions->Copy( *(obj->fFunctions) );
-  }
-  if(newname and strlen(newname) ) {
-    obj->SetName(newname);
-  }
-  return obj;
+   TH1* obj = (TH1*)IsA()->GetNew()(0);
+   Copy(*obj);
+
+   //Now handle the parts that Copy doesn't do
+   if(fFunctions) {
+      if(not obj->fFunctions) {
+         obj->fFunctions = new TList;
+      }
+      fFunctions->Copy( *(obj->fFunctions) );
+   }
+   if(newname and strlen(newname) ) {
+      obj->SetName(newname);
+   }
+   return obj;
 }
 
 //______________________________________________________________________________
