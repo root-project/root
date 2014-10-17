@@ -3439,10 +3439,10 @@ void TClass::GetMenuItems(TList *list)
 Bool_t TClass::HasDictionary()
 {
    // Check whether a class has a dictionary or not.
+   // This is equivalent to ask if a class is coming from a bootstrapping
+   // procedure initiated during the loading of a library.
 
-   if (gClassTable->GetDict(fName)) return true;
-
-   return false;
+   return IsLoaded();
 }
 
 //______________________________________________________________________________
