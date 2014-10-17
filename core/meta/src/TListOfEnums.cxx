@@ -35,8 +35,8 @@ TListOfEnums::TListOfEnums(TClass *cl /*=0*/) :
 {
    // Constructor.
 
-   fIds = new TExMap;
-   fUnloaded = new THashList;
+   fIds = new TExMap(5);
+   fUnloaded = new THashList(5);
 }
 
 //______________________________________________________________________________
