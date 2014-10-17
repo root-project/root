@@ -77,7 +77,7 @@ namespace Cint {
             ~Bucket() {
                // delete all buffers
                for(auto it = fBuffers; it != fBuffers+fNumBuffers; ++it) {
-                  delete [] *it;
+                  delete [] it->load();
                }
                delete [] fBuffers;
             }
