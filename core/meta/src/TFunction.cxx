@@ -23,7 +23,7 @@
 #include "TROOT.h"
 #include "TInterpreter.h"
 #include "Strlen.h"
-
+#include "TVirtualMutex.h"
 
 ClassImp(TFunction)
 
@@ -48,6 +48,7 @@ TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
    // Copy operator.
 
    if (orig.fInfo) {
+      R__LOCKGUARD2(gCINTMutex);
       fInfo = gCint->MethodInfo_FactoryCopy(orig.fInfo);
       fMangledName = gCint->MethodInfo_GetMangledName(fInfo);
    } else
@@ -61,6 +62,7 @@ TFunction& TFunction::operator=(const TFunction &rhs)
    // Assignment operator.
 
    if (this != &rhs) {
+      R__LOCKGUARD2(gCINTMutex);
       gCint->MethodInfo_Delete(fInfo);
       if (fMethodArgs) fMethodArgs->Delete();
       delete fMethodArgs;
@@ -81,6 +83,7 @@ TFunction::~TFunction()
 {
    // TFunction dtor deletes adopted CINT MethodInfo.
 
+   R__LOCKGUARD2(gCINTMutex);
    gCint->MethodInfo_Delete(fInfo);
 
    if (fMethodArgs) fMethodArgs->Delete();
@@ -101,7 +104,7 @@ TObject *TFunction::Clone(const char *newname) const
 void TFunction::CreateSignature()
 {
    // Using the CINT method arg information to create a complete signature string.
-
+   R__LOCKGUARD2(gCINTMutex);
    gCint->MethodInfo_CreateSignature(fInfo, fSignature);
 }
 
@@ -134,7 +137,7 @@ TList *TFunction::GetListOfMethodArgs()
 const char *TFunction::GetReturnTypeName() const
 {
    // Get full type description of function return type, e,g.: "class TDirectory*".
-
+   R__LOCKGUARD2(gCINTMutex);
    if (gCint->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCint->MethodInfo_TypeName(fInfo);
 }
@@ -147,7 +150,7 @@ std::string TFunction::GetReturnTypeNormalizedName() const
    // which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
    // also has std:: removed [This is subject to change].
    //
-   
+   R__LOCKGUARD2(gCINTMutex);
    if (gCint->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCint->MethodInfo_TypeNormalizedName(fInfo);
 }
@@ -209,8 +212,9 @@ const char *TFunction::GetPrototype() const
    // Returns the prototype of a function as defined by CINT, or 0 in
    // case of error.
 
-   if (fInfo)
+   if (fInfo) {
+      R__LOCKGUARD2(gCINTMutex);
       return gCint->MethodInfo_GetPrototype(fInfo);
-   else
+   } else
       return 0;
 }

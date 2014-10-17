@@ -143,7 +143,11 @@ private:
    TString            fContextMenuTitle;//context menu title
    const type_info   *fTypeInfo;        //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
+#if __cplusplus >= 201103L
+   mutable std::atomic<void*> fInterShowMembers;//Interpreter call setup for ShowMembers
+#else
    mutable void      *fInterShowMembers;//Interpreter call setup for ShowMembers
+#endif
    TClassStreamer    *fStreamer;        //pointer to streamer function
    TString            fSharedLibs;      //shared libraries containing class code
 
@@ -167,10 +171,11 @@ private:
    Int_t               fSizeof;         //Sizeof the class.
 
    mutable Int_t      fCanSplit;        //!Indicates whether this class can be split or not.
-   mutable Long_t     fProperty;        //!Property
 #if __cplusplus >= 201103L
+   mutable std::atomic<Long_t> fProperty;        //!Property
    mutable std::atomic<Bool_t> fVersionUsed;     //!Indicates whether GetClassVersion has been called
 #else
+   mutable Long_t     fProperty;        //!Property
    mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
 #endif
 
