@@ -53,7 +53,7 @@ TListOfDataMembers::~TListOfDataMembers()
 void TListOfDataMembers::MapObject(TObject* obj)
 {
    // Add a pair<id, object> to the map of data members and their ids.
-   if (!fIds) fIds = new TExMap;
+   if (!fIds) fIds = new TExMap(23);
 
    if (fClass) {
       TDataMember *d = dynamic_cast<TDataMember*>(obj);
