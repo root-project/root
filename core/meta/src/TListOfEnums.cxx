@@ -31,7 +31,7 @@ ClassImp(TListOfEnums)
 
 //______________________________________________________________________________
 TListOfEnums::TListOfEnums(TClass *cl /*=0*/) :
-   fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE), fLastLoadMarker(0)
+   fClass(cl), fIds(0), fUnloaded(0), fIsLoaded(kFALSE), fLastLoadMarker(0)
 {
    // Constructor.
 
@@ -55,9 +55,9 @@ void TListOfEnums::MapObject(TObject *obj)
 {
    // Add pair<id, object> to the map of functions and their ids.
 
-   TEnum *e = dynamic_cast<TEnum*>(obj);
+   TEnum *e = dynamic_cast<TEnum *>(obj);
    if (e && e->GetDeclId()) {
-      fIds->Add((Long64_t)e->GetDeclId(),(Long64_t)e);
+      fIds->Add((Long64_t)e->GetDeclId(), (Long64_t)e);
    }
 }
 
@@ -79,7 +79,7 @@ void TListOfEnums::AddFirst(TObject *obj, Option_t *opt)
    // copy of the object. This feature is used, for example, by the Draw()
    // method. It allows the same object to be drawn in different ways.
 
-   THashList::AddFirst(obj,opt);
+   THashList::AddFirst(obj, opt);
    MapObject(obj);
 }
 
@@ -186,7 +186,7 @@ TObject *TListOfEnums::FindObject(const char *name) const
       TInterpreter::DeclId_t decl;
       if (fClass) decl = gInterpreter->GetEnum(fClass, name);
       else        decl = gInterpreter->GetEnum(0, name);
-      if (decl) result = const_cast<TListOfEnums*>(this)->Get(decl, name);
+      if (decl) result = const_cast<TListOfEnums *>(this)->Get(decl, name);
    }
    return result;
 }
@@ -199,7 +199,7 @@ TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
 
    if (!id) return 0;
 
-   TEnum *e = (TEnum*)fIds->GetValue((Long64_t)id);
+   TEnum *e = (TEnum *)fIds->GetValue((Long64_t)id);
    if (!e) {
       if (fClass) {
          if (!fClass->HasInterpreterInfoInMemory()) {
@@ -210,9 +210,9 @@ TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
             //  of the header which we want to avoid].
             return 0;
          }
-         if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
+         if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(), id)) return 0;
       } else {
-         if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
+         if (!gInterpreter->ClassInfo_Contains(0, id)) return 0;
       }
 
       R__LOCKGUARD(gInterpreterMutex);
@@ -224,12 +224,12 @@ TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
          e->Update(id);
          gInterpreter->UpdateEnumConstants(e, fClass);
       } else {
-         e = gInterpreter->CreateEnum((void*)id, fClass);
+         e = gInterpreter->CreateEnum((void *)id, fClass);
       }
       // Calling 'just' THahList::Add would turn around and call
       // TListOfEnums::AddLast which should *also* do the fIds->Add.
       THashList::AddLast(e);
-      fIds->Add((Long64_t)id,(Long64_t)e);
+      fIds->Add((Long64_t)id, (Long64_t)e);
    }
    return e;
 }
@@ -238,7 +238,7 @@ TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
 void TListOfEnums::UnmapObject(TObject *obj)
 {
    // Remove a pair<id, object> from the map of functions and their ids.
-   TEnum *e = dynamic_cast<TEnum*>(obj);
+   TEnum *e = dynamic_cast<TEnum *>(obj);
    if (e) {
       fIds->Remove((Long64_t)e->GetDeclId());
    }
@@ -263,7 +263,7 @@ void TListOfEnums::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
-TObject* TListOfEnums::Remove(TObject *obj)
+TObject *TListOfEnums::Remove(TObject *obj)
 {
    // Remove object from the list.
 
@@ -279,7 +279,7 @@ TObject* TListOfEnums::Remove(TObject *obj)
 }
 
 //______________________________________________________________________________
-TObject* TListOfEnums::Remove(TObjLink *lnk)
+TObject *TListOfEnums::Remove(TObjLink *lnk)
 {
    // Remove object via its objlink from the list.
 
@@ -299,7 +299,7 @@ void TListOfEnums::Load()
    // Load all the DataMembers known to the intepreter for the scope 'fClass'
    // into this collection.
 
-   if (fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
+   if (fClass && fClass->Property() & (kIsClass | kIsStruct | kIsUnion)) {
       // Class and union are not extendable, if we already
       // loaded all the data member there is no need to recheck
       if (fIsLoaded) return;
@@ -316,8 +316,8 @@ void TListOfEnums::Load()
    "This special case can be removed once PCMs are available."
 # endif
 #endif
-   for (TObject* enumAsTObj : *this){
-      TEnum* en = (TEnum*)enumAsTObj;
+   for (TObject * enumAsTObj : *this) {
+      TEnum *en = (TEnum *)enumAsTObj;
       if (0 == en->GetDeclId()) {
          Unload(en);
       }
