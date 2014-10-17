@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 # This script is almost identical to /usr/bin/gstack.
 # It is used by TUnixSystem::StackTrace() on Linux and MacOS X.
@@ -85,12 +85,13 @@ else
    # Run GDB, strip out unwanted noise.
    have_eval_command=`gdb --help 2>&1 |grep eval-command`
    if ! test "x$have_eval_command" = "x"; then
-      $GDB --batch --eval-command="$backtrace" /proc/$1/exe $1 2>&1 < /dev/null |
+      echo $GDB --batch --eval-command="$backtrace" /proc/$1/exe $1 2>&1 < /dev/null |
       /bin/sed -n \
          -e 's/^(gdb) //' \
          -e '/^#/p' \
          -e '/^   /p' \
          -e 's/\(^Thread.*\)/@\1/p' | tr '@' '\n' > $OUTFILE
+      sleep 1000
    else
       $GDB -q -n /proc/$1/exe $1 <<EOF 2>&1 |
    $backtrace
