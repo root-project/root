@@ -91,7 +91,7 @@ public:
 
 
 inline TBuffer &operator>>(TBuffer &buf, TUUID &uuid)
-{ uuid.StreamerV1(buf); return buf; }
+{ uuid.Streamer(buf); return buf; }
 
 // Not inlined in order to avoid const casted away warning in user code.  
 TBuffer &operator<<(TBuffer &buf, const TUUID &uuid);
