@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 # This script is almost identical to /usr/bin/gstack.
 # It is used by TUnixSystem::StackTrace() on Linux and MacOS X.
@@ -40,7 +40,7 @@ if [ `uname -s` = "Darwin" ]; then
 
    # Run GDB, strip out unwanted noise.
    $GDB -q -batch -n -x $TMPFILE $1 $2 2>&1  < /dev/null |
-   /usr/bin/sed -n \
+   sed -n \
     -e 's/^(gdb) //' \
     -e '/^#/p' \
     -e 's/\(^Thread.*\)/@\1/p' | tr "@" "\n" > $OUTFILE
@@ -85,18 +85,18 @@ else
    # Run GDB, strip out unwanted noise.
    have_eval_command=`gdb --help 2>&1 |grep eval-command`
    if ! test "x$have_eval_command" = "x"; then
-      echo $GDB --batch --eval-command="$backtrace" /proc/$1/exe $1 2>&1 < /dev/null |
-      /bin/sed -n \
+      $GDB --batch --eval-command="$backtrace" /proc/$1/exe $1 2>&1 < /dev/null |
+      sed -n \
+         -e 's,\x1B\[[0-9;]*[a-zA-Z],,g' \
          -e 's/^(gdb) //' \
          -e '/^#/p' \
          -e '/^   /p' \
          -e 's/\(^Thread.*\)/@\1/p' | tr '@' '\n' > $OUTFILE
-      sleep 1000
    else
       $GDB -q -n /proc/$1/exe $1 <<EOF 2>&1 |
    $backtrace
 EOF
-      /bin/sed -n \
+      sed -n \
          -e 's/^(gdb) //' \
          -e '/^#/p' \
          -e '/^   /p' \
