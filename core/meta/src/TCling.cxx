@@ -176,8 +176,8 @@ extern "C" {
 char *dlerror() {
    static char Msg[1000];
    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
-	             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
-				 sizeof(Msg), NULL);
+                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
+                 sizeof(Msg), NULL);
    return Msg;
 }
 #endif
@@ -3654,7 +3654,7 @@ TInterpreter::DeclId_t TCling::GetDataMemberWithValue(const void *ptrvalue) cons
    llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
 
    llvm::Module::global_iterator iter = module->global_begin();
-	llvm::Module::global_iterator end = module->global_end ();
+   llvm::Module::global_iterator end = module->global_end ();
    while (iter != end) {
       if ( (*iter).getType()->getElementType()->isPointerTy() ) {
          void **ptr = (void**)EE->getPointerToGlobalIfAvailable( iter );
