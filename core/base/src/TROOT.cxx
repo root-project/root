@@ -1500,7 +1500,7 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
       // Try to remove the ROOT typedefs
       {
          R__LOCKGUARD(gCINTMutex);
-	 resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
+         resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
       }
       if (resolved != classname) {
          dict = TClassTable::GetDict(resolved.Data());

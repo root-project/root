@@ -1894,23 +1894,23 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
          //
 
          if (!fInterShowMembers) {
-            
-            R__LOCKGUARD2(gCINTMutex);
-	    if(!fInterShowMembers) {
-	       CallFunc_t* ism = gCint->CallFunc_Factory();
-	       Long_t offset = 0;
 
-	       gCint->CallFunc_SetFuncProto(ism,fClassInfo,"ShowMembers", "TMemberInspector&", &offset);
-	       if (fIsOffsetStreamerSet && offset != fOffsetStreamer) {
-		  Error("CallShowMembers", "Logic Error: offset for Streamer() and ShowMembers() differ!");
-		  fInterShowMembers = 0;
-		  return kFALSE;
-	       }
-	      
-	       fInterShowMembers = ism;
-	    }
+            R__LOCKGUARD2(gCINTMutex);
+            if(!fInterShowMembers) {
+               CallFunc_t* ism = gCint->CallFunc_Factory();
+               Long_t offset = 0;
+
+               gCint->CallFunc_SetFuncProto(ism,fClassInfo,"ShowMembers", "TMemberInspector&", &offset);
+               if (fIsOffsetStreamerSet && offset != fOffsetStreamer) {
+                  Error("CallShowMembers", "Logic Error: offset for Streamer() and ShowMembers() differ!");
+                  fInterShowMembers = 0;
+                  return kFALSE;
+               }
+
+               fInterShowMembers = ism;
+            }
          }
-	 void* interShowMembers = fInterShowMembers;
+         void* interShowMembers = fInterShowMembers;
          if (!gCint->CallFunc_IsValid(interShowMembers)) {
             if (strcmp(GetName(), "string") == 0) {
                // For std::string we know that we do not have a ShowMembers
@@ -4109,7 +4109,7 @@ void *TClass::New(ENewType defConstructor) const
       if (p) {
          RegisterAddressInRepository("New",p,this);
       } else {
-	Error("New", "Failed to construct class '%s' using streamer info", GetName());
+         Error("New", "Failed to construct class '%s' using streamer info", GetName());
       }
    } else {
       Error("New", "This cannot happen!");
