@@ -138,7 +138,7 @@ namespace Cint {
             }
          private:
             typedef char* Buffer_t;
-            
+
             std::atomic<Buffer_t>* fBuffers; // array of buffers,
             std::atomic<std::atomic<Buffer_t>*> fWatermark; // most recently filled slot
             size_t fNumBuffers; // size of fBuffers
