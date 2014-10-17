@@ -51,8 +51,8 @@ class Basic2SetupTestCase( MyTestCase ):
     # get proxy before setting, otherwise the AutoLoader will have printout
       proxy = gROOT.GetGlobal( 'gDebug', 1 )
 
-      ROOT.gDebug = 3
-      self.assertEqual( proxy.__get__( proxy ), 3 )
+      ROOT.gDebug = -1
+      self.assertEqual( proxy.__get__( proxy ), -1 )
 
       ROOT.gDebug = oldval
 
