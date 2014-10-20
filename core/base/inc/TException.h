@@ -45,7 +45,7 @@ struct ExceptionContext_t {
 };
 
 #ifdef NEED_SIGJMP
-#define SETJMP(buf) sigsetjmp(buf,1)
+#define SETJMP(buf) __sigsetjmp(buf,1)
 #else
 #define SETJMP(buf) setjmp(buf)
 #endif
