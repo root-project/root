@@ -255,7 +255,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
+$(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS) -I$(ROOT_SRCDIR)/net/rpdutils/src
 
 $(XPDO): $(XROOTDMAKE) $(XRDHDRS)
 $(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS) $(BONJOURCPPFLAGS)
