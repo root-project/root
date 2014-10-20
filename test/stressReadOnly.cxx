@@ -199,7 +199,7 @@ void stressReadOnly2()
 
    TCanvas *c1 = new TCanvas("c1","stress canvas",800,600);
    gROOT->LoadClass("TPostScript","Postscript");
-   TPostScript ps("stress.ps",112);
+   TPostScript ps("stressro.ps",112);
 
    //Get objects generated in previous test
    TFile *f = TFile::Open(gPfx + "stress_5.root");
@@ -229,7 +229,7 @@ void stressReadOnly2()
    ps.Close();
 
    //count number of lines in ps file
-   FILE *fp = fopen("stress.ps","r");
+   FILE *fp = fopen("stressro.ps","r");
    char line[260];
    Int_t nlines = 0;
    Int_t nlinesGood = 632;
@@ -244,7 +244,7 @@ void stressReadOnly2()
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
-      printf("%-8s nlines in stress.ps file = %d\n"," ",nlines);
+      printf("%-8s nlines in stressro.ps file = %d\n"," ",nlines);
    }
    delete c1;
    delete f;
@@ -311,5 +311,5 @@ void stressReadOnly3()
 
 void cleanup()
 {
-   gSystem->Unlink("stress.ps");
+   gSystem->Unlink("stressro.ps");
 }
