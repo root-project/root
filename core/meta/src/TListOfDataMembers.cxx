@@ -29,6 +29,8 @@
 #include "TError.h"
 #include "TEnumConstant.h"
 
+static constexpr const unsigned int idsSize=19;
+
 ClassImp(TListOfDataMembers)
 
 //______________________________________________________________________________
@@ -53,7 +55,7 @@ TListOfDataMembers::~TListOfDataMembers()
 void TListOfDataMembers::MapObject(TObject* obj)
 {
    // Add a pair<id, object> to the map of data members and their ids.
-   if (!fIds) fIds = new TExMap(23);
+   if (!fIds) fIds = new TExMap(idsSize);
 
    if (fClass) {
       TDataMember *d = dynamic_cast<TDataMember*>(obj);
@@ -249,7 +251,7 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
       // Calling 'just' THahList::Add would turn around and call
       // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
       THashList::AddLast(dm);
-      if (!fIds) fIds = new TExMap;
+      if (!fIds) fIds = new TExMap(idsSize);
       fIds->Add((Long64_t)id,(Long64_t)dm);
    }
    return dm;
@@ -299,7 +301,7 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
       // Calling 'just' THahList::Add would turn around and call
       // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
       THashList::AddLast(dm);
-      if (!fIds) fIds = new TExMap;
+      if (!fIds) fIds = new TExMap(idsSize);
       fIds->Add((Long64_t)id,(Long64_t)dm);
    }
    return dm;
@@ -449,7 +451,7 @@ void TListOfDataMembers::Update(TDictionary *member) {
       TDataMember *d = dynamic_cast<TDataMember*>(member);
       if (d) {
          if (d->GetDeclId()) {
-            if (!fIds) fIds = new TExMap;
+            if (!fIds) fIds = new TExMap(idsSize);
             fIds->Add((Long64_t)d->GetDeclId(),(Long64_t)d);
          }
          TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(d->GetName()) : 0;
@@ -465,7 +467,7 @@ void TListOfDataMembers::Update(TDictionary *member) {
       TGlobal *g = dynamic_cast<TGlobal*>(member);
       if (g) {
          if (g->GetDeclId()) {
-            if (!fIds) fIds = new TExMap;
+            if (!fIds) fIds = new TExMap(idsSize);
             fIds->Add((Long64_t)g->GetDeclId(),(Long64_t)g);
 
             TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(g->GetName()) : 0;
