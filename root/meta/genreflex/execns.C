@@ -1,7 +1,7 @@
 void execns(){
-   if(TClass::GetClass("ns")) {
-      std::cout << "Namespace ns found\n";
+   if(TClass::GetClass("the_ns")) {
+      std::cout << "Namespace the_ns found\n";
    } else {
-      std::cout << "Namespace ns not found\n";
+      std::cout << "Namespace the_ns not found\n";
    }
 }

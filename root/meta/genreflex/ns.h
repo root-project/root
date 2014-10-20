@@ -1,2 +1,2 @@
-namespace ns{
+namespace the_ns{
 }
