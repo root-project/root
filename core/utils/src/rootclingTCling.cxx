@@ -89,8 +89,7 @@ bool CloseStreamerInfoROOTFile(bool buildingROOT)
       std::string pcmName = gPCMFilename;
       pcmName = pcmName.substr(7, pcmName.length() - 10 - 7); // lib/lib
 
-      static const std::unordered_set<std::string> pcmsInPCH
-      {
+      static const std::unordered_set<std::string> pcmsInPCH {
          // core:
          "Thread", "Rint",
          // io/io
@@ -214,7 +213,7 @@ bool CloseStreamerInfoROOTFile(bool buildingROOT)
    }
 
    // Don't use TFile::Open(); we don't need plugins.
-   TFile dictFile( (gPCMFilename + "?filetype=pcm").c_str(), "RECREATE");
+   TFile dictFile((gPCMFilename + "?filetype=pcm").c_str(), "RECREATE");
    if (dictFile.IsZombie())
       return false;
    // Instead of plugins:
