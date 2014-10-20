@@ -27,16 +27,18 @@
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 
+static constexpr const unsigned int listSize=3;
+
 ClassImp(TListOfEnums)
 
 //______________________________________________________________________________
 TListOfEnums::TListOfEnums(TClass *cl /*=0*/) :
-   fClass(cl), fIds(0), fUnloaded(0), fIsLoaded(kFALSE), fLastLoadMarker(0)
+   THashList(listSize), fClass(cl), fIds(0), fUnloaded(0), fIsLoaded(kFALSE), fLastLoadMarker(0)
 {
    // Constructor.
 
-   fIds = new TExMap(5);
-   fUnloaded = new THashList(5);
+   fIds = new TExMap(listSize);
+   fUnloaded = new THashList(listSize);
 }
 
 //______________________________________________________________________________
