@@ -2,6 +2,9 @@
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
+#---On MacOSX, try to find frameworks after standard libraries or headers------------
+set(CMAKE_FIND_FRAMEWORK LAST)
+
 #---Check for Cocoa/Quartz graphics backend (MacOS X only)
 if(cocoa)
   if(APPLE)
