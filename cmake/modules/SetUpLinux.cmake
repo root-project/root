@@ -41,8 +41,7 @@ set(CILIBS "-lm -ldl -rdynamic")
 set(CRYPTLIBS "-lcrypt")
 set(CMAKE_M_LIBS -lm)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR 
-   CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+if(CMAKE_COMPILER_IS_GNUCXX)
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -Woverloaded-virtual -fPIC")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -fPIC")
@@ -68,7 +67,42 @@ if(CMAKE_COMPILER_IS_GNUCXX OR
   set(CMAKE_C_FLAGS_DEBUG            "-g  -fno-reorder-blocks -fno-schedule-insns -fno-inline")
   set(CMAKE_C_FLAGS_DEBUGFULL        "-g3 -fno-inline")
   set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
- 
+
+  #Settings for cint
+  set(CPPPREP "${CXX} -E -C")
+  set(CXXOUT "-o ")
+  set(EXPLICITLINK "no") #TODO
+
+  set(EXEEXT "")
+  set(SOEXT "so")
+
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -Woverloaded-virtual -fPIC")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -fPIC")
+
+  set(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
+
+  set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
+  set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
+
+  set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
+  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
+
+  set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
+
+  # Select flags.
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
+  set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -DNDEBUG")
+  set(CMAKE_CXX_FLAGS_DEBUG          "-g -fno-schedule-insns -fno-inline")
+  set(CMAKE_CXX_FLAGS_DEBUGFULL      "-g3 -fno-inline")
+  set(CMAKE_CXX_FLAGS_PROFILE        "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG")
+  set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG")
+  set(CMAKE_C_FLAGS_DEBUG            "-g  -fno-schedule-insns -fno-inline")
+  set(CMAKE_C_FLAGS_DEBUGFULL        "-g3 -fno-inline")
+  set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
+
   #Settings for cint
   set(CPPPREP "${CXX} -E -C")
   set(CXXOUT "-o ")
