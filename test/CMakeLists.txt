@@ -90,12 +90,6 @@ ROOT_ADD_TEST(test-bench COMMAND bench)
 ROOT_EXECUTABLE(stress stress.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
 ROOT_ADD_TEST(test-stress COMMAND stress -b FAILREGEX "FAILED|Error in")
 
-#--stressReadOnly for xroot------------------------------------------------------------------
-ROOT_EXECUTABLE(stressReadOnly stressReadOnly.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
-if(ROOT_xrootd_FOUND)
-  ROOT_ADD_TEST(test-stressreadonly-xroot COMMAND stressReadOnly xroot FAILREGEX "FAILED|Error in")
-endif()
-
 #--stressShapes------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressShapes stressShapes.cxx LIBRARIES  Geom Tree GenVector Gpad)
 ROOT_ADD_TEST(test-stressshapes COMMAND stressShapes -b FAILREGEX "FAILED|Error in")
@@ -231,7 +225,8 @@ ROOT_ADD_TEST(test-qprandom COMMAND QpRandomDriver 10 2 2)
 ROOT_EXECUTABLE(threads threads.cxx LIBRARIES Thread Hist Gpad)
 #ROOT_ADD_TEST(test-threads COMMAND threads)
 
-
-
-
-
+#--readonly for xroot------------------------------------------------------------------
+ROOT_EXECUTABLE(readonly readonly.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
+if(ROOT_xrootd_FOUND)
+  ROOT_ADD_TEST(test-readonly-xroot COMMAND readonly xroot FAILREGEX "FAILED|Error in")
+endif()

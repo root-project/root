@@ -198,9 +198,9 @@ STRESSO       = stress.$(ObjSuf)
 STRESSS       = stress.$(SrcSuf)
 STRESS        = stress$(ExeSuf)
 
-STRESSRDO       = stressReadOnly.$(ObjSuf)
-STRESSRDS       = stressReadOnly.$(SrcSuf)
-STRESSRD        = stressReadOnly$(ExeSuf)
+READONLYO       = readonly.$(ObjSuf)
+READONLYS       = readonly.$(SrcSuf)
+READONLY        = readonly$(ExeSuf)
 
 STRESSGEOMETRYO   = stressGeometry.$(ObjSuf)
 STRESSGEOMETRYS   = stressGeometry.$(SrcSuf)
@@ -306,7 +306,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) \
                 $(STRESSROOSTATSO) $(STRESSHISTFACTORYO) \
                 $(STRESSPROOFO) $(STRESSMATHMOREO) \
                 $(STRESSTMVAO) $(STRESSINTERPO) $(STRESSITERO) \
-                $(STRESSHISTO) $(STRESSGUIO) $(SQLITETESTO) $(STRESSRDO)
+                $(STRESSHISTO) $(STRESSGUIO) $(SQLITETESTO) $(READONLYO)
 
 PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) \
                 $(TSTRING) $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) \
@@ -317,7 +317,7 @@ PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) \
                 $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSROOSTATS) \
                 $(STRESSHISTFACTORY) $(STRESSPROOF) $(STRESSMATH) \
                 $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSINTERP) $(STRESSITER) \
-                $(STRESSHIST) $(STRESSGUI) $(SQLITETEST) $(STRESSRD)
+                $(STRESSHIST) $(STRESSGUI) $(SQLITETEST) $(READONLY)
 
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
@@ -565,8 +565,8 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		$(MT_EXE)
 		@echo "$@ done"
 
-$(STRESSRD):    $(STRESSRDO) $(EVENTO)
-		$(LD) $(LDFLAGS) $(STRESSRDO) $(EVENTO) $(LIBS) $(OutPutOpt)$@
+$(READONLY):    $(READONLYO) $(EVENTO)
+		$(LD) $(LDFLAGS) $(READONLYO) $(EVENTO) $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
 
