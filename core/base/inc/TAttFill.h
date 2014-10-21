@@ -51,7 +51,7 @@ public:
    virtual void     SetFillColorAlpha(Color_t fcolor, Float_t falpha);
    virtual void     SetFillStyle(Style_t fstyle) { fFillStyle = fstyle; }
 
-   ClassDef(TAttFill,1)  //Fill area attributes
+   ClassDef(TAttFill,2)  //Fill area attributes
 };
 
 inline Bool_t TAttFill::IsTransparent() const

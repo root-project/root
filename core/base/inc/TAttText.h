@@ -60,7 +60,7 @@ public:
    virtual void     SetTextSize(Float_t tsize=1) { fTextSize = tsize;}
    virtual void     SetTextSizePixels(Int_t npixels);
 
-   ClassDef(TAttText,1)  //Text attributes
+   ClassDef(TAttText,2)  //Text attributes
 };
 
    enum ETextAlign {kHAlignLeft=10, kHAlignCenter=20, kHAlignRight=30,
