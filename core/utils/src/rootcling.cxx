@@ -2876,6 +2876,7 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp)
                          "#include \"TVirtualArray.h\"\n"
                          "#include \"TStreamerElement.h\"\n"
                          "#include \"TProtoClass.h\"\n"
+                         "#include \"TProtoClass.h\"\n"
                          "#include \"TBaseClass.h\"\n"
                          "#include \"TListOfDataMembers.h\"\n"
                          "#include \"TListOfEnums.h\"\n"
@@ -2884,6 +2885,8 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp)
                          "#include \"TEnumConstant.h\"\n"
                          "#include \"TDictAttributeMap.h\"\n"
                          "#include \"TMessageHandler.h\"\n"
+                         "#include \"TArray.h\"\n"
+                         "#include \"TRefArray.h\"\n"
                         );
    if (!CloseStreamerInfoROOTFile(buildingROOT)) {
       return 1;

@@ -65,6 +65,7 @@ public:
    TDictionary *Get(DataMemberInfo_t *info);
 
    Bool_t     IsLoaded() const { return fIsLoaded; }
+   void       SetIsLoaded(Bool_t on = kTRUE)  { fIsLoaded = on; } 
    void       AddFirst(TObject *obj);
    void       AddFirst(TObject *obj, Option_t *opt);
    void       AddLast(TObject *obj);

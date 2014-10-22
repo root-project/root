@@ -69,5 +69,8 @@
 #pragma link C++ class TListOfFunctionTemplates+;
 #pragma link C++ class TListOfDataMembers-;
 #pragma link C++ class TListOfEnums+;
+//for new protoclasses
+#pragma link C++ class std::vector<TDataMember * >+;
+#pragma link C++ class std::vector<TProtoClass::TProtoRealData >+;
 
 #endif

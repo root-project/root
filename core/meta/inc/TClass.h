@@ -88,6 +88,7 @@ friend class TCling;
 friend void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 friend class ROOT::TGenericClassInfo;
 friend class TProtoClass;
+friend class TProtoClass2;
 
 public:
    // TClass status bits
