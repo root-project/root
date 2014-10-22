@@ -2863,6 +2863,7 @@ int main(int argc, char **argv)
 
 //feenableexcept (FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
 
+   gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
    gBenchmark->Start("stress");
