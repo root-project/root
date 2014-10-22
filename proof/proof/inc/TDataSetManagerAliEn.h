@@ -51,7 +51,7 @@ class TAliEnFind : public TObject {
       TString      fTreeName;
       TString      fRegexpRaw;
       TString      fAnchor;
-      TString      fQuery;
+      TString      fFilter;
       Bool_t       fArchSubst;
       TPMERegexp  *fRegexp;
       TString      fSearchId;
@@ -65,7 +65,7 @@ class TAliEnFind : public TObject {
       TAliEnFind(const TString &basePath = "", const TString &fileName = "",
          const TString &anchor = "", const Bool_t archSubst = kFALSE,
          const TString &treeName = "", const TString &regexp = "",
-         const TString &query = "");
+         const TString& filter = "");
 
       TAliEnFind(const TAliEnFind &src);
       TAliEnFind &operator=(const TAliEnFind &rhs);

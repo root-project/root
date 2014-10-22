@@ -20,15 +20,16 @@
 
 #include "TDataSetManagerAliEn.h"
 #include "TError.h"
+#include "TSystem.h"
 
 ClassImp(TAliEnFind);
 
 //______________________________________________________________________________
 TAliEnFind::TAliEnFind(const TString &basePath, const TString &fileName,
   const TString &anchor, const Bool_t archSubst, const TString &treeName,
-  const TString &regexp, const TString &query) :
+  const TString &regexp, const TString& filter) :
   fBasePath(basePath), fFileName(fileName), fTreeName(treeName),
-  fRegexpRaw(regexp), fAnchor(anchor), fQuery(query), fArchSubst(archSubst),
+  fRegexpRaw(regexp), fAnchor(anchor), fFilter(filter), fArchSubst(archSubst),
   fRegexp(0), fSearchId(""), fGridResult(0)
 {
    // Constructor
@@ -47,7 +48,7 @@ TAliEnFind::TAliEnFind(const TAliEnFind &src) : TObject()
    fFileName = src.fFileName;
    fAnchor = src.fAnchor;
    fArchSubst = src.fArchSubst;
-   fQuery = src.fQuery;
+   fFilter = src.fFilter;
    fTreeName = src.fTreeName;
    fRegexpRaw = src.fRegexpRaw;
 
@@ -69,7 +70,7 @@ TAliEnFind &TAliEnFind::operator=(const TAliEnFind &rhs)
       fFileName = rhs.fFileName;
       fAnchor = rhs.fAnchor;
       fArchSubst = rhs.fArchSubst;
-      fQuery = rhs.fQuery;
+      fFilter = rhs.fFilter;
       fTreeName = rhs.fTreeName;
 
       SetRegexp(rhs.fRegexpRaw);
@@ -119,7 +120,7 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
    fGridResult = gGrid->Query(fBasePath.Data(), fFileName.Data());
    if (!fGridResult) return NULL;
 
-   if (fRegexp || fArchSubst || (fAnchor != "")) {
+   if (fRegexp || fArchSubst || (fAnchor != "") || fFilter ) {
 
       TPMERegexp *reArchSubst = NULL;
       TString substWith;
@@ -127,13 +128,7 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
          TString temp;
          temp.Form("/%s$", fFileName.Data());
          reArchSubst = new TPMERegexp(temp.Data());
-         if (fQuery) {
-            substWith.Form("/root_archive.zip?%s#%s", fQuery.Data(),
-               fFileName.Data());
-         }
-         else {
-            substWith.Form("/root_archive.zip#%s", fFileName.Data());
-         }
+         substWith.Form("/root_archive.zip#%s", fFileName.Data());
       }
 
       TIter it(fGridResult);
@@ -142,7 +137,7 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
       TString tUrl;
 
       while (( map = dynamic_cast<TMap *>(it.Next()) ) != NULL) {
-
+        
          os = dynamic_cast<TObjString *>( map->GetValue("turl") );
          if (!os) continue;
          tUrl = os->String();
@@ -157,15 +152,24 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
             reArchSubst->Substitute(tUrl, substWith, kFALSE);
             os->SetString(tUrl.Data());
          }
-         else if (fAnchor) {
-            if (fQuery) {
-               tUrl.Append("?");
-               tUrl.Append(fQuery);
-            }
+         else if (fAnchor.Length()) {
             tUrl.Append("#");
             tUrl.Append(fAnchor);
             os->SetString(tUrl.Data());
          }
+        
+        if ( fFilter )
+        {
+          TString tmp = gSystem->BaseName(os->String());
+          Ssiz_t ix = tmp.Last('.');
+          TString file = gSystem->DirName(os->String());
+          file += "/";
+          file += tmp(0,ix);
+          file += ".";
+          file += fFilter;
+          file += tmp(ix,tmp.Length()-ix);
+          os->SetString(file.Data());
+        }
       }
 
       if (reArchSubst) delete reArchSubst;
@@ -609,7 +613,7 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
 
 //______________________________________________________________________________
 Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
-   TString &basePath, TString &fileName, TString &anchor, TString &query,
+   TString &basePath, TString &fileName, TString &anchor, TString& filter,
    TString &treeName, TString &regexp)
 {
 
@@ -654,13 +658,13 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
     anchor = reAnchor[3];
   }
 
-  // Query string (optional)
-  TPMERegexp reQuery("(^|;)(Query=([^; ]+))(;|$)");
-  if (reQuery.Match(uri) != 5)
-    query = "";
+  // Filter string (optional)
+  TPMERegexp reFilter("(^|;)(Filter=([^; ]+))(;|$)");
+  if (reFilter.Match(uri) != 5)
+    filter = "";
   else {
-    checkUri.ReplaceAll(reQuery[2], "");
-    query = reQuery[3];
+    checkUri.ReplaceAll(reFilter[2], "");
+    filter = reFilter[3];
   }
 
   // Tree name (optional)
@@ -686,7 +690,7 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
   checkUri.ReplaceAll(" ", "");
   if (!checkUri.IsNull()) {
     ::Error("TDataSetManagerAliEn::ParseCustomFindUri",
-      "There are unrecognized parameters in the dataset find string");
+            "There are unrecognized parameters in the dataset find string : %s",checkUri.Data());
     return kFALSE;
   }
    return kTRUE;
