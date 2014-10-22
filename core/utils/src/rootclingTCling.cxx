@@ -125,7 +125,10 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
       protoClasses.AddLast(new TProtoClass(cl));
    }
 
+
    TObjArray typedefs(gTypedefsToStore.size());
+
+
    for (const auto & dtname : gTypedefsToStore) {
       TDataType *dt = (TDataType *)gROOT->GetListOfTypes()->FindObject(dtname.c_str());
       if (!dt) {

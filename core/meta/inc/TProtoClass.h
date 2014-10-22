@@ -21,6 +21,10 @@ class TClass;
 class TList;
 class TRealData;
 
+#include "TDataMember.h"
+
+#include <vector>
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TProtoClass                                                          //
@@ -32,24 +36,32 @@ class TRealData;
 
 class TProtoClass: public TNamed {
 public:
-   class TProtoRealData: public TNamed {
+   struct TProtoRealData  {
       Long_t fOffset; // data member offset
-      enum {
-         kIsObject = BIT(15) // member is an object
-      };
+      Int_t fDMIndex;  // index of data member in vector of data members
+      Int_t fLevel;  // member level (0 : belong to this class, 1 is a data member of a data member object, etc...)
+      Int_t fClassIndex; // index of class belonging to in list of dep classes
+      bool  fIsObject; // member is object
+      bool  fIsTransient; // data member is transient 
+      bool  fIsPointer;   // dta member is a pointer 
+
    public:
-      TProtoRealData() {}
+      bool IsAClass() const { return fClassIndex >= 0; }
+      TProtoRealData() : fOffset(0), fDMIndex(-1), fLevel(0), fClassIndex(-1), fIsObject(false), fIsTransient(false), fIsPointer(false) {} 
       TProtoRealData(const TRealData *rd);
       virtual ~TProtoRealData();
-      TRealData *CreateRealData(TClass *currentClass, TClass *parent) const;
+      TRealData *CreateRealData(TClass *currentClass, TClass *parent, TRealData * parentData, int prevLevel) const;
+     
       ClassDef(TProtoRealData, 2);//Persistent version of TRealData
    };
 
 private:
    TList   *fBase;     // List of base classes
-   TList   *fData;     // List of data members
+   //TList   *fData;     //! List of data members
    TList   *fEnums;    // List of enums in this scope
-   TList   *fPRealData;// List of TProtoRealData
+   std::vector<TProtoRealData>   fPRealData;// List of TProtoRealData
+   std::vector<TDataMember *>       fData;   // collection of data members
+   std::vector<TString>    fDepClasses;  // list of dependent classes 
    Int_t    fSizeof;   // Size of the class
    Int_t    fCanSplit; // Whether this class can be split
    Int_t    fStreamerType; // Which streaming method to use
@@ -60,13 +72,21 @@ private:
    TProtoClass(const TProtoClass &) = delete;
    TProtoClass &operator=(const TProtoClass &) = delete;
 
+   const char * GetClassName(Int_t index) const { return (index >= 0) ? fDepClasses[index].Data() : 0; }
+
+   // compute index of data member in the list
+   static Int_t DataMemberIndex(TClass * cl, const char * name);  
+   // find data member  given an index
+   static TDataMember * FindDataMember(TClass * cl,  Int_t index);  
+
 public:
    TProtoClass():
-      fBase(0), fData(0), fEnums(0), fPRealData(0), fSizeof(0), fCanSplit(0),
+      fBase(0), fEnums(0), fSizeof(0), fCanSplit(0),
       fStreamerType(0), fProperty(0), fClassProperty(0),
       fOffsetStreamer(0) {
    }
 
+   TProtoClass(TProtoClass *pc);
    TProtoClass(TClass *cl);
    virtual ~TProtoClass();
 
@@ -75,6 +95,15 @@ public:
       return fEnums;
    };
    void Delete(Option_t *opt = "");
+
+   int GetSize() { return fSizeof; }
+   TList * GetBaseList() { return fBase; }
+   //TList * GetDataList() { return fData; }
+   TList * GetEnumList() { return fEnums; }
+   std::vector<TProtoRealData> & GetPRDList() { return fPRealData; }
+   std::vector<TDataMember *> & GetData() { return fData; }
+   std::vector<TString> & GetDepClasses() { return fDepClasses; }
+
 
    ClassDef(TProtoClass, 2); //Persistent TClass
 };

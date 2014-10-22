@@ -1208,6 +1208,17 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TDirectory::TContext ctxt(0);
+      
+      if (pcmFileName.Contains("MathCore")) { 
+         // LM: first time need to read an empty object otehrwise 
+         // reading new protoclasses fail
+         TFile *pcmFileTmp = new TFile(pcmFileName+"?filetype=pcm","READ");
+         TObjArray * dummyObj;
+         pcmFileTmp->GetObject("__Enums", dummyObj);
+         pcmFileTmp->Close(); 
+         delete pcmFileTmp;
+      }
+
       TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
 
       auto listOfKeys = pcmFile->GetListOfKeys();
@@ -1219,10 +1230,15 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TObjArray *protoClasses;
+      if (gDebug > 1) 
+            ::Info("TCling::LoadPCM","reading protoclasses for %s \n",pcmFileName.Data());
+      
       pcmFile->GetObject("__ProtoClasses", protoClasses);
+
       if (protoClasses) {
-         for (auto proto : *protoClasses) {
-            TClassTable::Add((TProtoClass*)proto);
+         for (auto obj : *protoClasses) {
+            TProtoClass * proto = (TProtoClass*)obj;
+            TClassTable::Add(proto);
          }
          // Now that all TClass-es know how to set them up we can update
          // existing TClasses, which might cause the creation of e.g. TBaseClass
@@ -1250,6 +1266,7 @@ bool TCling::LoadPCM(TString pcmFileName,
                }
             }
          }
+
          protoClasses->Clear(); // Ownership was transfered to TClassTable.
          delete protoClasses;
       }
