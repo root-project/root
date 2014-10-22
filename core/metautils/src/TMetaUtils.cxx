@@ -48,6 +48,7 @@
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Utils/AST.h"
 
 #include "llvm/Support/Path.h"
 #include "llvm/Support/FileSystem.h"
@@ -59,6 +60,32 @@
 
 int ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
 // std::vector<ROOT::TMetaUtils::RConstructorType> gIoConstructorTypes;
+
+namespace ROOT {
+namespace TMetaUtils {
+//______________________________________________________________________________
+class TNormalizedCtxtImpl {
+   using DeclsCont_t = TNormalizedCtxt::Config_t::SkipCollection;
+   using Config_t = TNormalizedCtxt::Config_t;
+   using TypesCont_t = TNormalizedCtxt::TypesCont_t;
+   using TemplPtrIntMap_t = TNormalizedCtxt::TemplPtrIntMap_t;
+private:
+   Config_t         fConfig;
+   TypesCont_t      fTypeWithAlternative;
+   static TemplPtrIntMap_t fTemplatePtrArgsToKeepMap;
+public:
+   TNormalizedCtxtImpl(const cling::LookupHelper &lh);
+
+   const Config_t    &GetConfig() const { return fConfig; }
+   const TypesCont_t &GetTypeWithAlternative() const { return fTypeWithAlternative; }
+   void AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i);
+   int GetNargsToKeep(const clang::ClassTemplateDecl* templ) const;
+   const TemplPtrIntMap_t GetTemplNargsToKeepMap() const { return fTemplatePtrArgsToKeepMap; }
+   void keepTypedef(const cling::LookupHelper &lh, const char* name,
+                    bool replace = false);
+};
+}
+}
 
 namespace {
 
@@ -264,11 +291,12 @@ cling::LookupHelper::DiagSetting ToLHDS(bool wantDiags) {
 
 } // end of anonymous namespace
 
-namespace ROOT{
-   namespace TMetaUtils{
+
+namespace ROOT {
+namespace TMetaUtils {
 
 //______________________________________________________________________________
-void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ,
+void TNormalizedCtxtImpl::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ,
                                              unsigned int i){
    // Add to the internal map the pointer of a template as key and the number of
    // template arguments to keep as value.
@@ -296,15 +324,53 @@ void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* tem
    fTemplatePtrArgsToKeepMap[canTempl]=i;
 }
 //______________________________________________________________________________
-int TNormalizedCtxt::GetNargsToKeep(const clang::ClassTemplateDecl* templ) const{
+int TNormalizedCtxtImpl::GetNargsToKeep(const clang::ClassTemplateDecl* templ) const{
    // Get from the map the number of arguments to keep.
    // It uses the canonical decl of the template as key.
    // If not present, returns -1.
-      const clang::ClassTemplateDecl* constTempl = templ->getCanonicalDecl();
-      auto thePairPtr = fTemplatePtrArgsToKeepMap.find(constTempl);
-      int nArgsToKeep = (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;
-      return nArgsToKeep;
-   }
+   const clang::ClassTemplateDecl* constTempl = templ->getCanonicalDecl();
+   auto thePairPtr = fTemplatePtrArgsToKeepMap.find(constTempl);
+   int nArgsToKeep = (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;
+   return nArgsToKeep;
+}
+
+
+//______________________________________________________________________________
+TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh):
+   fImpl(new TNormalizedCtxtImpl(lh))
+{}
+
+TNormalizedCtxt::TNormalizedCtxt(const TNormalizedCtxt& other):
+   fImpl(new TNormalizedCtxtImpl(*other.fImpl))
+{}
+
+TNormalizedCtxt::~TNormalizedCtxt() {
+   delete fImpl;
+}
+const TNormalizedCtxt::Config_t &TNormalizedCtxt::GetConfig() const {
+   return fImpl->GetConfig();
+}
+const TNormalizedCtxt::TypesCont_t &TNormalizedCtxt::GetTypeWithAlternative() const {
+   return fImpl->GetTypeWithAlternative();
+}
+void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i)
+{
+   return fImpl->AddTemplAndNargsToKeep(templ, i);
+}
+int TNormalizedCtxt::GetNargsToKeep(const clang::ClassTemplateDecl* templ) const
+{
+   return fImpl->GetNargsToKeep(templ);
+}
+const TNormalizedCtxt::TemplPtrIntMap_t TNormalizedCtxt::GetTemplNargsToKeepMap() const {
+   return fImpl->GetTemplNargsToKeepMap();
+}
+void TNormalizedCtxt::keepTypedef(const cling::LookupHelper &lh, const char* name,
+                                  bool replace /*= false*/)
+{
+   return fImpl->keepTypedef(lh, name, replace);
+}
+
+
 
 //______________________________________________________________________________
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
@@ -565,7 +631,7 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
 } // end namespace TMetaUtils
 
 //______________________________________________________________________________
-void ROOT::TMetaUtils::TNormalizedCtxt::keepTypedef(const cling::LookupHelper &lh,
+void ROOT::TMetaUtils::TNormalizedCtxtImpl::keepTypedef(const cling::LookupHelper &lh,
                                                     const char* name,
                                                     bool replace /*=false*/) {
    // Insert the type with name into the collection of typedefs to keep.
@@ -584,7 +650,7 @@ void ROOT::TMetaUtils::TNormalizedCtxt::keepTypedef(const cling::LookupHelper &l
 }
 
 //______________________________________________________________________________
-ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh)
+ROOT::TMetaUtils::TNormalizedCtxtImpl::TNormalizedCtxtImpl(const cling::LookupHelper &lh)
 {
    // Initialize the list of typedef to keep (i.e. make them opaque for normalization)
    // and the list of typedef whose semantic is different from their underlying type
@@ -611,7 +677,7 @@ ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh
    }
 }
 
-using TNCtxtFullQual = ROOT::TMetaUtils::TNormalizedCtxt;
+using TNCtxtFullQual = ROOT::TMetaUtils::TNormalizedCtxtImpl;
 TNCtxtFullQual::TemplPtrIntMap_t TNCtxtFullQual::fTemplatePtrArgsToKeepMap=TNCtxtFullQual::TemplPtrIntMap_t{};
 // Initialisation of the atomic flag used to build a lightweight spinlock
 // std::atomic_flag TNCtxtFullQual::fCanAccessNargsToKeep = ATOMIC_FLAG_INIT;
