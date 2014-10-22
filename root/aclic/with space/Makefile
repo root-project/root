@@ -1,4 +1,4 @@
-TEST_TARGETS += load
+TEST_TARGETS += thetest
 
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.success
 
@@ -21,8 +21,8 @@ ifeq ($(FAIL),)
 endif
 
 
-load : load.success
+thetest : thetest.success
 
-load.success: load.clog
+thetest.success: thetest.clog
 	$(SuccessTestDiff) && touch $@
 

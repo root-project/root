@@ -1,5 +1,5 @@
 #include "Riostream.h"
 
-void runload() { 
+void runthetest() { 
    cout << "not much\n";
 }
