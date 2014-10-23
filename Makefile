@@ -509,7 +509,7 @@ MAKESTATICLIB := $(ROOT_SRCDIR)/build/unix/makestaticlib.sh
 MAKESTATIC    := $(ROOT_SRCDIR)/build/unix/makestatic.sh
 RECONFIGURE   := $(ROOT_SRCDIR)/build/unix/reconfigure.sh
 MAKEPCHINPUT  := $(ROOT_SRCDIR)/build/unix/makepchinput.sh
-MAKEPCH       := build/unix/makepch.sh
+MAKEPCH       := etc/dictpch/makepch.sh
 ifeq ($(PLATFORM),win32)
 MAKELIB       := $(ROOT_SRCDIR)/build/win/makelib.sh
 MAKECOMPDATA  := $(ROOT_SRCDIR)/build/win/compiledata.sh
