@@ -641,6 +641,11 @@ root/meta/genreflex/XMLParsing/dicts/*
 # /root/stress/
 /root/stress/*_ref.root
 /root/stress/*_diff.root
+/root/stress/sg*.C
+/root/stress/sg*.gif
+/root/stress/sg*.jpg
+/root/stress/sg*.pdf
+/root/stress/sg*.png
 /root/stress/sg*.ps
 /root/stress/files
 /root/stress/stressEntryListTrees_0.root
