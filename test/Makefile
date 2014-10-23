@@ -198,11 +198,9 @@ STRESSO       = stress.$(ObjSuf)
 STRESSS       = stress.$(SrcSuf)
 STRESS        = stress$(ExeSuf)
 
-ifeq ($(shell $(RC) --has-xrootd),yes)
-READONLYO       = stressIOPlugins.$(ObjSuf)
-READONLYS       = stressIOPlugins.$(SrcSuf)
-READONLY        = stressIOPlugins$(ExeSuf)
-endif
+IOPLUGINSO    = stressIOPlugins.$(ObjSuf)
+IOPLUGINSS    = stressIOPlugins.$(SrcSuf)
+IOPLUGINS     = stressIOPlugins$(ExeSuf)
 
 STRESSGEOMETRYO   = stressGeometry.$(ObjSuf)
 STRESSGEOMETRYS   = stressGeometry.$(SrcSuf)
@@ -308,7 +306,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) \
                 $(STRESSROOSTATSO) $(STRESSHISTFACTORYO) \
                 $(STRESSPROOFO) $(STRESSMATHMOREO) \
                 $(STRESSTMVAO) $(STRESSINTERPO) $(STRESSITERO) \
-                $(STRESSHISTO) $(STRESSGUIO) $(SQLITETESTO) $(READONLYO)
+                $(STRESSHISTO) $(STRESSGUIO) $(SQLITETESTO) $(IOPLUGINSO)
 
 PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) \
                 $(TSTRING) $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) \
@@ -319,7 +317,7 @@ PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) \
                 $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSROOSTATS) \
                 $(STRESSHISTFACTORY) $(STRESSPROOF) $(STRESSMATH) \
                 $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSINTERP) $(STRESSITER) \
-                $(STRESSHIST) $(STRESSGUI) $(SQLITETEST) $(READONLY)
+                $(STRESSHIST) $(STRESSGUI) $(SQLITETEST) $(IOPLUGINS)
 
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
@@ -567,10 +565,15 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		$(MT_EXE)
 		@echo "$@ done"
 
-$(READONLY):    $(READONLYO) $(EVENTO)
-		$(LD) $(LDFLAGS) $(READONLYO) $(EVENTO) $(LIBS) $(OutPutOpt)$@
+ifeq ($(shell $(RC) --has-xrootd),yes)
+$(IOPLUGINS):   $(IOPLUGINSO) $(EVENTO)
+		$(LD) $(LDFLAGS) $(IOPLUGINSO) $(EVENTO) $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
+else
+$(IOPLUGINS):   ROOT-configured-without-xrootd
+
+endif
 
 $(STRESSGEOMETRY):  $(STRESSGEOMETRYO)
 ifeq ($(PLATFORM),win32)

@@ -112,11 +112,11 @@ int setPath(const char *proto)
    return -1;
 }
 
-void stressIOPlugins(const char *protoName /*=0*/)
+void stressIOPluginsForProto(const char *protoName /*=0*/)
 {
    //Main control function invoking all test programs
    if (!protoName) {
-     stressIOPlugins("xroot");
+     stressIOPluginsForProto("xroot");
      return;
    }
 
