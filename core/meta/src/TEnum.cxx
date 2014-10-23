@@ -192,7 +192,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
    } else {
       // We don't have any scope: this is a global enum
       theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kNone);
-      if (!theEnum && (sa & kAutoload)) {
+      if (!theEnum && (sa == kAutoload)) {
          gInterpreter->AutoLoad(enumName);
          theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kAutoload);
       }
