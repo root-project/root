@@ -37,6 +37,9 @@ endif
 ifeq ($(findstring minuit2,$(R__FEATURES)),)
 STRESSTESTS  := $(filter-out stressHistoFit-test,$(STRESSTESTS))
 endif
+ifeq ($(findstring xrootd,$(R__FEATURES)),)
+STRESSTESTS  := $(filter-out stressReadOnly-test,$(STRESSTESTS))
+endif
 
 TEST_TARGETS += $(STRESSTESTS)
 
