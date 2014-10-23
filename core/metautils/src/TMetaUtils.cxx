@@ -4675,6 +4675,50 @@ const clang::RecordDecl* ROOT::TMetaUtils::ExtractEnclosingScopes(const clang::D
 }
 
 //______________________________________________________________________________
+static void replaceEnvVars(const char* varname, std::string& txt)
+{
+   // Reimplementation of TSystem::ExpandPathName() that cannot be
+   // used from TMetaUtils.
+   std::string::size_type beginVar = 0;
+   std::string::size_type endVar = 0;
+   while ((beginVar = txt.find('$', beginVar)) != std::string::npos
+          && beginVar + 1 < txt.length()) {
+      std::string::size_type beginVarName = beginVar + 1;
+      std::string::size_type endVarName = std::string::npos;
+      if (txt[beginVarName] == '(') {
+         // "$(VARNAME)" style.
+         endVarName = txt.find(')', beginVarName);
+         ++beginVarName;
+         if (endVarName == std::string::npos) {
+            ROOT::TMetaUtils::Error(0, "Missing ')' for '$(' in $%s at %s\n",
+                                    varname, txt.c_str() + beginVar);
+            return;
+         }
+         endVar = endVarName + 1;
+      } else {
+         // "$VARNAME/..." style.
+         beginVarName = beginVar + 1;
+         endVarName = beginVarName;
+         while (isalnum(txt[endVarName]) || txt[endVarName] == '_')
+            ++endVarName;
+         endVar = endVarName;
+      }
+
+      const char* val = getenv(txt.substr(beginVarName,
+                                          endVarName - beginVarName).c_str());
+      if (!val) val = "";
+
+      txt.replace(beginVar, endVar - beginVar, val);
+      int lenval = strlen(val);
+      int delta = lenval - (endVar - beginVar); // these many extra chars,
+      endVar += delta; // advance the end marker accordingly.
+
+      // Look for the next one
+      beginVar = endVar + 1;
+   }
+}
+
+//______________________________________________________________________________
 void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& clingArgs )
 {
    // Organise the parameters for cling in order to guarantee relocatability
@@ -4683,10 +4727,14 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
    // are available.
    const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
 
-   if (envInclPath) {
-      std::istringstream envInclPathsStream(envInclPath);
-      std::string inclPath;
-      while (std::getline(envInclPathsStream, inclPath, ':')) {
+   if (!envInclPath)
+      return;
+   std::istringstream envInclPathsStream(envInclPath);
+   std::string inclPath;
+   while (std::getline(envInclPathsStream, inclPath, ':')) {
+      // Can't use TSystem in here; re-implement TSystem::ExpandPathName().
+      replaceEnvVars("ROOT_INCLUDE_PATH", inclPath);
+      if (!inclPath.empty()) {
          clingArgs.push_back("-I");
          clingArgs.push_back(inclPath);
       }
