@@ -531,6 +531,9 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       if (fillis==1) {
          PrintStr("@");
          PrintStr("\\draw [c, fill=c");
+      } else if (fillis==0) {
+         PrintStr("@");
+         PrintStr("\\draw [c");
       } else {
          PrintStr("\\draw [pattern=");
          if (fillsi==1)  PrintStr("crosshatch dots");
