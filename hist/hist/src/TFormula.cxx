@@ -4461,3 +4461,16 @@ void TFormula::SetMaxima(Int_t maxop, Int_t maxpar, Int_t maxconst)
    gMAXPAR   = TMath::Max(10,maxpar);
    gMAXCONST = TMath::Max(10,maxconst);
 }
+
+//______________________________________________________________________________
+void TFormula::GetMaxima(Int_t& maxop, Int_t& maxpar, Int_t& maxconst)
+{
+   // static function to get the maximum value of 3 parameters
+   //  -maxop    : maximum number of operations
+   //  -maxpar   : maximum number of parameters
+   //  -maxconst : maximum number of constants
+
+   maxop = gMAXOP;
+   maxpar = gMAXPAR;
+   maxconst = gMAXCONST;
+}

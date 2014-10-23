@@ -1194,6 +1194,12 @@ void TMultiLayerPerceptron::AttachData()
    TNeuron *neuron = 0;
    Bool_t normalize = false;
    fManager = new TTreeFormulaManager;
+
+   // Set the size of the internal array of parameters of the formula
+   Int_t maxop, maxpar, maxconst;
+   TFormula::GetMaxima(maxop, maxpar, maxconst);
+   TFormula::SetMaxima(10, 10, 10);
+   
    //first layer
    const TString input = TString(fStructure(0, fStructure.First(':')));
    const TObjArray *inpL = input.Tokenize(", ");
@@ -1232,6 +1238,9 @@ void TMultiLayerPerceptron::AttachData()
 
    fManager->Add((fEventWeight = new TTreeFormula("NNweight",fWeight.Data(),fData)));
    //fManager->Sync();
+
+   // Set the old values
+   TFormula::SetMaxima(maxop, maxpar, maxconst);
 }
 
 //______________________________________________________________________________
