@@ -2188,6 +2188,30 @@ void TCling::ClearStack()
 }
 
 //______________________________________________________________________________
+void TCling::Declare(const char* code)
+{
+   // Declare code to the interpreter, without any of the interpreter actions
+   // that could trigger a re-interpretation of the code. I.e. make cling
+   // behave like a compiler: no dynamic lookup, no input wrapping for
+   // subsequent execution, no automatic provision of declarations but just a
+   // plain #include.
+
+   int oldload = SetClassAutoloading(0);
+   int oldparse = SetClassAutoparsing(0);
+   bool oldDynLookup = fInterpreter->isDynamicLookupEnabled();
+   fInterpreter->enableDynamicLookup(false);
+   bool oldRawInput = fInterpreter->isRawInputEnabled();
+   fInterpreter->enableRawInput(true);
+
+   LoadText(code);
+
+   fInterpreter->enableRawInput(oldRawInput);
+   fInterpreter->enableDynamicLookup(oldDynLookup);
+   SetClassAutoloading(oldload);
+   SetClassAutoparsing(oldparse);
+}
+
+//______________________________________________________________________________
 void TCling::EnableAutoLoading()
 {
    // Enable the automatic loading of shared libraries when a class

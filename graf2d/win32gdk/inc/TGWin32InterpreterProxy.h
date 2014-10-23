@@ -46,6 +46,7 @@ public:
    Int_t    AutoLoad(const char *classname);
    void     ClearFileBusy();
    void     ClearStack();
+   void     Declare(const char* code);
    void     EnableAutoLoading();
    void     EndOfLineAction();
    void     Initialize();
