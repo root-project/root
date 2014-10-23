@@ -198,9 +198,11 @@ STRESSO       = stress.$(ObjSuf)
 STRESSS       = stress.$(SrcSuf)
 STRESS        = stress$(ExeSuf)
 
-READONLYO       = readonly.$(ObjSuf)
-READONLYS       = readonly.$(SrcSuf)
-READONLY        = readonly$(ExeSuf)
+ifeq ($(shell $(RC) --has-xrootd),yes)
+READONLYO       = stressIOPlugins.$(ObjSuf)
+READONLYS       = stressIOPlugins.$(SrcSuf)
+READONLY        = stressIOPlugins$(ExeSuf)
+endif
 
 STRESSGEOMETRYO   = stressGeometry.$(ObjSuf)
 STRESSGEOMETRYS   = stressGeometry.$(SrcSuf)
