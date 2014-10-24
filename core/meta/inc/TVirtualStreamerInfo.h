@@ -42,8 +42,8 @@ class TVirtualStreamerInfo : public TNamed {
 
 protected:
    Bool_t              fOptimized;         //! true if the StreamerInfo has been optimized
-   Bool_t              fIsBuilt;           //! true if the StreamerInfo has been 'built'
-   std::atomic<Bool_t> fIsCompiled;        //! true if the StreamerInfo has been compiled (i.e. fully built).
+   Bool_t              fIsBuilt;           //! true if the StreamerInfo has been 'built' (i.e. has all the StreamerElements it should have)
+   std::atomic<Bool_t> fIsCompiled;        //! true if the StreamerInfo has been compiled (i.e. fully built, ready to use for streaming).
 
 protected:
    static  Bool_t    fgCanDelete;        //True if ReadBuffer can delete object
@@ -146,7 +146,7 @@ public:
    virtual Int_t       GetNumber()  const = 0;
    virtual Int_t       GetSize()    const = 0;
    virtual TStreamerElement *GetStreamerElement(const char*datamember, Int_t& offset) const = 0;
-           Bool_t      IsBuilt() const { return fIsCompiled; }
+           Bool_t      IsBuilt() const { return fIsBuilt; }
            Bool_t      IsCompiled() const { return fIsCompiled; }
            Bool_t      IsOptimized() const { return fOptimized; }
            Int_t       IsRecovered() const { return TestBit(kRecovered); }
