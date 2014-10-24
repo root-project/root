@@ -101,7 +101,7 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
       info = (TVirtualStreamerInfo *)sinfos->At(cl->GetClassVersion());
    }
 
-   if (!info || !info->IsBuilt()) {
+   if (!info || !info->IsCompiled()) {
       // Even if the streamerInfo exist, it could still need to be 'build'
       // It is important to figure this out, because
       //   a) if it is not build, we need to build
