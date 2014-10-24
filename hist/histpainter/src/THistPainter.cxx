@@ -3362,9 +3362,13 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (dimension ==2) {
          bin1 = xaxis->GetFirst()+1;
          bin2 = xaxis->GetLast()-1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, xaxis->GetNbins());
          if (bin2>bin1) xaxis->SetRange(bin1,bin2);
          bin1 = yaxis->GetFirst()+1;
          bin2 = yaxis->GetLast()-1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, yaxis->GetNbins());
          if (bin2>bin1) yaxis->SetRange(bin1,bin2);
       }
       gPad->Modified();
@@ -3377,9 +3381,13 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (dimension == 2) {
          bin1 = xaxis->GetFirst()-1;
          bin2 = xaxis->GetLast()+1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, xaxis->GetNbins());
          if (bin2>bin1) xaxis->SetRange(bin1,bin2);
          bin1 = yaxis->GetFirst()-1;
          bin2 = yaxis->GetLast()+1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, yaxis->GetNbins());
          if (bin2>bin1) yaxis->SetRange(bin1,bin2);
       }
       gPad->Modified();
@@ -3404,6 +3412,10 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             Double_t x2 = TMath::Max(zoombox->GetX1(), zoombox->GetX2());
             Double_t y1 = TMath::Min(zoombox->GetY1(), zoombox->GetY2());
             Double_t y2 = TMath::Max(zoombox->GetY1(), zoombox->GetY2());
+            x1 = TMath::Max(x1,xaxis->GetXmin());
+            x2 = TMath::Min(x2,xaxis->GetXmax());
+            y1 = TMath::Max(y1,yaxis->GetXmin());
+            y2 = TMath::Min(y2,yaxis->GetXmax());
             if (x1<x2 && y1<y2) {
                xaxis->SetRangeUser(x1, x2);
                yaxis->SetRangeUser(y1, y2);
