@@ -33,81 +33,6 @@ class TDataMember;
 class TJSONStackObj;
 
 
-#include "TNamed.h"
-#include "TArrayF.h"
-#include "TArrayL.h"
-#include "TObjString.h"
-#include "TClonesArray.h"
-
-class TTestObject : public TNamed {
-protected:
-   Int_t    fIntValue;
-   Float_t  fFloatValue;
-   Int_t    fIntArray[5];
-   Int_t    fInt2Array[3][4];
-   Int_t    fInt3Array[2][3][4];
-   TString  fStrValue;
-   TString *fStrPtr;
-   TArrayF  fArrayF;
-   TArrayL  fArrayL;
-   TClonesArray fNames;
-
-public:
-   TTestObject() : TNamed()
-   {
-      fIntValue    = 123;
-      fFloatValue  = 23.45;
-      for (int n = 0; n < 5; n++) fIntArray[n] = (n + 7) * 12;
-      for (int n1 = 0; n1 < 3; n1++)
-         for (int n2 = 0; n2 < 4; n2++)
-            fInt2Array[n1][n2] = (n1 + 1) * (n2 + 2);
-      for (int n0 = 0; n0 < 2; n0++)
-         for (int n1 = 0; n1 < 3; n1++)
-            for (int n2 = 0; n2 < 4; n2++)
-               fInt3Array[n0][n1][n2] = (n0 + 1) * (n1 + 2) * (n2 + 3);
-
-      fStrValue = "";
-      fStrPtr = 0;
-      fArrayF.Set(0);
-      fArrayL.Set(0);
-   }
-
-   TTestObject(const char *name, const char *title) :
-      TNamed(name, title)
-   {
-      fIntValue    = 123;
-      fFloatValue  = 23.45;
-      for (int n = 0; n < 5; n++) fIntArray[n] = (n + 7) * 12;
-      for (int n1 = 0; n1 < 3; n1++)
-         for (int n2 = 0; n2 < 4; n2++)
-            fInt2Array[n1][n2] = (n1 + 1) * (n2 + 2);
-
-      for (int n0 = 0; n0 < 2; n0++)
-         for (int n1 = 0; n1 < 3; n1++)
-            for (int n2 = 0; n2 < 4; n2++)
-               fInt3Array[n0][n1][n2] = (n0 + 1) * (n1 + 2) * (n2 + 3);
-
-      fStrValue = "string value";
-      fStrPtr = &fStrValue;
-      fArrayF.Set(10);
-      fArrayF.Reset(123);
-      fArrayL.Set(12);
-      fArrayL.Reset(77);
-
-      fNames.SetClass("TObjString", 10);
-      for (Int_t n = 0; n <= 10; n++) {
-         new(fNames[n]) TObjString(Form("str%d", n));
-         //fNames.Add(s);
-      }
-      printf("Num names %d\n", fNames.GetLast() + 1);
-   }
-
-
-   ClassDef(TTestObject, 1);
-
-};
-
-
 class TBufferJSON : public TBuffer {
 
 public:
@@ -301,15 +226,11 @@ public:
 
    virtual void       TagStreamerInfo(TVirtualStreamerInfo * /*info*/) {}
 
-   // abstract virtual methods from TBuffer, which should be redefined to
-   virtual Bool_t     CheckObject(const TObject * /*obj*/)
-   {
-      /*Error("CheckObject","useless");*/ return kTRUE;
-   }
-   virtual Bool_t     CheckObject(const void * /*ptr*/, const TClass * /*cl*/)
-   {
-      /*Error("CheckObject","useless");*/ return kTRUE;
-   }
+   virtual Bool_t     CheckObject(const TObject * /*obj*/);
+
+   virtual Bool_t     CheckObject(const void * /*ptr*/, const TClass * /*cl*/);
+
+   // abstract virtual methods from TBuffer, which should be redefined
 
    virtual Int_t      ReadBuf(void * /*buf*/, Int_t /*max*/)
    {
