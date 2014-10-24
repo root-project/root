@@ -2252,7 +2252,7 @@ void TStreamerInfo::Compile()
    // of time compared to an explicit iteration on all elements.
 
    if (IsCompiled()) {
-      Fatal("Compile","can only be called once; this first call generates both the optimized and memberwise actions.");
+      //Error("Compile","can only be called once; this first call generates both the optimized and memberwise actions.");
       return;
    }
    R__LOCKGUARD(gCINTMutex);
