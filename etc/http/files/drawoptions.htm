@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+   <meta http-equiv="X-UA-Compatible" content="IE=Edge; text/html">
+
+   <title>All supported classes and options by JSROOT</title>
+   
+   <script src="../scripts/JSRootCore.js" type="text/javascript"></script>
+
+   <script type='text/javascript'>
+
+      function file_error(divid, str) {
+         $('#'+divid).append("<h4>" + str + "</h4>"); 
+      }
+      
+      function draw_item(file, itemname, divid, drawopt) {
+         file.ReadObject(itemname, function(obj) {
+            if (obj==null) return file_error(divid, "In file " + file.fURL + " item " + itemname + " cannot be find");
+            JSROOT.draw(divid, obj, drawopt); 
+         });
+      }
+      
+      function draw_item_options(file, itemname, divid, options, factor) {
+         var arr = options.split(";");
+
+         var html = "Supported options: ";
+         for (var i in arr) {
+            if (i>0) html += ", ";
+            html += '<a href="../index.htm?nobrowser&file=files/' + file.fURL + '&item=' + itemname + '&opt=' + arr[i] + '" target="_blank">';
+            if (arr[i] == "") html += '&lt;default&gt;'; else html += arr[i]; 
+            html += '</a>'; 
+         }
+         html += "<br/><br/>";
+         
+         $("#" + divid).append(html);
+         
+         if (JSROOT.GetUrlOption("minimal")!=null) return;
+         
+         var w = JSROOT.GetUrlOption("w", null, "800");
+         var h = JSROOT.GetUrlOption("h", null, "600");
+         if (factor!=null) h = w * factor;
+         
+         for (var i in arr) {
+            var subid = divid + "_" + arr[i];
+            
+            var html = '<div id="' + subid + '" style="width:'+w+'px; height:'+h+'px"></div>';
+            $("#" + divid).append(html);
+            
+            draw_item(file, itemname, subid, arr[i]);
+            
+            if (JSROOT.GetUrlOption("all")==null) return;
+         }
+      }
+   
+      function CreateGui() {
+
+         $('#debug').empty();
+
+         new JSROOT.TFile("hsimple.root+", function(file) {
+            if (file==null) return file_error("h1_draw", "hsimple.root cannot be opened");
+            
+            draw_item_options(file, "hpx;1", "h1_draw", "");
+            draw_item_options(file, "hpxpy;1", "h2_draw", ";COL;COLZ;LEGO");
+            draw_item_options(file, "hprof;1", "prof_draw", ";E1");
+         });
+
+         new JSROOT.TFile("glbox.root+", function(file) {
+            if (file==null) return file_error("h3_draw", "glbox.root cannot be opened");
+            
+            draw_item_options(file, "h31;1", "h3_draw", "");
+         });
+         
+         new JSROOT.TFile("graph.root+", function(file) {
+            if (file==null) return file_error("gr_draw", "graph.root cannot be opened");
+            
+            draw_item_options(file, "Graph;1", "gr_draw", ";L;P");
+         });
+
+         new JSROOT.TFile("fillrandom.root+", function(file) {
+            if (file==null) return file_error("f1_draw", "fillrandom.root cannot be opened");
+            
+            draw_item_options(file, "sqroot;1", "f1_draw", "");
+         });
+
+         new JSROOT.TFile("rf107.root+", function(file) {
+            if (file==null) return file_error("can_draw", "fillrandom.root cannot be opened");
+            
+            draw_item_options(file, "rf107_plotstyles;1", "can_draw", "", 0.);
+         });
+
+         new JSROOT.TFile("ct.root+", function(file) {
+            if (file==null) return file_error("can2_draw", "ct.root cannot be opened");
+            
+            draw_item_options(file, "ct;1", "can2_draw", "", 0.);
+         });
+
+         new JSROOT.TFile("zdemo.root+", function(file) {
+            if (file==null) return file_error("can3_draw", "zdemo.root cannot be opened");
+            
+            draw_item_options(file, "zdemo;1", "can3_draw", "", 0.);
+         });
+
+         new JSROOT.TFile("JPsi_evolution.root", function(file) {
+            if (file==null) return file_error("can4_draw", "JPsi_evolution.root cannot be opened");
+            
+            draw_item_options(file, "CutTrees/cut1/C_cut1 < 2.85714;1", "can4_draw", "", 0.);
+         });
+         
+         new JSROOT.TFile("stacks.root+", function(file) {
+            if (file==null) return file_error("can5_draw", "stacks.root cannot be opened");
+            
+            draw_item_options(file, "stacks;1", "can5_draw", "", 0.);
+         });
+         
+         // JSROOT.RegisterForResize(function() { if (objpainter) objpainter.CheckResize(); });
+      }
+   </script>
+   
+</head>
+
+<body onload="JSROOT.AssertPrerequisites('2d;3d;io', CreateGui, 'debug')">
+
+  <div id="debug">loading...</div>
+
+  <h1>TH1 class</h1> 
+
+  <div id="h1_draw"></div>
+
+  <h1>TH2 class</h1> 
+
+  <div id="h2_draw"></div>
+
+  <h1>TH3 class</h1> 
+
+  <div id="h3_draw"></div>
+
+  <h1>TProfile class</h1> 
+
+  <div id="prof_draw"></div>
+
+  <h1>TGraph class</h1> 
+
+  <div id="gr_draw"></div>
+
+  <h1>TF1 class</h1> 
+
+  <div id="f1_draw"></div>
+
+  <h1>TCanvas class</h1> 
+
+  <div id="can_draw"></div>
+  <div id="can2_draw"></div>
+  <div id="can3_draw"></div>
+  <div id="can4_draw"></div>
+  <div id="can5_draw"></div>
+
+  
+</body>
+
+</html>
+

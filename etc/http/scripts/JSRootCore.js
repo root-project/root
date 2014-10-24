@@ -1,7 +1,9 @@
-// JSROOTCore.js
-//
-// core methods for JavaScript ROOT.
-//
+/// @file JSRootCore.js
+/// Core methods of JavaScript ROOT
+
+/// @namespace JSROOT
+/// Holder of all JSROOT functions and classes
+
 
 (function(){
 
@@ -13,13 +15,13 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.x 11.09.2014";
+   JSROOT.version = "3.0 betta 24/10/2014";
    
    JSROOT.source_dir = null;
    
    JSROOT.clone = function(obj) {
       return jQuery.extend(true, {}, obj);
-   };
+   }
    
    JSROOT.id_counter = 0;
    
@@ -117,8 +119,51 @@
 	   return obj;
 	}
 	
+	JSROOT.GetUrlOption = function(opt, url, dflt) {
+	   // analyzes document.URL and extracts options after '?' mark
+	   // following options supported ?opt1&opt2=3
+	   // In case of opt1 empty string will be returned, in case of opt2 '3'
+	   // If option not found, null is returned (or provided default value)
+
+	   if ((opt==null) || (typeof opt != 'string') || (opt.length==0)) return dflt;
+	   
+	   if (!url) url = document.URL;
+	   
+	   var pos = url.indexOf("?");
+	   if (pos<0) return null;
+	   url = url.slice(pos+1);
+	   
+	   while (url.length>0) {
+
+         if (url==opt) return "";
+         
+         pos = url.indexOf("&");
+         if (pos < 0) pos = url.length;
+         
+         if (url.indexOf(opt) == 0) {
+            if (url.charAt(opt.length)=="&") return "";
+
+            // replace several symbols which are known to make a problem
+            if (url.charAt(opt.length)=="=")
+               return url.slice(opt.length+1, pos).replace(/%27/g, "'").replace(/%22/g, '"').replace(/%20/g, ' ').replace(/%3C/g, '<').replace(/%3E/g, '>');
+         }
+
+         url = url.slice(pos+1);
+      } 
+	   return dflt;
+	}
+	
 	JSROOT.NewHttpRequest = function(url, kind, callback) {
-      // kind can be "text", "xml", "bin" or "head"
+	   // Create asynchronous XMLHttpRequest object.
+	   // One should call req.send() to submit request
+      // kind of the request can be:
+	   //  "bin" - abstract binary data (default)
+	   //  "text" - returns req.responseText
+      //  "object" - returns JSROOT.parse(req.responseText)
+	   //  "xml" - returns res.responseXML
+	   //  "head" - returns request itself, uses "HEAD" method
+      // Result will be returned to the callback functions
+	   // If failed, request returns null
       var xhr = new XMLHttpRequest();
       
 //      if (typeof ActiveXObject == "function") {
@@ -131,18 +176,16 @@
             
             if (xhr.status != 200 && xhr.status != 206) {
                // error
-               callback(null); return;
+               return callback(null);
             }
             
-            if (kind == "xml") {
-               callback(xhr.responseXML); return;
-            } 
-            if (kind == "text") {
-               callback(xhr.responseText); return;
-            } 
-            if (kind == "head") {
-               callback(xhr); return;
-            } 
+            if (kind == "xml") return callback(xhr.responseXML);
+            
+            if (kind == "text") return callback(xhr.responseText);
+
+            if (kind == "object") return callback(JSROOT.parse(xhr.responseText));
+
+            if (kind == "head") return callback(xhr);
             
             var filecontent = new String("");
             var array = new VBArray(xhr.responseBody).toArray();
@@ -162,17 +205,12 @@
             if (xhr.readyState != 4) return;
             
             if (xhr.status != 0 && xhr.status != 200 && xhr.status != 206) {
-               callback(null); return;
+               return callback(null);
             }
-            if (kind == "xml") {
-               callback(xhr.responseXML); return;
-            }  
-            if (kind == "text") {
-               callback(xhr.responseText); return;
-            }  
-            if (kind == "head") {
-               callback(xhr); return;
-            }
+            if (kind == "xml") return callback(xhr.responseXML);
+            if (kind == "text") return callback(xhr.responseText);
+            if (kind == "object") return callback(JSROOT.parse(xhr.responseText));
+            if (kind == "head") return callback(xhr);
             
             var HasArrayBuffer = ('ArrayBuffer' in window && 'Uint8Array' in window);
             var Buf, filecontent;
@@ -221,7 +259,7 @@
       return xhr;
    }
 	
-   JSROOT.loadScript = function(urllist, callback) {
+   JSROOT.loadScript = function(urllist, callback, debugout) {
       // dynamic script loader using callback
       // (as loading scripts may be asynchronous)
       // one could specify list of scripts or style files, separated by semicolon ';'
@@ -230,19 +268,25 @@
       // by the position of JSRootCore.js file, which must be loaded by normal methods:
       // <script type="text/javascript" src="scripts/JSRootCore.js"></script>
 
-      
-      var completeLoad = function() {
-         if ((urllist!=null) && (urllist.length>0))
-            JSROOT.loadScript(urllist, callback);
+      function debug(str) {
+         if (debugout) 
+            document.getElementById(debugout).innerHTML = str;
          else
-            if (typeof callback == 'function') callback();
+            console.log(str);
       }
       
-      
-      if ((urllist==null) || (urllist.length==0)) {
-         completeLoad();
-         return;
+      function completeLoad() {
+         if ((urllist!=null) && (urllist.length>0))
+            return JSROOT.loadScript(urllist, callback, debugout);
+         
+         if (debugout) 
+            document.getElementById(debugout).innerHTML = "";
+         
+         if (typeof callback == 'function') callback();
       }
+      
+      if ((urllist==null) || (urllist.length==0)) 
+         return completeLoad();
       
       var filename = urllist;
       var separ = filename.indexOf(";");
@@ -270,8 +314,7 @@
 
             if (href.indexOf(filename)>=0) {
                console.log("style "+  filename + " already loaded");
-               completeLoad();
-               return;
+               return completeLoad();
             }
          }
          
@@ -290,14 +333,13 @@
                var pos = src.indexOf("scripts/JSRootCore.js");
                if (pos>=0) {
                   JSROOT.source_dir = src.substr(0, pos);
-                  console.log("Set JSROOT.source_dir to " + JSROOT.source_dir);
+                  debug("Set JSROOT.source_dir to " + JSROOT.source_dir);
                }
             }
 
             if (src.indexOf(filename)>=0) {
-               console.log("script "+  filename + " already loaded");
-               completeLoad();
-               return;
+               // debug("script "+  filename + " already loaded");
+               return completeLoad();
             }
          }
       }
@@ -305,18 +347,15 @@
       if (isrootjs && (JSROOT.source_dir!=null)) filename = JSROOT.source_dir + filename;   
       
       var element = null;
-      
+
+      debug("loading " + filename + " ..."); 
+
       if (isstyle) {
-         
-         console.log("loading style " + filename);
-         
          element = document.createElement("link");
          element.setAttribute("rel", "stylesheet");
          element.setAttribute("type", "text/css");
          element.setAttribute("href", filename);
       } else {
-         console.log("loading script " + filename);
-
          element = document.createElement("script");
          element.setAttribute('type', "text/javascript");
          element.setAttribute('src', filename);//+ "?r=" + rnd;
@@ -324,8 +363,7 @@
       
       if (element.readyState) { // Internet Explorer specific
          element.onreadystatechange = function() {
-            if (element.readyState == "loaded" ||
-                  element.readyState == "complete") {
+            if (element.readyState == "loaded" || element.readyState == "complete") {
                element.onreadystatechange = null;
                completeLoad();
             }
@@ -340,52 +378,60 @@
       document.getElementsByTagName("head")[0].appendChild(element);
    }
 
-   JSROOT.AssertPrerequisites = function(kind, andThan) {
+   JSROOT.AssertPrerequisites = function(kind, andThan, debugout) {
       // one could specify kind of requirements
       // 'io' for I/O functionality (default)
-      // '2d' only for 2d graphic
+      // '2d' for 2d graphic
       // '3d' for 3d graphic
       
-      if (typeof kind == 'function') { andThan = kind; kind = null; } 
+      if (typeof kind == 'function') { andThan = kind; kind = null; }
+      
+      if (typeof kind != 'string') kind = "2d";
 
       // file names should be separated with ';' 
-      var allfiles = 
-         '$$$scripts/jquery.min.js;'+
-         '$$$style/jquery-ui.css;' +
-         '$$$scripts/jquery-ui.min.js;' +
-         '$$$scripts/d3.v3.min.js;' +
-         '$$$scripts/JSRootPainter.js;' +
-         '$$$style/JSRootPainter.css';
+      var allfiles = '$$$scripts/jquery.min.js';
       
-      var minimal = ((kind!=null) && (kind.indexOf('2d')>=0));
+      if (kind.indexOf('io')>=0)
+         allfiles += ";$$$scripts/rawinflate.js" + 
+                     ";$$$scripts/JSRootIOEvolution.js"; 
+
+      if (kind.indexOf('2d')>=0)
+         allfiles += ';$$$style/jquery-ui.css' +
+                     ';$$$scripts/jquery-ui.min.js' +
+                     ';$$$scripts/d3.v3.min.js' +
+                     ';$$$scripts/JSRootPainter.js' +
+                     ';$$$style/JSRootPainter.css';
       
-      if (!minimal || ((kind!=null) && (kind.indexOf('io')>=0)))
-         allfiles += ";$$$scripts/rawinflate.js;$$$scripts/JSRootIOEvolution.js"; 
+      if (kind.indexOf("3d")>=0)
+         allfiles += ";$$$scripts/jquery.mousewheel.js" + 
+                     ";$$$scripts/three.min.js" +
+                     ";$$$scripts/helvetiker_regular.typeface.js" + 
+                     ";$$$scripts/helvetiker_bold.typeface.js" + 
+                     ";$$$scripts/JSRoot3DPainter.js";
+
+      if (kind.indexOf("simple")>=0)
+         allfiles += ';$$$scripts/JSRootInterface.js' +
+                     ';$$$style/JSRootInterface.css';
       
-      if ((kind!=null) && (kind.indexOf("3d")>=0))
-         allfiles += ";$$$scripts/jquery.mousewheel.js;$$$scripts/three.min.js;$$$scripts/helvetiker_regular.typeface.js;$$$scripts/helvetiker_bold.typeface.js";
-      
-      JSROOT.loadScript(allfiles, andThan); 
+      JSROOT.loadScript(allfiles, andThan, debugout); 
    }
    
-   JSROOT.BuildSimpleGUI = function(requirements, andThen) {
+   JSROOT.BuildSimpleGUI = function(andThen) {
       if (typeof requirements == 'function') {
          andThen = requirements; requirements = null;
-      } 
+      }
+      var debugout = null;
       
-      JSROOT.AssertPrerequisites(requirements, function(){
-         JSROOT.loadScript('$$$scripts/JSRootInterface.js;$$$style/JSRootInterface.css', function() { 
-            
-            if (typeof BuildSimpleGUI != 'function') {
-               alert('BuildSimpleGUI function not found');
-               return;
-            }
-            
-            BuildSimpleGUI();
-            
-            if (typeof andThen == 'function') andThen();
-         });
-      });
+      var requirements = "2d;io;simple";
+      
+      if (document.getElementById('simpleGUI')) debugout = 'simpleGUI'; else
+      if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;simple"; } 
+      
+      JSROOT.AssertPrerequisites(requirements, function() {
+         if (typeof BuildSimpleGUI == 'function') BuildSimpleGUI();
+
+         if (typeof andThen == 'function') andThen();
+      }, debugout);
    }
 
    JSROOT.addFormula = function(obj) {
