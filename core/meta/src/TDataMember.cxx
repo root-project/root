@@ -175,7 +175,8 @@
 #include "TList.h"
 #include "TGlobal.h"
 #include "TRealData.h"
- 
+#include "TVirtualMutex.h"
+
 #include <stdlib.h>
 
 
@@ -693,6 +694,8 @@ int TDataMember::IsSTLContainer()
 Long_t TDataMember::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
+
+   R__LOCKGUARD2(gCINTMutex); // We could move it later if fProperty was an atomic
 
    if (fProperty!=(-1)) return fProperty;
 
