@@ -3679,7 +3679,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
             CheckByteCount(start, count, cl);
             return 0;            
          }
-      } else if (!sinfo->IsCompiled()) {
+      } else if (!sinfo->IsCompiled()) {  // Note this read is protected by the above lock.
          // Streamer info has not been compiled, but exists.
          // Therefore it was read in from a file and we have to do schema evolution.
          const_cast<TClass*>(cl)->BuildRealData(pointer);
@@ -3791,7 +3791,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             CheckByteCount(R__s, R__c, cl);
             return 0;            
          }
-      } 
+      }
+      // NOTE This is reading non atomic fBits (needs to be fixed/protected)
       else if (!sinfo->IsCompiled())
       { 
          // Streamer info has not been compiled, but exists.
@@ -3837,6 +3838,7 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
          if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),cl->GetClassVersion());
          sinfo->Build();
       }
+      // NOTE This is reading non atomic fBits (needs to be fixed/protected)
    } else if (!sinfo->IsCompiled()) {
       R__LOCKGUARD(gCINTMutex);
       // Redo the test in case we have been victim of a data race on fBits.
