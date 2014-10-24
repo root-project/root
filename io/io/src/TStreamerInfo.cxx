@@ -2325,6 +2325,8 @@ void TStreamerInfo::Clear(Option_t *option)
    opt.ToLower();
 
    if (opt.Contains("build")) {
+      R__LOCKGUARD2(gInterpreterMutex);
+
       delete [] fComp;     fComp    = 0;
       delete [] fCompFull; fCompFull= 0;
       delete [] fCompOpt;  fCompOpt = 0;
