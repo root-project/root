@@ -889,7 +889,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
                }
             }
          }
-         if (info->IsBuilt()) {
+         if (info->IsCompiled()) {
             SetBit(kCanDelete);
             fNumber = info->GetNumber();
             Int_t nel = fElements->GetEntriesFast();
