@@ -41,8 +41,9 @@ namespace ROOT { class TCollectionProxyInfo; }
 class TVirtualStreamerInfo : public TNamed {
 
 protected:
-   Bool_t            fOptimized;         //! true if the Streamer has been optimized
-   Bool_t            fIsBuilt;           //! true if the StreamerInfo has been 'built'
+   Bool_t              fOptimized;         //! true if the Streamer has been optimized
+   Bool_t              fIsBuilt;           //! true if the StreamerInfo has been 'built'
+   std::atomic<Bool_t> fIsCompiled;        //! true if the StreamerInfo has been compiled (i.e. fully built).
 
 protected:
    static  Bool_t    fgCanDelete;        //True if ReadBuffer can delete object
@@ -52,6 +53,15 @@ protected:
 
    TVirtualStreamerInfo(const TVirtualStreamerInfo& info);
    TVirtualStreamerInfo& operator=(const TVirtualStreamerInfo&);
+
+   void  ResetIsCompiled() {
+      fIsCompiled = kFALSE;
+      ResetBit(kIsCompiled); /* for backward compatibility */
+   }
+   void  SetIsCompiled() {
+      fIsCompiled = kTRUE;
+      SetBit(kIsCompiled); /* for backward compatibility */
+   }
 
 public:
 
@@ -136,7 +146,7 @@ public:
    virtual Int_t       GetSize()    const = 0;
    virtual TStreamerElement *GetStreamerElement(const char*datamember, Int_t& offset) const = 0;
            Bool_t      IsBuilt() const { return fIsBuilt; }
-           Bool_t      IsCompiled() const { return TestBit(kIsCompiled); }
+           Bool_t      IsCompiled() const { return fIsCompiled; }
            Bool_t      IsOptimized() const { return fOptimized; }
            Int_t       IsRecovered() const { return TestBit(kRecovered); }
    virtual void        ls(Option_t *option="") const = 0;

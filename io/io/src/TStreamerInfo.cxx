@@ -223,8 +223,15 @@ void TStreamerInfo::Build()
    // A list of TStreamerElement derived classes is built by scanning
    // one by one the list of data members of the analyzed class.
 
-   R__LOCKGUARD(gCINTMutex);
    // Did another thread already do the work?
+   if (fIsCompiled) return;
+
+   R__LOCKGUARD(gCINTMutex);
+
+   // Did another thread already do the work while we were waiting ..
+   if (fIsCompiled) return;
+
+   // Are we recursing on ourself?
    if (fIsBuilt) return;
 
    // This is used to avoid unwanted recursive call to Build
@@ -2325,7 +2332,7 @@ void TStreamerInfo::Clear(Option_t *option)
       fNfulldata = 0;
       fNslots= 0;
       fSize = 0;
-      ResetBit(kIsCompiled);
+      ResetIsCompiled();
       ResetBit(kBuildOldUsed);
 
       if (fReadObjectWise) fReadObjectWise->fActions.clear();

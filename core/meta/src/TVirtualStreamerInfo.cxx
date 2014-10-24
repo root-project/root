@@ -36,7 +36,7 @@ Bool_t  TVirtualStreamerInfo::fgStreamMemberWise = kTRUE;
 ClassImp(TVirtualStreamerInfo)
 
 //______________________________________________________________________________
-TVirtualStreamerInfo::TVirtualStreamerInfo() : fOptimized(kFALSE), fIsBuilt(kFALSE)
+TVirtualStreamerInfo::TVirtualStreamerInfo() : fOptimized(kFALSE), fIsBuilt(kFALSE), fIsCompiled(kFALSE)
 {
    // Default constructor.
 
@@ -44,7 +44,7 @@ TVirtualStreamerInfo::TVirtualStreamerInfo() : fOptimized(kFALSE), fIsBuilt(kFAL
 
 //______________________________________________________________________________
 TVirtualStreamerInfo::TVirtualStreamerInfo(TClass *cl)
-   : TNamed(cl->GetName(),""), fOptimized(kFALSE), fIsBuilt(kFALSE)
+   : TNamed(cl->GetName(),""), fOptimized(kFALSE), fIsBuilt(kFALSE), fIsCompiled(kFALSE)
 {
    // Default constructor.
 
@@ -52,8 +52,8 @@ TVirtualStreamerInfo::TVirtualStreamerInfo(TClass *cl)
 
 //______________________________________________________________________________
 TVirtualStreamerInfo::TVirtualStreamerInfo(const TVirtualStreamerInfo& info)
-  : TNamed(info), fOptimized(kFALSE), fIsBuilt(kFALSE)
-{ 
+  : TNamed(info), fOptimized(kFALSE), fIsBuilt(kFALSE), fIsCompiled(kFALSE)
+{
    //copy constructor
 }
 
