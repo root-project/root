@@ -2332,6 +2332,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    case kWheelUp:
       bin1 = axis->GetFirst()+1;
       bin2 = axis->GetLast()-1;
+      bin1 = TMath::Max(bin1, 1);
+      bin2 = TMath::Min(bin2, axis->GetNbins());
       if (bin2>bin1) {
          axis->SetRange(bin1,bin2);
          gPad->Modified();
@@ -2342,6 +2344,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    case kWheelDown:
       bin1 = axis->GetFirst()-1;
       bin2 = axis->GetLast()+1;
+      bin1 = TMath::Max(bin1, 1);
+      bin2 = TMath::Min(bin2, axis->GetNbins());
       if (bin2>bin1) {
          axis->SetRange(bin1,bin2);
          gPad->Modified();
@@ -2393,6 +2397,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                last  = axis->GetLast();
                bin1 = first + Int_t((last-first+1)*ratio1);
                bin2 = first + Int_t((last-first+1)*ratio2);
+               bin1 = TMath::Max(bin1, 1);
+               bin2 = TMath::Min(bin2, axis->GetNbins());
                axis->SetRange(bin1, bin2);
             }
             delete view;
@@ -2447,6 +2453,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             TH1 *hobj1 = (TH1*)axis->GetParent();
             bin1 = axis->FindFixBin(xmin);
             bin2 = axis->FindFixBin(xmax);
+            bin1 = TMath::Max(bin1, 1);
+            bin2 = TMath::Min(bin2, axis->GetNbins());
             if (axisNumber == 1) axis->SetRange(bin1,bin2);
             if (axisNumber == 2 && hobj1) {
                if (hobj1->GetDimension() == 1) {
