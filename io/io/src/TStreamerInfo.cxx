@@ -201,15 +201,19 @@ TStreamerInfo::~TStreamerInfo()
 //______________________________________________________________________________
 namespace {
    // Makes sure kBuildOldUsed set once Build or BuildOld finishes
-   struct TPreventBuildOldGuard {
-      TPreventBuildOldGuard(TStreamerInfo* info): fInfo(info) {
+   // Makes sure kBuildRunning reset once Build finishes
+   struct TPreventRecursiveBuildGuard {
+      TPreventRecursiveBuildGuard(TStreamerInfo* info): fInfo(info) {
+         fInfo->SetBit(TStreamerInfo::kBuildRunning);
          fInfo->SetBit(TStreamerInfo::kBuildOldUsed);
       }
-      TPreventBuildOldGuard() {
+      ~TPreventRecursiveBuildGuard() {
          fInfo->ResetBit(TStreamerInfo::kBuildOldUsed);
+         fInfo->ResetBit(TStreamerInfo::kBuildRunning);
       }
       TStreamerInfo* fInfo;
    };
+
 }
 
 //______________________________________________________________________________
@@ -227,14 +231,14 @@ void TStreamerInfo::Build()
    // Did another thread already do the work while we were waiting ..
    if (fIsCompiled) return;
 
-   // Are we recursing on ourself?
+   // Has Build already been run?
    if (fIsBuilt) return;
 
-   // This is used to avoid unwanted recursive call to Build
-   fIsBuilt = kTRUE;
+   // Are we recursing on ourself?
+   if (TestBit(TStreamerInfo::kBuildRunning)) return;
 
-   // This is used to avoid unwanted recursive call to BuildOld.
-   TPreventBuildOldGuard buildOldGuard(this);
+   // This is used to avoid unwanted recursive call to Build or BuildOld.
+   TPreventRecursiveBuildGuard buildGuard(this);
 
    if (fClass->GetCollectionProxy()) {
       TVirtualCollectionProxy *proxy = fClass->GetCollectionProxy();
@@ -247,6 +251,7 @@ void TStreamerInfo::Build()
       TStreamerElement* element = new TStreamerSTL("This", title.Data(), 0, fClass->GetName(), *proxy, 0);
       fElements->Add(element);
       Compile();
+      fIsBuilt = kTRUE;
       return;
    }
 
@@ -594,6 +599,7 @@ void TStreamerInfo::Build()
    // Make a more compact version.
    //
    Compile();
+   fIsBuilt = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -1546,8 +1552,11 @@ namespace {
 
    // Makes sure kBuildOldUsed set once BuildOld finishes
    struct TBuildOldGuard {
-      TBuildOldGuard(TStreamerInfo* info): fInfo(info) {}
+      TBuildOldGuard(TStreamerInfo* info): fInfo(info) {
+         fInfo->SetBit(TStreamerInfo::kBuildRunning);
+      }
       ~TBuildOldGuard() {
+         fInfo->ResetBit(TStreamerInfo::kBuildRunning);
          fInfo->SetBit(TStreamerInfo::kBuildOldUsed);
       }
       TStreamerInfo* fInfo;
@@ -1561,6 +1570,9 @@ void TStreamerInfo::BuildOld()
 
    R__LOCKGUARD(gInterpreterMutex);
    if ( TestBit(kBuildOldUsed) ) return;
+
+   // This is used to avoid unwanted recursive call to Build and make sure
+   // that we record the execution of BuildOld.
    TBuildOldGuard buildOldGuard(this);
 
    if (gDebug > 0) {
@@ -1568,9 +1580,6 @@ void TStreamerInfo::BuildOld()
    }
 
    Bool_t wasCompiled = IsCompiled();
-
-   // This is used to avoid unwanted recursive call to Build
-   fIsBuilt = kTRUE;
 
    if (fClass->GetClassVersion() == fClassVersion) {
       if (!fClass->HasInterpreterInfo() || TClassEdit::IsSTLCont(GetName(), 0) || TClassEdit::IsSTLBitset(GetName()))
@@ -4855,6 +4864,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
          ResetBit(kIsCompiled);
          ResetBit(kBuildOldUsed);
+         ResetBit(kBuildRunning);
          return;
       }
       //====process old versions before automatic schema evolution
