@@ -3844,7 +3844,6 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
          if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),cl->GetClassVersion());
          sinfo->Build();
       }
-      // NOTE This is reading non atomic fBits (needs to be fixed/protected)
    } else if (!sinfo->IsCompiled()) {
       R__LOCKGUARD(gCINTMutex);
       // Redo the test in case we have been victim of a data race on fBits.
