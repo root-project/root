@@ -108,7 +108,9 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
       //   b) if is build, we should not build it (or we could end up in an
       //      infinite loop, if the element and its counter are in the same
       //      class!
-
+      // Checking IsCompiled is sufficint here even-though it is set only at
+      // the end of the call to Build as this function has an
+      // internal recursion prevention (setting and testing kBuildRunning).
       info = cl->GetStreamerInfo();
    }
    if (!info) return 0;
