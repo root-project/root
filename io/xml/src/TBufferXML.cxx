@@ -1001,7 +1001,11 @@ void TBufferXML::SetStreamerElementNumber(TStreamerElement *elem, Int_t comptype
 //______________________________________________________________________________
 void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t comp_type)
 {
-   //to be documented by Sergey
+   // This function is a part of SetStreamerElementNumber method.
+   // It is introduced for reading of data for specified data memeber of class.
+   // Used also in ReadFastArray methods to resolve problem of compressed data,
+   // when several data memebers of the same basic type streamed with single ...FastArray call
+
    CheckVersionBuf();
 
    fExpectedChain = kFALSE;
@@ -1030,12 +1034,14 @@ void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t comp_type)
       Error("SetStreamerElementNumber", "Problem in Inc/Dec level");
       return;
    }
+
    TStreamerInfo* info = stack->fInfo;
+
    if (!stack->IsStreamerInfo()) {
       Error("SetStreamerElementNumber", "Problem in Inc/Dec level");
       return;
    }
-   Int_t number = info->GetElements()->IndexOf(elem);
+   Int_t number = info ? info->GetElements()->IndexOf(elem) : -1;
 
    if (gDebug>4) Info("SetStreamerElementNumber", "    Next element %s", elem->GetName());
 
@@ -1052,7 +1058,6 @@ void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t comp_type)
    fCanUseCompact = isBasicType && ((elem->GetType()==comp_type) ||
                                     (elem->GetType()==comp_type-TStreamerInfo::kConv) ||
                                     (elem->GetType()==comp_type-TStreamerInfo::kSkip));
-
 
    if ((elem->GetType()==TStreamerInfo::kBase) ||
        ((elem->GetType()==TStreamerInfo::kTNamed) && !strcmp(elem->GetName(), TNamed::Class()->GetName())))
@@ -1077,21 +1082,55 @@ void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t comp_type)
 //______________________________________________________________________________
 void TBufferXML::ClassBegin(const TClass* cl, Version_t)
 {
-   //to be documented by Sergey
+   // Should be called in the beginning of custom class streamer.
+   // Informs buffer data about class which will be streamed now.
+   //
+   // ClassBegin(), ClassEnd() and ClassMemeber() should be used in
+   // custom class streamers to specify which kind of data are
+   // now streamed. Such information is used to correctly
+   // convert class data to XML. Without that functions calls
+   // classes with custom streamers cannot be used with TBufferXML
+
    WorkWithClass(0, cl);
 }
 
 //______________________________________________________________________________
 void TBufferXML::ClassEnd(const TClass*)
 {
-   //to be documented by Sergey
+   // Should be called at the end of custom streamer
+   // See TBufferXML::ClassBegin for more details
+
    DecrementLevel(0);
 }
 
 //______________________________________________________________________________
 void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsize1, Int_t arrsize2)
 {
-   //to be documented by Sergey
+   // Method indicates name and typename of class member,
+   // which should be now streamed in custom streamer
+   // Following combinations are supported:
+   // 1. name = "ClassName", typeName = 0 or typename==ClassName
+   //    This is a case, when data of parent class "ClassName" should be streamed.
+   //     For instance, if class directly inherited from TObject, custom
+   //     streamer should include following code:
+   //       b.ClassMember("TObject");
+   //       TObject::Streamer(b);
+   // 2. Basic data type
+   //      b.ClassMember("fInt","Int_t");
+   //      b >> fInt;
+   // 3. Array of basic data types
+   //      b.ClassMember("fArr","Int_t", 5);
+   //      b.ReadFastArray(fArr, 5);
+   // 4. Object as data member
+   //      b.ClassMemeber("fName","TString");
+   //      fName.Streamer(b);
+   // 5. Pointer on object as data member
+   //      b.ClassMemeber("fObj","TObject*");
+   //      b.StreamObject(fObj);
+   //  arrsize1 and arrsize2 arguments (when specified) indicate first and
+   //  second dimension of array. Can be used for array of basic types.
+   //  See ClassBegin() method for more details.
+
    if (typeName==0) typeName = name;
 
    if ((name==0) || (strlen(name)==0)) {
@@ -1102,7 +1141,7 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
 
    TString tname = typeName;
 
-   Int_t typ_id = -1;
+   Int_t typ_id(-1), comp_type(-1);
 
    if (strcmp(typeName,"raw:data")==0)
       typ_id = TStreamerInfo::kMissing;
@@ -1148,7 +1187,6 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
       elem = new TStreamerElement(name,"title",0, typ_id, "raw:data");
    } else
 
-
    if (typ_id==TStreamerInfo::kBase) {
       TClass* cl = TClass::GetClass(tname.Data());
       if (cl!=0) {
@@ -1160,6 +1198,7 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
 
    if ((typ_id>0) && (typ_id<20)) {
       elem = new TStreamerBasicType(name, "title", 0, typ_id, typeName);
+      comp_type = typ_id;
    } else
 
    if ((typ_id==TStreamerInfo::kObject) ||
@@ -1198,7 +1237,7 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
    }
 
    // we indicate that there is no streamerinfo
-   WorkWithElement(elem, -1);
+   WorkWithElement(elem, comp_type);
 }
 
 //______________________________________________________________________________
