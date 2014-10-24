@@ -41,7 +41,7 @@ namespace ROOT { class TCollectionProxyInfo; }
 class TVirtualStreamerInfo : public TNamed {
 
 protected:
-   Bool_t              fOptimized;         //! true if the Streamer has been optimized
+   Bool_t              fOptimized;         //! true if the StreamerInfo has been optimized
    Bool_t              fIsBuilt;           //! true if the StreamerInfo has been 'built'
    std::atomic<Bool_t> fIsCompiled;        //! true if the StreamerInfo has been compiled (i.e. fully built).
 
@@ -67,7 +67,7 @@ public:
 
    //status bits
    enum { kCannotOptimize        = BIT(12),
-          kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
+          kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserve forward compatibility)
           kRecovered             = BIT(14),
           kNeedCheck             = BIT(15),
           kIsCompiled            = BIT(16),
