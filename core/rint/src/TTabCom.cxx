@@ -2171,7 +2171,7 @@ TClass *TTabCom::MakeClassFromClassName(const char className[]) const
    // the TClass constructor will print a Warning message for classes that don't exist
    // so, ignore warnings temporarily.
    NoMsg(kWarning);
-   TClass *pClass = new TClass(className);
+   TClass *pClass = TClass::GetClass(className);
    NoMsg(-1);
 
    // make sure "className" exists
@@ -2196,7 +2196,7 @@ TClass *TTabCom::TryMakeClassFromClassName(const char className[]) const
    // the TClass constructor will print a Warning message for classes that don't exist
    // so, ignore warnings temporarily.
    NoMsg(kWarning);
-   TClass *pClass = new TClass(className);
+   TClass *pClass = TClass::GetClass(className);
    NoMsg(-1);
 
    // make sure "className" exists
@@ -2320,7 +2320,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
             //              if (returnName[returnName.Length()-1] == '*')
             //                  printf("It's a pointer!\n");
 
-            TClass *mclass = new TClass(returnName.Data());
+            TClass *mclass = TClass::GetClass(returnName.Data());
             return mclass;
          }
 
@@ -2361,7 +2361,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
                fVarIsPointer = kFALSE;
             }
 
-            TClass *mclass = new TClass(returnName.Data());
+            TClass *mclass = TClass::GetClass(returnName.Data());
             return mclass;
          }
       }
@@ -2502,7 +2502,9 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
       }
    }
 
-   return new TClass(className);
+   className.Strip(TString::kBoth);
+
+   return TClass::GetClass(className);
 }
 
 //______________________________________________________________________________
