@@ -3793,6 +3793,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
          }
       }
       // NOTE This is reading non atomic fBits (needs to be fixed/protected)
+      // should move it in previous if statement ... in particular if we make
+      // assignment to fLastReadInfo to require being build.
       else if (!sinfo->IsCompiled())
       { 
          // Streamer info has not been compiled, but exists.
