@@ -1,0 +1,36 @@
+
+
+
+TObjArray
+TObjArrayIter
+TObjString
+TObject
+TObjectRefSpy
+TObjectSet
+TObjectSpy
+TObjectTable
+
+
+kBitMask
+kCanDelete
+kCannotPick
+kHasUUID
+kInvalidObject
+kIsOnHeap
+kIsReferenced
+kMustCleanup
+kNoContextMenu
+kNotDeleted
+kObjInCanvas
+kOverwrite
+kSingleKey
+kWriteDelete
+kZombie
+
+
+GetListOfTasks
+GetListOfTypes
+
+
+void SetTitle(const char* title = "") 	// *MENU*
+(const char *) "OtherTitle"

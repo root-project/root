@@ -633,6 +633,9 @@ root/meta/genreflex/XMLParsing/dicts/*
 /root/meta/tclass/tmpltd.root
 /root/meta/tclass/tmpltd32.root
 
+# /root/rint/
+/root/rint/TabCom.err
+
 # /root/selector/
 /root/selector/*.root
 

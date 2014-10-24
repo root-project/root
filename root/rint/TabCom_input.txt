@@ -1,0 +1,6 @@
+TObj	
+TObject::k	
+gROOT->GetListOfT	
+TNamed tabComTestNamedObj("AName","ATitle");
+tabComTestNamedOb	.SetTitl		"OtherTitle")
+tabComTestNamedOb	.GetTitl	()
