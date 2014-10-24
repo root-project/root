@@ -71,7 +71,8 @@ public:
           kRecovered             = BIT(14),
           kNeedCheck             = BIT(15),
           kIsCompiled            = BIT(16),
-          kBuildOldUsed          = BIT(17)
+          kBuildOldUsed          = BIT(17),
+          kBuildRunning          = BIT(18)
    };
 
    enum EReadWrite {
