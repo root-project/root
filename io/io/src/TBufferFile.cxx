@@ -3745,67 +3745,70 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
       if (guess && guess->GetClassVersion() == version) {
          sinfo = guess;
       } else {
-         R__LOCKGUARD(gCINTMutex);
+         // The last one is not the one we are looking for.
+         {
+            R__LOCKGUARD(gCINTMutex);
 
-         TObjArray *infos = cl->GetStreamerInfos();
-         Int_t infocapacity = infos->Capacity();
-         if (infocapacity) {
-            if (version < -1 || version >= infocapacity) {
-               Error("ReadClassBuffer","class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
-                     cl->GetName(), version, Length());
+            const TObjArray *infos = cl->GetStreamerInfos();
+            Int_t infocapacity = infos->Capacity();
+            if (infocapacity) {
+               if (version < -1 || version >= infocapacity) {
+                  Error("ReadClassBuffer","class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+                        cl->GetName(), version, Length());
+                  CheckByteCount(R__s, R__c, cl);
+                  return 0;
+               }
+               sinfo = (TStreamerInfo*) infos->UncheckedAt(version);
+               if (sinfo) {
+                  if (!sinfo->IsCompiled())
+                  {
+                     // Streamer info has not been compiled, but exists.
+                     // Therefore it was read in from a file and we have to do schema evolution?
+                     const_cast<TClass*>(cl)->BuildRealData(pointer);
+                     sinfo->BuildOld();
+                  }
+                  // If the compilation succeeded, remember this StreamerInfo.
+                  // const_cast okay because of the lock on gInterpreterMutex.
+                  if (sinfo->IsCompiled()) const_cast<TClass*>(cl)->SetLastReadInfo(sinfo);
+               }
+            }
+         }
+
+         if (sinfo == 0) {
+            // Unless the data is coming via a socket connection from with schema evolution
+            // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
+            // one for the current version, otherwise let's complain ...
+            // We could also get here when reading a file prior to the introduction of StreamerInfo.
+            // We could also get here if there old class version was '1' and the new class version is higher than 1
+            // AND the checksum is the same.
+            if (v2file || version == cl->GetClassVersion() || version == 1 ) {
+               R__LOCKGUARD(gCINTMutex);
+               TObjArray *infos = cl->GetStreamerInfos();
+
+               const_cast<TClass*>(cl)->BuildRealData(pointer);
+               sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
+               infos->AddAtAndExpand(sinfo,version);
+               if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
+               if (v2file) {
+                  sinfo->Build(); // Get the elements.
+                  sinfo->Clear("build"); // Undo compilation.
+                  sinfo->BuildEmulated(file); // Fix the types and redo compilation.
+               } else {
+                  sinfo->Build();
+               }
+            } else if (version==0) {
+               // When the object was written the class was version zero, so
+               // there is no StreamerInfo to be found.
+               // Check that the buffer position corresponds to the byte count.
+               CheckByteCount(R__s, R__c, cl);
+               return 0;
+            } else {
+               Error( "ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+                     version, cl->GetName(), Length() );
                CheckByteCount(R__s, R__c, cl);
                return 0;
             }
-            sinfo = (TStreamerInfo*) infos->UncheckedAt(version);
-            // const_cast okay because of the lock on gCINTMutex.
-            const_cast<TClass*>(cl)->SetLastReadInfo(sinfo);
          }
-      }
-      if (sinfo == 0) {
-         // Unless the data is coming via a socket connection from with schema evolution
-         // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
-         // one for the current version, otherwise let's complain ...
-         // We could also get here when reading a file prior to the introduction of StreamerInfo.
-         // We could also get here if there old class version was '1' and the new class version is higher than 1
-         // AND the checksum is the same.
-         if (v2file || version == cl->GetClassVersion() || version == 1 ) {
-            R__LOCKGUARD(gCINTMutex);
-            TObjArray *infos = cl->GetStreamerInfos();
-
-            const_cast<TClass*>(cl)->BuildRealData(pointer);
-            sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-            infos->AddAtAndExpand(sinfo,version);
-            if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
-            if (v2file) {
-               sinfo->Build(); // Get the elements.
-               sinfo->Clear("build"); // Undo compilation.
-               sinfo->BuildEmulated(file); // Fix the types and redo compilation.
-            } else {
-               sinfo->Build();
-            }
-         } else if (version==0) {
-            // When the object was written the class was version zero, so
-            // there is no StreamerInfo to be found.
-            // Check that the buffer position corresponds to the byte count.
-            CheckByteCount(R__s, R__c, cl);
-            return 0;
-         } else {
-            Error( "ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
-                  version, cl->GetName(), Length() );
-            CheckByteCount(R__s, R__c, cl);
-            return 0;            
-         }
-      }
-      // NOTE This is reading non atomic fBits (needs to be fixed/protected)
-      // should move it in previous if statement ... in particular if we make
-      // assignment to fLastReadInfo to require being build.
-      else if (!sinfo->IsCompiled())
-      { 
-         // Streamer info has not been compiled, but exists.
-         // Therefore it was read in from a file and we have to do schema evolution?
-         R__LOCKGUARD(gCINTMutex);
-         const_cast<TClass*>(cl)->BuildRealData(pointer);
-         sinfo->BuildOld();
       }
    }
 
