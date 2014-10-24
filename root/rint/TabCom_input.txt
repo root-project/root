@@ -4,3 +4,6 @@ gROOT->GetListOfT
 TNamed tabComTestNamedObj("AName","ATitle");
 tabComTestNamedOb	.SetTitl		"OtherTitle")
 tabComTestNamedOb	.GetTitl	()
+#include "MyClass.h"
+MyCla	::fgM	
+MyCla	::fgPrivateM	

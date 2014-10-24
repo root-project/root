@@ -3,10 +3,13 @@
 
 TObjArray
 TObjArrayIter
+TObjLink
+TObjOptLink
 TObjString
 TObject
+TObject::(anonymous)
+TObject::EStatusBits
 TObjectRefSpy
-TObjectSet
 TObjectSpy
 TObjectTable
 
@@ -34,3 +37,5 @@ GetListOfTypes
 
 void SetTitle(const char* title = "") 	// *MENU*
 (const char *) "OtherTitle"
+(int) 42
+
