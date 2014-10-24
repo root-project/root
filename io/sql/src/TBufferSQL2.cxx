@@ -865,7 +865,7 @@ void TBufferSQL2::WorkWithElement(TStreamerElement* elem, Int_t /* comp_type */)
 
    TSQLStructure* stack = Stack(1);
    TStreamerInfo* info = stack->GetStreamerInfo();
-   Int_t number = info->GetElements()->IndexOf(elem);
+   Int_t number = info ? info->GetElements()->IndexOf(elem) : -1;
 
    if (number>=0)
       PushStack()->SetStreamerElement(elem, number);
