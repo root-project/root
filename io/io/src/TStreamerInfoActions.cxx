@@ -2279,7 +2279,6 @@ void TStreamerInfo::Compile()
 
    Int_t ndata = fElements->GetEntries();
 
-   SetBit(kIsCompiled);
 
    if (fReadObjectWise) fReadObjectWise->fActions.clear();
    else fReadObjectWise = new TStreamerInfoActions::TActionSequence(this,ndata);
@@ -2309,6 +2308,7 @@ void TStreamerInfo::Compile()
       fCompFull = new TCompInfo*[1];
       fCompOpt  = new TCompInfo*[1];
       fCompOpt[0] = fCompFull[0] = &(fComp[0]);
+      SetIsCompiled();
       return;
    }
 
@@ -2472,6 +2472,7 @@ void TStreamerInfo::Compile()
    ComputeSize();
 
    fOptimized = isOptimized;
+   SetIsCompiled();
 
    if (gDebug > 0) {
       ls();
