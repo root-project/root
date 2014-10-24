@@ -3850,7 +3850,7 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
       }
    } else if (!sinfo->IsCompiled()) {
       R__LOCKGUARD(gInterpreterMutex);
-      // Redo the test in case we have been victim of a data race on fBits.
+      // Redo the test in case we have been victim of a data race on fIsCompiled.
       if (!sinfo->IsCompiled()) {
          const_cast<TClass*>(cl)->BuildRealData(pointer);
          sinfo->BuildOld();
