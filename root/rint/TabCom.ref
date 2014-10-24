@@ -7,7 +7,6 @@ TObjLink
 TObjOptLink
 TObjString
 TObject
-TObject::(anonymous)
 TObject::EStatusBits
 TObjectRefSpy
 TObjectSpy
