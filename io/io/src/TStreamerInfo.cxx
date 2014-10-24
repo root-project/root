@@ -872,7 +872,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
                }
             }
          }
-         if (info->IsCompiled()) {
+         if (info->IsBuilt()) {
             SetBit(kCanDelete);
             fNumber = info->GetNumber();
             Int_t nel = fElements->GetEntriesFast();
@@ -1104,13 +1104,9 @@ void TStreamerInfo::BuildEmulated(TFile *file)
    fClassVersion = -1;
    fCheckSum = 2001;
    TObjArray *elements = GetElements();
-   if (!elements) return;
-   Int_t ndata = elements->GetEntries();
-   if (ndata == 0) return;
-   TStreamerElement *element;
-   Int_t i;
-   for (i=0;i < ndata;i++) {
-      element = (TStreamerElement*)elements->UncheckedAt(i);
+   Int_t ndata = elements ? elements->GetEntries() : 0;
+   for (Int_t i=0;i < ndata;i++) {
+      TStreamerElement *element = (TStreamerElement*)elements->UncheckedAt(i);
       if (!element) break;
       int ty = element->GetType();
       if (ty < kChar || ty >kULong+kOffsetL)    continue;
@@ -1521,7 +1517,11 @@ void TStreamerInfo::BuildOld()
    // rebuild the TStreamerInfo structure
 
    R__LOCKGUARD(gCINTMutex);
+
    if ( TestBit(kBuildOldUsed) ) return;
+
+   // Are we recursing on ourself?
+   if (TestBit(TStreamerInfo::kBuildRunning)) return;
 
    // This is used to avoid unwanted recursive call to Build and make sure
    // that we record the execution of BuildOld.
@@ -2334,7 +2334,7 @@ void TStreamerInfo::Clear(Option_t *option)
    opt.ToLower();
 
    if (opt.Contains("build")) {
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD2(gCINTMutex);
 
       delete [] fComp;     fComp    = 0;
       delete [] fCompFull; fCompFull= 0;

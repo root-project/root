@@ -3776,9 +3776,13 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
             infos->AddAtAndExpand(sinfo,version);
             if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
-            sinfo->Build();
-
-            if (v2file) sinfo->BuildEmulated(file);
+            if (v2file) {
+               sinfo->Build(); // Get the elements.
+               sinfo->Clear("build"); // Undo compilation.
+               sinfo->BuildEmulated(file); // Fix the types and redo compilation.
+            } else {
+               sinfo->Build();
+            }
          } else if (version==0) {
             // When the object was written the class was version zero, so
             // there is no StreamerInfo to be found.
