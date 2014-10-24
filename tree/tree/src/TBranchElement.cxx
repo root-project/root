@@ -1992,7 +1992,7 @@ void TBranchElement::InitInfo()
       if ( GetID()>-1 && !fInfo->IsCompiled() ) {
          // Streamer info has not yet been compiled.
 
-         Error("InitInfo","StreamerInfo is not compiled.");
+         Fatal("InitInfo","StreamerInfo is not compiled.");
       }
       if (!fInit) {
          // We were read in from a file, figure out what our fID should be,
