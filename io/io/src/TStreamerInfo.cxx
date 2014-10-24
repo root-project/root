@@ -1518,7 +1518,14 @@ void TStreamerInfo::BuildOld()
    fIsBuilt = kTRUE;
 
    if (fClass->GetClassVersion() == fClassVersion) {
-      fClass->BuildRealData();
+      if (!fClass->HasInterpreterInfo() || TClassEdit::IsSTLCont(GetName(), 0) || TClassEdit::IsSTLBitset(GetName()))
+      {
+         // Handle emulated classes and STL containers specially.
+         // in this case BuildRealData would call BuildOld for this same
+         // TStreamerInfo to be able to build the real data on it.
+      } else {
+         fClass->BuildRealData();
+      }
    }
    else {
       // This is to support the following case
