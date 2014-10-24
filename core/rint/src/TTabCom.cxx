@@ -1704,7 +1704,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          IfDebug(std::cerr << "namesp: " << '"' << namesp << '"' << std::endl);
 
          // Make sure autoloading happens (if it can).
-         delete TryMakeClassFromClassName(namesp);
+         TryMakeClassFromClassName(namesp);
 
          TContainer *pList = new TContainer;
          // Add all classes to pList that contain the prefix, i.e. are in the
@@ -1740,8 +1740,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          pos = Complete("[^: ]*$", pList, "", out);
 
          delete pList;
-         if (pClass)
-            delete pClass;
 
          if (context != original_context)
             pos = -2;
@@ -1809,7 +1807,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          }
 
          delete pList;
-         delete pClass;
 
          if (context != original_context)
             pos = -2;
@@ -1905,7 +1902,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
 
          // cleanup
          delete pList;
-         delete pClass;
 
          if (context != original_context)
             pos = -2;
@@ -2006,7 +2002,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
 
          // cleanup
          delete pList;
-         delete pClass;
 
          if (context != original_context)
             pos = -2;
