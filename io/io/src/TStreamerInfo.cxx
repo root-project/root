@@ -1534,7 +1534,7 @@ void TStreamerInfo::BuildOld()
    Bool_t wasCompiled = IsCompiled();
 
    if (fClass->GetClassVersion() == fClassVersion) {
-      if (!fClass->HasInterpreterInfo() || TClassEdit::IsSTLCont(GetName(), 0) || TClassEdit::IsSTLBitset(GetName()))
+      if (!fClassInfo || TClassEdit::IsSTLCont(GetName(), 0) || TClassEdit::IsSTLBitset(GetName())) {
       {
          // Handle emulated classes and STL containers specially.
          // in this case BuildRealData would call BuildOld for this same
