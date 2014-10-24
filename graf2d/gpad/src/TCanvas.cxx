@@ -2045,10 +2045,6 @@ void TCanvas::Streamer(TBuffer &b)
       if (v>7) b.ClassEnd(TCanvas::IsA());
       b.CheckByteCount(R__s, R__c, TCanvas::IsA());
    } else {
-
-      printf("Savce Canvas\n");
-
-
       //save list of colors
       //we must protect the case when two or more canvases are saved
       //in the same buffer. If the list of colors has already been saved
