@@ -41,8 +41,8 @@ namespace ROOT { class TCollectionProxyInfo; }
 class TVirtualStreamerInfo : public TNamed {
 
 protected:
-   Bool_t              fOptimized;         //! true if the StreamerInfo has been optimized
-   Bool_t              fIsBuilt;           //! true if the StreamerInfo has been 'built' (i.e. has all the StreamerElements it should have)
+   Bool_t              fOptimized : 1;     //! true if the StreamerInfo has been optimized
+   Bool_t              fIsBuilt : 1;       //! true if the StreamerInfo has been 'built' (i.e. has all the StreamerElements it should have)
    std::atomic<Bool_t> fIsCompiled;        //! true if the StreamerInfo has been compiled (i.e. fully built, ready to use for streaming).
 
 protected:
