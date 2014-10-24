@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+   <head>
+      <title>Draw selected item from the file</title>
+      <meta http-equiv="X-UA-Compatible" content="IE=Edge; text/html">
+      <script type="text/javascript" src="../scripts/JSRootCore.js"></script>
+   </head>
+
+   <script type='text/javascript'>
+   
+      function CreateGui() {
+      
+         // analyze URL options
+         
+         var filename = JSROOT.GetUrlOption("file");
+         if (!filename || filename=="") filename = "hsimple.root";
+         
+         var itemname = JSROOT.GetUrlOption("item");
+         if (!itemname || itemname=="") itemname = "hpx";
+
+         var drawopt = JSROOT.GetUrlOption("opt");
+         
+         var monitor = JSROOT.GetUrlOption("monitoring");
+         if (monitor == "") monitor = 3000; else
+         if (monitor != null) monitor = parseInt(monitor);  
+         
+         var objpainter = null;
+         
+         function file_error(str) {
+            if (objpainter == null)
+               $('#drawing').append("<h4>" + str + "</h4>"); 
+         }
+         
+         function draw_object(obj) {
+            document.body.style.cursor = 'wait';
+            objpainter = JSROOT.redraw('drawing', obj, drawopt); 
+            document.body.style.cursor = 'auto';
+         }
+   
+         function read_object() {
+         
+            var f = new JSROOT.TFile(filename, function(file) {
+               if (file==null) return file_error("file " + filename + " cannot be opened");
+
+               if (itemname=="StreamerInfo")
+                  return draw_object(file.fStreamerInfos);
+                
+               file.ReadObject(itemname, function(obj) {
+                  if (obj==null) return file_error("object " + itemname + " not found in " + filename);
+
+                  draw_object(obj);
+               });
+            });
+         }
+   
+         read_object();
+   
+         if (monitor>0)
+            setInterval(read_object, monitor);
+   
+         JSROOT.RegisterForResize(function() { if (objpainter) objpainter.CheckResize(); });
+      }
+   
+   </script>
+
+   <body onload="JSROOT.AssertPrerequisites('2d;io', CreateGui, 'drawing')">
+      <div id="drawing" style="position:absolute; left:1px; top:1px; bottom:1px; right:1px">
+         loading scripts...
+      </div>
+   </body>
+
+</html>

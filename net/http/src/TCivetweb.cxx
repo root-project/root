@@ -70,7 +70,7 @@ static int begin_request_handler(struct mg_connection *conn)
 //    auth_domain - domain name, used for authentication                //
 //                                                                      //
 // Example:                                                             //
-//    new THttpServer("http:8080/none?top=MyApp&thrds=3");              //
+//    new THttpServer("http:8080?top=MyApp&thrds=3");                   //
 //                                                                      //
 // Authentication:                                                      //
 //    When auth_file and auth_domain parameters are specified, access   //
@@ -82,7 +82,7 @@ static int begin_request_handler(struct mg_connection *conn)
 //                                                                      //
 //    When creating server, parameters should be:                       //
 //                                                                      //
-//       new THttpServer("http:8080/none?auth_file=.htdigets&auth_domain=domain_name");   //
+//       new THttpServer("http:8080?auth_file=.htdigets&auth_domain=domain_name");  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -113,6 +113,11 @@ Bool_t TCivetweb::Create(const char *args)
 {
    // Creates embedded civetweb server
    // As argument, http port should be specified in form "8090"
+   // One could provide extra parameters after '?' (like URL parameters)
+   //    thrds=N   - there N is number of threads used by the civetweb (default is 5)
+   //    top=name  - configure top name, visible at the web browser
+   //    auth_file=filename  - authentication file name, created with htdigets utility
+   //    auth_domain=domain   - authentication domain
 
    fCallbacks = malloc(sizeof(struct mg_callbacks));
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
@@ -122,24 +127,35 @@ Bool_t TCivetweb::Create(const char *args)
    TString num_threads = "5";
    TString auth_file, auth_domain;
 
-   // for the moment the only argument is port number
+   // extract arguments
    if ((args != 0) && (strlen(args) > 0)) {
-      TUrl url(TString::Format("http://localhost:%s", args));
 
-      if (url.IsValid()) {
-         url.ParseOptions();
-         if (url.GetPort() > 0) sport.Form("%d", url.GetPort());
+      // first extract port number
+      sport = "";
+      while ((*args!=0) && (*args>='0') && (*args<='9'))
+         sport.Append(*args++);
 
-         const char *top = url.GetValueFromOptions("top");
-         if (top != 0) fTopName = top;
+      // than search for extra parameters
+      while ((*args!=0) && (*args!='?')) args++;
 
-         Int_t thrds = url.GetIntValueFromOptions("thrds");
-         if (thrds > 0) num_threads.Form("%d", thrds);
+      if (*args=='?') {
+         TUrl url(TString::Format("http://localhost/folder%s", args));
 
-         const char *afile = url.GetValueFromOptions("auth_file");
-         if (afile != 0) auth_file = afile;
-         const char *adomain = url.GetValueFromOptions("auth_domain");
-         if (adomain != 0) auth_domain = adomain;
+         if (url.IsValid()) {
+            url.ParseOptions();
+
+            const char *top = url.GetValueFromOptions("top");
+            if (top != 0) fTopName = top;
+
+            Int_t thrds = url.GetIntValueFromOptions("thrds");
+            if (thrds > 0) num_threads.Form("%d", thrds);
+
+            const char *afile = url.GetValueFromOptions("auth_file");
+            if (afile != 0) auth_file = afile;
+
+            const char *adomain = url.GetValueFromOptions("auth_domain");
+            if (adomain != 0) auth_domain = adomain;
+         }
       }
    }
 
