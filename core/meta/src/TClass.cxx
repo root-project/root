@@ -3913,6 +3913,11 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignr)
    //  To be effective for object streamed member-wise or split in a TTree,
    //  this function must be called for the most derived class (i.e. BigTrack).
 
+   // We need to tak the lock since we are test and then setting fBits
+   // and TStreamerInfo::fBits (and the StreamerInfo state in general)
+   // which can also be modified by another thread.
+   R__LOCKGUARD2(gCINTMutex);
+
    if ( ignr &&  TestBit(kIgnoreTObjectStreamer)) return;
    if (!ignr && !TestBit(kIgnoreTObjectStreamer)) return;
    TVirtualStreamerInfo *sinfo = GetCurrentStreamerInfo();
