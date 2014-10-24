@@ -116,19 +116,28 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
 get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
 get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
-add_custom_command(OUTPUT include/allLinkDef.h include/allHeaders.h cppflags.txt
-                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${CMAKE_SOURCE_DIR} "." ${__clingetcpch}
-                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${__allFiles})
-set(__cxxflags -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DLDAP_DEPRECATED -DQT3_SUPPORT -Wno-deprecated
-               -Iinclude -Ietc -Ietc/cling -I${CMAKE_SOURCE_DIR})
+
+add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
+                          etc/dictpch/allHeaders.h
+                          etc/dictpch/allCppflags.txt
+                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.sh ${CMAKE_SOURCE_DIR} "." ${__clingetcpch}
+                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.sh ${__allFiles})
+
 add_custom_command(OUTPUT etc/allDict.cxx.pch
-                  COMMAND bin/rootcling_tmp -1 -f etc/allDict.cxx -noDictSelection -c ${__cxxflags} `cat cppflags.txt | sort | uniq` include/allHeaders.h include/allLinkDef.h
-                  COMMAND ${CMAKE_COMMAND} -E copy etc/allDict_rdict.pch etc/allDict.cxx.pch
-                  DEPENDS include/allLinkDef.h include/allHeaders.h rootcling_tmp)
+                   COMMAND ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh etc/allDict.cxx.pch
+                   DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh
+                           etc/dictpch/allLinkDefs.h
+                           etc/dictpch/allHeaders.h
+                           etc/dictpch/allCppflags.txt
+                           rootcling)
 add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
 set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
 add_dependencies(onepcm ${__allTargets})
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+install(FILES ${CMAKE_BINARY_DIR}/etc/dictpch/allLinkDefs.h
+              ${CMAKE_BINARY_DIR}/etc/dictpch/allHeaders.h
+              ${CMAKE_BINARY_DIR}/etc/dictpch/allCppflags.txt
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/dictpch)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
