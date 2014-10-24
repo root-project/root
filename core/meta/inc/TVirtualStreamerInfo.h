@@ -43,7 +43,11 @@ class TVirtualStreamerInfo : public TNamed {
 protected:
    Bool_t              fOptimized : 1;     //! true if the StreamerInfo has been optimized
    Bool_t              fIsBuilt : 1;       //! true if the StreamerInfo has been 'built' (i.e. has all the StreamerElements it should have)
+#if __cplusplus >= 201103L
    std::atomic<Bool_t> fIsCompiled;        //! true if the StreamerInfo has been compiled (i.e. fully built, ready to use for streaming).
+#else
+   Bool_t              fIsCompiled;        //! true if the StreamerInfo has been compiled (i.e. fully built, ready to use for streaming).
+#endif
 
 protected:
    static  Bool_t    fgCanDelete;        //True if ReadBuffer can delete object
