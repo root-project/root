@@ -506,6 +506,9 @@ void TXMLFile::SaveToFile()
 
       fXML->FreeAttr(fRootNode, xmlio::IOVersion);
       fXML->NewIntAttr(fRootNode, xmlio::IOVersion, GetIOVersion());
+
+      fXML->FreeAttr(fRootNode, "file_version");
+      fXML->NewIntAttr(fRootNode, "file_version", fVersion);
    }
 
    TString fname, dtdname;
@@ -603,6 +606,9 @@ Bool_t TXMLFile::ReadFromFile()
       fIOVersion = fXML->GetIntAttr(fRootNode, xmlio::IOVersion);
    else
       fIOVersion = 1;
+
+   if (fXML->HasAttr(fRootNode, "file_version"))
+      fVersion = fXML->GetIntAttr(fRootNode, "file_version");
 
    fStreamerInfoNode = fXML->GetChild(fRootNode);
    fXML->SkipEmpty(fStreamerInfoNode);
@@ -735,6 +741,7 @@ TList* TXMLFile::GetStreamerInfoList()
 
          Int_t clversion = AtoI(fXML->GetAttr(sinfonode,"classversion"));
          info->SetClassVersion(clversion);
+         info->SetOnFileClassVersion(clversion);
          Int_t checksum = AtoI(fXML->GetAttr(sinfonode,"checksum"));
          info->SetCheckSum(checksum);
 
