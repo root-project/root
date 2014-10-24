@@ -382,7 +382,9 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
       // might fail because CINT does not known the nesting
       // scope, so let's first look for an emulated class:
 
+      auto oldAutoParseVal = gInterpreter->SetClassAutoparsing(false);
       fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
+      gInterpreter->SetClassAutoparsing(oldAutoParseVal);
 
       if (fType) {
          if (intype != inside) {
