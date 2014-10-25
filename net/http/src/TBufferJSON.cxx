@@ -53,6 +53,8 @@
 #include "TStreamerInfoActions.h"
 #include "RVersion.h"
 #include "TClonesArray.h"
+#include "TVirtualMutex.h"
+#include "TInterpreter.h"
 
 #ifdef R__VISUAL_CPLUSPLUS
 #define FLong64    "%I64d"
