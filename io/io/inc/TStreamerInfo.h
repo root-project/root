@@ -274,6 +274,7 @@ public:
    void                SetCheckSum(UInt_t checksum) {fCheckSum = checksum;}
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
+   void                SetOnFileClassVersion(Int_t vers) {fOnFileClassVersion=vers;}
    void                TagFile(TFile *fFile);
 private:
    // Try to remove those functions from the public interface.

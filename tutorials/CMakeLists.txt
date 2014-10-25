@@ -12,7 +12,13 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
                    ROOTSYS=${CMAKE_BINARY_DIR}
                    PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
 else()                       # testing using an installation
-  include(${ROOT_USE_FILE})
+  if(DEFINED ROOT_USE_FILE)
+    include(${ROOT_USE_FILE})
+  else()  #---If ROOT was built with the classic configure/make---
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
+    include(RootNewMacros)
+    set(ROOT_root_CMD root.exe)
+  endif()
   enable_testing()
 endif()
 
@@ -64,6 +70,11 @@ if(NOT ROOT_xml_FOUND)
                 histfactory/*.C)   # histfactory requires xml
 endif()
 
+if(WIN32)
+  set(histfactory_veto histfactory/*.C
+                       roostats/StandardFrequentistDiscovery.C) # histfactory doesn't work on Windows
+endif()
+
 if(NOT ROOT_fitsio_FOUND)
   set(fitsio_veto  fitsio/*.C)
 endif()
@@ -86,6 +97,10 @@ if(NOT ROOT_fftw3_FOUND)
                  roofit/rf211_paramconv.C
                  roofit/rf512_wsfactory_oper.C
                  fft/FFT.C)
+endif()
+
+if(NOT ROOT_opengl_FOUND)
+  set(opengl_veto tree/staff.C)
 endif()
 
 if(NOT GRAPHVIZ_FOUND)
@@ -144,7 +159,9 @@ set(all_veto hsimple.C
              ${fitsio_veto}
              ${mathmore_veto}
              ${fftw3_veto}
-             ${gviz_veto})
+             ${opengl_veto}
+             ${gviz_veto}
+             ${histfactory_veto})
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
@@ -157,10 +174,10 @@ list(REMOVE_ITEM tutorials ${tutorials_veto})
 
 #---Special return code------------------------------------------------
 set(returncode_1 fit/fit2a.C fit/graph2dfit.C
-                 graphics/archi.C graphics/arrow.C
+                 graphics/arrow.C
                  graphics/crown.C graphics/diamond.C
                  graphics/earth.C graphics/ellipse.C
-                 graphics/event.C graphics/pavetext.C
+                 graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
                  graphs/exclusiongraph.C graphs/multigraph.C
                  graphs/multipalette.C
@@ -168,6 +185,8 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  hist/ContourList.C hist/hstack.C
                  hist/h2proj.C
                  hist/th2polyBoxes.C
+                 hist/statsEditing.C
+                 tree/h1analysis.C
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
 set(math-testUnfold5d-depends tutorial-math-testUnfold5c)
@@ -234,7 +253,7 @@ if(ROOT_python_FOUND)
 
   #---Python tutorials dependencies--------------------------------------
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
-  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple)
+  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple tutorial-pyroot-fillrandom)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
   set(pyroot-na49view-depends tutorial-geom-geometry)
 

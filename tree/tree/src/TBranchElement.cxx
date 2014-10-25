@@ -1989,7 +1989,7 @@ void TBranchElement::InitInfo()
 
    if (fInfo) {
 
-      if ( GetID()>-1 && !fInfo->IsCompiled() ) {
+      if (!fInfo->IsCompiled()) {
          // Streamer info has not yet been compiled.
 
          Error("InitInfo","StreamerInfo is not compiled.");
@@ -5270,14 +5270,8 @@ void TBranchElement::SetupAddressesImpl()
    {
       TBranchElement *parent = (TBranchElement *)GetMother()->GetSubBranch( this );
 
-      TVirtualStreamerInfo *sinfo = GetInfoImp();
-      if (sinfo && sinfo->IsCompiled())
-      {
-         // If our streamer info has already been compiled,
-         // then we must try to deal with schema evolution here.
-         // FIXME: We must not optimize here or InitializeOffsets will crash!
-         sinfo->BuildOld();
-      }
+      // Make sure the StreamerInfo is loaded and initialized.
+      GetInfoImp();
 
       if( !parent->GetAddress() )
          parent->SetAddress( 0 );
@@ -5293,16 +5287,8 @@ void TBranchElement::SetupAddressesImpl()
    }
    TClass* cl = TClass::GetClass(mother->GetClassName());
 
-   {
-      TVirtualStreamerInfo *sinfo = GetInfoImp();
-      // FIXME: Should this go after the mother and cl test?
-      if (sinfo && sinfo->IsCompiled()) {
-         // If our streamer info has already been compiled,
-         // then we must try to deal with schema evolution here.
-         // FIXME: We must not optimize here or InitializeOffsets will crash!
-         sinfo->BuildOld();
-      }
-   }
+   // Make sure the StreamerInfo is loaded and initialized.
+   GetInfoImp();
 
    if (!cl) {
       return;

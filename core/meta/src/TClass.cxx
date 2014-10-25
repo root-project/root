@@ -970,6 +970,7 @@ TClass::TClass(const char *name, Bool_t silent) :
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    TDictionary(name),
+   fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
@@ -995,6 +996,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t silent) :
    TDictionary(name),
+   fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
@@ -1031,6 +1033,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
 TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
    TDictionary(""),
+   fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
    fAllPubMethod(0), fClassMenuList(0),
@@ -1285,7 +1288,7 @@ void TClass::Init(const char *name, Version_t cversion,
             fHasRootPcmInfo = kTRUE;
          }
       }
-      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName)) {
+      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
          if (!fClassInfo) {
             if (IsZombie()) {
@@ -1413,80 +1416,6 @@ void TClass::Init(const char *name, Version_t cversion,
 }
 
 //______________________________________________________________________________
-TClass::TClass(const TClass& cl) :
-  TDictionary(cl),
-  fPersistentRef(0),
-  fStreamerInfo(cl.fStreamerInfo),
-  fConversionStreamerInfo(0),
-  fRealData(cl.fRealData),
-  fBase(cl.fBase),
-  fData(cl.fData),
-  fEnums(cl.fEnums),
-  fFuncTemplate(cl.fFuncTemplate),
-  fMethod(cl.fMethod),
-  fAllPubData(cl.fAllPubData),
-  fAllPubMethod(cl.fAllPubMethod),
-  fClassMenuList(0),
-  fDeclFileName(cl.fDeclFileName),
-  fImplFileName(cl.fImplFileName),
-  fDeclFileLine(cl.fDeclFileLine),
-  fImplFileLine(cl.fImplFileLine),
-  fInstanceCount(cl.fInstanceCount),
-  fOnHeap(cl.fOnHeap),
-  fCheckSum(cl.fCheckSum),
-  fCollectionProxy(cl.fCollectionProxy),
-  fClassVersion(cl.fClassVersion),
-  fClassInfo(cl.fClassInfo),
-  fContextMenuTitle(cl.fContextMenuTitle),
-  fTypeInfo(cl.fTypeInfo),
-  fShowMembers(cl.fShowMembers),
-  fStreamer(cl.fStreamer),
-  fSharedLibs(cl.fSharedLibs),
-  fIsA(cl.fIsA),
-  fGlobalIsA(cl.fGlobalIsA),
-  fIsAMethod(cl.fIsAMethod),
-  fMerge(cl.fMerge),
-  fResetAfterMerge(cl.fResetAfterMerge),
-  fNew(cl.fNew),
-  fNewArray(cl.fNewArray),
-  fDelete(cl.fDelete),
-  fDeleteArray(cl.fDeleteArray),
-  fDestructor(cl.fDestructor),
-  fDirAutoAdd(cl.fDirAutoAdd),
-  fStreamerFunc(cl.fStreamerFunc),
-  fSizeof(cl.fSizeof),
-  fCanSplit(cl.fCanSplit),
-  fProperty(cl.fProperty),
-  fClassProperty(cl.fClassProperty),
-  fCanLoadClassInfo(cl.fCanLoadClassInfo),
-  fIsOffsetStreamerSet(cl.fIsOffsetStreamerSet),
-  fVersionUsed(kFALSE),
-  fOffsetStreamer(cl.fOffsetStreamer),
-  fStreamerType(cl.fStreamerType),
-  fState(cl.fState),
-  fCurrentInfo(0),
-  fLastReadInfo(0),
-  fRefProxy(cl.fRefProxy),
-  fSchemaRules(cl.fSchemaRules),
-  fStreamerImpl(0)
-{
-   //copy constructor
-
-   R__ASSERT(0 /* TClass Object are not copyable */ );
-}
-
-//______________________________________________________________________________
-TClass& TClass::operator=(const TClass& cl)
-{
-   //assignement operator
-   if(this!=&cl) {
-      R__ASSERT(0 /* TClass Object are not copyable */ );
-   }
-   return *this;
-}
-
-
-//______________________________________________________________________________
 TClass::~TClass()
 {
    // TClass dtor. Deletes all list that might have been created.
@@ -1562,7 +1491,7 @@ TClass::~TClass()
 
    delete fStreamer;
    delete fCollectionProxy;
-   delete fIsAMethod;
+   delete fIsAMethod.load();
    delete fSchemaRules;
    if (fConversionStreamerInfo.load()) {
       std::map<std::string, TObjArray*>::iterator it;
@@ -2394,18 +2323,24 @@ TClass *TClass::GetActualClass(const void *object) const
       //will not work if the class derives from TObject but not as primary
       //inheritance.
       if (fIsAMethod==0) {
-         fIsAMethod = new TMethodCall((TClass*)this, "IsA", "");
+         TMethodCall* temp = new TMethodCall((TClass*)this, "IsA", "");
 
-         if (!fIsAMethod->GetMethod()) {
-            delete fIsAMethod;
-            fIsAMethod = 0;
+         if (!temp->GetMethod()) {
+            delete temp;
             Error("IsA","Can not find any IsA function for %s!",GetName());
             return (TClass*)this;
          }
+         //Force cache to be updated here so do not have to worry about concurrency
+         temp->ReturnType();
 
+         TMethodCall* expected = nullptr;
+         if( not fIsAMethod.compare_exchange_strong(expected,temp) ) {
+            //another thread beat us to it
+            delete temp;
+         }
       }
       char * char_result = 0;
-      fIsAMethod->Execute((void*)object, &char_result);
+      (*fIsAMethod).Execute((void*)object, &char_result);
       return (TClass*)char_result;
    }
 }
@@ -2794,6 +2729,19 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (gInterpreter->AutoLoad(normalizedName.c_str(),kTRUE)) {
          loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
       }
+      // Maybe this was a typedef: let's try to see if this is the case
+      if (!loadedcl){
+         if (TDataType* theDataType = gROOT->GetType(normalizedName.c_str())){
+            // We have a typedef: we get the name of the underlying type
+            auto underlyingTypeName = theDataType->GetTypeName().Data();
+            // We see if we can bootstrap a class with it
+            auto underlyingTypeDict = TClassTable::GetDictNorm(underlyingTypeName);
+            if (underlyingTypeDict){
+               loadedcl = underlyingTypeDict();
+            }
+
+         }
+      }
    }
    if (loadedcl) return loadedcl;
 
@@ -2822,7 +2770,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    }
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   if (gInterpreter->CheckClassInfo(normalizedName.c_str())) {
+   if (gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */, kTRUE /*Only class, structs and ns*/)) {
       // Get the normalized name based on the decl (currently the only way
       // to get the part to add or drop the default arguments as requested by the user)
       std::string alternative;
@@ -4031,23 +3979,8 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
 
    TVirtualStreamerInfo *guess = fLastReadInfo;
    if (guess && guess->GetClassVersion() == version) {
-      // NOTE: race condition on IsCompiled() ... either TestBit or fBits becomes
-      // atomic or we make sure that the following code is no longer necessary
-      // by making sure that the StreamerInfo assigned to fLastReadInfo is
-      // already compiled (see FindStreamerInfo for example of possible break of
-      // this contract).
-
-      // If it was assigned to fLastReadInfo, it was already used
-      // and thus already properly setup
-      if (!guess->IsCompiled()) {
-         // Streamer info has not been compiled, but exists.
-         // Therefore it was read in from a file and we have to do schema evolution?
-         // Or it didn't have a dictionary before, but does now?
-         R__LOCKGUARD(gInterpreterMutex);
-         // Re-test to make sure we did not get the 'wrong' result early because
-         // of the potential data races on fBits.
-         if (!guess->IsCompiled()) guess->BuildOld();
-      }
+      // If the StreamerInfo is assigned to the fLastReadInfo, we are
+      // guaranted it was built and compiled.
       return guess;
    }
 
@@ -4093,12 +4026,6 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
          // If we do not have a StreamerInfo for this version and we do not
          // have dictionary information nor a proxy, there is nothing to build!
          //
-         // Warning:  Whether or not the build optimizes is controlled externally
-         //           to us by a global variable!  Don't call us unless you have
-         //           set that variable properly with TStreamer::Optimize()!
-         //
-         // FIXME: Why don't we call BuildOld() like we do below?
-         // Answer: We are new and so don't have to do schema evolution.
          sinfo->Build();
       }
    } else {
@@ -4113,7 +4040,8 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
    if (version == fClassVersion) {
       fCurrentInfo = sinfo;
    }
-   fLastReadInfo = sinfo;
+   // If the compilation succeeded, remember this StreamerInfo.
+   if (sinfo->IsCompiled()) fLastReadInfo = sinfo;
    return sinfo;
 }
 
@@ -4258,6 +4186,11 @@ void TClass::IgnoreTObjectStreamer(Bool_t doIgnore)
    //     BigTrack::Class()->IgnoreTObjectStreamer();
    //  To be effective for object streamed member-wise or split in a TTree,
    //  this function must be called for the most derived class (i.e. BigTrack).
+
+   // We need to tak the lock since we are test and then setting fBits
+   // and TStreamerInfo::fBits (and the StreamerInfo state in general)
+   // which can also be modified by another thread.
+   R__LOCKGUARD2(gInterpreterMutex);
 
    if ( doIgnore &&  TestBit(kIgnoreTObjectStreamer)) return;
    if (!doIgnore && !TestBit(kIgnoreTObjectStreamer)) return;
@@ -4463,6 +4396,8 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
       // Register the object for special handling in the destructor.
       if (p) {
          RegisterAddressInRepository("New",p,this);
+      } else {
+         Error("New", "Failed to construct class '%s' using streamer info", GetName());
       }
    } else {
       Fatal("New", "This cannot happen!");
@@ -5078,6 +5013,8 @@ TClass *TClass::LoadClass(const char *requestedname, Bool_t silent)
    // This function does not (and should not) attempt to check in the
    // list of loaded classes or in the typedef.
 
+   R__LOCKGUARD(gInterpreterMutex);
+
    TClass *result = LoadClassDefault(requestedname, silent);
 
    if (result) return result;
@@ -5359,9 +5296,6 @@ Long_t TClass::Property() const
 
    if (HasInterpreterInfo()) {
 
-      kl->fProperty = gCling->ClassInfo_Property(GetClassInfo());
-      kl->fClassProperty = gCling->ClassInfo_ClassProperty(GetClassInfo());
-
       // This code used to use ClassInfo_Has|IsValidMethod but since v6
       // they return true if the routine is defined in the class or any of
       // its parent.  We explicitly want to know whether the function is
@@ -5388,6 +5322,10 @@ Long_t TClass::Property() const
          kl->fStreamerType  = kExternal;
          kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
+      //must set this last since other threads may read fProperty
+      // and think all test bits have been properly set
+      kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
+      kl->fClassProperty = gCling->ClassInfo_ClassProperty(GetClassInfo());
 
    } else {
 
@@ -6150,7 +6088,8 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
          TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)fStreamerInfo->UncheckedAt(i);
          if (info && info->GetCheckSum() == checksum) {
             // R__ASSERT(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
-            fLastReadInfo = info;
+            info->BuildOld();
+            if (info->IsCompiled()) fLastReadInfo = info;
             return info;
          }
       }

@@ -12,5 +12,6 @@ void hsimpleProxyDriver()
    }
    TTree *ntuple = nullptr;
    file->GetObject("ntuple",ntuple);
-   ntuple->Draw("tree/hsimpleProxy.C+");
+   TString dir = gSystem->DirName(__FILE__);
+   ntuple->Draw(dir+"/hsimpleProxy.C+");
 }

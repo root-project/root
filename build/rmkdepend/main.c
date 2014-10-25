@@ -27,6 +27,10 @@ in this Software without prior written authorization from the X Consortium.
 
 */
 
+#if !defined(USGISH) || !defined(_SEQUENT_) || !defined(USE_CHMOD)
+#define _BSD_SOURCE /* def.h includes sys/stat and we need _BSD_SOURCE for fchmod see man fchmod */
+#endif
+
 #include "def.h"
 #ifdef __hpux
 #define sigvec sigvector
@@ -52,19 +56,6 @@ in this Software without prior written authorization from the X Consortium.
 #else
 #include <io.h>
 #endif
-#if !defined(__hpux)
-# if defined(__APPLE__)
-#  include <AvailabilityMacros.h>
-#  if !defined(MAC_OS_X_VERSION_10_4)
-extern int fchmod(int, int);
-#  endif
-# elif defined(__CYGWIN__)
-extern int fchmod(int, mode_t);
-# elif !defined(__GLIBC__) || __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 16)
-extern int fchmod(int, int);
-# endif
-#endif
-
 #ifdef MINIX
 #define USE_CHMOD 1
 #endif

@@ -788,6 +788,14 @@ void CodeGenModule::SetCommonAttributes(const Decl *D,
 
   if (D->hasAttr<UsedAttr>())
     addUsedGlobal(GV);
+  else if (const FunctionDecl* FD = dyn_cast<FunctionDecl>(D)) {
+     if (FD->isFromASTFile() && GV->hasLinkOnceODRLinkage()) {
+        // An inline function.
+        // Mark them used such that the DeclReverter does not
+        // unload it.
+        addUsedGlobal(GV);
+     }
+  }
 }
 
 void CodeGenModule::setNonAliasAttributes(const Decl *D,
@@ -927,7 +935,9 @@ static void emitUsed(CodeGenModule &CGM, StringRef Name,
 
 void CodeGenModule::emitLLVMUsed() {
   emitUsed(*this, "llvm.used", LLVMUsed);
+  LLVMUsed.clear();
   emitUsed(*this, "llvm.compiler.used", LLVMCompilerUsed);
+  LLVMCompilerUsed.clear();
 }
 
 void CodeGenModule::AppendLinkerOptions(StringRef Opts) {
@@ -1125,18 +1135,21 @@ llvm::Constant *CodeGenModule::EmitAnnotationString(StringRef Str) {
 
 llvm::Constant *CodeGenModule::EmitAnnotationUnit(SourceLocation Loc) {
   SourceManager &SM = getContext().getSourceManager();
-  PresumedLoc PLoc = SM.getPresumedLoc(Loc);
-  if (PLoc.isValid())
-    return EmitAnnotationString(PLoc.getFilename());
+  //PresumedLoc PLoc = SM.getPresumedLoc(Loc);
+  //if (PLoc.isValid())
+  //  return EmitAnnotationString(PLoc.getFilename());
   return EmitAnnotationString(SM.getBufferName(Loc));
 }
 
 llvm::Constant *CodeGenModule::EmitAnnotationLineNo(SourceLocation L) {
+  return llvm::ConstantInt::get(Int32Ty, 1);
+#if 0
   SourceManager &SM = getContext().getSourceManager();
   PresumedLoc PLoc = SM.getPresumedLoc(L);
   unsigned LineNo = PLoc.isValid() ? PLoc.getLine() :
     SM.getExpansionLineNumber(L);
   return llvm::ConstantInt::get(Int32Ty, LineNo);
+#endif
 }
 
 llvm::Constant *CodeGenModule::EmitAnnotateAttr(llvm::GlobalValue *GV,

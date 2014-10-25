@@ -36,7 +36,7 @@ Bool_t  TVirtualStreamerInfo::fgStreamMemberWise = kTRUE;
 ClassImp(TVirtualStreamerInfo)
 
 //______________________________________________________________________________
-TVirtualStreamerInfo::TVirtualStreamerInfo() : fOptimized(kFALSE), fIsBuilt(kFALSE)
+TVirtualStreamerInfo::TVirtualStreamerInfo() : fOptimized(kFALSE), fIsBuilt(kFALSE), fIsCompiled(kFALSE)
 {
    // Default constructor.
 
@@ -44,7 +44,7 @@ TVirtualStreamerInfo::TVirtualStreamerInfo() : fOptimized(kFALSE), fIsBuilt(kFAL
 
 //______________________________________________________________________________
 TVirtualStreamerInfo::TVirtualStreamerInfo(TClass *cl)
-   : TNamed(cl->GetName(),""), fOptimized(kFALSE), fIsBuilt(kFALSE)
+   : TNamed(cl->GetName(),""), fOptimized(kFALSE), fIsBuilt(kFALSE), fIsCompiled(kFALSE)
 {
    // Default constructor.
 
@@ -52,7 +52,7 @@ TVirtualStreamerInfo::TVirtualStreamerInfo(TClass *cl)
 
 //______________________________________________________________________________
 TVirtualStreamerInfo::TVirtualStreamerInfo(const TVirtualStreamerInfo& info)
-  : TNamed(info), fOptimized(kFALSE), fIsBuilt(kFALSE)
+  : TNamed(info), fOptimized(kFALSE), fIsBuilt(kFALSE), fIsCompiled(kFALSE)
 {
    //copy constructor
 }
@@ -121,14 +121,16 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
       info = (TVirtualStreamerInfo *)sinfos->At(cl->GetClassVersion());
    }
 
-   if (!info || !info->IsBuilt()) {
+   if (!info || !info->IsCompiled()) {
       // Even if the streamerInfo exist, it could still need to be 'build'
       // It is important to figure this out, because
       //   a) if it is not build, we need to build
       //   b) if is build, we should not build it (or we could end up in an
       //      infinite loop, if the element and its counter are in the same
       //      class!
-
+      // Checking IsCompiled is sufficint here even-though it is set only at
+      // the end of the call to Build as this function has an
+      // internal recursion prevention (setting and testing kBuildRunning).
       info = cl->GetStreamerInfo();
    }
    if (!info) return 0;

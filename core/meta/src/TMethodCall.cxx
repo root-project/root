@@ -230,7 +230,7 @@ void TMethodCall::Init(TFunction *function)
 
    TMethod *m = dynamic_cast<TMethod*>(function);
    fClass = m ? m->GetClass() : 0;
-   fMetPtr = function;
+   fMetPtr = (TFunction*)function->Clone();
    fMethod = function->GetName();
    fParams = "";
    fProto  = function->GetSignature()+1; // skip leading )
@@ -293,9 +293,10 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
    // 'methodname' should NOT have any scope information in it.  The scope
    // information should be passed via the TClass or CINT ClassInfo.
 
-   if (!fFunc)
+   if (!fFunc) {
+      R__LOCKGUARD2(gInterpreterMutex);
       fFunc = gCling->CallFunc_Factory();
-   else
+   } else
       gCling->CallFunc_Init(fFunc);
 
    fClass    = cl;
@@ -586,6 +587,15 @@ void TMethodCall::SetParam(Long_t l)
 
    if (!fFunc) return;
    gCling->CallFunc_SetArg(fFunc,l);
+}
+
+//______________________________________________________________________________
+void TMethodCall::SetParam(Float_t f)
+{
+   // Add a double method parameter.
+
+   if (!fFunc) return;
+   gCling->CallFunc_SetArg(fFunc,f);
 }
 
 //______________________________________________________________________________

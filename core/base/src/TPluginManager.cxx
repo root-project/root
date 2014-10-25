@@ -258,79 +258,30 @@ Int_t TPluginHandler::LoadPlugin()
 }
 
 //______________________________________________________________________________
-Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
+Bool_t TPluginHandler::CheckForExecPlugin(Int_t nargs)
 {
-   // Execute ctor for this plugin and return pointer to object of specific
-   // class. User must cast the returned long to the correct class.
-   // This method accepts a variable number of arguments to be passed
-   // to the ctor, where nargs is the number of arguments, followed
-   // by nargs arguments. Returns 0 in case of error.
+   // Check that we can properly run ExecPlugin.
 
    if (fCtor.IsNull()) {
       Error("ExecPlugin", "no ctor specified for this handler %s", fClass.Data());
-      return 0;
+      return kFALSE;
    }
 
    if (!fCallEnv && !fCanCall)
       SetupCallEnv();
 
    if (fCanCall == -1)
-      return 0;
+      return kFALSE;
 
    if (nargs < fMethod->GetNargs() - fMethod->GetNargsOpt() ||
        nargs > fMethod->GetNargs()) {
       Error("ExecPlugin", "nargs (%d) not consistent with expected number of arguments ([%d-%d])",
             nargs, fMethod->GetNargs() - fMethod->GetNargsOpt(),
             fMethod->GetNargs());
-      return 0;
+      return kFALSE;
    }
 
-   R__LOCKGUARD2(gInterpreterMutex);
-
-   fCallEnv->ResetParam();
-
-   if (nargs > 0) {
-      TIter next(fMethod->GetListOfMethodArgs());
-      TMethodArg *arg;
-
-      va_list ap;
-      va_start(ap, va_(nargs));
-
-      for (int i = 0; i < nargs; i++) {
-         arg = (TMethodArg*) next();
-         TString type = arg->GetFullTypeName();
-         TDataType *dt = gROOT->GetType(type);
-         if (dt)
-            type = dt->GetFullTypeName();
-         if (arg->Property() & (kIsPointer | kIsArray | kIsReference))
-            fCallEnv->SetParam((Long_t) va_arg(ap, void*));
-         else if (type == "bool")
-            fCallEnv->SetParam((Long_t) va_arg(ap, int));  // bool is promoted to int
-         else if (type == "char" || type == "unsigned char")
-            fCallEnv->SetParam((Long_t) va_arg(ap, int));  // char is promoted to int
-         else if (type == "short" || type == "unsigned short")
-            fCallEnv->SetParam((Long_t) va_arg(ap, int));  // short is promoted to int
-         else if (type == "int" || type == "unsigned int")
-            fCallEnv->SetParam((Long_t) va_arg(ap, int));
-         else if (type == "long" || type == "unsigned long")
-            fCallEnv->SetParam((Long_t) va_arg(ap, long));
-         else if (type == "long long")
-            fCallEnv->SetParam((Long64_t) va_arg(ap, Long64_t));
-         else if (type == "unsigned long long")
-            fCallEnv->SetParam((ULong64_t) va_arg(ap, ULong64_t));
-         else if (type == "float")
-            fCallEnv->SetParam((Double_t) va_arg(ap, double));  // float is promoted to double
-         else if (type == "double")
-            fCallEnv->SetParam((Double_t) va_arg(ap, double));
-      }
-
-      va_end(ap);
-   }
-
-   Long_t ret;
-   fCallEnv->Execute(ret);
-
-   return ret;
+   return kTRUE;
 }
 
 //______________________________________________________________________________

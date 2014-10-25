@@ -7519,28 +7519,29 @@ void TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize /
    // Set the size of the file cache and create it if needed.
    //
    // If autocache is true:
-   // create a cache or replace an existing autosized with a larger one.
-   // The size is calculated automatically, cacheSize is unused.
+   // this will be an automatically create cache, possibly replacing an
+   // existing autocreated cache with a larger one. The size is calculated,
+   // cacheSize is unused.
    //
    // If autocache is false:
-   // cacheSize is used to size the cache.
-
-   Bool_t cacheAutoSized = autocache;
+   // cacheSize is used to size the cache. This cache should never be
+   // automatically adjusted.
 
    if (autocache) {
       // used as a once only control for automatic cache setup
       fCacheDoAutoInit = kFALSE;
-   } else {
+   }
+
+   if (!autocache) {
       // negative size means the user requests the default
       if (cacheSize < 0) {
-         cacheAutoSized = kTRUE;
          cacheSize = GetCacheAutoSize(kTRUE);
       }
    }
 
    TFile* file = GetCurrentFile();
    if (!file) {
-      if (fCacheUserSet) fCacheSize = cacheSize;
+      if (!autocache) fCacheSize = cacheSize;
       return;
    }
 
@@ -7548,27 +7549,27 @@ void TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize /
    TTreeCache* pf = GetReadCache(file);
    if (pf) {
       if (autocache) {
-         // reset our cache status tracking in case this cache was added by
-         // the user without using one of the TTree methods
+         // reset our cache status tracking in case existing cache was added
+         // by the user without using one of the TTree methods
          fCacheSize = pf->GetBufferSize();
-         fCacheUserSet = !pf->IsAutoSized();
+         fCacheUserSet = !pf->IsAutoCreated();
 
-         if (!pf->IsAutoSized()) {
-            // cache was not automaticlly sized, don't change it
+         if (fCacheUserSet) {
+            // existing cache was created by the user, don't change it
             return;
          }
 
          // find the size that would be used now
-         cacheSize = GetCacheAutoSize(kTRUE);
+         cacheSize = GetCacheAutoSize();
 
       } else {
-         // update the information in the cache about how its size was set
-         pf->SetAutoSized(cacheAutoSized);
+         // update the cache to ensure it records the user has explcitly requested one
+         pf->SetAutoCreated(kFALSE);
       }
 
-      // if a cache is almost the size of the autocalculated value
-      // don't rellocate
-      if (cacheAutoSized && Long64_t(0.80*cacheSize) < fCacheSize) {
+      // if we're using an automatically calculated size
+      // and the existing cache is already almost large enough don't reallocate
+      if (autocache && Long64_t(0.80*cacheSize) < fCacheSize) {
          // already large enough
          return;
       }
@@ -7583,10 +7584,10 @@ void TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize /
       delete pf;
       pf = 0;
    } else {
+      // no existing cache
       if (autocache) {
-         // no existing cache
          if (fCacheUserSet) {
-            // was manually set. Do nothing here.
+            // value was already set manually. Do nothing here.
             return;
          } else {
             // if configured, autocreate a cache
@@ -7605,7 +7606,7 @@ void TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize /
    else
       pf = new TTreeCache(this, cacheSize);
 
-   pf->SetAutoSized(cacheAutoSized);
+   pf->SetAutoCreated(autocache);
 }
 
 //______________________________________________________________________________

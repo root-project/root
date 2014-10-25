@@ -726,9 +726,9 @@ with:
 <pre>
       gStyle->SetOptStat(mode);
 </pre>
-The "<tt>mode</tt>" has up to nine digits that can be set to on(1 or 2), off(0).
+The "<tt>mode</tt>" has up to nine digits that can be set to on (1 or 2), off (0).
 <pre>
-      mode = iourmen  (default = 000001111)
+      mode = ksiourmen  (default = 000001111)
       k = 1;  kurtosis printed
       k = 2;  kurtosis and kurtosis error printed
       s = 1;  skewness printed
@@ -756,7 +756,7 @@ displays the name of histogram, mean value and RMS.
 
 <p><b>WARNING 1:</b> never do:
 <pre>
-      <s>gStyle->SetOptStat(000111);</s>
+      <s>gStyle->SetOptStat(0001111);</s>
 </pre>
 but instead do:
 <pre>
@@ -3272,6 +3272,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          zbx2 = gPad->AbsPixeltoX(px);
          zby1 = gPad->AbsPixeltoY(py);
          zby2 = gPad->AbsPixeltoY(py);
+         px1 = px;
+         py1 = py;
          if (gPad->GetLogx()) {
             zbx1 = TMath::Power(10,zbx1);
             zbx2 = TMath::Power(10,zbx2);
@@ -3341,14 +3343,16 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       if (opaque && dimension ==2) {
-         zbx2 = gPad->AbsPixeltoX(px);
-         zby2 = gPad->AbsPixeltoY(py);
-         if (gPad->GetLogx()) zbx2 = TMath::Power(10,zbx2);
-         if (gPad->GetLogy()) zby2 = TMath::Power(10,zby2);
-         zoombox->SetX2(zbx2);
-         zoombox->SetY2(zby2);
-         gPad->Modified();
-         gPad->Update();
+         if (TMath::Abs(px1-px)>5 && TMath::Abs(py1-py)>5) {
+            zbx2 = gPad->AbsPixeltoX(px);
+            zby2 = gPad->AbsPixeltoY(py);
+            if (gPad->GetLogx()) zbx2 = TMath::Power(10,zbx2);
+            if (gPad->GetLogy()) zby2 = TMath::Power(10,zby2);
+            zoombox->SetX2(zbx2);
+            zoombox->SetY2(zby2);
+            gPad->Modified();
+            gPad->Update();
+         }
       }
 
       break;
@@ -3358,9 +3362,13 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (dimension ==2) {
          bin1 = xaxis->GetFirst()+1;
          bin2 = xaxis->GetLast()-1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, xaxis->GetNbins());
          if (bin2>bin1) xaxis->SetRange(bin1,bin2);
          bin1 = yaxis->GetFirst()+1;
          bin2 = yaxis->GetLast()-1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, yaxis->GetNbins());
          if (bin2>bin1) yaxis->SetRange(bin1,bin2);
       }
       gPad->Modified();
@@ -3373,9 +3381,13 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (dimension == 2) {
          bin1 = xaxis->GetFirst()-1;
          bin2 = xaxis->GetLast()+1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, xaxis->GetNbins());
          if (bin2>bin1) xaxis->SetRange(bin1,bin2);
          bin1 = yaxis->GetFirst()-1;
          bin2 = yaxis->GetLast()+1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, yaxis->GetNbins());
          if (bin2>bin1) yaxis->SetRange(bin1,bin2);
       }
       gPad->Modified();
@@ -3400,6 +3412,10 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             Double_t x2 = TMath::Max(zoombox->GetX1(), zoombox->GetX2());
             Double_t y1 = TMath::Min(zoombox->GetY1(), zoombox->GetY2());
             Double_t y2 = TMath::Max(zoombox->GetY1(), zoombox->GetY2());
+            x1 = TMath::Max(x1,xaxis->GetXmin());
+            x2 = TMath::Min(x2,xaxis->GetXmax());
+            y1 = TMath::Max(y1,yaxis->GetXmin());
+            y2 = TMath::Min(y2,yaxis->GetXmax());
             if (x1<x2 && y1<y2) {
                xaxis->SetRangeUser(x1, x2);
                yaxis->SetRangeUser(y1, y2);

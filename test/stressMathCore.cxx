@@ -962,7 +962,7 @@ public:
       }
       //std::cout << typeName << std::endl;
 
-      TBranch * br = tree.Branch("Vector branch",typeName.c_str(),&v1);
+      TBranch * br = tree.Branch("Vector_branch",typeName.c_str(),&v1);
       if (br == 0) {
          std::cout << "Error creating branch for" << typeName << "\n\t typeid is "
                    << typeid(*v1).name() << std::endl;
@@ -1013,7 +1013,7 @@ public:
       //std::cout << "reading typeID  : " << typeid(*v1).name() << std::endl;
 
       // cast to void * to avoid a warning
-      tree->SetBranchAddress("Vector branch",(void *) &v1);
+      tree->SetBranchAddress("Vector_branch",(void *) &v1);
 
       Timer timer;
       int n = (int) tree->GetEntries();
@@ -1476,8 +1476,6 @@ int testSMatrix(int ngen,bool io) {
 
 int testCompositeObj(int ngen) {
 
-   int iret = 0;
-
    std::cout <<"******************************************************************************\n";
    std::cout << "\tTest of a Composite Object (containing Vector's and Matrices)\n";
    std::cout <<"******************************************************************************\n";
@@ -1489,8 +1487,13 @@ int testCompositeObj(int ngen) {
    std::cout << "Test Using CINT library\n\n";
 
    // put path relative to LD_LIBRARY_PATH
-   iret = gSystem->Load("../test/libTrackMathCoreDict");
-   if (iret !=0) {
+
+   const char* dynPath = gSystem->DynamicPathName("../test/libTrackMathCoreDict",
+                                                  /*quiet*/ true);
+   int iret = -1;
+   if (dynPath)
+      iret = gSystem->Load("../test/libTrackMathCoreDict");
+   if (iret != 0) {
       // if not assume running from top ROOT dir (case of roottest)
       iret = gSystem->Load("test/libTrackMathCoreDict");
       if (iret !=0) {

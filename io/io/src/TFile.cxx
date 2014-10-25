@@ -2185,8 +2185,8 @@ void TFile::SumBuffer(Int_t bufsize)
    // Increment statistics for buffer sizes of objects in this file.
 
    fWritten++;
-   fSumBuffer  += bufsize;
-   fSum2Buffer += bufsize*bufsize;
+   fSumBuffer  += double(bufsize);
+   fSum2Buffer += double(bufsize) * double(bufsize); // avoid reaching MAXINT for temporary
 }
 
 //______________________________________________________________________________
@@ -3361,7 +3361,9 @@ void TFile::ReadStreamerInfo()
 
    TStreamerInfo *info;
 
-   if (fVersion < 53419 || (59900 < fVersion && fVersion < 59907)) {
+   Int_t version = fVersion;
+   if (version > 1000000) version -= 1000000;
+   if (version < 53419 || (59900 < version && version < 59907)) {
       // We need to update the fCheckSum field of the TStreamerBase.
 
       // loop on all TStreamerInfo classes

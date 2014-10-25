@@ -167,12 +167,9 @@ namespace cling {
       if (!externalSemaSrc || externalSemaSrc == Reader) {
         // If the ExternalSemaSource is the PCH reader we still need to insert
         // our listener.
-        llvm::IntrusiveRefCntPtr<InterpreterExternalSemaSource>
-           tmpptr(new InterpreterExternalSemaSource(this));
-        m_ExternalSemaSource.swap(tmpptr);
-
+        m_ExternalSemaSource = new InterpreterExternalSemaSource(this);
         m_ExternalSemaSource->InitializeSema(SemaRef);
-        m_Interpreter->getSema().addExternalSource(m_ExternalSemaSource.get());
+        m_Interpreter->getSema().addExternalSource(m_ExternalSemaSource);
 
         // FIXME: We should add a multiplexer in the ASTContext, too.
         llvm::IntrusiveRefCntPtr<ExternalASTSource>
@@ -212,7 +209,7 @@ namespace cling {
 
   ExternalSemaSource*
   InterpreterCallbacks::getInterpreterExternalSemaSource() const {
-    return m_ExternalSemaSource.get();
+    return m_ExternalSemaSource;
   }
 
   ASTDeserializationListener*

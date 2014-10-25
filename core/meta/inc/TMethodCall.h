@@ -31,13 +31,28 @@
 #include "TDictionary.h"
 #endif
 
+#ifndef ROOT_TInterpreter
+#include "TInterpreter.h"
+#endif
+
 class TClass;
 class TFunction;
 
 class TMethodCall : public TObject {
 
 public:
-   enum EReturnType { kLong, kDouble, kString, kOther, kNone };
+   using EReturnType = TInterpreter::EReturnType;
+
+   // For backward compatibility:
+   static const EReturnType kLong = TInterpreter::EReturnType::kLong;
+   static const EReturnType kDouble = TInterpreter::EReturnType::kDouble;
+   static const EReturnType kString = TInterpreter::EReturnType::kString;
+   static const EReturnType kOther = TInterpreter::EReturnType::kOther;
+   static const EReturnType kNoReturnType = TInterpreter::EReturnType::kNoReturnType;
+   // Historical name.
+   static const EReturnType kNone = TInterpreter::EReturnType::kNoReturnType;
+
+   // enum EReturnType { kLong, kDouble, kString, kOther, kNone };
 
 private:
    CallFunc_t    *fFunc;      //CINT method invocation environment
@@ -84,9 +99,15 @@ public:
    void     SetParamPtrs(void *paramArr, Int_t nparam = -1);
    void     ResetParam();
    void     SetParam(Long_t l);
+   void     SetParam(Float_t f);
    void     SetParam(Double_t d);
    void     SetParam(Long64_t ll);
    void     SetParam(ULong64_t ull);
+
+   template <typename... T> void SetParams(const T&... params) {
+      if (!fFunc) return;
+      gInterpreter->CallFunc_SetArguments(fFunc,params...);
+   }
 
    void     Execute(void *object);
    void     Execute(void *object, const char *params);

@@ -3,6 +3,7 @@
 #  COMPONENTS - Installation component
 
 set(COMPONENTS ${COMPONENTS})
+set(ENV{DESTDIR} "")
 foreach(component ${COMPONENTS})
   execute_process(
     COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=${PREFIX}

@@ -2434,6 +2434,28 @@ void TH1::Copy(TObject &obj) const
 
 
 //______________________________________________________________________________
+TObject* TH1::Clone(const char* newname) const
+{
+   // Make a complete copy of the underlying object.  If 'newname' is set,
+   // the copy's name will be set to that name.
+
+   TH1* obj = (TH1*)IsA()->GetNew()(0);
+   Copy(*obj);
+
+   //Now handle the parts that Copy doesn't do
+   if(fFunctions) {
+      if(not obj->fFunctions) {
+         obj->fFunctions = new TList;
+      }
+      fFunctions->Copy( *(obj->fFunctions) );
+   }
+   if(newname and strlen(newname) ) {
+      obj->SetName(newname);
+   }
+   return obj;
+}
+
+//______________________________________________________________________________
 void TH1::DirectoryAutoAdd(TDirectory *dir)
 {
    // Perform the automatic addition of the histogram to the given directory
@@ -5719,8 +5741,8 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       oldErrors = new Double_t[nbins+2];
       for (bin=0;bin<nbins+2;bin++) oldErrors[bin] = GetBinError(bin);
    }
-   // rebin will not include underflow/overflow if new axis range is larger than old axis range 
-   if (xbins) {  
+   // rebin will not include underflow/overflow if new axis range is larger than old axis range
+   if (xbins) {
       if (xbins[0] < fXaxis.GetXmin() && oldBins[0] != 0 )
          Warning("Rebin","underflow entries will not be used when rebinning");
       if (xbins[newbins] > fXaxis.GetXmax() && oldBins[nbins+1] != 0 )
@@ -6658,7 +6680,9 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (     !histName.Contains("Graph")
          && !histName.Contains("_stack_")
          && !opt.Contains("colz")) {
-      histName += ++hcounter;
+      hcounter++;
+      histName += "__";
+      histName += hcounter;
    }
    const char *hname = histName.Data();
    if (!strlen(hname)) hname = "unnamed";
@@ -7331,34 +7355,34 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Option_t *option) const
 {
    //  Statistical test of compatibility in shape between
    //  this histogram and h2, using the Anderson-Darling 2 sample test.
-   //  The AD 2 sample test formula are derived from the paper 
-   //  F.W Scholz, M.A. Stephens "k-Sample Anderson-Darling Test". 
+   //  The AD 2 sample test formula are derived from the paper
+   //  F.W Scholz, M.A. Stephens "k-Sample Anderson-Darling Test".
    //  The test is implemented in root in the ROOT::Math::GoFTest class
    //  It is the same formula ( (6) in the paper), and also shown in this preprint
    //  http://arxiv.org/pdf/0804.0380v1.pdf
-   //  Binned data are considered as un-binned data 
-   //   with identical observation happening in the bin center. 
+   //  Binned data are considered as un-binned data
+   //   with identical observation happening in the bin center.
    //
    //     option is a character string to specify options
    //         "D" Put out a line of "Debug" printout
    //         "T" Return the normalized A-D test statistic
-   // 
+   //
    //  Note1: Underflow and overflow are not considered in the test
    //  Note2:  The test works only for un-weighted histogram (i.e. representing counts)
    //  Note3:  The histograms are not required to have the same X axis
    //  Note4:  The test works only for 1-dimensional histograms
 
-   Double_t advalue = 0; 
-   Double_t pvalue = AndersonDarlingTest(h2, advalue); 
+   Double_t advalue = 0;
+   Double_t pvalue = AndersonDarlingTest(h2, advalue);
 
    TString opt = option;
    opt.ToUpper();
    if (opt.Contains("D") ) {
       printf(" AndersonDarlingTest Prob     = %g, AD TestStatistic  = %g\n",pvalue,advalue);
-   } 
-   if (opt.Contains("T") ) return advalue; 
+   }
+   if (opt.Contains("T") ) return advalue;
 
-   return pvalue;    
+   return pvalue;
 }
 
 //______________________________________________________________________________
@@ -7368,19 +7392,19 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
 
    if (GetDimension() != 1 || h2->GetDimension() != 1) {
       Error("AndersonDarlingTest","Histograms must be 1-D");
-      return -1; 
+      return -1;
    }
 
-   // use the BinData class 
-   ROOT::Fit::BinData data1; 
-   ROOT::Fit::BinData data2; 
+   // use the BinData class
+   ROOT::Fit::BinData data1;
+   ROOT::Fit::BinData data2;
    ROOT::Fit::FillData(data1, this, 0);
    ROOT::Fit::FillData(data2, h2, 0);
 
-   double pvalue; 
+   double pvalue;
    ROOT::Math::GoFTest::AndersonDarling2SamplesTest(data1,data2, pvalue,advalue);
 
-   return pvalue; 
+   return pvalue;
 }
 
 //______________________________________________________________________________

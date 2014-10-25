@@ -64,6 +64,8 @@ TObject::TObject() : fBits(kNotDeleted) //Need to leave FUniqueID unset
    // (see TEnv) the object is added to the global TObjectTable for
    // bookkeeping.
 
+   // This will be reported by valgrind as uninitialized memory reads for
+   // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
    if (TStorage::FilledByObjectAlloc(&fUniqueID))
       fBits |= kIsOnHeap;
 
@@ -79,6 +81,8 @@ TObject::TObject(const TObject &obj)
 
    fBits = obj.fBits;
 
+   // This will be reported by valgrind as uninitialized memory reads for
+   // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
    if (TStorage::FilledByObjectAlloc(&fUniqueID))
       fBits |= kIsOnHeap;
    else
@@ -199,8 +203,12 @@ TObject *TObject::Clone(const char *) const
    // This usually means that the object will be appended to the current
    // ROOT directory.
 
-   if (gDirectory) return gDirectory->CloneObject(this);
-   else            return 0;
+   if (gDirectory) {
+     return gDirectory->CloneObject(this);
+   } else {
+     Fatal("Clone","No gDirectory set");
+     return 0;
+   }
 }
 
 //______________________________________________________________________________

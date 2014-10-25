@@ -4,6 +4,14 @@ Float_t ratio;
 TSlider *slider;
 TCanvas *c1;
 
+void hsumUpdate()
+{
+// called when Timer times out
+   if (slider) slider->SetRange(0, ::ratio);
+   c1->Modified();
+   c1->Update();
+}
+
 void hsumTimer(Int_t nfill=100000)
 {
 //
@@ -61,10 +69,3 @@ void hsumTimer(Int_t nfill=100000)
   hsumUpdate();
 }
 
-void hsumUpdate()
-{
-// called when Timer times out
-   if (slider) slider->SetRange(0, ::ratio);
-   c1->Modified();
-   c1->Update();
-}

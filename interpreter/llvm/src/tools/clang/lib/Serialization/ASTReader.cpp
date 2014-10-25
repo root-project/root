@@ -1516,6 +1516,9 @@ bool HeaderFileInfoTrait::EqualKey(internal_key_ref a, internal_key_ref b) {
 
   if (strcmp(a.Filename, b.Filename) == 0)
     return true;
+
+  if (StringRef(b.Filename).endswith(a.Filename))
+    return true;
   
   // Determine whether the actual files are equivalent.
   FileManager &FileMgr = Reader.getFileManager();

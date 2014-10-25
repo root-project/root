@@ -37,6 +37,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeVisitor.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/ModuleMap.h"
@@ -47,6 +48,7 @@
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Utils/AST.h"
 
 #include "llvm/Support/Path.h"
 #include "llvm/Support/FileSystem.h"
@@ -58,6 +60,32 @@
 
 int ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
 // std::vector<ROOT::TMetaUtils::RConstructorType> gIoConstructorTypes;
+
+namespace ROOT {
+namespace TMetaUtils {
+//______________________________________________________________________________
+class TNormalizedCtxtImpl {
+   using DeclsCont_t = TNormalizedCtxt::Config_t::SkipCollection;
+   using Config_t = TNormalizedCtxt::Config_t;
+   using TypesCont_t = TNormalizedCtxt::TypesCont_t;
+   using TemplPtrIntMap_t = TNormalizedCtxt::TemplPtrIntMap_t;
+private:
+   Config_t         fConfig;
+   TypesCont_t      fTypeWithAlternative;
+   static TemplPtrIntMap_t fTemplatePtrArgsToKeepMap;
+public:
+   TNormalizedCtxtImpl(const cling::LookupHelper &lh);
+
+   const Config_t    &GetConfig() const { return fConfig; }
+   const TypesCont_t &GetTypeWithAlternative() const { return fTypeWithAlternative; }
+   void AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i);
+   int GetNargsToKeep(const clang::ClassTemplateDecl* templ) const;
+   const TemplPtrIntMap_t GetTemplNargsToKeepMap() const { return fTemplatePtrArgsToKeepMap; }
+   void keepTypedef(const cling::LookupHelper &lh, const char* name,
+                    bool replace = false);
+};
+}
+}
 
 namespace {
 
@@ -263,11 +291,12 @@ cling::LookupHelper::DiagSetting ToLHDS(bool wantDiags) {
 
 } // end of anonymous namespace
 
-namespace ROOT{
-   namespace TMetaUtils{
+
+namespace ROOT {
+namespace TMetaUtils {
 
 //______________________________________________________________________________
-void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ,
+void TNormalizedCtxtImpl::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ,
                                              unsigned int i){
    // Add to the internal map the pointer of a template as key and the number of
    // template arguments to keep as value.
@@ -295,15 +324,53 @@ void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* tem
    fTemplatePtrArgsToKeepMap[canTempl]=i;
 }
 //______________________________________________________________________________
-int TNormalizedCtxt::GetNargsToKeep(const clang::ClassTemplateDecl* templ) const{
+int TNormalizedCtxtImpl::GetNargsToKeep(const clang::ClassTemplateDecl* templ) const{
    // Get from the map the number of arguments to keep.
    // It uses the canonical decl of the template as key.
    // If not present, returns -1.
-      const clang::ClassTemplateDecl* constTempl = templ->getCanonicalDecl();
-      auto thePairPtr = fTemplatePtrArgsToKeepMap.find(constTempl);
-      int nArgsToKeep = (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;
-      return nArgsToKeep;
-   }
+   const clang::ClassTemplateDecl* constTempl = templ->getCanonicalDecl();
+   auto thePairPtr = fTemplatePtrArgsToKeepMap.find(constTempl);
+   int nArgsToKeep = (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;
+   return nArgsToKeep;
+}
+
+
+//______________________________________________________________________________
+TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh):
+   fImpl(new TNormalizedCtxtImpl(lh))
+{}
+
+TNormalizedCtxt::TNormalizedCtxt(const TNormalizedCtxt& other):
+   fImpl(new TNormalizedCtxtImpl(*other.fImpl))
+{}
+
+TNormalizedCtxt::~TNormalizedCtxt() {
+   delete fImpl;
+}
+const TNormalizedCtxt::Config_t &TNormalizedCtxt::GetConfig() const {
+   return fImpl->GetConfig();
+}
+const TNormalizedCtxt::TypesCont_t &TNormalizedCtxt::GetTypeWithAlternative() const {
+   return fImpl->GetTypeWithAlternative();
+}
+void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i)
+{
+   return fImpl->AddTemplAndNargsToKeep(templ, i);
+}
+int TNormalizedCtxt::GetNargsToKeep(const clang::ClassTemplateDecl* templ) const
+{
+   return fImpl->GetNargsToKeep(templ);
+}
+const TNormalizedCtxt::TemplPtrIntMap_t TNormalizedCtxt::GetTemplNargsToKeepMap() const {
+   return fImpl->GetTemplNargsToKeepMap();
+}
+void TNormalizedCtxt::keepTypedef(const cling::LookupHelper &lh, const char* name,
+                                  bool replace /*= false*/)
+{
+   return fImpl->keepTypedef(lh, name, replace);
+}
+
+
 
 //______________________________________________________________________________
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
@@ -564,47 +631,53 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
 } // end namespace TMetaUtils
 
 //______________________________________________________________________________
-ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh)
+void ROOT::TMetaUtils::TNormalizedCtxtImpl::keepTypedef(const cling::LookupHelper &lh,
+                                                    const char* name,
+                                                    bool replace /*=false*/) {
+   // Insert the type with name into the collection of typedefs to keep.
+   // if replace, replace occurrences of the canonical type by name.
+   clang::QualType toSkip = lh.findType(name, cling::LookupHelper::WithDiagnostics);
+   if (const clang::Type* T = toSkip.getTypePtr()) {
+      clang::Decl* D = llvm::dyn_cast<clang::TypedefType>(T)->getDecl();
+      fConfig.m_toSkip.insert(D);
+      if (replace) {
+         clang::QualType canon = toSkip->getCanonicalTypeInternal();
+         fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),T));
+      } else {
+         fTypeWithAlternative.insert(T);
+      }
+   }
+}
+
+//______________________________________________________________________________
+ROOT::TMetaUtils::TNormalizedCtxtImpl::TNormalizedCtxtImpl(const cling::LookupHelper &lh)
 {
    // Initialize the list of typedef to keep (i.e. make them opaque for normalization)
    // and the list of typedef whose semantic is different from their underlying type
    // (Double32_t and Float16_t).
    // This might be specific to an interpreter.
+   keepTypedef(lh, "Double32_t");
+   keepTypedef(lh, "Float16_t");
+   keepTypedef(lh, "Long64_t", true);
+   keepTypedef(lh, "ULong64_t", true);
 
-   clang::QualType toSkip = lh.findType("Double32_t", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) {
-      fConfig.m_toSkip.insert(toSkip.getTypePtr());
-      fTypeWithAlternative.insert(toSkip.getTypePtr());
-   }
-   toSkip = lh.findType("Float16_t", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) {
-      fConfig.m_toSkip.insert(toSkip.getTypePtr());
-      fTypeWithAlternative.insert(toSkip.getTypePtr());
-   }
-   toSkip = lh.findType("Long64_t", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) {
-      fConfig.m_toSkip.insert(toSkip.getTypePtr());
-      clang::QualType canon = toSkip->getCanonicalTypeInternal();
-      fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),toSkip.getTypePtr()));
-   }
-   toSkip = lh.findType("ULong64_t", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) {
-      fConfig.m_toSkip.insert(toSkip.getTypePtr());
-      clang::QualType canon = toSkip->getCanonicalTypeInternal();
-      fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),toSkip.getTypePtr()));
-   }
-   toSkip = lh.findType("string", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
+   clang::QualType toSkip = lh.findType("string", cling::LookupHelper::WithDiagnostics);
+   if (const clang::TypedefType* TT
+       = llvm::dyn_cast_or_null<clang::TypedefType>(toSkip.getTypePtr()))
+      fConfig.m_toSkip.insert(TT->getDecl());
+
    toSkip = lh.findType("std::string", cling::LookupHelper::WithDiagnostics);
    if (!toSkip.isNull()) {
-      fConfig.m_toSkip.insert(toSkip.getTypePtr());
+      if (const clang::TypedefType* TT
+          = llvm::dyn_cast_or_null<clang::TypedefType>(toSkip.getTypePtr()))
+         fConfig.m_toSkip.insert(TT->getDecl());
 
       clang::QualType canon = toSkip->getCanonicalTypeInternal();
       fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),toSkip.getTypePtr()));
    }
 }
 
-using TNCtxtFullQual = ROOT::TMetaUtils::TNormalizedCtxt;
+using TNCtxtFullQual = ROOT::TMetaUtils::TNormalizedCtxtImpl;
 TNCtxtFullQual::TemplPtrIntMap_t TNCtxtFullQual::fTemplatePtrArgsToKeepMap=TNCtxtFullQual::TemplPtrIntMap_t{};
 // Initialisation of the atomic flag used to build a lightweight spinlock
 // std::atomic_flag TNCtxtFullQual::fCanAccessNargsToKeep = ATOMIC_FLAG_INIT;
@@ -653,13 +726,36 @@ ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp
    return result;
 }
 
+
+//______________________________________________________________________________
+bool ROOT::TMetaUtils::RequireCompleteType(const cling::Interpreter &interp, const clang::CXXRecordDecl *cl)
+{
+   clang::QualType qType(cl->getTypeForDecl(),0);
+   return RequireCompleteType(interp,cl->getLocation(),qType);
+}
+
+//______________________________________________________________________________
+bool ROOT::TMetaUtils::RequireCompleteType(const cling::Interpreter &interp, clang::SourceLocation Loc, clang::QualType Type)
+{
+   clang::Sema& S = interp.getCI()->getSema();
+   // Here we might not have an active transaction to handle
+   // the caused instantiation decl.
+   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interp));
+   return S.RequireCompleteType( Loc, Type , 0);
+}
+
 //______________________________________________________________________________
 bool ROOT::TMetaUtils::IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base,
-                                 const clang::CXXRecordDecl *context /*=0*/)
+                              const clang::CXXRecordDecl *context, const cling::Interpreter &interp)
 {
    if (!cl || !base) {
       return false;
    }
+
+   if (!cl->getDefinition() || !cl->isCompleteDefinition()) {
+      RequireCompleteType(interp,cl);
+   }
+
    if (!CheckDefinition(cl, context) || !CheckDefinition(base, context)) {
       return false;
    }
@@ -684,7 +780,7 @@ bool ROOT::TMetaUtils::IsBase(const clang::FieldDecl &m, const char* basename, c
 
    if (base) {
       return IsBase(CRD, llvm::dyn_cast<clang::CXXRecordDecl>( base ),
-                       llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext()));
+                    llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext()),interp);
    }
    return false;
 }
@@ -722,7 +818,7 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
 
    clang::CXXRecordDecl *cxxtype = rawtype->getAsCXXRecordDecl() ;
    int isStre = cxxtype && ROOT::TMetaUtils::ClassInfo__HasMethod(cxxtype,"Streamer",interp);
-   int isTObj = cxxtype && (IsBase(cxxtype,TObject_decl) || rawname == "TObject");
+   int isTObj = cxxtype && (IsBase(cxxtype,TObject_decl,nullptr,interp) || rawname == "TObject");
 
    long kase = 0;
 
@@ -4122,6 +4218,59 @@ ROOT::ESTLType ROOT::TMetaUtils::IsSTLCont(const clang::RecordDecl &cl)
    return STLKind(cl.getName());
 }
 
+static bool hasSomeTypedefSomewhere(const clang::Type* T) {
+  using namespace clang;
+  struct SearchTypedef: public TypeVisitor<SearchTypedef, bool> {
+    bool VisitTypedefType(const TypedefType* TD) {
+      return true;
+    }
+    bool VisitArrayType(const ArrayType* AT) {
+      return Visit(AT->getElementType().getTypePtr());
+    }
+    bool VisitDecltypeType(const DecltypeType* DT) {
+      return Visit(DT->getUnderlyingType().getTypePtr());
+    }
+    bool VisitPointerType(const PointerType* PT) {
+      return Visit(PT->getPointeeType().getTypePtr());
+    }
+    bool VisitReferenceType(const ReferenceType* RT) {
+      return Visit(RT->getPointeeType().getTypePtr());
+    }
+    bool VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* STST) {
+      return Visit(STST->getReplacementType().getTypePtr());
+    }
+    bool VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
+      for (int I = 0, N = TST->getNumArgs(); I < N; ++I) {
+        const TemplateArgument& TA = TST->getArg(I);
+        if (TA.getKind() == TemplateArgument::Type
+            && Visit(TA.getAsType().getTypePtr()))
+          return true;
+      }
+      return false;
+    }
+    bool VisitTemplateTypeParmType(const TemplateTypeParmType* TTPT) {
+      return false; // shrug...
+    }
+    bool VisitTypeOfType(const TypeOfType* TOT) {
+      return TOT->getUnderlyingType().getTypePtr();
+    }
+    bool VisitElaboratedType(const ElaboratedType* ET) {
+      NestedNameSpecifier* NNS = ET->getQualifier();
+      while (NNS) {
+        if (NNS->getKind() == NestedNameSpecifier::TypeSpec) {
+          if (Visit(NNS->getAsType()))
+            return true;
+        }
+        NNS = NNS->getPrefix();
+      }
+      return Visit(ET->getNamedType().getTypePtr());
+    }
+  };
+
+  SearchTypedef ST;
+  return ST.Visit(T);
+}
+
 //______________________________________________________________________________
 clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, const clang::Type *instance)
 {
@@ -4130,6 +4279,10 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
    // partially sugared types we have from 'instance'.
 
    if (!instance) return input;
+   // if there is no typedef in instance then there is nothing guiding any
+   // template parameter typedef replacement.
+   if (!hasSomeTypedefSomewhere(instance))
+     return input;
 
    using namespace llvm;
    using namespace clang;
@@ -4522,6 +4675,50 @@ const clang::RecordDecl* ROOT::TMetaUtils::ExtractEnclosingScopes(const clang::D
 }
 
 //______________________________________________________________________________
+static void replaceEnvVars(const char* varname, std::string& txt)
+{
+   // Reimplementation of TSystem::ExpandPathName() that cannot be
+   // used from TMetaUtils.
+   std::string::size_type beginVar = 0;
+   std::string::size_type endVar = 0;
+   while ((beginVar = txt.find('$', beginVar)) != std::string::npos
+          && beginVar + 1 < txt.length()) {
+      std::string::size_type beginVarName = beginVar + 1;
+      std::string::size_type endVarName = std::string::npos;
+      if (txt[beginVarName] == '(') {
+         // "$(VARNAME)" style.
+         endVarName = txt.find(')', beginVarName);
+         ++beginVarName;
+         if (endVarName == std::string::npos) {
+            ROOT::TMetaUtils::Error(0, "Missing ')' for '$(' in $%s at %s\n",
+                                    varname, txt.c_str() + beginVar);
+            return;
+         }
+         endVar = endVarName + 1;
+      } else {
+         // "$VARNAME/..." style.
+         beginVarName = beginVar + 1;
+         endVarName = beginVarName;
+         while (isalnum(txt[endVarName]) || txt[endVarName] == '_')
+            ++endVarName;
+         endVar = endVarName;
+      }
+
+      const char* val = getenv(txt.substr(beginVarName,
+                                          endVarName - beginVarName).c_str());
+      if (!val) val = "";
+
+      txt.replace(beginVar, endVar - beginVar, val);
+      int lenval = strlen(val);
+      int delta = lenval - (endVar - beginVar); // these many extra chars,
+      endVar += delta; // advance the end marker accordingly.
+
+      // Look for the next one
+      beginVar = endVar + 1;
+   }
+}
+
+//______________________________________________________________________________
 void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& clingArgs )
 {
    // Organise the parameters for cling in order to guarantee relocatability
@@ -4530,10 +4727,14 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
    // are available.
    const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
 
-   if (envInclPath) {
-      std::istringstream envInclPathsStream(envInclPath);
-      std::string inclPath;
-      while (std::getline(envInclPathsStream, inclPath, ':')) {
+   if (!envInclPath)
+      return;
+   std::istringstream envInclPathsStream(envInclPath);
+   std::string inclPath;
+   while (std::getline(envInclPathsStream, inclPath, ':')) {
+      // Can't use TSystem in here; re-implement TSystem::ExpandPathName().
+      replaceEnvVars("ROOT_INCLUDE_PATH", inclPath);
+      if (!inclPath.empty()) {
          clingArgs.push_back("-I");
          clingArgs.push_back(inclPath);
       }

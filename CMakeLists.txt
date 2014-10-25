@@ -65,13 +65,20 @@ foreach(var ${variables})
 endforeach()
 
 #---Move (copy) the headers and other directories to binary tree---------------------------------
-add_custom_target(move_headers  COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR} -DCOMPONENTS="headers"
-                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials)
+set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
+add_custom_command(OUTPUT ${stamp_file}
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials
+                   COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
+                   COMMENT "Moving directorties such as etc, icons, fonts, etc. to build area")
+add_custom_target(move_headers DEPENDS ${stamp_file}
+                               COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
+                                                        -DCOMPONENTS="headers"
+                                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake)
+include_directories(${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
@@ -109,26 +116,37 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
 get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
 get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
-add_custom_command(OUTPUT include/allLinkDef.h include/allHeaders.h cppflags.txt
-                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${CMAKE_SOURCE_DIR} "." ${__clingetcpch}
-                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${__allFiles})
-set(__cxxflags -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DLDAP_DEPRECATED -DQT3_SUPPORT -Wno-deprecated
-               -Iinclude -Ietc -Ietc/cling -I${CMAKE_SOURCE_DIR})
+
+add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
+                          etc/dictpch/allHeaders.h
+                          etc/dictpch/allCppflags.txt
+                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.sh ${CMAKE_SOURCE_DIR} "." ${__clingetcpch}
+                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.sh ${__allFiles})
+
 add_custom_command(OUTPUT etc/allDict.cxx.pch
-                  COMMAND bin/rootcling_tmp -1 -f etc/allDict.cxx -noDictSelection -c ${__cxxflags} `cat cppflags.txt | sort | uniq` include/allHeaders.h include/allLinkDef.h
-                  COMMAND ${CMAKE_COMMAND} -E copy etc/allDict_rdict.pch etc/allDict.cxx.pch
-                  DEPENDS include/allLinkDef.h include/allHeaders.h rootcling_tmp)
+                   COMMAND ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh etc/allDict.cxx.pch
+                   DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh
+                           etc/dictpch/allLinkDefs.h
+                           etc/dictpch/allHeaders.h
+                           etc/dictpch/allCppflags.txt
+                           rootcling)
 add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
 set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
 add_dependencies(onepcm ${__allTargets})
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+install(FILES ${CMAKE_BINARY_DIR}/etc/dictpch/allLinkDefs.h
+              ${CMAKE_BINARY_DIR}/etc/dictpch/allHeaders.h
+              ${CMAKE_BINARY_DIR}/etc/dictpch/allCppflags.txt
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/dictpch)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
-add_custom_target(hsimple ALL DEPENDS hsimple.root)
-add_dependencies(hsimple onepcm)
-ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
-add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
-install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
+  add_custom_target(hsimple ALL DEPENDS hsimple.root)
+  add_dependencies(hsimple onepcm)
+  ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
+  add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe DEPENDS Cling)
+  install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+endif()
 
 #---version--------------------------------------------------------------------------------------
 add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
@@ -170,15 +188,24 @@ if(testing)
   include(RootCTest)
   if(roottest)
     find_package(Git REQUIRED)
+    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(GIT_BRANCH STREQUAL HEAD)
+      string(REPLACE "origin/" "" GIT_BRANCH "$ENV{GIT_BRANCH}")  # Comming from Jenkins checkout
+    endif()
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-      execute_process(COMMAND ${GIT_EXECUTABLE} clean -xfq WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-      execute_process(COMMAND ${GIT_EXECUTABLE} pull WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+      execute_process(COMMAND ${GIT_EXECUTABLE} clean -xfdq WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+      execute_process(COMMAND ${GIT_EXECUTABLE} checkout ${GIT_BRANCH} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+      execute_process(COMMAND ${GIT_EXECUTABLE} fetch origin WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+      execute_process(COMMAND ${GIT_EXECUTABLE} rebase origin/${GIT_BRANCH} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
       add_subdirectory(roottest)
     elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../roottest)
       add_subdirectory(../roottest roottest)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone http://root.cern.ch/git/roottest.git
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} http://root.cern.ch/git/roottest.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
     endif()

@@ -105,25 +105,25 @@ dict: sl $(DICTO1) $(DICTO2) $(DICTO3) $(DICTO4)
 $(DICTS1):  $(DICTH1) $(DICTL1)
 	@echo "Generating dictionary and rootmap $@" 
 	@mkdir -p $(LIBDIR)
-	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rmf lib/libTMVA1.rootmap $^
+	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rmf lib/libTMVA1.rootmap -rml libTMVA.so $^
 #	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rml libMinuit.so  -rml libMLP.so  -rml libMatrix.so  -rml libTree.so  -rml libGraf.so  -rml libTreePlayer.so  -rml libXMLIO.so -rmf lib/libTMVA1.rootmap $^
 
 $(DICTS2):  $(DICTH2) $(DICTL2)
 	@echo "Generating dictionary and rootmap $@" 
 	@mkdir -p $(LIBDIR)
-	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rmf lib/libTMVA2.rootmap $^
+	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rmf lib/libTMVA2.rootmap -rml libTMVA.so $^
 #	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rml libMinuit.so  -rml libMLP.so  -rml libMatrix.so  -rml libTree.so  -rml libGraf.so  -rml libTreePlayer.so  -rml libXMLIO.so -rmf lib/libTMVA2.rootmap $^
 
 $(DICTS3):  $(DICTH3) $(DICTL3)
 	@echo "Generating dictionary and rootmap $@" 
 	@mkdir -p $(LIBDIR)
-	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rmf lib/libTMVA3.rootmap $^
+	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rmf lib/libTMVA3.rootmap -rml libTMVA.so $^
 #	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rml libMinuit.so  -rml libMLP.so  -rml libMatrix.so  -rml libTree.so  -rml libGraf.so  -rml libTreePlayer.so  -rml libXMLIO.so -rmf lib/libTMVA3.rootmap $^
 
 $(DICTS4):  $(DICTH4) $(DICTL4)
 	@echo "Generating dictionary and rootmap $@" 
 	@mkdir -p $(LIBDIR)
-	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rmf lib/libTMVA4.rootmap $^
+	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rmf lib/libTMVA4.rootmap -rml libTMVA.so $^
 #	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rml libMinuit.so  -rml libMLP.so  -rml libMatrix.so  -rml libTree.so  -rml libGraf.so  -rml libTreePlayer.so  -rml libXMLIO.so -rmf lib/libTMVA4.rootmap $^
 
 $(DICTO1): $(DICTS1)
@@ -197,7 +197,7 @@ $(LIBDIR)/$(SHLIBFILE): $(OLIST) $(DICTO)
 	@printf "Building shared library $(LIBDIR)/$(SHLIBFILE) ... "
 	@mkdir -p $(LIBDIR)
 	@rm -f $(LIBDIR)/$(SHLIBFILE)
-	@$(LD) -L$(shell root-config --libdir) $(SOFLAGS) $(addprefix $(OBJDIR)/,$(OLIST)) $(DICTO) -o $(LIBDIR)/$(SHLIBFILE) -lMinuit -lXMLIO
+	@$(LD) -L$(shell root-config --libdir) $(SOFLAGS) $(addprefix $(OBJDIR)/,$(OLIST)) $(DICTO) -o $(LIBDIR)/$(SHLIBFILE) -lTree -lMinuit -lXMLIO
 #	ln -fs $(SHLIBFILE) lib/lib$(PACKAGE).1.so
 	@echo "Done"
 

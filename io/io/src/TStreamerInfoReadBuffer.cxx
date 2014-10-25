@@ -96,6 +96,10 @@ TStreamerElement *TStreamerInfo::GetCurrentElement()
          f[j] = new name[*l];                   \
          b.ReadFastArray(f[j],*l);              \
       }                                         \
+      else for(j=0;j<compinfo[i]->fLength;j++) {  \
+        delete [] f[j];                        \
+        f[j] = 0;                              \
+     }                                         \
    }
 
 #define ReadBasicPointer(name)                  \
@@ -751,17 +755,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
    if (needIncrement) b.IncrementLevel(thisVar);
 
-   if (!IsCompiled()) {
-      char *ptr = (arrayMode&1)? 0:arr[0];
-      fClass->BuildRealData(ptr);
-      thisVar->BuildOld();
-   }
-
    //loop on all active members
-
-//   Int_t last;
-//   if (first < 0) {first = 0; last = fNdata;}
-//   else            last = first+1;
 
    // In order to speed up the case where the object being written is
    // not in a collection (i.e. arrayMode is false), we actually

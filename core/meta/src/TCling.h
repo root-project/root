@@ -155,6 +155,7 @@ public: // Public Interface
    Bool_t  IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl);
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
+   void    Declare(const char* code);
    void    EnableAutoLoading();
    void    EndOfLineAction();
    TClass *GetClass(const std::type_info& typeinfo, Bool_t load) const;
@@ -213,7 +214,7 @@ public: // Public Interface
    void    UpdateListOfGlobalFunctions();
    void    UpdateListOfTypes();
    void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE);
-   Bool_t  CheckClassInfo(const char* name, Bool_t autoload = kTRUE);
+   Bool_t  CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE);
    Bool_t  CheckClassTemplate(const char *name);
    Long_t  Calc(const char* line, EErrorCode* error = 0);
    void    CreateListOfBaseClasses(TClass* cl) const;
@@ -295,7 +296,7 @@ public: // Public Interface
    const ROOT::TMetaUtils::TNormalizedCtxt& GetNormalizedContext() const {return *fNormalizedCtxt;};
 
    // core/meta helper functions.
-   virtual TMethodCall::EReturnType MethodCallReturnType(TFunction *func) const;
+   virtual EReturnType MethodCallReturnType(TFunction *func) const;
    virtual void GetFunctionName(const clang::FunctionDecl *decl, std::string &name) const;
 
    // CallFunc interface
@@ -317,6 +318,8 @@ public: // Public Interface
    virtual CallFuncIFacePtr_t CallFunc_IFacePtr(CallFunc_t * func) const;
    virtual void   CallFunc_ResetArg(CallFunc_t* func) const;
    virtual void   CallFunc_SetArg(CallFunc_t* func, Long_t param) const;
+   virtual void   CallFunc_SetArg(CallFunc_t* func, ULong_t param) const;
+   virtual void   CallFunc_SetArg(CallFunc_t* func, Float_t param) const;
    virtual void   CallFunc_SetArg(CallFunc_t* func, Double_t param) const;
    virtual void   CallFunc_SetArg(CallFunc_t* func, Long64_t param) const;
    virtual void   CallFunc_SetArg(CallFunc_t* func, ULong64_t param) const;
@@ -432,7 +435,7 @@ public: // Public Interface
    virtual Long_t MethodInfo_Property(MethodInfo_t* minfo) const;
    virtual Long_t MethodInfo_ExtraProperty(MethodInfo_t* minfo) const;
    virtual TypeInfo_t*  MethodInfo_Type(MethodInfo_t* minfo) const;
-   virtual TMethodCall::EReturnType MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const;
+   virtual EReturnType MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const;
    virtual const char* MethodInfo_GetMangledName(MethodInfo_t* minfo) const;
    virtual const char* MethodInfo_GetPrototype(MethodInfo_t* minfo) const;
    virtual const char* MethodInfo_Name(MethodInfo_t* minfo) const;

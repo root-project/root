@@ -30,7 +30,7 @@ ROOT_INSTALL_HEADERS()
 
 #### STL dictionary (replacement for cintdlls)##############################
 
-set(stldicts vector list deque map map2 set multimap multimap2 multiset)
+set(stldicts vector list deque map map2 set multimap multimap2 multiset complex)
 if(NOT WIN32)
   list(APPEND stldicts valarray)
 endif()

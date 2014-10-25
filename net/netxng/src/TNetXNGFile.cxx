@@ -130,6 +130,9 @@ TNetXNGFile::TNetXNGFile(const char *url,
    fInitCondVar = new XrdSysCondVar();
    fUrl->SetProtocol(std::string("root"));
    fMode = ParseOpenMode(mode);
+   fQueryReadVParams = 1;
+   fReadvIorMax = 2097136;
+   fReadvIovMax = 1024;
 
    // Map ROOT and xrootd environment
    SetEnv();
@@ -651,12 +654,12 @@ Bool_t TNetXNGFile::GetVectorReadLimits()
 
    using namespace XrdCl;
 
-   fReadvIorMax = 2097136;
-   fReadvIovMax = 1024;
-
    // Check the file isn't a zombie or closed
    if (!IsUseable())
       return kFALSE;
+
+   if (!fQueryReadVParams)
+      return kTRUE;
 
 #if XrdVNUMBER >= 40000
    std::string dataServerStr;
@@ -677,14 +680,30 @@ Bool_t TNetXNGFile::GetVectorReadLimits()
 
    Ssiz_t from = 0;
    TString token;
-   fReadvIorMax = fReadvIovMax = 0;
 
-   while (TString(response->ToString()).Tokenize(token, from, "\n")) {
-      if (fReadvIorMax == 0)      fReadvIorMax = token.Atoi();
-      else if (fReadvIovMax == 0) fReadvIovMax = token.Atoi();
-   }
+   std::vector<TString> resps;
+   while (TString(response->ToString()).Tokenize(token, from, "\n"))
+      resps.push_back(token);
+
+   if (resps.size() != 2)
+      return kFALSE;
+
+   if (resps[0].IsDigit())
+      fReadvIorMax = resps[0].Atoi();
+
+   if (resps[1].IsDigit())
+      fReadvIovMax = resps[1].Atoi();
 
    delete response;
+
+   // this is to workaround a dCache bug reported here:
+   // https://sft.its.cern.ch/jira/browse/ROOT-6639
+   if( fReadvIovMax == 0x7FFFFFFF )
+   {
+     fReadvIovMax = 1024;
+     fReadvIorMax = 2097136;
+   }
+
    return kTRUE;
 }
 
@@ -766,6 +785,8 @@ void TNetXNGFile::SetEnv()
    if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_CLIENTMONITORPARAM"))
                             || strlen(cenv) <= 0))
       env->PutString("ClientMonitorParam", val.Data());
+
+   fQueryReadVParams = gEnv->GetValue("NetXNG.QueryReadVParams", 1);
 
    // Old style netrc file
    TString netrc;

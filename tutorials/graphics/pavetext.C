@@ -1,6 +1,6 @@
 //Draw a pave text
 //Author: Olivier Couet
-{
+TCanvas *pavetext(){
    TCanvas *c = new TCanvas("c");
    TPaveText *pt = new TPaveText(.05,.1,.95,.8);
 

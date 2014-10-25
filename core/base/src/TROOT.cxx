@@ -950,7 +950,10 @@ TObject *TROOT::FindObject(const char *name) const
 
    temp   = fFiles->FindObject(name);       if (temp) return temp;
    temp   = fMappedFiles->FindObject(name); if (temp) return temp;
-   temp   = fFunctions->FindObject(name);   if (temp) return temp;
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      temp   = fFunctions->FindObject(name);   if (temp) return temp;
+   }
    temp   = fGeometries->FindObject(name);  if (temp) return temp;
    temp   = fCanvases->FindObject(name);    if (temp) return temp;
    temp   = fStyles->FindObject(name);      if (temp) return temp;
@@ -1003,6 +1006,7 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
       where = fMappedFiles;
    }
    if (!temp) {
+      R__LOCKGUARD2(gROOTMutex);
       temp  = fFunctions->FindObject(name);
       where = fFunctions;
    }
@@ -1118,6 +1122,8 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load, Bool_t silent) const
    //   which can provoke the parsing of the header files (and/or the loading
    //   of clang pcms information).
 
+   R__LOCKGUARD(gInterpreterMutex);
+
    // Remove std::, allocator, typedef, add Long64_t, etc. in just one call.
    std::string normalized;
    TClassEdit::GetNormalizedName(normalized, name);
@@ -1210,11 +1216,15 @@ TObject *TROOT::GetFunction(const char *name) const
       return 0;
    }
 
-   TObject *f1 = fFunctions->FindObject(name);
-   if (f1) return f1;
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      TObject *f1 = fFunctions->FindObject(name);
+      if (f1) return f1;
+   }
 
    gROOT->ProcessLine("TF1::InitStandardFunctions();");
 
+   R__LOCKGUARD2(gROOTMutex);
    return fFunctions->FindObject(name);
 }
 
@@ -1288,12 +1298,14 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
    // global functions from Cling.
    // The param string must be of the form: "3189,\"aap\",1.3".
 
-   if (!params)
+   if (!params) {
+      R__LOCKGUARD2(gROOTMutex);
       return (TFunction *)GetListOfGlobalFunctions(load)->FindObject(function);
-   else {
+   } else {
       if (!fInterpreter)
          Fatal("GetGlobalFunction", "fInterpreter not initialized");
 
+      R__LOCKGUARD2(gROOTMutex);
       TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithValues(0,
                                                                  function, params,
                                                                  false);
@@ -1319,12 +1331,14 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
    // of all currently defined global functions from CINT (more expensive).
    // The proto string must be of the form: "int, char*, float".
 
-   if (!proto)
+   if (!proto) {
+      R__LOCKGUARD2(gROOTMutex);
       return (TFunction *)GetListOfGlobalFunctions(load)->FindObject(function);
-   else {
+   } else {
       if (!fInterpreter)
          Fatal("GetGlobalFunctionWithPrototype", "fInterpreter not initialized");
 
+      R__LOCKGUARD2(gROOTMutex);
       TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithPrototype(0,
                                                                            function, proto);
 
@@ -1461,9 +1475,9 @@ void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
       TApplication::CreateApplication();
 
    if (idleTimeInSec <= 0)
-      fApplication->RemoveIdleTimer();
+      (*fApplication).RemoveIdleTimer();
    else
-      fApplication->SetIdleTimer(idleTimeInSec, command);
+      (*fApplication).SetIdleTimer(idleTimeInSec, command);
 }
 
 //______________________________________________________________________________
@@ -1945,7 +1959,7 @@ Long_t TROOT::ProcessLine(const char *line, Int_t *error)
    if (!fApplication)
       TApplication::CreateApplication();
 
-   return fApplication->ProcessLine(sline, kFALSE, error);
+   return (*fApplication).ProcessLine(sline, kFALSE, error);
 }
 
 //______________________________________________________________________________
@@ -1965,7 +1979,7 @@ Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
    if (!fApplication)
       TApplication::CreateApplication();
 
-   return fApplication->ProcessLine(sline, kTRUE, error);
+   return (*fApplication).ProcessLine(sline, kTRUE, error);
 }
 
 //______________________________________________________________________________

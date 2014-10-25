@@ -41,8 +41,9 @@ namespace ROOT { class TCollectionProxyInfo; }
 class TVirtualStreamerInfo : public TNamed {
 
 protected:
-   Bool_t            fOptimized;         //! true if the Streamer has been optimized
-   Bool_t            fIsBuilt;           //! true if the StreamerInfo has been 'built'
+   Bool_t              fOptimized : 1;     //! true if the StreamerInfo has been optimized
+   Bool_t              fIsBuilt : 1;       //! true if the StreamerInfo has been 'built' (i.e. has all the StreamerElements it should have)
+   std::atomic<Bool_t> fIsCompiled;        //! true if the StreamerInfo has been compiled (i.e. fully built, ready to use for streaming).
 
 protected:
    static  Bool_t    fgCanDelete;        //True if ReadBuffer can delete object
@@ -53,15 +54,25 @@ protected:
    TVirtualStreamerInfo(const TVirtualStreamerInfo& info);
    TVirtualStreamerInfo& operator=(const TVirtualStreamerInfo&);
 
+   void  ResetIsCompiled() {
+      fIsCompiled = kFALSE;
+      ResetBit(kIsCompiled); /* for backward compatibility */
+   }
+   void  SetIsCompiled() {
+      fIsCompiled = kTRUE;
+      SetBit(kIsCompiled); /* for backward compatibility */
+   }
+
 public:
 
    //status bits
    enum { kCannotOptimize        = BIT(12),
-          kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
+          kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserve forward compatibility)
           kRecovered             = BIT(14),
           kNeedCheck             = BIT(15),
           kIsCompiled            = BIT(16),
-          kBuildOldUsed          = BIT(17)
+          kBuildOldUsed          = BIT(17),
+          kBuildRunning          = BIT(18)
    };
 
    enum EReadWrite {
@@ -137,7 +148,7 @@ public:
    virtual Int_t       GetSize()    const = 0;
    virtual TStreamerElement *GetStreamerElement(const char*datamember, Int_t& offset) const = 0;
            Bool_t      IsBuilt() const { return fIsBuilt; }
-           Bool_t      IsCompiled() const { return TestBit(kIsCompiled); }
+           Bool_t      IsCompiled() const { return fIsCompiled; }
            Bool_t      IsOptimized() const { return fOptimized; }
            Int_t       IsRecovered() const { return TestBit(kRecovered); }
    virtual void        ls(Option_t *option="") const = 0;

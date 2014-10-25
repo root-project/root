@@ -26,10 +26,8 @@
 #include "TDictionary.h"
 #endif
 
-// We must include this as we can not forward
-// declare enums until C++11.
-#ifndef ROOT_TMethodCall
-#include "TMethodCall.h"
+#ifndef ROOT_TVirtualMutex
+#include "TVirtualMutex.h"
 #endif
 
 #include <typeinfo>
@@ -41,7 +39,6 @@ class TFunction;
 class TInterpreterValue;
 class TMethod;
 class TObjArray;
-class TVirtualMutex;
 class TEnum;
 
 R__EXTERN TVirtualMutex *gInterpreterMutex;
@@ -59,6 +56,8 @@ public:
       kFatal       = 3,
       kProcessing  = 99
    };
+
+   enum class EReturnType { kLong, kDouble, kString, kOther, kNoReturnType };
 
    struct CallFuncIFacePtr_t {
       enum EKind {
@@ -104,6 +103,7 @@ public:
    virtual Int_t    AutoParse(const char* cls) = 0;
    virtual void     ClearFileBusy() = 0;
    virtual void     ClearStack() = 0; // Delete existing temporary values
+   virtual void     Declare(const char* code) = 0;
    virtual void     EnableAutoLoading() = 0;
    virtual void     EndOfLineAction() = 0;
    virtual TClass  *GetClass(const std::type_info& typeinfo, Bool_t load) const = 0;
@@ -159,7 +159,7 @@ public:
    virtual void     UpdateListOfGlobalFunctions() = 0;
    virtual void     UpdateListOfTypes() = 0;
    virtual void     SetClassInfo(TClass *cl, Bool_t reload = kFALSE) = 0;
-   virtual Bool_t   CheckClassInfo(const char *name, Bool_t autoload = kTRUE) = 0;
+   virtual Bool_t   CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE) = 0;
    virtual Bool_t   CheckClassTemplate(const char *name) = 0;
    virtual Long_t   Calc(const char *line, EErrorCode* error = 0) = 0;
    virtual void     CreateListOfBaseClasses(TClass *cl) const = 0;
@@ -214,7 +214,7 @@ public:
    virtual TInterpreterValue *CreateTemporary() { return 0; }
 
    // core/meta helper functions.
-   virtual TMethodCall::EReturnType MethodCallReturnType(TFunction *func) const = 0;
+   virtual EReturnType MethodCallReturnType(TFunction *func) const = 0;
    virtual ULong64_t GetInterpreterStateMarker() const = 0;
 
    typedef TDictionary::DeclId_t DeclId_t;
@@ -258,12 +258,61 @@ public:
    virtual Bool_t CallFunc_IsValid(CallFunc_t * /* func */) const {return 0;}
    virtual CallFuncIFacePtr_t CallFunc_IFacePtr(CallFunc_t * /* func */) const {return CallFuncIFacePtr_t();}
    virtual void   CallFunc_ResetArg(CallFunc_t * /* func */) const {;}
-   virtual void   CallFunc_SetArg(CallFunc_t * /*func */, Long_t /* param */) const {;}
-   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Double_t /* param */) const {;}
-   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Long64_t /* param */) const {;}
-   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, ULong64_t /* param */) const {;}
    virtual void   CallFunc_SetArgArray(CallFunc_t * /* func */, Long_t * /* paramArr */, Int_t /* nparam */) const {;}
    virtual void   CallFunc_SetArgs(CallFunc_t * /* func */, const char * /* param */) const {;}
+
+   virtual void   CallFunc_SetArg(CallFunc_t * /*func */, Long_t /* param */) const = 0;
+   virtual void   CallFunc_SetArg(CallFunc_t * /*func */, ULong_t /* param */) const = 0;
+   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Float_t /* param */) const = 0;
+   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Double_t /* param */) const = 0;
+   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Long64_t /* param */) const = 0;
+   virtual void   CallFunc_SetArg(CallFunc_t * /* func */, ULong64_t /* param */) const = 0;
+
+   void CallFunc_SetArg(CallFunc_t * func, Char_t param) const { CallFunc_SetArg(func,(Long_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, Short_t param) const { CallFunc_SetArg(func,(Long_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, Int_t param) const { CallFunc_SetArg(func,(Long_t)param); }
+
+   void CallFunc_SetArg(CallFunc_t * func, UChar_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, UShort_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
+   void CallFunc_SetArg(CallFunc_t * func, UInt_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
+
+   void CallFunc_SetArg(CallFunc_t *func, void *arg)
+   {
+      CallFunc_SetArg(func,(Long_t) arg);
+   }
+
+   template <typename T>
+   void CallFunc_SetArg(CallFunc_t *func, const T *arg)
+   {
+      CallFunc_SetArg(func,(Long_t) arg);
+   }
+
+   void CallFunc_SetArgImpl(CallFunc_t * /* func */)
+   {
+   }
+
+   template <typename U>
+   void CallFunc_SetArgImpl(CallFunc_t *func, const U& head)
+   {
+      CallFunc_SetArg(func, head);
+   }
+
+   template <typename U, typename... T>
+   void CallFunc_SetArgImpl(CallFunc_t *func, const U& head, const T&... tail)
+   {
+      CallFunc_SetArg(func, head);
+      CallFunc_SetArgImpl(func, tail...);
+   }
+
+   template <typename... T>
+   void CallFunc_SetArguments(CallFunc_t *func, const T&... args)
+   {
+      R__LOCKGUARD2(gInterpreterMutex);
+
+      CallFunc_ResetArg(func);
+      CallFunc_SetArgImpl(func,args...);
+   }
+
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, bool /* objectIsConst */, Long_t * /* Offset */) const {;}
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, Long_t * /* Offset */) const {;}
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, MethodInfo_t * /* info */) const {;}
@@ -371,7 +420,7 @@ public:
    virtual Long_t MethodInfo_Property(MethodInfo_t * /* minfo */) const = 0;
    virtual Long_t MethodInfo_ExtraProperty(MethodInfo_t * /* minfo */) const = 0;
    virtual TypeInfo_t  *MethodInfo_Type(MethodInfo_t * /* minfo */) const {return 0;}
-   virtual TMethodCall::EReturnType MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const = 0;
+   virtual EReturnType MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const = 0;
    virtual const char *MethodInfo_GetMangledName(MethodInfo_t * /* minfo */) const {return 0;}
    virtual const char *MethodInfo_GetPrototype(MethodInfo_t * /* minfo */) const {return 0;}
    virtual const char *MethodInfo_Name(MethodInfo_t * /* minfo */) const {return 0;}

@@ -216,7 +216,17 @@ void TAxis::Copy(TObject &obj) const
       axis.fLabels = 0;
    }
    if (fLabels) {
-      for (Int_t i=1;i<=fNbins;i++) axis.SetBinLabel(i,this->GetBinLabel(i));
+      //Properly handle case where not all bins have labels
+      TIter next(fLabels);
+      TObjString *label;
+      if(! axis.fLabels) {
+         axis.fLabels = new THashList(axis.fNbins, 3);
+      }
+      while( (label=(TObjString*)next()) ) {
+         TObjString *copyLabel = new TObjString(*label);
+         axis.fLabels->Add(copyLabel);
+         copyLabel->SetUniqueID(label->GetUniqueID());
+      }
    }
 }
 

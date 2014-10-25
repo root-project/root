@@ -300,9 +300,11 @@ public: \
 #define ClassImpUnique(name,key) \
    namespace ROOT { \
       TGenericClassInfo *GenerateInitInstance(const name*); \
-      static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
-         GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
-      R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
+      namespace { \
+         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
+            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
+         R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
+      } \
    }
 #define ClassImp(name) ClassImpUnique(name,default)
 #endif
@@ -317,9 +319,11 @@ public: \
    namespace name { \
       namespace ROOT { \
          ::ROOT::TGenericClassInfo *GenerateInitInstance(); \
-         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
-            GenerateInitInstance()->SetImplFile(__FILE__, __LINE__); \
-         R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
+         namespace { \
+            static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
+               GenerateInitInstance()->SetImplFile(__FILE__, __LINE__); \
+            R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
+         } \
       } \
    }
 #define NamespaceImp(name) NamespaceImpUnique(name,default)

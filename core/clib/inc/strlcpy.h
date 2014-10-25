@@ -13,13 +13,11 @@
 #include "RConfig.h"
 #endif
 
-#if !defined(__CINT__)
-
 #ifndef HAS_STRLCPY
 
 #ifndef WIN32
 #   include <unistd.h>
-#elif !defined(__CINT__)
+#else
 #   include <sys/types.h>
 #endif
 
@@ -40,7 +38,5 @@ size_t strlcat(char *dst, const char *src, size_t siz);
 
 size_t strlcpy(char *dst, const char *src, size_t siz);
 size_t strlcat(char *dst, const char *src, size_t siz);
-
-#endif /* __CINT__ */
 
 #endif /* ROOT_strlcpy */

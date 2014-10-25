@@ -40,7 +40,7 @@ if [ `uname -s` = "Darwin" ]; then
 
    # Run GDB, strip out unwanted noise.
    $GDB -q -batch -n -x $TMPFILE $1 $2 2>&1  < /dev/null |
-   /usr/bin/sed -n \
+   sed -n \
     -e 's/^(gdb) //' \
     -e '/^#/p' \
     -e 's/\(^Thread.*\)/@\1/p' | tr "@" "\n" > $OUTFILE
@@ -86,7 +86,8 @@ else
    have_eval_command=`gdb --help 2>&1 |grep eval-command`
    if ! test "x$have_eval_command" = "x"; then
       $GDB --batch --eval-command="$backtrace" /proc/$1/exe $1 2>&1 < /dev/null |
-      /bin/sed -n \
+      sed -n \
+         -e 's,\x1B\[[0-9;]*[a-zA-Z],,g' \
          -e 's/^(gdb) //' \
          -e '/^#/p' \
          -e '/^   /p' \
@@ -95,7 +96,7 @@ else
       $GDB -q -n /proc/$1/exe $1 <<EOF 2>&1 |
    $backtrace
 EOF
-      /bin/sed -n \
+      sed -n \
          -e 's/^(gdb) //' \
          -e '/^#/p' \
          -e '/^   /p' \

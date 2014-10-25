@@ -25,8 +25,8 @@
 #include "cling/Interpreter/Transaction.h"
 
 namespace {
-  constexpr const char annoTag[] = "$clingAutoload$";
-  constexpr const size_t lenAnnoTag = sizeof(annoTag) - 1;
+  static const char annoTag[] = "$clingAutoload$";
+  static const size_t lenAnnoTag = sizeof(annoTag) - 1;
 }
 
 using namespace clang;
@@ -60,6 +60,8 @@ namespace cling {
     bool m_IsStoringState;
     AutoloadCallback::FwdDeclsMap* m_Map;
     clang::Preprocessor* m_PP;
+    const clang::FileEntry* m_PrevFE;
+    std::string m_PrevFileName;
   private:
     void InsertIntoAutoloadingState (Decl* decl, llvm::StringRef annotation) {
 
@@ -76,24 +78,29 @@ namespace cling {
       bool isAngled = false;
       const DirectoryLookup* LookupFrom = 0;
       const DirectoryLookup* CurDir = 0;
-
-      FE = m_PP->LookupFile(fileNameLoc,
-                            annotation.drop_front(lenAnnoTag), isAngled,
-                            LookupFrom, CurDir, /*SearchPath*/0,
-                            /*RelativePath*/ 0, /*suggestedModule*/0,
-                            /*SkipCache*/false, /*OpenFile*/ false,
-                            /*CacheFail*/ false);
+      llvm::StringRef FileName = annotation.drop_front(lenAnnoTag);
+      if (FileName.equals(m_PrevFileName))
+        FE = m_PrevFE;
+      else {
+        FE = m_PP->LookupFile(fileNameLoc, FileName, isAngled,
+                              LookupFrom, CurDir, /*SearchPath*/0,
+                              /*RelativePath*/ 0, /*suggestedModule*/0,
+                              /*SkipCache*/ false, /*OpenFile*/ false,
+                              /*CacheFail*/ true);
+        m_PrevFE = FE;
+        m_PrevFileName = FileName;
+      }
 
       assert(FE && "Must have a valid FileEntry");
-
-      if (m_Map->find(FE) == m_Map->end())
-        (*m_Map)[FE] = std::vector<Decl*>();
-
-      (*m_Map)[FE].push_back(decl);
+      if (FE) {
+        auto& Vec = (*m_Map)[FE];
+        Vec.push_back(decl);
+      }
     }
 
   public:
-    AutoloadingVisitor() : m_IsStoringState(false), m_Map(0) {}
+    AutoloadingVisitor():
+      m_IsStoringState(false), m_Map(0), m_PP(0), m_PrevFE(0) {}
     void RemoveDefaultArgsOf(Decl* D) {
       //D = D->getMostRecentDecl();
       TraverseDecl(D);

@@ -115,109 +115,14 @@ ClassImp(TQUndoManager)
 
 static TQCommand *gActiveCommand = 0;
 
-//////////////////////// auxilary private functions ////////////////////////////
-//______________________________________________________________________________
-static char *ResolveTypes(const char *method)
-{
-   // Resolve any typedefs in the method signature. For example:
-   // func(Float_t,Int_t) becomes func(float,int).
-   // The returned string must be deleted by the user.
-
-   if (!method || !*method) return 0;
-
-   char *str = new char[strlen(method)+1];
-   if (str) strcpy(str, method);
-
-   TString res;
-
-   char *s = strtok(str, "(");
-   res = s;
-   res += "(";
-
-   Bool_t first = kTRUE;
-   while ((s = strtok(0, ",)"))) {
-      char *s1, s2 = 0;
-      if ((s1 = strchr(s, '*'))) {
-         *s1 = 0;
-         s2  = '*';
-      }
-      if (!s1 && (s1 = strchr(s, '&'))) {
-         *s1 = 0;
-         s2  = '&';
-      }
-      TDataType *dt = gROOT->GetType(s);
-      if (s1) *s1 = s2;
-      if (!first) res += ",";
-      if (dt) {
-         res += dt->GetFullTypeName();
-         if (s1) res += s1;
-      } else
-         res += s;
-      first = kFALSE;
-   }
-
-   res += ")";
-
-   delete [] str;
-   str = new char[res.Length()+1];
-   strcpy(str, res.Data());
-
-   return str;
-}
-
-//______________________________________________________________________________
-static char *CompressName(const char *method_name)
-{
-   // Removes "const" words and blanks from full (with prototype)
-   // method name.
-   //
-   //  Example: CompressName(" Draw(const char *, const char *,
-   //                               Option_t * , Int_t , Int_t)")
-   //
-   // Returns the string "Draw(char*,char*,char*,int,int)"
-   // The returned string must be deleted by the user.
-
-   if (!method_name || !*method_name) return 0;
-
-   char *str = new char[strlen(method_name)+1];
-   if (str) strcpy(str, method_name);
-
-   char *tmp = str;
-
-   // substitute "const" with white spaces
-   while ((tmp = strstr(tmp,"const"))) {
-      for (int i = 0; i < 5; i++) *(tmp+i) = ' ';
-   }
-
-   tmp = str;
-   char *s;
-   s = str;
-
-   Bool_t quote = kFALSE;
-   while (*tmp) {
-      if (*tmp == '\"')
-         quote = quote ? kFALSE : kTRUE;
-      if (*tmp != ' ' || quote)
-         *s++ = *tmp;
-      tmp++;
-   }
-   *s = '\0';
-
-   s = ResolveTypes(str);
-
-   delete [] str;
-
-   return s;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
 void TQCommand::Init(const char *clname, void *obj, const char *redo, const char *undo)
 {
    // common protected method used in several constructors
 
-   char *credo = CompressName(redo);
-   char *cundo = CompressName(undo);
+   TString credo( CompressName(redo) );
+   TString cundo( CompressName(undo) );
 
    fNRargs = fNUargs = -1;
    fNewDelete = kFALSE;
@@ -230,9 +135,6 @@ void TQCommand::Init(const char *clname, void *obj, const char *redo, const char
    fUndoArgs = 0;
    fStatus = 0;
    fState = 0;
-
-   delete [] credo;
-   delete [] cundo;
 
    if (!obj && !redo && !undo) { // macros
       fName = clname;

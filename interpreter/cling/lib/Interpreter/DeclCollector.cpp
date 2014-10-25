@@ -12,6 +12,7 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
 
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclGroup.h"
@@ -31,8 +32,24 @@ namespace cling {
     return D->isFromASTFile();
   }
 
+  bool DeclCollector::comesFromASTReader(const Decl* D) const {
+    // The operation is const but clang::DeclGroupRef doesn't allow us to
+    // express it.
+    return comesFromASTReader(DeclGroupRef(const_cast<Decl*>(D)));
+  }
+
   // pin the vtable here.
   DeclCollector::~DeclCollector() { }
+
+  void DeclCollector::AddedCXXImplicitMember(const CXXRecordDecl *RD,
+                                             const Decl *D) {
+    assert(D->isImplicit());
+    // We need to mark the decls coming from the modules
+    if (comesFromASTReader(RD) || comesFromASTReader(D)) {
+      Decl* implicitD = const_cast<Decl*>(D);
+      implicitD->addAttr(UsedAttr::CreateImplicit(implicitD->getASTContext()));
+    }
+  }
 
   bool DeclCollector::HandleTopLevelDecl(DeclGroupRef DGR) {
     Transaction::DelayCallInfo DCI(DGR, Transaction::kCCIHandleTopLevelDecl);

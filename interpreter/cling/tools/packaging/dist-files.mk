@@ -18,16 +18,16 @@
 ###############################################################################
 
 BIN_FILES := \
-  bin/cling@EXEEXT@
+  bin/cling@EXEEXT@ 
 # CAUTION: The trailing space above is needed. DO NOT delete.
 
 DOCS_FILES := \
   docs/llvm/html/cling/cling.html \
   docs/llvm/html/cling/manpage.css \
   \
-  docs/llvm/ps/cling.ps
+  docs/llvm/ps/cling.ps 
 # CAUTION: The trailing space above is needed. DO NOT delete.
-
+  
 INCLUDE_CLANG_FILES := \
   include/Analysis/Analyses/CFGReachabilityAnalysis.h \
   include/Analysis/Analyses/Consumed.h \
@@ -464,7 +464,7 @@ INCLUDE_CLANG_FILES := \
   include/clang/Tooling/RefactoringCallbacks.h \
   include/clang/Tooling/Refactoring.h \
   include/clang/Tooling/ReplacementsYaml.h \
-  include/clang/Tooling/Tooling.h
+  include/clang/Tooling/Tooling.h 
 # CAUTION: The trailing space above is needed. DO NOT delete.
 
 INCLUDE_CLANG_C_FILES := \
@@ -473,7 +473,7 @@ INCLUDE_CLANG_C_FILES := \
   include/clang-c/CXErrorCode.h \
   include/clang-c/CXString.h \
   include/clang-c/Index.h \
-  include/clang-c/Platform.h
+  include/clang-c/Platform.h 
 # CAUTION: The trailing space above is needed. DO NOT delete.
 
 INCLUDE_CLING_FILES := \
@@ -501,7 +501,7 @@ INCLUDE_CLING_FILES := \
   include/cling/UserInterface/CompilationException.h \
   include/cling/UserInterface/UserInterface.h \
   \
-  include/cling/Utils/AST.h
+  include/cling/Utils/AST.h 
 # CAUTION: The trailing space above is needed. DO NOT delete.
 
 INCLUDE_LLVM_FILES := \
@@ -1088,7 +1088,7 @@ INCLUDE_LLVM_FILES := \
   include/llvm/Transforms/Utils/UnifyFunctionExitNodes.h \
   include/llvm/Transforms/Utils/UnrollLoop.h \
   include/llvm/Transforms/Utils/ValueMapper.h \
-  include/llvm/Transforms/Vectorize.h
+  include/llvm/Transforms/Vectorize.h 
 # CAUTION: The trailing space above is needed. DO NOT delete.
 
 INCLUDE_LLVM_C_FILES := \
@@ -1111,61 +1111,61 @@ INCLUDE_LLVM_C_FILES := \
   include/llvm-c/Transforms/IPO.h \
   include/llvm-c/Transforms/PassManagerBuilder.h \
   include/llvm-c/Transforms/Scalar.h \
-  include/llvm-c/Transforms/Vectorize.h
+  include/llvm-c/Transforms/Vectorize.h 
 # CAUTION: The trailing space above is needed. DO NOT delete.
 
 LIB_CLANG_HEADERS := \
-  lib/clang/3.5/include/altivec.h \
-  lib/clang/3.5/include/ammintrin.h \
-  lib/clang/3.5/include/arm_neon.h \
-  lib/clang/3.5/include/avx2intrin.h \
-  lib/clang/3.5/include/avxintrin.h \
-  lib/clang/3.5/include/bmi2intrin.h \
-  lib/clang/3.5/include/bmiintrin.h \
-  lib/clang/3.5/include/cpuid.h \
-  lib/clang/3.5/include/emmintrin.h \
-  lib/clang/3.5/include/f16cintrin.h \
-  lib/clang/3.5/include/float.h \
-  lib/clang/3.5/include/fma4intrin.h \
-  lib/clang/3.5/include/fmaintrin.h \
-  lib/clang/3.5/include/immintrin.h \
-  lib/clang/3.5/include/Intrin.h \
-  lib/clang/3.5/include/iso646.h \
-  lib/clang/3.5/include/limits.h \
-  lib/clang/3.5/include/lzcntintrin.h \
-  lib/clang/3.5/include/mm3dnow.h \
-  lib/clang/3.5/include/mmintrin.h \
-  lib/clang/3.5/include/mm_malloc.h \
-  lib/clang/3.5/include/module.map \
-  lib/clang/3.5/include/nmmintrin.h \
-  lib/clang/3.5/include/pmmintrin.h \
-  lib/clang/3.5/include/popcntintrin.h \
-  lib/clang/3.5/include/prfchwintrin.h \
-  lib/clang/3.5/include/rdseedintrin.h \
-  lib/clang/3.5/include/rtmintrin.h \
-  lib/clang/3.5/include/shaintrin.h \
-  lib/clang/3.5/include/smmintrin.h \
-  lib/clang/3.5/include/stdalign.h \
-  lib/clang/3.5/include/stdarg.h \
-  lib/clang/3.5/include/stdbool.h \
-  lib/clang/3.5/include/stddef.h \
-  lib/clang/3.5/include/stdint.h \
-  lib/clang/3.5/include/stdnoreturn.h \
-  lib/clang/3.5/include/tbmintrin.h \
-  lib/clang/3.5/include/tgmath.h \
-  lib/clang/3.5/include/tmmintrin.h \
-  lib/clang/3.5/include/unwind.h \
-  lib/clang/3.5/include/varargs.h \
-  lib/clang/3.5/include/__wmmintrin_aes.h \
-  lib/clang/3.5/include/wmmintrin.h \
-  lib/clang/3.5/include/__wmmintrin_pclmul.h \
-  lib/clang/3.5/include/x86intrin.h \
-  lib/clang/3.5/include/xmmintrin.h \
-  lib/clang/3.5/include/xopintrin.h
+  lib/clang/@CLANG_VERSION@/include/altivec.h \
+  lib/clang/@CLANG_VERSION@/include/ammintrin.h \
+  lib/clang/@CLANG_VERSION@/include/arm_neon.h \
+  lib/clang/@CLANG_VERSION@/include/avx2intrin.h \
+  lib/clang/@CLANG_VERSION@/include/avxintrin.h \
+  lib/clang/@CLANG_VERSION@/include/bmi2intrin.h \
+  lib/clang/@CLANG_VERSION@/include/bmiintrin.h \
+  lib/clang/@CLANG_VERSION@/include/cpuid.h \
+  lib/clang/@CLANG_VERSION@/include/emmintrin.h \
+  lib/clang/@CLANG_VERSION@/include/f16cintrin.h \
+  lib/clang/@CLANG_VERSION@/include/float.h \
+  lib/clang/@CLANG_VERSION@/include/fma4intrin.h \
+  lib/clang/@CLANG_VERSION@/include/fmaintrin.h \
+  lib/clang/@CLANG_VERSION@/include/immintrin.h \
+  lib/clang/@CLANG_VERSION@/include/Intrin.h \
+  lib/clang/@CLANG_VERSION@/include/iso646.h \
+  lib/clang/@CLANG_VERSION@/include/limits.h \
+  lib/clang/@CLANG_VERSION@/include/lzcntintrin.h \
+  lib/clang/@CLANG_VERSION@/include/mm3dnow.h \
+  lib/clang/@CLANG_VERSION@/include/mmintrin.h \
+  lib/clang/@CLANG_VERSION@/include/mm_malloc.h \
+  lib/clang/@CLANG_VERSION@/include/module.map \
+  lib/clang/@CLANG_VERSION@/include/nmmintrin.h \
+  lib/clang/@CLANG_VERSION@/include/pmmintrin.h \
+  lib/clang/@CLANG_VERSION@/include/popcntintrin.h \
+  lib/clang/@CLANG_VERSION@/include/prfchwintrin.h \
+  lib/clang/@CLANG_VERSION@/include/rdseedintrin.h \
+  lib/clang/@CLANG_VERSION@/include/rtmintrin.h \
+  lib/clang/@CLANG_VERSION@/include/shaintrin.h \
+  lib/clang/@CLANG_VERSION@/include/smmintrin.h \
+  lib/clang/@CLANG_VERSION@/include/stdalign.h \
+  lib/clang/@CLANG_VERSION@/include/stdarg.h \
+  lib/clang/@CLANG_VERSION@/include/stdbool.h \
+  lib/clang/@CLANG_VERSION@/include/stddef.h \
+  lib/clang/@CLANG_VERSION@/include/stdint.h \
+  lib/clang/@CLANG_VERSION@/include/stdnoreturn.h \
+  lib/clang/@CLANG_VERSION@/include/tbmintrin.h \
+  lib/clang/@CLANG_VERSION@/include/tgmath.h \
+  lib/clang/@CLANG_VERSION@/include/tmmintrin.h \
+  lib/clang/@CLANG_VERSION@/include/unwind.h \
+  lib/clang/@CLANG_VERSION@/include/varargs.h \
+  lib/clang/@CLANG_VERSION@/include/__wmmintrin_aes.h \
+  lib/clang/@CLANG_VERSION@/include/wmmintrin.h \
+  lib/clang/@CLANG_VERSION@/include/__wmmintrin_pclmul.h \
+  lib/clang/@CLANG_VERSION@/include/x86intrin.h \
+  lib/clang/@CLANG_VERSION@/include/xmmintrin.h \
+  lib/clang/@CLANG_VERSION@/include/xopintrin.h 
 # CAUTION: The trailing space above is needed. DO NOT delete.
 
 SHARE_FILES := \
-  share/man/man1/cling.1
+  share/man/man1/cling.1 
 # CAUTION: The trailing space above is needed. DO NOT delete.
 
 INCLUDE_FILES := \

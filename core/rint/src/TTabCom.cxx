@@ -167,20 +167,22 @@ TTabCom *gTabCom = 0;
 //
 
 //______________________________________________________________________________
-TTabCom::TTabCom()
+TTabCom::TTabCom():
+   fpClasses(0),
+   fPrevInterpMarker(0),
+   fpDirectives(0),
+   fpEnvVars(0),
+   fpFiles(0),
+   fpGlobals(0),
+   fpPragmas(0),
+   fpSysIncFiles(0),
+   fpUsers(0),
+   fBuf(0),
+   fpLoc(0),
+   fVarIsPointer(kFALSE),
+   fLastIter(0)
 {
    // Default constructor.
-   fpDirectives = 0;
-   fpPragmas = 0;
-   fpClasses = 0;
-   fpUsers = 0;
-   fBuf = 0;
-   fpLoc = 0;
-   fpEnvVars = 0;
-   fpFiles = 0;
-   fpSysIncFiles = 0;
-   fVarIsPointer = kFALSE;
-   fLastIter = 0;
 
    InitPatterns();
 }
@@ -211,7 +213,6 @@ void TTabCom::ClearClasses()
    // Clear classes and namespace collections.
 
    if (fpClasses) {
-      fpClasses->Delete(0);
       delete fpClasses;
       fpClasses = 0;
    }
@@ -412,30 +413,28 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       // Iterate over the table from the map file.
       THashList* entries = gInterpreter->GetMapfile()->GetTable();
       TIter next(entries);
-      TString classname;
       while (const auto key = next()) {
-         classname = key->GetName();
          // This is not needed with the new rootmap format
-         classname.ReplaceAll("@@", "::");
-         classname.ReplaceAll(" ", "-");
-         if (classname.BeginsWith("Library."))
-            classname.Remove(0, 7);
+         const char* className = key->GetName();
+         if (strncmp(className, "Library.", 8))
+            className += 8;
 
-         if (!classname.EndsWith(".h"))
-            fpClasses->Add(new TObjString(classname));
+         if (!strstr(className, ".h"))
+            fpClasses->Add(new TObjString(className));
       }
-      // Iterate over the ClassTable.
-      Int_t totalNumberOfClasses = gClassTable->Classes();
-      // start from begining
-      gClassTable->Init();
-      // iterate over classes
-      for (Int_t i = 0; i < totalNumberOfClasses; i++) {
-         // get class name
-         const char *cname = gClassTable->Next();
-         if (!fpClasses->FindObject(cname)) {
-            fpClasses->Add(new TObjString(cname));
+   }
+
+   if (fPrevInterpMarker != gInterpreter->GetInterpreterStateMarker()) {
+      ClassInfo_t* ci = gInterpreter->ClassInfo_Factory();
+      while (gInterpreter->ClassInfo_Next(ci)) {
+         const char* className = gInterpreter->ClassInfo_FullName(ci);
+         if (strstr(className, "(anonymous)"))
+            continue;
+         if (!fpClasses->FindObject(className)) {
+            fpClasses->Add(new TObjString(className));
          }
       }
+      gInterpreter->ClassInfo_Delete(ci);
    }
 
    return fpClasses;
@@ -1704,7 +1703,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          IfDebug(std::cerr << "namesp: " << '"' << namesp << '"' << std::endl);
 
          // Make sure autoloading happens (if it can).
-         delete TryMakeClassFromClassName(namesp);
+         TryMakeClassFromClassName(namesp);
 
          TContainer *pList = new TContainer;
          // Add all classes to pList that contain the prefix, i.e. are in the
@@ -1740,8 +1739,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          pos = Complete("[^: ]*$", pList, "", out);
 
          delete pList;
-         if (pClass)
-            delete pClass;
 
          if (context != original_context)
             pos = -2;
@@ -1809,7 +1806,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          }
 
          delete pList;
-         delete pClass;
 
          if (context != original_context)
             pos = -2;
@@ -1905,7 +1901,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
 
          // cleanup
          delete pList;
-         delete pClass;
 
          if (context != original_context)
             pos = -2;
@@ -2006,7 +2001,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
 
          // cleanup
          delete pList;
-         delete pClass;
 
          if (context != original_context)
             pos = -2;
@@ -2171,7 +2165,7 @@ TClass *TTabCom::MakeClassFromClassName(const char className[]) const
    // the TClass constructor will print a Warning message for classes that don't exist
    // so, ignore warnings temporarily.
    NoMsg(kWarning);
-   TClass *pClass = new TClass(className);
+   TClass *pClass = TClass::GetClass(className);
    NoMsg(-1);
 
    // make sure "className" exists
@@ -2196,15 +2190,8 @@ TClass *TTabCom::TryMakeClassFromClassName(const char className[]) const
    // the TClass constructor will print a Warning message for classes that don't exist
    // so, ignore warnings temporarily.
    NoMsg(kWarning);
-   TClass *pClass = new TClass(className);
+   TClass *pClass = TClass::GetClass(className);
    NoMsg(-1);
-
-   // make sure "className" exists
-   // if (pClass->Size() == 0) {   //namespace has 0 size
-   if (pClass->GetListOfAllPublicMethods()->GetSize() == 0 &&
-       pClass->GetListOfAllPublicDataMembers()->GetSize() == 0) {
-      return 0;
-   }
 
    return pClass;
 }
@@ -2320,7 +2307,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
             //              if (returnName[returnName.Length()-1] == '*')
             //                  printf("It's a pointer!\n");
 
-            TClass *mclass = new TClass(returnName.Data());
+            TClass *mclass = TClass::GetClass(returnName.Data());
             return mclass;
          }
 
@@ -2361,7 +2348,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
                fVarIsPointer = kFALSE;
             }
 
-            TClass *mclass = new TClass(returnName.Data());
+            TClass *mclass = TClass::GetClass(returnName.Data());
             return mclass;
          }
       }
@@ -2502,7 +2489,9 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
       }
    }
 
-   return new TClass(className);
+   className.Strip(TString::kBoth);
+
+   return TClass::GetClass(className);
 }
 
 //______________________________________________________________________________

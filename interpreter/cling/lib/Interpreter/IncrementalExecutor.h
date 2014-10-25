@@ -106,9 +106,11 @@ namespace cling {
     ///
     AtExitFunctions m_AtExitFuncs;
 
+#if 0 // See FIXME in IncrementalExecutor.cpp
     ///\brief The diagnostics engine, printing out issues coming from the
     /// incremental executor.
     clang::DiagnosticsEngine& m_Diags;
+#endif
 
   public:
     enum ExecutionResult {
@@ -189,6 +191,11 @@ namespace cling {
     /// that the interpreter can call the object destructors at the right time.
     ///
     void remapSymbols();
+
+    ///\brief Report and empty m_unresolvedSymbols.
+    ///\return true if m_unresolvedSymbols was non-empty.
+    bool diagnoseUnresolvedSymbols(llvm::StringRef trigger,
+                                   llvm::StringRef title = llvm::StringRef());
 
     static void* HandleMissingFunction(const std::string&);
     static void* NotifyLazyFunctionCreators(const std::string&);

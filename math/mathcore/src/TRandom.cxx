@@ -563,7 +563,7 @@ void TRandom::SetSeed(UInt_t seed)
       TUUID u;
       UChar_t uuid[16];
       u.GetUUID(uuid);
-      fSeed  =  int(uuid[3])*16777216 + int(uuid[2])*65536 + int(uuid[1])*256 + int(uuid[0]);
+      fSeed  =  UInt_t(uuid[3])*16777216 + UInt_t(uuid[2])*65536 + UInt_t(uuid[1])*256 + UInt_t(uuid[0]);
    } else {
       fSeed = seed;
    }

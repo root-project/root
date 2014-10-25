@@ -46,6 +46,7 @@ public:
    Int_t    AutoLoad(const char *classname);
    void     ClearFileBusy();
    void     ClearStack();
+   void     Declare(const char* code);
    void     EnableAutoLoading();
    void     EndOfLineAction();
    void     Initialize();
@@ -76,7 +77,7 @@ public:
    void     UpdateListOfGlobalFunctions();
    void     UpdateListOfTypes();
    void     SetClassInfo(TClass *cl, Bool_t reload = kFALSE);
-   Bool_t   CheckClassInfo(const char *name, Bool_t autoload = kTRUE);
+   Bool_t   CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE);
    Bool_t   CheckClassTemplate(const char *name);
    Long_t   Calc(const char *line, EErrorCode* error = 0);
    void     CreateListOfBaseClasses(TClass *cl);

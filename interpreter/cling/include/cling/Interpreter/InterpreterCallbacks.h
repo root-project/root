@@ -51,10 +51,9 @@ namespace cling {
     Interpreter* m_Interpreter; // we don't own
 
     ///\brief Our custom SemaExternalSource, translating interesting events into
-    /// callbacks.
+    /// callbacks. RefOwned by Sema & ASTContext.
     ///
-    ///This must be a RefCntPtr has internally the ASTContext is using one too.
-    llvm::IntrusiveRefCntPtr<InterpreterExternalSemaSource> m_ExternalSemaSource;
+    InterpreterExternalSemaSource* m_ExternalSemaSource;
 
     ///\brief Our custom ASTDeserializationListener, translating interesting
     /// events into callbacks.

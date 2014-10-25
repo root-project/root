@@ -29,17 +29,23 @@ ClassImp(TPaveStats)
 /* Begin_Html
 <center><h2>The histogram statistics painter class</h2></center>
 A PaveStats is a PaveText to draw histogram statistics and fit parameters.
+<ul>
+<li><a href="#PS01">Statistics Display</a>
+<li><a href="#PS02">Fit Statistics</a>
+<li><a href="#PS03">Statistics box editing</a>
+</ul>
 
-<a name="HP07"></a><h3>Statistics Display</h3>
+<a name="PS01"></a><h3>Statistics Display</h3>
 
 The type of information shown in the histogram statistics box can be selected
 with:
 <pre>
       gStyle->SetOptStat(mode);
 </pre>
-The "<tt>mode</tt>" has up to nine digits that can be set to on(1 or 2), off(0).
+
+<p>The "<tt>mode</tt>" has up to nine digits that can be set to on (1 or 2), off (0).
 <pre>
-      mode = iourmen  (default = 000001111)
+      mode = ksiourmen  (default = 000001111)
       k = 1;  kurtosis printed
       k = 2;  kurtosis and kurtosis error printed
       s = 1;  skewness printed
@@ -54,7 +60,8 @@ The "<tt>mode</tt>" has up to nine digits that can be set to on(1 or 2), off(0).
       e = 1;  number of entries printed
       n = 1;  name of histogram is printed
 </pre>
-For example:
+
+<p>For example:
 <pre>
       gStyle->SetOptStat(11);
 </pre>
@@ -66,7 +73,7 @@ displays the name of histogram, mean value and RMS.
 
 <p><b>WARNING 1:</b> never do:
 <pre>
-      <s>gStyle->SetOptStat(000111);</s>
+      <s>gStyle->SetOptStat(0001111);</s>
 </pre>
 but instead do:
 <pre>
@@ -86,12 +93,12 @@ To print only the name of the histogram do:
 <pre>
       gStyle->SetOptStat(1000000001);
 </pre>
-<b>NOTE</b> that in case of 2D histograms, when selecting only underflow
+
+<p><b>NOTE</b> that in case of 2D histograms, when selecting only underflow
 (10000) or overflow (100000), the statistics box will show all combinations
 of underflow/overflows and not just one single number.
 
-<p>The parameter mode can be any combination of the letters
-<tt>kKsSiourRmMen</tt>
+<p>The parameter mode can be any combination of the letters <tt>kKsSiourRmMen</tt>
 <pre>
       k :  kurtosis printed
       K :  kurtosis and kurtosis error printed
@@ -107,15 +114,18 @@ of underflow/overflows and not just one single number.
       e :  number of entries printed
       n :  name of histogram is printed
 </pre>
-For example, to print only name of histogram and number of entries do:
+
+<p>For example, to print only name of histogram and number of entries do:
 <pre>
       gStyle->SetOptStat("ne");
 </pre>
-To print only the name of the histogram do:
+
+<p>To print only the name of the histogram do:
 <pre>
       gStyle->SetOptStat("n");
 </pre>
-The default value is:
+
+<p>The default value is:
 <pre>
       gStyle->SetOptStat("nemr");
 </pre>
@@ -131,7 +141,8 @@ updated with the current histogram parameters.
       Root > h->Draw()
       Root > TPaveStats *st = (TPaveStats*)h->FindObject("stats")
 </pre>
-because after <tt>h->Draw()</tt> the histogram is automatically painted. But
+
+<p>because after <tt>h->Draw()</tt> the histogram is automatically painted. But
 in a script file the painting should be forced using <tt>gPad->Update()</tt>
 in order to make sure the statistics box is created:
 <pre>
@@ -153,7 +164,8 @@ its position with these lines ("<tt>h</tt>" being the pointer to the histogram):
       Root > st->SetX1NDC(newx1); //new x start position
       Root > st->SetX2NDC(newx2); //new x end position
 </pre>
-To change the type of information for an histogram with an existing
+
+<p>To change the type of information for an histogram with an existing
 <tt>TPaveStats</tt> one should do:
 <pre>
       st->SetOptStat(mode);
@@ -165,13 +177,14 @@ Where "<tt>mode</tt>" has the same meaning than when calling
 <pre>
       h->SetStats(0)
 </pre>
-and activate it again with:
+
+<p>and activate it again with:
 <pre>
       h->SetStats(1).
 </pre>
 
 
-<a name="HP08"></a><h3>Fit Statistics</h3>
+<a name="PS02"></a><h3>Fit Statistics</h3>
 
 
 The type of information about fit parameters printed in the histogram statistics
@@ -195,7 +208,15 @@ print fit probability, parameter names/values and errors.
 </ol>
 Note: <tt>gStyle->SetOptFit(1)</tt> means "default value", so it is equivalent
 to <tt>gStyle->SetOptFit(111)</tt>
-End_Html */
+
+
+<a name="PS03"></a><h3>Statistics box editing</h3>
+
+The following example show how to remove and add a line in a statistics box.
+End_Html
+Begin_Macro(source)
+../../../tutorials/hist/statsEditing.C
+End_Macro */
 
 
 const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat

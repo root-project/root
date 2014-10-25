@@ -294,6 +294,10 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          if (!name.compare(0, 22, "ROOT::R__dummyStreamer")) {
             return kNoMatch;
          }
+         if (name.find("(anonymous namespace)") != std::string::npos) {
+            // Reject items declared in anonymous namespace
+            return kNoMatch;
+         }
          if (fHasPatternAttribute) {
             if (CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
                const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);

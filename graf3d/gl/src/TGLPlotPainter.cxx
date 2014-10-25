@@ -1267,12 +1267,12 @@ Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins,
    const Bool_t maximum = hist->GetMaximumStored() != -1111;
    const Double_t margin = gStyle->GetHistTopMargin();
 
-   zRange.second = hist->GetCellContent(xBins.first, yBins.first), zRange.first = zRange.second;
+   zRange.second = hist->GetBinContent(hist->GetBin(xBins.first, yBins.first)), zRange.first = zRange.second;
    Double_t summ = 0.;
 
    for (Int_t i = xBins.first; i <= xBins.second; ++i) {
       for (Int_t j = yBins.first; j <= yBins.second; ++j) {
-         Double_t val = hist->GetCellContent(i, j);
+         Double_t val = hist->GetBinContent(hist->GetBin(i, j));
          if (val > 0. && errors)
             val = TMath::Max(val, val + hist->GetCellError(i, j));
          zRange.second = TMath::Max(val, zRange.second);

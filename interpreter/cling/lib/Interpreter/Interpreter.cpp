@@ -233,6 +233,11 @@ namespace cling {
     for (size_t i = 0, e = m_StoredStates.size(); i != e; ++i)
       delete m_StoredStates[i];
     getCI()->getDiagnostics().getClient()->EndSourceFile();
+    // We want to keep the callback alive during the shutdown of Sema, CodeGen
+    // and the ASTContext. For that to happen we shut down the IncrementalParser
+    // explicitly, before the implicit destruction (through the unique_ptr) of
+    // the callbacks.
+    m_IncrParser.reset(0);
   }
 
   const char* Interpreter::getVersion() const {
@@ -1038,7 +1043,8 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::loadFile(const std::string& filename,
-                        bool allowSharedLib /*=true*/) {
+                        bool allowSharedLib /*=true*/,
+                        Transaction** T /*= 0*/) {
     DynamicLibraryManager* DLM = getDynamicLibraryManager();
     std::string canonicalLib = DLM->lookupLibrary(filename);
     if (allowSharedLib && !canonicalLib.empty()) {
@@ -1057,7 +1063,7 @@ namespace cling {
 
     std::string code;
     code += "#include \"" + filename + "\"";
-    CompilationResult res = declare(code);
+    CompilationResult res = declare(code, T);
     return res;
   }
 

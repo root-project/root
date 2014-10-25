@@ -175,8 +175,8 @@ extern "C" {
 char *dlerror() {
    static char Msg[1000];
    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
-	             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
-				 sizeof(Msg), NULL);
+                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
+                 sizeof(Msg), NULL);
    return Msg;
 }
 #endif
@@ -661,20 +661,7 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
       // vector is special: we need to check whether
       // vector::iterator is a typedef to pointer or a
       // class.
-      static std::set<std::string> sSTLTypes;
-      if (sSTLTypes.empty()) {
-         sSTLTypes.insert("vector");
-         sSTLTypes.insert("list");
-         sSTLTypes.insert("deque");
-         sSTLTypes.insert("map");
-         sSTLTypes.insert("multimap");
-         sSTLTypes.insert("set");
-         sSTLTypes.insert("multiset");
-         sSTLTypes.insert("queue");
-         sSTLTypes.insert("priority_queue");
-         sSTLTypes.insert("stack");
-         sSTLTypes.insert("iterator");
-      }
+      static const std::set<std::string> sSTLTypes {"vector","list","deque","map","multimap","set","multiset","queue","priority_queue","stack","iterator"};
       std::vector<std::string>::const_iterator it;
       std::string fileContent("");
       for (it = headers.begin(); it != headers.end(); ++it) {
@@ -990,6 +977,9 @@ TCling::TCling(const char *name, const char *title)
       clingArgsStorage.push_back(interpInclude);
 
       std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
+      if (gSystem->Getenv("ROOT_PCH")) {
+         pchFilename = gSystem->Getenv("ROOT_PCH");
+      }
       clingArgsStorage.push_back("-include-pch");
       clingArgsStorage.push_back(pchFilename);
 
@@ -1097,13 +1087,13 @@ TCling::TCling(const char *name, const char *title)
    //optind = 1;  // make sure getopt() works in the main program
 #endif // R__WIN32
 
-   if (!fromRootCling) {
-      fInterpreter->enableDynamicLookup();
-   }
-
    // Attach cling callbacks
    fClingCallbacks = new TClingCallbacks(fInterpreter);
    fInterpreter->setCallbacks(fClingCallbacks);
+
+   if (!fromRootCling) {
+      fInterpreter->enableDynamicLookup();
+   }
 }
 
 
@@ -1203,6 +1193,13 @@ bool TCling::LoadPCM(TString pcmFileName,
 
    if (!gSystem->FindFile(searchPath, pcmFileName))
       return kFALSE;
+
+   // Prevent the ROOT-PCMs hitting this during auto-load during
+   // JITting - which will cause recursive compilation. The PCMs that
+   // have their headers in the PCH have empty keys which don't trigger
+   // TVirtualStreamerInfo::Factory() - which means that the plugin gets
+   // called and JITted during some random library load instead.
+   TVirtualStreamerInfo::Factory();
 
    if (gROOT->IsRootFile(pcmFileName)) {
       Int_t oldDebug = gDebug;
@@ -1905,14 +1902,17 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 
    const clang::ASTContext& astContext = fInterpreter->getCI()->getASTContext();
    const clang::Decl *scopeDecl = 0;
+   const clang::Type *recordType = 0;
 
    if (cl->GetClassInfo()) {
       TClingClassInfo * clingCI = (TClingClassInfo *)cl->GetClassInfo();
       scopeDecl = clingCI->GetDecl();
+      recordType = clingCI->GetType();
    } else {
       const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
       // Diags will complain about private classes:
-      scopeDecl = lh.findScope(clname, cling::LookupHelper::NoDiagnostics);
+      scopeDecl = lh.findScope(clname, cling::LookupHelper::NoDiagnostics,
+                               &recordType);
    }
    if (!scopeDecl) {
       Error("InspectMembers", "Cannot find Decl for class %s", clname);
@@ -1947,7 +1947,13 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
         eField = recordDecl->field_end(); iField != eField;
         ++iField, ++iNField) {
 
-      clang::QualType memberQT = cling::utils::Transform::GetPartiallyDesugaredType(astContext, iField->getType(), fNormalizedCtxt->GetConfig(), false /* fully qualify */);
+
+      clang::QualType memberQT = iField->getType();
+      if (recordType) {
+         // if (we_need_to_do_the_subst_because_the_class_is_a_template_instance_of_double32_t)
+         memberQT = ROOT::TMetaUtils::ReSubstTemplateArg(memberQT, recordType);
+      }
+      memberQT = cling::utils::Transform::GetPartiallyDesugaredType(astContext, memberQT, fNormalizedCtxt->GetConfig(), false /* fully qualify */);
       if (memberQT.isNull()) {
          std::string memberName;
          llvm::raw_string_ostream stream(memberName);
@@ -1976,6 +1982,10 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
          ispointer = true;
          clang::QualType ptrQT
             = memNonPtrType->getAs<clang::PointerType>()->getPointeeType();
+         if (recordType) {
+            // if (we_need_to_do_the_subst_because_the_class_is_a_template_instance_of_double32_t)
+            ptrQT = ROOT::TMetaUtils::ReSubstTemplateArg(ptrQT, recordType);
+         }
          ptrQT = cling::utils::Transform::GetPartiallyDesugaredType(astContext, ptrQT, fNormalizedCtxt->GetConfig(), false /* fully qualify */);
          if (ptrQT.isNull()) {
             std::string memberName;
@@ -2178,6 +2188,30 @@ void TCling::ClearStack()
    // Delete existing temporary values.
 
    // No-op for cling due to cling::Value.
+}
+
+//______________________________________________________________________________
+void TCling::Declare(const char* code)
+{
+   // Declare code to the interpreter, without any of the interpreter actions
+   // that could trigger a re-interpretation of the code. I.e. make cling
+   // behave like a compiler: no dynamic lookup, no input wrapping for
+   // subsequent execution, no automatic provision of declarations but just a
+   // plain #include.
+
+   int oldload = SetClassAutoloading(0);
+   int oldparse = SetClassAutoparsing(0);
+   bool oldDynLookup = fInterpreter->isDynamicLookupEnabled();
+   fInterpreter->enableDynamicLookup(false);
+   bool oldRawInput = fInterpreter->isRawInputEnabled();
+   fInterpreter->enableRawInput(true);
+
+   LoadText(code);
+
+   fInterpreter->enableRawInput(oldRawInput);
+   fInterpreter->enableDynamicLookup(oldDynLookup);
+   SetClassAutoloading(oldload);
+   SetClassAutoparsing(oldparse);
 }
 
 //______________________________________________________________________________
@@ -2416,7 +2450,8 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || strstr(filename, "/usr/lib/liblangid")
        || strstr(filename, "/usr/lib/libCRFSuite")
        || strstr(filename, "/usr/lib/libpam")
-       || strstr(filename, "/usr/lib/libOpenScriptingUtil"))
+       || strstr(filename, "/usr/lib/libOpenScriptingUtil")
+       || strstr(filename, "/usr/lib/libextension"))
       return;
 #elif defined(__CYGWIN__)
    // Check that this is not a system library
@@ -2818,6 +2853,9 @@ void TCling::UpdateListOfTypes()
 void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 {
    // Set pointer to the TClingClassInfo in TClass.
+   // If 'reload' is true, (attempt to) generate a new ClassInfo even if we
+   // already have one.
+
    R__LOCKGUARD2(gInterpreterMutex);
    if (cl->fClassInfo && !reload) {
       return;
@@ -2832,26 +2870,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    std::string name(cl->GetName());
    TClingClassInfo* info = new TClingClassInfo(fInterpreter, name.c_str());
    if (!info->IsValid()) {
-      bool cint_class_exists = CheckClassInfo(name.c_str());
-      if (!cint_class_exists) {
-         // Try resolving all the typedefs (even Float_t and Long64_t).
-         name = TClassEdit::ResolveTypedef(name.c_str(), kTRUE);
-         if (name == cl->GetName()) {
-            // No typedefs found, all done.
-            return;
-         }
-         // Try the new name.
-         cint_class_exists = CheckClassInfo(name.c_str());
-         if (!cint_class_exists) {
-            // Nothing found, nothing to do.
-            return;
-         }
-      }
-      info = new TClingClassInfo(fInterpreter, name.c_str());
-      if (!info->IsValid()) {
-         // Failed, done.
-         return;
-      }
+      return;
    }
    cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transfering ownership here.
    // In case a class contains an external enum, the enum will be seen as a
@@ -2902,20 +2921,24 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 }
 
 //______________________________________________________________________________
-Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
+Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/ )
 {
-   // Checks if a class with the specified name is defined in Cling.
-   // Returns kFALSE is class is not defined.
+   // Checks if an entity with the specified name is defined in Cling.
+   // Returns kFALSE if the entity is not defined.
+   // By default, structs, namespaces, classes, enums and unions are looked for.
+   // If the flag isClassOrNamespaceOnly is true, classes, structs and
+   // namespaces only are considered. I.e. if the name is an enum or a union,
+   // the returned value is false.
    // In the case where the class is not loaded and belongs to a namespace
    // or is nested, looking for the full class name is outputing a lots of
    // (expected) error messages.  Currently the only way to avoid this is to
    // specifically check that each level of nesting is already loaded.
    // In case of templates the idea is that everything between the outer
-   // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
+   // '<' and '>' has to be skipped, e.g.: aap<pippo<noot>::klaas>::a_class
 
    R__LOCKGUARD(gInterpreterMutex);
    static const char *anonEnum = "anonymous enum ";
-   static int cmplen = strlen(anonEnum);
+   static const int cmplen = strlen(anonEnum);
 
    if (0 == strncmp(name,anonEnum,cmplen)) {
       return kFALSE;
@@ -2990,7 +3013,10 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
          SetClassAutoloading(storeAutoload);
          return kFALSE;
       }
-      if (tci.Property() & (kIsEnum | kIsClass | kIsStruct | kIsUnion | kIsNamespace)) {
+      auto propertiesMask = isClassOrNamespaceOnly ? kIsClass | kIsStruct | kIsNamespace :
+                                                     kIsClass | kIsStruct | kIsNamespace | kIsEnum | kIsUnion;
+
+      if (tci.Property() & propertiesMask) {
          // We are now sure that the entry is not in fact an autoload entry.
          SetClassAutoloading(storeAutoload);
          return kTRUE;
@@ -3470,7 +3496,8 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
       // If it is a global enum.
       possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name);
    }
-   if (possibleEnum && isa<clang::EnumDecl>(possibleEnum)) {
+   if (possibleEnum && (possibleEnum != (clang::Decl*)-1)
+       && isa<clang::EnumDecl>(possibleEnum)) {
       return possibleEnum;
    }
    return 0;
@@ -3555,7 +3582,7 @@ TInterpreter::DeclId_t TCling::GetDataMemberWithValue(const void *ptrvalue) cons
    llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
 
    llvm::Module::global_iterator iter = module->global_begin();
-	llvm::Module::global_iterator end = module->global_end ();
+   llvm::Module::global_iterator end = module->global_end ();
    while (iter != end) {
       if ( (*iter).getType()->getElementType()->isPointerTy() ) {
          void **ptr = (void**)EE->getPointerToGlobalIfAvailable( iter );
@@ -3802,11 +3829,6 @@ void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   // This first step is likely redundant if
-   // the next step never issue any warnings.
-   if (!CheckClassInfo(name)) {
-      return ;
-   }
    TClingClassInfo cl(fInterpreter, name);
    if (!cl.IsValid()) {
       return ;
@@ -4079,9 +4101,9 @@ const char* TCling::TypeName(const char* typeDesc)
    // Return the absolute type of typeDesc.
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
    // You need to use the result immediately before it is being overwritten.
-   static char* t = 0;
-   static unsigned int tlen = 0;
-   R__LOCKGUARD(gInterpreterMutex); // Because of the static array.
+   thread_local char* t = 0;
+   thread_local unsigned int tlen = 0;
+
    unsigned int dlen = strlen(typeDesc);
    if (dlen > tlen) {
       delete[] t;
@@ -4918,9 +4940,16 @@ Int_t TCling::AutoParse(const char *cls)
             for (auto & hName : hNamesPtrs) {
                if (fParsedPayloadsAddresses.count(hName) == 1) continue;
                if (0 != fPayloads.count(normNameHash)) {
+                  float initRSSval=0.f, initVSIZEval=0.f;
+                  (void) initRSSval; // Avoid unused var warning
+                  (void) initVSIZEval;
                   if (gDebug > 0) {
                      Info("AutoParse",
                           "Parsing full payload for %s", apKey);
+                     ProcInfo_t info;
+                     gSystem->GetProcInfo(&info);
+                     initRSSval = 1e-3*info.fMemResident;
+                     initVSIZEval = 1e-3*info.fMemVirtual;
                   }
                   auto cRes = ExecAutoParse(hName, kFALSE, fInterpreter);
                   if (cRes != cling::Interpreter::kSuccess) {
@@ -4929,6 +4958,14 @@ Int_t TCling::AutoParse(const char *cls)
                   } else {
                      fParsedPayloadsAddresses.insert(hName);
                      nHheadersParsed++;
+                     if (gDebug > 0){
+                        ProcInfo_t info;
+                        gSystem->GetProcInfo(&info);
+                        float endRSSval = 1e-3*info.fMemResident;
+                        float endVSIZEval = 1e-3*info.fMemVirtual;
+                        Info("Autoparse", ">>> RSS key %s - before %.3f MB - after %.3f MB - delta %.3f MB", apKey, initRSSval, endRSSval, endRSSval-initRSSval);
+                        Info("Autoparse", ">>> VSIZE key %s - before %.3f MB - after %.3f MB - delta %.3f MB", apKey, initVSIZEval, endVSIZEval, endVSIZEval-initVSIZEval);
+                     }
                   }
                } else if (!IsLoaded(hName)) {
                   if (gDebug > 0) {
@@ -6005,6 +6042,20 @@ void TCling::CallFunc_SetArg(CallFunc_t* func, Long_t param) const
 }
 
 //______________________________________________________________________________
+void TCling::CallFunc_SetArg(CallFunc_t* func, ULong_t param) const
+{
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   f->SetArg(param);
+}
+
+//______________________________________________________________________________
+void TCling::CallFunc_SetArg(CallFunc_t* func, Float_t param) const
+{
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   f->SetArg(param);
+}
+
+//______________________________________________________________________________
 void TCling::CallFunc_SetArg(CallFunc_t* func, Double_t param) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
@@ -6962,39 +7013,39 @@ const char* TCling::MethodInfo_Title(MethodInfo_t* minfo) const
 }
 
 //______________________________________________________________________________
-TMethodCall::EReturnType TCling::MethodCallReturnType(TFunction *func) const
+auto TCling::MethodCallReturnType(TFunction *func) const -> EReturnType
 {
    if (func) {
       return MethodInfo_MethodCallReturnType(func->fInfo);
    } else {
-      return TMethodCall::kOther;
+      return EReturnType::kOther;
    }
 }
 
 //______________________________________________________________________________
-TMethodCall::EReturnType TCling::MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const
+auto TCling::MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const -> EReturnType
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    if (info && info->IsValid()) {
       TClingTypeInfo *typeinfo = info->Type();
       clang::QualType QT( typeinfo->GetQualType().getCanonicalType() );
       if (QT->isEnumeralType()) {
-         return TMethodCall::kLong;
+         return EReturnType::kLong;
       } else if (QT->isPointerType()) {
          // Look for char*
          QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
          if ( QT->isCharType() ) {
-            return TMethodCall::kString;
+            return EReturnType::kString;
          } else {
-            return TMethodCall::kOther;
+            return EReturnType::kOther;
          }
       } else if ( QT->isFloatingType() ) {
          int sz = typeinfo->Size();
          if (sz == 4 || sz == 8) {
             // Support only float and double.
-            return TMethodCall::kDouble;
+            return EReturnType::kDouble;
          } else {
-            return TMethodCall::kOther;
+            return EReturnType::kOther;
          }
       } else if ( QT->isIntegerType() ) {
          int sz = typeinfo->Size();
@@ -7006,15 +7057,15 @@ TMethodCall::EReturnType TCling::MethodInfo_MethodCallReturnType(MethodInfo_t* m
             // was not making the distinction so we let it go
             // as is for now, but we really need to upgrade
             // TMethodCall::Execute ...
-            return TMethodCall::kLong;
+            return EReturnType::kLong;
          } else {
-            return TMethodCall::kOther;
+            return EReturnType::kOther;
          }
       } else {
-         return TMethodCall::kOther;
+         return EReturnType::kOther;
       }
    } else {
-      return TMethodCall::kOther;
+      return EReturnType::kOther;
    }
 }
 

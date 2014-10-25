@@ -202,7 +202,11 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fNewType     = fType;
    fArrayDim    = 0;
    fArrayLength = 0;
-   fTypeName    = TClassEdit::ResolveTypedef(typeName);
+   {
+      //must protect call into the interpreter
+      R__LOCKGUARD2(gInterpreterMutex);
+      fTypeName    = TClassEdit::ResolveTypedef(typeName);
+   }
    fStreamer    = 0;
    fClassObject = (TClass*)(-1);
    fNewClass    = 0;
@@ -639,14 +643,14 @@ void TStreamerBase::InitStreaming()
 
    if (fNewBaseClass) {
       fStreamerFunc = fNewBaseClass->GetStreamerFunc();
-      if (fBaseVersion > 0 || fBaseClass == 0) {
+      if (fBaseVersion > 0 || fBaseCheckSum == 0) {
          fStreamerInfo = fNewBaseClass->GetConversionStreamerInfo(fBaseClass,fBaseVersion);
       } else {
          fStreamerInfo = fNewBaseClass->FindConversionStreamerInfo(fBaseClass,fBaseCheckSum);
       }
    } else if (fBaseClass && fBaseClass != (TClass*)-1) {
       fStreamerFunc = fBaseClass->GetStreamerFunc();
-      if (fBaseVersion >= 0 || fBaseClass == 0) {
+      if (fBaseVersion >= 0 || fBaseCheckSum == 0) {
          fStreamerInfo = fBaseClass->GetStreamerInfo(fBaseVersion);
       } else {
          fStreamerInfo = fBaseClass->FindStreamerInfo(fBaseCheckSum);

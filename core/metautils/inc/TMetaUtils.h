@@ -14,15 +14,16 @@
 
 #include "RConversionRuleParser.h"
 
-// #include "llvm/Attr.h"
-#include "llvm/ADT/SmallSet.h"
-#include "llvm/ADT/StringRef.h"
-
+#include <set>
 #include <string>
 #include <unordered_set>
 
 //#include <atomic>
 #include <stdlib.h>
+
+namespace llvm {
+   class StringRef;
+}
 
 namespace clang {
    class ASTContext;
@@ -33,6 +34,7 @@ namespace clang {
    class CXXBaseSpecifier;
    class CXXRecordDecl;
    class Decl;
+   class DeclContext;
    class DeclaratorDecl;
    class FieldDecl;
    class FunctionDecl;
@@ -57,9 +59,12 @@ namespace clang {
 namespace cling {
    class Interpreter;
    class LookupHelper;
+   namespace utils {
+      namespace Transform {
+         struct Config;
+      }
+   }
 }
-
-#include "cling/Utils/AST.h"
 
 // For ROOT::ESTLType
 #include "ESTLType.h"
@@ -112,26 +117,28 @@ const int kFatal    =   4000;
 const int kMaxLen   =   1024;
 
 // Classes ---------------------------------------------------------------------
+class TNormalizedCtxtImpl;
 
 //______________________________________________________________________________
 class TNormalizedCtxt {
-   using TypesCont_t = llvm::SmallSet<const clang::Type*, 4>;
-   using Config_t = cling::utils::Transform::Config;
-   using TemplPtrIntMap_t = std::map<const clang::ClassTemplateDecl*, int>;
 private:
-   Config_t         fConfig;
-   TypesCont_t      fTypeWithAlternative;
-   static TemplPtrIntMap_t fTemplatePtrArgsToKeepMap;
+   TNormalizedCtxtImpl* fImpl;
 public:
-   TNormalizedCtxt(const cling::LookupHelper &lh);
+   using Config_t = cling::utils::Transform::Config;
+   using TypesCont_t = std::set<const clang::Type*>;
+   using TemplPtrIntMap_t = std::map<const clang::ClassTemplateDecl*, int>;
 
-   const Config_t    &GetConfig() const { return fConfig; }
-   const TypesCont_t &GetTypeToSkip() const { return fConfig.m_toSkip; }
-   const TypesCont_t &GetTypeWithAlternative() const { return fTypeWithAlternative; }
+   TNormalizedCtxt(const cling::LookupHelper &lh);
+   TNormalizedCtxt(const TNormalizedCtxt& other);
+   ~TNormalizedCtxt();
+   const Config_t& GetConfig() const;
+   const TypesCont_t &GetTypeWithAlternative() const;
+
    void AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i);
    int GetNargsToKeep(const clang::ClassTemplateDecl* templ) const;
-   const TemplPtrIntMap_t GetTemplNargsToKeepMap() const { return fTemplatePtrArgsToKeepMap; }
-
+   const TemplPtrIntMap_t GetTemplNargsToKeepMap() const;
+   void keepTypedef(const cling::LookupHelper &lh, const char* name,
+                    bool replace = false);
 };
 
 //______________________________________________________________________________
@@ -310,6 +317,12 @@ bool ExtractAttrIntPropertyFromName(const clang::Decl& decl,
                                     int& propValue);
 
 //______________________________________________________________________________
+bool RequireCompleteType(const cling::Interpreter &interp, const clang::CXXRecordDecl *cl);
+
+//______________________________________________________________________________
+bool RequireCompleteType(const cling::Interpreter &interp, clang::SourceLocation Loc, clang::QualType Type);
+
+//______________________________________________________________________________
 // Add default template parameters.
 clang::QualType AddDefaultParameters(clang::QualType instanceType,
                                      const cling::Interpreter &interpret,
@@ -337,14 +350,14 @@ int ElementStreamer(std::ostream& finalString,
                     const clang::QualType &qti,
                     const char *t,
                     int rwmode,
-                    const cling::Interpreter &gInterp,
+                    const cling::Interpreter &interp,
                     const char *tcl=0);
 
 //______________________________________________________________________________
-bool IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context = 0);
+bool IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context,const cling::Interpreter &interp);
 
 //______________________________________________________________________________
-bool IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &gInterp);
+bool IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &interp);
 
 //______________________________________________________________________________
 bool HasCustomOperatorNewArrayPlacement(clang::RecordDecl const&, const cling::Interpreter &interp);

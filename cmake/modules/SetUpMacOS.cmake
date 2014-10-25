@@ -56,6 +56,9 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
     set(MACOSX_GLU_DEPRECATED ON)
     set(MACOSX_KRB5_DEPRECATED ON)
   endif()
+  if(MACOSX_VERSION VERSION_GREATER 10.9)
+    set(MACOSX_LDAP_DEPRECATED ON)
+  endif()
 
   if (CMAKE_COMPILER_IS_GNUCXX)
      message(STATUS "Found GNU compiler collection")
@@ -128,7 +131,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   endif()
 
   #---Set Linker flags----------------------------------------------------------------------
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,@loader_path/../lib")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -mmacosx-version-min=${MACOSX_VERSION} -Wl,-rpath,@loader_path/../lib")
 
 
 else (CMAKE_SYSTEM_NAME MATCHES Darwin)

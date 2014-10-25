@@ -214,6 +214,7 @@ private: // member functions
 
 private: // data members
    TSeqCollection* fpClasses;
+   ULong64_t       fPrevInterpMarker;
    TSeqCollection* fpDirectives;
    TSeqCollection* fpEnvVars;
    TSeqCollection* fpFiles;

@@ -62,9 +62,8 @@
 
 #include "ifparser.h"
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
-
-extern long strtol(const char *nptr, char **endptr, int base);
 
 /****************************************************************************
      Internal Macros and Utilities for Parser

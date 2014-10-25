@@ -442,7 +442,7 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
                  << i << "]";
       } else {
          // pointer falls back to non-pointer case; the argument preserves
-         // the "pointerness" (i.e. doesn't refernce the value).
+         // the "pointerness" (i.e. doesn't reference the value).
          callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
       }
    }
@@ -1066,6 +1066,10 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    void *F = compile_wrapper(wrapper_name, wrapper);
    if (F) {
       wrapper_store.insert(make_pair(FD, F));
+   } else {
+      Error("TClingCallFunc::make_wrapper",
+            "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
+            wrapper.c_str());
    }
    return (tcling_callfunc_Wrapper_t)F;
 }
@@ -1227,6 +1231,10 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
                              /*withAccessControl=*/false);
    if (F) {
       ctor_wrapper_store.insert(make_pair(info->GetDecl(), F));
+   } else {
+      Error("TClingCallFunc::make_ctor_wrapper",
+            "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
+            wrapper.c_str());
    }
    return (tcling_callfunc_ctor_Wrapper_t)F;
 }
@@ -1387,7 +1395,12 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
                              /*withAccessControl=*/false);
    if (F) {
       dtor_wrapper_store.insert(make_pair(info->GetDecl(), F));
+   } else {
+      Error("TClingCallFunc::make_dtor_wrapper",
+            "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
+            wrapper.c_str());
    }
+
    return (tcling_callfunc_dtor_Wrapper_t)F;
 }
 
@@ -2293,11 +2306,25 @@ void TClingCallFunc::ResetArg()
    fArgVals.clear();
 }
 
+void TClingCallFunc::SetArg(unsigned long param)
+{
+   ASTContext &C = fInterp->getCI()->getASTContext();
+   fArgVals.push_back(cling::Value(C.UnsignedLongTy, *fInterp));
+   fArgVals.back().getLL() = param;
+}
+
 void TClingCallFunc::SetArg(long param)
 {
    ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.LongTy, *fInterp));
    fArgVals.back().getLL() = param;
+}
+
+void TClingCallFunc::SetArg(float param)
+{
+   ASTContext &C = fInterp->getCI()->getASTContext();
+   fArgVals.push_back(cling::Value(C.FloatTy, *fInterp));
+   fArgVals.back().getFloat() = param;
 }
 
 void TClingCallFunc::SetArg(double param)
