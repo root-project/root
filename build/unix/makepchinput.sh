@@ -74,8 +74,11 @@ EOF
 EOF
     fi
 
-    find $srcdir/$dirname/inc/ -name '*LinkDef*.h' | \
-        sed -e 's|^|#include "|' -e 's|$|"|' >> $alllinkdefs
+    for f in `cd $srcdir; find $dirname/inc/ -name '*LinkDef*.h'`; do
+        mkdir -p $outdir/`dirname $f`
+        cp $srcdir/$f $outdir/$f
+        echo '#include "'$outdir/$f'"' >> $alllinkdefs
+    done
 done
 
 cat $cppflags.tmp | sort | uniq | grep -v $srcdir | grep -v `pwd` > $cppflags
