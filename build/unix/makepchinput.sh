@@ -80,7 +80,7 @@ EOF
 done
 
 # E.g. core's LinkDef includes clib/LinkDef, so just copy all LinkDefs.
-for f in `cd $srcdir; find -name '*LinkDef*.h'`; do
+for f in `cd $srcdir; find . -name '*LinkDef*.h'`; do
     mkdir -p $outdir/`dirname $f`
     cp $srcdir/$f $outdir/$f
 done
