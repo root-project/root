@@ -75,10 +75,14 @@ EOF
     fi
 
     for f in `cd $srcdir; find $dirname/inc/ -name '*LinkDef*.h'`; do
-        mkdir -p $outdir/`dirname $f`
-        cp $srcdir/$f $outdir/$f
         echo '#include "'$outdir/$f'"' >> $alllinkdefs
     done
+done
+
+# E.g. core's LinkDef includes clib/LinkDef, so just copy all LinkDefs.
+for f in `cd $srcdir; find -name '*LinkDef*.h'`; do
+    mkdir -p $outdir/`dirname $f`
+    cp $srcdir/$f $outdir/$f
 done
 
 cat $cppflags.tmp | sort | uniq | grep -v $srcdir | grep -v `pwd` > $cppflags
