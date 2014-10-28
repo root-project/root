@@ -5757,8 +5757,7 @@ void THistPainter::PaintErrors(Option_t *)
    if (fixbin) {
       if (Hoption.Logx) xp = TMath::Power(10,Hparam.xmin) + 0.5*Hparam.xbinsize;
       else              xp = Hparam.xmin + 0.5*Hparam.xbinsize;
-   }
-   else {
+   } else {
       delta = fH->GetBinWidth(first);
       xp    = fH->GetBinLowEdge(first) + 0.5*delta;
    }
@@ -5771,8 +5770,8 @@ void THistPainter::PaintErrors(Option_t *)
    for (k=first; k<=last; k++) {
 
       //          get the data
-      //     xp      = X position of the current point
-      //     yp      = Y position of the current point
+      //     xp    = X position of the current point
+      //     yp    = Y position of the current point
       //     ex1   = Low X error
       //     ex2   = Up X error
       //     ey1   = Low Y error
@@ -5798,8 +5797,7 @@ void THistPainter::PaintErrors(Option_t *)
       if (fH->GetBinErrorOption() == TH1::kNormal) {
          ey1 = factor*fH->GetBinError(k);
          ey2 = ey1;
-      }
-      else {
+      } else {
          ey1 = factor*fH->GetBinErrorLow(k);
          ey2 = factor*fH->GetBinErrorUp(k);
       }
@@ -5862,6 +5860,7 @@ void THistPainter::PaintErrors(Option_t *)
       }
 
       //          draw the error bars
+      if (Hoption.Logy && yp < logymin) drawmarker = kFALSE;
       if (optionE && drawmarker) {
          if ((yi3 < yi1 - s2y) && (yi3 < ymax)) gPad->PaintLine(xi3,yi3,xi4,TMath::Min(yi1 - s2y,ymax));
          if ((yi1 + s2y < yi4) && (yi4 > ymin)) gPad->PaintLine(xi3,TMath::Max(yi1 + s2y, ymin),xi4,yi4);
@@ -5873,7 +5872,7 @@ void THistPainter::PaintErrors(Option_t *)
             }
          }
       }
-      if (optionE && !drawmarker && ey1 != 0) {
+      if (optionE && !drawmarker && (ey1 != 0 || ey2 !=0)) {
          if ((yi3 < yi1) && (yi3 < ymax)) gPad->PaintLine(xi3,yi3,xi4,TMath::Min(yi1,ymax));
          if ((yi1 < yi4) && (yi4 > ymin)) gPad->PaintLine(xi3,TMath::Max(yi1,ymin),xi4,yi4);
          // don't duplicate the horizontal line
