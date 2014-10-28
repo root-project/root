@@ -18,11 +18,18 @@
 #include "common.h"
 #include "FastAllocString.h"
 
-#if __cplusplus >= 201103L
-#define THREAD_LOCAL thread_local
+#if __GNUC__ <= 4 && __GNUC_MINOR__ < 80
+#define THREAD_LOCAL_OR_STATIC static
+
 #else
-#define THREAD_LOCAL
+#if __cplusplus >= 201103L
+#define THREAD_LOCAL_OR_STATIC thread_local
+#else
+#define THREAD_LOCAL_OR_STATIC static
 #endif
+
+#endif
+
 /*********************************************************************
 * class G__TypeInfo
 * 
@@ -122,11 +129,7 @@ int Cint::G__TypeInfo::operator!=(const G__TypeInfo& a)
 ///////////////////////////////////////////////////////////////////////////
 const char* Cint::G__TypeInfo::TrueName() 
 {
-#if __cplusplus >= 201103L
-   thread_local G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
-#else
-   THREAD_LOCAL static G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
-#endif
+   THREAD_LOCAL_OR_STATIC G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
    G__FastAllocString &buf(*buf_ptr);
 
    buf = G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst);
@@ -135,11 +138,7 @@ const char* Cint::G__TypeInfo::TrueName()
 ///////////////////////////////////////////////////////////////////////////
 const char* Cint::G__TypeInfo::Name() 
 {
-#if __cplusplus >= 201103L
-   thread_local G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
-#else
-   THREAD_LOCAL static G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
-#endif
+   THREAD_LOCAL_OR_STATIC G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
    G__FastAllocString &buf(*buf_ptr);
 
    buf = G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
