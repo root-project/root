@@ -16,7 +16,7 @@
 rootdir=.
 cfgdir=etc/dictpch
 allheaders=$cfgdir/allHeaders.h
-alllinkdefs=$cfgdir/allLinkdefs.h
+alllinkdefs=$cfgdir/allLinkDefs.h
 cppflags=$cfgdir/allCppflags.txt
 pch=$1
 shift

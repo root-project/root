@@ -17,7 +17,7 @@ rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h all.h c
 
 outdir=etc/dictpch
 allheaders=$outdir/allHeaders.h
-alllinkdefs=$outdir/allLinkdefs.h
+alllinkdefs=$outdir/allLinkDefs.h
 cppflags=$outdir/allCppflags.txt
 
 mkdir -p $outdir
