@@ -11,7 +11,7 @@ if(ALIEN_LIBRARY AND ALIEN_INCLUDE_DIR)
   set(ALIEN_FIND_QUIETLY TRUE)
 endif()
 
-find_path(ALIEN_INCLUDE_DIR gapiUI.h
+find_path(ALIEN_INCLUDE_DIR gapiUI.h PATHS
   ${ALIEN_DIR}/include $ENV{ALIEN_DIR}/include
   /usr/local/include 
   /opt/alien/api/include 
