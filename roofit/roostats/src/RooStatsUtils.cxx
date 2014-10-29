@@ -192,6 +192,7 @@ namespace RooStats {
       public:
          std::map<TString, Double_t> fVarVals;
          double fInval;
+         TTree *fTree;
 
          BranchStore(const vector <TString> &params = vector <TString>(), double _inval = -999.) : fTree(0) {
             fInval = _inval;
@@ -199,7 +200,17 @@ namespace RooStats {
                fVarVals[params[i]] = _inval;
          }
 
+         ~BranchStore() {
+            if (fTree) {
+               for(std::map<TString, Double_t>::iterator it = fVarVals.begin();it!=fVarVals.end();it++) {
+                  TBranch *br = fTree->GetBranch( it->first );
+                  if (br) br->ResetAddress();
+               }
+            }
+         }
+
          void AssignToTTree(TTree &myTree) {
+            fTree = &myTree;
             for(std::map<TString, Double_t>::iterator it = fVarVals.begin();it!=fVarVals.end();it++) {
                const TString& name = it->first;
                myTree.Branch( name, &fVarVals[name], TString::Format("%s/D", name.Data()));
