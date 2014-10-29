@@ -36,6 +36,9 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
 }")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "{}")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.rootrc "
+Proof.Sandbox: /tmp/proof
+")
 
 #---Definition of the helper function--------------------------------
 function(ROOT_ADD_TUTORIAL macrofile rc)
