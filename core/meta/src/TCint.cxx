@@ -2427,7 +2427,7 @@ const char *TCint::GetIncludePath()
 const char *TCint::GetSTLIncludePath() const
 {
    // Return the directory containing CINT's stl cintdlls.
-#if __cplusplus >= 201103L
+#if defined(R__HAS_THREAD_LOCAL)
    thread_local TString stldir;
 #else
    TString &stldir( TTHREAD_TLS_INIT<5 /* must be unique */, TString>() );
