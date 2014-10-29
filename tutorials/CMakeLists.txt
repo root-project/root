@@ -39,6 +39,9 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
   gSystem->SetBuildDir(\".\", kTRUE);
 }")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.rootrc "
+Proof.Sandbox: /etc/proof
+")
 
 #---Tutorials disabled depending on the build components-------------
 if(NOT ROOT_minuit2_FOUND)
