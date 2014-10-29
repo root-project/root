@@ -40,7 +40,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
 }")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.rootrc "
-Proof.Sandbox: /etc/proof
+Proof.Sandbox: /tmp/proof
 ")
 
 #---Tutorials disabled depending on the build components-------------
