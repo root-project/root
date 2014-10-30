@@ -2873,26 +2873,25 @@ int CheckClassesForInterpreterOnlyDicts(cling::Interpreter &interp,
 
 //_____________________________________________________________________________
 #ifndef ROOT_STAGE1_BUILD
-int FinalizeStreamerInfoWriting(cling::Interpreter &interp)
+int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootPCM=false)
 {
    // Make up for skipping RegisterModule, now that dictionary parsing
    // is done and these headers cannot be selected anymore.
    interp.parseForModule("#include \"TStreamerInfo.h\"\n"
-                         "#include \"TFile.h\"\n"
-                         "#include \"TObjArray.h\"\n"
-                         "#include \"TVirtualArray.h\"\n"
-                         "#include \"TStreamerElement.h\"\n"
-                         "#include \"TProtoClass.h\"\n"
-                         "#include \"TBaseClass.h\"\n"
-                         "#include \"TListOfDataMembers.h\"\n"
-                         "#include \"TListOfEnums.h\"\n"
-                         "#include \"TDataMember.h\"\n"
-                         "#include \"TEnum.h\"\n"
-                         "#include \"TEnumConstant.h\"\n"
-                         "#include \"TDictAttributeMap.h\"\n"
-                         "#include \"TMessageHandler.h\"\n"
-                        );
-   if (!CloseStreamerInfoROOTFile(buildingROOT)) {
+                           "#include \"TFile.h\"\n"
+                           "#include \"TObjArray.h\"\n"
+                           "#include \"TVirtualArray.h\"\n"
+                           "#include \"TStreamerElement.h\"\n"
+                           "#include \"TProtoClass.h\"\n"
+                           "#include \"TBaseClass.h\"\n"
+                           "#include \"TListOfDataMembers.h\"\n"
+                           "#include \"TListOfEnums.h\"\n"
+                           "#include \"TDataMember.h\"\n"
+                           "#include \"TEnum.h\"\n"
+                           "#include \"TEnumConstant.h\"\n"
+                           "#include \"TDictAttributeMap.h\"\n"
+                           "#include \"TMessageHandler.h\"\n");
+   if (!CloseStreamerInfoROOTFile(writeEmptyRootPCM)) {
       return 1;
    }
    return 0;
@@ -2905,7 +2904,8 @@ int GenerateFullDict(std::ostream &dictStream,
                      SelectionRules &selectionRules,
                      const ROOT::TMetaUtils::RConstructorTypes &ctorTypes,
                      bool isSplit,
-                     bool isGenreflex)
+                     bool isGenreflex,
+                     bool writeEmptyRootPCM)
 {
 
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
@@ -3023,7 +3023,7 @@ int GenerateFullDict(std::ostream &dictStream,
    EmitEnums(scan.fSelectedEnums);
    // Make up for skipping RegisterModule, now that dictionary parsing
    // is done and these headers cannot be selected anymore.
-   int finRetCode = FinalizeStreamerInfoWriting(interp);
+   int finRetCode = FinalizeStreamerInfoWriting(interp, writeEmptyRootPCM);
    if (finRetCode != 0) return finRetCode;
 #endif
 
@@ -3727,6 +3727,7 @@ int RootCling(int argc,
    bool doSplit = false;
    bool dictSelection = true;
    bool multiDict = false;
+   bool writeEmptyRootPCM = false;
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = true;
@@ -3823,6 +3824,14 @@ int RootCling(int argc,
             ic += 1;
             continue;
          }
+
+         if (strcmp("-writeEmptyRootPCM", argv[ic]) == 0) {
+            // inline the input header
+            writeEmptyRootPCM = true;
+            ic += 1;
+            continue;
+         }
+
 
          if (strcmp("-pipe", argv[ic]) != 0 && strcmp("-pthread", argv[ic]) != 0) {
             // filter out undesirable options
@@ -4335,6 +4344,7 @@ int RootCling(int argc,
    }
 
    int retCode(0);
+
    if (onepcm) {
       AnnotateAllDeclsForPCH(interp, scan, selectionRules);
    } else if (interpreteronly) {
@@ -4351,7 +4361,8 @@ int RootCling(int argc,
                                  selectionRules,
                                  constructorTypes,
                                  doSplit,
-                                 isGenreflex);
+                                 isGenreflex,
+                                 writeEmptyRootPCM);
    }
 
    if (retCode != 0) {
@@ -4672,6 +4683,7 @@ namespace genreflex {
                        bool interpreteronly,
                        bool doSplit,
                        bool isDeep,
+                       bool writeEmptyRootPCM,
                        const std::vector<std::string> &headersNames,
                        const std::string &ofilename)
    {
@@ -4762,6 +4774,10 @@ namespace genreflex {
       // Inline the input header
       argvVector.push_back(string2charptr("-inlineInputHeader"));
 
+      // Write empty root pcms
+      if (writeEmptyRootPCM)
+         argvVector.push_back(string2charptr("-writeEmptyRootPCM"));
+
       // Clingargs
       AddToArgVector(argvVector, includes, "-I");
       AddToArgVector(argvVector, preprocDefines, "-D");
@@ -4813,6 +4829,7 @@ namespace genreflex {
                            bool interpreteronly,
                            bool doSplit,
                            bool isDeep,
+                           bool writeEmptyRootPCM,
                            const std::vector<std::string> &headersNames,
                            const std::string &outputDirName_const = "")
    {
@@ -4850,6 +4867,7 @@ namespace genreflex {
                                           interpreteronly,
                                           doSplit,
                                           isDeep,
+                                          writeEmptyRootPCM,
                                           namesSingleton,
                                           ofilenameFullPath);
          if (returnCode != 0)
@@ -4952,6 +4970,7 @@ int GenReflex(int argc, char **argv)
                        OLDRMFFORMAT,
                        DEBUG,
                        QUIET,
+                       WRITEEMPTYROOTPCM,
                        HELP,
                        CAPABILITIESFILENAME,
                        INTERPRETERONLY,
@@ -5179,6 +5198,14 @@ int GenReflex(int argc, char **argv)
       },
 
       {
+         WRITEEMPTYROOTPCM,
+         NOTYPE ,
+         "" , "writeEmptyPCM",
+         ROOT::option::Arg::None,
+         "--writeEmptyPCM\tWrite an empty ROOT pcm.\n"
+      },
+
+      {
          HELP,
          NOTYPE,
          "h" , "help",
@@ -5353,6 +5380,10 @@ int GenReflex(int argc, char **argv)
    if (options[SPLIT])
       doSplit = true;
 
+   bool writeEmptyRootPCM = false;
+   if (options[WRITEEMPTYROOTPCM])
+      writeEmptyRootPCM = true;
+
    // Add the .so extension to the rootmap lib if not there
    if (!rootmapLibName.empty() && !endsWith(rootmapLibName, gLibraryExtension)) {
       rootmapLibName += gLibraryExtension;
@@ -5414,6 +5445,7 @@ int GenReflex(int argc, char **argv)
                                     interpreteronly,
                                     doSplit,
                                     isDeep,
+                                    writeEmptyRootPCM,
                                     headersNames,
                                     ofileName);
    } else {
@@ -5434,6 +5466,7 @@ int GenReflex(int argc, char **argv)
                                         interpreteronly,
                                         doSplit,
                                         isDeep,
+                                        writeEmptyRootPCM,
                                         headersNames,
                                         ofileName);
    }

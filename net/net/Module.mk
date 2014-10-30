@@ -74,7 +74,7 @@ $(call pcmrule,NET)
 $(NETDS):       $(NETH) $(NETL) $(ROOTCLINGEXE) $(call pcmdep,NET)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,NET) -c -writeEmptyRootPCM $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
 
 $(NETMAP):      $(NETH) $(NETL) $(ROOTCLINGEXE) $(call pcmdep,NET)
 		$(MAKEDIR)

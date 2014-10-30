@@ -57,7 +57,7 @@ $(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCLINGEXE) $(call pcmdep,MINUIT)
 $(MINUITMAP):   $(MINUITH) $(MINUITL) $(ROOTCLINGEXE) $(call pcmdep,MINUIT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(MINUITDS) $(call dictModule,MINUIT) -c $(MINUITH) $(MINUITL)
+		$(ROOTCLINGSTAGE2) -r $(MINUITDS) $(call dictModule,MINUIT) -c -writeEmptyRootPCM $(MINUITH) $(MINUITL)
 
 all-$(MODNAME): $(MINUITLIB)
 

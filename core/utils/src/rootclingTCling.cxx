@@ -80,55 +80,23 @@ void AddAncestorPCMROOTFile(const char *pcmName)
    gAncestorPCMNames.emplace_back(pcmName);
 }
 
+void ResetPCMContent()
+{
+   // Empty the PCM, because its information is in the PCH.
+   // We write an file with empty keys for symmetry reasons.
+   gClassesToStore.clear();
+   gTypedefsToStore.clear();
+   gEnumsToStore.clear();
+   gAncestorPCMNames.clear();
+}
+
 extern "C"
-bool CloseStreamerInfoROOTFile(bool buildingROOT)
+bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
 {
    // Write all persistent TClasses.
 
-   if (buildingROOT && !gPCMFilename.compare(0, 7, "lib/lib")) {
-      std::string pcmName = gPCMFilename;
-      pcmName = pcmName.substr(7, pcmName.length() - 10 - 7); // lib/lib
-
-      static const std::unordered_set<std::string> pcmsInPCH {
-         // core:
-         "Thread", "Rint",
-         // io/io
-         "RIO",
-         // net/net
-         "Net",
-         // math
-         "MathCore", "MathMore", "Genetic", "GenVector",
-         "GenVector_G__GenVector32", "Matrix", "Minuit", "Minuit2",
-         "Physics", "Smatrix", "Smatrix_G__Smatrix32",
-         // hist
-         "Hbook", "Hist", "HistPainter", "Spectrum", "SpectrumPainter",
-         // tree
-         "Tree", "TreePlayer", "TreeViewer",
-         // graf2d
-         "ASImage", "ASImageGUI", "FITSIO", "Gpad", "Graf", "Gviz",
-         "Postscript", "GX11", "GX11TTF",
-         // graf3d/gl
-         "RGL",
-         // gui/gui
-         "Gui",
-         // gui/fitpanel
-         "FitPanel",
-         // bindings/pyroot
-         "PyROOT",
-         // rootfit
-         "RooFit", "RooFitCore", "RooStats", "HistFactory",
-         // tmva
-         "TMVA"
-      };
-      if (pcmsInPCH.find(pcmName) != pcmsInPCH.end()) {
-         // Empty the PCM, because its information is in the PCH.
-         // We write an file with empty keys for symmetry reasons.
-         gClassesToStore.clear();
-         gTypedefsToStore.clear();
-         gEnumsToStore.clear();
-         gAncestorPCMNames.clear();
-      }
-   }
+   // Reset the content of the pcm
+   if (writeEmptyRootPCM) ResetPCMContent();
 
    // Avoid plugins.
    TVirtualStreamerInfo::SetFactory(new TStreamerInfo());

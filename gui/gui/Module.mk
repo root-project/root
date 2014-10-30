@@ -84,7 +84,7 @@ $(call pcmrule,GUI)
 $(GUIDS):       $(GUIH) $(GUIL0) $(GUILS) $(ROOTCLINGEXE) $(call pcmdep,GUI)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GUI) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GUI) -c -writeEmptyRootPCM -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
 
 $(GUIMAP):      $(GUIH) $(GUIL0) $(GUILS) $(ROOTCLINGEXE) $(call pcmdep,GUI)
 		$(MAKEDIR)

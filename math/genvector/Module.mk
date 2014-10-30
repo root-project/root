@@ -101,12 +101,12 @@ $(call pcmrule,GENVECTOR)
 $(GENVECTORDS):  $(GENVECTORDH1) $(GENVECTORL) $(GENVECTORLINC) $(ROOTCLINGEXE) $(call pcmdep,GENVECTOR)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GENVECTOR) -c $(GENVECTORDH1) $(GENVECTORL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GENVECTOR) -c -writeEmptyRootPCM $(GENVECTORDH1) $(GENVECTORL)
 
 $(GENVECTORDS32): $(GENVECTORDH132) $(GENVECTORL32) $(GENVECTORLINC) $(ROOTCLINGEXE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ -multiDict $(subst -rmf $(GENVECTORMAP), -rmf $(GENVECTORMAP32),$(call dictModule,GENVECTOR)) -c $(GENVECTORDH132) $(GENVECTORL32)
+		$(ROOTCLINGSTAGE2) -f $@ -multiDict $(subst -rmf $(GENVECTORMAP), -rmf $(GENVECTORMAP32),$(call dictModule,GENVECTOR)) -c -writeEmptyRootPCM $(GENVECTORDH132) $(GENVECTORL32)
 
 $(GENVECTORMAP):  $(GENVECTORDH1) $(GENVECTORL) $(GENVECTORLINC) $(ROOTCLINGEXE) $(call pcmdep,GENVECTOR)
 		$(MAKEDIR)

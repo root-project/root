@@ -52,7 +52,7 @@ $(call pcmrule,PHYSICS)
 $(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCLINGEXE) $(call pcmdep,PHYSICS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PHYSICS) -c $(PHYSICSH) $(PHYSICSL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PHYSICS) -c -writeEmptyRootPCM $(PHYSICSH) $(PHYSICSL)
 
 $(PHYSICSMAP):  $(PHYSICSH) $(PHYSICSL) $(ROOTCLINGEXE) $(call pcmdep,PHYSICS)
 		$(MAKEDIR)

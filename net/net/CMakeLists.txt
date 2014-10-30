@@ -30,8 +30,8 @@ if(MACOSX_SSL_DEPRECATED)
   set_source_files_properties(src/TSSLSocket.cxx COMPILE_FLAGS "-Wno-deprecated-declarations" )
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Net ${headers} MODULE Net LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Net ${headers} MODULE Net LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
-ROOT_LINKER_LIBRARY(Net ${sources} G__Net.cxx LIBRARIES ${ssllib} ${CRYPTLIBS} DEPENDENCIES MathCore RIO )
+ROOT_LINKER_LIBRARY(Net ${sources} G__Net.cxx LIBRARIES ${ssllib} ${CRYPTLIBS} DEPENDENCIES MathCore RIO)
 
 ROOT_INSTALL_HEADERS()

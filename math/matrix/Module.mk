@@ -52,7 +52,7 @@ $(call pcmrule,MATRIX)
 $(MATRIXDS):    $(MATRIXH) $(MATRIXL) $(ROOTCLINGEXE) $(call pcmdep,MATRIX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MATRIX) -c $(MATRIXH) $(MATRIXL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MATRIX) -c -writeEmptyRootPCM $(MATRIXH) $(MATRIXL)
 
 $(MATRIXMAP):   $(MATRIXH) $(MATRIXL) $(ROOTCLINGEXE) $(call pcmdep,MATRIX)
 		$(MAKEDIR)

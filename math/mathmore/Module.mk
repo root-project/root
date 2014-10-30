@@ -96,7 +96,7 @@ $(call pcmrule,MATHMORE)
 $(MATHMOREDS):  $(MATHMOREDH1) $(MATHMOREL) $(MATHMORELINC) $(ROOTCLINGEXE) $(call pcmdep,MATHMORE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@  $(call dictModule,MATHMORE) -c $(ROOT_SRCDIR:%=-I%) $(GSLFLAGS) $(MATHMOREDH1) $(MATHMOREL)
+		$(ROOTCLINGSTAGE2) -f $@  $(call dictModule,MATHMORE) -c -writeEmptyRootPCM $(ROOT_SRCDIR:%=-I%) $(GSLFLAGS) $(MATHMOREDH1) $(MATHMOREL)
 
 $(MATHMOREMAP): $(MATHMOREDH1) $(MATHMOREL) $(MATHMORELINC) $(ROOTCLINGEXE) $(call pcmdep,MATHMORE)
 		$(MAKEDIR)

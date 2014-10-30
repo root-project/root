@@ -81,12 +81,12 @@ $(call pcmrule,SMATRIX)
 $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SMATRIX) -c $(SMATRIXDH1) $(SMATRIXL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SMATRIX) -c -writeEmptyRootPCM $(SMATRIXDH1) $(SMATRIXL)
 
 $(SMATRIXDS32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCLINGEXE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ -multiDict $(subst -rmf $(SMATRIXMAP), -rmf $(SMATRIXMAP32),$(call dictModule,SMATRIX)) -c $(SMATRIXDH1) $(SMATRIXL32)
+		$(ROOTCLINGSTAGE2) -f $@ -multiDict $(subst -rmf $(SMATRIXMAP), -rmf $(SMATRIXMAP32),$(call dictModule,SMATRIX)) -c -writeEmptyRootPCM $(SMATRIXDH1) $(SMATRIXL32)
 
 $(SMATRIXMAP):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
 		$(MAKEDIR)

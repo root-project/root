@@ -54,12 +54,12 @@ $(call pcmrule,X11)
 $(X11DS):       $(X11H1) $(X11L) $(ROOTCLINGEXE) $(call pcmdep,X11)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,X11) -c $(X11INCDIR:%=-I%) $(X11H1) $(X11L)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,X11) -c -writeEmptyRootPCM $(X11INCDIR:%=-I%) $(X11H1) $(X11L)
 
 $(X11MAP):      $(X11H1) $(X11L) $(ROOTCLINGEXE) $(call pcmdep,X11)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(X11DS) $(call dictModule,X11) -c $(X11INCDIR:%=-I%) $(X11H1) $(X11L)
+		$(ROOTCLINGSTAGE2) -r $(X11DS) $(call dictModule,X11) -c -writeEmptyRootPCM $(X11INCDIR:%=-I%) $(X11H1) $(X11L)
 
 all-$(MODNAME): $(X11LIB)
 
