@@ -52,7 +52,7 @@ $(call pcmrule,RINT)
 $(RINTDS):      $(RINTH) $(RINTL) $(ROOTCLINGSTAGE1DEP) $(call pcmdep,RINT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE1) -f $@ $(call dictModule,RINT) -c $(RINTH) $(RINTL) && touch lib/libRint_rdict.pcm
+		$(ROOTCLINGSTAGE1) -f $@ $(call dictModule,RINT) -c -writeEmptyRootPCM $(RINTH) $(RINTL) && touch lib/libRint_rdict.pcm
 
 $(RINTMAP):     $(RINTH) $(RINTL) $(ROOTCLINGSTAGE1DEP) $(call pcmdep,RINT)
 		$(MAKEDIR)

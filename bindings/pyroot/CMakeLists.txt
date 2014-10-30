@@ -5,7 +5,7 @@ ROOT_USE_PACKAGE(math/mathcore)
 ROOT_USE_PACKAGE(tree/tree)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
-ROOT_GENERATE_DICTIONARY(G__PyROOT *.h MODULE PyROOT LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__PyROOT *.h MODULE PyROOT LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 if(GCC_MAJOR EQUAL 4)
   add_definitions(-fno-strict-aliasing)

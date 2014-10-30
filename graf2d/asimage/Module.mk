@@ -258,7 +258,7 @@ $(call pcmrule,ASIMAGEGUI)
 $(ASIMAGEGUIDS): $(ASIMAGEGUIH) $(ASIMAGEGUIL) $(ROOTCLINGEXE) $(call pcmdep,ASIMAGEGUI)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ASIMAGEGUI) -c $(ASIMAGEGUIH) $(ASIMAGEGUIL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ASIMAGEGUI) -c -writeEmptyRootPCM $(ASIMAGEGUIH) $(ASIMAGEGUIL)
 
 $(ASIMAGEGUIMAP): $(ASIMAGEGUIH) $(ASIMAGEGUIL) $(ROOTCLINGEXE) $(call pcmdep,ASIMAGEGUI)
 		$(MAKEDIR)

@@ -88,7 +88,7 @@ $(call pcmrule,TMVA)
 $(TMVADS):      $(TMVAH) $(TMVAL0) $(TMVALS) $(ROOTCLINGEXE) $(call pcmdep,TMVA)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TMVA) -c -I$(ROOT_SRCDIR) $(TMVAH) $(TMVAL0)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TMVA) -c -writeEmptyRootPCM -I$(ROOT_SRCDIR) $(TMVAH) $(TMVAL0)
 
 $(TMVAMAP):     $(TMVAH) $(TMVAL0) $(TMVALS) $(ROOTCLINGEXE) $(call pcmdep,TMVA)
 		$(MAKEDIR)

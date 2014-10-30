@@ -12,7 +12,7 @@ ROOT_USE_PACKAGE(core/metautils)
 ROOT_USE_PACKAGE(core/thread)
 ROOT_USE_PACKAGE(hist/hist)
 
-ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 #ROOT_GENERATE_DICTIONARY(ManualTree TTree.h  LINKDEF LinkDef2.h)
 
 

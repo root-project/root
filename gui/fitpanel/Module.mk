@@ -52,7 +52,7 @@ $(call pcmrule,FITPANEL)
 $(FITPANELDS):  $(FITPANELH) $(FITPANELL) $(ROOTCLINGEXE) $(call pcmdep,FITPANEL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,FITPANEL) -c $(FITPANELH) $(FITPANELL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,FITPANEL) -c -writeEmptyRootPCM $(FITPANELH) $(FITPANELL)
 
 $(FITPANELMAP): $(FITPANELH) $(FITPANELL) $(ROOTCLINGEXE) $(call pcmdep,FITPANEL)
 		$(MAKEDIR)

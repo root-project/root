@@ -22,7 +22,7 @@ else()
 endif()
 
 
-ROOT_GENERATE_DICTIONARY(G__${libname} ${headers} MODULE ${libname} LINKDEF ${linkdef})
+ROOT_GENERATE_DICTIONARY(G__${libname} ${headers} MODULE ${libname} LINKDEF ${linkdef} OPTIONS "-writeEmptyRootPCM")
 
 
 ROOT_LINKER_LIBRARY(${libname} ${sources} G__${libname}.cxx LIBRARIES TreePlayer DEPENDENCIES Gui Ged)

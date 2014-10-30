@@ -26,7 +26,7 @@ include_directories(${CMAKE_SOURCE_DIR}/hist/hist/inc)  # This is to avoid a cir
 
 include_directories(${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__ASImage TASImage.h TASImagePlugin.h TASPluginGS.h MODULE ASImage LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__ASImage TASImage.h TASImagePlugin.h TASPluginGS.h MODULE ASImage LINKDEF LinkDef.h  OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(ASImage TASImage.cxx TASPluginGS.cxx  G__ASImage.cxx
                     LIBRARIES Core ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES}
@@ -38,7 +38,7 @@ if(builtin_freetype)
   add_dependencies(ASImage FREETYPE)
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__ASImageGui TASPaletteEditor.h MODULE ASImageGui LINKDEF LinkDefGui.h)
+ROOT_GENERATE_DICTIONARY(G__ASImageGui TASPaletteEditor.h MODULE ASImageGui LINKDEF LinkDefGui.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(ASImageGui TASPaletteEditor.cxx G__ASImageGui.cxx
                     LIBRARIES ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES}

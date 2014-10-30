@@ -54,7 +54,7 @@ $(call pcmrule,GRAF)
 $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCLINGEXE) $(call pcmdep,GRAF)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GRAF) -c -writeEmptyRootPCM $(CINTFLAGS) $(GRAFH) $(GRAFL)
 
 $(GRAFMAP):     $(GRAFH) $(GRAFL) $(ROOTCLINGEXE) $(call pcmdep,GRAF)
 		$(MAKEDIR)

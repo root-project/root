@@ -3,4 +3,4 @@
 ############################################################################
 
 ROOT_USE_PACKAGE(hist/hist)
-ROOT_STANDARD_LIBRARY_PACKAGE(Spectrum DEPENDENCIES Hist Matrix)
+ROOT_STANDARD_LIBRARY_PACKAGE(Spectrum DEPENDENCIES Hist Matrix DICTIONARY_OPTIONS "-writeEmptyRootPCM")

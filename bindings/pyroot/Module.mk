@@ -97,7 +97,7 @@ $(call pcmrule,PYROOT)
 $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCLINGEXE) $(call pcmdep,PYROOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PYROOT) -c -writeEmptyRootPCM $(PYROOTH) $(PYROOTL)
 
 $(PYROOTMAP):   $(PYROOTH) $(PYROOTL) $(ROOTCLINGEXE) $(call pcmdep,PYROOT)
 		$(MAKEDIR)

@@ -52,7 +52,7 @@ $(call pcmrule,FITSIO)
 $(FITSIODS):    $(FITSIOH) $(FITSIOL) $(ROOTCLINGEXE) $(call pcmdep,FITSIO)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,FITSIO) -c $(FITSIOH) $(FITSIOL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,FITSIO) -c -writeEmptyRootPCM $(FITSIOH) $(FITSIOL)
 
 $(FITSIOMAP):   $(FITSIOH) $(FITSIOL) $(ROOTCLINGEXE) $(call pcmdep,FITSIO)
 		$(MAKEDIR)

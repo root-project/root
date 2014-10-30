@@ -60,7 +60,7 @@ $(call pcmrule,GENETIC)
 $(GENETICDS):  $(GENETICDH1) $(GENETICL) $(GENETICLINC) $(ROOTCLINGEXE) $(call pcmdep,GENETIC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GENETIC) -c $(GENETICDH1) $(GENETICL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GENETIC) -c -writeEmptyRootPCM $(GENETICDH1) $(GENETICL)
 
 $(GENETICMAP):  $(GENETICDH1) $(GENETICL) $(GENETICLINC) $(ROOTCLINGEXE) $(call pcmdep,GENETIC)
 		$(MAKEDIR)
