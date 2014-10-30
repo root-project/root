@@ -4444,7 +4444,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    // the end of the file.
 
    TString psname, fs1, fs2;
-   char *filename;
+   const char *filename;
 
    // "[" and "]" are special characters for ExpandPathName. When they are at the end
    // of the file name (see help) they must be removed before doing ExpandPathName.
@@ -4462,15 +4462,14 @@ void TPad::Print(const char *filenam, Option_t *option)
       fs2 = exppath;
       delete [] exppath;
    }
-   filename = (char*)fs2.Data();
-
-   Int_t lenfil =  filename ? strlen(filename) : 0;
-   const char *opt = option;
-   Bool_t image = kFALSE;
+   filename = fs2.Data();
 
    // Set the default option as "Postscript" (Should be a data member of TPad)
    const char *opt_default="ps";
-   if( !opt ) opt = opt_default;
+
+   Int_t lenfil =  filename ? strlen(filename) : 0;
+   TString opt = (!option) ? opt_default : option;
+   Bool_t image = kFALSE;
 
    if ( !lenfil )  {
       psname = GetName();
@@ -4666,7 +4665,6 @@ void TPad::Print(const char *filenam, Option_t *option)
    // in case we read directly from a Root file and the canvas
    // is not on the screen, set batch mode
 
-   char *l;
    Bool_t mustOpen  = kTRUE;
    Bool_t mustClose = kTRUE;
    Bool_t copen=kFALSE, cclose=kFALSE, copenb=kFALSE, ccloseb=kFALSE;
@@ -4723,10 +4721,10 @@ void TPad::Print(const char *filenam, Option_t *option)
 
       // Create a new Postscript, PDF or image file
       gVirtualPS->SetName(psname);
-      l = (char*)strstr(opt,"Title:");
-      if (l) {
-         gVirtualPS->SetTitle(l+6);
-         strcpy(l,"pdf");
+      const Ssiz_t titlePos = opt.Index("Title:");
+      if (titlePos != kNPOS) {
+         gVirtualPS->SetTitle(opt.Data()+titlePos+6);
+         opt.Replace(titlePos,opt.Length(),"pdf");
       }
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
@@ -4745,21 +4743,21 @@ void TPad::Print(const char *filenam, Option_t *option)
          gVirtualPS = 0;
       }
 
-      if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt, psname.Data());
+      if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt.Data(), psname.Data());
    } else {
       // Append to existing Postscript, PDF or GIF file
       if (!ccloseb) {
          gVirtualPS->NewPage();
          Paint();
       }
-      l = (char*)strstr(opt,"Title:");
-      if (l) {
-         gVirtualPS->SetTitle(l+6);
-         strcpy(l,"pdf");
+      const Ssiz_t titlePos = opt.Index("Title:");
+      if (titlePos != kNPOS) {
+         gVirtualPS->SetTitle(opt.Data()+titlePos+6);
+         opt.Replace(titlePos,opt.Length(),"pdf");
       } else {
          gVirtualPS->SetTitle("PDF");
       }
-      Info("Print", "Current canvas added to %s file %s", opt, psname.Data());
+      Info("Print", "Current canvas added to %s file %s", opt.Data(), psname.Data());
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;
