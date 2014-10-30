@@ -350,6 +350,11 @@ freebsd* | openbsd* | linux*)
       if test "x$f" = "xrpath" ; then
          auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
+      if test "x$f" = "xcxx14" ; then
+         auxcflags="-std=c++1y -Wno-deprecated-declarations $auxcflags"
+      else
+         auxcflags="-std=c++11 -Wno-deprecated-declarations $auxcflags"
+      fi
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
@@ -371,6 +376,11 @@ macosx*)
          if [ $macosx_minor -ge 5 ]; then
             auxlibs="-Wl,-rpath,$libdir $auxlibs"
          fi
+      fi
+      if test "x$f" = "xcxx14" ; then
+         auxcflags="-std=c++1y $auxcflags"
+      else
+         auxcflags="-std=c++11 $auxcflags"
       fi
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
@@ -404,6 +414,8 @@ for f in $features ; do
       auxlibs="$auxlibs @alloclibdir@ @alloclib@"
    fi
 done
+
+auxcflags="$auxcflags @usercflags@"
 
 ### end of machine and compiler dependent settings ###
 
