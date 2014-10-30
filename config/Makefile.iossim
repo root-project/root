@@ -21,15 +21,20 @@ IOS_MAJOR    := $(shell echo $(IOSVERS) | cut -d . -f 1)
 ifeq ($(subst $(IOS_MAJOR),,1234),1234)
 CXX          := $(shell xcrun -find clang++)
 CC           := $(shell xcrun -find clang)
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y
+else
+CXX11FLAGS    = -std=c++11
+endif
 ifeq ($(LIBCXX),yes)
-CXX11FLAGS    = -stdlib=libc++
+CXX11FLAGS    += -stdlib=libc++
 CXX11LDFLAGS  = -stdlib=libc++
 endif
 else
 CXX          := $(shell xcrun -find g++)
 CC           := $(shell xcrun -find gcc)
 endif
-CXXFLAGS      = -std=c++11 -arch i386 -pipe -Wshadow -W -Wall \
+CXXFLAGS      = $(CXX11FLAGS) -arch i386 -pipe -Wshadow -W -Wall \
                 -Woverloaded-virtual -fsigned-char -fno-common \
                 -fvisibility-inlines-hidden $(EXTRA_CXXFLAGS) \
                 -isysroot $(IOSSDK) $(CXX11FLAGS)

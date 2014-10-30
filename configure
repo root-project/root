@@ -29,6 +29,7 @@ altf77=
 altld=
 altccset=
 gcctoolchain=
+usercflags=
 host=
 
 deprecated_options="         \
@@ -56,6 +57,7 @@ options="                    \
    enable_builtin_zlib       \
    enable_builtin_lzma       \
    enable_builtin_llvm       \
+   enable_cxx14              \
    enable_libcxx             \
    enable_castor             \
    enable_chirp              \
@@ -148,6 +150,7 @@ done
 for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_cxx11=yes
+enable_cxx14=no
 enable_libcxx=no
 enable_cocoa=
 enable_afs=no
@@ -1581,6 +1584,7 @@ FIRST argument one of the architecures given at the end of this message.
    --bindir        Binary installation dir   (<prefix>/bin)
    --build         Build configuration [debug, ...],
                    overrides the ROOTBUILD shell variable
+   --cflags        Flags to pass to the compiler that change the ABI, none by default
    --datadir       Data installation dir     (<prefix>/share/root)
    --docdir        Documentation             (<prefix>/share/doc/root)
    --elispdir      Where to put Emacs Lisp   (<prefix>/share/emacs/site-lisp)
@@ -1629,6 +1633,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-zlib       Build included libz, or use system libz
   builtin-lzma       Build included liblzma, or use system liblzma
   libcxx             Build using libc++, required by clang option (MacOS X only, for the time being)
+  cxx14              Build using C++14 compatible mode, requires gcc > 4.9.x or clang
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cocoa              Use native Cocoa/Quartz graphics backend (MacOS X only)
@@ -2258,6 +2263,7 @@ if test $# -gt 0 ; then
       # Build steering option
       #
       --build=*)      rootbuild="ROOTBUILD      := $optarg"  ;;
+      --cflags=*)      usercflags=$optarg ;;
       ################################################################
       #
       # Install path options
@@ -2535,6 +2541,11 @@ fi
 # needs gcc > 4.7.x or clang
 usecxx11="undef"
 if test "x$enable_cxx11" = "xyes"; then
+    if test "x$enable_cxx14" = "xyes"; then
+#       message "Note: c++11 mode requested but superseded by request for c++14 mode"
+#       result ""
+        enable_cxx11="no"
+    else
     message "Checking whether c++11 mode is supported"
     check_cxxopt -std=c++11
     if test $cxxopt_result -eq 0 ; then
@@ -2551,6 +2562,33 @@ if test "x$enable_cxx11" = "xyes"; then
         fi
         result "yes"
     fi
+    fi
+fi
+
+######################################################################
+#
+### echo %%% C++14 - compile using c++14 compatible option
+#
+# needs gcc > 4.9.x or clang
+usecxx14="undef"
+if test "x$enable_cxx14" = "xyes"; then
+message "Checking whether c++14 mode is supported"
+check_cxxopt -std=c++1y
+if test $cxxopt_result -eq 0 ; then
+enable_cxx14="no"
+result "no"
+result "`basename $0`: c++14 mode is requested but the current compiler does not support it."
+exit 1
+else
+usecxx11="define"
+usecxx14="define"
+# on OS X libcxx is required for C++11 support with clang
+# so turn the option on when using clang
+if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
+enable_libcxx="yes"
+fi
+result "yes"
+fi
 fi
 
 ######################################################################
@@ -7170,7 +7208,7 @@ if test ! "x$haveconfig" = "x" ; then
     fi
 
     sed -e "s|@useconfig@|TRUE|"                       \
-        -e "s|@cflags@|$haveconfig|"                   \
+        -e "s|@cflags@|$haveconfig $usercflags|"                   \
             < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 else
@@ -7221,7 +7259,7 @@ else
     fi
 
     sed -e "s|@useconfig@|FALSE|" \
-        -e "s|@cflags@||"         \
+        -e "s|@cflags@|$usercflags|"         \
         -e "s|@ldflags@||"        \
             < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
@@ -7514,6 +7552,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildxrdclt@|$buildxrdclt|"          \
     -e "s|@buildnetxng@|$buildnetxng|"          \
     -e "s|@c++11@|$enable_cxx11|"               \
+    -e "s|@c++14@|$enable_cxx14|"               \
     -e "s|@libc++@|$enable_libcxx|"             \
     -e "s|@werror@|$enable_werror|"             \
     < Makefile.tmp > $MAKEOUT
@@ -7570,6 +7609,7 @@ sed \
     -e "s|@hascocoa@|$hascocoa|"           \
     -e "s|@hasvc@|$hasvc|"                 \
     -e "s|@usec++11@|$usecxx11|"           \
+    -e "s|@usec++14@|$usecxx14|"           \
     -e "s|@uselibc++@|$uselibcxx|"         \
     -e "s|@hasllvm@|$hasllvm|"             \
     -e "s|@llvmdir@|$llvmdir|"             \
@@ -7695,6 +7735,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@altcxx@|$altcxx2|"              \
     -e "s|@altf77@|$altf772|"              \
     -e "s|@altld@|$altld2|"                \
+    -e "s|@usercflags@|$usercflags|"       \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT

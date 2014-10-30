@@ -30,17 +30,22 @@ endif
 ifeq ($(subst $(APPLE_CLANG),,12),12)
 CXX           = clang++
 CC            = clang
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y
+else
+CXX11FLAGS    = -std=c++11
+endif
 ifeq ($(LIBCXX),yes)
-CXX11FLAGS    = -stdlib=libc++
+CXX11FLAGS    += -stdlib=libc++
 CXX11LDFLAGS  = -stdlib=libc++
 endif
 else
 CXX           = g++
 CC            = gcc
 endif
-CXXFLAGS      = -m64 -std=c++11 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
+CXXFLAGS      = -m64 $(CXX11FLAGS) -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
-                $(TARGETFLAGS) $(CXX11FLAGS)
+                $(TARGETFLAGS)
 CFLAGS        = -m64 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS)
 COMPILER      = gnu
