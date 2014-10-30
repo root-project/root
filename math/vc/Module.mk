@@ -27,9 +27,7 @@ ALLLIBS      += $(VCLIBVC)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/Vc/%: $(MODDIRI)/Vc/%
-	@(if [ ! -d "include/Vc" ]; then    \
-	   mkdir -p include/Vc;             \
-	fi)
+	mkdir -p $(dir $@)
 	cp -R $< $@
 
 escapeflag = $(subst ~,_,$(subst /,_,$(subst :,_,$(subst =,_,$(subst .,_,$(subst -,_,$(1)))))))
