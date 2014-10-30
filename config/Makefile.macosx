@@ -36,6 +36,9 @@ CC            = clang
 ifeq ($(CXX11),yes)
 CXX11FLAGS    = -std=c++11
 endif
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y
+endif
 else
 CXX           = g++
 CC            = gcc

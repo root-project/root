@@ -17,6 +17,9 @@ endif
 ifeq ($(CXX11),yes)
 CXX11FLAGS    = -std=c++11 -Wno-deprecated-declarations
 endif
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y -Wno-deprecated-declarations
+endif
 
 # Compiler:
 CXX           = g++
