@@ -524,7 +524,7 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       }
       if (fLineWidth>1) {
          PrintStr(",line width=");
-         WriteReal(fLineWidth*0.2, kFALSE);
+         WriteReal(0.9*fLineWidth, kFALSE);
       }
    } else {
       SetColor(fFillColor);
