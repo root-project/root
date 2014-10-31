@@ -1526,6 +1526,9 @@ bool HeaderFileInfoTrait::EqualKey(internal_key_ref a, internal_key_ref b) {
     = OriginalFileMap.find(a.Filename);
   if (iName != OriginalFileMap.end())
     aName = iName->second;
+  else
+    while (aName.startswith("./"))
+      aName = aName.drop_front(2);
 
   if (aName.compare(b.Filename) == 0)
     return true;
