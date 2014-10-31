@@ -1293,14 +1293,18 @@ Int_t TTabCom::Complete(const TRegexp & re,
          {
             IfDebug(std::cerr << "printing ambiguous matches" << std::endl);
             out << std::endl;
+            std::set<std::string> alreadyPrinted;
             while ((pObj = next_match())) {
                s = pObj->GetName();
-               s0 = next_fullpath()->GetName();
-               if (!ExcludedByFignore(s) || nGoodStrings == 0) {
-                  if (IsDirectory(s0))
-                     out << s << "/" << std::endl;
-                  else
-                     out << s << std::endl;
+               if (alreadyPrinted.insert(s).second) {
+                  // Nothing of that name has been printed yet.
+                  s0 = next_fullpath()->GetName();
+                  if (!ExcludedByFignore(s) || nGoodStrings == 0) {
+                     if (IsDirectory(s0))
+                        out << s << "/" << std::endl;
+                     else
+                        out << s << std::endl;
+                  }
                }
             }
             pos = -2;
