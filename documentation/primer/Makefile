@@ -1,6 +1,6 @@
 MDFILES=titlepage.md Introduction.md ROOT_as_calculator.md \
 	your_first_ROOT_macro.md graphs.md histograms.md \
-	functions_and_parameter_estimation.md filio.md \
+	functions_and_parameter_estimation.md filio.md root_in_python.md \
 	concludingRemarks.md references.md
 
 OPTIONS=-s -S -f markdown --toc --chapters --number-sections \
