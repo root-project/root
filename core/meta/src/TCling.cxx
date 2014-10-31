@@ -1220,6 +1220,15 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
+
+      auto listOfKeys = pcmFile->GetListOfKeys();
+
+      // This is an empty pcm
+      if (listOfKeys && listOfKeys->GetSize() == 0) {
+         delete pcmFile;
+         return kTRUE;
+      }
+
       TObjArray *protoClasses;
       if (gDebug > 1) 
             ::Info("TCling::LoadPCM","reading protoclasses for %s \n",pcmFileName.Data());

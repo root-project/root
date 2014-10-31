@@ -80,26 +80,21 @@ void AddAncestorPCMROOTFile(const char *pcmName)
    gAncestorPCMNames.emplace_back(pcmName);
 }
 
-void ResetPCMContent()
-{
-   // Empty the PCM, because its information is in the PCH.
-   // We write an file with empty keys for symmetry reasons.
-   gClassesToStore.clear();
-   gTypedefsToStore.clear();
-   gEnumsToStore.clear();
-   gAncestorPCMNames.clear();
-}
-
 extern "C"
 bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
 {
    // Write all persistent TClasses.
 
-   // Reset the content of the pcm
-   if (writeEmptyRootPCM) ResetPCMContent();
-
    // Avoid plugins.
    TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
+
+   // Don't use TFile::Open(); we don't need plugins.
+   TFile dictFile((gPCMFilename + "?filetype=pcm").c_str(), "RECREATE");
+
+   // Reset the content of the pcm
+   if (writeEmptyRootPCM) {
+      return true;
+   };
 
    TObjArray protoClasses(gClassesToStore.size());
    for (const auto & normName : gClassesToStore) {
@@ -179,8 +174,6 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
       enums.AddLast(en);
    }
 
-   // Don't use TFile::Open(); we don't need plugins.
-   TFile dictFile((gPCMFilename + "?filetype=pcm").c_str(), "RECREATE");
    if (dictFile.IsZombie())
       return false;
    // Instead of plugins:
