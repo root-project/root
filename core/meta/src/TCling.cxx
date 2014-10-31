@@ -1464,7 +1464,7 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   if (fHeaderParsingOnDemand){
+   if (fHeaderParsingOnDemand && fwdDeclsCode){
       // We now parse the forward declarations. All the classes are then modified
       // in order for them to have an external lexical storage.
       std::string fwdDeclsCodeLessEnums;
