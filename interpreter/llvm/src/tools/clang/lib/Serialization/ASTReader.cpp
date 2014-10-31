@@ -1520,15 +1520,23 @@ bool HeaderFileInfoTrait::EqualKey(internal_key_ref a, internal_key_ref b) {
   if (a.Size != b.Size || a.ModTime != b.ModTime)
     return false;
 
-  if (strcmp(a.Filename, b.Filename) == 0)
+  StringRef aName = a.Filename;
+  // a comes from PCH, see llvm::OnDiskChainedHashTable::find().
+  llvm::StringMap<std::string>::const_iterator iName
+    = OriginalFileMap.find(a.Filename);
+  if (iName != OriginalFileMap.end())
+    aName = iName->second;
+
+  if (aName.compare(b.Filename) == 0)
     return true;
 
-  if (StringRef(b.Filename).endswith(a.Filename))
+  // Might have partial name in PCH.
+  if (StringRef(b.Filename).endswith(aName))
     return true;
   
   // Determine whether the actual files are equivalent.
   FileManager &FileMgr = Reader.getFileManager();
-  const FileEntry *FEA = FileMgr.getFile(a.Filename);
+  const FileEntry *FEA = FileMgr.getFile(aName);
   const FileEntry *FEB = FileMgr.getFile(b.Filename);
   return (FEA && FEA == FEB);
 }
@@ -2156,8 +2164,10 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
       File = FileMgr.getFile(Resolved);
     if (!File) {
       StringRef PPResolved = resolveFileThroughHeaderSearch(PP, Filename);
-      if (!PPResolved.empty())
+      if (!PPResolved.empty()) {
         File = FileMgr.getFile(PPResolved);
+	OriginalFileMap[Filename] = PPResolved;
+      }
     }
   }
 
@@ -2255,8 +2265,10 @@ const FileEntry *ASTReader::getFileEntry(StringRef filenameStrRef) {
       File = FileMgr.getFile(resolved);
     if (!File) {
       StringRef PPresolved = resolveFileThroughHeaderSearch(PP, Filename);
-      if (!PPresolved.empty())
+      if (!PPresolved.empty()) {
         File = FileMgr.getFile(PPresolved);
+	OriginalFileMap[Filename] = PPresolved;
+      }
     }
   }
 
@@ -3232,6 +3244,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
                    (const unsigned char *)F.HeaderFileInfoTableData,
                    HeaderFileInfoTrait(*this, F, 
                                        &PP.getHeaderSearchInfo(),
+                                       OriginalFileMap,
                                        Blob.data() + Record[2]));
         
         PP.getHeaderSearchInfo().SetExternalSource(this);
