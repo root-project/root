@@ -18,9 +18,9 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -std=c++11 -m32 -pipe -Wall -fsigned-char -fPIC \
-                -I/usr/X11/include $(EXTRA_CXXFLAGS)
+                -I/usr/X11/include $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -pipe -m32 -Wall -fPIC -fsigned-char \
-                -I/usr/X11/include $(EXTRA_CFLAGS)
+                -I/usr/X11/include $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

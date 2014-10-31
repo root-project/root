@@ -37,9 +37,9 @@ endif
 CXXFLAGS      = $(CXX11FLAGS) -arch arm64 -pipe -Wshadow -W -Wall \
                 -Woverloaded-virtual -fsigned-char -fno-common \
                 -fvisibility-inlines-hidden $(EXTRA_CXXFLAGS) \
-                -isysroot $(IOSSDK) $(CXX11FLAGS)
+                -isysroot $(IOSSDK) $(CXX11FLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -arch arm64 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) -isysroot $(IOSSDK)
+                $(EXTRA_CFLAGS) -isysroot $(IOSSDK) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

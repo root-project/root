@@ -18,8 +18,8 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -std=c++11 -pipe -W -Wall -fPIC -I/usr/local/include \
-                $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -W -Wall -fPIC -I/usr/local/include $(EXTRA_CFLAGS)
+                $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -pipe -W -Wall -fPIC -I/usr/local/include $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

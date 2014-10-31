@@ -17,8 +17,8 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -std=c++11 -fPIC -DR__AIXGCC -fsigned-char $(EXTRA_CXXFLAGS)
-CFLAGS        = -fPIC -DR__AIXGCC -fsigned-char $(EXTRA_CFLAGS)
+CXXFLAGS      = -std=c++11 -fPIC -DR__AIXGCC -fsigned-char $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -fPIC -DR__AIXGCC -fsigned-char $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

@@ -21,8 +21,8 @@ MICFLAGS      = -mmic
 CXX           = icc
 CC            = icc
 CXXFLAGS      = -std=c++11 -fPIC -wd1476 $(MICFLAGS) $(EXTRA_CXXFLAGS) \
-                -m64 -no-vec -no-fma -Wall -DWARNINGMSG
-CFLAGS        = -m64 -fPIC $(MICFLAGS) $(EXTRA_CFLAGS) -restrict
+                -m64 -no-vec -no-fma -Wall -DWARNINGMSG $(USERCONF_CXXFLAGS)
+CFLAGS        = -m64 -fPIC $(MICFLAGS) $(EXTRA_CFLAGS) -restrict $(USERCONF_CFLAGS)
 
 # Linker:
 LD            = icpc

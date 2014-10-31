@@ -17,8 +17,8 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -fPIC -I/usr/include/X11R5 $(EXTRA_CXXFLAGS)
-CFLAGS        = -fPIC -I/usr/include/X11R5 $(EXTRA_CFLAGS)
+CXXFLAGS      = -fPIC -I/usr/include/X11R5 $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -fPIC -I/usr/include/X11R5 $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

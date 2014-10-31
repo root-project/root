@@ -38,8 +38,8 @@ SUNCC5        = true
 CXX           = CC
 CC            = cc
 CXXFLAGS      = -KPIC -I/usr/openwin/include $(CCSTL) $(CCPTR) \
-                $(EXTRA_CXXFLAGS) $(MTOPT)
-CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS) $(MTOPT)
+                $(EXTRA_CXXFLAGS) $(MTOPT) $(USERCONF_CXXFLAGS)
+CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS) $(MTOPT) $(USERCONF_CFLAGS)
 CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
 
 # Linker:

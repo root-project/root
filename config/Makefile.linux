@@ -25,8 +25,8 @@ CC            = gcc
 CXXFLAGS      = -pipe -m32 -msse -mfpmath=sse -Wall -W \
                 -Woverloaded-virtual -fPIC -msse -mfpmath=sse \
                 $(CXX11FLAGS) -Wno-deprecated-declarations \
-                $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -m32 -msse -mfpmath=sse -Wall -W -fPIC $(EXTRA_CFLAGS)
+                $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -pipe -m32 -msse -mfpmath=sse -Wall -W -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CLINGCXXFLAGS = -m32 -msse -mfpmath=sse
 COMPILER      = gnu
 

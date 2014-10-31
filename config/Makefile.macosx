@@ -41,9 +41,9 @@ CC            = gcc
 endif
 CXXFLAGS      = -m32 $(CXX11FLAGS) -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
-                $(TARGETFLAGS)
+                $(TARGETFLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -m32 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS)
+                $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS) $(USERCONF_CFLAGS)
 CLINGCXXFLAGS = -m32
 COMPILER      = gnu
 

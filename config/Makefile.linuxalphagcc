@@ -17,8 +17,8 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -fPIC $(EXTRA_CFLAGS)
+CXXFLAGS      = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -pipe -Wall -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

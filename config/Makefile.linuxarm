@@ -18,8 +18,8 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -std=c++11 -Wall -fsigned-char -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -Wall -fsigned-char -fPIC $(EXTRA_CFLAGS)
+CXXFLAGS      = -std=c++11 -Wall -fsigned-char -fPIC $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -Wall -fsigned-char -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

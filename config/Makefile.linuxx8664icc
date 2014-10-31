@@ -22,8 +22,8 @@ endif
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -fPIC $(CXX11FLAGS) -wd1476 $(EXTRA_CXXFLAGS)
-CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict
+CXXFLAGS      = -fPIC $(CXX11FLAGS) -wd1476 $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict $(USERCONF_CFLAGS)
 
 # Linker:
 LD            = icpc
