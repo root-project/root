@@ -31,3 +31,6 @@ ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-execCheck
                   OUTREF execCheckComplexTypedefs.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
+ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-execLDAPAttribute
+                  MACRO execLDAPAttribute.C
+                  OUTREF execLDAPAttribute.ref)
