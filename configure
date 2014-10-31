@@ -30,6 +30,7 @@ altld=
 altccset=
 gcctoolchain=
 usercflags=
+usercxxflags=
 host=
 
 deprecated_options="         \
@@ -1584,7 +1585,8 @@ FIRST argument one of the architecures given at the end of this message.
    --bindir        Binary installation dir   (<prefix>/bin)
    --build         Build configuration [debug, ...],
                    overrides the ROOTBUILD shell variable
-   --cflags        Flags to pass to the compiler that change the ABI, none by default
+   --cflags        Flags to pass to the C compiler that change the ABI, none by default
+   --cxxflags      Flags to pass to the C++ compiler that change the ABI, none by default
    --datadir       Data installation dir     (<prefix>/share/root)
    --docdir        Documentation             (<prefix>/share/doc/root)
    --elispdir      Where to put Emacs Lisp   (<prefix>/share/emacs/site-lisp)
@@ -2264,6 +2266,7 @@ if test $# -gt 0 ; then
       #
       --build=*)      rootbuild="ROOTBUILD      := $optarg"  ;;
       --cflags=*)      usercflags=$optarg ;;
+      --cxxflags=*)    usercxxflags=$optarg ;;
       ################################################################
       #
       # Install path options
@@ -7208,7 +7211,9 @@ if test ! "x$haveconfig" = "x" ; then
     fi
 
     sed -e "s|@useconfig@|TRUE|"                       \
-        -e "s|@cflags@|$haveconfig $usercflags|"                   \
+        -e "s|@cflags@|$haveconfig $usercflags|"       \
+        -e "s|@usercflags@|$usercflags|"               \
+        -e "s|@usercxxflags@|$usercxxxflags|"          \
             < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 else
@@ -7259,7 +7264,9 @@ else
     fi
 
     sed -e "s|@useconfig@|FALSE|" \
-        -e "s|@cflags@|$usercflags|"         \
+        -e "s|@cflags@||"         \
+        -e "s|@usercflags@|$usercflags|"         \
+        -e "s|@usercxxflags@|$usercxxflags|"     \
         -e "s|@ldflags@||"        \
             < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
@@ -7736,6 +7743,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@altf77@|$altf772|"              \
     -e "s|@altld@|$altld2|"                \
     -e "s|@usercflags@|$usercflags|"       \
+    -e "s|@usercxxflags@|$usercxxflags|"   \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT
