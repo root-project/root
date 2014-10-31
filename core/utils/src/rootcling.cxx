@@ -4394,14 +4394,20 @@ int RootCling(int argc,
             break;
          }
       }
+
+      if (writeEmptyRootPCM){
+         headersDeclsMap.clear();
+      }
+
+
       const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
-            detectedUmbrella,
-            true);
+                                                                                      detectedUmbrella,
+                                                                                      true);
       const std::string fwdDeclsString =
 #ifndef ROOT_STAGE1_BUILD
-         GenerateFwdDeclString(scan, interp);
+         writeEmptyRootPCM ? "nullptr" : GenerateFwdDeclString(scan, interp);
 #else
-         "\"\"";
+         "nullptr";
 #endif
       GenerateModule(modGen,
                      CI,
