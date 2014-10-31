@@ -5198,7 +5198,7 @@ int GenReflex(int argc, char **argv)
          WRITEEMPTYROOTPCM,
          NOTYPE ,
          "" , "writeEmptyPCM",
-         ROOT::option::Arg::None,
+         option::Arg::None,
          "--writeEmptyPCM\tWrite an empty ROOT pcm.\n"
       },
 
