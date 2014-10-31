@@ -19,10 +19,16 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSX_CPU   := $(shell uname -p)
 FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y
+else
+CXX11FLAGS    = -std=c++11
+endif
+
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -std=c++11 -fPIC -wd1476 $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CXXFLAGS      = $(CXX11FLAGS) -fPIC -wd1476 $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict $(USERCONF_CFLAGS)
 
 # Compiler version:

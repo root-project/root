@@ -14,12 +14,18 @@ OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y
+else
+CXX11FLAGS    = -std=c++11
+endif
+
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -mx32 -Wshadow -Wall -W -Woverloaded-virtual \
+CXXFLAGS      = $(CXX11FLAGS) -pipe -mx32 -Wshadow -Wall -W -Woverloaded-virtual \
                 -fPIC -msse -mfpmath=sse $(EXTRA_CXXFLAGS) \
-                -std=c++11 -Wno-deprecated-declarations $(USERCONF_CXXFLAGS)
+                -Wno-deprecated-declarations $(USERCONF_CXXFLAGS)
 CFLAGS        = -pipe -mx32 -Wshadow -Wall -W -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 

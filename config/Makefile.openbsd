@@ -14,10 +14,16 @@ OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y
+else
+CXX11FLAGS    = -std=c++11
+endif
+
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -std=c++11 -pipe -W -Wall -fPIC -I/usr/X11R6/include \
+CXXFLAGS      = $(CXX11FLAGS) -pipe -W -Wall -fPIC -I/usr/X11R6/include \
                 -I/usr/local/include $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -pipe -W -Wall -fPIC -I/usr/X11R6/include \
                 -I/usr/local/include $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
