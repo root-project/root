@@ -17,14 +17,14 @@ endif
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS)
-CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict
+CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -fPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -fPIC $(EXTRA_CFLAGS) -restrict \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT $(USERCONF_CFLAGS)
 
 # Compiler version:
 ICC_MAJOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \

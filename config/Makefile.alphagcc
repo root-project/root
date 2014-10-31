@@ -17,13 +17,13 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -fPIC -mcpu=ev5 -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
-CFLAGS        = -fPIC -mcpu=ev5 -D__osf__ -D__alpha $(EXTRA_CFLAGS)
+CXXFLAGS      = -fPIC -mcpu=ev5 -D__osf__ -D__alpha $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -fPIC -mcpu=ev5 -D__osf__ -D__alpha $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -fPIC -mcpu=ev5 \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__64BIT \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -fPIC -mcpu=ev5 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT $(EXTRA_CFLAGS)
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

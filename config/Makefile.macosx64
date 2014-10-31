@@ -49,19 +49,19 @@ CC            = gcc
 endif
 CXXFLAGS      = -m64 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
-                $(TARGETFLAGS) $(CXX11FLAGS)
+                $(TARGETFLAGS) $(CXX11FLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -m64 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS)
+                $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -m64 -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
-                -DG__STD_EXCEPTION $(TARGETFLAGS) $(CXX11FLAGS)
+                -DG__STD_EXCEPTION $(TARGETFLAGS) $(CXX11FLAGS) $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -m64 -pipe -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
-                -DG__STD_EXCEPTION $(TARGETFLAGS)
+                -DG__STD_EXCEPTION $(TARGETFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 ifeq ($(WERROR),yes)

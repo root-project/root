@@ -18,14 +18,14 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -Wall -fsigned-char -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -Wall -fsigned-char -fPIC $(EXTRA_CFLAGS)
+CXXFLAGS      = -Wall -fsigned-char -fPIC $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -Wall -fsigned-char -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -Wall -fsigned-char -fPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -Wall -fsigned-char -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

@@ -17,12 +17,12 @@ endif
 # Compiler:
 CXX           = /opt/SUNWspro/bin/CC
 CC            = /opt/SUNWspro/bin/cc
-CXXFLAGS      = -KPIC -I/usr/openwin/include $(EXTRA_CXXFLAGS)
-CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS)
+CXXFLAGS      = -KPIC -I/usr/openwin/include $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
-                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
-                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
 
 # Linker:

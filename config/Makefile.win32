@@ -79,12 +79,12 @@ CXX           = $(ROOT_SRCDIR)/build/win/cl.sh
 CC            = $(ROOT_SRCDIR)/build/win/cl.sh
 CPPPREP       = cl.exe -E -C -nologo
 CXXFLAGS      = -nologo -FIw32pragma.h \
-                $(BLDCXXFLAGS) $(EXTRA_CXXFLAGS) -D_WIN32
+                $(BLDCXXFLAGS) $(EXTRA_CXXFLAGS) -D_WIN32 $(USERCONF_CXXFLAGS)
 CXXOUT        = -Fo
 CFLAGS        = -nologo -I$(ROOT_SRCDIR)/build/win -FIw32pragma.h -FIsehmap.h \
-                $(BLDCFLAGS) $(EXTRA_CFLAGS) -D_WIN32
-CINTCXXFLAGS := $(CXXFLAGS) $(CINTOPT)
-CINTCFLAGS   := $(CFLAGS) $(CINTOPT)
+                $(BLDCFLAGS) $(EXTRA_CFLAGS) -D_WIN32 $(USERCONF_CFLAGS)
+CINTCXXFLAGS := $(CXXFLAGS) $(CINTOPT) $(USERCONF_CXXFLAGS)
+CINTCFLAGS   := $(CFLAGS) $(CINTOPT) $(USERCONF_CFLAGS)
 
 # Linker:
 LD            = $(ROOT_SRCDIR)/build/win/ld.sh

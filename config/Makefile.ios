@@ -1,4 +1,4 @@
-# -*- mode: makefile -*-
+C# -*- mode: makefile -*-
 #
 # Makefile of ROOT for MacOS X, using g++ 32-bit mode
 
@@ -37,20 +37,20 @@ CC           := $(shell xcrun -find gcc)
 endif
 CXXFLAGS      = -arch armv7 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common \
-                $(EXTRA_CXXFLAGS) -isysroot $(IOSSDK) $(CXX11FLAGS)
+                $(EXTRA_CXXFLAGS) -isysroot $(IOSSDK) $(CXX11FLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -arch armv7 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) -isysroot $(IOSSDK)
+                $(EXTRA_CFLAGS) -isysroot $(IOSSDK) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -arch armv7 -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION $(CXX11FLAGS) \
-                $(EXTRA_CXXFLAGS) -isysroot $(IOSSDK)
+                $(EXTRA_CXXFLAGS) -isysroot $(IOSSDK) $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -arch armv7 -pipe -W -Wall -fsigned-char -fno-common \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION \
-                $(EXTRA_CFLAGS) -isysroot $(IOSSDK)
+                $(EXTRA_CFLAGS) -isysroot $(IOSSDK) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

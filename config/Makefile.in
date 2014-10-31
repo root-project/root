@@ -26,7 +26,9 @@ USECONFIG      := @useconfig@
 MKLIBOPTIONS   := @mkliboption@
 
 EXTRA_CFLAGS   := -Iinclude @cflags@
+USERCONF_CFLAGS:= @usercflags@
 EXTRA_CXXFLAGS := -Iinclude @cflags@
+USERCONF_CXXFLAGS:= @usercxxflags@
 EXTRA_LDFLAGS  := @ldflags@
 WERROR         := @werror@
 WINRTDEBUG     := @winrtdebug@

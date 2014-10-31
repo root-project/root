@@ -24,17 +24,17 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -m32 -msse -mfpmath=sse -Wall -W -Woverloaded-virtual \
-                -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS)
-CFLAGS        = -pipe -m32 -msse -mfpmath=sse -Wall -W -fPIC $(EXTRA_CFLAGS)
+                -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -pipe -m32 -msse -mfpmath=sse -Wall -W -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -pipe -m32 -msse -mfpmath=sse -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION
+                -DG__STD_EXCEPTION $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -pipe -m32 -msse -mfpmath=sse -Wall -W -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION
+                -DG__STD_EXCEPTION $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

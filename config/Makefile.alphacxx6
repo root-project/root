@@ -18,15 +18,15 @@ endif
 CXX           = cxx
 CC            = cc
 CXXFLAGS      = -tlocal -D__osf__ -D__alpha -D__USE_STD_IOSTREAM \
-                $(EXTRA_CXXFLAGS)
-CFLAGS        = -D__osf__ -D__alpha $(EXTRA_CFLAGS)
+                $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -D__osf__ -D__alpha $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -tlocal $(EXTRA_CXXFLAGS) -D__USE_STD_IOSTREAM \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT \
-                -DG__STD_EXCEPTION 
+                -DG__STD_EXCEPTION  $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__64BIT \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                $(EXTRA_CFLAGS)
+                $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 EXTRA_CXXFLAGS := -Iinclude -long_double_size 64
 
 # Linker:

@@ -36,13 +36,13 @@ SUNCC5        = true
 CXX           = CC
 CC            = cc
 CXXFLAGS      = -m64 -KPIC -I/usr/openwin/include $(CCSTL) $(CCPTR) \
-                $(EXTRA_CXXFLAGS) $(MTOPT)
-CFLAGS        = -m64 -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS) $(MTOPT)
+                $(EXTRA_CXXFLAGS) $(MTOPT) $(USERCONF_CXXFLAGS)
+CFLAGS        = -m64 -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS) $(MTOPT) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -m64 -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 $(EXTRA_CXXFLAGS) -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO \
-                $(CCSTL) $(CCPTR) $(MTOPT)
+                $(CCSTL) $(CCPTR) $(MTOPT) $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -m64 -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CFLAGS) \
-                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(MTOPT)
+                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(MTOPT) $(USERCONF_CFLAGS)
 CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
 
 # Linker:

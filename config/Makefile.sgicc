@@ -17,12 +17,12 @@ endif
 # Compiler:
 CXX           = CC
 CC            = cc
-CXXFLAGS      = -n32 -ptused -LANG:std -signed -DIRIX64 -DSGI_REL=62 $(EXTRA_CXXFLAGS) -I/usr/include/CC.sgi -woff 1107,3505
-CFLAGS        = -n32 -signed -DIRIX64 $(EXTRA_CFLAGS)
+CXXFLAGS      = -n32 -ptused -LANG:std -signed -DIRIX64 -DSGI_REL=62 $(EXTRA_CXXFLAGS) -I/usr/include/CC.sgi -woff 1107,3505 $(USERCONF_CXXFLAGS)
+CFLAGS        = -n32 -signed -DIRIX64 $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -n32 -ptused -LANG:std -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
-                -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS) -I/usr/include/CC.sgi
+                -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS) -I/usr/include/CC.sgi $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -n32 -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
-                -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+                -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 
 # Linker:
 LD            = CC

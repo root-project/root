@@ -18,19 +18,19 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -Wall -W -Woverloaded-virtual \
-                -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -W -fPIC $(EXTRA_CFLAGS)
+                -fPIC $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -pipe -Wall -W -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 # G__64BIT should only be defined if mips is truly 64bit.  Check for
 # example that _ABI64 is defined or so. 
 CINTCXXFLAGS  = -pipe -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION 
+                -DG__STD_EXCEPTION  $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -pipe -Wall -W -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION 
+                -DG__STD_EXCEPTION  $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:
