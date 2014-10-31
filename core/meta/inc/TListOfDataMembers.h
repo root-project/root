@@ -75,6 +75,7 @@ public:
    void       AddBefore(const TObject *before, TObject *obj);
    void       AddBefore(TObjLink *before, TObject *obj);
 
+   TClass    *GetClass() const { return fClass; }
    void       SetClass(TClass* cl) { fClass = cl; }
    void       Update(TDictionary *member);
 
