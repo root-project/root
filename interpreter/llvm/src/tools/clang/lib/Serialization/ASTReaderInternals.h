@@ -202,6 +202,7 @@ class HeaderFileInfoTrait {
   ASTReader &Reader;
   ModuleFile &M;
   HeaderSearch *HS;
+  const llvm::StringMap<std::string>& OriginalFileMap;
   const char *FrameworkStrings;
 
 public:
@@ -219,8 +220,10 @@ public:
   typedef unsigned offset_type;
   
   HeaderFileInfoTrait(ASTReader &Reader, ModuleFile &M, HeaderSearch *HS,
+                      const llvm::StringMap<std::string>& OFM,
                       const char *FrameworkStrings)
-  : Reader(Reader), M(M), HS(HS), FrameworkStrings(FrameworkStrings) { }
+  : Reader(Reader), M(M), HS(HS), OriginalFileMap(OFM),
+  FrameworkStrings(FrameworkStrings) { }
   
   static hash_value_type ComputeHash(internal_key_ref ikey);
   static internal_key_type GetInternalKey(const FileEntry *FE);
