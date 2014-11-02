@@ -5374,6 +5374,12 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
          continue;
       for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
               DE = I->m_DGR.end(); DI != DE; ++DI) {
+
+         // Do not mark a decl as unloaded if we are going to keep it
+         // (because it comes from the pch) ...
+         if ( (*DI)->isFromASTFile() )
+            continue;
+
          // Deal with global variables and globa enum constants.
          if (isa<VarDecl>(*DI) || isa<EnumConstantDecl>(*DI)) {
             clang::ValueDecl* VD = dyn_cast<ValueDecl>(*DI);
