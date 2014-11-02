@@ -39,6 +39,7 @@ private:
    TString       fDefaultPrompt;      // default prompt: "root [%d] "
    char          fPrompt[64];         // interpreter prompt
    Bool_t        fInterrupt;          // if true macro execution will be stopped
+   Bool_t        fCaughtException;    // TRint just caught an exception or signal
    TFileHandler *fInputHandler;       // terminal input handler
 
    TRint(const TRint&);               // not implemented

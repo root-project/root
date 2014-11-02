@@ -129,8 +129,9 @@ ClassImp(TRint)
 
 //______________________________________________________________________________
 TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
-             Int_t numOptions, Bool_t noLogo)
-       : TApplication(appClassName, argc, argv, options, numOptions)
+             Int_t numOptions, Bool_t noLogo):
+   TApplication(appClassName, argc, argv, options, numOptions),
+   fCaughtException(kFALSE)
 {
    // Create an application environment. The TRint environment provides an
    // interface to the WM manager functionality and eventloop via inheritance
@@ -417,7 +418,7 @@ void TRint::Run(Bool_t retrn)
             // to call Getlinem(kInit, GetPrompt());
             needGetlinemInit = kTRUE;
 
-            if (error != 0) break;
+            if (error != 0 || fCaughtException) break;
          }
       } ENDTRY;
 
@@ -425,6 +426,8 @@ void TRint::Run(Bool_t retrn)
          if (retrn) return;
          if (error) {
             retval = error;
+         } else if (fCaughtException) {
+            retval = 1;
          }
          // Bring retval into sensible range, 0..125.
          if (retval < 0) retval = 1;
@@ -444,7 +447,7 @@ void TRint::Run(Bool_t retrn)
    if (QuitOpt()) {
       printf("\n");
       if (retrn) return;
-      Terminate(0);
+      Terminate(fCaughtException ? 1 : 0);
    }
 
    TApplication::Run(retrn);
@@ -633,6 +636,7 @@ void TRint::HandleException(Int_t sig)
    // kSigIllegalInstruction and kSigFloatingException) trapped in TSystem.
    // Specific TApplication implementations may want something different here.
 
+   fCaughtException = kTRUE;
    if (TROOT::Initialized()) {
       if (gException) {
          Getlinem(kCleanUp, 0);
