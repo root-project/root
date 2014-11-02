@@ -2205,13 +2205,14 @@ void TCling::ClearStack()
 }
 
 //______________________________________________________________________________
-void TCling::Declare(const char* code)
+bool TCling::Declare(const char* code)
 {
    // Declare code to the interpreter, without any of the interpreter actions
    // that could trigger a re-interpretation of the code. I.e. make cling
    // behave like a compiler: no dynamic lookup, no input wrapping for
    // subsequent execution, no automatic provision of declarations but just a
    // plain #include.
+   // Returns true on success, false on failure.
 
    int oldload = SetClassAutoloading(0);
    int oldparse = SetClassAutoparsing(0);
@@ -2220,12 +2221,13 @@ void TCling::Declare(const char* code)
    bool oldRawInput = fInterpreter->isRawInputEnabled();
    fInterpreter->enableRawInput(true);
 
-   LoadText(code);
+   Bool_t ret = LoadText(code);
 
    fInterpreter->enableRawInput(oldRawInput);
    fInterpreter->enableDynamicLookup(oldDynLookup);
    SetClassAutoloading(oldload);
    SetClassAutoparsing(oldparse);
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -5709,12 +5711,13 @@ int TCling::LoadFile(const char* path) const
 }
 
 //______________________________________________________________________________
-void TCling::LoadText(const char* text) const
+Bool_t TCling::LoadText(const char* text) const
 {
    // Load the declarations from text into the interpreter.
    // Note that this cannot be (top level) statements; text must contain
    // top level declarations.
-   fInterpreter->declare(text);
+   // Returns true on success, false on failure.
+   return (fInterpreter->declare(text) == cling::Interpreter::kSuccess);
 }
 
 //______________________________________________________________________________

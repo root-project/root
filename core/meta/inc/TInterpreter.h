@@ -103,7 +103,7 @@ public:
    virtual Int_t    AutoParse(const char* cls) = 0;
    virtual void     ClearFileBusy() = 0;
    virtual void     ClearStack() = 0; // Delete existing temporary values
-   virtual void     Declare(const char* code) = 0;
+   virtual Bool_t   Declare(const char* code) = 0;
    virtual void     EnableAutoLoading() = 0;
    virtual void     EndOfLineAction() = 0;
    virtual TClass  *GetClass(const std::type_info& typeinfo, Bool_t load) const = 0;
@@ -199,7 +199,7 @@ public:
    virtual const char *GetCurrentMacroName()  const {return 0;};
    virtual int    GetSecurityError() const{return 0;}
    virtual int    LoadFile(const char * /* path */) const {return 0;}
-   virtual void   LoadText(const char * /* text */) const {;}
+   virtual Bool_t LoadText(const char * /* text */) const {return kFALSE;}
    virtual const char *MapCppName(const char*) const {return 0;}
    virtual void   SetAlloclockfunc(void (*)()) const {;}
    virtual void   SetAllocunlockfunc(void (*)()) const {;}
