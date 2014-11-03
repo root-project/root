@@ -3661,9 +3661,18 @@ void TClass::ResetClassInfo(Long_t /* tagnum */)
 void TClass::ResetClassInfo()
 {
    // Make sure that the current ClassInfo is up to date.
-   fClassInfo = 0;
-   gInterpreter->SetClassInfo(this, true);
-   //Could use TCling__UpdateClassInfoWithDecl, but the new decl is 0
+   R__LOCKGUARD2(gInterpreterMutex);
+
+   if (fClassInfo) {
+      TClass::RemoveClassDeclId(gInterpreter->GetDeclId(fClassInfo));
+      gInterpreter->ClassInfo_Delete(fClassInfo);
+      fClassInfo = 0;
+   }
+   // We can not check at this point whether after the unload there will
+   // still be interpreter information about this class (as v5 was doing),
+   // instead this function must only be called if the definition is (about)
+   // to be unloaded.
+
    ResetCaches();
 
    // We got here because the definition Decl is about to be unloaded.
