@@ -2640,12 +2640,31 @@ void ExtractTypedefAutoloadKeys(std::list<std::string> &tdNames,
 }
 
 //______________________________________________________________________________
+void ExtractEnumAutoloadKeys(std::list<std::string> &enumNames,
+                             const std::vector<clang::EnumDecl *> &enumDecls,
+                             const cling::Interpreter &interp)
+{
+   if (!enumDecls.empty()) {
+      std::string autoLoadKey;
+      for (auto & en : enumDecls) {
+         autoLoadKey = "";
+         GetMostExternalEnclosingClassNameFromDecl(*en, autoLoadKey, interp);
+         // If there is an outer class, it is already considered
+         if (autoLoadKey.empty()) {
+            enumNames.push_back(en->getQualifiedNameAsString());
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
 int CreateNewRootMapFile(const std::string &rootmapFileName,
                          const std::string &rootmapLibName,
                          const std::list<std::string> &classesDefsList,
                          const std::list<std::string> &classesNames,
                          const std::list<std::string> &nsNames,
                          const std::list<std::string> &tdNames,
+                         const std::list<std::string> &enNames,
                          const HeadersDeclsMap_t &headersClassesMap,
                          const std::unordered_set<std::string> headersToIgnore)
 {
@@ -2679,7 +2698,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
    }
 
    // Add the "section"
-   if (!nsNames.empty() || !classesNames.empty() || !tdNames.empty()) {
+   if (!nsNames.empty() || !classesNames.empty() || !tdNames.empty() || !enNames.empty()) {
       rootmapFile << "[" << rootmapLibName << " ]\n";
 
       // Loop on selected classes and insert them in the rootmap
@@ -2720,6 +2739,16 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
             if (classesKeys.insert(autoloadKey).second)
                rootmapFile << "typedef " << autoloadKey << std::endl;
       }
+
+      // And Enums. There is no incomplete type for an enum but we can nevertheless
+      // have the key for the cases where the root typesystem is interrogated.
+      if (!enNames.empty()){
+         rootmapFile << "# List of selected enums and outer classes\n";
+         for (const auto & autoloadKey : enNames)
+            if (classesKeys.insert(autoloadKey).second)
+               rootmapFile << "enum " << autoloadKey << std::endl;
+      }
+
    }
 
    return 0;
@@ -4454,10 +4483,10 @@ int RootCling(int argc,
    std::list<std::string> classesDefsList;
 
    retCode = ExtractSelectedClassesAndTemplateDefs(scan,
-             classesNames,
-             classesNamesForRootmap,
-             classesDefsList,
-             interp);
+                                                   classesNames,
+                                                   classesNamesForRootmap,
+                                                   classesDefsList,
+                                                   interp);
    if (0 != retCode) return retCode;
 
    // Create the rootmapfile if needed
@@ -4491,12 +4520,18 @@ int RootCling(int argc,
                                     scan.fSelectedTypedefs,
                                     interp);
 
+         std::list<std::string> enumNames;
+         ExtractEnumAutoloadKeys(enumNames,
+                                 scan.fSelectedEnums,
+                                 interp);
+
          rmStatusCode = CreateNewRootMapFile(rootmapFileName,
                                              rootmapLibName,
                                              classesDefsList,
                                              classesNamesForRootmap,
                                              nsNames,
                                              typedefsRootmapLines,
+                                             enumNames,
                                              headersClassesMap,
                                              headersToIgnore);
       } else {
