@@ -423,7 +423,7 @@ void WaitLogo()
    
    if (showAboutInfo) {
       delegate = [[ROOTSplashScreenAppDelegate alloc] init];
-      [NSApp setDelegate : (id<NSFileManagerDelegate>)delegate];
+      [[NSApplication sharedApplication] setDelegate : delegate];
    }
 
    RunEventLoop();
