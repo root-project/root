@@ -5425,11 +5425,14 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
          // Cannot declare the members in a different declaration like redeclarable namespaces.
          } else if (const clang::RecordDecl* RD = dyn_cast<RecordDecl>(*DI)) {
             std::vector<TClass*> vectTClass;
-            if (TClass::GetClass(RD, vectTClass)) {
-               for (std::vector<TClass*>::iterator CI = vectTClass.begin(), CE = vectTClass.end();
-                    CI != CE; ++CI) {
-                  UnloadClassMembers((*CI), RD);
-                  (*CI)->ResetClassInfo();
+            // Only update the TClass if the definition is being unloaded.
+            if (RD->isCompleteDefinition()) {
+               if (TClass::GetClass(RD, vectTClass)) {
+                  for (std::vector<TClass*>::iterator CI = vectTClass.begin(), CE = vectTClass.end();
+                       CI != CE; ++CI) {
+                     UnloadClassMembers((*CI), RD);
+                     (*CI)->ResetClassInfo();
+                  }
                }
             }
          // Deal with namespaces. Unload the members of the current redeclaration only.
