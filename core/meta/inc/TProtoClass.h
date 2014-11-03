@@ -41,18 +41,31 @@ public:
       Int_t fDMIndex;  // index of data member in vector of data members
       Int_t fLevel;  // member level (0 : belong to this class, 1 is a data member of a data member object, etc...)
       Int_t fClassIndex; // index of class belonging to in list of dep classes
-      bool  fIsObject; // member is object
-      bool  fIsTransient; // data member is transient 
-      bool  fIsPointer;   // dta member is a pointer 
+      char  fStatusFlag;  // status of the real data member (if bit 0 set is an object, if bit 1 set is transient if bit 2 set is a pointer)
+
+      enum  { 
+         kIsObject    = BIT(0),   // member is object
+         kIsTransient = BIT(1), // data member is transient 
+         kIsPointer   = BIT(2),    // data member is a pointer 
+         kBitMask     = 0x000000ff
+      };
 
    public:
       bool IsAClass() const { return fClassIndex >= 0; }
-      TProtoRealData() : fOffset(0), fDMIndex(-1), fLevel(0), fClassIndex(-1), fIsObject(false), fIsTransient(false), fIsPointer(false) {} 
+      TProtoRealData() : fOffset(0), fDMIndex(-1), fLevel(0), fClassIndex(-1), fStatusFlag(0) {} 
       TProtoRealData(const TRealData *rd);
       virtual ~TProtoRealData();
       TRealData *CreateRealData(TClass *currentClass, TClass *parent, TRealData * parentData, int prevLevel) const;
+
+      Bool_t TestFlag(UInt_t f) const { return (Bool_t) ((fStatusFlag & f) != 0); } 
+      void SetFlag(UInt_t f, Bool_t on = kTRUE) { 
+         if (on) 
+            fStatusFlag |= f & kBitMask; 
+         else
+            fStatusFlag &= ~(f & kBitMask);  
+      } 
      
-      ClassDef(TProtoRealData, 2);//Persistent version of TRealData
+      ClassDef(TProtoRealData, 3);//Persistent version of TRealData
    };
 
 private:
