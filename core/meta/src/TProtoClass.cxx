@@ -27,7 +27,6 @@
 #include "TListOfEnums.h"
 #include "TRealData.h"
 #include "TError.h"
-#include "TROOT.h"
 
 #include <cassert>
 //______________________________________________________________________________
@@ -83,10 +82,10 @@ TProtoClass::TProtoClass(TClass* cl):
 //TObjString *clstr = new TObjString(clRD->GetName());
             if (precRd->TestBit(TRealData::kTransient)) {
                //clstr->SetBit(TRealData::kTransient);
-               protoRealData.fIsTransient = true; 
+               protoRealData.SetFlag(TProtoRealData::kIsTransient,true);
             }
             else 
-               protoRealData.fIsTransient = false; 
+               protoRealData.SetFlag(TProtoRealData::kIsTransient,false); 
                
             //      fPRealData->AddLast(clstr);
             precRd = rd;
@@ -244,13 +243,13 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
 
    // fill list of data members in TClass
    //if (cl->fData) { cl->fData->Delete(); delete cl->fData;  }
-   cl->fData = new TListOfDataMembers(); 
-   for (auto * dataMember : fData) { 
-      //printf("add data member for class %s - member %s \n",GetName(), dataMember->GetName() );
-      cl->fData->Add(dataMember); 
-   }
-   // set loaded bit to true to avoid re-loading the data members
-   cl->fData->SetIsLoaded();
+   cl->fData = new TListOfDataMembers(fData); 
+   // for (auto * dataMember : fData) { 
+   //    //printf("add data member for class %s - member %s \n",GetName(), dataMember->GetName() );
+   //    cl->fData->Add(dataMember); 
+   // }
+   // // set loaded bit to true to avoid re-loading the data members
+   // cl->fData->SetIsLoaded();* 
 
    //cl->fData = (TListOfDataMembers*)fData;
 
@@ -305,7 +304,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
             // and the fallback new TClass() below.
             currentRDClass = TClass::GetClass(GetClassName(element.fClassIndex), false /* Load */ );
             //printf("element is a class - name %s  - index %d  %s \n ",currentRDClass->GetName(), element.fClassIndex, GetClassName(element.fClassIndex) );
-            if (!currentRDClass && !element.fIsTransient) {
+            if (!currentRDClass && !element.TestFlag(TProtoRealData::kIsTransient)) {
                if (gDebug>1)
                   Info("FillTClass()",
                        "Cannot find TClass for %s; Creating an empty one in the kForwardDeclared state.",
@@ -373,7 +372,8 @@ TProtoClass::TProtoRealData::TProtoRealData(const TRealData* rd):
    fOffset(rd->GetThisOffset()),
    fDMIndex(-1),
    fLevel(0),
-   fClassIndex(-1)
+   fClassIndex(-1),
+   fStatusFlag(0)
 {
    TDataMember * dm = rd->GetDataMember(); 
    TClass * cl = dm->GetClass();
@@ -382,13 +382,12 @@ TProtoClass::TProtoRealData::TProtoRealData(const TRealData* rd):
    //printf("Index of data member %s for class %s is %d \n",dm->GetName(), cl->GetName() , fDMIndex);
    TString fullDataMemberName = rd->GetName(); // full data member name (e.g. fXaxis.fNbins)
    fLevel = fullDataMemberName.CountChar('.');
-   fIsPointer = fullDataMemberName.Contains("*");
+
+   if (fullDataMemberName.Contains("*") ) SetFlag(kIsPointer); 
 
    // Initialize this from a TRealData object.
-   fIsObject =  rd->IsObject();
-   //SetBit(kIsObject, rd->IsObject());
-   fIsTransient = rd->TestBit(TRealData::kTransient);
-   //SetBit(TRealData::kTransient, rd->TestBit(TRealData::kTransient));
+   SetFlag(kIsObject, rd->IsObject());
+   SetFlag(kIsTransient, rd->TestBit(TRealData::kTransient) );
 }
 
 //______________________________________________________________________________
@@ -410,7 +409,7 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
    TDataMember* dm = TProtoClass::FindDataMember(dmClass, fDMIndex);
 
    if (!dm && dmClass->GetState()!=TClass::kForwardDeclared) {
-      gROOT->Error("CreateRealData",
+      ::Error("CreateRealData",
              "Cannot find data member # %d of class %s for parent %s!", fDMIndex, dmClass->GetName(),
              parent->GetName());
       return nullptr;
@@ -421,7 +420,7 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
    TString realMemberName;
    // keep an empty name if data member is not found
    if (dm) realMemberName = dm->GetName(); 
-   if (fIsPointer) 
+   if (TestFlag(kIsPointer) ) 
       realMemberName = TString("*")+realMemberName;  
    else {  
       if (dm && dm->GetArrayDim() > 0) { 
@@ -453,7 +452,7 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
    //printf("adding new realdata for class %s : %s - %s   %d    %d   \n",dmClass->GetName(), realMemberName.Data(), dm->GetName(),fLevel, fDMIndex  );
 
    TRealData* rd = new TRealData(realMemberName, fOffset, dm);
-   rd->SetIsObject(fIsObject);
+   rd->SetIsObject(TestFlag(kIsObject) );
    return rd;
 }
 
@@ -472,7 +471,7 @@ Int_t TProtoClass::DataMemberIndex(TClass * cl, const char * name)
          return index; 
       index++;
    }
-   gROOT->Error("TProtoClass::DataMemberIndex","data member %s is not found in class %s",name, cl->GetName());
+   ::Error("TProtoClass::DataMemberIndex","data member %s is not found in class %s",name, cl->GetName());
    dmList->ls();
    return -1; 
 }
@@ -493,6 +492,6 @@ TDataMember * TProtoClass::FindDataMember(TClass * cl, Int_t index)
       i++;
    }
    if (cl->GetState()!=TClass::kForwardDeclared)
-      gROOT->Error("TProtoClass::FindDataMember","data member with index %d is not found in class %s",index,cl->GetName());
+      ::Error("TProtoClass::FindDataMember","data member with index %d is not found in class %s",index,cl->GetName());
    return nullptr;
 }
