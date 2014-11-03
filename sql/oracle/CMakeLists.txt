@@ -6,6 +6,7 @@ ROOT_USE_PACKAGE(io/io)
 ROOT_USE_PACKAGE(net/net)
 
 include_directories(${ORACLE_INCLUDE_DIR})
+add_definitions(${ORACLE_DEFINITIONS})
 
 ROOT_GENERATE_DICTIONARY(G__Oracle *.h MODULE Oracle LINKDEF LinkDef.h)
 
