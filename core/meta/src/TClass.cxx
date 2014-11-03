@@ -3576,15 +3576,11 @@ void TClass::ReplaceWith(TClass *newcl) const
 }
 
 //______________________________________________________________________________
-void TClass::ResetClassInfo(Long_t tagnum)
+void TClass::ResetClassInfo(Long_t /* tagnum */)
 {
    // Make sure that the current ClassInfo is up to date.
-   if (!fClassInfo || gCling->ClassInfo_Tagnum(fClassInfo) != tagnum) {
-      if (!fClassInfo)
-         fClassInfo = gInterpreter->ClassInfo_Factory();
-      gCling->ClassInfo_Init(fClassInfo,(Int_t)tagnum);
-      ResetCaches();
-   }
+
+   Warning("ResetClassInfo(Long_t tagnum)","Call to deprecated interface (does nothing)");
 }
 
 //______________________________________________________________________________
