@@ -2878,6 +2878,13 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    std::string name(cl->GetName());
    TClingClassInfo* info = new TClingClassInfo(fInterpreter, name.c_str());
    if (!info->IsValid()) {
+      if (cl->fState != TClass::kHasTClassInit) {
+         if (cl->fStreamerInfo->GetEntries() != 0) {
+            cl->fState = TClass::kEmulated;
+         } else {
+            cl->fState = TClass::kForwardDeclared;
+         }
+      }
       return;
    }
    cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transfering ownership here.
@@ -2919,7 +2926,11 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 //            There will be an emulated collection proxy, is that the same?
 //            cl->fState = TClass::kEmulated;
 //         } else {
+         if (cl->fStreamerInfo->GetEntries() != 0) {
+            cl->fState = TClass::kEmulated;
+         } else {
             cl->fState = TClass::kForwardDeclared;
+         }
 //         }
       }
    }

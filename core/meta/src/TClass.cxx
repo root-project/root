@@ -3591,10 +3591,18 @@ void TClass::ResetClassInfo()
    gInterpreter->SetClassInfo(this, true);
    //Could use TCling__UpdateClassInfoWithDecl, but the new decl is 0
    ResetCaches();
-   if (fStreamerInfo->GetEntries() != 0) {
-      fState = kEmulated;
+
+   // We got here because the definition Decl is about to be unloaded.
+   if (fState != TClass::kHasTClassInit) {
+      if (fStreamerInfo->GetEntries() != 0) {
+         fState = TClass::kEmulated;
+      } else {
+         fState = TClass::kForwardDeclared;
+      }
    } else {
-      fState = kForwardDeclared;
+      // if the ClassInfo was loaded for a class with a TClass Init and it
+      // gets unloaded, should we guess it can be reloaded?
+      fCanLoadClassInfo = kTRUE;
    }
 }
 
