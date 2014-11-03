@@ -7138,7 +7138,7 @@ if test ! "x$haveconfig" = "x" ; then
     sed -e "s|@useconfig@|TRUE|"                       \
         -e "s|@cflags@|$haveconfig $usercflags|"       \
         -e "s|@usercflags@|$usercflags|"               \
-        -e "s|@usercxxflags@|$usercxxxflags|"          \
+        -e "s|@usercxxflags@|$usercxxflags|"           \
             < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 else
