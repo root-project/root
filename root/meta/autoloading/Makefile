@@ -78,3 +78,5 @@ MissingEntriesROOT-5759: MissingEntriesROOT-5759.log
 
 exectypeDefAutoloading.log: libclasses_dictrflx.$(DllSuf)
 
+execTriggerTypedefs.log: libTriggerTypeDefs_dictrflx.$(DllSuf)
+
