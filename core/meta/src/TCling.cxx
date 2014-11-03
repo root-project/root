@@ -4167,8 +4167,8 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
    // success, -1 if the file has already been read, and -3 in case its format
    // is the old one (e.g. containing "Library.ClassName")
 
-   // For "class ", "namespace ", "typedef ", "header " respectively
-   const std::unordered_map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7}};
+   // For "class ", "namespace ", "typedef ", "header ", "enum " respectively
+   const std::map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7},{'e',5}};
 
    if (rootmapfile && *rootmapfile) {
 

@@ -180,7 +180,11 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       // Three levels of search
       theEnum = searchEnum(scopeName, enName, kNone);
       if (!theEnum && (sa & kAutoload)) {
-         gInterpreter->AutoLoad(scopeName);
+         const auto libsLoaded = gInterpreter->AutoLoad(scopeName);
+         // It could be an enum in a scope which is not selected
+         if (libsLoaded == 0){
+            gInterpreter->AutoLoad(enumName);
+         }
          theEnum = searchEnum(scopeName, enName, kAutoload);
       }
       if (!theEnum && (sa == kALoadAndInterpLookup)) {
