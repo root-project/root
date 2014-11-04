@@ -2894,6 +2894,16 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
    int             type;
    UInt_t          addr;    // good for 4 byte addresses
 
+   // Note that http://linux.die.net/man/3/gethostbyaddr
+   // claims:
+   //   The gethostbyname*() and gethostbyaddr*() functions are obsolete.
+   //   Applications should use getaddrinfo(3) and getnameinfo(3) instead.
+
+   // gethostbyaddr return the address of static data, we need to insure
+   // exclusive access ... the 'right' solution is to switch to getaddrinfo
+
+   R__LOCKGUARD(gROOTMutex);
+
 #ifdef HASNOT_INETATON
    if ((addr = (UInt_t)inet_addr(hostname)) != INADDR_NONE) {
 #else
