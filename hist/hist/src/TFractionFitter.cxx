@@ -249,6 +249,8 @@ TFractionFitter::~TFractionFitter() {
    if (fFractionFitter) delete fFractionFitter;
    delete[] fIntegralMCs;
    delete[] fFractions;
+   if (fPlot) delete fPlot; 
+   fAji.Delete();
 }
 
 //______________________________________________________________________________
@@ -608,6 +610,8 @@ TH1* TFractionFitter::GetPlot() {
    // uncertainties are taken into account).
    // Note that the name of this histogram will simply be the same as that of the
    // "data" histogram, prefixed with the string "Fraction fit to hist: ".
+   // Note also that the histogram is managed by the TFractionFitter class, so the returned pointer will be invalid if 
+   // the class is deleted 
 
    if (! fFitDone) {
       Error("GetPlot","Fit not yet performed");
@@ -945,6 +949,8 @@ TH1* TFractionFitter::GetMCPrediction(Int_t parm) const
    // Return the adjusted MC template (Aji) for template (parm).
    // Note that the (Aji) times fractions only sum to the total prediction
    // of the fit if all weights are 1.
+   // Note also that the histogram is managed by the TFractionFitter class, so the returned pointer will be invalid if 
+   // the class is deleted 
 
    CheckParNo(parm);
    if ( !fFitDone ) {
