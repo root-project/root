@@ -55,10 +55,12 @@ public:
    TListOfDataMembers(TClass *cl = 0);
    // construct from a generic collection of data members objects
    template<class DataMemberList> 
-   TListOfDataMembers(DataMemberList & dmlist) { 
+   TListOfDataMembers(DataMemberList & dmlist) : 
+      fClass(0),fIds(0),fUnloaded(0),
+      fIsLoaded(kTRUE), fLastLoadMarker(0)
+   { 
       for (auto * dataMember : dmlist) 
          Add(dataMember);      
-      fIsLoaded = true; 
    }
 
    ~TListOfDataMembers();
