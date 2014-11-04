@@ -1841,7 +1841,17 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          // explicitly ignore .autodict without having to support it
          // in cling.
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
+
+         // Turn off autoparsing if this is an include directive
+         bool isInclusionDirective = sLine.Contains("\n#include");
+         int oldAutoParseValue = 0;
+         if (isInclusionDirective){
+            oldAutoParseValue = SetClassAutoparsing(false);
+         }
          indent = fMetaProcessor->process(sLine, compRes, &result);
+         if (isInclusionDirective){
+            SetClassAutoparsing(oldAutoParseValue);
+         }
       }
    }
    if (result.isValid())
