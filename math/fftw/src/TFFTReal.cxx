@@ -170,6 +170,10 @@ void TFFTReal::Init( Option_t* flags,Int_t /*sign*/, const Int_t *kind)
 //     DSTIII  - kind=6
 //     DSTIV   - kind=7
 
+   if (fPlan)
+      fftw_destroy_plan((fftw_plan)fPlan);
+   fPlan = 0;
+
    if (!fKind)
       fKind = (fftw_r2r_kind*)fftw_malloc(sizeof(fftw_r2r_kind)*fNdim);
 
