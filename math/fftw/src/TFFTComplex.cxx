@@ -139,6 +139,11 @@ void TFFTComplex::Init( Option_t *flags, Int_t sign,const Int_t* /*kind*/)
 
    fSign = sign;
    fFlags = flags;
+
+   if (fPlan)
+      fftw_destroy_plan((fftw_plan)fPlan);
+   fPlan = 0;
+
    if (fOut)
       fPlan = (void*)fftw_plan_dft(fNdim, fN, (fftw_complex*)fIn, (fftw_complex*)fOut, sign,MapFlag(flags));
    else
