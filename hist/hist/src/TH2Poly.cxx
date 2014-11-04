@@ -499,23 +499,6 @@ void TH2Poly::Reset(Option_t *opt)
    TH2::Reset(opt);
 }
 
-
-//______________________________________________________________________________
-TH1 *TH2Poly::DrawCopy(Option_t *option) const
-{
-   // Draw copy.
-
-   TString opt = option;
-   opt.ToLower();
-   if (gPad && !opt.Contains("same")) gPad->Clear();
-   TH2Poly *newth2 = (TH2Poly*)Clone();
-   newth2->SetDirectory(0);
-   newth2->SetBit(kCanDelete);
-   newth2->AppendPad(option);
-   return newth2;
-}
-
-
 //______________________________________________________________________________
 Int_t TH2Poly::FindBin(Double_t x, Double_t y, Double_t)
 {

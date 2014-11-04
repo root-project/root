@@ -207,7 +207,7 @@ public:
    virtual Bool_t   Divide(const TH1 *h1);
    virtual Bool_t   Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
    virtual void     Draw(Option_t *option="");
-   virtual TH1     *DrawCopy(Option_t *option="") const;
+   virtual TH1     *DrawCopy(Option_t *option="", const char * name_postfix = "_copy") const;
    virtual TH1     *DrawNormalized(Option_t *option="", Double_t norm=1) const;
    virtual void     DrawPanel(); // *MENU*
    virtual Int_t    BufferEmpty(Int_t action=0);
