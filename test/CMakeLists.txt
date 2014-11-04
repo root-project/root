@@ -88,7 +88,8 @@ ROOT_ADD_TEST(test-bench COMMAND bench)
 
 #--stress------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stress stress.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
-ROOT_ADD_TEST(test-stress COMMAND stress -b FAILREGEX "FAILED|Error in")
+ROOT_ADD_TEST(test-stress COMMAND stress -b FAILREGEX "FAILED|Error in"
+                          DEPENDS test-event)
 
 #--stressShapes------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressShapes stressShapes.cxx LIBRARIES  Geom Tree GenVector Gpad)
