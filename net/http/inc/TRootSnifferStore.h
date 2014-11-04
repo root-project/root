@@ -58,11 +58,13 @@ public:
 class TRootSnifferStoreXml : public TRootSnifferStore {
 protected:
    TString *buf;           //! output buffer
+   Bool_t compact;         //! produce compact xml code
 
 public:
-   TRootSnifferStoreXml(TString &_buf) :
+   TRootSnifferStoreXml(TString &_buf, Bool_t _compact = kFALSE) :
       TRootSnifferStore(),
-      buf(&_buf) {}
+      buf(&_buf),
+      compact(_compact){}
 
    virtual ~TRootSnifferStoreXml() {}
 
@@ -84,7 +86,7 @@ protected:
    TString *buf;     //! output buffer
    Bool_t compact;   //! produce compact json code
 public:
-   TRootSnifferStoreJson(TString &_buf, Bool_t _compact) :
+   TRootSnifferStoreJson(TString &_buf, Bool_t _compact = kFALSE) :
       TRootSnifferStore(),
       buf(&_buf),
       compact(_compact) {}

@@ -8,8 +8,51 @@
       <script type="text/javascript" src="/jsrootsys/scripts/JSRootCore.js"></script>
    </head>
 
-   <body onload="JSROOT.BuildSimpleGUI('2d')">
-      <div id="drawGUI" style="position:absolute; left:5px; top:5px; bottom:5px; right:5px"></div>
+   <script type='text/javascript'>
+
+      function CreateDrawGui() {
+         // analyze URL options
+         var drawopt = JSROOT.GetUrlOption("opt");
+
+         var monitor = JSROOT.GetUrlOption("monitoring");
+         if (monitor == "") monitor = 3000; else
+         if (monitor != null) monitor = parseInt(monitor);
+
+         var objpainter = null;
+
+         function drawfunction() {
+
+            var req = JSROOT.NewHttpRequest("root.json.gz?compact=3", 'text', function(result) {
+                var obj = JSROOT.parse(result);
+                if (!obj) {
+                   if (!objpainter) $('#drawing').append("<h3>Can not get object from the server</h3>");
+                   return;
+                }
+
+                document.body.style.cursor = 'wait';
+                objpainter = JSROOT.redraw('drawing', obj, drawopt);
+                document.body.style.cursor = 'auto';
+
+            });
+
+            // submit request
+            req.send(null);
+         }
+
+         drawfunction();
+
+         if (monitor!=null)
+            setInterval(drawfunction, monitor);
+
+         JSROOT.RegisterForResize(function() { if (objpainter) objpainter.CheckResize(); });
+      }
+
+   </script>
+
+   <body onload="JSROOT.AssertPrerequisites('2d', CreateDrawGui, 'drawing')">
+      <div id="drawing" style="position:absolute; left:1px; top:1px; bottom:1px; right:1px">
+         loading scripts...
+      </div>
    </body>
 
 </html>
