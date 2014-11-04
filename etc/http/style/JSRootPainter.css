@@ -7,32 +7,32 @@
 |--------------------------------------------------*/
 
 .dtree {
-	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
-	font-size: 11px;
-	color: #666;
-	white-space: nowrap;
+   font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+   font-size: 11px;
+   color: #666;
+   white-space: nowrap;
 }
 .dtree img {
-	border: 0px;
-	vertical-align: middle;
+   border: 0px;
+   vertical-align: middle;
 }
 .dtree a {
-	color: #333;
-	text-decoration: none;
+   color: #333;
+   text-decoration: none;
 }
 .dtree a.node, .dtree a.nodeSel {
-	white-space: nowrap;
-	padding: 1px 2px 1px 2px;
+   white-space: nowrap;
+   padding: 1px 2px 1px 2px;
 }
 .dtree a.node:hover, .dtree a.nodeSel:hover {
-	color: #333;
-	text-decoration: underline;
+   color: #333;
+   text-decoration: underline;
 }
 .dtree a.nodeSel {
-	background-color: #c0d2ec;
+   background-color: #c0d2ec;
 }
 .dtree .clip {
-	overflow: hidden;
+   overflow: hidden;
 }
 
 /*--------------------------------------------------|
@@ -91,7 +91,7 @@ svg:not(:root) { overflow: hidden; }
 
 .ctxmenu
 {
-  position:absolute;   
+  position:absolute;
   min-width:64px;
   height:auto;
   padding: 4px;

@@ -3,11 +3,44 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
    <head>
-      <title>Read a ROOT file in Javascript (Demonstration)</title>
+      <title>Read a ROOT file</title>
       <meta http-equiv="X-UA-Compatible" content="IE=Edge; text/html">
-      <script type="text/javascript" src="http://web-docs.gsi.de/~linev/js/3.0/scripts/JSRootCore.js"></script>
+      <link rel="shortcut icon" href="img/RootIcon.ico">
+      <script type="text/javascript" src="scripts/JSRootCore.js"></script>
    </head>
    <body onload="JSROOT.BuildSimpleGUI()">
-   <div id="simpleGUI" files="files/ct.root;files/exclusion.root;files/fillrandom.root;files/glbox.root;files/graph.root;files/hsimple.root;files/legends.root;files/rf107.root;files/stacks.root;files/zdemo.root"></div>
+      <div id="simpleGUI" files="files/ct.root;files/exclusion.root;files/fillrandom.root;files/glbox.root;files/graph.root;files/hsimple.root;files/legends.root;files/rf107.root;files/stacks.root;files/zdemo.root">
+         loading scripts ...
+      </div>
    </body>
 </html>
+
+<!--
+
+This is main page of JSROOT project, which aims to display content of ROOT files.
+Several parameters could be specified when opening page:
+  file - name of the file, which will be automatically open with page loading
+  item - object name in the file to display
+  opt  - draw option for the item
+  items - array of objects to display like ['hpx;1', 'hpxpy;1']
+  opts - array of options ['any', 'colz']
+  layout - can be 'collapsible', 'tabs' or gridNxM where N and M are integer values
+  nobrowser - only file item(s) will be displayed, browser will be disabled
+Example:
+   http://web-docs.gsi.de/~linev/js/3.0/index.htm?file=files/hsimple.root&layout=grid2x2&items=["hpx;1", "hpxpy;1"]&opts=["", "colz"]
+
+Page can be used to open files from other web servers like:
+
+   http://web-docs.gsi.de/~linev/js/3.0/index.htm?file=http://root.cern.ch/js/files/hsimple.root
+
+But one should be aware about Cross-Origin Request blocking.
+Read https://developer.mozilla.org/en/http_access_control for more details.
+
+To avoid problem at all, one can copy only index.htm on the web server where data files are located.
+And specify full path to the JSRootCore.js script like
+   <script type="text/javascript" src="http://web-docs.gsi.de/~linev/js/3.0/scripts/JSRootCore.js"></script>
+
+If necessary, complete JSROOT can be installed on the web server.
+Sources can be found in ROOT repository, etc/http/ subdirectory.
+
+-->
