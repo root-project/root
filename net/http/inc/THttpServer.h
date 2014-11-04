@@ -82,7 +82,6 @@ public:
    {
       fQuery = q;
    }
-
    const char *GetTopName() const
    {
       return fTopName.Data();
@@ -128,6 +127,8 @@ public:
    {
       fContentEncoding = typ;
    }
+
+   Bool_t CompressWithGzip();
 
    void SetExtraHeader(const char* name, const char* value)
    {
@@ -195,6 +196,8 @@ protected:
 
    // Here any request can be processed
    virtual void ProcessRequest(THttpCallArg *arg);
+
+   static Bool_t VerifyFilePath(const char* fname);
 
 public:
 

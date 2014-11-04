@@ -323,7 +323,12 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 
       if (*separ == 0) {
          searchpath = 0;
-         if (mask & mask_Expand) mask = mask_Scan;
+         if (mask & mask_Expand) {
+            mask = mask_Scan;
+            searchpath = 0;
+            has_more = true; // when found selected object, allow to scan it (and only it)
+         }
+
       } else {
          if (!isslash) return kFALSE;
          searchpath = separ;
@@ -411,9 +416,6 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
 //         if (chld.Done()) break;
 //      }
    }
-
-   //DOUT0("SCAN MEMBERS %s %u mask %u done %s", cl->GetName(),
-   //      cl->GetListOfDataMembers()->GetSize(), chld.mask, DBOOL(chld.Done()));
 
    // than expand data members
    TIter iter(cl->GetListOfDataMembers());
@@ -589,8 +591,8 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
 void TRootSniffer::ScanRoot(TRootSnifferScanRec &rec)
 {
    // scan complete ROOT objects hierarchy
-   // For the moment it includes objects in gROOT directory and lise of canvases
-   // and files
+   // For the moment it includes objects in gROOT directory
+   // and list of canvases and files
    // Also all registered objects are included.
    // One could reimplement this method to provide alternative
    // scan methods or to extend some collection kinds
