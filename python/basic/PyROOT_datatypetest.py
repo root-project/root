@@ -50,6 +50,7 @@ class TestClassDATATYPES:
 
         # reading boolean type
         assert c.m_bool == False
+        assert not c.get_bool(); assert not c.get_bool_cr(); assert not c.get_bool_r()
 
         # reading char types
         assert c.m_char  == 'a'
@@ -57,24 +58,27 @@ class TestClassDATATYPES:
         assert c.m_uchar == 'c'
 
         # reading integer types
-        assert c.m_short   == -11; assert c.get_short_cr()   == -11
-        assert c.m_ushort  ==  11; assert c.get_ushort_cr()  ==  11
-        assert c.m_int     == -22; assert c.get_int_cr()     == -22
-        assert c.m_uint    ==  22; assert c.get_uint_cr()    ==  22
-        assert c.m_long    == -33; assert c.get_long_cr()    == -33
-        assert c.m_ulong   ==  33; assert c.get_ulong_cr()   ==  33
-        assert c.m_llong   == -44; assert c.get_llong_cr()   == -44
-        assert c.m_ullong  ==  44; assert c.get_ullong_cr()  ==  44
-        assert c.m_long64  == -55; assert c.get_long64_cr()  == -55
-        assert c.m_ulong64 ==  55; assert c.get_ulong64_cr() ==  55
+        assert c.m_short   == -11; assert c.get_short_cr()   == -11; assert c.get_short_r()   == -11
+        assert c.m_ushort  ==  11; assert c.get_ushort_cr()  ==  11; assert c.get_ushort_r()  ==  11
+        assert c.m_int     == -22; assert c.get_int_cr()     == -22; assert c.get_int_r()     == -22
+        assert c.m_uint    ==  22; assert c.get_uint_cr()    ==  22; assert c.get_uint_r()    ==  22
+        assert c.m_long    == -33; assert c.get_long_cr()    == -33; assert c.get_long_r()    == -33
+        assert c.m_ulong   ==  33; assert c.get_ulong_cr()   ==  33; assert c.get_ulong_r()   ==  33
+        assert c.m_llong   == -44; assert c.get_llong_cr()   == -44; assert c.get_llong_r()   == -44
+        assert c.m_ullong  ==  44; assert c.get_ullong_cr()  ==  44; assert c.get_ullong_r()  ==  44
+        assert c.m_long64  == -55; assert c.get_long64_cr()  == -55; assert c.get_long64_r()  == -55
+        assert c.m_ulong64 ==  55; assert c.get_ulong64_cr() ==  55; assert c.get_ulong64_r() ==  55
 
         # reading floating point types
         assert round(c.m_float          + 66.,  5) == 0
         assert round(c.get_float_cr()   + 66.,  5) == 0
+        assert round(c.get_float_r()    + 66.,  5) == 0
         assert round(c.m_double         + 77., 11) == 0
         assert round(c.get_double_cr()  + 77., 11) == 0
+        assert round(c.get_double_r()   + 77., 11) == 0
         assert round(c.m_ldouble        + 88., 24) == 0
         assert round(c.get_ldouble_cr() + 88., 24) == 0
+        assert round(c.get_ldouble_r()  + 88., 24) == 0
 
         # reading of enum types
         assert c.m_enum == CppyyTestData.kNothing
@@ -146,19 +150,19 @@ class TestClassDATATYPES:
         raises(ValueError, 'c.set_bool(10)')
 
         # char types through functions
-        c.set_char('c');     assert c.get_char_cr()  == 'c'
+        c.set_char('c');     assert c.get_char_cr()  == 'c'; assert c.get_char_r()  == 'c'
         c.set_char_cr('d');  assert c.get_char()     == 'd'
-        c.set_schar('e');    assert c.get_schar_cr() == 'e'
+        c.set_schar('e');    assert c.get_schar_cr() == 'e'; assert c.get_schar_r() == 'e'
         c.set_schar_cr('f'); assert c.get_schar()    == 'f'
-        c.set_uchar('g');    assert c.get_uchar_cr() == 'g'
+        c.set_uchar('g');    assert c.get_uchar_cr() == 'g'; assert c.get_uchar_r() == 'g'
         c.set_uchar_cr('h'); assert c.get_uchar()    == 'h'
 
         # ints as char through functions
-        c.set_char(ord('c'));     assert c.get_char_cr()  == 'c'
+        c.set_char(ord('c'));     assert c.get_char_cr()  == 'c'; assert c.get_char_r()  == 'c'
         c.set_char_cr(ord('d'));  assert c.get_char()     == 'd'
-        c.set_schar(ord('e'));    assert c.get_schar_cr() == 'e'
+        c.set_schar(ord('e'));    assert c.get_schar_cr() == 'e'; assert c.get_schar_r() == 'e'
         c.set_schar_cr(ord('f')); assert c.get_schar()    == 'f'
-        c.set_uchar(ord('g'));    assert c.get_uchar_cr() == 'g'
+        c.set_uchar(ord('g'));    assert c.get_uchar_cr() == 'g'; assert c.get_uchar_r() == 'g'
         c.set_uchar_cr(ord('h')); assert c.get_uchar()    == 'h'
 
         # char types through data members, as char and as int

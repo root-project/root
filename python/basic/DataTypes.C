@@ -155,6 +155,26 @@ const double&               CppyyTestData::get_double_cr()  { return m_double; }
 const long double&          CppyyTestData::get_ldouble_cr() { return m_ldouble; }
 const CppyyTestData::EWhat& CppyyTestData::get_enum_cr()    { return m_enum; }
 
+//- getters ref -------------------------------------------------------------
+bool&                 CppyyTestData::get_bool_r()    { return m_bool; }
+char&                 CppyyTestData::get_char_r()    { return m_char; }
+signed char&          CppyyTestData::get_schar_r()   { return m_schar; }
+unsigned char&        CppyyTestData::get_uchar_r()   { return m_uchar; }
+short&                CppyyTestData::get_short_r()   { return m_short; }
+unsigned short&       CppyyTestData::get_ushort_r()  { return m_ushort; }
+int&                  CppyyTestData::get_int_r()     { return m_int; }
+unsigned int&         CppyyTestData::get_uint_r()    { return m_uint; }
+long&                 CppyyTestData::get_long_r()    { return m_long; }
+unsigned long&        CppyyTestData::get_ulong_r()   { return m_ulong; }
+long long&            CppyyTestData::get_llong_r()   { return m_llong; }
+unsigned long long&   CppyyTestData::get_ullong_r()  { return m_ullong; }
+Long64_t&             CppyyTestData::get_long64_r()  { return m_long64; }
+ULong64_t&            CppyyTestData::get_ulong64_r() { return m_ulong64; }
+float&                CppyyTestData::get_float_r()   { return m_float; }
+double&               CppyyTestData::get_double_r()  { return m_double; }
+long double&          CppyyTestData::get_ldouble_r() { return m_ldouble; }
+CppyyTestData::EWhat& CppyyTestData::get_enum_r()    { return m_enum; }
+
 //- setters -----------------------------------------------------------------
 void CppyyTestData::set_bool(bool b)                       { m_bool    = b; }
 void CppyyTestData::set_char(char c)                       { m_char    = c; }

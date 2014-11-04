@@ -123,6 +123,26 @@ public:
     const long double&        get_ldouble_cr();
     const EWhat&              get_enum_cr();
 
+// getters ref
+    bool&               get_bool_r();
+    char&               get_char_r();
+    signed char&        get_schar_r();
+    unsigned char&      get_uchar_r();
+    short&              get_short_r();
+    unsigned short&     get_ushort_r();
+    int&                get_int_r();
+    unsigned int&       get_uint_r();
+    long&               get_long_r();
+    unsigned long&      get_ulong_r();
+    long long&          get_llong_r();
+    unsigned long long& get_ullong_r();
+    Long64_t&           get_long64_r();
+    ULong64_t&          get_ulong64_r();
+    float&              get_float_r();
+    double&             get_double_r();
+    long double&        get_ldouble_r();
+    EWhat&              get_enum_r();
+
 // setters
     void set_bool(bool);
     void set_char(char);
