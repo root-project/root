@@ -183,6 +183,7 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  hist/h2proj.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C
+                 hist/cumulative.C
                  tree/h1analysis.C
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
@@ -196,6 +197,12 @@ set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
 set(tree-staff-depends  tutorial-tree-cernbuild)
+set(benchmarks-depends tutorial-hsimple
+                       tutorial-fit-fit1
+                       tutorial-hist-h1draw
+                       tutorial-geom-na49view
+                       tutorial-tree-ntuple1)
+
 #--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
                StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo
