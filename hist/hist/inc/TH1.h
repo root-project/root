@@ -224,6 +224,7 @@ public:
    const   Double_t *GetBuffer() const {return fBuffer;}
    static  Int_t    GetDefaultBufferSize();
    virtual Double_t *GetIntegral();
+   TH1             *GetCumulative(Bool_t forward = kTRUE, const char* suffix = "_cumulative") const;
 
    TList           *GetListOfFunctions() const { return fFunctions; }
 
