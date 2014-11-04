@@ -2919,7 +2919,9 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
                            "#include \"TEnum.h\"\n"
                            "#include \"TEnumConstant.h\"\n"
                            "#include \"TDictAttributeMap.h\"\n"
-                           "#include \"TMessageHandler.h\"\n");
+                           "#include \"TMessageHandler.h\"\n"
+                           "#include \"TArray.h\"\n"
+                           "#include \"TRefArray.h\"\n");
    if (!CloseStreamerInfoROOTFile(writeEmptyRootPCM)) {
       return 1;
    }
