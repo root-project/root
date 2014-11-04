@@ -8,7 +8,7 @@ macros = [
    'framework.py', 'hsimple.py', 'hsum.py', 'formula1.py',
    'fillrandom.py','fit1.py', 'h1draw.py', 'graph.py',
    'gerrors.py', 'tornado.py', 'surfaces.py', 'zdemo.py',
-   'geometry.py', 'na49view.py', 'na49view.py', 'file.py',
+   'geometry.py', 'na49view.py', 'file.py',
    'ntuple1.py', 'rootmarks.py' ]
 
 ### note: this function is defined in tutorials/rootlogon.C
