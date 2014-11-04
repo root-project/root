@@ -2767,20 +2767,22 @@ void TH1::Draw(Option_t *option)
 
 
 //______________________________________________________________________________
-TH1 *TH1::DrawCopy(Option_t *option) const
+TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
 {
    // Copy this histogram and Draw in the current pad.
    //
    //     Once the histogram is drawn into the pad, any further modification
    //     using graphics input will be made on the copy of the histogram,
    //     and not to the original object.
+   //     By default a postfix "_copy" is added to the histogram name. Pass an empty postfix in case 
+   //     you want to draw an histogram with the same name
    //
    //     See Draw for the list of options
 
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
-   TString newName = TString::Format("%s_copy",GetName());
+   TString newName = (name_postfix) ?  TString::Format("%s%s",GetName(),name_postfix) : "";
    TH1 *newth1 = (TH1 *)Clone(newName);
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
