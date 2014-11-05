@@ -1209,16 +1209,6 @@ bool TCling::LoadPCM(TString pcmFileName,
 
       TDirectory::TContext ctxt(0);
       
-      if (pcmFileName.Contains("MathCore")) { 
-         // LM: first time need to read an empty object otehrwise 
-         // reading new protoclasses fail
-         TFile *pcmFileTmp = new TFile(pcmFileName+"?filetype=pcm","READ");
-         TObjArray * dummyObj;
-         pcmFileTmp->GetObject("__Enums", dummyObj);
-         pcmFileTmp->Close(); 
-         delete pcmFileTmp;
-      }
-
       TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
 
       auto listOfKeys = pcmFile->GetListOfKeys();
