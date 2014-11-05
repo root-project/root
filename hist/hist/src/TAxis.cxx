@@ -256,12 +256,12 @@ void TAxis::Copy(TObject &obj) const
       TIter next(fLabels);
       TObjString *label;
       if(! axis.fLabels) {
-	axis.fLabels = new THashList(axis.fNbins, 3);
+         axis.fLabels = new THashList(axis.fNbins, 3);
       }
       while( (label=(TObjString*)next()) ) {
-	TObjString *copyLabel = new TObjString(*label);
-	axis.fLabels->Add(copyLabel);
-	copyLabel->SetUniqueID(label->GetUniqueID());
+         TObjString *copyLabel = new TObjString(*label);
+         axis.fLabels->Add(copyLabel);
+         copyLabel->SetUniqueID(label->GetUniqueID());
       }
    }
 }
