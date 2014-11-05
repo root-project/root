@@ -1,6 +1,8 @@
 
 Processing runFullheaderParsingOnDemand.C...
 Class name myClass0<E>
+Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnDemand_dictrflx.so for myClass0<E>
+Info in <TInterpreter::AutoParse>: Parsing full payload for myClass0
 Class name myClass1<E>
 Class name myClass1<int>
 Class name myClass2<E>
