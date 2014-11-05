@@ -1226,6 +1226,7 @@ bool TCling::LoadPCM(TString pcmFileName,
       // This is an empty pcm
       if (listOfKeys && listOfKeys->GetSize() == 0) {
          delete pcmFile;
+         gDebug = oldDebug;
          return kTRUE;
       }
 
@@ -4231,7 +4232,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
             while( lib_name[nspaces] == ' ' ) ++nspaces;
             if (nspaces) lib_name.replace(0, nspaces, "");
             if (gDebug > 3) {
-               TString lib_nameTstr(100);
+               TString lib_nameTstr(lib_name.c_str());
                TObjArray* tokens = lib_nameTstr.Tokenize(" ");
                const char* lib = ((TObjString *)tokens->At(0))->GetName();
                const char* wlib = gSystem->DynamicPathName(lib, kTRUE);
