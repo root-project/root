@@ -167,22 +167,20 @@ TTabCom *gTabCom = 0;
 //
 
 //______________________________________________________________________________
-TTabCom::TTabCom():
-   fpClasses(0),
-   fPrevInterpMarker(0),
-   fpDirectives(0),
-   fpEnvVars(0),
-   fpFiles(0),
-   fpGlobals(0),
-   fpPragmas(0),
-   fpSysIncFiles(0),
-   fpUsers(0),
-   fBuf(0),
-   fpLoc(0),
-   fVarIsPointer(kFALSE),
-   fLastIter(0)
+TTabCom::TTabCom()
 {
    // Default constructor.
+   fpDirectives = 0;
+   fpPragmas = 0;
+   fpClasses = 0;
+   fpUsers = 0;
+   fBuf = 0;
+   fpLoc = 0;
+   fpEnvVars = 0;
+   fpFiles = 0;
+   fpSysIncFiles = 0;
+   fVarIsPointer = kFALSE;
+   fLastIter = 0;
 
    InitPatterns();
 }
@@ -213,6 +211,7 @@ void TTabCom::ClearClasses()
    // Clear classes and namespace collections.
 
    if (fpClasses) {
+      fpClasses->Delete(0);
       delete fpClasses;
       fpClasses = 0;
    }
@@ -413,28 +412,30 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       // Iterate over the table from the map file.
       THashList* entries = gInterpreter->GetMapfile()->GetTable();
       TIter next(entries);
+      TString classname;
       while (const auto key = next()) {
+         classname = key->GetName();
          // This is not needed with the new rootmap format
-         const char* className = key->GetName();
-         if (strncmp(className, "Library.", 8))
-            className += 8;
+         classname.ReplaceAll("@@", "::");
+         classname.ReplaceAll(" ", "-");
+         if (classname.BeginsWith("Library."))
+            classname.Remove(0, 7);
 
-         if (!strstr(className, ".h"))
-            fpClasses->Add(new TObjString(className));
+         if (!classname.EndsWith(".h"))
+            fpClasses->Add(new TObjString(classname));
       }
-   }
-
-   if (fPrevInterpMarker != gInterpreter->GetInterpreterStateMarker()) {
-      ClassInfo_t* ci = gInterpreter->ClassInfo_Factory();
-      while (gInterpreter->ClassInfo_Next(ci)) {
-         const char* className = gInterpreter->ClassInfo_FullName(ci);
-         if (strstr(className, "(anonymous)"))
-            continue;
-         if (!fpClasses->FindObject(className)) {
-            fpClasses->Add(new TObjString(className));
+      // Iterate over the ClassTable.
+      Int_t totalNumberOfClasses = gClassTable->Classes();
+      // start from begining
+      gClassTable->Init();
+      // iterate over classes
+      for (Int_t i = 0; i < totalNumberOfClasses; i++) {
+         // get class name
+         const char *cname = gClassTable->Next();
+         if (!fpClasses->FindObject(cname)) {
+            fpClasses->Add(new TObjString(cname));
          }
       }
-      gInterpreter->ClassInfo_Delete(ci);
    }
 
    return fpClasses;
@@ -2192,6 +2193,13 @@ TClass *TTabCom::TryMakeClassFromClassName(const char className[]) const
    NoMsg(kWarning);
    TClass *pClass = TClass::GetClass(className);
    NoMsg(-1);
+
+   // make sure "className" exists
+   // if (pClass->Size() == 0) {   //namespace has 0 size
+   if (pClass->GetListOfAllPublicMethods()->GetSize() == 0 &&
+       pClass->GetListOfAllPublicDataMembers()->GetSize() == 0) {
+      return 0;
+   }
 
    return pClass;
 }
