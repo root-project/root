@@ -26,7 +26,6 @@
 #include "TMath.h"
 #include "TThread.h"
 #include "TString.h"
-#include "TGeoMatrix.h"
 #include "TGeoNavigator.h"
 #include "TGeoCache.h"
 #include "TGeoManager.h"
@@ -34,25 +33,94 @@
 ClassImp(TGeoBranchArray)
 
 //______________________________________________________________________________
-TGeoBranchArray::TGeoBranchArray(Int_t level)
-                :fLevel(level),
-                 fMaxLevel(0),
-                 fArray(NULL),
-                 fMatrix(NULL),
-                 fClient(NULL)
+TGeoBranchArray::TGeoBranchArray(Int_t maxlevel)
+                :fLevel(-1),
+                 fMaxLevel(maxlevel),
+                 fMatrix(),
+                 fArray(&fRealArray[0])
 {
 // Constructor. Alocates the array with a size given by level.
-   fMaxLevel = (fLevel+1 > 10) ? fLevel+1:10;
-   fArray = new TGeoNode*[fMaxLevel];
-   fMatrix = new TGeoHMatrix();
+   memset(fRealArray, 0, fMaxLevel*sizeof(TGeoNode*));
 }
 
 //______________________________________________________________________________
-TGeoBranchArray::~TGeoBranchArray()
+TGeoBranchArray * TGeoBranchArray::MakeInstance(size_t maxlevel, void *addr)
 {
-// Destructor.
-   delete [] fArray;
-   delete fMatrix;
+// Make an instance of the class which allocates the node array. To be
+// released using ReleaseInstance. If addr is non-zero, the user promised that 
+// addr contains at least that many bytes:  size_t needed = SizeOf(maxlevel);
+   TGeoBranchArray* ba = 0;
+   if (!addr) {
+      size_t needed = SizeOf(maxlevel);
+      char *ptr = new char[ needed ];
+      if (!ptr) return 0;
+      new (ptr) TGeoBranchArray(maxlevel);
+      ba = reinterpret_cast<TGeoBranchArray*>(ptr);
+      ba->SetBit(kBASelfAlloc, kTRUE);
+   } else {
+      new (addr) TGeoBranchArray(maxlevel);
+      ba = reinterpret_cast<TGeoBranchArray*>(addr);
+      ba->SetBit(kBASelfAlloc, kFALSE);
+   }   
+   return ba;
+}
+
+//______________________________________________________________________________
+TGeoBranchArray * TGeoBranchArray::MakeCopy(const TGeoBranchArray &other, void *addr)
+{
+// Make a copy of a branch array at the location (if indicated)
+   TGeoBranchArray *copy = 0;
+   if (addr) {      
+      new (addr) TGeoBranchArray(other.fMaxLevel);
+      copy = reinterpret_cast<TGeoBranchArray*>(addr);
+      copy->SetBit(kBASelfAlloc, kFALSE);
+   } else {
+      size_t needed = SizeOf(other.fMaxLevel);
+      char *ptr = new char[ needed ];
+      if (!ptr) return 0;
+      new (ptr) TGeoBranchArray(other.fMaxLevel);
+      copy = reinterpret_cast<TGeoBranchArray*>(ptr);
+      copy->SetBit(kBASelfAlloc, kTRUE);
+   }
+   copy->fLevel = other.fLevel;
+   copy->fMatrix = other.fMatrix;   
+   if (other.fLevel+1) memcpy(copy->fArray, other.fArray, (other.fLevel+1)*sizeof(TGeoNode*));
+   return copy;
+}
+
+//______________________________________________________________________________
+void TGeoBranchArray::CopyTo(TGeoBranchArray *dest)
+{
+// Raw memcpy of the branch array content to an existing destination.
+   memcpy(dest->DataStart(), DataStart(), DataSize());
+   dest->fArray = &(dest->fRealArray[0]);
+}
+
+//______________________________________________________________________________
+void TGeoBranchArray::ReleaseInstance(TGeoBranchArray *obj) 
+{
+// Releases the space allocated for the object
+   obj->~TGeoBranchArray();
+   if (obj->TestBit(kBASelfAlloc)) delete [] (char*)obj;
+}
+
+//______________________________________________________________________________
+void TGeoBranchArray::UpdateArray(size_t nobj)
+{
+// Updates the internal addresses for n contiguous objects which have the same 
+// fMaxLevel
+// Updates the internal addresses for n contiguous objects which have the same fMaxLevel
+   size_t needed = SizeOf();
+//   char *where = &fArray;
+//   for (size_t i=0; i<nobj; ++i, where += needed) {
+//      TGeoNode ***array =  reinterpret_cast<TGeoNode***>(where);
+//      *array = ((void**)where)+1; 
+//   }
+   char *where = reinterpret_cast<char*>(this);
+   for (size_t i=0; i<nobj; ++i, where += needed) {
+      TGeoBranchArray *obj = reinterpret_cast<TGeoBranchArray*>(where);
+      obj->fArray = &(obj->fRealArray[0]);
+   }    
 }
 
 //______________________________________________________________________________
@@ -60,43 +128,27 @@ TGeoBranchArray::TGeoBranchArray(const TGeoBranchArray&  other)
                 :TObject(other),
                  fLevel(other.fLevel),
                  fMaxLevel(other.fMaxLevel),
-                 fArray(NULL),
-                 fMatrix(NULL),
-                 fClient(other.fClient)
+                 fMatrix(other.fMatrix),
+                 fArray(NULL)
 {
-// Copy constructor.
+// Copy constructor. Not callable anymore. Use TGeoBranchArray::MakeCopy instead
    if (fMaxLevel) {
       fArray = new TGeoNode*[fMaxLevel];
       if (fLevel+1) memcpy(fArray, other.fArray, (fLevel+1)*sizeof(TGeoNode*));
    }
-   if (other.fMatrix) fMatrix = new TGeoHMatrix(*(other.fMatrix));   
 }   
       
 //______________________________________________________________________________
 TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
 {
-// Assignment.
+// Assignment. Not valid anymore. Use TGeoBranchArray::MakeCopy instead
    if (&other == this) return *this;
 //   TThread::Lock();
-   TObject::operator=(other);
-   // Check if the array exists and has to be resized
-   if (fArray) {
-      if (fMaxLevel<other.fLevel+1) {
-         fMaxLevel = other.fMaxLevel;
-         delete [] fArray;
-         fArray = new TGeoNode*[fMaxLevel];
-      }
-   } else {
-      fMaxLevel = other.fMaxLevel;
-      fArray = new TGeoNode*[fMaxLevel];
-   }   
+//   TObject::operator=(other);
    fLevel = other.fLevel;
+   fMatrix.CopyFrom(&other.fMatrix);
    if (fLevel+1) memcpy(fArray, other.fArray, (fLevel+1)*sizeof(TGeoNode*));
-   if (other.fMatrix) {
-      if (!fMatrix) fMatrix = new TGeoHMatrix();
-      fMatrix->CopyFrom(other.fMatrix);
-   }
-   fClient = other.fClient;
+//   SetBit(other.TestBit(kBASelfAlloc));
 //   TThread::UnLock();
    return *this;
 }   
@@ -109,13 +161,19 @@ void TGeoBranchArray::AddLevel(Int_t dindex)
       Error("AddLevel", "You must initialize from navigator or copy from another branch array first.");
       return;
    }
+   if (fLevel>fMaxLevel) {
+      Fatal("AddLevel", "Max level = %d reached\n", fMaxLevel);
+      return;
+   }   
    fLevel++;
+/*
    if (fLevel+1>fMaxLevel) {
       TGeoNode **array = new TGeoNode*[fLevel+1];
       memcpy(array, fArray, fLevel*sizeof(TGeoNode*));
       delete [] fArray;
       fArray = array;
    }   
+*/   
    fArray[fLevel] = fArray[fLevel-1]->GetVolume()->GetNode(dindex);
 }   
 
@@ -217,7 +275,6 @@ Int_t TGeoBranchArray::Compare(const TObject *obj) const
 void TGeoBranchArray::CleanMatrix()
 {
 // Garbage collect the stored matrix.
-   delete fMatrix; fMatrix = 0;
 }
 
 //______________________________________________________________________________
@@ -225,12 +282,10 @@ void TGeoBranchArray::Init(TGeoNode **branch, TGeoMatrix *global, Int_t level)
 {
 // Init the branch array from an array of nodes, the global matrix for the path and 
 // the level.
-   if (!fMatrix) fMatrix = new TGeoHMatrix();
-   fMatrix->CopyFrom(global);
-   if (!fArray || level+1>fMaxLevel) {
-      delete [] fArray; 
-      fMaxLevel = level+1;
-      fArray = new TGeoNode*[fMaxLevel];
+   fMatrix.CopyFrom(global);
+   if (level>fMaxLevel) {
+      Fatal("Init", "Requested level %d exceeds maximum level %d", level+1, fMaxLevel);
+      return;
    }
    fLevel = level;
    memcpy(fArray, branch, (fLevel+1)*sizeof(TGeoNode*));
@@ -243,12 +298,10 @@ void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
    TGeoNodeCache *cache = nav->GetCache();
    const TGeoNode **branch = (const TGeoNode**)cache->GetBranch();
    Int_t level = cache->GetLevel();
-   if (!fMatrix) fMatrix = new TGeoHMatrix();
-   fMatrix->CopyFrom(cache->GetCurrentMatrix());
-   if (!fArray || level+1>fMaxLevel) {
-      delete [] fArray; 
-      fMaxLevel = level+1;
-      fArray = new TGeoNode*[fMaxLevel];
+   fMatrix.CopyFrom(cache->GetCurrentMatrix());
+   if (level>fMaxLevel) {
+      Fatal("InitFromNavigator", "Requested level %d exceeds maximum level %d", level+1, fMaxLevel);
+      return;
    }
    fLevel = level;
    memcpy(fArray, branch, (fLevel+1)*sizeof(TGeoNode*));
@@ -260,7 +313,7 @@ void TGeoBranchArray::GetPath(TString &path) const
 {
 // Fill path pointed by the array.
    path = "";
-   if (!fArray) return;
+   if (!fArray || !fArray[0]) return;
    for (Int_t i=0; i<fLevel+1; i++) {
       path += "/";
       path += fArray[i]->GetName();

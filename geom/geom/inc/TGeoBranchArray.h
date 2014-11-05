@@ -16,15 +16,18 @@
 #include "TObject.h"
 #endif
 
+#ifndef ROOT_TGeoMatrix
+#include "TGeoMatrix.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoBranchArray - An array of daughter indices making a geometry path. //
-//   Can be used to backup/restore a state                                //
+//   Can be used to backup/restore a state. Allocated contiguously in     //
+//   memory.                                                              //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-class TGeoHMatrix;
-class TGeoMatrix;
 class TGeoNavigator;
 class TGeoNode;
 
@@ -33,17 +36,57 @@ class TGeoBranchArray : public TObject
 protected:
    Int_t             fLevel;          // Branch depth
    Int_t             fMaxLevel;       // Array length
-   TGeoNode        **fArray;          //![fMaxLevel] Array of nodes
-   TGeoHMatrix      *fMatrix;         // Global matrix (owned)
-   TObject          *fClient;         // Client object to notify
+   TGeoHMatrix       fMatrix;         // Global matrix (owned)
+   TGeoNode        **fArray;          //![fMaxLevel+1] Array of nodes
+   TGeoNode         *fRealArray[1];   // Beginning address of the array of nodes
 
+private:
+   TGeoBranchArray(Int_t level);                       // not allowed
+   TGeoBranchArray(const TGeoBranchArray&);            // not allowed
 public:
-   TGeoBranchArray() : TObject(), fLevel(-1), fMaxLevel(10), fArray(NULL), fMatrix(NULL), fClient(NULL) {}
-   TGeoBranchArray(Int_t level);
-   virtual ~TGeoBranchArray();
+   enum EGeoBATypes {
+      kBASelfAlloc =  BIT(14)             // does self allocation or not
+   };   
+   // This replaces the dummy constructor to make sure that I/O can be
+   // performed while the user is only allowed to use the static maker
+   TGeoBranchArray(TRootIOCtor*) : TObject(), fLevel(0), fMaxLevel(0), fMatrix(), fArray(0) {}
 
-   TGeoBranchArray(const TGeoBranchArray&);
+   // The static maker to be use to create an instance of the branch array
+   static TGeoBranchArray *MakeInstance(size_t maxlevel, void *addr=0);
+   
+   // The equivalent of the copy constructor
+   static TGeoBranchArray *MakeCopy(const TGeoBranchArray &other, void *addr=0);
+
+   // The equivalent of the destructor
+   static void             ReleaseInstance(TGeoBranchArray *obj);
+
+   // Assignment allowed
    TGeoBranchArray& operator=(const TGeoBranchArray&);
+
+   // Fast copy based on memcpy to destination array
+   void                    CopyTo(TGeoBranchArray *dest);
+   
+   // Equivalent of sizeof function
+   static size_t SizeOf(size_t maxlevel)
+      { return (sizeof(TGeoBranchArray)+sizeof(TGeoBranchArray*)*(maxlevel)); }
+
+   inline size_t SizeOf() const
+      { return (sizeof(TGeoBranchArray)+sizeof(TGeoBranchArray*)*(fMaxLevel)); }
+   
+   // The data start should point to the address of the first data member,
+   // after the virtual table
+   void       *DataStart() const {return (void*)&fLevel;}
+
+   // The actual size of the data for an instance, excluding the virtual table
+   size_t      DataSize() const {return SizeOf()-size_t(&fLevel)+(size_t)this;}
+
+   // Update the internal addresses of n contiguous branch array objects, starting
+   // with this one
+   void UpdateArray(size_t nobj);
+
+   // Destructor. Release instance to be called instead
+   virtual ~TGeoBranchArray() {}
+
    Bool_t operator ==(const TGeoBranchArray& other) const;
    Bool_t operator !=(const TGeoBranchArray& other) const;
    Bool_t operator >(const TGeoBranchArray& other) const;
@@ -52,12 +95,14 @@ public:
    Bool_t operator <=(const TGeoBranchArray& other) const;
    
    void              AddLevel(Int_t dindex);
+   static Long64_t   BinarySearch(Long64_t n, const TGeoBranchArray **array, TGeoBranchArray *value);
    virtual Int_t     Compare(const TObject *obj) const;
    void              CleanMatrix();
-   TGeoNode        **GetArray() const   {return fArray;}
-   TObject          *GetClient() const  {return fClient;}
-   Int_t             GetLevel() const   {return fLevel;}
-   TGeoHMatrix      *GetMatrix() const  {return fMatrix;}
+   TGeoNode        **GetArray() const    {return fArray;}
+   size_t            GetLevel() const    {return fLevel;}
+   size_t            GetMaxLevel() const {return fMaxLevel;}
+   const TGeoHMatrix  
+                    *GetMatrix() const  {return &fMatrix;}
    TGeoNode         *GetNode(Int_t level) const {return fArray[level];}
    TGeoNode         *GetCurrentNode() const {return fArray[fLevel];}
    void              GetPath(TString &path) const;
@@ -65,14 +110,11 @@ public:
    void              InitFromNavigator(TGeoNavigator *nav);
    virtual Bool_t    IsSortable() const {return kTRUE;}
    Bool_t            IsOutside() const {return (fLevel<0)?kTRUE:kFALSE;}
-   virtual Bool_t    Notify() {return (fClient)?fClient->Notify():kFALSE;}
    virtual void      Print(Option_t *option="") const;
-   void              SetClient(TObject *client) {fClient = client;}
    static void       Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_t down=kTRUE);
-   static Long64_t   BinarySearch(Long64_t n, const TGeoBranchArray **array, TGeoBranchArray *value);
    void              UpdateNavigator(TGeoNavigator *nav) const;
    
-   ClassDef(TGeoBranchArray, 3)
+   ClassDef(TGeoBranchArray, 4)
 };
 
 struct compareBAasc {
