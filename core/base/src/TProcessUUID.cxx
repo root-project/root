@@ -143,7 +143,7 @@ void TProcessUUID::RemoveUUID(UInt_t number)
       if (obj->GetUniqueID() == number) {
          fUUIDs->Remove(lnk);
          delete obj;
-         fActive->ResetBit(number);
+         fActive->ResetBitNumber(number);
          fObjects->AddAt(0,number);
          return;
       }
