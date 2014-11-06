@@ -729,7 +729,7 @@ void TParallelCoord::RemoveVariable(TParallelCoordVar *var)
 
 
 //______________________________________________________________________________
-TParallelCoordVar* TParallelCoord::RemoveVariable(const char* vartitle)
+Bool_t TParallelCoord::RemoveVariable(const char* vartitle)
 {
    // Delete the variable "vartitle" from the graph.
 
@@ -738,12 +738,14 @@ TParallelCoordVar* TParallelCoord::RemoveVariable(const char* vartitle)
    while((var = (TParallelCoordVar*)next())) {
       if (!strcmp(var->GetTitle(),vartitle)) break;
    }
-   if(!var) Error("RemoveVariable","\"%s\" not a variable",vartitle);
-   fVarList->Remove(var);
-   fNvar = fVarList->GetSize();
-   SetAxesPosition();
-   var->DeleteVariable();
-   return var;
+   if(!var) {
+      Error("RemoveVariable","\"%s\" not a variable",vartitle);
+      return kFALSE;
+   } else {
+      RemoveVariable(var);
+      delete var;
+      return kTRUE;
+   }
 }
 
 

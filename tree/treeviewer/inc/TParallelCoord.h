@@ -77,7 +77,7 @@ public:
    static void    BuildParallelCoord(TSelectorDraw* selector, Bool_t candle);
    void           CleanUpSelections(TParallelCoordRange* range);
    void           RemoveVariable(TParallelCoordVar* var);
-   TParallelCoordVar* RemoveVariable(const char* var);
+   Bool_t         RemoveVariable(const char* var);
    void           DeleteSelection(TParallelCoordSelect* sel);
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
    virtual void   Draw(Option_t* options="");

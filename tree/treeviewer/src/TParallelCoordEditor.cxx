@@ -592,9 +592,9 @@ void TParallelCoordEditor::DoDeleteVar()
 
    if (fAvoidSignal) return;
 
-   TParallelCoordVar* var = fParallel->RemoveVariable(((TGTextLBEntry*)fVariables->GetSelectedEntry())->GetTitle());
+   Bool_t hasDeleted = fParallel->RemoveVariable(((TGTextLBEntry*)fVariables->GetSelectedEntry())->GetTitle());
    CleanUpVariables();
-   if (var) Update();
+   if (hasDeleted) Update();
 }
 
 
