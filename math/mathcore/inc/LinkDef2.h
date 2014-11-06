@@ -42,7 +42,6 @@
 
 #pragma link C++ class TStatistic+;
 
-#pragma link C++ class TVirtualFitter+;
 
 #pragma link C++ class TKDTree<Int_t, Double_t>+;
 #pragma link C++ class TKDTree<Int_t, Float_t>+;
