@@ -137,7 +137,7 @@
 #pragma link C++ class  ROOT::Math::TDataPointN<Double_t>+;
 #pragma link C++ class  ROOT::Math::TDataPointN<Float_t>+;
 //
-//N.B. disable streaming (do not use +) for KDTree class because it will not work on Windows
+//N.B. use old streamer (do not use +) for KDTree class because it will not work on Windows
 // to work one would need to change the internal classes from private to public
 #pragma link C++ class ROOT::Math::KDTree<ROOT::Math::TDataPoint1D>;
 
