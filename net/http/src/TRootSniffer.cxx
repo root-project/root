@@ -929,8 +929,9 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char * options, TString 
 {
    // execute command for specified object
    // options include method and extra list of parameters
+   // sniffer should be not-readonly to allow execution of the commands
 
-   if ((path == 0) || (*path == 0)) return kFALSE;
+   if ((path == 0) || (*path == 0) || fReadOnly) return kFALSE;
 
    if (*path == '/') path++;
 
