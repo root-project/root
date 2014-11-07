@@ -15,7 +15,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.0 beta 30/10/2014";
+   JSROOT.version = "3.0 6/11/2014";
 
    JSROOT.source_dir = null;
 
@@ -456,6 +456,7 @@
       list['name'] = "TList";
       list['arr'] = new Array;
       list['opt'] = new Array;
+      JSROOT.addMethods(list);
       return list;
    }
 
@@ -489,6 +490,43 @@
       axis['fTitleFont'] = 42;
       JSROOT.addMethods(axis);
       return axis;
+   }
+
+   JSROOT.CreateTPaveText = function() {
+      var pave = {};
+      pave['_typename'] = "TPaveText";
+      pave['fUniqueID'] = 0;
+      pave["fBits"] = 50331657;
+      pave["fLineColor"] = 1;
+      pave["fLineStyle"] = 1;
+      pave["fLineWidth"] = 1;
+      pave["fFillColor"] = 0;
+      pave["fFillStyle"] = 0;
+      pave["fX1"] = 0;
+      pave["fY1"] = 0;
+      pave["fX2"] = 1;
+      pave["fY2"] = 1;
+      pave["fX1NDC"] = 0.2809483;
+      pave["fY1NDC"] = 0.9339831;
+      pave["fX2NDC"] = 0.7190517;
+      pave["fY2NDC"] = 0.995;
+      pave["fBorderSize"] =  0;
+      pave["fInit"] =  1;
+      pave["fShadowColor"] =  1;
+      pave["fCornerRadius"] = 0;
+      pave["fOption"] = "blNDC";
+      pave["fName"] = "title";
+      pave["fTextAngle"] =  0;
+      pave["fTextSize"] = 0;
+      pave["fTextAlign"] = 22;
+      pave["fTextColor"] = 1;
+      pave["fTextFont"] = 42;
+      pave["fLabel"] = "";
+      pave["fLongest"] = 27;
+      pave["fMargin"] = 0.05;
+      pave["fLines"] = JSROOT.CreateTList();
+      JSROOT.addMethods(pave);
+      return pave;
    }
 
    JSROOT.CreateTH1 = function(nbinsx) {
@@ -673,6 +711,27 @@
             }
          };
       }
+
+      if (obj['_typename'] == "TList") {
+         obj['Clear'] = function() {
+            this['arr'] = new Array;
+            this['opt'] = new Array;
+         }
+         obj['Add'] = function(obj,opt) {
+            this['arr'].push(obj);
+            this['opt'].push((typeof opt=='string') ? opt : "");
+         }
+      }
+
+      if ((obj['_typename'] == "TPaveText") || (obj['_typename'] == "TPaveStats")) {
+         obj['AddText'] = function(txt) {
+            this['fLines'].Add({'fTitle' : txt, "fTextColor" : 1 });
+         }
+         obj['Clear'] = function() {
+            this['fLines'].Clear();
+         }
+      }
+
       if ((obj['_typename'].indexOf("TFormula") != -1) ||
           (obj['_typename'].indexOf("TF1") == 0)) {
          obj['evalPar'] = function(x) {
@@ -727,9 +786,6 @@
             };
          };
       }
-      if (obj['_typename'].indexOf("TH1") == 0) obj['fDimension'] = 1;
-      if (obj['_typename'].indexOf("TH2") == 0) obj['fDimension'] = 2;
-      if (obj['_typename'].indexOf("TH3") == 0) obj['fDimension'] = 3;
       if (obj['_typename'].indexOf("TH1") == 0 ||
           obj['_typename'].indexOf("TH2") == 0 ||
           obj['_typename'].indexOf("TH3") == 0) {
@@ -1171,6 +1227,7 @@
          };
       }
       if (obj['_typename'].indexOf("TH1") == 0) {
+         obj['fDimension'] = 1;
          obj['getBinContent'] = function(bin) {
             if (bin < 0) bin = 0;
             if (bin >= this['fNcells']) bin = this['fNcells']-1;
@@ -1218,6 +1275,7 @@
          };
       }
       if (obj['_typename'].indexOf("TH2") == 0) {
+         obj['fDimension'] = 2;
          obj['getBin'] = function(x, y) {
             var nx = this['fXaxis']['fNbins']+2;
             return (x + nx * y);
@@ -1272,6 +1330,7 @@
          };
       }
       if (obj['_typename'].indexOf("TH3") == 0) {
+         obj['fDimension'] = 3;
          obj['getBin'] = function(x, y, z) {
             var nx = this['fXaxis']['fNbins']+2;
             if (x < 0) x = 0;
