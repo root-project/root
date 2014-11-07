@@ -6,6 +6,16 @@ project of Bertrand Bellenot, but provides same functionality in default mode.
 Main motivation for changes - fix different errors,
 make JavaScript code more flexible and applicable for online environment.
 
+November 2014:
+1. Better font size and position in pave stats
+2. Resize/move of element only inside correspondent pad
+3. Adjust of frame size when Y-axis exceed pad limits
+4. Correct values in tooltip for THStack
+5. Exclude drawing of markers from TGraph outside visible range
+6. Drawing of canvas without TFrame object
+7. Many other small bug fixes and improvements, thanks to Maximilian Dietrich
+
+
 October 2014:
 1. Add "shortcut icon"
 2. Add demo of online THttpServer - shell script copies data from
