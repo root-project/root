@@ -1345,7 +1345,8 @@
 
       if (this.fAcceptRanges)
          xhr.setRequestHeader("Range", "bytes=" + this.fOffset + "-" + (this.fOffset + len));
-      xhr.setRequestHeader("If-Modified-Since", "Wed, 31 Dec 1980 00:00:00 GMT");
+      // does not work when used with CORS requests
+      // xhr.setRequestHeader("If-Modified-Since", "Wed, 31 Dec 1980 00:00:00 GMT");
       xhr.send(null);
    };
 
