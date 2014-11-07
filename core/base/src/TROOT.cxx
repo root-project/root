@@ -991,6 +991,18 @@ void TROOT::AddClassGenerator(TClassGenerator *generator)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Append object to this directory.
+///
+/// If replace is true:
+///   remove any existing objects with the same same (if the name is not "")
+
+void TROOT::Append(TObject *obj, Bool_t replace /* = kFALSE */)
+{
+   R__LOCKGUARD(gROOTMutex);
+   TDirectory::Append(obj,replace);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add browsable objects to TBrowser.
 
 void TROOT::Browse(TBrowser *b)
@@ -2442,6 +2454,16 @@ void TROOT::RegisterModule(const char* modulename,
          .push_back(ModuleHeaderInfo_t (modulename, headers, includePaths, payloadCode, fwdDeclCode,
                                         triggerFunc, fwdDeclsArgToSkip,classesHeaders));
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove an object from the in-memory list.
+///    Since TROOT is global resource, this is lock protected.
+
+TObject *TROOT::Remove(TObject* obj)
+{
+   R__LOCKGUARD(gROOTMutex);
+   return TDirectory::Remove(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
