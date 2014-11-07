@@ -74,6 +74,18 @@ void PRCallFuncExecValue(  CallFunc_t* func, void* self, TInterpreterValue& valu
       gInterpreter->CallFunc_Exec( func, self, value );
 }
 
+static inline
+PyObject* PyROOT_PyUnicode_FromInt( Int_t c ) {
+   return PyROOT_PyUnicode_FromFormat( "%c", c );
+}
+
+static inline
+PyObject* PyROOT_PyBool_FromInt( Int_t b ) {
+   PyObject* result = (Bool_t)b ? Py_True : Py_False;
+   Py_INCREF( result );
+   return result;
+}
+
 //- executors for built-ins ---------------------------------------------------
 PyObject* PyROOT::TBoolExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
@@ -88,24 +100,21 @@ PyObject* PyROOT::TBoolExecutor::Execute( CallFunc_t* func, void* self, Bool_t r
 PyObject* PyROOT::TBoolConstRefExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python bool return value
-   PyObject* result =
-      *((Bool_t*)PRCallFuncExecInt( func, self, release_gil )) ? Py_True : Py_False;
-   Py_INCREF( result );
-   return result;
+   return PyROOT_PyBool_FromInt( *((Bool_t*)PRCallFuncExecInt( func, self, release_gil )) );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::TCharExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python string return value
-   return PyROOT_PyUnicode_FromFormat( "%c", (Int_t)PRCallFuncExecInt( func, self, release_gil ) );
+   return PyROOT_PyUnicode_FromInt( (Int_t)PRCallFuncExecInt( func, self, release_gil ) );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::TCharConstRefExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python string return value with the single char
-   return PyROOT_PyUnicode_FromFormat( "%c", *((Char_t*)PRCallFuncExecInt( func, self, release_gil )) );
+   return PyROOT_PyUnicode_FromInt( *((Char_t*)PRCallFuncExecInt( func, self, release_gil )) );
 }
 
 //____________________________________________________________________________
@@ -181,7 +190,7 @@ Bool_t PyROOT::TRefExecutor::SetAssignable( PyObject* pyobject )
 }
 
 //____________________________________________________________________________
-#define PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( name, type, stype, F1, F2, CF )  \
+#define PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( name, type, stype, F1, F2 )      \
 PyObject* PyROOT::T##name##RefExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )\
 {                                                                            \
    type* ref = (type*)PRCallFuncExecInt( func, self, release_gil );          \
@@ -196,20 +205,22 @@ PyObject* PyROOT::T##name##RefExecutor::Execute( CallFunc_t* func, void* self, B
    }                                                                         \
 }
 
-PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Short,  Short_t,  Long_t,   PyInt_FromLong,     PyLong_AsLong,    PRCallFuncExecInt )
-PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( UShort, UShort_t, ULong_t,  PyInt_FromLong,     PyLongOrInt_AsULong, PRCallFuncExecInt )
-PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Int,    Int_t,    Long_t,   PyInt_FromLong,     PyLong_AsLong,    PRCallFuncExecInt )
-PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( UInt,   UInt_t,   ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong, PRCallFuncExecInt )
-PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Long,   Long_t,   Long_t,   PyLong_FromLong,    PyLong_AsLong,    PRCallFuncExecInt )
-PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( ULong,  ULong_t,  ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong, PRCallFuncExecInt )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Bool,   Bool_t,   Long_t,   PyROOT_PyBool_FromInt,    PyLong_AsLong )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Char,   Char_t,   Long_t,   PyROOT_PyUnicode_FromInt, PyLong_AsLong )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Short,  Short_t,  Long_t,   PyInt_FromLong,     PyLong_AsLong )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( UShort, UShort_t, ULong_t,  PyInt_FromLong,     PyLongOrInt_AsULong )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Int,    Int_t,    Long_t,   PyInt_FromLong,     PyLong_AsLong )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( UInt,   UInt_t,   ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Long,   Long_t,   Long_t,   PyLong_FromLong,    PyLong_AsLong )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( ULong,  ULong_t,  ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR(
-   LongLong,  Long64_t,  Long64_t,   PyLong_FromLongLong,         PyLong_AsLongLong,       PRCallFuncExecInt64 )
+   LongLong,  Long64_t,  Long64_t,   PyLong_FromLongLong,         PyLong_AsLongLong )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR(
-   ULongLong, ULong64_t, ULong64_t,  PyLong_FromUnsignedLongLong, PyLongOrInt_AsULong64,   PRCallFuncExecInt64 )
-PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble, PRCallFuncExecDouble )
-PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble, PRCallFuncExecDouble )
+   ULongLong, ULong64_t, ULong64_t,  PyLong_FromUnsignedLongLong, PyLongOrInt_AsULong64 )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR(
-   LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble, PRCallFuncExecDouble )
+   LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
 //____________________________________________________________________________
 PyObject* PyROOT::TSTLStringRefExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
@@ -523,8 +534,10 @@ namespace {
 
 // use macro rather than template for portability ...
    PYROOT_EXECUTOR_FACTORY( Bool )
+   PYROOT_EXECUTOR_FACTORY( BoolRef )
    PYROOT_EXECUTOR_FACTORY( BoolConstRef )
    PYROOT_EXECUTOR_FACTORY( Char )
+   PYROOT_EXECUTOR_FACTORY( CharRef )
    PYROOT_EXECUTOR_FACTORY( CharConstRef )
    PYROOT_EXECUTOR_FACTORY( ShortRef )
    PYROOT_EXECUTOR_FACTORY( UShortRef )
@@ -567,10 +580,14 @@ namespace {
    NFp_t factories_[] = {
    // factories for built-ins
       NFp_t( "bool",               &CreateBoolExecutor                ),
+      NFp_t( "bool&",              &CreateBoolRefExecutor             ),
       NFp_t( "const bool&",        &CreateBoolConstRefExecutor        ),
       NFp_t( "char",               &CreateCharExecutor                ),
       NFp_t( "signed char",        &CreateCharExecutor                ),
       NFp_t( "unsigned char",      &CreateCharExecutor                ),
+      NFp_t( "char&",              &CreateCharRefExecutor             ),
+      NFp_t( "signed char&",       &CreateCharRefExecutor             ),
+      NFp_t( "unsigned char&",     &CreateCharRefExecutor             ),
       NFp_t( "const char&",        &CreateCharConstRefExecutor        ),
       NFp_t( "const signed char&", &CreateCharConstRefExecutor        ),
       NFp_t( "const unsigned char&", &CreateCharConstRefExecutor      ),
