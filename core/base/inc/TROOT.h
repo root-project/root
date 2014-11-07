@@ -195,6 +195,7 @@ public:
    virtual           ~TROOT();
    void              AddClass(TClass *cl);
    void              AddClassGenerator(TClassGenerator *gen);
+   virtual void      Append(TObject *obj, Bool_t replace = kFALSE);
    void              Browse(TBrowser *b);
    Bool_t            ClassSaved(TClass *cl);
    void              CloseFiles();
@@ -308,6 +309,7 @@ public:
                                     void (*triggerFunc)(),
                                     const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                                     const char** classesHeaders);
+   TObject          *Remove(TObject*);
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();
