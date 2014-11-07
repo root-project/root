@@ -404,7 +404,7 @@ void TList::Delete(Option_t *option)
 
    Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
 
-   TList removeDirectory; // need to deregistere these from their directory
+   TList removeDirectory; // need to deregister these from their directory
 
    if (slow) {
 
