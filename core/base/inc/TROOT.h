@@ -147,6 +147,7 @@ public:
    virtual           ~TROOT();
    void              AddClass(TClass *cl);
    void              AddClassGenerator(TClassGenerator *gen);
+   virtual void      Append(TObject *obj, Bool_t replace = kFALSE);
    void              Browse(TBrowser *b);
    Bool_t            ClassSaved(TClass *cl);
    void              CloseFiles();
@@ -250,6 +251,7 @@ public:
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
    Bool_t            ReadingObject() const;
    void              RefreshBrowsers();
+   TObject          *Remove(TObject*);
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();

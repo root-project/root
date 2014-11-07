@@ -601,6 +601,18 @@ void TROOT::AddClassGenerator(TClassGenerator *generator)
 }
 
 //______________________________________________________________________________
+void TROOT::Append(TObject *obj, Bool_t replace /* = kFALSE */)
+{
+   // Append object to this directory.
+   //
+   // If replace is true:
+   //   remove any existing objects with the same same (if the name is not ""
+
+   R__LOCKGUARD(gROOTMutex);
+   TDirectory::Append(obj,replace);
+}
+
+//______________________________________________________________________________
 void TROOT::Browse(TBrowser *b)
 {
    // Add browsable objects to TBrowser.
@@ -1977,6 +1989,16 @@ namespace ROOT {
 
       atexit(CallCloseFiles);
    }
+}
+
+//______________________________________________________________________________
+TObject *TROOT::Remove(TObject* obj)
+{
+   // Remove an object from the in-memory list.
+   // Since TROOT is global resource, this is lock protected.
+
+   R__LOCKGUARD(gROOTMutex);
+   return TDirectory::Remove(obj);
 }
 
 //______________________________________________________________________________
