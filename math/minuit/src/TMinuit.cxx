@@ -482,7 +482,7 @@ TMinuit::~TMinuit()
    DeleteArrays();
    delete fPlot;
    delete fMethodCall;
-   gROOT->GetListOfSpecials()->Remove(this);
+   if (gROOT != 0 && gROOT->GetListOfSpecials() != 0) gROOT->GetListOfSpecials()->Remove(this);
    if (gMinuit == this) gMinuit = 0;
 }
 
