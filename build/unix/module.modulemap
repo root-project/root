@@ -20,6 +20,18 @@ module graf3d_x3d {
   header "TViewerX3D.h"
   header "TX3DFrame.h"
 }
+
+module RooMsgService {
+  header "RooMsgService.h"
+  header "RooCmdArg.h"
+  header "RooLinkedList.h"
+  header "RooLinkedListElem.h"
+  header "RooHashTable.h"
+  header "RooGlobalFunc.h"
+  config_macros INST_MSG_SERVICE // see RooMsgService.h:223
+  export *
+}
+
 module roofit_roofitcore {
   export *
   header "RooAbsCache.h"
@@ -48,7 +60,6 @@ module roofit_roofitcore {
   header "RooAdaptiveGaussKronrodIntegrator1D.h"
   header "RooNormSetCache.h"
   header "RooRealMPFE.h"
-  header "RooLinkedListElem.h"
   header "RooAbsCachedPdf.h"
   header "RooPullVar.h"
   header "RooProduct.h"
@@ -87,7 +98,6 @@ module roofit_roofitcore {
   header "RooAbsAnaConvPdf.h"
   header "RooScaledFunc.h"
   header "RooAbsCacheElement.h"
-  header "RooHashTable.h"
   header "RooExtendedBinding.h"
   header "RooAbsArg.h"
   header "RooAddition.h"
@@ -102,7 +112,6 @@ module roofit_roofitcore {
   header "RooProdGenContext.h"
   header "Roo1DTable.h"
   header "RooArgProxy.h"
-  header "RooGlobalFunc.h"
   header "RooGenFitStudy.h"
   header "RooAbsRealLValue.h"
   header "RooGrid.h"
@@ -112,7 +121,6 @@ module roofit_roofitcore {
   header "RooGenFunction.h"
   header "RooDerivative.h"
   header "RooTrace.h"
-  header "RooCmdArg.h"
   header "RooFitResult.h"
   header "RooRandomizeParamMCSModule.h"
   header "RooSharedPropertiesList.h"
@@ -222,18 +230,10 @@ module roofit_roofitcore {
   header "RooRealAnalytic.h"
   header "RooMultiCatIter.h"
   header "RooMultiCategory.h"
-
-  module RooMsgService {
-    header "RooMsgService.h"
-    config_macros INST_MSG_SERVICE // see RooMsgService.h:223
-    export *
-  }
-
   header "RooMappedCategory.h"
   header "RooProdPdf.h"
   header "RooFoamGenerator.h"
   header "RooUniformBinning.h"
-  header "RooLinkedList.h"
   header "RooConvGenContext.h"
   header "RooAbsReal.h"
   header "RooImproperIntegrator1D.h"
