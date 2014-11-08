@@ -391,7 +391,7 @@ module core_base {
 
   header "Htypes.h"
   header "TObjectSpy.h"
-  //header "TQObjectEmitVA.h"
+  header "TQObjectEmitVA.h"
   header "TVirtualPadEditor.h"
   header "TQClass.h"
   //header "config.h" //deprecated use RConfigure.h
