@@ -704,11 +704,11 @@ module graf2d_asimage {
 module core_clib [extern_c] {
   //export *
   header "Demangle.h"
-  module mmconfig{header "mmconfig.h" export *}
-  //module mmalloc{header "mmalloc.h" export *} // enabling this leads to clashing macro PTR with Clang's Expr.h
   header "snprintf.h"
   header "strlcpy.h"
-  //module mmprivate{header "mmprivate.h"} // enabling this + enabling TMapFile leads to clashing macro BLOCK with Clang's DeclNode.inc
+  textual header "mmconfig.h"
+  textual header "mmalloc.h" // enabling this leads to clashing macro PTR with Clang's Expr.h
+  textual header "mmprivate.h" // enabling this + enabling TMapFile leads to clashing macro BLOCK with Clang's DeclNode.inc
 }
 module bindings_pyroot {
   export *
@@ -1225,6 +1225,10 @@ module montecarlo_vmc {
   header "TMCOptical.h"
   header "TMCVerbose.h"
 }
+module MapFile {
+  export *
+  header "TMapFile.h"
+}
 module io_io {
   //export core_thread // i.e missing module causes a crash...
   export *
@@ -1241,7 +1245,6 @@ module io_io {
   header "TVirtualCollectionIterators.h"
   header "TCollectionProxyFactory.h"
   header "TContainerConverters.h"
-  header "TMapFile.h"
   header "TVirtualArray.h"
   header "TFile.h"
   header "TFree.h"
