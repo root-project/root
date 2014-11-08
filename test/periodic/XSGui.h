@@ -24,8 +24,8 @@
 #define DATE   "Jun-1999"
 #define EMAIL   "V.Vlachoudis@cern.ch"
 
-#define ABOUT   PRGNAME" "VERSION"\n" \
-      AUTHOR" "DATE \
+#define ABOUT   PRGNAME" " VERSION"\n" \
+      AUTHOR" " DATE \
       EMAIL
 
 /* ---- Define all the available commands ----- */
