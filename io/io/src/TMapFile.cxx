@@ -98,6 +98,10 @@
 #include "TVirtualMutex.h"
 #include <cmath>
 
+#if !defined(__MMPRIVATE_H)
+#include "mmprivate.h"
+#endif
+
 #if defined(R__UNIX) && !defined(R__MACOSX) && !defined(R__WINGCC)
 #define HAVE_SEMOP
 #include <sys/types.h>
@@ -1169,4 +1173,31 @@ void TMapFile::operator delete(void *ptr)
    fgMmallocDesc = 0;
 
    TObject::operator delete(ptr);
+}
+
+//______________________________________________________________________________
+void *TMapFile::GetBreakval() const
+{
+   // Return the current location in the memory region for this malloc heap which
+   // represents the end of memory in use. Returns 0 if map file was closed.
+
+   if (!fMmallocDesc) return 0;
+   return (void *)((struct mdesc *)fMmallocDesc)->breakval;
+}
+
+//______________________________________________________________________________
+TMapFile *TMapFile::WhichMapFile(void *addr)
+{
+   if (!gROOT || !gROOT->GetListOfMappedFiles()) return 0;
+
+   TObjLink *lnk = ((TList *)gROOT->GetListOfMappedFiles())->LastLink();
+   while (lnk) {
+      TMapFile *mf = (TMapFile*)lnk->GetObject();
+      if (!mf) return 0;
+      if ((ULong_t)addr >= mf->fBaseAddr + mf->fOffset &&
+          (ULong_t)addr <  (ULong_t)mf->GetBreakval() + mf->fOffset)
+         return mf;
+      lnk = lnk->Prev();
+   }
+   return 0;
 }
