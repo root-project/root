@@ -1399,14 +1399,14 @@ module math_mlp {
   header "TMultiLayerPerceptron.h"
   header "TSynapse.h"
 }
-/*module math_matrix {
+module math_matrix {
   export *
   header "TMatrixTSymCramerInv.h"
   header "TMatrix.h"
   header "TMatrixTUtils.h"
   header "TMatrixD.h"
   header "TMatrixTCramerInv.h"
-  //header "TMatrixTSym.h" clang bug An asserting value handle still pointed to this value!
+  header "TMatrixTSym.h" //clang bug An asserting value handle still pointed to this value!
   header "TMatrixFSymfwd.h"
   header "TVectorF.h"
   header "TVectorFfwd.h"
@@ -1448,7 +1448,7 @@ module math_mlp {
   header "TMatrixT.h"// clang bug An asserting value handle still pointed to this value!
   header "TDecompQRH.h"
   header "TVectorDfwd.h"
-}*/
+}
 module gui_qtgsi {
   export *
   header "TQRootApplication.h"
