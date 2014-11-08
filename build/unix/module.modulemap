@@ -2322,12 +2322,17 @@ module core_textinput {
   export *
   header "Getline.h"
 }
+module Tree { // Because we don't want TTreeIndex to be polluted all tree_tree
+  header "TBranch.h"
+  header "TTree.h"
+  header "TVirtualTreePlayer.h"
+  export *
+}
 module tree_tree {
   export *
   header "TEntryListArray.h"
   header "TFriendElement.h"
   header "TLeafB.h"
-  header "TTree.h"
   header "TBranchElement.h"
   header "TLeafS.h"
   header "TLeafElement.h"
@@ -2354,7 +2359,6 @@ module tree_tree {
   header "TBufferSQL.h"
   header "TTreeSQL.h"
   header "TQueryResult.h"
-  header "TBranch.h"
   header "TLeafL.h"
   header "TEntryList.h"
   header "TLeafObject.h"
@@ -2371,7 +2375,6 @@ module tree_tree {
   header "TSelectorCint.h"
   header "TVirtualIndex.h"
   header "TChain.h"
-  header "TVirtualTreePlayer.h"
 }
 module graf2d_graf {
   export *
