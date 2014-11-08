@@ -1,14 +1,11 @@
 // Current Status:
-// Modules must be turned off when compiling due to -fno-rtti & -fno-exceptions
-// * core/utils/src/rootcling_tmp.cxx:
-//     /home/vvassilev/workspace/llvm/obj/Debug+Asserts/bin/clang++ -g -pipe -m64 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -std=c++11 -Wno-deprecated-declarations -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -UR__HAVE_CONFIG -DROOT_STAGE1_BUILD -I/home/vvassilev/workspace/root/core/utils/src -I/home/vvassilev/workspace/root/core/metautils/src -I/home/vvassilev/workspace/root/interpreter/cling/include -I/home/vvassilev/workspace/root/interpreter/llvm/inst/include -D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -g -std=c++11 -fPIC -Woverloaded-virtual -fdata-sections -fno-strict-aliasing -Wno-shadow -Wno-unused-parameter -o core/utils/src/rootcling_tmp.o -c core/utils/src/rootcling_tmp.cxx
-// * /home/vvassilev/workspace/root/core/utils/src/LinkdefReader.cxx:
-//     /home/vvassilev/workspace/llvm/obj/Debug+Asserts/bin/clang++ -g -pipe -m64 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -std=c++11 -Wno-deprecated-declarations -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -UR__HAVE_CONFIG -I/home/vvassilev/workspace/root/core/utils/src -I/home/vvassilev/workspace/root/core/metautils/src -I/home/vvassilev/workspace/root/interpreter/cling/include -I/home/vvassilev/workspace/root/interpreter/llvm/inst/include -D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -g -std=c++11 -fPIC -Woverloaded-virtual -fdata-sections -fno-strict-aliasing -Wno-shadow -Wno-unused-parameter -o core/utils/src/LinkdefReader.o -c /home/vvassilev/workspace/root/core/utils/src/LinkdefReader.cxx
-// * /home/vvassilev/workspace/root/core/utils/src/DictSelectionReader.cxx:
-//     /home/vvassilev/workspace/llvm/obj/Debug+Asserts/bin/clang++ -g -pipe -m64 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -std=c++11 -Wno-deprecated-declarations -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -UR__HAVE_CONFIG -I/home/vvassilev/workspace/root/core/utils/src -I/home/vvassilev/workspace/root/core/metautils/src -I/home/vvassilev/workspace/root/interpreter/cling/include -I/home/vvassilev/workspace/root/interpreter/llvm/inst/include -D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -g -std=c++11 -fPIC -Woverloaded-virtual -fdata-sections -fno-strict-aliasing -Wno-shadow -Wno-unused-parameter -o core/utils/src/DictSelectionReader.o -c /home/vvassilev/workspace/root/core/utils/src/DictSelectionReader.cxx
-// * /home/vvassilev/workspace/root/core/utils/src/TModuleGenerator.cxx:
-//     /home/vvassilev/workspace/llvm/obj/Debug+Asserts/bin/clang++ -g -pipe -m64 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -std=c++11 -Wno-deprecated-declarations -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -UR__HAVE_CONFIG -I/home/vvassilev/workspace/root/core/utils/src -I/home/vvassilev/workspace/root/core/metautils/src -I/home/vvassilev/workspace/root/interpreter/cling/include -I/home/vvassilev/workspace/root/interpreter/llvm/inst/include -D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -g -std=c++11 -fPIC -Woverloaded-virtual -fdata-sections -fno-strict-aliasing -Wno-shadow -Wno-unused-parameter -o core/utils/src/TModuleGenerator.o -c /home/vvassilev/workspace/root/core/utils/src/TModuleGenerator.cxx
-//
+// Dictionaries which do not compile with -fmodules:
+//   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++ -g -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -Icore/base/src  -D__CLING__ -Ietc -Ietc/cling -I/home/vvassilev/workspace/root/interpreter/cling/include -I/home/vvassilev/workspace/root/interpreter/llvm/inst/include -D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -g -std=c++11 -fPIC -Woverloaded-virtual -fdata-sections -Wcast-qual -fno-strict-aliasing -Wno-shadow -Wno-unused-parameter -I. -o core/base/src/G__Core.o -c core/base/src/G__Core.cxx
+//   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++  -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o net/net/src/G__Net.o -c net/net/src/G__Net.cxx
+//   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++ -g -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o hist/hist/src/G__Hist.o -c hist/hist/src/G__Hist.cxx
+//   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++  -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o graf2d/gpad/src/G__Gpad.o -c graf2d/gpad/src/G__Gpad.cxx
+//   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++  -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o gui/gui/src/G__Gui.o -c gui/gui/src/G__Gui.cxx
+//   * 
 //module ROOT {
 //requires cplusplus
 module sql_pgsql {
@@ -277,122 +274,158 @@ module html {
   header "TClassDocOutput.h"
   header "TDocOutput.h"
 }
+
+// Modules needed by rootcling. When building rootcling we must not import info from core_base 
+
+module DllImport [extern_c] {
+  header "DllImport.h"
+  export *
+}
+
+module RVersion [extern_c]{
+  header "RVersion.h"
+  export *
+}
+
+module Rtypes {
+  module SchemaHelper {
+    header "TSchemaHelper.h"
+    export *
+  }
+  module GenericClassInfo {
+    header "TGenericClassInfo.h"
+    export *
+  }
+
+  export *
+}
+
+module RtypesCore { header "RtypesCore.h" export * }
+module Rtypeinfo { header "Rtypeinfo.h" export * }
+
+module VersionCheck {
+  header "TVersionCheck.h"
+  export *
+}
+
+module String {
+  header "TString.h"
+  export *
+}
+module MathBase { header "TMathBase.h" export * }
+
+module Riosfwd {
+  header "Riosfwd.h"
+  export *
+}
+module Riostream { header "Riostream.h" export * }
+
+module ESTLType {
+  header "ESTLType.h"
+  export *
+}
+
+module Application {
+  export *
+}
+
+module ClassEdit {
+  header "TClassEdit.h"
+  export *
+}
+
+module Rstrstream { header "Rstrstream.h" export * }
+module RootMetaSelection { header "RootMetaSelection.h" export * }
+
+
+module SchemaType {
+  header "TSchemaType.h"
+  export *
+}
+
+module CoversionRuleParser {
+  header "RConversionRuleParser.h"
+  export *
+}
+
+module SchemaRuleProcessor {
+  header "TSchemaRuleProcessor.h"
+  export *
+}
+
+module RConfig [extern_c]{ header "RConfig.h" export * }
+module RConfigOptions [extern_c]{ header "RConfigOptions.h" export * }
+module RConfigure [extern_c]{ header "RConfigure.h" export * }
+
 module rootcling {
   export *
   // needs Compression.h from core_zip
   // needs Demangle.h from core_clib
-  header "DllImport.h"
-  header "RootMetaSelection.h"
-  // needs "RConfig.h" but maybe textually
-  // needs "RConfigOptions.h" maybe textually
-  // needs "RConfigure.h" maybe textually
-  // needs RConversionRuleParser from core_metautils
-  header "RVersion.h"
-  header "Riosfwd.h"
-  header "Riostream.h"
-  header "Rtypeinfo.h"
-  header "Rtypes.h"
-  header "RtypesCore.h"
   //header "RtypesImp.h" // AXEL is on it
-  header "Strlen.h"
-  header "TApplicationImp.h"
-  header "TApplication.h"
-  header "TArchiveFile.h" // NB! from io_io
-  header "TContextMenuImp.h"
-  header "TContextMenu.h"
-  header "TCanvasImp.h"
-  header "TCanvas.h"
-  header "TVersionCheck.h"
-  header "TClassEdit.h"
-  header "ESTLType.h"
-
-
-  module clingInterpreter {// Doesn't really do anything/work
-    export *
-    header "interpreter/cling/include/cling/Interpreter/AutoloadCallback.h"
-    header "interpreter/cling/include/cling/Interpreter/CIFactory.h"
-    header "interpreter/cling/include/cling/Interpreter/CValuePrinter.h"
-    header "interpreter/cling/include/cling/Interpreter/ClangInternalState.h"
-    header "interpreter/cling/include/cling/Interpreter/ClingOptions.h"
-    header "interpreter/cling/include/cling/Interpreter/CompilationOptions.h"
-    header "interpreter/cling/include/cling/Interpreter/DynamicLibraryManager.h"
-    header "interpreter/cling/include/cling/Interpreter/Interpreter.h"
-    header "interpreter/cling/include/cling/Interpreter/InterpreterCallbacks.h"
-    header "interpreter/cling/include/cling/Interpreter/InvocationOptions.h"
-    header "interpreter/cling/include/cling/Interpreter/LookupHelper.h"
-    header "interpreter/cling/include/cling/Interpreter/Transaction.h"
-    header "interpreter/cling/include/cling/Interpreter/Value.h"
-    header "interpreter/cling/include/cling/MetaProcessor/MetaProcessor.h"
-    header "interpreter/cling/include/cling/Utils/AST.h"
-    header "interpreter/cling/lib/Interpreter/AutoSynthesizer.h"
-    header "interpreter/cling/lib/Interpreter/BackendPass.h"
-    header "interpreter/cling/lib/Interpreter/CheckEmptyTransactionTransformer.h"
-    header "interpreter/cling/lib/Interpreter/DeclCollector.h"
-    header "interpreter/cling/lib/Interpreter/DeclExtractor.h"
-    header "interpreter/cling/lib/Interpreter/DynamicLookup.h"
-    header "interpreter/cling/lib/Interpreter/ForwardDeclPrinter.h"
-    header "interpreter/cling/lib/Interpreter/IncrementalExecutor.h"
-    header "interpreter/cling/lib/Interpreter/IncrementalParser.h"
-    header "interpreter/cling/lib/Interpreter/MultiplexInterpreterCallbacks.h"
-    header "interpreter/cling/lib/Interpreter/NullDerefProtectionTransformer.h"
-    header "interpreter/cling/lib/Interpreter/TransactionPool.h"
-    header "interpreter/cling/lib/Interpreter/TransactionTransformer.h"
-    header "interpreter/cling/lib/Interpreter/TransactionUnloader.h"
-    header "interpreter/cling/lib/Interpreter/ValueExtractionSynthesizer.h"
-    header "interpreter/cling/lib/Interpreter/ValuePrinterSynthesizer.h"
-    header "interpreter/cling/lib/MetaProcessor/Display.h"
-    header "interpreter/cling/lib/MetaProcessor/InputValidator.h"
-    header "interpreter/cling/lib/MetaProcessor/MetaLexer.h"
-    header "interpreter/cling/lib/MetaProcessor/MetaParser.h"
-    header "interpreter/cling/lib/MetaProcessor/MetaSema.h"
-  }
 
 }
+module Named { header "TNamed.h" export * }
+module Object {
+  header "TObject.h"
+  header "TBuffer.h"
+  export *
+}
+module Storage { header "TStorage.h" export * }
+module AttLine { header "TAttLine.h" export * }
+module GuiTypes { header "GuiTypes.h" export * }
+
+module Canvas {
+  header "TCanvas.h"
+  export *
+}
+
 module core_base {
   requires cplusplus
   export *
+
+  header "TCanvasImp.h"
+  header "Buttons.h"
+  header "TAttFill.h"
+  header "TAttMarker.h"
+  header "TAttPad.h"
+  header "TAttText.h"
+  header "TVirtualPad.h"
+  header "TVirtualX.h"
+
   header "Htypes.h"
   header "TObjectSpy.h"
   //header "TQObjectEmitVA.h"
   header "TVirtualPadEditor.h"
   header "TQClass.h"
-  header "TVirtualX.h"
   //header "config.h" //deprecated use RConfigure.h
   header "TBenchmark.h"
-  header "TAttText.h"
   header "TVirtualMutex.h"
-  header "TAttPad.h"
-  header "TMathBase.h"
-  header "TNamed.h"
   header "TParameter.h"
-  header "TBuffer.h"
-  header "Buttons.h"
   header "Bytes.h"
   header "Byteswap.h"
   header "GLConstants.h"
   header "Gtypes.h"
-  header "GuiTypes.h"
   header "KeySymbols.h"
   header "Match.h"
   header "MessageTypes.h"
+  header "Strlen.h"
+  header "TApplication.h"
+  header "TApplicationImp.h"
+  header "TContextMenu.h"
+  header "TContextMenuImp.h"
 
   //module TExceptionM {header "TException.h" export *} // We need to suppress TRY macro
   header "TMD5.h"
   header "TAtt3D.h"
   header "TThreadSlots.h"
-  header "Rstrstream.h"
   header "TGuiFactory.h"
   header "TAttAxis.h"
   header "TPluginManager.h"
   header "TVirtualViewer3D.h"
   header "TVirtualPerfStats.h"
-  header "TAttMarker.h"
-  header "TString.h"
   header "TEnv.h"
-  header "TVirtualPad.h"
   header "TColor.h"
   header "TMemberInspector.h"
-  header "TAttFill.h"
   header "TVirtualFFT.h"
   header "TRefCnt.h"
   header "TVirtualAuth.h"
@@ -424,14 +457,12 @@ module core_base {
   header "TVirtualGL.h"
   header "TAttBBox2D.h"
   header "TControlBarImp.h"
-  header "TAttLine.h"
   header "TFileInfo.h"
   header "TVirtualMonitoring.h"
   header "TFileCollection.h"
   header "TStyle.h"
   header "Rpair.h"
   header "TExec.h"
-  header "TObject.h"
   header "TInetAddress.h"
   header "TRedirectOutputGuard.h"
   header "TProcessID.h"
@@ -444,7 +475,6 @@ module core_base {
   header "TBrowserImp.h"
   header "TStopwatch.h"
   header "TVirtualTableInterface.h"
-  header "TStorage.h"
   header "TQCommand.h"
   header "TPRegexp.h"
   header "TSystemDirectory.h"
@@ -485,7 +515,6 @@ module core_base {
   header "TDictAttributeMap.h"
   header "TProtoClass.h"
   header "TEnumConstant.h"
-  header "TGenericClassInfo.h"
   header "TIsAProxy.h"
   header "TClassRef.h"
   header "TMethod.h"
@@ -501,7 +530,6 @@ module core_base {
   header "TListOfEnums.h"
   header "TVirtualStreamerInfo.h"
   header "TToggleGroup.h"
-  header "TSchemaHelper.h"
 //}// because of cyclic dependencies
 //module core_cont {
 //  export *
@@ -511,8 +539,8 @@ module core_base {
   header "TArrayF.h"
   header "TArrayI.h"
   header "TArrayL.h"
-  header "TArrayL64.h" // core_cont
-  header "TArrayS.h" // core_cont
+  header "TArrayL64.h"
+  header "TArrayS.h"
   header "TSortedList.h"
   header "TRefTable.h"
   header "TRefArray.h"
@@ -862,13 +890,17 @@ module core_zip [extern_c] {
   header "Compression.h"
   header "RZip.h"
 }
+
+module Pad {
+  header "TPad.h"
+  header "TAttCanvas.h"
+  export *
+}
 module graf2d_gpad {
   export *
-  header "TPad.h"
   header "TControlBarButton.h"
   header "TColorWheel.h"
   header "TButton.h"
-  header "TAttCanvas.h"
   header "TInspectCanvas.h"
   header "TCreatePrimitives.h"
   header "TGroupButton.h"
@@ -1200,6 +1232,7 @@ module montecarlo_vmc {
 module io_io {
   //export core_thread // i.e missing module causes a crash...
   export *
+  header "TArchiveFile.h"
   header "TBufferFile.h"
   header "TGenCollectionProxy.h"
   header "TStreamerInfo.h"
@@ -2373,13 +2406,10 @@ module graf2d_graf {
 }
 module core_metautils {
   export *
-  //header "TClassEdit.h" // needed by rootcling
-  //header "ESTLType.h" // needed by rootcling
+  header "TClassEdit.h"
+  header "ESTLType.h"
 
-  header "RConversionRuleParser.h"
-  //header "TSchemaRuleProcessor.h"
-  header "TMetaUtils.h" // AXEL is on it.
-  header "TSchemaType.h"
+  //header "TMetaUtils.h" // AXEL is on it.
   module ClingRuntime {header "TClingRuntime.h" export *}
 }
 module gui_qtroot {
