@@ -297,6 +297,8 @@ module Rtypes {
     export *
   }
 
+  header "Rtypes.h"
+
   export *
 }
 
@@ -357,13 +359,6 @@ module RConfig [extern_c]{ header "RConfig.h" export * }
 module RConfigOptions [extern_c]{ header "RConfigOptions.h" export * }
 module RConfigure [extern_c]{ header "RConfigure.h" export * }
 
-module rootcling {
-  export *
-  // needs Compression.h from core_zip
-  // needs Demangle.h from core_clib
-  //header "RtypesImp.h" // AXEL is on it
-
-}
 module Named { header "TNamed.h" export * }
 module Object {
   header "TObject.h"
@@ -378,6 +373,8 @@ module Canvas {
   header "TCanvas.h"
   export *
 }
+
+module Varargs { header "Varargs.h" export * }
 
 module core_base {
   requires cplusplus
@@ -413,8 +410,9 @@ module core_base {
   header "TApplicationImp.h"
   header "TContextMenu.h"
   header "TContextMenuImp.h"
+  textual header "RtypesImp.h" // Must be included only from the dictionaries.
 
-  //module TExceptionM {header "TException.h" export *} // We need to suppress TRY macro
+  //module Exception { header "TException.h" } // We need to suppress TRY macro
   header "TMD5.h"
   header "TAtt3D.h"
   header "TThreadSlots.h"
@@ -432,7 +430,6 @@ module core_base {
   header "TSystemFile.h"
   header "TBuffer3DTypes.h"
   header "TPoint.h"
-  //header "RConfig.h"
   header "TQConnection.h"
   header "TRef.h"
   header "TSystem.h"
@@ -442,7 +439,6 @@ module core_base {
   header "TObjString.h"
   header "TMacro.h"
   header "TDirectory.h"
-  //header "Varargs.h"
   header "TStringLong.h"
   header "TBrowser.h"
   header "TUUID.h"
@@ -1245,7 +1241,7 @@ module io_io {
   header "TVirtualCollectionIterators.h"
   header "TCollectionProxyFactory.h"
   header "TContainerConverters.h"
-  //header "TMapFile.h"
+  header "TMapFile.h"
   header "TVirtualArray.h"
   header "TFile.h"
   header "TFree.h"
