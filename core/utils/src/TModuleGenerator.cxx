@@ -202,6 +202,8 @@ std::ostream &TModuleGenerator::WritePPDefines(std::ostream &out) const
           "  #define " << strPair.first;
       if (!strPair.second.empty()) {
          out << " " << strPair.second;
+      } else {
+         out << " 1";
       }
       out << "\n"
           "#endif\n";

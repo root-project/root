@@ -2378,8 +2378,16 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( name == "Fitter" )    // really Fit::Fitter, allow call with python callable
       return Utility::AddToClass( pyclass, "FitFCN", new TFitterFitFCN );
 
-   if ( name == "TFile" )     // allow member-style access to entries in file
+   if ( name == "TFile" ) {
+   // TFile::Open really is a constructor, really
+      PyObject* attr = PyObject_GetAttrString( pyclass, (char*)"Open" );
+      if ( MethodProxy_Check( attr ) )
+         ((MethodProxy*)attr)->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsCreator;
+      Py_XDECREF( attr );
+
+   // allow member-style access to entries in file
       return Utility::AddToClass( pyclass, "__getattr__", TFileGetAttr, METH_O );
+   }
 
    if ( name.substr(0,8) == "TVector3" ) {
       Utility::AddToClass( pyclass, "__len__", (PyCFunction) ReturnThree, METH_NOARGS );

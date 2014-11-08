@@ -52,7 +52,7 @@ $(call pcmrule,GVIZ)
 $(GVIZDS):      $(GVIZH) $(GVIZL) $(ROOTCLINGEXE) $(call pcmdep,GVIZ)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GVIZ) -c $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GVIZ) -c -writeEmptyRootPCM $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)
 
 $(GVIZMAP):     $(GVIZH) $(GVIZL) $(ROOTCLINGEXE) $(call pcmdep,GVIZ)
 		$(MAKEDIR)

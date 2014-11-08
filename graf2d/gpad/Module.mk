@@ -52,7 +52,7 @@ $(call pcmrule,GPAD)
 $(GPADDS):      $(GPADH) $(GPADL) $(ROOTCLINGEXE) $(call pcmdep,GPAD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GPAD) -c $(GPADH) $(GPADL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GPAD) -c -writeEmptyRootPCM $(GPADH) $(GPADL)
 
 $(GPADMAP):     $(GPADH) $(GPADL) $(ROOTCLINGEXE) $(call pcmdep,GPAD)
 		$(MAKEDIR)

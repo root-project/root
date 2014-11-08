@@ -16,7 +16,7 @@
 rootdir=.
 cfgdir=etc/dictpch
 allheaders=$cfgdir/allHeaders.h
-alllinkdefs=$cfgdir/allLinkdefs.h
+alllinkdefs=$cfgdir/allLinkDefs.h
 cppflags=$cfgdir/allCppflags.txt
 pch=$1
 shift
@@ -34,7 +34,7 @@ if ! [ -f $rootdir/$allheaders ]; then
     fi
 fi
 
-cxxflags="-D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -I$rootdir/include -I$rootdir/etc -I$rootdir/etc/cling `cat $rootdir/$cppflags`"
+cxxflags="-D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DROOT_PCH -I$rootdir/include -I$rootdir/etc -I$rootdir/$cfgdir -I$rootdir/etc/cling `cat $rootdir/$cppflags`"
 
 if ! [ "x$1" = "x" ]; then
     cxxflags="$cxxflags $1"

@@ -54,7 +54,7 @@ $(call pcmrule,TREEPLAYER)
 $(TREEPLAYERDS): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCLINGEXE) $(call pcmdep,TREEPLAYER)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TREEPLAYER) -c $(TREEPLAYERH) $(TREEPLAYERL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TREEPLAYER) -c -writeEmptyRootPCM $(TREEPLAYERH) $(TREEPLAYERL)
 
 $(TREEPLAYERMAP): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCLINGEXE) $(call pcmdep,TREEPLAYER)
 		$(MAKEDIR)

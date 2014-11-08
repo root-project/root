@@ -1376,6 +1376,12 @@ Token ASTReader::ReadToken(ModuleFile &F, const RecordDataImpl &Record,
     Tok.setIdentifierInfo(II);
   Tok.setKind((tok::TokenKind)Record[Idx++]);
   Tok.setFlag((Token::TokenFlags)Record[Idx++]);
+  if (Tok.isLiteral()) {
+     const RecordData& RD = reinterpret_cast<const RecordData&>(Record);
+     std::string* Lit = new std::string(ReadString(RD, Idx));
+     TokenLiteralDataLoaded.push_back(Lit);
+     Tok.setLiteralData(Lit->c_str());
+  }
   return Tok;
 }
 
@@ -1514,15 +1520,26 @@ bool HeaderFileInfoTrait::EqualKey(internal_key_ref a, internal_key_ref b) {
   if (a.Size != b.Size || a.ModTime != b.ModTime)
     return false;
 
-  if (strcmp(a.Filename, b.Filename) == 0)
+  StringRef aName = a.Filename;
+  // a comes from PCH, see llvm::OnDiskChainedHashTable::find().
+  llvm::StringMap<std::string>::const_iterator iName
+    = OriginalFileMap.find(a.Filename);
+  if (iName != OriginalFileMap.end())
+    aName = iName->second;
+  else
+    while (aName.startswith("./"))
+      aName = aName.drop_front(2);
+
+  if (aName.compare(b.Filename) == 0)
     return true;
 
-  if (StringRef(b.Filename).endswith(a.Filename))
+  // Might have partial name in PCH.
+  if (StringRef(b.Filename).endswith(aName))
     return true;
   
   // Determine whether the actual files are equivalent.
   FileManager &FileMgr = Reader.getFileManager();
-  const FileEntry *FEA = FileMgr.getFile(a.Filename);
+  const FileEntry *FEA = FileMgr.getFile(aName);
   const FileEntry *FEB = FileMgr.getFile(b.Filename);
   return (FEA && FEA == FEB);
 }
@@ -2150,8 +2167,10 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
       File = FileMgr.getFile(Resolved);
     if (!File) {
       StringRef PPResolved = resolveFileThroughHeaderSearch(PP, Filename);
-      if (!PPResolved.empty())
+      if (!PPResolved.empty()) {
         File = FileMgr.getFile(PPResolved);
+	OriginalFileMap[Filename] = PPResolved;
+      }
     }
   }
 
@@ -2225,7 +2244,12 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
         Diag(diag::note_pch_rebuild_required) << TopLevelPCHName;
     }
 
-    IsOutOfDate = true;
+    //IsOutOfDate = true;
+    // Force the match of the file from the live filesystem to the
+    // file in teh PCH. Size and time are used as part of the key;
+    // they must agree on both sides.
+    FileMgr.modifyFileEntry(const_cast<FileEntry*>(File),
+                            StoredSize, StoredTime);
   }
 
   InputFile IF = InputFile(File, Overridden, IsOutOfDate);
@@ -2249,8 +2273,10 @@ const FileEntry *ASTReader::getFileEntry(StringRef filenameStrRef) {
       File = FileMgr.getFile(resolved);
     if (!File) {
       StringRef PPresolved = resolveFileThroughHeaderSearch(PP, Filename);
-      if (!PPresolved.empty())
+      if (!PPresolved.empty()) {
         File = FileMgr.getFile(PPresolved);
+	OriginalFileMap[Filename] = PPresolved;
+      }
     }
   }
 
@@ -3226,6 +3252,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
                    (const unsigned char *)F.HeaderFileInfoTableData,
                    HeaderFileInfoTrait(*this, F, 
                                        &PP.getHeaderSearchInfo(),
+                                       OriginalFileMap,
                                        Blob.data() + Record[2]));
         
         PP.getHeaderSearchInfo().SetExternalSource(this);
@@ -8439,5 +8466,8 @@ ASTReader::~ASTReader() {
                                              F = I->second.end();
          J != F; ++J)
       delete J->first;
+  }
+  for (auto PStr: TokenLiteralDataLoaded) {
+     delete PStr;
   }
 }

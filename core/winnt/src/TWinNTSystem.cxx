@@ -750,7 +750,7 @@ namespace {
 
             hres = ppf->Load(wsz, STGM_READ);
             if (SUCCEEDED(hres)) {
-               hres = psl->Resolve(HWND_DESKTOP, SLR_ANY_MATCH);
+               hres = psl->Resolve(HWND_DESKTOP, SLR_ANY_MATCH | SLR_NO_UI | SLR_UPDATE);
                if (SUCCEEDED(hres)) {
                   strlcpy(szGotPath, pszShortcutFile,MAX_PATH);
                   hres = psl->GetPath(szGotPath, MAX_PATH, (WIN32_FIND_DATA *)&wfd,

@@ -19,7 +19,7 @@ set(headers Math/DistFuncMathMore.h Math/SpecFuncMathMore.h Math/PdfFuncMathMore
             Math/VavilovAccurateCdf.h Math/VavilovAccurateQuantile.h Math/VavilovFast.h )
 set(linkdefs Math/LinkDef.h Math/LinkDef_Func.h Math/LinkDef_RootFinding.h)
 
-ROOT_GENERATE_DICTIONARY(G__MathMore ${headers} MODULE MathMore LINKDEF Math/LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__MathMore ${headers} MODULE MathMore LINKDEF Math/LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(MathMore *.cxx G__MathMore.cxx LIBRARIES ${GSL_LIBRARIES} DEPENDENCIES MathCore)
 ROOT_INSTALL_HEADERS()

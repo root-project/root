@@ -134,10 +134,7 @@ add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
 set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
 add_dependencies(onepcm ${__allTargets})
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-install(FILES ${CMAKE_BINARY_DIR}/etc/dictpch/allLinkDefs.h
-              ${CMAKE_BINARY_DIR}/etc/dictpch/allHeaders.h
-              ${CMAKE_BINARY_DIR}/etc/dictpch/allCppflags.txt
-        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/dictpch)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall

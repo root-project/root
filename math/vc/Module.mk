@@ -16,6 +16,9 @@ VCLIBVC      := $(LPATH)/libVc.a
 endif
 
 VCH          := $(wildcard $(MODDIRI)/Vc/* $(MODDIRI)/Vc/*/*)
+# Above includes Vc/scalar which is a directory; filter those out.
+# Problem: $(dir $(VCH)) gives Vc/scalar/ thus patsubst %/, %
+VCH          := $(filter-out $(sort $(patsubst %/,%,$(dir $(VCH)))),$(VCH))
 
 ALLHDRS      += $(patsubst $(MODDIRI)/%,include/%,$(VCH))
 ALLLIBS      += $(VCLIBVC)
@@ -24,9 +27,7 @@ ALLLIBS      += $(VCLIBVC)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/Vc/%: $(MODDIRI)/Vc/%
-	@(if [ ! -d "include/Vc" ]; then    \
-	   mkdir -p include/Vc;             \
-	fi)
+	mkdir -p $(dir $@)
 	cp -R $< $@
 
 escapeflag = $(subst ~,_,$(subst /,_,$(subst :,_,$(subst =,_,$(subst .,_,$(subst -,_,$(1)))))))

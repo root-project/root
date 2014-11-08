@@ -505,6 +505,9 @@ private:
   /// been loaded.
   std::vector<MacroInfo *> MacrosLoaded;
 
+  /// \brief Token literal data loaded and owned by us.
+  std::vector<std::string *> TokenLiteralDataLoaded;
+
   typedef ContinuousRangeMap<serialization::MacroID, ModuleFile *, 4>
     GlobalMacroMapType;
 
@@ -668,6 +671,11 @@ private:
   /// which the preprocessed entity resides along with the offset that should be
   /// added to the global preprocessing entitiy ID to produce a local ID.
   GlobalPreprocessedEntityMapType GlobalPreprocessedEntityMap;
+
+  /// \brief Mapping from file as known to PCH to file on disk. This gets set
+  /// by the ResuleFile*() functions and evaluated by
+  /// HeaderFileInfoTrait::EqualKey() through GetHeaderFileInfo().
+  llvm::StringMap<std::string> OriginalFileMap;
 
   /// \name CodeGen-relevant special data
   /// \brief Fields containing data that is relevant to CodeGen.

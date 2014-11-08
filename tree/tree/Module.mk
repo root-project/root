@@ -52,7 +52,7 @@ $(call pcmrule,TREE)
 $(TREEDS):      $(TREEH) $(TREEL) $(ROOTCLINGEXE) $(call pcmdep,TREE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TREE) -c $(TREEH) $(TREEL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TREE) -c -writeEmptyRootPCM $(TREEH) $(TREEL)
 
 $(TREEMAP):     $(TREEH) $(TREEL) $(ROOTCLINGEXE) $(call pcmdep,TREE)
 		$(MAKEDIR)

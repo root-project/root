@@ -52,7 +52,7 @@ $(call pcmrule,HBOOK)
 $(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCLINGEXE) $(filter-out lib/libminicern_rdict.pcm,$(call pcmdep,HBOOK))
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HBOOK) -c $(HBOOKH) $(HBOOKL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HBOOK) -c -writeEmptyRootPCM $(HBOOKH) $(HBOOKL)
 
 $(HBOOKMAP):    $(HBOOKH) $(HBOOKL) $(ROOTCLINGEXE) $(filter-out lib/libminicern_rdict.pcm,$(call pcmdep,HBOOK))
 		$(MAKEDIR)

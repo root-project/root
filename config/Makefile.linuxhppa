@@ -18,8 +18,8 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -Wall -W -Woverloaded-virtual \
-                -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -W -fPIC $(EXTRA_CFLAGS)
+                -fPIC $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -pipe -Wall -W -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

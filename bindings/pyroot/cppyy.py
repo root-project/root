@@ -7,6 +7,18 @@
 
 import sys, string
 
+### helper to get the version number from root-config
+def get_version():
+   try:
+      import commands
+      stat, output = commands.getstatusoutput("root-config --version")
+      if stat == 0:
+         return output
+   except Exception:
+      pass
+   # semi-sensible default in case of failure ...
+   return "6.03/XY"
+
 ### PyPy has 'cppyy' builtin (if enabled, that is)
 if 'cppyy' in sys.builtin_module_names:
    _builtin_cppyy = True

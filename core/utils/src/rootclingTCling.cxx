@@ -65,13 +65,13 @@ void AddStreamerInfoToROOTFile(const char *normName)
 extern "C"
 void AddTypedefToROOTFile(const char *tdname)
 {
-   gTypedefsToStore.push_back(tdname);
+   gTypedefsToStore.emplace_back(tdname);
 }
 
 extern "C"
 void AddEnumToROOTFile(const char *enumname)
 {
-   gEnumsToStore.push_back(enumname);
+   gEnumsToStore.emplace_back(enumname);
 }
 
 extern "C"
@@ -81,60 +81,22 @@ void AddAncestorPCMROOTFile(const char *pcmName)
 }
 
 extern "C"
-bool CloseStreamerInfoROOTFile(bool buildingROOT)
+bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
 {
    // Write all persistent TClasses.
-
-   if (buildingROOT && !gPCMFilename.compare(0, 7, "lib/lib")) {
-      std::string pcmName = gPCMFilename;
-      pcmName = pcmName.substr(7, pcmName.length() - 10 - 7); // lib/lib
-
-      static const std::unordered_set<std::string> pcmsInPCH
-      {
-         // core:
-         "Thread", "Rint",
-         // io/io
-         "RIO",
-         // net/net
-         "Net",
-         // math
-         "MathCore", "MathMore", "Genetic", "GenVector",
-         "GenVector_G__GenVector32", "Matrix", "Minuit", "Minuit2",
-         "Physics", "Smatrix", "Smatrix_G__Smatrix32",
-         // hist
-         "Hbook", "Hist", "HistPainter", "Spectrum", "SpectrumPainter",
-         // tree
-         "Tree", "TreePlayer", "TreeViewer",
-         // graf2d
-         "ASImage", "ASImageGUI", "FITSIO", "Gpad", "Graf", "Gviz",
-         "Postscript", "GX11", "GX11TTF",
-         // graf3d/gl
-         "RGL",
-         // gui/gui
-         "Gui",
-         // gui/fitpanel
-         "FitPanel",
-         // bindings/pyroot
-         "PyROOT",
-         // rootfit
-         "RooFit", "RooFitCore", "RooStats", "HistFactory",
-         // tmva
-         "TMVA"
-      };
-      if (pcmsInPCH.find(pcmName) != pcmsInPCH.end()) {
-         // Empty the PCM, because its information is in the PCH.
-         // We write an file with empty keys for symmetry reasons.
-         gClassesToStore.clear();
-         gTypedefsToStore.clear();
-         gEnumsToStore.clear();
-         gAncestorPCMNames.clear();
-      }
-   }
 
    // Avoid plugins.
    TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
 
-   TObjArray protoClasses;
+   // Don't use TFile::Open(); we don't need plugins.
+   TFile dictFile((gPCMFilename + "?filetype=pcm").c_str(), "RECREATE");
+
+   // Reset the content of the pcm
+   if (writeEmptyRootPCM) {
+      return true;
+   };
+
+   TObjArray protoClasses(gClassesToStore.size());
    for (const auto & normName : gClassesToStore) {
       TClass *cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
       if (!cl) {
@@ -163,7 +125,10 @@ bool CloseStreamerInfoROOTFile(bool buildingROOT)
       protoClasses.AddLast(new TProtoClass(cl));
    }
 
-   TObjArray typedefs;
+
+   TObjArray typedefs(gTypedefsToStore.size());
+
+
    for (const auto & dtname : gTypedefsToStore) {
       TDataType *dt = (TDataType *)gROOT->GetListOfTypes()->FindObject(dtname.c_str());
       if (!dt) {
@@ -179,7 +144,7 @@ bool CloseStreamerInfoROOTFile(bool buildingROOT)
    }
 
 
-   TObjArray enums;
+   TObjArray enums(gEnumsToStore.size());
    for (const auto & enumname : gEnumsToStore) {
       TEnum *en = nullptr;
       const size_t lastSepPos = enumname.find_last_of("::");
@@ -213,8 +178,6 @@ bool CloseStreamerInfoROOTFile(bool buildingROOT)
       enums.AddLast(en);
    }
 
-   // Don't use TFile::Open(); we don't need plugins.
-   TFile dictFile( (gPCMFilename + "?filetype=pcm").c_str(), "RECREATE");
    if (dictFile.IsZombie())
       return false;
    // Instead of plugins:

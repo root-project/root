@@ -8,7 +8,7 @@ ROOT_USE_PACKAGE(graf2d/graf)
 ROOT_USE_PACKAGE(graf2d/x11)
 include_directories(${FREETYPE_INCLUDE_DIRS} ${X11_INCLUDE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 
 ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx

@@ -1188,9 +1188,6 @@ bool TCling::LoadPCM(TString pcmFileName,
    // look in other places.
    searchPath.Append( gSystem->GetDynamicPath() );
 
-   static bool enableRootPcm = !gSystem->Getenv("DISABLE_ROOT_PCM");
-   if (!enableRootPcm) return kTRUE;
-
    if (!gSystem->FindFile(searchPath, pcmFileName))
       return kFALSE;
 
@@ -1211,12 +1208,28 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TDirectory::TContext ctxt(0);
+      
       TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
+
+      auto listOfKeys = pcmFile->GetListOfKeys();
+
+      // This is an empty pcm
+      if (listOfKeys && listOfKeys->GetSize() == 0) {
+         delete pcmFile;
+         gDebug = oldDebug;
+         return kTRUE;
+      }
+
       TObjArray *protoClasses;
+      if (gDebug > 1) 
+            ::Info("TCling::LoadPCM","reading protoclasses for %s \n",pcmFileName.Data());
+      
       pcmFile->GetObject("__ProtoClasses", protoClasses);
+
       if (protoClasses) {
-         for (auto proto : *protoClasses) {
-            TClassTable::Add((TProtoClass*)proto);
+         for (auto obj : *protoClasses) {
+            TProtoClass * proto = (TProtoClass*)obj;
+            TClassTable::Add(proto);
          }
          // Now that all TClass-es know how to set them up we can update
          // existing TClasses, which might cause the creation of e.g. TBaseClass
@@ -1244,6 +1257,7 @@ bool TCling::LoadPCM(TString pcmFileName,
                }
             }
          }
+
          protoClasses->Clear(); // Ownership was transfered to TClassTable.
          delete protoClasses;
       }
@@ -1441,7 +1455,7 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   if (fHeaderParsingOnDemand){
+   if (fHeaderParsingOnDemand && fwdDeclsCode){
       // We now parse the forward declarations. All the classes are then modified
       // in order for them to have an external lexical storage.
       std::string fwdDeclsCodeLessEnums;
@@ -1818,7 +1832,17 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          // explicitly ignore .autodict without having to support it
          // in cling.
          cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
+
+         // Turn off autoparsing if this is an include directive
+         bool isInclusionDirective = sLine.Contains("\n#include");
+         int oldAutoParseValue = 0;
+         if (isInclusionDirective){
+            oldAutoParseValue = SetClassAutoparsing(false);
+         }
          indent = fMetaProcessor->process(sLine, compRes, &result);
+         if (isInclusionDirective){
+            SetClassAutoparsing(oldAutoParseValue);
+         }
       }
    }
    if (result.isValid())
@@ -2191,13 +2215,14 @@ void TCling::ClearStack()
 }
 
 //______________________________________________________________________________
-void TCling::Declare(const char* code)
+bool TCling::Declare(const char* code)
 {
    // Declare code to the interpreter, without any of the interpreter actions
    // that could trigger a re-interpretation of the code. I.e. make cling
    // behave like a compiler: no dynamic lookup, no input wrapping for
    // subsequent execution, no automatic provision of declarations but just a
    // plain #include.
+   // Returns true on success, false on failure.
 
    int oldload = SetClassAutoloading(0);
    int oldparse = SetClassAutoparsing(0);
@@ -2206,12 +2231,13 @@ void TCling::Declare(const char* code)
    bool oldRawInput = fInterpreter->isRawInputEnabled();
    fInterpreter->enableRawInput(true);
 
-   LoadText(code);
+   Bool_t ret = LoadText(code);
 
    fInterpreter->enableRawInput(oldRawInput);
    fInterpreter->enableDynamicLookup(oldDynLookup);
    SetClassAutoloading(oldload);
    SetClassAutoparsing(oldparse);
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -2870,6 +2896,13 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    std::string name(cl->GetName());
    TClingClassInfo* info = new TClingClassInfo(fInterpreter, name.c_str());
    if (!info->IsValid()) {
+      if (cl->fState != TClass::kHasTClassInit) {
+         if (cl->fStreamerInfo->GetEntries() != 0) {
+            cl->fState = TClass::kEmulated;
+         } else {
+            cl->fState = TClass::kForwardDeclared;
+         }
+      }
       return;
    }
    cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transfering ownership here.
@@ -2911,7 +2944,11 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 //            There will be an emulated collection proxy, is that the same?
 //            cl->fState = TClass::kEmulated;
 //         } else {
+         if (cl->fStreamerInfo->GetEntries() != 0) {
+            cl->fState = TClass::kEmulated;
+         } else {
             cl->fState = TClass::kForwardDeclared;
+         }
 //         }
       }
    }
@@ -4148,8 +4185,8 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
    // success, -1 if the file has already been read, and -3 in case its format
    // is the old one (e.g. containing "Library.ClassName")
 
-   // For "class ", "namespace ", "typedef ", "header " respectively
-   const std::unordered_map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7}};
+   // For "class ", "namespace ", "typedef ", "header ", "enum " respectively
+   const std::map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7},{'e',5}};
 
    if (rootmapfile && *rootmapfile) {
 
@@ -4185,7 +4222,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
             while( lib_name[nspaces] == ' ' ) ++nspaces;
             if (nspaces) lib_name.replace(0, nspaces, "");
             if (gDebug > 3) {
-               TString lib_nameTstr(100);
+               TString lib_nameTstr(lib_name.c_str());
                TObjArray* tokens = lib_nameTstr.Tokenize(" ");
                const char* lib = ((TObjString *)tokens->At(0))->GetName();
                const char* wlib = gSystem->DynamicPathName(lib, kTRUE);
@@ -5344,10 +5381,6 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
    HandleNewTransaction(T);
 
    // Unload the objects from the lists and update the objects' state.
-   TDataMember* var = 0;
-   TFunction* function = 0;
-   TEnum* e = 0;
-   TFunctionTemplate* functiontemplate = 0;
    TListOfFunctions* functions = (TListOfFunctions*)gROOT->GetListOfGlobalFunctions();
    TListOfFunctionTemplates* functiontemplates = (TListOfFunctionTemplates*)gROOT->GetListOfFunctionTemplates();
    TListOfEnums* enums = (TListOfEnums*)gROOT->GetListOfEnums();
@@ -5358,32 +5391,48 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
          continue;
       for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
               DE = I->m_DGR.end(); DI != DE; ++DI) {
+
+         // Do not mark a decl as unloaded if we are going to keep it
+         // (because it comes from the pch) ...
+         if ( (*DI)->isFromASTFile() )
+            continue;
+
          // Deal with global variables and globa enum constants.
          if (isa<VarDecl>(*DI) || isa<EnumConstantDecl>(*DI)) {
             clang::ValueDecl* VD = dyn_cast<ValueDecl>(*DI);
-            var = (TDataMember*)globals->FindObject(VD->getNameAsString().c_str());
-            if (var && var->IsValid()) {
-               // Unload the global by setting the DataMemberInfo_t to 0
-               globals->Unload(var);
-               var->Update(0);
+            TObject *obj = globals->FindObject(VD->getNameAsString().c_str());
+            if (globals->GetClass()) {
+               TDataMember* var = dynamic_cast<TDataMember*>(obj);
+               if (var && var->IsValid()) {
+                  // Unload the global by setting the DataMemberInfo_t to 0
+                  globals->Unload(var);
+                  var->Update(0);
+               }
+            } else {
+               TGlobal *g = dynamic_cast<TGlobal*>(obj);
+               if (g && g->IsValid()) {
+                  // Unload the global by setting the DataMemberInfo_t to 0
+                  globals->Unload(g);
+                  g->Update(0);
+               }
             }
          // Deal with global functions.
          } else if (const FunctionDecl* FD = dyn_cast<FunctionDecl>(*DI)) {
-            function = (TFunction*)functions->FindObject(FD->getNameAsString().c_str());
+            TFunction* function = (TFunction*)functions->FindObject(FD->getNameAsString().c_str());
             if (function && function->IsValid()) {
                functions->Unload(function);
                function->Update(0);
             }
          // Deal with global function templates.
          } else if (const FunctionTemplateDecl* FTD = dyn_cast<FunctionTemplateDecl>(*DI)) {
-            functiontemplate = (TFunctionTemplate*)functiontemplates->FindObject(FTD->getNameAsString().c_str());
+            TFunctionTemplate* functiontemplate = (TFunctionTemplate*)functiontemplates->FindObject(FTD->getNameAsString().c_str());
             if (functiontemplate) {
                functiontemplates->Unload(functiontemplate);
                functiontemplate->Update(0);
             }
          // Deal with global enums.
          } else if (const EnumDecl* ED = dyn_cast<EnumDecl>(*DI)) {
-            e = (TEnum*)enums->FindObject(ED->getNameAsString().c_str());
+            TEnum* e = (TEnum*)enums->FindObject(ED->getNameAsString().c_str());
             if (e) {
                globals = (TListOfDataMembers*)gROOT->GetListOfGlobals();
                TIter iEnumConst(e->GetConstants());
@@ -5403,11 +5452,14 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
          // Cannot declare the members in a different declaration like redeclarable namespaces.
          } else if (const clang::RecordDecl* RD = dyn_cast<RecordDecl>(*DI)) {
             std::vector<TClass*> vectTClass;
-            if (TClass::GetClass(RD, vectTClass)) {
-               for (std::vector<TClass*>::iterator CI = vectTClass.begin(), CE = vectTClass.end();
-                    CI != CE; ++CI) {
-                  UnloadClassMembers((*CI), RD);
-                  (*CI)->ResetClassInfo();
+            // Only update the TClass if the definition is being unloaded.
+            if (RD->isCompleteDefinition()) {
+               if (TClass::GetClass(RD, vectTClass)) {
+                  for (std::vector<TClass*>::iterator CI = vectTClass.begin(), CE = vectTClass.end();
+                       CI != CE; ++CI) {
+                     UnloadClassMembers((*CI), RD);
+                     (*CI)->ResetClassInfo();
+                  }
                }
             }
          // Deal with namespaces. Unload the members of the current redeclaration only.
@@ -5695,12 +5747,13 @@ int TCling::LoadFile(const char* path) const
 }
 
 //______________________________________________________________________________
-void TCling::LoadText(const char* text) const
+Bool_t TCling::LoadText(const char* text) const
 {
    // Load the declarations from text into the interpreter.
    // Note that this cannot be (top level) statements; text must contain
    // top level declarations.
-   fInterpreter->declare(text);
+   // Returns true on success, false on failure.
+   return (fInterpreter->declare(text) == cling::Interpreter::kSuccess);
 }
 
 //______________________________________________________________________________

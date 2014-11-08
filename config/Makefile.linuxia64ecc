@@ -17,8 +17,8 @@ endif
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS)
-CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict
+CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict $(USERCONF_CFLAGS)
 
 # Compiler version:
 ICC_MAJOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \

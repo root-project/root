@@ -50,7 +50,7 @@ foreach(hs headers1 headers2 headers3 headers4)
   endforeach()
 endforeach()
 
-ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} MODULE TMVA LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx LIBRARIES Core
                     DEPENDENCIES RIO Hist Tree MLP Minuit XMLIO)

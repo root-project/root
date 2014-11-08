@@ -2379,7 +2379,7 @@ bool HasPath(const std::string &name)
 //______________________________________________________________________________
 int CreateCapabilitiesFile(const std::string &capaFileName,
                            const std::string &dictFileName,
-                           const std::list<std::string> &classesNames)
+                           const std::list<std::string> &keysNames)
 {
 
    char const *model_c[] = {
@@ -2408,9 +2408,13 @@ int CreateCapabilitiesFile(const std::string &capaFileName,
 
    std::list<std::string> new_lines;
 
-   for (std::list<std::string>::const_iterator lineIt = classesNames.begin();
-         lineIt != classesNames.end(); ++lineIt) {
-      new_lines.push_back(" \"" + capaPre + "/" + TClassEdit::InsertStd(lineIt->c_str()) + "\",\n");
+   std::string keyNameWithStd;
+   for (auto const keyName : keysNames){
+      keyNameWithStd = TClassEdit::InsertStd(keyName.c_str());
+      new_lines.push_back(" \"" + capaPre + "/" + keyNameWithStd + "\",\n");
+      if (keyName!=keyNameWithStd) {
+         new_lines.push_back(" \"" + capaPre + "/" + keyName.c_str() + "\",\n");
+      }
    }
 
    std::ifstream ifile(capaFileName.c_str());
@@ -2427,8 +2431,8 @@ int CreateCapabilitiesFile(const std::string &capaFileName,
    ifile.close();
 
    // Now replace lines if dict already in the capabilities content if there
-   std::list<std::string>::iterator startMarkPos(std::find(lines.begin(), lines.end(), startmark));
-   std::list<std::string>::iterator endMarkPos(std::find(lines.begin(), lines.end(), endmark));
+   auto startMarkPos(std::find(lines.begin(), lines.end(), startmark));
+   auto endMarkPos(std::find(lines.begin(), lines.end(), endmark));
    if (startMarkPos != lines.end() && endMarkPos != lines.end()) {
       // increment since erase erases elements like [first,last)
       startMarkPos++;
@@ -2448,9 +2452,8 @@ int CreateCapabilitiesFile(const std::string &capaFileName,
       return 1;
    }
 
-   for (std::list<std::string>::iterator lineIt = lines.begin();
-         lineIt != lines.end(); ++lineIt) {
-      capaFile << *lineIt;
+   for (auto const & line : lines) {
+      capaFile << line;
    }
    return 0;
 }
@@ -2643,12 +2646,32 @@ void ExtractTypedefAutoloadKeys(std::list<std::string> &tdNames,
 }
 
 //______________________________________________________________________________
+int ExtractEnumAutoloadKeys(std::list<std::string> &enumNames,
+                            const std::vector<clang::EnumDecl *> &enumDecls,
+                            const cling::Interpreter &interp)
+{
+   if (!enumDecls.empty()) {
+      std::string autoLoadKey;
+      for (auto & en : enumDecls) {
+         autoLoadKey = "";
+         GetMostExternalEnclosingClassNameFromDecl(*en, autoLoadKey, interp);
+         // If there is an outer class, it is already considered
+         if (autoLoadKey.empty()) {
+            enumNames.push_back(en->getQualifiedNameAsString());
+         }
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 int CreateNewRootMapFile(const std::string &rootmapFileName,
                          const std::string &rootmapLibName,
                          const std::list<std::string> &classesDefsList,
                          const std::list<std::string> &classesNames,
                          const std::list<std::string> &nsNames,
                          const std::list<std::string> &tdNames,
+                         const std::list<std::string> &enNames,
                          const HeadersDeclsMap_t &headersClassesMap,
                          const std::unordered_set<std::string> headersToIgnore)
 {
@@ -2682,7 +2705,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
    }
 
    // Add the "section"
-   if (!nsNames.empty() || !classesNames.empty() || !tdNames.empty()) {
+   if (!nsNames.empty() || !classesNames.empty() || !tdNames.empty() || !enNames.empty()) {
       rootmapFile << "[" << rootmapLibName << " ]\n";
 
       // Loop on selected classes and insert them in the rootmap
@@ -2723,6 +2746,16 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
             if (classesKeys.insert(autoloadKey).second)
                rootmapFile << "typedef " << autoloadKey << std::endl;
       }
+
+      // And Enums. There is no incomplete type for an enum but we can nevertheless
+      // have the key for the cases where the root typesystem is interrogated.
+      if (!enNames.empty()){
+         rootmapFile << "# List of selected enums and outer classes\n";
+         for (const auto & autoloadKey : enNames)
+            if (classesKeys.insert(autoloadKey).second)
+               rootmapFile << "enum " << autoloadKey << std::endl;
+      }
+
    }
 
    return 0;
@@ -2869,26 +2902,27 @@ int CheckClassesForInterpreterOnlyDicts(cling::Interpreter &interp,
 
 //_____________________________________________________________________________
 #ifndef ROOT_STAGE1_BUILD
-int FinalizeStreamerInfoWriting(cling::Interpreter &interp)
+int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootPCM=false)
 {
    // Make up for skipping RegisterModule, now that dictionary parsing
    // is done and these headers cannot be selected anymore.
    interp.parseForModule("#include \"TStreamerInfo.h\"\n"
-                         "#include \"TFile.h\"\n"
-                         "#include \"TObjArray.h\"\n"
-                         "#include \"TVirtualArray.h\"\n"
-                         "#include \"TStreamerElement.h\"\n"
-                         "#include \"TProtoClass.h\"\n"
-                         "#include \"TBaseClass.h\"\n"
-                         "#include \"TListOfDataMembers.h\"\n"
-                         "#include \"TListOfEnums.h\"\n"
-                         "#include \"TDataMember.h\"\n"
-                         "#include \"TEnum.h\"\n"
-                         "#include \"TEnumConstant.h\"\n"
-                         "#include \"TDictAttributeMap.h\"\n"
-                         "#include \"TMessageHandler.h\"\n"
-                        );
-   if (!CloseStreamerInfoROOTFile(buildingROOT)) {
+                           "#include \"TFile.h\"\n"
+                           "#include \"TObjArray.h\"\n"
+                           "#include \"TVirtualArray.h\"\n"
+                           "#include \"TStreamerElement.h\"\n"
+                           "#include \"TProtoClass.h\"\n"
+                           "#include \"TBaseClass.h\"\n"
+                           "#include \"TListOfDataMembers.h\"\n"
+                           "#include \"TListOfEnums.h\"\n"
+                           "#include \"TDataMember.h\"\n"
+                           "#include \"TEnum.h\"\n"
+                           "#include \"TEnumConstant.h\"\n"
+                           "#include \"TDictAttributeMap.h\"\n"
+                           "#include \"TMessageHandler.h\"\n"
+                           "#include \"TArray.h\"\n"
+                           "#include \"TRefArray.h\"\n");
+   if (!CloseStreamerInfoROOTFile(writeEmptyRootPCM)) {
       return 1;
    }
    return 0;
@@ -2901,7 +2935,8 @@ int GenerateFullDict(std::ostream &dictStream,
                      SelectionRules &selectionRules,
                      const ROOT::TMetaUtils::RConstructorTypes &ctorTypes,
                      bool isSplit,
-                     bool isGenreflex)
+                     bool isGenreflex,
+                     bool writeEmptyRootPCM)
 {
 
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
@@ -3019,7 +3054,7 @@ int GenerateFullDict(std::ostream &dictStream,
    EmitEnums(scan.fSelectedEnums);
    // Make up for skipping RegisterModule, now that dictionary parsing
    // is done and these headers cannot be selected anymore.
-   int finRetCode = FinalizeStreamerInfoWriting(interp);
+   int finRetCode = FinalizeStreamerInfoWriting(interp, writeEmptyRootPCM);
    if (finRetCode != 0) return finRetCode;
 #endif
 
@@ -3723,6 +3758,7 @@ int RootCling(int argc,
    bool doSplit = false;
    bool dictSelection = true;
    bool multiDict = false;
+   bool writeEmptyRootPCM = false;
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = true;
@@ -3819,6 +3855,14 @@ int RootCling(int argc,
             ic += 1;
             continue;
          }
+
+         if (strcmp("-writeEmptyRootPCM", argv[ic]) == 0) {
+            // inline the input header
+            writeEmptyRootPCM = true;
+            ic += 1;
+            continue;
+         }
+
 
          if (strcmp("-pipe", argv[ic]) != 0 && strcmp("-pthread", argv[ic]) != 0) {
             // filter out undesirable options
@@ -4331,6 +4375,7 @@ int RootCling(int argc,
    }
 
    int retCode(0);
+
    if (onepcm) {
       AnnotateAllDeclsForPCH(interp, scan, selectionRules);
    } else if (interpreteronly) {
@@ -4347,7 +4392,8 @@ int RootCling(int argc,
                                  selectionRules,
                                  constructorTypes,
                                  doSplit,
-                                 isGenreflex);
+                                 isGenreflex,
+                                 writeEmptyRootPCM);
    }
 
    if (retCode != 0) {
@@ -4379,12 +4425,18 @@ int RootCling(int argc,
             break;
          }
       }
+
+      if (writeEmptyRootPCM){
+         headersDeclsMap.clear();
+      }
+
+
       const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
-            detectedUmbrella,
-            true);
+                                                                                      detectedUmbrella,
+                                                                                      true);
       const std::string fwdDeclsString =
 #ifndef ROOT_STAGE1_BUILD
-         GenerateFwdDeclString(scan, interp);
+         writeEmptyRootPCM ? "nullptr" : GenerateFwdDeclString(scan, interp);
 #else
          "\"\"";
 #endif
@@ -4436,10 +4488,15 @@ int RootCling(int argc,
    std::list<std::string> classesDefsList;
 
    retCode = ExtractSelectedClassesAndTemplateDefs(scan,
-             classesNames,
-             classesNamesForRootmap,
-             classesDefsList,
-             interp);
+                                                   classesNames,
+                                                   classesNamesForRootmap,
+                                                   classesDefsList,
+                                                   interp);
+   std::list<std::string> enumNames;
+   retCode += ExtractEnumAutoloadKeys(enumNames,
+                                      scan.fSelectedEnums,
+                                      interp);
+
    if (0 != retCode) return retCode;
 
    // Create the rootmapfile if needed
@@ -4479,6 +4536,7 @@ int RootCling(int argc,
                                              classesNamesForRootmap,
                                              nsNames,
                                              typedefsRootmapLines,
+                                             enumNames,
                                              headersClassesMap,
                                              headersToIgnore);
       } else {
@@ -4493,9 +4551,12 @@ int RootCling(int argc,
    // Create the capabilities file if needed
    if (capaNeeded) {
       tmpCatalog.addFileName(capaFileName);
+      // Lump together classes and enum names
+      std::list<std::string>& capaKeysNames=classesNames;
+      capaKeysNames.splice(capaKeysNames.end(),enumNames);
       int capaStatusCode = CreateCapabilitiesFile(capaFileName,
-                           dictpathname,
-                           classesNames);
+                                                  dictpathname,
+                                                  capaKeysNames);
       if (0 != capaStatusCode) return 1;
    }
 
@@ -4668,6 +4729,7 @@ namespace genreflex {
                        bool interpreteronly,
                        bool doSplit,
                        bool isDeep,
+                       bool writeEmptyRootPCM,
                        const std::vector<std::string> &headersNames,
                        const std::string &ofilename)
    {
@@ -4758,6 +4820,10 @@ namespace genreflex {
       // Inline the input header
       argvVector.push_back(string2charptr("-inlineInputHeader"));
 
+      // Write empty root pcms
+      if (writeEmptyRootPCM)
+         argvVector.push_back(string2charptr("-writeEmptyRootPCM"));
+
       // Clingargs
       AddToArgVector(argvVector, includes, "-I");
       AddToArgVector(argvVector, preprocDefines, "-D");
@@ -4809,6 +4875,7 @@ namespace genreflex {
                            bool interpreteronly,
                            bool doSplit,
                            bool isDeep,
+                           bool writeEmptyRootPCM,
                            const std::vector<std::string> &headersNames,
                            const std::string &outputDirName_const = "")
    {
@@ -4846,6 +4913,7 @@ namespace genreflex {
                                           interpreteronly,
                                           doSplit,
                                           isDeep,
+                                          writeEmptyRootPCM,
                                           namesSingleton,
                                           ofilenameFullPath);
          if (returnCode != 0)
@@ -4948,6 +5016,7 @@ int GenReflex(int argc, char **argv)
                        OLDRMFFORMAT,
                        DEBUG,
                        QUIET,
+                       WRITEEMPTYROOTPCM,
                        HELP,
                        CAPABILITIESFILENAME,
                        INTERPRETERONLY,
@@ -5175,6 +5244,14 @@ int GenReflex(int argc, char **argv)
       },
 
       {
+         WRITEEMPTYROOTPCM,
+         NOTYPE ,
+         "" , "writeEmptyPCM",
+         ROOT::option::Arg::None,
+         "--writeEmptyPCM\tWrite an empty ROOT pcm.\n"
+      },
+
+      {
          HELP,
          NOTYPE,
          "h" , "help",
@@ -5349,6 +5426,10 @@ int GenReflex(int argc, char **argv)
    if (options[SPLIT])
       doSplit = true;
 
+   bool writeEmptyRootPCM = false;
+   if (options[WRITEEMPTYROOTPCM])
+      writeEmptyRootPCM = true;
+
    // Add the .so extension to the rootmap lib if not there
    if (!rootmapLibName.empty() && !endsWith(rootmapLibName, gLibraryExtension)) {
       rootmapLibName += gLibraryExtension;
@@ -5410,6 +5491,7 @@ int GenReflex(int argc, char **argv)
                                     interpreteronly,
                                     doSplit,
                                     isDeep,
+                                    writeEmptyRootPCM,
                                     headersNames,
                                     ofileName);
    } else {
@@ -5430,6 +5512,7 @@ int GenReflex(int argc, char **argv)
                                         interpreteronly,
                                         doSplit,
                                         isDeep,
+                                        writeEmptyRootPCM,
                                         headersNames,
                                         ofileName);
    }

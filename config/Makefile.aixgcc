@@ -14,11 +14,17 @@ OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y
+else
+CXX11FLAGS    = -std=c++11
+endif
+
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -std=c++11 -fPIC -DR__AIXGCC -fsigned-char $(EXTRA_CXXFLAGS)
-CFLAGS        = -fPIC -DR__AIXGCC -fsigned-char $(EXTRA_CFLAGS)
+CXXFLAGS      = $(CXX11FLAGS) -fPIC -DR__AIXGCC -fsigned-char $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -fPIC -DR__AIXGCC -fsigned-char $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

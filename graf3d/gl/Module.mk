@@ -86,7 +86,7 @@ $(call pcmrule,GL)
 $(GLDS):	$(GLH2) $(GLL) $(ROOTCLINGEXE) $(call pcmdep,GL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GL) -c $(CINTFLAGS) $(GLH2) $(GLL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GL) -c -writeEmptyRootPCM $(CINTFLAGS) $(GLH2) $(GLL)
 
 $(GLMAP):	$(GLH2) $(GLL) $(ROOTCLINGEXE) $(call pcmdep,GL)
 		$(MAKEDIR)

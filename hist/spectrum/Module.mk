@@ -54,7 +54,7 @@ $(call pcmrule,SPECTRUM)
 $(SPECTRUMDS):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCLINGEXE) $(call pcmdep,SPECTRUM)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SPECTRUM) -c $(SPECTRUMH) $(SPECTRUML)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SPECTRUM) -c -writeEmptyRootPCM $(SPECTRUMH) $(SPECTRUML)
 
 $(SPECTRUMMAP): $(SPECTRUMH) $(SPECTRUML) $(ROOTCLINGEXE) $(call pcmdep,SPECTRUM)
 		$(MAKEDIR)

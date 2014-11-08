@@ -190,25 +190,36 @@ namespace RooStats {
    // Helper class for GetAsTTree
    class BranchStore {
       public:
-         std::map<TString, Double_t> varVals;
-         double inval;
+         std::map<TString, Double_t> fVarVals;
+         double fInval;
+         TTree *fTree;
 
-         BranchStore(const vector <TString> &params = vector <TString>(), double _inval = -999.) {
-            inval = _inval;
+         BranchStore(const vector <TString> &params = vector <TString>(), double _inval = -999.) : fTree(0) {
+            fInval = _inval;
             for(unsigned int i = 0;i<params.size();i++)
-               varVals[params[i]] = _inval;
+               fVarVals[params[i]] = _inval;
+         }
+
+         ~BranchStore() {
+            if (fTree) {
+               for(std::map<TString, Double_t>::iterator it = fVarVals.begin();it!=fVarVals.end();it++) {
+                  TBranch *br = fTree->GetBranch( it->first );
+                  if (br) br->ResetAddress();
+               }
+            }
          }
 
          void AssignToTTree(TTree &myTree) {
-            for(std::map<TString, Double_t>::iterator it = varVals.begin();it!=varVals.end();it++) {
+            fTree = &myTree;
+            for(std::map<TString, Double_t>::iterator it = fVarVals.begin();it!=fVarVals.end();it++) {
                const TString& name = it->first;
-               myTree.Branch( name, &varVals[name], TString::Format("%s/D", name.Data()));
+               myTree.Branch( name, &fVarVals[name], TString::Format("%s/D", name.Data()));
             }
          }
          void ResetValues() {
-            for(std::map<TString, Double_t>::iterator it = varVals.begin();it!=varVals.end();it++) {
+            for(std::map<TString, Double_t>::iterator it = fVarVals.begin();it!=fVarVals.end();it++) {
                const TString& name = it->first;
-               varVals[name] = inval;
+               fVarVals[name] = fInval;
             }
          }
    };
@@ -251,17 +262,18 @@ namespace RooStats {
             RooRealVar *rvar = dynamic_cast<RooRealVar*>(arg);
             if (rvar == NULL)
                continue;
-            bs->varVals[rvar->GetName()] = rvar->getValV();
+            bs->fVarVals[rvar->GetName()] = rvar->getValV();
             if (rvar->hasAsymError()) {
-               bs->varVals[TString::Format("%s_errlo", rvar->GetName())] = rvar->getAsymErrorLo();
-               bs->varVals[TString::Format("%s_errhi", rvar->GetName())] = rvar->getAsymErrorHi();
+               bs->fVarVals[TString::Format("%s_errlo", rvar->GetName())] = rvar->getAsymErrorLo();
+               bs->fVarVals[TString::Format("%s_errhi", rvar->GetName())] = rvar->getAsymErrorHi();
             }
             else if (rvar->hasError()) {
-               bs->varVals[TString::Format("%s_err", rvar->GetName())] = rvar->getError();
+               bs->fVarVals[TString::Format("%s_err", rvar->GetName())] = rvar->getError();
             }
          }
          myTree.Fill();
       }
+
       delete bs;
    }
 

@@ -115,6 +115,8 @@ namespace cling {
                              Value* resultValue) {
     if (resultValue)
       *resultValue = Value();
+    // Assume success; some actions don't set it.
+    actionResult = MetaSema::AR_Success;
     return isLCommand(actionResult)
       || isXCommand(actionResult, resultValue) ||isTCommand(actionResult)
       || isAtCommand()
@@ -293,7 +295,6 @@ namespace cling {
   }
 
   bool MetaParser::isUCommand(MetaSema::ActionResult& actionResult) {
-    actionResult = MetaSema::AR_Failure;
     if (getCurTok().is(tok::ident) && getCurTok().getIdent().equals("U")) {
       consumeAnyStringToken(tok::eof);
       llvm::StringRef path;
@@ -573,7 +574,6 @@ namespace cling {
                                   Value* resultValue) {
     if (resultValue)
       *resultValue = Value();
-    actionResult = MetaSema::AR_Failure;
     const Token& Tok = getCurTok();
     if (Tok.is(tok::excl_mark)) {
       consumeAnyStringToken(tok::eof);

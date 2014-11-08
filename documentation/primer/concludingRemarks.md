@@ -1,4 +1,4 @@
-## Concluding Remarks ##
+# Concluding Remarks #
 
 This is the end of our guided tour for beginners through ROOT. There is
 still a lot coming to mind to be said, but by now you are experienced

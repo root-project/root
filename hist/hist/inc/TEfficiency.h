@@ -55,7 +55,7 @@ protected:
       std::vector<std::pair<Double_t, Double_t> > fBeta_bin_params;  // parameter for prior beta distribution different bin by bin
                                                                  // (default vector is empty)
       Double_t      (*fBoundary)(Int_t,Int_t,Double_t,Bool_t);               //!pointer to a method calculating the boundaries of confidence intervals
-      Double_t      fConfLevel;              //confidence level (default = 0.95)
+      Double_t      fConfLevel;              //confidence level (default = 0.683, 1 sigma)
       TDirectory*   fDirectory;              //!pointer to directory holding this TEfficiency object
       TList*        fFunctions;              //->pointer to list of functions
       TGraphAsymmErrors* fPaintGraph;        //!temporary graph for painting

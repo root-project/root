@@ -5,5 +5,5 @@
 ROOT_USE_PACKAGE(gui/gui)
 ROOT_USE_PACKAGE(tree/treeplayer)
 
-ROOT_STANDARD_LIBRARY_PACKAGE(FitPanel DEPENDENCIES Gui Gpad Hist Graf Tree MathCore)
+ROOT_STANDARD_LIBRARY_PACKAGE(FitPanel DEPENDENCIES Gui Gpad Hist Graf Tree MathCore DICTIONARY_OPTIONS "-writeEmptyRootPCM")
 

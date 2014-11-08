@@ -28,7 +28,7 @@ p { margin-top: 6px; padding: 0 10px 1em; }
 
 #left-div { left: 2px; width: 300px; margin-right: 1px; overflow: auto; }
 
-#separator-div { left: 304px; width: 4px; width: 2px; background-color: white; cursor: ew-resize } 
+#separator-div { left: 304px; width: 4px; width: 2px; background-color: white; cursor: ew-resize }
 
 #right-div {
    left: 310px;
@@ -57,28 +57,28 @@ input.tb {
    background-color: #eee;
 }
 
-.ui-accordion-icons .ui-accordion-header a { 
-   padding-left: 2.2em; 
+.ui-accordion-icons .ui-accordion-header a {
+   padding-left: 2.2em;
 }
 
-.ui-accordion .ui-accordion-header .ui-icon { 
-   left: .5em; 
-   margin-top: -8px; 
-   position: absolute; 
-   top: 50%; 
+.ui-accordion .ui-accordion-header .ui-icon {
+   left: .5em;
+   margin-top: -8px;
+   position: absolute;
+   top: 50%;
 }
 
 
 .ui-accordion .ui-accordion-content {
    border: 1px solid #aaaaaa;
    border-top: 0;
-   margin-top: -2px; 
+   margin-top: -2px;
    margin-bottom: 2px;
    overflow:hidden;
    padding: 3px 0px 3px 0px;
 }
 
-.ui-state-active { 
+.ui-state-active {
    background: #ffffff;
    border-bottom: 0;
    color: #3a3a3a;
@@ -89,8 +89,8 @@ input.tb {
 }
 
 button.closeButton {
-   margin-top: -3px; 
-   margin-right: -2px; 
+   margin-top: -3px;
+   margin-right: -2px;
    float: right;
 }
 

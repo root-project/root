@@ -22,6 +22,9 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 #include "TClass.h"
+#include "TMethod.h"
+#include "TMethodArg.h"
+#include "TMethodCall.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TBaseClass.h"
@@ -323,7 +326,12 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 
       if (*separ == 0) {
          searchpath = 0;
-         if (mask & mask_Expand) mask = mask_Scan;
+         if (mask & mask_Expand) {
+            mask = mask_Scan;
+            searchpath = 0;
+            has_more = true; // when found selected object, allow to scan it (and only it)
+         }
+
       } else {
          if (!isslash) return kFALSE;
          searchpath = separ;
@@ -412,9 +420,6 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
 //      }
    }
 
-   //DOUT0("SCAN MEMBERS %s %u mask %u done %s", cl->GetName(),
-   //      cl->GetListOfDataMembers()->GetSize(), chld.mask, DBOOL(chld.Done()));
-
    // than expand data members
    TIter iter(cl->GetListOfDataMembers());
    while ((obj = iter()) != 0) {
@@ -472,6 +477,25 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
 
    if (rec.SetResult(obj, obj->IsA())) return;
 
+   TClass* obj_class = obj->IsA();
+
+   ScanObjectProperties(rec, obj, obj_class);
+
+   rec.SetRootClass(obj_class);
+
+   ScanObjectChilds(rec, obj);
+
+   // here we should know how many childs are accumulated
+   rec.SetResult(obj, obj_class, 0, rec.num_childs);
+}
+
+
+//______________________________________________________________________________
+void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject* &obj, TClass* &obj_class)
+{
+   // scans basic object properties
+   // here such fields as _typename, _title, _more properties can be specified
+
    const char* title = obj->GetTitle();
    if ((title!=0) && (*title!=0))
       rec.SetField(item_prop_title, title);
@@ -485,8 +509,6 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
 
    // special handling of TKey class - in non-readonly mode
    // sniffer allowed to fetch objects
-
-   TClass* obj_class = obj->IsA();
 
    if (!fReadOnly && obj->InheritsFrom(TKey::Class())) {
       TKey* key = (TKey *) obj;
@@ -505,8 +527,12 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
          obj_class = TClass::GetClass(key->GetClassName());
       }
    }
+}
 
-   rec.SetRootClass(obj_class);
+void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
+{
+   // scans object childs (if any)
+   // here one scans collection, branches, trees and so on
 
    if (obj->InheritsFrom(TFolder::Class())) {
       // starting from special folder, we automatically scan members
@@ -525,10 +551,8 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
    } else if (rec.CanExpandItem()) {
       ScanObjectMemebers(rec, obj->IsA(), (char *) obj, 0);
    }
-
-   // here we should know how many childs are accumulated
-   rec.SetResult(obj, obj_class, 0, rec.num_childs);
 }
+
 
 //______________________________________________________________________________
 void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
@@ -589,8 +613,8 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
 void TRootSniffer::ScanRoot(TRootSnifferScanRec &rec)
 {
    // scan complete ROOT objects hierarchy
-   // For the moment it includes objects in gROOT directory and lise of canvases
-   // and files
+   // For the moment it includes objects in gROOT directory
+   // and list of canvases and files
    // Also all registered objects are included.
    // One could reimplement this method to provide alternative
    // scan methods or to extend some collection kinds
@@ -901,6 +925,81 @@ Bool_t TRootSniffer::ProduceXml(const char *path, const char * /*options*/,
 }
 
 //______________________________________________________________________________
+Bool_t TRootSniffer::ProduceExe(const char *path, const char * options, TString &res)
+{
+   // execute command for specified object
+   // options include method and extra list of parameters
+   // sniffer should be not-readonly to allow execution of the commands
+
+   if ((path == 0) || (*path == 0) || fReadOnly) return kFALSE;
+
+   if (*path == '/') path++;
+
+   TClass *obj_cl(0);
+   void *obj_ptr = FindInHierarchy(path, &obj_cl);
+   if ((obj_ptr == 0) || (obj_cl == 0)) return kFALSE;
+
+   TUrl url;
+   url.SetOptions(options);
+
+   const char* method_name = url.GetValueFromOptions("method");
+   if (method_name==0) return kFALSE;
+
+   TMethod* method = obj_cl->GetMethodAllAny(method_name);
+   if (method==0) return kFALSE;
+
+   TList* args = method->GetListOfMethodArgs();
+
+   res.Form("Method: %s\n", method_name);
+
+   TIter next(args);
+   TMethodArg* arg = 0;
+   TString call_args;
+   while ((arg = (TMethodArg*) next()) != 0) {
+
+      const char* val = url.GetValueFromOptions(arg->GetName());
+      if (val==0) val = arg->GetDefault();
+
+      if ((strcmp(arg->GetName(),"rest_url_opt")==0) &&
+          (strcmp(arg->GetFullTypeName(),"const char*")==0) && (args->GetSize()==1)) {
+         // very special case - function requires list of options after method=argument
+
+         const char* pos = strstr(options,"method=");
+         if ((pos == 0) || (strlen(pos) < strlen(method_name)+8)) return kFALSE;
+         call_args.Form("\"%s\"", pos + strlen(method_name)+8);
+         break;
+      }
+
+      res += TString::Format("  Argument:%s Type:%s Specified:%s \n", arg->GetName(), arg->GetFullTypeName(), val ? val : "<missed>");
+
+      if (val==0) { res += "missing argument\n"; return kTRUE; }
+
+      if (call_args.Length()>0) call_args+=", ";
+
+      if (strcmp(arg->GetFullTypeName(),"const char*")==0) {
+         int len = strlen(val);
+         if ((strlen(val)<2) || (*val != '\"') || (val[len-1]!='\"'))
+            call_args.Append(TString::Format("\"%s\"", val));
+         else
+            call_args.Append(val);
+      } else {
+         call_args.Append(val);
+      }
+   }
+
+   res += TString::Format("Calling obj->%s(%s);\n", method_name, call_args.Data());
+
+   TMethodCall call(obj_cl, method_name, call_args.Data());
+
+   if (!call.IsValid()) { res += "Fail: invalid TMethodCall\n"; return kTRUE; }
+
+   call.Execute(obj_ptr);
+
+   res += "Execution done!\n";
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TRootSniffer::IsStreamerInfoItem(const char *itemname)
 {
    if ((itemname == 0) || (*itemname == 0)) return kFALSE;
@@ -1174,6 +1273,15 @@ Bool_t TRootSniffer::Produce(const char *path, const char *file,
    if ((strcmp(file, "root.json") == 0) || (strcmp(file, "get.json") == 0)) {
       TString res;
       if (!ProduceJson(path, options, res)) return kFALSE;
+      length = res.Length();
+      ptr = malloc(length);
+      memcpy(ptr, res.Data(), length);
+      return kTRUE;
+   }
+
+   if (strcmp(file, "exe.txt") == 0) {
+      TString res;
+      if (!ProduceExe(path, options, res)) return kFALSE;
       length = res.Length();
       ptr = malloc(length);
       memcpy(ptr, res.Data(), length);

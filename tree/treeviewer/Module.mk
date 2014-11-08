@@ -68,7 +68,7 @@ $(call pcmrule,TREEVIEWER)
 $(TREEVIEWERDS): $(TREEVIEWERH) $(TREEVIEWERL) $(ROOTCLINGEXE) $(call pcmdep,TREEVIEWER)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TREEVIEWER) -c $(TREEVIEWERH) $(TREEVIEWERL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TREEVIEWER) -c -writeEmptyRootPCM $(TREEVIEWERH) $(TREEVIEWERL)
 
 $(TREEVIEWERMAP): $(TREEVIEWERH) $(TREEVIEWERL) $(ROOTCLINGEXE) $(call pcmdep,TREEVIEWER)
 		$(MAKEDIR)

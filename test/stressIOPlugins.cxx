@@ -12,17 +12,38 @@
 //   tested via tests based on some of stress.cxx tests.
 //
 //   Can be run as:
+//     stressIOPlugins
 //     stressIOPlugins [name]
-//   The 1st parameter is a scheme name, as expected in a url
-//   e.g. xroot
+//
+//   The name parameter is a protocol name, as expected
+//   in a url. The supported names are: xroot, root, http, https
+//   If the name is omitted a selection of schemes are
+//   tested based on feature availability:
+//
+//           feature          protocol
+//
+//            xrootd           root
+//            davix            http
 //
 // An example of output when all the tests run OK is shown below:
 //
-// *  Starting  R O O T - stressIOPlugins test for protocol xroot
-// Test  1 : Check size & compression factor of a Root file........ OK
-// Test  2 : Test graphics & Postscript............................ OK
-// Test  3 : Trees split and compression modes..................... OK
-//
+// ****************************************************************************
+// *  Starting stressIOPlugins test for protocol http
+// *  Test files will be read from:
+// *  http://root.cern.ch/files/StressIOPluginsTestFiles/
+// ****************************************************************************
+// Test  1 : Check size & compression factor of a Root file........ using stress_2.root
+//         : opened file with plugin class......................... TDavixFile
+//         : Check size & compression factor of a Root file........ OK
+// Test  2 : Test graphics & Postscript............................ using stress_5.root
+//         : opened file with plugin class......................... TDavixFile
+//         : Test graphics & Postscript............................ OK
+// Test  3 : Trees split and compression modes..................... using Event_8a.root
+//         : opened file with plugin class......................... TDavixFile
+//         : Trees split and compression modes..................... using Event_8b.root
+//         : opened file with plugin class......................... TDavixFile
+//         : Trees split and compression modes..................... OK
+// ****************************************************************************
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
@@ -93,7 +114,7 @@ struct ensureEventLoaded {
      }
    }
    ~ensureEventLoaded() { }
-} mytmp;
+} myStaticObject;
 #endif
 
 //_______________________ common part_________________________
@@ -101,12 +122,57 @@ struct ensureEventLoaded {
 Double_t ntotin=0, ntotout=0;
 TString gPfx;
 
+void Bprint(Int_t id, const char *title)
+{
+  // Print test program number and its title
+   const Int_t kMAX = 65;
+   char header[80];
+   if (id > 0) {
+      snprintf(header,80,"Test %2d : %s",id,title);
+   } else {
+      snprintf(header,80,"        : %s",title);
+   }
+   Int_t nch = strlen(header);
+   for (Int_t i=nch;i<kMAX;i++) header[i] = '.';
+   header[kMAX] = 0;
+   header[kMAX-1] = ' ';
+   printf("%s",header);
+}
+
+TFile *openTestFile(const char *fn, const char *title) {
+
+   printf("using %s\n", fn);
+
+   TFile *f = TFile::Open(gPfx + fn);
+   Bprint(0,"opened file with plugin class");
+
+   if (!f) {
+      printf("FAILED\n");
+      Bprint(0, title);
+      return 0;
+   }
+
+   printf("%s\n", f->ClassName());
+
+   Bprint(0, title);
+   return f;
+}   
+
+Bool_t isFeatureAvailable(const char *name) {
+   TString configfeatures = gROOT->GetConfigFeatures();
+   return configfeatures.Contains(name);
+}
+
 int setPath(const char *proto)
 {
    if (!proto) return -1;
    TString p(proto);
    if (p == "root" || p == "xroot") {
-      gPfx = "root://eospublic.cern.ch//eos/opstest/dhsmith/StressIOPluginsTestFiles/";
+      gPfx = p + "://eospublic.cern.ch//eos/opstest/dhsmith/StressIOPluginsTestFiles/";
+      return 0;
+   }
+   if (p == "http" || p == "https") {
+      gPfx = p + "://root.cern.ch/files/StressIOPluginsTestFiles/";
       return 0;
    }
    return -1;
@@ -116,18 +182,29 @@ void stressIOPluginsForProto(const char *protoName /*=0*/)
 {
    //Main control function invoking all test programs
    if (!protoName) {
-     stressIOPluginsForProto("xroot");
+     if (isFeatureAvailable("xrootd")) {
+        stressIOPluginsForProto("root");
+     } else {
+        printf("* Skipping root protocol test because 'xrootd' feature not available\n");
+     }
+     if (isFeatureAvailable("davix")) {
+        stressIOPluginsForProto("http");
+     } else {
+        printf("* Skipping http protocol test because 'davix' feature not available\n");
+     }
      return;
    }
-
-   printf("**********************************************************************\n");
-   printf("*  Starting  R O O T - stressIOPlugins test for protocol %s\n", protoName);
-   printf("**********************************************************************\n");
 
    if (setPath(protoName)) {
      printf("No server and path available to test protocol %s\n", protoName);
      return;
    }
+
+   printf("****************************************************************************\n");
+   printf("*  Starting stressIOPlugins test for protocol %s\n", protoName);
+   printf("*  Test files will be read from:\n");
+   printf("*  %s\n", gPfx.Data());
+   printf("****************************************************************************\n");
 
    stressIOPlugins1();
    stressIOPlugins2();
@@ -135,7 +212,7 @@ void stressIOPluginsForProto(const char *protoName /*=0*/)
 
    cleanup();
 
-   printf("**********************************************************************\n");
+   printf("****************************************************************************\n");
 }
 
 void stressIOPlugins()
@@ -143,30 +220,17 @@ void stressIOPlugins()
    stressIOPluginsForProto((const char*)0);
 }
 
-void Bprint(Int_t id, const char *title)
-{
-  // Print test program number and its title
-   const Int_t kMAX = 65;
-   char header[80];
-   snprintf(header,80,"Test %2d : %s",id,title);
-   Int_t nch = strlen(header);
-   for (Int_t i=nch;i<kMAX;i++) header[i] = '.';
-   header[kMAX] = 0;
-   header[kMAX-1] = ' ';
-   printf("%s",header);
-}
-
 //_______________________________________________________________
 void stressIOPlugins1()
 {
    //based on stress2()
    //check length and compression factor in stress.root
-   Bprint(1,"Check size & compression factor of a Root file");
+   const char *title = "Check size & compression factor of a Root file";
+   Bprint(1, title);
 
-   TFile *f = TFile::Open(gPfx + "stress_2.root");
+   TFile *f = openTestFile("stress_2.root", title);
    if (!f) {
-     printf("FAILED\n");
-     printf("Could not open test file for stressIOPlugins1\n");
+      printf("FAILED\n");
      return;
    }
 
@@ -199,17 +263,17 @@ void stressIOPlugins2()
 // different.
 // You can also inspect visually the ps file with a ps viewer.
 
-   Bprint(2,"Test graphics & Postscript");
+   const char *title = "Test graphics & Postscript";
+   Bprint(2,title);
 
    TCanvas *c1 = new TCanvas("c1","stress canvas",800,600);
    gROOT->LoadClass("TPostScript","Postscript");
    TPostScript ps("stressIOPlugins.ps",112);
 
    //Get objects generated in previous test
-   TFile *f = TFile::Open(gPfx + "stress_5.root");
+   TFile *f = openTestFile("stress_5.root",title);
    if (!f) {
      printf("FAILED\n");
-     printf("Could not open test file for stressIOPlugins2\n");
      return;
    }
 
@@ -255,7 +319,7 @@ void stressIOPlugins2()
 }
 
 //_______________________________________________________________
-Int_t test3read(const TString &fn)
+Int_t test3read(const TString &fn, const char *title)
 {
 
 //  Read the event file
@@ -264,9 +328,8 @@ Int_t test3read(const TString &fn)
 
    Int_t nevent = 0;
 
-   TFile *hfile = TFile::Open(gPfx + fn);
+   TFile *hfile = openTestFile(fn,title);
    if (!hfile) {
-      printf("Could not open event file during stressIOPlugins3\n");
       return 0;
    }
    TTree *tree; hfile->GetObject("T",tree);
@@ -296,12 +359,13 @@ Int_t test3read(const TString &fn)
 void stressIOPlugins3()
 {
    // based on stress8()
-   Bprint(3,"Trees split and compression modes");
+   const char *title = "Trees split and compression modes";
+   Bprint(3,title);
 
-   Int_t nbr0 = test3read("Event_8a.root");
+   Int_t nbr0 = test3read("Event_8a.root",title);
    Event::Reset();
 
-   Int_t nbr1 = test3read("Event_8b.root");
+   Int_t nbr1 = test3read("Event_8b.root",title);
    Event::Reset();
 
    Bool_t OK = kTRUE;

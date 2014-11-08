@@ -1,7 +1,9 @@
-// JSROOTCore.js
-//
-// core methods for JavaScript ROOT.
-//
+/// @file JSRootCore.js
+/// Core methods of JavaScript ROOT
+
+/// @namespace JSROOT
+/// Holder of all JSROOT functions and classes
+
 
 (function(){
 
@@ -13,18 +15,18 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.x 11.09.2014";
-   
+   JSROOT.version = "3.0 6/11/2014";
+
    JSROOT.source_dir = null;
-   
+
    JSROOT.clone = function(obj) {
       return jQuery.extend(true, {}, obj);
-   };
-   
+   }
+
    JSROOT.id_counter = 0;
-   
+
    JSROOT.function_list = []; // do we really need it here?
-   
+
    JSROOT.BIT = function(n) { return 1 << (n); }
 
    // TH1 status bits
@@ -56,124 +58,160 @@
          kDecimals      : JSROOT.BIT(11)
    };
 
-   // This is part of the JSON-R code, found on 
+   // This is part of the JSON-R code, found on
    // https://github.com/graniteds/jsonr
    // Only unref part was used, arrays are not accounted as objects
-   // Should be used to reintroduce objects references, produced by TBufferJSON 
+   // Should be used to reintroduce objects references, produced by TBufferJSON
 
-	JSROOT.JSONR_unref = function(value, dy)
-	{
-	   var c, i, k, ks;
-	   if (!dy) dy = [];
-	
-	   switch (typeof value) {
-	   case 'string':
-	       if ((value.length > 5) && (value.substr(0, 5) == "$ref:")) {
-	          c = parseInt(value.substr(5));
-	          if (!isNaN(c) && (c < dy.length)) {
-	             value = dy[c];
-	             // console.log("replace index " + c + "  name = " + value.fName);
-	          }
-	       }
-	       break;
-	
-	   case 'object':
-	      if (value !== null) {
-	         
-	         if (Object.prototype.toString.apply(value) === '[object Array]') {
-	            for (i = 0; i < value.length; i++) {
-	               value[i] = JSROOT.JSONR_unref(value[i], dy);
-	            }
-	         } else {
-	
-	            // account only objects in ref table
-	            if (dy.indexOf(value) === -1) {
-	               //if (dy.length<10) console.log("Add object " + value._typename + "  $ref:" + dy.length);
-	               dy.push(value);
-	            }
-	
-	            // add methods to all objects, where _typename is specified
-	            if (('_typename' in value) && (typeof JSROOT == "object"))
-	               JSROOT.addMethods(value);
-	
-	            ks = Object.keys(value);
-	            for (i = 0; i < ks.length; i++) {
-	               k = ks[i];
-	               //if (dy.length<10) console.log("Check field " + k);
-	               value[k] = JSROOT.JSONR_unref(value[k], dy);
-	            }
-	         }
-	      }
-	      break;
-	   }
-	
-	   return value;
-	}
-	
-	JSROOT.parse = function(arg) {
-	   if (arg==null) return null;
-	   var obj = JSON.parse(arg);
-	   if (obj!=null) obj = JSROOT.JSONR_unref(obj)
-	   return obj;
-	}
-	
-	JSROOT.NewHttpRequest = function(url, kind, callback) {
-      // kind can be "text", "xml", "bin" or "head"
+   JSROOT.JSONR_unref = function(value, dy)
+   {
+      var c, i, k, ks;
+      if (!dy) dy = [];
+
+      switch (typeof value) {
+      case 'string':
+          if ((value.length > 5) && (value.substr(0, 5) == "$ref:")) {
+             c = parseInt(value.substr(5));
+             if (!isNaN(c) && (c < dy.length)) {
+                value = dy[c];
+                // console.log("replace index " + c + "  name = " + value.fName);
+             }
+          }
+          break;
+
+      case 'object':
+         if (value !== null) {
+
+            if (Object.prototype.toString.apply(value) === '[object Array]') {
+               for (i = 0; i < value.length; i++) {
+                  value[i] = JSROOT.JSONR_unref(value[i], dy);
+               }
+            } else {
+
+               // account only objects in ref table
+               if (dy.indexOf(value) === -1) {
+                  //if (dy.length<10) console.log("Add object " + value._typename + "  $ref:" + dy.length);
+                  dy.push(value);
+               }
+
+               // add methods to all objects, where _typename is specified
+               if (('_typename' in value) && (typeof JSROOT == "object"))
+                  JSROOT.addMethods(value);
+
+               ks = Object.keys(value);
+               for (i = 0; i < ks.length; i++) {
+                  k = ks[i];
+                  //if (dy.length<10) console.log("Check field " + k);
+                  value[k] = JSROOT.JSONR_unref(value[k], dy);
+               }
+            }
+         }
+         break;
+      }
+
+      return value;
+   }
+
+   JSROOT.parse = function(arg) {
+      if (arg==null) return null;
+      var obj = JSON.parse(arg);
+      if (obj!=null) obj = JSROOT.JSONR_unref(obj)
+      return obj;
+   }
+
+   JSROOT.GetUrlOption = function(opt, url, dflt) {
+      // analyzes document.URL and extracts options after '?' mark
+      // following options supported ?opt1&opt2=3
+      // In case of opt1 empty string will be returned, in case of opt2 '3'
+      // If option not found, null is returned (or provided default value)
+
+      if ((opt==null) || (typeof opt != 'string') || (opt.length==0)) return dflt;
+
+      if (!url) url = document.URL;
+
+      var pos = url.indexOf("?");
+      if (pos<0) return null;
+      url = url.slice(pos+1);
+
+      while (url.length>0) {
+
+         if (url==opt) return "";
+
+         pos = url.indexOf("&");
+         if (pos < 0) pos = url.length;
+
+         if (url.indexOf(opt) == 0) {
+            if (url.charAt(opt.length)=="&") return "";
+
+            // replace several symbols which are known to make a problem
+            if (url.charAt(opt.length)=="=")
+               return url.slice(opt.length+1, pos).replace(/%27/g, "'").replace(/%22/g, '"').replace(/%20/g, ' ').replace(/%3C/g, '<').replace(/%3E/g, '>');
+         }
+
+         url = url.slice(pos+1);
+      }
+      return dflt;
+   }
+
+   JSROOT.NewHttpRequest = function(url, kind, callback) {
+      // Create asynchronous XMLHttpRequest object.
+      // One should call req.send() to submit request
+      // kind of the request can be:
+      //  "bin" - abstract binary data (default)
+      //  "text" - returns req.responseText
+      //  "object" - returns JSROOT.parse(req.responseText)
+      //  "xml" - returns res.responseXML
+      //  "head" - returns request itself, uses "HEAD" method
+      // Result will be returned to the callback functions
+      // If failed, request returns null
       var xhr = new XMLHttpRequest();
-      
+
 //      if (typeof ActiveXObject == "function") {
       if (window.ActiveXObject) {
          // console.log(" Create IE request");
-         
+
          xhr.onreadystatechange = function() {
             // console.log(" Ready IE request");
             if (xhr.readyState != 4) return;
-            
+
             if (xhr.status != 200 && xhr.status != 206) {
                // error
-               callback(null); return;
+               return callback(null);
             }
-            
-            if (kind == "xml") {
-               callback(xhr.responseXML); return;
-            } 
-            if (kind == "text") {
-               callback(xhr.responseText); return;
-            } 
-            if (kind == "head") {
-               callback(xhr); return;
-            } 
-            
+
+            if (kind == "xml") return callback(xhr.responseXML);
+
+            if (kind == "text") return callback(xhr.responseText);
+
+            if (kind == "object") return callback(JSROOT.parse(xhr.responseText));
+
+            if (kind == "head") return callback(xhr);
+
             var filecontent = new String("");
             var array = new VBArray(xhr.responseBody).toArray();
             for (var i = 0; i < array.length; i++) {
                filecontent = filecontent + String.fromCharCode(array[i]);
             }
-            
+
             callback(filecontent);
             filecontent = null;
          }
-         
+
          xhr.open(kind == 'head' ? 'HEAD' : 'GET', url, true);
-         
+
       } else {
-         
+
          xhr.onreadystatechange = function() {
             if (xhr.readyState != 4) return;
-            
+
             if (xhr.status != 0 && xhr.status != 200 && xhr.status != 206) {
-               callback(null); return;
+               return callback(null);
             }
-            if (kind == "xml") {
-               callback(xhr.responseXML); return;
-            }  
-            if (kind == "text") {
-               callback(xhr.responseText); return;
-            }  
-            if (kind == "head") {
-               callback(xhr); return;
-            }
-            
+            if (kind == "xml") return callback(xhr.responseXML);
+            if (kind == "text") return callback(xhr.responseText);
+            if (kind == "object") return callback(JSROOT.parse(xhr.responseText));
+            if (kind == "head") return callback(xhr);
+
             var HasArrayBuffer = ('ArrayBuffer' in window && 'Uint8Array' in window);
             var Buf, filecontent;
             if (HasArrayBuffer && 'mozResponse' in xhr) {
@@ -186,7 +224,7 @@
                Buf = xhr.responseText;
                HasArrayBuffer = false;
             }
-            
+
             if (HasArrayBuffer) {
                filecontent = new String("");
                var bLen = Buf.byteLength;
@@ -198,14 +236,14 @@
             } else {
                filecontent = Buf;
             }
-            
+
             callback(filecontent);
 
             filecontent = null;
          }
-         
+
          xhr.open(kind == 'head' ? 'HEAD' : 'GET', url, true);
-         
+
          if (kind == "bin") {
             var HasArrayBuffer = ('ArrayBuffer' in window && 'Uint8Array' in window);
             if (HasArrayBuffer && 'mozResponseType' in xhr) {
@@ -220,8 +258,8 @@
       }
       return xhr;
    }
-	
-   JSROOT.loadScript = function(urllist, callback) {
+
+   JSROOT.loadScript = function(urllist, callback, debugout) {
       // dynamic script loader using callback
       // (as loading scripts may be asynchronous)
       // one could specify list of scripts or style files, separated by semicolon ';'
@@ -230,20 +268,26 @@
       // by the position of JSRootCore.js file, which must be loaded by normal methods:
       // <script type="text/javascript" src="scripts/JSRootCore.js"></script>
 
-      
-      var completeLoad = function() {
-         if ((urllist!=null) && (urllist.length>0))
-            JSROOT.loadScript(urllist, callback);
+      function debug(str) {
+         if (debugout)
+            document.getElementById(debugout).innerHTML = str;
          else
-            if (typeof callback == 'function') callback();
+            console.log(str);
       }
-      
-      
-      if ((urllist==null) || (urllist.length==0)) {
-         completeLoad();
-         return;
+
+      function completeLoad() {
+         if ((urllist!=null) && (urllist.length>0))
+            return JSROOT.loadScript(urllist, callback, debugout);
+
+         if (debugout)
+            document.getElementById(debugout).innerHTML = "";
+
+         if (typeof callback == 'function') callback();
       }
-      
+
+      if ((urllist==null) || (urllist.length==0))
+         return completeLoad();
+
       var filename = urllist;
       var separ = filename.indexOf(";");
       if (separ>0) {
@@ -252,36 +296,35 @@
       } else {
          urllist = "";
       }
-      
+
       var isrootjs = false;
       if (filename.indexOf("$$$")==0) {
          isrootjs = true;
          filename = filename.slice(3);
       }
       var isstyle = filename.indexOf('.css') > 0;
-      
+
       if (isstyle) {
          var styles = document.getElementsByTagName('link');
          for (var n in styles) {
             if ((styles[n]['type'] != 'text/css') || (styles[n]['rel'] != 'stylesheet')) continue;
 
-            var href = styles[n]['href']; 
+            var href = styles[n]['href'];
             if ((href == null) || (href.length == 0)) continue;
 
             if (href.indexOf(filename)>=0) {
                console.log("style "+  filename + " already loaded");
-               completeLoad();
-               return;
+               return completeLoad();
             }
          }
-         
+
       } else {
          var scripts = document.getElementsByTagName('script');
 
          for (var n in scripts) {
             if (scripts[n]['type'] != 'text/javascript') continue;
 
-            var src = scripts[n]['src']; 
+            var src = scripts[n]['src'];
             if ((src == null) || (src.length == 0)) continue;
 
             // try to detect place where source for our scripts should be situated
@@ -290,42 +333,37 @@
                var pos = src.indexOf("scripts/JSRootCore.js");
                if (pos>=0) {
                   JSROOT.source_dir = src.substr(0, pos);
-                  console.log("Set JSROOT.source_dir to " + JSROOT.source_dir);
+                  debug("Set JSROOT.source_dir to " + JSROOT.source_dir);
                }
             }
 
             if (src.indexOf(filename)>=0) {
-               console.log("script "+  filename + " already loaded");
-               completeLoad();
-               return;
+               // debug("script "+  filename + " already loaded");
+               return completeLoad();
             }
          }
       }
 
-      if (isrootjs && (JSROOT.source_dir!=null)) filename = JSROOT.source_dir + filename;   
-      
+      if (isrootjs && (JSROOT.source_dir!=null)) filename = JSROOT.source_dir + filename;
+
       var element = null;
-      
+
+      debug("loading " + filename + " ...");
+
       if (isstyle) {
-         
-         console.log("loading style " + filename);
-         
          element = document.createElement("link");
          element.setAttribute("rel", "stylesheet");
          element.setAttribute("type", "text/css");
          element.setAttribute("href", filename);
       } else {
-         console.log("loading script " + filename);
-
          element = document.createElement("script");
          element.setAttribute('type', "text/javascript");
          element.setAttribute('src', filename);//+ "?r=" + rnd;
       }
-      
+
       if (element.readyState) { // Internet Explorer specific
          element.onreadystatechange = function() {
-            if (element.readyState == "loaded" ||
-                  element.readyState == "complete") {
+            if (element.readyState == "loaded" || element.readyState == "complete") {
                element.onreadystatechange = null;
                completeLoad();
             }
@@ -336,56 +374,64 @@
             completeLoad();
          }
       }
-    
+
       document.getElementsByTagName("head")[0].appendChild(element);
    }
 
-   JSROOT.AssertPrerequisites = function(kind, andThan) {
+   JSROOT.AssertPrerequisites = function(kind, andThan, debugout) {
       // one could specify kind of requirements
       // 'io' for I/O functionality (default)
-      // '2d' only for 2d graphic
+      // '2d' for 2d graphic
       // '3d' for 3d graphic
-      
-      if (typeof kind == 'function') { andThan = kind; kind = null; } 
 
-      // file names should be separated with ';' 
-      var allfiles = 
-         '$$$scripts/jquery.min.js;'+
-         '$$$style/jquery-ui.css;' +
-         '$$$scripts/jquery-ui.min.js;' +
-         '$$$scripts/d3.v3.min.js;' +
-         '$$$scripts/JSRootPainter.js;' +
-         '$$$style/JSRootPainter.css';
-      
-      var minimal = ((kind!=null) && (kind.indexOf('2d')>=0));
-      
-      if (!minimal || ((kind!=null) && (kind.indexOf('io')>=0)))
-         allfiles += ";$$$scripts/rawinflate.js;$$$scripts/JSRootIOEvolution.js"; 
-      
-      if ((kind!=null) && (kind.indexOf("3d")>=0))
-         allfiles += ";$$$scripts/jquery.mousewheel.js;$$$scripts/three.min.js;$$$scripts/helvetiker_regular.typeface.js;$$$scripts/helvetiker_bold.typeface.js";
-      
-      JSROOT.loadScript(allfiles, andThan); 
+      if (typeof kind == 'function') { andThan = kind; kind = null; }
+
+      if (typeof kind != 'string') kind = "2d";
+
+      // file names should be separated with ';'
+      var allfiles = '$$$scripts/jquery.min.js';
+
+      if (kind.indexOf('io')>=0)
+         allfiles += ";$$$scripts/rawinflate.js" +
+                     ";$$$scripts/JSRootIOEvolution.js";
+
+      if (kind.indexOf('2d')>=0)
+         allfiles += ';$$$style/jquery-ui.css' +
+                     ';$$$scripts/jquery-ui.min.js' +
+                     ';$$$scripts/d3.v3.min.js' +
+                     ';$$$scripts/JSRootPainter.js' +
+                     ';$$$style/JSRootPainter.css';
+
+      if (kind.indexOf("3d")>=0)
+         allfiles += ";$$$scripts/jquery.mousewheel.js" +
+                     ";$$$scripts/three.min.js" +
+                     ";$$$scripts/helvetiker_regular.typeface.js" +
+                     ";$$$scripts/helvetiker_bold.typeface.js" +
+                     ";$$$scripts/JSRoot3DPainter.js";
+
+      if (kind.indexOf("simple")>=0)
+         allfiles += ';$$$scripts/JSRootInterface.js' +
+                     ';$$$style/JSRootInterface.css';
+
+      JSROOT.loadScript(allfiles, andThan, debugout);
    }
-   
-   JSROOT.BuildSimpleGUI = function(requirements, andThen) {
+
+   JSROOT.BuildSimpleGUI = function(andThen) {
       if (typeof requirements == 'function') {
          andThen = requirements; requirements = null;
-      } 
-      
-      JSROOT.AssertPrerequisites(requirements, function(){
-         JSROOT.loadScript('$$$scripts/JSRootInterface.js;$$$style/JSRootInterface.css', function() { 
-            
-            if (typeof BuildSimpleGUI != 'function') {
-               alert('BuildSimpleGUI function not found');
-               return;
-            }
-            
-            BuildSimpleGUI();
-            
-            if (typeof andThen == 'function') andThen();
-         });
-      });
+      }
+      var debugout = null;
+
+      var requirements = "2d;io;simple";
+
+      if (document.getElementById('simpleGUI')) debugout = 'simpleGUI'; else
+      if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;simple"; }
+
+      JSROOT.AssertPrerequisites(requirements, function() {
+         if (typeof BuildSimpleGUI == 'function') BuildSimpleGUI();
+
+         if (typeof andThen == 'function') andThen();
+      }, debugout);
    }
 
    JSROOT.addFormula = function(obj) {
@@ -396,7 +442,7 @@
       var code = obj['fName'] + " = function(x) { return " + formula + " };";
       eval(code);
       var sig = obj['fName']+'(x)';
-      
+
       var pos = JSROOT.function_list.indexOf(sig);
       if (pos >= 0) {
          JSROOT.function_list.splice(pos, 1);
@@ -410,6 +456,7 @@
       list['name'] = "TList";
       list['arr'] = new Array;
       list['opt'] = new Array;
+      JSROOT.addMethods(list);
       return list;
    }
 
@@ -443,6 +490,43 @@
       axis['fTitleFont'] = 42;
       JSROOT.addMethods(axis);
       return axis;
+   }
+
+   JSROOT.CreateTPaveText = function() {
+      var pave = {};
+      pave['_typename'] = "TPaveText";
+      pave['fUniqueID'] = 0;
+      pave["fBits"] = 50331657;
+      pave["fLineColor"] = 1;
+      pave["fLineStyle"] = 1;
+      pave["fLineWidth"] = 1;
+      pave["fFillColor"] = 0;
+      pave["fFillStyle"] = 0;
+      pave["fX1"] = 0;
+      pave["fY1"] = 0;
+      pave["fX2"] = 1;
+      pave["fY2"] = 1;
+      pave["fX1NDC"] = 0.2809483;
+      pave["fY1NDC"] = 0.9339831;
+      pave["fX2NDC"] = 0.7190517;
+      pave["fY2NDC"] = 0.995;
+      pave["fBorderSize"] =  0;
+      pave["fInit"] =  1;
+      pave["fShadowColor"] =  1;
+      pave["fCornerRadius"] = 0;
+      pave["fOption"] = "blNDC";
+      pave["fName"] = "title";
+      pave["fTextAngle"] =  0;
+      pave["fTextSize"] = 0;
+      pave["fTextAlign"] = 22;
+      pave["fTextColor"] = 1;
+      pave["fTextFont"] = 42;
+      pave["fLabel"] = "";
+      pave["fLongest"] = 27;
+      pave["fMargin"] = 0.05;
+      pave["fLines"] = JSROOT.CreateTList();
+      JSROOT.addMethods(pave);
+      return pave;
    }
 
    JSROOT.CreateTH1 = function(nbinsx) {
@@ -592,20 +676,20 @@
          };
       }
       if (!('_typename' in obj)) return;
-      
+
       var EBinErrorOpt = {
           kNormal : 0,    // errors with Normal (Wald) approximation: errorUp=errorLow= sqrt(N)
           kPoisson : 1,   // errors from Poisson interval at 68.3% (1 sigma)
           kPoisson2 : 2   // errors from Poisson interval at 95% CL (~ 2 sigma)
        };
-      
+
       var EErrorType = {
           kERRORMEAN : 0,
           kERRORSPREAD : 1,
           kERRORSPREADI : 2,
           kERRORSPREADG : 3
        };
-      
+
       if (obj['_typename'].indexOf("TAxis") == 0) {
          obj['getFirst'] = function() {
             if (!this.TestBit(JSROOT.EAxisBits.kAxisRange)) return 1;
@@ -627,6 +711,27 @@
             }
          };
       }
+
+      if (obj['_typename'] == "TList") {
+         obj['Clear'] = function() {
+            this['arr'] = new Array;
+            this['opt'] = new Array;
+         }
+         obj['Add'] = function(obj,opt) {
+            this['arr'].push(obj);
+            this['opt'].push((typeof opt=='string') ? opt : "");
+         }
+      }
+
+      if ((obj['_typename'] == "TPaveText") || (obj['_typename'] == "TPaveStats")) {
+         obj['AddText'] = function(txt) {
+            this['fLines'].Add({'fTitle' : txt, "fTextColor" : 1 });
+         }
+         obj['Clear'] = function() {
+            this['fLines'].Clear();
+         }
+      }
+
       if ((obj['_typename'].indexOf("TFormula") != -1) ||
           (obj['_typename'].indexOf("TF1") == 0)) {
          obj['evalPar'] = function(x) {
@@ -681,9 +786,6 @@
             };
          };
       }
-      if (obj['_typename'].indexOf("TH1") == 0) obj['fDimension'] = 1;
-      if (obj['_typename'].indexOf("TH2") == 0) obj['fDimension'] = 2;
-      if (obj['_typename'].indexOf("TH3") == 0) obj['fDimension'] = 3;
       if (obj['_typename'].indexOf("TH1") == 0 ||
           obj['_typename'].indexOf("TH2") == 0 ||
           obj['_typename'].indexOf("TH3") == 0) {
@@ -814,7 +916,7 @@
                   for (binx=0;binx<=nbinsx+1;binx++) {
                      bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
                      //special case where histograms have the kIsAverage bit set
-                     if (this.TestBit(JSROOT.TH1StatusBits.kIsAverage) 
+                     if (this.TestBit(JSROOT.TH1StatusBits.kIsAverage)
                          && h1.TestBit(JSROOT.TH1StatusBits.kIsAverage)) {
                         var y1 = h1.getBinContent(bin),
                             y2 = this.getBinContent(bin),
@@ -1125,6 +1227,7 @@
          };
       }
       if (obj['_typename'].indexOf("TH1") == 0) {
+         obj['fDimension'] = 1;
          obj['getBinContent'] = function(bin) {
             if (bin < 0) bin = 0;
             if (bin >= this['fNcells']) bin = this['fNcells']-1;
@@ -1172,6 +1275,7 @@
          };
       }
       if (obj['_typename'].indexOf("TH2") == 0) {
+         obj['fDimension'] = 2;
          obj['getBin'] = function(x, y) {
             var nx = this['fXaxis']['fNbins']+2;
             return (x + nx * y);
@@ -1226,6 +1330,7 @@
          };
       }
       if (obj['_typename'].indexOf("TH3") == 0) {
+         obj['fDimension'] = 3;
          obj['getBin'] = function(x, y, z) {
             var nx = this['fXaxis']['fNbins']+2;
             if (x < 0) x = 0;
@@ -1510,7 +1615,7 @@
       }
    };
 
-   
+
    // math methods for Javascript ROOT
 
    JSROOT.Math = {};
@@ -1696,7 +1801,7 @@
       var code = 1;
       var y = y0;
       var x, z, y2, x0, x1;
-      
+
       if ( y > (1.0 - 0.13533528323661269189) ) {
          y = 1.0 - y;
          code = 0;
@@ -1725,7 +1830,7 @@
       var x0, x1, x, yl, yh, y, d, lgm, dithresh;
       var i, dir;
       var kMACHEP = 1.11022302462515654042363166809e-16;
-      
+
       // check the domain
       if (a <= 0) {
          alert("igami : Wrong domain for parameter a (must be > 0)");
@@ -1869,7 +1974,7 @@
       var q6 = new Array(1.0         , 651.4101098,  56974.73333,    165917.4725,     -2815759.939);
       var a1 = new Array(0.04166666667,-0.01996527778, 0.02709538966);
       var a2 = new Array(-1.845568670,-4.284640743);
-      
+
       if (v < -5.5) {
          u   = Math.exp(v+1.0);
          if (u < 1e-10) return 0.0;
@@ -1912,7 +2017,7 @@
       if (!norm) return den;
       return den/sigma;
    };
-   
+
    JSROOT.Math.gaus = function(f, x, i) {
       return f['fParams'][i+0] * Math.exp(-0.5 * Math.pow((x-f['fParams'][i+1]) / f['fParams'][i+2], 2));
    };

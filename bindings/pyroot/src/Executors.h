@@ -92,6 +92,8 @@ namespace PyROOT {
       virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );    \
    }
 
+   PYROOT_DECLARE_BASIC_REFEXECUTOR( Bool );
+   PYROOT_DECLARE_BASIC_REFEXECUTOR( Char );
    PYROOT_DECLARE_BASIC_REFEXECUTOR( Short );
    PYROOT_DECLARE_BASIC_REFEXECUTOR( UShort );
    PYROOT_DECLARE_BASIC_REFEXECUTOR( Int );

@@ -58,7 +58,7 @@ $(call pcmrule,POSTSCRIPT)
 $(POSTSCRIPTDS): $(POSTSCRIPTH) $(POSTSCRIPTL) $(ROOTCLINGEXE) $(call pcmdep,POSTSCRIPT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,POSTSCRIPT) -c $(POSTSCRIPTH) $(POSTSCRIPTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,POSTSCRIPT) -c -writeEmptyRootPCM $(POSTSCRIPTH) $(POSTSCRIPTL)
 
 $(POSTSCRIPTMAP): $(POSTSCRIPTH) $(POSTSCRIPTL) $(ROOTCLINGEXE) $(call pcmdep,POSTSCRIPT)
 		$(MAKEDIR)

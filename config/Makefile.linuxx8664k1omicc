@@ -17,12 +17,18 @@ endif
 # MIC flags
 MICFLAGS      = -mmic
 
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y
+else
+CXX11FLAGS    = -std=c++11
+endif
+
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -std=c++11 -fPIC -wd1476 $(MICFLAGS) $(EXTRA_CXXFLAGS) \
-                -m64 -no-vec -no-fma -Wall -DWARNINGMSG
-CFLAGS        = -m64 -fPIC $(MICFLAGS) $(EXTRA_CFLAGS) -restrict
+CXXFLAGS      = $(CXX11FLAGS) -fPIC -wd1476 $(MICFLAGS) $(EXTRA_CXXFLAGS) \
+                -m64 -no-vec -no-fma -Wall -DWARNINGMSG $(USERCONF_CXXFLAGS)
+CFLAGS        = -m64 -fPIC $(MICFLAGS) $(EXTRA_CFLAGS) -restrict $(USERCONF_CFLAGS)
 
 # Linker:
 LD            = icpc

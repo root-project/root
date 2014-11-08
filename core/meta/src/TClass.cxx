@@ -2770,6 +2770,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    }
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
+   if (gDebug>0){
+      printf("TClass::GetClass: Header Parsing - The representation of %s was not found in the type system. A lookup in the interpreter is about to be tried: this can cause parsing. This can be avoided selecting %s in the linkdef/selection file.\n",normalizedName.c_str(), normalizedName.c_str());
+   }
    if (gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */, kTRUE /*Only class, structs and ns*/)) {
       // Get the normalized name based on the decl (currently the only way
       // to get the part to add or drop the default arguments as requested by the user)
@@ -3275,7 +3278,10 @@ TList *TClass::GetListOfMethods(Bool_t load /* = kTRUE */)
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!fMethod) fMethod = new TListOfFunctions(this);
-   if (load) fMethod->Load();
+   if (load) {
+      if (gDebug>0) Info("GetListOfMethods","Header Parsing - Asking for all the methods of class %s: this can involve parsing.",GetName());
+      fMethod->Load();
+   }
    return fMethod;
 }
 
@@ -3304,7 +3310,10 @@ const TList *TClass::GetListOfAllPublicMethods(Bool_t load /* = kTRUE */)
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!fAllPubMethod) fAllPubMethod = new TViewPubFunctions(this);
-   if (load) fAllPubMethod->Load();
+   if (load) {
+      if (gDebug>0) Info("GetListOfAllPublicMethods","Header Parsing - Asking for all the methods of class %s: this can involve parsing.",GetName());
+      fAllPubMethod->Load();
+   }
    return fAllPubMethod;
 }
 
@@ -3356,10 +3365,10 @@ void TClass::GetMenuItems(TList *list)
 Bool_t TClass::HasDictionary()
 {
    // Check whether a class has a dictionary or not.
+   // This is equivalent to ask if a class is coming from a bootstrapping
+   // procedure initiated during the loading of a library.
 
-   if (gClassTable->GetDict(fName)) return true;
-
-   return false;
+   return IsLoaded();
 }
 
 //______________________________________________________________________________
@@ -3567,29 +3576,42 @@ void TClass::ReplaceWith(TClass *newcl) const
 }
 
 //______________________________________________________________________________
-void TClass::ResetClassInfo(Long_t tagnum)
+void TClass::ResetClassInfo(Long_t /* tagnum */)
 {
    // Make sure that the current ClassInfo is up to date.
-   if (!fClassInfo || gCling->ClassInfo_Tagnum(fClassInfo) != tagnum) {
-      if (!fClassInfo)
-         fClassInfo = gInterpreter->ClassInfo_Factory();
-      gCling->ClassInfo_Init(fClassInfo,(Int_t)tagnum);
-      ResetCaches();
-   }
+
+   Warning("ResetClassInfo(Long_t tagnum)","Call to deprecated interface (does nothing)");
 }
 
 //______________________________________________________________________________
 void TClass::ResetClassInfo()
 {
    // Make sure that the current ClassInfo is up to date.
-   fClassInfo = 0;
-   gInterpreter->SetClassInfo(this, true);
-   //Could use TCling__UpdateClassInfoWithDecl, but the new decl is 0
+   R__LOCKGUARD2(gInterpreterMutex);
+
+   if (fClassInfo) {
+      TClass::RemoveClassDeclId(gInterpreter->GetDeclId(fClassInfo));
+      gInterpreter->ClassInfo_Delete(fClassInfo);
+      fClassInfo = 0;
+   }
+   // We can not check at this point whether after the unload there will
+   // still be interpreter information about this class (as v5 was doing),
+   // instead this function must only be called if the definition is (about)
+   // to be unloaded.
+
    ResetCaches();
-   if (fStreamerInfo->GetEntries() != 0) {
-      fState = kEmulated;
+
+   // We got here because the definition Decl is about to be unloaded.
+   if (fState != TClass::kHasTClassInit) {
+      if (fStreamerInfo->GetEntries() != 0) {
+         fState = TClass::kEmulated;
+      } else {
+         fState = TClass::kForwardDeclared;
+      }
    } else {
-      fState = kForwardDeclared;
+      // if the ClassInfo was loaded for a class with a TClass Init and it
+      // gets unloaded, should we guess it can be reloaded?
+      fCanLoadClassInfo = kTRUE;
    }
 }
 

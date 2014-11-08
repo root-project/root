@@ -60,7 +60,7 @@ $(call pcmrule,ROOSTATS)
 $(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ROOSTATS) -c -writeEmptyRootPCM $(ROOSTATSH) $(ROOSTATSL)
 
 $(ROOSTATSMAP): $(ROOSTATSH) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)

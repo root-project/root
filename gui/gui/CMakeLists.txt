@@ -36,7 +36,7 @@ set(headers3 TRootGuiFactory.h TRootApplication.h TRootCanvas.h
              TRootBrowser.h TGSplitFrame.h TGShapedFrame.h TGEventHandler.h)
 
 include_directories(${CMAKE_SOURCE_DIR}/)
-ROOT_GENERATE_DICTIONARY(G__Gui ${headers1} ${headers2} ${headers3} MODULE ${libname} LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Gui ${headers1} ${headers2} ${headers3} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 
 ROOT_LINKER_LIBRARY(${libname} *.cxx G__Gui.cxx LIBRARIES Core DEPENDENCIES Gpad Graf MathCore) #Use 1 big dict

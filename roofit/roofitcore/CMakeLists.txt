@@ -43,7 +43,7 @@ set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
              RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h RooRangeBoolean.h 
              RooVectorDataStore.h RooUnitTest.h RooExtendedBinding.h)
 
-ROOT_GENERATE_DICTIONARY(G__RooFitCore MODULE RooFitCore ${headers1} ${headers2} ${headers3} ${headers4} LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__RooFitCore MODULE RooFitCore ${headers1} ${headers2} ${headers3} ${headers4} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore.cxx LIBRARIES Core
                     DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam)

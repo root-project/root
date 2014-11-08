@@ -6,7 +6,7 @@ ROOT_USE_PACKAGE(core)
 include_directories(${CMAKE_SOURCE_DIR}/hist/hist/inc)  # Explicit to avoid circular dependencies mathcore <--> hist :-(
 
 set(MATHCORE_HEADERS TRandom.h
-  TRandom1.h TRandom2.h TRandom3.h TVirtualFitter.h TKDTree.h TKDTreeBinning.h TStatistic.h
+  TRandom1.h TRandom2.h TRandom3.h TKDTree.h TKDTreeBinning.h TStatistic.h
   Math/IParamFunction.h Math/IFunction.h Math/ParamFunctor.h Math/Functor.h
   Math/Minimizer.h Math/MinimizerOptions.h Math/IntegratorOptions.h Math/IOptions.h Math/GenAlgoOptions.h
   Math/BasicMinimizer.h Math/MinimTransformFunction.h Math/MinimTransformVariable.h
@@ -23,7 +23,7 @@ set(MATHCORE_HEADERS TRandom.h
 # ROOT_GENERATE_DICTIONARY(G__MathCore ${MATHCORE_HEADERS} LINKDEF LinkDef2.h)
 # ROOT_GENERATE_DICTIONARY(G__MathFit  Fit/*.h LINKDEF LinkDef3.h)
 
-ROOT_GENERATE_DICTIONARY(G__MathCore   TComplex.h TMath.h ${MATHCORE_HEADERS} Fit/*.h MODULE MathCore LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__MathCore   TComplex.h TMath.h ${MATHCORE_HEADERS} Fit/*.h MODULE MathCore LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 
 

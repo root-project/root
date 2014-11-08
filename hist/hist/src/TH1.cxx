@@ -2361,6 +2361,55 @@ Double_t *TH1::GetIntegral()
 
 
 //______________________________________________________________________________
+TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
+{
+   //  Return a pointer to an histogram containing the cumulative The
+   //  cumulative can be computed both in the forward (default) or backward
+   //  direction; the name of the new histogram is constructed from
+   //  the name of this histogram with the suffix suffix appended.
+   //
+   // The cumulative distribution is formed by filling each bin of the
+   // resulting histogram with the sum of that bin and all previous
+   // (forward == kTRUE) or following (forward = kFALSE) bins.
+   //
+   // note: while cumulative distributions make sense in one dimension, you
+   // may not be getting what you expect in more than 1D because the concept
+   // of a cumulative distribution is much trickier to define; make sure you
+   // understand the order of summation before you use this method with
+   // histograms of dimension >= 2.
+
+   const Int_t nbinsx = GetNbinsX();
+   const Int_t nbinsy = GetNbinsY();
+   const Int_t nbinsz = GetNbinsZ();
+   TH1* hintegrated = (TH1*) Clone(fName + suffix);
+   hintegrated->Reset();
+   if (forward) { // Forward computation
+      Double_t sum = 0.;
+      for (Int_t binz = 1; binz <= nbinsz; ++binz) {
+	 for (Int_t biny = 1; biny <= nbinsy; ++biny) {
+	    for (Int_t binx = 1; binx <= nbinsx; ++binx) {
+	       const Int_t bin = hintegrated->GetBin(binx, biny, binz);
+	       sum += GetBinContent(bin);
+	       hintegrated->SetBinContent(bin, sum);
+	    }
+	 }
+      }
+   } else { // Backward computation
+      Double_t sum = 0.;
+      for (Int_t binz = nbinsz; binz >= 1; --binz) {
+	 for (Int_t biny = nbinsy; biny >= 1; --biny) {
+	    for (Int_t binx = nbinsx; binx >= 1; --binx) {
+	       const Int_t bin = hintegrated->GetBin(binx, biny, binz);
+	       sum += GetBinContent(bin);
+	       hintegrated->SetBinContent(bin, sum);
+	    }
+	 }
+      }
+   }
+   return hintegrated;
+}
+
+//______________________________________________________________________________
 void TH1::Copy(TObject &obj) const
 {
    // Copy this histogram structure to newth1.
@@ -2789,20 +2838,22 @@ void TH1::Draw(Option_t *option)
 
 
 //______________________________________________________________________________
-TH1 *TH1::DrawCopy(Option_t *option) const
+TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
 {
    // Copy this histogram and Draw in the current pad.
    //
    //     Once the histogram is drawn into the pad, any further modification
    //     using graphics input will be made on the copy of the histogram,
    //     and not to the original object.
+   //     By default a postfix "_copy" is added to the histogram name. Pass an empty postfix in case 
+   //     you want to draw an histogram with the same name
    //
    //     See Draw for the list of options
 
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
-   TString newName = TString::Format("%s_copy",GetName());
+   TString newName = (name_postfix) ?  TString::Format("%s%s",GetName(),name_postfix) : "";
    TH1 *newth1 = (TH1 *)Clone(newName);
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);

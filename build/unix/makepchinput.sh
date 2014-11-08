@@ -17,7 +17,7 @@ rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h all.h c
 
 outdir=etc/dictpch
 allheaders=$outdir/allHeaders.h
-alllinkdefs=$outdir/allLinkdefs.h
+alllinkdefs=$outdir/allLinkDefs.h
 cppflags=$outdir/allCppflags.txt
 
 mkdir -p $outdir
@@ -47,7 +47,7 @@ for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx
         selmodules="$selmodules$dirname "
     fi
 
-    awk 'BEGIN{START=-1} /includePaths\[\] = {/, /^0$/ { if (START==-1) START=NR; else if ($0 != "0") { sub(/",/,"",$0); sub(/^"/,"-I",$0); print $0 } }' $dict >> $cppflags
+    awk 'BEGIN{START=-1} /includePaths\[\] = {/, /^0$/ { if (START==-1) START=NR; else if ($0 != "0") { sub(/",/,"",$0); sub(/^"/,"-I",$0); print $0 } }' $dict >> $cppflags.tmp
     echo "// $dict" >> $allheaders
 #     awk 'BEGIN{START=-1} /payloadCode =/, /^;$/ { if (START==-1) START=NR; else if ($1 != ";") { code=substr($0,2); sub(/\\n"/,"",code); print code } }' $dict >> $allheaders
     awk 'BEGIN{START=-1} /headers\[\] = {/, /^0$/ { if (START==-1) START=NR; else if ($0 != "0") { sub(/,/,"",$0); print "#include",$0 } }' $dict >> $allheaders
@@ -74,9 +74,18 @@ EOF
 EOF
     fi
 
-    find $srcdir/$dirname/inc/ -name '*LinkDef*.h' | \
-        sed -e 's|^|#include "|' -e 's|$|"|' >> $alllinkdefs
+    for f in `cd $srcdir; find $dirname/inc/ -name '*LinkDef*.h'`; do
+        echo '#include "'$outdir/$f'"' >> $alllinkdefs
+    done
 done
+
+# E.g. core's LinkDef includes clib/LinkDef, so just copy all LinkDefs.
+for f in `cd $srcdir; find . -name '*LinkDef*.h'`; do
+    mkdir -p $outdir/`dirname $f`
+    cp $srcdir/$f $outdir/$f
+done
+
+cat $cppflags.tmp | sort | uniq | grep -v $srcdir | grep -v `pwd` > $cppflags
 
 echo
 echo Generating PCH for ${selmodules}

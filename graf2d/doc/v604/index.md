@@ -9,3 +9,4 @@
 
 - The hollow fill style was not rendered correctly.
   (see https://sft.its.cern.ch/jira/browse/ROOT-6841)
+- Better line width matching with screen and pdf output.

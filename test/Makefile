@@ -565,15 +565,10 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		$(MT_EXE)
 		@echo "$@ done"
 
-ifeq ($(shell $(RC) --has-xrootd),yes)
 $(IOPLUGINS):   $(IOPLUGINSO) $(EVENTO)
 		$(LD) $(LDFLAGS) $(IOPLUGINSO) $(EVENTO) $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
-else
-$(IOPLUGINS):   ROOT-configured-without-xrootd
-
-endif
 
 $(STRESSGEOMETRY):  $(STRESSGEOMETRYO)
 ifeq ($(PLATFORM),win32)

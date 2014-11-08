@@ -63,7 +63,7 @@ $(call pcmrule,HIST)
 $(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HIST) -c -writeEmptyRootPCM $(HISTHH) $(HISTL)
 
 $(HISTMAP):     $(HISTHH) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
 		$(MAKEDIR)

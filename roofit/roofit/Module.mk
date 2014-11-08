@@ -52,7 +52,7 @@ $(call pcmrule,ROOFIT)
 $(ROOFITDS):    $(ROOFITH) $(ROOFITL) $(ROOTCLINGEXE) $(call pcmdep,ROOFIT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ROOFIT) -c $(ROOFITH) $(ROOFITL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ROOFIT) -c -writeEmptyRootPCM $(ROOFITH) $(ROOFITL)
 
 $(ROOFITMAP):   $(ROOFITH) $(ROOFITL) $(ROOTCLINGEXE) $(call pcmdep,ROOFIT)
 		$(MAKEDIR)

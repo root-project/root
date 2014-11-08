@@ -19,30 +19,23 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSX_CPU   := $(shell uname -p)
 FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 
-# Compiler:
-# From "Apple clang version ... (based on LLVM 3.0svn)"
-# i.e. OSX 10.7 we will take clang as default
-APPLE_CLANG  := $(shell clang -v 2>&1 | sed -n "s/.*based on LLVM //p" | cut -d . -f 1)
-ifeq ($(APPLE_CLANG),)
-APPLE_CLANG  := 1
-endif
-
-ifeq ($(subst $(APPLE_CLANG),,12),12)
 CXX           = clang++
 CC            = clang
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y
+else
+CXX11FLAGS    = -std=c++11
+endif
 ifeq ($(LIBCXX),yes)
-CXX11FLAGS    = -stdlib=libc++
+CXX11FLAGS    += -stdlib=libc++
 CXX11LDFLAGS  = -stdlib=libc++
 endif
-else
-CXX           = g++
-CC            = gcc
-endif
-CXXFLAGS      = -m64 -std=c++11 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
+
+CXXFLAGS      = -m64 $(CXX11FLAGS) -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
-                $(TARGETFLAGS) $(CXX11FLAGS)
+                $(TARGETFLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -m64 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS)
+                $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 ifeq ($(WERROR),yes)
@@ -52,11 +45,7 @@ NOOPT         += -pedantic -Wno-long-long
 endif
 
 # Linker:
-ifeq ($(subst $(APPLE_CLANG),,12),12)
 LD            = clang++
-else
-LD            = g++
-endif
 LDFLAGS       = $(OPT) -m64 -mmacosx-version-min=$(MACOSXVERS)
 F77LDFLAGS   := $(LDFLAGS)
 LDFLAGS      += $(CXX11LDFLAGS)

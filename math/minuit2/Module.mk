@@ -89,7 +89,7 @@ $(call pcmrule,MINUIT2)
 $(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCLINGEXE) $(call pcmdep,MINUIT2)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MINUIT2) -c $(MINUIT2H) $(MINUIT2L)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MINUIT2) -c -writeEmptyRootPCM $(MINUIT2H) $(MINUIT2L)
 
 $(MINUIT2MAP):  $(MINUIT2H) $(MINUIT2L) $(ROOTCLINGEXE) $(call pcmdep,MINUIT2)
 		$(MAKEDIR)

@@ -53,6 +53,16 @@ private:
 public:
 
    TListOfDataMembers(TClass *cl = 0);
+   // construct from a generic collection of data members objects
+   template<class DataMemberList> 
+   TListOfDataMembers(DataMemberList & dmlist) : 
+      fClass(0),fIds(0),fUnloaded(0),
+      fIsLoaded(kTRUE), fLastLoadMarker(0)
+   { 
+      for (auto * dataMember : dmlist) 
+         Add(dataMember);      
+   }
+
    ~TListOfDataMembers();
 
    virtual void Clear(Option_t *option);
@@ -75,6 +85,7 @@ public:
    void       AddBefore(const TObject *before, TObject *obj);
    void       AddBefore(TObjLink *before, TObject *obj);
 
+   TClass    *GetClass() const { return fClass; }
    void       SetClass(TClass* cl) { fClass = cl; }
    void       Update(TDictionary *member);
 

@@ -303,6 +303,84 @@
    fun:_ZN24TEmulatedCollectionProxy12InitializeExEv
 }
 
+
+{
+   Leaking TROOT member collections
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN5TROOTC1EPKcS1_PPFvvE
+   fun:_ZN4ROOT14TROOTAllocatorC2Ev
+   fun:_ZN4ROOT8GetROOT1Ev
+   fun:_ZN4ROOT7GetROOTEv
+}
+
+
+{
+   TEnums leak
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN5TROOT14GetListOfEnumsEv
+}
+
+
+{
+   TDataTypes leak
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN5TROOT14GetListOfTypesEb
+}
+
+
+{
+   Globals leak (collection part)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN5TList3AddEP7TObject
+   fun:_ZN10THashTable3AddEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN18TListOfDataMembers3GetEPKv
+   fun:_ZNK18TListOfDataMembers10FindObjectEPKc
+   fun:_ZN6TCling13HandleNewDeclEPKvbRSt3setIP6TClassSt4lessIS4_ESaIS4_EE
+}
+
+{
+   Globals leak (element / TObjLink part)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
+   fun:_ZN5TList7AddLastEP7TObject
+   fun:_ZN9THashList7AddLastEP7TObject
+   fun:_ZN18TListOfDataMembers3GetEPKv
+   fun:_ZNK18TListOfDataMembers10FindObjectEPKc
+   fun:_ZN6TCling13HandleNewDeclEPKvbRSt3setIP6TClassSt4lessIS4_ESaIS4_EE
+}
+
+
+{
+   Globals leak (element / TGlobal part)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN5TROOT16GetListOfGlobalsEb
+   fun:_ZN6TCling13HandleNewDeclEPKvbRSt3setIP6TClassSt4lessIS4_ESaIS4_EE
+}
+
+
 ######### ROOT I/O
 
 {
