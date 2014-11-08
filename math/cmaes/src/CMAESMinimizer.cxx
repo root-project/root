@@ -72,8 +72,6 @@ namespace ROOT
 	fMinimizer = sepIPOP_CMAES;
       else if (algoname == "sepbipop")
 	fMinimizer = sepBIPOP_CMAES;
-
-      
     }
 
     TCMAESMinimizer::TCMAESMinimizer(const TCMAESMinimizer &m)
@@ -649,12 +647,10 @@ namespace ROOT
 	{
 	  if (!fWithBounds)
 	    {
-	      fCMAparams_l.set_automaxiter(true);
 	      le = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams_l,fCMAsols,i,false,samplesize,ErrorDef());
 	    }
 	  else
 	    {
-	      fCMAparams_lb.set_automaxiter(true);
 	      le = errstats<GenoPheno<pwqBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams_lb,fCMAsols,i,false,samplesize);
 	    }
 	}
@@ -662,12 +658,10 @@ namespace ROOT
 	{
 	  if (!fWithBounds)
 	    {
-	      fCMAparams_l.set_automaxiter(true);
 	      le = errstats<GenoPheno<NoBoundStrategy,NoScalingStrategy>>::profile_likelihood(ffit,fCMAparams,fCMAsols,i,false,samplesize,ErrorDef());
 	    }
 	  else
 	    {
-	      fCMAparams_lb.set_automaxiter(true);
 	      le = errstats<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>::profile_likelihood(ffit,fCMAparams_b,fCMAsols,i,false,samplesize);
 	    }
 	}
