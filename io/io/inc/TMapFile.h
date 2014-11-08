@@ -41,6 +41,9 @@
 #ifndef ROOT_TROOT
 #include "TROOT.h"
 #endif
+#if !defined(__MMPRIVATE_H) && !defined(__CINT__)
+#include "mmprivate.h"
+#endif
 
 
 class TBrowser;
@@ -175,6 +178,33 @@ public:
    TMapRec      *GetNext(Long_t offset = 0) const { return (TMapRec *)((Long_t) fNext + offset); }
 };
 
+
+//______________________________________________________________________________
+inline void *TMapFile::GetBreakval() const
+{
+   // Return the current location in the memory region for this malloc heap which
+   // represents the end of memory in use. Returns 0 if map file was closed.
+
+   if (!fMmallocDesc) return 0;
+   return (void *)((struct mdesc *)fMmallocDesc)->breakval;
+}
+
+//______________________________________________________________________________
+inline TMapFile *TMapFile::WhichMapFile(void *addr)
+{
+   if (!gROOT || !gROOT->GetListOfMappedFiles()) return 0;
+
+   TObjLink *lnk = ((TList *)gROOT->GetListOfMappedFiles())->LastLink();
+   while (lnk) {
+      TMapFile *mf = (TMapFile*)lnk->GetObject();
+      if (!mf) return 0;
+      if ((ULong_t)addr >= mf->fBaseAddr + mf->fOffset &&
+          (ULong_t)addr <  (ULong_t)mf->GetBreakval() + mf->fOffset)
+         return mf;
+      lnk = lnk->Prev();
+   }
+   return 0;
+}
 
 R__EXTERN void *gMmallocDesc;  //is initialized in TClass.cxx
 
