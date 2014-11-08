@@ -21,7 +21,6 @@ RAUTHDH      := $(RAUTHDS:.cxx=.h)
 RAUTHH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 RAUTHS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
-RAUTHH       := $(filter-out $(MODDIRI)/DaemonUtils.h,$(RAUTHH))
 RAUTHS       := $(filter-out $(MODDIRS)/DaemonUtils.cxx,$(RAUTHS))
 RAUTHH       := $(filter-out $(MODDIRI)/AFSAuth.h,$(RAUTHH))
 RAUTHH       := $(filter-out $(MODDIRI)/AFSAuthTypes.h,$(RAUTHH))
