@@ -222,7 +222,13 @@ module roofit_roofitcore {
   header "RooRealAnalytic.h"
   header "RooMultiCatIter.h"
   header "RooMultiCategory.h"
-  header "RooMsgService.h"
+
+  module RooMsgService {
+    header "RooMsgService.h"
+    config_macros INST_MSG_SERVICE // see RooMsgService.h:223
+    export *
+  }
+
   header "RooMappedCategory.h"
   header "RooProdPdf.h"
   header "RooFoamGenerator.h"
