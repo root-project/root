@@ -617,6 +617,7 @@ module net_rpdutils {
   header "rpderr.h"
   header "rpdconn.h"
   header "rpdpriv.h"
+  header "rpdp.h"
 }
 module hist_hbook {
   export *
