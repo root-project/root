@@ -81,8 +81,7 @@ EXTRA_RAUTHLIBS  += -lz
 endif
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RAUTHH)) \
-                include/DaemonUtils.h
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RAUTHH))
 ALLLIBS      += $(RAUTHLIB)
 ALLMAPS      += $(RAUTHMAP)
 ifneq ($(AFSLIB),)
