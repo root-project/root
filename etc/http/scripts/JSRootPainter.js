@@ -2355,13 +2355,8 @@
 
       var pthis = this;
 
-      if (this.main_rect == null) {
+      if (this.main_rect == null)
          this.main_rect = this.svg_pad(true).append("rect");
-      } else {
-         // force main rect of the stat box be last item in the primitives to
-         // kept it on the top - for instance when colz is created
-         JSROOT.Painter.moveChildToEnd(this.main_rect);
-      }
 
       this.main_rect
              .attr("x", pos_x)
@@ -2371,24 +2366,6 @@
              .attr("fill", fcolor)
              .style("stroke-width", lwidth ? 1 : 0)
              .style("stroke", lcolor);
-
-      this.AddDrag("stat", this.main_rect, {
-         move : function(x, y, dx, dy) {
-            pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
-
-            pthis.pavetext['fX1NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
-            pthis.pavetext['fX2NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
-            pthis.pavetext['fY1NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
-            pthis.pavetext['fY2NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
-         },
-         resize : function(width, height) {
-            pthis.pavetext['fX2NDC'] = pthis.pavetext['fX1NDC'] + width  / Number(pthis.svg_pad(true).attr("width"));
-            pthis.pavetext['fY1NDC'] = pthis.pavetext['fY2NDC'] - height / Number(pthis.svg_pad(true).attr("height"));
-
-            pthis.DrawPaveText();
-         }
-      });
-
 
       // container used to recalculate coordinates
       this.RecreateDrawG(true);
@@ -2542,6 +2519,28 @@
                     .style("stroke", lcolor)
                     .style("stroke-width", lwidth);
       }
+
+      // force main rect of the stat box be last item in the primitives to
+      // kept it on the top - for instance when colz is created
+      JSROOT.Painter.moveChildToEnd(this.main_rect);
+      JSROOT.Painter.moveChildToEnd(this.draw_g);
+
+      this.AddDrag("stat", this.main_rect, {
+         move : function(x, y, dx, dy) {
+            pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
+
+            pthis.pavetext['fX1NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
+            pthis.pavetext['fX2NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
+            pthis.pavetext['fY1NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
+            pthis.pavetext['fY2NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
+         },
+         resize : function(width, height) {
+            pthis.pavetext['fX2NDC'] = pthis.pavetext['fX1NDC'] + width  / Number(pthis.svg_pad(true).attr("width"));
+            pthis.pavetext['fY1NDC'] = pthis.pavetext['fY2NDC'] - height / Number(pthis.svg_pad(true).attr("height"));
+
+            pthis.DrawPaveText();
+         }
+      });
    }
 
    JSROOT.TPavePainter.prototype.AddLine = function(txt) {
@@ -7447,31 +7446,27 @@
       }
    }
 
-   JSROOT.HierarchyPainter.prototype.OpenOnline = function(server_address,
-         user_callback) {
-      if (!server_address)
-         server_address = "";
+   JSROOT.HierarchyPainter.prototype.OpenOnline = function(server_address, user_callback) {
+      if (!server_address) server_address = "";
 
       var painter = this;
 
-      var req = JSROOT.NewHttpRequest(server_address + "h.json?compact=3",
-            'object', function(result) {
-               painter.h = result;
-               if (painter.h == null)
-                  return;
+      var req = JSROOT.NewHttpRequest(server_address + "h.json?compact=3", 'object', function(result) {
+         painter.h = result;
+         if (painter.h == null) return;
 
-               // mark top hierarchy as online data and
-               painter.h['_online'] = server_address;
+         // mark top hierarchy as online data and
+         painter.h['_online'] = server_address;
 
-               painter.AddOnlineMethods(painter.h);
+         painter.AddOnlineMethods(painter.h);
 
-               if (painter.h != null)
-                  painter.RefreshHtml(true);
+         if (painter.h != null)
+            painter.RefreshHtml(true);
 
-               if (typeof user_callback == 'function')
-                  user_callback(painter);
+         if (typeof user_callback == 'function')
+            user_callback(painter);
 
-            });
+      });
 
       req.send(null);
    }
