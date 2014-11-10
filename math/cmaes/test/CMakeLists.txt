@@ -1,4 +1,4 @@
-project(minuit2-tests)
+project(cmaes-tests)
 find_package(ROOT REQUIRED)
 
 include(${ROOT_USE_FILE})
@@ -30,10 +30,10 @@ set(TestSourceMnSim
 
 
 
-#---For the simple Minuit2 tests build and defined them---------------
+#---For the simple cmaes tests build and defined them---------------
 foreach(file ${TestSourceMnTutorial})
   get_filename_component(testname ${file} NAME_WE)
-  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES Minuit2)
+  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES cmaes)
   ROOT_ADD_TEST(minuit2-${testname} COMMAND ${testname})
 endforeach()
 

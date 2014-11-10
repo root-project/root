@@ -135,7 +135,6 @@ ROOT_BUILD_OPTION(imt ON "Enable support for implicit multi-threading via IntelÂ
 ROOT_BUILD_OPTION(jemalloc OFF "Use jemalloc memory allocator")
 ROOT_BUILD_OPTION(libcxx OFF "Build using libc++")
 ROOT_BUILD_OPTION(macos_native OFF "Disable looking for libraries, includes and binaries in locations other than a native installation (MacOS only)")
-<<<<<<< HEAD
 ROOT_BUILD_OPTION(mathmore ON "Build libMathMore extended math library (requires GSL)")
 ROOT_BUILD_OPTION(memory_termination OFF "Free internal ROOT memory before process termination (experimental, used for leak checking)")
 ROOT_BUILD_OPTION(memstat OFF "Build memory statistics utility (helps to detect memory leaks)")
@@ -150,20 +149,6 @@ ROOT_BUILD_OPTION(oracle ON "Enable support for Oracle databases (requires Oracl
 ROOT_BUILD_OPTION(pgsql ON "Enable support for PostgreSQL")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
 ROOT_BUILD_OPTION(pyroot_legacy OFF "Use legacy Python bindings for ROOT")
-=======
-ROOT_BUILD_OPTION(mathmore ON "Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)")
-ROOT_BUILD_OPTION(memstat ON "A memory statistics utility, helps to detect memory leaks")
-ROOT_BUILD_OPTION(minuit2 OFF "Build the new libMinuit2 minimizer library")
-ROOT_BUILD_OPTION(cmaes ON "Build the libcmaes minimizer library wrapper")
-ROOT_BUILD_OPTION(monalisa ON "Monalisa monitoring support, requires libapmoncpp")
-ROOT_BUILD_OPTION(mysql ON "MySQL support, requires libmysqlclient")
-ROOT_BUILD_OPTION(odbc ON "ODBC support, requires libiodbc or libodbc")
-ROOT_BUILD_OPTION(opengl ON "OpenGL support, requires libGL and libGLU")
-ROOT_BUILD_OPTION(oracle ON "Oracle support, requires libocci")
-ROOT_BUILD_OPTION(pch ON)
-ROOT_BUILD_OPTION(pgsql ON "PostgreSQL support, requires libpq")
-ROOT_BUILD_OPTION(pythia6 ON "Pythia6 EG support, requires libPythia6")
->>>>>>> first cmaes addition
 ROOT_BUILD_OPTION(pythia6_nolink OFF "Delayed linking of Pythia6 library")
 ROOT_BUILD_OPTION(pythia6 ON "Enable support for Pythia 6.x")
 ROOT_BUILD_OPTION(pythia8 ON "Enable support for Pythia 8.x")
