@@ -383,7 +383,7 @@ module Canvas {
 }
 
 module Varargs { header "Varargs.h" export * }
-
+module MessageTypes {   header "MessageTypes.h" export * }
 module core_base {
   requires cplusplus
   export *
@@ -412,7 +412,6 @@ module core_base {
   header "Gtypes.h"
   header "KeySymbols.h"
   header "Match.h"
-  header "MessageTypes.h"
   header "Strlen.h"
   header "TApplication.h"
   header "TApplicationImp.h"
