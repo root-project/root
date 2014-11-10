@@ -1,4 +1,4 @@
-# Module.ml for cmaes module.
+# Module.mk for cmaes module.
 
 MODNAME       := cmaes
 MODDIR        := $(ROOT_SRCDIR)/math/$(MODNAME)
@@ -9,6 +9,8 @@ CMAESDIR    := $(MODDIR)
 CMAESDIRS   := $(CMAESDIR)/src
 CMAESDIRI   := $(CMAESDIR)/inc
 #CMAESDIRT   :=$(call stripsrc,$(CMAESDIR)/test)
+
+CMAESINCDIR := $(LIBCMAES_INCLUDE_DIR)
 
 CMAESBASEVERS := cmaes-1_0_0
 CMAESBASESRCS := $(MODDIRS)/$(CMAESBASEVERS).tar.gz
@@ -79,7 +81,7 @@ $(CMAESLIB):  $(CMAESO) $(CMAESDO) $(ORDER_) $(MAINLIBS) $(CMAESLIBDEP)
 		   "$(SOFLAGS)" libcmaesroot.$(SOEXT) $@ \
 		"$(CMAESO) $(CMAESDO)" "-lcmaes -lMathCore" "$(CMAESLIBEXTRA)"
 
-$(call pcmrule,MINUIT2)
+$(call pcmrule,CMAES)
 	$(noop)
 
 $(CMAESDS):   $(CMAESH) $(CMAESL) $(ROOTCLINGEXE) $(call pcmdep,CMAES)
@@ -127,7 +129,7 @@ $(CMAESDO): CXXFLAGS += -DWARNINGMSG -DUSE_ROOT_ERROR
 #ifneq ($(USE_OPENMP),)
 #$(CMAESO): CXXFLAGS += -DCMAES_THREAD_SAFE -DCMAES_PARALLEL_OPENMP
 #math/cmaes/src/Numerical2PGradientCalculator.o: 
-$(CMAESO):CXXFLAGS +=  -D_GLIBCXX_PARALLEL -fopenmp 
+$(CMAESO):CXXFLAGS +=  -D_GLIBCXX_PARALLEL -fopenmp
 $(CMAESDO):CXXFLAGS +=  -D_GLIBCXX_PARALLEL -fopenmp 
 $(CMAESLIB):LDFLAGS += -fopenmp
 #endif
