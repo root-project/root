@@ -383,7 +383,7 @@ module Canvas {
 }
 
 module Varargs { header "Varargs.h" export * }
-module Exception [extern_c] { textual header "TException.h" export * } // FIXME: We need to suppress TRY macro and  error: use of undeclared identifier 'sigsetjmp'; did you mean '__sigsetjmp'?
+
 module core_base {
   requires cplusplus
   export *
@@ -420,6 +420,7 @@ module core_base {
   header "TContextMenuImp.h"
   textual header "RtypesImp.h" // Must be included only from the dictionaries.
 
+  //module Exception { header "TException.h" export * } // We need to suppress TRY macro
   header "TMD5.h"
   header "TAtt3D.h"
   header "TThreadSlots.h"
