@@ -1335,6 +1335,7 @@ module graf2d_qt {
   header "TQtClientWidget.h"
 }
 module graf3d_g3d {
+  requires cplusplus
   export *
   header "TCONE.h"
   header "TShape.h"
