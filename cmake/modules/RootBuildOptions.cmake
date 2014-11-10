@@ -62,7 +62,7 @@ else()
   set(memstat_defvalue ON)
   set(explicitlink_defvalue ON)
   set(cocoa_defvalue OFF)
-  set(davix_defvalue OFF)
+  set(davix_defvalue ON)
 endif()
 
 
