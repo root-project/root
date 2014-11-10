@@ -600,7 +600,10 @@ DumpFile(LPSTR filename, FILE *fout, int full, int fort)
 #endif
    }
    /* Does it look like a i386 COFF OBJ file??? */
-   else if ((dosHeader->e_magic == 0x014C) && (dosHeader->e_sp == 0)) {
+   else if (
+	   ((dosHeader->e_magic == IMAGE_FILE_MACHINE_I386) || (dosHeader->e_magic == IMAGE_FILE_MACHINE_AMD64))
+	   && (dosHeader->e_sp == 0)
+	   ) {
       /*
       * The two tests above aren't what they look like.  They're
       * really checking for IMAGE_FILE_HEADER.Machine == i386 (0x14C)
