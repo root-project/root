@@ -4289,7 +4289,6 @@
       if (isany) this.RedrawPad();
    }
 
-
    JSROOT.THistPainter.prototype.AddInteractive = function() {
       // only first painter in list allowed to add interactive functionality to the main pad
       if (!this.is_main_painter()) return;
@@ -5543,7 +5542,6 @@
             }
          }
       }
-      this.maxbin *= 1.05;
    }
 
    JSROOT.TH2Painter.prototype.FillStatistic = function(stat, dostat) {
@@ -5689,7 +5687,7 @@
             if (gry1 < 0) gry1 = this.y(y1);
             gry2 = this.y(y2);
             binz = this.histo.getBinContent(i + 1, j + 1);
-            if (binz <= this.minbin) continue;
+            if (binz < this.minbin) continue;
 
             switch (coordinates_kind) {
             case 0:
