@@ -734,6 +734,14 @@ module TreeFormula {
   header "TTreeFormula.h"
   export *
 }
+module TreeIndex {
+  header "TTreeIndex.h"
+  export *
+}
+module ChainIndex {
+  header "TChainIndex.h"
+  export *
+}
 module tree_treeplayer {
   export *
   header "TSelectorEntries.h"
@@ -747,7 +755,6 @@ module tree_treeplayer {
   header "TTreeReaderUtils.h"
   header "TFileDrawMap.h"
   header "TTreePerfStats.h"
-  header "TChainIndex.h"
   header "TFormLeafInfo.h"
   header "TBranchProxyDescriptor.h"
   header "TBranchProxyClassDescriptor.h"
@@ -757,7 +764,6 @@ module tree_treeplayer {
   header "TTreeTableInterface.h"
   header "TTreeProxyGenerator.h"
   header "TTreeFormulaManager.h"
-  header "TTreeIndex.h"
   header "TBranchProxy.h"
   header "TRefArrayProxy.h"
   header "TTreeReaderValue.h"
