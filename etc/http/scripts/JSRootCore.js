@@ -15,7 +15,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.0 6/11/2014";
+   JSROOT.version = "3.1 dev 10/11/2014";
 
    JSROOT.source_dir = null;
 
@@ -153,7 +153,7 @@
       return dflt;
    }
 
-   JSROOT.NewHttpRequest = function(url, kind, callback) {
+   JSROOT.NewHttpRequest = function(url, kind, user_call_back) {
       // Create asynchronous XMLHttpRequest object.
       // One should call req.send() to submit request
       // kind of the request can be:
@@ -164,6 +164,11 @@
       //  "head" - returns request itself, uses "HEAD" method
       // Result will be returned to the callback functions
       // If failed, request returns null
+
+      function callback(res) {
+         if (typeof user_call_back == 'function') user_call_back(res);
+      }
+
       var xhr = new XMLHttpRequest();
 
 //      if (typeof ActiveXObject == "function") {
