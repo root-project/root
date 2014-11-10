@@ -5687,7 +5687,7 @@
             if (gry1 < 0) gry1 = this.y(y1);
             gry2 = this.y(y2);
             binz = this.histo.getBinContent(i + 1, j + 1);
-            if (binz < this.minbin) continue;
+            if (binz <= this.minbin) continue;
 
             switch (coordinates_kind) {
             case 0:
