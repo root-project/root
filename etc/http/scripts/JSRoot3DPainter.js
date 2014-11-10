@@ -282,11 +282,11 @@
          uty = d3.scale.linear().domain([ size, -size ]).range([ ymin, ymax ]);
       }
       if (painter.options.Logz) {
-         tz = d3.scale.log().domain([ painter.minbin, Math.ceil(painter.maxbin / 10) * 10 ]).range([ 0, size * 2 ]);
-         utz = d3.scale.log().domain([ 0, size * 2 ]).range([ painter.minbin, Math.ceil(painter.maxbin / 10) * 10 ]);
+         tz = d3.scale.log().domain([ painter.minbin, Math.ceil(painter.maxbin / 100) * 105 ]).range([ 0, size * 2 ]);
+         utz = d3.scale.log().domain([ 0, size * 2 ]).range([ painter.minbin, Math.ceil(painter.maxbin / 100) * 105 ]);
       } else {
-         tz = d3.scale.linear().domain([ painter.minbin, Math.ceil(painter.maxbin / 10) * 10 ]).range( [ 0, size * 2 ]);
-         utz = d3.scale.linear().domain([ 0, size * 2 ]).range( [ painter.minbin, Math.ceil(painter.maxbin / 10) * 10 ]);
+         tz = d3.scale.linear().domain([ painter.minbin, Math.ceil(painter.maxbin / 100) * 105 ]).range( [ 0, size * 2 ]);
+         utz = d3.scale.linear().domain([ 0, size * 2 ]).range( [ painter.minbin, Math.ceil(painter.maxbin / 100) * 105 ]);
       }
 
       var constx = (size * 2 / painter.nbinsx) / painter.maxbin;
