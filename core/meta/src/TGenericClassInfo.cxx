@@ -185,8 +185,22 @@ namespace ROOT {
    TClass *TGenericClassInfo::GetClass()
    {
       // Generate and return the TClass object.
+
+      // First make sure that TROOT is initialized, do this before checking
+      // for fClass.  If the request is for the TClass of TObject and TROOT
+      // is not initialized, the TROOT creation (because of the ROOT pcm files)
+      // will lead to its own request of the TClass for TObject and thus
+      // upon returning, the TClass for TObject will have already been created
+      // and fClass will have been set.
+      if (!gROOT)
+         ::Fatal("TClass::TClass", "ROOT system not initialized");
+
       if (!fClass && fAction) {
          R__LOCKGUARD2(gInterpreterMutex);
+         // Check again, while we waited for the lock, something else might
+         // have set fClass.
+         if (fClass) return fClass;
+
          fClass = GetAction().CreateClass(GetClassName(),
                                           GetVersion(),
                                           GetInfo(),
