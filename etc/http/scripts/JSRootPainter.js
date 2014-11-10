@@ -2088,29 +2088,16 @@
                    .style("fill", pthis.excl_ec);
          }
       }
+
       if (this.seriesType == 'line') {
 
-         if ((this.optionLine == 1) && (this.optionFill == 0)) {
-            var polyline = "";
-            for (var i in this.bins)
-               polyline += " " + Math.round(x(this.bins[i].x)) + "," + Math.round(y(this.bins[i].y));
-
-            this.draw_g.append("polyline")
-                       .attr("class", "draw_line")
-                       .attr("points", polyline)
-                       .style("stroke", JSROOT.Painter.root_colors[pthis.graph['fLineColor']])
-                       .style("stroke-width", pthis.bins_lw)
-                       .style("stroke-dasharray", JSROOT.Painter.root_line_styles[pthis.graph['fLineStyle']])
-                       .style("fill", "none").style("fill-opacity", "none");
-         } else {
-            this.draw_g.append("svg:path")
-                  .attr("d", line(pthis.bins))
-                  .attr("class", "draw_line")
-                  .style("stroke", (pthis.optionLine == 1) ? JSROOT.Painter.root_colors[pthis.graph['fLineColor']] : "none")
-                  .style("stroke-width", pthis.bins_lw)
-                  .style("stroke-dasharray", JSROOT.Painter.root_line_styles[pthis.graph['fLineStyle']])
-                  .style("fill", (pthis.optionFill == 1) ? JSROOT.Painter.root_colors[pthis.graph['fFillColor']] : "none");
-         }
+         this.draw_g.append("svg:path")
+               .attr("d", line(pthis.bins))
+               .attr("class", "draw_line")
+               .style("stroke", (pthis.optionLine == 1) ? JSROOT.Painter.root_colors[pthis.graph['fLineColor']] : "none")
+               .style("stroke-width", pthis.bins_lw)
+               .style("stroke-dasharray", JSROOT.Painter.root_line_styles[pthis.graph['fLineStyle']])
+               .style("fill", (pthis.optionFill == 1) ? JSROOT.Painter.root_colors[pthis.graph['fFillColor']] : "none");
 
          // do not add tooltip for line, when we wants to add markers
          if (JSROOT.gStyle.Tooltip && !this.showMarker)
@@ -2123,7 +2110,6 @@
                        .attr("opacity", 0)
                        .append("svg:title")
                        .text(TooltipText);
-
       }
 
       if (this.draw_errors)
@@ -2661,7 +2647,7 @@
           .append("svg")
           .attr("class", "root_canvas")
           .style("background-color", fillcolor)
-          .attr("pointer-events", "all")
+          // .attr("pointer-events", "all")   // comment out while it hides mouse events
           .property('pad_painter', this) // this is custom property
           .property('mainpainter', null) // this is custom property
           .property('current_pad', "") // this is custom property
