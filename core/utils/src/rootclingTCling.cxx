@@ -160,10 +160,10 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
          }
          const std::string unqualifiedEnumName = enumname.substr(lastSepPos + 1);
          en = (TEnum *)enumListPtr->FindObject(unqualifiedEnumName.c_str());
-         en->SetTitle(nsName.c_str());
+         if (en) en->SetTitle(nsName.c_str());
       } else {
          en = (TEnum *)gROOT->GetListOfEnums()->FindObject(enumname.c_str());
-         en->SetTitle("");
+         if (en) en->SetTitle("");
       }
       if (!en) {
          std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find enum "
