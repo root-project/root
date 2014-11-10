@@ -1097,10 +1097,13 @@ module graf2d_gviz {
   header "TGraphNode.h"
   header "TGraphStruct.h"
 }
+module TProofSuperMaster {
+  header "TProofSuperMaster.h"
+  export *
+}
 module proof_proof {
   export *
   header "TProofLite.h"
-  header "TProofSuperMaster.h"
   header "TDataSetManagerFile.h"
   header "TProofQueryResult.h"
   header "TProofCondor.h"
@@ -2092,19 +2095,26 @@ module tmva {
   header "TMVA/Factory.h"
   header "TMVA/RuleFitAPI.h"
 }
+// FIXME: These are to build G__ProofPlayer dict, it is putting together proof_proofplayer and proof...
+module ProofPlayerLight {
+  header "TProofPlayerLite.h"
+  export *
+}
+module Packetizer {
+  header "TPacketizer.h"
+  header "TPacketizerAdaptive.h"
+  export *
+}
 module proof_proofplayer {
   export *
   header "TProofPlayer.h"
-  header "TPacketizerAdaptive.h"
   header "TPacketizerMulti.h"
-  header "TProofPlayerLite.h"
   header "TProofLimitsFinder.h"
   header "TStatsFeedback.h"
   header "TPacketizerFile.h"
   header "TStatus.h"
   header "TPerfStats.h"
   header "TProofMonSenderML.h"
-  header "TPacketizer.h"
   header "TPacketizerUnit.h"
   header "TProofDraw.h"
   header "TEventIter.h"
