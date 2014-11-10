@@ -339,6 +339,8 @@ module Application {
 
 module ClassEdit {
   header "TClassEdit.h"
+  header "ESTLType.h"
+
   export *
 }
 
@@ -2417,8 +2419,6 @@ module graf2d_graf {
 }
 module core_metautils {
   export *
-  header "TClassEdit.h"
-  header "ESTLType.h"
 
   //header "TMetaUtils.h" // AXEL is on it.
   module ClingRuntime {header "TClingRuntime.h" export *}
