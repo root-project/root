@@ -10,8 +10,6 @@ CMAESDIRS   := $(CMAESDIR)/src
 CMAESDIRI   := $(CMAESDIR)/inc
 #CMAESDIRT   :=$(call stripsrc,$(CMAESDIR)/test)
 
-CMAESINCDIR := $(LIBCMAES_INCLUDE_DIR)
-
 CMAESBASEVERS := cmaes-1_0_0
 CMAESBASESRCS := $(MODDIRS)/$(CMAESBASEVERS).tar.gz
 CMAESBASEDIRS := $(MODDIRS)/$(CMAESBASEVERS)
@@ -47,7 +45,7 @@ CMAESO     := $(call stripsrc,$(CMAESS:.cxx=.o))
 
 CMAESDEP   := $(CMAESO:.o=.d) $(CMAESDO:.o=.d)
 
-CMAESLIB   := $(LPATH)/libcmaesroot.$(SOEXT)
+CMAESLIB   := $(LPATH)/libcmaes_root.$(SOEXT)
 CMAESMAP   := $(CMAESLIB:.$(SOEXT)=.rootmap)
 
 # use this compiler option if want to optimize object allocation in cmaes
@@ -78,7 +76,7 @@ include/%.h:    $(CMAESDIRI)/%.h
 
 $(CMAESLIB):  $(CMAESO) $(CMAESDO) $(ORDER_) $(MAINLIBS) $(CMAESLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libcmaesroot.$(SOEXT) $@ \
+		   "$(SOFLAGS)" libcmaes_root.$(SOEXT) $@ \
 		"$(CMAESO) $(CMAESDO)" "-lcmaes -lMathCore" "$(CMAESLIBEXTRA)"
 
 $(call pcmrule,CMAES)
