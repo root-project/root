@@ -2451,16 +2451,19 @@ module sql_sqlite {
   header "TSQLiteResult.h"
   header "TSQLiteRow.h"
 }
+module net_rsa [extern_c] {
+  header "rsadef.h"
+  header "rsalib.h"
+  header "rsafun.h"
+  header "rsaaux.h"
+  export *
+}
 module net_auth {
   export *
-  header "rsaaux.h"
   header "TAuthenticate.h"
   header "AuthConst.h"
   header "THostAuth.h"
-  header "rsafun.h"
-  header "rsadef.h"
   header "TRootAuth.h"
-  header "rsalib.h"
   header "TRootSecContext.h"
 }
 module math_minuit2 {
