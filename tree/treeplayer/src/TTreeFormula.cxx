@@ -4350,6 +4350,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 // Template instantiations
 template double TTreeFormula::EvalInstance<double> (int, char const**);
 template long double TTreeFormula::EvalInstance<long double> (int, char const**);
+template long long TTreeFormula::EvalInstance<long long> (int, char const**);
 
 //______________________________________________________________________________
 TFormLeafInfo *TTreeFormula::GetLeafInfo(Int_t code) const
