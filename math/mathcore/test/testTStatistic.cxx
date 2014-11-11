@@ -15,8 +15,8 @@ void testTStatistic(Int_t n = 10000)
 
    double true_mean = 10;
    double true_sigma = 1;
-   double eps1 = 5*true_sigma/sqrt(n);  // 5 times error on the mean
-   double eps2 = 5*true_sigma/sqrt(2*n);  // 5 times error on the RMS
+   double eps1 = 5*true_sigma/sqrt(double(n));  // 5 times error on the mean
+   double eps2 = 5*true_sigma/sqrt(double(2.*n));  // 5 times error on the RMS
 
    // Gaussian first
    TRandom3 rand3;
@@ -57,7 +57,7 @@ void testTStatistic(Int_t n = 10000)
    else printf("OK\n");                  
    if (error || gVerbose) {
       stp.Print();
-      printf("  TMATH         mu =  %.5g +- %.4g \t RMS = %.5g \n",mean, rms/sqrt(xx.size() ), rms);
+      printf("  TMATH         mu =  %.5g +- %.4g \t RMS = %.5g \n",mean, rms/sqrt(double(xx.size()) ), rms);
    }
    
 
