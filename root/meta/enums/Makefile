@@ -15,3 +15,4 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 execEnumsTest.log: libenumsTestClasses_dictrflx.$(DllSuf)
+execenumsInNamespaces.log: libenumsInNamespaces_dictrflx.$(DllSuf)

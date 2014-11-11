@@ -18,3 +18,13 @@ ROOTTEST_ADD_TEST(roottest-root-meta-enums-execTEnumGetEnum
                   OUTREF execTEnumGetEnum.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
+
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(enumsInNamespaces
+                  enumsInNamespaces.h
+                  SELECTION enumsInNamespaces_selection.xml
+                  NO_ROOTMAP)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-enums-enumsInNamespaces
+                  MACRO execenumsInNamespaces.C
+                  OUTREF execenumsInNamespaces.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST})
