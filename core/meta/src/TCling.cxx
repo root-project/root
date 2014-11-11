@@ -6270,9 +6270,9 @@ void TCling::ClassInfo_Destruct(ClassInfo_t* cinfo, void* arena) const
 }
 
 //______________________________________________________________________________
-ClassInfo_t* TCling::ClassInfo_Factory() const
+ClassInfo_t* TCling::ClassInfo_Factory(Bool_t all) const
 {
-   return (ClassInfo_t*) new TClingClassInfo(fInterpreter);
+   return (ClassInfo_t*) new TClingClassInfo(fInterpreter, all);
 }
 
 //______________________________________________________________________________

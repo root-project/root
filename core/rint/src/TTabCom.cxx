@@ -425,7 +425,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
    }
 
    if (fPrevInterpMarker != gInterpreter->GetInterpreterStateMarker()) {
-      ClassInfo_t* ci = gInterpreter->ClassInfo_Factory();
+      ClassInfo_t* ci = gInterpreter->ClassInfo_Factory(kFALSE /*all*/);
       while (gInterpreter->ClassInfo_Next(ci)) {
          const char* className = gInterpreter->ClassInfo_FullName(ci);
          if (strstr(className, "(anonymous)"))

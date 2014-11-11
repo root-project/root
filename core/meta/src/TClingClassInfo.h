@@ -57,6 +57,7 @@ private:
    cling::Interpreter   *fInterp; // Cling interpreter, we do *not* own.
    bool                  fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
    bool                  fDescend; // Flag for signaling the need to descend on this advancement.
+   bool                  fIterAll; // Flag whether iteration should be as complete as possible.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
    const clang::Decl    *fDecl; // Current decl, we do *not* own.
    const clang::Type    *fType; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)
@@ -76,7 +77,7 @@ public: // Types
 
 public:
 
-   explicit TClingClassInfo(cling::Interpreter *);
+   explicit TClingClassInfo(cling::Interpreter *, Bool_t all = kTRUE);
    explicit TClingClassInfo(cling::Interpreter *, const char *);
    explicit TClingClassInfo(cling::Interpreter *, const clang::Type &);
    void                 AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFunc_t func) { fOffsetCache[decl] = std::make_pair(0L, func); }
