@@ -832,7 +832,10 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
 
    // debug result of Minos
    // print error message in Minos
-
+   // Note that the only invalid condition can happen when the (npar-1) minimization fails
+   // The error is also invalid when the maximum number of calls is reached or a new function minimum is found
+   // in case of the parameter at the limit the error is not ivalid. 
+   // When the error is invalid the returned error is the Hessian error. 
 
    if (debugLevel >= 1) {
       if (runLower) {
