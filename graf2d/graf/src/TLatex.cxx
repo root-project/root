@@ -2024,17 +2024,46 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
             t.ReplaceAll("%","\\%");
          }
          gVirtualPS->Text(x,y,t.Data());
-         gVirtualPS = 0;
+      } else {
+         Bool_t saveb = gPad->IsBatch();
+         gPad->SetBatch(kTRUE);
+         if (!PaintLatex1( x, y, angle, size, text1)) {
+            if (saveps) gVirtualPS = saveps;
+            return;
+         }
+         gPad->SetBatch(saveb);
       }
+      gVirtualPS = 0;
    }
+
+   if (!gPad->IsBatch()) PaintLatex1( x, y, angle, size, text1);
+   if (saveps) gVirtualPS = saveps;
+}
+
+
+//______________________________________________________________________________
+Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
+{
+   // Drawing function
+
+   TString newText = text1;
+   if( newText.Length() == 0) return 0;
+   newText.ReplaceAll("#hbox","#mbox");
+
+   fError = 0 ;
+   if (CheckLatexSyntax(newText)) {
+      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<text1<<std::endl;
+      return 0;
+   }
+   fError = 0 ;
 
    // Do not use Latex if font is low precision.
    if (fTextFont%10 < 2) {
       if (gVirtualX) gVirtualX->SetTextAngle(angle);
       if (gVirtualPS) gVirtualPS->SetTextAngle(angle);
       gPad->PaintText(x,y,text1);
-      if (saveps) gVirtualPS = saveps;
-      return;
+      return 1;
    }
 
    // Paint the text using TMathText if contains a "\"
@@ -2043,13 +2072,8 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       tm.SetTextAlign(GetTextAlign());
       tm.SetTextFont(GetTextFont());
       tm.PaintMathText(x, y, angle, size, text1);
-      if (saveps) gVirtualPS = saveps;
-      return;
+      return 1;
    }
-
-   TString newText = text1;
-   if( newText.Length() == 0) return;
-   newText.ReplaceAll("#hbox","#mbox");
 
    Double_t saveSize = size;
    Int_t saveFont = fTextFont;
@@ -2064,15 +2088,6 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          size = size/h;
       SetTextFont(10*(saveFont/10) + 2);
    }
-
-   fError = 0 ;
-   if (CheckLatexSyntax(newText)) {
-      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
-      std::cout<<"==> "<<text1<<std::endl;
-      if (saveps) gVirtualPS = saveps;
-      return ;
-   }
-   fError = 0 ;
 
    Int_t length = newText.Length() ;
    const Char_t *text = newText.Data() ;
@@ -2127,7 +2142,8 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
    SetLineWidth(lineW);
    SetLineColor(lineC);
    delete[] fTabSize;
-   if (saveps) gVirtualPS = saveps;
+   if (fError != 0) return 0;
+   return 1;
 }
 
 
