@@ -70,14 +70,19 @@ static std::string FullyQualifiedName(const Decl *decl) {
    return buf;
 }
 
-TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), fOffsetCache(0)
+TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(all),
+     fDecl(0), fType(0), fOffsetCache(0)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
    // Could trigger deserialization of decls.
    cling::Interpreter::PushTransactionRAII RAII(interp);
-   fIter = TU->decls_begin();
+   if (fIterAll)
+      fIter = TU->decls_begin();
+   else
+      fIter = TU->noload_decls_begin();
+
    InternalNext();
    fFirstTime = true;
    // CINT had this odd behavior where a ClassInfo created without any
@@ -97,8 +102,8 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
-     fTitle(""), fOffsetCache(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE), fDecl(0),
+     fType(0), fTitle(""), fOffsetCache(0)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const Type *type = 0;
@@ -127,8 +132,8 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Type &tag)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
-     fTitle(""), fOffsetCache(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
+     fDecl(0), fType(0), fTitle(""), fOffsetCache(0)
 {
    Init(tag);
 }
@@ -874,7 +879,10 @@ int TClingClassInfo::InternalNext()
             //   "pushing ...\n");
             fIterStack.push_back(fIter);
             DeclContext *DC = llvm::cast<DeclContext>(*fIter);
-            fIter = DC->decls_begin();
+            if (fIterAll)
+               fIter = DC->decls_begin();
+            else
+               fIter = DC->noload_decls_begin();
          }
          // Fix it if we went past the end.
          while (!*fIter && fIterStack.size()) {
@@ -914,7 +922,8 @@ int TClingClassInfo::InternalNext()
          if (DK != Decl::Enum) {
             // We do not descend into enums.
             DeclContext *DC = llvm::cast<DeclContext>(*fIter);
-            if (*DC->decls_begin()) {
+            if ((fIterAll && *DC->decls_begin())
+                || (!fIterAll && *DC->noload_decls_begin())) {
                // Next iteration will begin scanning the decl context
                // contained by this decl.
                fDescend = true;
