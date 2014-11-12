@@ -219,7 +219,7 @@ typedef std::atomic<TClass*> atomic_TClass_ptr;
 // Common part of ClassDef definition.
 // DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
-#define _ClassDef_(name,id) \
+#define _ClassDef_(name,id, overrd)                    \
 private: \
    static atomic_TClass_ptr fgIsA; \
 public: \
@@ -227,9 +227,9 @@ public: \
    static const char *Class_Name(); \
    static Version_t Class_Version() { return id; } \
    static TClass *Dictionary(); \
-   virtual TClass *IsA() const { return name::Class(); } \
-   virtual void ShowMembers(TMemberInspector&insp) const { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
-   virtual void Streamer(TBuffer&); \
+   virtual TClass *IsA() const overrd { return name::Class(); } \
+   virtual void ShowMembers(TMemberInspector&insp) const overrd { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
+   virtual void Streamer(TBuffer&) overrd; \
    void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
    static const char *DeclFileName() { return __FILE__; } \
    static int ImplFileLine(); \
@@ -269,8 +269,12 @@ public: \
 
 #if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__)
 
-#define ClassDef(name,id) \
-   _ClassDef_(name,id) \
+#define ClassDef(name,id)                      \
+   _ClassDef_(name,id,)                        \
+   static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefOverride(name,id) \
+   _ClassDef_(name,id,override)   \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefNV(name,id) \
@@ -280,7 +284,11 @@ public: \
 #else
 
 #define ClassDef(name,id) \
-   _ClassDef_(name,id) \
+   _ClassDef_(name,id,)   \
+   static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefOverride(name,id) \
+   _ClassDef_(name,id,override)   \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefNV(name,id) \
