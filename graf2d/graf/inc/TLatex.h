@@ -97,6 +97,8 @@ protected:
 
       TLatexFormSize FirstParse(Double_t angle, Double_t size, const Char_t *text);
 
+      Int_t PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
+
       void Savefs(TLatexFormSize *fs);
       TLatexFormSize Readfs();
 

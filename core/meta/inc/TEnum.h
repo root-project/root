@@ -44,6 +44,7 @@ private:
    THashList fConstantList;     //list of constants the enum type
    void     *fInfo;             //!interpreter implementation provided declaration
    TClass   *fClass;            //!owning class
+   std::string fQualName;       // fully qualified type name
 
 public:
 
@@ -76,6 +77,7 @@ public:
       fClass = cl;
    }
    void                  Update(DeclId_t id);
+   const char*           GetQualifiedName() const { return fQualName.c_str(); }
    static TEnum         *GetEnum(const std::type_info &ti, ESearchAction sa = kALoadAndInterpLookup);
    static TEnum         *GetEnum(const char *enumName, ESearchAction sa = kALoadAndInterpLookup);
 

@@ -1,3 +1,13 @@
+#include "TMaterial.h"
+#include "TMixture.h"
+#include "TNode.h"
+#include "TGeometry.h"
+#include "TRotMatrix.h"
+#include "TBenchmark.h"
+#include "TBRIK.h"
+#include "TTRAP.h"
+#include "TTUBE.h"
+
 void na49() {
 //
 //  This file has been generated automatically via the root

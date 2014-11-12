@@ -38,5 +38,9 @@ if(test_list)
 endif()
 
 foreach(d ${test_list})
-  add_subdirectory(${d})
+  if(d STREQUAL tutorials)
+    add_subdirectory(${d} runtutorials)  # to avoid clashes with the tutorial sources copied to binary tree
+  else()
+    add_subdirectory(${d})
+  endif()
 endforeach()

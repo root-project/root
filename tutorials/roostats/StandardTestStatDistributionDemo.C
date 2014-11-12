@@ -44,6 +44,9 @@ using namespace RooFit;
 using namespace RooStats;
 
 
+bool useProof = false;  // flag to control whether to use Proof
+int nworkers = 0;   // number of workers (default use all available cores)
+
 /////////////////////////////////////////////////////////////////////////
 // The actual macro
 
@@ -162,9 +165,11 @@ void StandardTestStatDistributionDemo(const char* infile = "",
   firstPOI->setVal(plcUpperLimit); // set POI value for generation
   sampler.SetParametersForTestStat(*mc->GetParametersOfInterest()); // set POI value for evaluation
 
-  ProofConfig pc(*w, 4, "workers=4",false);
-  sampler.SetProofConfig(&pc); // enable proof
-
+  if (useProof) { 
+     ProofConfig pc(*w, nworkers, "",false);
+     sampler.SetProofConfig(&pc); // enable proof
+  }
+     
   firstPOI->setVal(plcUpperLimit);
   RooArgSet allParameters;
   allParameters.add(*mc->GetParametersOfInterest());

@@ -13,13 +13,9 @@ void hsimpleReader() {
    TH1F *myHist = new TH1F("h1","ntuple",100,-4,4);
 
    // Open the file containing the tree.
-   TFile *myFile = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
+   TFile *myFile = TFile::Open("hsimple.root");
    if (!myFile || myFile->IsZombie()) {
-      gROOT->ProcessLine(".x $ROOTSYS/tutorials/hsimple.C");
-      myFile = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
-      if (!myFile || myFile->IsZombie()) {
-         return;
-      }
+      return;
    }
    // Create a TTreeReader for the tree, for instance by passing the
    // TTree's name and the TDirectory / TFile it is in.

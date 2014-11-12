@@ -9,7 +9,6 @@ ROOT_USE_PACKAGE(io/io)
 ROOT_GLOB_HEADERS(headers inc/*.h)
 list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDefAFS.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDefRoot.h
-                         ${CMAKE_CURRENT_SOURCE_DIR}/inc/DaemonUtils.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/AFSAuth.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/AFSAuthTypes.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/TAFS.h)

@@ -10,3 +10,9 @@
 - The hollow fill style was not rendered correctly.
   (see https://sft.its.cern.ch/jira/browse/ROOT-6841)
 - Better line width matching with screen and pdf output.
+
+### TLatex
+
+With the Cocoa backend the PDF and PS output produced miss-aligned exponents
+because the `GetTextExtend` method behaved differently in batch mode and "screen"
+mode. This is now fixed. See http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=18883

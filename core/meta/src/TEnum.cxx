@@ -41,6 +41,17 @@ TEnum::TEnum(const char *name, void *info, TClass *cls)
    if (cls) {
       fConstantList.SetOwner(kTRUE);
    }
+
+   // Determine fQualName
+   if (0 != strcmp("",GetTitle())){ // It comes from a protoclass
+      fQualName = std::string(GetTitle()) + "::" + GetName();
+   }
+   else if (GetClass()){ // It comes from a class/ns
+      fQualName = std::string(GetClass()->GetName()) + "::" + GetName();
+   }
+   else { // it is in the global scope
+      fQualName = GetName();
+   }
 }
 
 //______________________________________________________________________________
@@ -158,7 +169,21 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       }
 
       if (auto tClassScope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
-         theEnum = findEnumInList(tClassScope->GetListOfEnums(sa_local & kInterpLookup), enName, sa_local);
+         // If this is a class, load only if the user allowed interpreter lookup
+         // If this is a namespace and the user did not allow for interpreter lookup, load but before disable
+         // autoparsing if enabled.
+         bool canLoadEnums (sa_local & kInterpLookup);
+         const bool scopeIsNamespace (tClassScope->Property() & kIsNamespace);
+         const bool oldAutoparseVal = gInterpreter->SetClassAutoparsing(true);
+         if (!oldAutoparseVal) gInterpreter->SetClassAutoparsing(oldAutoparseVal);
+         if (scopeIsNamespace && oldAutoparseVal){
+            gInterpreter->SetClassAutoparsing(false);
+            canLoadEnums=true;
+         }
+         auto listOfEnums = tClassScope->GetListOfEnums(canLoadEnums);
+         gInterpreter->SetClassAutoparsing(oldAutoparseVal);
+
+         theEnum = findEnumInList(listOfEnums, enName, sa_local);
       }
       // Check if the scope is still a protoclass
       else if (auto tProtoClassscope = static_cast<TProtoClass *>((gClassTable->GetProtoNorm(scopeName)))) {

@@ -34,15 +34,9 @@
                               // optimized to exclude too-many points
       'AutoStat' : true,
       'OptStat' : 1111,
-      'StatX' : 0.78,
-      'StatY' : 0.75,
-      'StatW' : 0.2,
-      'StatH' : 0.16,
-      'StatColor' : 0,
-      'StatStyle' : 1001,
-      'StatFont' : 42,
-      'StatFontSize' : 9,
-      'StatTextColor' : 1,
+      'StatNDC' : { fX1NDC : 0.78, fY1NDC: 0.75, fX2NDC: 0.98, fY2NDC: 0.91 },
+      'StatText': { fTextAngle: 0, fTextSize: 9, fTextAlign: 12, fTextColor: 1, fTextFont: 42 },
+      'StatFill': { fFillColor: 0, fFillStyle: 1001 },
       'TimeOffset' : 788918400000, // UTC time at 01/01/95
       'StatFormat' : function(v) { return (Math.abs(v) < 1e5) ? v.toFixed(5) : v.toExponential(7); },
       'StatEntriesFormat' : function(v) { return (Math.abs(v) < 1e7) ? v.toFixed(0) : v.toExponential(7); }
@@ -337,6 +331,8 @@
       // create fill pattern - only if they don't exists yet
 
       if ((pattern == 0) || (color == 0)) return "none";
+      if ((pattern >= 4000) && (pattern <= 4100)) return "none";
+
       if ((pattern < 3000) || (pattern>3025)) return JSROOT.Painter.root_colors[color];
 
       var id = "pat" + pattern + "_" + color;
@@ -1468,12 +1464,10 @@
          }
       }
 
-      if (ymax > 0.0)
-         ymax *= 1.05;
-      if (ymin < 0.0)
-         ymin *= 1.05;
+      if (ymax > 0.0) ymax *= 1.05;
+      if (ymin < 0.0) ymin *= 1.05;
 
-      var histo = JSROOT.CreateTH1();
+      var histo = JSROOT.Create("TH1I");
 
       histo['fName'] = this.tf1['fName'] + "_hist";
       histo['fTitle'] = this.tf1['fTitle'];
@@ -1738,7 +1732,10 @@
    JSROOT.TGraphPainter.prototype.CreateBins = function() {
       var pthis = this;
 
-      this.bins = d3.range(this.graph['fNpoints']).map(
+      var npoints = this.graph['fNpoints'];
+      if ((this.graph._typename=="TCutG") && (npoints>3)) npoints--;
+
+      this.bins = d3.range(npoints).map(
             function(p) {
                if (pthis.optionBar == 1) {
                   return {
@@ -2024,8 +2021,6 @@
 
       this.RecreateDrawG();
 
-      delete this.draw_bins; // delete draw bins (used for markers and errors)
-
       var pthis = this;
 
       function TooltipText(d) {
@@ -2088,29 +2083,28 @@
                    .style("fill", pthis.excl_ec);
          }
       }
+
       if (this.seriesType == 'line') {
 
-         if ((this.optionLine == 1) && (this.optionFill == 0)) {
-            var polyline = "";
-            for (var i in this.bins)
-               polyline += " " + Math.round(x(this.bins[i].x)) + "," + Math.round(y(this.bins[i].y));
+         var close_symbol = "";
+         if (this.graph._typename=="TCutG") close_symbol = " Z";
 
-            this.draw_g.append("polyline")
-                       .attr("class", "draw_line")
-                       .attr("points", polyline)
-                       .style("stroke", JSROOT.Painter.root_colors[pthis.graph['fLineColor']])
-                       .style("stroke-width", pthis.bins_lw)
-                       .style("stroke-dasharray", JSROOT.Painter.root_line_styles[pthis.graph['fLineStyle']])
-                       .style("fill", "none").style("fill-opacity", "none");
-         } else {
-            this.draw_g.append("svg:path")
-                  .attr("d", line(pthis.bins))
-                  .attr("class", "draw_line")
-                  .style("stroke", (pthis.optionLine == 1) ? JSROOT.Painter.root_colors[pthis.graph['fLineColor']] : "none")
-                  .style("stroke-width", pthis.bins_lw)
-                  .style("stroke-dasharray", JSROOT.Painter.root_line_styles[pthis.graph['fLineStyle']])
-                  .style("fill", (pthis.optionFill == 1) ? JSROOT.Painter.root_colors[pthis.graph['fFillColor']] : "none");
+         var line_color = "none", line_style = "none", fill_color = "none";
+
+         if (this.optionLine == 1) {
+            line_color = JSROOT.Painter.root_colors[this.graph['fLineColor']];
+            line_style = JSROOT.Painter.root_line_styles[this.graph['fLineStyle']];
          }
+         if (this.optionFill == 1)
+            fill_color = JSROOT.Painter.createFillPattern(this.svg_canvas(true), this.graph['fFillStyle'], this.graph['fFillColor']);
+
+         this.draw_g.append("svg:path")
+               .attr("d", line(pthis.bins) + close_symbol)
+               .attr("class", "draw_line")
+               .style("stroke", line_color)
+               .style("stroke-width", pthis.bins_lw)
+               .style("stroke-dasharray", line_style)
+               .style("fill", fill_color);
 
          // do not add tooltip for line, when we wants to add markers
          if (JSROOT.gStyle.Tooltip && !this.showMarker)
@@ -2123,7 +2117,6 @@
                        .attr("opacity", 0)
                        .append("svg:title")
                        .text(TooltipText);
-
       }
 
       if (this.draw_errors)
@@ -2313,6 +2306,7 @@
           h = Number(this.svg_pad(true).attr("height"));
 
       var pos_x = Math.round(pavetext['fX1NDC'] * w);
+
       var pos_y = Math.round((1.0 - pavetext['fY1NDC']) * h);
       var width = Math.round(Math.abs(pavetext['fX2NDC'] - pavetext['fX1NDC']) * w);
       var height = Math.round(Math.abs(pavetext['fY2NDC'] - pavetext['fY1NDC']) * h);
@@ -2355,40 +2349,17 @@
 
       var pthis = this;
 
-      if (this.main_rect == null) {
+      if (this.main_rect == null)
          this.main_rect = this.svg_pad(true).append("rect");
-      } else {
-         // force main rect of the stat box be last item in the primitives to
-         // kept it on the top - for instance when colz is created
-         JSROOT.Painter.moveChildToEnd(this.main_rect);
-      }
 
       this.main_rect
              .attr("x", pos_x)
              .attr("y", pos_y)
-             .attr("height", height)
              .attr("width", width)
+             .attr("height", height)
              .attr("fill", fcolor)
              .style("stroke-width", lwidth ? 1 : 0)
              .style("stroke", lcolor);
-
-      this.AddDrag("stat", this.main_rect, {
-         move : function(x, y, dx, dy) {
-            pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
-
-            pthis.pavetext['fX1NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
-            pthis.pavetext['fX2NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
-            pthis.pavetext['fY1NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
-            pthis.pavetext['fY2NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
-         },
-         resize : function(width, height) {
-            pthis.pavetext['fX2NDC'] = pthis.pavetext['fX1NDC'] + width  / Number(pthis.svg_pad(true).attr("width"));
-            pthis.pavetext['fY1NDC'] = pthis.pavetext['fY2NDC'] - height / Number(pthis.svg_pad(true).attr("height"));
-
-            pthis.DrawPaveText();
-         }
-      });
-
 
       // container used to recalculate coordinates
       this.RecreateDrawG(true);
@@ -2542,6 +2513,28 @@
                     .style("stroke", lcolor)
                     .style("stroke-width", lwidth);
       }
+
+      // force main rect of the stat box be last item in the primitives to
+      // kept it on the top - for instance when colz is created
+      JSROOT.Painter.moveChildToEnd(this.main_rect);
+      JSROOT.Painter.moveChildToEnd(this.draw_g);
+
+      this.AddDrag("stat", this.main_rect, {
+         move : function(x, y, dx, dy) {
+            pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
+
+            pthis.pavetext['fX1NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
+            pthis.pavetext['fX2NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
+            pthis.pavetext['fY1NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
+            pthis.pavetext['fY2NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
+         },
+         resize : function(width, height) {
+            pthis.pavetext['fX2NDC'] = pthis.pavetext['fX1NDC'] + width  / Number(pthis.svg_pad(true).attr("width"));
+            pthis.pavetext['fY1NDC'] = pthis.pavetext['fY2NDC'] - height / Number(pthis.svg_pad(true).attr("height"));
+
+            pthis.DrawPaveText();
+         }
+      });
    }
 
    JSROOT.TPavePainter.prototype.AddLine = function(txt) {
@@ -2662,7 +2655,7 @@
           .append("svg")
           .attr("class", "root_canvas")
           .style("background-color", fillcolor)
-          .attr("pointer-events", "all")
+          // .attr("pointer-events", "all")   // comment out while it hides mouse events
           .property('pad_painter', this) // this is custom property
           .property('mainpainter', null) // this is custom property
           .property('current_pad', "") // this is custom property
@@ -4033,12 +4026,11 @@
          painter.pavetext.AddText(this.histo['fTitle']);
       } else {
 
-         var pavetext = JSROOT.CreateTPaveText();
-         pavetext["fName"] = "title";
-         pavetext["fX1NDC"] = 0.2809483;
-         pavetext["fY1NDC"] = 0.9339831;
-         pavetext["fX2NDC"] = 0.7190517;
-         pavetext["fY2NDC"] = 0.995;
+         var pavetext = JSROOT.Create("TPaveText");
+
+         jQuery.extend(pavetext, { fName: "title",
+                                   fX1NDC: 0.2809483, fY1NDC: 0.9339831,
+                                   fX2NDC: 0.7190517, fY2NDC: 0.995});
          pavetext.AddText(this.histo['fTitle']);
 
          painter = JSROOT.Painter.drawPaveText(this.divid, pavetext);
@@ -4133,57 +4125,22 @@
       if (!this.draw_content) return null;
       if (this.FindStat() != null) return null;
 
-      var stats = {};
-      stats['_typename'] = 'TPaveStats';
-      stats['fName'] = 'stats';
+      var stats = JSROOT.Create('TPaveStats');
+      jQuery.extend(stats, { _AutoCreated: true,
+                             fName : 'stats',
+                             fOptStat: JSROOT.gStyle.OptStat,
+                             fBorderSize : 1} );
+      jQuery.extend(stats, JSROOT.gStyle.StatNDC);
+      jQuery.extend(stats, JSROOT.gStyle.StatText);
+      jQuery.extend(stats, JSROOT.gStyle.StatFill);
 
-      stats['_AutoCreated'] = true;
-      stats['fX1NDC'] = JSROOT.gStyle.StatX;
-      stats['fY1NDC'] = JSROOT.gStyle.StatY;
-      stats['fX2NDC'] = JSROOT.gStyle.StatX + JSROOT.gStyle.StatW;
-      stats['fY2NDC'] = JSROOT.gStyle.StatY + JSROOT.gStyle.StatH;
       if (this.histo['_typename'] && (this.histo['_typename'].match(/^TProfile/) || this.histo['_typename'].match(/^TH2/)))
          stats['fY1NDC'] = 0.67;
-
-      stats['fOptFit'] = 0;
-      stats['fOptStat'] = JSROOT.gStyle.OptStat;
-      stats['fLongest'] = 17;
-      stats['fMargin'] = 0.05;
-
-      stats['fBorderSize'] = 1;
-      stats['fInit'] = 1;
-      stats['fShadowColor'] = 1;
-      stats['fCornerRadius'] = 0;
-
-      stats['fX1'] = 1;
-      stats['fY1'] = 100;
-      stats['fX2'] = 1;
-      stats['fY2'] = 100;
-
-      stats['fResizing'] = false;
-      stats['fUniqueID'] = 0;
-      stats['fBits'] = 0x03000009;
-      stats['fLineColor'] = 1;
-      stats['fLineStyle'] = 1;
-      stats['fLineWidth'] = 1;
-
-      stats['fFillColor'] = JSROOT.gStyle.StatColor;
-      stats['fFillStyle'] = JSROOT.gStyle.StatStyle;
-
-      stats['fTextAngle'] = 0;
-      stats['fTextSize'] = JSROOT.gStyle.StatFontSize;
-      stats['fTextAlign'] = 12;
-      stats['fTextColor'] = JSROOT.gStyle.StatTextColor;
-      stats['fTextFont'] = JSROOT.gStyle.StatFont;
-
-      stats['fLines'] = JSROOT.CreateTList();
-
-      JSROOT.addMethods(stats);
 
       stats.AddText(this.histo['fName']);
 
       if (!'fFunctions' in this.histo)
-         this.histo['fFunctions'] = JSROOT.CreateTList();
+         this.histo['fFunctions'] = JSROOT.Create("TList");
 
       this.histo.fFunctions.arr.push(stats);
 
@@ -4289,7 +4246,6 @@
 
       if (isany) this.RedrawPad();
    }
-
 
    JSROOT.THistPainter.prototype.AddInteractive = function() {
       // only first painter in list allowed to add interactive functionality to the main pad
@@ -5409,7 +5365,7 @@
       pal['fAxis'] = axis;
 
       if (!'fFunctions' in this.histo)
-         this.histo['fFunctions'] = JSROOT.CreateTList();
+         this.histo['fFunctions'] = JSROOT.Create("TList");
 
       // place colz in the beginning, that stat box is always drawn on the top
       this.histo.fFunctions.arr.unshift(pal);
@@ -5544,7 +5500,6 @@
             }
          }
       }
-      this.maxbin *= 1.05;
    }
 
    JSROOT.TH2Painter.prototype.FillStatistic = function(stat, dostat) {
@@ -5664,7 +5619,7 @@
          yfactor = 0.5 * h / (j2 - j1) / (this.maxbin - this.minbin);
       }
 
-      var x1, y1, x2, y2, grx1, gry1, grx2, gry2, fillcol, shrx, shry, binz, point;
+      var x1, y1, x2, y2, grx1, gry1, grx2, gry2, fillcol, shrx, shry, binz, point, wx ,wy;
 
       var local_bins = new Array;
 
@@ -5695,10 +5650,10 @@
             switch (coordinates_kind) {
             case 0:
                point = {
-                  x : Math.round(grx1),
-                  y : Math.round(gry2),
-                  width : Math.round(grx2) - Math.round(grx1) + 1,
-                  height : Math.round(gry1) - Math.round(gry2) + 1,
+                  x : grx1,
+                  y : gry2,
+                  width : grx2 - grx1 + 1,  // +1 to fill gaps between colored bins
+                  height : gry1 - gry2 + 1,
                   stroke : "none",
                   fill : this.getValueColor(binz)
                }
@@ -5709,10 +5664,10 @@
                shrx = xfactor * (this.maxbin - binz);
                shry = yfactor * (this.maxbin - binz);
                point = {
-                  x : Math.round(grx1 + shrx),
-                  y : Math.round(gry2 + shry),
-                  width : Math.round(grx2 - grx1 - 2 * shrx),
-                  height : Math.round(gry1 - gry2 - 2 * shry),
+                  x : grx1 + shrx,
+                  y : gry2 + shry,
+                  width : grx2 - grx1 - 2 * shrx,
+                  height : gry1 - gry2 - 2 * shry,
                   stroke : this.linecolor,
                   fill : this.fillcolor
                }
@@ -5729,13 +5684,13 @@
             }
 
             if (tipkind == 1)
-               point['tip'] = "x = [" + this.AxisAsText("x", x1) + ", "
-                     + this.AxisAsText("x", x2) + "]\n" + "y = ["
-                     + this.AxisAsText("y", y1) + ", "
-                     + this.AxisAsText("y", y2) + "]\n" + "entries = " + binz;
+               point['tip'] = "x = [" + this.AxisAsText("x", x1) + ", " + this.AxisAsText("x", x2) + "]\n" +
+                              "y = [" + this.AxisAsText("y", y1) + ", " + this.AxisAsText("y", y2) + "]\n" +
+                              "entries = " + binz;
             else if (tipkind == 2)
-               point['tip'] = "x = " + this.AxisAsText("x", x1) + "\n" + "y = "
-                     + this.AxisAsText("y", y1) + "\n" + "entries = " + binz;
+               point['tip'] = "x = " + this.AxisAsText("x", x1) + "\n" +
+                              "y = " + this.AxisAsText("y", y1) + "\n" +
+                              "entries = " + binz;
 
             local_bins.push(point);
          }
@@ -5797,7 +5752,7 @@
                   .data(local_bins)
                   .enter().append("svg:path")
                   .attr("class", "marker")
-                  .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" })
+                  .attr("transform", function(d) { return "translate(" + d.x.toFixed(1) + "," + d.y.toFixed(1) + ")" })
                   .style("fill", JSROOT.Painter.root_colors[this.histo['fMarkerColor']])
                   .style("stroke", JSROOT.Painter.root_colors[this.histo['fMarkerColor']])
                   .attr("d", marker);
@@ -5809,10 +5764,10 @@
                            .data(local_bins).enter()
                            .append("svg:rect")
                            .attr("class", "bins")
-                           .attr("x", function(d) { return d.x; })
-                           .attr("y", function(d) { return d.y; })
-                           .attr("width", function(d) { return d.width; })
-                           .attr("height", function(d) { return d.height; })
+                           .attr("x", function(d) { return d.x.toFixed(1); })
+                           .attr("y", function(d) { return d.y.toFixed(1); })
+                           .attr("width", function(d) { return d.width.toFixed(1); })
+                           .attr("height", function(d) { return d.height.toFixed(1); })
                            .style("stroke", function(d) { return d.stroke; })
                            .style("fill", function(d) {
                                this['f0'] = d.fill;
@@ -5978,7 +5933,7 @@
          themin = this.stack['fMinimum'];
       if (!('fHistogram' in this.stack)) {
          h = this.stack['fHists'].arr[0];
-         this.stack['fHistogram'] = JSROOT.CreateTH1();
+         this.stack['fHistogram'] = JSROOT.Create("TH1I");
          this.stack['fHistogram']['fName'] = "unnamed";
          this.stack['fHistogram']['fXaxis'] = JSROOT.clone(h['fXaxis']);
          this.stack['fHistogram']['fYaxis'] = JSROOT.clone(h['fYaxis']);
@@ -6453,17 +6408,12 @@
       }
       if (uxmax > 0 && rwxmax <= 0) {
          if (logx) uxmax = 1.1 * rwxmax;
-         // else uxmax = 0;
       }
       if (minimum < 0 && rwymin >= 0) {
-         if (logy)
-            minimum = 0.9 * rwymin;
-         // else minimum = 0;
+         if (logy) minimum = 0.9 * rwymin;
       }
       if (maximum > 0 && rwymax <= 0) {
-         if (logy)
-            maximum = 1.1 * rwymax;
-         // else maximum = 0;
+         if (logy) maximum = 1.1 * rwymax;
       }
       if (minimum <= 0 && logy)
          minimum = 0.001 * maximum;
@@ -6482,7 +6432,7 @@
 
       // Create a temporary histogram to draw the axis (if necessary)
       if (!histo) {
-         histo = JSROOT.CreateTH1();
+         histo = JSROOT.Create("TH1I");
          histo['fXaxis']['fXmin'] = rwxmin;
          histo['fXaxis']['fXmax'] = rwxmax;
          histo['fYaxis']['fXmin'] = rwymin;
@@ -6500,12 +6450,9 @@
    }
 
    JSROOT.Painter.drawMultiGraph = function(divid, mgraph, opt) {
-
       var painter = new JSROOT.TMultiGraphPainter(mgraph);
       painter.SetDivId(divid);
       painter.drawMultiGraph(opt);
-
-
       return painter;
    }
 
@@ -7004,7 +6951,7 @@
       } else if (kind == "ROOT.TProfile") {
          cando.img1 = JSROOT.source_dir + 'img/profile.png';
          cando.display = true;
-      } else if (kind.match(/^ROOT.TGraph/)) {
+      } else if (kind.match(/^ROOT.TGraph/) || (kind=="TCutG")) {
          cando.img1 = JSROOT.source_dir + 'img/graph.png';
          cando.display = true;
       } else if (kind == "ROOT.TF1") {
@@ -7447,31 +7394,27 @@
       }
    }
 
-   JSROOT.HierarchyPainter.prototype.OpenOnline = function(server_address,
-         user_callback) {
-      if (!server_address)
-         server_address = "";
+   JSROOT.HierarchyPainter.prototype.OpenOnline = function(server_address, user_callback) {
+      if (!server_address) server_address = "";
 
       var painter = this;
 
-      var req = JSROOT.NewHttpRequest(server_address + "h.json?compact=3",
-            'object', function(result) {
-               painter.h = result;
-               if (painter.h == null)
-                  return;
+      var req = JSROOT.NewHttpRequest(server_address + "h.json?compact=3", 'object', function(result) {
+         painter.h = result;
+         if (painter.h == null) return;
 
-               // mark top hierarchy as online data and
-               painter.h['_online'] = server_address;
+         // mark top hierarchy as online data and
+         painter.h['_online'] = server_address;
 
-               painter.AddOnlineMethods(painter.h);
+         painter.AddOnlineMethods(painter.h);
 
-               if (painter.h != null)
-                  painter.RefreshHtml(true);
+         if (painter.h != null)
+            painter.RefreshHtml(true);
 
-               if (typeof user_callback == 'function')
-                  user_callback(painter);
+         if (typeof user_callback == 'function')
+            user_callback(painter);
 
-            });
+      });
 
       req.send(null);
    }
@@ -8102,6 +8045,7 @@
    JSROOT.addDrawFunc("TFrame", JSROOT.Painter.drawFrame);
    JSROOT.addDrawFunc("TLegend", JSROOT.Painter.drawLegend);
    JSROOT.addDrawFunc("TPaveText", JSROOT.Painter.drawPaveText);
+   JSROOT.addDrawFunc("TPaveStats", JSROOT.Painter.drawPaveText);
    JSROOT.addDrawFunc("TLatex", JSROOT.Painter.drawText);
    JSROOT.addDrawFunc("TText", JSROOT.Painter.drawText);
    JSROOT.addDrawFunc("TPaveLabel", JSROOT.Painter.drawText);
@@ -8112,6 +8056,7 @@
    JSROOT.addDrawFunc("THStack", JSROOT.Painter.drawHStack);
    JSROOT.addDrawFunc("TF1", JSROOT.Painter.drawFunction);
    JSROOT.addDrawFunc(/^TGraph/, JSROOT.Painter.drawGraph);
+   JSROOT.addDrawFunc("TCutG", JSROOT.Painter.drawGraph);
    JSROOT.addDrawFunc(/^RooHist/, JSROOT.Painter.drawGraph);
    JSROOT.addDrawFunc(/^RooCurve/, JSROOT.Painter.drawGraph);
    JSROOT.addDrawFunc("TMultiGraph", JSROOT.Painter.drawMultiGraph);
@@ -8141,8 +8086,6 @@
       if ((typeof obj != 'object') || (!('_typename' in obj))) return null;
 
       var draw_func = JSROOT.getDrawFunc(obj['_typename']);
-
-//      console.log("Drawing " + obj['_typename']);
 
       if (draw_func==null) return null;
 
