@@ -132,11 +132,11 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SY
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
-  add_custom_target(hsimple ALL DEPENDS hsimple.root)
+  add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
   add_dependencies(hsimple onepcm)
   ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
-  add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe DEPENDS Cling)
-  install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+  add_custom_command(OUTPUT tutorials/hsimple.root COMMAND hsimple.exe WORKING_DIRECTORY tutorials DEPENDS Cling)
+  install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 endif()
 
 #---version--------------------------------------------------------------------------------------
