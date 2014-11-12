@@ -337,6 +337,8 @@
       // create fill pattern - only if they don't exists yet
 
       if ((pattern == 0) || (color == 0)) return "none";
+      if ((pattern >= 4000) && (pattern <= 4100)) return "none";
+
       if ((pattern < 3000) || (pattern>3025)) return JSROOT.Painter.root_colors[color];
 
       var id = "pat" + pattern + "_" + color;
@@ -1737,8 +1739,11 @@
 
    JSROOT.TGraphPainter.prototype.CreateBins = function() {
       var pthis = this;
-
-      this.bins = d3.range(this.graph['fNpoints']).map(
+      
+      var npoints = this.graph['fNpoints'];
+      if ((this.graph._typename=="TCutG") && (npoints>3)) npoints--;
+      
+      this.bins = d3.range(npoints).map(
             function(p) {
                if (pthis.optionBar == 1) {
                   return {
@@ -2024,8 +2029,6 @@
 
       this.RecreateDrawG();
 
-      delete this.draw_bins; // delete draw bins (used for markers and errors)
-
       var pthis = this;
 
       function TooltipText(d) {
@@ -2088,16 +2091,28 @@
                    .style("fill", pthis.excl_ec);
          }
       }
-
+      
       if (this.seriesType == 'line') {
+         
+         var close_symbol = "";
+         if (this.graph._typename=="TCutG") close_symbol = " Z"; 
+         
+         var line_color = "none", line_style = "none", fill_color = "none";  
+         
+         if (this.optionLine == 1) {
+            line_color = JSROOT.Painter.root_colors[this.graph['fLineColor']]; 
+            line_style = JSROOT.Painter.root_line_styles[this.graph['fLineStyle']];
+         }
+         if (this.optionFill == 1)
+            fill_color = JSROOT.Painter.createFillPattern(this.svg_canvas(true), this.graph['fFillStyle'], this.graph['fFillColor']);
 
          this.draw_g.append("svg:path")
-               .attr("d", line(pthis.bins))
+               .attr("d", line(pthis.bins) + close_symbol)
                .attr("class", "draw_line")
-               .style("stroke", (pthis.optionLine == 1) ? JSROOT.Painter.root_colors[pthis.graph['fLineColor']] : "none")
+               .style("stroke", line_color)
                .style("stroke-width", pthis.bins_lw)
-               .style("stroke-dasharray", JSROOT.Painter.root_line_styles[pthis.graph['fLineStyle']])
-               .style("fill", (pthis.optionFill == 1) ? JSROOT.Painter.root_colors[pthis.graph['fFillColor']] : "none");
+               .style("stroke-dasharray", line_style)
+               .style("fill", fill_color);
 
          // do not add tooltip for line, when we wants to add markers
          if (JSROOT.gStyle.Tooltip && !this.showMarker)
@@ -6987,7 +7002,7 @@
       } else if (kind == "ROOT.TProfile") {
          cando.img1 = JSROOT.source_dir + 'img/profile.png';
          cando.display = true;
-      } else if (kind.match(/^ROOT.TGraph/)) {
+      } else if (kind.match(/^ROOT.TGraph/) || (kind=="TCutG")) {
          cando.img1 = JSROOT.source_dir + 'img/graph.png';
          cando.display = true;
       } else if (kind == "ROOT.TF1") {
@@ -8091,6 +8106,7 @@
    JSROOT.addDrawFunc("THStack", JSROOT.Painter.drawHStack);
    JSROOT.addDrawFunc("TF1", JSROOT.Painter.drawFunction);
    JSROOT.addDrawFunc(/^TGraph/, JSROOT.Painter.drawGraph);
+   JSROOT.addDrawFunc("TCutG", JSROOT.Painter.drawGraph);
    JSROOT.addDrawFunc(/^RooHist/, JSROOT.Painter.drawGraph);
    JSROOT.addDrawFunc(/^RooCurve/, JSROOT.Painter.drawGraph);
    JSROOT.addDrawFunc("TMultiGraph", JSROOT.Painter.drawMultiGraph);
