@@ -1430,7 +1430,7 @@ void TCling::RegisterModule(const char* modulename,
       "#define __ROOTCLING__ 1\n"
       "#undef ClassDef\n"
       "#define ClassDef(name,id) \\\n"
-      "_ClassDef_(name,id) \\\n"
+      "_ClassDef_(name,id,) \\\n"
       "static int DeclFileLine() { return __LINE__; }\n";
    code += payloadCode;
 
