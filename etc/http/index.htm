@@ -9,7 +9,7 @@
       <script type="text/javascript" src="scripts/JSRootCore.js"></script>
    </head>
    <body onload="JSROOT.BuildSimpleGUI()">
-      <div id="simpleGUI" files="files/ct.root;files/exclusion.root;files/fillrandom.root;files/glbox.root;files/graph.root;files/hsimple.root;files/legends.root;files/rf107.root;files/stacks.root;files/zdemo.root">
+      <div id="simpleGUI" path="http://root.cern.ch/js/files/" files="ct.root;exclusion.root;fillrandom.root;glbox.root;graph.root;hsimple.root;legends.root;rf107.root;stacks.root;zdemo.root">
          loading scripts ...
       </div>
    </body>
@@ -19,15 +19,16 @@
 
 This is main page of JSROOT project, which aims to display content of ROOT files.
 Several parameters could be specified when opening page:
-  file - name of the file, which will be automatically open with page loading
-  item - object name in the file to display
-  opt  - draw option for the item
-  items - array of objects to display like ['hpx;1', 'hpxpy;1']
-  opts - array of options ['any', 'colz']
-  layout - can be 'collapsible', 'tabs' or gridNxM where N and M are integer values
-  nobrowser - only file item(s) will be displayed, browser will be disabled
+   file      - name of the file, which will be automatically open with page loading
+   item      - object name in the file to display
+   opt       - draw option for the item
+   items     - array of objects to display like ['hpx;1', 'hpxpy;1']
+   opts      - array of options ['any', 'colz']
+   layout    - can be 'collapsible', 'tabs' or gridNxM where N and M are integer values
+   nobrowser - only file item(s) will be displayed, browser will be disabled
+
 Example:
-   http://web-docs.gsi.de/~linev/js/3.0/index.htm?file=files/hsimple.root&layout=grid2x2&items=["hpx;1", "hpxpy;1"]&opts=["", "colz"]
+   http://root.cern.ch/js/3.0/?file=../files/hsimple.root&layout=grid2x2&items=["hpx;1", "hpxpy;1"]&opts=["", "colz"]
 
 Page can be used to open files from other web servers like:
 
@@ -38,7 +39,7 @@ Read https://developer.mozilla.org/en/http_access_control for more details.
 
 To avoid problem at all, one can copy only index.htm on the web server where data files are located.
 And specify full path to the JSRootCore.js script like
-   <script type="text/javascript" src="http://web-docs.gsi.de/~linev/js/3.0/scripts/JSRootCore.js"></script>
+   <script type="text/javascript" src="http://root.cern.ch/js/3.0/scripts/JSRootCore.js"></script>
 
 If necessary, complete JSROOT can be installed on the web server.
 Sources can be found in ROOT repository, etc/http/ subdirectory.

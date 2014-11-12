@@ -14,7 +14,8 @@ November 2014:
 5. Exclude drawing of markers from TGraph outside visible range
 6. Drawing of canvas without TFrame object
 7. Many other small bug fixes and improvements, thanks to Maximilian Dietrich
-
+8. Mark as JSROOT version 3
+9. Correctly show tooltips in case of overlapped objects
 
 October 2014:
 1. Add "shortcut icon"
