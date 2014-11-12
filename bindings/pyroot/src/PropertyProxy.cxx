@@ -14,6 +14,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TDataMember.h"
+#include "TEnumConstant.h"
 #include "TGlobal.h"
 #include "TDataType.h"
 #include "TClassEdit.h"
@@ -208,6 +209,19 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
       fEnclosingScope = NULL;    // namespaces
 
    fName      = dm->GetName();
+}
+
+//____________________________________________________________________________
+void PyROOT::PropertyProxy::Set( TEnumConstant* tec )
+{
+// initialize from <tec> info
+   fOffset    = (Long_t)tec->GetAddress();
+   fProperty  = tec->Property() | kIsStatic | kIsEnum;
+
+   fConverter = CreateConverter( "UInt_t", tec->GetMaxIndex( 0 ) );
+
+   fEnclosingScope = 0;            // no enclosure (global scope; maybe pretend)
+   fName      = tec->GetName();
 }
 
 //____________________________________________________________________________
