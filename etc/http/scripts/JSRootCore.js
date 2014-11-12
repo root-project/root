@@ -15,7 +15,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.1 dev 10/11/2014";
+   JSROOT.version = "3.1 dev 11/11/2014";
 
    JSROOT.source_dir = null;
 
@@ -453,160 +453,127 @@
          JSROOT.function_list.splice(pos, 1);
       }
       JSROOT.function_list.push(sig);
-   };
-
-   JSROOT.CreateTList = function() {
-      var list = {};
-      list['_typename'] = "TList";
-      list['name'] = "TList";
-      list['arr'] = new Array;
-      list['opt'] = new Array;
-      JSROOT.addMethods(list);
-      return list;
    }
 
-   JSROOT.CreateTAxis = function() {
-      var axis = {};
+   JSROOT.Create = function(typename, target) {
+      var obj = target;
+      if (obj == null)
+         obj = { _typename: typename };
 
-      axis['_typename'] = "TAxis";
-      axis['fBits'] = 0x3000008;
-      axis['fBits2'] = 0;
-      axis['fXmin'] = 0;
-      axis['fXmax'] = 0;
-      axis['fNbins'] = 0;
-      axis['fN'] = 0;
-      axis['fXbins'] = new Array;
-      axis['fFirst'] = 0;
-      axis['fLast'] = 0;
-      axis['fName'] = "";
-      axis['fTitle'] = "";
-      axis['fTimeDisplay'] = false;
-      axis['fTimeFormat'] = "";
-      axis['fNdivisions'] = 510;
-      axis['fAxisColor'] = 1;
-      axis['fLabelColor'] = 1;
-      axis['fLabelFont'] = 42;
-      axis['fLabelOffset']  = 0.05;
-      axis['fLabelSize']  = 0.035;
-      axis['fTickLength'] = 0.03;
-      axis['fTitleOffset'] = 1;
-      axis['fTitleSize']  = 0.035;
-      axis['fTitleColor'] = 1;
-      axis['fTitleFont'] = 42;
-      JSROOT.addMethods(axis);
-      return axis;
-   }
+      if (typename == 'TObject')
+         jQuery.extend(obj, { fUniqueID: 0, fBits: 0x3000008 });
+      else
+      if (typename == 'TNamed')
+         jQuery.extend(obj, { fUniqueID: 0, fBits: 0x3000008, fName: "", fTitle: "" });
+      else
+      if (typename == 'TList')
+         jQuery.extend(obj, { name: "TList", arr : [], opt : [] });
+      else
+      if (typename == 'TAttAxis') {
+         jQuery.extend(obj, { fNdivisions: 510, fAxisColor: 1,
+            fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.05, fLabelSize: 0.035, fTickLength: 0.03,
+            fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
+      } else
+      if (typename == 'TAxis') {
+         JSROOT.Create("TNamed", obj);
+         JSROOT.Create("TAttAxis", obj);
+         jQuery.extend(obj, { fNbins: 0, fXmin: 0, fXmax: 0, fXbins : [], fFirst: 0, fLast: 0,
+                              fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null });
+      } else
+      if (typename == 'TAttLine') {
+         jQuery.extend(obj, { fLineColor: 1, fLineStyle : 1, fLineWidth : 1 });
+      } else
+      if (typename == 'TAttFill') {
+         jQuery.extend(obj, { fFillColor: 0, fFillStyle : 0 } );
+      } else
+      if (typename == 'TAttMarker') {
+         jQuery.extend(obj, { fMarkerColor: 1, fMarkerStyle : 1, fMarkerSize : 1. });
+      } else
+      if (typename == 'TBox') {
+         JSROOT.Create("TObject", obj);
+         JSROOT.Create("TAttLine", obj);
+         JSROOT.Create("TAttFill", obj);
+         jQuery.extend(obj, { fX1: 0, fY1: 0, fX2: 1, fY2: 1 });
+      } else
+      if (typename == 'TPave') {
+         JSROOT.Create("TBox", obj);
+         jQuery.extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
+                              fBorderSize: 0, fInit: 1, fShadowColor: 1,
+                              fCornerRadius: 0, fOption: "blNDC", fName: "title" });
+      } else
+      if (typename == 'TAttText') {
+         jQuery.extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
+      } else
+      if (typename == 'TPaveText') {
+         JSROOT.Create("TPave", obj);
+         JSROOT.Create("TAttText", obj);
+         jQuery.extend(obj, { fLabel: "", fLongest: 27, fMargin: 0.05, fLines: JSROOT.Create("TList") });
+      } else
+      if (typename == 'TPaveStats') {
+         JSROOT.Create("TPaveText", obj);
+         jQuery.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
+      } else
+      if (typename == 'TH1') {
+         JSROOT.Create("TNamed", obj);
+         JSROOT.Create("TAttLine", obj);
+         JSROOT.Create("TAttFill", obj);
+         JSROOT.Create("TAttMarker", obj);
 
-   JSROOT.CreateTPaveText = function() {
-      var pave = {};
-      pave['_typename'] = "TPaveText";
-      pave['fUniqueID'] = 0;
-      pave["fBits"] = 50331657;
-      pave["fLineColor"] = 1;
-      pave["fLineStyle"] = 1;
-      pave["fLineWidth"] = 1;
-      pave["fFillColor"] = 0;
-      pave["fFillStyle"] = 0;
-      pave["fX1"] = 0;
-      pave["fY1"] = 0;
-      pave["fX2"] = 1;
-      pave["fY2"] = 1;
-      pave["fX1NDC"] = 0.2809483;
-      pave["fY1NDC"] = 0.9339831;
-      pave["fX2NDC"] = 0.7190517;
-      pave["fY2NDC"] = 0.995;
-      pave["fBorderSize"] =  0;
-      pave["fInit"] =  1;
-      pave["fShadowColor"] =  1;
-      pave["fCornerRadius"] = 0;
-      pave["fOption"] = "blNDC";
-      pave["fName"] = "title";
-      pave["fTextAngle"] =  0;
-      pave["fTextSize"] = 0;
-      pave["fTextAlign"] = 22;
-      pave["fTextColor"] = 1;
-      pave["fTextFont"] = 42;
-      pave["fLabel"] = "";
-      pave["fLongest"] = 27;
-      pave["fMargin"] = 0.05;
-      pave["fLines"] = JSROOT.CreateTList();
-      JSROOT.addMethods(pave);
-      return pave;
-   }
-
-   JSROOT.CreateTH1 = function(nbinsx) {
-      var histo = {};
-      histo['_typename'] = "TH1I";
-      histo['fBits'] = 0x3000008;
-      histo['fName'] = "dummy_histo_" + this.id_counter++;
-      histo['fTitle'] = "dummytitle";
-      histo['fMinimum'] = -1111;
-      histo['fMaximum'] = -1111;
-      histo['fOption'] = "";
-      histo['fFillColor'] = 0;
-      histo['fLineColor'] = 0;
-      histo['fLineWidth'] = 1;
-      histo['fBinStatErrOpt'] = 0;
-      histo['fNcells'] = 0;
-      histo['fN'] = 0;
-      histo['fArray'] = new Array;
-      histo['fSumw2'] = new Array;
-      histo['fFunctions'] = JSROOT.CreateTList();
-
-      histo['fXaxis'] = JSROOT.CreateTAxis();
-      histo['fYaxis'] = JSROOT.CreateTAxis();
-
-      if (nbinsx!=null) {
-         histo['fNcells'] = nbinsx+2;
-         for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
-         histo['fXaxis']['fNbins'] = nbinsx;
-         histo['fXaxis']['fXmin'] = 0;
-         histo['fXaxis']['fXmax'] = nbinsx;
+         jQuery.extend(obj, {
+            fNcells : 0,
+            fXaxis: JSROOT.Create("TAxis"),
+            fYaxis: JSROOT.Create("TAxis"),
+            fZaxis: JSROOT.Create("TAxis"),
+            fBarOffset : 0, fBarWidth : 1000, fEntries : 0.,
+            fTsumw : 0., fTsumw2 : 0., fTsumwx : 0., fTsumwx2 : 0.,
+            fMaximum : -1111., fMinimum : -1111, fNormFactor : 0., fContour : [],
+            fSumw2 : [], fOption : "",
+            fFunctions : JSROOT.Create("TList"),
+            fBufferSize : 0, fBuffer : [], fBinStatErrOpt : 0 });
+      } else
+      if (typename == 'TH1I' || typename == 'TH1F' || typename == 'TH1D' || typename == 'TH1S' || typename == 'TH1C') {
+         JSROOT.Create("TH1", obj);
+         jQuery.extend(obj, { fN : 0, fArray: [] });
+      } else
+      if (typename == 'TH2') {
+         JSROOT.Create("TH1", obj);
+         jQuery.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy : 0});
+      } else
+      if (typename == 'TH2I' || typename == 'TH2F' || typename == 'TH2D' || typename == 'TH2S' || typename == 'TH2C') {
+         JSROOT.Create("TH2", obj);
+         jQuery.extend(obj, { fN : 0, fArray: [] });
       }
 
-      JSROOT.addMethods(histo);
+      JSROOT.addMethods(obj, typename);
+      return obj;
+   }
 
+   // obsolete functions, can be removed by next JSROOT release
+   JSROOT.CreateTList = function() { return JSROOT.Create("TList"); }
+   JSROOT.CreateTAxis = function() { return JSROOT.Create("TAxis"); }
+
+   JSROOT.CreateTH1 = function(nbinsx) {
+      var histo = JSROOT.Create("TH1I");
+      jQuery.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
+
+      if (nbinsx!=null) {
+         histo['fN'] = histo['fNcells'] = nbinsx+2;
+         for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
+         jQuery.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0,  fXmax: nbinsx });
+      }
       return histo;
    }
 
    JSROOT.CreateTH2 = function(nbinsx, nbinsy) {
-      var histo = {};
-      histo['_typename'] = "TH2I";
-      histo['fBits'] = 0x3000008;
-      histo['fName'] = "dummy_histo_" + this.id_counter++;
-      histo['fTitle'] = "dummytitle";
-      histo['fMinimum'] = -1111;
-      histo['fMaximum'] = -1111;
-      histo['fOption'] = "";
-      histo['fFillColor'] = 0;
-      histo['fLineColor'] = 0;
-      histo['fLineWidth'] = 1;
-      histo['fBinStatErrOpt'] = 0;
-      histo['fNcells'] = 0;
-      histo['fN'] = 0;
-      histo['fArray'] = new Array;
-      histo['fSumw2'] = new Array;
-      histo['fFunctions'] = JSROOT.CreateTList();
-      histo['fContour'] = new Array;
-
-      histo['fXaxis'] = JSROOT.CreateTAxis();
-      histo['fYaxis'] = JSROOT.CreateTAxis();
-      histo['fZaxis'] = JSROOT.CreateTAxis();
+      var histo = JSROOT.Create("TH2I");
+      jQuery.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
       if ((nbinsx!=null) && (nbinsy!=null)) {
-         histo['fNcells'] = (nbinsx+2) * (nbinsy+2);
+         histo['fN'] = histo['fNcells'] = (nbinsx+2) * (nbinsy+2);
          for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
-         histo['fXaxis']['fNbins'] = nbinsx;
-         histo['fYaxis']['fNbins'] = nbinsy;
-
-         histo['fXaxis']['fXmin'] = 0;
-         histo['fXaxis']['fXmax'] = nbinsx;
-         histo['fYaxis']['fXmin'] = 0;
-         histo['fYaxis']['fXmax'] = nbinsy;
+         jQuery.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0,  fXmax: nbinsx });
+         jQuery.extend(histo['YXaxis'], { fNbins: nbinsy, fXmin: 0,  fXmax: nbinsy });
       }
-
-      JSROOT.addMethods(histo);
-
       return histo;
    }
 
@@ -631,7 +598,7 @@
       graph['fNpoints'] = 0;
       graph['fX'] = new Array;
       graph['fY'] = new Array;
-      graph['fFunctions'] = JSROOT.CreateTList();
+      graph['fFunctions'] = JSROOT.Create("TList");
       graph['fHistogram'] = JSROOT.CreateTH1();
 
       if (npoints>0) {
@@ -672,15 +639,18 @@
       graph['fHistogram']['fYaxis']['fXmax'] = maxy;
    }
 
-
-   JSROOT.addMethods = function(obj) {
+   JSROOT.addMethods = function(obj, obj_typename) {
       // check object type and add methods if needed
       if (('fBits' in obj) && !('TestBit' in obj)) {
          obj['TestBit'] = function (f) {
             return ((obj['fBits'] & f) != 0);
          };
       }
-      if (!('_typename' in obj)) return;
+
+      if (!obj_typename) {
+         if (!('_typename' in obj)) return;
+         obj_typename = obj['_typename'];
+      }
 
       var EBinErrorOpt = {
           kNormal : 0,    // errors with Normal (Wald) approximation: errorUp=errorLow= sqrt(N)
@@ -695,7 +665,7 @@
           kERRORSPREADG : 3
        };
 
-      if (obj['_typename'].indexOf("TAxis") == 0) {
+      if (obj_typename.indexOf("TAxis") == 0) {
          obj['getFirst'] = function() {
             if (!this.TestBit(JSROOT.EAxisBits.kAxisRange)) return 1;
             return this['fFirst'];
@@ -717,7 +687,7 @@
          };
       }
 
-      if (obj['_typename'] == "TList") {
+      if (obj_typename == "TList") {
          obj['Clear'] = function() {
             this['arr'] = new Array;
             this['opt'] = new Array;
@@ -728,7 +698,7 @@
          }
       }
 
-      if ((obj['_typename'] == "TPaveText") || (obj['_typename'] == "TPaveStats")) {
+      if ((obj_typename == "TPaveText") || (obj_typename == "TPaveStats")) {
          obj['AddText'] = function(txt) {
             this['fLines'].Add({'fTitle' : txt, "fTextColor" : 1 });
          }
@@ -737,8 +707,8 @@
          }
       }
 
-      if ((obj['_typename'].indexOf("TFormula") != -1) ||
-          (obj['_typename'].indexOf("TF1") == 0)) {
+      if ((obj_typename.indexOf("TFormula") != -1) ||
+          (obj_typename.indexOf("TF1") == 0)) {
          obj['evalPar'] = function(x) {
             var i, _function = this['fTitle'];
             _function = _function.replace('TMath::Exp(', 'Math.exp(');
@@ -769,7 +739,7 @@
             return ret;
          };
       }
-      if (obj['_typename'].indexOf("TGraph") == 0) {
+      if (obj_typename.indexOf("TGraph") == 0) {
          obj['computeRange'] = function() {
             // Compute the x/y range of the points in this graph
             var i, xmin = 0, xmax = 0, ymin = 0, ymax = 0;
@@ -791,9 +761,9 @@
             };
          };
       }
-      if (obj['_typename'].indexOf("TH1") == 0 ||
-          obj['_typename'].indexOf("TH2") == 0 ||
-          obj['_typename'].indexOf("TH3") == 0) {
+      if (obj_typename.indexOf("TH1") == 0 ||
+          obj_typename.indexOf("TH2") == 0 ||
+          obj_typename.indexOf("TH3") == 0) {
          obj['getBinError'] = function(bin) {
             //   -*-*-*-*-*Return value of error associated to bin number bin*-*-*-*-*
             //    if the sum of squares of weights has been defined (via Sumw2),
@@ -1231,7 +1201,7 @@
             }
          };
       }
-      if (obj['_typename'].indexOf("TH1") == 0) {
+      if (obj_typename.indexOf("TH1") == 0) {
          obj['fDimension'] = 1;
          obj['getBinContent'] = function(bin) {
             if (bin < 0) bin = 0;
@@ -1279,7 +1249,7 @@
             return stats;
          };
       }
-      if (obj['_typename'].indexOf("TH2") == 0) {
+      if (obj_typename.indexOf("TH2") == 0) {
          obj['fDimension'] = 2;
          obj['getBin'] = function(x, y) {
             var nx = this['fXaxis']['fNbins']+2;
@@ -1334,7 +1304,7 @@
             return stats;
          };
       }
-      if (obj['_typename'].indexOf("TH3") == 0) {
+      if (obj_typename.indexOf("TH3") == 0) {
          obj['fDimension'] = 3;
          obj['getBin'] = function(x, y, z) {
             var nx = this['fXaxis']['fNbins']+2;
@@ -1411,7 +1381,7 @@
             return stats;
          };
       }
-      if (obj['_typename'].indexOf("THStack") == 0) {
+      if (obj_typename.indexOf("THStack") == 0) {
          obj['buildStack'] = function() {
             //  build sum of all histograms
             //  Build a separate list fStack containing the running sum of all histograms
@@ -1419,7 +1389,7 @@
             if (!'fHists' in this) return;
             var nhists = this['fHists'].arr.length;
             if (nhists <= 0) return;
-            this['fStack'] = JSROOT.CreateTList();
+            this['fStack'] = JSROOT.Create("TList");
             var h = JSROOT.clone(this['fHists'].arr[0]);
             this['fStack'].arr.push(h);
             for (var i=1;i<nhists;i++) {
@@ -1500,10 +1470,10 @@
             return themin;
          };
       }
-      if ((obj['_typename'].indexOf("TH1") == 0) ||
-          (obj['_typename'].indexOf("TH2") == 0) ||
-          (obj['_typename'].indexOf("TH3") == 0) ||
-          (obj['_typename'].indexOf("TProfile") == 0)) {
+      if ((obj_typename.indexOf("TH1") == 0) ||
+          (obj_typename.indexOf("TH2") == 0) ||
+          (obj_typename.indexOf("TH3") == 0) ||
+          (obj_typename.indexOf("TProfile") == 0)) {
          obj['getMean'] = function(axis) {
             if (axis < 1 || (axis > 3 && axis < 11) || axis > 13) return 0;
             var stats = this.getStats();
@@ -1522,7 +1492,7 @@
             return Math.sqrt(rms2);
          };
       }
-      if (obj['_typename'].indexOf("TProfile") == 0) {
+      if (obj_typename.indexOf("TProfile") == 0) {
          obj['getBinContent'] = function(bin) {
             if (bin < 0 || bin >= this['fNcells']) return 0;
             if (this['fBinEntries'][bin] < 1e-300) return 0;

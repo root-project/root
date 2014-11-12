@@ -3,7 +3,6 @@
 // default user interface for JavaScript ROOT Web Page.
 //
 
-
 function ResetUI() {
    if (JSROOT.H('root') != null) {
       JSROOT.H('root').clear();
@@ -43,7 +42,7 @@ function BuildNoBrowserGUI(online) {
    if (!online) {
       filename = JSROOT.GetUrlOption("file");
       var filesdir = JSROOT.GetUrlOption("path");
-      if (filesdir!=null) filename = filesdir + filename; 
+      if (filesdir!=null) filename = filesdir + filename;
    }
 
    var itemname = JSROOT.GetUrlOption("item");
@@ -435,7 +434,7 @@ function BuildSimpleGUI() {
    if (files==null) files = myDiv.attr("files");
    var filesdir = JSROOT.GetUrlOption("path");
    if (filesdir==null) filesdir = myDiv.attr("path");
-   
+
    if (files==null) files = "files/hsimple.root";
    if (filesdir==null) filesdir = "";
    var arrFiles = files.split(';');
