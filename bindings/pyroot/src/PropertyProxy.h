@@ -11,6 +11,7 @@
 #include "DllImport.h"
 #include "TClassRef.h"
 class TDataMember;
+class TEnumConstant;
 class TGlobal;
 
 // Standard
@@ -30,6 +31,7 @@ namespace PyROOT {
    class PropertyProxy {
    public:
       void Set( TDataMember* );
+      void Set( TEnumConstant* );
       void Set( TGlobal* );
 
       std::string GetName() { return fName; }
