@@ -53,9 +53,7 @@ TDataType *TListOfTypes::FindType(const char *name) const
    if (!result) {
       R__LOCKGUARD2(gInterpreterMutex);
 
-      int old = gInterpreter->SetClassAutoloading(false);
       TypedefInfo_t  *info = gInterpreter->TypedefInfo_Factory(name);
-      gInterpreter->SetClassAutoloading(old);
       if (gInterpreter->TypedefInfo_IsValid(info)) {
          result = new TDataType(info);
          // Double check we did not get a different spelling of an
