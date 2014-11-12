@@ -1,6 +1,6 @@
 // Example of bar charts with 1-d histograms
 // Author: Rene Brun
-void hbars() {
+TCanvas *hbars() {
    cout << gSystem->DirName(__FILE__) << endl;
    // try to open first the file cernstaff.root in tutorials/tree directory
    TString filedir = gSystem->DirName(__FILE__);
@@ -16,12 +16,12 @@ void hbars() {
    TFile * f = TFile::Open(filename);
    if (!f) {
       Error("hbars","file cernstaff.root not found");
-      return;
+      return 0;
    }
    TTree *T = (TTree*)f->Get("T");
    if (!T) {
       Error("hbars","Tree T is not present in file %s",f->GetName() );
-      return;
+      return 0;
    }
    T->SetFillColor(45);
    TCanvas *c1 = new TCanvas("c1","histograms with bars",700,800);
@@ -55,4 +55,5 @@ void hbars() {
 
    c1->cd();
    delete f;
+   return c1;
 }
