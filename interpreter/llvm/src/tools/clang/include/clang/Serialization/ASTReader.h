@@ -673,9 +673,12 @@ private:
   GlobalPreprocessedEntityMapType GlobalPreprocessedEntityMap;
 
   /// \brief Mapping from file as known to PCH to file on disk. This gets set
-  /// by the ResuleFile*() functions and evaluated by
+  /// by the ResolveFile*() functions and evaluated by
   /// HeaderFileInfoTrait::EqualKey() through GetHeaderFileInfo().
   llvm::StringMap<std::string> OriginalFileMap;
+
+  /// \brief Known stem mapping for resolveFileThroughHeaderSearch.
+  llvm::StringMap<std::string> HSStemMap;
 
   /// \name CodeGen-relevant special data
   /// \brief Fields containing data that is relevant to CodeGen.
