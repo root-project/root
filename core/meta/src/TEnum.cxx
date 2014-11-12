@@ -41,6 +41,17 @@ TEnum::TEnum(const char *name, void *info, TClass *cls)
    if (cls) {
       fConstantList.SetOwner(kTRUE);
    }
+
+   // Determine fQualName
+   if (0 != strcmp("",GetTitle())){ // It comes from a protoclass
+      fQualName = std::string(GetTitle()) + "::" + GetName();
+   }
+   else if (GetClass()){ // It comes from a class/ns
+      fQualName = std::string(GetClass()->GetName()) + "::" + GetName();
+   }
+   else { // it is in the global scope
+      fQualName = GetName();
+   }
 }
 
 //______________________________________________________________________________
@@ -86,27 +97,6 @@ Long_t TEnum::Property() const
 void TEnum::Update(DeclId_t id)
 {
    fInfo = (void *)id;
-}
-
-//______________________________________________________________________________
-const char* TEnum::GetQualifiedName()
-{
-   // Return the fully qualified name of the enumerator
-
-   if (fQualName.empty()){
-      if (0 != strcmp("",GetTitle())){ // It comes from a protoclass
-         fQualName = std::string(GetTitle()) + "::" + GetName();
-      }
-      else if (GetClass()){ // It comes from a class/ns
-         fQualName = std::string(GetClass()->GetName()) + "::" + GetName();
-      }
-      else { // it is in the global scope
-         return GetName();
-      }
-   }
-
-   return fQualName.c_str();
-
 }
 
 //______________________________________________________________________________

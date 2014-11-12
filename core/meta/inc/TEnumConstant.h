@@ -24,6 +24,9 @@
 #ifndef ROOT_TGlobal
 #include "TGlobal.h"
 #endif
+#ifndef ROOT_TEnum
+#include "TEnum.h"
+#endif
 
 class TEnum;
 
@@ -37,9 +40,12 @@ public:
    TEnumConstant(DataMemberInfo_t *info, const char* name, Long64_t value, TEnum* type);
    virtual ~TEnumConstant();
 
-   virtual void *GetAddress() const { auto valPtr = &fValue; return (void*) const_cast<Long64_t*>(valPtr); }
+   void *GetAddress() const override { auto valPtr = &fValue; return (void*) const_cast<Long64_t*>(valPtr); }
    Long64_t      GetValue() const { return fValue; }
    const TEnum  *GetType() const { return fEnum; }
+
+   const char *GetTypeName() const override { return fEnum->GetQualifiedName(); }
+   const char *GetFullTypeName() const override { return GetTypeName(); }
 
    ClassDef(TEnumConstant,2)  //Enum type constant
 };
