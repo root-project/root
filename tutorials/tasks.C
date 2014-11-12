@@ -17,7 +17,7 @@ void tasks()
    gROOT->LoadMacro(dir +"MyTasks.cxx+");
 
    gROOT->ProcessLine("#define __RUN_TASKS__ 1");
-   gROOT->ProcessLine("#include \"tasks.C\"");
+   gROOT->ProcessLine(TString("#include \"") + dir + "tasks.C\"");
    gROOT->ProcessLine("runtasks()");
    gROOT->ProcessLine("#undef __RUN_TASKS__");
 }
