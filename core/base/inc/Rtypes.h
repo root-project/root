@@ -267,22 +267,6 @@ public: \
    static int ImplFileLine() { return 0; } \
    static const char *ImplFileName() { return __FILE__; }
 
-#if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__)
-
-#define ClassDef(name,id)                      \
-   _ClassDef_(name,id,)                        \
-   static int DeclFileLine() { return __LINE__; }
-
-#define ClassDefOverride(name,id) \
-   _ClassDef_(name,id,override)   \
-   static int DeclFileLine() { return __LINE__; }
-
-#define ClassDefNV(name,id) \
-   _ClassDefNV_(name,id) \
-   static int DeclFileLine() { return __LINE__; }
-
-#else
-
 #define ClassDef(name,id) \
    _ClassDef_(name,id,)   \
    static int DeclFileLine() { return __LINE__; }
@@ -295,16 +279,10 @@ public: \
    _ClassDefNV_(name,id) \
    static int DeclFileLine() { return __LINE__; }
 
-#endif
-
 #define R__UseDummy(name) \
    class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
 
 
-#if defined(__CINT__)
-#define ClassImpUnique(name,key)
-#define ClassImp(name)
-#else
 #define ClassImpUnique(name,key) \
    namespace ROOT { \
       TGenericClassInfo *GenerateInitInstance(const name*); \
@@ -315,14 +293,9 @@ public: \
       } \
    }
 #define ClassImp(name) ClassImpUnique(name,default)
-#endif
 
 // Macro for Namespace
 
-#if defined(__CINT__)
-#define NamespaceImpUnique(name,key)
-#define NamespaceImp(name)
-#else
 #define NamespaceImpUnique(name,key) \
    namespace name { \
       namespace ROOT { \
@@ -335,7 +308,6 @@ public: \
       } \
    }
 #define NamespaceImp(name) NamespaceImpUnique(name,default)
-#endif
 
 //---- ClassDefT macros for templates with one template argument ---------------
 // ClassDefT  corresponds to ClassDef
@@ -345,9 +317,7 @@ public: \
 
 
 // This ClassDefT is stricly redundant and is kept only for
-// backward compatibility. Using #define ClassDef ClassDefT is confusing
-// the CINT parser.
-#if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__)
+// backward compatibility.
 
 #define ClassDefT(name,id) \
    _ClassDef_(name,id) \
@@ -357,27 +327,11 @@ public: \
    _ClassDefNV_(name,id) \
    static int DeclFileLine() { return __LINE__; }
 
-
-#else
-
-#define ClassDefT(name,id) \
-   _ClassDef_(name,id) \
-   static int DeclFileLine() { return __LINE__; }
-
-#define ClassDefTNV(name,id) \
-   _ClassDefNV_(name,id) \
-   static int DeclFileLine() { return __LINE__; }
-
-#endif
 
 #define ClassDefT2(name,Tmpl)
 
 
 
-#if defined(__CINT__)
-#define templateClassImpUnique(name,key)
-#define templateClassImp(name)
-#else
 #define templateClassImpUnique(name,key) \
    namespace ROOT { \
       static TNamed *_R__UNIQUE_(_NAME2_(R__dummyholder,key)) = \
@@ -385,7 +339,6 @@ public: \
       R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder,key))); \
    }
 #define templateClassImp(name) templateClassImpUnique(name,default)
-#endif
 
 #define ClassImpT(name,Tmpl) templateClassImp(name)
 
@@ -417,9 +370,6 @@ namespace ROOT { \
    R__UseDummy(_R__UNIQUE_(R__dummyVersionNumber)); \
 }
 
-#if defined(__CINT__)
-#define RootStreamer(name,STREAMER)
-#else
 #define RootStreamer(name,STREAMER)                                  \
 namespace ROOT {                                                     \
    TGenericClassInfo *GenerateInitInstance(const name*);             \
@@ -427,6 +377,5 @@ namespace ROOT {                                                     \
            GenerateInitInstance((name*)0x0)->SetStreamer(STREAMER);  \
    R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                       \
 }
-#endif
 
 #endif
