@@ -181,6 +181,9 @@
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #   define cygwingcc
 #endif
+#ifdef __linux__
+#define linux
+#endif
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
     defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
     defined(__MACH__) || defined(cygwingcc) || defined(__OpenBSD__)
