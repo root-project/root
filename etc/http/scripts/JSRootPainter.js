@@ -5662,7 +5662,7 @@
          yfactor = 0.5 * h / (j2 - j1) / (this.maxbin - this.minbin);
       }
 
-      var x1, y1, x2, y2, grx1, gry1, grx2, gry2, fillcol, shrx, shry, binz, point;
+      var x1, y1, x2, y2, grx1, gry1, grx2, gry2, fillcol, shrx, shry, binz, point, wx ,wy;
 
       var local_bins = new Array;
 
@@ -5693,10 +5693,10 @@
             switch (coordinates_kind) {
             case 0:
                point = {
-                  x : Math.round(grx1),
-                  y : Math.round(gry2),
-                  width : Math.round(grx2) - Math.round(grx1) + 1,
-                  height : Math.round(gry1) - Math.round(gry2) + 1,
+                  x : grx1,
+                  y : gry2,
+                  width : grx2 - grx1 + 1,  // +1 to fill gaps between colored bins 
+                  height : gry1 - gry2 + 1,
                   stroke : "none",
                   fill : this.getValueColor(binz)
                }
@@ -5707,10 +5707,10 @@
                shrx = xfactor * (this.maxbin - binz);
                shry = yfactor * (this.maxbin - binz);
                point = {
-                  x : Math.round(grx1 + shrx),
-                  y : Math.round(gry2 + shry),
-                  width : Math.round(grx2 - grx1 - 2 * shrx),
-                  height : Math.round(gry1 - gry2 - 2 * shry),
+                  x : grx1 + shrx,
+                  y : gry2 + shry,
+                  width : grx2 - grx1 - 2 * shrx,
+                  height : gry1 - gry2 - 2 * shry,
                   stroke : this.linecolor,
                   fill : this.fillcolor
                }
@@ -5727,13 +5727,13 @@
             }
 
             if (tipkind == 1)
-               point['tip'] = "x = [" + this.AxisAsText("x", x1) + ", "
-                     + this.AxisAsText("x", x2) + "]\n" + "y = ["
-                     + this.AxisAsText("y", y1) + ", "
-                     + this.AxisAsText("y", y2) + "]\n" + "entries = " + binz;
+               point['tip'] = "x = [" + this.AxisAsText("x", x1) + ", " + this.AxisAsText("x", x2) + "]\n" + 
+                              "y = [" + this.AxisAsText("y", y1) + ", " + this.AxisAsText("y", y2) + "]\n" + 
+                              "entries = " + binz;
             else if (tipkind == 2)
-               point['tip'] = "x = " + this.AxisAsText("x", x1) + "\n" + "y = "
-                     + this.AxisAsText("y", y1) + "\n" + "entries = " + binz;
+               point['tip'] = "x = " + this.AxisAsText("x", x1) + "\n" + 
+                              "y = " + this.AxisAsText("y", y1) + "\n" + 
+                              "entries = " + binz;
 
             local_bins.push(point);
          }
@@ -5795,7 +5795,7 @@
                   .data(local_bins)
                   .enter().append("svg:path")
                   .attr("class", "marker")
-                  .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")" })
+                  .attr("transform", function(d) { return "translate(" + d.x.toFixed(1) + "," + d.y.toFixed(1) + ")" })
                   .style("fill", JSROOT.Painter.root_colors[this.histo['fMarkerColor']])
                   .style("stroke", JSROOT.Painter.root_colors[this.histo['fMarkerColor']])
                   .attr("d", marker);
@@ -5807,10 +5807,10 @@
                            .data(local_bins).enter()
                            .append("svg:rect")
                            .attr("class", "bins")
-                           .attr("x", function(d) { return d.x; })
-                           .attr("y", function(d) { return d.y; })
-                           .attr("width", function(d) { return d.width; })
-                           .attr("height", function(d) { return d.height; })
+                           .attr("x", function(d) { return d.x.toFixed(1); })
+                           .attr("y", function(d) { return d.y.toFixed(1); })
+                           .attr("width", function(d) { return d.width.toFixed(1); })
+                           .attr("height", function(d) { return d.height.toFixed(1); })
                            .style("stroke", function(d) { return d.stroke; })
                            .style("fill", function(d) {
                                this['f0'] = d.fill;
