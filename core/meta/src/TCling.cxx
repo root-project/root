@@ -1430,7 +1430,7 @@ void TCling::RegisterModule(const char* modulename,
       "#define __ROOTCLING__ 1\n"
       "#undef ClassDef\n"
       "#define ClassDef(name,id) \\\n"
-      "_ClassDef_(name,id,) \\\n"
+      "_ClassDef_(name,id,virtual,) \\\n"
       "static int DeclFileLine() { return __LINE__; }\n";
    code += payloadCode;
 
@@ -4887,7 +4887,7 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
    std::string code = "#define __ROOTCLING__ 1\n"
       "#undef ClassDef\n"
       "#define ClassDef(name,id) \\\n"
-      "_ClassDef_(name,id) \\\n"
+      "_ClassDef_(name,id,virtual,) \\\n"
       "static int DeclFileLine() { return __LINE__; }\n";
    if (!header) {
       // This is the complete header file content and not the
