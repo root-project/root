@@ -4012,7 +4012,7 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    unsigned int skipChars = 2;
    if (commentStart[0] == '/' &&
        commentStart[1] == '/' &&
-       commentStart[2] == '/' &&
+       (commentStart[2] == '/' || commentStart[2] == '!') &&
        commentStart[3] == '<') {
       skipChars = 4;
    }
