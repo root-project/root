@@ -665,8 +665,8 @@ namespace ROOT
 	      le = errstats<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>::profile_likelihood(ffit,fCMAparams_b,fCMAsols,i,false,samplesize);
 	    }
 	}
-      errLow = le.getErrMin();
-      errUp = le.getErrMax();
+      errLow = le.get_err_min();
+      errUp = le.get_err_max();
       return true;
     }
     
