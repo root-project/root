@@ -583,6 +583,10 @@ Histograms in the stack are all paint in the same pad as if the option
 <tt>"SAME"</tt> had been specified.
 </td></tr>
 
+<tr><th valign=top>"NOSTACKB"</th><td>
+Histograms are  drawn next to each other as bar charts.
+</td></tr>
+
 <tr><th valign=top>"PADS"</th><td>
 The current pad/canvas is subdivided into a number of pads equal to the number
 of histograms in the stack and each histogram is paint into a separate pad.
@@ -2599,6 +2603,36 @@ histogram is paint into a separate pad.
 End_Html
 Begin_Macro(source)
 ../../../tutorials/hist/hstack.C
+End_Macro
+Begin_Html
+
+<p>The option <tt>"nostackb"</tt> allows to draw the histograms next to each
+other as bar charts:
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *cst0 = new TCanvas("cst0","cst0",600,400);
+   THStack *hs = new THStack("hs","Stacked 1D histograms: option #font[82]{\"nostackb\"}");
+
+   TH1F *h1 = new TH1F("h1","h1",10,-4,4);
+   h1->FillRandom("gaus",20000);
+   h1->SetFillColor(kRed);
+   hs->Add(h1);
+
+   TH1F *h2 = new TH1F("h2","h2",10,-4,4);
+   h2->FillRandom("gaus",15000);
+   h2->SetFillColor(kBlue);
+   hs->Add(h2);
+
+   TH1F *h3 = new TH1F("h3","h3",10,-4,4);
+   h3->FillRandom("gaus",10000);
+   h3->SetFillColor(kGreen);
+   hs->Add(h3);
+
+   hs->Draw("nostackb");
+   return cst0;
+}
 End_Macro
 Begin_Html
 

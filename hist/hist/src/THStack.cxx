@@ -27,36 +27,69 @@
 ClassImp(THStack)
 
 //______________________________________________________________________________
-//
-//   A THStack is a collection of TH1 (or derived) objects
-//   Use THStack::Add to add a new histogram to the list.
-//   The THStack does not own the objects in the list.
-//   By default (if option "nostack" is not specified), histograms will be paint
-//   stacked on top of each other.
-//   Example;
-//      THStack hs("hs","test stacked histograms");
-//      TH1F *h1 = new TH1F("h1","test hstack",100,-4,4);
-//      h1->FillRandom("gaus",20000);
-//      h1->SetFillColor(kRed);
-//      hs.Add(h1);
-//      TH1F *h2 = new TH1F("h2","test hstack",100,-4,4);
-//      h2->FillRandom("gaus",15000);
-//      h2->SetFillColor(kBlue);
-//      hs.Add(h2);
-//      TH1F *h3 = new TH1F("h3","test hstack",100,-4,4);
-//      h3->FillRandom("gaus",10000);
-//      h3->SetFillColor(kGreen);
-//      hs.Add(h3);
-//      TCanvas c1("c1","stacked hists",10,10,700,900);
-//      c1.Divide(1,2);
-//      c1.cd(1);
-//      hs.Draw();
-//      c1.cd(2);
-//      hs.Draw("nostack");
-//
-//  See a more complex example in $ROOTSYS/tutorials/hist/hstack.C
-//
-//  Note that picking is supported for all drawing modes.
+/* Begin_Html
+<center><h2>The Histogram stack class</h2></center>
+
+A <t>THStack</tt> is a collection of <tt>TH1</tt> or <tt>TH2</tt> histograms.
+Using <tt>THStack::Draw()</tt> the histogram collection is drawn in one go according
+to the drawing option.
+<p>
+<tt>THStack::Add()</tt> allows to add a new histogram to the list.
+The <tt>THStack</tt> does not own the objects in the list.
+<p>
+By default (if no option drawing option is specified), histograms will be paint
+stacked on top of each other. <tt>TH2</tt are stacked as lego plots.
+<p>
+If option <tt>"nostack"</tt> is specified the histograms are not drawn on top
+of each other but as they would if drawn using the option <tt>"same"</tt>.
+<p>
+If option <tt>"nostackb"</tt> is specified the histograms are drawn next to
+each other as bar charts.
+<p>
+In all cases The axis range is computed automatically along the X and Y axis in
+order to show the complete histogram collection.
+<p>
+Example;
+
+End_Html
+Begin_Macro(source)
+{
+   THStack *hs = new THStack("hs","");
+   TH1F *h1 = new TH1F("h1","test hstack",10,-4,4);
+   h1->FillRandom("gaus",20000);
+   h1->SetFillColor(kRed);
+   hs->Add(h1);
+   TH1F *h2 = new TH1F("h2","test hstack",10,-4,4);
+   h2->FillRandom("gaus",15000);
+   h2->SetFillColor(kBlue);
+   hs->Add(h2);
+   TH1F *h3 = new TH1F("h3","test hstack",10,-4,4);
+   h3->FillRandom("gaus",10000);
+   h3->SetFillColor(kGreen);
+   hs->Add(h3);
+   TCanvas *cs = new TCanvas("cs","cs",10,10,700,900);
+   TText T; T.SetTextFont(42); T.SetTextAlign(21);
+   cs->Divide(2,2);
+   cs->cd(1); hs->Draw(); T.DrawTextNDC(.5,.95,"Default drawing option");
+   cs->cd(2); hs->Draw("nostack"); T.DrawTextNDC(.5,.95,"Option \"nostack\"");
+   cs->cd(3); hs->Draw("nostackb"); T.DrawTextNDC(.5,.95,"Option \"nostackb\"");
+   cs->cd(4); hs->Draw("lego1"); T.DrawTextNDC(.5,.95,"Option \"lego1\"");
+   return cs;
+}
+End_Macro
+Begin_Html
+
+A more complex example:
+
+End_Html
+Begin_Macro(source)
+../../../tutorials/hist/hstack.C
+End_Macro
+Begin_Html
+
+Note that picking is supported for all drawing modes.
+End_Html */
+
 
 //______________________________________________________________________________
 THStack::THStack(): TNamed()
@@ -607,13 +640,16 @@ void THStack::Modified()
 //______________________________________________________________________________
 void THStack::Paint(Option_t *option)
 {
-   // paint the list of histograms
+   // Paint the list of histograms.
    // By default, histograms are shown stacked.
-   //    -the first histogram is paint
-   //    -then the sum of the first and second, etc
+   //    - the first histogram is paint
+   //    - then the sum of the first and second, etc
    //
    // If option "nostack" is specified, histograms are all paint in the same pad
    // as if the option "same" had been specified.
+   //
+   // If the option nostackb is specified histograms are all paint in the same pad
+   // next to each other as bar plots.
    //
    // if option "pads" is specified, the current pad/canvas is subdivided into
    // a number of pads equal to the number of histograms and each histogram
@@ -690,7 +726,8 @@ void THStack::Paint(Option_t *option)
 
    char loption[32];
    snprintf(loption,31,"%s",opt.Data());
-   char *nostack = strstr(loption,"nostack");
+   char *nostack  = strstr(loption,"nostack");
+   char *nostackb = strstr(loption,"nostackb");
    // do not delete the stack. Another pad may contain the same object
    // drawn in stack mode!
    //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
@@ -751,8 +788,8 @@ void THStack::Paint(Option_t *option)
       fHistogram->SetTitle(GetTitle());
    }
 
-   if (nostack) {*nostack = 0; strncat(nostack,nostack+7,7);}
-   //if (nostack) {strlcpy(nostack,"       ",7);}
+   if (nostack)  {*nostack  = 0; strncat(nostack,nostack+7,7);}
+   if (nostackb) {*nostackb = 0; strncat(nostackb,nostackb+8,8);}
    else fHistogram->GetPainter()->SetStack(fHists);
 
    if (!fHistogram->TestBit(TH1::kIsZoomed)) {
@@ -793,13 +830,24 @@ void THStack::Paint(Option_t *option)
    Int_t nhists = fHists->GetSize();
    if (nostack) {
       lnk = (TObjOptLink*)fHists->FirstLink();
+      TH1* hAti;
+      Double_t bo=0.03;
+      Double_t bw = (1.-(2*bo))/nhists;
       for (Int_t i=0;i<nhists;i++) {
          if (strstr(lnk->GetOption(),"same")) {
-            snprintf(loption,31,"%s%s",noption,lnk->GetOption());
+            if (nostackb) snprintf(loption,31,"%s%s b",noption,lnk->GetOption());
+            else          snprintf(loption,31,"%s%s",noption,lnk->GetOption());
          } else {
-            snprintf(loption,31,"%ssame%s",noption,lnk->GetOption());
+            if (nostackb) snprintf(loption,31,"%ssame%s b",noption,lnk->GetOption());
+            else          snprintf(loption,31,"%ssame%s",noption,lnk->GetOption());
          }
-         fHists->At(i)->Paint(loption);
+         hAti = (TH1F*)(fHists->At(i));
+         if (nostackb) {
+            hAti->SetBarWidth(bw);
+            hAti->SetBarOffset(bo);
+            bo += bw;
+         }
+         hAti->Paint(loption);
          lnk = (TObjOptLink*)lnk->Next();
       }
    } else {
