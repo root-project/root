@@ -34,3 +34,15 @@ ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-execCheck
 ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-execLDAPAttribute
                   MACRO execLDAPAttribute.C
                   OUTREF execLDAPAttribute.ref)
+
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(scopedEnums
+                                    scopedEnums.h
+                                    SELECTION scopedEnums_selection.xml
+                                    LIBNAME libscopedEnums_dictrflx)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-runscopedEnums
+                  MACRO runscopedEnums.C
+                  OUTREF runscopedEnums.ref
+                  OUTCNV runscopedEnums_convert.sh
+                  DEPENDS ${GENERATE_REFLEX_TEST})
+

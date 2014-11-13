@@ -63,7 +63,7 @@ FullheaderParsingOnDemand.log: libFullheaderParsingOnDemand_dictrflx.$(DllSuf)
 # The greps are there to find a common denominator among all platforms for 
 # system headers.
 headerParsingOnDemand.log: FullheaderParsingOnDemand.log
-	$(CMDECHO) cat FullheaderParsingOnDemand.log |grep -v "Warning in <TInterpreter::RegisterModule()>: Header" | grep -v "status 0" | grep -v "memory" | grep -v "__functional_base"|grep -v "string" |grep -v "TRint" |grep -v "TApplication"|grep -v "dtor called for" |grep -v ">>> RSS"|grep -v ">>> VSIZE"> headerParsingOnDemand.log 2>&1
+	$(CMDECHO) cat FullheaderParsingOnDemand.log |grep -v "Warning in <TInterpreter::RegisterModule()>: Header" | grep -v "status 0" | grep -v "memory" | grep -v "__functional_base"|grep -v "string" |grep -v "TRint" |grep -v "TApplication"|grep -v "dtor called for" |grep -v ">>> RSS"|grep -v ">>> VSIZE" > headerParsingOnDemand.log 2>&1
 
 headerParsingOnDemand: headerParsingOnDemand.log
 	$(TestDiff)
@@ -72,7 +72,7 @@ scopedEnums.log: libscopedEnums_dictrflx.$(DllSuf)
 
 # We chase the Autoparsing message
 trimmedScopedEnums.log: scopedEnums.log
-	$(CMDECHO) cat scopedEnums.log |grep -v TRint|grep -v "loaded library" > trimmedScopedEnums.log 2>&1
+	$(CMDECHO) cat scopedEnums.log |grep -v TRint|grep -v "loaded library"|grep -v "TClass::GetClass: Header Parsing - The representation of cond::IOVSequence::ScopeType" > trimmedScopedEnums.log 2>&1
 
 scopedEnums: trimmedScopedEnums.log
 	$(TestDiff)
