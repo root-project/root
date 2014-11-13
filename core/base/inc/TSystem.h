@@ -85,13 +85,6 @@ enum ELogFacility {
    kLogLocal7
 };
 
-enum ESysConstants {
-   kMAXSIGNALS       = 15,
-   kMAXPATHLEN       = 8192,
-   kBUFFERSIZE       = 8192,
-   kItimerResolution = 10      // interval-timer resolution in ms
-};
-
 enum EFpeMask {
    kNoneMask         = 0x00,
    kInvalid          = 0x01,  // Invalid argument

@@ -49,6 +49,14 @@ class TCollection;
 class TFileMergeInfo;
 class TString;
 
+//Moved from TSystem.
+enum ESysConstants {
+   kMAXSIGNALS       = 15,
+   kMAXPATHLEN       = 8192,
+   kBUFFERSIZE       = 8192,
+   kItimerResolution = 10      // interval-timer resolution in ms
+};
+
 enum EColor { kWhite =0,   kBlack =1,   kGray=920,
               kRed   =632, kGreen =416, kBlue=600, kYellow=400, kMagenta=616, kCyan=432,
               kOrange=800, kSpring=820, kTeal=840, kAzure =860, kViolet =880, kPink=900 };

@@ -46,7 +46,7 @@ namespace std { using ::string; }
 #include "rpddefs.h"
 #endif
 
-const int  kMAXPATHLEN = kMAXSECBUF;
+#include "Rtypes.h" //const int  kMAXPATHLEN = kMAXSECBUF;
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //

@@ -107,7 +107,7 @@ extern void CloseDisplay();
 
 static STRUCT_UTMP *gUtmpContents;
 static bool gNoLogo = false;
-const  int  kMAXPATHLEN = 8192;
+      //const  int  kMAXPATHLEN = 8192; defined in Rtypes.h
 
 
 //Part for Cocoa - requires external linkage.
