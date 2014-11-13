@@ -309,8 +309,8 @@ void TDavixFileInternal::parseConfig()
       davixParam->setAwsAuthorizationKeys(env_var, env_var2);
    }
 
-   env_var = gEnv->GetValue("Davix.GSI.GridMode", (const char *) NULL);
-   if (env_var && !isno(env_var))
+   env_var = gEnv->GetValue("Davix.GSI.GridMode", (const char *)"y");
+   if (!isno(env_var))
       enableGridMode();
 }
 
