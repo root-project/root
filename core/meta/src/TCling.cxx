@@ -2992,6 +2992,13 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassO
       return kFALSE;
    }
 
+   // Migrated from within TClass::GetClass
+   // If we want to know if a class or a namespace with this name exists in the
+   // interpreter and this is an enum in the type system, before or after loading
+   // according to the autoload function argument, return false.
+   if (isClassOrNamespaceOnly &&
+       TEnum::GetEnum(name, autoload ? TEnum::kAutoload : TEnum::kNone)) return false;
+
    const char *classname = name;
 
    int storeAutoload = SetClassAutoloading(autoload);

@@ -2832,9 +2832,6 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
    }
 
-   // Try to see if this is an enumerator
-   if(TEnum::GetEnum(name,load ? TEnum::kAutoload : TEnum::kNone)) return nullptr;
-
    // Check the interpreter only after autoparsing the template if any.
    {
       std::string::size_type posLess = normalizedName.find('<');
