@@ -5363,6 +5363,9 @@ Long_t TClass::Property() const
 
    if (fProperty!=(-1)) return fProperty;
 
+   // Avoid asking about the class when it is still building
+   if (TestBit(kLoading)) return fProperty;
+
    // When called via TMapFile (e.g. Update()) make sure that the dictionary
    // gets allocated on the heap and not in the mapped file.
    TMmallocDescTemp setreset;
