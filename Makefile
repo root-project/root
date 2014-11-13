@@ -591,6 +591,11 @@ INCLUDEFILES :=
 
 ##### RULES #####
 
+# Copy the modulemap in the right place first.
+ALLHDRS     += include/module.modulemap
+include/module.modulemap:    $(ROOT_SRCDIR)/build/unix/module.modulemap
+		cp $< $@
+
 .SUFFIXES: .cxx .mm .d
 .PRECIOUS: include/%.h
 
