@@ -654,6 +654,12 @@ module math_fumili {
   header "TFumili.h"
   header "TFumiliMinimizer.h"
 }
+
+module NetErrors {
+  header "NetErrors.h"
+  export *
+}
+
 module net_net {
   export *
   header "TPSocket.h"
@@ -684,7 +690,6 @@ module net_net {
   header "TParallelMergingFile.h"
   header "TGridCollection.h"
   header "TSQLTableInfo.h"
-  header "NetErrors.h"
   header "TNetFile.h"
   header "TSQLColumnInfo.h"
   header "TS3WebFile.h"
