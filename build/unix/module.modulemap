@@ -1227,14 +1227,14 @@ module math_mathcore {
   header "TMath.h"
   header "TRandom3.h"
 }
-module math_minuit {
+/*module math_minuit {
   export *
-  header "TLinearFitter.h"
+  header "TLinearFitter.h" // Bug in clang MethodInfoMap.count(OverriddenMD) && "Did not find the overridden method!
   header "TLinearMinimizer.h"
   header "TMinuit.h"
-  header "TMinuitMinimizer.h"
+  header "TMinuitMinimizer.h" // Bug in clang MethodInfoMap.count(OverriddenMD) && "Did not find the overridden method!
   header "TFitter.h"
-}
+}*/
 module montecarlo_vmc {
   export *
   header "TMCParticleType.h"
@@ -1415,20 +1415,20 @@ module math_mlp {
   header "TMultiLayerPerceptron.h"
   header "TSynapse.h"
 }
-module math_matrix {
+/*module math_matrix {
   export *
   header "TMatrixTSymCramerInv.h"
   header "TMatrix.h"
   header "TMatrixTUtils.h"
   header "TMatrixD.h"
   header "TMatrixTCramerInv.h"
-  header "TMatrixTSym.h" //clang bug An asserting value handle still pointed to this value!
+  //header "TMatrixTSym.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
   header "TMatrixFSymfwd.h"
   header "TVectorF.h"
   header "TVectorFfwd.h"
   header "TMatrixDSymfwd.h"
   header "TDecompLU.h"
-  header "TMatrixTSparse.h"
+  textual header "TMatrixTSparse.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
   header "TMatrixDUtilsfwd.h"
   header "TMatrixFSparse.h"
   header "TMatrixTBase.h"
@@ -1461,10 +1461,11 @@ module math_matrix {
   header "TMatrixFfwd.h"
   header "TMatrixDSparse.h"
   header "TMatrixDBasefwd.h"
-  header "TMatrixT.h"// clang bug An asserting value handle still pointed to this value!
+  //header "TMatrixT.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
   header "TDecompQRH.h"
   header "TVectorDfwd.h"
-}
+}*/
+
 module gui_qtgsi {
   export *
   header "TQRootApplication.h"
