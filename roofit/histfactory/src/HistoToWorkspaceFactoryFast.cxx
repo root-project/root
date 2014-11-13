@@ -1087,7 +1087,14 @@ namespace HistFactory{
 
   ///////////////////////////////////////////////
   RooWorkspace* HistoToWorkspaceFactoryFast::MakeSingleChannelWorkspace(Measurement& measurement, Channel& channel) {
-    
+
+     // check inputs (see JIRA-6890 )
+
+     if (channel.GetSamples().empty()) {
+        Error("MakeSingleChannelWorkspace","The input Channel does not contain any sample - return a nullptr");
+        return 0; 
+     }
+     
     // Set these by hand inside the function
     vector<string> systToFix = measurement.GetConstantParams();
     bool doRatio=false;
@@ -1913,6 +1920,11 @@ namespace HistFactory{
     // Take a RooDataSet and fill it with the entries
     // from a TH1*, using the observable names to
     // determine the columns
+
+     if (ObsNameVec.empty() ) {
+        Error("ConfigureHistFactoryDataset","Invalid input - return");
+        return;
+     }
     
     //ES// TH1* mnominal = summary.at(0).nominal;
     // TH1* mnominal = data.GetHisto(); 
@@ -1972,6 +1984,17 @@ namespace HistFactory{
 
   RooWorkspace* HistoToWorkspaceFactoryFast::MakeCombinedModel(vector<string> ch_names, vector<RooWorkspace*> chs)
   {
+
+
+     // check first the inputs (see JIRA-6890)
+     if (ch_names.empty() || chs.empty() ) {
+        Error("MakeCombinedModel","Input vectors are empty - return a nullptr");
+        return 0;
+     }
+     if (chs.size()  <  ch_names.size() ) {
+        Error("MakeCombinedModel","Input vector of workspace has an invalid size - return a nullptr");
+        return 0;
+     }
 
     //
     /// These things were used for debugging. Maybe useful in the future
