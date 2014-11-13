@@ -2463,10 +2463,14 @@ module net_rsa [extern_c] {
   header "rsaaux.h"
   export *
 }
+
+module AuthConst {
+  header "AuthConst.h"
+  export *
+}
 module net_auth {
   export *
   header "TAuthenticate.h"
-  header "AuthConst.h"
   header "THostAuth.h"
   header "TRootAuth.h"
   header "TRootSecContext.h"
