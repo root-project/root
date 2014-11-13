@@ -42,7 +42,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(scopedEnums
 
 ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-runscopedEnums
                   MACRO runscopedEnums.C
-                  OUTREF runscopedEnums.ref
+                  OUTREF scopedEnums.ref
                   OUTCNV scopedEnums_convert.sh
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
