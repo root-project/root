@@ -1582,6 +1582,7 @@ void TCling::RegisterModule(const char* modulename,
 
    if (strcmp(modulename,"libCore")!=0 && strcmp(modulename,"libRint")!=0
        && strcmp(modulename,"libThread")!=0 && strcmp(modulename,"libRIO")!=0
+       && strcmp(modulename,"libMathCore")!=0
        && strcmp(modulename,"libcomplexDict")!=0 && strcmp(modulename,"libdequeDict")!=0
        && strcmp(modulename,"liblistDict")!=0 && strcmp(modulename,"libvectorDict")!=0
        && strcmp(modulename,"libmapDict")!=0 && strcmp(modulename,"libmultimap2Dict")!=0
