@@ -624,6 +624,10 @@ SOFLAGS  ?= -G $(LDFLAGS) -KPIC
 CXXFLAGS += -KPIC
 endif
 
+ifneq ($(GCCTOOLCHAIN),)
+CXXFLAGS    += --gcc-toolchain=$(GCCTOOLCHAIN)
+endif
+
 ifeq ($(PT),)
 CALLROOTEXE  ?= root.exe
 else
