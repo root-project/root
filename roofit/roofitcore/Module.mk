@@ -147,3 +147,5 @@ distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(ROOFITCOREDO): NOOPT = $(OPT)
+# FIXME: Temporarily until we understand where the errors come from.
+$(ROOFITCOREDO): CXXFLAGS := $(filter-out -Xclang -fmodules -Xclang -fmodules-cache-path=$(ROOTSYS)/pcm/, $(CXXFLAGS))

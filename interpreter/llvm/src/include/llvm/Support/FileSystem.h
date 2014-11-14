@@ -34,6 +34,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TimeValue.h"
 #include <ctime>
+#include <dirent.h>
 #include <iterator>
 #include <stack>
 #include <string>

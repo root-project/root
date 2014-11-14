@@ -28,6 +28,10 @@
 #  include <fcntl.h>
 #endif
 
+#ifdef __linux__
+#define linux
+#endif
+
 #ifdef SIGTSTP
 #include <sys/file.h>
 #include <sys/ioctl.h>
