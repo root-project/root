@@ -45,7 +45,11 @@ struct ExceptionContext_t {
 };
 
 #ifdef NEED_SIGJMP
+#if __has_feature(modules) // A not implemented in the modulemaps macro re-export
+#define SETJMP(buf) __sigsetjmp(buf,1)
+#else
 #define SETJMP(buf) sigsetjmp(buf,1)
+#endif
 #else
 #define SETJMP(buf) setjmp(buf)
 #endif
