@@ -80,3 +80,9 @@ endif
 
 # Extras
 GLIBC_MALLOC_DEPRECATED = yes
+
+ifneq ($(CXX:%clang++=),$(CXX))
+ifneq ($(CXXMODULES),)
+  CXXFLAGS += -fmodules
+endif
+endif
