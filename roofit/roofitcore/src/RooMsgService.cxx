@@ -41,7 +41,6 @@
 // END_HTML
 //
 
-#define INST_MSG_SERVICE
 
 #include <sys/types.h>
 
@@ -67,6 +66,7 @@ using namespace RooFit ;
 ClassImp(RooMsgService)
 ;
 
+RooMsgService* gMsgService = 0 ;
 RooMsgService* RooMsgService::_instance = 0 ;
 Int_t RooMsgService::_debugCount = 0 ;
 

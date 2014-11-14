@@ -219,12 +219,6 @@ protected:
   ClassDef(RooMsgService,0) // RooFit Message Service Singleton class
 };
 
-
-#ifdef INST_MSG_SERVICE 
-RooMsgService* gMsgService = 0 ;
-#else
 extern RooMsgService* gMsgService ;
-#endif 
-
 
 #endif
