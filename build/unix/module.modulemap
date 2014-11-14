@@ -27,7 +27,6 @@ module RooMsgService {
   header "RooLinkedListElem.h"
   header "RooHashTable.h"
   header "RooGlobalFunc.h"
-  config_macros INST_MSG_SERVICE // see RooMsgService.h:223
   export *
 }
 
