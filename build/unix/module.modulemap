@@ -611,9 +611,12 @@ module math_physics {
   header "TVector3.h"
   header "TRobustEstimator.h"
 }
+module net_rpddefs {
+  header "rpddefs.h"
+  export *
+}
 module net_rpdutils {
   export *
-  header "rpddefs.h"
   header "rpderr.h"
   header "rpdconn.h"
   header "rpdpriv.h"
