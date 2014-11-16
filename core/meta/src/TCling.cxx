@@ -1276,14 +1276,15 @@ bool TCling::LoadPCM(TString pcmFileName,
       if (enums) {
          // Cache the pointers
          auto listOfGlobals = gROOT->GetListOfGlobals();
-         auto listOfEnums = gROOT->GetListOfEnums();
+         auto listOfEnums = dynamic_cast<THashList*>(gROOT->GetListOfEnums());
          // Loop on enums and then on enum constants
          for (auto selEnum: *enums){
             const char* enumScope = selEnum->GetTitle();
+            const char* enumName = selEnum->GetName();
             if (strcmp(enumScope,"") == 0){
                // This is a global enum and is added to the
                // list of enums and its constants to the list of globals
-               if (!listOfEnums->FindObject(selEnum)){
+               if (!listOfEnums->THashList::FindObject(enumName)){
                   listOfEnums->Add(selEnum);
                }
                for (auto enumConstant: *static_cast<TEnum*>(selEnum)->GetConstants()){
@@ -1299,7 +1300,10 @@ bool TCling::LoadPCM(TString pcmFileName,
                if (!nsTClassEntry){
                   nsTClassEntry = new TClass(enumScope,0,TClass::kNamespaceForMeta, true);
                }
-               nsTClassEntry->GetListOfEnums(false)->Add(selEnum);
+               auto listOfEnums = dynamic_cast<THashList*>(nsTClassEntry->GetListOfEnums(false));
+               if (listOfEnums && !listOfEnums->THashList::FindObject(enumName)){
+                  listOfEnums->Add(selEnum);
+               }
             }
          }
          enums->Clear();
