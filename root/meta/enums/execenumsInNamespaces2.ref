@@ -1,0 +1,4 @@
+
+Processing execenumsInNamespaces2.C...
+Enum first defined in the interpreter and then loaded from protoclass
+Size of list of enums before loading the library: 1, after 1

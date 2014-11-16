@@ -28,4 +28,13 @@ void execenumsInNamespaces(){
    gInterpreter->ProcessLine("namespace myNamespace{enum B{kOne};};");
    checkEnum();
 
+   // Now check that the enum read from protoclasses does not appear twice after being re-defined in the interpreter
+   auto enList = TClass::GetClass("myNamespace2")->GetListOfEnums();
+   gInterpreter->ProcessLine("namespace myNamespace2{enum C{kOne};}");
+   enList = TClass::GetClass("myNamespace2")->GetListOfEnums();
+   int nEnums =enList->GetSize();
+   if (nEnums != 1 ){
+     std::cerr << "One enum expected, but " << nEnums << " found!\n";
+     enList->Dump();
+   }
 }
