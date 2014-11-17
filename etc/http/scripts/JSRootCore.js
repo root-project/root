@@ -15,10 +15,27 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.1 dev 11/11/2014";
+   JSROOT.version = "3.1 dev 17/11/2014";
 
-   JSROOT.source_dir = null;
+   JSROOT.source_dir  = function(){
+      var scripts = document.getElementsByTagName('script');
 
+      for (var n in scripts) {
+         if (scripts[n]['type'] != 'text/javascript') continue;
+
+         var src = scripts[n]['src'];
+         if ((src == null) || (src.length == 0)) continue;
+
+         var pos = src.indexOf("scripts/JSRootCore.js");
+         if (pos<0) continue;
+
+         console.log("Set JSROOT.source_dir to " + src.substr(0, pos));
+         return src.substr(0, pos);
+      }
+      return "";
+   }();
+
+   // TODO: all jQuery-related functions should go into extra script
    JSROOT.clone = function(obj) {
       return jQuery.extend(true, {}, obj);
    }
@@ -332,16 +349,6 @@
             var src = scripts[n]['src'];
             if ((src == null) || (src.length == 0)) continue;
 
-            // try to detect place where source for our scripts should be situated
-            if (JSROOT.source_dir == null) {
-
-               var pos = src.indexOf("scripts/JSRootCore.js");
-               if (pos>=0) {
-                  JSROOT.source_dir = src.substr(0, pos);
-                  debug("Set JSROOT.source_dir to " + JSROOT.source_dir);
-               }
-            }
-
             if (src.indexOf(filename)>=0) {
                // debug("script "+  filename + " already loaded");
                return completeLoad();
@@ -388,53 +395,67 @@
       // 'io' for I/O functionality (default)
       // '2d' for 2d graphic
       // '3d' for 3d graphic
+      // 'simple' for basic user interface
+      // 'user:' list of user-specific scripts at the end of kind string
 
       if (typeof kind == 'function') { andThan = kind; kind = null; }
 
       if (typeof kind != 'string') kind = "2d";
+      if (kind.charAt(kind.length-1)!=";") kind+=";";
 
       // file names should be separated with ';'
       var allfiles = '$$$scripts/jquery.min.js';
 
-      if (kind.indexOf('io')>=0)
+      if (kind.indexOf('io;')>=0)
          allfiles += ";$$$scripts/rawinflate.js" +
                      ";$$$scripts/JSRootIOEvolution.js";
 
-      if (kind.indexOf('2d')>=0)
+      if (kind.indexOf('2d;')>=0)
          allfiles += ';$$$style/jquery-ui.css' +
                      ';$$$scripts/jquery-ui.min.js' +
                      ';$$$scripts/d3.v3.min.js' +
                      ';$$$scripts/JSRootPainter.js' +
                      ';$$$style/JSRootPainter.css';
 
-      if (kind.indexOf("3d")>=0)
+      if (kind.indexOf("3d;")>=0)
          allfiles += ";$$$scripts/jquery.mousewheel.js" +
                      ";$$$scripts/three.min.js" +
                      ";$$$scripts/helvetiker_regular.typeface.js" +
                      ";$$$scripts/helvetiker_bold.typeface.js" +
                      ";$$$scripts/JSRoot3DPainter.js";
 
-      if (kind.indexOf("simple")>=0)
+      if (kind.indexOf("simple;")>=0)
          allfiles += ';$$$scripts/JSRootInterface.js' +
                      ';$$$style/JSRootInterface.css';
+
+      var pos = kind.indexOf("user:");
+      if (pos>0)
+         allfiles += ";" + kind.slice(pos+5);
 
       JSROOT.loadScript(allfiles, andThan, debugout);
    }
 
-   JSROOT.BuildSimpleGUI = function(andThen) {
-      if (typeof requirements == 'function') {
-         andThen = requirements; requirements = null;
+   JSROOT.BuildSimpleGUI = function(user_scripts, andThen) {
+      if (typeof user_scripts == 'function') {
+         andThen = user_scripts;
+         user_scripts = null;
       }
+
       var debugout = null;
 
-      var requirements = "2d;io;simple";
+      var requirements = "2d;io;simple;";
 
       if (document.getElementById('simpleGUI')) debugout = 'simpleGUI'; else
-      if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;simple"; }
+      if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;simple;"; }
+
+      if (user_scripts == null)
+         user_scripts = JSROOT.GetUrlOption("autoload");
+
+      if (user_scripts != null)
+         requirements += "user:" + user_scripts + ";";
 
       JSROOT.AssertPrerequisites(requirements, function() {
          if (typeof BuildSimpleGUI == 'function') BuildSimpleGUI();
-
          if (typeof andThen == 'function') andThen();
       }, debugout);
    }
@@ -542,6 +563,14 @@
       if (typename == 'TH2I' || typename == 'TH2F' || typename == 'TH2D' || typename == 'TH2S' || typename == 'TH2C') {
          JSROOT.Create("TH2", obj);
          jQuery.extend(obj, { fN : 0, fArray: [] });
+      } else
+      if (typename == 'TGraph') {
+         JSROOT.Create("TNamed", obj);
+         JSROOT.Create("TAttLine", obj);
+         JSROOT.Create("TAttFill", obj);
+         JSROOT.Create("TAttMarker", obj);
+         jQuery.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: JSROOT.CreateTH1(),
+                              fMaxSize: 0, fMaximum:0, fMinimum:0, fNpoints: 0, fX: [], fY: [] });
       }
 
       JSROOT.addMethods(obj, typename);
@@ -571,39 +600,18 @@
       if ((nbinsx!=null) && (nbinsy!=null)) {
          histo['fN'] = histo['fNcells'] = (nbinsx+2) * (nbinsy+2);
          for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
-         jQuery.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0,  fXmax: nbinsx });
-         jQuery.extend(histo['YXaxis'], { fNbins: nbinsy, fXmin: 0,  fXmax: nbinsy });
+         jQuery.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
+         jQuery.extend(histo['fYaxis'], { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
       }
       return histo;
    }
 
    JSROOT.CreateTGraph = function(npoints) {
-      var graph = {};
-      graph['_typename'] = "TGraph";
-      graph['fBits'] = 0x3000408;
-      graph['fName'] = "dummy_graph_" + this.id_counter++;
-      graph['fTitle'] = "dummytitle";
-      graph['fMinimum'] = -1111;
-      graph['fMaximum'] = -1111;
-      graph['fOption'] = "";
-      graph['fFillColor'] = 0;
-      graph['fFillStyle'] = 1001;
-      graph['fLineColor'] = 2;
-      graph['fLineStyle'] = 1;
-      graph['fLineWidth'] = 2;
-      graph['fMarkerColor'] = 4;
-      graph['fMarkerStyle'] = 21;
-      graph['fMarkerSize'] = 1;
-      graph['fMaxSize'] = 0;
-      graph['fNpoints'] = 0;
-      graph['fX'] = new Array;
-      graph['fY'] = new Array;
-      graph['fFunctions'] = JSROOT.Create("TList");
-      graph['fHistogram'] = JSROOT.CreateTH1();
+      var graph = JSROOT.Create("TGraph");
+      jQuery.extend(graph, { fBits: 0x3000408, fName: "dummy_graph_" + this.id_counter++, fTitle: "dummytitle" });
 
       if (npoints>0) {
-         graph['fMaxSize'] = npoints;
-         graph['fNpoints'] = npoints;
+         graph['fMaxSize'] = graph['fNpoints'] = npoints;
          for (var i=0;i<npoints;i++) {
             graph['fX'].push(i);
             graph['fY'].push(i);
@@ -611,7 +619,6 @@
          JSROOT.AdjustTGraphRanges(graph);
       }
 
-      JSROOT.addMethods(graph);
       return graph;
    }
 
@@ -629,8 +636,6 @@
       }
 
       if (miny==maxy) maxy = miny + 1;
-
-      // console.log("search minx = " + minx + " maxx = " + maxx);
 
       graph['fHistogram']['fXaxis']['fXmin'] = minx;
       graph['fHistogram']['fXaxis']['fXmax'] = maxx;
@@ -739,26 +744,38 @@
             return ret;
          };
       }
-      if (obj_typename.indexOf("TGraph") == 0) {
-         obj['computeRange'] = function() {
+      if ((obj_typename.indexOf("TGraph") == 0) || (obj_typename == "TCutG")) {
+         obj['ComputeRange'] = function() {
             // Compute the x/y range of the points in this graph
-            var i, xmin = 0, xmax = 0, ymin = 0, ymax = 0;
+            var res = { xmin: 0, xmax: 0, ymin: 0, ymax: 0 };
             if (this['fNpoints'] > 0) {
-               xmin = xmax = this['fX'][0];
-               ymin = ymax = this['fY'][0];
-               for (i=1; i<this['fNpoints']; i++) {
-                  if (this['fX'][i] < xmin) xmin = this['fX'][i];
-                  if (this['fX'][i] > xmax) xmax = this['fX'][i];
-                  if (this['fY'][i] < ymin) ymin = this['fY'][i];
-                  if (this['fY'][i] > ymax) ymax = this['fY'][i];
+               res.xmin = res.xmax = this['fX'][0];
+               res.ymin = res.ymax = this['fY'][0];
+               for (var i=1; i<this['fNpoints']; i++) {
+                  if (this['fX'][i] < res.xmin) res.xmin = this['fX'][i];
+                  if (this['fX'][i] > res.xmax) res.xmax = this['fX'][i];
+                  if (this['fY'][i] < res.ymin) res.ymin = this['fY'][i];
+                  if (this['fY'][i] > res.ymax) res.ymax = this['fY'][i];
                }
             }
-            return {
-               xmin: xmin,
-               xmax: xmax,
-               ymin: ymin,
-               ymax: ymax
-            };
+            return res;
+         };
+         // check if point inside figure specified by the TGrpah
+         obj['IsInside'] = function(xp,yp) {
+            var j = this['fNpoints'] - 1 ;
+            var x = this['fX'], y = this['fY'];
+            var oddNodes = false;
+
+            for (var i=0; i<this['fNpoints']; i++) {
+               if ((y[i]<yp && y[j]>=yp) || (y[j]<yp && y[i]>=yp)) {
+                  if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
+                     oddNodes = !oddNodes;
+                  }
+               }
+               j=i;
+            }
+
+            return oddNodes;
          };
       }
       if (obj_typename.indexOf("TH1") == 0 ||
