@@ -25,6 +25,7 @@ The following parameters can be specified in the URL string:
 - opts - array of options ['any', 'colz']
 - layout - can be 'collapsible', 'tabs' or 'gridNxM' where N and M are integer values
 - nobrowser - do not display file browser
+- autoload - name of JavaScript to load
 
 Examples: 
 
@@ -78,7 +79,7 @@ It is also possible to display one single item from the THttpServer server like:
 [http://root.cern.ch/js/3.0/demo/Files/job1.root/hpxpy/draw.htm?opt=colz](http://root.cern.ch/js/3.0/demo/Files/job1.root/hpxpy/draw.htm?opt=colz)
 
 
-##  Data monitoring with JSROOT 
+##  Data monitoring with JSROOT
 
 ### Monitoring with http server
 
@@ -93,7 +94,6 @@ The parameter value is the update interval in milliseconds.
 ### JSON file-based monitoring
 
 Solid file-based monitoring (without integration of THttpServer into application) can be implemented in JSON format. There is the TBufferJSON class, which is capable to potentially convert any ROOT object (beside TTree) into JSON. Any ROOT application can use such class to create JSON files for selected objects and write such files in a directory, which can be accessed via web server. Then one can use JSROOT to read such files and display objects in a web browser.
-           
 There is a demonstration page showing such functionality:
 
 [http://root.cern.ch/js/3.0/demo/demo.htm](http://root.cern.ch/js/3.0/demo/demo.htm)
@@ -104,7 +104,7 @@ There is a demonstration page showing such functionality:
 This demo page reads in cycle 20 json files and displays them.
 
 If one has a web server which already provides such JSON file, one could specify the URL to this file like:
-  
+
 [http://root.cern.ch/js/3.0/demo/demo.htm?addr=Canvases/c1/root.json.gz](http://root.cern.ch/js/3.0/demo/demo.htm?addr=Canvases/c1/root.json.gz)
 
 Here the same problem with [Cross-Origin Request](https://developer.mozilla.org/en/http_access_control) can appear.
@@ -164,6 +164,7 @@ Then one should call the JSROOT.AssertPrerequisites(kind,callback,debug) method,
     + '2d' normal drawing for 1D/2D objects
     + '3d' 3D drawing for 2D/3D histograms
     + 'io' binary file I/O
+    + 'user:scirpt.js' load user scripts, should be at the end of kind string
 - callback - call back function which is called when all necessary scripts are loaded
 - debug - id of HTML element where debug information will be shown while scripts are loading
 
@@ -174,34 +175,34 @@ At the best, one should call it with `onload` handler like:
     <body onload="JSROOT.AssertPrerequisites('2d', userInitFunction, 'drawing')">
        <div id="drawing">loading...</div>
     </body>
-     
+
 Internally, the JSROOT.loadScript(urllist, callback, debug) method is used. It can be useful when some other scripts should be loaded as well. __urllist__ is a string with scripts names, separated by ';' symbol. If a script name starts with __$$$__ (triple dollar sign), the script will be loaded from a location relative to the main JSROOT directory. 
 This location is automatically detected when JSRootCore.js script is loaded.
-    
+
 
 ### Use of JSON
 
 It is strongly recommended to use JSON when communicating with ROOT application.
-THttpServer  provides a JSON representation for every registered object with an url address like: 
+THttpServer  provides a JSON representation for every registered object with an url address like:
 
     http://your_root_server:8080/Canvases/c1/root.json
- 
+
 One can also generate JSON representation, using the [TBufferJSON](http://root.cern.ch/root/html/TBufferJSON.html) class.
 
-To access data from a remote web server, it is recommended to use the [XMLHttpRequest](http://en.wikipedia.org/wiki/XMLHttpRequest) class. 
-JSROOT provides a special method to create such class and properly handle it in different browsers. 
+To access data from a remote web server, it is recommended to use the [XMLHttpRequest](http://en.wikipedia.org/wiki/XMLHttpRequest) class.
+JSROOT provides a special method to create such class and properly handle it in different browsers.
 For receiving JSON from a server one could use following code:
 
     var req = JSROOT.NewHttpRequest("http://your_root_server:8080/Canvases/c1/root.json", 'object', userCallback);
     req.send(null);
-    
+
 In the callback function, one gets JavaScript object (or null in case of failure)
 
 
 ### Objects drawing
 
 After an object has been created, one can directly draw it. If somewhere in a HTML page there is a `<div>` element:
-    
+
     ...
     <div id="drawing"></div>
     ...
@@ -209,13 +210,13 @@ After an object has been created, one can directly draw it. If somewhere in a HT
 One could use the JSROOT.draw function:
 
     JSROOT.draw("drawing", obj, "colz");
-    
+
 The first argument is the id of the HTML div element, where drawing will be performed. The second argument is the object to draw and the third one is the drawing option.
 One is also able to update the drawing with a new version of the object:
 
     // after some interval request object again
     JSROOT.redraw("drawing", obj2, "colz");
-    
+
 The JSROOT.redraw function will call JSROOT.draw if the drawing was not performed before.
 
 
@@ -225,7 +226,7 @@ JSROOT defines the JSROOT.TFile class, which can be used to access binary ROOT f
 
     var filename = "http://root.cern.ch/js/files/hsimple.root";
     var f = new JSROOT.TFile(filename, fileReadyCallback);
-    
+
 One should always remember that all I/O operations are asynchronous in JSROOT.
 Therefore, callback functions are used to react when the I/O operation completed.
 For example, reading an object from a file and displaying it will look like:
@@ -267,5 +268,4 @@ For example, reading an object from a file and displaying it will look like:
 * [Only options list](http://root.cern.ch/js/3.0/demo/drawoptions.htm?minimal)
 * [List and drawing with default options](http://root.cern.ch/js/3.0/demo/drawoptions.htm?default&w=800&h=600)
 * [All drawings at once (many large canvases)](http://root.cern.ch/js/3.0/demo/drawoptions.htm?all&w=1400&h=800)
-
 
