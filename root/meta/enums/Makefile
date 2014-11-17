@@ -17,4 +17,4 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 execEnumsTest.log: libenumsTestClasses_dictrflx.$(DllSuf)
 execenumsInNamespaces.log: libenumsInNamespaces_dictrflx.$(DllSuf)
 execenumsInNamespaces2.log: libenumsInNamespaces2_dictrflx.$(DllSuf)
-
+execduplicateEnums.log: libduplicateEnums_dictrflx.$(DllSuf)
