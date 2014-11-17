@@ -553,6 +553,11 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
    return newarrays;
 }
 
+//______________________________________________________________________________
+void TGraph::AppendPoint(Double_t x, Double_t y)
+{
+    SetPoint(fNpoints, x, y);
+}
 
 //______________________________________________________________________________
 void TGraph::Apply(TF1 *f)

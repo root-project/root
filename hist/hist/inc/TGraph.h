@@ -97,6 +97,7 @@ public:
    TGraph(const char *filename, const char *format="%lg %lg", Option_t *option="");
    virtual ~TGraph();
 
+   virtual void          AppendPoint(Double_t x, Double_t y);
    virtual void          Apply(TF1 *f);
    virtual void          Browse(TBrowser *b);
    virtual Double_t      Chisquare(TF1 *f1, Option_t *option="") const;
