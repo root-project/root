@@ -2113,6 +2113,13 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
    return ipoint;
 }
 
+//______________________________________________________________________________
+void TGraph::RemoveAllPoints()
+{
+    while (fNpoints > 0) {
+        RemovePoint(0);
+    }
+}
 
 //______________________________________________________________________________
 void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)

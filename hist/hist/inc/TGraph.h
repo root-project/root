@@ -173,6 +173,7 @@ public:
    virtual void          RecursiveRemove(TObject *obj);
    virtual Int_t         RemovePoint(); // *MENU*
    virtual Int_t         RemovePoint(Int_t ipoint);
+   virtual void          RemoveAllPoints();
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void          SetEditable(Bool_t editable=kTRUE); // *TOGGLE* *GETTER=GetEditable
    virtual void          SetHistogram(TH1F *h) {fHistogram = h;}
