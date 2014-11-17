@@ -6,6 +6,18 @@ project of Bertrand Bellenot, but provides same functionality in default mode.
 Main motivation for changes - fix different errors,
 make JavaScript code more flexible and applicable for online environment.
 
+Changes in 3.1
+1. Correctly show tooltips in case of overlapped objects
+2. Implement JSROOT.Create() method to create supported
+   in JavaScript ROOT classes like TH1 or TGraph
+3. Fix problem with JSROOT.draw in HTML element with zero width (display:none)
+4. Provide possibility to load user scripts with JSROOT.BuildSimpleGUI 
+   and JSROOT.AssertPrerequisites, also with main index.htm
+5. Support of TCutG drawing
+
+
+Development of version 3.0
+
 November 2014:
 1. Better font size and position in pave stats
 2. Resize/move of element only inside correspondent pad
@@ -14,8 +26,6 @@ November 2014:
 5. Exclude drawing of markers from TGraph outside visible range
 6. Drawing of canvas without TFrame object
 7. Many other small bug fixes and improvements, thanks to Maximilian Dietrich
-8. Mark as JSROOT version 3
-9. Correctly show tooltips in case of overlapped objects
 
 October 2014:
 1. Add "shortcut icon"
