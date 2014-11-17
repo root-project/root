@@ -47,7 +47,7 @@ public:
    const char *GetTypeName() const override { return fEnum->GetQualifiedName(); }
    const char *GetFullTypeName() const override { return GetTypeName(); }
 
-   ClassDef(TEnumConstant,2)  //Enum type constant
+   ClassDefOverride(TEnumConstant,2)  //Enum type constant
 };
 
 #endif

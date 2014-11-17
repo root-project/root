@@ -2758,9 +2758,6 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
    }
 
-   // Try to see if this is an enumerator
-   if(TEnum::GetEnum(name,load ? TEnum::kAutoload : TEnum::kNone)) return nullptr;
-
    // Check the interpreter only after autoparsing the template if any.
    {
       std::string::size_type posLess = normalizedName.find('<');
@@ -5295,6 +5292,9 @@ Long_t TClass::Property() const
    R__LOCKGUARD(gInterpreterMutex);
 
    if (fProperty!=(-1)) return fProperty;
+
+   // Avoid asking about the class when it is still building
+   if (TestBit(kLoading)) return fProperty;
 
    // When called via TMapFile (e.g. Update()) make sure that the dictionary
    // gets allocated on the heap and not in the mapped file.

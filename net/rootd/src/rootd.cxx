@@ -214,6 +214,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <string>
@@ -339,7 +340,7 @@ static int gFd                   = -1;
 static int gFtp                  = 0;
 static int gInetdFlag            = 0;
 static char gOption[32]          = { 0 };
-static char gFile[kMAXPATHLEN]   = { 0 };
+static char gRdFile[kMAXPATHLEN]   = { 0 };
 static int gUploaded             = 0;
 static int gWritable             = 0;
 static int gReadOnly             = 0;
@@ -605,7 +606,7 @@ again:
 
    dev_t device;
    ino_t inode;
-   if (stat(gFile, &sbuf) == -1) {
+   if (stat(gRdFile, &sbuf) == -1) {
       device = 0;
       inode  = 0;
    } else {
@@ -672,11 +673,11 @@ again:
       unsigned long dev = device;
       unsigned long ino = inode;
       char *tmsg = msg;
-      int lmsg = strlen(gFile) + gUser.length() + strlen(smode) + 40;
+      int lmsg = strlen(gRdFile) + gUser.length() + strlen(smode) + 40;
       if (lmsg > kMAXPATHLEN)
          tmsg = new char[lmsg];
       sprintf(tmsg, "%s %lu %lu %s %s %d\n",
-                   gFile, dev, ino, smode, gUser.c_str(), (int) getpid());
+                   gRdFile, dev, ino, smode, gUser.c_str(), (int) getpid());
       if (write(fid, tmsg, strlen(tmsg)) == -1)
          Error(ErrSys, kErrFatal, "RootdCheckTab: error writing %s", sfile);
       if (tmsg != msg)
@@ -698,8 +699,8 @@ again:
 //______________________________________________________________________________
 void RootdCloseTab(int force = 0)
 {
-   // Removes from the gRootdTab file the reference to gFile for the
-   // current rootd. If force = 1, then remove all references for gFile
+   // Removes from the gRootdTab file the reference to gRdFile for the
+   // current rootd. If force = 1, then remove all references for gRdFile
    // from the gRootdTab file. This might be necessary in case something
    // funny happened and the original reference was not correctly removed.
    // Stale locks are detected by checking each pid and then removed.
@@ -737,7 +738,7 @@ again:
    fstat(fid, &sbuf);
    size_t siz = sbuf.st_size;
 
-   stat(gFile, &sbuf);
+   stat(gRdFile, &sbuf);
    dev_t device = sbuf.st_dev;
    ino_t inode  = sbuf.st_ino;
 
@@ -845,10 +846,10 @@ void RootdClose()
 
    if (gDebug > 0)
       ErrorInfo("RootdClose: file %s closed, rd=%g, wr=%g, rx=%g, tx=%g",
-                gFile, gBytesRead, gBytesWritten,
+                gRdFile, gBytesRead, gBytesWritten,
                 NetGetBytesRecv(), NetGetBytesSent());
    else
-      ErrorInfo("Rootd: file %s closed, rd=%g, wr=%g, rx=%g, tx=%g", gFile,
+      ErrorInfo("Rootd: file %s closed, rd=%g, wr=%g, rx=%g, tx=%g", gRdFile,
                 gBytesRead, gBytesWritten,
                 NetGetBytesRecv(), NetGetBytesSent());
 }
@@ -859,12 +860,12 @@ void RootdFlush()
    if (RootdIsOpen() && gWritable) {
 #ifndef WIN32
       if (fsync(gFd) < 0)
-         Error(ErrSys, kErrFatal, "RootdFlush: error flushing file %s", gFile);
+         Error(ErrSys, kErrFatal, "RootdFlush: error flushing file %s", gRdFile);
 #endif
    }
 
    if (gDebug > 0)
-      ErrorInfo("RootdFlush: file %s flushed", gFile);
+      ErrorInfo("RootdFlush: file %s flushed", gRdFile);
 }
 
 //______________________________________________________________________________
@@ -1019,22 +1020,22 @@ void RootdOpen(const char *msg)
       }
 
       ErrorInfo("RootdOpen: CASTOR Flag on, file: %s", gCastorFile.c_str());
-      strncpy(gFile, gCastorFile.c_str(), kMAXPATHLEN-1);
-      gFile[kMAXPATHLEN-1] = '\0';
+      strncpy(gRdFile, gCastorFile.c_str(), kMAXPATHLEN-1);
+      gRdFile[kMAXPATHLEN-1] = '\0';
 
    } else {
 
       if (gClientProtocol > 14) {
-         strlcpy(gFile, file, sizeof(gFile));
+         strlcpy(gRdFile, file, sizeof(gRdFile));
       } else {
          // Old clients send an additional slash at the beginning
          if (file[0] == '/')
-            strlcpy(gFile, &file[1], sizeof(gFile));
+            strlcpy(gRdFile, &file[1], sizeof(gRdFile));
          else
-            strlcpy(gFile, file, sizeof(gFile));
+            strlcpy(gRdFile, file, sizeof(gRdFile));
       }
 
-      gFile[strlen(file)] = '\0';
+      gRdFile[strlen(file)] = '\0';
    }
 
    strlcpy(gOption, option, sizeof(gOption));
@@ -1064,15 +1065,15 @@ void RootdOpen(const char *msg)
 
    if (!read && gReadOnly)
       Error(ErrFatal, kErrNoAccess,
-            "RootdOpen: file %s can only be opened in \"READ\" mode", gFile);
+            "RootdOpen: file %s can only be opened in \"READ\" mode", gRdFile);
 
    if (!gAnon) {
       char *fname;
-      if ((fname = RootdExpandPathName(gFile))) {
-         strlcpy(gFile, fname, sizeof(gFile));
+      if ((fname = RootdExpandPathName(gRdFile))) {
+         strlcpy(gRdFile, fname, sizeof(gRdFile));
          free(fname);
       } else
-         Error(ErrFatal, kErrBadFile, "RootdOpen: bad file name %s", gFile);
+         Error(ErrFatal, kErrBadFile, "RootdOpen: bad file name %s", gRdFile);
    }
 
    if (forceOpen)
@@ -1082,8 +1083,8 @@ void RootdOpen(const char *msg)
    if (recreate) {
       if (!RootdCheckTab(-1))
          Error(ErrFatal, kErrFileWriteOpen,
-               "RootdOpen: file %s already opened in read or write mode", gFile);
-      if (!access(gFile, F_OK))
+               "RootdOpen: file %s already opened in read or write mode", gRdFile);
+      if (!access(gRdFile, F_OK))
          trunc = O_TRUNC;
       else {
          recreate = 0;
@@ -1092,71 +1093,71 @@ void RootdOpen(const char *msg)
       }
    }
 
-   if (create && !access(gFile, F_OK))
-      Error(ErrFatal, kErrFileExists, "RootdOpen: file %s already exists", gFile);
+   if (create && !access(gRdFile, F_OK))
+      Error(ErrFatal, kErrFileExists, "RootdOpen: file %s already exists", gRdFile);
 
    int wasupdt = 0;
    if (update) {
-      if (access(gFile, F_OK)) {
+      if (access(gRdFile, F_OK)) {
          update = 0;
          create = 1;
          wasupdt = 1;
          strlcpy(gOption, "create", sizeof(gOption));
       }
-      if (update && access(gFile, W_OK))
+      if (update && access(gRdFile, W_OK))
          Error(ErrFatal, kErrNoAccess,
-               "RootdOpen: no write permission for file %s", gFile);
+               "RootdOpen: no write permission for file %s", gRdFile);
    }
 
    if (read) {
-      if (access(gFile, F_OK))
+      if (access(gRdFile, F_OK))
          Error(ErrFatal, kErrNoFile,
-               "RootdOpen: file %s does not exist (errno: 0x%x)", gFile, errno);
-      if (access(gFile, R_OK))
+               "RootdOpen: file %s does not exist (errno: 0x%x)", gRdFile, errno);
+      if (access(gRdFile, R_OK))
          Error(ErrFatal, kErrNoAccess,
-               "RootdOpen: no read permission for file %s (errno: 0x%x)", gFile, errno);
+               "RootdOpen: no read permission for file %s (errno: 0x%x)", gRdFile, errno);
    }
 
    if (create || recreate || update) {
       if (create || recreate) {
          // make sure file exists so RootdCheckTab works correctly
 #ifndef WIN32
-         gFd = SysOpen(gFile, O_RDWR | O_CREAT | trunc, 0644);
+         gFd = SysOpen(gRdFile, O_RDWR | O_CREAT | trunc, 0644);
 #else
-         gFd = SysOpen(gFile, O_RDWR | O_CREAT | O_BINARY | trunc, S_IREAD | S_IWRITE);
+         gFd = SysOpen(gRdFile, O_RDWR | O_CREAT | O_BINARY | trunc, S_IREAD | S_IWRITE);
 #endif
          if (gFd != -1)
             close(gFd);
          gFd = -1;
       }
 #ifndef WIN32
-      gFd = SysOpen(gFile, O_RDWR, 0644);
+      gFd = SysOpen(gRdFile, O_RDWR, 0644);
 #else
-      gFd = SysOpen(gFile, O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
+      gFd = SysOpen(gRdFile, O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (gFd == -1)
-         Error(ErrSys, kErrFileOpen, "RootdOpen: error opening file %s in write mode", gFile);
+         Error(ErrSys, kErrFileOpen, "RootdOpen: error opening file %s in write mode", gRdFile);
 
       if (!RootdCheckTab(1)) {
          close(gFd);
-         Error(ErrFatal, kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
+         Error(ErrFatal, kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gRdFile);
       }
 
       gWritable = wasupdt ? 2 : 1;
 
    } else {
 #ifndef WIN32
-      gFd = SysOpen(gFile, O_RDONLY, 0644);
+      gFd = SysOpen(gRdFile, O_RDONLY, 0644);
 #else
-      gFd = SysOpen(gFile, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
+      gFd = SysOpen(gRdFile, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (gFd == -1)
-         Error(ErrSys, kErrFileOpen, "RootdOpen: error opening file %s in read mode", gFile);
+         Error(ErrSys, kErrFileOpen, "RootdOpen: error opening file %s in read mode", gRdFile);
 
       if (!RootdCheckTab(0)) {
          if (!forceRead) {
             close(gFd);
-            Error(ErrFatal, kErrFileReadOpen, "RootdOpen: file %s already opened in write mode", gFile);
+            Error(ErrFatal, kErrFileReadOpen, "RootdOpen: file %s already opened in write mode", gRdFile);
          }
       }
 
@@ -1172,14 +1173,14 @@ void RootdOpen(const char *msg)
    unsigned long ino = sbuf.st_ino;
 
    if (gDebug > 0)
-      ErrorInfo("RootdOpen: file %s opened in mode %s", gFile, gOption);
+      ErrorInfo("RootdOpen: file %s opened in mode %s", gRdFile, gOption);
    else {
       if (gAnon)
          ErrorInfo("RootdOpen: file %s (dev=%lu,inode=%lu,%s) opened by %s/%s",
-                   gFile, dev, ino, gOption, gUser.c_str(), gPasswd.c_str());
+                   gRdFile, dev, ino, gOption, gUser.c_str(), gPasswd.c_str());
       else
          ErrorInfo("RootdOpen: file %s (dev=%lu,inode=%lu,%s) opened by %s",
-                   gFile, dev, ino, gOption, gUser.c_str());
+                   gRdFile, dev, ino, gOption, gUser.c_str());
    }
 }
 
@@ -1198,7 +1199,7 @@ void RootdPut(const char *msg)
    NetRecvRaw(buf, len);
 
    if (!RootdIsOpen() || !gWritable)
-      Error(ErrFatal, kErrNoAccess, "RootdPut: file %s not opened in write mode", gFile);
+      Error(ErrFatal, kErrNoAccess, "RootdPut: file %s not opened in write mode", gRdFile);
 
 #if defined (R__SEEK64)
    if (lseek64(gFd, offset, SEEK_SET) < 0)
@@ -1207,18 +1208,18 @@ void RootdPut(const char *msg)
 #else
    if (lseek(gFd, offset, SEEK_SET) < 0)
 #endif
-      Error(ErrSys, kErrFilePut, "RootdPut: cannot seek to position %lld in file %s", offset, gFile);
+      Error(ErrSys, kErrFilePut, "RootdPut: cannot seek to position %lld in file %s", offset, gRdFile);
 
    ssize_t siz;
    while ((siz = write(gFd, buf, len)) < 0 && GetErrno() == EINTR)
       ResetErrno();
 
    if (siz < 0)
-      Error(ErrSys, kErrFilePut, "RootdPut: error writing to file %s", gFile);
+      Error(ErrSys, kErrFilePut, "RootdPut: error writing to file %s", gRdFile);
 
    if (siz != len)
       Error(ErrFatal, kErrFilePut, "RootdPut: error writing all requested bytes to file %s, wrote %d of %d",
-            gFile, siz, len);
+            gRdFile, siz, len);
 
    NetSend(0, kROOTD_PUT);
 
@@ -1228,7 +1229,7 @@ void RootdPut(const char *msg)
 
    if (gDebug > 0)
       ErrorInfo("RootdPut: written %d bytes starting at %lld to file %s",
-                len, offset, gFile);
+                len, offset, gRdFile);
 }
 
 //______________________________________________________________________________
@@ -1245,7 +1246,7 @@ void RootdGet(const char *msg)
    char *buf = new char[len];
 
    if (!RootdIsOpen())
-      Error(ErrFatal, kErrNoAccess, "RootdGet: file %s not open", gFile);
+      Error(ErrFatal, kErrNoAccess, "RootdGet: file %s not open", gRdFile);
 
 #if defined (R__SEEK64)
    if (lseek64(gFd, offset, SEEK_SET) < 0)
@@ -1255,18 +1256,18 @@ void RootdGet(const char *msg)
    if (lseek(gFd, offset, SEEK_SET) < 0)
 #endif
       Error(ErrSys, kErrFileGet, "RootdGet: cannot seek to position %lld in"
-            " file %s", offset, gFile);
+            " file %s", offset, gRdFile);
 
    ssize_t siz;
    while ((siz = read(gFd, buf, len)) < 0 && GetErrno() == EINTR)
       ResetErrno();
 
    if (siz < 0)
-      Error(ErrSys, kErrFileGet, "RootdGet: error reading from file %s", gFile);
+      Error(ErrSys, kErrFileGet, "RootdGet: error reading from file %s", gRdFile);
 
    if (siz != len)
       Error(ErrFatal, kErrFileGet, "RootdGet: error reading all requested bytes"
-            " from file %s, got %d of %d",gFile, siz, len);
+            " from file %s, got %d of %d",gRdFile, siz, len);
 
    NetSend(0, kROOTD_GET);
 
@@ -1278,7 +1279,7 @@ void RootdGet(const char *msg)
 
    if (gDebug > 0)
       ErrorInfo("RootdGet: read %d bytes starting at %lld from file %s",
-                len, offset, gFile);
+                len, offset, gRdFile);
 }
 
 //______________________________________________________________________________
@@ -1290,7 +1291,7 @@ void RootdGets(const char *msg)
    // new data)
 
    if (!RootdIsOpen())
-      Error(ErrFatal, kErrNoAccess, "RootdGets: file %s not open", gFile);
+      Error(ErrFatal, kErrNoAccess, "RootdGets: file %s not open", gRdFile);
 
    Int_t nbuf;      // Number of buffers
    Int_t len;       // len of the data buffer with the list of buffers
@@ -1344,7 +1345,7 @@ void RootdGets(const char *msg)
          if (lseek(gFd, offsets[i] + pos, SEEK_SET) < 0)
 #endif
          Error(ErrSys, kErrFileGet, "RootdGets: cannot seek to position %lld in"
-            " file %s", offsets[i], gFile);
+            " file %s", offsets[i], gRdFile);
 
          Int_t readsz = lens[i] - pos;
          if( readsz > ( left - buf_pos) )
@@ -1379,11 +1380,11 @@ void RootdGets(const char *msg)
 
 end:
    if (siz < 0)
-      Error(ErrSys, kErrFileGet, "RootdGets: error reading from file %s", gFile);
+      Error(ErrSys, kErrFileGet, "RootdGets: error reading from file %s", gRdFile);
 
    if (actual_pos != size)
       Error(ErrFatal, kErrFileGet, "RootdGets: error reading all requested bytes"
-            " from file %s, got %d of %d",gFile, actual_pos, size);
+            " from file %s, got %d of %d",gRdFile, actual_pos, size);
 
    delete [] buf_in;
    delete [] buf_out;
@@ -1395,7 +1396,7 @@ end:
 
    if (gDebug > 0)
       ErrorInfo("RootdGets: read %d bytes from file %s",
-                actual_pos, gFile);
+                actual_pos, gRdFile);
 }
 
 //______________________________________________________________________________
@@ -1413,15 +1414,15 @@ void RootdPutFile(const char *msg)
 
    if (file[0] == '-') {
       forceopen = 1;
-      strlcpy(gFile, file+1, sizeof(gFile));
+      strlcpy(gRdFile, file+1, sizeof(gRdFile));
    } else
-      strlcpy(gFile, file, sizeof(gFile));
+      strlcpy(gRdFile, file, sizeof(gRdFile));
 
    // anon user may not overwrite existing files...
    struct stat st;
-   if (!stat(gFile, &st)) {
+   if (!stat(gRdFile, &st)) {
       if (gAnon) {
-         Error(Err, kErrFileExists, "RootdPutFile: anonymous users may not overwrite existing file %s", gFile);
+         Error(Err, kErrFileExists, "RootdPutFile: anonymous users may not overwrite existing file %s", gRdFile);
          return;
       }
    } else if (GetErrno() != ENOENT) {
@@ -1439,12 +1440,12 @@ void RootdPutFile(const char *msg)
 
       // make sure file exists so RootdCheckTab works correctly
 #ifndef WIN32
-      fd = SysOpen(gFile, O_RDWR | O_CREAT, 0600);
+      fd = SysOpen(gRdFile, O_RDWR | O_CREAT, 0600);
 #else
-      fd = SysOpen(gFile, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
+      fd = SysOpen(gRdFile, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fd < 0) {
-         Error(Err, kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
+         Error(Err, kErrFileOpen, "RootdPutFile: cannot open file %s", gRdFile);
          return;
       }
 
@@ -1453,42 +1454,42 @@ void RootdPutFile(const char *msg)
       // check if file is not in use by somebody and prevent from somebody
       // using it before upload is completed
       if (!RootdCheckTab(1)) {
-         Error(Err, kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gFile);
+         Error(Err, kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gRdFile);
          return;
       }
 
 #ifndef WIN32
-      fd = SysOpen(gFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+      fd = SysOpen(gRdFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 #else
       if (mode == kBinary)
-         fd = SysOpen(gFile, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
+         fd = SysOpen(gRdFile, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
                       S_IREAD | S_IWRITE);
       else
-         fd = SysOpen(gFile, O_CREAT | O_TRUNC | O_WRONLY,
+         fd = SysOpen(gRdFile, O_CREAT | O_TRUNC | O_WRONLY,
                       S_IREAD | S_IWRITE);
 #endif
    } else {
 #ifndef WIN32
-      fd = SysOpen(gFile, O_WRONLY, 0600);
+      fd = SysOpen(gRdFile, O_WRONLY, 0600);
 #else
       if (mode == kBinary)
-         fd = SysOpen(gFile, O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
+         fd = SysOpen(gRdFile, O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
       else
-         fd = SysOpen(gFile, O_WRONLY, S_IREAD | S_IWRITE);
+         fd = SysOpen(gRdFile, O_WRONLY, S_IREAD | S_IWRITE);
 #endif
       if (fd < 0) {
-         Error(Err, kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
+         Error(Err, kErrFileOpen, "RootdPutFile: cannot open file %s", gRdFile);
          return;
       }
       if (!RootdCheckTab(1)) {
          close(fd);
-         Error(Err, kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gFile);
+         Error(Err, kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gRdFile);
          return;
       }
    }
 
    // check file system space
-   if (strcmp(gFile, "/dev/null")) {
+   if (strcmp(gRdFile, "/dev/null")) {
       struct statfs statfsbuf;
 #if defined(__sgi) || (defined(__sun) && !defined(linux))
       if (fstatfs(fd, &statfsbuf, sizeof(struct statfs), 0) == 0) {
@@ -1498,7 +1499,7 @@ void RootdPutFile(const char *msg)
          Long64_t space = (Long64_t)statfsbuf.f_bsize * (Long64_t)statfsbuf.f_bavail;
 #endif
          if (space < size - restartat) {
-            Error(Err, kErrNoSpace, "RootdPutFile: not enough space to store file %s", gFile);
+            Error(Err, kErrNoSpace, "RootdPutFile: not enough space to store file %s", gRdFile);
             close(fd);
             return;
          }
@@ -1515,7 +1516,7 @@ void RootdPutFile(const char *msg)
       if (lseek(fd, restartat, SEEK_SET) < 0) {
 #endif
          Error(Err, kErrRestartSeek, "RootdPutFile: cannot seek to position %lld in file %s",
-               restartat, gFile);
+               restartat, gRdFile);
          close(fd);
          return;
       }
@@ -1563,11 +1564,11 @@ void RootdPutFile(const char *msg)
       }
 
       if (siz < 0)
-         Error(ErrSys, kErrFilePut, "RootdPutFile: error writing to file %s", gFile);
+         Error(ErrSys, kErrFilePut, "RootdPutFile: error writing to file %s", gRdFile);
 
       if (siz != n)
          Error(ErrFatal, kErrFilePut, "RootdPutFile: error writing all requested bytes to file %s, wrote %d of %d",
-               gFile, siz, int(left-skip));
+               gRdFile, siz, int(left-skip));
 
       gBytesWritten += n;
 
@@ -1599,13 +1600,13 @@ void RootdPutFile(const char *msg)
       speed = 0.0;
    if (speed > 524288)
       ErrorInfo("RootdPutFile: uploaded file %s (%lld bytes, %.3f seconds, "
-                "%.2f Mbytes/s)", gFile, size, t, speed / 1048576);
+                "%.2f Mbytes/s)", gRdFile, size, t, speed / 1048576);
    else if (speed > 512)
       ErrorInfo("RootdPutFile: uploaded file %s (%lld bytes, %.3f seconds, "
-                "%.2f Kbytes/s)", gFile, size, t, speed / 1024);
+                "%.2f Kbytes/s)", gRdFile, size, t, speed / 1024);
    else
       ErrorInfo("RootdPutFile: uploaded file %s (%lld bytes, %.3f seconds, "
-                "%.2f bytes/s)", gFile, size, t, speed);
+                "%.2f bytes/s)", gRdFile, size, t, speed);
 }
 
 //______________________________________________________________________________
@@ -1623,9 +1624,9 @@ void RootdGetFile(const char *msg)
 
    if (file[0] == '-') {
       forceopen = 1;
-      strlcpy(gFile, file+1, sizeof(gFile));
+      strlcpy(gRdFile, file+1, sizeof(gRdFile));
    } else
-      strlcpy(gFile, file, sizeof(gFile));
+      strlcpy(gRdFile, file, sizeof(gRdFile));
 
    // remove lock from file
    if (forceopen)
@@ -1633,12 +1634,12 @@ void RootdGetFile(const char *msg)
 
    // open file for reading
 #if defined(WIN32) || defined(R__WINGCC)
-   int fd = SysOpen(gFile, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
+   int fd = SysOpen(gRdFile, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #else
-   int fd = SysOpen(gFile, O_RDONLY, 0600);
+   int fd = SysOpen(gRdFile, O_RDONLY, 0600);
 #endif
    if (fd < 0) {
-      Error(Err, kErrFileOpen, "RootdGetFile: cannot open file %s", gFile);
+      Error(Err, kErrFileOpen, "RootdGetFile: cannot open file %s", gRdFile);
       return;
    }
 
@@ -1646,7 +1647,7 @@ void RootdGetFile(const char *msg)
    // using it before download is completed
    if (!RootdCheckTab(0)) {
       close(fd);
-      Error(Err, kErrFileOpen, "RootdGetFile: file %s is already open in write mode", gFile);
+      Error(Err, kErrFileOpen, "RootdGetFile: file %s is already open in write mode", gRdFile);
       return;
    }
 
@@ -1660,14 +1661,14 @@ void RootdGetFile(const char *msg)
    struct stat st;
    if (fstat(fd, &st)) {
 #endif
-      Error(Err, kErrFatal, "RootdGetFile: cannot get size of file %s", gFile);
+      Error(Err, kErrFatal, "RootdGetFile: cannot get size of file %s", gRdFile);
       close(fd);
       return;
    }
    Long64_t size = st.st_size;
 
    if (!S_ISREG(st.st_mode)) {
-      Error(Err, kErrBadFile, "RoodGetFile: not a regular file %s", gFile);
+      Error(Err, kErrBadFile, "RoodGetFile: not a regular file %s", gRdFile);
       close(fd);
       return;
    }
@@ -1711,13 +1712,13 @@ void RootdGetFile(const char *msg)
       char *buf = (char*) mmap(0, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
 #endif
       if (buf == (char *) -1)
-         Error(ErrFatal, kErrFileGet, "RootdGetFile: mmap of file %s failed", gFile);
+         Error(ErrFatal, kErrFileGet, "RootdGetFile: mmap of file %s failed", gRdFile);
 #else
       int siz;
       while ((siz = read(fd, buf, (int)left)) < 0 && GetErrno() == EINTR)
          ResetErrno();
       if (siz < 0 || siz != left)
-         Error(ErrFatal, kErrFileGet, "RootdGetFile: error reading from file %s", gFile);
+         Error(ErrFatal, kErrFileGet, "RootdGetFile: error reading from file %s", gRdFile);
 #endif
 
       NetSendRaw(buf+skip, int(left-skip));
@@ -1753,13 +1754,13 @@ void RootdGetFile(const char *msg)
       speed = 0.0;
    if (speed > 524288)
       ErrorInfo("RootdGetFile: downloaded file %s (%lld bytes, %.3f seconds, "
-                "%.2f Mbytes/s)", gFile, size, t, speed / 1048576);
+                "%.2f Mbytes/s)", gRdFile, size, t, speed / 1048576);
    else if (speed > 512)
       ErrorInfo("RootdGetFile: downloaded file %s (%lld bytes, %.3f seconds, "
-                "%.2f Kbytes/s)", gFile, size, t, speed / 1024);
+                "%.2f Kbytes/s)", gRdFile, size, t, speed / 1024);
    else
       ErrorInfo("RootdGetFile: downloaded file %s (%lld bytes, %.3f seconds, "
-                "%.2f bytes/s)", gFile, size, t, speed);
+                "%.2f bytes/s)", gRdFile, size, t, speed);
 }
 
 //______________________________________________________________________________

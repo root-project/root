@@ -23,8 +23,8 @@ CXX11FLAGS    = -std=c++11
 endif
 
 # Compiler:
-CXX           = g++
-CC            = gcc
+CXX           ?= g++
+CC            ?= gcc
 CXXFLAGS      = -pipe -m64 $(CXX11FLAGS) -Wshadow -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS) \
                 -Wno-deprecated-declarations $(USERCONF_CXXFLAGS)
@@ -38,7 +38,7 @@ NOOPT         += -pedantic -Wno-long-long
 endif
 
 # Linker:
-LD            = g++
+LD            ?= g++
 LDFLAGS       = -m64 $(OPT) $(EXTRA_LDFLAGS) -Wl,--no-undefined -Wl,--as-needed
 SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
@@ -80,3 +80,9 @@ endif
 
 # Extras
 GLIBC_MALLOC_DEPRECATED = yes
+
+ifneq ($(CXX:%clang++=),$(CXX))
+ifneq ($(CXXMODULES),)
+  CXXFLAGS += -fmodules
+endif
+endif

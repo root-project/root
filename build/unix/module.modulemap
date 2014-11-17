@@ -1,6 +1,5 @@
 // Current Status:
 // Dictionaries which do not compile with -fmodules:
-//   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++ -g -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -Icore/base/src  -D__CLING__ -Ietc -Ietc/cling -I/home/vvassilev/workspace/root/interpreter/cling/include -I/home/vvassilev/workspace/root/interpreter/llvm/inst/include -D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -g -std=c++11 -fPIC -Woverloaded-virtual -fdata-sections -Wcast-qual -fno-strict-aliasing -Wno-shadow -Wno-unused-parameter -I. -o core/base/src/G__Core.o -c core/base/src/G__Core.cxx
 //   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++  -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o net/net/src/G__Net.o -c net/net/src/G__Net.cxx
 //   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++ -g -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o hist/hist/src/G__Hist.o -c hist/hist/src/G__Hist.cxx
 //   * /home/vvassilev/workspace/llvm/release/Release+Asserts/bin/clang++  -pipe -m64 -std=c++11 -Wshadow -Wall -W -Woverloaded-virtual -fPIC -Iinclude  -Wno-deprecated-declarations  -Xclang -fmodules -Xclang -fmodules-cache-path=/home/vvassilev/workspace/root/pcm/ -pthread -I. -o graf2d/gpad/src/G__Gpad.o -c graf2d/gpad/src/G__Gpad.cxx
@@ -28,7 +27,6 @@ module RooMsgService {
   header "RooLinkedListElem.h"
   header "RooHashTable.h"
   header "RooGlobalFunc.h"
-  config_macros INST_MSG_SERVICE // see RooMsgService.h:223
   export *
 }
 
@@ -339,6 +337,8 @@ module Application {
 
 module ClassEdit {
   header "TClassEdit.h"
+  header "ESTLType.h"
+
   export *
 }
 
@@ -381,7 +381,7 @@ module Canvas {
 }
 
 module Varargs { header "Varargs.h" export * }
-
+module MessageTypes {   header "MessageTypes.h" export * }
 module core_base {
   requires cplusplus
   export *
@@ -410,7 +410,6 @@ module core_base {
   header "Gtypes.h"
   header "KeySymbols.h"
   header "Match.h"
-  header "MessageTypes.h"
   header "Strlen.h"
   header "TApplication.h"
   header "TApplicationImp.h"
@@ -418,7 +417,7 @@ module core_base {
   header "TContextMenuImp.h"
   textual header "RtypesImp.h" // Must be included only from the dictionaries.
 
-  //module Exception { header "TException.h" } // We need to suppress TRY macro
+  //module Exception { header "TException.h" export * } // We need to suppress TRY macro
   header "TMD5.h"
   header "TAtt3D.h"
   header "TThreadSlots.h"
@@ -611,12 +610,16 @@ module math_physics {
   header "TVector3.h"
   header "TRobustEstimator.h"
 }
+module net_rpddefs {
+  header "rpddefs.h"
+  export *
+}
 module net_rpdutils {
   export *
-  header "rpddefs.h"
   header "rpderr.h"
   header "rpdconn.h"
   header "rpdpriv.h"
+  header "rpdp.h"
 }
 module hist_hbook {
   export *
@@ -653,6 +656,12 @@ module math_fumili {
   header "TFumili.h"
   header "TFumiliMinimizer.h"
 }
+
+module NetErrors {
+  header "NetErrors.h"
+  export *
+}
+
 module net_net {
   export *
   header "TPSocket.h"
@@ -683,7 +692,6 @@ module net_net {
   header "TParallelMergingFile.h"
   header "TGridCollection.h"
   header "TSQLTableInfo.h"
-  header "NetErrors.h"
   header "TNetFile.h"
   header "TSQLColumnInfo.h"
   header "TS3WebFile.h"
@@ -731,6 +739,14 @@ module TreeFormula {
   header "TTreeFormula.h"
   export *
 }
+module TreeIndex {
+  header "TTreeIndex.h"
+  export *
+}
+module ChainIndex {
+  header "TChainIndex.h"
+  export *
+}
 module tree_treeplayer {
   export *
   header "TSelectorEntries.h"
@@ -744,7 +760,6 @@ module tree_treeplayer {
   header "TTreeReaderUtils.h"
   header "TFileDrawMap.h"
   header "TTreePerfStats.h"
-  header "TChainIndex.h"
   header "TFormLeafInfo.h"
   header "TBranchProxyDescriptor.h"
   header "TBranchProxyClassDescriptor.h"
@@ -754,7 +769,6 @@ module tree_treeplayer {
   header "TTreeTableInterface.h"
   header "TTreeProxyGenerator.h"
   header "TTreeFormulaManager.h"
-  header "TTreeIndex.h"
   header "TBranchProxy.h"
   header "TRefArrayProxy.h"
   header "TTreeReaderValue.h"
@@ -1088,10 +1102,13 @@ module graf2d_gviz {
   header "TGraphNode.h"
   header "TGraphStruct.h"
 }
+module TProofSuperMaster {
+  header "TProofSuperMaster.h"
+  export *
+}
 module proof_proof {
   export *
   header "TProofLite.h"
-  header "TProofSuperMaster.h"
   header "TDataSetManagerFile.h"
   header "TProofQueryResult.h"
   header "TProofCondor.h"
@@ -1212,14 +1229,14 @@ module math_mathcore {
   header "TMath.h"
   header "TRandom3.h"
 }
-module math_minuit {
+/*module math_minuit {
   export *
-  header "TLinearFitter.h"
+  header "TLinearFitter.h" // Bug in clang MethodInfoMap.count(OverriddenMD) && "Did not find the overridden method!
   header "TLinearMinimizer.h"
   header "TMinuit.h"
-  header "TMinuitMinimizer.h"
+  header "TMinuitMinimizer.h" // Bug in clang MethodInfoMap.count(OverriddenMD) && "Did not find the overridden method!
   header "TFitter.h"
-}
+}*/
 module montecarlo_vmc {
   export *
   header "TMCParticleType.h"
@@ -1324,6 +1341,7 @@ module graf2d_qt {
   header "TQtClientWidget.h"
 }
 module graf3d_g3d {
+  requires cplusplus
   export *
   header "TCONE.h"
   header "TShape.h"
@@ -1399,20 +1417,20 @@ module math_mlp {
   header "TMultiLayerPerceptron.h"
   header "TSynapse.h"
 }
-module math_matrix {
+/*module math_matrix {
   export *
   header "TMatrixTSymCramerInv.h"
   header "TMatrix.h"
   header "TMatrixTUtils.h"
   header "TMatrixD.h"
   header "TMatrixTCramerInv.h"
-  header "TMatrixTSym.h" //clang bug An asserting value handle still pointed to this value!
+  //header "TMatrixTSym.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
   header "TMatrixFSymfwd.h"
   header "TVectorF.h"
   header "TVectorFfwd.h"
   header "TMatrixDSymfwd.h"
   header "TDecompLU.h"
-  header "TMatrixTSparse.h"
+  textual header "TMatrixTSparse.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
   header "TMatrixDUtilsfwd.h"
   header "TMatrixFSparse.h"
   header "TMatrixTBase.h"
@@ -1445,10 +1463,11 @@ module math_matrix {
   header "TMatrixFfwd.h"
   header "TMatrixDSparse.h"
   header "TMatrixDBasefwd.h"
-  header "TMatrixT.h"// clang bug An asserting value handle still pointed to this value!
+  //header "TMatrixT.h" // See http://llvm.org/bugs/show_bug.cgi?id=21547
   header "TDecompQRH.h"
   header "TVectorDfwd.h"
-}
+}*/
+
 module gui_qtgsi {
   export *
   header "TQRootApplication.h"
@@ -2083,19 +2102,26 @@ module tmva {
   header "TMVA/Factory.h"
   header "TMVA/RuleFitAPI.h"
 }
+// FIXME: These are to build G__ProofPlayer dict, it is putting together proof_proofplayer and proof...
+module ProofPlayerLight {
+  header "TProofPlayerLite.h"
+  export *
+}
+module Packetizer {
+  header "TPacketizer.h"
+  header "TPacketizerAdaptive.h"
+  export *
+}
 module proof_proofplayer {
   export *
   header "TProofPlayer.h"
-  header "TPacketizerAdaptive.h"
   header "TPacketizerMulti.h"
-  header "TProofPlayerLite.h"
   header "TProofLimitsFinder.h"
   header "TStatsFeedback.h"
   header "TPacketizerFile.h"
   header "TStatus.h"
   header "TPerfStats.h"
   header "TProofMonSenderML.h"
-  header "TPacketizer.h"
   header "TPacketizerUnit.h"
   header "TProofDraw.h"
   header "TEventIter.h"
@@ -2417,8 +2443,6 @@ module graf2d_graf {
 }
 module core_metautils {
   export *
-  header "TClassEdit.h"
-  header "ESTLType.h"
 
   //header "TMetaUtils.h" // AXEL is on it.
   module ClingRuntime {header "TClingRuntime.h" export *}
@@ -2434,16 +2458,23 @@ module sql_sqlite {
   header "TSQLiteResult.h"
   header "TSQLiteRow.h"
 }
+module net_rsa [extern_c] {
+  header "rsadef.h"
+  header "rsalib.h"
+  header "rsafun.h"
+  header "rsaaux.h"
+  export *
+}
+
+module AuthConst {
+  header "AuthConst.h"
+  export *
+}
 module net_auth {
   export *
-  header "rsaaux.h"
   header "TAuthenticate.h"
-  header "AuthConst.h"
   header "THostAuth.h"
-  header "rsafun.h"
-  header "rsadef.h"
   header "TRootAuth.h"
-  header "rsalib.h"
   header "TRootSecContext.h"
 }
 module math_minuit2 {
@@ -2559,5 +2590,126 @@ module math_minuit2 {
   header "Minuit2/VectorOuterProduct.h"
   header "Minuit2/Minuit2Minimizer.h"
   header "Minuit2/ABSum.h"
+}
+
+module Vc {
+  export *
+  //header "Vc/ushort_v" // depracated
+  header "Vc/Allocator"
+  header "Vc/Vc"
+  header "Vc/IO"
+  header "Vc/short_v"
+  header "Vc/sfloat_v"
+  header "Vc/global.h"
+  header "Vc/uint_v"
+  header "Vc/Utils"
+  header "Vc/float_v"
+  header "Vc/support.h"
+  header "Vc/Memory"
+  header "Vc/cpuid.h"
+  header "Vc/version.h"
+  header "Vc/limits"
+  header "Vc/vector.h"
+  header "Vc/double_v"
+  header "Vc/int_v"
+  header "Vc/internal/namespace.h"
+
+  module vc_common {
+    header "Vc/common/windows_fix_intrin.h"
+    header "Vc/common/types.h"
+    header "Vc/common/memorybase.h"
+    header "Vc/common/undomacros.h"
+    header "Vc/common/operators.h"
+    header "Vc/common/operand.h"
+    header "Vc/common/exponential.h"
+    header "Vc/common/aliasingentryhelper.h"
+    header "Vc/common/iif.h"
+    header "Vc/common/memoryfwd.h"
+    header "Vc/common/fix_clang_emmintrin.h"
+    header "Vc/common/deinterleave.h"
+    header "Vc/common/macros.h"
+    header "Vc/common/storage.h"
+    header "Vc/common/support.h"
+    header "Vc/common/trigonometric.h"
+    header "Vc/common/interleavedmemory.h"
+    header "Vc/common/vectortuple.h"
+    header "Vc/common/memory.h"
+    header "Vc/common/bitscanintrinsics.h"
+    header "Vc/common/logarithm.h"
+    export *
+  }
+
+  module vc_sse {
+    requires sse
+    header "Vc/sse/casts.h"
+    //header "Vc/sse/forceToRegisters.tcc"
+    header "Vc/sse/vectorhelper.h"
+    header "Vc/sse/types.h"
+    header "Vc/sse/undomacros.h"
+    header "Vc/sse/const_data.h"
+    header "Vc/sse/shuffle.h"
+    header "Vc/sse/vector.tcc"
+    header "Vc/sse/limits.h"
+    header "Vc/sse/vectorhelper.tcc"
+    header "Vc/sse/deinterleave.tcc"
+    //header "Vc/sse/intrinsics.h"
+    header "Vc/sse/macros.h"
+    header "Vc/sse/helperimpl.h"
+    header "Vc/sse/mask.h"
+    header "Vc/sse/debug.h"
+    header "Vc/sse/const.h"
+    header "Vc/sse/math.h"
+    header "Vc/sse/interleavedmemory.tcc"
+    header "Vc/sse/helperimpl.tcc"
+    header "Vc/sse/vector.h"
+    header "Vc/sse/prefetches.tcc"
+    export *
+  }
+  
+  module vc_scalar {
+    header "Vc/scalar/writemaskedvector.h"
+    header "Vc/scalar/types.h"
+    header "Vc/scalar/undomacros.h"
+    header "Vc/scalar/vector.tcc"
+    header "Vc/scalar/limits.h"
+    header "Vc/scalar/macros.h"
+    header "Vc/scalar/helperimpl.h"
+    header "Vc/scalar/mask.h"
+    header "Vc/scalar/math.h"
+    header "Vc/scalar/interleavedmemory.tcc"
+    header "Vc/scalar/helperimpl.tcc"
+    header "Vc/scalar/vector.h"
+    export *
+  }
+  module vc_avx {
+    requires avx
+    header "Vc/avx/writemaskedvector.h"
+    header "Vc/avx/casts.h"
+    //header "Vc/avx/forceToRegisters.tcc"
+    header "Vc/avx/vectorhelper.h"
+    header "Vc/avx/types.h"
+    header "Vc/avx/undomacros.h"
+    header "Vc/avx/const_data.h"
+    header "Vc/avx/shuffle.h"
+    header "Vc/avx/vector.tcc"
+    header "Vc/avx/limits.h"
+    header "Vc/avx/vectorhelper.tcc"
+    header "Vc/avx/writemaskedvector.tcc"
+    header "Vc/avx/deinterleave.tcc"
+    header "Vc/avx/intrinsics.h"
+    header "Vc/avx/macros.h"
+    header "Vc/avx/helperimpl.h"
+    header "Vc/avx/mask.h"
+    header "Vc/avx/mask.tcc"
+    header "Vc/avx/debug.h"
+    header "Vc/avx/const.h"
+    header "Vc/avx/math.h"
+    header "Vc/avx/interleavedmemory.tcc"
+    header "Vc/avx/sorthelper.h"
+    header "Vc/avx/helperimpl.tcc"
+    header "Vc/avx/vector.h"
+    header "Vc/avx/prefetches.tcc"
+    export *
+  }
 }
 //}// end module ROOT

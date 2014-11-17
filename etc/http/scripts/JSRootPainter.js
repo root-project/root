@@ -2999,6 +2999,7 @@
       JSROOT.TObjectPainter.call(this, histo);
       this.histo = histo;
       this.shrink_frame_left = 0.;
+      this.draw_content = true;
    }
 
    JSROOT.THistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -3645,10 +3646,6 @@
       }
    }
 
-   JSROOT.THistPainter.prototype.CountStat = function() {
-      alert("CountStat not implemented");
-   }
-
    JSROOT.THistPainter.prototype.DrawGrids = function() {
       // grid can only be drawn by first painter
       if (!this.is_main_painter()) return;
@@ -4065,7 +4062,7 @@
    }
 
    JSROOT.THistPainter.prototype.GetSelectIndex = function(axis, size, add) {
-      // be aware - here index starts from 0
+      // be aware - here indexs starts from 0
       var indx = 0;
       var obj = this.main_painter();
       if (obj == null) obj = this;
@@ -4200,7 +4197,6 @@
 
    JSROOT.THistPainter.prototype.Redraw = function() {
       this.CreateXY();
-      this.CountStat();
       this.DrawAxes();
       this.DrawGrids();
       this.DrawBins();
@@ -4662,7 +4658,6 @@
 
    JSROOT.TH1Painter = function(histo) {
       JSROOT.THistPainter.call(this, histo);
-      this.draw_bins = null;
    }
 
    JSROOT.TH1Painter.prototype = Object.create(JSROOT.THistPainter.prototype);
@@ -4678,7 +4673,6 @@
       if (this.histo['fLineColor'] == 0) this.linecolor = '#4572A7';
 
       var hmin = 0, hmax = 0, hsum = 0;
-      // this.stat_entries = d3.sum(this.histo['fArray']);
 
       var profile = this.IsTProfile();
 
@@ -4699,11 +4693,6 @@
          hsum += this.histo.getBinContent(0) + this.histo.getBinContent(this.nbinsx + 1);
 
       this.stat_entries = hsum;
-
-      // if (('fBuffer' in this.histo) && (this.histo['fBuffer'].length>0))
-      // this.stat_entries = this.histo['fBuffer'][0];
-      // if ((this.stat_entries == 0) && ('fEntries' in this.histo))
-      // this.stat_entries = this.histo['fEntries'];
 
       // used in CreateXY and tooltip providing
       this.xmin = this.histo['fXaxis']['fXmin'];
@@ -4745,47 +4734,57 @@
          this.draw_content = false;
    }
 
-   JSROOT.TH1Painter.prototype.CountStat = function() {
+   JSROOT.TH1Painter.prototype.CountStat = function(cond) {
       var profile = this.IsTProfile();
 
-      if (profile) {
-         this.stat_sumw = 0;
-         this.stat_sumwx = 0;
-         this.stat_sumwx2 = 0;
-         this.stat_sumwy = 0;
-         this.stat_sumwy2 = 0;
-      } else {
-         this.stat_sum0 = 0;
-         this.stat_sum1 = 0;
-         this.stat_sum2 = 0;
-      }
+      var stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0;
 
       var left = this.GetSelectIndex("x", "left");
       var right = this.GetSelectIndex("x", "right");
 
-      var xx = 0, yy = 0, w = 0;
+      var xx = 0, w = 0, xmax = null, wmax = null;
 
       for (var i = left; i < right; i++) {
          xx = this.xmin + (i + 0.5) * this.binwidthx;
 
+         if ((cond!=null) && !cond(xx)) continue;
+
          if (profile) {
             w = this.histo.fBinEntries[i + 1];
-            this.stat_sumw += w;
-            this.stat_sumwx += w * xx;
-            this.stat_sumwx2 += w * xx * xx;
-            this.stat_sumwy += this.histo.fArray[i + 1];
-            this.stat_sumwy2 += this.histo.fSumw2[i + 1];
+            stat_sumwy += this.histo.fArray[i + 1];
+            stat_sumwy2 += this.histo.fSumw2[i + 1];
          } else {
-            yy = this.histo.getBinContent(i + 1);
-            this.stat_sum0 += yy;
-            this.stat_sum1 += xx * yy;
-            this.stat_sum2 += xx * xx * yy;
+            w = this.histo.getBinContent(i + 1);
          }
+
+         if ((xmax==null) || (w>wmax)) { xmax = xx; wmax = w; }
+
+         stat_sumw += w;
+         stat_sumwx += w * xx;
+         stat_sumwx2 += w * xx * xx;
       }
+
+      var res = { meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: stat_sumw, entries: this.stat_entries, xmax:0, wmax:0 };
+
+      if (stat_sumw > 0) {
+         res.meanx = stat_sumwx / stat_sumw;
+         res.meany = stat_sumwy / stat_sumw;
+         res.rmsx = Math.sqrt(stat_sumwx2 / stat_sumw - res.meanx * res.meanx);
+         res.rmsy = Math.sqrt(stat_sumwy2 / stat_sumw - res.meany * res.meany);
+      }
+
+      if (xmax!=null) {
+         res.xmax = xmax;
+         res.wmax = wmax;
+      }
+
+      return res;
    }
 
    JSROOT.TH1Painter.prototype.FillStatistic = function(stat, dostat) {
       if (!this.histo) return false;
+
+      var data = this.CountStat();
 
       var print_name = Math.floor(dostat % 10);
       var print_entries = Math.floor(dostat / 10) % 10;
@@ -4803,46 +4802,29 @@
       if (this.IsTProfile()) {
 
          if (print_entries > 0)
-            stat.AddLine("Entries = " + JSROOT.gStyle.StatEntriesFormat(this.stat_entries));
-
-         var meanx = 0, meany = 0;
-         if (this.stat_sumw > 0) {
-            meanx = this.stat_sumwx / this.stat_sumw;
-            meany = this.stat_sumwy / this.stat_sumw;
-         }
+            stat.AddLine("Entries = " + JSROOT.gStyle.StatEntriesFormat(data.entries));
 
          if (print_mean > 0) {
-            stat.AddLine("Mean = " + JSROOT.gStyle.StatFormat(meanx));
-            stat.AddLine("Mean y = " + JSROOT.gStyle.StatFormat(meany));
+            stat.AddLine("Mean = " + JSROOT.gStyle.StatFormat(data.meanx));
+            stat.AddLine("Mean y = " + JSROOT.gStyle.StatFormat(data.meany));
          }
 
          if (print_rms > 0) {
-            var rmsx = 0, rmsy = 0;
-            if (this.stat_sumw > 0) {
-               rmsx = Math.sqrt(this.stat_sumwx2 / this.stat_sumw - meanx * meanx);
-               rmsy = Math.sqrt(this.stat_sumwy2 / this.stat_sumw - meany * meany);
-            }
-            stat.AddLine("RMS = " + JSROOT.gStyle.StatFormat(rmsx));
-            stat.AddLine("RMS y = " + JSROOT.gStyle.StatFormat(rmsy));
+            stat.AddLine("RMS = " + JSROOT.gStyle.StatFormat(data.rmsx));
+            stat.AddLine("RMS y = " + JSROOT.gStyle.StatFormat(data.rmsy));
          }
 
       } else {
 
          if (print_entries > 0)
-            stat.AddLine("Entries = "
-                  + JSROOT.gStyle.StatEntriesFormat(this.stat_entries));
+            stat.AddLine("Entries = " + JSROOT.gStyle.StatEntriesFormat(data.entries));
 
          if (print_mean > 0) {
-            var res = 0;
-            if (this.stat_sum0 > 0) res = this.stat_sum1 / this.stat_sum0;
-            stat.AddLine("Mean = " + JSROOT.gStyle.StatFormat(res));
+            stat.AddLine("Mean = " + JSROOT.gStyle.StatFormat(data.meanx));
          }
 
          if (print_rms > 0) {
-            var res = 0;
-            if (this.stat_sum0 > 0)
-               res = Math.sqrt(this.stat_sum2 / this.stat_sum0 - Math.pow(this.stat_sum1 / this.stat_sum0, 2));
-            stat.AddLine("RMS = " + JSROOT.gStyle.StatFormat(res));
+            stat.AddLine("RMS = " + JSROOT.gStyle.StatFormat(data.rmsx));
          }
 
          if (print_under > 0) {
@@ -4860,8 +4842,7 @@
          }
 
          if (print_integral > 0) {
-            stat.AddLine("Integral = "
-                  + JSROOT.gStyle.StatEntriesFormat(this.stat_sum0));
+            stat.AddLine("Integral = " + JSROOT.gStyle.StatEntriesFormat(data.integral));
          }
 
          if (print_skew > 0)
@@ -4883,16 +4864,14 @@
       return true;
    }
 
-   JSROOT.TH1Painter.prototype.CreateDrawBins = function() {
+   JSROOT.TH1Painter.prototype.CreateDrawBins = function(width, height) {
       // method is called directly before bins must be drawn
 
       var left = this.GetSelectIndex("x", "left", -1);
       var right = this.GetSelectIndex("x", "right", 2);
-      var width = Number(this.svg_frame(true).attr("width"));
-      var height = Number(this.svg_frame(true).attr("height"));
       var stepi = 1;
 
-      this.draw_bins = new Array;
+      var draw_bins = new Array;
 
       // reduce number of drawn points - we define interval where two points
       // will be selected - max and min
@@ -4902,8 +4881,6 @@
       var x1, x2 = this.xmin + left * this.binwidthx;
       var grx1 = -1111, grx2 = -1111, gry;
       var profile = this.IsTProfile();
-
-      // console.log("left " + left + " right " + right + " step " + stepi);
 
       var point = null;
 
@@ -4958,18 +4935,20 @@
                            "entries = " + cont;
          }
 
-         this.draw_bins.push(point);
+         draw_bins.push(point);
       }
 
       // if we need to draw line or area, we need extra point for correct drawing
       if ((right == this.nbinsx) && (this.options.Error == 0) && (point!=null)) {
          var extrapoint = jQuery.extend(true, {}, point);
          extrapoint.x = grx2;
-         this.draw_bins.push(extrapoint);
+         draw_bins.push(extrapoint);
       }
+
+      return draw_bins;
    }
 
-   JSROOT.TH1Painter.prototype.DrawErrors = function() {
+   JSROOT.TH1Painter.prototype.DrawErrors = function(draw_bins) {
       var w = Number(this.svg_frame(true).attr("width")),
           h = Number(this.svg_frame(true).attr("height"));
 
@@ -4989,7 +4968,7 @@
 
       /* Draw x-error indicators */
       var xerr = this.draw_g.selectAll("error_x")
-                 .data(this.draw_bins).enter()
+                 .data(draw_bins).enter()
                  .append("svg:line")
                  .attr("x1", function(d) { return d.x - d.xerr; })
                  .attr("y1", function(d) { return d.y; })
@@ -5000,7 +4979,7 @@
 
       if (this.options.Error == 11) {
          this.draw_g.selectAll("e1_x")
-            .data(this.draw_bins).enter()
+            .data(draw_bins).enter()
             .append("svg:line")
             .attr("y1", function(d) { return d.y - 3; })
             .attr("x1", function(d) { return d.x - d.xerr; })
@@ -5009,7 +4988,7 @@
             .style("stroke", line_color)
             .style("stroke-width", line_width);
          this.draw_g.selectAll("e1_x")
-            .data(this.draw_bins).enter()
+            .data(draw_bins).enter()
             .append("svg:line")
             .attr("y1", function(d) { return d.y - 3; })
             .attr("x1", function(d) { return d.x + d.xerr; })
@@ -5021,7 +5000,7 @@
 
       /* Draw y-error indicators */
       var yerr = this.draw_g.selectAll("error_y")
-                   .data(this.draw_bins).enter()
+                   .data(draw_bins).enter()
                    .append("svg:line")
                    .attr("x1", function(d) { return d.x; })
                    .attr("y1", function(d) { return d.y - d.yerr; })
@@ -5031,7 +5010,7 @@
 
       if (this.options.Error == 11) {
          this.draw_g.selectAll("e1_y")
-             .data(this.draw_bins).enter()
+             .data(draw_bins).enter()
              .append("svg:line")
              .attr("x1", function(d) { return d.x - 3; })
              .attr("y1", function(d) { return d.y - d.yerr; })
@@ -5040,7 +5019,7 @@
              .style("stroke", line_color)
              .style("stroke-width", line_width);
          this.draw_g.selectAll("e1_y")
-              .data(this.draw_bins).enter()
+              .data(draw_bins).enter()
               .append("svg:line")
               .attr("x1", function(d) { return d.x - 3; })
               .attr("y1", function(d) { return d.y + d.yerr; })
@@ -5050,7 +5029,7 @@
               .style("stroke-width", line_width);
       }
       var marks = this.draw_g.selectAll("markers")
-                    .data(this.draw_bins).enter()
+                    .data(draw_bins).enter()
                     .append("svg:path")
                     .attr("class", "marker")
                     .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
@@ -5067,26 +5046,20 @@
 
    JSROOT.TH1Painter.prototype.DrawBins = function() {
 
-      // TODO: limit number of drawn by number of visible pixels
-      // one could select every second bin, for instance
+      var width = Number(this.svg_frame(true).attr("width")),
+          height = Number(this.svg_frame(true).attr("height"));
 
-      delete this.draw_bins;
-      this.draw_bins = null;
-
-      if (!this.draw_content) {
+      if (!this.draw_content || (width<=0) || (height<=0)) {
          this.RemoveDrawG();
          return;
       }
 
-      this.CreateDrawBins();
+      var draw_bins = this.CreateDrawBins(width, height);
 
       this.RecreateDrawG();
 
       if (this.options.Error > 0)
-         return this.DrawErrors();
-
-      var width = Number(this.svg_frame(true).attr("width")),
-          height = Number(this.svg_frame(true).attr("height"));
+         return this.DrawErrors(draw_bins);
 
       var pthis = this;
 
@@ -5100,7 +5073,7 @@
                     .interpolate("step-after");
 
          this.draw_g.append("svg:path")
-                    .attr("d", area(this.draw_bins))
+                    .attr("d", area(draw_bins))
                     .style("stroke", this.linecolor)
                     .style("stroke-width", this.histo['fLineWidth'])
                     .style("fill", this.fillcolor)
@@ -5114,7 +5087,7 @@
 
          this.draw_g
                .append("svg:path")
-               .attr("d", line(this.draw_bins))
+               .attr("d", line(draw_bins))
                // to draw one bar, one need two points
                .style("stroke", this.linecolor)
                .style("stroke-width", this.histo['fLineWidth'])
@@ -5126,7 +5099,7 @@
       if (JSROOT.gStyle.Tooltip) {
          // TODO: limit number of tooltips by number of visible pixels
          this.draw_g.selectAll("selections")
-                    .data(this.draw_bins).enter()
+                    .data(draw_bins).enter()
                     .append("svg:line")
                     .attr("x1", function(d) { return d.x + d.width / 2; })
                     .attr("y1", function(d) { return Math.max(0, d.y); })
@@ -5189,8 +5162,6 @@
       painter.ScanContent();
 
       painter.CreateXY();
-
-      painter.CountStat();
 
       painter.DrawAxes();
 
@@ -5429,15 +5400,13 @@
       if (this.nbinsy > 0)
          this.binwidthy = this.binwidthy / this.nbinsy
 
-      this.gmaxbin = 0; // global min/max
-      this.gminbin = 0;
+      this.gmaxbin = this.histo.getBinContent(1, 1);
+      this.gminbin = this.gmaxbin; // global min/max, used at the moment in 3D drawing
       for (var i = 0; i < this.nbinsx; ++i) {
          for (var j = 0; j < this.nbinsy; ++j) {
             var bin_content = this.histo.getBinContent(i + 1, j + 1);
-            if (bin_content < this.gminbin)
-               this.gminbin = bin_content;
-            if (bin_content > this.gmaxbin)
-               this.gmaxbin = bin_content;
+            if (bin_content < this.gminbin) this.gminbin = bin_content; else
+            if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
          }
       }
 
@@ -5445,27 +5414,17 @@
       this.draw_content = this.gmaxbin > 0;
    }
 
-   JSROOT.TH2Painter.prototype.CountStat = function() {
-      this.stat_matrix = new Array();
-      for (var n = 0; n < 9; n++) this.stat_matrix.push(0);
-      this.stat_entries = 0;
-      this.stat_sum0 = 0;
-      this.stat_sumx1 = 0;
-      this.stat_sumy1 = 0;
-      this.stat_sumx2 = 0;
-      this.stat_sumy2 = 0;
-      this.stat_sumxy2 = 0;
-      this.maxbin = 0; // min/max in selected range
-      this.minbin = 0;
+   JSROOT.TH2Painter.prototype.CountStat = function(cond) {
+      var stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0, stat_sumx2 = 0, stat_sumy2 = 0, stat_sumxy2 = 0;
+
+      var res = { entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix : [], xmax: 0, ymax:0, wmax: null };
+      for (var n = 0; n < 9; n++) res.matrix.push(0);
 
       var xleft = this.GetSelectIndex("x", "left");
       var xright = this.GetSelectIndex("x", "right");
 
       var yleft = this.GetSelectIndex("y", "left");
       var yright = this.GetSelectIndex("y", "right");
-
-      // console.log(" xleft = " + xleft + " xright = " + xright);
-      // console.log(" yleft = " + yleft + " yright = " + yright);
 
       for (var xi = 0; xi <= this.nbinsx + 1; xi++) {
          var xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
@@ -5477,33 +5436,42 @@
 
             var zz = this.histo.getBinContent(xi, yi);
 
-            this.stat_entries += zz;
+            res.entries += zz;
 
-            this.stat_matrix[yside * 3 + xside] += zz;
+            res.matrix[yside * 3 + xside] += zz;
 
-            if ((xside == 1) && (yside == 1)) {
+            if ((xside != 1) || (yside != 1)) continue;
 
-               if (this.stat_sum0 == 0) {
-                  this.maxbin = zz;
-                  this.minbin = zz;
-               } else if (zz > this.maxbin)
-                  this.maxbin = zz;
-               else if (zz < this.minbin)
-                  this.minbin = zz;
+            if ((cond!=null) && !cond(xx,yy)) continue;
 
-               this.stat_sum0 += zz;
-               this.stat_sumx1 += xx * zz;
-               this.stat_sumy1 += yy * zz;
-               this.stat_sumx2 += xx * xx * zz;
-               this.stat_sumy2 += yy * yy * zz;
-               this.stat_sumxy2 += xx * yy * zz;
-            }
+            if ((res.wmax==null) || (zz>res.wmax)) { res.wmax = zz; res.xmax = xx; res.ymax = yy; }
+
+            stat_sum0 += zz;
+            stat_sumx1 += xx * zz;
+            stat_sumy1 += yy * zz;
+            stat_sumx2 += xx * xx * zz;
+            stat_sumy2 += yy * yy * zz;
+            stat_sumxy2 += xx * yy * zz;
          }
       }
+
+      if (stat_sum0 > 0) {
+         res.meanx = stat_sumx1 / stat_sum0;
+         res.meany = stat_sumy1 / stat_sum0;
+         res.rmsx = Math.sqrt(stat_sumx2 / stat_sum0 - res.meanx * res.meanx);
+         res.rmsy = Math.sqrt(stat_sumy2 / stat_sum0 - res.meany * res.meany);
+      }
+
+      if (res.wmax==null) res.wmax = 0;
+      res.integral = stat_sum0;
+
+      return res;
    }
 
    JSROOT.TH2Painter.prototype.FillStatistic = function(stat, dostat) {
       if (!this.histo) return false;
+
+      var data = this.CountStat();
 
       var print_name = Math.floor(dostat % 10);
       var print_entries = Math.floor(dostat / 10) % 10;
@@ -5519,32 +5487,20 @@
          stat.AddLine(this.histo['fName']);
 
       if (print_entries > 0)
-         stat.AddLine("Entries = " + JSROOT.gStyle.StatEntriesFormat(this.stat_entries));
-
-      var meanx = 0, meany = 0;
-      if (this.stat_sum0 > 0) {
-         meanx = this.stat_sumx1 / this.stat_sum0;
-         meany = this.stat_sumy1 / this.stat_sum0;
-      }
+         stat.AddLine("Entries = " + JSROOT.gStyle.StatEntriesFormat(data.entries));
 
       if (print_mean > 0) {
-         stat.AddLine("Mean x = " + JSROOT.gStyle.StatFormat(meanx));
-         stat.AddLine("Mean y = " + JSROOT.gStyle.StatFormat(meany));
-      }
-
-      var rmsx = 0, rmsy = 0;
-      if (this.stat_sum0 > 0) {
-         rmsx = Math.sqrt(this.stat_sumx2 / this.stat_sum0 - meanx * meanx);
-         rmsy = Math.sqrt(this.stat_sumy2 / this.stat_sum0 - meany * meany);
+         stat.AddLine("Mean x = " + JSROOT.gStyle.StatFormat(data.meanx));
+         stat.AddLine("Mean y = " + JSROOT.gStyle.StatFormat(data.meany));
       }
 
       if (print_rms > 0) {
-         stat.AddLine("RMS x = " + JSROOT.gStyle.StatFormat(rmsx));
-         stat.AddLine("RMS y = " + JSROOT.gStyle.StatFormat(rmsy));
+         stat.AddLine("RMS x = " + JSROOT.gStyle.StatFormat(data.rmsx));
+         stat.AddLine("RMS y = " + JSROOT.gStyle.StatFormat(data.rmsy));
       }
 
       if (print_integral > 0) {
-         stat.AddLine("Integral = " + JSROOT.gStyle.StatEntriesFormat(this.stat_matrix[4]));
+         stat.AddLine("Integral = " + JSROOT.gStyle.StatEntriesFormat(data.matrix[4]));
       }
 
       if (print_skew > 0) {
@@ -5556,7 +5512,7 @@
          stat.AddLine("Kurt = <undef>");
 
       if ((print_under > 0) || (print_over > 0)) {
-         var m = this.stat_matrix;
+         var m = data.matrix;
 
          stat.AddLine("" + m[6].toFixed(0) + " | " + m[7].toFixed(0) + " | "  + m[7].toFixed(0));
          stat.AddLine("" + m[3].toFixed(0) + " | " + m[4].toFixed(0) + " | "  + m[5].toFixed(0));
@@ -5613,13 +5569,23 @@
       var j1 = this.GetSelectIndex("y", "left", 0);
       var j2 = this.GetSelectIndex("y", "right", 0);
 
+      var x1, y1, x2, y2, grx1, gry1, grx2, gry2, fillcol, shrx, shry, binz, point, wx ,wy;
+
+      // first found min/max values in selected range
+      this.maxbin = this.minbin = this.histo.getBinContent(i1 + 1, j1 + 1);
+      for (var i = i1; i < i2; i++) {
+         for (var j = j1; j < j2; j++) {
+            binz = this.histo.getBinContent(i + 1, j + 1);
+            if (binz>this.maxbin) this.maxbin = binz; else
+            if (binz<this.minbin) this.minbin = binz;
+         }
+      }
+
       var xfactor = 1, yfactor = 1;
       if (coordinates_kind == 1) {
          xfactor = 0.5 * w / (i2 - i1) / (this.maxbin - this.minbin);
          yfactor = 0.5 * h / (j2 - j1) / (this.maxbin - this.minbin);
       }
-
-      var x1, y1, x2, y2, grx1, gry1, grx2, gry2, fillcol, shrx, shry, binz, point, wx ,wy;
 
       var local_bins = new Array;
 
@@ -5788,7 +5754,6 @@
       }
 
       delete local_bins;
-      local_bins = null;
    }
 
    JSROOT.TH2Painter.prototype.Draw2D = function() {
@@ -5851,8 +5816,6 @@
       painter.CheckPadOptions();
 
       painter.ScanContent();
-
-      painter.CountStat();
 
       painter.CreateXY();
 
@@ -6325,7 +6288,6 @@
 
    JSROOT.TMultiGraphPainter.prototype.drawMultiGraph = function(opt) {
       var maximum, minimum, rwxmin = 0, rwxmax = 0, rwymin = 0, rwymax = 0, uxmin = 0, uxmax = 0, dx, dy;
-      var npt = 100;
       var histo = this.mgraph['fHistogram'];
       var graphs = this.mgraph['fGraphs'];
       var scalex = 1, scaley = 1;
@@ -6353,28 +6315,12 @@
             uxmax = JSROOT.Painter.padtoX(pad, rwxmax);
          }
       } else {
-         var g = graphs.arr[0];
-         if (g) {
-            var r = g.computeRange();
-            rwxmin = r['xmin'];
-            rwymin = r['ymin'];
-            rwxmax = r['xmax'];
-            rwymax = r['ymax'];
-         }
-         for (var i = 1; i < graphs.arr.length; ++i) {
-            var rx1, ry1, rx2, ry2;
-            g = graphs.arr[i];
-            var r = g.computeRange();
-            rx1 = r['xmin'];
-            ry1 = r['ymin'];
-            rx2 = r['xmax'];
-            ry2 = r['ymax'];
-            if (rx1 < rwxmin) rwxmin = rx1;
-            if (ry1 < rwymin) rwymin = ry1;
-            if (rx2 > rwxmax) rwxmax = rx2;
-            if (ry2 > rwymax) rwymax = ry2;
-            if (g['fNpoints'] > npt)
-               npt = g['fNpoints'];
+         for (var i = 0; i < graphs.arr.length; ++i) {
+            var r = graphs.arr[i].ComputeRange();
+            if ((i==0) || (r.xmin < rwxmin)) rwxmin = r.xmin;
+            if ((i==0) || (r.ymin < rwymin)) rwymin = r.ymin;
+            if ((i==0) || (r.xmax > rwxmax)) rwxmax = r.xmax;
+            if ((i==0) || (r.ymax > rwymax)) rwymax = r.ymax;
          }
          if (rwxmin == rwxmax)
             rwxmax += 1.;
@@ -7250,13 +7196,14 @@
          callback(item, null);
    }
 
-   JSROOT.HierarchyPainter.prototype.display = function(itemname, options) {
+   JSROOT.HierarchyPainter.prototype.display = function(itemname, options, call_back) {
       if (!this.CreateDisplay()) return;
 
       var mdi = this['disp'];
 
       this.get(itemname, function(item, obj) {
-         mdi.Draw(itemname, obj, options);
+         var painter = mdi.Draw(itemname, obj, options);
+         if (typeof call_back == 'function') call_back(painter);
       });
    }
 
@@ -7357,41 +7304,11 @@
       return null;
    }
 
-   JSROOT.HierarchyPainter.prototype.AddOnlineMethods = function(h) {
-      if (typeof h != 'object')
-         return;
-
-      var painter = this;
-
-      h['_get'] = function(item, callback) {
-
-         var url = painter.itemFullName(item);
-         if (url.length > 0) url += "/";
-         var h_get = ('_more' in item) || ('_doing_expand' in item);
-         url += h_get ? 'h.json?compact=3' : 'root.json.gz?compact=3';
-
-         var itemreq = JSROOT.NewHttpRequest(url, 'object', function(obj) {
-            if ((obj != null) && !h_get && (item._name === "StreamerInfo")
-                  && (obj['_typename'] === 'TList'))
-               obj['_typename'] = 'TStreamerInfoList';
-
-            if (typeof callback == 'function')
-               callback(item, obj);
-         });
-
-         itemreq.send(null);
-      }
-
-      h['_expand'] = function(node, obj) {
-         // central function for all expand
-
-         if ((obj != null) && (node != null) && ('_childs' in obj)) {
-            node._childs = obj._childs;
-            obj._childs = null;
-            return true;
-         }
-         return false;
-      }
+   JSROOT.HierarchyPainter.prototype.CompleteOnline = function(ready_callback) {
+      // method called at the moment when new description (h.json) is loaded
+      // and before any graphical element is created
+      // one can load extra scripts here or assign draw functions
+      ready_callback();
    }
 
    JSROOT.HierarchyPainter.prototype.OpenOnline = function(server_address, user_callback) {
@@ -7406,14 +7323,43 @@
          // mark top hierarchy as online data and
          painter.h['_online'] = server_address;
 
-         painter.AddOnlineMethods(painter.h);
+         painter.h['_get'] = function(item, callback) {
 
-         if (painter.h != null)
-            painter.RefreshHtml(true);
+            var url = painter.itemFullName(item);
+            if (url.length > 0) url += "/";
+            var h_get = ('_more' in item) || ('_doing_expand' in item);
+            url += h_get ? 'h.json?compact=3' : 'root.json.gz?compact=3';
 
-         if (typeof user_callback == 'function')
-            user_callback(painter);
+            var itemreq = JSROOT.NewHttpRequest(url, 'object', function(obj) {
+               if ((obj != null) && !h_get && (item._name === "StreamerInfo")
+                     && (obj['_typename'] === 'TList'))
+                  obj['_typename'] = 'TStreamerInfoList';
 
+               if (typeof callback == 'function')
+                  callback(item, obj);
+            });
+
+            itemreq.send(null);
+         }
+
+         painter.h['_expand'] = function(node, obj) {
+            // central function for all expand
+
+            if ((obj != null) && (node != null) && ('_childs' in obj)) {
+               node._childs = obj._childs;
+               obj._childs = null;
+               return true;
+            }
+            return false;
+         }
+
+         painter.CompleteOnline(function() {
+            if (painter.h != null)
+               painter.RefreshHtml(true);
+
+            if (typeof user_callback == 'function')
+               user_callback(painter);
+         });
       });
 
       req.send(null);
@@ -7474,13 +7420,6 @@
    JSROOT.HierarchyPainter.prototype.Adopt = function(h) {
       this.h = h;
       this.RefreshHtml();
-   }
-
-   JSROOT.HierarchyPainter.prototype.CreateSingleOnlineElement = function() {
-      this.h = {
-         _name : ""
-      }
-      this.AddOnlineMethods(this.h);
    }
 
    JSROOT.HierarchyPainter.prototype.contextmenu = function(element, event, itemname) {

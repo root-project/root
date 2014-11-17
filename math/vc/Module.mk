@@ -80,3 +80,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean:: distclean-$(MODNAME)
 
+# FIXME: Temporarily until we understand where the errors come from.
+$(VCLIBVCOBJ): CXXFLAGS := $(filter-out -Xclang -fmodules -Xclang -fmodules-cache-path=$(ROOTSYS)/pcm/, $(CXXFLAGS))
+$(VCLIBVCOBJ): VCFLAGS := $(filter-out -Xclang -fmodules -Xclang -fmodules-cache-path=$(ROOTSYS)/pcm/, $(VCFLAGS))

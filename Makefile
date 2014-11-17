@@ -589,14 +589,15 @@ endif
 
 ##### all #####
 
-ALLHDRS      :=
+# Copy the modulemap in the right place first.
+ALLHDRS      := include/module.modulemap
 ALLLIBS      := $(CORELIB)
 ALLMAPS      := $(COREMAP)
 ALLEXECS     :=
 INCLUDEFILES :=
 
 ##### RULES #####
-
+#$(ALLHDRS)  : include/module.modulemap
 .SUFFIXES: .cxx .mm .d
 .PRECIOUS: include/%.h
 
@@ -802,10 +803,13 @@ endif
 $(COMPILEDATA): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp Makefile \
                 $(MAKECOMPDATA) $(wildcard MyRules.mk) $(wildcard MyConfig.mk) $(wildcard MyModules.mk)
 	@$(MAKECOMPDATA) $(COMPILEDATA) "$(CXX)" "$(OPTFLAGS)" "$(DEBUGFLAGS)" \
-	   "$(CXXFLAGS)" "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" \
+	   "$(filter-out -fmodules,$(CXXFLAGS))" "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" \
 	   "$(LIBDIR)" "$(BOOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)" \
 	   "$(EXPLICITLINK)"
+
+include/module.modulemap:    $(ROOT_SRCDIR)/build/unix/module.modulemap
+		cp $< $@
 
 # We rebuild GITCOMMITH only when we would re-link libCore anyway.
 # Thus it depends on all dependencies of libCore (minus TROOT.o

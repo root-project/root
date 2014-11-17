@@ -185,7 +185,9 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphs/exclusiongraph.C graphs/multigraph.C
                  graphs/multipalette.C
                  graphs/graphstruct.C
-                 hist/ContourList.C hist/hstack.C
+                 hist/ContourList.C
+                 hist/hstack.C
+                 hist/hbars.C
                  hist/h2proj.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C

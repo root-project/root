@@ -2146,7 +2146,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             gxwork[1] = xhigh;
             gywork[1] = yhigh;
             ComputeLogs(2, optionZ);
-            gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1]);
+            if (xlow < rwxmax && xhigh > rwxmin)
+               gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1]);
             if (!optionBins) {
                xlow  = xlow+delta;
                xhigh = xhigh+delta;
@@ -2169,7 +2170,6 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
          yhigh = wmin + offset + dbar;
          if (!optionOne) xlow = TMath::Max((Double_t)0,gPad->GetUxmin());
          else            xlow = gPad->GetUxmin();
-
          for (i=first; i<=last;i++) {
             xhigh    = x[i-1];
             gxwork[0] = xlow;

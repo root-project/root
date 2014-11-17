@@ -37,21 +37,20 @@
 
 ClassImp(TAttLineEditor)
 
-enum ELineWid {
-   kCOLOR,
-   kLINE_WIDTH,
-   kLINE_STYLE,
-   kALPHA,
-   kALPHAFIELD
-};
-
-
 //______________________________________________________________________________
 TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of line attributes GUI.
+
+   enum ELineWid {
+      kCOLOR,
+      kLINE_WIDTH,
+      kLINE_STYLE,
+      kALPHA,
+      kALPHAFIELD
+   };
 
    fPriority = 1;
    fAttLine = 0;

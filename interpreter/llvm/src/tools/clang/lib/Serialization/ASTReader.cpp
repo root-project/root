@@ -1117,8 +1117,33 @@ bool ASTReader::ReadSourceManagerBlock(ModuleFile &F) {
 /// \brief Attempt to resolve the location based on PP header search.
 /// Find the first match with the longest trailing part.
 static StringRef
-resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename) {
+resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename,
+                               llvm::StringMap<std::string>& HSStemMap) {
+  // Locate /a/b/c/d.h given the -I paths, by removing leading subdirectories
+  // until a file is found.
   HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
+
+  // Iteration through HSStemMap is faster than searching through all possible
+  // stems of Filename, especially as we might have one entry for /a/b/c and
+  // another for /a/b/c/d.
+  for (const auto& entry: HSStemMap) {
+    if (Filename.startswith(entry.getKey())) {
+      StringRef value = entry.getValue();
+      llvm::SmallString<1024> substName = value;
+      llvm::sys::path::append(substName,
+                              Filename.drop_front(entry.getKey().size()));
+      const DirectoryLookup* FoundDir = 0;
+      const FileEntry* FE
+        = HdrSearch.LookupFile(substName, SourceLocation(), true/*isAngled*/,
+                               0/*FromDir*/, FoundDir,
+                               ArrayRef<const FileEntry*>() /*Includers*/,
+                               0/*Searchpath*/, 0/*RelPath*/, 0/*SuggModule*/,
+                               false /*SkipCache*/, false /*OpenFile*/,
+                               true /*CacheFailure*/);
+      if (FE)
+        return FE->getName();
+    }
+  }
    bool isAbsolute = true;
    // Find the longest available match.
    for (llvm::sys::path::const_iterator
@@ -1143,8 +1168,13 @@ resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename) {
                                0/*Searchpath*/, 0/*RelPath*/, 0/*SuggModule*/,
                                false /*SkipCache*/, false /*OpenFile*/,
                                true /*CacheFailure*/);
-      if (FE)
-        return FE->getName();
+     if (FE) {
+       typedef std::pair<StringRef, std::string> HSStemEl_t;
+       size_t lenStem = IDir->data() - Filename.data();
+       HSStemMap.insert(HSStemEl_t(Filename.substr(0, lenStem),
+                                   FoundDir->getName()));
+       return FE->getName();
+     }
    }
    return StringRef();
 }
@@ -2166,7 +2196,8 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
     if (!Resolved.empty())
       File = FileMgr.getFile(Resolved);
     if (!File) {
-      StringRef PPResolved = resolveFileThroughHeaderSearch(PP, Filename);
+      StringRef PPResolved = resolveFileThroughHeaderSearch(PP, Filename,
+                                                            HSStemMap);
       if (!PPResolved.empty()) {
         File = FileMgr.getFile(PPResolved);
 	OriginalFileMap[Filename] = PPResolved;
@@ -2272,7 +2303,8 @@ const FileEntry *ASTReader::getFileEntry(StringRef filenameStrRef) {
     if (!resolved.empty())
       File = FileMgr.getFile(resolved);
     if (!File) {
-      StringRef PPresolved = resolveFileThroughHeaderSearch(PP, Filename);
+      StringRef PPresolved = resolveFileThroughHeaderSearch(PP, Filename,
+                                                            HSStemMap);
       if (!PPresolved.empty()) {
         File = FileMgr.getFile(PPresolved);
 	OriginalFileMap[Filename] = PPresolved;
