@@ -19,6 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <forward_list>
+
 #include "TListOfEnums.h"
 #include "TClass.h"
 #include "TExMap.h"
@@ -358,12 +360,20 @@ void TListOfEnums::Load()
 # endif
 #endif
 
+   std::forward_list<TEnum*> respownedEnums;
    for (auto enumAsObj : *fUnloaded){
       TEnum* en = static_cast<TEnum*>(enumAsObj);
       if (0 == en->GetDeclId()){
          THashList::AddLast(en);
+         respownedEnums.push_front(en);
       }
    }
+
+   for (auto en : respownedEnums)
+      fUnloaded->Remove(en);
+
+   // We cannot clear the whole unloaded list. It is too much.
+//   fUnloaded->Clear();
 
    gInterpreter->LoadEnums(fClass);
 }
