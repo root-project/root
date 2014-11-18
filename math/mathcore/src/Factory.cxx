@@ -92,7 +92,7 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
      }
 
    if (minimizerType.empty() ) minim = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-
+   
    R__LOCKGUARD2(gROOTMutex);
 
    // create Minimizer using the PM
@@ -114,8 +114,7 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       else
          std::cout << "Error creating Minimizer " << minimizerType << "  " << algoType << std::endl;
 #endif
-
-      return min;
+      return min; 
    }
    std::cout << "returning 0\n";
    return 0;
