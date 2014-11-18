@@ -114,7 +114,6 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       else
          std::cout << "Error creating Minimizer " << minimizerType << "  " << algoType << std::endl;
 #endif
-
       return min;
    }
    std::cout << "returning 0\n";
@@ -156,7 +155,7 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
        || minimizerType.find("ipop") != std::string::npos)
      min = new ROOT::cmaes::TCMAESMinimizer(algoType.c_str());
 #endif
-   
+
 #ifdef R__HAS_MATHMORE
    // use GSL minimizer
    if (minimizerType ==  "GSL")
@@ -209,5 +208,3 @@ ROOT::Math::DistSampler * ROOT::Math::Factory::CreateDistSampler(const std::stri
    return 0;
 #endif
 }
-
-

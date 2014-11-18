@@ -375,7 +375,6 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
                TString ctor = strtok(0, ";\"");
                if (!ctor.Contains("("))
                   ctor = strtok(0, ";\"");
-	       std::cout << "class: " << clss << std::endl;
 	       AddHandler(s, regexp, clss, plugin, ctor, "TEnv");
                cnt++;
             }

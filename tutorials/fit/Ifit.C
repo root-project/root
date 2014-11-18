@@ -36,6 +36,7 @@ Double_t func(float x,float y,Double_t *par)
 //______________________________________________________________________________
 void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 {
+  const Int_t nbins = 5;
   Int_t i;
 
 //calculate chisquare
