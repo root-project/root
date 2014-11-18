@@ -1758,6 +1758,21 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
    gROOT->SetLineIsProcessing();
 
+   struct InterpreterFlagsRAII_t {
+      cling::Interpreter* fInterpreter;
+      bool fWasDynamicLookupEnabled;
+
+      InterpreterFlagsRAII_t(cling::Interpreter* interp):
+         fInterpreter(interp),
+         fWasDynamicLookupEnabled(interp->isDynamicLookupEnabled())
+      {
+         fInterpreter->enableDynamicLookup(true);
+      }
+      ~InterpreterFlagsRAII_t() {
+         fInterpreter->enableDynamicLookup(fWasDynamicLookupEnabled);
+      }
+   } interpreterFlagsRAII(fInterpreter);
+
    // A non-zero returned value means the given line was
    // not a complete statement.
    int indent = 0;
@@ -1826,6 +1841,8 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
                                                         true /*ignoreOutmostBlock*/);
          } else {
+            // No DynLookup for .x, .L of named macros.
+            fInterpreter->enableDynamicLookup(false);
             indent = fMetaProcessor->process(mod_line, compRes, &result);
          }
          fCurExecutingMacros.pop_back();
