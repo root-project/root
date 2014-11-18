@@ -101,6 +101,7 @@
 #include "TObjString.h"
 #include "ThreadLocalStorage.h"
 
+#include <iostream>
 
 TPluginManager *gPluginMgr;   // main plugin manager created in TROOT
 
@@ -356,7 +357,8 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
                TString ctor = strtok(0, ";\"");
                if (!ctor.Contains("("))
                   ctor = strtok(0, ";\"");
-               AddHandler(s, regexp, clss, plugin, ctor, "TEnv");
+	       std::cout << "class: " << clss << std::endl;
+	       AddHandler(s, regexp, clss, plugin, ctor, "TEnv");
                cnt++;
             }
             delete [] v;
@@ -558,8 +560,8 @@ TPluginHandler *TPluginManager::FindHandler(const char *base, const char *uri)
 
    while ((h = (TPluginHandler*) next())) {
       if (h->CanHandle(base, uri)) {
-         if (gDebug > 0)
-            Info("FindHandler", "found plugin for %s", h->GetClass());
+	/*if (gDebug > 0)
+	  Info("FindHandler", "found plugin for %s", h->GetClass());*/
          return h;
       }
    }

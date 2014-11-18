@@ -182,7 +182,7 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string & name, 
    // if index is wrong (i.e. variable already exists but with a different index return false) but
    // value is set for corresponding variable name
 
-//    std::cout << " add parameter " << name << "  " <<  val << " step " << step << std::endl;
+  //std::cout << " add parameter " << name << "  " <<  val << " step " << step << std::endl;
 
    if (step <= 0) {
       std::string txtmsg = "Parameter " + name + "  has zero or invalid step size - consider it as constant ";

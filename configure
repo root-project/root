@@ -84,6 +84,7 @@ options="                    \
    enable_mathmore           \
    enable_memstat            \
    enable_minuit2            \
+   enable_cmaes              \
    enable_monalisa           \
    enable_mysql              \
    enable_odbc               \
@@ -166,6 +167,7 @@ enable_qt=no
 enable_qtgsi=no
 enable_roofit=no
 enable_minuit2=no
+enable_cmaes=yes
 enable_rpath=no
 enable_ruby=no
 enable_shadowpw=
@@ -193,6 +195,7 @@ if test "x$ENABLEALL" = "xyes"; then
     enable_qtgsi=yes
     enable_roofit=yes
     enable_minuit2=yes
+    enable_cmaes=yes
     #enable_ruby=yes     #not supported in ROOT v6.0.0 yet
     enable_table=yes
     enable_unuran=yes
@@ -247,6 +250,7 @@ SSL              \
 AFS              \
 ROOFIT           \
 MINUIT2          \
+CMAES            \
 TABLE            \
 XMLDIR           \
 CASROOT          \
@@ -1660,6 +1664,7 @@ enable/disable options, prefix with either --enable- or --disable-
   mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.10)
   memstat            A memory statistics utility, helps to detect memory leaks
   minuit2            Build the new libMinuit2 minimizer library
+  cmaes              Build the wrapper to the libcmaes mininmizer library
   monalisa           Monalisa monitoring support, requires libapmoncpp
   mysql              MySQL support, requires libmysqlclient
   odbc               ODBC support, requires libiodbc or libodbc
@@ -2167,6 +2172,8 @@ if test $# -gt 0 ; then
       --with-rfio-libdir=*)    shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
       --with-sqlite-incdir=*)  sqliteincdir=$optarg  ; enable_sqlite="yes"  ;;
       --with-sqlite-libdir=*)  sqlitelibdir=$optarg  ; enable_sqlite="yes"  ;;
+      --with-cmaes-incdir=*)   cmaesincdir=$optarg   ; enable_cmaes="yes"   ;;
+      --with-cmaes-libdir=*)   cmaeslibdir=$optarg   ; enable_cmaes="yes"   ;;
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
@@ -6648,6 +6655,19 @@ fi
 
 ######################################################################
 #
+### echo %%% libcmaes support - Third party libraries
+#
+#check_header "cmaes.h" $HOME/include/libcmaes /usr/include/libcmaes
+check_header "cmaes.h" "$cmaesincdir" /usr/include/libcmaes
+cmaesinc=$found_hdr
+cmaesincdir=$found_dir
+check_library "libcmaes" "yes" "$cmaeslibdir" /usr/lib
+# $HOME/lib /usr/lib
+cmaeslib=$found_lib
+cmaeslibdir=$found_dir
+
+######################################################################
+#
 ### echo %%% Unuran Library - Contributed library
 #
 message "Checking whether to build libUnuran"
@@ -6852,6 +6872,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_fitsio"   = "xyes" && pl="$pl root-plugin-graf2d-fitsio"
     test "x$enable_gviz"     = "xyes" && pl="$pl root-plugin-graf2d-gviz"
     test "x$enable_minuit2"  = "xyes" && pl="$pl root-plugin-math-minuit2"
+    test "x$enable_cmaes"  = "xyes" && pl="$pl root-plugin-math-cmaes"
     test "x$enable_pythia6"  = "xyes" && pl="$pl root-plugin-montecarlo-pythia6"
     test "x$enable_alien"    = "xyes" && pl="$pl root-plugin-net-alien"
     test "x$enable_bonjour"  = "xyes" && pl="$pl root-plugin-net-bonjour"
@@ -6884,6 +6905,7 @@ if test "x$show_pkglist" = "xyes" ; then
         libroot-math-mathcore \
         libroot-math-matrix \
         libroot-math-minuit \
+        libroot-math-cmaes \
         libroot-math-mlp \
         libroot-math-physics \
         libroot-math-quadp \
@@ -7354,6 +7376,10 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@lzmalibdir@|$lzmalibdir|"            \
     -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
+    -e "s|@buildcmaes@|$enable_cmaes|"          \
+    -e "s|@cmaeslibdir@|$cmaeslibdir|"          \
+    -e "s|@cmaeslib@|$cmaeslib|"                \
+    -e "s|@cmaesincdir@|$cmaesincdir|"          \
     -e "s|@buildunuran@|$enable_unuran|"        \
     -e "s|@buildvc@|$enable_vc|"                \
     -e "s|@buildvdt@|$enable_vdt|"              \

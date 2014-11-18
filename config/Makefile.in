@@ -395,6 +395,11 @@ BUILDROOFIT    := @buildroofit@
 
 BUILDMINUIT2   := @buildminuit2@
 
+BUILDCMAES     := @buildcmaes@
+CMAESINCDIR    := $(filter-out -I/usr/include, @cmaesincdir@)
+CMAESLIBDIR    := @cmaeslibdir@
+CMAESLIB       := -lcmaes
+
 BUILDUNURAN    := @buildunuran@
 
 BUILDVC        := @buildvc@

@@ -471,6 +471,20 @@ if(sqlite)
   endif()
 endif()
 
+#---Check for Libcmaes-------------------------------------------------------------------
+if(libcmaes)
+  message(STATUS "Looking for libcmaes")
+  find_package(LibCmaes)
+  if(NOT LIBCMAES_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "libcmaes not found")
+    else()
+      message(STATUS "libcmaes not found. Switching off libcmaes option")
+      set(libcmaes OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for Pythia6-------------------------------------------------------------------
 if(pythia6)
   message(STATUS "Looking for Pythia6")

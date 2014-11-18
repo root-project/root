@@ -26,6 +26,7 @@
 // #define MATH_NO_PLUGIN_MANAGER
 // #define HAS_MINUIT
 // #define HAS_MINUIT2
+// #define HAS_CMAES
 
 #ifndef MATH_NO_PLUGIN_MANAGER
 // use ROOT Plug-in manager
@@ -41,6 +42,9 @@
 #ifdef HAS_MINUIT
 #include "TMinuitMinimizer.h"
 #endif
+#ifdef HAS_CMAES
+#include "TCMAESMinimizer.h"
+#endif
 #ifdef R__HAS_MATHMORE
 #include "Math/GSLMinimizer.h"
 #include "Math/GSLNLSMinimizer.h"
@@ -52,7 +56,6 @@
 #include <algorithm>
 #include <cassert>
 
-//#define DEBUG
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -80,9 +83,14 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       s1 = "Minuit";
       minim = s1.c_str();
    }
-
+   if (minimizerType.find("cmaes")!=std::string::npos
+       ||minimizerType.find("ipop")!=std::string::npos)
+     {
+       s1 = minimizerType;
+       minim = s1.c_str();
+     }
    if (minimizerType.empty() ) minim = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-
+   
    R__LOCKGUARD2(gROOTMutex);
 
    // create Minimizer using the PM
@@ -104,8 +112,7 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       else
          std::cout << "Error creating Minimizer " << minimizerType << "  " << algoType << std::endl;
 #endif
-
-      return min;
+      return min; 
    }
    return 0;
 
@@ -140,6 +147,12 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       min = new TMinuitMinimizer(algoType.c_str());
 #endif
 
+#ifdef HAS_CMAES
+   if (minimizerType.find("cmaes") != std::string::npos
+       || minimizerType.find("ipop") != std::string::npos)
+     min = new ROOT::cmaes::TCMAESMinimizer(algoType.c_str());
+#endif
+   
 #ifdef R__HAS_MATHMORE
    // use GSL minimizer
    if (minimizerType ==  "GSL")
