@@ -6204,6 +6204,7 @@ EOF
                 echo "Clang before version 3.1 is unable to compile Vc correctly. Please update clang or disable Vc."
                 exit 1
             fi
+	    vcflags="$vcflags -Wno-local-type-template-args -Wno-unnamed-type-template-args"
             ;;
         GCC)
             vcflags="$vcflags -Wno-unused-function"
