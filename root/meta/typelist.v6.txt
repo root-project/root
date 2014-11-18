@@ -998,7 +998,6 @@ ssize_t
 Ssiz_t
 Stat_t
 streambuf
-string
 stringbuf
 stringstream
 Style_t
