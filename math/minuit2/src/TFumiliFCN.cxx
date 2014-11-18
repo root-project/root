@@ -24,6 +24,7 @@
 #endif
 
 #include <cmath>
+#include <algorithm>
 
 static const double kPrecision = 1.E-16; 
 static const double kEpsilon = 1.E-300; 
