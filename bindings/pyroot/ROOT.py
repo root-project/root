@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 04/22/14
+# Last: 11/17/14
 
 """PyROOT user module.
 
@@ -338,7 +338,10 @@ def _displayhook( v ):
 
 
 ### set import hook to be able to trigger auto-loading as appropriate
-import __builtin__
+try:
+   import __builtin__
+except ImportError:
+   import builtins as __builtin__  # name change in p3
 _orig_ihook = __builtin__.__import__
 def _importhook( name, glbls = {}, lcls = {}, fromlist = [], level = -1 ):
    if name[0:5] == 'ROOT.':
