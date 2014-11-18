@@ -1785,7 +1785,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
 
       // Prefix the full class name with '::' except for the STL
       // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
+      // real class instead of the class in the namespace ROOTShadow::Shadow
       classname.insert(0,"::");
    }
 
@@ -2459,7 +2459,7 @@ void WriteClassInit(G__ClassInfo &cl)
 
       // Prefix the full class name with '::' except for the STL
       // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
+      // real class instead of the class in the namespace ROOTShadow::Shadow
       csymbol.insert(0,"::");
    }
 
@@ -2589,7 +2589,7 @@ void WriteClassInit(G__ClassInfo &cl)
          std::string clfullname;
          shadowMaker->GetFullShadowName(cl, clfullname);
          (*dictSrcOut) << "      R__ASSERT(sizeof(" << csymbol.c_str() << ")"
-                       << " == sizeof(" << clfullname.c_str() << "));" << std::endl;
+                       << " == sizeof( " << clfullname.c_str() << "));" << std::endl;
       }
    }
 
@@ -3478,7 +3478,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 
       // Prefix the full class name with '::' except for the STL
       // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
+      // real class instead of the class in the namespace ROOTShadow::Shadow
       csymbol.insert(0,"::");
    }
 
@@ -5116,9 +5116,9 @@ int main(int argc, char **argv)
 
       WriteRegisterModule();
 
-      const char* shadowNSName="ROOT";
+      const char* shadowNSName="ROOTShadow";
       if (dict_type != kDictTypeCint)
-         shadowNSName = "ROOT::Reflex";
+         shadowNSName = "ROOTShadow::Reflex";
       G__ShadowMaker myShadowMaker((*dictSrcOut), shadowNSName, NeedShadowClass,
                                    dict_type==kDictTypeCint ? NeedTypedefShadowClass : 0);
       shadowMaker = &myShadowMaker;
@@ -5279,11 +5279,11 @@ int main(int argc, char **argv)
             if (forceLink) {
                if ((clRequest.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && clRequest.Linkage() != G__CPPLINK) {
                   if (NeedShadowClass(clRequest)) {
-                     (*dictSrcOut) << "namespace ROOT {" << std::endl
+                     (*dictSrcOut) << "namespace ROOTShadow {" << std::endl
                                    << "   namespace Shadow {" << std::endl;
                      // coverity[fun_call_w_exception] - that's just fine.
                      shadowMaker->WriteShadowClass(clRequest);
-                     (*dictSrcOut) << "   } // Of namespace ROOT::Shadow" << std::endl
+                     (*dictSrcOut) << "   } // Of namespace ROOTShadow::Shadow" << std::endl
                                    << "} // Of namespace ROOT" << std::endl << std::endl;
                   }
                   if (G__ShadowMaker::IsSTLCont(clRequest.Name()) == 0 ) {
