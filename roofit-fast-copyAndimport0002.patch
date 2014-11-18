@@ -1,0 +1,29 @@
+From 2c79b782f902abdd5ed3d7ccac29aea4f680ea06 Mon Sep 17 00:00:00 2001
+From: Lorenzo Moneta <Lorenzo.Moneta@cern.ch>
+Date: Fri, 31 Jan 2014 11:33:29 +0100
+Subject: [PATCH] Use hash tables for server list sizes >= 1000 in
+ RooAbsArg::addServer
+
+---
+ roofit/roofitcore/src/RooAbsArg.cxx | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/roofit/roofitcore/src/RooAbsArg.cxx b/roofit/roofitcore/src/RooAbsArg.cxx
+index 100223a..8bf960f 100644
+--- a/roofit/roofitcore/src/RooAbsArg.cxx
++++ b/roofit/roofitcore/src/RooAbsArg.cxx
+@@ -366,6 +366,11 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
+   }
+ 
+ 
++  // LM: use hash tables for larger lists
++  if (_serverList.GetSize() > 999 && _serverList.getHashTableSize() == 0) _serverList.setHashTableSize(1000);
++  if (server._clientList.GetSize() > 999 && server._clientList.getHashTableSize() == 0) server._clientList.setHashTableSize(1000);
++  if (server._clientListValue.GetSize() >  999 && server._clientListValue.getHashTableSize() == 0) server._clientListValue.setHashTableSize(1000);
++
+   // Add server link to given server
+   _serverList.Add(&server) ;
+ 
+-- 
+1.8.4.2
+

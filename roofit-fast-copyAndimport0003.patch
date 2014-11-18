@@ -1,0 +1,50 @@
+From dfe6c3a1cc06eaef713ad2e27225dac5597034cd Mon Sep 17 00:00:00 2001
+From: Lorenzo Moneta <Lorenzo.Moneta@cern.ch>
+Date: Fri, 31 Jan 2014 16:40:15 +0100
+Subject: [PATCH] =?UTF-8?q?Speed=20up=20RooWorkspace::import=20by=20using?=
+ =?UTF-8?q?=20a=20has=20table=20for=20the=20internal=20Workspace=20collect?=
+ =?UTF-8?q?ion=20if=20size=20is=20>=201000=20and=20=20by=20speeding=20up?=
+ =?UTF-8?q?=20the=20=20removal=20of=20the=20set=20which=20is=20cloned=20in?=
+ =?UTF-8?q?=20the=20import.=20We=20don=E2=80=99t=20delete=20the=20set=20wh?=
+ =?UTF-8?q?ich=20calls=20safeDeleteList.=20It=20is=20not=20needed,=20the?=
+ =?UTF-8?q?=20set=20contains=20a=20list=20of=20all=20the=20nodes,=20so=20w?=
+ =?UTF-8?q?e=20simply=20delete=20just=20one=20by=20one.?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ roofit/roofitcore/src/RooWorkspace.cxx | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/roofit/roofitcore/src/RooWorkspace.cxx b/roofit/roofitcore/src/RooWorkspace.cxx
+index 2707eec..0b1f7c9 100644
+--- a/roofit/roofitcore/src/RooWorkspace.cxx
++++ b/roofit/roofitcore/src/RooWorkspace.cxx
+@@ -658,6 +658,8 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
+   }
+   iter->Reset() ;
+ 
++  if (cloneSet2->getSize()+_allOwnedNodes.getSize() > 999) _allOwnedNodes.setHashTableSize(1000);
++
+   RooArgSet recycledNodes ;
+   RooArgSet nodesToBeDeleted ;
+   while((node=(RooAbsArg*)iter->Next())) {
+@@ -712,6 +714,14 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
+   }
+ 
+   // Release working copy
++  // no need to do a safe list since it was generated from a snapshot 
++  // just take ownership and delte elements by hand
++  cloneSet->releaseOwnership() ;
++  RooFIter cloneSet_iter = cloneSet->fwdIterator() ;
++  RooAbsArg* cloneNode ;
++  while ((cloneNode=(RooAbsArg*)cloneSet_iter.next())) {
++     delete cloneNode;
++  }
+   delete cloneSet ;
+ 
+   // Reconnect any nodes that need to be
+-- 
+1.8.4.2
+

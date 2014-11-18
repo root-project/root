@@ -1,0 +1,45 @@
+<!--
+//============================================================================
+// Name        : example.xml
+//============================================================================
+-->
+
+<!--
+    Top-level configuration,  details for the example channel are in example_channel.xml.
+    This is the input file to the executable.
+
+    Note: Config.dtd needs to be accessible.  It can be found in ROOT release area.  
+    The file system path is relative to location of this XML file, not the executable.
+-->
+
+<!DOCTYPE Combination  SYSTEM 'HistFactorySchema.dtd'>
+
+<Combination OutputFilePrefix="./results/example" >
+
+  <Input>./config/example_channel.xml</Input>
+
+  <Measurement Name="GaussExample" Lumi="1." LumiRelErr="0.1" >
+    <POI>SigXsecOverSM</POI>
+    <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
+    <!-- don't need <ConstraintTerm> default is Gaussian with an exponential interpolation for normalization factors (LHC HCG default)-->
+  </Measurement>
+
+  <Measurement Name="GammaExample" Lumi="1." LumiRelErr="0.1" ExportOnly="True">
+    <POI>SigXsecOverSM</POI>
+    <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
+    <ConstraintTerm Type="Gamma" RelativeUncertainty=".3">syst2</ConstraintTerm>
+  </Measurement>
+
+  <Measurement Name="LogNormExample" Lumi="1." LumiRelErr="0.1" ExportOnly="True">
+    <POI>SigXsecOverSM</POI>
+    <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
+    <ConstraintTerm Type="LogNormal" RelativeUncertainty=".3">syst2</ConstraintTerm>
+  </Measurement>
+
+  <Measurement Name="ConstExample" Lumi="1." LumiRelErr="0.1" ExportOnly="True">
+    <POI>SigXsecOverSM</POI>
+    <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
+  </Measurement>
+
+
+</Combination>

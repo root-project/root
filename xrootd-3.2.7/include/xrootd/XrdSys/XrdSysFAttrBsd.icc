@@ -1,0 +1,160 @@
+/******************************************************************************/
+/*                                                                            */
+/*                    X r d S y s F A t t r B s d . i c c                     */
+/*                                                                            */
+/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/*                            All Rights Reserved                             */
+/*   Produced by Andrew Hanushevsky for Stanford University under contract    */
+/*              DE-AC02-76-SFO0515 with the Department of Energy              */
+/******************************************************************************/
+  
+//          $Id$
+const char *XrdSysFAttrBsdCVSID = "$Id$";
+
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/extattr.h>
+
+#include "XrdSys/XrdSysFAttr.hh"
+
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : D e l                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Del(const char *Aname, const char *Path, int fd)
+{
+   int ec;
+
+// Remove the attrbiute but ignore errors if it doesn't exist
+//
+   ec = (fd < 0 ? extattr_delete_file(Path, EXTATTR_NAMESPACE_USER, Aname)
+                : extattr_delete_fd(  fd,   EXTATTR_NAMESPACE_USER, Aname));
+
+// Diagnose errors but ignore errors if it doesn't exist
+//
+   if (ec && (ec = Diagnose("remove", Aname, Path, errno)) == -ENOENT) ec = 0;
+   return ec;
+}
+  
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : G e t                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Get(const char *Aname, void *Aval, int Avsz, 
+                     const char *Path, int fd)
+{
+   int ec;
+
+// Obtain the attribute.
+//
+   ec = (fd < 0 ? extattr_get_file(Path,EXTATTR_NAMESPACE_USER,Aname,Aval,Avsz)
+                  extattr_get_fd(  fd,  EXTATTR_NAMESPACE_USER,Aname,Aval,Avsz));
+
+// Diagnose errors. We return 0 on ENOENT to indicate no attribute.
+//
+   if (ec < 0 && (ec = Diagnose("get", Aname, Path, errno)) == -ENOENT) ec = 0;
+   return ec;
+}
+
+/******************************************************************************/
+/*                     X r d S y s F A t t r : : L i s t                      */
+/******************************************************************************/
+  
+int XrdSysFAttr::List(AList **aPL, const char *Path, int fd, int getSz)
+{
+   AList *aNew;
+   char *Buff, *bP, *bEnd;
+   int  ec, Tlen, maxSz = 0, *msP = (getSz ? &maxSz : 0);
+
+// First obtain the amount of storage we will need for the whole list
+//
+   *aPL = 0;
+   Tlen = (fd < 0 ? extattr_get_file(Path,EXTATTR_NAMESPACE_USER, 0, 0)
+                    extattr_list_fd(   fd,EXTATTR_NAMESPACE_USER, 0, 0));
+   if (Tlen < 0)
+      {if ((ec = Diagnose("list", "*", Path, errno)) == -ENOENT) ec = 0;
+       return ec;
+      }
+
+// If we don't have any then just return 0. Otherwise, add 4K to the buffer
+// size just in case some one is adding attributes while we get the list.
+//
+   if (!Tlen) return 0;
+   Tlen += 4096;
+
+// Allocate storage to get the whole list
+//
+   if (!(Buff = (char *)malloc(Tlen))) return -ENOMEM;
+
+// Now get the actual list. We will not recover if someone added an attribute
+// since the time we actual determined the size of the buffer we need.
+//
+   Tlen = (fd < 0 ? extattr_get_file(Path,EXTATTR_NAMESPACE_USER, Buff, Tlen)
+                    extattr_list_fd(   fd,EXTATTR_NAMESPACE_USER, Buff, Tlen));
+   if (Tlen < 0)
+      {if ((ec = Diagnose("list", "*", Path, errno)) == -ENOENT) ec = 0;
+       free(Buff);
+       return ec;
+      }
+   if (!Tlen) return 0;
+
+// Run through the memory and allocate an AList entry for each.
+//
+#ifdef __ubuntu__
+// Ubuntu BSD returns attribute names preceeded by the length.
+//
+   int n, i = 0;
+   char Vname[256];
+   while(i < Tlen)
+        {n = (unsigned char)Buff[i];
+         strncpy(Vname, &Buff[i+1], n);
+         Vname[n] = '\0';
+         if (n && (aNew = getEnt(Path, fd, Vname, *aPL, msP))) *aPL = aNew;
+         i += (n + 1);
+        }
+#else
+   bP = Buff; bEnd = Buff+Tlen;
+   while(bP < bEnd)
+        {if ((aNew = getEnt(Path, fd, bP, *aPL, msP))) *aPL = aNew;
+         bP = bP + strlen(bP) + 1;
+        }
+#endif
+
+// All done
+//
+   free(Buff);
+   return maxSz;
+}
+  
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : S e t                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Set(const char *Aname, const void *Aval, int Avsz,
+                     const char *Path,  int fd, int isNew)
+{
+   int ec;
+
+// Check if we should see if the attribute already exists as BSD always replaces
+// or creates attributes, as needed. This is not MT safe, sigh.
+//
+  if (isNew)
+     {ec = (fd < 0 ? extattr_get_file(Path,EXTATTR_NAMESPACE_USER,Aname,0,0)
+                   : extattr_get_fd(  fd,  EXTATTR_NAMESPACE_USER,Aname,0 0));
+      if (ec >= 0) return -EEXIST;
+     }
+
+// Set the attribute
+//
+   ec = (fd < 0 ? extattr_set_file(Path,EXTATTR_NAMESPACE_USER,Aname,Aval,Avsz)
+                : extattr_set_fd(  fd,  EXTATTR_NAMESPACE_USER,Aname,Aval,Avsz));
+   if (ec < 0 || ec != Avsz)
+      ec = Diagnose("set", Aname, Path, (ec < 0 ? errno : ENOSPC));
+
+// Return appropriately
+//
+   return ec;
+}

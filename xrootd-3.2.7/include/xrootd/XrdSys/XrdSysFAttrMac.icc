@@ -1,0 +1,131 @@
+/******************************************************************************/
+/*                                                                            */
+/*                    X r d S y s F A t t r M a c . i c c                     */
+/*                                                                            */
+/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/*                            All Rights Reserved                             */
+/*   Produced by Andrew Hanushevsky for Stanford University under contract    */
+/*              DE-AC02-76-SFO0515 with the Department of Energy              */
+/******************************************************************************/
+
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/xattr.h>
+
+#include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysFAttr.hh"
+  
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : D e l                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Del(const char *Aname, const char *Path, int fd)
+{
+   int ec;
+
+// Remove the attrbiute but ignore errors if it doesn't exist
+//
+   ec = (fd < 0 ? removexattr(Path,Aname,0) : fremovexattr(fd, Aname, 0));
+
+// Diagnose errors but ignore errors if it doesn't exist
+//
+   if (ec && (ec = Diagnose("remove", Aname, Path, errno)) == -ENOENT) ec = 0;
+   return ec;
+}
+  
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : G e t                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Get(const char *Aname, void *Aval, int Avsz, 
+                     const char *Path, int fd)
+{
+   int ec;
+
+// Obtain the attribute.
+//
+   ec = (fd < 0 ?  getxattr(Path, Aname, Aval, Avsz, 0, 0)
+                : fgetxattr(fd,   Aname, Aval, Avsz, 0, 0));
+
+// Diagnose errors. We return 0 on ENOENT to indicate no attribute.
+//
+   if (ec < 0 && (ec = Diagnose("get", Aname, Path, errno)) == -ENOENT) ec = 0;
+   return ec;
+}
+
+/******************************************************************************/
+/*                     X r d S y s F A t t r : : L i s t                      */
+/******************************************************************************/
+  
+int XrdSysFAttr::List(AList **aPL, const char *Path, int fd, int getSz)
+{
+   AList *aNew;
+   char *Buff, *bP, *bEnd;
+   int  ec, Tlen, maxSz = 0, *msP = (getSz ? &maxSz : 0);
+
+// First obtain the amount of storage we will need for the whole list
+//
+   *aPL = 0;
+   Tlen = (fd < 0 ? listxattr(Path, 0, 0, 0) : flistxattr(fd, 0, 0, 0));
+   if (Tlen < 0)
+      {if ((ec = Diagnose("list", "*", Path, errno)) == -ENOENT) ec = 0;
+       return ec;
+      }
+
+// If we don't have any then just return 0. Otherwise, add 4K to the buffer
+// size just in case some one is adding attributes while we get the list.
+//
+   if (!Tlen) return 0;
+   Tlen += 4096;
+
+// Allocate storage to get the whole list
+//
+   if (!(Buff = (char *)malloc(Tlen))) return -ENOMEM;
+
+// Now get the actual list. We will not recover if someone added an attribute
+// since the time we actual determined the size of the buffer we need.
+//
+   Tlen = (fd < 0 ? listxattr(Path,Buff,Tlen,0) : flistxattr(fd,Buff,Tlen,0));
+   if (Tlen < 0)
+      {if ((ec = Diagnose("list", "*", Path, errno)) == -ENOENT) ec = 0;
+       free(Buff);
+       return ec;
+      }
+   if (!Tlen) return 0;
+
+// Run through the memory and allocate an AList entry for each.
+//
+   bP = Buff; bEnd = Buff+Tlen;
+   while(bP < bEnd)
+        {if ((aNew = getEnt(Path, fd, bP, *aPL, msP))) *aPL = aNew;
+         bP = bP + strlen(bP) + 1;
+        }
+
+// All done
+//
+   free(Buff);
+   return maxSz;
+}
+  
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : S e t                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Set(const char *Aname, const void *Aval, int Avsz,
+                     const char *Path,  int fd, int isNew)
+{
+   int ec, xFlag = (isNew ? XATTR_CREATE : 0);
+
+// Set the attribute
+//
+   ec = (fd < 0 ?  setxattr(Path, Aname, Aval, Avsz, 0, xFlag)
+                : fsetxattr(fd,   Aname, Aval, Avsz, 0, xFlag));
+
+// Diagnose any errors
+//
+   if (ec < 0) ec = Diagnose("set", Aname, Path, errno);
+   return ec;
+}

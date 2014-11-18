@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<MethodSetup Method="LD::LD">
+  <GeneralInfo>
+    <Info name="TMVA Release" value="4.2.0 [262656]"/>
+    <Info name="ROOT Release" value="5.34/18 [336402]"/>
+    <Info name="Creator" value="moneta"/>
+    <Info name="Date" value="Mon May 12 17:16:21 2014"/>
+    <Info name="Host" value="Darwin pb-d-128-141-235-186.cern.ch 13.1.0 Darwin Kernel Version 13.1.0: Wed Apr 2 23:52:02 PDT 2014; root:xnu-2422.92.1~2/RELEASE_X86_64 x86_64"/>
+    <Info name="Dir" value="/Users/moneta/root/github/5.34/tmva/test"/>
+    <Info name="Training events" value="5000"/>
+    <Info name="TrainingTime" value="3.97610664e-03"/>
+    <Info name="AnalysisType" value="Regression"/>
+  </GeneralInfo>
+  <Options>
+    <Option name="V" modified="Yes">False</Option>
+    <Option name="VerbosityLevel" modified="No">Default</Option>
+    <Option name="VarTransform" modified="Yes">None</Option>
+    <Option name="H" modified="Yes">False</Option>
+    <Option name="CreateMVAPdfs" modified="No">False</Option>
+    <Option name="IgnoreNegWeightsInTraining" modified="No">False</Option>
+  </Options>
+  <Variables NVar="2">
+    <Variable VarIndex="0" Expression="var1" Label="var1" Title="Variable 1" Unit="units" Internal="var1" Type="F" Min="1.96635723e-03" Max="4.99746370e+00"/>
+    <Variable VarIndex="1" Expression="var2" Label="var2" Title="Variable 2" Unit="units" Internal="var2" Type="F" Min="9.17228987e-04" Max="4.99897623e+00"/>
+  </Variables>
+  <Spectators NSpec="2">
+    <Spectator SpecIndex="0" Expression="var1*2" Label="spec1" Title="Spectator 1" Unit="units" Internal="spec1" Type="F" Min="3.93271446e-03" Max="9.99492741e+00"/>
+    <Spectator SpecIndex="1" Expression="var1*3" Label="spec2" Title="Spectator 2" Unit="units" Internal="spec2" Type="F" Min="5.89907169e-03" Max="1.49923916e+01"/>
+  </Spectators>
+  <Classes NClass="1">
+    <Class Name="Regression" Index="0"/>
+  </Classes>
+  <Targets NTrgt="1">
+    <Target TargetIndex="0" Expression="fvalue" Label="fvalue" Title="fvalue" Unit="" Internal="fvalue" Type="F" Min="1.61858249e+00" Max="3.94841431e+02"/>
+  </Targets>
+  <Transformations NTransformations="0"/>
+  <MVAPdfs/>
+  <Weights NOut="1" NCoeff="3">
+    <Coefficient IndexOut="0" IndexCoeff="0" Value="-8.7877287636757160e+01"/>
+    <Coefficient IndexOut="0" IndexCoeff="1" Value="4.2130581771409148e+01"/>
+    <Coefficient IndexOut="0" IndexCoeff="2" Value="4.4845215326714168e+01"/>
+  </Weights>
+</MethodSetup>

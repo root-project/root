@@ -1,0 +1,107 @@
+From 31a0be93392e4706d5baf486ebf6a212af4fb68f Mon Sep 17 00:00:00 2001
+From: Lorenzo Moneta <Lorenzo.Moneta@cern.ch>
+Date: Thu, 30 Jan 2014 17:18:57 +0100
+Subject: [PATCH] Optimize the filling of share properties (done when cloning
+ RooRealVar) by using a std::map
+
+---
+ roofit/roofitcore/inc/RooSharedProperties.h       |  3 +++
+ roofit/roofitcore/inc/RooSharedPropertiesList.h   |  2 ++
+ roofit/roofitcore/src/RooSharedPropertiesList.cxx | 25 +++++++++++++++++++++++
+ 3 files changed, 30 insertions(+)
+
+diff --git a/roofit/roofitcore/inc/RooSharedProperties.h b/roofit/roofitcore/inc/RooSharedProperties.h
+index 4013948..bdf3a77 100644
+--- a/roofit/roofitcore/inc/RooSharedProperties.h
++++ b/roofit/roofitcore/inc/RooSharedProperties.h
+@@ -18,6 +18,7 @@
+ 
+ #include "TObject.h"
+ #include "TUUID.h"
++#include "TString.h"
+ 
+ class RooSharedProperties : public TObject {
+ public:
+@@ -38,6 +39,8 @@ public:
+   void setInSharedList() { _inSharedList = kTRUE ; }
+   Bool_t inSharedList() const { return _inSharedList ; }
+ 
++   TString asString() { return TString(_uuid.AsString()); }
++
+ protected:
+ 
+   TUUID _uuid ; // Unique object ID
+diff --git a/roofit/roofitcore/inc/RooSharedPropertiesList.h b/roofit/roofitcore/inc/RooSharedPropertiesList.h
+index 8661b5a..9767ab2 100644
+--- a/roofit/roofitcore/inc/RooSharedPropertiesList.h
++++ b/roofit/roofitcore/inc/RooSharedPropertiesList.h
+@@ -20,6 +20,7 @@
+ #include <assert.h>
+ #include "RooRefCountList.h"
+ #include "RooSharedProperties.h"
++#include <map>
+ 
+ class RooSharedPropertiesList : public TObject {
+ public:
+@@ -33,6 +34,7 @@ public:
+ protected:
+ 
+   RooRefCountList _propList ;
++   std::map<std::string, RooSharedProperties *> _newPropList; 
+ 
+   ClassDef(RooSharedPropertiesList,0) // Manager for shared properties among clones of certain RooAbsArg-derived types
+ };
+diff --git a/roofit/roofitcore/src/RooSharedPropertiesList.cxx b/roofit/roofitcore/src/RooSharedPropertiesList.cxx
+index 7608e73..3d0a6b7 100644
+--- a/roofit/roofitcore/src/RooSharedPropertiesList.cxx
++++ b/roofit/roofitcore/src/RooSharedPropertiesList.cxx
+@@ -43,6 +43,7 @@ ClassImp(RooSharedPropertiesList)
+ RooSharedPropertiesList::RooSharedPropertiesList() 
+ {
+   // Constructor
++   _propList.setHashTableSize(1000);
+ } 
+ 
+ 
+@@ -89,7 +90,11 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
+ 
+   // Find property with identical uuid in list
+   RooFIter iter = _propList.fwdIterator() ;
++
++  //std::cout << "REGISTER properties " << prop->asString() << " - list size = " << _propList.GetSize() << std::endl;
+   RooSharedProperties* tmp ;
++
++#ifdef OLD
+   while((tmp=(RooSharedProperties*)iter.next())) {
+     if (tmp != prop && *tmp==*prop) {
+       // Found another instance of object with identical UUID 
+@@ -119,6 +124,26 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
+   prop->setInSharedList() ;
+   prop->increaseRefCount() ;
+   _propList.Add(prop) ;
++#else 
++  
++  std::map<std::string, RooSharedProperties *>::iterator it; 
++
++  it = _newPropList.find( std::string(prop->asString()) ); 
++  if (it != _newPropList.end() ) {
++     tmp = it->second; 
++     if (tmp != prop) { 
++        // found another instance with same UUID
++        if (canDeleteIncoming) delete prop; 
++     }
++     tmp->increaseRefCount(); 
++     return tmp;
++  }
++  prop->setInSharedList() ;
++  prop->increaseRefCount() ;
++  _newPropList[ std::string(prop->asString()) ] = prop; 
++
++#endif
++
+   return prop ;
+ }
+ 
+-- 
+1.8.4.2
+

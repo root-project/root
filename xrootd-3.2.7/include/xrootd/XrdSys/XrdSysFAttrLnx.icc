@@ -1,0 +1,153 @@
+/******************************************************************************/
+/*                                                                            */
+/*                    X r d S y s F A t t r L n x . i c c                     */
+/*                                                                            */
+/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/*                            All Rights Reserved                             */
+/*   Produced by Andrew Hanushevsky for Stanford University under contract    */
+/*              DE-AC02-76-SFO0515 with the Department of Energy              */
+/******************************************************************************/
+
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/xattr.h>
+
+#include "XrdSys/XrdSysFAttr.hh"
+
+/******************************************************************************/
+/*                     L o c a l   D e f i n i t i o n s                      */
+/******************************************************************************/
+
+#define AttrName(Aname, Abuff, Ablen) snprintf(Abuff, Ablen, "user.%s", Aname);
+
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : D e l                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Del(const char *Aname, const char *Path, int fd)
+{
+   char Avar[512];
+   int ec;
+
+// Qualify the name
+//
+   AttrName(Aname, Avar, sizeof(Avar));
+
+// Remove the attribute
+//
+   ec = (fd < 0 ? removexattr(Path, Avar) : fremovexattr(fd, Avar));
+
+// Diagnose errors but ignore errors if it doesn't exist
+//
+   if (ec && (ec = Diagnose("remove", Aname, Path, errno)) == -ENOENT) ec = 0;
+   return ec;
+}
+  
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : G e t                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Get(const char *Aname, void *Aval, int Avsz,
+                     const char *Path,  int fd)
+{
+   char Avar[512];
+   int ec;
+
+// Qualify the name
+//
+   AttrName(Aname, Avar, sizeof(Avar));
+
+// Get the attribute
+//
+   ec = (fd < 0 ?  getxattr(Path, Avar, Aval, Avsz)
+                : fgetxattr(fd,   Avar, Aval, Avsz));
+
+// Diagnose errors. We return 0 on ENOENT to indicate no attribute.
+//
+   if (ec < 0 && (ec = Diagnose("get", Aname, Path, errno)) == -ENOENT) ec = 0;
+   return ec;
+}
+
+/******************************************************************************/
+/*                     X r d S y s F A t t r : : L i s t                      */
+/******************************************************************************/
+  
+int XrdSysFAttr::List(AList **aPL, const char *Path, int fd, int getSz)
+{
+   AList *aNew;
+   char *Buff = 0, *bP, *bEnd;
+   int  ec, Tlen, maxSz = 0, *msP = (getSz ? &maxSz : 0);
+
+// First obtain the amount of storage we will need for the whole list
+//
+   *aPL = 0;
+   Tlen = (fd < 0 ? listxattr(Path, Buff, 0) : flistxattr(fd, Buff, 0));
+   if (Tlen < 0)
+      {if ((ec = Diagnose("list", "*", Path, errno)) == -ENOENT) ec = 0;
+       return ec;
+      }
+
+// If we don't have any then just return 0. Otherwise, add 4K to the buffer
+// size just in case some one is adding attributes while we get the list.
+//
+   if (!Tlen) return 0;
+   Tlen += 4096;
+
+// Allocate storage to get the whole list
+//
+   if (!(Buff = (char *)malloc(Tlen))) return -ENOMEM;
+
+// Now get the actual list. We will not recover if someone added an attribute
+// since the time we actual determined the size of the buffer we need.
+//
+   Tlen = (fd < 0 ? listxattr(Path, Buff, Tlen) : flistxattr(fd, Buff, Tlen));
+   if (Tlen < 0)
+      {if ((ec = Diagnose("list", "*", Path, errno)) == -ENOENT) ec = 0;
+       free(Buff);
+       return ec;
+      }
+   if (!Tlen) return 0;
+
+// Run through the memory and allocate an AList entry for each. Note that we
+// strip off the name space prefix.
+//
+   bP = Buff; bEnd = Buff+Tlen;
+   while(bP < bEnd)
+        {if (!strncmp("user.", bP, 5) && bP[5]
+         &&  (aNew = getEnt(Path, fd, bP+5, *aPL, msP))) *aPL = aNew;
+         bP = bP + strlen(bP) + 1;
+        }
+
+// All done
+//
+   free(Buff);
+   return maxSz;
+}
+
+/******************************************************************************/
+/*                      X r d S y s F A t t r : : S e t                       */
+/******************************************************************************/
+
+int XrdSysFAttr::Set(const char *Aname, const void *Aval, int Avsz,
+                     const char *Path,  int fd, int isNew)
+{
+   char Avar[512];
+   int ec, xFlag = (isNew ? XATTR_CREATE : 0);
+
+// Qualify the name
+//
+   AttrName(Aname, Avar, sizeof(Avar));
+
+// Set the attribute
+//
+   ec = (fd < 0 ?  setxattr(Path, Avar, Aval, Avsz, xFlag)
+                : fsetxattr(fd,   Avar, Aval, Avsz, xFlag));
+
+// Diagnose any errors
+//
+   if (ec < 0) ec = Diagnose("set", Aname, Path, errno);
+   return ec;
+}
