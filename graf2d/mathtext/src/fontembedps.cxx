@@ -19,6 +19,7 @@
 #include "../inc/fontembed.h"
 #include <string.h>
 #include <stdio.h>
+#include <algorithm>
 #ifdef WIN32
 #define snprintf _snprintf
 #endif
