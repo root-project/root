@@ -39,7 +39,7 @@
 
 #define USE_SCALAR_SINCOS
 
-enum {
+enum JustSomeName__ {
   N = 10240000,
   PrintStep = 1000000
 };

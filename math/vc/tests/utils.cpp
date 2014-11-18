@@ -154,7 +154,7 @@ void bzero(void *p, size_t n) { memset(p, 0, n); }
 template<typename V> void Random()
 {
     typedef typename V::EntryType T;
-    enum {
+    enum JustAnotherName__ {
         NBits = 3,
         NBins = 1 << NBits,                        // short int
         TotalBits = sizeof(T) * 8,                 //    16  32
@@ -200,7 +200,7 @@ template<typename V> void Random()
 template<typename V, typename I> void FloatRandom()
 {
     typedef typename V::EntryType T;
-    enum {
+    enum JustAnotherName__ {
         NBins = 64,
         NHistograms = 1,
         Mean = 135791,

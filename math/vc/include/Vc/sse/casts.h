@@ -43,7 +43,7 @@ namespace SSE
     template<> struct StaticCastHelper<int         , int         > { static Vc_ALWAYS_INLINE _M128I cast(const _M128I &v) { return v; } };
     template<> struct StaticCastHelper<unsigned int, int         > { static Vc_ALWAYS_INLINE _M128I cast(const _M128I &v) { return v; } };
     template<> struct StaticCastHelper<float       , unsigned int> { static Vc_ALWAYS_INLINE _M128I cast(const _M128  &v) {
-        return _mm_castps_si128(_mm_blendv_ps(
+        return _mm_castps_si128(mm_blendv_ps(
                 _mm_castsi128_ps(_mm_cvttps_epi32(v)),
                 _mm_castsi128_ps(_mm_add_epi32(_mm_cvttps_epi32(_mm_sub_ps(v, _mm_set1_ps(1u << 31))), _mm_set1_epi32(1 << 31))),
                 _mm_cmpge_ps(v, _mm_set1_ps(1u << 31))
@@ -57,7 +57,7 @@ namespace SSE
     template<> struct StaticCastHelper<double      , float       > { static Vc_ALWAYS_INLINE _M128  cast(const _M128D &v) { return _mm_cvtpd_ps(v); } };
     template<> struct StaticCastHelper<int         , float       > { static Vc_ALWAYS_INLINE _M128  cast(const _M128I &v) { return _mm_cvtepi32_ps(v); } };
     template<> struct StaticCastHelper<unsigned int, float       > { static Vc_ALWAYS_INLINE _M128  cast(const _M128I &v) {
-        return _mm_blendv_ps(
+        return mm_blendv_ps(
                 _mm_cvtepi32_ps(v),
                 _mm_add_ps(_mm_cvtepi32_ps(_mm_sub_epi32(v, _mm_set1_epi32(1 << 31))), _mm_set1_ps(1u << 31)),
                 _mm_castsi128_ps(_mm_cmplt_epi32(v, _mm_setzero_si128()))

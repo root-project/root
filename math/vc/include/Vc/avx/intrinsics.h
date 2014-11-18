@@ -289,6 +289,16 @@ namespace AVX
     AVX_TO_SSE_2(cmpgt_epi16)
     AVX_TO_SSE_2(cmpgt_epi32)
 
+    // This code is AVX only (without AVX2). We never asked for AVX2 intrinsics. So go away... :)
+#if defined _mm256_srli_si256
+#undef _mm256_srli_si256
+#endif
+#if defined _mm256_slli_si256
+#undef _mm256_slli_si256
+#endif
+#if defined _mm256_blend_epi16
+#undef _mm256_blend_epi16
+#endif
     static Vc_INTRINSIC m256i Vc_CONST _mm256_srli_si256(param256i a0, const int i) {
         const m128i vLo = _mm256_castsi256_si128(a0);
         const m128i vHi = _mm256_extractf128_si256(a0, 1);

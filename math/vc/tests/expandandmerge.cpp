@@ -22,7 +22,7 @@
 
 using namespace Vc;
 
-enum {
+enum JustAnotherName__ {
     VectorSizeFactor = short_v::Size / int_v::Size
 };
 
