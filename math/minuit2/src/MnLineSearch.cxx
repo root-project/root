@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include "Minuit2/MnPrint.h"
+#include <algorithm>
 
 #ifdef USE_OTHER_LS
 
