@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 #include <map>
-
+#include <algorithm>
 
 class rflx_gensrc {
 
