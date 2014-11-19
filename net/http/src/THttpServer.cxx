@@ -9,6 +9,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "RVersion.h"
+#include "RConfigure.h"
 
 #include "THttpEngine.h"
 #include "TRootSniffer.h"
@@ -294,35 +295,42 @@ THttpServer::THttpServer(const char *engine) :
 {
    // constructor
 
-   // Checks where ROOT sources (via $ROOTSYS variable)
-   // Sources are required to locate files and scripts,
-   // which will be provided to the web clients by request
    // As argument, one specifies engine kind which should be
    // created like "http:8080". One could specify several engines
    // at once, separating them with ; like "http:8080;fastcgi:9000"
    // One also can configure readonly flag for sniffer like
    // "http:8080;readonly" or "http:8080;readwrite"
-
+   //
+   // Also searches for JavaScript ROOT sources, which are used in web clients
+   // Typically JSROOT sources located in $ROOTSYS/etc/http directory,
+   // but one could set JSROOTSYS variable to specify alternative location
 
    fMainThrdId = TThread::SelfId();
 
    // Info("THttpServer", "Create %p in thrd %ld", this, (long) fMainThrdId);
 
 #ifdef COMPILED_WITH_DABC
-
    const char *dabcsys = gSystem->Getenv("DABCSYS");
    if (dabcsys != 0)
       fJsRootSys = TString::Format("%s/plugins/root/js", dabcsys);
-
-#else
-   const char *rootsys = gSystem->Getenv("ROOTSYS");
-
-   if (rootsys != 0)
-      fJsRootSys = TString::Format("%s/etc/http", rootsys);
 #endif
 
-   const char* jsrootsys = gSystem->Getenv("JSROOTSYS");
-   if (jsrootsys!=0) fJsRootSys = jsrootsys;
+   const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
+   if (jsrootsys != 0) fJsRootSys = jsrootsys;
+
+   if (fJsRootSys.Length() == 0) {
+#ifdef ROOTETCDIR
+      TString jsdir = TString::Format("%s/http", ROOTETCDIR);
+#else
+      TString jsdir("$(ROOTSYS)/etc/http");
+#endif
+      if (gSystem->ExpandPathName(jsdir)) {
+         Warning("THttpServer", "problems resolving '%s', use JSROOTSYS to specify $ROOTSYS/etc/http location", jsdir.Data());
+         fJsRootSys = ".";
+      } else {
+         fJsRootSys = jsdir;
+      }
+   }
 
    fDefaultPage = fJsRootSys + "/files/online.htm";
    fDrawPage = fJsRootSys + "/files/draw.htm";
@@ -330,7 +338,7 @@ THttpServer::THttpServer(const char *engine) :
    SetSniffer(new TRootSniffer("sniff"));
 
    // start timer
-   SetTimer(100, kTRUE);
+   SetTimer(20, kTRUE);
 
    if (strchr(engine,';')==0) {
       CreateEngine(engine);
