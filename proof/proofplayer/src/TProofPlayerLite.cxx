@@ -209,7 +209,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    if (dset->TestBit(TDSet::kEmpty))
       set->SetBit(TDSet::kEmpty);
    fProof->SetParameter("PROOF_MaxSlavesPerNode", (Long_t) ((TProofLite *)fProof)->fNWorkers);
-   if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", "TPacketizerAdaptive") != 0) {
+   if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", "TPacketizer") != 0) {
       Error("Process", "cannot init the packetizer");
       fExitStatus = kAborted;
       return -1;
