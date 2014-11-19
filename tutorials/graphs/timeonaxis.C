@@ -47,8 +47,8 @@ void timeonaxis()
       ht->SetBinContent(i,noise);
    }
    ct->cd(1);
-   ct_1->SetFillColor(41);
-   ct_1->SetFrameFillColor(33);
+   gPad->SetFillColor(41);
+   gPad->SetFrameFillColor(33);
    ht->SetLineColor(2);
    ht->GetXaxis()->SetLabelSize(0.05);
    ht->Draw();
@@ -69,8 +69,8 @@ void timeonaxis()
    TGraph *gt = new TGraph(100,t,x);
    gt->SetTitle("Politics");
    ct->cd(2);
-   ct_2->SetFillColor(41);
-   ct_2->SetFrameFillColor(33);
+   gPad->SetFillColor(41);
+   gPad->SetFrameFillColor(33);
    gt->SetFillColor(19);
    gt->SetLineColor(5);
    gt->SetLineWidth(2);
@@ -91,8 +91,8 @@ void timeonaxis()
    TGraph *gt2 = new TGraph(10,t2,x2);
    gt2->SetTitle("Number of monkeys on the moon");
    ct->cd(3);
-   ct_3->SetFillColor(41);
-   ct_3->SetFrameFillColor(33);
+   gPad->SetFillColor(41);
+   gPad->SetFrameFillColor(33);
    gt2->SetFillColor(19);
    gt2->SetMarkerColor(4);
    gt2->SetMarkerStyle(29);

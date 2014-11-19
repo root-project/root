@@ -18,15 +18,6 @@ public:
    }
 };
 
-void tv3() {
-   TCanvas *c1 = new TCanvas("c1","demo of Trees",10,10,600,800);
-   c1->Divide(1,2);
-   tv3Write();
-   c1->cd(1);
-   tv3Read1();
-   c1->cd(2);
-   tv3Read2();
-}
 void tv3Write() {
    //creates the Tree
    Vector3 *v = new Vector3();
@@ -73,3 +64,12 @@ void tv3Read1() {
    h2->Draw();
 }
 
+void tv3() {
+  TCanvas *c1 = new TCanvas("c1","demo of Trees",10,10,600,800);
+  c1->Divide(1,2);
+  tv3Write();
+  c1->cd(1);
+  tv3Read1();
+  c1->cd(2);
+  tv3Read2();
+}
