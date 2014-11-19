@@ -1197,17 +1197,18 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       (!strcmp(gEnv->GetValue("ProofLite.AutoSaveQueries", "off"), "on")) ? kTRUE : kFALSE;
 
    // Keep queries in memory and how many (-1 = all, 0 = none, ...)
-   Int_t memqueries = gEnv->GetValue("ProofLite.MaxQueriesMemory", 10);
+   Int_t memqueries = gEnv->GetValue("ProofLite.MaxQueriesMemory", 1);
 
    // If not a draw action add the query to the main list
    if (!(pq->IsDraw())) {
       if (fQMgr->Queries()) {
-         if (memqueries > 0 && fQMgr->Queries()->GetSize() >= memqueries) {
+         if (memqueries != 0) fQMgr->Queries()->Add(pq);
+         if (memqueries >= 0 && fQMgr->Queries()->GetSize() > memqueries) {
             // Remove oldest
             TObject *qfst = fQMgr->Queries()->First();
             fQMgr->Queries()->Remove(qfst);
+            delete qfst;
          }
-         if (memqueries >= 0) fQMgr->Queries()->Add(pq);
       }
       // Also save it to queries dir
       if (savequeries) fQMgr->SaveQuery(pq);
@@ -1326,7 +1327,7 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
       // Save the data set into the TQueryResult (should be done after Process to avoid
       // improper deletion during collection)
-      if (rv == 0 && dset && pq->GetInputList()) {
+      if (rv == 0 && dset && !dset->TestBit(TDSet::kEmpty) && pq->GetInputList()) {
          pq->GetInputList()->Add(dset);
          if (dset->GetEntryList())
             pq->GetInputList()->Add(dset->GetEntryList());
