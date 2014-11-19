@@ -9,6 +9,24 @@
 // precise drawing and using computation to generate them.
 //Author: Olivier Couet
 
+void hline (Double_t x, Double_t y)
+{
+  Double_t dx = 0.1;
+  TLine *l = new TLine(x,y,x+dx,y);
+  l->Draw();
+  l->SetLineWidth(4);
+}
+
+void arrow (Double_t x1, Double_t y1, Double_t x2, Double_t y2, Int_t ls)
+{
+  TArrow *arr = new TArrow(x1,y1,x2,y2,0.025,"|>");
+  arr->SetFillColor(1);
+  arr->SetFillStyle(1001);
+  arr->SetLineStyle(ls);
+  arr->SetAngle(19);
+  arr->Draw();
+}
+
 void mass_spectrum()
 {
    TCanvas *C = new TCanvas("C","C",800,500);
@@ -99,22 +117,4 @@ void mass_spectrum()
    l3.DrawLatex(0.295, 0.50, "#pi#pi");
    l3.DrawLatex(0.345, 0.53, "#eta,#pi^{0}");
    l3.DrawLatex(0.70, 0.65, "#pi^{0}");
-}
-
-void hline (Double_t x, Double_t y)
-{
-   Double_t dx = 0.1;
-   TLine *l = new TLine(x,y,x+dx,y);
-   l->Draw();
-   l->SetLineWidth(4);
-}
-
-void arrow (Double_t x1, Double_t y1, Double_t x2, Double_t y2, Int_t ls)
-{
-   TArrow *arr = new TArrow(x1,y1,x2,y2,0.025,"|>");
-   arr->SetFillColor(1);
-   arr->SetFillStyle(1001);
-   arr->SetLineStyle(ls);
-   arr->SetAngle(19);
-   arr->Draw();
 }

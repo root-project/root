@@ -47,6 +47,7 @@ void fitslicesy() {
 // Show fitted "mean" for each slice
    left->cd(2);
    gPad->SetFillColor(33);
+   TH2F *hpxpy_0 = (TH2F*)hsimple->Get("hpxpy_0");
    hpxpy_0->Draw();
    TPad *right = (TPad*)c1->cd(2);
    right->Divide(1,2);
@@ -54,6 +55,7 @@ void fitslicesy() {
    gPad->SetTopMargin(0.12);
    gPad->SetLeftMargin(0.15);
    gPad->SetFillColor(33);
+   TH2F *hpxpy_1 = (TH2F*)hsimple->Get("hpxpy_1");
    hpxpy_1->Draw();
 
 // Show fitted "sigma" for each slice
@@ -61,6 +63,7 @@ void fitslicesy() {
    gPad->SetTopMargin(0.12);
    gPad->SetLeftMargin(0.15);
    gPad->SetFillColor(33);
+   TH2F *hpxpy_2 = (TH2F*)hsimple->Get("hpxpy_2");
    hpxpy_2->SetMinimum(0.8);
    hpxpy_2->Draw();
 
