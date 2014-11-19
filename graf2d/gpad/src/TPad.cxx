@@ -5740,7 +5740,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
 
    // Get Primitives
    prims = gPad->GetListOfPrimitives();
-   n     = prims->GetSize();
+   n     = TMath::Min(15,prims->GetSize());
    Int_t lineColor = TColor::GetColor(239, 202, 0);
 
    TAttBBox2D *cur = dynamic_cast<TAttBBox2D *>( object );
