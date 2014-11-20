@@ -362,6 +362,25 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
         // wrapper function so the parent context must be the global.
         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                                SemaR.TUScope);
+
+        // First see whether we have a fwd decl of this name.
+        // We shall only do that if lookup makes sense for it (!noLookup).
+        if (!noLookup) {
+           lookupSuccess = SemaR.LookupName(R, S);
+           if (lookupSuccess) {
+              if (R.isSingleResult()) {
+                 if (isa<clang::RecordDecl>(R.getFoundDecl())) {
+                    // Good enough; RequireCompleteType() will tell us if we
+                    // need to auto parse.
+                    // But we might need to auto-load.
+                    TCling__AutoLoadCallback(Name.data());
+                    fIsAutoloadingRecursively = false;
+                    return true;
+                 }
+              }
+           }
+        }
+
         if (TCling__AutoParseCallback(Name.str().c_str())) {
            pushedDCAndS.pop();
            cleanupRAII.pop();
