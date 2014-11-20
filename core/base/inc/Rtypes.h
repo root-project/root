@@ -362,10 +362,10 @@ static const char *ImplFileName();
 #define ClassImp(name)
 #else
 #define ClassImpUnique(name,key) \
-   namespace ROOT { \
-      TGenericClassInfo *GenerateInitInstance(const name*); \
+   namespace ROOTDict { \
+      ::ROOT::TGenericClassInfo *GenerateInitInstance(const name*); \
       static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
-         GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
+         GenerateInitInstance(( name*)0x0)->SetImplFile(__FILE__, __LINE__); \
       R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
    }
 #define ClassImp(name) ClassImpUnique(name,default)
@@ -379,7 +379,7 @@ static const char *ImplFileName();
 #else
 #define NamespaceImpUnique(name,key) \
    namespace name { \
-      namespace ROOT { \
+      namespace ROOTDict { \
          ::ROOT::TGenericClassInfo *GenerateInitInstance(); \
          static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
             GenerateInitInstance()->SetImplFile(__FILE__, __LINE__); \
@@ -433,7 +433,7 @@ static const char *ImplFileName();
 #define templateClassImp(name)
 #else
 #define templateClassImpUnique(name,key) \
-   namespace ROOT { \
+   namespace ROOTDict { \
       static TNamed *_R__UNIQUE_(_NAME2_(R__dummyholder,key)) = \
          ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
       R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder,key))); \
@@ -464,8 +464,8 @@ static const char *ImplFileName();
 //---- Macro to set the class version of non instrumented classes --------------
 
 #define RootClassVersion(name,VersionNumber) \
-namespace ROOT { \
-   TGenericClassInfo *GenerateInitInstance(const name*); \
+namespace ROOTDict { \
+   ::ROOT::TGenericClassInfo *GenerateInitInstance(const name*); \
    static Short_t _R__UNIQUE_(R__dummyVersionNumber) = \
            GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber); \
    R__UseDummy(_R__UNIQUE_(R__dummyVersionNumber)); \
@@ -475,8 +475,8 @@ namespace ROOT { \
 #define RootStreamer(name,STREAMER)
 #else
 #define RootStreamer(name,STREAMER)                                  \
-namespace ROOT {                                                     \
-   TGenericClassInfo *GenerateInitInstance(const name*);             \
+namespace ROOTDict {                                                 \
+   ::ROOT::TGenericClassInfo *GenerateInitInstance(const name*);     \
    static Short_t _R__UNIQUE_(R__dummyStreamer) =                    \
            GenerateInitInstance((name*)0x0)->SetStreamer(STREAMER);  \
    R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                       \
