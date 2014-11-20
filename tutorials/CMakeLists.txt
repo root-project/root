@@ -265,7 +265,9 @@ if(ROOT_python_FOUND)
 
   #---Python tutorials dependencies--------------------------------------
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
-  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple tutorial-pyroot-fit1
+  set(pyroot-h1draw-depends tutorial-pyroot-hsimple)
+  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple
+                                tutorial-pyroot-fit1
                                 tutorial-pyroot-na49view )
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
   set(pyroot-na49view-depends tutorial-geom-geometry)
