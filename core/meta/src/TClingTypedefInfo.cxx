@@ -67,11 +67,20 @@ void TClingTypedefInfo::Init(const char *name)
 {
    // Lookup named typedef and reset the iterator to point to it.
 
+   fDecl = 0;
+
    // Reset the iterator to invalid.
    fFirstTime = true;
    fDescend = false;
    fIter = clang::DeclContext::decl_iterator();
    fIterStack.clear();
+
+   // Some trivial early exit, covering many cases in a cheap way.
+   if (!name || !*name) return;
+   const char lastChar = name[strlen(name) - 1];
+   if (lastChar == '*' || lastChar == '&' || !strncmp(name, "const ", 6))
+      return;
+
    // Ask the cling interpreter to lookup the name for us.
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    clang::QualType QT = lh.findType(name,
@@ -85,7 +94,6 @@ void TClingTypedefInfo::Init(const char *name)
                           : cling::LookupHelper::NoDiagnostics);
       }
       if (QT.isNull()) {
-         fDecl = 0;
          return;
       }
    }
@@ -93,13 +101,9 @@ void TClingTypedefInfo::Init(const char *name)
    // if (fDecl && !llvm::isa<clang::TypedefDecl>(fDecl)) {
    if (!td) {
       // If what the lookup found is not a typedef, ignore it.
-      fDecl = 0;
       return;
    }
    fDecl = td->getDecl();
-   if (!fDecl) {
-      return;
-   }
 }
 
 //______________________________________________________________________________
