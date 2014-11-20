@@ -1,3 +1,5 @@
+void table(Float_t x1, Float_t x2, Float_t yrange, TText *t, const char **symbol, Bool_t octal);
+
 void pstable()
 {
 // Display all possible types of ROOT/Postscript characters
