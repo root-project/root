@@ -17,7 +17,7 @@
 
 #include "RConversionRuleParser.h"
 
-ClassImp(TSchemaRule)
+ClassImp(ROOT::TSchemaRule)
 
 using namespace ROOT;
 
