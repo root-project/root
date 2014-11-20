@@ -47,6 +47,8 @@
 #include "TMVA/Tools.h"
 #endif
 
+void TMVAGui( const char* fName /*= "TMVA.root"*/ );
+
 void TMVAClassification( TString myMethodList = "" )
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
