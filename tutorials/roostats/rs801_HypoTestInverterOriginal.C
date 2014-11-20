@@ -74,5 +74,5 @@ void rs801_HypoTestInverterOriginal()
   // expected result: 4.10
 }
 int main() {
-   rs801_HypoTestInverter();
+   rs801_HypoTestInverterOriginal();
 }
