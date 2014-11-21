@@ -12,7 +12,7 @@ enum HistType { MVAType = 0, ProbaType = 1, RarityType = 2, CompareType = 3 };
 
 // input: - Input file (result from TMVA)
 //        - use of TMVA plotting TStyle
-void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVAStyle = kTRUE )
+void mvas( TString fin = "TMVA.root", int htype = MVAType, Bool_t useTMVAStyle = kTRUE )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );

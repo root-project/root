@@ -102,7 +102,6 @@ void Boost(){
    delete factory;
    
    // Launch the GUI for the root macros
-   if (!gROOT->IsBatch()) TMVAGui( outfileName );
-   
-   
+   if (!gROOT->IsBatch())
+      gROOT->ProcessLine(TString::Format("TMVAGui(\"%s\")", outfileName.Data()));
 }
