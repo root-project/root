@@ -37,6 +37,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TTimeStamp.h"
+#include "TMath.h"
 #include "TString.h"
 #include "TError.h"
 #include "Riostream.h"
@@ -139,17 +140,17 @@ TTimeStamp::TTimeStamp(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDat
 }
 
 //______________________________________________________________________________
-Double_t TTimeStamp::AsGMST(Double_t UT1Offset) const 
+Double_t TTimeStamp::AsGMST(Double_t UT1Offset) const
 {
-   // Return Greenwich mean sidereal time (GMST) in hour-angle. Return value 
+   // Return Greenwich mean sidereal time (GMST) in hour-angle. Return value
    // will always be between 0 and 24 (hours). Sidereal time is most accurately
    // calculated from UT1. If fSec and fNanoSec are in UTC (which they are by
    // default), the optional argument UT1Offset can be supplied (in
    // milliseconds). If UT1Offset is not supplied, conversion has maximum error
    // of 1s. If offset is supplied error can be reduced to us level. Values for
-   // UT1Offset can be found in IERS Bulletin B: 
+   // UT1Offset can be found in IERS Bulletin B:
    // ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
-   // The conversion to sidereal time used here is given by 
+   // The conversion to sidereal time used here is given by
    // Aoki et. al. Astron. Astrophys. 105, 359-362 (1982)
    // http://adsabs.harvard.edu/abs/1982A%26A...105..359A
 
@@ -171,7 +172,7 @@ Double_t TTimeStamp::AsGAST(Double_t UT1Offset) const
    // they are by default), the optional argument UT1Offset can be supplied (in
    // milliseconds). If UT1Offset is not supplied, conversion has maximum error
    // of 1s. If offset is supplied error can be reduced to us level. Values for
-   // UT1Offset can be found in IERS Bulletin B: 
+   // UT1Offset can be found in IERS Bulletin B:
    // ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
    // Equation of the equinoxes is given by USNO:
    // http://aa.usno.navy.mil/faq/docs/GAST.php
@@ -501,8 +502,8 @@ Int_t TTimeStamp::GetZoneOffset()
    return -localtime_r(&tp, &buf)->tm_gmtoff;
 #else
    return -localtime(&tp)->tm_gmtoff;
-#endif 
-#endif  
+#endif
+#endif
 #endif
 #else
    _tzset();
