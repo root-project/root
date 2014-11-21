@@ -49,6 +49,7 @@ extern "C" {
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
    int TCling__AutoParseCallback(const char* className);
+   const char* TCling__GetClassSharedLibs(const char* className);
 //    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    int TCling__IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* name);
    int TCling__CompileMacro(const char *fileName, const char *options);
@@ -101,19 +102,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
    DeclarationName Name = &SemaR.getASTContext().Idents.get(localString.c_str());
    LookupResult RHeader(SemaR, Name, sLoc, Sema::LookupOrdinaryName);
 
-   bool success = tryAutoParseInternal(localString, RHeader, SemaR.getCurScope(),true);
-
-   if (success || !FileName.startswith("T")) return;
-
-   // Old implementation, revisited. We leave in place the old heuristics, for cases
-   // like #include "TH1F.h"
-   // Try to recover the class name
-   localString.resize(localString.size()-2); // 2 chars: '.','h'
-   Name = &SemaR.getASTContext().Idents.get(localString.c_str());
-   LookupResult RReconnstructedClassName(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
-   tryAutoParseInternal(localString, RReconnstructedClassName, SemaR.getCurScope());
-
-
+   tryAutoParseInternal(localString, RHeader, SemaR.getCurScope(),true);
 }
 
 // Preprocessor callbacks used to handle special cases like for example:
@@ -385,6 +374,15 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
            pushedDCAndS.pop();
            cleanupRAII.pop();
            lookupSuccess = noLookup || SemaR.LookupName(R, S);
+        } else if (noLookup && TCling__GetClassSharedLibs(Name.str().c_str())) {
+           // We are "autoparsing" a header, and the header was not parsed.
+           // But its library is known - so we do know about that header.
+           // Do the parsing explicitly here, while recursive autoloading is
+           // disabled.
+           std::string incl = "#include \"";
+           incl += Name.str();
+           incl += '"';
+           m_Interpreter->declare(incl);
         }
      }
 
