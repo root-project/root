@@ -542,6 +542,12 @@ extern "C" int TCling__AutoParseCallback(const char* className)
 {
    return ((TCling*)gCling)->AutoParse(className);
 }
+
+extern "C" const char* TCling__GetClassSharedLibs(const char* className)
+{
+   return ((TCling*)gCling)->GetClassSharedLibs(className);
+}
+
 // // Returns 0 for failure 1 for success
 // extern "C" int TCling__IsAutoLoadNamespaceCandidate(const char* name)
 // {
