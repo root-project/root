@@ -138,9 +138,14 @@ namespace ROOT {
             *(void**)dest = *(void**)(const_cast<void*>(source));
             return dest;
          }
-         static void* next(void * /* iter_loc */, const void * /* end_loc */) {
-            // Should not be used.
-            R__ASSERT(0 && "Intentionally not implemented, do not use.");
+         static void* next(void *iter_loc, const void *end_loc) {
+            iterator *end = (iterator *)(end_loc);
+            iterator *iter = (iterator *)(iter_loc);
+            if (*iter != *end) {
+               void *result = IteratorValue<Cont_t, typename Cont_t::value_type>::get(*iter);
+               ++(*iter);
+               return result;
+            }
             return 0;
          }
          static void destruct1(void  * /* iter_ptr */) {
