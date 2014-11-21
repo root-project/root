@@ -340,7 +340,7 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
 
      bool lookupSuccess = false;
      if (getenv("ROOT_MODULES")) {
-        if (TCling__AutoParseCallback(Name.data())) {
+        if (TCling__AutoParseCallback(Name.str().c_str())) {
            lookupSuccess = noLookup || SemaR.LookupName(R, S);
         }
      }
@@ -362,7 +362,7 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
         // wrapper function so the parent context must be the global.
         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                                SemaR.TUScope);
-        if (TCling__AutoParseCallback(Name.data())) {
+        if (TCling__AutoParseCallback(Name.str().c_str())) {
            pushedDCAndS.pop();
            cleanupRAII.pop();
            lookupSuccess = noLookup || SemaR.LookupName(R, S);
