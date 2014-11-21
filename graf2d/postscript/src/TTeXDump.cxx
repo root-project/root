@@ -748,7 +748,7 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
    Int_t txalv = fTextAlign%10;
    if (txalv <1) txalv = 1; if (txalv > 3) txalv = 3;
-
+   SetColor(fTextColor);
    PrintStr("@");
    PrintStr("\\draw");
    if (txalh!=2 || txalv!=2) {
@@ -765,7 +765,7 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    WriteReal(YtoTeX(y), kFALSE);
    PrintStr(") node[scale=");
    WriteReal(ftsize, kFALSE);
-   PrintStr(", rotate=");
+   PrintStr(", color=c, rotate=");
    WriteReal(fTextAngle, kFALSE);
    PrintFast(2,"]{");
    PrintStr(t.Data());
