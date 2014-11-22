@@ -56,7 +56,6 @@
 #include <algorithm>
 #include <cassert>
 
-#define DEBUG
 #ifdef DEBUG
 #include <iostream>
 #endif
