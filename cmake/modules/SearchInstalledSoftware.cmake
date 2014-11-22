@@ -476,12 +476,30 @@ if(libcmaes)
   message(STATUS "Looking for libcmaes")
   find_package(LibCmaes)
   if(NOT LIBCMAES_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "libcmaes not found")
-    else()
-      message(STATUS "libcmaes not found. Switching off libcmaes option")
-      set(libcmaes OFF CACHE BOOL "" FORCE)
-    endif()
+    message(STATUS "Fetching and compiling libcmaes")
+    ExternalProject_Add(
+      eigen3
+      PREFIX eigen3
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      URL http://bitbucket.org/eigen/eigen/get/3.2.2.tar.gz
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+      )
+    ExternalProject_Add(
+      local_libcmaes
+      URL https://github.com/beniz/libcmaes/archive/master.tar.gz
+      PREFIX local_libcmaes
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=<INSTALL_DIR> --with-eigen3-include=${CMAKE_BINARY_DIR}/include/eigen3
+      BUILD_IN_SOURCE 1
+      )
+    set(LIBCMAES_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/libcmaes ${CMAKE_BINARY_DIR}/include/eigen3)
+    set(LIBCMAES_LIBRARIES ${CMAKE_BINARY_DIR}/lib/)
+    #if(fail-on-missing)
+    #  message(FATAL_ERROR "libcmaes not found")
+    #else() 
+    #  message(STATUS "libcmaes not found. Switching off libcmaes option")
+    #  set(libcmaes OFF CACHE BOOL "" FORCE)
+    #endif()
   endif()
 endif()
 
