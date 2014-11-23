@@ -268,7 +268,8 @@ if(ROOT_python_FOUND)
   set(pyroot-h1draw-depends tutorial-pyroot-hsimple)
   set(pyroot-benchmarks-depends tutorial-pyroot-hsimple
                                 tutorial-pyroot-fit1
-                                tutorial-pyroot-na49view )
+                                tutorial-pyroot-na49view
+                                tutorial-pyroot-h1draw)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
   set(pyroot-na49view-depends tutorial-geom-geometry)
 
