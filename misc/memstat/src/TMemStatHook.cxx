@@ -96,7 +96,7 @@ void TMemStatHook::trackZoneMalloc(zoneMallocHookFunc_t pm,
                                    zoneFreeHookFunc_t pf)
 {
    // tracZoneMalloc - a static function
-   // override the defualt Mac OS X memory zone
+   // override the default Mac OS X memory zone
 
    malloc_zone_t* zone = malloc_default_zone();
    if (!zone) {
@@ -120,7 +120,7 @@ void TMemStatHook::trackZoneMalloc(zoneMallocHookFunc_t pm,
 void TMemStatHook::untrackZoneMalloc()
 {
    // untrackZoneMalloc - a static function
-   // set the defualt Mac OS X memory zone to original
+   // set the default Mac OS X memory zone to original
 
    malloc_zone_t* zone = malloc_default_zone();
    if (!zone) {

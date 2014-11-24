@@ -4938,7 +4938,7 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
       if (ios != kNPOS) {
          from = ios + tags.Length();
          if (!opt.Tokenize(stfopt, from, "[; ]"))
-            if (gDebug > 0) Info("HandleOutputOptions", "save-to-file not found: use defualt");
+            if (gDebug > 0) Info("HandleOutputOptions", "save-to-file not found: use default");
          // For removal from original options string
          tags += stfopt;
          // It must be digit
