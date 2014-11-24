@@ -50,8 +50,6 @@ class TSubString;
 class TObjArray;
 class TVirtualMutex;
 
-R__EXTERN TVirtualMutex *gStringMutex;
-
 TString operator+(const TString &s1, const TString &s2);
 TString operator+(const TString &s,  const char *cs);
 TString operator+(const char *cs, const TString &s);
