@@ -7,6 +7,7 @@ set(depends ${depends} ${GENERATE_REFLEX_TEST})
 #---Copy from source to binary some of the files
 configure_file(exectypeDefAutoloading.rootmap . COPYONLY)
 configure_file(aRootmap.rootmap . COPYONLY)
+configure_file(aHeader.h . COPYONLY)
 
 #--With ACLiC---------------------------------------------------------
 set(execTypeinfo-suffix +)
