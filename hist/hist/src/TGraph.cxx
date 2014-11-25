@@ -553,6 +553,11 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
    return newarrays;
 }
 
+//______________________________________________________________________________
+void TGraph::AppendPoint(Double_t x, Double_t y)
+{
+    SetPoint(fNpoints, x, y);
+}
 
 //______________________________________________________________________________
 void TGraph::Apply(TF1 *f)
@@ -2108,6 +2113,23 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
    return ipoint;
 }
 
+//______________________________________________________________________________
+void TGraph::RemoveAllPoints()
+{
+    if (fNpoints <= 0) {
+        return;
+    }
+
+    fNpoints = 0;
+    fMaxSize = 0;
+    delete[] fX;
+    fX = 0;
+    delete[] fY;
+    fY = 0;
+    if (gPad) {
+        gPad->Modified();
+    }
+}
 
 //______________________________________________________________________________
 void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
