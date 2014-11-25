@@ -268,7 +268,8 @@ void stressIOPlugins2()
 
    TCanvas *c1 = new TCanvas("c1","stress canvas",800,600);
    gROOT->LoadClass("TPostScript","Postscript");
-   TPostScript ps("stressIOPlugins.ps",112);
+   TString psfname = TString::Format("stressIOPlugins-%d.ps", gSystem->GetPid());
+   TPostScript ps(psfname,112);
 
    //Get objects generated in previous test
    TFile *f = openTestFile("stress_5.root",title);
@@ -297,7 +298,14 @@ void stressIOPlugins2()
    ps.Close();
 
    //count number of lines in ps file
-   FILE *fp = fopen("stressIOPlugins.ps","r");
+   FILE *fp = fopen(psfname,"r");
+   if (!fp) {
+      printf("FAILED\n");
+      printf("%-8s could not open %s\n"," ",psfname.Data());
+      delete c1;
+      delete f;
+      return;
+   }
    char line[260];
    Int_t nlines = 0;
    Int_t nlinesGood = 632;
@@ -312,7 +320,7 @@ void stressIOPlugins2()
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
-      printf("%-8s nlines in stressIOPlugins.ps file = %d\n"," ",nlines);
+      printf("%-8s nlines in %s file = %d\n"," ",psfname.Data(),nlines);
    }
    delete c1;
    delete f;
@@ -379,5 +387,6 @@ void stressIOPlugins3()
 
 void cleanup()
 {
-   gSystem->Unlink("stressIOPlugins.ps");
+   TString psfname = TString::Format("stressIOPlugins-%d.ps", gSystem->GetPid());
+   gSystem->Unlink(psfname);
 }
