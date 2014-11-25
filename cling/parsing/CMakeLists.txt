@@ -49,3 +49,9 @@ ROOTTEST_ADD_TEST(roottest-cling-parsing-assertSpaces
                   MACRO assertSpaces.C
                   OUTREF assertSpaces.ref
                   LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-parsing-execROOT6625
+                  MACRO execROOT6625.C
+                  OUTREF execROOT6625.ref
+                  LABELS roottest regression cling)
+
