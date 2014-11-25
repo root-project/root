@@ -2116,8 +2116,18 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
 //______________________________________________________________________________
 void TGraph::RemoveAllPoints()
 {
-    while (fNpoints > 0) {
-        RemovePoint(0);
+    if (fNpoints <= 0) {
+        return;
+    }
+
+    fNpoints = 0;
+    fMaxSize = 0;
+    delete[] fX;
+    fX = 0;
+    delete[] fY;
+    fY = 0;
+    if (gPad) {
+        gPad->Modified();
     }
 }
 
