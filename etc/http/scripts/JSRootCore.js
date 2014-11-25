@@ -4,7 +4,6 @@
 /// @namespace JSROOT
 /// Holder of all JSROOT functions and classes
 
-
 (function(){
 
    if (typeof JSROOT == "object") {
@@ -15,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.1 dev 17/11/2014";
+   JSROOT.version = "3.1 dev 25/11/2014";
 
    JSROOT.source_dir  = function(){
       var scripts = document.getElementsByTagName('script');
@@ -130,7 +129,7 @@
    }
 
    JSROOT.parse = function(arg) {
-      if (arg==null) return null;
+      if ((arg==null) || (arg=="")) return null;
       var obj = JSON.parse(arg);
       if (obj!=null) obj = JSROOT.JSONR_unref(obj)
       return obj;

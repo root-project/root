@@ -110,7 +110,9 @@ function BuildNoBrowserGUI(online) {
          file_error("object " + itemsarr[indx] + " not found");
       } else
       if (mdi) {
-         mdi.Redraw(itemsarr[indx], obj, optionsarr[indx]);
+         var frame = mdi.FindFrame(itemsarr[indx], true);
+         mdi.ActivateFrame(frame);
+         JSROOT.redraw($(frame).attr('id'), obj, optionsarr[indx]);
       } else {
          objpainter = JSROOT.redraw(divid, obj, optionsarr[indx]);
       }
@@ -264,29 +266,6 @@ function ReadFile(filename, checkitem) {
    });
 }
 
-function UpdateOnline() {
-   var h = JSROOT.H('root');
-
-   if (h['_monitoring_on'] && ('disp' in h))
-     h['disp'].ForEach(function(panel, itemname, painter) {
-       if (painter==null) return;
-
-       // prevent to update item if previous not completed
-       if ('_doing_update' in painter)  return;
-
-       painter['_doing_update'] = true;
-
-       h.get(itemname, function(item, obj) {
-         if (painter.UpdateObject(obj)) {
-            document.body.style.cursor = 'wait';
-            painter.RedrawPad();
-            document.body.style.cursor = 'auto';
-         }
-         delete painter['_doing_update'];
-      });
-     } , true); // update only visible objects
-}
-
 function ProcessResize(direct)
 {
    if (direct) document.body.style.cursor = 'wait';
@@ -374,13 +353,7 @@ function BuildOnlineGUI() {
    else
       setGuiLayout(layout);
 
-   var interval = 3000;
    var monitor = JSROOT.GetUrlOption("monitoring");
-   if (monitor != null) {
-      document.getElementById("monitoring").checked = true;
-      if (monitor!="") interval = parseInt(monitor);
-      if ((interval == NaN) || (interval<=0)) interval = 3000;
-   }
 
    var itemsarr = [], optionsarr = [];
    var itemname = JSROOT.GetUrlOption("item");
@@ -403,21 +376,21 @@ function BuildOnlineGUI() {
 
    h.SetDisplay(layout, 'right-div');
 
-   h['_monitoring_interval'] = interval;
-   h['_monitoring_on'] = (monitor!=null);
+   h.EnableMonitoring(monitor!=null);
+   $("#monitoring")
+      .prop('checked', monitor!=null)
+      .click(function() {
+         h.EnableMonitoring(this.checked);
+         if (this.checked) h.updateAll();
+      });
 
    h.OpenOnline("", function() {
       h.displayAll(itemsarr, optionsarr);
    });
 
-   setInterval(UpdateOnline, interval);
+   setInterval(function() { if (h.IsMonitoring()) h.updateAll(); }, h.MonitoringInterval());
 
    AddInteractions();
-
-   $("#monitoring").click(function() {
-      h['_monitoring_on'] = this.checked;
-      if (h['_monitoring_on']) UpdateOnline();
-   });
 }
 
 function BuildSimpleGUI() {
