@@ -743,10 +743,11 @@ if(libcmaes)
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       )
     ExternalProject_Add(
-      local_libcmaes
-      URL https://github.com/beniz/libcmaes/archive/master.tar.gz
-      PREFIX local_libcmaes
+      cma
+      DEPENDS eigen3
+      PREFIX cma
       INSTALL_DIR ${CMAKE_BINARY_DIR}
+      URL https://github.com/beniz/libcmaes/archive/master.tar.gz
       CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=<INSTALL_DIR> --with-eigen3-include=${CMAKE_BINARY_DIR}/include/eigen3
       BUILD_IN_SOURCE 1
       )
