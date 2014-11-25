@@ -151,8 +151,11 @@ static
 std::pair<std::string, std::string> SplitPPDefine(const std::string &in)
 {
    std::string::size_type posEq = in.find('=');
+   // No equal found: define to 1
    if (posEq == std::string::npos)
-      return std::make_pair(in, "");
+      return std::make_pair(in, "1");
+
+   // Equal found
    return std::pair<std::string, std::string>
           (in.substr(0, posEq), in.substr(posEq + 1, std::string::npos));
 }
@@ -200,11 +203,7 @@ std::ostream &TModuleGenerator::WritePPDefines(std::ostream &out) const
       if (pos != std::string::npos) cppname.erase(pos);
       out << "#ifndef " << cppname << "\n"
           "  #define " << strPair.first;
-      if (!strPair.second.empty()) {
-         out << " " << strPair.second;
-      } else {
-         out << " 1";
-      }
+      out << " " << strPair.second;
       out << "\n"
           "#endif\n";
    }
