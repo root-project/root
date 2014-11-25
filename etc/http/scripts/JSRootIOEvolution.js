@@ -63,7 +63,7 @@
                 ((str.charCodeAt(off+3) & 0xff) |
                  ((str.charCodeAt(off+4) & 0xff) << 8) |
                  ((str.charCodeAt(off+5) & 0xff) << 16));
-   };
+   }
 
    JSROOT.R__unzip = function(srcsize, str, off, noalert) {
 
@@ -1273,11 +1273,7 @@
       this.fAcceptRanges = true; // when disabled ('+' at the end of file name), complete file content read with single operation
       this.fFullFileContent = ""; // this can be full content of the file (if ranges are not supported)
 
-      this.ERelativeTo = {
-         kBeg : 0,
-         kCur : 1,
-         kEnd : 2
-      };
+      this.ERelativeTo = { kBeg : 0, kCur : 1, kEnd : 2 };
       this.fDirectories = new Array();
       this.fKeys = new Array();
       this.fSeekInfo = 0;
@@ -1310,20 +1306,19 @@
                }
 
                var accept_ranges = res.getResponseHeader("Accept-Ranges");
-               if (!accept_ranges) file.fAcceptRanges = false;
-               file.fEND = parseInt(res.getResponseHeader("Content-Length"));
+               if (accept_ranges==null) file.fAcceptRanges = false;
+               var len = res.getResponseHeader("Content-Length");
+               if (len!=null) file.fEND = parseInt(len);
+                         else file.fAcceptRanges = false;
                file.ReadKeys(newfile_callback);
             });
 
             xhr.send(null);
-            xhr = null;
          }
-
       }
 
       return this;
-   };
-
+   }
 
    JSROOT.TFile.prototype.ReadBuffer = function(len, callback) {
 

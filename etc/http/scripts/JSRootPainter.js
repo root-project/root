@@ -273,16 +273,9 @@
    JSROOT.Painter.clearCuts = function(chopt) {
       /* decode string "chopt" and remove graphical cuts */
       var left = chopt.indexOf('[');
-      if (left == -1)
-         return chopt;
       var right = chopt.indexOf(']');
-      if (right == -1)
-         return chopt;
-      var nch = right - left;
-      if (nch < 2)
-         return chopt;
-      for (var i = 0; i <= nch; i++)
-         chopt[left + i] = ' ';
+      if ((left>=0) && (right>=0) && (left<right))
+          for (var i = left; i <= right; i++) chopt[i] = ' ';
       return chopt;
    }
 
@@ -862,16 +855,24 @@
    }
 
    JSROOT.TBasePainter.prototype.RedrawObject = function(obj) {
-      if (this.UpdateObject(obj))
+      if (this.UpdateObject(obj)) {
+         var current = document.body.style.cursor;
+         document.body.style.cursor = 'wait';
          this.RedrawPad();
-   }
-
-   JSROOT.TBasePainter.prototype.RedrawFrame = function() {
-      // obsolete, should not be used
-      this.RedrawPad();
+         document.body.style.cursor = current;
+      }
    }
 
    JSROOT.TBasePainter.prototype.CheckResize = function(force) {
+   }
+
+   JSROOT.TBasePainter.prototype.SetDivId = function(divid) {
+      // base painter does not creates canvas or frames
+      // it registered in the first child element
+
+      this['divid'] = divid;
+
+      $("#" + divid).children().eq(0).prop('painter', this);
    }
 
    // ==============================================================================
@@ -971,11 +972,12 @@
    }
 
    JSROOT.TObjectPainter.prototype.SetDivId = function(divid, is_main) {
-      // assign all basic graphic elements like canvas, pad, frame
-      // create canvas and frame if required
+      // Assigns id of top element (normally <div></div> where drawing is done
       // is_main - -1 - not add to painters list,
       //            0 - normal painter,
       //            1 - major objects like TH1/TH2
+      // In some situations canvas may not exists - for instance object drawn as html, not as svg.
+      // In such case the only painter will be assigned to the first element
 
       this['divid'] = divid;
 
@@ -993,8 +995,10 @@
       }
 
       if (svg_c == null) {
-         if ((this.obj_typename!="TCanvas") && (is_main>=0))
-            console.log("Canvas not exists when trying to draw " + this.obj_typename);
+         if ((is_main < 0) || (this.obj_typename=="TCanvas")) return;
+
+         console.log("Special case for " + this.obj_typename + " assign painter to first DOM element");
+         $("#" + divid).children().eq(0).prop('painter', this);
          return;
       }
 
@@ -1016,6 +1020,18 @@
       if ((is_main > 0) && (svg_p['mainpainter']==null))
          // when this is first main painter in the pad
          svg_p['mainpainter'] = this;
+   }
+
+   JSROOT.TObjectPainter.prototype.ForEachPainter = function(userfunc) {
+      // Iterate over all known painters
+      var svg_c = this.svg_canvas();
+      if (svg_c!=null) {
+         var painters = svg_c['pad_painter'].painters;
+         for (var k in painters) userfunc(painters[k]);
+      } else {
+         var painter = $("#" + this.divid).children().eq(0).prop('painter');
+         if (painter!=null) userfunc(painter);
+      }
    }
 
    JSROOT.TObjectPainter.prototype.Cleanup = function() {
@@ -3000,6 +3016,8 @@
       this.histo = histo;
       this.shrink_frame_left = 0.;
       this.draw_content = true;
+      this.nbinsx = 0;
+      this.nbinsy = 0;
    }
 
    JSROOT.THistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -3047,6 +3065,15 @@
       if (this.IsTProfile()) option.Error = 2;
       if ('fFunctions' in this.histo) option.Func = 1;
 
+      if (chopt.indexOf('LOGX') != -1) {
+         option.Logx = 1;
+         chopt = chopt.replace('LOGX', '');
+      }
+      if (chopt.indexOf('LOGY') != -1) {
+         option.Logy = 1;
+         chopt = chopt.replace('LOGY', '');
+      }
+
       var l = chopt.indexOf('SPEC');
       if (l != -1) {
          option.Scat = 0;
@@ -3057,15 +3084,12 @@
          option.Spec = Math.max(1600, bs);
          return option;
       }
-      l = chopt.indexOf('GL');
-      if (l != -1)  chopt = chopt.replace('GL', '  ');
-      l = chopt.indexOf('X+');
-      if (l != -1) {
+      if (chopt.indexOf('GL') != -1)  chopt = chopt.replace('GL', '  ');
+      if (chopt.indexOf('X+') != -1) {
          option.AxisPos = 10;
          chopt = chopt.replace('X+', '  ');
       }
-      l = chopt.indexOf('Y+');
-      if (l != -1) {
+      if (chopt.indexOf('Y+') != -1) {
          option.AxisPos += 1;
          chopt = chopt.replace('Y+', '  ');
       }
@@ -3073,20 +3097,17 @@
          option.Hist = 1;
       if (option.AxisPos == 11 && nch == 4)
          option.Hist = 1;
-      l = chopt.indexOf('SAMES');
-      if (l != -1) {
+      if (chopt.indexOf('SAMES') != -1) {
          if (nch == 5) option.Hist = 1;
          option.Same = 2;
          chopt = chopt.replace('SAMES', '     ');
       }
-      l = chopt.indexOf('SAME');
-      if (l != -1) {
+      if (chopt.indexOf('SAME') != -1) {
          if (nch == 4) option.Hist = 1;
          option.Same = 1;
          chopt = chopt.replace('SAME', '    ');
       }
-      l = chopt.indexOf('PIE');
-      if (l != -1) {
+      if (chopt.indexOf('PIE') != -1) {
          option.Pie = 1;
          chopt = chopt.replace('PIE', '   ');
       }
@@ -3296,8 +3317,7 @@
             option.Hist = 1;
          }
       }
-      l = chopt.indexOf('COLZ');
-      if (l != -1) {
+      if (chopt.indexOf('COLZ') != -1) {
          chopt = chopt.replace('COLZ', '');
          if (hdim > 1) {
             option.Color = 2;
@@ -3307,8 +3327,7 @@
             option.Hist = 1;
          }
       }
-      l = chopt.indexOf('COL');
-      if (l != -1) {
+      if (chopt.indexOf('COL') != -1) {
          chopt = chopt.replace('COL', '   ');
          if (hdim > 1) {
             option.Color = 1;
@@ -3317,8 +3336,7 @@
             option.Hist = 1;
          }
       }
-      l = chopt.indexOf('CHAR');
-      if (l != -1) {
+      if (chopt.indexOf('CHAR') != -1) {
          option.Char = 1;
          chopt = chopt.replace('CHAR', '    ');
          option.Scat = 0;
@@ -3336,18 +3354,15 @@
          option.Func = 0;
          option.Error = 0;
       }
-      l = chopt.indexOf('AXIS');
-      if (l != -1) {
+      if (chopt.indexOf('AXIS') != -1) {
          option.Axis = 1;
          chopt = chopt.replace('AXIS', '    ');
       }
-      l = chopt.indexOf('AXIG');
-      if (l != -1) {
+      if (chopt.indexOf('AXIG') != -1) {
          option.Axis = 2;
          chopt = chopt.replace('AXIG', '    ');
       }
-      l = chopt.indexOf('SCAT');
-      if (l != -1) {
+      if (chopt.indexOf('SCAT') != -1) {
          option.Scat = 1;
          chopt = chopt.replace('SCAT', '    ');
       }
@@ -3369,18 +3384,15 @@
             option.Text += 3000;
          option.Scat = 0;
       }
-      l = chopt.indexOf('POL');
-      if (l != -1) {
+      if (chopt.indexOf('POL') != -1) {
          option.System = JSROOT.Painter.Coord.kPOLAR;
          chopt = chopt.replace('POL', '   ');
       }
-      l = chopt.indexOf('CYL');
-      if (l != -1) {
+      if (chopt.indexOf('CYL') != -1) {
          option.System = JSROOT.Painter.Coord.kCYLINDRICAL;
          chopt = chopt.replace('CYL', '   ');
       }
-      l = chopt.indexOf('SPH');
-      if (l != -1) {
+      if (chopt.indexOf('SPH') != -1) {
          option.System = JSROOT.Painter.Coord.kSPHERICAL;
          chopt = chopt.replace('SPH', '   ');
       }
@@ -3615,8 +3627,17 @@
 
       if (this.options.Logx) {
          if (this.scale_xmax <= 0) this.scale_xmax = 0;
-         if ((this.scale_xmin <= 0) || (this.scale_xmin >= this.scale_xmax))
+
+         if ((this.scale_xmin <= 0) && (this.nbinsx>0))
+            for (var i=0;i<this.nbinsx;i++) {
+               var left = this.xmin + i*this.binwidthx;
+               if (left>0) { this.scale_xmin = left; break; }
+            }
+
+         if ((this.scale_xmin <= 0) || (this.scale_xmin >= this.scale_xmax)) {
             this.scale_xmin = this.scale_xmax * 0.0001;
+         }
+
          this['x'] = d3.scale.log().domain([ this.scale_xmin, this.scale_xmax ]).range([ 0, w ]); // .clamp(true);
       } else {
          this['x'] = d3.scale.linear().domain([ this.scale_xmin, this.scale_xmax ]).range([ 0, w ]);
@@ -3638,6 +3659,13 @@
 
       if (this.options.Logy) {
          if (this.scale_ymax <= 0) this.scale_ymax = 1;
+
+         if ((this.scale_ymin <= 0) && (this.nbinsy>0))
+            for (var i=0;i<this.nbinsy;i++) {
+               var down = this.ymin + i*this.binwidthy;
+               if (down>0) { this.scale_ymin = down; break; }
+            }
+
          if ((this.scale_ymin <= 0) || (this.scale_ymin >= this.scale_ymax))
             this.scale_ymin = 0.0001 * this.scale_ymax;
          this['y'] = d3.scale.log().domain([ this.scale_ymin, this.scale_ymax ]).range([ h, 0 ]); // .clamp(true);
@@ -4730,8 +4758,9 @@
             && this.options.Error == 0 && this.options.Same == 0) {
          this.draw_content = false;
       }
-      if (this.options.Axis > 0) // Paint histogram axis only
+      if (this.options.Axis > 0) { // Paint histogram axis only
          this.draw_content = false;
+      }
    }
 
    JSROOT.TH1Painter.prototype.CountStat = function(cond) {
@@ -6592,7 +6621,7 @@
 
    JSROOT.Painter.drawStreamerInfo = function(divid, obj) {
       $("#" + divid).css({ overflow : 'auto' });
-      var painter = new JSROOT.HierarchyPainter('sinfo', divid);
+      var painter = new JSROOT.HierarchyPainter('sinfo', divid, true);
       painter.ShowStreamerInfo(obj);
       return painter;
    }
@@ -6626,18 +6655,19 @@
       return null;
    }
 
-   JSROOT.HierarchyPainter = function(name, frameid) {
+   JSROOT.HierarchyPainter = function(name, frameid, local) {
       JSROOT.TBasePainter.call(this);
-      JSROOT.AddHList(name, this);
       this.name = name;
       this.frameid = frameid;
       this.h = null; // hierarchy
+      this.local = local;
+      if (!this.local) JSROOT.AddHList(name, this);
    }
 
    JSROOT.HierarchyPainter.prototype = Object.create(JSROOT.TBasePainter.prototype);
 
    JSROOT.HierarchyPainter.prototype.Cleanup = function() {
-      JSROOT.DelHList(this.name);
+      if (!this.local) JSROOT.DelHList(this.name);
    }
 
    JSROOT.HierarchyPainter.prototype.GlobalName = function(suffix) {
@@ -6823,34 +6853,45 @@
       return folder;
    }
 
-   JSROOT.HierarchyPainter.prototype.Find = function(fullname, top, replace) {
-      if (!top) top = this.h;
+   JSROOT.HierarchyPainter.prototype.Find = function(itemname, force) {
 
-      if (fullname.length == 0) return top;
+      function find_in_hierarchy(top, fullname) {
 
-      var pos = -1;
+         if (fullname.length == 0) return top;
 
-      do {
-         // we try to find element with slashes inside
-         pos = fullname.indexOf("/", pos + 1);
+         var pos = -1;
 
-         var localname = (pos < 0) ? fullname : fullname.substr(0, pos);
+         function process_child(child) {
+            // set parent pointer when searching child
+            child['_parent'] = top;
+            if ((pos + 1 == fullname.length) || (pos < 0)) return child;
 
-         for ( var i in top._childs)
-            if (top._childs[i]._name == localname) {
-               top._childs[i]['_parent'] = top; // set parent pointer when
-                                                // searching child
-               if ((pos + 1 == fullname.length) || (pos < 0)) {
-                  if (replace != null)
-                     top._childs[i] = replace;
-                  return top._childs[i];
-               }
+            return find_in_hierarchy(child, fullname.substr(pos + 1));
+         }
 
-               return this.Find(fullname.substr(pos + 1), top._childs[i],
-                     replace);
+         do {
+            // we try to find element with slashes inside
+            pos = fullname.indexOf("/", pos + 1);
+
+            var localname = (pos < 0) ? fullname : fullname.substr(0, pos);
+
+            for (var i in top._childs)
+               if (top._childs[i]._name == localname)
+                  return process_child(top._childs[i]);
+
+            if (force) {
+               // if didnot found element with given name we just generate it
+               if (! ('_childs' in top)) top['_childs'] = [];
+               var child = { _name: localname };
+               top['_childs'].push(child);
+               return process_child(child);
             }
-      } while (pos > 0);
-      return null;
+         } while (pos > 0);
+
+         return null;
+      }
+
+      return find_in_hierarchy(this.h, itemname);
    }
 
    JSROOT.HierarchyPainter.prototype.itemFullName = function(node, uptoparent) {
@@ -6878,48 +6919,48 @@
       if (node == this.h) {
          cando.ctxt = true;
       } else if (kind == "ROOT.Session") {
-         cando.img1 = JSROOT.source_dir + 'img/globe.gif';
+         cando.img1 = "img_globe";
       } else if (kind.match(/^ROOT.TH1/)) {
-         cando.img1 = JSROOT.source_dir + 'img/histo.png';
+         cando.img1 = "img_histo1d";
          cando.scan = false;
          cando.display = true;
       } else if (kind.match(/^ROOT.TH2/)) {
-         cando.img1 = JSROOT.source_dir + 'img/histo2d.png';
+         cando.img1 = "img_histo2d";
          cando.scan = false;
          cando.display = true;
       } else if (kind.match(/^ROOT.TH3/)) {
-         cando.img1 = JSROOT.source_dir + 'img/histo3d.png';
+         cando.img1 = "img_histo3d";
          cando.scan = false;
          cando.display = true;
       } else if (kind == "ROOT.TCanvas") {
-         cando.img1 = JSROOT.source_dir + 'img/canvas.png';
+         cando.img1 = "img_canvas";
          cando.display = true;
       } else if (kind == "ROOT.TProfile") {
-         cando.img1 = JSROOT.source_dir + 'img/profile.png';
+         cando.img1 = "img_profile";
          cando.display = true;
       } else if (kind.match(/^ROOT.TGraph/) || (kind=="TCutG")) {
-         cando.img1 = JSROOT.source_dir + 'img/graph.png';
+         cando.img1 = "img_graph";
          cando.display = true;
       } else if (kind == "ROOT.TF1") {
-         cando.img1 = JSROOT.source_dir + 'img/graph.png';
+         cando.img1 = "img_graph";
          cando.display = true;
-      } else if (kind == "ROOT.TTree")
-         cando.img1 = JSROOT.source_dir + 'img/tree.png';
-      else if (kind == "ROOT.TFolder") {
-         cando.img1 = JSROOT.source_dir + 'img/folder.gif';
-         cando.img2 = JSROOT.source_dir + 'img/folderopen.gif';
+      } else if (kind == "ROOT.TTree") {
+         cando.img1 = "img_tree";
+      } else if (kind == "ROOT.TFolder") {
+         cando.img1 = "img_folder";
+         cando.img2 = "img_folderopen";
       } else if (kind == "ROOT.TNtuple")
-         cando.img1 = JSROOT.source_dir + 'img/tree.png';
+         cando.img1 = "img_tree";
       else if (kind == "ROOT.TBranch")
-         cando.img1 = JSROOT.source_dir + 'img/branch.png';
+         cando.img1 = "img_branch";
       else if (kind.match(/^ROOT.TLeaf/))
-         cando.img1 = JSROOT.source_dir + 'img/leaf.png';
+         cando.img1 = "img_leaf";
       else if (kind == "ROOT.TStreamerInfoList") {
-         cando.img1 = JSROOT.source_dir + 'img/question.gif';
+         cando.img1 = 'img_question';
          cando.expand = false;
          cando.display = true;
       } else if ((kind.indexOf("ROOT.") == 0) && JSROOT.canDraw(kind.slice(5))) {
-         cando.img1 = JSROOT.source_dir + 'img/histo.png';
+         cando.img1 = "img_histo1d";
          cando.scan = false;
          cando.display = true;
       }
@@ -6943,19 +6984,20 @@
 
       // console.log("add kind = " + kind + " name = " + node._name);
 
+      can_click = false;
+
       if (!node._childs || !cando.scan) {
          if (cando.expand) {
-            cando.html = "javascript: " + this.GlobalName() + ".expand(\'" + nodefullname + "\');";
+            can_click = true;
             if (cando.img1.length == 0) {
-               cando.img1 = JSROOT.source_dir + 'img/folder.gif';
-               cando.img2 = JSROOT.source_dir + 'img/folderopen.gif';
+               cando.img1 = 'img_folder';
+               cando.img2 = 'img_folderopen';
             }
          } else
          if (cando.display) {
-            cando.html = "javascript: " + this.GlobalName() + ".display(\'" + nodefullname + "\');";
+            can_click = true;
          } else
-         if (cando.open && (cando.html.length == 0))
-            cando.html = nodefullname + "/";
+         if (cando.html.length > 0) can_click = true;
       }
 
       if (cando.img2 == "")
@@ -6963,15 +7005,10 @@
 
       node['_d'] = {
          name : nodename,
-         url : cando.html,
+         _click : can_click,
          title : "",
          icon : cando.img1,
-         iconOpen : cando.img2,
-         _id : 0,     // id used in html
-         _io : false, // is open
-         _is : false, // is selected
-         _ls : false, // last sibling
-         _hc : false  // has childs
+         iconOpen : cando.img2
       };
 
       if ('_realname' in node)
@@ -6986,17 +7023,7 @@
       if (node['_d']['title'].length == 0)
          node['_d']['title'] = node['_d']['name'];
 
-      if (parent && parent._childs && (parent._childs[parent._childs.length - 1] == node))
-         node['_d']._ls = true;
-
-      node['_d']._id = this.grid++;
-
-      // allow context menu only for objects which can be displayed or for top-level item
-      if (cando.display || cando.ctxt)
-         node['_d']['ctxt'] = this.GlobalName() + ".contextmenu(this, event, \'" + nodefullname + "\')";
-
       if (cando.scan && ('_childs' in node)) {
-         node['_d']._hc = true;
          for ( var i in node._childs)
             this.createNode(node._childs[i], nodefullname, node);
       }
@@ -7004,159 +7031,228 @@
 
    JSROOT.HierarchyPainter.prototype.RefreshHtml = function(force) {
       if (this.frameid == null) return;
-      var elem = document.getElementById(this.frameid);
-      if (elem == null) return;
+      var elem = $("#" + this.frameid);
+      if (elem.length == 0) return;
 
-      if (this.h == null) { elem.innerHTML = "<h2>null</h2>"; return; }
+      if (this.h == null) return elem.html("<h2>null</h2>");
 
       if (force && this.h._d != null) {
          delete this.h._d;
          this.h._d = null;
       }
 
-      if (this.h._d == null) {
-         this.grid = 0;
+      if (this.h._d == null)
          this.createNode(this.h, "", null);
-      }
 
       this['html'] = "<p>";
-      this['html'] += "<a href=\"javascript: " + this.GlobalName() + ".toggle(true);\">open all</a>";
-      this['html'] += "| <a href=\"javascript: " + this.GlobalName() + ".toggle(false);\">close all</a>";
+
+      this['html'] += "<a href='#open_all'>open all</a>";
+      this['html'] += "| <a href='#close_all'>close all</a>";
       if ('_online' in this.h)
-         this['html'] += "| <a href=\"javascript: " + this.GlobalName() + ".reload();\">reload</a>";
+         this['html'] += "| <a href='#reload'>reload</a>";
+      else
+         this['html'] += "<a/>"
+
       if ('disp_kind' in this)
-         this['html'] += "| <a href=\"javascript: " + this.GlobalName() + ".clear();\">clear</a>";
+         this['html'] += "| <a href='#clear'>clear</a>";
+      else
+         this['html'] += "<a/>"
 
       this['html'] += "</p>";
-      this['html'] += '<div class="dtree">'
 
+      this['html'] += '<div class="dtree">'
       this.addItemHtml(this.h);
       this['html'] += '</div>';
-      elem.innerHTML = this['html'];
+
+      console.log("html length " + this['html'].length);
+
+      var h = this;
+
+      elem.html(this['html'])
+          .find(".dTreeItem")
+          .click(function() { h.dtree_click($(this)); })
+          .on('contextmenu', function(e) { h.dtree_contextmenu($(this), e); });
+
+      elem.find(".plus_minus").click(function() { h.dtree_click($(this),true); });
+
+      elem.find("a").first().click(function() { h.toggle(true); return false; })
+                    .next().click(function() { h.toggle(false); return false; })
+                    .next().click(function() { h.reload(); return false; })
+                    .next().click(function() { h.clear(); return false; });
+
+//      $("#" + this.frameid + " .dTreeItem")
+//         .click(function() { h.opennew($(this)); });
+//         .draggable({ revert: true, helper: "clone", appendTo: "body" });
+
+//      elem.find(".dTreeItem")
+//         .draggable({ revert: true, helper: "clone", appendTo: "body" });
    }
 
-   JSROOT.HierarchyPainter.prototype.addItemHtml = function(hitem, onlyitem) {
-      if (this.icon == null)
-         this.icon = {
-            root : JSROOT.source_dir + 'img/base.gif',
-            folder : JSROOT.source_dir + 'img/folder.gif',
-            folderOpen : JSROOT.source_dir + 'img/folderopen.gif',
-            node : JSROOT.source_dir + 'img/page.gif',
-            empty : JSROOT.source_dir + 'img/empty.gif',
-            line : JSROOT.source_dir + 'img/line.gif',
-            join : JSROOT.source_dir + 'img/join.gif',
-            joinBottom : JSROOT.source_dir + 'img/joinbottom.gif',
-            plus : JSROOT.source_dir + 'img/plus.gif',
-            plusBottom : JSROOT.source_dir + 'img/plusbottom.gif',
-            minus : JSROOT.source_dir + 'img/minus.gif',
-            minusBottom : JSROOT.source_dir + 'img/minusbottom.gif',
-            nlPlus : JSROOT.source_dir + 'img/nolines_plus.gif',
-            nlMinus : JSROOT.source_dir + 'img/nolines_minus.gif'
-         };
+   JSROOT.HierarchyPainter.prototype.isLastSibling = function(hitem) {
+      return hitem && hitem._parent && hitem._parent._childs &&
+             (hitem._parent._childs.indexOf(hitem) == hitem._parent._childs.length-1);
+   }
 
+   JSROOT.HierarchyPainter.prototype.addItemHtml = function(hitem) {
       var isroot = (hitem == this.h);
 
       var node = hitem._d;
-      var idname = this.name + "_id_" + node._id;
 
-      if (!onlyitem)
-         this['html'] += '<div class="dTreeNode" id="z' + idname + '">';
+      var itemname = this.itemFullName(hitem);
+
+      this['html'] += '<div item="' + itemname + '">';
 
       // build indent
       var sindent = "";
       var prnt = isroot ? null : hitem._parent;
       while ((prnt != null) && (prnt != this.h)) {
-         sindent = '<img src="' + (!prnt._d._ls ? this.icon.line : this.icon.empty) + '" alt="" />' + sindent;
+         sindent = '<div class="' + (this.isLastSibling(prnt) ? "img_empty" : "img_line") + '"/>' + sindent;
          prnt = prnt._parent;
       }
       this['html'] += sindent;
 
-      var opencode = this.GlobalName() + ".open(\'" + this.itemFullName(hitem) + "\')";
+      var icon_class = "", plusminus = false;
+      var has_childs = '_childs' in hitem;
 
       if (isroot) {
          // for root node no extra code
       } else
-      if (node._hc) {
-         this['html'] += '<a href="javascript: ' + opencode + '"><img src="';
-         this['html'] += ((node._io) ? (node._ls ? this.icon.minusBottom : this.icon.minus)
-                                     : (node._ls ? this.icon.plusBottom : this.icon.plus));
-         this['html'] += '" alt="" /></a>';
+      if (has_childs) {
+         icon_class = hitem._isopen ? "img_minus" : "img_plus";
+         plusminus = true;
       } else {
-         this['html'] += '<img src="' + ((node._ls ? this.icon.joinBottom : this.icon.join)) + '" alt="" />';
+         icon_class = "img_join";
+      }
+
+      if (icon_class.length > 0) {
+         if (this.isLastSibling(hitem)) icon_class += "bottom";
+         this['html'] += '<div class="' + icon_class;
+         if (plusminus) this['html'] += ' plus_minus" style="cursor:pointer';
+         this['html'] += '"/>';
       }
 
       // make node icon
       if (!node.icon)
-         node.icon = isroot ? this.icon.root : ((node._hc) ? this.icon.folder : this.icon.node);
+         node.icon = isroot ? "img_base" : (has_childs ? "img_folder" : "img_page");
       if (!node.iconOpen)
-         node.iconOpen = (node._hc) ? this.icon.folderOpen : this.icon.node;
+         node.iconOpen = has_childs ? "img_folderopen" : "img_page";
       if (isroot) {
-         node.icon = this.icon.root;
-         node.iconOpen = this.icon.root;
+         node.icon = "img_base";
+         node.iconOpen = "img_base";
       }
 
-      this['html'] += '<img src="' + ((node._io) ? node.iconOpen : node.icon) + '" alt=""/>';
+      var icon_name = hitem._isopen ? node.iconOpen : node.icon;
 
-      if (node.url) {
-         this['html'] += '<a class="' + (node._is ? 'nodeSel' : 'node') + '" href="' + node.url + '"';
-      } else
-      if (node._hc && !isroot) {
-         this['html'] += '<a href="javascript: ' + opencode + '" class="node"';
-      } else {
-         this['html'] += '<a';
-      }
+      if (icon_name.indexOf("img_")==0)
+         this['html'] += '<div class="' + icon_name + '"/>';
+      else
+         this['html'] += '<img src="' + icon_name + '" alt=""/>';
+
+      this['html'] += '<a';
+      if (node._click || has_childs) this['html'] +=' class="dTreeItem"';
 
       if (node.title) this['html'] += ' title="' + node.title + '"';
-      if (node.ctxt) this['html'] += ' oncontextmenu="' + node.ctxt + '"';
       this['html'] += '>' + node.name + '</a>';
 
-      if (onlyitem) return;
-
       this['html'] += '</div>';
 
-      var childs_display = node._hc && (isroot || node._io);
+      var childs_display = has_childs && (isroot || hitem._isopen);
 
-      // place for childs
+      if (!childs_display) return;
 
-      this['html'] += '<div id="d' + idname + '" class="clip" style="display:' + (childs_display ? 'block' : 'none') + ';">';
-      if (childs_display)
-         for ( var i in hitem._childs)
-            this.addItemHtml(hitem._childs[i]);
+      this['html'] += '<div class="dTreeSub">';
+      for (var i in hitem._childs)
+         this.addItemHtml(hitem._childs[i]);
       this['html'] += '</div>';
+   }
+
+   JSROOT.HierarchyPainter.prototype.dtree_click = function(node, plusminus) {
+
+      var itemname = node.parent().attr('item');
+
+      if (itemname==null) return;
+
+      var hitem = this.Find(itemname);
+      if (hitem==null) return;
+
+      if (!plusminus) {
+         var cando = this.CheckCanDo(hitem);
+
+         if (cando.open && (cando.html.length>0))
+            return window.open(cando.html);
+
+         if (cando.expand && (hitem['_childs'] == null))
+            return this.expand(itemname, hitem, node.parent());
+
+         if (cando.display)
+            return this.display(itemname);
+
+         if (!('_childs' in hitem) || (hitem === this.h)) return;
+      }
+
+      if (hitem._isopen)
+         delete hitem._isopen;
+      else
+         hitem._isopen = true;
+
+      this.UpdateTreeNode(node.parent(), hitem);
    }
 
    JSROOT.HierarchyPainter.prototype.open = function(itemname) {
-      var hitem = this.Find(itemname);
-      if (hitem == null) return;
-      this.setDNodeOpenStatus(hitem, !hitem._d._io);
+      console.log("open() no longer available");
    }
 
-   JSROOT.HierarchyPainter.prototype.setDNodeOpenStatus = function(hitem, status, force) {
-      if (hitem == null) return;
+   JSROOT.HierarchyPainter.prototype.UpdateTreeNode = function(node, hitem) {
+      var has_childs = '_childs' in hitem;
 
-      var node = hitem._d;
-      var idname = this.name + "_id_" + node._id;
+      var new_class = hitem._isopen ? "img_minus" : "img_plus";
+      var old_class = hitem._isopen ? "img_plus" : "img_minus";
+      if (this.isLastSibling(hitem)) { old_class += "bottom"; new_class += "bottom"; }
 
-      node._io = status;
+      var newname = hitem._isopen ? hitem._d.iconOpen : hitem._d.icon;
+      var oldname = hitem._isopen ? hitem._d.icon : hitem._d.iconOpen;
 
-      var zDiv = document.getElementById('z' + idname);
-      var dDiv = document.getElementById('d' + idname);
+      var img;
 
-      if (zDiv) {
-         this['html'] = '';
-         this.addItemHtml(hitem, true);
-         zDiv.innerHTML = this['html'];
+      if (newname.indexOf("img_")<0) {
+         img = node.find("img:last");
+         img.attr("src", newname);
+      } else {
+         img = node.find("div:last");
+         if (newname!=oldname)
+            img.switchClass(oldname, newname);
       }
 
-      if (dDiv) {
-         if (node._io && node._hc && (force || (dDiv.childNodes.length == 0))) {
-            this['html'] = '';
-            for ( var i in hitem._childs)
-               this.addItemHtml(hitem._childs[i]);
-            dDiv.innerHTML = this['html'];
-         }
-         dDiv.style.display = node._io ? 'block' : 'none';
+      img = img.prev();
+
+      if (img.hasClass("plus_minus"))
+         img.switchClass(old_class, new_class);
+      else
+      if (has_childs) {
+         img.attr('class', new_class + " plus_minus");
+         img.css('cursor', 'pointer');
+         var h = this;
+         img.click(function() { h.dtree_click($(this),true); });
       }
+
+      var dnode = node.next();
+      if (dnode.hasClass("dTreeSub")) dnode.remove();
+
+      if (!hitem._isopen || !has_childs) return;
+
+      this['html'] = '<div class="dTreeSub">';
+      for (var i in hitem._childs)
+         this.addItemHtml(hitem._childs[i]);
+      this['html'] += '</div>';
+      node.after(this['html']);
+
+      dnode = node.next();
+
+      var h = this;
+      dnode.find(".dTreeItem")
+         .click(function() { h.dtree_click($(this)); })
+         .on('contextmenu', function(e) { h.dtree_contextmenu($(this), e); });
+      dnode.find(".plus_minus").click(function() { h.dtree_click($(this), true); });
    }
 
    JSROOT.HierarchyPainter.prototype.toggle = function(status) {
@@ -7165,7 +7261,10 @@
       var toggleItem = function(hitem) {
 
          if (hitem != painter.h)
-            hitem._d._io = status;
+            if (status)
+               hitem._isopen = true;
+            else
+               delete hitem._isopen;
 
          if ('_childs' in hitem)
             for ( var i in hitem._childs)
@@ -7196,15 +7295,84 @@
          callback(item, null);
    }
 
-   JSROOT.HierarchyPainter.prototype.display = function(itemname, options, call_back) {
-      if (!this.CreateDisplay()) return;
+   JSROOT.HierarchyPainter.prototype.draw = function(divid, obj, drawopt) {
+      // just envelope, one should be able to redefine it for sub-classes
+      return JSROOT.draw(divid, obj, drawopt);
+   }
+
+   JSROOT.HierarchyPainter.prototype.display = function(itemname, drawopt, call_back) {
+
+      function do_call_back(res) {
+         if (typeof call_back=='function') call_back(res);
+      }
+
+      if (!this.CreateDisplay()) return do_call_back(null);
+
+      var h = this;
+
+      var mdi = h['disp'];
+
+      var updating = drawopt=="update";
+
+      if (updating) {
+         var item = h.Find(itemname);
+         if ((item==null) || ('_doing_update' in item)) return do_call_back(null);
+         item['_doing_update'] = true;
+      }
+
+      h.get(itemname, function(item, obj) {
+
+         if (updating) delete item['_doing_update'];
+         if (obj==null) return do_call_back(null);
+
+         var painter = null;
+
+         var pos = drawopt ? drawopt.indexOf("divid:") : -1;
+         if (pos>=0) {
+            var divid = drawopt.slice(pos+6);
+            drawopt = drawopt.slice(0, pos);
+            console.log("draw opts = " + drawopt  + "  divid = " + divid);
+            painter = h.draw(divid, obj, drawopt);
+         } else
+         mdi.ForEachPainter(function(p, frame) {
+            if (p['_hitemname'] != itemname) return;
+            painter = p;
+            mdi.ActivateFrame(frame);
+            painter.RedrawObject(obj);
+         });
+
+         if (painter==null) {
+            if (updating) {
+               console.log("something went wrong - did not found painter when doing update of " + itemname);
+            } else {
+               var frame = mdi.FindFrame(itemname, true);
+               painter = h.draw($(frame).attr("id"), obj, drawopt);
+               mdi.ActivateFrame(frame);
+            }
+         }
+
+         if (painter) painter['_hitemname'] = itemname; // mark painter as created from hierarchy
+
+         do_call_back(painter);
+      });
+   }
+
+   JSROOT.HierarchyPainter.prototype.updateAll = function() {
+      // method can be used to fetch new objects and update all existing drawings
 
       var mdi = this['disp'];
+      if (mdi == null) return;
 
-      this.get(itemname, function(item, obj) {
-         var painter = mdi.Draw(itemname, obj, options);
-         if (typeof call_back == 'function') call_back(painter);
-      });
+      var allitems = [];
+
+      // first collect items
+      mdi.ForEachPainter(function(p) {
+         if (('_hitemname' in p) && (allitems.indexOf(p['_hitemname'])<0)) allitems.push(p['_hitemname']);
+      }, true); // only visible panels are considered
+
+      // than call display with update
+      for (var cnt in allitems)
+         this.display(allitems[cnt], "update");
    }
 
    JSROOT.HierarchyPainter.prototype.displayAll = function(items, options) {
@@ -7225,7 +7393,7 @@
          mdi.CreateFrame(items[i]);
 
       // Display items
-      for ( var i in items)
+      for (var i in items)
          this.display(items[i], options[i]);
    }
 
@@ -7234,24 +7402,32 @@
          this.OpenOnline(this.h['_online']);
    }
 
-   JSROOT.HierarchyPainter.prototype.ExpandDtree = function(node) {
-      var itemname = this.itemFullName(node);
+   JSROOT.HierarchyPainter.prototype.ExpandDtree = function(node, hitem) {
+      var itemname = this.itemFullName(hitem);
 
-      for ( var i in node._childs)
-         this.createNode(node._childs[i], itemname, node);
+      node.attr('item', itemname);
+      node.find("a").text(hitem._name);
 
-      node._d._hc = true;
-      node._d._io = true;
-      node._d.url = "";
-      node._d.name = node._name;
+      for (var i in hitem._childs)
+         this.createNode(hitem._childs[i], itemname, hitem);
 
-      this.setDNodeOpenStatus(node, true, true);
+      hitem._isopen = true;
+      hitem._d._click = false;
+      hitem._d.name = hitem._name;
+
+      this.UpdateTreeNode(node, hitem);
    }
 
-   JSROOT.HierarchyPainter.prototype.expand = function(itemname) {
+   JSROOT.HierarchyPainter.prototype.expand = function(itemname, item0, node) {
       var painter = this;
 
-      var item0 = this.Find(itemname);
+      if (node==null)
+         node = $("#" + this.frameid).find("[item='" + itemname + "']");
+
+      if (node.length==0)
+         return console.log("Did not found node with item = " + itemname);
+
+      if (item0==null) item0 = this.Find(itemname);
       if (item0==null) return;
       item0['_doing_expand'] = true;
 
@@ -7263,7 +7439,7 @@
          while (curr != null) {
             if (('_expand' in curr) && (typeof (curr['_expand']) == 'function')) {
                 if (curr['_expand'](item, obj))
-                   painter.ExpandDtree(item);
+                   painter.ExpandDtree(node, item);
                 return;
             }
             curr = ('_parent' in curr) ? curr['_parent'] : null;
@@ -7399,8 +7575,8 @@
          JSROOT.Painter.menuitem(menu, "Expand", function() { painter.expand(itemname); });
 
       var drawurl = onlineprop.server + onlineprop.itemname + "/draw.htm";
-      if (this['_monitoring_on'])
-         drawurl += "?monitoring=" + this['_monitoring_interval'];
+      if (this.IsMonitoring())
+         drawurl += "?monitoring=" + this.MonitoringInterval();
 
       if (cando.display)
          JSROOT.Painter.menuitem(menu, "Draw in new window", function() { window.open(drawurl); });
@@ -7422,8 +7598,38 @@
       this.RefreshHtml();
    }
 
-   JSROOT.HierarchyPainter.prototype.contextmenu = function(element, event, itemname) {
+   JSROOT.HierarchyPainter.prototype.MonitoringInterval = function() {
+      // returns interval
+      var monitor = this['_monitoring_interval'];
+      if (monitor == null) {
+         monitor = JSROOT.GetUrlOption("monitoring");
+         if ((monitor == "") || (monitor==null)) monitor = 3000;
+                                            else monitor = parseInt(monitor);
+         if ((monitor == NaN) || (monitor<=0)) monitor = 3000;
+         this['_monitoring_interval'] = monitor;
+      }
+      return monitor;
+   }
+
+   JSROOT.HierarchyPainter.prototype.EnableMonitoring = function(on) {
+      this['_monitoring_on'] = on;
+   }
+
+   JSROOT.HierarchyPainter.prototype.IsMonitoring = function() {
+      return this['_monitoring_on'];
+   }
+
+   JSROOT.HierarchyPainter.prototype.dtree_contextmenu = function(node, event) {
       event.preventDefault();
+
+      var itemname = node.parent().attr('item');
+
+      var hitem = this.Find(itemname);
+      if (hitem==null) return;
+
+      var cando = this.CheckCanDo(hitem);
+
+      if (!cando.display && !cando.ctxt && (itemname!="")) return;
 
       var onlineprop = this.GetOnlineProp(itemname);
       var fileprop = this.GetFileProp(itemname);
@@ -7445,8 +7651,8 @@
          var addr = "";
          if ('_online' in this.h) {
             addr = "/?";
-            if (this['_monitoring_on'])
-               addr += "monitoring=" + this['_monitoring_interval'];
+            if (this.IsMonitoring())
+               addr += "monitoring=" + this.MonitoringInterval();
          } else if ('_file' in this.h) {
             addr = JSROOT.source_dir + "index.htm?";
             addr += "file=" + this.h['_file'].fURL;
@@ -7460,8 +7666,9 @@
          var items = [];
 
          if (this['disp'] != null)
-            this['disp'].ForEach(function(panel, itemname, painter) {
-               items.push(itemname);
+            this['disp'].ForEachPainter(function(painter) {
+               if ('_hitemname' in painter)
+                  items.push(painter['_hitemname']);
             });
 
          if (items.length == 1) {
@@ -7531,106 +7738,99 @@
 
    // ================================================================
 
-   // JSROOT.MDIDisplay - class to manage multiple document interface for
-   // drawings
+   // JSROOT.MDIDisplay - class to manage multiple document interface for drawings
 
    JSROOT.MDIDisplay = function(frameid) {
       this.frameid = frameid;
    }
 
-   JSROOT.MDIDisplay.prototype.ForEach = function(userfunc, only_visible) {
-      alert("ForEach not implemented");
+   JSROOT.MDIDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
+      // method dedicated to iterate over existing panles
+      // provided userfunc is called with arguemnts (frame)
+
+      alert("ForEachFrame not implemented");
+   }
+
+   JSROOT.MDIDisplay.prototype.ForEachPainter = function(userfunc, only_visible) {
+      // method dedicated to iterate over existing panles
+      // provided userfunc is called with arguemnts (painter, frame)
+
+      this.ForEachFrame(function(frame) {
+         var dummy = new JSROOT.TObjectPainter();
+         dummy.SetDivId($(frame).attr('id'), -1);
+         dummy.ForEachPainter(function(painter) { userfunc(painter, frame); });
+      }, only_visible);
    }
 
    JSROOT.MDIDisplay.prototype.NumDraw = function() {
       var cnt = 0;
-      this.ForEach(function() { cnt++; });
+      this.ForEachFrame(function() { cnt++; });
       return cnt;
    }
 
-   JSROOT.MDIDisplay.prototype.FindFrame = function(searchitemname) {
+   JSROOT.MDIDisplay.prototype.FindFrame = function(searchtitle, force) {
       var found_frame = null;
 
-      this.ForEach(function(frame, itemname) {
-         if (itemname == searchitemname)
+      this.ForEachFrame(function(frame) {
+         if (frame.prop('title') == searchtitle)
             found_frame = frame;
       });
+
+      if ((found_frame == null) && force)
+         found_frame = this.CreateFrame(searchtitle);
 
       return found_frame;
    }
 
-   JSROOT.MDIDisplay.prototype.FindPainter = function(searchitemname) {
-      var frame = this.FindFrame(searchitemname);
-      //if (frame == null) return null;
-      //return document.getElementById($(frame).attr('id'))['painter'];
-      return frame ? $(frame).prop('painter') : null;
+   JSROOT.MDIDisplay.prototype.FindPainter = function(title) {
+      var res = null;
+      this.ForEachPainter(function(p,f) {
+         if ((res==null) && (f.prop('title')==title)) res = p;
+      });
+      return res;
    }
 
    JSROOT.MDIDisplay.prototype.ActivateFrame = function(frame) {
       // do nothing by default
    }
 
-   JSROOT.MDIDisplay.prototype.Draw = function(itemname, obj, drawopt) {
-      // draw object with specified options
-      if (!obj) return;
-
-      var frame = this.FindFrame(itemname);
-
-      if ((frame != null) && this.FindPainter(itemname)) {
-         this.ActivateFrame(frame);
-         return;
-      }
-
-      if (!JSROOT.canDraw(obj['_typename'], drawopt)) return;
-
-      if (frame == null)
-         frame = this.CreateFrame(itemname);
-
-      this.ActivateFrame(frame);
-
-      var painter = JSROOT.draw($(frame).attr("id"), obj, drawopt);
-
-      this.SetPainterForFrame(frame, painter);
-
-      return painter;
-   }
-
-   JSROOT.MDIDisplay.prototype.Redraw = function(itemname, obj, drawopt) {
-      // (re)draw object with specified options
-      // if object was not drawn before, normal draw will be performed
-
-      var p = this.FindPainter(itemname);
-      if (p==null) {
-         p = this.Draw(itemname, obj, drawopt);
-      } else {
-         if (p.UpdateObject(obj)) p.RedrawPad();
-      }
-
-      return p;
-   }
-
-
-   JSROOT.MDIDisplay.prototype.SetPainterForFrame = function(frame, painter) {
-      //var hid = $(frame).attr('id');
-      //document.getElementById(hid)['painter'] = painter;
-      $(frame).prop('painter', painter);
-      this.ActivateFrame(frame);
-   }
-
    JSROOT.MDIDisplay.prototype.CheckResize = function() {
-      this.ForEach(function(panel, itemname, painter) {
-         if ((painter != null) && (typeof painter['CheckResize'] == 'function'))
+      this.ForEachPainter(function(painter) {
+         if (('_hitemname' in painter) && (typeof painter['CheckResize'] == 'function'))
              painter.CheckResize();
       });
    }
 
    JSROOT.MDIDisplay.prototype.Reset = function() {
-      this.ForEach(function(panel, itemname, painter) {
-         if ((painter != null) && (typeof painter['Clenaup'] == 'function'))
+      this.ForEachPainter(function(painter) {
+         if (('_hitemname' in painter) && (typeof painter['Clenaup'] == 'function'))
             painter.Clenaup();
       });
 
       document.getElementById(this.frameid).innerHTML = '';
+   }
+
+   JSROOT.MDIDisplay.prototype.Draw = function(title, obj, drawopt) {
+      // draw object with specified options
+      if (!obj) return;
+
+      var painter = this.FindPainter(title);
+      var frame = this.FindFrame(title);
+
+      if (painter!=null) {
+         this.ActivateFrame(frame);
+         painter.RedrawObject(obj);
+         return painter;
+      }
+
+      if (!JSROOT.canDraw(obj['_typename'], drawopt)) return;
+
+      if (frame == null)
+         frame = this.CreateFrame(title);
+
+      this.ActivateFrame(frame);
+
+      return JSROOT.draw($(frame).attr("id"), obj, drawopt);
    }
 
    // ==================================================
@@ -7653,21 +7853,19 @@
 
    JSROOT.CollapsibleDisplay.prototype = Object.create(JSROOT.MDIDisplay.prototype);
 
-   JSROOT.CollapsibleDisplay.prototype.ForEach = function(userfunc,  only_visible) {
+   JSROOT.CollapsibleDisplay.prototype.ForEachFrame = function(userfunc,  only_visible) {
       var topid = this.frameid + '_collapsible';
 
       if (document.getElementById(topid) == null) return;
 
       if (typeof userfunc != 'function') return;
 
-      $('#' + topid).children().each(function() {
-
-         if (!('itemname' in this)) return;
+      $('#' + topid + ' .collapsible_draw').each(function() {
 
          // check if only visible specified
          if (only_visible && $(this).is(":hidden")) return;
 
-         userfunc(this, this['itemname'], $(this).prop('painter'));
+         userfunc($(this));
       });
    }
 
@@ -7680,64 +7878,44 @@
       $(frame).prev()[0].scrollIntoView();
    }
 
-   JSROOT.CollapsibleDisplay.prototype.CreateFrame = function(itemname) {
+   JSROOT.CollapsibleDisplay.prototype.CreateFrame = function(title) {
 
       var topid = this.frameid + '_collapsible';
 
       if (document.getElementById(topid) == null)
-         $("#right-div")
-               .append(
-                     '<div id="'
-                           + topid
-                           + '" class="ui-accordion ui-accordion-icons ui-widget ui-helper-reset" style="overflow:auto; overflow-y:scroll; height:100%"></div>');
+         $("#right-div").append('<div id="'+ topid  + '" class="ui-accordion ui-accordion-icons ui-widget ui-helper-reset" style="overflow:auto; overflow-y:scroll; height:100%"></div>');
 
       var hid = topid + "_sub" + this.cnt++;
       var uid = hid + "h";
 
-      var entryInfo = "<h5 id=\"" + uid + "\"><a> " + itemname
-            + "</a>&nbsp; </h5>\n";
-      entryInfo += "<div id='" + hid + "'></div>\n";
+      var entryInfo = "<h5 id=\"" + uid + "\"><a> " + title + "</a>&nbsp; </h5>\n";
+      entryInfo += "<div class='collapsible_draw' id='" + hid + "'></div>\n";
       $("#" + topid).append(entryInfo);
 
-      document.getElementById(hid)['itemname'] = itemname;
-
       $('#' + uid)
-            .addClass(
-                  "ui-accordion-header ui-helper-reset ui-state-default ui-corner-top ui-corner-bottom")
-            .hover(function() {
-               $(this).toggleClass("ui-state-hover");
-            })
+            .addClass("ui-accordion-header ui-helper-reset ui-state-default ui-corner-top ui-corner-bottom")
+            .hover(function() { $(this).toggleClass("ui-state-hover"); })
             .prepend('<span class="ui-icon ui-icon-triangle-1-e"></span>')
-            .append(
-                  '<button type="button" class="closeButton" title="close canvas" onclick="JSROOT.CloseCollapsible(event, \'#'
-                        + uid
-                        + '\')"><img src="'
-                        + JSROOT.source_dir
-                        + '/img/remove.gif"/></button>')
-            .click(
-                  function() {
-                     $(this)
-                           .toggleClass(
-                                 "ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
-                           .find("> .ui-icon").toggleClass(
-                                 "ui-icon-triangle-1-e ui-icon-triangle-1-s")
-                           .end().next().toggleClass(
-                                 "ui-accordion-content-active").slideToggle(0);
+            .append('<button type="button" class="closeButton" title="close canvas" onclick="JSROOT.CloseCollapsible(event, \'#'
+                        + uid + '\')"><img class="img_remove" src="" alt=""/></button>')
+            .click( function() {
+                     $(this).toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
+                           .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s")
+                           .end().next().toggleClass("ui-accordion-content-active").slideToggle(0);
                      return false;
                   })
             .next()
-            .addClass(
-                  "ui-accordion-content  ui-helper-reset ui-widget-content ui-corner-bottom")
+            .addClass("ui-accordion-content  ui-helper-reset ui-widget-content ui-corner-bottom")
             .hide();
 
       $('#' + uid)
-            .toggleClass(
-                  "ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
-            .find("> .ui-icon").toggleClass(
-                  "ui-icon-triangle-1-e ui-icon-triangle-1-s").end().next()
+            .toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
+            .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end().next()
             .toggleClass("ui-accordion-content-active").slideToggle(0);
 
       // $('#'+uid)[0].scrollIntoView();
+
+      $("#" + hid).prop('title', title);
 
       return $("#" + hid);
    }
@@ -7751,7 +7929,7 @@
 
    JSROOT.TabsDisplay.prototype = Object.create(JSROOT.MDIDisplay.prototype);
 
-   JSROOT.TabsDisplay.prototype.ForEach = function(userfunc, only_visible) {
+   JSROOT.TabsDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
       var topid = this.frameid + '_tabs';
 
       if (document.getElementById(topid) == null) return;
@@ -7761,36 +7939,32 @@
       var cnt = -1;
       var active = $('#' + topid).tabs("option", "active");
 
-      $('#' + topid).children().each(function() {
+      $('#' + topid + ' .tabs_draw').each(function() {
          // check if only_visible specified
          if (only_visible && (cnt++ != active)) return;
 
-         if (!('itemname' in this)) return;
-
-         userfunc(this, this['itemname'], $(this).prop('painter'));
+         userfunc($(this));
       });
    }
 
    JSROOT.TabsDisplay.prototype.ActivateFrame = function(frame) {
       var cnt = 0, id = -1;
-      this.ForEach(function(fr) {
-         if (fr === frame)
-            id = cnt;
+      this.ForEachFrame(function(fr) {
+         if ($(fr).attr('id') == frame.attr('id'))  id = cnt;
          cnt++;
       });
 
       $('#' + this.frameid + "_tabs").tabs("option", "active", id);
    }
 
-   JSROOT.TabsDisplay.prototype.CreateFrame = function(itemname) {
+   JSROOT.TabsDisplay.prototype.CreateFrame = function(title) {
       var topid = this.frameid + '_tabs';
 
       var hid = topid + "_sub" + this.cnt++;
 
-      var li = '<li><a href="#' + hid + '">'
-            + itemname
+      var li = '<li><a href="#' + hid + '">' + title
             + '</a><span class="ui-icon ui-icon-close" role="presentation">Remove Tab</span></li>';
-      var cont = '<div id="' + hid + '"></div>';
+      var cont = '<div class="tabs_draw" id="' + hid + '"></div>';
 
       if (document.getElementById(topid) == null) {
          $("#" + this.frameid).append('<div id="' + topid + '">' + ' <ul>' + li + ' </ul>' + cont + '</div>');
@@ -7812,7 +7986,7 @@
          $("#" + topid).tabs("option", "active", -1);
       }
       $('#' + hid).empty();
-      document.getElementById(hid)['itemname'] = itemname;
+      $('#' + hid).prop('title', title);
       return $('#' + hid);
    }
 
@@ -7857,73 +8031,88 @@
 
    JSROOT.GridDisplay.prototype = Object.create(JSROOT.MDIDisplay.prototype);
 
-   JSROOT.GridDisplay.prototype.ForEach = function(userfunc, only_visible) {
+   JSROOT.GridDisplay.prototype.IsSingle = function() {
+      return (this.sizex <= 1) && (this.sizey <= 1);
+   }
+
+   JSROOT.GridDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
+      if (typeof userfunc != 'function') return;
+
+      if (this.IsSingle()) {
+         var elem = $("#"+this.frameid);
+         if (elem.prop('title')!=null)
+            userfunc(elem);
+         return;
+      }
+
       var topid = this.frameid + '_grid';
 
       if (document.getElementById(topid) == null) return;
 
-      if (typeof userfunc != 'function') return;
-
       for (var cnt = 0; cnt < this.sizex * this.sizey; cnt++) {
-         var hid = topid + "_" + cnt;
 
-         var elem = document.getElementById(hid);
+         var elem = $( "#" + topid + "_" + cnt);
 
-         if ((elem == null) || !('itemname' in elem)) continue;
-
-         userfunc($("#" + hid), elem['itemname'], elem['painter']);
+         if (elem.prop('title')!="")
+            userfunc(elem);
       }
    }
 
-   JSROOT.GridDisplay.prototype.CreateFrame = function(itemname) {
+   JSROOT.GridDisplay.prototype.CreateFrame = function(title) {
 
-      var topid = this.frameid + '_grid';
+      var hid = this.frameid;
 
-      if (document.getElementById(topid) == null) {
+      if (!this.IsSingle()) {
+         var topid = this.frameid + '_grid';
+         if (document.getElementById(topid) == null) {
 
-         var precx = 100. / this.sizex;
-         var precy = 100. / this.sizey;
-         var h = $("#" + this.frameid).height() / this.sizey;
-         var w = $("#" + this.frameid).width() / this.sizex;
+            var main = $("#" + this.frameid);
 
-         var content = "<table id='" + topid + "' style='width:100%; height:100%; table-layout:fixed'>";
-         var cnt = 0;
-         for (var i = 0; i < this.sizey; i++) {
-            content += "<tr>";
-            for (var j = 0; j < this.sizex; j++)
-               content += "<td><div id='" + topid + "_" + cnt++ + "'></div></td>";
-            content += "</tr>";
+            var h = Math.floor(main.height() / this.sizey);
+            var w = Math.floor(main.width() / this.sizex);
+
+            var content = "<table id='" + topid + "' style='width:100%; height:100%; table-layout:fixed'>";
+            var cnt = 0;
+            for (var i = 0; i < this.sizey; i++) {
+               content += "<tr>";
+               for (var j = 0; j < this.sizex; j++)
+                  content += "<td><div id='" + topid + "_" + cnt++ + "'></div></td>";
+               content += "</tr>";
+            }
+            content += "</table>";
+
+            main.empty();
+            main.append(content);
+
+            main.find("[id^=" + this.frameid + "_grid_]").width(w).height(h);
+//              .droppable({ accepted: ".dTreeItem", drop: function(event, ui) { console.log("drop!"); } });;
          }
-         content += "</table>";
 
-         $("#" + this.frameid).empty();
-         $("#" + this.frameid).append(content);
-
-         $("[id^=" + this.frameid + "_grid_]").height(h);
-         $("[id^=" + this.frameid + "_grid_]").width(w);
+         hid = topid + "_" + this.cnt;
+         if (++this.cnt >= this.sizex * this.sizey) this.cnt = 0;
       }
 
-      var hid = topid + "_" + this.cnt;
-      if (++this.cnt >= this.sizex * this.sizey) this.cnt = 0;
-
       $("#" + hid).empty();
-      document.getElementById(hid)['itemname'] = itemname;
-      document.getElementById(hid)['painter'] = null;
+      $("#" + hid).prop('title', title);
 
       return $('#' + hid);
    }
 
    JSROOT.GridDisplay.prototype.Reset = function() {
       JSROOT.MDIDisplay.prototype.Reset.call(this);
+      if (this.IsSingle())
+         $("#" + this.frameid).prop('title', null);
       this.cnt = 0;
    }
 
    JSROOT.GridDisplay.prototype.CheckResize = function() {
-      var h = $("#" + this.frameid).height() / this.sizey;
-      var w = $("#" + this.frameid).width() / this.sizex;
 
-      // console.log("big width = " + $("#" + this.frameid).width() + " height =
-      // " + $("#" + this.frameid).height());
+      var main = $("#" + this.frameid);
+
+      var h = Math.floor(main.height() / this.sizey);
+      var w = Math.floor(main.width() / this.sizex);
+
+      console.log("big width = " + main.width() + " height = " + main.height());
 
       // set height for all table cells, it is not done automatically by browser
       // for (var cnt=0;cnt<this.sizex*this.sizey;cnt++)
@@ -7931,8 +8120,7 @@
 
       // $("[id^=" + this.frameid + "_grid_]").height(h).width(w);
 
-      $("[id^=" + this.frameid + "_grid_]").height(h);
-      $("[id^=" + this.frameid + "_grid_]").width(w);
+      main.find("[id^=" + this.frameid + "_grid_]").height(h).width(w);
 
       JSROOT.MDIDisplay.prototype.CheckResize.call(this);
    }
@@ -8045,7 +8233,7 @@
       if (can_painter != null) {
          if (obj._typename=="TCanvas") {
             can_painter.RedrawObject(obj);
-           return can_painter;
+            return can_painter;
          }
 
          for (var i in can_painter.painters) {
