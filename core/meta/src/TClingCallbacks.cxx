@@ -79,7 +79,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          llvm::StringRef FileName,
                                          bool /*IsAngled*/,
                                          clang::CharSourceRange /*FilenameRange*/,
-                                         const clang::FileEntry */*File*/,
+                                         const clang::FileEntry *FE,
                                          llvm::StringRef /*SearchPath*/,
                                          llvm::StringRef /*RelativePath*/,
                                          const clang::Module */*Imported*/) {
@@ -102,7 +102,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
    DeclarationName Name = &SemaR.getASTContext().Idents.get(localString.c_str());
    LookupResult RHeader(SemaR, Name, sLoc, Sema::LookupOrdinaryName);
 
-   tryAutoParseInternal(localString, RHeader, SemaR.getCurScope(),true);
+   tryAutoParseInternal(localString, RHeader, SemaR.getCurScope(), FE);
 }
 
 // Preprocessor callbacks used to handle special cases like for example:
@@ -307,9 +307,11 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 // try to autoload it first and do secondary lookup to try to find it.
 //
 // returns true when a declaration is found and no error should be emitted.
+// If FileEntry, this is a reacting on a #include and Name is the included
+// filename.
 //
 bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R,
-                                          Scope *S, bool noLookup) {
+                                           Scope *S, const FileEntry* FE /*=0*/) {
    Sema &SemaR = m_Interpreter->getSema();
 
    // Try to autoload first if autoloading is enabled
@@ -330,7 +332,7 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
      bool lookupSuccess = false;
      if (getenv("ROOT_MODULES")) {
         if (TCling__AutoParseCallback(Name.str().c_str())) {
-           lookupSuccess = noLookup || SemaR.LookupName(R, S);
+           lookupSuccess = FE || SemaR.LookupName(R, S);
         }
      }
      else {
@@ -353,8 +355,8 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
                                                SemaR.TUScope);
 
         // First see whether we have a fwd decl of this name.
-        // We shall only do that if lookup makes sense for it (!noLookup).
-        if (!noLookup) {
+        // We shall only do that if lookup makes sense for it (!FE).
+        if (!FE) {
            lookupSuccess = SemaR.LookupName(R, S);
            if (lookupSuccess) {
               if (R.isSingleResult()) {
@@ -373,14 +375,14 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
         if (TCling__AutoParseCallback(Name.str().c_str())) {
            pushedDCAndS.pop();
            cleanupRAII.pop();
-           lookupSuccess = noLookup || SemaR.LookupName(R, S);
-        } else if (noLookup && TCling__GetClassSharedLibs(Name.str().c_str())) {
+           lookupSuccess = FE || SemaR.LookupName(R, S);
+        } else if (FE && TCling__GetClassSharedLibs(Name.str().c_str())) {
            // We are "autoparsing" a header, and the header was not parsed.
            // But its library is known - so we do know about that header.
            // Do the parsing explicitly here, while recursive autoloading is
            // disabled.
            std::string incl = "#include \"";
-           incl += Name.str();
+           incl += FE->getName();
            incl += '"';
            m_Interpreter->declare(incl);
         }
