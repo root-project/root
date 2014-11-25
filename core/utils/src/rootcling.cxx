@@ -3404,10 +3404,15 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t &annotatedRcds,
          if (autoParseKey.empty()) autoParseKey = annotatedRcd.GetNormalizedName();
          headersDeclsMap[autoParseKey] = headers;
          headersDeclsMap[annotatedRcd.GetRequestedName()] = headers;
+
+         // Propagate to the classes map only if this is not a template.
+         // The header is then used as autoload key and we want to avoid duplicates.
+         if (!llvm::isa<clang::ClassTemplateSpecializationDecl>(cxxRcd)){
+            headersClassesMap[autoParseKey] = headersDeclsMap[autoParseKey];
+            headersClassesMap[annotatedRcd.GetRequestedName()] = headersDeclsMap[annotatedRcd.GetRequestedName()];
+         }
       }
    }
-
-   headersClassesMap = headersDeclsMap;
 
    // The same for the typedefs:
    for (auto & tDef : tDefDecls) {
@@ -3426,6 +3431,7 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t &annotatedRcds,
          headersDeclsMap[autoParseKey] = headers;
       }
    }
+
    // The same for the functions:
    for (auto & func : funcDecls) {
       std::list<std::string> headers = {ROOT::TMetaUtils::GetFileName(*func, interp)};
