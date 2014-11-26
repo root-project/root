@@ -26,6 +26,8 @@ The following parameters can be specified in the URL string:
 - layout - can be 'collapsible', 'tabs' or 'gridNxM' where N and M are integer values
 - nobrowser - do not display file browser
 - autoload - name of JavaScript to load
+- optimize - drawing optimization 0:off, 1:only large histograms (default), 2:always
+- interactive - enable/disable interactive functions 0-disable all, 1-enable all
 
 Examples: 
 
