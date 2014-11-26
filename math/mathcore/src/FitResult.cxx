@@ -44,7 +44,7 @@ const int gInitialResultStatus = -99; // use this special convention to flag it 
 
 FitResult::FitResult() :
    fValid(false), fNormalized(false), fNFree(0), fNdf(0), fNCalls(0),
-   fStatus(-1), fCovStatus(0), fVal(0), fEdm(-1), fChi2(-1), fFitFunc(0)
+   fStatus(-1), fCovStatus(0), fVal(0), fEdm(-1), fChi2(-1)
 {
    // Default constructor implementation.
 }
@@ -97,21 +97,26 @@ FitResult::FitResult(const FitConfig & fconfig) :
    std::cout << "create fit result from config - nfree " << fNFree << std::endl;
 }
 
-FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, const IModelFunction * func,  bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls ) :
-   fValid(isValid),
-   fNormalized(false),
-   fNFree(min.NFree() ),
-   fNdf(0),
-   fNCalls(min.NCalls()),
-   fStatus(min.Status() ),
-   fCovStatus(min.CovMatrixStatus() ),
-   fVal (min.MinValue()),
-   fEdm (min.Edm()),
-   fChi2(-1),
-   fFitFunc(0),
-   fParams(std::vector<double>( min.NDim() ) )
+void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, const FitConfig & fconfig, const std::shared_ptr<IModelFunction> & func,
+                     bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls ) 
 {
-   // Constructor of FitResult after minimization using result from Minimizers
+   // Fill the FitResult after minimization using result from Minimizers
+
+   // minimizer must exist
+   assert(min);
+   
+   fValid = isValid;
+   fNFree= min->NFree();
+   fNCalls = min->NCalls();
+   fStatus = min->Status();
+   fCovStatus= min->CovMatrixStatus();
+   fVal  =  min->MinValue();
+   fEdm = min->Edm();
+
+   fMinimizer= min;
+   fFitFunc = func; 
+
+
 
    // set minimizer type
    fMinimType = fconfig.MinimizerType();
@@ -125,28 +130,29 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
 
    // replace ncalls if minimizer does not support it (they are taken then from the FitMethodFunction)
    if (fNCalls == 0) fNCalls = ncalls;
-
-   // Constructor from a minimizer, fill the data. ModelFunction  is passed as non const
-   // since it will be managed by the FitResult
-   const unsigned int npar = fParams.size();
+   
+   const unsigned int npar = min->NDim();
    if (npar == 0) return;
-
-   if (min.X() ) std::copy(min.X(), min.X() + npar, fParams.begin());
+   
+   if (min->X() )
+      fParams = std::vector<double>(min->X(), min->X() + npar);
    else {
       // case minimizer does not provide minimum values (it failed) take from configuration
+      fParams.resize(npar); 
       for (unsigned int i = 0; i < npar; ++i ) {
          fParams[i] = ( fconfig.ParSettings(i).Value() );
       }
    }
 
-   if (sizeOfData >  min.NFree() ) fNdf = sizeOfData - min.NFree();
+   if (sizeOfData >  min->NFree() ) fNdf = sizeOfData - min->NFree();
 
 
    // set right parameters in function (in case minimizer did not do before)
    // do also when fit is not valid
    if (func ) {
-      fFitFunc = dynamic_cast<IModelFunction *>( func->Clone() );
-      assert(fFitFunc);
+      // I think we can avoid cloning the model function
+      //fFitFunc = dynamic_cast<IModelFunction *>( func->Clone() );
+      //assert(fFitFunc);
       fFitFunc->SetParameters(&fParams.front());
    }
    else {
@@ -191,16 +197,16 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
 
    // fill error matrix
    // if minimizer provides error provides also error matrix
-   if (min.Errors() != 0) {
+   if (min->Errors() != 0) {
 
-      fErrors = std::vector<double>(min.Errors(), min.Errors() + npar ) ;
+      fErrors = std::vector<double>(min->Errors(), min->Errors() + npar ) ;
 
       if (fCovStatus != 0) {
          unsigned int r = npar * (  npar + 1 )/2;
          fCovMatrix.reserve(r);
          for (unsigned int i = 0; i < npar; ++i)
             for (unsigned int j = 0; j <= i; ++j)
-               fCovMatrix.push_back(min.CovMatrix(i,j) );
+               fCovMatrix.push_back(min->CovMatrix(i,j) );
       }
 
       // minos errors
@@ -210,7 +216,7 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
          for (unsigned int i = 0; i < n; ++i) {
           double elow, eup;
           unsigned int index = (ipars.size() > 0) ? ipars[i] : i;
-          bool ret = min.GetMinosError(index, elow, eup);
+          bool ret = min->GetMinosError(index, elow, eup);
           if (ret) SetMinosError(index, elow, eup);
          }
       }
@@ -218,7 +224,7 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
       // globalCC
       fGlobalCC.reserve(npar);
       for (unsigned int i = 0; i < npar; ++i) {
-         double globcc = min.GlobalCC(i);
+         double globcc = min->GlobalCC(i);
          if (globcc < 0) break; // it is not supported by that minimizer
          fGlobalCC.push_back(globcc);
       }
@@ -229,7 +235,7 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
 
 FitResult::~FitResult() {
    // destructor. FitResult manages the fit Function pointer
-   if (fFitFunc) delete fFitFunc;
+   //if (fFitFunc) delete fFitFunc;
 }
 
 FitResult::FitResult(const FitResult &rhs) :
@@ -244,12 +250,12 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
    if (this == &rhs) return *this;  // time saving self-test
 
    // Manages the fitted function
-   if (fFitFunc) delete fFitFunc;
-   fFitFunc = 0;
-   if (rhs.fFitFunc != 0 ) {
-      fFitFunc = dynamic_cast<IModelFunction *>( (rhs.fFitFunc)->Clone() );
-      assert(fFitFunc != 0);
-   }
+   // if (fFitFunc) delete fFitFunc;
+   // fFitFunc = 0;
+   // if (rhs.fFitFunc != 0 ) {
+   //    fFitFunc = dynamic_cast<IModelFunction *>( (rhs.fFitFunc)->Clone() );
+   //    assert(fFitFunc != 0);
+   // }
 
    // copy all other data members
    fValid = rhs.fValid;
@@ -262,6 +268,9 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
    fVal = rhs.fVal;
    fEdm = rhs.fEdm;
    fChi2 = rhs.fChi2;
+   fMinimizer = rhs.fMinimizer;
+   fObjFunc = rhs.fObjFunc;
+   fFitFunc = rhs.fFitFunc; 
 
    fFixedParams = rhs.fFixedParams;
    fBoundParams = rhs.fBoundParams;
@@ -279,48 +288,50 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
 
 }
 
-bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned int ncalls) {
+bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, bool isValid, unsigned int ncalls) {
    // update fit result with new status from minimizer
    // ncalls if it is not zero is used instead of value from minimizer
 
+   fMinimizer = min; 
+
    const unsigned int npar = fParams.size();
-   if (min.NDim() != npar ) {
+   if (min->NDim() != npar ) {
       MATH_ERROR_MSG("FitResult::Update","Wrong minimizer status ");
       return false;
    }
-   if (min.X() == 0 ) {
+   if (min->X() == 0 ) {
       MATH_ERROR_MSG("FitResult::Update","Invalid minimizer status ");
       return false;
    }
-   //fNFree = min.NFree();
-   if (fNFree != min.NFree() ) {
+   //fNFree = min->NFree();
+   if (fNFree != min->NFree() ) {
       MATH_ERROR_MSG("FitResult::Update","Configuration has changed ");
       return false;
    }
 
    fValid = isValid;
    // update minimum value
-   fVal = min.MinValue();
-   fEdm = min.Edm();
-   fStatus = min.Status();
-   fCovStatus = min.CovMatrixStatus();
+   fVal = min->MinValue();
+   fEdm = min->Edm();
+   fStatus = min->Status();
+   fCovStatus = min->CovMatrixStatus();
 
    // update number of function calls
-   if ( min.NCalls() > 0)   fNCalls = min.NCalls();
+   if ( min->NCalls() > 0)   fNCalls = min->NCalls();
    else fNCalls = ncalls;
 
    // copy parameter value and errors
-   std::copy(min.X(), min.X() + npar, fParams.begin());
+   std::copy(min->X(), min->X() + npar, fParams.begin());
 
 
    // set parameters  in fit model function
    if (fFitFunc) fFitFunc->SetParameters(&fParams.front());
 
-   if (min.Errors() != 0)  {
+   if (min->Errors() != 0)  {
 
       if (fErrors.size() != npar) fErrors.resize(npar);
 
-      std::copy(min.Errors(), min.Errors() + npar, fErrors.begin() ) ;
+      std::copy(min->Errors(), min->Errors() + npar, fErrors.begin() ) ;
 
       if (fCovStatus != 0) {
 
@@ -330,14 +341,14 @@ bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned
          unsigned int l = 0;
          for (unsigned int i = 0; i < npar; ++i) {
             for (unsigned int j = 0; j <= i; ++j)
-               fCovMatrix[l++] = min.CovMatrix(i,j);
+               fCovMatrix[l++] = min->CovMatrix(i,j);
          }
       }
 
       // update global CC
       if (fGlobalCC.size() != npar) fGlobalCC.resize(npar);
       for (unsigned int i = 0; i < npar; ++i) {
-         double globcc = min.GlobalCC(i);
+         double globcc = min->GlobalCC(i);
          if (globcc < 0) {
             fGlobalCC.clear();
             break; // it is not supported by that minimizer
@@ -554,10 +565,14 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
    // confidence intervals are returned in array ci
 
    if (!fFitFunc) {
-      MATH_ERROR_MSG("FitResult::GetConfidenceIntervals","Cannot compute Confidence Intervals without fitter function");
-      return;
+      // try to get model function from objective function 
+      if (!FittedBinData() ) {
+         MATH_ERROR_MSG("FitResult::GetConfidenceIntervals","Cannot compute Confidence Intervals without fitter function");
+         return;
+      }
    }
-
+   assert(fFitFunc);
+   
    // use student quantile in case of normalized errors
    double corrFactor = 1;
    if (fChi2 <= 0 || fNdf == 0) norm = false;
@@ -615,7 +630,7 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
    }
 }
 
-      void FitResult::GetConfidenceIntervals(const BinData & data, double * ci, double cl, bool norm ) const {
+void FitResult::GetConfidenceIntervals(const BinData & data, double * ci, double cl, bool norm ) const {
    // implement confidence intervals from a given bin data sets
    // currently copy the data from Bindata.
    // could implement otherwise directly
@@ -631,6 +646,41 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
    GetConfidenceIntervals(np,ndim,1,&xdata.front(),ci,cl,norm);
 }
 
+std::vector<double> FitResult::GetConfidenceIntervals(double cl, bool norm ) const {
+   // implement confidence intervals using stored data sets (if can be retrieved from objective function)
+   // it works only in case of chi2 or binned likelihood fits
+    const BinData * data = FittedBinData();
+    std::vector<double> result; 
+    if (data) {
+       result.resize(data->NPoints() );
+       GetConfidenceIntervals(*data, result.data(), cl, norm);      
+    }
+    return result; 
+}
+
+// const BinData * GetFitBinData() const {
+//    // return a pointer to the binned data used in the fit
+//    // works only for chi2 or binned likelihood fits
+//    // thus when the objective function stored is a Chi2Func or a PoissonLikelihood
+//    ROOT::Math::IMultiGenFunction * f = fObjFunc->get(); 
+//    Chi2Function * chi2func = dynamic_cast<Chi2Function*>(f);
+//    if (chi2func) return &(chi2func->Data());
+//    PoissonLLFunction * pllfunc = dynamic_cast<PoissonLLFunction*>(f);
+//    if (pllfunc) return &(pllfunc->Data());
+//    Chi2GradFunction * chi2gradfunc = dynamic_cast<Chi2GradFunction*>(f);
+//    if (chi2gradfunc) return &(chi2gradfunc->Data());
+//    PoissonLLGradFunction * pllgradfunc = dynamic_cast<PoissonLLFunction*>(f);
+//    if (pllgradfunc) return &(pllgradfunc->Data());
+//    MATH_WARN_MSG("FitResult::GetFitBinData","Cannot retrun fit bin data set if objective function is not of a known type");
+//    return nullptr;
+// }
+
+const BinData * FitResult::FittedBinData() const {
+   return dynamic_cast<const BinData*> ( fFitData.get() ); 
+} 
+      
+
+     
    } // end namespace Fit
 
 } // end namespace ROOT

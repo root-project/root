@@ -43,7 +43,13 @@ public:
       fStatus = status;
    };
 
-   // constructor from an IFitResult
+   // constructor from name and title
+   TFitResult(const char * name, const char * title) :
+      TNamed(name,title),
+      ROOT::Fit::FitResult()
+   {}
+
+   // constructor from an FitResult
    TFitResult(const ROOT::Fit::FitResult& f);
 
    virtual ~TFitResult() {}

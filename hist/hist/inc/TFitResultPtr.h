@@ -28,12 +28,16 @@
 
 class TFitResult;
 
+#include <memory>
+
 class TFitResultPtr {
 public:
 
    TFitResultPtr(int status = -1): fStatus(status), fPointer(0) {};
 
-   TFitResultPtr(TFitResult* p);
+   TFitResultPtr(const std::shared_ptr<TFitResult> & p);
+
+   TFitResultPtr(TFitResult *p);
 
    TFitResultPtr(const TFitResultPtr& rhs);
 
@@ -43,7 +47,7 @@ public:
 
    TFitResult* operator->() const;
 
-   TFitResult* Get() const { return fPointer; }
+   TFitResult* Get() const; 
 
    TFitResultPtr& operator= (const TFitResultPtr& rhs);
 
@@ -51,10 +55,10 @@ public:
 
 private:
 
-   int fStatus;          // fit status code
-   TFitResult* fPointer; // Smart Pointer to TFitResult class
+   int fStatus;                            // fit status code
+   std::shared_ptr<TFitResult>  fPointer;  //! Smart Pointer to TFitResult class
 
-   ClassDef(TFitResultPtr,1)  //indirection to TFitResult
+   ClassDef(TFitResultPtr,2)  //indirection to TFitResult
 };
 
 #endif

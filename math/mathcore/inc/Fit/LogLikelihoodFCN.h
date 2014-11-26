@@ -13,8 +13,8 @@
 #ifndef ROOT_Fit_LogLikelihoodFCN
 #define ROOT_Fit_LogLikelihoodFCN
 
-#ifndef ROOT_Math_FitMethodFunction
-#include "Math/FitMethodFunction.h"
+#ifndef ROOT_Fit_BasicFCN
+#include "Fit/BasicFCN.h"
 #endif
 
 #ifndef ROOT_Math_IParamFunction
@@ -35,6 +35,8 @@
 #endif
 #endif
 
+#include <memory>
+
 namespace ROOT {
 
    namespace Fit {
@@ -50,11 +52,11 @@ namespace ROOT {
    @ingroup  FitMethodFunc
 */
 template<class FunType>
-class LogLikelihoodFCN : public ::ROOT::Math::BasicFitMethodFunction<FunType>  {
+class LogLikelihoodFCN : public BasicFCN<FunType,UnBinData>  {
 
 public:
 
-
+   typedef  BasicFCN<FunType,UnBinData> BaseFCN; 
 
    typedef  ::ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction;
    typedef typename  BaseObjFunction::BaseFunction BaseFunction;
@@ -65,39 +67,57 @@ public:
    /**
       Constructor from unbin data set and model function (pdf)
    */
-   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func, int weight = 0, bool extended = false) :
-      BaseObjFunction(func.NPar(), data.Size() ),
+   LogLikelihoodFCN (const std::shared_ptr<UnBinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = false) :
+      BaseFCN( data, func),
       fIsExtended(extended),
       fWeight(weight),
-      fData(data),
-      fFunc(func),
+      fNEffPoints(0),
+      fGrad ( std::vector<double> ( func->NPar() ) )
+   {}
+
+      /**
+      Constructor from unbin data set and model function (pdf) for object managed by users
+   */
+   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func, int weight = 0, bool extended = false) :
+      BaseFCN(std::shared_ptr<UnBinData>(const_cast<UnBinData*>(&data), DummyDeleter<UnBinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
+      fIsExtended(extended),
+      fWeight(weight),
       fNEffPoints(0),
       fGrad ( std::vector<double> ( func.NPar() ) )
    {}
-
 
    /**
       Destructor (no operations)
    */
    virtual ~LogLikelihoodFCN () {}
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
+   /**
+      Copy constructor 
+   */
+   LogLikelihoodFCN(const LogLikelihoodFCN & f) :
+      BaseFCN(f.DataPtr(), f.ModelFunctionPtr() ),
+      fIsExtended(f.fIsExtended ),
+      fWeight( f.fWeight ),
+      fNEffPoints( f.fNEffPoints ),
+      fGrad( f.fGrad)
+   {  }
+
 
    /**
-      Dummy Copy constructor (private)
+      Assignment operator 
    */
-   LogLikelihoodFCN(const LogLikelihoodFCN &);
+   LogLikelihoodFCN & operator = (const LogLikelihoodFCN & rhs) {
+      SetData(rhs.DataPtr() );
+      SetModelFunction(rhs.ModelFunctionPtr() );
+      fNEffPoints = rhs.fNEffPoints;
+      fGrad = rhs.fGrad; 
+      fIsExtended = rhs.fIsExtended;
+      fWeight = rhs.fWeight; 
+   }
 
-   /**
-      Dummy Assignment operator (private)
-   */
-   LogLikelihoodFCN & operator = (const LogLikelihoodFCN &);
-
-public:
 
    /// clone the function (need to return Base for Windows)
-   virtual BaseFunction * Clone() const { return  new LogLikelihoodFCN(fData,fFunc,fWeight,fIsExtended); }
+   virtual BaseFunction * Clone() const { return  new LogLikelihoodFCN(*this); }
 
 
    //using BaseObjFunction::operator();
@@ -108,24 +128,19 @@ public:
    /// i-th likelihood contribution and its gradient
    virtual double DataElement(const double * x, unsigned int i, double * g) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::EvaluatePdf(fFunc, fData, x, i, g);
+      return FitUtil::EvaluatePdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
 
    // need to be virtual to be instantited
    virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
-      FitUtil::EvaluateLogLGradient(fFunc, fData, x, g, fNEffPoints);
+      FitUtil::EvaluateLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
    }
 
    /// get type of fit method function
    virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLogLikelihood; }
 
-   /// access to const reference to the data
-   virtual const UnBinData & Data() const { return fData; }
-
-   /// access to const reference to the model function
-   virtual const IModelFunction & ModelFunction() const { return fFunc; }
 
    // Use sum of the weight squared in evaluating the likelihood
    // (this is needed for calculating the errors)
@@ -149,9 +164,9 @@ private:
       this->UpdateNCalls();
 
 #ifdef ROOT_FIT_PARALLEL
-      return FitUtilParallel::EvaluateLogL(fFunc, fData, x, fNEffPoints);
+      return FitUtilParallel::EvaluateLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
 #else
-      return FitUtil::EvaluateLogL(fFunc, fData, x, fWeight, fIsExtended, fNEffPoints);
+      return FitUtil::EvaluateLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints);
 #endif
    }
 
@@ -166,8 +181,6 @@ private:
    bool fIsExtended;  // flag for indicating if likelihood is extended
    int  fWeight;  // flag to indicate if needs to evaluate using weight or weight squared (default weight = 0)
 
-   const UnBinData & fData;
-   const IModelFunction & fFunc;
 
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit
 

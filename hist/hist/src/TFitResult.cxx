@@ -28,7 +28,7 @@ TFitResult::TFitResult(const ROOT::Fit::FitResult& f) :
 {
    // constructor from an IFitResult
    // copy the contained TF1 pointer function if it is 
-   ROOT::Math::WrappedMultiTF1 * wfunc = dynamic_cast<ROOT::Math::WrappedMultiTF1 *>(ModelFunction() );
+   ROOT::Math::WrappedMultiTF1 * wfunc = dynamic_cast<ROOT::Math::WrappedMultiTF1 *>(ModelFunction().get() );
    if (wfunc)  wfunc->SetAndCopyFunction();
 }
 

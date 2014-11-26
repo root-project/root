@@ -25,6 +25,7 @@
 #include <string>
 #include <cmath>
 #include <cassert>
+#include <memory>
 
 namespace ROOT {
 
@@ -36,6 +37,7 @@ namespace ROOT {
    namespace Fit {
 
       class FitConfig;
+      class FitData; 
       class BinData;
 
 //___________________________________________________________________________________
@@ -64,16 +66,11 @@ public:
    */
    FitResult (const FitConfig & fconfig);
 
-   /**
-      Construct from a Minimizer instance after fitting
-      Run also Minos if requested from the configuration
-    */
-   FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, const IModelFunction * f, bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction * chi2func = 0, unsigned int ncalls = 0);
 
    /**
       Copy constructor.
    */
-   FitResult(const FitResult &);
+   FitResult(const FitResult & rhs);
 
    /**
       Assignment operator
@@ -89,12 +86,20 @@ public:
 public:
 
    /**
+      Fill the fit result from a Minimizer instance after fitting
+      Run also Minos if requested from the configuration
+    */
+   void FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, const FitConfig & fconfig,  const std::shared_ptr<IModelFunction> & f,
+              bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction * chi2func = 0, unsigned int ncalls = 0);
+
+
+   /**
       Update the fit result with a new minimization status
       To be run only if same fit is performed with same configuration
       Note that in this case MINOS is not re-run. If one wants to run also MINOS
       a new result must be created
     */
-   bool Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned int ncalls = 0 );
+   bool Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, bool isValid, unsigned int ncalls = 0 );
 
    /** minimization quantities **/
 
@@ -144,7 +149,16 @@ public:
    /** fitting quantities **/
 
    /// Return pointer to model (fit) function with fitted parameter values.
-   const IModelFunction * FittedFunction() const { return fFitFunc; }
+   /// Pointer is managed internally. I must not be deleted 
+   const IModelFunction * FittedFunction() const {
+      return fFitFunc.get(); 
+   }
+
+   /// return BinData used in the fit (return a nullptr in case a different fit is done
+   /// or the data are not available
+   /// Pointer is managed internally, it must not be deleted 
+   const BinData * FittedBinData() const;
+
 
    /// Chi2 fit value
    /// in case of likelihood must be computed ?
@@ -267,9 +281,16 @@ public:
    /**
       evaluate confidence interval for the point specified in the passed data sets
       the confidence interval are returned in the array ci
-      cl is the desired confidence interval value
-    */
+      cl is the desired confidence interval value. 
+      This method is mantained for backward compatibility and will be deprecated
+   */
    void GetConfidenceIntervals(const BinData & data, double * ci, double cl=0.95, bool norm = true ) const;
+
+   /**
+      evaluate confidence interval for the data set used in the last fit
+      the confidence interval are returned as a vector of data points
+    */
+   std::vector<double> GetConfidenceIntervals(double cl=0.95, bool norm = true ) const;
 
 
    /// get index for parameter name (return -1 if not found)
@@ -309,8 +330,9 @@ protected:
 
    /// Return pointer non const pointer to model (fit) function with fitted parameter values.
    /// used by Fitter class
-   IModelFunction * ModelFunction()  { return fFitFunc; }
-   void SetModelFunction(IModelFunction * func) { fFitFunc = func; }
+   std::shared_ptr<IModelFunction> ModelFunction()  { return fFitFunc; }
+   void SetModelFunction(const std::shared_ptr<IModelFunction> & func) { fFitFunc = func; }
+
 
    friend class Fitter;
 
@@ -325,7 +347,10 @@ protected:
    double fVal;             // minimum function value
    double fEdm;             // expected distance from mimimum
    double fChi2;            // fit chi2 value (different than fval in case of chi2 fits)
-   IModelFunction * fFitFunc; //! model function resulting  from the fit. It is given by Fitter but it is managed by FitResult
+   std::shared_ptr<ROOT::Math::Minimizer> fMinimizer; //! minimizer object used for fitting
+   std::shared_ptr<ROOT::Math::IMultiGenFunction> fObjFunc; //! objective function used for fitting
+   std::shared_ptr<IModelFunction> fFitFunc; //! model function resulting  from the fit. 
+   std::shared_ptr<FitData>    fFitData; //! data set used in the fit
    std::map<unsigned int, bool>           fFixedParams; // list of fixed parameters
    std::map<unsigned int, unsigned int>   fBoundParams; // list of limited parameters
    std::vector<std::pair<double,double> >  fParamBounds; // parameter bounds
@@ -339,9 +364,13 @@ protected:
 
 };
 
+
    } // end namespace Fit
 
 } // end namespace ROOT
+
+
+
 
 
 #endif /* ROOT_Fit_FitResult */

@@ -19,8 +19,14 @@
 Classes used for fitting (regression analysis) and estimation of parameter values given a data sample.
 */
 
-#ifndef ROOT_Fit_DataVectorfwd
-#include "Fit/DataVectorfwd.h"
+// #ifndef ROOT_Fit_DataVectorfwd
+// #include "Fit/DataVectorfwd.h"
+// #endif
+#ifndef ROOT_Fit_BinData
+#include "Fit/BinData.h"
+#endif
+#ifndef ROOT_Fit_UnBinData
+#include "Fit/UnBinData.h"
 #endif
 
 #ifndef ROOT_Fit_FitConfig
@@ -67,6 +73,7 @@ namespace ROOT {
    @ingroup Fit
 */
 
+
 //___________________________________________________________________________________
 /**
    Fitter class, entry point for performing all type of fits.
@@ -98,6 +105,12 @@ public:
       Default constructor
    */
    Fitter ();
+
+   /**
+      Constructor from a result
+   */
+   Fitter (const std::shared_ptr<FitResult> & result);
+
 
    /**
       Destructor
@@ -136,41 +149,52 @@ public:
        Fit a binned data set using a least square fit (default method)
    */
    bool Fit(const BinData & data) {
-      return DoLeastSquareFit(data);
+      SetData(data);
+      return DoLeastSquareFit();
+   }
+   bool Fit(const std::shared_ptr<BinData> & data) {
+      SetData(data);
+      return DoLeastSquareFit();
    }
 
    /**
        Fit a binned data set using a least square fit
    */
    bool LeastSquareFit(const BinData & data) {
-      return DoLeastSquareFit(data);
+      return Fit(data);
    }
 
    /**
        fit an unbinned data set using loglikelihood method
    */
    bool Fit(const UnBinData & data, bool extended = false) {
-      return DoLikelihoodFit(data, extended);
+      SetData(data);
+      return DoUnbinnedLikelihoodFit(extended);
    }
 
    /**
-      Likelihood fit (unbinned or unbinned) depending on the type of data
-      If Binned default is extended
-      If Unbinned default is NOT extended (for backward compatibility)
+      Binned Likelihood fit. Default is extended
     */
-   template <class Data>
-   bool LikelihoodFit(const Data & data ) {
-      return DoLikelihoodFit(data);
+   bool LikelihoodFit(const BinData & data, bool extended = true) {
+      SetData(data);
+      return DoBinnedLikelihoodFit(extended);
    }
-
-
+   bool LikelihoodFit(const std::shared_ptr<BinData> & data, bool extended = true) {
+      SetData(data);
+      return DoBinnedLikelihoodFit(extended);
+   }
    /**
-      Likelihood fit using extended or not extended method
+      Unbinned Likelihood fit. Default is not extended
     */
-   template <class Data>
-   bool LikelihoodFit(const Data & data, bool extended ) {
-      return DoLikelihoodFit(data, extended);
+   bool LikelihoodFit(const UnBinData & data, bool extended = false) {
+      SetData(data);
+      return DoUnbinnedLikelihoodFit(extended);
    }
+   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false) {
+      SetData(data);
+      return DoUnbinnedLikelihoodFit(extended);
+   }
+
 
    /**
        fit a data set using any  generic model  function
@@ -179,8 +203,21 @@ public:
    template < class Data , class Function>
    bool LikelihoodFit( const Data & data, const Function & func, bool extended) {
       SetFunction(func);
-      return DoLikelihoodFit(data, extended);
+      return LikelihoodFit(data, extended);
    }
+
+   /**
+      do a linear fit on a set of bin-data
+    */
+   bool LinearFit(const BinData & data) {
+      SetData(data);
+      return DoLinearFit();
+   }
+   bool LinearFit(const std::shared_ptr<BinData> & data) {
+      SetData(data);
+      return DoLinearFit();
+   }
+
 
    /**
       Fit using the a generic FCN function as a C++ callable object implementing
@@ -288,10 +325,6 @@ public:
    bool EvalFCN();
 
 
-   /**
-      do a linear fit on a set of bin-data
-    */
-   bool LinearFit(const BinData & data) { return DoLinearFit(data); }
 
    /**
        Set the fitted function (model function) from a parametric function interface
@@ -319,6 +352,7 @@ public:
       assert( fResult.get() );
       return *fResult;
    }
+
 
    /**
       perform an error analysis on the result using the Hessian
@@ -358,8 +392,7 @@ public:
    /**
       return pointer to last used minimizer
       (is NULL in case fit is not yet done)
-      This pointer will be valid as far as the data, the objective function
-      and the fitter class  have not been deleted.
+      This pointer is guranteed to be valid as far as the fitter class is valid and a new fit is not redone.
       To be used only after fitting.
       The pointer should not be stored and will be invalided after performing a new fitting.
       In this case a new instance of ROOT::Math::Minimizer will be re-created and can be
@@ -370,8 +403,8 @@ public:
    /**
       return pointer to last used objective function
       (is NULL in case fit is not yet done)
-      This pointer will be valid as far as the data and the fitter class
-      have not been deleted. To be used after the fitting.
+      This pointer will be valid as far as the fitter class
+      has not been deleted. To be used after the fitting.
       The pointer should not be stored and will be invalided after performing a new fitting.
       In this case a new instance of the function pointer will be re-created and can be
       obtained calling again GetFCN()
@@ -394,13 +427,13 @@ protected:
 
 
    /// least square fit
-   bool DoLeastSquareFit(const BinData & data);
+   bool DoLeastSquareFit();
    /// binned likelihood fit
-   bool DoLikelihoodFit(const BinData & data, bool extended = true);
+   bool DoBinnedLikelihoodFit( bool extended = true);
    /// un-binned likelihood fit
-   bool DoLikelihoodFit(const UnBinData & data, bool extended = false);
+   bool DoUnbinnedLikelihoodFit( bool extended = false);
    /// linear least square fit
-   bool DoLinearFit(const BinData & data);
+   bool DoLinearFit();
 
    // initialize the minimizer
    bool DoInitMinimizer();
@@ -413,13 +446,36 @@ protected:
    // get function calls from the FCN
    int GetNCallsFromFCN();
 
-   // set 1D function
-   void DoSetFunction(const IModel1DFunction & func, bool useGrad);
-   // set generic N-d function
-   void DoSetFunction(const IModelFunction & func, bool useGrad);
+
+   //set data for the fit
+   void SetData(const FitData & data) {
+      fData = std::shared_ptr<FitData>(const_cast<FitData*>(&data),DummyDeleter<FitData>());
+   }
+   // set data and function without cloning them 
+   void SetFunctionAndData(const IModelFunction & func, const FitData & data) {
+      SetData(data);
+      fFunc = std::shared_ptr<IModelFunction>(const_cast<IModelFunction*>(&func),DummyDeleter<IModelFunction>());
+   }
+
+   //set data for the fit using a shared ptr
+   template <class Data> 
+   void SetData(const std::shared_ptr<Data> & data) { 
+      fData = std::static_pointer_cast<Data>(data);
+   }
+
+   /// look at the user provided FCN and get data and model function is
+   /// they derive from ROOT::Fit FCN classes 
+   void ExamineFCN(); 
+
+   
+   /// internal functions to get data set and model function from FCN
+   /// useful for fits done with customized FCN classes 
+   template <class ObjFuncType>
+   bool GetDataFromFCN();  
+
 
 private:
-
+   
    bool fUseGradient;       // flag to indicate if using gradient or not
 
    bool fBinFit;            // flag to indicate if fit is binned
@@ -430,19 +486,37 @@ private:
 
    int fDataSize;  // size of data sets (need for Fumili or LM fitters)
 
-   IModelFunction * fFunc;  // copy of the fitted  function containing on output the fit result (managed by FitResult)
-
    FitConfig fConfig;       // fitter configuration (options and parameter settings)
 
-   std::auto_ptr<ROOT::Fit::FitResult>  fResult;  //! pointer to the object containing the result of the fit
+   std::shared_ptr<IModelFunction> fFunc;  //! copy of the fitted  function containing on output the fit result 
 
-   std::auto_ptr<ROOT::Math::Minimizer>  fMinimizer;  //! pointer to used minimizer
+   std::shared_ptr<ROOT::Fit::FitResult>  fResult;  //! pointer to the object containing the result of the fit
 
-   std::auto_ptr<ROOT::Math::IMultiGenFunction>  fObjFunction;  //! pointer to used objective function
+   std::shared_ptr<ROOT::Math::Minimizer>  fMinimizer;  //! pointer to used minimizer
 
+   std::shared_ptr<ROOT::Fit::FitData>  fData;  //! pointer to the fit data (binned or unbinned data)
+
+   std::shared_ptr<ROOT::Math::IMultiGenFunction>  fObjFunction;  //! pointer to used objective function
 
 };
 
+
+// internal functions to get data set and model function from FCN
+// useful for fits done with customized FCN classes 
+template <class ObjFuncType>
+bool Fitter::GetDataFromFCN()  {
+   ObjFuncType * objfunc = dynamic_cast<ObjFuncType*>(fObjFunction.get() );
+   if (objfunc) {
+      fFunc = objfunc->ModelFunctionPtr();
+      fData = objfunc->DataPtr();
+      return true; 
+   }
+   else {
+      return false; 
+   }
+}
+
+      
    } // end namespace Fit
 
 } // end namespace ROOT

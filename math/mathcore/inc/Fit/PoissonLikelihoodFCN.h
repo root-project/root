@@ -13,8 +13,8 @@
 #ifndef ROOT_Fit_PoissonLikelihoodFCN
 #define ROOT_Fit_PoissonLikelihoodFCN
 
-#ifndef ROOT_Math_FitMethodunction
-#include "Math/FitMethodFunction.h"
+#ifndef ROOT_Fit_BasicFCN
+#include "Fit/BasicFCN.h"
 #endif
 
 #ifndef ROOT_Math_IParamFunction
@@ -28,6 +28,9 @@
 #ifndef ROOT_Fit_FitUtil
 #include "Fit/FitUtil.h"
 #endif
+
+
+#include <memory>
 
 //#define PARALLEL
 // #ifdef PARALLEL
@@ -50,10 +53,11 @@ namespace ROOT {
    @ingroup  FitMethodFunc
 */
 template<class FunType>
-class PoissonLikelihoodFCN : public ::ROOT::Math::BasicFitMethodFunction<FunType>  {
+class PoissonLikelihoodFCN : public BasicFCN<FunType,BinData>  {
 
 public:
 
+   typedef  BasicFCN<FunType,BinData> BaseFCN; 
 
    typedef  ::ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction;
    typedef typename  BaseObjFunction::BaseFunction BaseFunction;
@@ -64,12 +68,21 @@ public:
    /**
       Constructor from unbin data set and model function (pdf)
    */
-   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0, bool extended = true ) :
-      BaseObjFunction(func.NPar(), data.Size() ),
+   PoissonLikelihoodFCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = true ) :
+      BaseFCN( data, func),
       fIsExtended(extended),
       fWeight(weight),
-      fData(data),
-      fFunc(func),
+      fNEffPoints(0),
+      fGrad ( std::vector<double> ( func->NPar() ) )
+   { }
+
+   /**
+      Constructor from unbin data set and model function (pdf) managed by the users
+   */
+   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0, bool extended = true ) :
+      BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
+      fIsExtended(extended),
+      fWeight(weight),
       fNEffPoints(0),
       fGrad ( std::vector<double> ( func.NPar() ) )
    { }
@@ -78,25 +91,34 @@ public:
    /**
       Destructor (no operations)
    */
-   ~PoissonLikelihoodFCN () {}
-
-private:
-   // usually copying is non trivial, so we declare but don't implement them
+   virtual ~PoissonLikelihoodFCN () {}
 
    /**
       Copy constructor
    */
-   PoissonLikelihoodFCN(const PoissonLikelihoodFCN &);
+   PoissonLikelihoodFCN(const PoissonLikelihoodFCN & f) :
+      BaseFCN(f.DataPtr(), f.ModelFunctionPtr() ),
+      fIsExtended(f.fIsExtended ),
+      fWeight( f.fWeight ),
+      fNEffPoints( f.fNEffPoints ),
+      fGrad( f.fGrad)
+   {  }
 
    /**
       Assignment operator
    */
-   PoissonLikelihoodFCN & operator = (const PoissonLikelihoodFCN &);
+   PoissonLikelihoodFCN & operator = (const PoissonLikelihoodFCN & rhs) {
+      SetData(rhs.DataPtr() );
+      SetModelFunction(rhs.ModelFunctionPtr() );
+      fNEffPoints = rhs.fNEffPoints;
+      fGrad = rhs.fGrad; 
+      fIsExtended = rhs.fIsExtended;
+      fWeight = rhs.fWeight; 
+   }
 
-public:
 
    /// clone the function (need to return Base for Windows)
-   virtual BaseFunction * Clone() const { return new  PoissonLikelihoodFCN(fData,fFunc,fWeight,fIsExtended); }
+   virtual BaseFunction * Clone() const { return new  PoissonLikelihoodFCN(*this); }
 
    // effective points used in the fit
    virtual unsigned int NFitPoints() const { return fNEffPoints; }
@@ -104,23 +126,17 @@ public:
    /// i-th likelihood element and its gradient
    virtual double DataElement(const double * x, unsigned int i, double * g) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::EvaluatePoissonBinPdf(fFunc, fData, x, i, g);
+      return FitUtil::EvaluatePoissonBinPdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
    /// evaluate gradient
    virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
-      FitUtil::EvaluatePoissonLogLGradient(fFunc, fData, x, g );
+      FitUtil::EvaluatePoissonLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g );
    }
 
    /// get type of fit method function
    virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLogLikelihood; }
-
-   /// access to const reference to the data
-   virtual const BinData & Data() const { return fData; }
-
-   /// access to const reference to the model function
-   virtual const IModelFunction & ModelFunction() const { return fFunc; }
 
    bool IsWeighted() const { return (fWeight != 0); }
 
@@ -149,7 +165,7 @@ private:
     */
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
-      return FitUtil::EvaluatePoissonLogL(fFunc, fData, x, fWeight, fIsExtended, fNEffPoints);
+      return FitUtil::EvaluatePoissonLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints);
    }
 
    // for derivatives
@@ -164,12 +180,8 @@ private:
    bool fIsExtended; // flag to indicate if is extended (when false is a Multinomial lieklihood), default is true
    int fWeight;  // flag to indicate if needs to evaluate using weight or weight squared (default weight = 0)
 
-   const BinData & fData;
-   const IModelFunction & fFunc;
-
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit
-
-
+   
    mutable std::vector<double> fGrad; // for derivatives
 
 };
