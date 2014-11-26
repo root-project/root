@@ -327,6 +327,8 @@ function BuildOnlineGUI() {
       return;
    }
 
+   JSROOT.Painter.readStyleFromURL();
+
    if (JSROOT.GetUrlOption("nobrowser")!=null)
       return BuildNoBrowserGUI(true);
 
@@ -399,6 +401,8 @@ function BuildSimpleGUI() {
 
    var myDiv = $('#simpleGUI');
    if (!myDiv) return;
+
+   JSROOT.Painter.readStyleFromURL();
 
    if (JSROOT.GetUrlOption("nobrowser")!=null)
       return BuildNoBrowserGUI(false);

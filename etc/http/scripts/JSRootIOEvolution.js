@@ -1284,37 +1284,37 @@
       this.fFileName = "";
       this.fStreamers = new Array;
 
-      if (typeof this.fURL == 'string') {
-         if (this.fURL.charAt(this.fURL.length-1) == "+") {
-            this.fURL = this.fURL.substr(0, this.fURL.length-1);
-            this.fAcceptRanges = false;
-         }
+      if (typeof this.fURL != 'string') return this;
 
-         var pos = Math.max(this.fURL.lastIndexOf("/"), this.fURL.lastIndexOf("\\"));
-         if (pos>=0) this.fFileName = this.fURL.substr(pos+1);
+      if (this.fURL.charAt(this.fURL.length-1) == "+") {
+         this.fURL = this.fURL.substr(0, this.fURL.length-1);
+         this.fAcceptRanges = false;
+      }
 
-         if (!this.fAcceptRanges) {
-            this.ReadKeys(newfile_callback);
-         } else {
-            var file = this;
+      var pos = Math.max(this.fURL.lastIndexOf("/"), this.fURL.lastIndexOf("\\"));
+      this.fFileName = pos>=0 ? this.fURL.substr(pos+1) : this.fURL;
 
-            var xhr = JSROOT.NewHttpRequest(this.fURL, "head", function(res) {
-               if (res==null) {
-                  if (typeof newfile_callback == 'function')
-                     newfile_callback(null);
-                  return;
-               }
+      if (!this.fAcceptRanges) {
+         this.ReadKeys(newfile_callback);
+      } else {
+         var file = this;
 
-               var accept_ranges = res.getResponseHeader("Accept-Ranges");
-               if (accept_ranges==null) file.fAcceptRanges = false;
-               var len = res.getResponseHeader("Content-Length");
-               if (len!=null) file.fEND = parseInt(len);
-                         else file.fAcceptRanges = false;
-               file.ReadKeys(newfile_callback);
-            });
+         var xhr = JSROOT.NewHttpRequest(this.fURL, "head", function(res) {
+            if (res==null) {
+               if (typeof newfile_callback == 'function')
+                  newfile_callback(null);
+               return;
+            }
 
-            xhr.send(null);
-         }
+            var accept_ranges = res.getResponseHeader("Accept-Ranges");
+            if (accept_ranges==null) file.fAcceptRanges = false;
+            var len = res.getResponseHeader("Content-Length");
+            if (len!=null) file.fEND = parseInt(len);
+            else file.fAcceptRanges = false;
+            file.ReadKeys(newfile_callback);
+         });
+
+         xhr.send(null);
       }
 
       return this;
