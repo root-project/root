@@ -4,7 +4,7 @@
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = 6.02/00
+PROJECT_NUMBER         = 6.02/02
 
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project.
