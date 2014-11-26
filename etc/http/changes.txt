@@ -11,9 +11,13 @@ Changes in 3.1
 2. Implement JSROOT.Create() method to create supported
    in JavaScript ROOT classes like TH1 or TGraph
 3. Fix problem with JSROOT.draw in HTML element with zero width (display:none)
-4. Provide possibility to load user scripts with JSROOT.BuildSimpleGUI 
+4. Provide possibility to load user scripts with JSROOT.BuildSimpleGUI
    and JSROOT.AssertPrerequisites, also with main index.htm
 5. Support of TCutG drawing
+6. Implement hierarchy display (former dtree) with jQuery
+7. Fix several problems in drawing optimization
+8. Implement dragging objects from hierarchy browser into existing canvas 
+   to superimpose several objects 
 
 
 Development of version 3.0

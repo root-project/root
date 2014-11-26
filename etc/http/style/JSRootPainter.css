@@ -6,32 +6,37 @@
 | Copyright (c) 2002-2003 Geir Landrö               |
 |--------------------------------------------------*/
 
-.dtree {
-   font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
-   font-size: 11px;
-   color: #666;
-   white-space: nowrap;
+/* h_item is clickable text in hierarchy */
+
+.h_tree {
+   display: block;
 }
-.dtree img {
+
+.h_tree img {
    border: 0px;
    vertical-align: middle;
 }
-.dtree a {
-   color: #333;
+
+
+.h_tree a {
+   font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+   font-size: 11px;
+   white-space: nowrap;
    text-decoration: none;
    vertical-align: top; 
-}
-.dtree a.dTreeItem {
-   cursor: pointer;
    white-space: nowrap;
    padding: 1px 2px 1px 2px;
 }
-.dtree a.dTreeItem:hover {
-   color: #333;
+
+.h_item {
+   cursor: pointer;
+}
+
+.h_item:hover {
    text-decoration: underline;
 }
 
-.dtree .dTreeSub {
+.h_childs {
    overflow: hidden;
    display: block;
 }
