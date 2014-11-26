@@ -48,19 +48,23 @@ public:
    CreateIterators_t    fCreateIterators;
    DeleteTwoIterators_t fDeleteTwoIterators;
 
-   TVirtualCollectionIterators(TVirtualCollectionProxy *proxy, Bool_t read = kTRUE) : fBegin( &(fBeginBuffer[0]) ), fEnd(&(fEndBuffer[0])), fCreateIterators(0), fDeleteTwoIterators(0)
+   TVirtualCollectionIterators(TVirtualCollectionProxy *proxy, Bool_t read_from_file = kTRUE) : fBegin( &(fBeginBuffer[0]) ), fEnd(&(fEndBuffer[0])), fCreateIterators(0), fDeleteTwoIterators(0)
    {
+      // Constructor given a collection proxy.
+
       //         memset(fBeginBuffer,0,TVirtualCollectionProxy::fgIteratorArenaSize);
       //         memset(fEndBuffer,0,TVirtualCollectionProxy::fgIteratorArenaSize);
       if (proxy) {
-         fCreateIterators = proxy->GetFunctionCreateIterators(read);
-         fDeleteTwoIterators = proxy->GetFunctionDeleteTwoIterators(read);
+         fCreateIterators = proxy->GetFunctionCreateIterators(read_from_file);
+         fDeleteTwoIterators = proxy->GetFunctionDeleteTwoIterators(read_from_file);
       } else {
          ::Fatal("TIterators::TIterators","Created with out a collection proxy!\n");
       }
    }
+
    TVirtualCollectionIterators(CreateIterators_t creator, DeleteTwoIterators_t destruct) : fBegin( &(fBeginBuffer[0]) ), fEnd(&(fEndBuffer[0])), fCreateIterators(creator), fDeleteTwoIterators(destruct)
    {
+      // Constructor given the creation and delete routines.
    }
 
    inline void CreateIterators(void *collection, TVirtualCollectionProxy *proxy)
@@ -72,12 +76,122 @@ public:
 
    inline ~TVirtualCollectionIterators()
    {
+      // Destructor.
+
       if (fBegin != &(fBeginBuffer[0])) {
          // assert(end != endbuf);
          fDeleteTwoIterators(fBegin,fEnd);
       }
    }
 };
+
+
+class TGenericCollectionIterator
+{
+protected:
+   TVirtualCollectionIterators fIterators;
+
+   // The actual implementation.
+   class RegularIterator;
+   class VectorIterator;
+
+   TGenericCollectionIterator() = delete;
+   TGenericCollectionIterator(const TGenericCollectionIterator&) = delete;
+
+   TGenericCollectionIterator(void *collection, TVirtualCollectionProxy *proxy, Bool_t read_from_file = kTRUE) :
+      fIterators(proxy,read_from_file)
+   {
+      // Regular constructor.
+
+      fIterators.CreateIterators(collection,proxy);
+   }
+
+   virtual ~TGenericCollectionIterator()
+   {
+      // Regular destructor.
+   }
+
+public:
+
+   virtual void *Next() = 0;
+
+   virtual void* operator*() const = 0;
+
+   virtual operator bool() const = 0;
+
+   TGenericCollectionIterator& operator++() { Next(); return *this; }
+
+   static TGenericCollectionIterator *New(void *collection, TVirtualCollectionProxy *proxy);
+};
+
+class TGenericCollectionIterator::RegularIterator : public TGenericCollectionIterator {
+   typedef TVirtualCollectionProxy::Next_t Next_t;
+
+   Next_t    fNext;
+   void     *fCurrent;
+   bool      fStarted : 1;
+
+public:
+   RegularIterator(void *collection, TVirtualCollectionProxy *proxy, Bool_t read_from_file) :
+      TGenericCollectionIterator(collection,proxy,read_from_file),
+      fNext( proxy->GetFunctionNext(read_from_file) ),
+      fCurrent(0),
+      fStarted(kFALSE)
+   {
+   }
+
+   void *Next() {
+      fStarted = kTRUE;
+      fCurrent = fNext(fIterators.fBegin,fIterators.fEnd);
+      return fCurrent;
+   }
+
+   virtual void* operator*() const { return fCurrent; }
+
+   operator bool() const { return fStarted ? fCurrent != 0 : kTRUE; }
+
+};
+
+class TGenericCollectionIterator::VectorIterator : public TGenericCollectionIterator {
+
+   ULong_t fIncrement;
+   Bool_t  fHasPointer;
+
+   inline void *GetValue() const {
+      if ((bool)*this) return fHasPointer ? *(void**)fIterators.fBegin : fIterators.fBegin;
+      else return 0;
+   }
+
+public:
+   VectorIterator(void *collection, TVirtualCollectionProxy *proxy, Bool_t read_from_file) :
+      TGenericCollectionIterator(collection,proxy,read_from_file),
+      fIncrement(proxy->GetIncrement()),
+      fHasPointer(proxy->HasPointers())
+   {
+   }
+
+   void *Next() {
+      if ( ! (bool)*this ) return 0;
+      void *result = GetValue();
+      fIterators.fBegin = ((char*)fIterators.fBegin) + fIncrement;
+      return result;
+   }
+
+   virtual void* operator*() const { return GetValue(); }
+
+   operator bool() const { return fIterators.fBegin != fIterators.fEnd; }
+
+};
+
+inline TGenericCollectionIterator *TGenericCollectionIterator::New(void *collection, TVirtualCollectionProxy *proxy)
+{
+   if (proxy->GetCollectionType() == ROOT::kSTLvector) {
+      return new VectorIterator(collection, proxy, kFALSE);
+   } else {
+      return new RegularIterator(collection, proxy, kFALSE);
+   }
+}
+
 
 class TVirtualCollectionPtrIterators
 {
