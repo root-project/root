@@ -271,7 +271,7 @@ if(ROOT_python_FOUND)
                                 tutorial-pyroot-na49view
                                 tutorial-pyroot-h1draw)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
-  set(pyroot-na49view-depends tutorial-geom-geometry)
+  set(pyroot-na49view-depends tutorial-pyroot-geometry)
 
   foreach(t ${pytutorials})
     string(REPLACE ".py" "" tname ${t})
