@@ -148,6 +148,14 @@ namespace Math {
       return (1.0/(std::sqrt(2 * M_PI) * std::fabs(sigma))) * std::exp(-tmp*tmp/2);
    }
 
+   double bigaussian_pdf(double x, double y, double sigmax , double sigmay , double rho , double x0 , double y0 ) {
+
+      double u = (x-x0)/sigmax;
+      double v = (y-y0)/sigmay;
+      double c = 1. - rho*rho;  
+      double z = u*u - 2.*rho*u*v + v*v;
+      return  1./(2 * M_PI * sigmax * sigmay * std::sqrt(c) ) * std::exp(- z / (2. * c) ); 
+   }
 
 
    double landau_pdf(double x, double xi, double x0) {
