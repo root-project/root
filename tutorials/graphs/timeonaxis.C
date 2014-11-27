@@ -1,6 +1,6 @@
 #include <time.h>
 
-void timeonaxis()
+TCanvas *timeonaxis()
 {
 // This macro illustrates the use of the time mode on the axis
 // with different time intervals and time formats. It's result can
@@ -124,4 +124,5 @@ void timeonaxis()
 
    gt2->GetXaxis()->SetTimeFormat("y. %Y %F2000-01-01 00:00:00");
    gPad->Modified();
+   return ct;
 }

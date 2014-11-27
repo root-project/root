@@ -1,4 +1,4 @@
-// This example compare what the system time function gmtime and localtime give
+// This example compares what the system time function gmtime and localtime give
 // with what gives TGaxis. It can be used as referenced test to check if TGaxis
 // is working properly.
 // The original code was developped by Philippe Gras (CEA Saclay. IRFU/SEDI)
@@ -34,7 +34,7 @@ TString stime(time_t* t, bool utc = false, bool display_time_zone = true) {
 }
 
 
-void timeonaxis3() {
+TCanvas * timeonaxis3() {
    double f = 1.8;
 
    TCanvas* c = new TCanvas;
@@ -110,5 +110,6 @@ void timeonaxis3() {
          if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
       }
    }
+   return c;
 }
 #endif
