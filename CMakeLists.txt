@@ -118,7 +118,7 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.sh ${__allFiles})
 
 add_custom_command(OUTPUT etc/allDict.cxx.pch
-                   COMMAND ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh etc/allDict.cxx.pch
+                   COMMAND ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}
                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh
                            etc/dictpch/allLinkDefs.h
                            etc/dictpch/allHeaders.h
