@@ -893,7 +893,7 @@ void Fitter::ExamineFCN()  {
    if ( GetDataFromFCN<BasicFCN<ROOT::Math::IMultiGradFunction, BinData> >() ) return;
    if ( GetDataFromFCN<BasicFCN<ROOT::Math::IMultiGradFunction, UnBinData> >() ) return;
 
-   MATH_INFO_MSG("Fitter::ExamineFCN","Objective function is not of a known type - FitData and ModelFunction objects are not available");
+   //MATH_INFO_MSG("Fitter::ExamineFCN","Objective function is not of a known type - FitData and ModelFunction objects are not available");
    return;
 }
 
