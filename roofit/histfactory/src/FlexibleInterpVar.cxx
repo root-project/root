@@ -458,5 +458,22 @@ Double_t FlexibleInterpVar::evaluate() const
   return total;
 }
 
+void FlexibleInterpVar::printMultiline(ostream& os, Int_t contents, 
+				       Bool_t verbose, TString indent) const
+{
+  RooAbsReal::printMultiline(os,contents,verbose,indent);
+  os << indent << "--- FlexibleInterpVar ---" << endl;
+  printFlexibleInterpVars(os);
+}
+
+void FlexibleInterpVar::printFlexibleInterpVars(ostream& os) const
+{
+  _paramIter->Reset();
+  for (int i=0;i<(int)_low.size();i++) {
+    RooAbsReal* param=(RooAbsReal*)_paramIter->Next();
+    os << setw(36) << param->GetName()<<": "<<setw(7) << _low[i]<<"  "<<setw(7) << _high[i]
+       <<endl;
+  }
+}
 
 
