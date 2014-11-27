@@ -20,6 +20,9 @@
 #include "Riosfwd.h"
 #include "RooLinkedList.h"
 
+#define TRACE_CREATE
+#define TRACE_DESTROY 
+
 class RooTrace {
 public:
   RooTrace() ;
@@ -46,6 +49,8 @@ public:
   
   static RooTrace& instance() ;
 
+  static void printObjectCounts() ;
+
 
 protected:
 
@@ -54,7 +59,6 @@ protected:
   void dump3(std::ostream&, Bool_t sinceMarked) ;
 
   void mark3() ;
-  void printObjectCounts() ;
   void printObjectCounts3() ;
    
   void create2(const TObject* obj) ;

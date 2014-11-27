@@ -24,12 +24,12 @@ class RooRealVar;
 
 class RooGaussian : public RooAbsPdf {
 public:
-  RooGaussian() {   TRACE_CREATE } ;
+  RooGaussian() {    } ;
   RooGaussian(const char *name, const char *title,
 	      RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
   RooGaussian(const RooGaussian& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooGaussian(*this,newname); }
-  inline virtual ~RooGaussian() { TRACE_DESTROY }
+  inline virtual ~RooGaussian() {  }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;

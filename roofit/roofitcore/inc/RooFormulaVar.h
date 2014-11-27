@@ -27,7 +27,7 @@ class RooArgSet ;
 class RooFormulaVar : public RooAbsReal {
 public:
   // Constructors, assignment etc
-  inline RooFormulaVar() : _formula(0), _nset(0) { TRACE_CREATE }
+  inline RooFormulaVar() : _formula(0), _nset(0) {  }
   RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents);
   RooFormulaVar(const char *name, const char *title, const RooArgList& dependents);
   RooFormulaVar(const RooFormulaVar& other, const char* name=0);
