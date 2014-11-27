@@ -672,7 +672,8 @@ void TGContainer::RemoveItem(TGFrame *item)
 //______________________________________________________________________________
 const TGFrame *TGContainer::GetNextSelected(void **current)
 {
-   // Return next selected item.
+   // Return the next selected item. If the "current" pointer is 0, the first
+   // selected item will be returned.
 
    TGFrame *f;
    TObjLink *lnk = (TObjLink *) *current;
