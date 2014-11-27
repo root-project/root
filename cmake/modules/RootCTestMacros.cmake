@@ -94,6 +94,8 @@ macro(ROOTTEST_SETUP_EXECTEST)
 
   set(command ${realexec})
 
+  unset(realexec CACHE)
+
   set(checkstdout CHECKOUT)
   set(checkstderr CHECKERR)
 
