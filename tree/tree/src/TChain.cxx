@@ -262,11 +262,11 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    // Argument name may also have the format of a url with protocol, eg.
    //     http://machine/path/file_name.root
    // or  http://machine/path/file_name.root/subdir/tree_name
-   // or  http://machine/path/file_name.root#subdir/tree_name
+   // or  http://machine/path/file_name.root?#subdir/tree_name
    // Wildcards are not supported in any of the url formats. In the second
    // url example the file name of the root file must contain '.root'.
-   // The url may contain a query section (following the uri format rules), eg.
-   //     http://machine/path/file_name.root?query#subdir/tree_name
+   // The url may contain a query section, eg.
+   //     http://machine/path/file_name.root/subdir/tree_name?query
    // NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
    //
    //    A- if nentries <= 0, the file is connected and the tree header read
@@ -463,14 +463,17 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    char *fragstr = 0;
    const char *querysep = 0;
    if (isurl) {
-      fragstr = strchr(filename, '#');
-      if (fragstr) {
-         // Remove fragment from filename
-         *fragstr++ = 0;
-      }
+      // fragment without a query is not recognised because some of the
+      // protocols allow # in the filename
       char *pos = strchr(filename, '?');
       if (pos) {
          querysep = &name[pos - filename];
+         fragstr = strchr(pos+1, '#');
+         if (fragstr) {
+            // Remove query if empty and fragment from filename
+            if (fragstr == pos+1) *pos = 0;
+            *fragstr++ = 0;
+         }
       }
    }
 
