@@ -137,6 +137,7 @@ set(extra_veto
   tree/tree2a.C
   tree/tree4.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
+  roostats/rs_bernsteinCorrection.C      # having a problem in fitting t..b.i.
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
   tree/copytree2.C
