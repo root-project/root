@@ -697,6 +697,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    //   and DefaultVariable.
 
    Int_t valeur,find,n,i,j,k,lchain,nomb,virgule,inter,nest;
+   valeur=find=n=i=j=k=lchain=nomb=virgule=inter=nest = 0;
    Int_t compt,compt2,compt3,compt4;
    Bool_t inString;
    Double_t vafConst;

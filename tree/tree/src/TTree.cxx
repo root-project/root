@@ -6127,6 +6127,8 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
    UInt_t bmax = 256000;
    Double_t memFactor = 1;
    Int_t i, oldMemsize,newMemsize,oldBaskets,newBaskets;
+   i = oldMemsize = newMemsize = oldBaskets = newBaskets = 0;
+
    //we make two passes
    //one pass to compute the relative branch buffer sizes
    //a second pass to compute the absolute values

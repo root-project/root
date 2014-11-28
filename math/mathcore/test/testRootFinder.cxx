@@ -85,7 +85,7 @@ int runTest(int testcase = 0) {
    }
 
    TStopwatch timer;
-   double root;
+   double root = 0.;
    int status = 0;
 
    double tol = 1.E-14;

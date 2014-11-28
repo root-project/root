@@ -127,6 +127,7 @@ public:
 
       const double tol = 1e-9;
       double rho_min, rho_max, rho;
+      rho_min = rho_max = rho = 0.;
       int x_l, x_r;
 
       // Binary search for the smallest rho whose acceptance set has right

@@ -783,9 +783,10 @@ void TGQt::GetWindowAttributes(Window_t id, WindowAttributes_t &attr)
 {
    // Get window attributes and return filled in attributes structure.
    if (id == kNone) return;
-   const QWidget &thisWindow = *wid(id);
+   auto wid_idPtr = wid(id);
+   assert(wid_idPtr);
+   const QWidget &thisWindow = *wid_idPtr;
  //  const QWidget &thisWindow = *(QWidget *)(TGQt::iwid(id));
-   assert(&thisWindow);
    memset(&attr,0,sizeof(WindowAttributes_t));
    attr.fX        = thisWindow.x();
    attr.fY        = thisWindow.y();

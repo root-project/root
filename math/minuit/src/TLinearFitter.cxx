@@ -1482,7 +1482,7 @@ void TLinearFitter::SetFormula(const char *formula)
   //  input formula:    "TMath::Gaus(x, 0, 1)++y"
   //fills the array of functions
 
-   Int_t size, special = 0;
+   Int_t size = 0, special = 0;
    Int_t i;
    //Int_t len = strlen(formula);
    if (fInputFunction)

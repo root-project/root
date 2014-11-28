@@ -218,7 +218,7 @@ Double_t TGeoShape::ComputeEpsMch()
 // if added to 1.0 is different than 1.0.
    Double_t temp1 = 1.0;
    Double_t temp2 = 1.0 + temp1;
-   Double_t mchEps;
+   Double_t mchEps = 0.;
    while (temp2>1.0) {
       mchEps = temp1;
       temp1 /= 2;

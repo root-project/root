@@ -125,7 +125,7 @@ inline Bool_t TMVA::RuleCut::EvalEvent( const Event &eve )
    Int_t    sel;
    Double_t val;
    Bool_t done=kFALSE;
-   Bool_t minOK, cutOK;
+   Bool_t minOK, cutOK=kFALSE;
    UInt_t nc=0;
    while (!done) {
       sel = fSelector[nc];

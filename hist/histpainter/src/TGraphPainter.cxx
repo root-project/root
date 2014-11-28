@@ -3696,7 +3696,7 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
    Int_t iw, loptx;
    Double_t p1, p2, p3, p4, p5, p6;
    Double_t w1, w2, w3;
-   Double_t a, b, c, r, s, t, z;
+   Double_t a, b, c, r, s=0.0, t, z;
    Double_t co, so, ct, st, ctu, stu, xnt;
    Double_t dx1, dy1, dx2, dy2, dk1, dk2;
    Double_t xo, yo, dx, dy, xt, yt;

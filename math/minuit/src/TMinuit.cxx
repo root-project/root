@@ -4777,7 +4777,7 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
 
    /* Local variables */
    Double_t xpq[12], ypq[12], slam, sdev, coeff[3], denom, flast;
-   Double_t fvals[3], xvals[3], f1, fvmin, xvmin, ratio, f2, f3, fvmax;
+   Double_t fvals[3], xvals[3], f1, fvmin, xvmin, ratio, f2, f3 = 0., fvmax;
    Double_t toler8, toler9, overal, undral, slamin, slamax, slopem;
    Int_t i, nparx=0, nvmax=0, nxypt, kk, ipt;
    Bool_t ldebug;

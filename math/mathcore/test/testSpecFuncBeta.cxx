@@ -44,7 +44,7 @@ int testSpecFuncBeta()
    int status = 0;
 
    int color = 2;
-   TGraph *gb, *gmb;
+   TGraph *gb = nullptr, *gmb = nullptr;
    TCanvas* c1 = new TCanvas("c1", "BetaFunction", 600, 400);
    TH2F* hpx;
    {

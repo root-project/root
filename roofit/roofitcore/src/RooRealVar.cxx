@@ -536,7 +536,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 
 	} else {
 	  // Have error
-	  Double_t asymErrLo, asymErrHi ;
+	  Double_t asymErrLo=0., asymErrHi=0.;
 	  if (parser.readDouble(asymErrLo,kTRUE) ||
 	      parser.expectToken(",",kTRUE) || 
 	      parser.readDouble(asymErrHi,kTRUE) ||
@@ -587,7 +587,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
       } else if (!token.CompareTo("L")) {
 
 	// Next tokens are fit limits
-	Double_t fitMin, fitMax ;
+	Double_t fitMin = 0.0, fitMax = 0.0;
 //	Int_t fitBins ;
 	if (parser.expectToken("(",kTRUE) ||
 	    parser.readDouble(fitMin,kTRUE) ||
@@ -600,7 +600,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
       } else if (!token.CompareTo("B")) { 
 
 	// Next tokens are fit limits
-	Int_t fitBins ;
+	Int_t fitBins = 0;
 	if (parser.expectToken("(",kTRUE) ||
 	    parser.readInteger(fitBins,kTRUE) ||
 	    parser.expectToken(")",kTRUE)) break ;

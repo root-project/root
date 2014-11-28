@@ -739,7 +739,7 @@ void  TMVA::MethodCuts::Train( void )
             // retrieve signal events
             Bool_t isSignal = kFALSE;
             Int_t    ievt1, ievt2;
-            Double_t evt1, evt2;
+            Double_t evt1 = 0., evt2 = 0.;
             Int_t nbreak = 0;
             while (!isSignal) {
                ievt1 = Int_t(rnd->Uniform(0.,1.)*nevents);
@@ -1490,7 +1490,7 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
    if (NULL == fSplTrainEffBvsS) return 0.0;
 
    // now find signal efficiency that corresponds to required background efficiency
-   Double_t effS, effB, effS_ = 0, effB_ = 0;
+   Double_t effS = 0., effB, effS_ = 0., effB_ = 0.;
    Int_t    nbins_ = 1000;
 
    // loop over efficiency bins until the background eff. matches the requirement

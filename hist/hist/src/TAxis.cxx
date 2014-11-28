@@ -113,7 +113,7 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
    // If orientation = "X", the horizontal axis of the pad will be used for ref.
    // If orientation = "Y", the vertical axis of the pad will be used for ref.
 
-   const char *formatstr;
+   const char *formatstr = nullptr;
    Int_t reasformat = 0;
    Int_t ndiv,nx1,nx2,n;
    Double_t awidth;

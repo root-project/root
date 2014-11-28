@@ -1360,7 +1360,7 @@ void TGNumberEntryField::IncreaseNumber(EStepSize step,
 {
    // Increase the number value.
 
-   Long_t l;
+   Long_t l = 0;
    RealInfo_t ri;
    Long_t mag = 0;
    Double_t rmag = 0.0;

@@ -2136,7 +2136,7 @@ void TFitEditor::DoFit()
    fPrevFit.insert(FitFuncMap_t::value_type(fFitObject, tmpTF1));
    fSystemFuncs.push_back( copyTF1(tmpTF1) );
 
-   float xmin, xmax, ymin, ymax, zmin, zmax;
+   float xmin = 0.f, xmax = 0.f, ymin = 0.f, ymax = 0.f, zmin = 0.f, zmax = 0.f;
    if ( fParentPad ) {
       fParentPad->Modified();
       // As the range is not changed, save the old values and restore

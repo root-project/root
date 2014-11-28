@@ -121,6 +121,7 @@ Double_t TMath::DiLog(Double_t x)
       0.00000000000000093,-0.00000000000000014, 0.00000000000000002};
 
    Double_t t,h,y,s,a,alfa,b1,b2,b0;
+   t=h=y=s=a=alfa=b1=b2=b0=0.;
 
    if (x == 1) {
       h = pi6;

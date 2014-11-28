@@ -804,7 +804,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t optionDown,optionRight,optionLeft,optionCent,optionEqual,optionDecimals=0,optionDot;
    Int_t optionY,optionText,optionGrid,optionSize,optionNoopt,optionInt,optionM,optionUp,optionX;
    Int_t optionTime;
-   Int_t first,last,labelnumber;
+   Int_t first=0,last=0,labelnumber;
    Int_t xalign, yalign;
    Int_t nn1, nn2, nn3, n1a, n2a, n3a, nb2, nb3;
    Int_t nbins=10, n1aold, nn1old;
@@ -1872,7 +1872,7 @@ L110:
 //*-*-              Log axis
 
    if (optionLog && ndiv) {
-      UInt_t xi1=0,xi2,wi,yi1=0,yi2,hi,xl,xh;
+      UInt_t xi1=0,xi2=0,wi=0,yi1=0,yi2=0,hi=0,xl=0,xh=0;
       Bool_t firstintlab = kTRUE, overlap = kFALSE;
       if ((wmin == wmax) || (ndiv == 0))  {
          Error(where, "wmin (%f) == wmax (%f), or ndiv == 0", wmin, wmax);

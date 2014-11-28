@@ -1526,7 +1526,7 @@ void VisA() {
 // --> End_Html
 
    Int_t turni,turnj,w1,w2,x,y;
-   Int_t q1,q2,qv,smer,flag,i,j,x1,y1,x2,y2,x3,y3,x4,y4,uhl,xp1,yp1,xp2,yp2;
+   Int_t q1=0,q2=0,qv=0,smer=0,flag=0,i=0,j=0,x1=0,y1=0,x2=0,y2=0,x3=0,y3=0,x4=0,y4=0,uhl=0,xp1=0,yp1=0,xp2=0,yp2=0;
    Int_t ix5,iy5,x6,y6,x7,y7,y8,x1d,y1d,x2d=0,y2d=0;
    Int_t i1=0,i2=0,i3=0,i4=0,j1=0,j2=0,j3=0,j4=0;
    Int_t s1=0,s2=0,s3=0,s4=0,t1=0,t2=0,t3=0,t4=0;

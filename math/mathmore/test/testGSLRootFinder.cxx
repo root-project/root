@@ -78,7 +78,7 @@ int printStats( RF * r, int returnCode, TStopwatch& timer ) {
 
 int testGSLRootFinder() {
 
-  int returnCode;
+  int returnCode = 0;
   int status = 0;
   TStopwatch timer;
 
