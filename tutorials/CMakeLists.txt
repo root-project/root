@@ -182,6 +182,9 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphics/earth.C graphics/ellipse.C
                  graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
+                 graphs/timeonaxis.C
+                 graphs/timeonaxis2.C
+                 graphs/timeonaxis3.C
                  graphs/exclusiongraph.C graphs/multigraph.C
                  graphs/multipalette.C
                  graphs/graphstruct.C
@@ -192,6 +195,8 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C
                  hist/cumulative.C
+                 hist/hlabels1.C
+                 hist/hlabels2.C
                  tree/h1analysis.C
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
