@@ -596,7 +596,7 @@ void TPgSQLStatement::ConvertTimeToUTC(const TString &PQvalue, Int_t& year, Int_
 
    Ssiz_t p = PQvalue.Last('.');
    // Check if timestamp has timezone
-   TSubString *s_zone;
+   TSubString *s_zone = nullptr;
    Bool_t hasZone = kFALSE;
    Ssiz_t tzP = PQvalue.Last('+');
    if ((tzP != kNPOS) && (tzP > p) ) {
