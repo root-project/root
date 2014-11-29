@@ -7,7 +7,9 @@ set(LLVM_BUILD_TOOLS OFF)
 set(LLVM_TARGETS_TO_BUILD X86 CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR ${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+#---Protect against warnings clang would fire-------------------------------------------------------
+
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conditional-uninitialized")
 endif()
 
