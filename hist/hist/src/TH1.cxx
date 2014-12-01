@@ -2544,10 +2544,7 @@ TObject* TH1::Clone(const char* newname) const
 
    //Now handle the parts that Copy doesn't do
    if(fFunctions) {
-      if( ! obj->fFunctions) {
-         obj->fFunctions = new TList;
-      }
-      fFunctions->Copy( *(obj->fFunctions) );
+      obj->fFunctions = (TList*)fFunctions->Clone();
    }
    if(newname && strlen(newname) ) {
       obj->SetName(newname);
