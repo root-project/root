@@ -461,6 +461,18 @@ void TH2Poly::ChangePartition(Int_t n, Int_t m)
    }
 }
 
+//______________________________________________________________________________
+TObject* TH2Poly::Clone(const char* newname) const
+{
+   // Make a complete copy of the underlying object.  If 'newname' is set,
+   // the copy's name will be set to that name.
+
+   // TH1::Clone relies on ::Copy to implemented by the derived class.
+   // Until this is implemented, revert to the much slower default version
+   // (and possibly non-thread safe).
+
+   return TNamed::Clone(newname);
+}
 
 //______________________________________________________________________________
 void TH2Poly::ClearBinContents()
