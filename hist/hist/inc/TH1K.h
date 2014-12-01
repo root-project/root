@@ -38,6 +38,7 @@ public:
    TH1K(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup,Int_t k=0);
    virtual ~TH1K();
 
+   virtual void      Copy(TObject &obj) const;
    virtual Int_t     Fill(Double_t x);
    virtual Int_t     Fill(Double_t x,Double_t w){return TH1::Fill(x,w);}
    virtual Int_t     Fill(const char *name,Double_t w){return TH1::Fill(name,w);}
