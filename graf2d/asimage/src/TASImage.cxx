@@ -389,11 +389,11 @@ static void init_icon_paths()
    gIconPaths[3] = StrDup(guiIcons.Data());
 
 #ifdef ROOTICONPATH
-   gIconPaths[4] = ROOTICONPATH;
+   gIconPaths[4] = StrDup(ROOTICONPATH);
 #endif
 
 #ifdef EXTRAICONPATH
-   gIconPaths[5] = EXTRAICONPATH;
+   gIconPaths[5] = StrDup(EXTRAICONPATH);
 #endif
 
    gIconPaths[6] = 0;
