@@ -4,7 +4,6 @@ void testMergeCont()
 {
    // Macro to test merging of containers.
    TString tutdir = gROOT->GetTutorialsDir();
-   cout << "----->" << tutdir << endl;
    gROOT->LoadMacro(tutdir+"/hsimple.C");
    TList *list = GetCollection();
    TList *inputs = new TList();
