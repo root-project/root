@@ -82,6 +82,7 @@ public:
    virtual Bool_t Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1);
    virtual Bool_t Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    void         ClearBinContents();                 // Clears the content of all bins
+   TObject     *Clone(const char* newname = "") const;
    void         ChangePartition(Int_t n, Int_t m);  // Sets the number of partition cells to another value
    Int_t        Fill(Double_t x,Double_t y);
    Int_t        Fill(Double_t x,Double_t y, Double_t w);
