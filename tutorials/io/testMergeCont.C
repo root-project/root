@@ -6,7 +6,8 @@ void testMergeCont()
 {
    // Macro to test merging of containers.
 
-   gROOT->LoadMacro("$ROOTSYS/tutorials/hsimple.C");
+   TString tutdir = gROOT->GetTutorialsDir();
+   gROOT->LoadMacro(tutdir+"/hsimple.C");
    TList *list = (TList *)GetCollection();
    TList *inputs = new TList();
    for (Int_t i=0; i<10; i++) {

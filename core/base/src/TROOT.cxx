@@ -2447,3 +2447,16 @@ const char**& TROOT::GetExtraInterpreterArgs() {
    static const char** extraInterpArgs = 0;
    return extraInterpArgs;
 }
+
+//______________________________________________________________________________
+const char *TROOT::GetTutorialsDir()
+{
+   // Get the tuorials directory in the installtion. Static utility function.
+   
+#ifdef ROOTTUTDIR
+   return ROOTTUTDIR;
+#else
+   static TString tutdir = TString(gRootDir) + "/tutorials";
+   return tutdir;
+#endif
+}
