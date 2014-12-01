@@ -4439,7 +4439,7 @@ int RootCling(int argc,
 #ifndef ROOT_STAGE1_BUILD
          writeEmptyRootPCM ? "nullptr" : GenerateFwdDeclString(scan, interp);
 #else
-         "nullptr";
+         "\"\"";
 #endif
       GenerateModule(modGen,
                      CI,
