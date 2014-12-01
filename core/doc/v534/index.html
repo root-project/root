@@ -38,3 +38,9 @@ The default font set by <tt>gStyle->SetLegendFont()</tt> was ignored.
    <li> Implement <tt>Unsetenv</tt> using the system function <tt>unsetenv</tt>.
    </li>
 </ul>
+
+<h4>TROOT</h4>
+<p>
+Implemented new gROOT->GetTutorialsDir() static method to return the actual location of the tutorials directory.
+This is $ROOTSYS/tutorials when not configuring with --prefix  or -Dgnuinstall for CMake.
+</ul>

@@ -2204,3 +2204,17 @@ Int_t TROOT::RootVersionCode()
 
    return ROOT_VERSION_CODE;
 }
+
+//______________________________________________________________________________
+const char *TROOT::GetTutorialsDir()
+{
+   // Get the tuorials directory in the installtion. Static utility function.
+   
+#ifdef ROOTTUTDIR
+   return ROOTTUTDIR;
+#else
+   static TString tutdir = TString(gRootDir) + "/tutorials";
+   return tutdir;
+#endif
+}
+
