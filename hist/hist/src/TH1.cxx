@@ -6173,8 +6173,9 @@ void TH1::RebinAxis(Double_t x, TAxis *axis)
       return;
 
    //save a copy of this histogram
-   TH1 *hold = (TH1*)Clone();
+   TH1 *hold = (TH1*)IsA()->New(); 
    hold->SetDirectory(0);
+   Copy(*hold);
    //set new axis limits
    axis->SetLimits(xmin,xmax);
 
