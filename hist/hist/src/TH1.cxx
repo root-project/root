@@ -2537,22 +2537,6 @@ void TH1::Copy(TObject &obj) const
 }
 
 //______________________________________________________________________________
-TObject* TH1::Clone(const char* newname) const
-{
-   TH1* obj = (TH1*)IsA()->GetNew()(0);
-   Copy(*obj);
-
-   //Now handle the parts that Copy doesn't do
-   if(fFunctions) {
-      obj->fFunctions = (TList*)fFunctions->Clone();
-   }
-   if(newname && strlen(newname) ) {
-      obj->SetName(newname);
-   }
-   return obj;
-}
-
-//______________________________________________________________________________
 void TH1::DirectoryAutoAdd(TDirectory *dir)
 {
    // Perform the automatic addition of the histogram to the given directory
