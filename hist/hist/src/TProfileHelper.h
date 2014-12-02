@@ -439,8 +439,10 @@ T* TProfileHelper::ExtendAxis(T* p, Double_t x, TAxis *axis)
       return 0;
 
    //save a copy of this histogram
-   T *hold = (T*)p->Clone();
+   T* hold = (T*)p->IsA()->New();
+   R__ASSERT(hold); 
    hold->SetDirectory(0);
+   p->Copy(*hold);
    //set new axis limits
    axis->SetLimits(xmin,xmax);
    if (p->fBinSumw2.fN) hold->Sumw2();
