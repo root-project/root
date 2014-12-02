@@ -85,7 +85,7 @@ public:
    Bool_t            fIsBaseClass;    //! indicate if element is base-class, ignored by post processing
    Bool_t            fIsPostProcessed;//! indicate that value is written
    Bool_t            fIsObjStarted;   //! indicate that object writing started, should be closed in postprocess
-   Bool_t            fIsArray;        //! indicate if array object is used
+   Int_t             fIsSTLcont;      //! indicate if STL container is used
    TObjArray         fValues;         //! raw values
    Int_t             fLevel;          //! indent level
 
@@ -99,7 +99,7 @@ public:
       fIsBaseClass(kFALSE),
       fIsPostProcessed(kFALSE),
       fIsObjStarted(kFALSE),
-      fIsArray(kFALSE),
+      fIsSTLcont(0),
       fValues(),
       fLevel(0)
    {
@@ -532,9 +532,11 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
    }
    PopStack();
 
-   if (fValue.Length() == 0) return "not supported";
+   if (fValue.Length()) return fValue;
 
-   return fValue;
+   if ((memberClass==0) || (member->GetArrayDim()>0)) return "\"not supported\"";
+
+   return TBufferJSON::ConvertToJSON(ptr, memberClass);
 }
 
 
@@ -684,11 +686,17 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       if (isstd) isstlcont = TClassEdit::IsSTLCont(cl->GetName());
    }
 
-   if (!isarray && !iscollect && !iststring && (fStack.GetLast() >= 0) && isstd)
+   if (!isarray && !iscollect && !iststring && (fStack.GetLast() >= 0) && isstd && !isstlcont)
       iststring = !strcmp(cl->GetName(),"string");
 
    if (!isarray) {
       JsonStartElement();
+   }
+
+   TJSONStackObj *stack = Stack();
+
+   if (stack && stack->fIsSTLcont) {
+      AppendOutput(stack->fIsSTLcont++==1 ? "[" : ",");
    }
 
    if (obj == 0) {
@@ -696,7 +704,6 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       return;
    }
 
-   TJSONStackObj *stack = 0;
 
    // for array and string different handling - they not recognized at the end as objects in JSON
    if (!isarray && !iststring && !isstlcont) {
@@ -727,7 +734,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       Info("JsonWriteObject", "Starting object %p write for class: %s",
            obj, cl->GetName());
 
-   stack->fIsArray = isarray;
+   stack->fIsSTLcont = isstlcont ? 1 : 0;
 
    if (iscollect)
       JsonStreamCollection((TCollection *) obj, cl);
@@ -749,7 +756,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       AppendOutput(fValue.Data());
       fValue.Clear();
    } else if (isstlcont>0) {
-      if ((stack->fValues.GetLast() < 0) && (fValue=="0"))
+      if (stack->fIsSTLcont > 1)
+         AppendOutput("]");
+      else if ((stack->fValues.GetLast() < 0) && (fValue=="0"))
          AppendOutput("[]");
       else
          AppendOutput(fValue.Data());
