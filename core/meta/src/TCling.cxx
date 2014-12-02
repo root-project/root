@@ -1522,26 +1522,28 @@ void TCling::RegisterModule(const char* modulename,
          }
       }
 
-      auto compRes = fInterpreter->declare(fwdDeclsCodeLessEnums, &T);
-      assert(cling::Interpreter::kSuccess == compRes &&
-            "The forward declarations could not be compiled");
-      if (compRes!=cling::Interpreter::kSuccess){
-         Warning("TCling::RegisterModule",
-               "Problems in compiling forward declarations for module %s: '%s'",
-                 modulename, fwdDeclsCodeLessEnums.c_str()) ;
-      }
-      else if (T){
-         // Loop over all decls in the transaction and go through them all
-         // to mark them properly.
-         // In order to do that, we first iterate over all the DelayedCallInfos
-         // within the transaction. Then we loop over all Decls in the DeclGroupRef
-         // contained in the DelayedCallInfos. For each decl, we traverse.
-         ExtLexicalStorageAdder elsa;
-         for (auto dciIt = T->decls_begin();dciIt!=T->decls_end();dciIt++){
-            cling::Transaction::DelayCallInfo& dci = *dciIt;
-            for(auto dit = dci.m_DGR.begin(); dit != dci.m_DGR.end(); ++dit) {
-               clang::Decl* declPtr = *dit;
-               elsa.TraverseDecl(declPtr);
+      if (fwdDeclsCodeLessEnums.size() != 0){ // Avoid the overhead if nothing is to be declared
+         auto compRes = fInterpreter->declare(fwdDeclsCodeLessEnums, &T);
+         assert(cling::Interpreter::kSuccess == compRes &&
+               "The forward declarations could not be compiled");
+         if (compRes!=cling::Interpreter::kSuccess){
+            Warning("TCling::RegisterModule",
+                  "Problems in compiling forward declarations for module %s: '%s'",
+                  modulename, fwdDeclsCodeLessEnums.c_str()) ;
+         }
+         else if (T){
+            // Loop over all decls in the transaction and go through them all
+            // to mark them properly.
+            // In order to do that, we first iterate over all the DelayedCallInfos
+            // within the transaction. Then we loop over all Decls in the DeclGroupRef
+            // contained in the DelayedCallInfos. For each decl, we traverse.
+            ExtLexicalStorageAdder elsa;
+            for (auto dciIt = T->decls_begin();dciIt!=T->decls_end();dciIt++){
+               cling::Transaction::DelayCallInfo& dci = *dciIt;
+               for(auto dit = dci.m_DGR.begin(); dit != dci.m_DGR.end(); ++dit) {
+                  clang::Decl* declPtr = *dit;
+                  elsa.TraverseDecl(declPtr);
+               }
             }
          }
       }
