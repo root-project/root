@@ -650,10 +650,11 @@ void TBufferJSON::JsonStartElement()
 }
 
 //______________________________________________________________________________
-void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl)
+void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t check_map)
 {
    // Write object to buffer
    // If object was written before, only pointer will be stored
+   // If nomap==kTRUE, object will be stored anyway and pointer will not be registered in the map
 
    // static int  cnt = 0;
 
@@ -662,7 +663,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl)
    //if (cnt++>100) return;
 
    if (gDebug > 1)
-      Info("JsonWriteObject", "Object %p class %s", obj, cl ? cl->GetName() : "null");
+      Info("JsonWriteObject", "Object %p class %s check_map %s", obj, cl ? cl->GetName() : "null", check_map ? "true" : "false");
 
    // special handling for TArray classes - they should appear not as object but JSON array
    Bool_t isarray = strncmp("TArray", (cl ? cl->GetName() : ""), 6) == 0;
@@ -701,23 +702,16 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl)
    if (!isarray && !iststring && !isstlcont) {
       // add element name which should correspond to the object
 
-      std::map<const void *, unsigned>::const_iterator iter = fJsonrMap.find(obj);
-
-      Bool_t add_to_map = kTRUE;
-
-      if (iter != fJsonrMap.end()) {
-
-         // this is workaround for first member, which has same pointer as parent, we need to record it
-         if ((Stack()->fElemNumber==0) && (Stack()->fElem!=0)
-             && (Stack()->fElem->GetOffset()==0) && !Stack()->fElem->IsaPointer()) {
-               add_to_map = kFALSE;
-            } else {
-               AppendOutput(Form("\"$ref:%u\"", iter->second));
-               return;
-            }
+      if (check_map) {
+         std::map<const void *, unsigned>::const_iterator iter = fJsonrMap.find(obj);
+         if (iter != fJsonrMap.end()) {
+            AppendOutput(Form("\"$ref:%u\"", iter->second));
+            return;
+         }
+         fJsonrMap[obj] = fJsonrCnt;
       }
 
-      if (add_to_map) fJsonrMap[obj] = fJsonrCnt++;
+      fJsonrCnt++; // object counts is important in dereferencing part
 
       stack = PushStack(2);
       AppendOutput("{", "\"_typename\"");
@@ -1371,7 +1365,7 @@ void TBufferJSON::WriteObjectClass(const void *actualObjStart,
    // Write object to buffer. Only used from TBuffer
 
    if (gDebug > 3)
-      Info("WriteObject", "Class %s", (actualClass ? actualClass->GetName() : " null"));
+      Info("WriteObjectClass", "Class %s", (actualClass ? actualClass->GetName() : " null"));
 
    JsonWriteObject(actualObjStart, actualClass);
 }
@@ -2238,7 +2232,7 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
    // Recall TBuffer function to avoid gcc warning message
 
    if (gDebug > 2)
-      Info("WriteFastArray", "void *start");
+      Info("WriteFastArray", "void *start n %d", n);
 
    if (streamer) {
       JsonStartElement();
@@ -2261,7 +2255,7 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
 
       if (j > 0) AppendOutput(fArraySepar.Data());
 
-      JsonWriteObject(obj, cl);
+      JsonWriteObject(obj, cl, kFALSE);
    }
 
    if (n > 1) {
@@ -2309,7 +2303,7 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n,
 
          if (!start[j]) start[j] = ((TClass *)cl)->New();
          // ((TClass*)cl)->Streamer(start[j],*this);
-         JsonWriteObject(start[j], cl);
+         JsonWriteObject(start[j], cl, kFALSE);
       }
    }
 
