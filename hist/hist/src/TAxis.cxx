@@ -293,7 +293,8 @@ Int_t TAxis::FindBin(Double_t x)
 Int_t TAxis::FindBin(const char *label)
 {
    // Find bin number with label.
-   // If the List of labels does not exist create it
+   // If the List of labels does not exist create it and make the axis alphanumeric
+   // If one wants just to add a single label- just call TAxis::SetBinLabel
    // If label is not in the list of labels do the following depending on the
    // bit TAxis::kCanExtend; of the axis.
    //   - if the bit is set add the new label and if the number of labels exceeds
@@ -308,7 +309,9 @@ Int_t TAxis::FindBin(const char *label)
    //create list of labels if it does not exist yet
    if (!fLabels) {
       if (!fParent) return -1;
-      fLabels = new THashList(1,1);
+      fLabels = new THashList(fNbins,3);
+      // we set the axis alphanumeric
+      // when list of labels does not exis
       SetCanExtend(kTRUE);
       SetAlphanumeric(kTRUE);
       if (fXmax <= fXmin) {
