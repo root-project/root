@@ -209,10 +209,12 @@ TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member,
 
    if ((ptr == 0) || (member == 0)) return TString("null");
 
+   Bool_t stlstring = !strcmp(member->GetTrueTypeName(),"string");
+
    TClass *mcl = (member->IsBasic() || member->IsSTLContainer()) ? 0 :
                  gROOT->GetClass(member->GetTypeName());
 
-   if ((mcl != 0) && (mcl != TString::Class()) &&
+   if ((mcl != 0) && (mcl != TString::Class()) && !stlstring &&
          (mcl->GetBaseClassOffset(TArray::Class()) != 0))
       return TBufferJSON::ConvertToJSON(ptr, mcl, compact);
 
@@ -513,6 +515,9 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
          }
       } else
          fValue = "[]";
+   } else if (!strcmp(memberClass->GetName(),"string")) {
+      // here value contains quotes, stack can be ignored
+      ((TClass *)memberClass)->Streamer((void *)ptr, *this);
    }
 
    PopStack();
@@ -658,6 +663,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl)
 
    // special case for TString - it is saved as string in JSON
    Bool_t iststring = !isarray && !iscollect && (cl == TString::Class()) && (fStack.GetLast() >= 0);
+   // also special handling for STL string, which is same as TString
+   if (!isarray && !iscollect && !iststring && (fStack.GetLast() >= 0) && (cl!=0))
+      iststring = !strcmp(cl->GetName(),"string");
 
    if (!isarray) {
       JsonStartElement();
@@ -676,14 +684,23 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl)
 
       std::map<const void *, unsigned>::const_iterator iter = fJsonrMap.find(obj);
 
+      Bool_t add_to_map = kTRUE;
+
       if (iter != fJsonrMap.end()) {
-         AppendOutput(Form("\"$ref:%u\"", iter->second));
-         return;
+
+         // this is workaround for first member, which has same pointer as parent, we need to record it
+         if ((Stack()->fElemNumber==0) && (Stack()->fElem!=0)
+             && (Stack()->fElem->GetOffset()==0) && !Stack()->fElem->IsaPointer()) {
+               add_to_map = kFALSE;
+            } else {
+               AppendOutput(Form("\"$ref:%u\"", iter->second));
+               return;
+            }
       }
 
       // if (fJsonrCnt<10) Info("JsonWriteObject","Object cl:%s $ref%u", cl->GetName(), fJsonrCnt);
 
-      fJsonrMap[obj] = fJsonrCnt++;
+      if (add_to_map) fJsonrMap[obj] = fJsonrCnt++;
 
       stack = PushStack(2);
       AppendOutput("{", "\"_typename\"");
@@ -1145,6 +1162,7 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
    const char *typname = stack->fIsBaseClass ? elem->GetName() : elem->GetTypeName();
    Bool_t isTObject = (elem->GetType() == TStreamerInfo::kTObject) || (strcmp("TObject", typname) == 0);
    Bool_t isTString = elem->GetType() == TStreamerInfo::kTString;
+   Bool_t isSTLstring = elem->GetType() == TStreamerInfo::kSTLstring;
    Bool_t isOffsetPArray = (elem->GetType() > TStreamerInfo::kOffsetP) && (elem->GetType() < TStreamerInfo::kOffsetP + 20);
 
    Bool_t isTArray = (strncmp("TArray", typname, 6) == 0);
@@ -1156,7 +1174,7 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
       AppendOutput(fSemicolon.Data());
    }
 
-   if (isTString) {
+   if (isTString || isSTLstring) {
       // just remove all kind of string length information
 
       if (gDebug > 3)
