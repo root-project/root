@@ -37,6 +37,7 @@ void mergeSelective(Int_t nfiles=5)
    // Create the files to be merged
    TStopwatch timer;
    timer.Start();
+   TString tutdir = gROOT->GetTutorialsDir();
    if (gROOT->LoadMacro(tutdir + "/hsimple.C")) return;
    Int_t i;
    for (i=0; i<nfiles; i++) CreateFile(Form("tomerge%03d.root",i));
