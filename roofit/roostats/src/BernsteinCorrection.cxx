@@ -66,13 +66,15 @@ END_HTML
 #include <sstream>
 #include <iostream>
 
-#include "RooProdPdf.h"
+#include "RooEffProd.h"
 #include "RooNLLVar.h"
 #include "RooWorkspace.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 
 #include "RooBernstein.h"
+
+#include "Math/MinimizerOptions.h"
 
 
 ClassImp(RooStats::BernsteinCorrection) ;
@@ -83,7 +85,7 @@ using namespace std;
 
 //____________________________________
 BernsteinCorrection::BernsteinCorrection(Double_t tolerance):
-  fMaxCorrection(100), fTolerance(tolerance){
+   fMaxDegree(10), fMaxCorrection(100), fTolerance(tolerance){
 }
 
 
@@ -104,9 +106,19 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
      return -1;
   }
 
+  std::cout << "BernsteinCorrection::ImportCorrectedPdf -  Doing initial Fit with nominam model " << std::endl;
+
   // initialize alg, by checking how well nominal model fits
-  RooFitResult* nominalResult = nominal->fitTo(*data,Save(),Minos(kFALSE), Hesse(kFALSE),PrintLevel(-1));
+  TString minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+  int printLevel =  ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1; 
+
+  RooFitResult* nominalResult = nominal->fitTo(*data,Save(),Minos(kFALSE), Hesse(kFALSE),PrintLevel(printLevel),Minimizer(minimType));
   Double_t lastNll= nominalResult->minNll();
+
+  if (nominalResult->status() != 0 ) { 
+     std::cout << "BernsteinCorrection::ImportCorrectedPdf  - Error fit with nominal model failed - exit" << std::endl;  
+     return -1; 
+  }
 
   // setup a log
   std::stringstream log;
@@ -120,7 +132,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
 
   // The while loop
   bool keepGoing = true;
-  while( keepGoing) {
+  while( keepGoing ) {
     degree++;
 
     // we need to generate names for vars on the fly
@@ -129,31 +141,43 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
 
     RooRealVar* newCoef = new RooRealVar(("c"+str.str()).c_str(),
 			"Bernstein basis poly coefficient", 
-			1., 0., fMaxCorrection);
+			1.0, 0., fMaxCorrection);
     coeff.add(*newCoef);
     coefficients.push_back(newCoef);
-
+    // Since pdf is normalized - coefficient for degree 0 is fixed to be 1 
+    if (degree == 0) {
+       newCoef->setVal(1);
+       newCoef->setConstant(1); 
+       continue;
+    }
+    
     // make the polynomial correction term
     RooBernstein* poly = new RooBernstein("poly", "Bernstein poly", *x, coeff);
 
     // make the corrected PDF = nominal * poly
-    RooProdPdf* corrected = new RooProdPdf("corrected","",RooArgList(*nominal,*poly));
+    RooEffProd* corrected = new RooEffProd("corrected","",*nominal,*poly);
 
     // check to see how well this correction fits
-    RooFitResult* result = corrected->fitTo(*data,Save(),Minos(kFALSE), Hesse(kFALSE),PrintLevel(-1));
+    RooFitResult* result = corrected->fitTo(*data,Save(),Minos(kFALSE), Hesse(kFALSE),PrintLevel(printLevel),Minimizer(minimType));
+
+    if (result->status() != 0) { 
+       std::cout << "BernsteinCorrection::ImportCorrectedPdf  - Error fit with corrected model failed" << std::endl;  
+       return -1; 
+    } 
 
 
     // Hypothesis test between previous correction (null)
     // and this one (alternate).  Use -2 log LR for test statistic
     q = 2*(lastNll - result->minNll()); // -2 log lambda, goes like significance^2
     // check if we should keep going based on rate of Type I error
-    keepGoing = (degree < 1 || TMath::Prob(q,1) < fTolerance);
+    keepGoing = (degree < 1 || TMath::Prob(q,1) < fTolerance );
+    if (degree >= fMaxDegree) keepGoing = false; 
 
     if(!keepGoing){
       // terminate loop, import corrected PDF
-      RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
+      //RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
       wks->import(*corrected);
-      RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+      //RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
     } else { 
       // memory management
       delete corrected;
@@ -213,7 +237,7 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
   RooArgList coeffExtra; // n+1 correction
   vector<RooRealVar*> coefficients;
 
-  cout << "make coefs" << endl;
+  //cout << "make coefs" << endl;
   for(int i = 0; i<=degree+1; ++i) {
     // we need to generate names for vars on the fly
     std::stringstream str;
@@ -230,8 +254,6 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
     coefficients.push_back(newCoef);
   }
 
-  coeffNull.Print();
-  coeff.Print();
   // make the polynomial correction term
   RooBernstein* poly 
     = new RooBernstein("poly", "Bernstein poly", *x, coeff);
@@ -245,14 +267,14 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
     = new RooBernstein("polyExtra", "Bernstein poly", *x, coeffExtra);
 
   // make the corrected PDF = nominal * poly
-  RooProdPdf* corrected 
-    = new RooProdPdf("corrected","",RooArgList(*nominal,*poly));
+  RooEffProd* corrected 
+    = new RooEffProd("corrected","",*nominal,*poly);
 
-  RooProdPdf* correctedNull
-    = new RooProdPdf("correctedNull","",RooArgList(*nominal,*polyNull));
+  RooEffProd* correctedNull
+    = new RooEffProd("correctedNull","",*nominal,*polyNull);
 
-  RooProdPdf* correctedExtra
-    = new RooProdPdf("correctedExtra","",RooArgList(*nominal,*polyExtra));
+  RooEffProd* correctedExtra
+    = new RooEffProd("correctedExtra","",*nominal,*polyExtra);
 
 
   cout << "made pdfs, make toy generator" << endl;
@@ -261,26 +283,35 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
   RooDataHist dataHist("dataHist","",*x,*data);
   RooHistPdf toyGen("toyGen","",*x,dataHist);
 
+  TString minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+  int printLevel =  ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1; 
+
+  RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
+    if (printLevel < 0) {
+       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
+    }
+
 
   //  TH1F* samplingDist = new TH1F("samplingDist","",20,0,10);
   Double_t q = 0, qExtra = 0;
   // do toys
   for(int i=0; i<nToys; ++i){
     cout << "on toy " << i << endl;
+
     RooDataSet* tmpData = toyGen.generate(*x,data->numEntries());
     // check to see how well this correction fits
     RooFitResult* result 
       = corrected->fitTo(*tmpData,Save(),Minos(kFALSE), 
-			 Hesse(kFALSE),PrintLevel(-1));
+			 Hesse(kFALSE),PrintLevel(printLevel),Minimizer(minimType));
 
     RooFitResult* resultNull 
       = correctedNull->fitTo(*tmpData,Save(),Minos(kFALSE), 
-			 Hesse(kFALSE),PrintLevel(-1));
+			 Hesse(kFALSE),PrintLevel(printLevel),Minimizer(minimType));
 
 
     RooFitResult* resultExtra
       = correctedExtra->fitTo(*tmpData,Save(),Minos(kFALSE), 
-			 Hesse(kFALSE),PrintLevel(-1));
+			 Hesse(kFALSE),PrintLevel(printLevel),Minimizer(minimType));
 
 
     // Hypothesis test between previous correction (null)
@@ -291,13 +322,17 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
 
     samplingDist->Fill(q);
     samplingDistExtra->Fill(qExtra);
-    cout << resultNull->minNll() << " " << result->minNll() << " " << q << endl;
+    if (printLevel > 0) 
+       cout << "NLL Results: null " <<  resultNull->minNll() << " ref = " << result->minNll() << " extra" << resultExtra->minNll() << endl;
+    
     
     delete tmpData;
     delete result;
     delete resultNull;
     delete resultExtra;
   }
+
+  RooMsgService::instance().setGlobalKillBelow(msglevel);
 
   //  return samplingDist;
 }
