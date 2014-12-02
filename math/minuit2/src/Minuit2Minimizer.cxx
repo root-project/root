@@ -570,7 +570,7 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
    bool validMinimum = min.IsValid();
    if (validMinimum) {
       // print a warning message in case something is not ok
-      if (fStatus != 0)  MN_INFO_MSG2("Minuit2Minimizer::Minimize",txt);
+      if (fStatus != 0 && debugLevel >= 0)  MN_INFO_MSG2("Minuit2Minimizer::Minimize",txt);
    }
    else {
       // minimum is not valid when state is not valid and edm is over max or has passed call limits
