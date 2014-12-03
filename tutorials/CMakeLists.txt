@@ -201,7 +201,8 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
                        tutorial-hist-h1draw
                        tutorial-geom-na49view
-                       tutorial-tree-ntuple1)
+                       tutorial-tree-ntuple1
+                       tutorial-io-hadd)
 
 #--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
