@@ -136,21 +136,21 @@
    JSROOT.Painter.root_colors = function() {
       var colorMap = new Array('white', 'black', 'red', 'green', 'blue',
             'rgb(255,255,0)', 'rgb(255,0,255)', 'rgb(0,255,255)',
-            'rgb(89, 211, 84)', 'rgb(89, 84, 216)', 'rgb(254, 254, 254)',
-            'rgb(191,181, 173)', 'rgb(76, 76, 76)', 'rgb(102, 102, 102)',
-            'rgb(127,127, 127)', 'rgb(153, 153, 153)', 'rgb(178, 178, 178)',
-            'rgb(204,204, 204)', 'rgb(229, 229, 229)', 'rgb(242, 242, 242)',
-            'rgb(204,198, 170)', 'rgb(204, 198, 170)', 'rgb(193, 191, 168)',
-            'rgb(186,181, 163)', 'rgb(178, 165, 150)', 'rgb(183, 163, 155)',
-            'rgb(173,153, 140)', 'rgb(155, 142, 130)', 'rgb(135, 102, 86)',
-            'rgb(175,206, 198)', 'rgb(132, 193, 163)', 'rgb(137, 168, 160)',
-            'rgb(130,158, 140)', 'rgb(173, 188, 198)', 'rgb(122, 142, 153)',
-            'rgb(117,137, 145)', 'rgb(104, 130, 150)', 'rgb(109, 122, 132)',
-            'rgb(124,153, 209)', 'rgb(127, 127, 155)', 'rgb(170, 165, 191)',
-            'rgb(211,206, 135)', 'rgb(221, 186, 135)', 'rgb(188, 158, 130)',
-            'rgb(198,153, 124)', 'rgb(191, 130, 119)', 'rgb(206, 94, 96)',
-            'rgb(170,142, 147)', 'rgb(165, 119, 122)', 'rgb(147, 104, 112)',
-            'rgb(211,89, 84)');
+            'rgb(89, 211,84)', 'rgb(89,84,216)', 'rgb(254,254,254)',
+            'rgb(191,181,173)', 'rgb(76,76,76)', 'rgb(102,102,102)',
+            'rgb(127,127,127)', 'rgb(153,153,153)', 'rgb(178,178,178)',
+            'rgb(204,204,204)', 'rgb(229,229,229)', 'rgb(242,242,242)',
+            'rgb(204,198,170)', 'rgb(204,198,170)', 'rgb(193,191,168)',
+            'rgb(186,181,163)', 'rgb(178,165,150)', 'rgb(183,163,155)',
+            'rgb(173,153,140)', 'rgb(155,142,130)', 'rgb(135,102,86)',
+            'rgb(175,206,198)', 'rgb(132,193,163)', 'rgb(137,168,160)',
+            'rgb(130,158,140)', 'rgb(173,188,198)', 'rgb(122,142,153)',
+            'rgb(117,137,145)', 'rgb(104,130,150)', 'rgb(109,122,132)',
+            'rgb(124,153,209)', 'rgb(127,127,155)', 'rgb(170,165,191)',
+            'rgb(211,206,135)', 'rgb(221,186,135)', 'rgb(188,158,130)',
+            'rgb(198,153,124)', 'rgb(191,130,119)', 'rgb(206,94,96)',
+            'rgb(170,142,147)', 'rgb(165,119,122)', 'rgb(147,104,112)',
+            'rgb(211,89,84)');
 
       var circleColors = [ 632, 416, 600, 400, 616, 432 ];
 
@@ -1003,7 +1003,8 @@
       }
 
       var svg_p = this.svg_pad();
-      svg_p['pad_painter'].painters.push(this);
+      if (svg_p['pad_painter'] != this)
+         svg_p['pad_painter'].painters.push(this);
 
       if ((is_main > 0) && (svg_p['mainpainter']==null))
          // when this is first main painter in the pad
@@ -1125,6 +1126,7 @@
       // Iterate over all known painters
       var svg_c = this.svg_canvas();
       if (svg_c!=null) {
+         userfunc(svg_c['pad_painter']);
          var painters = svg_c['pad_painter'].painters;
          for (var k in painters) userfunc(painters[k]);
       } else {
@@ -2629,7 +2631,6 @@
       this.pad = pad;
       this.iscan = iscan; // indicate if workign with canvas
       this.painters = new Array; // complete list of all painters in the pad
-      this.primitive_painters = new Array; // list of painters for primitives, used in update
    }
 
    JSROOT.TPadPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -2759,7 +2760,7 @@
 
       for (var i in this.pad.fPrimitives.arr) {
          var pp = JSROOT.draw(this.divid, this.pad.fPrimitives.arr[i],  this.pad.fPrimitives.opt[i]);
-         this.primitive_painters.push(pp);
+         if (pp) pp['_primitive'] = true; // mark painter as belonging to primitive
       }
    }
 
@@ -2788,18 +2789,17 @@
 
       if (obj.fPrimitives.arr.length != this.pad.fPrimitives.arr.length) return false;
 
-      var isany = false;
-      var cnt = 0;
+      var isany = false, p = 0;
 
       for (var n in obj.fPrimitives.arr) {
          var sub = obj.fPrimitives.arr[n];
 
-         if ((n >= this.primitive_painters.length) || (this.primitive_painters[n]==null)) {
-            console.log("No paintrer for object " + sub._typename);
-            continue;
+         while (p<this.painters.length) {
+            var pp = this.painters[p++];
+            if (!('_primitive' in pp)) continue;
+            if (pp.UpdateObject(sub)) isany = true;
+            break;
          }
-
-         if (this.primitive_painters[n].UpdateObject(sub)) isany = true;
       }
 
       return isany;
@@ -2807,8 +2807,9 @@
 
    JSROOT.Painter.drawCanvas = function(divid, can) {
       var painter = new JSROOT.TPadPainter(can, true);
-      painter.SetDivId(divid);
+      painter.SetDivId(divid, -1); // just assign id
       painter.CreateCanvasSvg();
+      painter.SetDivId(divid);  // now add to painters list
 
       if (can==null) {
          JSROOT.Painter.drawFrame(divid, null);
@@ -5587,7 +5588,7 @@
             if (gry1 < 0) gry1 = this.y(y1);
             gry2 = this.y(y2);
             binz = this.histo.getBinContent(i + 1, j + 1);
-            if (binz <= this.minbin) continue;
+            if ((binz == 0) || (binz < this.minbin)) continue;
 
             switch (coordinates_kind) {
             case 0:
@@ -7297,6 +7298,8 @@
                if (JSROOT.gStyle.DragAndDrop)
                   frame.addClass("ui-state-default");
                painter = h.draw(frame.attr("id"), obj, drawopt);
+               console.log("painter = " + painter);
+
                mdi.ActivateFrame(frame);
 
                if (JSROOT.gStyle.DragAndDrop)
@@ -7353,6 +7356,8 @@
       mdi.ForEachPainter(function(p) {
          if (('_hitemname' in p) && (allitems.indexOf(p['_hitemname'])<0)) allitems.push(p['_hitemname']);
       }, true); // only visible panels are considered
+
+      console.log("update items " + allitems.length);
 
       // than call display with update
       for (var cnt in allitems)
