@@ -2485,6 +2485,10 @@ void TH1::Copy(TObject &obj) const
 //______________________________________________________________________________
 TObject* TH1::Clone(const char* newname) const
 {
+   // Make a clone of an object bur for performance we are not using the
+   // Streamer facility for TH1 and derived.  Instead we rely on the
+   // (required) implementation of Copy.
+
    TH1* obj = (TH1*)IsA()->GetNew()(0);
    Copy(*obj);
 
