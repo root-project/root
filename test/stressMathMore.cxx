@@ -33,6 +33,7 @@
 #include <iomanip>
 #include <limits>
 #include <cmath>
+#include <algorithm>
 #include <stdlib.h>
 #include "TBenchmark.h"
 #include "TROOT.h"
