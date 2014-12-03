@@ -35,7 +35,11 @@
 
 /* Define to 1 if you have the declaration of `log1p', and to 0 if you don't.
    */
+#if defined(_MSC_VER) && (_MSC_VER >= 1800)
+#define HAVE_DECL_LOG1P 1
+#else
 #define HAVE_DECL_LOG1P 0
+#endif
 
 /* Define to 1 if you have the declaration of `signal', and to 0 if you don't.
    */
