@@ -2,9 +2,13 @@ class MyClass {
 public:
    Int_t fPx; ///< Some doxygen comment for persistent data.
    Int_t fPy; //!< Some doxygen comment for persistent data.
+   Int_t fPz; /*!< Some doxygen comment for persistent data. */
+   Int_t fPa; /**< Some doxygen comment for persistent data. */
 
    Int_t fCachePx; ///<! Some doxygen comment for transient data.
    Int_t fCachePy; //!<! Some doxygen comment for transient data.
+   Int_t fCachePz; /*!<! Some doxygen comment for transient data. */
+   Int_t fCachePa; /**<! Some doxygen comment for transient data. */
 };
 
 #include "TClass.h"
@@ -36,8 +40,12 @@ int execDoxygenTransient() {
 
    if (!CheckMember(c,"fPx",true)) return 2;
    if (!CheckMember(c,"fPy",true)) return 3;
-   if (!CheckMember(c,"fCachePx",false)) return 4;
-   if (!CheckMember(c,"fCachePy",false)) return 5;
+   if (!CheckMember(c,"fPz",true)) return 4;
+   if (!CheckMember(c,"fPa",true)) return 5;
+   if (!CheckMember(c,"fCachePx",false)) return 10;
+   if (!CheckMember(c,"fCachePy",false)) return 11;
+   if (!CheckMember(c,"fCachePz",false)) return 12;
+   if (!CheckMember(c,"fCachePa",false)) return 13;
 
    return 0;
 }
