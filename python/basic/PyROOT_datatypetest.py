@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 04/04/14
+# Last: 12/03/14
 
 """Data type conversion unit tests for PyROOT package."""
 
@@ -179,10 +179,22 @@ class TestClassDATATYPES:
         c.set_uchar('g'); assert c.m_uchar     ==     'g'
         c.set_uchar(45);  assert c.m_uchar     == chr(45)
 
+        # limits and checks
         raises(TypeError,  'c.set_char("string")')
         raises(ValueError, 'c.set_char(500)')
         raises(TypeError,  'c.set_uchar("string")')
         raises(ValueError, 'c.set_uchar(-1)')
+        c.set_char_cr( -128); assert c.get_char()  == -128      # int type
+        assert c.get_char_r() == -128; assert c.get_char_cr()  == -128
+        c.set_char_cr(   -1); assert c.get_char()  ==   -1      # int type
+        c.set_char_cr(    0); assert c.get_char()  == chr(  0)
+        assert c.get_char_r() == chr(0); assert c.get_char_cr() == chr(0)
+        c.set_char(chr(  0)); assert c.get_char()  == chr(  0)
+        c.set_char(chr(127)); assert c.get_char()  == chr(127)
+        c.set_char_cr(  127); assert c.get_char()  == chr(127)
+        c.set_uchar_cr(   0); assert c.get_uchar() == chr(  0)
+        c.set_uchar_cr( 255); assert c.get_uchar() == chr(255)
+        assert c.get_uchar_r() == chr(255); assert c.get_uchar_cr() == chr(255)
 
         # integer types
         names = ['short', 'ushort', 'int', 'uint', 'long', 'ulong', 'llong', 'ullong', 'long64', 'ulong64' ]
