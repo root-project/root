@@ -14,9 +14,9 @@ To start the http server, at any time, create an instance of the **`THttpServer`
 
 This will start a civetweb-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (IE, Firefox, Chrome, Opera) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
 
-There is a [snapshot (frozen copy)](http://root.cern.ch/js/3.0/demo/) of such server, running in httpserver.C macro from ROOT tutorial.
+There is a [snapshot (frozen copy)](http://root.cern.ch/js/3.1/demo/) of such server, running in httpserver.C macro from ROOT tutorial.
 
-<iframe width="800" height="500" src="http://root.cern.ch/js/3.0/demo/?item=Canvases/c1">
+<iframe width="800" height="500" src="http://root.cern.ch/js/3.1/demo/?item=Canvases/c1">
 </iframe>
 
 At any time, one could register other objects with the command:
