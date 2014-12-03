@@ -4009,11 +4009,20 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    }
 
    // Treat by default c++ comments (+2) but also Doxygen comments (+4)
+   //   Int_t fPx; ///< Some doxygen comment for persistent data.
+   //   Int_t fPy; //!< Some doxygen comment for persistent data.
+   //   Int_t fPz; /*!< Some doxygen comment for persistent data. */
+   //   Int_t fPa; /**< Some doxygen comment for persistent data. */
    unsigned int skipChars = 2;
    if (commentStart[0] == '/' &&
        commentStart[1] == '/' &&
        (commentStart[2] == '/' || commentStart[2] == '!') &&
        commentStart[3] == '<') {
+      skipChars = 4;
+   } else if (commentStart[0] == '/' &&
+              commentStart[1] == '*' &&
+              (commentStart[2] == '*' || commentStart[2] == '!') &&
+              commentStart[3] == '<') {
       skipChars = 4;
    }
 
