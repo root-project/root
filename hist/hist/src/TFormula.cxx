@@ -1102,6 +1102,7 @@ void TFormula::ProcessFormula(TString &formula)
                                                    
             Bool_t silent = true;
             TClass *tclass = new TClass(className,silent);
+            std::cout << "looking for class " << className << std::endl;
             const TList *methodList = tclass->GetListOfAllPublicMethods();
             TIter next(methodList);
             TMethod *p;

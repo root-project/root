@@ -80,14 +80,14 @@ class TFormula : public TNamed
 {
 private:
 
-   TString           fClingInput;
-   vector<Double_t>  fClingVariables;
+   TString           fClingInput;           //!
+   vector<Double_t>  fClingVariables;       //!
    vector<Double_t>  fClingParameters;
-   Bool_t            fReadyToExecute;
+   Bool_t            fReadyToExecute;       //!
    Bool_t            fClingInitialized;  //! - make transient to force re-initialization in Cling when reading from a file
-   Bool_t            fAllParametersSetted;
+   Bool_t            fAllParametersSetted;    //!
    TMethodCall*      fMethod;        //! pointer to methocall
-   TString           fClingName;     // unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
+   TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
 
    TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;   //!  function pointer
 
@@ -101,16 +101,20 @@ private:
    Bool_t   IsDefaultVariableName(const TString &name);
 protected:
    
-   list<TFormulaFunction>         fFuncs;
-   map<TString,TFormulaVariable>  fVars;
-   map<TString,TFormulaVariable>  fParams;
-   map<TString,Double_t>          fConsts;
-   map<TString,TString>           fFunctionsShortcuts;
-   TString                        fFormula;
+   list<TFormulaFunction>         fFuncs;    //!
+   map<TString,TFormulaVariable>  fVars;     //!
+   map<TString,TFormulaVariable>  fParams;   //!
+   map<TString,Double_t>          fConsts;   //!
+   map<TString,TString>           fFunctionsShortcuts;  //!
+   TString                        fFormula;     
    Int_t                          fNdim;
    Int_t                          fNpar;
    Int_t                          fNumber;
    TObjArray                      fLinearParts;
+
+   // for I/O backward compatibility 
+   //Int_t   fNoper; 
+   // Int_t   fNconst;
 
    Bool_t IsOperator(const char c);
    Bool_t IsBracket(const char c);
@@ -175,6 +179,6 @@ public:
    void           SetVariable(const TString &name, Double_t value);
    void           SetVariables(const pair<TString,Double_t> *vars, const Int_t size);
 
-   ClassDef(TFormula,1)
+   ClassDef(TFormula,9)
 };
 #endif
