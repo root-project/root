@@ -17,6 +17,8 @@
 // 02110-1301 USA
 
 // See also Knuth (1986), p. 170.
+#include <climits>
+
 static const int nvr = INT_MIN;
 static const int spacing_table[64] = {
    // right ->  Ord    Op   Bin   Rel  Open Close Punct Inner
