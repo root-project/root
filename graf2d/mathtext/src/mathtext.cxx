@@ -16,8 +16,6 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 
-#include <limits.h>
-#include <cmath>
 #include <iostream>
 #include "../inc/mathtext.h"
 
