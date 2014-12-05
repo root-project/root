@@ -93,7 +93,7 @@ elif [ $PLATFORM = "lynxos" ]; then
 elif [ $PLATFORM = "fbsd" ] || [ $PLATFORM = "obsd" ]; then
    if [ "x$MAJOR" = "x" ] ; then
       cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB \
-         `lorder $OBJS | tsort -q` $ $EXTRA"
+         `lorder $OBJS | tsort -q` $EXPLLNKCORE $EXTRA"
    else
       cmd="$LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR \
          `lorder $OBJS | tsort -q` $EXPLLNKCORE $EXTRA"
