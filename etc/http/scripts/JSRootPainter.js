@@ -1032,6 +1032,7 @@
       if ((pattern < 1001) || ((pattern >= 4000) && (pattern <= 4100))) return fill;
 
       fill.color = JSROOT.Painter.root_colors[color];
+      if (typeof fill.color != 'string') fill.color = "none";
 
       var svg = this.svg_canvas(true);
 
@@ -1410,6 +1411,8 @@
          h -= (tm + bm);
       }
 
+      // force white color for the frame
+      if (framecolor.color == 'none') framecolor.color = 'white';
 
       // this is svg:g object - container for every other items belonging to frame
       var frame_g = this.svg_pad(true).select(".root_frame");
