@@ -10,6 +10,7 @@
 
 .h_tree {
    display: block;
+   white-space: nowrap;
 }
 
 .h_tree img {
