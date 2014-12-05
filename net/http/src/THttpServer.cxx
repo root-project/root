@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <stdlib.h>
 #include <string.h>
+#include <fstream>
 
 #ifdef COMPILED_WITH_DABC
    extern "C" unsigned long crc32(unsigned long crc, const unsigned char* buf, unsigned int buflen);
@@ -49,9 +50,9 @@ THttpCallArg::THttpCallArg() :
    fQuery(),
    fCond(),
    fContentType(),
-   fContentEncoding(),
-   fExtraHeader(),
+   fHeader(),
    fContent(),
+   fZipping(0),
    fBinData(0),
    fBinDataLength(0)
 {
@@ -68,7 +69,6 @@ THttpCallArg::~THttpCallArg()
       fBinData = 0;
    }
 }
-
 
 //______________________________________________________________________________
 void THttpCallArg::SetBinData(void* data, Long_t length)
@@ -108,39 +108,27 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
 }
 
 //______________________________________________________________________________
-void THttpCallArg::FillHttpHeader(TString &hdr, const char* header)
+void THttpCallArg::FillHttpHeader(TString &hdr, const char* kind)
 {
    // fill HTTP header
 
-   if (header==0) header = "HTTP/1.1";
+   if (kind==0) kind = "HTTP/1.1";
 
    if ((fContentType.Length() == 0) || Is404()) {
       hdr.Form("%s 404 Not Found\r\n"
                "Content-Length: 0\r\n"
-               "Connection: close\r\n\r\n", header);
-      return;
+               "Connection: close\r\n\r\n", kind);
+   } else {
+      hdr.Form("%s 200 OK\r\n"
+               "Content-Type: %s\r\n"
+               "Connection: keep-alive\r\n"
+               "Content-Length: %ld\r\n"
+               "%s\r\n",
+               kind,
+               GetContentType(),
+               GetContentLength(),
+               fHeader.Data());
    }
-
-   hdr.Form("%s 200 OK\r\n"
-            "Content-Type: %s\r\n"
-            "Connection: keep-alive\r\n"
-            "Content-Length: %ld\r\n",
-            header,
-            GetContentType(),
-            GetContentLength());
-
-   if (fContentEncoding.Length() > 0) {
-      hdr.Append("Content-Encoding: ");
-      hdr.Append(fContentEncoding);
-      hdr.Append("\r\n");
-   }
-
-   if (fExtraHeader.Length() > 0) {
-      hdr.Append(fExtraHeader);
-      hdr.Append("\r\n");
-   }
-
-   hdr.Append("\r\n");
 }
 
 //______________________________________________________________________________
@@ -290,6 +278,10 @@ THttpServer::THttpServer(const char *engine) :
    fMainThrdId(0),
    fJsRootSys(),
    fTopName("ROOT"),
+   fDefaultPage(),
+   fDefaultPageCont(),
+   fDrawPage(),
+   fDrawPageCont(),
    fMutex(),
    fCallArgs()
 {
@@ -593,23 +585,88 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    // Info("ProcessRequest", "Path %s File %s", arg->fPathName.Data(), arg->fFileName.Data());
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
-      arg->fContent = fDefaultPage;
-      arg->SetFile();
+
+      if (fDefaultPageCont.Length()==0) {
+         Int_t len = 0;
+         char* buf = ReadFileContent(fDefaultPage.Data(), len);
+         if (len>0) fDefaultPageCont.Append(buf, len);
+         delete buf;
+      }
+
+      if (fDefaultPageCont.Length()==0) {
+         arg->Set404();
+      } else {
+         const char* hjsontag = "\"$$$h.json$$$\"";
+
+         Ssiz_t pos = fDefaultPageCont.Index(hjsontag);
+         if (pos==kNPOS) {
+            arg->fContent = fDefaultPageCont;
+         } else {
+            TString h_json;
+            TRootSnifferStoreJson store(h_json, kTRUE);
+            const char *topname = fTopName.Data();
+            if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
+            fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
+
+            arg->fContent.Clear();
+            arg->fContent.Append(fDefaultPageCont, pos);
+            arg->fContent.Append(h_json);
+            arg->fContent.Append(fDefaultPageCont.Data() + pos + strlen(hjsontag));
+
+            // by default compress page with zip
+            if (arg->fQuery.Index("nozip")==kNPOS) arg->SetZipping(2);
+            // arg->SetExtraHeader("Cache-Control", "max-age=10, public");
+         }
+         arg->SetContentType("text/html");
+      }
       return;
    }
 
    if (arg->fFileName == "draw.htm") {
-      arg->fContent = fDrawPage;
-      arg->SetFile();
+      if (fDrawPageCont.Length()==0) {
+         Int_t len = 0;
+         char* buf = ReadFileContent(fDrawPage.Data(), len);
+         if (len>0) fDrawPageCont.Append(buf, len);
+         delete buf;
+      }
+
+      if (fDrawPageCont.Length()==0) {
+         arg->Set404();
+      } else {
+         const char* rootjsontag = "\"$$$root.json$$$\"";
+
+         Ssiz_t pos = fDrawPageCont.Index(rootjsontag);
+         if (pos==kNPOS) {
+            arg->fContent = fDrawPageCont;
+         } else {
+            void* bindata(0);
+            Long_t bindatalen(0);
+
+            if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=3", bindata, bindatalen)) {
+               arg->fContent.Clear();
+               arg->fContent.Append(fDrawPageCont, pos);
+               arg->fContent.Append((char*) bindata, bindatalen);
+               arg->fContent.Append(fDrawPageCont.Data() + pos + strlen(rootjsontag));
+
+               // by default compress page with zip
+               if (arg->fQuery.Index("nozip")==kNPOS) arg->SetZipping(2);
+            } else {
+               arg->fContent = fDrawPageCont;
+            }
+            free(bindata);
+         }
+         arg->SetContentType("text/html");
+      }
       return;
    }
 
-   if (IsFileRequested(arg->fFileName.Data(), arg->fContent)) {
-      arg->SetFile();
+   TString filename;
+   if (IsFileRequested(arg->fFileName.Data(), filename)) {
+      arg->SetFile(filename);
       return;
    }
 
-   TString filename = arg->fFileName;
+   filename = arg->fFileName;
    Bool_t iszip = kFALSE;
    if (filename.EndsWith(".gz")) {
       filename.Resize(filename.Length()-3);
@@ -657,13 +714,13 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    if (arg->Is404()) return;
 
-   if (iszip) arg->CompressWithGzip();
+   if (iszip) arg->SetZipping(3);
 
    if (filename == "root.bin") {
       // only for binary data master version is important
       // it allows to detect if streamer info was modified
       const char* parname = fSniffer->IsStreamerInfoItem(arg->fPathName.Data()) ? "BVersion" : "MVersion";
-      arg->SetExtraHeader(parname, Form("%u", (unsigned) fSniffer->GetStreamerInfoHash()));
+      arg->AddHeader(parname, Form("%u", (unsigned) fSniffer->GetStreamerInfoHash()));
    }
 }
 
@@ -758,4 +815,29 @@ const char *THttpServer::GetMimeType(const char *path)
    }
 
    return "text/plain";
+}
+
+//______________________________________________________________________________
+char* THttpServer::ReadFileContent(const char* filename, Int_t& len)
+{
+   // reads file content
+
+   len = 0;
+
+   std::ifstream is(filename);
+   if (!is) return 0;
+
+   is.seekg(0, is.end);
+   len = is.tellg();
+   is.seekg(0, is.beg);
+
+   char *buf = (char *) malloc(len);
+   is.read(buf, len);
+   if (!is) {
+      free(buf);
+      len = 0;
+      return 0;
+   }
+
+   return buf;
 }
