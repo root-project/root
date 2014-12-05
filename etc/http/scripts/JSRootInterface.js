@@ -386,8 +386,12 @@ function BuildOnlineGUI() {
          if (this.checked) h.updateAll();
       });
 
-   h.OpenOnline("", function() {
-      h.displayAll(itemsarr, optionsarr);
+   var h0 = null;
+   if (typeof GetCashedHierarchy == 'function') h0 = GetCashedHierarchy();
+   if (typeof h0 != 'object') h0 = "";
+
+   h.OpenOnline(h0, function() {
+     h.displayAll(itemsarr, optionsarr);
    });
 
    setInterval(function() { if (h.IsMonitoring()) h.updateAll(); }, h.MonitoringInterval());

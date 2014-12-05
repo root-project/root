@@ -7474,11 +7474,9 @@
    }
 
    JSROOT.HierarchyPainter.prototype.OpenOnline = function(server_address, user_callback) {
-      if (!server_address) server_address = "";
-
       var painter = this;
 
-      var req = JSROOT.NewHttpRequest(server_address + "h.json?compact=3", 'object', function(result) {
+      var AdoptHierarchy = function(result) {
          painter.h = result;
          if (painter.h == null) return;
 
@@ -7522,7 +7520,18 @@
             if (typeof user_callback == 'function')
                user_callback(painter);
          });
-      });
+      }
+
+      if (!server_address) server_address = "";
+
+      if (typeof server_address == 'object') {
+         var h = server_address;
+         server_address = "";
+         AdoptHierarchy(h);
+         return;
+      }
+
+      var req = JSROOT.NewHttpRequest(server_address + "h.json?compact=3", 'object', AdoptHierarchy);
 
       req.send(null);
    }

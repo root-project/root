@@ -14,9 +14,9 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.1 3/12/2014";
+   JSROOT.version = "3.2 dev 5/12/2014";
 
-   JSROOT.source_dir  = function(){
+   JSROOT.source_dir = function(){
       var scripts = document.getElementsByTagName('script');
 
       for (var n in scripts) {
@@ -131,7 +131,7 @@
    JSROOT.parse = function(arg) {
       if ((arg==null) || (arg=="")) return null;
       var obj = JSON.parse(arg);
-      if (obj!=null) obj = JSROOT.JSONR_unref(obj)
+      if (obj!=null) obj = JSROOT.JSONR_unref(obj);
       return obj;
    }
 
