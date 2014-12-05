@@ -276,9 +276,6 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
    PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
    isReference = false;
    if (QT->isRecordType() && forArgument) {
-      // Note: We treat object of class type as if it were a reference
-      //       type because we hold it by pointer.
-      isReference = true;
       ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
       return;
    }
@@ -371,7 +368,7 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
          }
       }
       if (isReference) {
-         callbuf << "**(" << type_name.c_str() << "**)args["
+         callbuf << "(" << type_name.c_str() << "&)*(" << type_name.c_str() << "*)args["
                  << i << "]";
       } else if (isPointer) {
          callbuf << "*(" << type_name.c_str() << "**)args["
@@ -435,7 +432,7 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
          }
       }
       if (isReference) {
-         callbuf << "**(" << type_name.c_str() << "**)args["
+         callbuf << "(" << type_name.c_str() << "&)*(" << type_name.c_str() << "*)args["
                  << i << "]";
       } else if (isPointer) {
          callbuf << "*(" << type_name.c_str() << "**)args["
@@ -1473,10 +1470,9 @@ void TClingCallFunc::exec(void *address, void *ret) const
       }
       QualType QT = Ty.getCanonicalType();
       if (QT->isReferenceType()) {
-         ValHolder vh;
-         vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
-         vh_ary.push_back(vh);
-         vp_ary.push_back(&vh_ary.back());
+         // the argument is already a pointer value (point to the same thing
+         // as the reference.
+         vp_ary.push_back((void *) sv_to_ulong_long(fArgVals[i]));
       } else if (QT->isMemberPointerType()) {
          ValHolder vh;
          vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
@@ -1488,10 +1484,9 @@ void TClingCallFunc::exec(void *address, void *ret) const
          vh_ary.push_back(vh);
          vp_ary.push_back(&vh_ary.back());
       } else if (QT->isRecordType()) {
-         ValHolder vh;
-         vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
-         vh_ary.push_back(vh);
-         vp_ary.push_back(&vh_ary.back());
+         // the argument is already a pointer value (pointing to object passed
+         // by value).
+         vp_ary.push_back((void *) sv_to_ulong_long(fArgVals[i]));
       } else if (const EnumType *ET =
                     dyn_cast<EnumType>(&*QT)) {
          // Note: We may need to worry about the underlying type
