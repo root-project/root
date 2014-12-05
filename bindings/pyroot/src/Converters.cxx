@@ -244,7 +244,8 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
-PYROOT_IMPLEMENT_BASIC_CONST_CHAR_REF_CONVERTER( Char, Char_t, CHAR_MIN, CHAR_MAX )
+PYROOT_IMPLEMENT_BASIC_CONST_CHAR_REF_CONVERTER( Char,  Char_t,  CHAR_MIN,  CHAR_MAX )
+PYROOT_IMPLEMENT_BASIC_CONST_CHAR_REF_CONVERTER( UChar, UChar_t,        0, UCHAR_MAX )
 
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Bool,      Bool_t,    PyInt_AsLong, VerifyPyBool )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Short,     Short_t,   PyInt_AsLong, VerifyPyLong )
@@ -1236,6 +1237,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( Char )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstCharRef )
    PYROOT_BASIC_CONVERTER_FACTORY( UChar )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstUCharRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Short )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstShortRef )
    PYROOT_BASIC_CONVERTER_FACTORY( UShort )
@@ -1294,7 +1296,7 @@ namespace {
       NFp_t( "signed char",               &CreateCharConverter               ),
       NFp_t( "const signed char&",        &CreateConstCharRefConverter       ),
       NFp_t( "unsigned char",             &CreateUCharConverter              ),
-      NFp_t( "const unsigned char&",      &CreateConstCharRefConverter       ),
+      NFp_t( "const unsigned char&",      &CreateConstUCharRefConverter      ),
       NFp_t( "short",                     &CreateShortConverter              ),
       NFp_t( "const short&",              &CreateConstShortRefConverter      ),
       NFp_t( "unsigned short",            &CreateUShortConverter             ),
