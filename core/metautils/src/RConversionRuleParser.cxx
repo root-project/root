@@ -5,6 +5,7 @@
 #include "TSchemaRuleProcessor.h"
 
 #include <iostream>
+#include <algorithm>
 #include <string>
 #include <utility>
 #include <map>
@@ -214,11 +215,11 @@ namespace ROOT
       auto const includeKeyName = "include";
       auto includeTag = result.find(includeKeyName);
       if (includeTag != result.end()){
-         auto includeTagValue = includeTag->second;
-         unsigned int i= 0;
-         while (includeTagValue[i++] != '\0') {
-            if (includeTagValue[i] == ';') includeTagValue[i]=',';
-         }
+         auto & includeTagValue = includeTag->second;
+         std::replace_if (includeTagValue.begin(),
+                          includeTagValue.end(),
+                          [](char c){ return c == ';';},
+                          ',');
          result[includeKeyName] = includeTagValue;
       }
 
