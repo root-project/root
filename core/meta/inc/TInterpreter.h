@@ -276,6 +276,9 @@ public:
    void CallFunc_SetArg(CallFunc_t * func, UShort_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
    void CallFunc_SetArg(CallFunc_t * func, UInt_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
 
+   template <typename T>
+   void CallFunc_SetArgRef(CallFunc_t * func, T &param) const { CallFunc_SetArg(func,(ULong_t)param); }
+
    void CallFunc_SetArg(CallFunc_t *func, void *arg)
    {
       CallFunc_SetArg(func,(Long_t) arg);
