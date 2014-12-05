@@ -154,7 +154,7 @@ void TRootSnifferStoreJson::BeforeNextChild(Int_t lvl, Int_t nchld, Int_t)
    buf->Append(",");
    if (!compact) buf->Append("\n");
    if (nchld == 0)
-      buf->Append(TString::Format("%*s\"_childs\" : [\n", compact ? 0 : lvl * 4 + 2, ""));
+      buf->Append(TString::Format("%*s\"_childs\"%s", (compact ? 0 : lvl * 4 + 2), "", (compact ? ":[" : " : [\n")));
 }
 
 //______________________________________________________________________________
@@ -164,7 +164,7 @@ void TRootSnifferStoreJson::CloseNode(Int_t lvl, const char *, Int_t numchilds)
    // depending from number of childs different xml format is applied
 
    if (numchilds > 0)
-      buf->Append(TString::Format("\n%*s]", compact ? 0 : lvl * 4 + 2, ""));
-   buf->Append(TString::Format("\n%*s}", compact ? 0 : lvl * 4, ""));
+      buf->Append(TString::Format("%s%*s]", (compact ? "" : "\n"), compact ? 0 : lvl * 4 + 2, ""));
+   buf->Append(TString::Format("%s%*s}", (compact ? "" : "\n"), compact ? 0 : lvl * 4, ""));
 }
 

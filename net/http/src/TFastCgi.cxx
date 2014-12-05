@@ -15,33 +15,17 @@
 #include <unistd.h>
 #endif
 
-
 #ifndef HTTP_WITHOUT_FASTCGI
 
 #include "fcgiapp.h"
-#include <fstream>
+
 #include <stdlib.h>
 
 void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 {
-   std::ifstream is(fname);
+   Int_t length = 0;
 
-   char *buf = 0;
-   int length = 0;
-
-   if (is) {
-      is.seekg(0, is.end);
-      length = is.tellg();
-      is.seekg(0, is.beg);
-
-      buf = (char *) malloc(length);
-      is.read(buf, length);
-      if (!is) {
-         free(buf);
-         buf = 0;
-         length = 0;
-      }
-   }
+   char *buf = THttpServer::ReadFileContent(fname, length);
 
    if (buf == 0) {
       FCGX_FPrintF(request->out,
@@ -49,24 +33,6 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
                    "Content-Length: 0\r\n" // Always set Content-Length
                    "Connection: close\r\n\r\n");
    } else {
-
-      /*      char sbuf[100], etag[100];
-            time_t curtime = time(NULL);
-            strftime(sbuf, sizeof(sbuf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&curtime));
-            snprintf(etag, sizeof(etag), "\"%lx.%ld\"",
-                     (unsigned long) curtime, (long) length);
-
-            // Send HTTP reply to the client
-            FCGX_FPrintF(request->out,
-                   "HTTP/1.1 200 OK\r\n"
-                   "Date: %s\r\n"
-                   "Last-Modified: %s\r\n"
-                   "Etag: %s\r\n"
-                   "Content-Type: %s\r\n"
-                   "Content-Length: %d\r\n"     // Always set Content-Length
-                   "\r\n", sbuf, sbuf, etag, THttpServer::GetMimeType(fname), length);
-
-      */
 
       FCGX_FPrintF(request->out,
                    "Status: 200 OK\r\n"
@@ -303,6 +269,9 @@ void *TFastCgi::run_func(void *args)
       } else if (arg.IsFile()) {
          FCGX_ROOT_send_file(&request, (const char *) arg.GetContent());
       } else {
+
+         // TODO: check in request header that gzip encoding is supported
+         if (arg.GetZipping()>0) arg.CompressWithGzip();
 
          arg.FillHttpHeader(hdr, "Status:");
          FCGX_FPrintF(request.out, hdr.Data());
