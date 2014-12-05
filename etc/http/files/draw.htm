@@ -10,6 +10,8 @@
 
    <script type='text/javascript'>
 
+      function GetCashedObject() { return "$$$root.json$$$"; }
+
       function CreateDrawGui() {
          // analyze URL options
          var drawopt = JSROOT.GetUrlOption("opt");
@@ -20,29 +22,33 @@
 
          var objpainter = null;
 
-         function drawfunction() {
+         function draw_function(obj) {
+            if (!obj) {
+                if (!objpainter) $('#drawing').append("<h3>Can not get object from the server</h3>");
+                return;
+             }
+             document.body.style.cursor = 'wait';
+             objpainter = JSROOT.redraw('drawing', obj, drawopt);
+             document.body.style.cursor = 'auto';
+         }
 
-            var req = JSROOT.NewHttpRequest("root.json.gz?compact=3", 'text', function(result) {
-                var obj = JSROOT.parse(result);
-                if (!obj) {
-                   if (!objpainter) $('#drawing').append("<h3>Can not get object from the server</h3>");
-                   return;
-                }
-
-                document.body.style.cursor = 'wait';
-                objpainter = JSROOT.redraw('drawing', obj, drawopt);
-                document.body.style.cursor = 'auto';
-
-            });
-
+         function get_function() {
+            var req = JSROOT.NewHttpRequest("root.json.gz?compact=3", 'object', draw_function);
             // submit request
             req.send(null);
          }
 
-         drawfunction();
+         var obj = GetCashedObject();
+
+         if (typeof obj =='object') {
+            obj = JSROOT.JSONR_unref(obj);
+            draw_function(obj);
+         } else { 
+            get_function();
+         }
 
          if (monitor!=null)
-            setInterval(drawfunction, monitor);
+            setInterval(get_function, monitor);
 
          JSROOT.RegisterForResize(function() { if (objpainter) objpainter.CheckResize(); });
       }
