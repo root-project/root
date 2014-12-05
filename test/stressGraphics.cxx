@@ -1909,7 +1909,7 @@ void th2poly()
 
    TCanvas *C = StartTest(800,400);
 
-   Int_t i, bin;
+   Int_t i;
    const Int_t nx = 48;
    const char *states [nx] = {
       "alabama",      "arizona",        "arkansas",       "california",
@@ -1955,7 +1955,7 @@ void th2poly()
       TObject *obj = key->ReadObj();
       if (obj->InheritsFrom("TMultiGraph")) {
          mg = (TMultiGraph*)obj;
-         bin = p->AddBin(mg);
+         p->AddBin(mg);
       }
    }
 
