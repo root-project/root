@@ -252,13 +252,21 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
 {
    // -- Add a new file to this chain.
    //
-   // Argument name may have the following format:
-   //   //machine/file_name.root/subdir/tree_name
-   // machine, subdir and tree_name are optional. If tree_name is missing,
+   // Argument name may have either of two formats. The first:
+   //   //machine/path/file_name.root/subdir/tree_name
+   // machine and subdir/tree_name are optional. If subdir/tree_name is missing
    // the chain name will be assumed.
    // In the file name part (but not in preceding directories) wildcarding
    // notation may be used, eg. specifying "xxx*.root" adds all files starting
    // with xxx in the current file system directory.
+   // Argument name may also have the format of a url with protocol, eg.
+   //     http://machine/path/file_name.root
+   // or  http://machine/path/file_name.root/subdir/tree_name
+   // or  http://machine/path/file_name.root?#subdir/tree_name
+   // Wildcards are not supported in any of the url formats. In the second
+   // url example the file name of the root file must contain '.root'.
+   // The url may contain a query section, eg.
+   //     http://machine/path/file_name.root/subdir/tree_name?query
    // NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
    //
    //    A- if nentries <= 0, the file is connected and the tree header read
@@ -310,14 +318,17 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    // If nentries<=0 and wildcarding is not used, return 1 if the file
    // exists and contains the correct tree and 0 otherwise.
 
-   // case with one single file
-   if (!TString(name).MaybeWildcard()) {
+   TString basename(name);
+   Int_t protosep = basename.Index("://");
+
+   // no processing needed here if a url is given or if there
+   // are no wildcards in the name
+   if ((protosep > 0 && basename.Index("/") > protosep) || !basename.MaybeWildcard()) {
       return AddFile(name, nentries);
    }
 
    // wildcarding used in name
    Int_t nf = 0;
-   TString basename(name);
 
    Int_t dotslashpos = -1;
    {
@@ -438,19 +449,33 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
 
    const char *treename = GetName();
    if (tname && strlen(tname) > 0) treename = tname;
-   char *dot = 0;
-   {
-      char *nextdot =  (char*)strstr(name,".root");
-      while (nextdot) {
-         dot = nextdot;
-         nextdot = (char*)strstr(dot+1,".root");
+
+   Int_t nch = strlen(name);
+   char *filename = new char[nch+1];
+   strlcpy(filename,name,nch+1);
+
+   Bool_t isurl = kFALSE;
+   const char *protosep = strstr(name,"://");
+   if (protosep && protosep > name && strchr(name,'/') > protosep) {
+      isurl = kTRUE;
+   }
+
+   char *fragstr = 0;
+   const char *querysep = 0;
+   if (isurl) {
+      // fragment without a query is not recognised because some of the
+      // protocols allow # in the filename
+      char *pos = strchr(filename, '?');
+      if (pos) {
+         querysep = &name[pos - filename];
+         fragstr = strchr(pos+1, '#');
+         if (fragstr) {
+            // Remove query if empty and fragment from filename
+            if (fragstr == pos+1) *pos = 0;
+            *fragstr++ = 0;
+         }
       }
    }
-   //the ".root" is mandatory only if one wants to specify a treename
-   //if (!dot) {
-   //   Error("AddFile","a chain element name must contain the string .root");
-   //   return 0;
-   //}
 
    //Check enough space in fTreeOffset
    if (fNtrees+1 >= fTreeOffsetLen) {
@@ -461,19 +486,45 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
       fTreeOffset = trees;
    }
 
-   //Search for a a slash between the .root and the end
-   Int_t nch = strlen(name) + strlen(treename);
-   char *filename = new char[nch+1];
-   strlcpy(filename,name,nch+1);
-   if (dot) {
-      char *pos = filename + (dot-name) + 5;
-      while (*pos) {
-         if (*pos == '/') {
-            treename = pos+1;
-            *pos = 0;
-            break;
+   if (fragstr) {
+      // Treename is given in the fragment
+      treename = fragstr;
+   } else {
+      // Treename may be given after the filename but before a query string
+      // Query is removed during the treename check and readded afterwards
+      if (querysep) {
+         filename[querysep - name] = '\0';
+      }
+      // Look for ".root"
+      char *dot = 0;
+      char *nextdot =  (char*)strstr(filename,".root");
+      while (nextdot) {
+         dot = nextdot;
+         nextdot = (char*)strstr(dot+1,".root");
+      }
+      Int_t fnnch = nch;
+      // Search for a slash between the .root and the end
+      if (dot) {
+         char *pos = dot + 5;
+         while (*pos) {
+            if (*pos == '/') {
+               treename = pos + 1;
+               *pos = 0;
+               Int_t tlen = strlen(treename);
+               if (querysep) {
+                  // Move treename to end of buffer to make room to readd query
+                  memmove(filename+nch-tlen, treename, tlen+1);
+                  treename = &filename[nch-tlen];
+               }
+               fnnch = treename - filename -1;
+               break;
+            }
+            pos++;
          }
-         pos++;
+      }
+      // Append any query back onto the filename
+      if (querysep) {
+         strlcat(filename,querysep,fnnch+1);
       }
    }
 
