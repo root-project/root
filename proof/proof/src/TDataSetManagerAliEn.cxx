@@ -21,16 +21,18 @@
 #include "TDataSetManagerAliEn.h"
 #include "TError.h"
 #include "TSystem.h"
+#include "Riostream.h"
 
 ClassImp(TAliEnFind);
 
 //______________________________________________________________________________
 TAliEnFind::TAliEnFind(const TString &basePath, const TString &fileName,
   const TString &anchor, const Bool_t archSubst, const TString &treeName,
-  const TString &regexp, const TString& filter) :
+  const TString &regexp, const TString& filter, const TString& alirootVersionForFilter) :
   fBasePath(basePath), fFileName(fileName), fTreeName(treeName),
-  fRegexpRaw(regexp), fAnchor(anchor), fFilter(filter), fArchSubst(archSubst),
-  fRegexp(0), fSearchId(""), fGridResult(0)
+  fRegexpRaw(regexp), fAnchor(anchor),
+  fFilter(filter), fAliRootVersionForFilter(alirootVersionForFilter),
+  fArchSubst(archSubst), fRegexp(0), fSearchId(""), fGridResult(0)
 {
    // Constructor
 
@@ -49,6 +51,7 @@ TAliEnFind::TAliEnFind(const TAliEnFind &src) : TObject()
    fAnchor = src.fAnchor;
    fArchSubst = src.fArchSubst;
    fFilter = src.fFilter;
+   fAliRootVersionForFilter = src.fAliRootVersionForFilter;
    fTreeName = src.fTreeName;
    fRegexpRaw = src.fRegexpRaw;
 
@@ -71,6 +74,7 @@ TAliEnFind &TAliEnFind::operator=(const TAliEnFind &rhs)
       fAnchor = rhs.fAnchor;
       fArchSubst = rhs.fArchSubst;
       fFilter = rhs.fFilter;
+      fAliRootVersionForFilter = rhs.fAliRootVersionForFilter;
       fTreeName = rhs.fTreeName;
 
       SetRegexp(rhs.fRegexpRaw);
@@ -158,7 +162,7 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
             os->SetString(tUrl.Data());
          }
         
-        if ( fFilter )
+        if ( fFilter.Length() )
         {
           TString tmp = gSystem->BaseName(os->String());
           Ssiz_t ix = tmp.Last('.');
@@ -166,7 +170,13 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
           file += "/";
           file += tmp(0,ix);
           file += ".";
+          file += "FILTER_";
           file += fFilter;
+          if ( fAliRootVersionForFilter.Length() )
+          {
+            file += "_WITH_";
+            file += fAliRootVersionForFilter;
+          }
           file += tmp(ix,tmp.Length()-ix);
           os->SetString(file.Data());
         }
@@ -450,12 +460,13 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
     TString basePath;
     TString fileName;
     TString anchor;
-    TString query;
+    TString filter;
+    TString alirootVersionForFilter;
     TString treeName;
     TString regexp;
 
     // Custom search URI
-    if (!ParseCustomFindUri(uri, basePath, fileName, anchor, query, treeName,
+    if (!ParseCustomFindUri(uri, basePath, fileName, anchor, filter, alirootVersionForFilter, treeName,
       regexp)) {
       Error("GetFindCommandsFromUri", "Malformed AliEn find command");
       return NULL;
@@ -464,7 +475,7 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
     findCommands = new TList();
     findCommands->SetOwner();
     findCommands->Add( new TAliEnFind(basePath, fileName, anchor, kFALSE,
-      treeName, regexp, query) );
+      treeName, regexp, filter, alirootVersionForFilter) );
 
   }
   else {  // Data or Sim
@@ -614,6 +625,7 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
 //______________________________________________________________________________
 Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
    TString &basePath, TString &fileName, TString &anchor, TString& filter,
+   TString& alirootVersionForFilter,
    TString &treeName, TString &regexp)
 {
 
@@ -667,6 +679,15 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
     filter = reFilter[3];
   }
 
+  // AliRoot version for filter string (optional)
+  TPMERegexp reAliRoot("(^|;)(AliRoot=([^; ]+))(;|$)");
+  if (reAliRoot.Match(uri) != 5)
+    alirootVersionForFilter = "";
+  else {
+    checkUri.ReplaceAll(reAliRoot[2], "");
+    alirootVersionForFilter = reAliRoot[3];
+  }
+
   // Tree name (optional)
   TPMERegexp reTreeName("(^|;)(Tree=(/[^; ]+))(;|$)");
   if (reTreeName.Match(uri) != 5)
@@ -693,6 +714,14 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
             "There are unrecognized parameters in the dataset find string : %s",checkUri.Data());
     return kFALSE;
   }
+  
+  if ( !alirootVersionForFilter.IsNull() && filter.IsNull() )
+  {
+    ::Error("TDataSetManagerAliEn::ParseCustomFindUri",
+            "Cannot specificy AliRoot version without specifying Filter");
+    return kFALSE;
+  }
+  
    return kTRUE;
 }
 
