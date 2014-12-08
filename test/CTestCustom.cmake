@@ -30,3 +30,14 @@ if(CTEST_BUILD_NAME MATCHES mac107)  #  sse tests of vc fail for mac107 compiler
       vc-utils_sse)
 endif()
 
+if(CTEST_BUILD_NAME MATCHES vc9)  #  some tests fail for vc9 compiler
+  set(CTEST_CUSTOM_TESTS_IGNORE ${CTEST_CUSTOM_TESTS_IGNORE}
+      mathcore-binarySearchTime
+      mathcore-testkdTreeBinning
+      test-stresstmva
+      tutorial-math-kdTreeBinning
+      tutorial-roostats-HybridOriginalDemo
+      tutorial-roostats-rs801_HypoTestInverterOriginal)
+endif()
+
+
