@@ -116,6 +116,12 @@ foreach(_value ${CINT_SRCS})
   endif()
 endforeach()
 
+if(ROOT_PLATFORM STREQUAL win32 AND NOT (MSVC_VERSION LESS 1800))
+  # turn optimizations off for this file, otherwise we get a compilation error with
+  # Visual C++ 12 (2013) in Release mode (due to the /O2 flag):
+  # g__cfunc.c(835) : error C2099: initializer is not a constant
+  set_source_files_properties(src/g__cfunc.c COMPILE_FLAGS "-Od")
+endif()
 
 include_directories(src)
 if(MACOSX_TMPNAM_DEPRECATED)
