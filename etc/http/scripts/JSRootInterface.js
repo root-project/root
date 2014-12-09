@@ -268,6 +268,8 @@ function ReadFile(filename, checkitem) {
 
 function ProcessResize(direct)
 {
+   if (JSROOT.H('root')==null) return;
+
    if (direct) document.body.style.cursor = 'wait';
 
    JSROOT.H('root').CheckResize();
@@ -276,47 +278,34 @@ function ProcessResize(direct)
 }
 
 function AddInteractions() {
-   var drag_sum = 0;
 
-   var drag_move = d3.behavior.drag()
-      .origin(Object)
-      .on("dragstart", function() {
-          d3.event.sourceEvent.preventDefault();
-          // console.log("start drag");
-          drag_sum = 0;
-       })
-      .on("drag", function() {
-         d3.event.sourceEvent.preventDefault();
-         drag_sum += d3.event.dx;
-         // console.log("dx = " + d3.event.dx);
-         d3.event.sourceEvent.stopPropagation();
-      })
-      .on("dragend", function() {
-         d3.event.sourceEvent.preventDefault();
-         // console.log("stop drag " + drag_sum);
+   function adjustSize(left) {
+      var diff = $("#left-div").outerWidth() - $("#left-div").width();
+      $("#separator-div").css('left', left.toString() + "px");
+      $("#left-div").width(left-diff-1);
+      $("#right-div").css('left',(left+4).toString() + "px");
+      ProcessResize(true);
+   }
 
-         var width = d3.select("#left-div").style('width');
-         width = (parseInt(width.substr(0, width.length - 2)) + Number(drag_sum)).toString() + "px";
-         d3.select("#left-div").style('width', width);
+   $("#separator-div").draggable({
+      axis: "x" , zIndex: 100, cursor: "ew-resize",
+      helper : function() { return $("#separator-div").clone().css('background-color','grey'); },
+      stop: function(event,ui) { adjustSize(ui.position.left); }
+   });
 
-         var left = d3.select("#separator-div").style('left');
-         left = parseInt(left.substr(0, left.length - 2)) + Number(drag_sum);
-         d3.select("#separator-div").style('left',left.toString() + "px");
-         d3.select("#right-div").style('left',(left+6).toString() + "px");
+   var w0 = Math.round($(window).width() * 0.2);
+   if (w0<300) w0 = Math.min(300, Math.round($(window).width() * 0.5));
 
-         ProcessResize(true);
-      });
-
-   d3.select("#separator-div").call(drag_move);
+   adjustSize(w0);
 
    JSROOT.RegisterForResize(ProcessResize);
 
    // specify display kind every time selection done
    // will be actually used only for first drawing or after reset
-   document.getElementById("layout").onchange = function() {
-      if (JSROOT.H('root'))
+   $("#layout").change( function() {
+      if (JSROOT.H('root')!=null)
          JSROOT.H('root').SetDisplay(guiLayout(), "right-div");
-   }
+   });
 }
 
 
@@ -332,11 +321,10 @@ function BuildOnlineGUI() {
    if (JSROOT.GetUrlOption("nobrowser")!=null)
       return BuildNoBrowserGUI(true);
 
-   var guiCode = "<div id='overlay'><font face='Verdana' size='1px'>&nbspJSROOT version " + JSROOT.version + "&nbsp</font></div>"
-
-   guiCode += '<div id="left-div" class="column"><br/>'
-            + '  <h1><font face="Verdana" size="4">ROOT online server</font></h1>'
-            + '  Hierarchy in <a href="h.json">json</a> and <a href="h.xml">xml</a> format<br/><br/>'
+   var guiCode = '<div id="left-div" class="column">'
+            + '<h1><font face="Verdana" size="4">ROOT online server</font></h1>'
+            + "<p><font face='Verdana' size='1px'><a href='http://root.cern.ch/js/jsroot.html'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></font></p>"
+            + '<p> Hierarchy in <a href="h.json">json</a> and <a href="h.xml">xml</a> format</p>'
             + ' <input type="checkbox" name="monitoring" id="monitoring"/> Monitoring '
             + ' <select style="padding:2px; margin-left:10px; margin-top:5px;" id="layout">'
             + '   <option>collapsible</option><option>grid 2x2</option><option>grid 3x3</option><option>grid 4x4</option><option>tabs</option>'
@@ -346,8 +334,9 @@ function BuildOnlineGUI() {
             + '<div id="separator-div" class="column"></div>'
             + '<div id="right-div" class="column"></div>';
 
-   $('#onlineGUI').empty();
-   $('#onlineGUI').append(guiCode);
+   $('#onlineGUI').empty().append(guiCode);
+
+   AddInteractions();
 
    var layout = JSROOT.GetUrlOption("layout");
    if ((layout=="") || (layout==null))
@@ -395,8 +384,6 @@ function BuildOnlineGUI() {
    });
 
    setInterval(function() { if (h.IsMonitoring()) h.updateAll(); }, h.MonitoringInterval());
-
-   AddInteractions();
 }
 
 function BuildSimpleGUI() {
@@ -420,44 +407,44 @@ function BuildSimpleGUI() {
    if (filesdir==null) filesdir = "";
    var arrFiles = files.split(';');
 
-   var guiCode = "<div id='overlay'><font face='Verdana' size='1px'>&nbspJSROOT version " + JSROOT.version + "&nbsp</font></div>"
+   var filename = JSROOT.GetUrlOption("file");
 
-   guiCode += "<div id='left-div' class='column'>\n"
-      +"<h1><font face='Verdana' size='4'>Read a ROOT file with Javascript</font></h1>\n"
-      +"<p><b>Select a ROOT file to read, or enter a url (*): </b><br/>\n"
-      +'<small><sub>*: Other URLs might not work because of cross site scripting protection, see e.g. <a href="https://developer.mozilla.org/en/http_access_control">developer.mozilla.org/http_access_control</a> on how to avoid it.</sub></small></p>'
-      +'<form name="ex">'
-      +'<div style="margin-left:10px;">'
-      + '<input type="text" name="state" value="" size="30" id="urlToLoad"/><br/>'
-      +'<select name="s" size="1" '
+   var guiCode = "<div id='left-div' class='column'>"
+      +"<h1><font face='Verdana' size='4'>Read a ROOT file</font></h1>"
+      +"<p><font face='Verdana' size='1px'><a href='http://root.cern.ch/js/jsroot.html'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></font></p>";
+
+   if ((JSROOT.GetUrlOption("noselect")==null) && (filename!=null)) {
+     guiCode += '<form name="ex">'
+      +'<input type="text" name="state" value="" style="width:95%; margin-top:5px;" id="urlToLoad"/>'
+      +'<select name="s" style="width:65%; margin-top:5px;" '
       +'onchange="document.ex.state.value = document.ex.s.options[document.ex.s.selectedIndex].value;document.ex.s.selectedIndex=0;document.ex.s.value=\'\'">'
-      +'<option value = " " selected = "selected">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</option>';
-   for (var i=0; i<arrFiles.length; i++) {
-      guiCode += '<option value = "' + filesdir + arrFiles[i] + '">' + arrFiles[i] + '</option>';
+      +'<option value=" " selected="selected">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</option>';
+      for (var i=0; i<arrFiles.length; i++) {
+         guiCode += '<option value = "' + filesdir + arrFiles[i] + '">' + arrFiles[i] + '</option>';
+      }
+      guiCode += '</select><br/>'
+        +'<p><small>Other URLs might not work because of <a href="http://en.wikipedia.org/wiki/Same-origin_policy">same-origin security policy</a>, '
+        +'see e.g. <a href="https://developer.mozilla.org/en/http_access_control">developer.mozilla.org</a> on how to avoid it.</small></p>'
+        +'<input style="padding:2px; margin-top:5px;"'
+        +'       onclick="ReadFile()" type="button" title="Read the Selected File" value="Load"/>'
+        +'<input style="padding:2px; margin-left:10px;"'
+        +'       onclick="ResetUI()" type="button" title="Clear All" value="Reset"/>'
+        +'<select style="padding:2px; margin-left:10px; margin-top:5px;" title="layout kind" id="layout">'
+        +'  <option>collapsible</option><option>grid 2x2</option><option>grid 3x3</option><option>grid 4x4</option><option>tabs</option>'
+        +'</select><br/>'
+        +'</form>';
    }
-   guiCode += '</select>'
+   guiCode += '<div id="browser"></div>'
       +'</div>'
-      +'<input style="padding:2px; margin-left:10px; margin-top:5px;"'
-      +'       onclick="ReadFile()" type="button" title="Read the Selected File" value="Load"/>'
-      +'<input style="padding:2px; margin-left:10px;"'
-      +'       onclick="ResetUI()" type="button" title="Clear All" value="Reset"/>'
-      +'<select style="padding:2px; margin-left:10px; margin-top:5px;" id="layout">'
-      +'  <option>collapsible</option><option>grid 2x2</option><option>grid 3x3</option><option>grid 4x4</option><option>tabs</option>'
-      +'</select>'
-      +'</form>'
-      +'<br/>'
-      +'<div id="browser"></div>'
-      +'</div>'
-      +'<div id="separator-div" class="column"></div>'
+      +'<div id="separator-div"></div>'
       +'<div id="right-div" class="column"></div>';
 
-   $('#simpleGUI').empty();
-   $('#simpleGUI').append(guiCode);
+   $('#simpleGUI').empty().append(guiCode);
+
    // $("#layout").selectmenu();
 
    AddInteractions();
 
-   var filename = JSROOT.GetUrlOption("file");
    if ((typeof filename == 'string') && (filename.length>0))
       ReadFile(filename, true);
 }
