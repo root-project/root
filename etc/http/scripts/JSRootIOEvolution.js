@@ -1327,7 +1327,15 @@
 
       var file = this;
 
-      var xhr = JSROOT.NewHttpRequest(this.fURL, "bin", function(res) {
+      var url = this.fURL;
+      if (this.fAcceptRanges) {
+         // only when server accept ranges we could also try to avoid caching
+         if (url.indexOf('?')>0) url+="&stamp="; else url += "?stamp=";
+         var d = new Date;
+         url += d.getTime();
+      }
+
+      var xhr = JSROOT.NewHttpRequest(url, "bin", function(res) {
          if ((res!=null) && !file.fAcceptRanges && (file.fFullFileContent.length == 0)) {
             // special case - read content all at once
             file.fFullFileContent = res;
@@ -1339,7 +1347,7 @@
       });
 
       if (this.fAcceptRanges)
-         xhr.setRequestHeader("Range", "bytes=" + this.fOffset + "-" + (this.fOffset + len));
+         xhr.setRequestHeader("Range", "bytes=" + this.fOffset + "-" + (this.fOffset + len - 1));
       // does not work when used with CORS requests
       // xhr.setRequestHeader("If-Modified-Since", "Wed, 31 Dec 1980 00:00:00 GMT");
       xhr.send(null);
