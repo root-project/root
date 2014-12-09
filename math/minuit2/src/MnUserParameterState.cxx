@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -11,7 +11,7 @@
 #include "Minuit2/MnCovarianceSqueeze.h"
 #include "Minuit2/MinimumState.h"
 
-#include "Minuit2/MnPrint.h" 
+#include "Minuit2/MnPrint.h"
 
 
 namespace ROOT {
@@ -22,19 +22,19 @@ namespace ROOT {
 //
 // construct from user parameters (befor minimization)
 //
-MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const std::vector<double>& err) : 
-   fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(MnUserParameters(par, err)), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(MnUserCovariance()) 
+MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const std::vector<double>& err) :
+   fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(MnUserParameters(par, err)), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(MnUserCovariance())
       {}
 
-MnUserParameterState::MnUserParameterState(const MnUserParameters& par) : 
+MnUserParameterState::MnUserParameterState(const MnUserParameters& par) :
    fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(par), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {
    // construct from user parameters (befor minimization)
-  
+
    for(std::vector<MinuitParameter>::const_iterator ipar = MinuitParameters().begin(); ipar != MinuitParameters().end(); ipar++) {
       if((*ipar).IsConst() || (*ipar).IsFixed()) continue;
-      if((*ipar).HasLimits()) 
+      if((*ipar).HasLimits())
          fIntParameters.push_back(Ext2int((*ipar).Number(), (*ipar).Value()));
-      else 
+      else
          fIntParameters.push_back((*ipar).Value());
    }
 }
@@ -42,10 +42,10 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters& par) :
 //
 // construct from user parameters + errors (befor minimization)
 //
-MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const std::vector<double>& cov, unsigned int nrow) : 
-   fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), 
+MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const std::vector<double>& cov, unsigned int nrow) :
+   fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
    fParameters(MnUserParameters()), fCovariance(MnUserCovariance(cov, nrow)), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(MnUserCovariance(cov, nrow)) {
-   // construct from user parameters + errors (before minimization) using std::vector for parameter error and    // an std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix) 
+   // construct from user parameters + errors (before minimization) using std::vector for parameter error and    // an std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix)
 
    std::vector<double> err; err.reserve(par.size());
    for(unsigned int i = 0; i < par.size(); i++) {
@@ -56,8 +56,8 @@ MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const
    assert(fCovariance.Nrow() == VariableParameters());
 }
 
-MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const MnUserCovariance& cov) : 
-   fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), 
+MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const MnUserCovariance& cov) :
+   fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
    fParameters(MnUserParameters()), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(cov) {
    //construct from user parameters + errors (before minimization) using std::vector (params) and MnUserCovariance class
 
@@ -71,18 +71,18 @@ MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const
 }
 
 
-MnUserParameterState::MnUserParameterState(const MnUserParameters& par, const MnUserCovariance& cov) : 
-   fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), 
+MnUserParameterState::MnUserParameterState(const MnUserParameters& par, const MnUserCovariance& cov) :
+   fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
    fParameters(par), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(cov) {
-   //construct from user parameters + errors (befor minimization) using 
+   //construct from user parameters + errors (befor minimization) using
    // MnUserParameters and MnUserCovariance objects
 
    fIntCovariance.Scale(0.5);
    for(std::vector<MinuitParameter>::const_iterator ipar = MinuitParameters().begin(); ipar != MinuitParameters().end(); ipar++) {
       if((*ipar).IsConst() || (*ipar).IsFixed()) continue;
-      if((*ipar).HasLimits()) 
+      if((*ipar).HasLimits())
          fIntParameters.push_back(Ext2int((*ipar).Number(), (*ipar).Value()));
-      else 
+      else
          fIntParameters.push_back((*ipar).Value());
    }
    assert(fCovariance.Nrow() == VariableParameters());
@@ -94,12 +94,14 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters& par, const Mn
 
 //
 //
-MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, const MnUserTransformation& trafo) : 
-   fValid(st.IsValid()), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), 
+MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, const MnUserTransformation& trafo) :
+   fValid(st.IsValid()), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1),
    fFVal(st.Fval()), fEDM(st.Edm()), fNFcn(st.NFcn()), fParameters(MnUserParameters()), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {
    //
    // construct from internal parameters (after minimization)
    //
+   //std::cout << "build a MnUSerParameterState after minimization.." << std::endl;
+   
    for(std::vector<MinuitParameter>::const_iterator ipar = trafo.Parameters().begin(); ipar != trafo.Parameters().end(); ipar++) {
       if((*ipar).IsConst()) {
          Add((*ipar).GetName(), (*ipar).Value());
@@ -130,21 +132,22 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
          Add((*ipar).GetName(), st.Vec()(i), err);
       }
    }
-   
+
+   // need to be set afterwards because becore the ::Add method set fCovarianceValid to false
    fCovarianceValid = st.Error().IsValid();
 
    fCovStatus = -1; // when not available
    //if (st.Error().HesseFailed() || st.Error().InvertFailed() ) fCovStatus = -1;
-   // when available 
+   // when available
    if (st.Error().IsAvailable() ) fCovStatus = 0;
-   
+
    if(fCovarianceValid) {
       fCovariance = trafo.Int2extCovariance(st.Vec(), st.Error().InvHessian());
       fIntCovariance = MnUserCovariance(std::vector<double>(st.Error().InvHessian().Data(), st.Error().InvHessian().Data()+st.Error().InvHessian().size()), st.Error().InvHessian().Nrow());
       fCovariance.Scale(2.*up);
       fGlobalCC = MnGlobalCorrelationCoeff(st.Error().InvHessian());
       fGCCValid = fGlobalCC.IsValid();
-      
+
       assert(fCovariance.Nrow() == VariableParameters());
 
       fCovStatus = 1;   // when is valid
@@ -154,7 +157,7 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
 
 }
 
-MnUserCovariance MnUserParameterState::Hessian() const { 
+MnUserCovariance MnUserParameterState::Hessian() const {
    // invert covariance matrix and return Hessian
    // need to copy in a MnSymMatrix
    MnAlgebraicSymMatrix mat(fCovariance.Nrow() );
@@ -183,7 +186,7 @@ const std::vector<MinuitParameter>& MnUserParameterState::MinuitParameters() con
    //access to parameters (row-wise)
    return fParameters.Parameters();
 }
- 
+
 std::vector<double> MnUserParameterState::Params() const {
    //access to parameters in column-wise representation
    return fParameters.Params();
@@ -200,31 +203,31 @@ const MinuitParameter& MnUserParameterState::Parameter(unsigned int i) const {
 
 void MnUserParameterState::Add(const std::string & name, double val, double err) {
    //add free Parameter
-   if ( fParameters.Add(name, val, err) ) { 
+   if ( fParameters.Add(name, val, err) ) {
       fIntParameters.push_back(val);
       fCovarianceValid = false;
       fGCCValid = false;
       fValid = true;
    }
-   else { 
+   else {
       // redefine an existing parameter
       int i = Index(name);
       SetValue(i,val);
-      if (Parameter(i).IsConst() ) { 
-         std::string msg = "Cannot modify status of constant parameter " + name; 
+      if (Parameter(i).IsConst() ) {
+         std::string msg = "Cannot modify status of constant parameter " + name;
          MN_INFO_MSG2("MnUserParameterState::Add",msg.c_str());
          return;
       }
       SetError(i,err);
-      // release if it was fixed 
-      if (Parameter(i).IsFixed() ) Release(i);  
+      // release if it was fixed
+      if (Parameter(i).IsFixed() ) Release(i);
    }
-   
+
 }
 
 void MnUserParameterState::Add(const std::string & name, double val, double err, double low, double up) {
    //add limited Parameter
-   if ( fParameters.Add(name, val, err, low, up) ) {  
+   if ( fParameters.Add(name, val, err, low, up) ) {
       fCovarianceValid = false;
       fIntParameters.push_back(Ext2int(Index(name), val));
       fGCCValid = false;
@@ -233,25 +236,25 @@ void MnUserParameterState::Add(const std::string & name, double val, double err,
    else { // Parameter already exist - just set values
       int i = Index(name);
       SetValue(i,val);
-      if (Parameter(i).IsConst() ) { 
-         std::string msg = "Cannot modify status of constant parameter " + name; 
+      if (Parameter(i).IsConst() ) {
+         std::string msg = "Cannot modify status of constant parameter " + name;
          MN_INFO_MSG2("MnUserParameterState::Add",msg.c_str());
          return;
       }
       SetError(i,err);
       SetLimits(i,low,up);
-      // release if it was fixed 
-      if (Parameter(i).IsFixed() ) Release(i);  
+      // release if it was fixed
+      if (Parameter(i).IsFixed() ) Release(i);
    }
-   
-   
+
+
 }
 
 void MnUserParameterState::Add(const std::string & name, double val) {
    //add const Parameter
-   if ( fParameters.Add(name, val) ) 
+   if ( fParameters.Add(name, val) )
       fValid = true;
-   else 
+   else
       SetValue(name,val);
 }
 
@@ -265,7 +268,7 @@ void MnUserParameterState::Fix(unsigned int e) {
          fCovariance = MnCovarianceSqueeze()(fCovariance, i);
          fIntCovariance = MnCovarianceSqueeze()(fIntCovariance, i);
       }
-      fIntParameters.erase(fIntParameters.begin()+i, fIntParameters.begin()+i+1);  
+      fIntParameters.erase(fIntParameters.begin()+i, fIntParameters.begin()+i+1);
    }
    fParameters.Fix(e);
    fGCCValid = false;
@@ -280,7 +283,7 @@ void MnUserParameterState::Release(unsigned int e) {
    fGCCValid = false;
    unsigned int i = IntOfExt(e);
    if(Parameter(e).HasLimits())
-      fIntParameters.insert(fIntParameters.begin()+i, Ext2int(e, Parameter(e).Value()));    
+      fIntParameters.insert(fIntParameters.begin()+i, Ext2int(e, Parameter(e).Value()));
    else
       fIntParameters.insert(fIntParameters.begin()+i, Parameter(e).Value());
 }
@@ -311,9 +314,9 @@ void MnUserParameterState::SetLimits(unsigned int e, double low, double up) {
       unsigned int i = IntOfExt(e);
       if(low < fIntParameters[i] && fIntParameters[i] < up)
          fIntParameters[i] = Ext2int(e, fIntParameters[i]);
-      else if (low >=  fIntParameters[i] ) 
+      else if (low >=  fIntParameters[i] )
          fIntParameters[i] = Ext2int(e, low + 0.1 * Parameter(e).Error() );
-      else 
+      else
          fIntParameters[i] = Ext2int(e, up - 0.1 * Parameter(e).Error() );
    }
 }
@@ -352,7 +355,7 @@ void MnUserParameterState::RemoveLimits(unsigned int e) {
    fCovarianceValid = false;
    fGCCValid = false;
    if(!Parameter(e).IsFixed() && !Parameter(e).IsConst())
-      fIntParameters[IntOfExt(e)] = Value(e);  
+      fIntParameters[IntOfExt(e)] = Value(e);
 }
 
 double MnUserParameterState::Value(unsigned int i) const {
@@ -397,7 +400,7 @@ const char* MnUserParameterState::Name(unsigned int i) const {
    return fParameters.Name(i);
 }
 const std::string & MnUserParameterState::GetName(unsigned int i) const {
-   //convert external number into name of Parameter (new interface returning a string) 
+   //convert external number into name of Parameter (new interface returning a string)
    return fParameters.GetName(i);
 }
 
@@ -408,14 +411,14 @@ double MnUserParameterState::Int2ext(unsigned int i, double val) const {
    return fParameters.Trafo().Int2ext(i, val);
 }
 double MnUserParameterState::Ext2int(unsigned int e, double val) const {
-    // external  to internal value 
+    // external  to internal value
    return fParameters.Trafo().Ext2int(e, val);
 }
 unsigned int MnUserParameterState::IntOfExt(unsigned int ext) const {
-   // return internal index for external index ext 
+   // return internal index for external index ext
    return fParameters.Trafo().IntOfExt(ext);
 }
-unsigned int MnUserParameterState::ExtOfInt(unsigned int internal) const { 
+unsigned int MnUserParameterState::ExtOfInt(unsigned int internal) const {
     // return external index for internal index internal
    return fParameters.Trafo().ExtOfInt(internal);
 }
