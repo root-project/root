@@ -24,6 +24,9 @@
 #if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
 #endif
+#if defined(DEBUG) && !defined(WARNINGMSG)
+#define WARNINGMSG
+#endif
 
 #include "Minuit2/MPIProcess.h"
 
@@ -329,7 +332,7 @@ L30:
    double edm = estim.Estimate(gr, err);
 
 #ifdef DEBUG
-   std::cout << "\nNew state from MnHesse " << std::endl;
+   std::cout << "\nHesse is ACCURATE. New state from MnHesse " << std::endl;
    std::cout << "Gradient " << grd << std::endl;
    std::cout << "Second Deriv " << g2 << std::endl;
    std::cout << "Gradient step " << gst << std::endl;

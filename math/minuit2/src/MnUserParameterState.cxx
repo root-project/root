@@ -100,6 +100,8 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
    //
    // construct from internal parameters (after minimization)
    //
+   //std::cout << "build a MnUSerParameterState after minimization.." << std::endl;
+   
    for(std::vector<MinuitParameter>::const_iterator ipar = trafo.Parameters().begin(); ipar != trafo.Parameters().end(); ipar++) {
       if((*ipar).IsConst()) {
          Add((*ipar).GetName(), (*ipar).Value());
@@ -131,6 +133,7 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
       }
    }
 
+   // need to be set afterwards because becore the ::Add method set fCovarianceValid to false
    fCovarianceValid = st.Error().IsValid();
 
    fCovStatus = -1; // when not available
