@@ -28,12 +28,13 @@ The following parameters can be specified in the URL string:
 - autoload - name of JavaScript to load
 - optimize - drawing optimization 0:off, 1:only large histograms (default), 2:always
 - interactive - enable/disable interactive functions 0-disable all, 1-enable all
+- noselect - hide file-selection part in the browser (only when file name is specified)
 
 Examples: 
 
 - <http://root.cern.ch/js/3.1/index.htm?file=../files/hsimple.root&item=hpx;1>
 - <http://root.cern.ch/js/3.1/index.htm?file=../files/hsimple.root&nobrowser&item=hpxpy;1&opt=colz>
-- <http://root.cern.ch/js/3.1/index.htm?file=../files/hsimple.root&layout=grid2x2&item=hprof;1>
+- <http://root.cern.ch/js/3.2/index.htm?file=../files/hsimple.root&noselect&layout=grid2x2&item=hprof;1>
 
 One can very easy integrate JSROOT graphic into other HTML pages using a __iframe__ tag:  
 
