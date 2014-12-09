@@ -613,9 +613,8 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->fContent.Append(h_json);
             arg->fContent.Append(fDefaultPageCont.Data() + pos + strlen(hjsontag));
 
-            // by default compress page with zip
+            arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
             if (arg->fQuery.Index("nozip")==kNPOS) arg->SetZipping(2);
-            // arg->SetExtraHeader("Cache-Control", "max-age=10, public");
          }
          arg->SetContentType("text/html");
       }
@@ -647,8 +646,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
                arg->fContent.Append(fDrawPageCont, pos);
                arg->fContent.Append((char*) bindata, bindatalen);
                arg->fContent.Append(fDrawPageCont.Data() + pos + strlen(rootjsontag));
-
-               // by default compress page with zip
+               arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
                if (arg->fQuery.Index("nozip")==kNPOS) arg->SetZipping(2);
             } else {
                arg->fContent = fDrawPageCont;
@@ -722,6 +720,9 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       const char* parname = fSniffer->IsStreamerInfoItem(arg->fPathName.Data()) ? "BVersion" : "MVersion";
       arg->AddHeader(parname, Form("%u", (unsigned) fSniffer->GetStreamerInfoHash()));
    }
+
+   // try to avoid caching on the browser
+   arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
 }
 
 //______________________________________________________________________________
