@@ -4285,7 +4285,7 @@ void *TClass::DynamicCast(const TClass *cl, void *obj, Bool_t up)
    if (!HasDataMemberInfo()) return 0;
 
    Int_t off;
-   if ((off = GetBaseClassOffset(cl)) != -1) {
+   if ((off = GetBaseClassOffset(cl, obj)) != -1) {
       if (up)
          return (void*)((Long_t)obj+off);
       else
