@@ -1,0 +1,8 @@
+<rootdict>
+  <class name="TestDictProperties">
+    <field name="m_v" mapping="blob">
+    <field name="m_s" persistency="loose_on_writing">
+    <field name="m_i" persistency="loose_on_reading">
+  </class>
+</rootdict>
+

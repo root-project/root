@@ -20,5 +20,5 @@ execTypedefSelection.log: libtypedefSelection_dictrflx.$(DllSuf)
 execstlPatternSelection.log: libstlPatternSelection_dictrflx.$(DllSuf)
 execCheckComplicatedAllocator.log: libcomplicatedAllocator_dictrflx.$(DllSuf)
 execns.log: libns_dictrflx.$(DllSuf)
-
+execAttributesCheck.log: libattributesCheck_dictrflx.$(DllSuf)
 

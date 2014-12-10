@@ -31,3 +31,11 @@ ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-ns
                   MACRO execns.C
                   OUTREF execns.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
+
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(attributesCheck attributesCheck.h SELECTION attributesCheck_selection.xml)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-attributesCheck
+                  MACRO execAttributesCheck.C
+                  OUTREF execAttributesCheck.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST})
+
