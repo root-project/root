@@ -126,6 +126,15 @@ namespace RooStats {
    // useful function to print in one line the content of a set with their values 
    void PrintListContent(const RooArgList & l, std::ostream & os = std::cout);
 
+   // function to set a global flag in RooStats to use NLL offset when performing nll computations
+   // Note that not all ROoStats tools implement this capabilities
+   void UseNLLOffset(bool on);
+
+   // function returning if the flag to check if the flag to use  NLLOffset is set
+   bool IsNLLOffset();
+   
+
+
 }
 
 

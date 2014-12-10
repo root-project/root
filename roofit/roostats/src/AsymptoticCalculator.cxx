@@ -54,11 +54,13 @@ ClassImp(RooStats::AsymptoticCalculator);
 
 int AsymptoticCalculator::fgPrintLevel = 1;
 
+
 void AsymptoticCalculator::SetPrintLevel(int level) { 
    // set print level (static function)
    // 0 minimal, 1 normal,  2 debug
    fgPrintLevel = level;
 }
+
 
 AsymptoticCalculator::AsymptoticCalculator(
    RooAbsData &data,
@@ -242,7 +244,7 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
     if (condObs) conditionalObs.add(*condObs);
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-    RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs));
+    RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()));
 
     RooArgSet* attachedSet = nll->getVariables();
 
@@ -347,8 +349,16 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        if (status%100 == 0) { // ignore errors in Hesse or in Improve
           result = minim.save();
        }
-       if (result){ 
-          val = result->minNll();
+       if (result){
+          if (!RooStats::IsNLLOffset() ) 
+             val = result->minNll();
+          else {
+             bool previous = RooAbsReal::hideOffset();
+             RooAbsReal::setHideOffset(kTRUE) ;
+             val = nll->getVal();
+             if (!previous)  RooAbsReal::setHideOffset(kFALSE) ;
+          }
+             
        }
        else { 
           oocoutE((TObject*)0,Fitting) << "FIT FAILED !- return a NaN NLL " << std::endl;
@@ -1166,7 +1176,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
       model.GetPdf()->fitTo(realData, RooFit::Minimizer(minimizerType.c_str(),minimizerAlgo.c_str()), 
                  RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()),
                  RooFit::PrintLevel(minimPrintLevel-1), RooFit::Hesse(false),
-                            RooFit::Constrain(constrainParams),RooFit::ConditionalObservables(conditionalObs));
+                            RooFit::Constrain(constrainParams),RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()));
       if (verbose>0) { std::cout << "fit time "; tw2.Print();}
       if (verbose > 1) { 
          // after the fit the nuisance parameters will have their best fit value

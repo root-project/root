@@ -50,6 +50,10 @@ END_HTML
 #include "Math/MinimizerOptions.h"
 #endif
 
+#ifndef ROOSTATS_RooStatsUtils
+#include "RooStats/RooStatsUtils.h"
+#endif
+
 
 namespace RooStats {
 
@@ -69,7 +73,7 @@ namespace RooStats {
         fDetailedOutputWithErrorsAndPulls = false;
         fDetailedOutputEnabled = false;
         fDetailedOutput = NULL;
-	fLOffset = kFALSE ;
+	fLOffset = RooStats::IsNLLOffset() ;
       
         fVarName = "Profile Likelihood Ratio";
         fReuseNll = false;
@@ -89,7 +93,7 @@ namespace RooStats {
        fDetailedOutputWithErrorsAndPulls = false;
        fDetailedOutputEnabled = false;
        fDetailedOutput = NULL;
-       fLOffset = kFALSE ;
+       fLOffset = RooStats::IsNLLOffset() ;
       
        fVarName = "Profile Likelihood Ratio";
        fReuseNll = false;
@@ -99,6 +103,7 @@ namespace RooStats {
        fTolerance=TMath::Max(1.,::ROOT::Math::MinimizerOptions::DefaultTolerance());
        fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
      }
+     
      virtual ~ProfileLikelihoodTestStat() {
        if(fNll) delete fNll;
        if(fCachedBestFitParams) delete fCachedBestFitParams;
