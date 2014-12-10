@@ -1947,7 +1947,7 @@ void TClass::CalculateStreamerOffset() const
 
       TMmallocDescTemp setreset;
       fIsOffsetStreamerSet = kTRUE;
-      fOffsetStreamer = const_cast<TClass*>(this)->GetBaseClassOffset(TObject::Class());
+      fOffsetStreamer = const_cast<TClass*>(this)->GetBaseClassOffsetRecurse(TObject::Class());
       if (fStreamerType == kTObject) {
          fStreamerImpl = &TClass::StreamerTObjectInitialized;
       }
@@ -5309,7 +5309,7 @@ Long_t TClass::Property() const
       kl->SetBit(kIsTObject);
 
       // Is it DIRECT inheritance from TObject?
-      Int_t delta = kl->GetBaseClassOffset(TObject::Class());
+      Int_t delta = kl->GetBaseClassOffsetRecurse(TObject::Class());
       if (delta==0) kl->SetBit(kStartWithTObject);
 
       kl->fStreamerType  = kTObject;
