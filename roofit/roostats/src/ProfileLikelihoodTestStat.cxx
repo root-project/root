@@ -71,6 +71,8 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
           fNll = fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs), RooFit::Offset(fLOffset));
 
+          if (fPrintLevel > 0 && fLOffset) cout << "ProfileLikelihoodTestStat::Evaluate - Use Offset in creating NLL " << endl ;
+
           created = kTRUE ;
           delete allParams;
           if (fPrintLevel > 1) cout << "creating NLL " << fNll << " with data = " << &data << endl ;
@@ -178,7 +180,10 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           // in case no nuisance parameters are present
           // no need to minimize just evaluate the nll
           if (allParams.getSize() == 0 ) {
-             condML = fNll->getVal(); 
+             // be sure to evaluate with offsets
+             if (fLOffset) RooAbsReal::setHideOffset(false);
+             condML = fNll->getVal();
+             if (fLOffset) RooAbsReal::setHideOffset(true);
           }
           else {              
             fNll->clearEvalErrorLog();
@@ -203,12 +208,25 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        tsw.Stop();
        double fitTime2 = tsw.CpuTime();
 
-       double pll;
-       if      (type == 1) pll = uncondML;
-       else if (type == 2) pll = condML;
-       else {
+       double pll = 0;
+       if (type != 0)  {
+          // for conditional only or unconditional fits
+          // need to compute nll value without the offset
+          if (fLOffset) {
+             RooAbsReal::setHideOffset(kFALSE) ;
+             pll = fNll->getVal();
+          }
+          else {
+             if (type == 1) 
+                pll = uncondML;          
+             else if (type == 2) 
+                pll = condML;
+          }
+       }       
+       else {  // type == 0
+          // for standard profile likelihood evaluations 
          pll = condML-uncondML;
-
+       
          if (fSigned) {
             if (pll<0.0) {
                if (fPrintLevel > 0) std::cout << "pll is negative - setting it to zero " << std::endl;

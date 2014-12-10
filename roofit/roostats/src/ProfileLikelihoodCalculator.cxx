@@ -175,7 +175,7 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    profile->addOwnedComponents(*nll) ;  // to avoid memory leak
    */
    
-   RooAbsReal *  nll = pdf->createNLL(*data, CloneData(kTRUE), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs));
+   RooAbsReal *  nll = pdf->createNLL(*data, CloneData(kTRUE), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), Offset(true));
 
    RooAbsReal* profile = nll->createProfile(fPOI);
    profile->addOwnedComponents(*nll) ;  // to avoid memory leak
@@ -302,8 +302,8 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1; // RooFit levels starts from -1
       oocoutP((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::GetHypoTest - do conditional fit " << std::endl;
       RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), 
-                                      Hesse(kFALSE),Strategy(0), Minos(kFALSE),
-                                      Minimizer(minimType,minimAlgo), Save(kTRUE),PrintLevel(level));
+                                      Hesse(kFALSE),Strategy(0),
+                                      Minimizer(minimType,minimAlgo), Save(kTRUE),PrintLevel(level), Offset(true));
      
       // print fit result 
       if (fit2) {
@@ -317,7 +317,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    }
    else { 
       // get just the likelihood value (no need to do a fit since the likelihood is a constant function)
-      RooAbsReal* nll = pdf->createNLL(*data, CloneData(kTRUE), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs));
+      RooAbsReal* nll = pdf->createNLL(*data, CloneData(kTRUE), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), Offset(true));
       NLLatCondMLE = nll->getVal();
       delete nll;
    }
