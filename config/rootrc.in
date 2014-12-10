@@ -524,6 +524,9 @@ RSA.KeyType:  1
 # of the TFile implementation. By default it is disabled.
 #TFile.AsyncPrefetching:   no
 
+# Enable cross-protocol redirects
+TFile.CrossProtocolRedirects:  yes
+
 # List of S3 servers known to support multi-range HTTP GET requests.
 # This is the value sent back by the S3 server in the 'Server:' header
 # of the HTTP response.
