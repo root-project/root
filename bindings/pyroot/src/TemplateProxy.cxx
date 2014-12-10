@@ -101,8 +101,11 @@ namespace {
       pymeth = PyObject_GetAttrString( pytmpl->fSelf, const_cast< char* >(
          (std::string( "__generic_" ) + PyROOT_PyUnicode_AsString( pytmpl->fPyName )).c_str()) );
 
-      if ( pymeth )
-         return PyObject_Call( pymeth, args, kwds );   // non-templated, executed as-is
+      if ( pymeth ) {
+         PyObject* result = PyObject_Call( pymeth, args, kwds );   // non-templated, executed as-is
+         Py_DECREF( pymeth );
+         return result;
+      }
       
       return pymeth;
    }
