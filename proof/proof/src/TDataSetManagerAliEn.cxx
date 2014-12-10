@@ -718,10 +718,17 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
   if ( !alirootVersionForFilter.IsNull() && filter.IsNull() )
   {
     ::Error("TDataSetManagerAliEn::ParseCustomFindUri",
-            "Cannot specificy AliRoot version without specifying Filter");
+            "Cannot specificy AliRoot version without specifying a Filter name");
     return kFALSE;
   }
-  
+
+  if ( alirootVersionForFilter.IsNull() && !filter.IsNull() )
+  {
+    ::Error("TDataSetManagerAliEn::ParseCustomFindUri",
+            "Cannot specificy a filter name without specifying the corresponding AliRoot version to be used");
+    return kFALSE;
+  }
+
    return kTRUE;
 }
 
