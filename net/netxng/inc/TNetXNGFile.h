@@ -46,6 +46,7 @@ private:
    Int_t                   fReadvIovMax; // Max number of readv chunks
 #endif
    Int_t                   fQueryReadVParams;
+   TString                 fNewUrl;
 
 public:
    TNetXNGFile() : TFile(),
@@ -68,6 +69,7 @@ public:
    virtual Bool_t   ReadBuffer(char *buffer, Long64_t position, Int_t length);
    virtual Bool_t   ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
                                 Int_t nbuffs);
+   virtual TString  GetNewUrl() { return fNewUrl; }
 
 private:
    virtual Bool_t IsUseable() const;

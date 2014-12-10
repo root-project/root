@@ -215,6 +215,7 @@ public:
                                        Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Int_t       GetNbytesInfo() const {return fNbytesInfo;}
    virtual Int_t       GetNbytesFree() const {return fNbytesFree;}
+   virtual TString     GetNewUrl() { return ""; }
    Long64_t            GetRelOffset() const { return fOffset - fArchiveOffset; }
    virtual Long64_t    GetSeekFree() const {return fSeekFree;}
    virtual Long64_t    GetSeekInfo() const {return fSeekInfo;}

@@ -225,9 +225,13 @@ ROOT_ADD_TEST(test-qprandom COMMAND QpRandomDriver 10 2 2)
 
 #--threads----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(threads threads.cxx LIBRARIES Thread Hist Gpad)
-#ROOT_ADD_TEST(test-threads COMMAND threads)  
+#ROOT_ADD_TEST(test-threads COMMAND threads)
 
-
-
-
-
+#--stressIOPlugins--------------------------------------------------------------------------
+ROOT_EXECUTABLE(stressIOPlugins stressIOPlugins.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
+if(ROOT_xrootd_FOUND)
+  ROOT_ADD_TEST(test-stressIOPlugins-xroot COMMAND stressIOPlugins root FAILREGEX "FAILED|Error in")
+endif()
+if(ROOT_davix_FOUND)
+  ROOT_ADD_TEST(test-stressIOPlugins-http COMMAND stressIOPlugins http FAILREGEX "FAILED|Error in")
+endif()
