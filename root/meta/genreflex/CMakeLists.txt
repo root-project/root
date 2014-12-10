@@ -1,5 +1,9 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-virtualInheritance
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/virtualInheritance.h --select=${CMAKE_CURRENT_SOURCE_DIR}/virtualInheritance_selection.xml
+                  OUTREF virtualInheritance.ref)
+
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(typedefSelection typedefSelection.h SELECTION typedefSelection_selection.xml)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-typedefSelection
