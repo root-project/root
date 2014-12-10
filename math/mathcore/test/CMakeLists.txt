@@ -38,12 +38,15 @@ set(TestSource
 if(ROOT_roofit_FOUND)
   list(APPEND TestSource fit/testRooFit.cxx)
   list(APPEND Libraries RooFit)
+  if(ROOT_mathmore_FOUND)
+    list(APPEND TestSource fit/testFitPerf.cxx)
+  endif()
+endif()
+ 
 if(ROOT_mathmore_FOUND)
-  list(APPEND TestSource fit/testFitPerf.cxx)
+  list(APPEND TestSource stressGoFTest.cxx)
   list(APPEND Libraries MathMore)
 endif()
-endif()
-
 
 if(ROOT_minuit2_FOUND)
   list(APPEND TestSource fit/testMinim.cxx)
