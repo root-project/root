@@ -28,6 +28,7 @@
 #include <XrdCl/XrdClFile.hh>
 #include <XrdCl/XrdClXRootDResponses.hh>
 #include <XrdCl/XrdClDefaultEnv.hh>
+#include <XrdVersion.hh>
 #include <iostream>
 
 //------------------------------------------------------------------------------
@@ -162,7 +163,14 @@ TNetXNGFile::TNetXNGFile(const char *url,
    // Open the file synchronously
    status = fFile->Open(fUrl->GetURL(), fMode);
    if (!status.IsOK()) {
+#if XrdVNUMBER >= 40000
+      if( status.code == errRedirect )
+         fNewUrl = status.GetErrorMessage().c_str();
+      else
+         Error("Open", "%s", status.ToStr().c_str());
+#else
       Error("Open", "%s", status.ToStr().c_str());
+#endif
       MakeZombie();
       return;
    }
@@ -787,6 +795,7 @@ void TNetXNGFile::SetEnv()
       env->PutString("ClientMonitorParam", val.Data());
 
    fQueryReadVParams = gEnv->GetValue("NetXNG.QueryReadVParams", 1);
+   env->PutInt( "MultiProtocol", gEnv->GetValue("TFile.CrossProtocolRedirects", 1));
 
    // Old style netrc file
    TString netrc;

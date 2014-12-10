@@ -3998,8 +3998,12 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
       }
 
       if (f && f->IsZombie()) {
+         TString newUrl = f->GetNewUrl();
          delete f;
-         f = 0;
+         if( newUrl.Length() && gEnv->GetValue("TFile.CrossProtocolRedirects", 1) )
+            f = TFile::Open( newUrl, option, ftitle, compress );
+         else
+            f = 0;
       }
    }
 
