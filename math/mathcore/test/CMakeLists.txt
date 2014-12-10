@@ -12,7 +12,6 @@ set(TestSource
     testSortOrder.cxx
     stressTMath.cxx
     stressTF1.cxx
-    stressGoFTest.cxx
     testIntegration.cxx
     testRootFinder.cxx
     testSampleQuantiles.cxx
