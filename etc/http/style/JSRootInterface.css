@@ -23,7 +23,7 @@ p { margin-top: 5px; margin-bottom: 5px; }
 
 #left-div { left: 1px; width: 300px; padding: 5px; overflow: auto; }
 
-#separator-div { left: 305px; width: 4px; position: absolute; top: 1px; bottom: 1px; background-color: white; cursor: ew-resize }
+#separator-div { left: 305px; width: 4px; border: 0px; position: absolute; top: 1px; bottom: 1px; background-color: white; cursor: ew-resize }
 
 #right-div { left: 310px; right: 1px; margin-left: 0px; }
 
@@ -57,6 +57,7 @@ input.tb {
    position: absolute;
    top: 50%;
 }
+
 
 .ui-accordion .ui-accordion-content {
    border: 1px solid #aaaaaa;
