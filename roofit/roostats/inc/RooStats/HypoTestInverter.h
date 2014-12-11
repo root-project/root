@@ -67,6 +67,7 @@ public:
                      double size = 0.05) ;
 
    // constructor from two ModelConfigs (first sb (the null model) then b (the alt model)
+   // creating a calculator inside
    HypoTestInverter( RooAbsData& data, ModelConfig &sb, ModelConfig &b,
 		     RooRealVar * scannedVariable = 0,  ECalculatorType type = kFrequentist, 
 		     double size = 0.05) ;
@@ -171,7 +172,7 @@ private:
    static std::string fgAlgo;
 
    // graph, used to compute the limit, not just for plotting!
-   mutable std::auto_ptr<TGraphErrors> fLimitPlot;  //! plot of limits
+   mutable std::unique_ptr<TGraphErrors> fLimitPlot;  //! plot of limits
     
     
    // performance counter: remember how many toys have been thrown
@@ -179,7 +180,7 @@ private:
    int fMaxToys;  // maximum number of toys to run 
     
    HypoTestCalculatorGeneric* fCalculator0;   // pointer to the calculator passed in the constructor
-   std::auto_ptr<HypoTestCalculatorGeneric> fHC;
+   std::unique_ptr<HypoTestCalculatorGeneric> fHC;  //! pointer to the generic hypotest calculator used
    RooRealVar* fScannedVariable;     // pointer to the constrained variable
    mutable HypoTestInverterResult* fResults; // pointer to the result 
      
@@ -195,7 +196,7 @@ private:
 
 protected:
 
-   ClassDef(HypoTestInverter,3)  // HypoTestInverter class
+   ClassDef(HypoTestInverter,4)  // HypoTestInverter class
 
 };
 

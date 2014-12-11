@@ -339,9 +339,9 @@ HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &sbModel, Mode
    // If no variable to scan are given they are assumed to be the first variable
    // from the parameter of interests of the null model
 
-   if(fCalcType==kFrequentist) fHC = auto_ptr<HypoTestCalculatorGeneric>(new FrequentistCalculator(data, bModel, sbModel)); 
-   if(fCalcType==kHybrid) fHC = auto_ptr<HypoTestCalculatorGeneric>(new HybridCalculator(data, bModel, sbModel)); 
-   if(fCalcType==kAsymptotic) fHC = auto_ptr<HypoTestCalculatorGeneric>(new AsymptoticCalculator(data, bModel, sbModel)); 
+   if(fCalcType==kFrequentist) fHC.reset(new FrequentistCalculator(data, bModel, sbModel)); 
+   if(fCalcType==kHybrid) fHC.reset( new HybridCalculator(data, bModel, sbModel)) ; 
+   if(fCalcType==kAsymptotic) fHC.reset( new AsymptoticCalculator(data, bModel, sbModel)); 
    fCalculator0 = fHC.get();
    // get scanned variabke
    if (!fScannedVariable) { 
@@ -424,7 +424,7 @@ void  HypoTestInverter::Clear()  {
    // delete contained result and graph
    if (fResults) delete fResults; 
    fResults = 0;
-   if (fLimitPlot.get()) fLimitPlot = std::auto_ptr<TGraphErrors>();
+   fLimitPlot.reset(nullptr);
 }   
 
 void  HypoTestInverter::CreateResults() const { 
@@ -534,7 +534,7 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
       if (fCalcType == kFrequentist) HypoTestWrapper<FrequentistCalculator>::SetToys((FrequentistCalculator*)&hc, fUseCLs ? fgNToys : 1, 4*fgNToys);
 
    while (clsMidErr >= fgCLAccuracy && (clsTarget == -1 || fabs(clsMid-clsTarget) < 3*clsMidErr) ) {
-      std::auto_ptr<HypoTestResult> more(hc.GetHypoTest());
+      std::unique_ptr<HypoTestResult> more(hc.GetHypoTest());
       
       // if (flipPValues)
       //    more->SetPValueIsRightTail(!more->GetPValueIsRightTail());
@@ -925,7 +925,7 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
       int npoints = 0; 
       
       HypoTestInverterPlot plot("plot","plot",fResults);
-      fLimitPlot = std::auto_ptr<TGraphErrors>(plot.MakePlot() );
+      fLimitPlot.reset(plot.MakePlot() );
 
       
       for (int j = 0; j < fLimitPlot->GetN(); ++j) { 
