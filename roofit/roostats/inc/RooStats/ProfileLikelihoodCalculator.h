@@ -59,16 +59,22 @@ namespace RooStats {
 
    protected:
 
-      // clear internal fit result
-      void DoReset() const; 
+    // clear internal fit result
+    void DoReset() const; 
+    
+    // perform a global fit 
+    RooAbsReal * DoGlobalFit() const;
+    
+    // minimize likelihood
+    static RooFitResult * DoMinimizeNLL(RooAbsReal * nll); 
 
-      // perform a global fit 
-      void DoGlobalFit() const; 
+    
+    mutable RooFitResult * fFitResult;  // internal  result of gloabl fit
+    mutable bool fGlobalFitDone;          // flag to control if a global fit has been done
+    
 
-      ClassDef(ProfileLikelihoodCalculator,1) // A concrete implementation of CombinedCalculator that uses the ProfileLikelihood ratio.
+    ClassDef(ProfileLikelihoodCalculator,2) // A concrete implementation of CombinedCalculator that uses the ProfileLikelihood ratio.
 
-      mutable RooFitResult * fFitResult;  // internal  result of gloabl fit 
-      
    };
 }
 #endif
