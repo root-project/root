@@ -6278,7 +6278,7 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
             if  (zz[ii] != zz[ii + 1]) continue;
             hh[0] = zz[ii - 2] - zz[ii];
             hh[1] = zz[ii + 2] - zz[ii];
-            if  (hh[0] * hh[1] < 0) continue;
+            if  (hh[0] * hh[1] <= 0) continue;
             int jk = 1;
             if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
             yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii]/0.75 + zz[ii + 2*jk] /6.;
