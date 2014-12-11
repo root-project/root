@@ -174,7 +174,7 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
           file += fFilter;
           if ( fAliRootVersionForFilter.Length() )
           {
-            file += "_WITH_";
+            file += "_WITH_ALIROOT_";
             file += fAliRootVersionForFilter;
           }
           file += tmp(ix,tmp.Length()-ix);
