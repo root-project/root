@@ -78,7 +78,7 @@ using namespace RooStats;
 
 //_______________________________________________________
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator() : 
-   CombinedCalculator(), fFitResult(0)
+   CombinedCalculator(), fFitResult(0), fGlobalFitDone(false)
 {
    // default constructor
 }
@@ -86,7 +86,7 @@ ProfileLikelihoodCalculator::ProfileLikelihoodCalculator() :
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest, 
                                                          Double_t size, const RooArgSet* nullParams ) :
    CombinedCalculator(data,pdf, paramsOfInterest, size, nullParams ), 
-   fFitResult(0)
+   fFitResult(0), fGlobalFitDone(false)
 {
    // constructor from pdf and parameters
    // the pdf must contain eventually the nuisance parameters
@@ -94,7 +94,7 @@ ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAb
 
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data,  ModelConfig& model, Double_t size) :
    CombinedCalculator(data, model, size), 
-   fFitResult(0)
+   fFitResult(0), fGlobalFitDone(false)
 {
    // construct from a ModelConfig. Assume data model.GetPdf() will provide full description of model including 
    // constraint term on the nuisances parameters
@@ -375,7 +375,6 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       nLLatCondMLE = nll->getVal();
       // this value contains the offset 
       if (RooStats::IsNLLOffset() ) nLLatCondMLE -= nlloffset; 
-      delete nll;
    }
 
    // Use Wilks' theorem to translate -2 log lambda into a signifcance/p-value
