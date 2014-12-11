@@ -843,9 +843,9 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
 bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs) 
 {
    // iterate a Prod pdf to find all the Poisson or Gaussian part to set the observed value to expected one
-    std::auto_ptr<TIterator> iter(prod.pdfList().createIterator());
+    RooLinkedListIter  iter(prod.pdfList().iterator());
     bool ret = false;
-    for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
+    for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
         if (!a->dependsOn(obs)) continue;
         RooPoisson *pois = 0;
         RooGaussian * gaus = 0;
@@ -881,8 +881,8 @@ bool AsymptoticCalculator::SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs
    RooRealVar *myobs = 0;
    RooAbsReal *myexp = 0;
    const char * pdfName = pdf.IsA()->GetName();
-   std::auto_ptr<TIterator> iter(pdf.serverIterator());
-   for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
+   RooFIter iter(pdf.serverMIterator());
+   for (RooAbsArg *a =  iter.next(); a != 0; a = iter.next()) {
       if (obs.contains(*a)) {
          if (myobs != 0) { 
             oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two observables ?? " << endl;
@@ -1142,9 +1142,9 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
    } else {
       // Do we have free parameters anyway that need fitting?
-      std::auto_ptr<RooArgSet> params(model.GetPdf()->getParameters(realData));
-      std::auto_ptr<TIterator> iter(params->createIterator());
-      for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
+      std::unique_ptr<RooArgSet> params(model.GetPdf()->getParameters(realData));
+      RooLinkedListIter iter(params->iterator());
+      for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
          RooRealVar *rrv = dynamic_cast<RooRealVar *>(a);
          if ( rrv != 0 && rrv->isConstant() == false ) { hasFloatParams = true; break; }
       } 
@@ -1285,7 +1285,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
       }
 
       // part 1: create the nuisance pdf
-      std::auto_ptr<RooAbsPdf> nuispdf(RooStats::MakeNuisancePdf(model,"TempNuisPdf") );
+      std::unique_ptr<RooAbsPdf> nuispdf(RooStats::MakeNuisancePdf(model,"TempNuisPdf") );
       if (nuispdf.get() == 0) { 
          oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: model has nuisance parameters and global obs but no nuisance pdf "
                                          << std::endl;
@@ -1300,16 +1300,16 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          // nothing to unfold - just use the pdf
          pdfList.add(*nuispdf.get());
 
-      std::auto_ptr<TIterator> iter(pdfList.createIterator());
-      for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
+      RooLinkedListIter iter(pdfList.iterator());
+      for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
          RooAbsPdf *cterm = dynamic_cast<RooAbsPdf *>(a); 
          assert(cterm && "AsimovUtils: a factor of the nuisance pdf is not a Pdf!");
          if (!cterm->dependsOn(nuis)) continue; // dummy constraints
          // skip also the case of uniform components
          if (typeid(*cterm) == typeid(RooUniform)) continue;
 
-         std::auto_ptr<RooArgSet> cpars(cterm->getParameters(&gobs));
-         std::auto_ptr<RooArgSet> cgobs(cterm->getObservables(&gobs));
+         std::unique_ptr<RooArgSet> cpars(cterm->getParameters(&gobs));
+         std::unique_ptr<RooArgSet> cgobs(cterm->getObservables(&gobs));
          if (cgobs->getSize() > 1) {
             oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: constraint term  " <<  cterm->GetName() 
                                             << " has multiple global observables -cannot generate - skip it" << std::endl;
@@ -1338,7 +1338,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
             continue;
 
          }
-         std::auto_ptr<TIterator> iter2(cterm->serverIterator() );
+         RooFIter iter2(cterm->serverMIterator() );
          bool foundServer = false;
          // note : this will work only for thi stype of constraints
          // expressed as RooPoisson, RooGaussian, RooLognormal, RooGamma
@@ -1360,7 +1360,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
             pois->setNoRounding(true); 
          }
 
-         for (RooAbsArg *a2 = (RooAbsArg *) iter2->Next(); a2 != 0; a2 = (RooAbsArg *) iter2->Next()) {
+         for (RooAbsArg *a2 = iter2.next(); a2 != 0; a2 = iter2.next()) {
             RooAbsReal * rrv2 = dynamic_cast<RooAbsReal *>(a2); 
             if (verbose > 2) std::cout << "Loop on constraint server term  " << a2->GetName() << std::endl;
             if (rrv2 && rrv2->dependsOn(nuis) ) { 

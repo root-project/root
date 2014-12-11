@@ -34,11 +34,11 @@ SequentialProposal::SequentialProposal(double divisor) :
 void SequentialProposal::Propose(RooArgSet& xPrime, RooArgSet& x )
 {
    RooStats::SetParameters(&x, &xPrime);
-   std::auto_ptr<TIterator> it(xPrime.createIterator());
+   RooLinkedListIter it(xPrime.iterator());
    RooRealVar* var;
    int n = xPrime.getSize();
    int j = int( floor(RooRandom::uniform()*n) );
-   for (int i = 0; (var = (RooRealVar*)it->Next()) != NULL; ++i) {
+   for (int i = 0; (var = (RooRealVar*)it.Next()) != NULL; ++i) {
       if (i == j) {
         double val = var->getVal(), max = var->getMax(), min = var->getMin(), len = max - min;
         val += RooRandom::gaussian() * len * fDivisor;
