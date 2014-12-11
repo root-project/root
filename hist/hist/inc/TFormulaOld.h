@@ -244,8 +244,8 @@ public:
    virtual void        GetParameters(Double_t *params){for(Int_t i=0;i<fNpar;i++) params[i] = fParams[i];}
    virtual const char *GetParName(Int_t ipar) const;
    virtual Int_t       GetParNumber(const char *name) const;
-   virtual Bool_t      IsLinear() {return TestBit(kLinear);}
-   virtual Bool_t      IsNormalized() {return TestBit(kNormalized);}
+   virtual Bool_t      IsLinear() const {return TestBit(kLinear);}
+   virtual Bool_t      IsNormalized() const {return TestBit(kNormalized);}
    virtual void        Print(Option_t *option="") const; // *MENU*
    virtual void        ProcessLinear(TString &replaceformula);
    virtual void        SetNumber(Int_t number) {fNumber = number;}
@@ -263,6 +263,7 @@ public:
    virtual void        Update() {;}
 
    static  void        SetMaxima(Int_t maxop=1000, Int_t maxpar=1000, Int_t maxconst=1000);
+   static  void        GetMaxima(Int_t& maxop, Int_t& maxpar, Int_t& maxconst);
 
    ClassDef(TFormulaOld,8)  //The formula base class  f(x,y,z,par)
 };

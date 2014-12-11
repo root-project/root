@@ -13,9 +13,12 @@
 
 #include "TFormulaOldPrimitive.h"
 #include "TMath.h"
+#include "TVirtualMutex.h"
 #ifdef WIN32
 #pragma optimize("",off)
 #endif
+
+static TVirtualMutex* gTFormulaOldPrimativeListMutex = 0;
 
 void TMath_GenerInterface();
 
@@ -189,7 +192,7 @@ Int_t TFormulaOldPrimitive::AddFormula(TFormulaOldPrimitive * formula)
 {
    // Add formula to the list of primitive formulas.
    // If primitive formula already defined do nothing.
-
+   R__LOCKGUARD2(gTFormulaOldPrimativeListMutex);
    if (fgListOfFunction == 0) BuildBasicFormulas();
    if (FindFormula(formula->GetName(),formula->fNArguments)){
       delete formula;
@@ -308,6 +311,7 @@ namespace TFastFun {
 TFormulaOldPrimitive* TFormulaOldPrimitive::FindFormula(const char* name)
 {
    // Find the formula in the list of formulas.
+   R__LOCKGUARD2(gTFormulaOldPrimativeListMutex);
    if (!fgListOfFunction) {
       BuildBasicFormulas();
    }
@@ -325,6 +329,7 @@ TFormulaOldPrimitive* TFormulaOldPrimitive::FindFormula(const char* name, UInt_t
 {
    // Find the formula in the list of formulas.
 
+   R__LOCKGUARD2(gTFormulaOldPrimativeListMutex);
    if (!fgListOfFunction) {
       BuildBasicFormulas();
    }
@@ -409,7 +414,7 @@ Double_t TFastFun::Gausn(Double_t x, Double_t mean, Double_t sigma)
 Int_t TFormulaOldPrimitive::BuildBasicFormulas()
 {
    // Built-in functions.
-
+   R__LOCKGUARD2(gTFormulaOldPrimativeListMutex);
    if (fgListOfFunction==0) {
       fgListOfFunction = new TObjArray(1000);
       fgListOfFunction->SetOwner(kTRUE);
