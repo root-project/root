@@ -859,6 +859,18 @@
       $("#" + divid).children().eq(0).prop('painter', this);
    }
 
+   JSROOT.TBasePainter.prototype.SetItemName = function(name) {
+      if (name==null)
+         delete this['_hitemname'];
+      else
+         this['_hitemname'] = name;
+   }
+
+   JSROOT.TBasePainter.prototype.GetItemName = function(name) {
+      return ('_hitemname' in this) ? this['_hitemname'] : null;
+   }
+
+
    // ==============================================================================
 
    JSROOT.TObjectPainter = function(obj) {
@@ -6631,59 +6643,25 @@
 
    JSROOT.Painter.drawStreamerInfo = function(divid, obj) {
       $("#" + divid).css({ overflow : 'auto' });
-      var painter = new JSROOT.HierarchyPainter('sinfo', divid, true);
+      var painter = new JSROOT.HierarchyPainter('sinfo', divid);
       painter.ShowStreamerInfo(obj);
       return painter;
    }
 
    // =========== painter of hierarchical structures =================================
 
-   JSROOT.HList = [];
-
-   JSROOT.DelHList = function(_name) {
-      for ( var i in JSROOT.HList)
-         if (JSROOT.HList[i].name == _name) {
-            var old = JSROOT.HList[i];
-            JSROOT.HList.splice(i, 1);
-            delete old;
-            return true;
-         }
-   }
-
-   JSROOT.AddHList = function(_name, _h) {
-      JSROOT.DelHList(_name);
-      JSROOT.HList.push({
-         name : _name,
-         h : _h
-      });
-   }
-
-   JSROOT.H = function(name) {
-      for ( var i in JSROOT.HList)
-         if (JSROOT.HList[i].name == name)
-            return JSROOT.HList[i].h;
-      return null;
-   }
-
-   JSROOT.HierarchyPainter = function(name, frameid, local) {
+   JSROOT.HierarchyPainter = function(name, frameid) {
       JSROOT.TBasePainter.call(this);
       this.name = name;
       this.frameid = frameid;
       this.h = null; // hierarchy
-      this.local = local;
-      if (!this.local) JSROOT.AddHList(name, this);
    }
 
    JSROOT.HierarchyPainter.prototype = Object.create(JSROOT.TBasePainter.prototype);
 
    JSROOT.HierarchyPainter.prototype.Cleanup = function() {
-      if (!this.local) JSROOT.DelHList(this.name);
-   }
-
-   JSROOT.HierarchyPainter.prototype.GlobalName = function(suffix) {
-      var res = "JSROOT.H(\'" + this.name + "\')";
-      if (suffix != null) res += suffix;
-      return res;
+      // clear drawing and browser
+      this.clear(true);
    }
 
    JSROOT.HierarchyPainter.prototype.ListHierarchy = function(folder, lst) {
@@ -7022,7 +7000,7 @@
       elem.find("a").first().click(function() { h.toggle(true); return false; })
                     .next().click(function() { h.toggle(false); return false; })
                     .next().click(function() { h.reload(); return false; })
-                    .next().click(function() { h.clear(); return false; });
+                    .next().click(function() { h.clear(false); return false; });
    }
 
    JSROOT.HierarchyPainter.prototype.isLastSibling = function(hitem) {
@@ -7311,7 +7289,7 @@
             painter = h.draw(divid, obj, drawopt);
          } else
          mdi.ForEachPainter(function(p, frame) {
-            if (p['_hitemname'] != itemname) return;
+            if (p.GetItemName() != itemname) return;
             painter = p;
             mdi.ActivateFrame(frame);
             painter.RedrawObject(obj);
@@ -7348,7 +7326,7 @@
             }
          }
 
-         if (painter) painter['_hitemname'] = itemname; // mark painter as created from hierarchy
+         if (painter) painter.SetItemName(itemname); // mark painter as created from hierarchy
 
          do_call_back(painter);
       });
@@ -7361,7 +7339,7 @@
       h.get(itemname, function(item, obj) {
          if (obj==null) return;
          var painter = h.draw(divid, obj, "same");
-         if (painter) painter['_hitemname'] = itemname;
+         if (painter) painter.SetItemName(itemname);
       });
 
       return true;
@@ -7378,7 +7356,7 @@
 
       // first collect items
       mdi.ForEachPainter(function(p) {
-         if (('_hitemname' in p) && (allitems.indexOf(p['_hitemname'])<0)) allitems.push(p['_hitemname']);
+         if ((p.GetItemName()!=null) && (allitems.indexOf(p.GetItemName())<0)) allitems.push(p.GetItemName());
       }, true); // only visible panels are considered
 
       // than call display with update
@@ -7691,8 +7669,8 @@
 
          if (this['disp'] != null)
             this['disp'].ForEachPainter(function(painter) {
-               if ('_hitemname' in painter)
-                  items.push(painter['_hitemname']);
+               if (painter.GetItemName()!=null)
+                  items.push(painter.GetItemName());
             });
 
          if (items.length == 1) {
@@ -7729,9 +7707,15 @@
       this['disp_frameid'] = frameid;
    }
 
-   JSROOT.HierarchyPainter.prototype.clear = function() {
+   JSROOT.HierarchyPainter.prototype.clear = function(withbrowser) {
       if ('disp' in this)
          this['disp'].Reset();
+
+      if (withbrowser) {
+         delete this['disp'];
+         $("#" + this.frameid).empty();
+         delete this.h;
+      }
    }
 
    JSROOT.HierarchyPainter.prototype.CreateDisplay = function(force) {
@@ -7820,14 +7804,14 @@
 
    JSROOT.MDIDisplay.prototype.CheckResize = function() {
       this.ForEachPainter(function(painter) {
-         if (('_hitemname' in painter) && (typeof painter['CheckResize'] == 'function'))
+         if ((painter.GetItemName()!=null) && (typeof painter['CheckResize'] == 'function'))
              painter.CheckResize();
       });
    }
 
    JSROOT.MDIDisplay.prototype.Reset = function() {
       this.ForEachPainter(function(painter) {
-         if (('_hitemname' in painter) && (typeof painter['Clenaup'] == 'function'))
+         if ((painter.GetItemName()!=null) && (typeof painter['Clenaup'] == 'function'))
             painter.Clenaup();
       });
 
@@ -8134,6 +8118,36 @@
       JSROOT.MDIDisplay.prototype.CheckResize.call(this);
    }
 
+   // =========================================================================
+
+   JSROOT.ConfigureVSeparator = function(handle, leftdiv, separdiv, rightdiv) {
+      if (!leftdiv) leftdiv = "left-div";
+      if (!separdiv) separdiv = "separator-div";
+      if (!rightdiv) rightdiv = "right-div";
+
+      function adjustSize(left, firsttime) {
+         var diff = $("#"+leftdiv).outerWidth() - $("#"+leftdiv).width();
+         $("#"+separdiv).css('left', left.toString() + "px");
+         $("#"+leftdiv).width(left-diff-1);
+         $("#"+rightdiv).css('left',(left+4).toString() + "px");
+         if (firsttime || (handle==null)) return;
+
+         if (typeof handle == 'function') handle(); else
+         if ((typeof handle == 'object') && (typeof handle['CheckResize'] == 'function')) handle.CheckResize();
+      }
+
+      $("#"+separdiv).draggable({
+         axis: "x" , zIndex: 100, cursor: "ew-resize",
+         helper : function() { return $("#"+separdiv).clone().css('background-color','grey'); },
+         stop: function(event,ui) { adjustSize(ui.position.left, false); }
+      });
+
+      var w0 = Math.round($(window).width() * 0.2);
+      if (w0<300) w0 = Math.min(300, Math.round($(window).width() * 0.5));
+
+      adjustSize(w0, true);
+   }
+
    JSROOT.RegisterForResize = function(handle, delay) {
       // function used to react on browser window resize event
       // While many resize events could come in short time,
@@ -8157,12 +8171,11 @@
          }
          myCounter = -1;
 
+         if (handle==null) return;
+
          document.body.style.cursor = 'wait';
-
-         if (typeof handle == 'function') handle();
-         else if ((typeof handle == 'object') && (typeof handle['CheckResize'] == 'function'))
-            handle.CheckResize();
-
+         if (typeof handle == 'function') handle(); else
+         if ((typeof handle == 'object') && (typeof handle['CheckResize'] == 'function')) handle.CheckResize();
          document.body.style.cursor = 'auto';
       }
 
