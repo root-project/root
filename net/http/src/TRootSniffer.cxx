@@ -446,6 +446,10 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
 
          if (chld.SetResult(member_ptr, mcl, member)) break;
 
+         const char* title = member->GetTitle();
+         if ((title!=0) && (strlen(title)!=0))
+            chld.SetField(item_prop_title, title);
+
          chld.SetRootClass(mcl);
 
          if (chld.CanExpandItem()) {
