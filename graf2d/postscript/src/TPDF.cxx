@@ -2188,24 +2188,6 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t x = xx;
    Double_t y = yy;
 
-   // Text color
-   SetColor(Int_t(fTextColor));
-
-   // Clipping
-   PrintStr(" q");
-   Double_t x1 = XtoPDF(gPad->GetX1());
-   Double_t x2 = XtoPDF(gPad->GetX2());
-   Double_t y1 = YtoPDF(gPad->GetY1());
-   Double_t y2 = YtoPDF(gPad->GetY2());
-   WriteReal(x1);
-   WriteReal(y1);
-   WriteReal(x2 - x1);
-   WriteReal(y2 - y1);
-   PrintStr(" re W n");
-
-   // Start the text
-   if (!fCompress) PrintStr("@");
-
    // Font and text size
    Int_t font = abs(fTextFont)/10;
    if (font > kNumberOfFonts || font < 1) font = 1;
@@ -2224,6 +2206,24 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    }
    Double_t fontsize = 72*(ftsize)/2.54;
    if (fontsize <= 0) return;
+
+   // Text color
+   SetColor(Int_t(fTextColor));
+
+   // Clipping
+   PrintStr(" q");
+   Double_t x1 = XtoPDF(gPad->GetX1());
+   Double_t x2 = XtoPDF(gPad->GetX2());
+   Double_t y1 = YtoPDF(gPad->GetY1());
+   Double_t y2 = YtoPDF(gPad->GetY2());
+   WriteReal(x1);
+   WriteReal(y1);
+   WriteReal(x2 - x1);
+   WriteReal(y2 - y1);
+   PrintStr(" re W n");
+
+   // Start the text
+   if (!fCompress) PrintStr("@");
 
    // Text alignment
    Float_t tsizex = gPad->AbsPixeltoX(Int_t(tsize))-gPad->AbsPixeltoX(0);
