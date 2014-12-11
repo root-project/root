@@ -12,6 +12,10 @@
 - Better line width matching with screen and pdf output.
 - Text color was ignored. It was always black.
 
+### TPDF
+
+- When a text size was equal or smaller than 0 the PDF file was corrupted.
+
 ### TPad
 
 - In `TPad::ShowGuidelines` the number of guide lines is limited to 15. Above
