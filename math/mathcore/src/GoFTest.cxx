@@ -18,6 +18,7 @@
 #include <cassert>
 
 #include "Math/Error.h"
+#include "Math/Math.h"
 #include "Math/Integrator.h"
 #include "Math/ProbFuncMathCore.h"
 
