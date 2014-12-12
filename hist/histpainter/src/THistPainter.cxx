@@ -6499,6 +6499,7 @@ Int_t THistPainter::PaintInit()
                f1 = (TF1*)f;
                if (xv[0] < f1->GetXmin() || xv[0] > f1->GetXmax()) continue;
                fval = f1->Eval(xv[0],0,0);
+               if (f1->GetMaximumStored() != -1111) fval = TMath::Min(f1->GetMaximumStored(), fval);
                ymax = TMath::Max(ymax,fval);
                if (Hoption.Logy) {
                   if (c1 > 0 && fval > 0.3*c1) ymin = TMath::Min(ymin,fval);
