@@ -1397,8 +1397,8 @@ TH1 *TF1::GetHistogram() const
 
    if (fHistogram) return fHistogram;
 
-   // May be function has not yet be painted. force a pad update
-   ((TF1*)this)->Paint();
+   // histogram has not yet created - create it
+   const_cast<TF1*>(this)->CreateHistogram(); 
    return fHistogram;
 }
 
@@ -2665,9 +2665,9 @@ Bool_t TF1::IsInside(const Double_t *x) const
 void TF1::Paint(Option_t *option)
 {
    // Paint this function with its current attributes.
-
-   Int_t i;
-   Double_t xv[1];
+   // The function is going to be converted in an histogram and the corresponding
+   // histogram is painted.
+   // The painted histogram can be retrieved calling afterwards the method TF1::GetHistogram()
 
    fgCurrent = this;
 
@@ -2688,65 +2688,10 @@ void TF1::Paint(Option_t *option)
       if (xmax > pmax) xmax = pmax;
    }
 
-   //  Create a temporary histogram and fill each channel with the function value
-   //  Preserve axis titles
-   TString xtitle = "";
-   TString ytitle = "";
-   char *semicol = (char*)strstr(GetTitle(),";");
-   if (semicol) {
-      Int_t nxt = strlen(semicol);
-      char *ctemp = new char[nxt];
-      strlcpy(ctemp,semicol+1,nxt);
-      semicol = (char*)strstr(ctemp,";");
-      if (semicol) {
-         *semicol = 0;
-         ytitle = semicol+1;
-      }
-      xtitle = ctemp;
-      delete [] ctemp;
-   }
-   if (fHistogram) {
-      xtitle = fHistogram->GetXaxis()->GetTitle();
-      ytitle = fHistogram->GetYaxis()->GetTitle();
-      if (!gPad->GetLogx()  &&  fHistogram->TestBit(TH1::kLogX)) { delete fHistogram; fHistogram = 0;}
-      if ( gPad->GetLogx()  && !fHistogram->TestBit(TH1::kLogX)) { delete fHistogram; fHistogram = 0;}
-   }
+   // create an histogram using the function content (re-use it if already existing)
+   fHistogram = DoCreateHistogram(xmin, xmax, kFALSE);
 
-   if (fHistogram) {
-      fHistogram->GetXaxis()->SetLimits(xmin,xmax);
-   } else {
-      // If logx, we must bin in logx and not in x
-      // otherwise in case of several decades, one gets wrong results.
-      if (xmin > 0 && gPad && gPad->GetLogx()) {
-         Double_t *xbins    = new Double_t[fNpx+1];
-         Double_t xlogmin = TMath::Log10(xmin);
-         Double_t xlogmax = TMath::Log10(xmax);
-         Double_t dlogx   = (xlogmax-xlogmin)/((Double_t)fNpx);
-         for (i=0;i<=fNpx;i++) {
-            xbins[i] = gPad->PadtoX(xlogmin+ i*dlogx);
-         }
-         fHistogram = new TH1D("Func",GetTitle(),fNpx,xbins);
-         fHistogram->SetBit(TH1::kLogX);
-         delete [] xbins;
-      } else {
-         fHistogram = new TH1D("Func",GetTitle(),fNpx,xmin,xmax);
-      }
-      if (!fHistogram) return;
-      if (fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
-      if (fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
-      fHistogram->SetDirectory(0);
-   }
-   // Restore axis titles.
-   fHistogram->GetXaxis()->SetTitle(xtitle.Data());
-   fHistogram->GetYaxis()->SetTitle(ytitle.Data());
-
-   InitArgs(xv,fParams);
-   for (i=1;i<=fNpx;i++) {
-      xv[0] = fHistogram->GetBinCenter(i);
-      fHistogram->SetBinContent(i,EvalPar(xv,fParams));
-   }
-
-   // Copy Function attributes to histogram attributes.
+   // set the optimal minimum and maximum 
    Double_t minimum   = fHistogram->GetMinimumStored();
    Double_t maximum   = fHistogram->GetMaximumStored();
    if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = -1111; // This can happen when switching from lin to log scale.
@@ -2761,12 +2706,12 @@ void TF1::Paint(Option_t *option)
          // function oscillate around a constant value
          if (minimum == -1111) {
             Double_t hmin;
-            if (optSAME) hmin = gPad->GetUymin();
+            if (optSAME && gPad) hmin = gPad->GetUymin();
             else         hmin = fHistogram->GetMinimum();
             if (hmin > 0) {
                Double_t hmax;
                Double_t hminpos = hmin;
-               if (optSAME) hmax = gPad->GetUymax();
+               if (optSAME && gPad) hmax = gPad->GetUymax();
                else         hmax = fHistogram->GetMaximum();
                hmin -= 0.05*(hmax-hmin);
                if (hmin < 0) hmin = 0;
@@ -2785,16 +2730,8 @@ void TF1::Paint(Option_t *option)
       }
       fHistogram->SetMaximum(maximum);
    }
-   fHistogram->SetBit(TH1::kNoStats);
-   fHistogram->SetLineColor(GetLineColor());
-   fHistogram->SetLineStyle(GetLineStyle());
-   fHistogram->SetLineWidth(GetLineWidth());
-   fHistogram->SetFillColor(GetFillColor());
-   fHistogram->SetFillStyle(GetFillStyle());
-   fHistogram->SetMarkerColor(GetMarkerColor());
-   fHistogram->SetMarkerStyle(GetMarkerStyle());
-   fHistogram->SetMarkerSize(GetMarkerSize());
 
+   
    // Draw the histogram.
    if (!gPad) return;
    if (opt.Length() == 0) fHistogram->Paint("lf");
@@ -2802,6 +2739,99 @@ void TF1::Paint(Option_t *option)
    else                   fHistogram->Paint(option);
 }
 
+//______________________________________________________________________________
+TH1 *  TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
+{
+   // create histogram with bin content equal to function value
+   // computed at the bin center
+   // This histogram will be used to paint the function
+   // A re-creation is forced and a new histogram is done if recreate=true
+   
+   Int_t i;
+   Double_t xv[1];
+
+   TH1 * histogram = 0;
+
+
+   //  Create a temporary histogram and fill each channel with the function value
+   //  Preserve axis titles
+   TString xtitle = "";
+   TString ytitle = "";
+   char *semicol = (char*)strstr(GetTitle(),";");
+   if (semicol) {
+      Int_t nxt = strlen(semicol);
+      char *ctemp = new char[nxt];
+      strlcpy(ctemp,semicol+1,nxt);
+      semicol = (char*)strstr(ctemp,";");
+      if (semicol) {
+         *semicol = 0;
+         ytitle = semicol+1;
+      }
+      xtitle = ctemp;
+      delete [] ctemp;
+   }
+   if (fHistogram) {
+      // delete previous histograms if were done if done in different mode
+      xtitle = fHistogram->GetXaxis()->GetTitle();
+      ytitle = fHistogram->GetYaxis()->GetTitle();
+      if (!gPad->GetLogx()  &&  fHistogram->TestBit(TH1::kLogX)) { delete fHistogram; fHistogram = 0;}
+      if ( gPad->GetLogx()  && !fHistogram->TestBit(TH1::kLogX)) { delete fHistogram; fHistogram = 0;}
+      recreate = kTRUE; 
+   }
+
+   if (fHistogram && !recreate) {
+      histogram = fHistogram;
+      fHistogram->GetXaxis()->SetLimits(xmin,xmax);
+   } else {
+      // If logx, we must bin in logx and not in x
+      // otherwise in case of several decades, one gets wrong results.
+      if (xmin > 0 && gPad && gPad->GetLogx()) {
+         Double_t *xbins    = new Double_t[fNpx+1];
+         Double_t xlogmin = TMath::Log10(xmin);
+         Double_t xlogmax = TMath::Log10(xmax);
+         Double_t dlogx   = (xlogmax-xlogmin)/((Double_t)fNpx);
+         for (i=0;i<=fNpx;i++) {
+            xbins[i] = gPad->PadtoX(xlogmin+ i*dlogx);
+         }
+         histogram = new TH1D("Func",GetTitle(),fNpx,xbins);
+         histogram->SetBit(TH1::kLogX);
+         delete [] xbins;
+      } else {
+         histogram = new TH1D("Func",GetTitle(),fNpx,xmin,xmax);
+      }
+      if (fMinimum != -1111) histogram->SetMinimum(fMinimum);
+      if (fMaximum != -1111) histogram->SetMaximum(fMaximum);
+      histogram->SetDirectory(0);
+   }
+   R__ASSERT(histogram); 
+
+   // Restore axis titles.
+   histogram->GetXaxis()->SetTitle(xtitle.Data());
+   histogram->GetYaxis()->SetTitle(ytitle.Data());
+
+   InitArgs(xv,fParams);
+   for (i=1;i<=fNpx;i++) {
+      xv[0] = histogram->GetBinCenter(i);
+      histogram->SetBinContent(i,EvalPar(xv,fParams));
+   }
+
+   // Copy Function attributes to histogram attributes.
+   histogram->SetBit(TH1::kNoStats);
+   histogram->SetLineColor(GetLineColor());
+   histogram->SetLineStyle(GetLineStyle());
+   histogram->SetLineWidth(GetLineWidth());
+   histogram->SetFillColor(GetFillColor());
+   histogram->SetFillStyle(GetFillStyle());
+   histogram->SetMarkerColor(GetMarkerColor());
+   histogram->SetMarkerStyle(GetMarkerStyle());
+   histogram->SetMarkerSize(GetMarkerSize());
+
+   // update saved histogram in case if was deleted or it is the first time the method is called
+   // for example when called from TF1::GetHistogram()
+   if (!fHistogram) fHistogram = histogram;
+   return histogram;
+   
+}
 
 //______________________________________________________________________________
 void TF1::Print(Option_t *option) const
