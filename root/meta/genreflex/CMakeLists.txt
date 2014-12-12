@@ -1,5 +1,9 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-classSelectedTwice
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice.h --select=${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice_selection.xml
+                  OUTREF classSelectedTwice.ref)
+
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-virtualInheritance
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/virtualInheritance.h --select=${CMAKE_CURRENT_SOURCE_DIR}/virtualInheritance_selection.xml
                   OUTREF virtualInheritance.ref)
@@ -38,4 +42,3 @@ ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-attributesCheck
                   MACRO execAttributesCheck.C
                   OUTREF execAttributesCheck.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
-

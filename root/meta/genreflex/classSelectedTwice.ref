@@ -1,0 +1,3 @@
+Warning: Attempt to select with a named selection rule an already selected class. The name used in sthe selection is "Muon::RpcPrepDataContainer_p3" while the class is "Muon::myclass<float>". The attributes specified will not be propagated to the typesystem of ROOT.
+Warning: Attempt to select with a named selection rule an already selected class. The name used in sthe selection is "Muon::additionalTypedef" while the class is "Muon::myclass<float>".
+Selected class -> Muon::myclass<float> for ROOT: Muon::myclass<float>
