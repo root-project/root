@@ -2837,7 +2837,7 @@ TH1 *  TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
    histogram->GetYaxis()->SetTitle(ytitle.Data());
    Double_t *parameters = GetParameters();
 
-   InitArgs(xv,fParams);
+   InitArgs(xv,parameters);
    for (i=1;i<=fNpx;i++) {
       xv[0] = histogram->GetBinCenter(i);
       histogram->SetBinContent(i,EvalPar(xv,parameters));
@@ -2859,15 +2859,6 @@ TH1 *  TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
    if (!fHistogram) fHistogram = histogram;
    return histogram;
    
-}
-
-//______________________________________________________________________________
-void TF1::Print(Option_t *option) const
-{
-   // Dump this function with its attributes.
-
-   TFormula::Print(option);
-   if (fHistogram) fHistogram->Print(option);
 }
 
 
