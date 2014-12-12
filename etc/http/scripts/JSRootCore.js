@@ -14,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.2 dev 11/12/2014";
+   JSROOT.version = "3.2 dev 12/12/2014";
 
    JSROOT.source_dir = function(){
       var scripts = document.getElementsByTagName('script');
@@ -40,6 +40,8 @@
    }
 
    JSROOT.id_counter = 0;
+   
+   JSROOT.touches = ('ontouchend' in document); // identify if touch events are supported
 
    JSROOT.function_list = []; // do we really need it here?
 
@@ -409,12 +411,15 @@
          allfiles += ";$$$scripts/rawinflate.js" +
                      ";$$$scripts/JSRootIOEvolution.js";
 
-      if (kind.indexOf('2d;')>=0)
+      if (kind.indexOf('2d;')>=0) {
          allfiles += ';$$$style/jquery-ui.css' +
                      ';$$$scripts/jquery-ui.min.js' +
                      ';$$$scripts/d3.v3.min.js' +
                      ';$$$scripts/JSRootPainter.js' +
                      ';$$$style/JSRootPainter.css';
+         if (JSROOT.touches)
+            allfiles += ';$$$scripts/touch-punch.min.js';         
+      }
 
       if (kind.indexOf("3d;")>=0)
          allfiles += ";$$$scripts/jquery.mousewheel.js" +
