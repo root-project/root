@@ -16,6 +16,7 @@
 
 ### THStack
 
+- Implement `GetNHists()` to return the number of histograms in the stack.
 - New drawing option `NOSTACKB`. histograms are drawn next to each other as
   bar charts.
 
