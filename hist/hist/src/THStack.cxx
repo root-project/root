@@ -512,6 +512,15 @@ Double_t THStack::GetMinimum(Option_t *option)
 }
 
 //______________________________________________________________________________
+Int_t THStack::GetNHists() const
+{
+   // Return the number of histograms in the stack
+
+   if (fHists) return fHists->GetSize();
+   return 0;
+}
+
+//______________________________________________________________________________
 TObjArray *THStack::GetStack()
 {
    // Return pointer to Stack. Build it if not yet done

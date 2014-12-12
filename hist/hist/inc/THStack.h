@@ -62,6 +62,7 @@ public:
    virtual void     Draw(Option_t *chopt="");
    TH1             *GetHistogram() const;
    TList           *GetHists()  const { return fHists; }
+   Int_t            GetNHists() const;
    TObjArray       *GetStack();
    virtual Double_t GetMaximum(Option_t *option="");
    virtual Double_t GetMinimum(Option_t *option="");
