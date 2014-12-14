@@ -76,6 +76,10 @@ public:
    static size_t SizeOf(size_t maxlevel)
       { return (sizeof(TGeoBranchArray)+sizeof(TGeoBranchArray*)*(maxlevel)); }
 
+   // Equivalent of sizeof function
+   static size_t SizeOfInstance(size_t maxlevel)
+      { return (sizeof(TGeoBranchArray)+sizeof(TGeoBranchArray*)*(maxlevel)); }
+
    inline size_t SizeOf() const
       { return (sizeof(TGeoBranchArray)+sizeof(TGeoBranchArray*)*(fMaxLevel)); }
    
