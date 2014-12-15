@@ -1,3 +1,12 @@
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(fclassVal
+                                    fclassVal.h
+                                    SELECTION fclassVal_selection.xml)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-enums-fclassVal
+                  MACRO execfclassVal.C
+                  OUTREF execfclassVal.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST})
+
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(qualifiedNames
                                     qualifiedNames.h
                                     SELECTION qualifiedNames_selection.xml)
