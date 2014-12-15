@@ -661,10 +661,12 @@ Bool_t TF2::IsInside(const Double_t *x) const
 TH1* TF2::CreateHistogram()
 {
    // Create a histogram from function.
+   // always created it, even if it is already existing
 
    Int_t i,j,bin;
    Double_t dx, dy;
    Double_t xv[2];
+
 
    TH2F* h = new TH2F("Func",(char*)GetTitle(),fNpx,fXmin,fXmax,fNpy,fYmin,fYmax);
    h->SetDirectory(0);

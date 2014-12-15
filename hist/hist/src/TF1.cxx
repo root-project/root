@@ -1397,8 +1397,10 @@ TH1 *TF1::GetHistogram() const
 
    if (fHistogram) return fHistogram;
 
-   // histogram has not yet created - create it
-   const_cast<TF1*>(this)->CreateHistogram(); 
+   // histogram has not been yet created - create it
+   // should not we make this function not const ??
+   const_cast<TF1*>(this)->fHistogram  = const_cast<TF1*>(this)->CreateHistogram();
+   if (!fHistogram) Error("GetHistogram","Error creating histogram for function %s of type %s",GetName(),IsA()->GetName() );
    return fHistogram;
 }
 
@@ -2826,7 +2828,7 @@ TH1 *  TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
    histogram->SetMarkerStyle(GetMarkerStyle());
    histogram->SetMarkerSize(GetMarkerSize());
 
-   // update saved histogram in case if was deleted or it is the first time the method is called
+   // update saved histogram in case it was deleted or if it is the first time the method is called
    // for example when called from TF1::GetHistogram()
    if (!fHistogram) fHistogram = histogram;
    return histogram;
