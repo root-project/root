@@ -739,6 +739,7 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    } else {
       t.ReplaceAll("<","$<$");
       t.ReplaceAll(">","$>$");
+      t.ReplaceAll("_","\\_");
    }
    t.ReplaceAll("&","\\&");
    t.ReplaceAll("#","\\#");
