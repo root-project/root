@@ -512,7 +512,7 @@ Double_t THStack::GetMinimum(Option_t *option)
 }
 
 //______________________________________________________________________________
-Int_t THStack::GetNHists() const
+Int_t THStack::GetNhists() const
 {
    // Return the number of histograms in the stack
 
