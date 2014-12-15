@@ -11,6 +11,8 @@
   (see https://sft.its.cern.ch/jira/browse/ROOT-6841)
 - Better line width matching with screen and pdf output.
 - Text color was ignored. It was always black.
+- Text color was ignored. It was always black.
+- The underscore `_` produced an error outside the TeX math context.
 
 ### TPDF
 
