@@ -1290,6 +1290,7 @@ bool TCling::LoadPCM(TString pcmFileName,
                // This is a global enum and is added to the
                // list of enums and its constants to the list of globals
                if (!listOfEnums->THashList::FindObject(enumName)){
+                  ((TEnum*) selEnum)->SetClass(nullptr);
                   listOfEnums->Add(selEnum);
                }
                for (auto enumConstant: *static_cast<TEnum*>(selEnum)->GetConstants()){
@@ -1307,6 +1308,7 @@ bool TCling::LoadPCM(TString pcmFileName,
                }
                auto listOfEnums = dynamic_cast<THashList*>(nsTClassEntry->GetListOfEnums(false));
                if (listOfEnums && !listOfEnums->THashList::FindObject(enumName)){
+                  ((TEnum*) selEnum)->SetClass(nsTClassEntry);
                   listOfEnums->Add(selEnum);
                }
             }
