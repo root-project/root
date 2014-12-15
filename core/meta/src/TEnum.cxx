@@ -37,7 +37,7 @@ TEnum::TEnum(const char *name, void *info, TClass *cls)
    //and interpreter info.
    //Constant List is owner if enum not on global scope (thus constants not
    //in TROOT::GetListOfGlobals).
-   SetNameTitle(name, "An enum type");
+   SetName(name);
    if (cls) {
       fConstantList.SetOwner(kTRUE);
    }
