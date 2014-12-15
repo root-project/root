@@ -2474,9 +2474,15 @@ void TH1::Copy(TObject &obj) const
    fContour.Copy(((TH1&)obj).fContour);
    fSumw2.Copy(((TH1&)obj).fSumw2);
    //   fFunctions->Copy(((TH1&)obj).fFunctions);
+   // when copying an histogram if the AddDirectoryStatus() is true it
+   // will be added to gDIrectory independently of the fDirectory stored.
+   // Is this what we really want ?? 
    if (fgAddDirectory && gDirectory) {
       gDirectory->Append(&obj);
-      ((TH1&)obj).fDirectory = gDirectory;
+      ((TH1&)obj).fDirectory = gDirectory;      
+   } else if (fDirectory) { 
+      ((TH1&)obj).fDirectory = fDirectory;      
+      ((TH1&)obj).fDirectory->Append(&obj);
    }
 
 }
