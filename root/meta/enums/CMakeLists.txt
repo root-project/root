@@ -1,3 +1,12 @@
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(qualifiedNames
+                                    qualifiedNames.h
+                                    SELECTION qualifiedNames_selection.xml)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-enums-qualifiedNames
+                  MACRO execQualifiedNames.C
+                  OUTREF execQualifiedNames.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST})
+
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(enumsTestClasses
                                     enumsTestClasses.h
                                     SELECTION enumsTestClasses_selection.xml
