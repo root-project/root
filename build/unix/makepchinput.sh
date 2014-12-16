@@ -36,7 +36,7 @@ done
 
 # within a protection for OSX
 stlHeadersNotForOSx="cstdalign"
-echo "#ifndef R__MACOSX" >> $allheaders
+echo "#ifndef __APPLE__" >> $allheaders
 for stlHeader in $stlHeadersNotForOSx; do
     echo '#include <'$stlHeader'>' >> $allheaders
 done
