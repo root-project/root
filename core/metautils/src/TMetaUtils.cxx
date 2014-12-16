@@ -3946,6 +3946,10 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 
    // If the location is a macro get the expansion location.
    sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+   if (sourceManager.isLoadedSourceLocation(sourceLocation)) {
+      // Do not touch disk for nodes coming from the PCH.
+      return "";
+   }
 
    bool invalid;
    const char *commentStart = sourceManager.getCharacterData(sourceLocation, &invalid);
