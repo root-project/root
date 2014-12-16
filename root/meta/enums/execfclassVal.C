@@ -7,6 +7,6 @@ void execfclassVal(){
 
    for (auto const & enName : {"en","a::en","A::en","pclass","a::pclass","B::pclass"}){
       auto en = TEnum::GetEnum(enName);
-      std::cout << enName << ": fClass is " << (ptr == en->GetClass() ? "" : "NOT " ) << ptr << std::endl;
+      std::cout << enName << ": fClass is " << (ptr == en->GetClass() ? "" : "NOT " ) << " kObjectAllocMemValue" << std::endl;
    }
 }
