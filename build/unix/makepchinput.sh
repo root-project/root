@@ -24,7 +24,7 @@ mkdir -p $outdir
 rm -f $allheaders $alllinkdefs
 
 # Here we include the list of c++11 stl headers
-stlHeaders="cstdlib csignal csetjmp cstdarg typeinfo typeindex type_traits bitset functional utility ctime chrono cstddef initializer_list tuple new memory scoped_allocator climits cfloat cstdint cinttypes limits exception stdexcept cassert system_error cerrno cctype cwctype cstring cwchar string array vector deque list forward_list set map unordered_set unordered_map stack queue algorithm iterator cmath complex valarray random numeric ratio cfenv iosfwd ios istream ostream iostream fstream sstream iomanip streambuf cstdio locale clocale atomic thread mutex future condition_variable ciso646 ccomplex ctgmath cstdalign cstdbool"
+stlHeaders="cstdlib csignal csetjmp cstdarg typeinfo typeindex type_traits bitset functional utility ctime chrono cstddef initializer_list tuple new memory scoped_allocator climits cfloat cstdint cinttypes limits exception stdexcept cassert system_error cerrno cctype cwctype cstring cwchar string array vector deque list forward_list set map unordered_set unordered_map stack queue algorithm iterator cmath complex valarray random numeric ratio cfenv iosfwd ios istream ostream iostream fstream sstream iomanip streambuf cstdio locale clocale atomic thread mutex future condition_variable ciso646 ccomplex ctgmath cstdbool"
 
 # Excluded from the list: <cuchar>, <codecvt>, <regex>
 # Only the latter is supported and only by gcc49.
@@ -34,6 +34,13 @@ for stlHeader in $stlHeaders; do
     echo '#include <'$stlHeader'>' >> $allheaders
 done
 
+# within a protection for OSX
+stlHeadersNotForOSx="cstdalign"
+echo "#ifndef R__MACOSX" >> $allheaders
+for stlHeader in $stlHeadersNotForOSx; do
+    echo '#include <'$stlHeader'>' >> $allheaders
+done
+echo "#endif // end of ifndef R__MACOSX" >> $allheaders
 
 while ! [ "x$1" = "x" ]; do
     echo '#include "'$1'"' >> $allheaders
