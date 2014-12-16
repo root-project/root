@@ -1125,6 +1125,7 @@ void TCint::CreateListOfDataMembers(TClass *cl)
    if (!cl->fData) {
 
       TList *newlist = new TList;
+      cl->fData = newlist; // TDataMember's contructor uses it :(
 
       G__DataMemberInfo t(*(G__ClassInfo*)cl->GetClassInfo()), *a;
       while (t.Next()) {
