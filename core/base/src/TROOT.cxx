@@ -1441,6 +1441,8 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
 
 TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
 {
+   R__LOCKGUARD2(gROOTMutex);
+
    if (!fGlobalFunctions) {
       fGlobalFunctions = new TListOfFunctions(0);
    }
@@ -1448,6 +1450,10 @@ TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
    if (!fInterpreter)
       Fatal("GetListOfGlobalFunctions", "fInterpreter not initialized");
 
+   // A thread that calls with load==true and a thread that calls with load==false
+   // will conflict here (the load==true will be updating the list while the
+   // other is reading it).  To solve the problem, we could use a read-write lock
+   // inside the list itself.
    if (load) fGlobalFunctions->Load();
 
    return fGlobalFunctions;
@@ -1471,12 +1477,14 @@ TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
 
 TCollection *TROOT::GetListOfTypes(Bool_t /* load */)
 {
-   if (!fTypes) {
-      fTypes = new TListOfTypes;
-   }
-
    if (!fInterpreter)
       Fatal("GetListOfTypes", "fInterpreter not initialized");
+
+   if (!fTypes) {
+      R__LOCKGUARD2(gROOTMutex);
+
+      if (!fTypes) fTypes = new TListOfTypes;
+   }
 
    return fTypes;
 }
