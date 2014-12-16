@@ -1264,6 +1264,8 @@ TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
    // a (tight) loop where no interpreter symbols will be created
    // you can set load=kFALSE (default).
 
+   R__LOCKGUARD2(gCINTMutex);
+
    if (!fGlobalFunctions) {
       fGlobalFunctions = new THashTable(100, 3);
       load = kTRUE;
@@ -1272,6 +1274,10 @@ TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
    if (!fInterpreter)
       Fatal("GetListOfGlobalFunctions", "fInterpreter not initialized");
 
+   // A thread that calls with load==true and a thread that calls with load==false
+   // will conflict here (the load==true will be updating the list while the
+   // other is reading it).  To solve the problem, we could use a read-write lock
+   // inside the list itself.
    if (load)
       gInterpreter->UpdateListOfGlobalFunctions();
 
@@ -1288,15 +1294,26 @@ TCollection *TROOT::GetListOfTypes(Bool_t load)
    // a (tight) loop where no new types will be created
    // you can set load=kFALSE (default).
 
-   if (!fTypes) {
-      fTypes = new THashTable(100, 3);
-      load = kTRUE;
-      TDataType::AddBuiltins(fTypes);
-   }
-
    if (!fInterpreter)
       Fatal("GetListOfTypes", "fInterpreter not initialized");
 
+   R__LOCKGUARD2(gCINTMutex);
+
+   if (!fTypes) {
+
+      fTypes = new THashTable(100, 3);
+      TDataType::AddBuiltins(fTypes);
+
+      gInterpreter->UpdateListOfTypes();
+
+      return fTypes;
+   }
+
+
+   // A thread that calls with load==true and a thread that calls with load==false
+   // will conflict here (the load==true will be updating the list while the
+   // other is reading it).  To solve the problem, we could use a read-write lock
+   // inside the list itself.
    if (load) {
 ///      printf("calling Update ListOfTypes\n");
       gInterpreter->UpdateListOfTypes();

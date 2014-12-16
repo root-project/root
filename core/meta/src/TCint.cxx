@@ -1100,16 +1100,18 @@ void TCint::CreateListOfBaseClasses(TClass *cl)
 
    if (!cl->fBase) {
 
-      cl->fBase = new TList;
+      TList *newlist = new TList;
 
       G__BaseClassInfo t(*(G__ClassInfo *)cl->GetClassInfo()), *a;
       while (t.Next()) {
          // if name cannot be obtained no use to put in list
          if (t.IsValid() && t.Name()) {
             a = new G__BaseClassInfo(t);
-            cl->fBase->Add(new TBaseClass(a, cl));
+            newlist->Add(new TBaseClass(a, cl));
          }
       }
+      // Set at the end, so other thread do not find it 'half' filled.
+      cl->fBase = newlist;
    }
 }
 
@@ -1122,16 +1124,18 @@ void TCint::CreateListOfDataMembers(TClass *cl)
 
    if (!cl->fData) {
 
-      cl->fData = new TList;
+      TList *newlist = new TList;
 
       G__DataMemberInfo t(*(G__ClassInfo*)cl->GetClassInfo()), *a;
       while (t.Next()) {
          // if name cannot be obtained no use to put in list
          if (t.IsValid() && t.Name() && strcmp(t.Name(), "G__virtualinfo")) {
             a = new G__DataMemberInfo(t);
-            cl->fData->Add(new TDataMember(a, cl));
+            newlist->Add(new TDataMember(a, cl));
          }
       }
+      // Set at the end, so other thread do not find it 'half' filled.
+      cl->fData = newlist;
    }
 }
 
@@ -1144,7 +1148,7 @@ void TCint::CreateListOfMethods(TClass *cl)
 
    if (!cl->fMethod) {
 
-      cl->fMethod = new THashList;
+      TList *newlist = new THashList;
 
       G__MethodInfo *a;
       G__MethodInfo t(*(G__ClassInfo*)cl->GetClassInfo());
@@ -1152,9 +1156,11 @@ void TCint::CreateListOfMethods(TClass *cl)
          // if name cannot be obtained no use to put in list
          if (t.IsValid() && t.Name()) {
             a = new G__MethodInfo(t);
-            cl->fMethod->Add(new TMethod(a, cl));
+            newlist->Add(new TMethod(a, cl));
          }
       }
+      // Set at the end, so other thread do not find it 'half' filled.
+      cl->fMethod = newlist;
    }
 }
 
@@ -1185,16 +1191,19 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
 
    if (!m->fMethodArgs) {
 
-      m->fMethodArgs = new TList;
+      TList *newlist = new TList;
 
       G__MethodArgInfo t(*(G__MethodInfo *)m->fInfo), *a;
       while (t.Next()) {
          // if type cannot be obtained no use to put in list
          if (t.IsValid() && t.Type()) {
             a = new G__MethodArgInfo(t);
-            m->fMethodArgs->Add(new TMethodArg(a, m));
+            newlist->Add(new TMethodArg(a, m));
          }
       }
+
+      // Set at the end, so other thread do not find it 'half' filled.
+      m->fMethodArgs = newlist;
    }
 }
 
