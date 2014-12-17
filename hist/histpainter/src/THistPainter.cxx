@@ -1005,7 +1005,7 @@ Begin_Macro(source)
 {
    int i;
    const Int_t nx = 8;
-   char *os_X[nx]   = {"8","32","128","512","2048","8192","32768","131072"};
+   string os_X[nx]   = {"8","32","128","512","2048","8192","32768","131072"};
    float d_35_0[nx] = {0.75, -3.30, -0.92, 0.10, 0.08, -1.69, -1.29, -2.37};
    float d_35_1[nx] = {1.01, -3.02, -0.65, 0.37, 0.34, -1.42, -1.02, -2.10};
 
@@ -1023,8 +1023,8 @@ Begin_Macro(source)
    h1b->SetMaximum(5);
 
    for (i=1; i<=nx; i++) {
-      h1b->Fill(os_X[i-1], d_35_0[i-1]);
-      h1b->GetXaxis()->SetBinLabel(i,os_X[i-1]);
+      h1b->SetBinContent(i, d_35_0[i-1]);
+      h1b->GetXaxis()->SetBinLabel(i,os_X[i-1].c_str());
    }
 
    h1b->Draw("b");
@@ -1034,7 +1034,7 @@ Begin_Macro(source)
    h2b->SetBarWidth(0.4);
    h2b->SetBarOffset(0.5);
    h2b->SetStats(0);
-   for (i=1;i<=nx;i++) h2b->Fill(os_X[i-1], d_35_1[i-1]);
+   for (i=1;i<=nx;i++) h2b->SetBinContent(i, d_35_1[i-1]);
 
    h2b->Draw("b same");
 
