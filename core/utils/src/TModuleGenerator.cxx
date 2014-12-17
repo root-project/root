@@ -40,9 +40,11 @@ using namespace ROOT;
 using namespace clang;
 
 TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
+                                   bool inlineInputHeaders,
                                    const std::string &shLibFileName):
    fCI(CI),
    fIsPCH(shLibFileName == "allDict.cxx"),
+   fInlineInputHeaders(inlineInputHeaders),
    fDictionaryName(llvm::sys::path::stem(shLibFileName)),
    fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
 {
@@ -231,8 +233,16 @@ std::ostream &TModuleGenerator::WritePPIncludes(std::ostream &out) const
    // Write
    // #include "header1.h"
    // #include "header2.h"
+   // or, if inlining of headers is requested, dump the content of the files.
    for (auto const & incl : fHeaders) {
-      out << "#include \"" << incl << "\"\n";
+      if (fInlineInputHeaders){
+         std::ifstream buffer(incl);
+         std::string bufferContent((std::istreambuf_iterator<char>(buffer)),
+                                    std::istreambuf_iterator<char>());
+         out << bufferContent << std::endl;
+      } else {
+         out << "#include \"" << incl << "\"\n";
+      }
    }
    out << std::endl;
    return out;
@@ -272,7 +282,6 @@ std::ostream &TModuleGenerator::WriteStringPairVec(const StringPairVec_t &vec,
 
 //______________________________________________________________________________
 void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
-      bool inlineHeaders,
       const std::string &fwdDeclnArgsToKeepString,
       const std::string &headersClassesMapString,
       const std::string &fwdDeclString) const
@@ -297,7 +306,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
 
    // If necessary, inline the headers
    std::string inlinedHeaders;
-   if (inlineHeaders) {
+   if (fInlineInputHeaders) {
       std::string hdrFullPath;
       for (auto const & hdrName : fHeaders) {
          hdrFullPath = hdrName;
@@ -346,7 +355,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
        "  void TriggerDictionaryInitialization_"
        << GetDictionaryName() << "_Impl() {\n"
        "    static const char* headers[] = {\n";
-   if (inlineHeaders) {
+   if (fInlineInputHeaders) {
       out << 0 ;
    } else {
       WriteHeaderArray(out);
