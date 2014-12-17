@@ -2205,7 +2205,6 @@ int GenerateModule(TModuleGenerator &modGen,
 
 
    modGen.WriteRegistrationSource(dictStream,
-                                  inlineInputHeader,
                                   fwdDeclnArgsToKeepString,
                                   headersClassesMapString,
                                   fwdDeclString);
@@ -3766,7 +3765,7 @@ int RootCling(int argc,
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
-   std::list<std::string> diagnosticPragmas;
+   std::list<std::string> diagnosticPragmas = {"#pragma clang diagnostic ignored \"-Wdeprecated-declarations\""};
 
    int nextStart = 0;
    while (ic < argc) {
@@ -4023,9 +4022,6 @@ int RootCling(int argc,
 
             bool isSelectionFile = IsSelectionFile(argv[i]);
 
-            string argkeep;
-            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-            if (!isSelectionFile) StrcpyArg(argkeep, argv[i]);
             std::string header(isSelectionFile ? argv[i] : GetRelocatableHeaderName(argv[i], currentDirectory));
             // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
             // use directly argv.
@@ -4033,12 +4029,6 @@ int RootCling(int argc,
                header.erase(header.length() - 1);
             }
 
-            // We are 'normalizing' the file in two different way.  StrcpyArg (from rootcling)
-            // strip just the ROOTBUILD part (i.e. $PWD/package/module/inc) while
-            // GetRelocatableHeaderName also $PWD.
-            // GetRelocatableHeaderName is likely to be too aggressive and the
-            // ROOTBUILD part should really be removed by changing the ROOT makefile
-            // to pass -I and path relative to the include path.
             interpPragmaSource += std::string("#include \"") + header + "\"\n";
             if (!isSelectionFile) {
                includeForSource += std::string("#include \"") + header + "\"\n";
@@ -4086,15 +4076,19 @@ int RootCling(int argc,
    pcmArgs.push_back(incCurDir);
 
    TModuleGenerator modGen(interp.getCI(),
+                           inlineInputHeader,
                            sharedLibraryPathName);
 
-   interp.declare("#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"");
-
    // Add the diagnostic pragmas distilled from the -Wno-xyz
-   for (std::list<std::string>::iterator dPrIt = diagnosticPragmas.begin();
-         dPrIt != diagnosticPragmas.end(); dPrIt++) {
-      interp.declare(*dPrIt);
+   {
+      std::stringstream res;
+      const char* delim="\n";
+      std::copy(diagnosticPragmas.begin(),
+                diagnosticPragmas.end(),
+                std::ostream_iterator<std::string>(res, delim));
+      interp.declare(res.str());
    }
+
    modGen.ParseArgs(pcmArgs);
 #ifndef ROOT_STAGE1_BUILD
    // Forward the -I, -D, -U
@@ -4104,10 +4098,12 @@ int RootCling(int argc,
    std::stringstream definesUndefinesStr;
    modGen.WritePPDefines(definesUndefinesStr);
    modGen.WritePPUndefines(definesUndefinesStr);
-   interp.declare(definesUndefinesStr.str());
+   if (!definesUndefinesStr.str().empty())
+      interp.declare(definesUndefinesStr.str());
 #endif
 
-   if (interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {
+   if (!interpreterDeclarations.empty() &&
+       interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {
       ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
       return 1;
    }
