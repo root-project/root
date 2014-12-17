@@ -401,8 +401,23 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
                value = (Int_t*)(enumval->GetAddress());
                l     = (Long_t)(*value);
             } else if (IsEnum()) {
-               TObject *obj = fClass->GetListOfDataMembers()->FindObject(ptr1);
-               if (obj)
+               // We can not look into the list of data member of this class as
+               // it is likely that it being build (i.e. we are being called
+               // by TCint::CreateListOfDataMembers.
+
+               DataMemberInfo_t *cursor = gInterpreter->DataMemberInfo_Factory(fClass->GetClassInfo());
+               Bool_t isInClass = kFALSE;
+               while (gInterpreter->DataMemberInfo_Next(cursor)) {
+                  // if name cannot be obtained no use to put in list
+                  if (gInterpreter->DataMemberInfo_IsValid(cursor) &&
+                      gInterpreter->DataMemberInfo_Name(cursor) &&
+                      strcmp(gInterpreter->DataMemberInfo_Name(cursor), ptr1) == 0)
+                  {
+                     isInClass = kTRUE;
+                     break;
+                  }
+               }
+               if (isInClass)
                   l = gROOT->ProcessLineFast(Form("%s::%s;",fClass->GetName(),ptr1));
                else
                   l = gROOT->ProcessLineFast(Form("%s;",ptr1));
