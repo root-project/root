@@ -80,12 +80,14 @@ class TFormula : public TNamed
 {
 private:
 
-   TString           fClingInput;           //!
-   vector<Double_t>  fClingVariables;       //!
-   vector<Double_t>  fClingParameters;
+   // All data members are transient apart from the string defining the formula and the parameter values
+
+   TString           fClingInput;           //! input function passed to Cling
+   vector<Double_t>  fClingVariables;       //!  cached variables
+   vector<Double_t>  fClingParameters;      //  parameter values 
    Bool_t            fReadyToExecute;       //!
-   Bool_t            fClingInitialized;  //! - make transient to force re-initialization in Cling when reading from a file
-   Bool_t            fAllParametersSetted;    //!
+   Bool_t            fClingInitialized;  //!  transient to force re-initialization
+   Bool_t            fAllParametersSetted;    // flag to control if all parameters are setted    
    TMethodCall*      fMethod;        //! pointer to methocall
    TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
 
@@ -107,14 +109,10 @@ protected:
    map<TString,Double_t>          fConsts;   //!
    map<TString,TString>           fFunctionsShortcuts;  //!
    TString                        fFormula;     
-   Int_t                          fNdim;
-   Int_t                          fNpar;
-   Int_t                          fNumber;
-   TObjArray                      fLinearParts;
-
-   // for I/O backward compatibility 
-   //Int_t   fNoper; 
-   // Int_t   fNconst;
+   Int_t                          fNdim;  //!
+   Int_t                          fNpar;  //!
+   Int_t                          fNumber;  //!
+   TObjArray                      fLinearParts;  //!
 
    Bool_t IsOperator(const char c);
    Bool_t IsBracket(const char c);
@@ -124,6 +122,8 @@ protected:
    void   ProcessFormula(TString &formula);
    Bool_t PrepareFormula(TString &formula);
    void   DoAddParameter(const TString &name, Double_t value, bool processFormula);
+
+   Double_t       DoEval(const Double_t * x  = nullptr, const Double_t * p = nullptr);
 
 
 public:
@@ -143,7 +143,6 @@ public:
    void           AddVariable(const TString &name, Double_t value);
    void           AddVariables(const pair<TString,Double_t> *vars, const Int_t size);
    void           Copy(TObject &f1) const;
-   Double_t       Eval();
    Double_t       Eval(Double_t x);
    Double_t       Eval(Double_t x, Double_t y);
    Double_t       Eval(Double_t x, Double_t y , Double_t z);

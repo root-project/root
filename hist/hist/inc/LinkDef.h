@@ -20,7 +20,7 @@
 
 #pragma link C++ class TAxis-;
 #pragma link C++ class TBinomialEfficiencyFitter+;
-#pragma link C++ class TFormula+;
+#pragma link C++ class TFormula-;
 #pragma link C++ class TFormulaOld-;
 #pragma link C++ class TFormulaOldPrimitive+;
 #pragma link C++ class TFractionFitter+;

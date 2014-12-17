@@ -26,14 +26,16 @@
 #include "TH1.h"
 #include "TRandom3.h"
 #include "TF1.h"
+#include "TFitResult.h"
 #include "TStyle.h"
 #include "TCanvas.h"
 #include "TLegend.h"
 #include "TPaveStats.h"
+#include "Math/IntegratorOptions.h"
 #include <cassert>
 #include <iostream>
 
-void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
+void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false, bool debug = false, int seed = 111)
 {
    gStyle->SetMarkerStyle(20);
    gStyle->SetLineWidth(2.0);
@@ -51,7 +53,8 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    TH1D* hChisquared = new TH1D("hChisquared",
       "#chi^{2} probability (Baker-Cousins)", 200, 0.0, 1.0);
 
-   //TVirtualFitter::SetDefaultFitter("Minuit2");
+   TVirtualFitter::SetDefaultFitter("Minuit2");
+   ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
 
    // Note: in order to be able to use TH1::FillRandom() to generate
    //       pseudo-experiments, we use a trick: generate "selected"
@@ -79,7 +82,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
       xmin, xmax);
    TF1*  fM2Fit2 = 0;
 
-   TRandom3 rb(0);
+   TRandom3 rb(seed);
 
    // First try: use a single set of parameters.
    // For each try, we need to find the overall normalization
@@ -99,6 +102,8 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    Double_t fracN = integralN/(integralN+integralD);
    Int_t nevtsN = rb.Binomial(nevts, fracN);
    Int_t nevtsD = nevts - nevtsN;
+
+   std::cout << nevtsN << "  " << nevtsD << std::endl;
 
    gStyle->SetOptFit(1111);
 
@@ -129,6 +134,12 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
      fM2Fit->SetParError(0, 0.1);
      fM2Fit->SetParError(1, 1.0);
      fM2Fit->SetParError(2, 0.2);
+     TH1 * hf = fM2Fit->GetHistogram();
+     // std::cout << "Function values " << std::endl;
+     // for (int i = 1; i <= hf->GetNbinsX(); ++i)
+     //    std::cout << hf->GetBinContent(i) << "  ";
+     // std::cout << std::endl;
+     
      TCanvas* cEvt;
      if (plot) {
        cEvt = new TCanvas(Form("cEnv%d",iloop),
@@ -145,29 +156,55 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
        Int_t status = 0;
        switch (fit) {
        case 0:
-          hM2E->Fit(fM2Fit, "RN");
+       {
+          // TVirtualPad * pad = gPad;
+          // new TCanvas();
+          // fM2Fit->Draw();
+          // gPad = pad;
+          TString optFit = "RN";
+          if (debug) optFit += TString("SV");
+          TFitResultPtr res = hM2E->Fit(fM2Fit, optFit);
           if (plot) {
              hM2E->DrawCopy("E");
              fM2Fit->DrawCopy("SAME");
           }
+          if (debug) res->Print();
+          status = res; 
           break;
+       }
        case 1:
-          if (fM2Fit2) delete fM2Fit2;
-          fM2Fit2 = dynamic_cast<TF1*>(fM2Fit->Clone("fM2Fit2"));
+       {
+          // if (fM2Fit2) delete fM2Fit2;
+          // fM2Fit2 = dynamic_cast<TF1*>(fM2Fit->Clone("fM2Fit2"));
+          fM2Fit2 = fM2Fit; // do not clone/copy the function
           if (fM2Fit2->GetParameter(0) >= 1.0)
           fM2Fit2->SetParameter(0, 0.95);
           fM2Fit2->SetParLimits(0, 0.0, 1.0);
+          
+          // TVirtualPad * pad = gPad;
+          // new TCanvas();
+          // fM2Fit2->Draw();
+          // gPad = pad; 
+
           TBinomialEfficiencyFitter bef(hM2N, hM2D);
-          status = bef.Fit(fM2Fit2,"RI");
-          if (status!=0) {
+          TString optFit = "RI";
+          if (debug) optFit += TString("SV");
+          TFitResultPtr res = bef.Fit(fM2Fit2,optFit);
+          status = res;
+          if (status !=0) {
              std::cerr << "Error performing binomial efficiency fit, result = "
              << status << std::endl;
+             res->Print();
              continue;
           }
           if (plot) {
              fM2Fit2->SetLineColor(kRed);
              fM2Fit2->DrawCopy("SAME");
           }
+          if (debug) {
+             res->Print();
+          }
+       }
        }
 
        if (status != 0) break;
@@ -246,4 +283,8 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
 
    c1->cd(4);
    hChisquared->Draw("HIST");
+}
+
+int main() {
+   TestBinomial(); 
 }

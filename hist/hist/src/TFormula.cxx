@@ -36,6 +36,7 @@
 #ifdef WIN32
 #pragma optimize("",off)
 #endif
+#include "TFormulaOld.h"
 
 ClassImp(TFormula)
 //______________________________________________________________________________
@@ -185,7 +186,6 @@ TFormula::TFormula(const char *name, Int_t nparams, Int_t ndims)
    fNumber = 0;
    fClingName = "";
    fFormula = "";
-   FillDefaults();
    for(Int_t i = 0; i < nparams; ++i)
    {
       TString parName = TString::Format("%d",i);
@@ -1718,7 +1718,8 @@ void TFormula::SetParameters(const Double_t *params, Int_t size)
 {
    if(!params || size < 0 || size > fNpar) return;
    // reset vector of cling parameters
-   if (size != (int) fClingParameters.size() ) { 
+   if (size != (int) fClingParameters.size() ) {
+      Warning("SetParameters","size is not same of cling parameter size %d - %d",size,fClingParameters.size() );
       for(Int_t i = 0; i < size; ++i)
       {
          TString name = TString::Format("%d",i);
@@ -1731,9 +1732,18 @@ void TFormula::SetParameters(const Double_t *params, Int_t size)
 }
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params)
 {
-   if (params) SetParameters(params, fNpar);
+   //if (params) SetParameters(params, fNpar);
 
-   std::copy(x, x+fNdim, fClingVariables.begin() );
+   // Print("v");
+   // 
+   // if (fNdim >  fClingVariables.size() ) {
+   //    std::cout << "dim " << fNdim << "  cling variables size " << fClingVariables.size() << std::endl;
+   //    Print("v");
+   // }
+   
+   // assert(fNdim <= fClingVariables.size() );
+
+   // std::copy(x, x+fNdim, fClingVariables.begin() );
 
    // if(fNdim >= 1) fClingVariables[0] = x[0];
    // if(fNdim >= 2) fClingVariables[1] = x[1];
@@ -1745,7 +1755,7 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params)
    // if(fNdim >= 3) SetVariable("z",x[2]);
    // if(fNdim >= 4) SetVariable("t",x[3]);
 
-   return Eval();
+   return DoEval(x, params);
 }
 Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
 {
@@ -1756,7 +1766,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
    if(fNdim >= 2) fClingVariables[1] = y;
    if(fNdim >= 3) fClingVariables[2] = z;
    if(fNdim >= 4) fClingVariables[3] = t;
-   return Eval();
+   return DoEval();
 }
 Double_t TFormula::Eval(Double_t x, Double_t y , Double_t z)
 {
@@ -1771,7 +1781,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y , Double_t z)
    // if(fNdim >= 2) SetVariable("y",y);
    // if(fNdim >= 3) SetVariable("z",z);
 
-   return Eval();
+   return DoEval();
 }
 Double_t TFormula::Eval(Double_t x, Double_t y)
 {
@@ -1781,7 +1791,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y)
 
    if(fNdim >= 1) fClingVariables[0] = x;
    if(fNdim >= 2) fClingVariables[1] = y;
-   return Eval();
+   return DoEval();
 }
 Double_t TFormula::Eval(Double_t x)
 {
@@ -1790,9 +1800,9 @@ Double_t TFormula::Eval(Double_t x)
    //*-*    
 
    if(fNdim >= 1) fClingVariables[0] = x;
-   return Eval();
+   return DoEval();
 }
-Double_t TFormula::Eval()
+Double_t TFormula::DoEval(const double * x, const double * params)
 {
    //*-*    
    //*-*    Evaluate formula.
@@ -1840,12 +1850,12 @@ Double_t TFormula::Eval()
    // }
    Double_t result = 0;
    void* args[2]; 
-   double * vars = fClingVariables.data();
+   double * vars = (x) ? const_cast<double*>(x) : fClingVariables.data();
    args[0] = &vars; 
    if (fNpar <= 0) 
       (*fFuncPtr)(0, 1, args, &result);
    else {
-      double * pars = fClingParameters.data();
+      double * pars = (params) ? const_cast<double*>(params) : fClingParameters.data();
       args[1] = &pars;
       (*fFuncPtr)(0, 2, args, &result);
    }
@@ -1908,3 +1918,91 @@ void TFormula::Print(Option_t *option) const
    }
 
 } 
+
+//______________________________________________________________________________
+void TFormula::Streamer(TBuffer &b)
+{
+   // Stream a class object.
+   if (b.IsReading() ) {
+      UInt_t R__s, R__c;
+      Version_t v = b.ReadVersion(&R__s, &R__c);
+      //std::cout << "version " << v << std::endl;
+      if (v <= 8 && v > 3 && v != 6) {
+         // old TFormula class
+         TFormulaOld * fold = new TFormulaOld(); 
+         b.ReadClassBuffer(TFormulaOld::Class(), fold, v, R__s, R__c);
+         fold->Print();
+         TFormula fnew(fold->GetName(), fold->GetExpFormula() );
+         *this = fnew;
+         SetParameters(fold->GetParameters() );
+         if (!fReadyToExecute ) {
+            Error("Streamer","Old formula read from file is NOT valid");
+            Print("v");
+         }
+         return;
+      }
+      else if (v > 8) {
+         // new TFormula class
+         b.ReadClassBuffer(TFormula::Class(), this, v, R__s, R__c);
+
+         //std::cout << "reading npar = " << GetNpar() << std::endl;
+
+         // initialize the formula
+         // need to set size of fClingVariables which is transient  
+         //fClingVariables.resize(fNdim);
+
+         // case of formula contains only parameters
+         if (fFormula.IsNull() ) return;
+
+         // store parameter values
+         std::vector<double> parValues = fClingParameters;
+         fClingParameters.clear();  // need to be reset before re-initializing it 
+         
+         FillDefaults();
+
+         PreProcessFormula(fFormula);
+         fClingInput = fFormula;
+         PrepareFormula(fClingInput);
+
+         // restore parameter values
+         if (fNpar != (int) parValues.size() ) { 
+            Error("Streamer","number of parameters computed (%d) is not same as the stored parameters (%d)",fNpar,parValues.size() );
+            Print("v");
+         }
+         assert(fNpar == (int) parValues.size() );
+         std::copy( parValues.begin(), parValues.end(), fClingParameters.begin() );
+
+         // input formula into Cling
+             // need to replace in cling the name of the pointer of this object 
+         // TString oldClingName = fClingName; 
+         // fClingName.Replace(fClingName.Index("_0x")+1,fClingName.Length(), TString::Format("%p",this) );
+         // fClingInput.ReplaceAll(oldClingName, fClingName);
+         // InputFormulaIntoCling();
+         
+         if (!TestBit(kNotGlobal)) {
+            R__LOCKGUARD2(gROOTMutex);
+            gROOT->GetListOfFunctions()->Add(this);
+         }
+         if (!fReadyToExecute ) {
+            Error("Streamer","Formula read from file is NOT ready to execute");
+            Print("v");
+         }
+         //std::cout << "reading 2 npar = " << GetNpar() << std::endl;
+
+         return;
+      }
+      else {
+         Error("Streamer","Reading version %d is not supported",v);
+         return;
+      }
+   }
+   else {
+      // case of writing
+       b.WriteClassBuffer(TFormula::Class(),this);
+       //std::cout << "writing npar = " << GetNpar() << std::endl;
+   }
+}
+   
+      
+
+      
