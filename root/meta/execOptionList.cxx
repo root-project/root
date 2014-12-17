@@ -2,6 +2,7 @@
 #include "TClass.h"
 #include "TGWidget.h"
 #include "TGTextEntry.h"
+#include "TSystem.h"
 
 // ETextJustification fAlignment;        // *OPTION={GetMethod="GetAlignment";SetMethod="SetAlignment";Items=(kTextLeft="Left",kTextCenterX="Center",kTextRight="Right")}*
 
@@ -19,6 +20,8 @@ int check(TDataMember *d, UInt_t i, const char *name, Long_t expected) {
 }
 
 int execOptionList() {
+   gSystem->Setenv("DISPLAY",""); // Avoid spurrious warning when libGui is loaded.
+
    auto c = TClass::GetClass("TGTextEntry");
    auto d = (TDataMember*)c->GetListOfDataMembers()->FindObject("fAlignment");
 
