@@ -150,6 +150,7 @@ public:
    Double_t         GetChi2()              const { return fChi2; }
    const TMatrixD*  GetCorrelationMatrix() const { return &fCorrelationMatrix; }
    const TVectorD*  GetCoefficients()      const { return &fCoefficients; }
+   const TVectorD*  GetCoefficientsRMS()   const { return &fCoefficientsRMS; }
    Double_t         GetError()             const { return fError; }
    Int_t*           GetFunctionCodes()     const { return fFunctionCodes; }
    const TMatrixD*  GetFunctions()         const { return &fFunctions; }
