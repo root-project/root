@@ -36,6 +36,7 @@
 
 ClassImp(TGObject)
 
+//______________________________________________________________________________
 void TGObject::SaveAs(const char* filename /*= ""*/, Option_t* option /*= ""*/) const
 {
    // Write this TGObject to a file using TImage, if filename's extension signals 
@@ -57,3 +58,17 @@ void TGObject::SaveAs(const char* filename /*= ""*/, Option_t* option /*= ""*/) 
 
    TObject::SaveAs(filename, option);
 }
+
+//______________________________________________________________________________
+Bool_t TGObject::IsEqual(const TObject *obj) const
+{
+   // Equal comparison (TGObjects are equal if they have the same
+   // window identifier). If the TGObjects have not been created by
+   // the Window manager (e.g. a TGLVEntry), then fall back to the
+   // default TObject equal comparison
+
+   if ((fId == 0) && (((const TGObject *) obj)->fId == 0))
+      return TObject::IsEqual(obj);
+   return fId == ((const TGObject *) obj)->fId;
+}
+
