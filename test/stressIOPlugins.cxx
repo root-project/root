@@ -298,7 +298,7 @@ void stressIOPlugins2()
    ps.Close();
 
    //count number of lines in ps file
-   FILE *fp = fopen(psfname,"r");
+   FILE *fp = fopen(psfname.Data(),"r");
    if (!fp) {
       printf("FAILED\n");
       printf("%-8s could not open %s\n"," ",psfname.Data());
