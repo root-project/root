@@ -221,6 +221,11 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
 bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) {
    if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
+
+   if (Name.getNameKind() != DeclarationName::Identifier) return false;
+
+
+
    // Get the 'lookup' decl context.
    // We need to cast away the constness because we will lookup items of this
    // namespace/DeclContext
