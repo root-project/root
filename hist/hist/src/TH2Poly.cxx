@@ -145,6 +145,8 @@ times, it is better to divide into a small number of cells.
 End_Html */
 
 
+int fNumberOfCells = 0;  // define number of cells instead of fNCells to avoid mising with fNcells
+
 //______________________________________________________________________________
 TH2Poly::TH2Poly()
 {
@@ -364,7 +366,7 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
    binYmax = bin->GetYMax();
    binYmin = bin->GetYMin();
    nl = (Int_t)(floor((binXmin - fXaxis.GetXmin())/fStepX));
-   nr = (Int_t)(floor((binXmax - fXaxis.GetXmin())/fStepX));
+   nr = (Int_t)(floor((binXmax - fXaxis.GetXmin())/fStepX)); 
    mb = (Int_t)(floor((binYmin - fYaxis.GetXmin())/fStepY));
    mt = (Int_t)(floor((binYmax - fYaxis.GetXmin())/fStepY));
 
@@ -375,6 +377,7 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
    if (mb<0)       mb = 0;
 
    fNumberOfCells = fCellX*fCellY;
+   fNCells = fNumberOfCells; 
 
    // Loop over all cells
    for (int i = nl; i <= nr; i++) {
@@ -431,6 +434,7 @@ void TH2Poly::ChangePartition(Int_t n, Int_t m)
    delete [] fCells;                    // Deletes the old partition
 
    fNumberOfCells = fCellX*fCellY;
+   fNCells = fNumberOfCells; 
    fCells  = new TList [fNumberOfCells];  // Sets an empty partition
 
    fStepX = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX;
@@ -945,6 +949,7 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    fCellY = m; // Set the number of cells to default
 
    fNumberOfCells = fCellX*fCellY;
+   fNCells = fNumberOfCells; 
    fCells  = new TList [fNumberOfCells];  // Sets an empty partition
    fStepX  = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX; // Cell width
    fStepY  = (fYaxis.GetXmax() - fYaxis.GetXmin())/fCellY; // Cell height
