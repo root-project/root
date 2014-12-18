@@ -420,7 +420,7 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TStrin
 TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const char* xmlstr )
 {
 
-#if (ROOT_VERSION_CODE >= ROOT_VERSION(5,26,00))
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,26,00)
 
    // books MVA method from weightfile
    IMethod* im = ClassifierFactory::Instance().Create(std::string(Types::Instance().GetMethodName( methodType )),
