@@ -36,7 +36,6 @@ class TEnum;
 class TListOfEnums : public THashList
 {
 private:
-   typedef TDictionary::DeclId_t DeclId_t;
    TClass    *fClass; //! Context of this list.  Not owned.
 
    TExMap    *fIds;      //! Map from DeclId_t to TEnum*
@@ -51,6 +50,7 @@ private:
    void       UnmapObject(TObject *obj);
 
 public:
+   typedef TDictionary::DeclId_t DeclId_t;
 
    TListOfEnums(TClass *cl = 0);
    ~TListOfEnums();
@@ -61,7 +61,8 @@ public:
    using THashList::FindObject;
    virtual TObject   *FindObject(const char *name) const;
 
-   TEnum *Get(DeclId_t id, const char *name);
+   TEnum     *Find(DeclId_t id) const;
+   TEnum     *Get(DeclId_t id, const char *name);
 
    Bool_t     IsLoaded() const { return fIsLoaded; }
    void       AddFirst(TObject *obj);

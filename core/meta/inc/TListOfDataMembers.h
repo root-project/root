@@ -36,7 +36,6 @@ class TDataMember;
 class TListOfDataMembers : public THashList
 {
 private:
-   typedef TDictionary::DeclId_t DeclId_t;
    TClass    *fClass;    //! Context of this list.  Not owned.
 
    TExMap    *fIds;      //! Map from DeclId_t to TDataMember*
@@ -51,6 +50,7 @@ private:
    void       UnmapObject(TObject *obj);
 
 public:
+   typedef TDictionary::DeclId_t DeclId_t;
 
    TListOfDataMembers(TClass *cl = 0);
    // construct from a generic collection of data members objects
@@ -71,6 +71,7 @@ public:
    using THashList::FindObject;
    virtual TObject   *FindObject(const char *name) const;
 
+   TDictionary *Find(DeclId_t id) const;
    TDictionary *Get(DeclId_t id);
    TDictionary *Get(DataMemberInfo_t *info);
 

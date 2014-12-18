@@ -247,6 +247,17 @@ TList* TListOfFunctions::GetListForObject(const TObject* obj) const
 }
 
 //______________________________________________________________________________
+TFunction *TListOfFunctions::Find(DeclId_t id) const
+{
+   // Return the TMethod or TFunction describing the function corresponding
+   // to the Decl 'id'. Return NULL if not found.
+
+   if (!id) return 0;
+
+   return (TFunction*)fIds->GetValue((Long64_t)id);
+}
+
+//______________________________________________________________________________
 TFunction *TListOfFunctions::Get(DeclId_t id)
 {
    // Return (after creating it if necessary) the TMethod or TFunction
@@ -254,45 +265,45 @@ TFunction *TListOfFunctions::Get(DeclId_t id)
 
    if (!id) return 0;
 
-   TFunction *f = (TFunction*)fIds->GetValue((Long64_t)id);
-   if (!f) {
-      if (fClass) {
-         if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
-      } else {
-         if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
-      }
+   TFunction *f = Find(id);
+   if (f) return f;
 
-      R__LOCKGUARD(gInterpreterMutex);
+   if (fClass) {
+      if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
+   } else {
+      if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
+   }
 
-      MethodInfo_t *m = gInterpreter->MethodInfo_Factory(id);
+   R__LOCKGUARD(gInterpreterMutex);
 
-      // Let's see if this is a reload ...
-      const char *name = gInterpreter->MethodInfo_Name(m);
-      TList* bucketForMethod = fUnloaded->GetListForObject(name);
-      if (bucketForMethod) {
-         TString mangledName( gInterpreter->MethodInfo_GetMangledName(m) );
-         TIter    next(bucketForMethod);
-         TFunction *uf;
-         while ((uf = (TFunction *) next())) {
-            if (uf->GetMangledName() == mangledName) {
-               // Reuse
-               fUnloaded->Remove(uf);
+   MethodInfo_t *m = gInterpreter->MethodInfo_Factory(id);
 
-               uf->Update(m);
-               f = uf;
-               break;
-            }
+   // Let's see if this is a reload ...
+   const char *name = gInterpreter->MethodInfo_Name(m);
+   if (TList* bucketForMethod = fUnloaded->GetListForObject(name)) {
+      TString mangledName( gInterpreter->MethodInfo_GetMangledName(m) );
+      TIter    next(bucketForMethod);
+      TFunction *uf;
+      while ((uf = (TFunction *) next())) {
+         if (uf->GetMangledName() == mangledName) {
+            // Reuse
+            fUnloaded->Remove(uf);
+
+            uf->Update(m);
+            f = uf;
+            break;
          }
       }
-      if (!f) {
-         if (fClass) f = new TMethod(m, fClass);
-         else f = new TFunction(m);
-      }
-      // Calling 'just' THahList::Add would turn around and call
-      // TListOfFunctions::AddLast which should *also* do the fIds->Add.
-      THashList::AddLast(f);
-      fIds->Add((Long64_t)id,(Long64_t)f);
    }
+   if (!f) {
+      if (fClass) f = new TMethod(m, fClass);
+      else f = new TFunction(m);
+   }
+   // Calling 'just' THahList::Add would turn around and call
+   // TListOfFunctions::AddLast which should *also* do the fIds->Add.
+   THashList::AddLast(f);
+   fIds->Add((Long64_t)id,(Long64_t)f);
+
    return f;
 }
 
