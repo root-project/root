@@ -221,9 +221,11 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
          //if (element->IsA() == TObjString::Class()) {
          if (element.IsAClass() ) { 
             if (gDebug > 1) Info("","Treating beforehand mother class %s",GetClassName(element.fClassIndex));
+            int autoloadingOldval=gInterpreter->SetClassAutoloading(false);
             int autoparsingOldval=gInterpreter->SetClassAutoparsing(false);
             TClass::GetClass(GetClassName(element.fClassIndex));
             gInterpreter->SetClassAutoparsing(autoparsingOldval);
+            gInterpreter->SetClassAutoloading(autoloadingOldval);
          }
       }
    }
