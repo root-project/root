@@ -39,6 +39,7 @@
 using namespace ROOT;
 using namespace clang;
 
+//______________________________________________________________________________
 TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
                                    bool inlineInputHeaders,
                                    const std::string &shLibFileName):
@@ -162,7 +163,7 @@ std::pair<std::string, std::string> SplitPPDefine(const std::string &in)
           (in.substr(0, posEq), in.substr(posEq + 1, std::string::npos));
 }
 
-
+//______________________________________________________________________________
 void TModuleGenerator::ParseArgs(const std::vector<std::string> &args)
 {
    // Parse -I -D -U headers.h SomethingLinkdef.h.
@@ -193,6 +194,7 @@ void TModuleGenerator::ParseArgs(const std::vector<std::string> &args)
    }
 }
 
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WritePPDefines(std::ostream &out) const
 {
    // Write
@@ -213,6 +215,7 @@ std::ostream &TModuleGenerator::WritePPDefines(std::ostream &out) const
    return out;
 }
 
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WritePPUndefines(std::ostream &out) const
 {
    // Write
@@ -228,15 +231,22 @@ std::ostream &TModuleGenerator::WritePPUndefines(std::ostream &out) const
    return out;
 }
 
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WritePPIncludes(std::ostream &out) const
 {
    // Write
    // #include "header1.h"
    // #include "header2.h"
    // or, if inlining of headers is requested, dump the content of the files.
+   std::string fullHeaderPath;
    for (auto const & incl : fHeaders) {
       if (fInlineInputHeaders){
-         std::ifstream buffer(incl);
+         bool headerFound = FindHeader(incl,fullHeaderPath);
+         if (!headerFound){
+            ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", fullHeaderPath.c_str());
+            continue;
+         }
+         std::ifstream buffer(fullHeaderPath);
          std::string bufferContent((std::istreambuf_iterator<char>(buffer)),
                                     std::istreambuf_iterator<char>());
          out << bufferContent << std::endl;
@@ -248,6 +258,7 @@ std::ostream &TModuleGenerator::WritePPIncludes(std::ostream &out) const
    return out;
 }
 
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WriteStringVec(const std::vector<std::string> &vec,
       std::ostream &out) const
 {
@@ -258,6 +269,7 @@ std::ostream &TModuleGenerator::WriteStringVec(const std::vector<std::string> &v
    return out;
 }
 
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WriteStringPairVec(const StringPairVec_t &vec,
       std::ostream &out) const
 {
@@ -309,19 +321,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
    if (fInlineInputHeaders) {
       std::string hdrFullPath;
       for (auto const & hdrName : fHeaders) {
-         hdrFullPath = hdrName;
-         bool headerFound = false;
-         if (!llvm::sys::fs::exists(hdrFullPath)) {
-            for (auto const & incDir : fCompI) {
-               hdrFullPath = incDir + ROOT::TMetaUtils::GetPathSeparator() + hdrName;
-               if (llvm::sys::fs::exists(hdrFullPath)) {
-                  headerFound = true;
-                  break;
-               }
-            }
-         } else {
-            headerFound = true;
-         }
+         bool headerFound = FindHeader(hdrName,hdrFullPath);
          if (!headerFound) {
             ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", hdrName.c_str());
          } else {
@@ -411,6 +411,27 @@ void TModuleGenerator::WriteContentHeader(std::ostream &out) const
       WriteUndefinesArray(out) << "};\n";*/
 
    out << "} } }" << std::endl;
+}
+
+//______________________________________________________________________________
+bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFullPath) const
+{
+   // Return true if the header is found in the include paths
+   // in this case also fill the full path variable with the full path.
+   hdrFullPath = hdrName;
+   bool headerFound = false;
+   if (llvm::sys::fs::exists(hdrFullPath)) {
+      return true;
+   } else {
+      for (auto const & incDir : fCompI) {
+         hdrFullPath = incDir + ROOT::TMetaUtils::GetPathSeparator() + hdrName;
+         if (llvm::sys::fs::exists(hdrFullPath)) {
+            headerFound = true;
+            break;
+         }
+      }
+   }
+   return headerFound;
 }
 
 //______________________________________________________________________________
