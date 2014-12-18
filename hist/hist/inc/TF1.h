@@ -335,7 +335,7 @@ public:
    //static  TGraph  *CalcGaussLegendreSamplingPoints(Int_t num=21, Double_t eps=3.0e-11);
    static  void     CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps=3.0e-11);
 
-   ClassDef(TF1,7)  //The Parametric 1-D function
+   ClassDef(TF1,8)  //The Parametric 1-D function
 };
 
 inline Double_t TF1::operator()(Double_t x, Double_t y, Double_t z, Double_t t) const
