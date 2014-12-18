@@ -5434,10 +5434,9 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
          if ( (*DI)->isFromASTFile() )
             continue;
 
-         // Deal with global variables and globa enum constants.
+         // Deal with global variables and global enum constants.
          if (isa<VarDecl>(*DI) || isa<EnumConstantDecl>(*DI)) {
-            clang::ValueDecl* VD = dyn_cast<ValueDecl>(*DI);
-            TObject *obj = globals->FindObject(VD->getNameAsString().c_str());
+            TObject *obj = globals->Find((TListOfDataMembers::DeclId_t)*DI);
             if (globals->GetClass()) {
                TDataMember* var = dynamic_cast<TDataMember*>(obj);
                if (var && var->IsValid()) {
@@ -5455,7 +5454,7 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
             }
          // Deal with global functions.
          } else if (const FunctionDecl* FD = dyn_cast<FunctionDecl>(*DI)) {
-            TFunction* function = (TFunction*)functions->FindObject(FD->getNameAsString().c_str());
+            TFunction* function = (TFunction*)functions->Find((TListOfFunctions::DeclId_t)FD);
             if (function && function->IsValid()) {
                functions->Unload(function);
                function->Update(0);
@@ -5469,8 +5468,7 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
             }
          // Deal with global enums.
          } else if (const EnumDecl* ED = dyn_cast<EnumDecl>(*DI)) {
-            TEnum* e = (TEnum*)enums->FindObject(ED->getNameAsString().c_str());
-            if (e) {
+            if (TEnum* e = (TEnum*)enums->Find((TListOfEnums::DeclId_t)ED)) {
                globals = (TListOfDataMembers*)gROOT->GetListOfGlobals();
                TIter iEnumConst(e->GetConstants());
                while (TEnumConstant* enumConst = (TEnumConstant*)iEnumConst()) {
