@@ -132,11 +132,11 @@ protected:
    Double_t fOverflow[9];       //Overflow bins
    Int_t    fCellX;             //Number of partition cells in the x-direction of the histogram
    Int_t    fCellY;             //Number of partition cells in the y-direction of the histogram
-   Int_t    fNumberOfCells;     //Number of partition cells: fCellX*fCellY
-   TList   *fCells;             //[fNumberOfCells] The array of TLists that store the bins that intersect with each cell. List do not own the contained objects
+   Int_t    fNCells;            //Number of partition cells: fCellX*fCellY
+   TList   *fCells;             //[fNCells] The array of TLists that store the bins that intersect with each cell. List do not own the contained objects
    Double_t fStepX, fStepY;     //Dimensions of a partition cell
-   Bool_t  *fIsEmpty;           //[fNumberOfCells] The array that returns true if the cell at the given coordinate is empty
-   Bool_t  *fCompletelyInside;  //[fNumberOfCells] The array that returns true if the cell at the given coordinate is completely inside a bin
+   Bool_t  *fIsEmpty;           //[fNCells] The array that returns true if the cell at the given coordinate is empty
+   Bool_t  *fCompletelyInside;  //[fNCells] The array that returns true if the cell at the given coordinate is completely inside a bin
    Bool_t   fFloat;             //When set to kTRUE, allows the histogram to expand if a bin outside the limits is added.
    Bool_t   fNewBinAdded;       //!For the 3D Painter
    Bool_t   fBinContentChanged; //!For the 3D Painter
