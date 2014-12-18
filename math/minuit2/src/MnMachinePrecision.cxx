@@ -33,7 +33,7 @@ MnMachinePrecision::MnMachinePrecision() :
    //calculate machine precision
    double epstry = 0.5;
    double epsbak = 0.;
-   double epsp1 = 0.;
+   volatile double epsp1 = 0.; // allow to run this method with fast-math
    double one = 1.0;
    for(int i = 0; i < 100; i++) {
       epstry *= 0.5;

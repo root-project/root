@@ -4565,7 +4565,8 @@ void TMinuit::mninit(Int_t i1, Int_t i2, Int_t i3)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    /* Local variables */
-   Double_t piby2, epsp1, epsbak, epstry, distnn;
+   volatile Double_t epsp1;
+   Double_t piby2, epstry, epsbak, distnn;
    Int_t i, idb;
 
 //*-*-           I/O unit numbers
@@ -7693,7 +7694,7 @@ void TMinuit::mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &np
 } /* mnstat_ */
 
 //______________________________________________________________________________
-void TMinuit::mntiny(Double_t epsp1, Double_t &epsbak)
+void TMinuit::mntiny(volatile Double_t epsp1, Double_t &epsbak)
 {
 //*-*-*-*-*-*-*-*To find the machine precision*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            =============================
