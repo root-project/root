@@ -114,6 +114,8 @@ namespace ROOT {
          return WriteStringVec(fCompU, out);
       }
 
+      bool FindHeader(const std::string& hdrName, std::string& hdrFullPath) const;
+
       typedef std::vector<std::pair<std::string, std::string> > StringPairVec_t;
 
       ESourceFileKind GetSourceFileKind(const char *filename) const;
