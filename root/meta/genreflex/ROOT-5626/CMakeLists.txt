@@ -7,4 +7,4 @@
 
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-ROOT-5626
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classes.h -o  classes.cxx
-                          --select=${CMAKE_CURRENT_SOURCE_DIR}/classes_selection.xml)
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/classes_selection.xml -I ${CMAKE_CURRENT_SOURCE_DIR})
