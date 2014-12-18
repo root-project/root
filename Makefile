@@ -1358,6 +1358,7 @@ runtimedirs:
 		--exclude '*' \
 		$(ROOT_SRCDIR)/geom/gdml/ geom/gdml ; \
 	echo "Rsync'ing $(ROOT_SRCDIR)/tmva/test/*.C, *.gif, *.png..."; \
+   mkdir -p tmva/test; \
 	$(RSYNC) \
 		--include '*.C' \
 		--include '*.gif' \
