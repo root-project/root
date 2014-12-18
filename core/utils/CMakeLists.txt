@@ -76,7 +76,7 @@ set(copy_commands COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/interpreter/llvm/src
 set(files_to_copy ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include/llvm/Config/llvm-config.h)
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/llvm/Config DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/llvm)
-install(DIRECTORY ${CMAKE_BINARY_DIR}/interpreter/llvm/src/lib/clang/${LLVM_VERSION}/include/
+install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/
         DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/lib/clang/${LLVM_VERSION}/include USE_SOURCE_PERMISSIONS)
 
 
@@ -134,12 +134,15 @@ foreach( file llvm/ADT/IntrusiveRefCntPtr.h
   set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${file})
 endforeach()
 
-set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
+set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
 add_custom_command(OUTPUT ${stamp_file}
                    COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
                    COMMAND cmake -E copy_directory
                                   ${CMAKE_BINARY_DIR}/interpreter/llvm/src/lib/clang/${LLVM_VERSION}/include
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
+                   COMMAND cmake -E copy
+                                  ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/assert.h
+                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/assert.h
                    ${copy_commands}
                    COMMAND cmake -E touch ${stamp_file}
                    DEPENDS ${files_to_copy}
