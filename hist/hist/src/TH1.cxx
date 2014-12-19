@@ -1240,7 +1240,8 @@ Int_t TH1::BufferEmpty(Int_t action)
       }
    }
 
-   FillN(nbentries,&fBuffer[2],&fBuffer[1],2);
+   // call DoFillN which will not put entries in the buffer as FillN does
+   DoFillN(nbentries,&fBuffer[2],&fBuffer[1],2);
 
    // if action == 1 - delete the buffer
    if (action > 0) {
@@ -3085,7 +3086,7 @@ Int_t TH1::Fill(Double_t x)
    //
    //    The function returns the corresponding bin number which has its content incremented by 1
 
-   if (fBuffer) return BufferFill(x,1);
+   if (fBuffer)  return BufferFill(x,1);
 
    Int_t bin;
    fEntries++;
@@ -3118,6 +3119,7 @@ Int_t TH1::Fill(Double_t x, Double_t w)
    //
    //    The function returns the corresponding bin number which has its content incremented by w
 
+   
    if (fBuffer) return BufferFill(x,w);
 
    Int_t bin;
@@ -3190,16 +3192,28 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
    //    by w^2 in the bin corresponding to x.
    //    if w is NULL each entry is assumed a weight=1
 
-   Int_t bin,i;
-   //If a buffer is activated, go via standard Fill (sorry)
-   //if (fBuffer) {
-   //   for (i=0;i<ntimes;i+=stride) {
-   //      if (w) Fill(x[i],w[i]);
-   //      else   Fill(x[i],0);
-   //   }
-   //   return;
-   //}
+   
+   //If a buffer is activated, fill buffer
+   if (fBuffer) {
+      ntimes *= stride;  
+      for (Int_t i=0;i<ntimes;i+=stride) {
+         if (w) BufferFill(x[i],w[i]);
+         else BufferFill(x[i], 1.);
+      }
+      return;
+   }
+   // call internal method 
+   DoFillN(ntimes, x, w, stride);
+}
 
+//______________________________________________________________________________
+void TH1::DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride)
+{
+   // internal method to fill histogram content from a vector
+   // called directly by TH1::BufferEmpty
+
+   Int_t bin,i;
+   
    fEntries += ntimes;
    Double_t ww = 1;
    Int_t nbins   = fXaxis.GetNbins();
