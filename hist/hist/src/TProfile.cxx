@@ -794,7 +794,6 @@ void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const D
    //If a buffer is activated, fill buffer
    // (note that this function must not be called from TH2::BufferEmpty)
    if (fBuffer) {
-      Int_t i = 0;
       for (i=0;i<ntimes;i+=stride) {
          if (!fBuffer) break; // buffer can be deleted in BufferFill when is empty
          if (w) BufferFill(x[i],y[i],w[i]);
