@@ -2322,7 +2322,7 @@ TClass *TClass::GetActualClass(const void *object) const
       //      object->IsA(brd, parent);
       //will not work if the class derives from TObject but not as primary
       //inheritance.
-      if (fIsAMethod==0) {
+      if (fIsAMethod.load()==0) {
          TMethodCall* temp = new TMethodCall((TClass*)this, "IsA", "");
 
          if (!temp->GetMethod()) {
@@ -2334,7 +2334,7 @@ TClass *TClass::GetActualClass(const void *object) const
          temp->ReturnType();
 
          TMethodCall* expected = nullptr;
-         if( not fIsAMethod.compare_exchange_strong(expected,temp) ) {
+         if( !fIsAMethod.compare_exchange_strong(expected,temp) ) {
             //another thread beat us to it
             delete temp;
          }

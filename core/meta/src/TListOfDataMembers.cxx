@@ -29,7 +29,7 @@
 #include "TError.h"
 #include "TEnumConstant.h"
 
-constexpr unsigned int idsSize=19;
+const unsigned int idsSize=19;
 
 ClassImp(TListOfDataMembers)
 

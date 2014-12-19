@@ -199,7 +199,11 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       // All of this C gymnastic is to avoid allocations on the heap
       const auto enName = lastPos + 1;
       const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 1;
+#ifdef R__WIN32
+      char *scopeName = new char[scopeNameSize + 1];
+#else
       char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
+#endif
       strncpy(scopeName, enumName, scopeNameSize);
       scopeName[scopeNameSize] = '\0';
       // Three levels of search
@@ -218,6 +222,9 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          }
          theEnum = searchEnum(scopeName, enName, kALoadAndInterpLookup);
       }
+#ifdef R__WIN32
+      delete [] scopeName;
+#endif
    } else {
       // We don't have any scope: this is a global enum
       theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kNone);

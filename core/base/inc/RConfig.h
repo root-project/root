@@ -336,6 +336,7 @@
 #   endif
 #   define R__BYTESWAP
 #   define R__ACCESS_IN_SYMBOL
+#   define thread_local static __declspec(thread)
 #endif
 
 #ifdef __SC__

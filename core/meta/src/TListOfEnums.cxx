@@ -29,7 +29,7 @@
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 
-constexpr unsigned int listSize=3;
+const unsigned int listSize=3;
 
 ClassImp(TListOfEnums)
 
