@@ -225,7 +225,7 @@ public:
 // Available on all platforms
 template <int marker, typename T>
 T &TTHREAD_TLS_INIT() {
-   TTHREAD_TLS(T*) ptr(0);
+   TTHREAD_TLS(T*) ptr = NULL;
    TTHREAD_TLS(Bool_t) isInit(kFALSE);
    if (!isInit) {
       ptr = new T;
@@ -236,7 +236,7 @@ T &TTHREAD_TLS_INIT() {
 
 template <int marker, typename Array, typename T>
 Array &TTHREAD_TLS_INIT_ARRAY() {
-   TTHREAD_TLS(Array*) ptr(0);
+   TTHREAD_TLS(Array*) ptr = NULL;
    TTHREAD_TLS(Bool_t) isInit(kFALSE);
    if (!isInit) {
       ptr = new Array[sizeof(Array)/sizeof(T)];
@@ -247,7 +247,7 @@ Array &TTHREAD_TLS_INIT_ARRAY() {
 
 template <int marker, typename T, typename ArgType>
 T &TTHREAD_TLS_INIT(ArgType arg) {
-   TTHREAD_TLS(T*) ptr(0);
+   TTHREAD_TLS(T*) ptr = NULL;
    TTHREAD_TLS(Bool_t) isInit(kFALSE);
    if (!isInit) {
       ptr = new T(arg);
