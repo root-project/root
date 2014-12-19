@@ -145,7 +145,6 @@ times, it is better to divide into a small number of cells.
 End_Html */
 
 
-int fNumberOfCells = 0;  // define number of cells instead of fNCells to avoid mising with fNcells
 
 //______________________________________________________________________________
 TH2Poly::TH2Poly()
@@ -376,8 +375,9 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
    if (nl<0)       nl = 0;
    if (mb<0)       mb = 0;
 
-   fNumberOfCells = fCellX*fCellY;
-   fNCells = fNumberOfCells; 
+   // number of cells in the grid
+   //N.B. not to be confused with fNcells (the number of bins) ! 
+   fNCells = fCellX*fCellY;
 
    // Loop over all cells
    for (int i = nl; i <= nr; i++) {
@@ -433,20 +433,21 @@ void TH2Poly::ChangePartition(Int_t n, Int_t m)
 
    delete [] fCells;                    // Deletes the old partition
 
-   fNumberOfCells = fCellX*fCellY;
-   fNCells = fNumberOfCells; 
-   fCells  = new TList [fNumberOfCells];  // Sets an empty partition
+   // number of cells in the grid
+   //N.B. not to be confused with fNcells (the number of bins) ! 
+   fNCells = fCellX*fCellY;
+   fCells  = new TList [fNCells];  // Sets an empty partition
 
    fStepX = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX;
    fStepY = (fYaxis.GetXmax() - fYaxis.GetXmin())/fCellY;
 
    delete [] fIsEmpty;
    delete [] fCompletelyInside;
-   fIsEmpty = new Bool_t [fNumberOfCells];
-   fCompletelyInside = new Bool_t [fNumberOfCells];
+   fIsEmpty = new Bool_t [fNCells];
+   fCompletelyInside = new Bool_t [fNCells];
 
    // Initializes the flags
-   for (int i = 0; i<fNumberOfCells; i++) {
+   for (int i = 0; i<fNCells; i++) {
       fIsEmpty[i]          = kTRUE;
       fCompletelyInside[i] = kFALSE;
    }
@@ -964,16 +965,17 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    fCellX = n; // Set the number of cells to default
    fCellY = m; // Set the number of cells to default
 
-   fNumberOfCells = fCellX*fCellY;
-   fNCells = fNumberOfCells; 
-   fCells  = new TList [fNumberOfCells];  // Sets an empty partition
+   // number of cells in the grid
+   //N.B. not to be confused with fNcells (the number of bins) ! 
+   fNCells = fCellX*fCellY;
+   fCells  = new TList [fNCells];  // Sets an empty partition
    fStepX  = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX; // Cell width
    fStepY  = (fYaxis.GetXmax() - fYaxis.GetXmin())/fCellY; // Cell height
 
-   fIsEmpty = new Bool_t [fNumberOfCells]; // Empty partition
-   fCompletelyInside = new Bool_t [fNumberOfCells]; // Cell is completely inside bin
+   fIsEmpty = new Bool_t [fNCells]; // Empty partition
+   fCompletelyInside = new Bool_t [fNCells]; // Cell is completely inside bin
 
-   for (i = 0; i<fNumberOfCells; i++) {   // Initializes the flags
+   for (i = 0; i<fNCells; i++) {   // Initializes the flags
       fIsEmpty[i] = kTRUE;
       fCompletelyInside[i] = kFALSE;
    }
