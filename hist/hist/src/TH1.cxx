@@ -3195,11 +3195,16 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
    
    //If a buffer is activated, fill buffer
    if (fBuffer) {
-      ntimes *= stride;  
-      for (Int_t i=0;i<ntimes;i+=stride) {
+      ntimes *= stride;
+      Int_t i = 0;
+      for (i=0;i<ntimes;i+=stride) {
+         if (!fBuffer) break;   // buffer can be deleted in BufferFill when is empty
          if (w) BufferFill(x[i],w[i]);
          else BufferFill(x[i], 1.);
       }
+      // fill the remaining entries if the buffer has been deleted 
+      if (i < ntimes && fBuffer==0) 
+         DoFillN((ntimes-i)/stride,&x[i],&w[i],stride);
       return;
    }
    // call internal method 
