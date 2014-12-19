@@ -2417,6 +2417,10 @@ void TH1::Copy(TObject &obj) const
    //
    // Note that this function does not copy the list of associated functions.
    // Use TObject::Clone to make a full copy of an histogram.
+   //
+   // Note also that the histogram it will be created in gDirectory (if AddDirectoryStatus()=true)
+   // or will not be added to any directory if  AddDirectoryStatus()=false
+   // independently of the current directory stored in the original histogram 
 
    if (((TH1&)obj).fDirectory) {
       // We are likely to change the hash value of this object
@@ -2476,15 +2480,14 @@ void TH1::Copy(TObject &obj) const
    fSumw2.Copy(((TH1&)obj).fSumw2);
    //   fFunctions->Copy(((TH1&)obj).fFunctions);
    // when copying an histogram if the AddDirectoryStatus() is true it
-   // will be added to gDIrectory independently of the fDirectory stored.
-   // Is this what we really want ?? 
+   // will be added to gDirectory independently of the fDirectory stored.
+   // and if the AddDirectoryStatus() is false it will not be added to
+   // any directory (fDirectory = 0)
    if (fgAddDirectory && gDirectory) {
       gDirectory->Append(&obj);
       ((TH1&)obj).fDirectory = gDirectory;      
-   } else if (fDirectory) { 
-      ((TH1&)obj).fDirectory = fDirectory;      
-      ((TH1&)obj).fDirectory->Append(&obj);
-   }
+   } else
+      ((TH1&)obj).fDirectory = 0; 
 
 }
 
@@ -8132,6 +8135,12 @@ void TH1::SetDirectory(TDirectory *dir)
    // Remove reference to this histogram from current directory and add
    // reference to new directory dir. dir can be 0 in which case the
    // histogram does not belong to any directory.
+   //
+   // Note that the directory is not a real property of the histogram and
+   // it will not be copied when the histogram is copied or cloned.
+   // If the user wants to have the copied (cloned) histogram in the same
+   // directory, he needs to set again the directory using SetDirectory to the
+   // copied histograms
 
    if (fDirectory == dir) return;
    if (fDirectory) fDirectory->Remove(this);
