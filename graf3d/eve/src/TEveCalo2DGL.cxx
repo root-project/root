@@ -301,7 +301,7 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
          for (TEveCaloData::vCellId_i it = cids->begin(); it != cids->end(); ++it)
          {
             data->GetCellData(*it, cellData);
-            if (cellData.Phi() > 0)
+            if (cellData.IsUpperRho())
                sliceValsUp [it->fSlice] += cellData.Value(fM->fPlotEt)*(*it).fFraction;
             else
                sliceValsLow[it->fSlice] += cellData.Value(fM->fPlotEt)*(*it).fFraction;
@@ -382,7 +382,7 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
          TEveCaloData::vCellId_t& cids = *(cellLists[etaBin]);
          for (TEveCaloData::vCellId_i i=cids.begin(); i!=cids.end(); i++) {
             data->GetCellData(*i, cellData);
-            if (cellData.Phi() > 0)
+            if (cellData.IsUpperRho())
                sliceValsUp [i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
             else
                sliceValsLow[i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
@@ -397,7 +397,7 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
          for (TEveCaloData::vCellId_i i=cidsRef.begin(); i!=cidsRef.end(); i++)
          {
             data->GetCellData(*i, cellData);
-            if (cellData.Phi() > 0)
+            if (cellData.IsUpperRho())
                sliceValsUpRef [i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
             else
                sliceValsLowRef[i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
@@ -530,7 +530,7 @@ void TEveCalo2DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
                Bool_t is_upper = (rec.GetItem(3) == 1);
                TEveCaloData::CellData_t cd;
                fM->fData->GetCellData(*it, cd);
-               if ((is_upper && cd.Phi() > 0) || (!is_upper && cd.Phi() < 0))
+               if ((is_upper && cd.IsUpperRho()) || (!is_upper && !cd.IsUpperRho()))
                   sel.push_back(*it);
             }
          }

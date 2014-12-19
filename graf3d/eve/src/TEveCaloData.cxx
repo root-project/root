@@ -46,6 +46,14 @@ void TEveCaloData::CellGeom_t::Configure(Float_t etaMin, Float_t etaMax, Float_t
    fPhiMin = phiMin;
    fPhiMax = phiMax;
 
+   // Complain if phi is out of [-2*pi, 2*pi] range.
+   if (fPhiMin < - TMath::TwoPi() || fPhiMin > TMath::TwoPi() ||
+       fPhiMax < - TMath::TwoPi() || fPhiMax > TMath::TwoPi())
+   {
+     ::Error("TEveCaloData::CellGeom_t::Configure", "phiMin and phiMax should be between -2*pi and 2*pi (min=%f, max=%f). RhoZ projection will be wrong.",
+             fPhiMin, fPhiMax);
+   }
+
    fThetaMin = EtaToTheta(fEtaMax);
    fThetaMax = EtaToTheta(fEtaMin);
 }
