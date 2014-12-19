@@ -3252,29 +3252,31 @@ Int_t TH1::Fill(const char *namex, Double_t w)
 //______________________________________________________________________________
 void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride)
 {
-//   -*-*-*-*-*-*Fill this histogram with an array x and weights w*-*-*-*-*
-//               =================================================
-//
-//    ntimes:  number of entries in arrays x and w (array size must be ntimes*stride)
-//    x:       array of values to be histogrammed
-//    w:       array of weighs
-//    stride:  step size through arrays x and w
-//
-//    If the storage of the sum of squares of weights has been triggered,
-//    via the function Sumw2, then the sum of the squares of weights is incremented
-//    by w[i]^2 in the bin corresponding to x[i].
-//    if w is NULL each entry is assumed a weight=1
-//
-//   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Fill this histogram with an array x and weights w.
+   //
+   //    ntimes:  number of entries in arrays x and w (array size must be ntimes*stride)
+   //    x:       array of values to be histogrammed
+   //    w:       array of weighs
+   //    stride:  step size through arrays x and w
+   //
+   //    If the weight is not equal to 1, the storage of the sum of squares of
+   //    weights is automatically triggered and the sum of the squares of weights is incremented
+   //    by w^2 in the bin corresponding to x.
+   //    if w is NULL each entry is assumed a weight=1
 
    
    //If a buffer is activated, fill buffer
    if (fBuffer) {
-      ntimes *= stride;  
-      for (Int_t i=0;i<ntimes;i+=stride) {
+      ntimes *= stride;
+      Int_t i = 0;
+      for (i=0;i<ntimes;i+=stride) {
+         if (!fBuffer) break;   // buffer can be deleted in BufferFill when is empty
          if (w) BufferFill(x[i],w[i]);
          else BufferFill(x[i], 1.);
       }
+      // fill the remaining entries if the buffer has been deleted 
+      if (i < ntimes && fBuffer==0) 
+         DoFillN((ntimes-i)/stride,&x[i],&w[i],stride);
       return;
    }
    // call internal method 

@@ -485,19 +485,27 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Int_t binx, biny, bin, i;
    ntimes *= stride;
+   Int_t ifirst = 0;
    
    //If a buffer is activated, fill buffer
    // (note that this function must not be called from TH2::BufferEmpty)
    if (fBuffer) {
-      for (Int_t i=0;i<ntimes;i+=stride) {
+      Int_t i = 0;
+      for (i=0;i<ntimes;i+=stride) {
+         if (!fBuffer) break; // buffer can be deleted in BufferFill when is empty
          if (w) BufferFill(x[i],y[i],w[i]);
          else BufferFill(x[i], y[i], 1.);
       }
-      return;
+      // fill the remaining entries if the buffer has been deleted 
+      if (i < ntimes && fBuffer==0) 
+         ifirst = i;
+      else
+         return;
    }
-   fEntries += ntimes;
+   
    Double_t ww = 1;
-   for (i=0;i<ntimes;i+=stride) {
+   for (i=ifirst;i<ntimes;i+=stride) {
+      fEntries++;
       binx = fXaxis.FindBin(x[i]);
       biny = fYaxis.FindBin(y[i]);
       if (binx <0 || biny <0) continue;
