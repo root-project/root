@@ -790,6 +790,16 @@ void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const D
    //*-*                  =====================================
    Int_t bin,i;
    ntimes *= stride;
+   //If a buffer is activated, fill buffer
+   // (note that this function must not be called from TH2::BufferEmpty)
+   if (fBuffer) {
+      for (Int_t i=0;i<ntimes;i+=stride) {
+         if (w) BufferFill(x[i],y[i],w[i]);
+         else BufferFill(x[i], y[i], 1.);
+      }
+      return;
+   }
+
    for (i=0;i<ntimes;i+=stride) {
       if (fYmin != fYmax) {
          if (y[i] <fYmin || y[i]> fYmax || TMath::IsNaN(y[i])) continue;
