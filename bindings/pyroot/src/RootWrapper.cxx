@@ -887,7 +887,7 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
    if ( gbl->GetAddress() &&       // check for enums and consts
         (unsigned long)gbl->GetAddress() != (unsigned long)-1 && // Cling (??)
         ( gInterpreter->ClassInfo_IsEnum( gbl->GetTypeName() ) ) ) {
-      return PyInt_FromLong( *((int*)gbl->GetAddress()) );
+      return PyInt_FromLong( (long)*((unsigned int*)gbl->GetAddress()) );
    }
 
 // for built-in types, to ensure setability
