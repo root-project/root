@@ -1888,7 +1888,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    TAxis *yaxis2 = h2->GetYaxis();
    TAxis *zaxis1 = this->GetZaxis();
    TAxis *zaxis2 = h2->GetZaxis();
-
+   
    Int_t nbinx1 = xaxis1->GetNbins();
    Int_t nbinx2 = xaxis2->GetNbins();
    Int_t nbiny1 = yaxis1->GetNbins();
@@ -6598,8 +6598,8 @@ void TH1::Print(Option_t *option) const
    //                     for all bins in the current range (default 1-->nbins)
    //  If option "all" is given, bin contents and errors are also printed
    //                     for all bins including under and overflows.
-   //
-   printf( "TH1.Print Name  = %s, Entries= %d, Total sum= %g\n",GetName(),Int_t(fEntries),GetSumOfWeights());
+
+   printf( "TH1.Print Name  = %s, Entries= %d, Total sum= %g\n",GetName(),Int_t(GetEntries()),GetSumOfWeights());
    TString opt = option;
    opt.ToLower();
    Int_t all;
@@ -7361,6 +7361,7 @@ Double_t TH1::GetSumOfWeights() const
 {
    //   -*-*-*-*-*-*Return the sum of weights excluding under/overflows*-*-*-*-*
    //               ===================================================
+
    Int_t bin,binx,biny,binz;
    Double_t sum =0;
    for(binz=1; binz<=fZaxis.GetNbins(); binz++) {
