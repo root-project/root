@@ -691,6 +691,8 @@ void THStack::Paint(Option_t *option)
    Double_t ymin = 1e100;
    Double_t ymax = -xmin;
    while ((h=(TH1*)next())) {
+      // in case of automatic binning
+      if (h->GetBuffer()) h->BufferEmpty(-1);
       if (h->GetXaxis()->GetXmin() < xmin) xmin = h->GetXaxis()->GetXmin();
       if (h->GetXaxis()->GetXmax() > xmax) xmax = h->GetXaxis()->GetXmax();
       if (h->GetYaxis()->GetXmin() < ymin) ymin = h->GetYaxis()->GetXmin();

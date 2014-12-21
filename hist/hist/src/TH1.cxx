@@ -1861,6 +1861,8 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    TString opt = option;
    opt.ToUpper();
 
+   if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
+
    const TAxis *xaxis1 = GetXaxis();
    const TAxis *xaxis2 = h2->GetXaxis();
    const TAxis *yaxis1 = GetYaxis();
@@ -6479,6 +6481,7 @@ void TH1::Print(Option_t *option) const
    //  If option "all" is given, bin contents and errors are also printed
    //                     for all bins including under and overflows.
 
+   if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
    printf( "TH1.Print Name  = %s, Entries= %d, Total sum= %g\n",GetName(),Int_t(fEntries),GetSumOfWeights());
    TString opt = option;
    opt.ToLower();
@@ -7252,6 +7255,8 @@ void TH1::ResetStats()
 Double_t TH1::GetSumOfWeights() const
 {
    // Return the sum of weights excluding under/overflows.
+
+   if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
    Int_t bin,binx,biny,binz;
    Double_t sum =0;
