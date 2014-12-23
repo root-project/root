@@ -732,13 +732,17 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
     } else {
       subst = ft.ws().arg(sep+1) ;
     }
-    if (!orig) {
-      throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",buf)) ;
+//     if (!orig) {
+//       throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",buf)) ;
+//     }
+//     if (!subst) {
+//       throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() replacement RooAbsArg %s does not exist",sep+1)) ;
+//     }
+    if (orig && subst) {
+      cust.replaceArg(*orig,*subst) ;
+    } else {
+      oocoutW((TObject*)0,ObjectHandling) << "RooCustomizer::CustIFace::create() WARNING: input or replacement of a replacement operation not found, operation ignored"<< endl ;
     }
-    if (!subst) {
-      throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",sep+1)) ;
-    }
-    cust.replaceArg(*orig,*subst) ;
   }
 
   // Build the desired edited object
