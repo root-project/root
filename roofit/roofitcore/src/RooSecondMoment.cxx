@@ -43,7 +43,10 @@
 #include "RooConstVar.h"
 #include "RooRealIntegral.h"
 #include "RooNumIntConfig.h"
+#include "RooFormulaVar.h"
+#include "RooLinearVar.h"
 #include "RooProduct.h"
+#include "RooGlobalFunc.h"
 #include <string>
 using namespace std ;
 
@@ -65,19 +68,29 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   RooAbsMoment(name, title,func,x,2,takeRoot),
   _xf("!xf","xf",this,kFALSE,kFALSE),
   _ixf("!ixf","ixf",this),
-  _if("!if","if",this)
+  _if("!if","if",this),
+  _xfOffset(0)
 {
 
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
   
+  RooAbsReal* XF(0) ;
   if (centr) {
+
     string m1name=Form("%s_moment1",GetName()) ;
     RooAbsReal* mom1 = func.mean(x) ;
     _mean.setArg(*mom1) ;
-  } 
+    
+    string pname=Form("%s_product",name) ;
+    _xfOffset = mom1->getVal() ;
+    XF = new RooFormulaVar(pname.c_str(),Form("pow((@0-%f),2)*@1",_xfOffset),RooArgList(x,func)) ;  
+        
+  } else {
 
-  string pname=Form("%s_product",name) ;
-  RooProduct* XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgList(x,x,func)) ;
+    string pname=Form("%s_product",name) ;
+    XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgList(x,x,func)) ;
+  }
+    
   XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   if (func.isBinnedDistribution(x)) {
@@ -101,22 +114,33 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   RooAbsMoment(name, title,func,x,2,takeRoot),
   _xf("!xf","xf",this,kFALSE,kFALSE),
   _ixf("!ixf","ixf",this),
-  _if("!if","if",this)
+  _if("!if","if",this),
+  _xfOffset(0)
 {
 
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   _nset.add(nset) ;
 
+  RooAbsReal* XF(0) ;
   if (centr) {
+
     string m1name=Form("%s_moment1",GetName()) ;
     RooAbsReal* mom1 = func.mean(x,nset) ;
-    addOwnedComponents(*mom1) ;
     _mean.setArg(*mom1) ;
+    
+    string pname=Form("%s_product",name) ;
+    _xfOffset = mom1->getVal() ;
+    XF = new RooFormulaVar(pname.c_str(),Form("pow((@0-%f),2)*@1",_xfOffset),RooArgList(x,func)) ;  
+
+
+  } else {
+
+    string pname=Form("%s_product",name) ;
+    XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgList(x,x,func)) ;
+
   }
-   
-  string pname=Form("%s_product",name) ;
-  RooProduct* XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgList(x,x,func)) ;
+  
   XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   if (func.isBinnedDistribution(x)) {
@@ -147,7 +171,8 @@ RooSecondMoment::RooSecondMoment(const RooSecondMoment& other, const char* name)
   RooAbsMoment(other, name), 
   _xf("xf",this,other._xf),
   _ixf("ixf",this,other._ixf),
-  _if("if",this,other._if)
+  _if("if",this,other._if),
+  _xfOffset(other._xfOffset)
 {
 }
 
@@ -166,11 +191,12 @@ Double_t RooSecondMoment::evaluate() const
 {
   // Calculate value  
   Double_t ratio = _ixf / _if ;
+
   if (_mean.absArg()) {
-    ratio -= _mean*_mean ;    
+    ratio -= (_mean - _xfOffset)*(_mean-_xfOffset) ;
   }  
+
   Double_t ret =  _takeRoot ? sqrt(ratio) : ratio ;
-  //cout << "\nRooSecondMoment::eval(" << GetName() << ") val = " << ret << endl ;
   return ret ;
 }
 
