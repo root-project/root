@@ -365,7 +365,7 @@ Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t s
     return kTRUE ;
   }
 
-  RooStringVar* rs = new RooStringVar(name,argName,defVal,10240) ;
+  RooStringVar* rs = new RooStringVar(name,argName,defVal,64000) ;
   if (appendMode) {
     rs->setAttribute("RooCmdConfig::AppendMode") ;
   }
