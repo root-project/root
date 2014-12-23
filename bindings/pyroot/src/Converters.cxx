@@ -365,29 +365,6 @@ Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TEnumAsUIntConverter::FromMemory( void* address )
-{
-// construct python object from C++ unsigned int read at <address>
-   return PyInt_FromLong( (long)*((UInt_t*)address) );
-}
-
-Bool_t PyROOT::TEnumAsUIntConverter::ToMemory( PyObject* value, void* address )
-{
-// convert <value> to C++ unsigned int, write it at <address>
-   ULong_t u = PyLongOrInt_AsULong( value );
-   if ( PyErr_Occurred() )
-      return kFALSE;
-
-   if ( u > (ULong_t)UINT_MAX ) {
-      PyErr_SetString( PyExc_OverflowError, "value too large for unsigned int" );
-      return kFALSE;
-   }
-
-   *((UInt_t*)address) = (UInt_t)u;
-   return kTRUE;
-}
-
-//____________________________________________________________________________
 Bool_t PyROOT::TDoubleConverter::SetArg(
       PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
 {
@@ -1269,7 +1246,6 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( IntRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstIntRef )
    PYROOT_BASIC_CONVERTER_FACTORY( UInt )
-   PYROOT_BASIC_CONVERTER_FACTORY( EnumAsUInt )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstUIntRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Long )
    PYROOT_BASIC_CONVERTER_FACTORY( LongRef )
@@ -1330,7 +1306,7 @@ namespace {
       NFp_t( "const int&",                &CreateConstIntRefConverter        ),
       NFp_t( "unsigned int",              &CreateUIntConverter               ),
       NFp_t( "const unsigned int&",       &CreateConstUIntRefConverter       ),
-      NFp_t( "UInt_t", /* enum */         &CreateEnumAsUIntConverter         ),
+      NFp_t( "UInt_t", /* enum */         &CreateIntConverter /* yes: Int */ ),
       NFp_t( "long",                      &CreateLongConverter               ),
       NFp_t( "long&",                     &CreateLongRefConverter            ),
       NFp_t( "const long&",               &CreateConstLongRefConverter       ),
