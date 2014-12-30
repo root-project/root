@@ -46,6 +46,12 @@ ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 include(SearchInstalledSoftware)
 ROOT_SHOW_OPTIONS()
 
+#---Here we add tcmalloc to the linker flags if needed------------------------------------------
+if (TCMALLOC_FOUND)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ltcmalloc")
+endif()
+
 #---Populate the configure arguments returned by 'root-config --config'-------------------------
 get_cmake_property(variables CACHE_VARIABLES)
 foreach(var ${variables})

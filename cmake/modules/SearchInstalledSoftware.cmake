@@ -843,6 +843,16 @@ if(vc)
   endif()
 endif()
 
+#---Check for TCMalloc---------------------------------------------------------------
+
+if (tcmalloc)
+  message(STATUS "Looking for tcmalloc")
+  find_package(tcmalloc)
+  if(NOT TCMALLOC_FOUND)
+    message(STATUS "TCMalloc not found.")
+  endif()
+endif()
+
 #---Report non implemented options---------------------------------------------------
 foreach(opt afs clarens glite pch peac sapdb srp geocad)
   if(${opt})
