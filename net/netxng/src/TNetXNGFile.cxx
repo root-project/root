@@ -24,6 +24,7 @@
 #include "TTimeStamp.h"
 #include "TVirtualPerfStats.h"
 #include "TVirtualMonitoring.h"
+#include <XrdVersion.hh>
 #include <XrdCl/XrdClURL.hh>
 #include <XrdCl/XrdClFile.hh>
 #include <XrdCl/XrdClXRootDResponses.hh>
