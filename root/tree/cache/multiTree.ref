@@ -66,4 +66,70 @@ Readahead..........................: 256000 bytes with overhead = 0 bytes
 Average transaction................: 236.151000 Kbytes
 Number of blocks in current cache..: 4500, total size: 472302
 File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree1 in file: multi.root ******
+Number of branches in the cache ...: 300
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.900000
+Learn entries......................: 100
+Cached Reading.....................: 282990 bytes in 2 transactions
+Reading............................: 31525 bytes in 300 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 141.495000 Kbytes
+Number of blocks in current cache..: 2700, total size: 282990
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree2 in file: multi.root ******
+Number of branches in the cache ...: 400
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.900000
+Learn entries......................: 100
+Cached Reading.....................: 378002 bytes in 2 transactions
+Reading............................: 42114 bytes in 400 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 189.001000 Kbytes
+Number of blocks in current cache..: 3600, total size: 378002
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree3 in file: multi.root ******
+Number of branches in the cache ...: 500
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.900000
+Learn entries......................: 100
+Cached Reading.....................: 472302 bytes in 2 transactions
+Reading............................: 52614 bytes in 500 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 236.151000 Kbytes
+Number of blocks in current cache..: 4500, total size: 472302
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree1 in file: multi.root ******
+Number of branches in the cache ...: 300
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.899700
+Learn entries......................: 100
+Cached Reading.....................: 282990 bytes in 2 transactions
+Reading............................: 31525 bytes in 300 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 141.495000 Kbytes
+Number of blocks in current cache..: 2700, total size: 282990
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree2 in file: multi.root ******
+Number of branches in the cache ...: 400
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.899775
+Learn entries......................: 100
+Cached Reading.....................: 378002 bytes in 2 transactions
+Reading............................: 42114 bytes in 400 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 189.001000 Kbytes
+Number of blocks in current cache..: 3600, total size: 378002
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree3 in file: multi.root ******
+Number of branches in the cache ...: 500
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.900000
+Learn entries......................: 100
+Cached Reading.....................: 472302 bytes in 2 transactions
+Reading............................: 52614 bytes in 500 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 236.151000 Kbytes
+Number of blocks in current cache..: 4500, total size: 472302
+File Reading.......................: 1212 transactions
 (int)0

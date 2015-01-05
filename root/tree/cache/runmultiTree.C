@@ -115,5 +115,12 @@ int runmultiTree() {
 
    readfileOldInterface();
    readfile();
+
+   // Retest with prefilling on.
+   gEnv->SetValue("TTreeCache.Prefill",1);
+
+   readfileOldInterface();
+   readfile();
+
    return 0;
 }
