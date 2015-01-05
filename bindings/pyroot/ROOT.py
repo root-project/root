@@ -173,52 +173,9 @@ def split( str ):
       return str, ''
 
 
-### template support ------------------------------------------------------------
-class Template:
-   def __init__( self, name ):
-      self.__name__ = name
-
-   def __call__( self, *args ):
-      newargs = [ self.__name__[ 0 <= self.__name__.find( 'std::' ) and 5 or 0:] ]
-      for arg in args:
-         if type(arg) == str:
-            arg = ','.join( map( lambda x: x.strip(), arg.split(',') ) )
-         newargs.append( arg )
-      result = _root.MakeRootTemplateClass( *newargs )
-
-    # special case pythonization (builtin_map is not available from the C-API)
-      if hasattr( result, 'push_back' ):
-         def iadd( self, ll ):
-            [ self.push_back(x) for x in ll ]
-            return self
-
-         result.__iadd__ = iadd
-
-      return result
-
-_root.Template = Template
-
-
-### scope place holder for STL classes ------------------------------------------
-class _stdmeta( type ):
-   def __getattr__( cls, attr ):   # for non-templated classes in std
-      klass = _root.CreateScopeProxy( attr, cls )
-      setattr( cls, attr, klass )
-      return klass
-
-class std( object ):
-   __metaclass__ = _stdmeta
-
-   stlclasses = ( 'complex', 'pair', \
-      'deque', 'list', 'queue', 'stack', 'vector', 'map', 'multimap', 'set', 'multiset' )
-
-   for name in stlclasses:
-      locals()[ name ] = Template( "std::%s" % name )
-
-   string = _root.CreateScopeProxy( 'string' )
-
-_root.std = std
-sys.modules['ROOT.std'] = std
+### put std namespace directly onto ROOT ----------------------------------------
+_root.std = cppyy.gbl.std
+sys.modules['ROOT.std'] = cppyy.gbl.std
 
 
 ### special cases for gPad, gVirtualX (are C++ macro's) -------------------------
@@ -533,8 +490,8 @@ class ModuleFacade( types.ModuleType ):
          sys.modules[ '__main__' ].__builtins__ = __builtins__
 
     # special case for cout (backwards compatibility)
-      if hasattr( std, '__1' ):
-         self.__dict__[ 'cout' ] = getattr( std, '__1' ).cout
+      if hasattr( cppyy.gbl.std, '__1' ):
+         self.__dict__[ 'cout' ] = getattr( cppyy.gbl.std, '__1' ).cout
 
     # custom logon file (must be after creation of ROOT globals)
       if hasargv and not '-n' in sys.argv:
@@ -593,8 +550,8 @@ class ModuleFacade( types.ModuleType ):
     # the macro NULL is not available from Cling globals, but might be useful
       setattr( _root, 'NULL', 0 )
 
-      for name in std.stlclasses:
-         setattr( _root, name, getattr( std, name ) )
+      for name in cppyy.gbl.std.stlclasses:
+         setattr( _root, name, getattr( cppyy.gbl.std, name ) )
 
     # set the display hook
       sys.displayhook = _displayhook
