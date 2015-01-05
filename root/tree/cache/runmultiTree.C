@@ -109,6 +109,10 @@ void readfile() {
 
 int runmultiTree() {
    writefile();
+
+   // Disable prefilling.
+   gEnv->SetValue("TTreeCache.Prefill",0);
+
    readfileOldInterface();
    readfile();
    return 0;
