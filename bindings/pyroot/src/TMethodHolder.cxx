@@ -450,7 +450,7 @@ PyObject* PyROOT::TMethodHolder::GetArgDefault( Int_t iarg )
 PyObject* PyROOT::TMethodHolder::GetScope()
 {
 // Get or build the scope of this method.
-   return MakeRootClassFromString( fMethod.DeclaringScope().Name( Rflx::SCOPED | Rflx::FINAL ) );
+   return CreateScopeProxy( fMethod.DeclaringScope().Name( Rflx::SCOPED | Rflx::FINAL ) );
 }
 
 //____________________________________________________________________________

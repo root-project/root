@@ -152,7 +152,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* LookupRootEntity( PyObject* pyname, PyObject* args )
+   PyObject* LookupCppEntity( PyObject* pyname, PyObject* args )
    {
    // Find a match within the ROOT module for something with name 'pyname'.
       const char* cname = 0; long macro_ok = 0;
@@ -178,7 +178,7 @@ namespace {
 
       // 2nd attempt: construct name as a class
          PyErr_Clear();
-         attr = MakeRootClassFromString( name, 0 /* scope */);
+         attr = CreateScopeProxy( name, 0 /* parent */);
          if ( attr != 0 )
             return attr;
 
@@ -259,7 +259,7 @@ namespace {
       gDictLookupActive = kTRUE;
 
    // attempt to get ROOT enum/global/class
-      PyObject* val = LookupRootEntity( key, 0 );
+      PyObject* val = LookupCppEntity( key, 0 );
 
       if ( val != 0 ) {
       // success ...
@@ -331,7 +331,7 @@ namespace {
       std::string name = PyROOT_PyUnicode_AsString( pyname );
       Py_DECREF( pyname );
 
-      return MakeRootClassFromString( name );
+      return CreateScopeProxy( name );
    }
 
 //____________________________________________________________________________
@@ -601,11 +601,11 @@ namespace {
 
 //- data -----------------------------------------------------------------------
 static PyMethodDef gPyROOTMethods[] = {
-   { (char*) "MakeRootClass", (PyCFunction)PyROOT::MakeRootClass,
+   { (char*) "CreateScopeProxy", (PyCFunction)PyROOT::CreateScopeProxy,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "GetRootGlobal", (PyCFunction)PyROOT::GetRootGlobal,
      METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "LookupRootEntity", (PyCFunction)LookupRootEntity,
+   { (char*) "LookupCppEntity", (PyCFunction)LookupCppEntity,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "SetRootLazyLookup", (PyCFunction)SetRootLazyLookup,
      METH_VARARGS, (char*) "PyROOT internal function" },
@@ -763,7 +763,7 @@ extern "C" void initlibPyROOT()
    Utility::SetSignalPolicy( gROOT->IsBatch() ? Utility::kFast : Utility::kSafe );
 
 // inject ROOT namespace for convenience
-   PyModule_AddObject( gRootModule, (char*)"ROOT", MakeRootClassFromString( "ROOT" ) );
+   PyModule_AddObject( gRootModule, (char*)"ROOT", CreateScopeProxy( "ROOT" ) );
 
 #if PY_VERSION_HEX >= 0x03000000
    Py_INCREF( gRootModule );

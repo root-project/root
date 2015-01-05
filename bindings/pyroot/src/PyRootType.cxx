@@ -4,6 +4,7 @@
 // Bindings
 #include "PyROOT.h"
 #include "PyRootType.h"
+#include "Cppyy.h"
 #include "Adapters.h"
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
@@ -96,14 +97,14 @@ namespace {
          std::string name = PyROOT_PyUnicode_AsString( pyname );
          if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
 
-            attr = MakeRootClassFromString( name, pyclass );
+            attr = CreateScopeProxy( name, pyclass );
 
          // namespaces may have seen updates in their list of global functions, which
          // are available as "methods" even though they're not really that
             if ( ! attr && ! PyRootType_CheckExact( pyclass ) && PyType_Check( pyclass ) ) {
                PyErr_Clear();
 
-               TScopeAdapter klass = TScopeAdapter::ByName( ((PyTypeObject*)pyclass)->tp_name );
+               TScopeAdapter klass = TScopeAdapter( Cppyy::GetScope( ((PyTypeObject*)pyclass)->tp_name ) );
                if ( klass.IsNamespace() ) {
 
                // tickle lazy lookup of functions

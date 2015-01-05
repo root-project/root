@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 11/17/14
+# Last: 01/05/15
 
 """PyROOT user module.
 
@@ -15,12 +15,13 @@ from __future__ import generators
 
 """
 
-__version__ = '7.0.0'
+__version__ = '8.0.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
 ### system and interpreter setup ------------------------------------------------
 import os, sys, types
+import cppyy
 
 ## there's no version_info in 1.5.2
 if sys.version[0:3] < '2.2':
@@ -93,19 +94,7 @@ if sys.platform == 'darwin':
       message='class \S* already in TClassTable$' )
 
 ### load PyROOT C++ extension module, special case for linux and Sun ------------
-needsGlobal =  ( 0 <= sys.platform.find( 'linux' ) ) or\
-               ( 0 <= sys.platform.find( 'sunos' ) )
-if needsGlobal:
- # change dl flags to load dictionaries from pre-linked .so's
-   dlflags = sys.getdlopenflags()
-   sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
-
-import libPyROOT as _root
-
-# reset dl flags if needed
-if needsGlobal:
-   sys.setdlopenflags( dlflags )
-del needsGlobal
+_root = cppyy._backend
 
 ## convince 2.2 it's ok to use the expand function
 if sys.version[0:3] == '2.2':
@@ -213,7 +202,7 @@ _root.Template = Template
 ### scope place holder for STL classes ------------------------------------------
 class _stdmeta( type ):
    def __getattr__( cls, attr ):   # for non-templated classes in std
-      klass = _root.MakeRootClass( attr, cls )
+      klass = _root.CreateScopeProxy( attr, cls )
       setattr( cls, attr, klass )
       return klass
 
@@ -226,7 +215,7 @@ class std( object ):
    for name in stlclasses:
       locals()[ name ] = Template( "std::%s" % name )
 
-   string = _root.MakeRootClass( 'string' )
+   string = _root.CreateScopeProxy( 'string' )
 
 _root.std = std
 sys.modules['ROOT.std'] = std
@@ -235,7 +224,7 @@ sys.modules['ROOT.std'] = std
 ### special cases for gPad, gVirtualX (are C++ macro's) -------------------------
 class _ExpandMacroFunction( object ):
    def __init__( self, klass, func ):
-      c = _root.MakeRootClass( klass )
+      c = _root.CreateScopeProxy( klass )
       self.func = getattr( c, func )
 
    def __getattr__( self, what ):
@@ -274,7 +263,7 @@ def _TTree__iter__( self ):
    if bytes_read == -1:
       raise RuntimeError( "TTree I/O error" )
 
-_root.MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
+_root.CreateScopeProxy( "TTree" ).__iter__    = _TTree__iter__
 
 
 ### RINT command emulation ------------------------------------------------------
@@ -488,7 +477,7 @@ class ModuleFacade( types.ModuleType ):
          return self.module.__all__
 
     # lookup into ROOT (which may cause python-side enum/class/global creation)
-      attr = _root.LookupRootEntity( name, PyConfig.ExposeCppMacros )
+      attr = _root.LookupCppEntity( name, PyConfig.ExposeCppMacros )
 
     # the call above will raise AttributeError as necessary; so if we get here,
     # attr is valid: cache as appropriate, so we don't come back
@@ -528,7 +517,7 @@ class ModuleFacade( types.ModuleType ):
          argv = sys.argv
          sys.argv = []
 
-      appc = _root.MakeRootClass( 'PyROOT::TPyROOTApplication' )
+      appc = _root.CreateScopeProxy( 'PyROOT::TPyROOTApplication' )
       if appc.CreatePyROOTApplication():
          appc.InitROOTGlobals()
          # TODO Cling equivalent needed: appc.InitCINTMessageCallback();

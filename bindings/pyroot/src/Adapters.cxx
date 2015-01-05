@@ -242,6 +242,15 @@ std::string PyROOT::TBaseAdapter::Name() const
 
 
 //= TScopeAdapter ============================================================
+PyROOT::TScopeAdapter::TScopeAdapter( Cppyy::TCppScope_t handle ) :
+   fClass( Cppyy::type_from_handle( handle ) )
+{
+// wrap a class (scope)
+   if ( fClass.GetClass() != 0 )
+      fName = fClass->GetName();
+}
+
+
 PyROOT::TScopeAdapter::TScopeAdapter( TClass* klass ) : fClass( klass )
 {
 // wrap a class (scope)
@@ -261,21 +270,6 @@ PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
       fName( mb.Name( Rflx::QUALIFIED | Rflx::SCOPED ) )
 {
    /* empty */
-}
-
-//____________________________________________________________________________
-PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string& name, Bool_t quiet )
-{
-// lookup a scope (class) by name
-   Int_t oldEIL = gErrorIgnoreLevel;
-   if ( quiet )
-      gErrorIgnoreLevel = 3000;
-
-   TClassRef klass( name.c_str() );
-
-   gErrorIgnoreLevel = oldEIL;
-
-   return klass.GetClass();
 }
 
 //____________________________________________________________________________

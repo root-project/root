@@ -25,10 +25,10 @@ namespace PyROOT {
 // construct a tuple of base classes for the given ROOT class
    PyObject* BuildRootClassBases( const TScopeAdapter& klass );
 
-// construct a Python shadow class for the named ROOT class
-   PyObject* MakeRootClassFromString(
-      const std::string& name, PyObject* scope = 0 );
-   PyObject* MakeRootClass( PyObject*, PyObject* args );
+// construct a Python shadow class for the named C++ class
+   PyObject* CreateScopeProxy(
+      const std::string& scope_name, PyObject* parent = 0 );
+   PyObject* CreateScopeProxy( PyObject*, PyObject* args );
 
 // convenience function to retrieve global variables and enums
    PyObject* GetRootGlobal( PyObject*, PyObject* args );

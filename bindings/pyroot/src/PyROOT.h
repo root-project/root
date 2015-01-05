@@ -203,4 +203,8 @@ inline Py_ssize_t PyNumber_AsSsize_t( PyObject* obj, PyObject* ) {
 #endif
 #endif
 
+// temp
+#include <iostream>
+// --temp
+
 #endif // !PYROOT_PYROOT_H

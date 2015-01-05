@@ -1353,7 +1353,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       virtual PyObject* GetPrototype() { return PyObject_GetAttrString( (PyObject*)fOrg, (char*)"__doc__" ); }
       virtual PyObject* GetScope()
       {
-         return MakeRootClassFromString( "TTree" );
+         return CreateScopeProxy( "TTree" );
       }
 
    protected:

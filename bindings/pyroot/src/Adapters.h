@@ -10,6 +10,8 @@ class TFunction;
 class TDataMember;
 class TMethodArg;
 
+#include "Cppyy.h"
+
 // old, compatibility
 namespace Rflx {
 
@@ -97,14 +99,12 @@ private:
 
 class TScopeAdapter {
 public:
+   TScopeAdapter( Cppyy::TCppScope_t );
    TScopeAdapter( TClass* klass );
    TScopeAdapter( const std::string& name );
    TScopeAdapter( const TMemberAdapter& );
    operator TClass*() const { return fClass.GetClass(); }
    operator Bool_t() const;
-
-public:
-   static TScopeAdapter ByName( const std::string& name, Bool_t quiet = true );
 
 public:
    std::string Name( unsigned int mod = 0 ) const;

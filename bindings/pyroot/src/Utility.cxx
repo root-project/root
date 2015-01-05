@@ -12,6 +12,7 @@
 #include "RootWrapper.h"
 #include "PyCallable.h"
 #include "Adapters.h"
+#include "Cppyy.h"
 
 // ROOT
 #include "TApplication.h"
@@ -412,12 +413,12 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
    PyCallable* pyfunc = 0;
    if ( gnucxx.GetClass() ) {
       TFunction* func = FindAndAddOperator( lcname, rcname, op, gnucxx.GetClass() );
-      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "__gnu_cxx" ), func );
+      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter( Cppyy::GetScope( "__gnu_cxx" ) ), func );
    }
 
    if ( ! pyfunc && std__1.GetClass() ) {
       TFunction* func = FindAndAddOperator( lcname, rcname, op, std__1.GetClass() );
-      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "std::__1" ), func );
+      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter( Cppyy::GetScope( "std::__1" ) ), func );
    }
 
    if ( ! pyfunc ) {
@@ -437,7 +438,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
       else { fname << "not_implemented<"; }
       fname  << lcname << ", " << rcname << ">";
       TFunction* func = _pr_int->GetMethodAny( fname.str().c_str() );
-      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "_pyroot_internal" ), func );
+      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter( Cppyy::GetScope( "_pyroot_internal" ) ), func );
    }
 
    if ( pyfunc ) {  // found a matching overload; add to class
