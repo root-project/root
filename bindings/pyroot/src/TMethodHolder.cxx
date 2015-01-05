@@ -124,9 +124,6 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
    for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
       std::string fullType =
          fMethod.TypeOf().FunctionParameterAt( iarg ).Name( Rflx::QUALIFIED | Rflx::SCOPED );
-   // CLING WORKAROUND --
-      fullType = Utility::ResolveTypedef( fullType, (TClass*)fClass.Id() );
-   // -- END CLING WORKAROUND
 
    // CLING WORKAROUND -- std::string can not use kExactMatch as that will
    //                     fail, but if no exact match is used, the const-ref

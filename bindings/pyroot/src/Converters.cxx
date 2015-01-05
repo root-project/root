@@ -11,6 +11,7 @@
 #include "TTupleOfInstances.h"
 #include "Utility.h"
 #include "RootWrapper.h"
+#include "Cppyy.h"
 
 // ROOT
 #include "TClass.h"
@@ -1126,7 +1127,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
       return (h->second)( user );
 
 // resolve typedefs etc.
-   std::string resolvedType = Utility::ResolveTypedef( fullType );
+   std::string resolvedType = Cppyy::ResolveName( fullType );
 
 // a full, qualified matching converter is preferred
    h = gConvFactories.find( resolvedType );

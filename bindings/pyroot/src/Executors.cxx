@@ -9,6 +9,7 @@
 #include "TPyBufferFactory.h"
 #include "RootWrapper.h"
 #include "Utility.h"
+#include "Cppyy.h"
 
 // ROOT
 #include "TClass.h"
@@ -470,7 +471,7 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
       return (h->second)();
 
 // resolve typedefs etc., and collect qualifiers
-   std::string resolvedType = Utility::ResolveTypedef( fullType );
+   std::string resolvedType = Cppyy::ResolveName( fullType );
 
 // a full, qualified matching executor is preferred
    h = gExecFactories.find( resolvedType );

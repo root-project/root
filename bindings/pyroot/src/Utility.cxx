@@ -361,7 +361,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
 {
 // Install binary operator op in pyclass, working on two instances of pyclass.
    PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
-   std::string cname = ResolveTypedef( PyROOT_PyUnicode_AsString( pyname ) );
+   std::string cname = Cppyy::ResolveName( PyROOT_PyUnicode_AsString( pyname ) );
    Py_DECREF( pyname ); pyname = 0;
 
    return AddBinaryOperator( pyclass, cname, cname, op, label, alt );
@@ -705,81 +705,6 @@ const std::string PyROOT::Utility::ClassName( PyObject* pyobj )
       PyErr_Clear();
 
    return clname;
-}
-
-//____________________________________________________________________________
-const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
-    TClass* containing_scope /* CLING WORKAROUND */ )
-{
-// Helper; captures common code needed to find the real class name underlying
-// a typedef (if any).
-   std::string tclean = TClassEdit::CleanType( tname.c_str() );
-
-   TDataType* dt = gROOT->GetType( tclean.c_str() );
-   if ( dt ) return dt->GetFullTypeName();
-
-// CLING WORKAROUND -- see: #100392; this does NOT attempt to cover all cases,
-//   as hopefully the bug will be resolved one way or another
-
-   if ( 5 < tclean.size() ) { // can't rely on finding std:: as it gets
-                              // stripped in many cases (for CINT history?)
-
-   // size_type is guessed to be an integer unsigned type
-      std::string::size_type pos = tclean.rfind( "::size_type" );
-      if ( pos != std::string::npos )
-         return containing_scope ? (std::string(containing_scope->GetName()) + "::size_type") : "unsigned long";
-
-   // determine any of the types that require extraction of the template
-   // parameter type names, and whether a const is needed (const can come
-   // in "implicitly" from the typedef, or explicitly from tname)
-      bool isConst = false, isReference = false;
-      if ( (pos = tclean.rfind( "::const_reference" )) != std::string::npos ) {
-         isConst = true;
-         isReference = true;
-      } else {
-         isConst = tclean.substr(0, 5) == "const";
-         if ( (pos = tclean.rfind( "::value_type" )) == std::string::npos ) {
-            pos = tclean.rfind( "::reference" );
-            if ( pos != std::string::npos ) isReference = true;
-         }
-      }
-
-      if ( pos != std::string::npos ) {
-      // extract the internals of the template name; take care of the extra
-      // default parameters for e.g. std::vector
-         std::string clName = containing_scope ? containing_scope->GetName() : tclean;
-         std::string::size_type pos1 = clName.find( '<' );
-         std::string::size_type pos2 = clName.find( ",allocator" );
-         if ( pos2 == std::string::npos ) pos2 = clName.rfind( '>' );
-         if ( pos1 != std::string::npos ) {
-            tclean = (isConst ? "const " : "") +
-                     clName.substr( pos1+1, pos2-pos1-1 ) +
-                     (isReference ? "&" : Compound( clName ));
-         }
-      }
-
-   // for std::map, extract the key_type, or iterator for either map or list
-      else {
-         pos = tclean.rfind( "::key_type" );
-         if ( pos != std::string::npos ) {
-            std::string clName = containing_scope ? containing_scope->GetName() : tclean;
-            std::string::size_type pos1 = clName.find( '<' );
-         // TODO: this is wrong for templates, but this code is a (temp?) workaround only
-            std::string::size_type pos2 = clName.find( ',' );
-            if ( pos1 != std::string::npos ) {
-               tclean = (isConst ? "const " : "") +
-                        clName.substr( pos1+1, pos2-pos1-1 ) +
-                        (isReference ? "&" : Compound( clName ));
-                        }
-         } else if ( tclean.rfind( "::_Self" ) != std::string::npos ) {
-            tclean = containing_scope ? containing_scope->GetName() : tclean;
-         }
-      }
-   }
-
-// -- END CLING WORKAROUND
-
-   return TClassEdit::ResolveTypedef( tclean.c_str(), true );
 }
 
 //____________________________________________________________________________

@@ -1,7 +1,6 @@
 // Bindings
 #include "PyROOT.h"
 #include "Adapters.h"
-#include "Utility.h"
 
 // ROOT
 #include "TInterpreter.h"
@@ -32,7 +31,7 @@ std::string PyROOT::TReturnTypeAdapter::Name( unsigned int mod ) const
    std::string name = fName;
 
    if ( mod & Rflx::FINAL )
-      name = Utility::ResolveTypedef( name );
+      name = Cppyy::ResolveName( name );
 
    if ( ! ( mod & Rflx::QUALIFIED ) )
       name = UnqualifiedTypeName( fName );
@@ -103,7 +102,7 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
 
       std::string name = arg->GetTypeNormalizedName();
       if ( mod & Rflx::FINAL )
-         name = Utility::ResolveTypedef( name );
+         name = Cppyy::ResolveName( name );
 
       if ( ! ( mod & Rflx::QUALIFIED ) )
          name = UnqualifiedTypeName( name );
@@ -111,7 +110,7 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
       return name;
 
    } else if ( mod & Rflx::FINAL )
-      return Utility::ResolveTypedef( fMember->GetName() );
+      return Cppyy::ResolveName( fMember->GetName() );
 
    if ( fMember )
       return fMember->GetName();
@@ -199,7 +198,7 @@ std::string PyROOT::TMemberAdapter::FunctionParameterDefaultAt( size_t nth ) con
       return "";
 
 // special case for strings: "some value" -> ""some value"
-   if ( strstr( Utility::ResolveTypedef( arg->GetTypeNormalizedName() ).c_str(), "char*" ) ) {
+   if ( strstr( Cppyy::ResolveName( arg->GetTypeNormalizedName() ).c_str(), "char*" ) ) {
       std::string sdef = "\"";
       sdef += def;
       sdef += "\"";
@@ -281,7 +280,7 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
       std::string name = fName;
 
       if ( mod & Rflx::FINAL )
-         name = Utility::ResolveTypedef( name );
+         name = Cppyy::ResolveName( name );
 
       if ( ! ( mod & Rflx::QUALIFIED ) )
          name = UnqualifiedTypeName( fName );
@@ -291,7 +290,7 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
 
    std::string name = fClass->GetName();
    if ( mod & Rflx::FINAL )
-      name = Utility::ResolveTypedef( name );
+      name = Cppyy::ResolveName( name );
 
    if ( ! (mod & Rflx::SCOPED) ) {
    // remove scope from the name
