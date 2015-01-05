@@ -5648,14 +5648,35 @@ Bool_t TClass::MatchLegacyCheckSum(UInt_t checksum) const
 //______________________________________________________________________________
 UInt_t TClass::GetCheckSum(ECheckSum code) const
 {
+   // Call GetCheckSum with validity check.
+
+   bool isvalid;
+   return GetCheckSum(code,isvalid);
+}
+
+//______________________________________________________________________________
+UInt_t TClass::GetCheckSum(Bool_t &isvalid) const
+{
+   // Return GetCheckSum(kCurrentCheckSum,isvalid);
+
+   return GetCheckSum(kCurrentCheckSum,isvalid);
+}
+
+//______________________________________________________________________________
+UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
+{
    // Compute and/or return the class check sum.
+   //
+   // isvalid is set to false, if the function is unable to calculate the
+   // checksum.
+   //
    // The class ckecksum is used by the automatic schema evolution algorithm
    // to uniquely identify a class version.
    // The check sum is built from the names/types of base classes and
    // data members.
    // Original algorithm from Victor Perevovchikov (perev@bnl.gov).
    //
-   // The valid range of code is determined by ECheckSum
+   // The valid range of code is determined by ECheckSum.
    //
    // kNoEnum:  data members of type enum are not counted in the checksum
    // kNoRange: return the checksum of data members and base classes, not including the ranges and array size found in comments.
@@ -5669,6 +5690,8 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
    // from TClass::GetListOfBases and TClass::GetListOfDataMembers.
 
    R__LOCKGUARD(gInterpreterMutex);
+
+   isvalid = kTRUE;
 
    if (fCheckSum && code == kCurrentCheckSum) return fCheckSum;
 
@@ -5699,10 +5722,12 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
          il = name.Length();
          for (int i=0; i<il; i++) id = id*3+name[i];
          if (code > kNoBaseCheckSum && !isSTL) {
-            if (tbc->GetClassPointer() == 0)
+            if (tbc->GetClassPointer() == 0) {
                Error("GetCheckSum","Calculating the checksum for (%s) requires the base class (%s) meta information to be available!",
                      GetName(),tbc->GetName());
-            else
+               isvalid = kFALSE;
+               return 0;
+            } else
                id = id*3 + tbc->GetClassPointer()->GetCheckSum();
          }
       }/*EndBaseLoop*/

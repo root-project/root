@@ -329,6 +329,8 @@ public:
    Bool_t             HasInterpreterInfoInMemory() const { return 0 != fClassInfo; }
    Bool_t             HasInterpreterInfo() const { return fCanLoadClassInfo || fClassInfo; }
    UInt_t             GetCheckSum(ECheckSum code = kCurrentCheckSum) const;
+   UInt_t             GetCheckSum(Bool_t &isvalid) const;
+   UInt_t             GetCheckSum(ECheckSum code, Bool_t &isvalid) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
    TMethod           *GetClassMethod(const char *name, const char *params, Bool_t objectIsConst = kFALSE);
