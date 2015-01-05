@@ -745,10 +745,10 @@ Rint.Canvas.HighLightColor:      5
 #               0.0 no automatic cache (default)
 #              >0.0 enable automatic cache
 # Can be overridden by the environment variable ROOT_TTREECACHE_SIZE
-# TTreeCache.Size: 0.0
+# TTreeCache.Size: 1.0
 
 # Set the default TTreeCache prefilling type.
 # The prefill type may be: 0 No Prefill (default)
 #                          1 All Branches
 # Can be overridden by the environment variable ROOT_TTREECACHE_PREFILL
-# TTreeCache.Prefill: 0
+# TTreeCache.Prefill: 1

@@ -4737,7 +4737,7 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
    const char *stcs;
    Double_t cacheFactor = 0.0;
    if (!(stcs = gSystem->Getenv("ROOT_TTREECACHE_SIZE")) || !*stcs) {
-      cacheFactor = gEnv->GetValue("TTreeCache.Size", 0.0);
+      cacheFactor = gEnv->GetValue("TTreeCache.Size", 1.0);
    } else {
       cacheFactor = TString(stcs).Atof();
    }
