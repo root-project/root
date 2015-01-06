@@ -14,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.2 dev 12/12/2014";
+   JSROOT.version = "3.2 dev 6/01/2015";
 
    JSROOT.source_dir = function(){
       var scripts = document.getElementsByTagName('script');
@@ -40,7 +40,7 @@
    }
 
    JSROOT.id_counter = 0;
-   
+
    JSROOT.touches = ('ontouchend' in document); // identify if touch events are supported
 
    JSROOT.function_list = []; // do we really need it here?
@@ -418,7 +418,7 @@
                      ';$$$scripts/JSRootPainter.js' +
                      ';$$$style/JSRootPainter.css';
          if (JSROOT.touches)
-            allfiles += ';$$$scripts/touch-punch.min.js';         
+            allfiles += ';$$$scripts/touch-punch.min.js';
       }
 
       if (kind.indexOf("3d;")>=0)
@@ -558,7 +558,7 @@
       } else
       if (typename == 'TH1I' || typename == 'TH1F' || typename == 'TH1D' || typename == 'TH1S' || typename == 'TH1C') {
          JSROOT.Create("TH1", obj);
-         jQuery.extend(obj, { fN : 0, fArray: [] });
+         jQuery.extend(obj, { fArray: [] });
       } else
       if (typename == 'TH2') {
          JSROOT.Create("TH1", obj);
@@ -566,7 +566,7 @@
       } else
       if (typename == 'TH2I' || typename == 'TH2F' || typename == 'TH2D' || typename == 'TH2S' || typename == 'TH2C') {
          JSROOT.Create("TH2", obj);
-         jQuery.extend(obj, { fN : 0, fArray: [] });
+         jQuery.extend(obj, { fArray: [] });
       } else
       if (typename == 'TGraph') {
          JSROOT.Create("TNamed", obj);
@@ -590,7 +590,7 @@
       jQuery.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
       if (nbinsx!=null) {
-         histo['fN'] = histo['fNcells'] = nbinsx+2;
+         histo['fNcells'] = nbinsx+2;
          for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
          jQuery.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0,  fXmax: nbinsx });
       }
@@ -602,7 +602,7 @@
       jQuery.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
       if ((nbinsx!=null) && (nbinsy!=null)) {
-         histo['fN'] = histo['fNcells'] = (nbinsx+2) * (nbinsy+2);
+         histo['fNcells'] = (nbinsx+2) * (nbinsy+2);
          for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
          jQuery.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
          jQuery.extend(histo['fYaxis'], { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
@@ -686,7 +686,7 @@
          obj['getBinCenter'] = function(bin) {
             // Return center of bin
             var binwidth;
-            if (!this['fN'] || bin < 1 || bin > this['fNbins']) {
+            if (!this['fNbins'] || bin < 1 || bin > this['fNbins']) {
                binwidth = (this['fXmax'] - this['fXmin']) / this['fNbins'];
                return this['fXmin'] + (bin-1) * binwidth + 0.5*binwidth;
             } else {
@@ -792,7 +792,7 @@
             //    otherwise it returns the sqrt(contents) for this bin.
             if (bin < 0) bin = 0;
             if (bin >= this['fNcells']) bin = this['fNcells'] - 1;
-            if (this['fN'] && this['fSumw2'].length > 0) {
+            if (this['fNcells'] && this['fSumw2'].length > 0) {
                var err2 = this['fSumw2'][bin];
                return Math.sqrt(err2);
             }
@@ -803,7 +803,7 @@
             //   -*-*-*-*-*Return lower error associated to bin number bin*-*-*-*-*
             //    The error will depend on the statistic option used will return
             //     the binContent - lower interval value
-            if (this['fBinStatErrOpt'] == EBinErrorOpt.kNormal || this['fN']) return this.getBinError(bin);
+            if (this['fBinStatErrOpt'] == EBinErrorOpt.kNormal) return this.getBinError(bin);
             if (bin < 0) bin = 0;
             if (bin >= this['fNcells']) bin = this['fNcells'] - 1;
             var alpha = 1.0 - 0.682689492;
@@ -822,7 +822,7 @@
             //   -*-*-*-*-*Return lower error associated to bin number bin*-*-*-*-*
             //    The error will depend on the statistic option used will return
             //     the binContent - lower interval value
-            if (this['fBinStatErrOpt'] == EBinErrorOpt.kNormal || this['fN']) return this.getBinError(bin);
+            if (this['fBinStatErrOpt'] == EBinErrorOpt.kNormal) return this.getBinError(bin);
             if (bin < 0) bin = 0;
             if (bin >= this['fNcells']) bin = this['fNcells'] - 1;
             var alpha = 1.0 - 0.682689492;
@@ -841,7 +841,7 @@
          };
          obj['getBinLowEdge'] = function(bin) {
             // Return low edge of bin
-            if (this['fXaxis']['fXbins']['fN'] && bin > 0 && bin <= this['fXaxis']['fNbins'])
+            if (this['fXaxis']['fXbins'].length && bin > 0 && bin <= this['fXaxis']['fNbins'])
                return this['fXaxis']['fXbins']['fArray'][bin-1];
             var binwidth = (this['fXaxis']['fXmax'] - this['fXaxis']['fXmin']) / this['fXaxis']['fNbins'];
             return this['fXaxis']['fXmin'] + (bin-1) * binwidth;
@@ -849,7 +849,7 @@
          obj['getBinUpEdge'] = function(bin) {
             // Return up edge of bin
             var binwidth;
-            if (!this['fXaxis']['fXbins']['fN'] || bin < 1 || bin > this['fXaxis']['fNbins']) {
+            if (!this['fXaxis']['fXbins'].length || bin < 1 || bin > this['fXaxis']['fNbins']) {
                binwidth = (this['fXaxis']['fXmax'] - this['fXaxis']['fXmin']) / this['fXaxis']['fNbins'];
                return this['fXaxis']['fXmin'] + bin * binwidth;
             } else {
@@ -860,7 +860,7 @@
          obj['getBinWidth'] = function(bin) {
             // Return bin width
             if (this['fXaxis']['fNbins'] <= 0) return 0;
-            if (this['fXaxis']['fXbins']['fN'] <= 0)
+            if (this['fXaxis']['fXbins'].length <= 0)
                return (this['fXaxis']['fXmax'] - this['fXaxis']['fXmin']) / this['fXaxis']['fNbins'];
             if (bin > this['fXaxis']['fNbins']) bin = this['fXaxis']['fNbins'];
             if (bin < 1) bin = 1;
@@ -884,7 +884,7 @@
             if (this['fDimension'] < 3) nbinsz = -1;
 
             // Create Sumw2 if h1 has Sumw2 set
-            if (this['fSumw2']['fN'] == 0 && h1['fSumw2']['fN'] != 0) this.sumw2();
+            if (this['fSumw2'].length == 0 && h1['fSumw2'].length != 0) this.sumw2();
 
             // - Add statistics
             if (this['fEntries'] == NaN) this['fEntries'] = 0;
@@ -923,7 +923,7 @@
                         // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
                         if (e1 > 0)
                            w1 = 1.0 / (e1 * e1);
-                        else if (h1['fSumw2']['fN']) {
+                        else if (h1['fSumw2'].length) {
                            w1 = 1.E200; // use an arbitrary huge value
                            if (y1 == 0) {
                               // use an estimated error from the global histogram scale
@@ -933,7 +933,7 @@
                         }
                         if (e2 > 0)
                            w2 = 1.0 / (e2 * e2);
-                        else if (this['fSumw2']['fN']) {
+                        else if (this['fSumw2'].length) {
                            w2 = 1.E200; // use an arbitrary huge value
                            if (y2 == 0) {
                               // use an estimated error from the global histogram scale
@@ -943,19 +943,19 @@
                         }
                         var y = (w1 * y1 + w2 * y2) / (w1 + w2);
                         this.setBinContent(bin, y);
-                        if (this['fSumw2']['fN']) {
+                        if (this['fSumw2'].length) {
                            var err2 =  1.0 / (w1 + w2);
                            if (err2 < 1.E-200) err2 = 0;  // to remove arbitrary value when e1=0 AND e2=0
-                           this['fSumw2']['fArray'][bin] = err2;
+                           this['fSumw2'][bin] = err2;
                         }
                      }
                      //normal case of addition between histograms
                      else {
                         cu  = c1 * factor * h1.getBinContent(bin);
                         this['fArray'][bin] += cu;
-                        if (this['fSumw2']['fN']) {
+                        if (this['fSumw2'].length) {
                            var e1 = factor * h1.getBinError(bin);
-                           this['fSumw2']['fArray'][bin] += c1 * c1 * e1 * e1;
+                           this['fSumw2'][bin] += c1 * c1 * e1 * e1;
                         }
                      }
                   }
@@ -1095,11 +1095,11 @@
          };
          obj['getSumOfWeights'] = function() {
             //   -*-*-*-*-*-*Return the sum of weights excluding under/overflows*-*-*-*-*
-            var bin, binx, biny, binz, sum = 0;
-            for (binz=1; binz<=this['fZaxis']['fXbins']['fN']; binz++) {
-               for (biny=1; biny<=this['fYaxis']['fXbins']['fN']; biny++) {
-                  for (binx=1; binx<=this['fXaxis']['fXbins']['fN']; binx++) {
-                     bin = this.getBin(binx,biny,binz);
+            var sum = 0;
+            for (var binz=1; binz<=this['fZaxis']['fNbins']; binz++) {
+               for (var biny=1; biny<=this['fYaxis']['fNbins']; biny++) {
+                  for (var binx=1; binx<=this['fXaxis']['fNbins']; binx++) {
+                     var bin = this.getBin(binx,biny,binz);
                      sum += this.getBinContent(bin);
                   }
                }
@@ -1136,7 +1136,7 @@
             axis['fXmax']  = xmax;
             this['fNcells'] = -1;
             this['fArray'].length = -1;
-            var errors = this['fSumw2']['fN'];
+            var errors = this['fSumw2'].length;
             if (errors) ['fSumw2'].length = this['fNcells'];
             axis['fTimeDisplay'] = timedisp;
 
@@ -1156,7 +1156,7 @@
                if (bin > 0)  {
                   var cu = hold.getBinContent(bin);
                   this['fArray'][bin] += cu;
-                  if (errors) this['fSumw2']['fArray'][ibin] += hold['fSumw2']['fArray'][bin];
+                  if (errors) this['fSumw2'][ibin] += hold['fSumw2'][bin];
                }
             }
             this['fEntries'] = oldEntries;
@@ -1176,7 +1176,7 @@
             this['fTsumwx2'] = stats[3];
             this['fEntries'] = Math.abs(this['fTsumw']);
             // use effective entries for weighted histograms:  (sum_w) ^2 / sum_w2
-            if (this['fSumw2']['fN'] > 0 && this['fTsumw'] > 0 && stats[1] > 0 )
+            if (this['fSumw2'].length > 0 && this['fTsumw'] > 0 && stats[1] > 0 )
                this['fEntries'] = stats[0] * stats[0] / stats[1];
          }
          obj['setBinContent'] = function(bin, content) {
@@ -1211,13 +1211,11 @@
             //  This function is automatically called when the histogram is created
             //  if the static function TH1::SetDefaultSumw2 has been called before.
 
-            if (this['fSumw2']['fN'] == this['fNcells']) {
-               return;
-            }
+            if (this['fSumw2'].length == this['fNcells']) return;
             this['fSumw2'].length = this['fNcells'];
             if ( this['fEntries'] > 0 ) {
                for (var bin=0; bin<this['fNcells']; bin++) {
-                  this['fSumw2']['fArray'][bin] = Math.abs(this.getBinContent(bin));
+                  this['fSumw2'][bin] = Math.abs(this.getBinContent(bin));
                }
             }
          };
@@ -1523,7 +1521,7 @@
          obj['getBinEffectiveEntries'] = function(bin) {
             if (bin < 0 || bin >= this['fNcells']) return 0;
             var sumOfWeights = this['fBinEntries'][bin];
-            if ( this['fBinSumw2'].length == 0 || this['fBinSumw2'].length != this['fNcells']) {
+            if ( this['fBinSumw2'] == null || this['fBinSumw2'].length != this['fNcells']) {
                // this can happen  when reading an old file
                return sumOfWeights;
             }
@@ -1537,7 +1535,7 @@
                var lastBinX  = this['fXaxis'].getLast();
                for (binx = this['firstBinX']; binx <= lastBinX; binx++) {
                   var w   = onj['fBinEntries'][binx];
-                  var w2  = (this['fN'] ? this['fBinSumw2'][binx] : w);
+                  var w2  = (this['fBinSumw2'] ? this['fBinSumw2'][binx] : w);
                   var x   = fXaxis.GetBinCenter(binx);
                   stats[0] += w;
                   stats[1] += w2;
