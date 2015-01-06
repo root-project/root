@@ -24,6 +24,11 @@
 
 ClassImp(TGTextViewStreamBuf)
 
+#ifdef R__WIN32
+#pragma warning( push )
+#pragma warning( disable : 4355 )
+#endif
+
 //______________________________________________________________________________
 TGTextViewStreamBuf::TGTextViewStreamBuf(TGTextView *textview) :
    fTextView(textview)
@@ -90,3 +95,6 @@ TGTextViewostream::TGTextViewostream(const TGWindow *parent, UInt_t w,
 
 }
 
+#ifdef R__WIN32
+#pragma warning( pop )
+#endif
