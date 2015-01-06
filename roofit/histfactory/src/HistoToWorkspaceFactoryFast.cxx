@@ -956,23 +956,24 @@ namespace HistFactory{
       double scale = relativeUncertainty;
       //double scale = kappa; 
 
+      const char * cname  = it->first.c_str(); 
+
       // this is the LogNormal
-      proto->factory(Form("beta_%s[1,0,10]",it->first.c_str()));
-      proto->factory(Form("kappa_%s[%f]",it->first.c_str(),kappa));
-      proto->factory(Form("Lognormal::beta_%sConstraint(beta_%s,one[1],kappa_%s)",
-			  it->first.c_str(),
-			  it->first.c_str(),
-			  it->first.c_str())) ;
-      proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",it->first.c_str(),it->first.c_str(),-1./scale,1./scale));
-      //      proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",it->first.c_str(),it->first.c_str(),-1.,1./scale));
+      proto->factory(TString::Format("beta_%s[1,0,10]",cname));
+      proto->factory(TString::Format("nom_beta_%s[1]",cname));
+      proto->factory(TString::Format("kappa_%s[%f]",cname,kappa));
+      proto->factory(TString::Format("Lognormal::beta_%sConstraint(beta_%s,nom_beta_%s,kappa_%s)",
+                                     cname, cname, cname, cname)) ;
+      proto->factory(TString::Format("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",cname,cname,-1./scale,1./scale));
+      
       
       // set beta const status to be same as alpha
-      if(proto->var(Form("alpha_%s",it->first.c_str()))->isConstant())
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(true);
+      if(proto->var(TString::Format("alpha_%s",cname))->isConstant())
+	proto->var(TString::Format("beta_%s",cname))->setConstant(true);
       else
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(false);
+	proto->var(TString::Format("beta_%s",cname))->setConstant(false);
       // set alpha const status to true
-      //      proto->var(Form("alpha_%s",it->first.c_str()))->setConstant(true);
+      //      proto->var(TString::Format("alpha_%s",cname))->setConstant(true);
 
       // replace alphas with alphaOfBeta and replace constraints
       cout <<         "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint" << endl;
@@ -999,6 +1000,14 @@ namespace HistFactory{
 	  cout << "\n\n ---------------------\n WARNING: failed to make EDIT\n\n" << endl;
 	
       }
+      // add global observables
+      const RooArgSet * gobs = proto->set("globalObservables");
+      RooArgSet gobsNew(*gobs); 
+      gobsNew.add(*proto->var(TString::Format("nom_beta_%s",cname)) );
+      proto->removeSet("globalObservables");
+      proto->defineSet("globalObservables",gobsNew);
+      gobsNew.Print();
+      
     }
 
     /////////////////////////////////////////
@@ -1695,14 +1704,14 @@ namespace HistFactory{
 	if(systToFix.at(i)=="Lumi"){
 	  auxMeas = proto->var("nominalLumi");
 	} else {
-	  auxMeas = proto->var(Form("nom_%s",temp->GetName()));
+	  auxMeas = proto->var(TString::Format("nom_%s",temp->GetName()));
 	}
 
 	if(auxMeas){
 	  const_cast<RooArgSet*>(proto->set("globalObservables"))->remove(*auxMeas);
 	} else{
 	  cout << "could not corresponding auxiliary measurement  " 
-	       << Form("nom_%s",temp->GetName()) << endl;
+	       << TString::Format("nom_%s",temp->GetName()) << endl;
 	}
       } else {
 	cout << "could not find variable " << systToFix.at(i) 
@@ -1749,8 +1758,8 @@ namespace HistFactory{
     // We create two sets, one for backwards compatability
     // The other to make a consistent naming convention
     // between individual channels and the combined workspace
-    proto->defineSet("observables", Form("%s",observablesStr.c_str()));
-    proto->defineSet("observablesSet", Form("%s",observablesStr.c_str()));
+    proto->defineSet("observables", TString::Format("%s",observablesStr.c_str()));
+    proto->defineSet("observablesSet", TString::Format("%s",observablesStr.c_str()));
     
     // Create the ParamHistFunc
     // after observables have been made
@@ -1775,8 +1784,8 @@ namespace HistFactory{
     // make data sets
       // THis works and is natural, but the memory size of the simultaneous dataset grows exponentially with channels
     const char* weightName="weightVar";
-    proto->factory(Form("%s[0,-1e10,1e10]",weightName));
-    proto->defineSet("obsAndWeight",Form("%s,%s",weightName,observablesStr.c_str()));
+    proto->factory(TString::Format("%s[0,-1e10,1e10]",weightName));
+    proto->defineSet("obsAndWeight",TString::Format("%s,%s",weightName,observablesStr.c_str()));
 
     /* Old code for generating the asimov
        Asimov generation is now done later...
