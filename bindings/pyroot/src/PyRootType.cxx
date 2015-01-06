@@ -159,7 +159,7 @@ namespace {
             if ( ! attr && ! PyRootType_Check( pyclass ) /* at global or module-level only */ ) {
                PyErr_Clear();
             // get class name to look up CINT tag info ...
-               attr = GetRootGlobalFromString( name /*, tag */ );
+               attr = GetCppGlobal( name /*, tag */ );
                if ( PropertyProxy_Check( attr ) ) {
                   PyObject_SetAttr( (PyObject*)Py_TYPE(pyclass), pyname, attr );
                   Py_DECREF( attr );

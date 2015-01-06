@@ -25,7 +25,7 @@
 // ROOT
 #include "TROOT.h"
 #include "TSystem.h"
-#include "TMethod.h"
+#include "TFunction.h"
 #include "TDataMember.h"
 #include "TBaseClass.h"
 #include "TClassEdit.h"
@@ -97,13 +97,6 @@ namespace {
       return pyclass;
    }
 
-// (CLING) looks pretty wrong, no?
-   inline Long_t GetDataMemberAddress( TDataMember* mb )
-   {
-   // Get the address of a data member (used for enums)
-      return mb->GetOffsetCint();
-   }
-
    template<class T>
    void AddPropertyToClass( PyObject* pyclass, T* prop, Bool_t isEnum, Bool_t isStatic ) {
       PyROOT::PropertyProxy* property = PyROOT::PropertyProxy_New( prop );
@@ -150,7 +143,7 @@ namespace {
       InitSTLTypes_t()
       {
       // Initialize the sets of known STL (container) types.
-         std::string nss = "std::";
+         const std::string nss = "std::";
 
          const char* stlTypes[] = { "complex", "exception",
             "deque", "list", "queue", "stack", "vector",
@@ -234,13 +227,12 @@ void PyROOT::InitRoot()
 }
 
 //____________________________________________________________________________
-int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) {
-// get the unscoped class name
-   std::string clName = TClassEdit::ShortType(
-      klass.Name().c_str(), TClassEdit::kDropAlloc );
+static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
+// Collect methods and data for the given scope, and add them to the given python
+// proxy object.
 
 // some properties that'll affect building the dictionary
-   Bool_t isNamespace = klass.IsNamespace();
+   Bool_t isNamespace = Cppyy::IsNamespace( scope );
    Bool_t hasConstructor = kFALSE;
 
 // load all public methods and data members
@@ -254,16 +246,15 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
 
 // functions in namespaces are properly found through lazy lookup, so do not
 // create them until needed (the same is not true for data members)
-   const size_t nMethods = klass.IsNamespace() ? 0 : klass.FunctionMemberSize();
-   for ( size_t inm = 0; inm < nMethods; ++inm ) {
-      const TMemberAdapter& method = klass.FunctionMemberAt( inm );
-
-   // retrieve method name
-      std::string mtName = method.Name();
+   const Cppyy::TCppIndex_t nMethods =
+      Cppyy::IsNamespace( scope ) ? 0 : Cppyy::GetNumMethods( scope );
+   for ( Cppyy::TCppIndex_t imeth = 0; imeth < nMethods; ++imeth ) {
+   // process the method based on its name
+      std::string mtName = Cppyy::GetMethodName( scope, imeth );
 
    // special case trackers
       Bool_t setupSetItem = kFALSE;
-      Bool_t isConstructor = method.IsConstructor();
+      Bool_t isConstructor = Cppyy::IsConstructor( scope, imeth );
 
    // filter empty names (happens for namespaces, is bug?)
       if ( mtName == "" )
@@ -274,14 +265,13 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
          continue;
 
    // translate operators
-      mtName = Utility::MapOperatorName( mtName, method.FunctionParameterSize() );
+      mtName = Utility::MapOperatorName( mtName, Cppyy::GetMethodNumArgs( scope, imeth ) );
 
    // operator[]/() returning a reference type will be used for __setitem__
       if ( mtName == "__call__" || mtName == "__getitem__" ) {
-         std::string qual_return = method.TypeOf().ReturnType().Name(
-            Rflx::QUALIFIED | Rflx::SCOPED | Rflx::FINAL );
+         const std::string& qual_return = Cppyy::ResolveName( Cppyy::GetMethodResultType( scope, imeth ) );
          if ( qual_return.find( "const", 0, 5 ) == std::string::npos ) {
-            std::string cpd = Utility::Compound( qual_return );
+            const std::string& cpd = Utility::Compound( qual_return );
             if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' ) {
                setupSetItem = kTRUE;
             }
@@ -289,7 +279,7 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
       }
 
    // decide on method type: member or static (which includes globals)
-      Bool_t isStatic = isNamespace || method.IsStatic();
+      Bool_t isStatic = isNamespace || Cppyy::IsStaticMethod( scope, imeth );
 
    // template members; handled by adding a dispatcher to the class
       std::string tmplName = "";
@@ -314,12 +304,18 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
    // public methods are normally visible, private methods are mangled python-wise
    // note the overload implications which are name based, and note that rootcint
    // does not create the interface methods for private/protected methods ...
-      if ( ! method.IsPublic() ) {
+      if ( ! Cppyy::IsPublicMethod( scope, imeth ) ) {
          if ( isConstructor )                // don't expose private ctors
             continue;
-         else                                // mangle private methods
+         else {                              // mangle private methods
+            const std::string& clName = TClassEdit::ShortType(
+               Cppyy::GetFinalName( scope ).c_str(), TClassEdit::kDropAlloc );
             mtName = "_" + clName + "__" + mtName;
+         }
       }
+
+      TScopeAdapter klass = TScopeAdapter( scope );
+      TMemberAdapter method = klass.FunctionMemberAt( imeth ); 
 
    // construct the holder
       PyCallable* pycall = 0;
@@ -353,6 +349,7 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
    }
 
 // add a pseudo-default ctor, if none defined
+   TScopeAdapter klass = TScopeAdapter( scope );
    if ( ! isNamespace && ! hasConstructor )
       cache[ "__init__" ].push_back( new TConstructorHolder( klass ) );
 
@@ -391,23 +388,22 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
    }
 
 // collect data members
-   const size_t nDataMembers = klass.DataMemberSize();
-   for ( size_t ind = 0; ind < nDataMembers; ++ind ) {
-      const TMemberAdapter& mb = klass.DataMemberAt( ind );
-
+   const Cppyy::TCppIndex_t nDataMembers = Cppyy::GetNumDatamembers( scope );
+   for ( Cppyy::TCppIndex_t idata = 0; idata < nDataMembers; ++idata ) {
    // allow only public members
-      if ( ! mb.IsPublic() )
+      if ( ! Cppyy::IsPublicData( scope, idata ) )
          continue;
 
    // enum datamembers (this in conjunction with previously collected enums above)
-      if ( mb.TypeOf().IsEnum() && mb.IsStatic() ) {
+      if ( Cppyy::IsEnumData( scope, idata ) && Cppyy::IsStaticData( scope, idata ) ) {
       // some implementation-specific data members have no address: ignore them
-         if ( ! GetDataMemberAddress( mb ) )
+         if ( ! Cppyy::GetDatamemberOffset( scope, idata ) )
             continue;
 
       // two options: this is a static variable, or it is the enum value, the latter
       // already exists, so check for it and move on if set
-         PyObject* eset = PyObject_GetAttrString( pyclass, const_cast<char*>(mb.Name().c_str()) );
+         PyObject* eset = PyObject_GetAttrString( pyclass,
+            const_cast<char*>( Cppyy::GetDatamemberName( scope, idata ).c_str()) );
          if ( eset ) {
             Py_DECREF( eset );
             continue;
@@ -417,14 +413,14 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
 
       // it could still be that this is an anonymous enum, which is not in the list
       // provided by the class
-         if ( strstr( ((TDataMember*)mb)->GetFullTypeName(), "(anonymous)" ) != 0 ) {
-            AddPropertyToClass( pyclass, (TDataMember*)mb, kTRUE, kTRUE );
+         if ( strstr( Cppyy::GetDatamemberType( scope, idata ).c_str(), "(anonymous)" ) != 0 ) {
+            AddPropertyToClass( pyclass, (TDataMember*)klass.DataMemberAt( idata ), kTRUE, kTRUE );
             continue;
          }
       }
 
    // properties (aka public (static) data members)
-      AddPropertyToClass( pyclass, (TDataMember*)mb, kFALSE, mb.IsStatic() );
+      AddPropertyToClass( pyclass, (TDataMember*)klass.DataMemberAt( idata ), kFALSE, Cppyy::IsStaticData( scope, idata ) );
    }
 
 // restore custom __getattr__
@@ -435,18 +431,17 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::BuildRootClassBases( const TScopeAdapter& klass )
+static PyObject* BuildCppClassBases( Cppyy::TCppType_t klass )
 {
 // Build a tuple of python shadow classes of all the bases of the given 'klass'.
-   size_t nbases = klass.BaseSize();
+   size_t nbases = Cppyy::GetNumBases( klass );
 
 // collect bases while removing duplicates
    std::vector< std::string > uqb;
    uqb.reserve( nbases );
 
-   for ( size_t inb = 0; inb < nbases; ++inb ) {
-      const TBaseAdapter& base = klass.BaseAt( inb );
-      std::string name = base.Name();
+   for ( size_t ibase = 0; ibase < nbases; ++ibase ) {
+      const std::string& name = Cppyy::GetBaseName( klass, ibase );
       if ( std::find( uqb.begin(), uqb.end(), name ) == uqb.end() ) {
          uqb.push_back( name );
       }
@@ -591,7 +586,7 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
          else if ( tpl_open == 0 &&\
               c == ':' && pos+1 < name.size() && name[ pos+1 ] == ':' ) {
          // found a new scope part
-            std::string part = name.substr( last, pos-last );
+            const std::string& part = name.substr( last, pos-last );
 
             PyObject* next = PyObject_GetAttrString(
                parent ? parent : gRootModule, const_cast< char* >( part.c_str() ) );
@@ -622,7 +617,7 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
    }
 
 // use actual class name for binding
-   std::string actual = Cppyy::ResolveName( klass );
+   const std::string& actual = Cppyy::GetFinalName( klass );
 
 // first try to retrieve an existing class representation
    PyObject* pyactual = PyROOT_PyUnicode_FromString( actual.c_str() );
@@ -636,7 +631,7 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
       PyErr_Clear();
 
    // construct the base classes
-      PyObject* pybases = BuildRootClassBases( klass );
+      PyObject* pybases = BuildCppClassBases( klass );
       if ( pybases != 0 ) {
       // create a fresh Python class, given bases, name, and empty dictionary
          pyclass = CreateNewROOTPythonClass( actual, pybases );
@@ -645,7 +640,7 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
 
    // fill the dictionary, if successful
       if ( pyclass != 0 ) {
-         if ( BuildRootClassDict( TScopeAdapter( klass ), pyclass ) != 0 ) {
+         if ( BuildScopeProxyDict( klass, pyclass ) != 0 ) {
          // something failed in building the dictionary
             Py_DECREF( pyclass );
             pyclass = 0;
@@ -691,7 +686,7 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::GetRootGlobal( PyObject*, PyObject* args )
+PyObject* PyROOT::GetCppGlobal( PyObject*, PyObject* args )
 {
 // get the requested name
    std::string ename = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
@@ -699,11 +694,11 @@ PyObject* PyROOT::GetRootGlobal( PyObject*, PyObject* args )
    if ( PyErr_Occurred() )
       return 0;
 
-   return GetRootGlobalFromString( ename );
+   return GetCppGlobal( ename );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
+PyObject* PyROOT::GetCppGlobal( const std::string& name )
 {
 // try named global variable/enum (first ROOT, then Cling: sync is too slow)
    TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals( kFALSE )->FindObject( name.c_str() );

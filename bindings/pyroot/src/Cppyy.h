@@ -22,7 +22,6 @@ namespace Cppyy {
 // name to opaque C++ scope representation -----------------------------------
    TCppIndex_t GetNumScopes( TCppScope_t parent );
    std::string GetScopeName( TCppScope_t parent, TCppIndex_t iscope );
-   std::string ResolveName( TCppScope_t handle );
    std::string ResolveName( const std::string& cppitem_name );
    TCppScope_t GetScope( const std::string& scope_name );
    TCppType_t  GetTemplate( const std::string& template_name );
@@ -94,6 +93,7 @@ namespace Cppyy {
 
 // method properties ---------------------------------------------------------
    Bool_t IsConstructor( TCppType_t type, TCppIndex_t imeth );
+   Bool_t IsPublicMethod( TCppType_t type, TCppIndex_t imeth );
    Bool_t IsStaticMethod( TCppType_t type, TCppIndex_t imeth );
 
 // data member reflection information ----------------------------------------
@@ -104,8 +104,9 @@ namespace Cppyy {
    TCppIndex_t GetDatamemberIndex( TCppScope_t scope, const std::string& name );
 
 // data member properties ----------------------------------------------------
-   Bool_t IsPublicData( TCppType_t type, TCppIndex_t idata );
-   Bool_t IsStaticData( TCppType_t type, TCppIndex_t idata );
+   Bool_t IsPublicData( TCppScope_t type, TCppIndex_t idata );
+   Bool_t IsStaticData( TCppScope_t type, TCppIndex_t idata );
+   Bool_t IsEnumData( TCppScope_t type, TCppIndex_t idata );
 
 } // namespace Cppyy
 

@@ -3,7 +3,6 @@
 
 // ROOT
 #include "TClassRef.h"
-class TBaseClass;
 class TDictionary;
 class TMethod;
 class TFunction;
@@ -84,19 +83,6 @@ private:
 };
 
 
-class TBaseAdapter {
-public:
-   TBaseAdapter( TBaseClass* base ) : fBase( base ) {}
-   operator Bool_t() const { return fBase != 0; }
-
-public:
-   std::string Name() const;
-
-private:
-   TBaseClass* fBase;
-};
-
-
 class TScopeAdapter {
 public:
    TScopeAdapter( Cppyy::TCppScope_t );
@@ -108,9 +94,6 @@ public:
 
 public:
    std::string Name( unsigned int mod = 0 ) const;
-
-   TBaseAdapter BaseAt( size_t nth ) const;
-   size_t BaseSize() const;
 
    TMemberAdapter FunctionMemberAt( size_t nth ) const;
    size_t FunctionMemberSize() const;

@@ -184,7 +184,7 @@ namespace {
 
       // 3rd attempt: lookup name as global variable
          PyErr_Clear();
-         attr = GetRootGlobalFromString( name );
+         attr = GetCppGlobal( name );
          if ( attr != 0 )
             return attr;
 
@@ -208,7 +208,7 @@ namespace {
                     << ";true;\n#else\nfalse;\n#endif";
             if ( gROOT->ProcessLine( ismacro.str().c_str() ) ) {
             // can now retrieve this as a global
-               attr = GetRootGlobalFromString( "_pyroot_"+name );
+               attr = GetCppGlobal( "_pyroot_"+name );
                if ( attr != 0 )
                   return attr;
             }
@@ -603,7 +603,7 @@ namespace {
 static PyMethodDef gPyROOTMethods[] = {
    { (char*) "CreateScopeProxy", (PyCFunction)PyROOT::CreateScopeProxy,
      METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "GetRootGlobal", (PyCFunction)PyROOT::GetRootGlobal,
+   { (char*) "GetCppGlobal", (PyCFunction)PyROOT::GetCppGlobal,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "LookupCppEntity", (PyCFunction)LookupCppEntity,
      METH_VARARGS, (char*) "PyROOT internal function" },

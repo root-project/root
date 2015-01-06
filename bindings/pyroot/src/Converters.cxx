@@ -1006,7 +1006,6 @@ Bool_t PyROOT::TRootObjectArrayConverter::ToMemory( PyObject* /* value */, void*
 // they come in a bazillion different guises, so just do whatever
 Bool_t PyROOT::TSTLIteratorConverter::SetArg(
       PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t /* user */ )
-
 {
    if ( ! ObjectProxy_Check( pyobject ) )
       return kFALSE;

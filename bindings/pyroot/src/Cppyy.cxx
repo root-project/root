@@ -2,19 +2,23 @@
 #include "Cppyy.h"
 
 // ROOT
+#include "TBaseClass.h"
 #include "TClass.h"
 #include "TClassRef.h"
 #include "TClassTable.h"
 #include "TClassEdit.h"
+#include "TDataMember.h"
 #include "TDataType.h"
 #include "TFunction.h"
 #include "TGlobal.h"
 #include "TList.h"
+#include "TMethod.h"
 #include "TROOT.h"
 
 // Standard
 #include <assert.h>
 #include <map>
+#include <sstream>
 #include <vector>
 
 // temp
@@ -50,12 +54,12 @@ class ApplicationStarter {
 public:
    ApplicationStarter() {
       // setup dummy holders for global and std namespaces
-      assert( g_classrefs.size() == (ClassRefs_t::size_type)GLOBAL_HANDLE );
-      g_classref_indices[ "" ] = (ClassRefs_t::size_type)GLOBAL_HANDLE;
+      assert( g_classrefs.size() == GLOBAL_HANDLE );
+      g_classref_indices[ "" ] = GLOBAL_HANDLE;
       g_classrefs.push_back(TClassRef(""));
       // ROOT ignores std/::std, so point them to the global namespace
-      g_classref_indices[ "std" ]   = (ClassRefs_t::size_type)GLOBAL_HANDLE;
-      g_classref_indices[ "::std" ] = (ClassRefs_t::size_type)GLOBAL_HANDLE;
+      g_classref_indices[ "std" ]   = GLOBAL_HANDLE;
+      g_classref_indices[ "::std" ] = GLOBAL_HANDLE;
    }
 } _applicationStarter;
 
@@ -77,7 +81,7 @@ static inline TFunction* type_get_method( Cppyy::TCppType_t handle, Cppyy::TCppI
 Cppyy::TCppIndex_t Cppyy::GetNumScopes( TCppScope_t handle ) {
    TClassRef& cr = type_from_handle( handle );
    if ( cr.GetClass() ) return 0;   // not supported if not at global scope
-   assert( handle == (TCppType_t)GLOBAL_HANDLE );
+   assert( handle == (TCppScope_t)GLOBAL_HANDLE );
    return gClassTable->Classes();
 }
 
@@ -85,16 +89,11 @@ std::string Cppyy::GetScopeName( TCppScope_t parent, TCppIndex_t iscope ) {
 // Retrieve the scope name of the scope indexed with iscope in parent.
    TClassRef& cr = type_from_handle( parent );
    if ( cr.GetClass() ) return 0;   // not supported if not at global scope
-   assert( parent == (TCppType_t)GLOBAL_HANDLE );
+   assert( parent == (TCppScope_t)GLOBAL_HANDLE );
    std::string name = gClassTable->At( iscope );
    if ( name.find("::") == std::string::npos )
        return name;
    return "";
-}
-
-std::string Cppyy::ResolveName( TCppScope_t handle ) {
-   TClassRef& cr = type_from_handle( handle );
-   return ResolveName( cr->GetName() );
 }
 
 std::string Cppyy::ResolveName( const std::string& cppitem_name ) {
@@ -134,22 +133,30 @@ Cppyy::TCppType_t Cppyy::GetTemplate( const std::string& /* template_name */ ) {
    return (TCppType_t)0;
 }
 
-Cppyy::TCppType_t Cppyy::GetActualClass( TCppType_t klass, TCppObject_t /* obj */ ) {
+Cppyy::TCppType_t Cppyy::GetActualClass( TCppType_t klass, TCppObject_t obj ) {
+   TClassRef& cr = type_from_handle( klass );
+   TClass* clActual = cr->GetActualClass( (void*)obj );
+   if ( clActual && clActual != cr.GetClass() ) {
+      // TODO: lookup through name should not be needed
+      return (TCppType_t)GetScope( clActual->GetName() );
+   }
    return klass;
 }
 
 
 // memory management ---------------------------------------------------------
-Cppyy::TCppObject_t Cppyy::Allocate( TCppType_t /* type */ ) {
-   return (TCppObject_t)0;
+Cppyy::TCppObject_t Cppyy::Allocate( TCppType_t klass ) {
+   TClassRef& cr = type_from_handle( klass );
+   return (TCppObject_t)malloc( cr->Size() );
 }
 
-void Cppyy::Deallocate( TCppType_t /* type */, TCppObject_t /* self */ ) {
-   /* empty */
+void Cppyy::Deallocate( TCppType_t /* klass */, TCppObject_t instance ) {
+   free( (void*)instance );
 }
 
-void Cppyy::Destruct( TCppType_t /* type */, TCppObject_t /* self */ ) {
-   /* empty */
+void Cppyy::Destruct( TCppType_t klass, TCppObject_t instance ) {
+   TClassRef& cr = type_from_handle( klass );
+   cr->Destructor( (void*)instance, true );
 }
 
 
@@ -244,7 +251,11 @@ size_t Cppyy::GetFunctionArgTypeoffset() {
 
 
 // scope reflection information ----------------------------------------------
-Bool_t Cppyy::IsNamespace( TCppScope_t /* handle */ ) {
+Bool_t Cppyy::IsNamespace( TCppScope_t handle ) {
+// Test if this scope represents a namespace.
+   TClassRef& cr = type_from_handle( handle );
+   if ( cr.GetClass() )
+      return cr->Property() & kIsNamespace;
    return kFALSE;
 }   
 
@@ -254,24 +265,34 @@ Bool_t Cppyy::IsEnum( const std::string& /* type_name */ ) {
     
     
 // class reflection information ----------------------------------------------
-std::string Cppyy::GetFinalName( TCppType_t /* handle */ ) {
-   return "<unknown>";
+std::string Cppyy::GetFinalName( TCppType_t klass ) {
+   // TODO: either this or GetScopedFinalName is wrong
+   TClassRef& cr = type_from_handle( klass );
+   return ResolveName( cr->GetName() );
 }
 
-std::string Cppyy::GetScopedFinalName( TCppType_t /* handle */ ) {
-   return "<unknown>";
+std::string Cppyy::GetScopedFinalName( TCppType_t klass ) {
+   // TODO: either this or GetFinalName is wrong
+   TClassRef& cr = type_from_handle( klass );
+   return ResolveName( cr->GetName() );
 }   
 
 Bool_t Cppyy::HasComplexHierarchy( TCppType_t /* handle */ ) {
-   return kFALSE;
+// Always TRUE for now (pre-empts certain optimizations).
+  return kTRUE;
 }
 
-Cppyy::TCppIndex_t Cppyy::GetNumBases( TCppType_t /* type */ ) {
+Cppyy::TCppIndex_t Cppyy::GetNumBases( TCppType_t klass ) {
+// Get the total number of base classes that this class has.
+   TClassRef& cr = type_from_handle( klass );
+   if ( cr.GetClass() && cr->GetListOfBases() != 0 )
+      return cr->GetListOfBases()->GetSize();
    return 0;
 }
 
-std::string Cppyy::GetBaseName( TCppType_t /* type */, TCppIndex_t /* ibase */ ) {
-   return "<unknown>";
+std::string Cppyy::GetBaseName( TCppType_t klass, TCppIndex_t ibase ) {
+   TClassRef& cr = type_from_handle( klass );
+   return ((TBaseClass*)cr->GetListOfBases()->At( ibase ))->GetName();
 }
 
 Bool_t Cppyy::IsSubtype( TCppType_t /* derived */, TCppType_t /* base */ ) {
@@ -282,13 +303,13 @@ Bool_t Cppyy::IsSubtype( TCppType_t /* derived */, TCppType_t /* base */ ) {
 // method/function reflection information ------------------------------------
 Cppyy::TCppIndex_t Cppyy::GetNumMethods( TCppScope_t handle ) {
    TClassRef& cr = type_from_handle(handle);
-   if (cr.GetClass() && cr->GetListOfMethods())
+   if ( cr.GetClass() && cr->GetListOfMethods() )
       return (TCppIndex_t)cr->GetListOfMethods()->GetSize();
-   else if (handle == (TCppScope_t)GLOBAL_HANDLE) {
+   else if ( handle == (TCppScope_t)GLOBAL_HANDLE ) {
       // TODO: make sure the following is done lazily instead
       std::cerr << " GetNumMethods on global scope must be made lazy " << std::endl;
       if (g_globalfuncs.empty()) {
-         TCollection* funcs = gROOT->GetListOfGlobalFunctions(kTRUE);
+         TCollection* funcs = gROOT->GetListOfGlobalFunctions( kTRUE );
          g_globalfuncs.reserve(funcs->GetSize());
 
          TIter ifunc(funcs);
@@ -311,20 +332,27 @@ Cppyy::TCppIndex_t* Cppyy::GetMethodIndicesFromName(
    return (TCppIndex_t*)NULL;
 }
 
-std::string Cppyy::GetMethodName( TCppScope_t /* scope */, TCppIndex_t /* imeth */ ) {
-   return "<unknown>";
+std::string Cppyy::GetMethodName( TCppScope_t handle, TCppIndex_t imeth ) {
+   TClassRef& cr = type_from_handle( handle );
+   return ((TMethod*)cr->GetListOfMethods()->At( imeth ))->GetName();
 }
 
-std::string Cppyy::GetMethodResultType( TCppScope_t /* scope */, TCppIndex_t /* imeth */ ) {
-   return "<unknown>";
+std::string Cppyy::GetMethodResultType( TCppScope_t handle, TCppIndex_t imeth ) {
+   TClassRef& cr = type_from_handle( handle );
+   if ( cr.GetClass() && IsConstructor( handle, imeth ) )
+       return "constructor";
+   TFunction* f = type_get_method( handle, imeth );
+   return f->GetReturnTypeName();
 }
 
-Cppyy::TCppIndex_t Cppyy::GetMethodNumArgs( TCppScope_t /* scope */, TCppIndex_t /* imeth */ ) {
-   return (TCppIndex_t)0;
+Cppyy::TCppIndex_t Cppyy::GetMethodNumArgs( TCppScope_t handle, TCppIndex_t imeth ) {
+   TFunction* f = type_get_method( handle, imeth );
+   return (TCppIndex_t)f->GetNargs();
 }
 
-Cppyy::TCppIndex_t Cppyy::GetMethodReqArgs( TCppScope_t /* scope */, TCppIndex_t /* imeth */ ) {
-   return (TCppIndex_t)0;
+Cppyy::TCppIndex_t Cppyy::GetMethodReqArgs( TCppScope_t handle, TCppIndex_t imeth ) {
+   TFunction* f = type_get_method( handle, imeth );
+   return (TCppIndex_t)(f->GetNargs() - f->GetNargsOpt());
 }
 
 std::string Cppyy::GetMethodArgType(
@@ -365,29 +393,92 @@ Cppyy::TCppIndex_t Cppyy::GetGlobalOperator(
 }
 
 // method properties ---------------------------------------------------------
-Bool_t Cppyy::IsConstructor( TCppType_t /* type */, TCppIndex_t /* imeth */ ) {
-   return kFALSE;
+Bool_t Cppyy::IsConstructor( TCppType_t klass, TCppIndex_t imeth ) {
+   TClassRef& cr = type_from_handle( klass );
+   if ( cr->Property() & kIsNamespace )
+      return kFALSE;
+   TMethod* m = (TMethod*)cr->GetListOfMethods()->At( imeth );
+   return m->ExtraProperty() & kIsConstructor;
 }
 
-Bool_t Cppyy::IsStaticMethod( TCppType_t /* type */, TCppIndex_t /* imeth */ ) {
-   return kFALSE;
+Bool_t Cppyy::IsPublicMethod( TCppType_t klass, TCppIndex_t imeth ) {
+   TClassRef& cr = type_from_handle( klass );
+   if ( cr->Property() & kIsNamespace )
+      return kTRUE;
+   TMethod* m = (TMethod*)cr->GetListOfMethods()->At( imeth );
+   return m->Property() & kIsPublic;
+}
+
+Bool_t Cppyy::IsStaticMethod( TCppType_t klass, TCppIndex_t imeth ) {
+   TClassRef& cr = type_from_handle( klass );
+   if ( cr->Property() & kIsNamespace )
+      return kTRUE;
+   TMethod* m = (TMethod*)cr->GetListOfMethods()->At( imeth );
+   return m->Property() & kIsStatic;
 }
 
 // data member reflection information ----------------------------------------
-Cppyy::TCppIndex_t Cppyy::GetNumDatamembers( TCppScope_t /* scope */ ) {
+Cppyy::TCppIndex_t Cppyy::GetNumDatamembers( TCppScope_t handle ) {
+   TClassRef& cr = type_from_handle( handle );
+   if ( cr.GetClass() && cr->GetListOfDataMembers() )
+      return cr->GetListOfDataMembers()->GetSize();
+   else if ( handle == (TCppScope_t)GLOBAL_HANDLE ) {
+      std::cerr << "   GLOBAL DATA SHOULD BE RETRIEVED LAZILY! " << std::endl;
+      TCollection* vars = gROOT->GetListOfGlobals( kTRUE ); 
+      if ( g_globalvars.size() != (GlobalVars_t::size_type)vars->GetSize() ) {
+         g_globalvars.clear();
+         g_globalvars.reserve(vars->GetSize());
+
+         TIter ivar(vars);
+
+         TGlobal* var = 0;
+         while ( (var = (TGlobal*)ivar.Next()) )
+            g_globalvars.push_back( *var );
+      }
+      return (TCppIndex_t)g_globalvars.size();
+   }
    return (TCppIndex_t)0;
 }
 
-std::string Cppyy::GetDatamemberName( TCppScope_t /* scope */, TCppIndex_t /* idata */ ) {
-   return "<unknown>";
+std::string Cppyy::GetDatamemberName( TCppScope_t handle, TCppIndex_t idata ) {
+   TClassRef& cr = type_from_handle( handle );
+   if (cr.GetClass()) {
+      TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
+      return m->GetName();
+   }
+   assert( handle == (TCppScope_t)GLOBAL_HANDLE );
+   TGlobal& gbl = g_globalvars[ idata ];
+   return gbl.GetName();
 }
 
-std::string Cppyy::GetDatamemberType( TCppScope_t /* scope */, TCppIndex_t /* idata */ ) {
-   return "<unknown>";
+std::string Cppyy::GetDatamemberType( TCppScope_t handle, TCppIndex_t idata ) {
+   TClassRef& cr = type_from_handle(handle);
+   if ( cr.GetClass() )  {
+      TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
+      std::string fullType = m->GetFullTypeName();
+      if ( (int)m->GetArrayDim() > 1 || (!m->IsBasic() && m->IsaPointer()) )
+         fullType.append( "*" );
+      else if ( (int)m->GetArrayDim() == 1 ) {
+         std::ostringstream s;
+         s << '[' << m->GetMaxIndex( 0 ) << ']' << std::ends;
+         fullType.append( s.str() );
+      }
+      return fullType;
+   }
+   assert( handle == (TCppScope_t)GLOBAL_HANDLE);
+   TGlobal& gbl = g_globalvars[ idata ];
+   return gbl.GetFullTypeName();
 }
 
-ptrdiff_t Cppyy::GetDatamemberOffset( TCppScope_t /* scope */, TCppIndex_t /* idata */ ) {
-   return (ptrdiff_t)0;
+ptrdiff_t Cppyy::GetDatamemberOffset( TCppScope_t handle, TCppIndex_t idata ) {
+   TClassRef& cr = type_from_handle( handle );
+   if (cr.GetClass()) {
+      TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
+      return (ptrdiff_t)m->GetOffsetCint();      // yes, CINT ...
+   }
+   assert( handle == (TCppScope_t)GLOBAL_HANDLE );
+   TGlobal& gbl = g_globalvars[ idata ];
+   return (ptrdiff_t)gbl.GetAddress();
 }
 
 Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex( TCppScope_t /* scope */, const std::string& /* name */ ) {
@@ -396,10 +487,25 @@ Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex( TCppScope_t /* scope */, const std
 
 
 // data member properties ----------------------------------------------------
-Bool_t Cppyy::IsPublicData( TCppType_t /* type */, TCppIndex_t /* idata */) {
-   return kFALSE;
+Bool_t Cppyy::IsPublicData( TCppScope_t handle, TCppIndex_t idata ) {
+   TClassRef& cr = type_from_handle( handle );
+   if ( cr->Property() & kIsNamespace )
+      return kTRUE;
+   TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
+   return m->Property() & kIsPublic;
 }
 
-Bool_t Cppyy::IsStaticData( TCppType_t /* type */, TCppIndex_t /* idata */ ) {
-   return kFALSE;
+Bool_t Cppyy::IsStaticData( TCppScope_t handle, TCppIndex_t idata  ) {
+   TClassRef& cr = type_from_handle( handle );
+   if ( cr->Property() & kIsNamespace )
+      return kTRUE;
+   TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
+   return m->Property() & kIsStatic;
 }
+
+Bool_t Cppyy::IsEnumData( TCppScope_t handle, TCppIndex_t idata ) {
+   TClassRef& cr = type_from_handle( handle );
+   TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
+   return m->Property() & kIsEnum;
+}
+

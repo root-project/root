@@ -4,7 +4,6 @@
 
 // ROOT
 #include "TInterpreter.h"
-#include "TBaseClass.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TDataType.h"
@@ -232,14 +231,6 @@ PyROOT::TScopeAdapter PyROOT::TMemberAdapter::DeclaringScope() const
 }
 
 
-//= TBaseAdapter =============================================================
-std::string PyROOT::TBaseAdapter::Name() const
-{
-// get the name of the base class that is being adapted
-   return fBase->GetName();
-}
-
-
 //= TScopeAdapter ============================================================
 PyROOT::TScopeAdapter::TScopeAdapter( Cppyy::TCppScope_t handle ) :
    fClass( Cppyy::type_from_handle( handle ) )
@@ -312,23 +303,6 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
    }
 
    return name;
-}
-
-//____________________________________________________________________________
-size_t PyROOT::TScopeAdapter::BaseSize() const
-{
-// get the total number of base classes that this class has
-   if ( fClass.GetClass() && fClass->GetListOfBases() != 0 )
-      return fClass->GetListOfBases()->GetSize();
-
-   return 0;
-}
-
-//____________________________________________________________________________
-PyROOT::TBaseAdapter PyROOT::TScopeAdapter::BaseAt( size_t nth ) const
-{
-// get the nth base of this class
-   return (TBaseClass*)fClass->GetListOfBases()->At( nth );
 }
 
 //____________________________________________________________________________

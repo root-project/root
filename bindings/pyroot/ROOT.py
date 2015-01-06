@@ -54,7 +54,7 @@ try:
          return matches
 
       def root_global_matches( self, text, prefix = '' ):
-         gClassTable = _root.GetRootGlobal( 'gClassTable' )
+         gClassTable = _root.GetCppGlobal( 'gClassTable' )
          all = [ gClassTable.At(i) for i in xrange(gClassTable.Classes()) ]
          all += [ g.GetName() for g in _root.gROOT.GetListOfGlobals() ]
          matches = filter( lambda x: x[:len(text)] == text, all )
@@ -376,7 +376,7 @@ class ModuleFacade( types.ModuleType ):
       if not name in self.__dict__:
          try:
           # assignment to an existing ROOT global (establishes proxy)
-            setattr( self.__class__, name, _root.GetRootGlobal( name ) )
+            setattr( self.__class__, name, _root.GetCppGlobal( name ) )
          except LookupError:
           # allow a few limited cases where new globals can be set
             if sys.hexversion >= 0x3000000:
@@ -390,7 +390,7 @@ class ModuleFacade( types.ModuleType ):
                      str         : 'string %s = "%s";' }
             try:
                _root.gROOT.ProcessLine( tcnv[ type(value) ] % (name,value) );
-               setattr( self.__class__, name, _root.GetRootGlobal( name ) )
+               setattr( self.__class__, name, _root.GetCppGlobal( name ) )
             except KeyError:
                pass           # can still assign normally, to the module
 

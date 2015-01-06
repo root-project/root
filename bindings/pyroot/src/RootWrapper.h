@@ -14,16 +14,8 @@ class TGlobal;
 
 namespace PyROOT {
 
-   class TScopeAdapter;
-
 // initialize ROOT
    void InitRoot();
-
-// construct the dictionary of the given ROOT class in pyclass
-   int BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass );
-
-// construct a tuple of base classes for the given ROOT class
-   PyObject* BuildRootClassBases( const TScopeAdapter& klass );
 
 // construct a Python shadow class for the named C++ class
    PyObject* CreateScopeProxy(
@@ -31,8 +23,8 @@ namespace PyROOT {
    PyObject* CreateScopeProxy( PyObject*, PyObject* args );
 
 // convenience function to retrieve global variables and enums
-   PyObject* GetRootGlobal( PyObject*, PyObject* args );
-   PyObject* GetRootGlobalFromString( const std::string& name );
+   PyObject* GetCppGlobal( const std::string& name );
+   PyObject* GetCppGlobal( PyObject*, PyObject* args );
 
 // bind a ROOT object into a Python object
    PyObject* BindRootObjectNoCast(
