@@ -35,7 +35,7 @@ protected:
    Int_t        fType;            //Workstation type used to know if the SVG is open
    Bool_t       fBoundingBox;     //True when the SVG header is printed
    Bool_t       fRange;           //True when a range has been defined
-   Int_t        fYsizeSVG;        //Page's Y size in SVG units
+   Double_t     fYsizeSVG;        //Page's Y size in SVG units
 
 public:
    TSVG();
@@ -46,7 +46,7 @@ public:
    void  CellArrayFill(Int_t r, Int_t g, Int_t b);
    void  CellArrayEnd();
    void  Close(Option_t *opt="");
-   Int_t CMtoSVG(Double_t u) {return Int_t(0.5 + 72*u/2.54);}
+   Double_t CMtoSVG(Double_t u) {return 0.5 + 72*u/2.54;}
    void  DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    void  DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                    Int_t mode, Int_t border, Int_t dark, Int_t light);
@@ -57,7 +57,7 @@ public:
    void  DrawPS(Int_t n, Float_t *xw, Float_t *yw);
    void  DrawPS(Int_t n, Double_t *xw, Double_t *yw);
    void  Initialize();
-   void  MovePS(Int_t x, Int_t y);
+   void  MovePS(Double_t x, Double_t y);
    void  NewPage();
    void  Off();
    void  On();
@@ -76,12 +76,12 @@ public:
    void  Text(Double_t, Double_t, const wchar_t *){}
    void  TextNDC(Double_t u, Double_t v, const char *string);
    void  TextNDC(Double_t, Double_t, const wchar_t *){}
-   Int_t UtoSVG(Double_t u);
-   Int_t VtoSVG(Double_t v);
-   Int_t XtoSVG(Double_t x);
-   Int_t YtoSVG(Double_t y);
+   Double_t UtoSVG(Double_t u);
+   Double_t VtoSVG(Double_t v);
+   Double_t XtoSVG(Double_t x);
+   Double_t YtoSVG(Double_t y);
 
-   ClassDef(TSVG,0)  //SVG driver
+   ClassDef(TSVG,1)  //SVG driver
 };
 
 #endif
