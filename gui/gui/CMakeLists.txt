@@ -33,7 +33,8 @@ set(headers3 TRootGuiFactory.h TRootApplication.h TRootCanvas.h
              TGSimpleTableInterface.h TGSimpleTable.h TGTableCell.h
              TGTableHeader.h TGTableContainer.h TGTextEditor.h TGSpeedo.h
              TGDNDManager.h TGCommandPlugin.h TGFileBrowser.h
-             TRootBrowser.h TGSplitFrame.h TGShapedFrame.h TGEventHandler.h)
+             TRootBrowser.h TGSplitFrame.h TGShapedFrame.h TGEventHandler.h
+             TGTextViewStream.h)
 
 
 ROOT_GENERATE_DICTIONARY(G__Gui1 ${headers1} LINKDEF LinkDef1.h)
