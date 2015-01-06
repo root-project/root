@@ -3610,7 +3610,7 @@
       // this.histo = obj;
 
       this.histo['fArray'] = obj['fArray'];
-      this.histo['fN'] = obj['fN'];
+      this.histo['fNcells'] = obj['fNcells'];
       this.histo['fTitle'] = obj['fTitle'];
       this.histo['fXaxis']['fNbins'] = obj['fXaxis']['fNbins'];
       this.histo['fXaxis']['fXmin'] = obj['fXaxis']['fXmin'];
@@ -7312,7 +7312,7 @@
                      hoverClass : "ui-state-active",
                      accept: function(ui) {
                         var dropname = ui.parent().attr('item');
-                        if (dropname == itemname) return false;
+                        if ((dropname == itemname) || (dropname==null)) return false;
 
                         var ditem = h.Find(dropname);
                         if ((ditem==null) || (!('_kind' in ditem))) return false;
@@ -7321,6 +7321,7 @@
                      },
                      drop: function(event, ui) {
                         var dropname = ui.draggable.parent().attr('item');
+                        if (dropname==null) return false;
                         return h.dropitem(dropname, frame.attr("id"));
                      }
                   });
@@ -7814,7 +7815,7 @@
    JSROOT.MDIDisplay.prototype.Draw = function(title, obj, drawopt) {
       // draw object with specified options
       if (!obj) return;
-      
+
       var frame = this.FindFrame(title);
 
       if (!JSROOT.canDraw(obj['_typename'], drawopt)) return;
@@ -8114,7 +8115,7 @@
       function adjustSize(left, firsttime) {
          var diff = $("#"+leftdiv).outerWidth() - $("#"+leftdiv).width();
          var w = JSROOT.touches ? 10 : 4;
-         
+
          $("#"+separdiv).css('left', left.toString() + "px").width(w);
          $("#"+leftdiv).width(left-diff-1);
          $("#"+rightdiv).css('left',(left+w).toString() + "px");
@@ -8127,7 +8128,7 @@
       $("#"+separdiv).draggable({
          axis: "x" , zIndex: 100, cursor: "ew-resize",
          helper : function() { return $("#"+separdiv).clone().css('background-color','grey'); },
-         stop: function(event,ui) { adjustSize(ui.position.left, false); }
+         stop: function(event,ui) { event.stopPropagation(); adjustSize(ui.position.left, false); }
       });
 
       var w0 = Math.round($(window).width() * 0.2);
