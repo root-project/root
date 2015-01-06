@@ -1017,8 +1017,8 @@
             var clname = this[prop]['class'];
             if (this[prop]['class'].indexOf("TArray") == 0) {
                var array_type = this[prop]['class'].charAt(6);
-               obj['fN'] = buf.ntou4();
-               obj['fArray'] = buf.ReadFastArray(obj['fN'], array_type);
+               var len = buf.ntou4();
+               obj['fArray'] = buf.ReadFastArray(len, array_type);
             } else {
                buf.ClassStreamer(obj, this[prop]['class']);
             }
