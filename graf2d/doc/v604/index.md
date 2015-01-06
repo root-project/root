@@ -18,6 +18,12 @@
 
 - When a text size was equal or smaller than 0 the PDF file was corrupted.
 
+### TSVG
+
+- Use float numbers instead of integer to describe graphics paths to avoid
+  rounding problems.
+- Use the correct Unicode code for `#minus`
+
 ### TPad
 
 - In `TPad::ShowGuidelines` the number of guide lines is limited to 15. Above
