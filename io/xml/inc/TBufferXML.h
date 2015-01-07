@@ -55,6 +55,9 @@ public:
    static TObject*  ConvertFromXML(const char* str, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
    static void*     ConvertFromXMLAny(const char* str, TClass** cl = 0, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
 
+   Int_t             GetIOVersion() const { return fIOVersion; }
+   void              SetIOVersion(Int_t v) { fIOVersion = v; }
+   
    // suppress class writing/reading
 
    virtual TClass*  ReadClass(const TClass* cl = 0, UInt_t* objTag = 0);
@@ -336,10 +339,11 @@ protected:
    Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
    TClass*          fExpectedBaseClass;    //!   pointer to class, which should be stored as parent of current
    Int_t            fCompressLevel;        //!   compression level and algorithm
+   Int_t            fIOVersion;            //!   indicates format of ROOT xml file
 
    static const char* fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
-ClassDef(TBufferXML,1) //a specialized TBuffer to read/write to XML files
+ClassDef(TBufferXML,2) //a specialized TBuffer to read/write to XML files
 };
 
 //______________________________________________________________________________
