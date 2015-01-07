@@ -853,6 +853,19 @@ if (tcmalloc)
   endif()
 endif()
 
+#---Check for JEMalloc---------------------------------------------------------------
+
+if (jemalloc)
+  if (tcmalloc)
+   message(FATAL_ERROR "Both tcmalloc and jemalloc were selected: this is an inconsistent setup.")
+  endif()
+  message(STATUS "Looking for jemalloc")
+  find_package(jemalloc)
+  if(NOT JEMALLOC_FOUND)
+    message(STATUS "JEMalloc not found.")
+  endif()
+endif()
+
 #---Report non implemented options---------------------------------------------------
 foreach(opt afs clarens glite pch peac sapdb srp geocad)
   if(${opt})
