@@ -49,6 +49,7 @@ class TString;
 class TSubString;
 class TObjArray;
 class TVirtualMutex;
+class TBufferFile;
 
 TString operator+(const TString &s1, const TString &s2);
 TString operator+(const TString &s,  const char *cs);
@@ -133,6 +134,7 @@ class TString {
 
 friend class TStringLong;
 friend class TSubString;
+friend class TBufferFile;
 
 friend TString operator+(const TString &s1, const TString &s2);
 friend TString operator+(const TString &s,  const char *cs);

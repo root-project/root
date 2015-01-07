@@ -32,6 +32,7 @@
 #include "TBufferJSON.h"
 
 #include <typeinfo>
+#include <string>
 
 #include "Compression.h"
 
@@ -2503,6 +2504,11 @@ void TBufferJSON::ReadTString(TString & /*s*/)
    // Reads a TString
 }
 
+//______________________________________________________________________________
+void TBufferJSON::ReadStdString(void * /*s*/)
+{
+   // Reads a std::string
+}
 
 //______________________________________________________________________________
 void TBufferJSON::WriteBool(Bool_t b)
@@ -2650,12 +2656,25 @@ void TBufferJSON::WriteCharP(const Char_t *c)
 void TBufferJSON::WriteTString(const TString &s)
 {
    // Writes a TString
-   Info("WriteTString", "Write string value");
 
    TJSONPushValue();
 
    fValue.Append("\"");
    fValue.Append(s);
+   fValue.Append("\"");
+}
+
+//______________________________________________________________________________
+void TBufferJSON::WriteStdString(const void *s)
+{
+   // Writes a std::string
+
+   TJSONPushValue();
+   
+   const std::string* obj = (const std::string*) s;
+
+   fValue.Append("\"");
+   fValue.Append(obj ? obj->c_str() : "");
    fValue.Append("\"");
 }
 
