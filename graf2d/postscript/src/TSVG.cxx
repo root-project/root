@@ -1488,31 +1488,82 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    }
    PrintFast(2,"\">");
    PrintStr("@");
+
    if (font == 12 || font == 15) {
       Int_t ichar = chars[0]+848;
       Int_t ic    = ichar;
 
-      // Math Symbols
-      if (ic == 755) ichar = 8804;
-      if (ic == 759) ichar = 9827;
-      if (ic == 760) ichar = 9830;
-      if (ic == 761) ichar = 9829;
-      if (ic == 762) ichar = 9824;
-      if (ic == 766) ichar = 8594;
-      if (ic == 776) ichar =  247;
-      if (ic == 757) ichar = 8734;
-      if (ic == 758) ichar =  402;
-      if (ic == 771) ichar = 8805;
-      if (ic == 774) ichar = 8706;
-      if (ic == 775) ichar = 8226;
-      if (ic == 779) ichar = 8776;
-      if (ic == 805) ichar = 8719;
-      if (ic == 821) ichar = 8721;
-      if (ic == 834) ichar = 8747;
-      if (ic == 769) ichar =  177;
-      if (ic == 772) ichar =  215;
-      if (ic == 768) ichar =  176;
-      if (ic == 893) ichar = 8722;
+      // Math Symbols (cf: http://www.fileformat.info/info/unicode/category/Sm/list.htm)
+      if (ic == 755) ichar =  8804;
+      if (ic == 759) ichar =  9827;
+      if (ic == 760) ichar =  9830;
+      if (ic == 761) ichar =  9829;
+      if (ic == 762) ichar =  9824;
+      if (ic == 766) ichar =  8594;
+      if (ic == 776) ichar =   247;
+      if (ic == 757) ichar =  8734;
+      if (ic == 758) ichar =   402;
+      if (ic == 771) ichar =  8805;
+      if (ic == 774) ichar =  8706;
+      if (ic == 775) ichar =  8226;
+      if (ic == 779) ichar =  8776;
+      if (ic == 805) ichar =  8719;
+      if (ic == 821) ichar =  8721;
+      if (ic == 834) ichar =  8747;
+      if (ic == 769) ichar =   177;
+      if (ic == 772) ichar =   215;
+      if (ic == 768) ichar =   176;
+      if (ic == 791) ichar =  8745;
+      if (ic == 793) ichar =  8835; // SUPERSET OF
+      if (ic == 794) ichar =  8839; // SUPERSET OF OR EQUAL TO
+      if (ic == 795) ichar =  8836; // NOT A SUBSET OF
+      if (ic == 796) ichar =  8834;
+      if (ic == 893) ichar =  8722;
+      if (ic == 803) ichar =   169; // COPYRIGHT SIGN
+      if (ic == 819) ichar =   169; // COPYRIGHT SIGN
+      if (ic == 804) ichar =  8482;
+      if (ic == 770) ichar =    34;
+      if (ic == 823) ichar = 10072;
+      if (ic == 781) ichar = 10072;
+      if (ic == 824) ichar =  9117; // LEFT PARENTHESIS LOWER HOOK
+      if (ic == 822) ichar =  9115; // LEFT PARENTHESIS UPPER HOOK
+      if (ic == 767) ichar =  8595; // DOWNWARDS ARROW
+      if (ic == 763) ichar =  8596; // LEFT RIGHT ARROW
+      if (ic == 764) ichar =  8592; // LEFTWARDS ARROW
+      if (ic == 788) ichar =  8855; // CIRCLED TIMES
+      if (ic == 784) ichar =  8501;
+      if (ic == 777) ichar =  8800;
+      if (ic == 797) ichar =  8838;
+      if (ic == 800) ichar =  8736;
+      if (ic == 812) ichar =  8656; // LEFTWARDS DOUBLE ARROW
+      if (ic == 817) ichar =    60; // LESS-THAN SIGN
+      if (ic == 833) ichar =    62; // GREATER-THAN SIGN
+      if (ic == 778) ichar =  8803; // STRICTLY EQUIVALENT TO
+      if (ic == 809) ichar =  8743; // LOGICAL AND
+      if (ic == 802) ichar =  9415; // CIRCLED LATIN CAPITAL LETTER R
+      if (ic == 780) ichar =  8230; // HORIZONTAL ELLIPSIS
+      if (ic == 801) ichar =  8711; // NABLA
+      if (ic == 783) ichar =  8629; // DOWNWARDS ARROW WITH CORNER LEFTWARDS
+      if (ic == 782) ichar =  8213;
+      if (ic == 799) ichar =  8713;
+      if (ic == 792) ichar =  8746;
+      if (ic == 828) ichar =  9127;
+      if (ic == 765) ichar =  8593; // UPWARDS ARROW
+      if (ic == 789) ichar =  8853; // CIRCLED PLUS
+      if (ic == 813) ichar =  8657; // UPWARDS DOUBLE ARROW
+      if (ic == 773) ichar =  8733; // PROPORTIONAL TO
+      if (ic == 790) ichar =  8709; // EMPTY SET
+      if (ic == 810) ichar =  8744;
+      if (ic == 756) ichar =  8260;
+      if (ic == 807) ichar =  8231;
+      if (ic == 808) ichar =  8989; // TOP RIGHT CORNER
+      if (ic == 814) ichar =  8658; // RIGHTWARDS DOUBLE ARROW
+      if (ic == 806) ichar =  8730; // SQUARE ROOT
+      if (ic == 827) ichar =  9123;
+      if (ic == 829) ichar =  9128;
+      if (ic == 786) ichar =  8476;
+      if (ic == 785) ichar =  8465;
+      if (ic == 787) ichar =  8472;
 
       // Greek characters
       if (ic == 918) ichar = 934;
@@ -1558,6 +1609,10 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
                PrintFast(4,"&lt;");
             } else if (chars[i]=='>') {
                PrintFast(4,"&gt;");
+            } else if (chars[i]=='\305') {
+               PrintFast(7,"&#8491;"); // ANGSTROM SIGN
+            } else if (chars[i]=='\345') {
+               PrintFast(6,"&#229;");
             } else if (chars[i]=='&') {
                PrintFast(5,"&amp;");
             } else {
