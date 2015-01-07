@@ -2658,15 +2658,21 @@ void TBufferXML::ReadCharP(Char_t    *c)
 }
 
 //______________________________________________________________________________
-void TBufferXML::ReadTString(TString & /*s*/)
+void TBufferXML::ReadTString(TString &s)
 {
    // Reads a TString
 
-   //BeforeIOoperation();
-   //const char* buf = XmlReadValue(xmlio::CharStar);
-   //strcpy(c, buf);
-   //TO BE IMPLEMENTED
+   TBufferFile::ReadTString(s);
 }
+
+//______________________________________________________________________________
+void TBufferXML::ReadStdString(void *s)
+{
+   // Reads a std::String
+
+   TBufferFile::ReadStdString(s);
+}
+
 
 // macro for left shift operator for basic types
 #define TBufferXML_operatorout(vname) \
@@ -2789,13 +2795,19 @@ void TBufferXML::WriteCharP(const Char_t *c)
 }
 
 //______________________________________________________________________________
-void TBufferXML::WriteTString(const TString & /*s*/)
+void TBufferXML::WriteTString(const TString &s)
 {
    // Writes a TString
 
-   //BeforeIOoperation();
-   //XmlWriteValue(c, xmlio::CharStar);
-   //TO BE IMPLEMENTED
+   TBufferFile::WriteTString(s);
+}
+
+//______________________________________________________________________________
+void TBufferXML::WriteStdString(const void *s)
+{
+   // Writes a TString
+
+   TBufferFile::WriteStdString(s);
 }
 
 //______________________________________________________________________________
