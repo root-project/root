@@ -22,7 +22,7 @@
 
 - Use float numbers instead of integer to describe graphics paths to avoid
   rounding problems.
-- Use the correct Unicode code for `#minus`
+- Implement missing math symbols.
 
 ### TPad
 
