@@ -46,39 +46,9 @@
 #include "Riosfwd.h"
 #endif
 
-#include <time.h>
-#if !defined(__CINT__) && (defined(R__MACOSX) || defined(R__OBSD))
-#include <sys/time.h>
-#endif
-#if defined(__CINT__) || defined(R__WIN32)
-// Explicit definition of timespec 'cause "rootcint" won't look in
-// appropriate <time.h>. time_t appears to be defined as "typedef long time_t;"
-// in CINT version of <time.h>.  This isn't required by the standard:
-// to be compatible w/ std functions it must be at least 32-bits long,
-// but it might be longer to avoid the year-2037 cutoff.
-struct timespec
-{
-   time_t   tv_sec;             // seconds
-   long     tv_nsec;            // nanoseconds
-};
-#endif
-#if defined(__CINT__)
-struct tm
-{
-   int tm_sec;                   // Seconds.     [0-60] (1 leap second)
-   int tm_min;                   // Minutes.     [0-59]
-   int tm_hour;                  // Hours.       [0-23]
-   int tm_mday;                  // Day.         [1-31]
-   int tm_mon;                   // Month.       [0-11]
-   int tm_year;                  // Year - 1900.
-   int tm_wday;                  // Day of week. [0-6]
-   int tm_yday;                  // Days in year.[0-365]
-   int tm_isdst;                 // DST.         [-1/0/1]
-};
-#endif
+#include <ctime>
 
-// define this typedef so that CINT doesn't barf at using these
-// for function return values
+// For backward compatibility
 typedef struct timespec timespec_t;
 typedef struct tm       tm_t;
 
