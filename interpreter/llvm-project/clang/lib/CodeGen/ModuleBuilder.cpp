@@ -36,7 +36,7 @@ namespace {
     IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS; // Only used for debug info.
     const HeaderSearchOptions &HeaderSearchOpts; // Only used for debug info.
     const PreprocessorOptions &PreprocessorOpts; // Only used for debug info.
-    const CodeGenOptions &CodeGenOpts;
+    CodeGenOptions CodeGenOpts;  // Intentionally copied in.
 
     unsigned HandlingTopLevelDecls;
 
@@ -146,6 +146,13 @@ namespace {
         OldBuilder->moveLazyEmissionStates(Builder.get());
 
       return M.get();
+    }
+
+    llvm::Module *StartModule(llvm::StringRef ModuleName,
+                              llvm::LLVMContext& C,
+                              const CodeGenOptions& CGO) {
+      CodeGenOpts = CGO;
+      return StartModule(ModuleName, C);
     }
 
     void Initialize(ASTContext &Context) override {
@@ -358,6 +365,12 @@ llvm::Constant *CodeGenerator::GetAddrOfGlobal(GlobalDecl global,
 llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
                                          llvm::LLVMContext &C) {
   return static_cast<CodeGeneratorImpl*>(this)->StartModule(ModuleName, C);
+}
+
+llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
+                                         llvm::LLVMContext& C,
+                                         const CodeGenOptions& CGO) {
+  return static_cast<CodeGeneratorImpl*>(this)->StartModule(ModuleName, C, CGO);
 }
 
 CodeGenerator *
