@@ -2185,6 +2185,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
    Int_t nchname = strlen(cname);
    Int_t i;
    Bool_t foundAtSign = kFALSE;
+   Bool_t startWithParan = kFALSE;
 
    for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) {
       // We will treated the terminator as a token.
@@ -2196,6 +2197,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
          if (current==work+1) {
             // If the expression starts with a paranthesis, we are likely
             // to have a cast operator inside.
+            startWithParan = kTRUE;
             current--;
          }
          continue;
@@ -2212,28 +2214,33 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             Error("DefinedVariable","Unmatched paranthesis in %s",fullExpression);
             return -1;
          }
-         // Let's see if work is a classname.
-         *(--current) = 0;
          paran_level--;
-         TString cast_name = gInterpreter->TypeName(work);
-         TClass *cast_cl = TClass::GetClass(cast_name);
-         if (cast_cl) {
-            // We must have a cast
-            castqueue.AddAtAndExpand(cast_cl,paran_level);
-            current = &(work[0]);
-            *current = 0;
-            //            Warning("DefinedVariable","Found cast to %s",cast_fullExpression);
-            continue;
-         } else if (gROOT->GetType(cast_name)) {
-            // We reset work
-            current = &(work[0]);
-            *current = 0;
-            Warning("DefinedVariable",
-               "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
-            continue;
+
+         if (startWithParan) {
+            startWithParan = kFALSE; // the next match wont be against the starting paranthesis.
+
+            // Let's see if work is a classname and thus we have a cast.
+            *(--current) = 0;
+            TString cast_name = gInterpreter->TypeName(work);
+            TClass *cast_cl = TClass::GetClass(cast_name);
+            if (cast_cl) {
+               // We must have a cast
+               castqueue.AddAtAndExpand(cast_cl,paran_level);
+               current = &(work[0]);
+               *current = 0;
+               //            Warning("DefinedVariable","Found cast to %s",cast_fullExpression);
+               continue;
+            } else if (gROOT->GetType(cast_name)) {
+               // We reset work
+               current = &(work[0]);
+               *current = 0;
+               Warning("DefinedVariable",
+                       "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
+               continue;
+            }
+            *(current++)=')';
          }
 
-         *(current++)=')';
          *current='\0';
          char *params = strchr(work,'(');
          if (params) {
