@@ -968,7 +968,7 @@ TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
    fClingCallbacks(0), fAutoLoadCallBack(0),
-   fTransactionCount(0), fHeaderParsingOnDemand(true)
+   fTransactionCount(0), fHeaderParsingOnDemand(true), fIsAutoParsingSuspended(kFALSE)
 {
    // Initialize the cling interpreter interface.
 
@@ -1394,13 +1394,13 @@ void TCling::RegisterModule(const char* modulename,
    if (fromRootCling) return;
 
    // Treat Aclic Libs in a special way. Do not delay the parsing.
-   bool oldfHeaderParsingOnDemand = fHeaderParsingOnDemand;
-   if (oldfHeaderParsingOnDemand &&
+   bool hasHeaderParsingOnDemand = fHeaderParsingOnDemand;
+   if (hasHeaderParsingOnDemand &&
        strstr(modulename, "_ACLiC_dict") != nullptr){
       if (gDebug>1)
          Info("TCling::RegisterModule",
               "Header parsing on demand is active but this is an Aclic library. Disabling it for this library.");
-      fHeaderParsingOnDemand=false;
+      hasHeaderParsingOnDemand = false;
    }
 
 
@@ -1473,7 +1473,7 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   if (fHeaderParsingOnDemand && fwdDeclsCode){
+   if (hasHeaderParsingOnDemand && fwdDeclsCode){
       // We now parse the forward declarations. All the classes are then modified
       // in order for them to have an external lexical storage.
       std::string fwdDeclsCodeLessEnums;
@@ -1634,7 +1634,7 @@ void TCling::RegisterModule(const char* modulename,
       #endif
       #endif
 
-      if(!fHeaderParsingOnDemand){
+      if(!hasHeaderParsingOnDemand){
          cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
 
          assert(cling::Interpreter::kSuccess == compRes &&
@@ -1650,7 +1650,7 @@ void TCling::RegisterModule(const char* modulename,
    // make sure to 'reset' the TClass that have a class init in this module
    // but already had their type information available (using information/header
    // loaded from other modules or from class rules).
-   if (!fHeaderParsingOnDemand) {
+   if (!hasHeaderParsingOnDemand) {
       // This code is likely to be superseded by the similar code in LoadPCM,
       // and have been disabled, (inadvertently or awkwardly) by
       // commit 7903f09f3beea69e82ffba29f59fb2d656a4fd54 (Refactor the routines used for header parsing on demand)
@@ -1692,7 +1692,6 @@ void TCling::RegisterModule(const char* modulename,
    }
 
    SetClassAutoloading(oldAutoloadValue);
-   fHeaderParsingOnDemand=oldfHeaderParsingOnDemand;
 }
 
 //______________________________________________________________________________
@@ -1872,13 +1871,11 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 
          // Turn off autoparsing if this is an include directive
          bool isInclusionDirective = sLine.Contains("\n#include");
-         int oldAutoParseValue = 0;
-         if (isInclusionDirective){
-            oldAutoParseValue = SetClassAutoparsing(false);
-         }
-         indent = fMetaProcessor->process(sLine, compRes, &result);
-         if (isInclusionDirective){
-            SetClassAutoparsing(oldAutoParseValue);
+         if (isInclusionDirective) {
+            SuspendAutoParsing autoParseRaii(this);
+            indent = fMetaProcessor->process(sLine, compRes, &result);
+         } else {
+            indent = fMetaProcessor->process(sLine, compRes, &result);
          }
       }
    }
@@ -2262,7 +2259,8 @@ bool TCling::Declare(const char* code)
    // Returns true on success, false on failure.
 
    int oldload = SetClassAutoloading(0);
-   int oldparse = SetClassAutoparsing(0);
+   SuspendAutoParsing autoParseRaii(this);
+
    bool oldDynLookup = fInterpreter->isDynamicLookupEnabled();
    fInterpreter->enableDynamicLookup(false);
    bool oldRawInput = fInterpreter->isRawInputEnabled();
@@ -2273,7 +2271,6 @@ bool TCling::Declare(const char* code)
    fInterpreter->enableRawInput(oldRawInput);
    fInterpreter->enableDynamicLookup(oldDynLookup);
    SetClassAutoloading(oldload);
-   SetClassAutoparsing(oldparse);
    return ret;
 }
 
@@ -4986,7 +4983,13 @@ Int_t TCling::AutoParse(const char *cls)
    // Parse the headers relative to the class
    // Returns 1 in case of success, 0 in case of failure
 
-   if (!fHeaderParsingOnDemand) return AutoLoad(cls);
+   if (!fHeaderParsingOnDemand || fIsAutoParsingSuspended) {
+      if (fClingCallbacks->IsAutoloadingEnabled()) {
+         return AutoLoad(cls);
+      } else {
+         return 0;
+      }
+   }
 
    if (gDebug > 1) {
       Info("TCling::AutoParse",
@@ -5002,7 +5005,7 @@ Int_t TCling::AutoParse(const char *cls)
    Int_t oldAutoloadValue = SetClassAutoloading(false);
 
    // No recursive header parsing on demand; we require headers to be standalone.
-   Int_t oldAutoparseValue = SetClassAutoparsing(false);
+   SuspendAutoParsing autoParseRAII(this);
 
    Int_t nHheadersParsed = 0;
 
@@ -5096,7 +5099,6 @@ Int_t TCling::AutoParse(const char *cls)
    }
 
    SetClassAutoloading(oldAutoloadValue);
-   SetClassAutoparsing(oldAutoparseValue);
 
    return nHheadersParsed > 0 ? 1 : 0;
 }
