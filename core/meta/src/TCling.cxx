@@ -4785,9 +4785,6 @@ Int_t TCling::AutoLoad(const type_info& typeinfo, Bool_t knowDictNotLoaded /* = 
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
 
-   if (!fClingCallbacks || !fClingCallbacks->IsAutoloadingEnabled())
-      return 0;
-
    int err = 0;
    char* demangled_name_c = TClassEdit::DemangleTypeIdName(typeinfo, err);
    if (err) {
@@ -4855,16 +4852,6 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
    }
    // Prevent the recursion when the library dictionary are loaded.
    Int_t oldvalue = SetClassAutoloading(false);
-
-   if (!oldvalue) {
-      // Autoloading was disabled.
-      if (gDebug > 2) {
-         Info("TCling::AutoLoad",
-              "Currently disabled (the class name is %s)", cls);
-      }
-      return 0;
-   }
-
    // Try using externally provided callback first.
    if (fAutoLoadCallBack) {
       int success = (*(AutoLoadCallBack_t)fAutoLoadCallBack)(cls);
