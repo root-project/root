@@ -25,7 +25,7 @@ public:
    virtual ~TRootSnifferStore();
 
    virtual void CreateNode(Int_t, const char *) {}
-   virtual void SetField(Int_t, const char *, const char *, Int_t) {}
+   virtual void SetField(Int_t, const char *, const char *, Bool_t) {}
    virtual void BeforeNextChild(Int_t, Int_t, Int_t) {}
    virtual void CloseNode(Int_t, const char *, Int_t) {}
 
@@ -69,7 +69,7 @@ public:
    virtual ~TRootSnifferStoreXml() {}
 
    virtual void CreateNode(Int_t lvl, const char *nodename);
-   virtual void SetField(Int_t lvl, const char *field, const char *value, Int_t);
+   virtual void SetField(Int_t lvl, const char *field, const char *value, Bool_t);
    virtual void BeforeNextChild(Int_t lvl, Int_t nchld, Int_t);
    virtual void CloseNode(Int_t lvl, const char *nodename, Int_t numchilds);
 
@@ -93,7 +93,7 @@ public:
    virtual ~TRootSnifferStoreJson() {}
 
    virtual void CreateNode(Int_t lvl, const char *nodename);
-   virtual void SetField(Int_t lvl, const char *field, const char *value, Int_t);
+   virtual void SetField(Int_t lvl, const char *field, const char *value, Bool_t with_quotes);
    virtual void BeforeNextChild(Int_t lvl, Int_t nchld, Int_t nfld);
    virtual void CloseNode(Int_t lvl, const char *nodename, Int_t numchilds);
 
