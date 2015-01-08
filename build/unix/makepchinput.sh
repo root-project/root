@@ -35,6 +35,12 @@ for stlHeader in $stlHeaders; do
     echo '#endif' >> $allheaders
 done
 
+# Special case for regex
+echo "// treat regex separately" >> $allheaders
+echo '#if __has_include("regex") && !defined __APPLE__' >> $allheaders
+echo '#include <regex>' >> $allheaders
+echo '#endif' >> $allheaders
+
 # treat this deprecated headers in a special way
 stlDeprecatedHeaders="strstream"
 echo "// STL Deprecated headers" >> $allheaders
