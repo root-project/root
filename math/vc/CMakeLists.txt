@@ -1,5 +1,11 @@
 set(Vc_INSIDE_ROOT TRUE)
 
+if (CMAKE_BUILD_TYPE STREQUAL OPTIMIZED)
+  set(VC_EXTRA_CONSERVATIVE_FLAGS "-fno-fast-math")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${VC_EXTRA_CONSERVATIVE_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${VC_EXTRA_CONSERVATIVE_FLAGS}")
+endif()
+
 include(cmake/VcMacros.cmake)
 include(cmake/AddTargetProperty.cmake)
 vc_determine_compiler()
