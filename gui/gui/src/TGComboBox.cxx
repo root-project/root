@@ -335,7 +335,7 @@ void TGComboBox::DrawBorder()
          gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, 0, fHeight-2);
          gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, fWidth-3, 1);
          gVirtualX->DrawLine(fId, GetBlackGC()(), 1, 1, 1, fHeight-3);
-
+         if (gClient->GetStyle() > 1) break;
          gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, fWidth-1, fHeight-1);
          gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, fHeight-1, fWidth-1, 0);
          gVirtualX->DrawLine(fId, GetBckgndGC()(),  1, fHeight-2, fWidth-2, fHeight-2);
