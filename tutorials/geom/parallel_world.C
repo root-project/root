@@ -77,6 +77,7 @@ void parallel_world(Bool_t usepw=kTRUE, Bool_t useovlp=kTRUE)
    TView3D *view = (TView3D*)gPad->GetView();
    view->SetParallel();
    view->Side();
+   if (usepw) pw->PrintDetectedOverlaps();
 }
 
 //______________________________________________________________________________
@@ -92,6 +93,6 @@ void align()
       sag = 8.-0.494*(i-4.5)*(i-4.5);
       TGeoTranslation *tr = new TGeoTranslation(0., -225.+50.*i, 10-sag);
       node->Align(tr);
-      if (pw) pw->AddNode(node);
+      if (pw) pw->AddNode(TString::Format("/TOP_1/chip_%d",i+1));
    }   
 }

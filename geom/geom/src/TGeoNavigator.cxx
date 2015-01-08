@@ -290,37 +290,41 @@ void TGeoNavigator::BuildCache(Bool_t /*dummy*/, Bool_t nodeid)
 Bool_t TGeoNavigator::cd(const char *path)
 {
 // Browse the tree of nodes starting from top node according to pathname.
-// Changes the path accordingly.
-   if (!path[0]) return kFALSE;
+// Changes the path accordingly. The path is changed to point to the top node
+// in case of failure.
    CdTop();
+   if (!path[0]) return kTRUE;
    TString spath = path;
    TGeoVolume *vol;
    Int_t length = spath.Length();
    Int_t ind1 = spath.Index("/");
+   if (ind1 == length-1) ind1 = -1;
    Int_t ind2 = 0;
    Bool_t end = kFALSE;
+   Bool_t first = kTRUE;
    TString name;
    TGeoNode *node;
    while (!end) {
       ind2 = spath.Index("/", ind1+1);
-      if (ind2<0) {
-         ind2 = length;
+      if (ind2<0 || ind2==length-1) {
+         if (ind2<0) ind2 = length;
          end  = kTRUE;
       }
       name = spath(ind1+1, ind2-ind1-1);
-      if (name==fGeometry->GetTopNode()->GetName()) {
-         ind1 = ind2;
-         continue;
-      }
       vol = fCurrentNode->GetVolume();
-      if (vol) {
-         node = vol->GetNode(name.Data());
-      } else node = 0;
+      if (first) {
+         first = kFALSE;
+         if (name.BeginsWith(vol->GetName())) {
+            ind1 = ind2;
+            continue;
+         }
+      }
+      node = vol->GetNode(name.Data());
       if (!node) {
          Error("cd", "Path %s not valid", path);
          return kFALSE;
       }
-      CdDown(fCurrentNode->GetVolume()->GetIndex(node));
+      CdDown(vol->GetIndex(node));
       ind1 = ind2;
    }
    return kTRUE;
@@ -330,45 +334,40 @@ Bool_t TGeoNavigator::cd(const char *path)
 Bool_t TGeoNavigator::CheckPath(const char *path) const
 {
 // Check if a geometry path is valid without changing the state of the navigator.
-   Int_t length = strlen(path);
-   if (!length) return kFALSE;
+   if (!path[0]) return kTRUE;
+   TGeoNode *crtnode = fGeometry->GetTopNode();
    TString spath = path;
    TGeoVolume *vol;
-   TGeoNode *top = fGeometry->GetTopNode();
-   // Check first occurance of a '/'
+   Int_t length = spath.Length();
    Int_t ind1 = spath.Index("/");
-   if (ind1<0) {
-      // No '/' so we check directly the path against the name of the top
-      if (strcmp(path,top->GetName())) return kFALSE;
-      return kTRUE;
-   }   
-   Int_t ind2 = ind1;
+   if (ind1 == length-1) ind1 = -1;
+   Int_t ind2 = 0;
    Bool_t end = kFALSE;
-   if (ind1>0) ind1 = -1;   // no trailing '/'
-   else ind2 = spath.Index("/", ind1+1);
-   if (ind2<0) ind2 = length;
-   TString name(spath(ind1+1, ind2-ind1-1));
-   if (name==top->GetName()) {
-      if (ind2>=length-1) return kTRUE;
-      ind1 = ind2;
-   } else return kFALSE;  
-   TGeoNode *node = top;
-   // Deeper than just top level
+   Bool_t first = kTRUE;
+   TString name;
+   TGeoNode *node;
    while (!end) {
       ind2 = spath.Index("/", ind1+1);
-      if (ind2<0) {
-         ind2 = length;
+      if (ind2<0 || ind2==length-1) {
+         if (ind2<0) ind2 = length;
          end  = kTRUE;
       }
-      vol = node->GetVolume();
       name = spath(ind1+1, ind2-ind1-1);
+      vol = crtnode->GetVolume();
+      if (first) {
+         first = kFALSE;
+         if (name.BeginsWith(vol->GetName())) {
+            ind1 = ind2;
+            continue;
+         }
+      }
       node = vol->GetNode(name.Data());
       if (!node) return kFALSE;
-      if (ind2>=length-1) return kTRUE;
+      crtnode = node;
       ind1 = ind2;
    }
    return kTRUE;
-}
+}    
 
 //_____________________________________________________________________________
 void TGeoNavigator::CdNode(Int_t nodeid)
@@ -582,6 +581,7 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
    Double_t *tr = fGlobalMatrix->GetTranslation();
    Double_t trmax = 1.+TMath::Abs(tr[0])+TMath::Abs(tr[1])+TMath::Abs(tr[2]);
    Double_t extra = 100.*(trmax+fStep)*gTolerance;
+   const Int_t idebug = TGeoManager::GetVerboseLevel();
    fPoint[0] += extra*fDirection[0];
    fPoint[1] += extra*fDirection[1];
    fPoint[2] += extra*fDirection[2];
@@ -598,22 +598,37 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
          current = fCurrentNode;
          nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
       }
+      if (idebug>4) {
+         printf("CrossBoundaryAndLocate: entered %s\n", GetPath());
+      }   
       return current;   
    }   
      
    if ((skipnode && current == skipnode) || current->GetVolume()->IsAssembly()) {
       if (!fLevel) {
          fIsOutside = kTRUE;
+         if (idebug>4) {
+            printf("CrossBoundaryAndLocate: Exited geometry\n");
+         }   
          return fGeometry->GetCurrentNode();
       }
       CdUp();
       while (fLevel && fCurrentNode->GetVolume()->IsAssembly()) CdUp();
       if (!fLevel && fCurrentNode->GetVolume()->IsAssembly()) {
          fIsOutside = kTRUE;
+         if (idebug>4) {
+            printf("CrossBoundaryAndLocate: Exited geometry\n");
+         }   
+         if (idebug>4) {
+            printf("CrossBoundaryAndLocate: entered %s\n", GetPath());
+         }   
          return fCurrentNode;
       }
       return fCurrentNode;
    }
+   if (idebug>4) {
+      printf("CrossBoundaryAndLocate: entered %s\n", GetPath());
+   }   
    return current;
 }   
    
@@ -657,7 +672,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
          fStep = stepmax;
          fNextNode = fCurrentNode;
          return fCurrentNode;
-      }   
+      }
       fSafety = TMath::Abs(fSafety);
       memcpy(fLastPoint, fPoint, kN3);
       fLastSafety = fSafety;
@@ -667,7 +682,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
       if (stepmax+gTolerance<fSafety) {
          fNextNode = fCurrentNode;
          return fCurrentNode;
-      }   
+      }
    }
    if (computeGlobal) fCurrentMatrix->CopyFrom(fGlobalMatrix);
    Double_t snext  = TGeoShape::Big();
@@ -957,6 +972,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
    // Compute now the distance in case we have a parallel world
    Double_t parstep = TGeoShape::Big();
    if (fGeometry->IsParallelWorldNav()) {
+//      printf("path: %s next node %s at %g\n", GetPath(), fNextNode->GetName(), fStep);
       TGeoPhysicalNode *pnode = fGeometry->GetParallelWorld()->FindNextBoundary(fPoint, fDirection, parstep, fStep);
       if (pnode) {
          // A boundary is hit at less than fPStep
@@ -965,6 +981,11 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
          fNextDaughterIndex = -2; // No way to store it for CdNext
          fIsStepEntering  = kTRUE;
          fIsStepExiting  = kFALSE;
+         Int_t nextindex = fNextNode->GetVolume()->GetNextNodeIndex();
+         while (nextindex>=0) {
+            fNextNode = fNextNode->GetDaughter(nextindex);
+            nextindex = fNextNode->GetVolume()->GetNextNodeIndex();
+         }
       }
    }
    return fNextNode;
@@ -1452,10 +1473,21 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
       if (pnode) {
          // A boundary is hit at less than fPStep
          fStep = parstep;
+         fPoint[0] += fStep*fDirection[0];
+         fPoint[1] += fStep*fDirection[1];
+         fPoint[2] += fStep*fDirection[2];
          fNextNode = pnode->GetNode();
 //         icrossed = -4; //
          fIsStepEntering  = kTRUE;
          fIsStepExiting  = kFALSE;
+         cd(pnode->GetName());
+         nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
+         while (nextindex>=0) {
+            current = fCurrentNode;
+            CdDown(nextindex);
+            nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
+         }
+         return fCurrentNode;
       }
    }
    fPoint[0] += fStep*fDirection[0];
@@ -1481,10 +1513,8 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
       else        skip = 0;
       return CrossBoundaryAndLocate(kFALSE, skip);
    }   
-   // Check crossing into a parallel world node
-   current = fCurrentNode;   
-   if (pnode) pnode->cd();
-   else CdDown(icrossed);
+   
+   CdDown(icrossed);
    nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
    while (nextindex>=0) {
       current = fCurrentNode;
@@ -1811,7 +1841,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          // and synchronize with navigation state
          pnode->cd();
          Int_t crtindex = fCurrentNode->GetVolume()->GetCurrentNodeIndex();
-         while (crtindex>=0 && downwards) {
+         while (crtindex>=0) {
         // Make sure we did not end up in an assembly.
             CdDown(crtindex);
             crtindex = fCurrentNode->GetVolume()->GetCurrentNodeIndex();
@@ -2340,7 +2370,22 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
       FindNode(x,y,z);
       return kFALSE;
    }
-
+   
+   // Check if the point is in a parallel world volume
+   if (fGeometry->IsParallelWorldNav()) {
+      TGeoPhysicalNode *pnode = fGeometry->GetParallelWorld()->FindNode(fPoint);
+      if (pnode) {
+         if (!change) return kFALSE;
+         pnode->cd();
+         Int_t crtindex = fCurrentNode->GetVolume()->GetCurrentNodeIndex();
+         while (crtindex>=0) {
+        // Make sure we did not end up in an assembly.
+            CdDown(crtindex);
+            crtindex = fCurrentNode->GetVolume()->GetCurrentNodeIndex();
+         }
+         return kFALSE;
+      }
+   }      
    // check if there are daughters
    Int_t nd = vol->GetNdaughters();
    if (!nd) return kTRUE;

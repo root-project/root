@@ -1021,9 +1021,9 @@ Int_t TGeoManager::ThreadId()
    // Map needs to be updated.
    (*fgThreadId)[TThread::SelfId()] = fgNumThreads;
    tid = fgNumThreads; // TTHREAD_TLS_SET(Int_t,tid,fgNumThreads);
-   fgNumThreads++;
+   ttid = fgNumThreads++;
    TThread::UnLock();
-   return fgNumThreads-1;
+   return ttid;
 }
    
 //_____________________________________________________________________________
@@ -1499,10 +1499,14 @@ void TGeoManager::CloseGeometry(Option_t *option)
          for (i=0; i<ngvol; i++) fHashGVolumes->AddLast(fGVolumes->At(i));
          for (i=0; i<nvol; i++) fHashVolumes->AddLast(fVolumes->At(i));
       }
+      fClosed = kTRUE;
+      if (fParallelWorld) {
+         if (fgVerboseLevel>0) Info("CloseGeometry","Recreating parallel world %s ...",fParallelWorld->GetName());
+         fParallelWorld->CloseGeometry();
+      }   
 
       if (fgVerboseLevel>0) Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
       if (fgVerboseLevel>0) Info("CloseGeometry","----------------modeler ready----------------");
-      fClosed = kTRUE;
       return;
    }
 
