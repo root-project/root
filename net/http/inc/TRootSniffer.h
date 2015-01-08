@@ -58,7 +58,7 @@ public:
    void BeforeNextChild();
 
    /** Set item field only when creating is specified */
-   void SetField(const char *name, const char *value);
+   void SetField(const char *name, const char *value, Bool_t with_quotes = kTRUE);
 
    /** Mark item with ROOT class and correspondent streamer info */
    void SetRootClass(TClass *cl);
