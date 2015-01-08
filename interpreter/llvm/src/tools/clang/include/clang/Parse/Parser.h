@@ -37,6 +37,7 @@ namespace clang {
   class DeclGroupRef;
   class DiagnosticBuilder;
   class Parser;
+  class ParserStateRAII;
   class ParsingDeclRAIIObject;
   class ParsingDeclSpec;
   class ParsingDeclarator;
@@ -60,6 +61,7 @@ class Parser : public CodeCompletionHandler {
   friend class ParenBraceBracketBalancer;
   friend class BalancedDelimiterTracker;
   friend class DestroyTemplateIdAnnotationsRAIIObj;
+  friend class ParserStateRAII;
 
   Preprocessor &PP;
 
