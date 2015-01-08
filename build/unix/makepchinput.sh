@@ -25,7 +25,8 @@ rm -f $allheaders $alllinkdefs
 
 # Here we include the list of c++11 stl headers
 # From http://en.cppreference.com/w/cpp/header
-stlHeaders="cstdlib csignal csetjmp cstdarg typeinfo typeindex type_traits bitset functional utility ctime chrono cstddef initializer_list tuple new memory scoped_allocator climits cfloat cstdint cinttypes limits exception stdexcept cassert system_error cerrno cctype cwctype cstring cwchar cuchar string array vector deque list forward_list set map unordered_set unordered_map stack queue algorithm iterator cmath complex valarray random numeric ratio cfenv iosfwd ios istream ostream iostream fstream sstream iomanip streambuf cstdio locale clocale codecvt regex atomic thread mutex future condition_variable ciso646 ccomplex ctgmath cstdalign cstdbool"
+# regex is removed until ROOT-7004 is fixed
+stlHeaders="cstdlib csignal csetjmp cstdarg typeinfo typeindex type_traits bitset functional utility ctime chrono cstddef initializer_list tuple new memory scoped_allocator climits cfloat cstdint cinttypes limits exception stdexcept cassert system_error cerrno cctype cwctype cstring cwchar cuchar string array vector deque list forward_list set map unordered_set unordered_map stack queue algorithm iterator cmath complex valarray random numeric ratio cfenv iosfwd ios istream ostream iostream fstream sstream iomanip streambuf cstdio locale clocale codecvt atomic thread mutex future condition_variable ciso646 ccomplex ctgmath cstdalign cstdbool"
 
 echo "// STL headers" >> $allheaders
 for stlHeader in $stlHeaders; do
