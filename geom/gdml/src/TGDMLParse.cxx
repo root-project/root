@@ -247,10 +247,19 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    //********matprocess***********************************                                                                                                                                        
    else if ((strcmp(name, matestr)) == 0 && gdml->HasAttr(node, "Z")) {
      childtmp = gdml->GetChild(node);
-     if ((strcmp(gdml->GetNodeName(childtmp), "fraction") == 0) || (strcmp(gdml->GetNodeName(childtmp), "D") == 0)){
+//     if ((strcmp(gdml->GetNodeName(childtmp), "fraction") == 0) || (strcmp(gdml->GetNodeName(childtmp), "D") == 0)){
+     Bool_t frac = kFALSE;
+     Bool_t atom = kFALSE;
+     while(childtmp) {
+       frac = strcmp(gdml->GetNodeName(childtmp),"fraction")==0;
+       atom = strcmp(gdml->GetNodeName(childtmp),"atom")==0;
+       gdml->ShiftToNext(childtmp);
+     }
+     if (frac) {
        int z = 0;
        node = MatProcess(gdml, node, attr, z);}
-     else if ((strcmp(gdml->GetNodeName(childtmp), "atom") == 0) || (strcmp(gdml->GetNodeName(childtmp), "D") == 0)){
+//     else if ((strcmp(gdml->GetNodeName(childtmp), "atom") == 0) || (strcmp(gdml->GetNodeName(childtmp), "D") == 0)){
+     else if (atom) {
        int z = 1;
        node = MatProcess(gdml, node, attr, z);}
    }
