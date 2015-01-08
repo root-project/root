@@ -31,6 +31,7 @@
 #include "TObjString.h"
 #include "TUrl.h"
 #include "TImage.h"
+#include "RZip.h"
 
 #include "TRootSnifferStore.h"
 
@@ -39,10 +40,9 @@
 const char *item_prop_kind = "_kind";
 const char *item_prop_more = "_more";
 const char *item_prop_title = "_title";
+const char *item_prop_typename = "_typename";
+const char *item_prop_arraydim = "_arraydim";
 const char *item_prop_realname = "_realname"; // real object name
-
-//extern "C" unsigned long R__memcompress(char* tgt, unsigned long tgtsize, char* src, unsigned long srcsize);
-extern "C" void R__zip(int cxlevel, int *srcsize, char* src, int *tgtsize, char* tgt, int* irep);
 
 // ============================================================================
 
@@ -82,11 +82,11 @@ TRootSnifferScanRec::~TRootSnifferScanRec()
 }
 
 //______________________________________________________________________________
-void TRootSnifferScanRec::SetField(const char *name, const char *value)
+void TRootSnifferScanRec::SetField(const char *name, const char *value, Bool_t with_quotes)
 {
    // record field for current element
 
-   if (CanSetFields()) store->SetField(lvl, name, value, num_fields);
+   if (CanSetFields()) store->SetField(lvl, name, value, with_quotes);
    num_fields++;
 }
 
@@ -440,7 +440,7 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
 
          Bool_t iscollection = (coll_offset >= 0);
          if (iscollection) {
-            chld.SetField(item_prop_more, "true");
+            chld.SetField(item_prop_more, "true", kFALSE);
             chld.has_more = kTRUE;
          }
 
@@ -450,11 +450,25 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
          if ((title!=0) && (strlen(title)!=0))
             chld.SetField(item_prop_title, title);
 
+         if (member->GetTypeName())
+           chld.SetField(item_prop_typename, member->GetTypeName());
+
+         if (member->GetArrayDim() > 0) {
+            // store array dimensions in form [N1,N2,N3,...]
+            TString dim("[");
+            for (Int_t n=0;n<member->GetArrayDim();n++) {
+               if (n>0) dim.Append(",");
+               dim.Append(TString::Format("%d", member->GetMaxIndex(n)));
+            }
+            dim.Append("]");
+            chld.SetField(item_prop_arraydim, dim, kFALSE);
+         }
+
          chld.SetRootClass(mcl);
 
          if (chld.CanExpandItem()) {
             if (iscollection) {
-               // chld.SetField("#members", "true");
+               // chld.SetField("#members", "true", kFALSE);
                ScanCollection(chld, (TCollection *)(member_ptr + coll_offset));
             }
          }
@@ -507,7 +521,7 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject* &obj,
    int isextra = rec.ExtraFolderLevel();
 
    if ((isextra == 1) || ((isextra > 1) && !IsDrawableClass(obj->IsA()))) {
-      rec.SetField(item_prop_more, "true");
+      rec.SetField(item_prop_more, "true", kFALSE);
       rec.has_more = kTRUE;
    }
 
@@ -524,7 +538,7 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject* &obj,
                obj_class = dir->IsA();
             }
          } else {
-            rec.SetField(item_prop_more, "true");
+            rec.SetField(item_prop_more, "true", kFALSE);
             rec.has_more = kTRUE;
          }
       } else {
