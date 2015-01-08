@@ -414,6 +414,9 @@ double sivalues[201][2]=
 {10.,1.658347594218874049}};
 
 int testSiCi() {
+  const double maxrelThreshold = 1E-13;
+  const double maxabsThreshold = 1.25E-15;
+
   int fail = 0;
   double xmaxrel = -1, maxrel = 0, xmaxabs=-1, maxabs=0;
   for (int i = 0; i < 201; ++i) {
@@ -436,12 +439,12 @@ int testSiCi() {
   }
   std::cout << "Si: Maximum relative deviation: " << maxrel
        << " for x=" << xmaxrel
-       << (maxrel > 1E-15 ? " -> FAIL" : " -> pass") << std::endl;
+       << (maxrel > maxabsThreshold ? " -> FAIL" : " -> pass") << std::endl;
   std::cout << "Si: Maximum absolute deviation: " << maxabs
        << " for x=" << xmaxabs
-       << (maxabs > 1E-15 ? " -> FAIL" : " -> pass") << std::endl;
-  if (maxrel > 1E-15) fail += 1;
-  if (maxabs > 1E-15) fail += 2;
+       << (maxabs > maxabsThreshold ? " -> FAIL" : " -> pass") << std::endl;
+  if (maxrel > maxabsThreshold) fail += 1;
+  if (maxabs > maxabsThreshold) fail += 2;
 
   xmaxrel = -1; maxrel = 0; xmaxabs=-1; maxabs=0;
   for (int i = 0; i < 200; ++i) {
@@ -463,13 +466,13 @@ int testSiCi() {
   }
   std::cout << "Ci: Maximum relative deviation: " << maxrel
        << " for x=" << xmaxrel
-       << (maxrel > 1E-13 ? " -> FAIL" : " -> pass") <<std::endl;
+       << (maxrel > maxrelThreshold ? " -> FAIL" : " -> pass") <<std::endl;
   std::cout << "Ci: Maximum absolute deviation: " << maxabs
        << " for x=" << xmaxabs
-       << (maxabs > 1E-15 ? " -> FAIL" : " -> pass")<< std::endl;
+       << (maxabs > maxabsThreshold ? " -> FAIL" : " -> pass")<< std::endl;
 
-  if (maxrel > 1E-13) fail += 4;
-  if (maxabs > 1E-15) fail += 8;
+  if (maxrel > maxrelThreshold) fail += 4;
+  if (maxabs > maxabsThreshold) fail += 8;
   return fail;
 }
 
