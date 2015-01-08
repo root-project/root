@@ -100,8 +100,10 @@ void TGTabElement::DrawBorder()
    gVirtualX->DrawLine(fId, GetHilightGC()(), 0, 2, 2, 0);
    gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 0, fWidth-3, 0);
    gVirtualX->DrawLine(fId, GetShadowGC()(),  fWidth-2, 1, fWidth-2, fHeight-1);
-   gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth-2, 1, fWidth-1, 2);
-   gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth-1, 2, fWidth-1, fHeight-2);
+   if (gClient->GetStyle() < 2) {
+      gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth-2, 1, fWidth-1, 2);
+      gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth-1, 2, fWidth-1, fHeight-2);
+   }
    gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, fHeight-1, fWidth-1, fHeight-1);
 
    if (fText) {

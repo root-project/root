@@ -169,7 +169,7 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fFE          = 0;
 
    if (fOptions & (kSunkenFrame | kRaisedFrame))
-      fBorderWidth = (fOptions & kDoubleBorder) ? 2 : 1;
+      fBorderWidth = (gClient->GetStyle() > 1) ? 1 : (fOptions & kDoubleBorder) ? 2 : 1;
 
    wattr.fMask = kWABackPixel | kWAEventMask;
    wattr.fBackgroundPixel = back;
@@ -185,6 +185,9 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
       //   SetBackgroundPixmap(kParentRelative);
    }
    fEventMask = (UInt_t) wattr.fEventMask;
+
+   if ((fOptions & kDoubleBorder) && (gClient->GetStyle() > 1))
+      ChangeOptions(fOptions ^ kDoubleBorder);
 
    SetWindowName();
 }
@@ -303,7 +306,7 @@ void TGFrame::ChangeOptions(UInt_t options)
       (fOptions & (kDoubleBorder | kSunkenFrame | kRaisedFrame))) {
       if (!InheritsFrom(TGGroupFrame::Class())) {
          if (options & (kSunkenFrame | kRaisedFrame))
-            fBorderWidth = (options & kDoubleBorder) ? 2 : 1;
+            fBorderWidth = (gClient->GetStyle() > 1) ? 1 : (fOptions & kDoubleBorder) ? 2 : 1;
          else
             fBorderWidth = 0;
       }
@@ -345,15 +348,22 @@ void TGFrame::Draw3dRectangle(UInt_t type, Int_t x, Int_t y,
          break;
 
       case kSunkenFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, GetShadowGC()(), x,     y,     x+w-2, y);
-         gVirtualX->DrawLine(fId, GetShadowGC()(), x,     y,     x,     y+h-2);
-         gVirtualX->DrawLine(fId, GetBlackGC()(),  x+1,   y+1,   x+w-3, y+1);
-         gVirtualX->DrawLine(fId, GetBlackGC()(),  x+1,   y+1,   x+1,   y+h-3);
-
-         gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y+h-1, x+w-1, y+h-1);
-         gVirtualX->DrawLine(fId, GetHilightGC()(), x+w-1, y+h-1, x+w-1, y);
-         gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+1,   y+h-2, x+w-2, y+h-2);
-         gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+w-2, y+1,   x+w-2, y+h-2);
+         if (gClient->GetStyle() < 2) {
+            gVirtualX->DrawLine(fId, GetShadowGC()(), x,     y,     x+w-2, y);
+            gVirtualX->DrawLine(fId, GetShadowGC()(), x,     y,     x,     y+h-2);
+            gVirtualX->DrawLine(fId, GetBlackGC()(),  x+1,   y+1,   x+w-3, y+1);
+            gVirtualX->DrawLine(fId, GetBlackGC()(),  x+1,   y+1,   x+1,   y+h-3);
+            gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y+h-1, x+w-1, y+h-1);
+            gVirtualX->DrawLine(fId, GetHilightGC()(), x+w-1, y+h-1, x+w-1, y);
+            gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+1,   y+h-2, x+w-2, y+h-2);
+            gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+w-2, y+1,   x+w-2, y+h-2);
+         }
+         else {
+            gVirtualX->DrawLine(fId, GetShadowGC()(),  x,     y,     x+w-2, y);
+            gVirtualX->DrawLine(fId, GetShadowGC()(),  x,     y,     x,     y+h-2);
+            gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y+h-1, x+w-1, y+h-1);
+            gVirtualX->DrawLine(fId, GetHilightGC()(), x+w-1, y+h-1, x+w-1, y);
+         }
          break;
 
       case kRaisedFrame:
@@ -364,15 +374,22 @@ void TGFrame::Draw3dRectangle(UInt_t type, Int_t x, Int_t y,
          break;
 
       case kRaisedFrame | kDoubleBorder:
-         gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y,     x+w-2, y);
-         gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y,     x,     y+h-2);
-         gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+1,   y+1,   x+w-3, y+1);
-         gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+1,   y+1,   x+1,   y+h-3);
-
-         gVirtualX->DrawLine(fId, GetShadowGC()(),  x+1,   y+h-2, x+w-2, y+h-2);
-         gVirtualX->DrawLine(fId, GetShadowGC()(),  x+w-2, y+h-2, x+w-2, y+1);
-         gVirtualX->DrawLine(fId, GetBlackGC()(),   x,     y+h-1, x+w-1, y+h-1);
-         gVirtualX->DrawLine(fId, GetBlackGC()(),   x+w-1, y+h-1, x+w-1, y);
+         if (gClient->GetStyle() < 2) {
+            gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y,     x+w-2, y);
+            gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y,     x,     y+h-2);
+            gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+1,   y+1,   x+w-3, y+1);
+            gVirtualX->DrawLine(fId, GetBckgndGC()(),  x+1,   y+1,   x+1,   y+h-3);
+            gVirtualX->DrawLine(fId, GetShadowGC()(),  x+1,   y+h-2, x+w-2, y+h-2);
+            gVirtualX->DrawLine(fId, GetShadowGC()(),  x+w-2, y+h-2, x+w-2, y+1);
+            gVirtualX->DrawLine(fId, GetBlackGC()(),   x,     y+h-1, x+w-1, y+h-1);
+            gVirtualX->DrawLine(fId, GetBlackGC()(),   x+w-1, y+h-1, x+w-1, y);
+         }
+         else {
+            gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y,     x+w-2, y);
+            gVirtualX->DrawLine(fId, GetHilightGC()(), x,     y,     x,     y+h-2);
+            gVirtualX->DrawLine(fId, GetShadowGC()(),  x,     y+h-1, x+w-1, y+h-1);
+            gVirtualX->DrawLine(fId, GetShadowGC()(),  x+w-1, y+h-1, x+w-1, y);
+         }
          break;
 
       default:

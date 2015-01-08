@@ -180,7 +180,9 @@ TGClient::TGClient(const char *dpyName)
 
    fStyle        = 0;
    TString style = gEnv->GetValue("Gui.Style", "modern");
-   if (style.Contains("modern", TString::kIgnoreCase))
+   if (style.Contains("flat", TString::kIgnoreCase))
+      fStyle = 2;
+   else if (style.Contains("modern", TString::kIgnoreCase))
       fStyle = 1;
 
    gClient = this;
