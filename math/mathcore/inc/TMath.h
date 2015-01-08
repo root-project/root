@@ -540,19 +540,79 @@ inline Int_t TMath::Finite(Double_t x)
    { return finite(x); }
 #endif
 
-inline Int_t TMath::IsNaN(Double_t x)
-#if (defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))) && !defined(_AIX) && !defined(__CUDACC__)
-#if defined(isnan) || defined(R__SOLARIS_CC50) || defined(__INTEL_COMPILER)
-   // from math.h
-  { return ::isnan(x); }
-#else
-   // from cmath
-   { return std::isnan(x); }
-#endif
-#else
-   { return isnan(x); }
+#if defined (R__FAST_MATH)
+/* This namespace provides all the routines necessary for checking if a number
+ * is a NaN also in presence of optimisations affecting the behaviour of the
+ * floating point calculations.
+ * Inspired from the CMSSW FWCore/Utilities package
+ */
+namespace detailsForFastMath {
+// abridged from GNU libc 2.6.1 - in detail from
+//   math/math_private.h
+//   sysdeps/ieee754/ldbl-96/math_ldbl.h
+
+// part of ths file:
+   /*
+    * ====================================================
+    * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+    *
+    * Developed at SunPro, a Sun Microsystems, Inc. business.
+    * Permission to use, copy, modify, and distribute this
+    * software is freely granted, provided that this notice
+    * is preserved.
+    * ====================================================
+    */
+
+   // A union which permits us to convert between a double and two 32 bit ints.
+   typedef union {
+      double value;
+      struct {
+         UInt_t lsw;
+         UInt_t msw;
+      } parts;
+   } ieee_double_shape_type;
+
+#define EXTRACT_WORDS(ix0,ix1,d)                                    \
+   do {                                                             \
+      ieee_double_shape_type ew_u;                                  \
+      ew_u.value = (d);                                             \
+      (ix0) = ew_u.parts.msw;                                       \
+      (ix1) = ew_u.parts.lsw;                                       \
+   } while (0)
+
+   inline int IsNaN(double x)
+   {
+      UInt_t hx, lx;
+      ieee_double_shape_type ew_u;
+      ew_u.value = (x);
+      hx = ew_u.parts.msw;
+      lx = ew_u.parts.lsw;
+
+      EXTRACT_WORDS(hx, lx, x);
+
+      lx |= hx & 0xfffff;
+      hx &= 0x7ff00000;
+      return (hx == 0x7ff00000) && (lx != 0);
+   }
+}
 #endif
 
+inline Int_t TMath::IsNaN(Double_t x)
+#if defined(R__FAST_MATH)
+   {return detailsForFastMath::IsNaN(x);}
+#else
+#  if (defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))) && !defined(_AIX) && !defined(__CUDACC__)
+#  if defined(isnan) || defined(R__SOLARIS_CC50) || defined(__INTEL_COMPILER)
+      // from math.h
+   { return ::isnan(x); }
+#  else
+      // from cmath
+   { return std::isnan(x); }
+#  endif
+#  else
+   { return isnan(x); }
+#  endif
+#endif
 //--------wrapper to numeric_limits
 //____________________________________________________________________________
 inline Double_t TMath::QuietNaN() {

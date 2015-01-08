@@ -419,4 +419,8 @@
 #   define SafeDelete(p) { delete p; p = 0; }
 #endif
 
+#ifdef __FAST_MATH__
+#define R__FAST_MATH
+#endif
+
 #endif
