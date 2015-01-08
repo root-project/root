@@ -14,9 +14,14 @@
 - Text color was ignored. It was always black.
 - The underscore `_` produced an error outside the TeX math context.
 
+### TPostScript
+
+- Small fix for fill patterns 1, 2 and 3.
+
 ### TPDF
 
 - When a text size was equal or smaller than 0 the PDF file was corrupted.
+- Small fix for fill patterns 1, 2 and 3.
 
 ### TSVG
 
