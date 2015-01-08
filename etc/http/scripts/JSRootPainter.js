@@ -1647,6 +1647,7 @@
                 .attr("class", "area")
                 .attr("d",area(pthis.bins))
                 .style("stroke", "none")
+                .style("pointer-events", "none")
                 .call(fill.func);
 
       // add tooltips
@@ -2172,15 +2173,14 @@
          var lineatt = this.lineatt;
          if (this.optionLine == 0) lineatt = JSROOT.Painter.createAttLine('none');
 
-         if (this.optionFill == 1) {
-
-         } else {
+         if (this.optionFill != 1) {
             fill.color = 'none';
          }
 
          this.draw_g.append("svg:path")
                .attr("d", line(pthis.bins) + close_symbol)
                .attr("class", "draw_line")
+               .style("pointer-events","none")
                .call(lineatt.func)
                .call(fill.func);
 
@@ -5100,6 +5100,7 @@
 
          this.draw_g.append("svg:path")
                     .attr("d", area(draw_bins))
+                    .style("pointer-events","none")
                     .call(this.attline.func)
                     .call(this.fill.func);
       } else {
