@@ -2129,7 +2129,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
       PrintStr(" << /PatternType 1 /PaintType 2 /TilingType 1");
       switch (ipat) {
          case 1 :
-            PrintStr(" /BBox [ 0 0 100 100 ]");
+            PrintStr(" /BBox [ 0 0 98 4 ]");
             PrintStr(" /XStep 98 /YStep 4");
             PrintStr(" /PaintProc { begin gsave");
             PrintStr(" [1] 0 sd 2 4 m 99 4 l s 1 3 m 98 3 l s");
@@ -2137,7 +2137,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
             PrintStr(" gr end } >> [ 4.0 0 0 4.0 0 0 ]");
             break;
          case 2 :
-            PrintStr(" /BBox [ 0 0 100 100 ]");
+            PrintStr(" /BBox [ 0 0 96 4 ]");
             PrintStr(" /XStep 96 /YStep 4");
             PrintStr(" /PaintProc { begin gsave");
             PrintStr(" [1 3] 0 sd 2 4 m 98 4 l s 0 3 m 96 3 l s");
@@ -2145,7 +2145,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
             PrintStr(" gr end } >> [ 3.0 0 0 3.0 0 0 ]");
             break;
          case 3 :
-            PrintStr(" /BBox [ 0 0 100 100 ]");
+            PrintStr(" /BBox [ 0 0 96 16 ]");
             PrintStr(" /XStep 96 /YStep 16");
             PrintStr(" /PaintProc { begin gsave");
             PrintStr(" [1 3] 0 sd 2 13 m 98 13 l s 0 9 m 96 9 l s");
