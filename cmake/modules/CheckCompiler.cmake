@@ -62,6 +62,8 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: Release, MinSizeRel, Debug, RelWithDebInfo, Optimized." FORCE)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+# to be case independent throughout the whole CMake code
+set(CMAKE_BUILD_TYPE ${uppercase_CMAKE_BUILD_TYPE})
 
 include(CheckCXXCompilerFlag)
 include(CheckCCompilerFlag)
