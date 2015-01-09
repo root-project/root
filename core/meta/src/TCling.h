@@ -139,7 +139,7 @@ private: // Data Members
    Bool_t fIsAutoParsingSuspended;
 
 protected:
-   Bool_t SetSuspendAutoParsing(Bool_t value) override {
+   Bool_t SetSuspendAutoParsing(Bool_t value) {
       Bool_t old = fIsAutoParsingSuspended;
       fIsAutoParsingSuspended = value;
       return old;
@@ -291,7 +291,7 @@ public: // Public Interface
    virtual void   SetAllocunlockfunc(void (*)()) const;
    virtual int    SetClassAutoloading(int) const;
    virtual int    SetClassAutoparsing(int) ;
-           Bool_t IsAutoParsingSuspended() const override { return fIsAutoParsingSuspended; }
+           Bool_t IsAutoParsingSuspended() const { return fIsAutoParsingSuspended; }
    virtual void   SetErrmsgcallback(void* p) const;
    virtual void   Setgvp(Long_t) const;
    virtual void   SetRTLD_NOW() const;
