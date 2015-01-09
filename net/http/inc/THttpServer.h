@@ -136,6 +136,12 @@ public:
       AddHeader("Content-Encoding", typ);
    }
 
+   // Set content directly
+   void SetContent(const char *c)
+   {
+      fContent = c;
+   }
+
    // Compress content with gzip, provides appropriate header
    Bool_t CompressWithGzip();
 
