@@ -6,10 +6,10 @@
 class TH1F;
 
 namespace Name
-{  
+{
   class MyClass : public TObject{
   public:
-    MyClass() 
+    MyClass()
     {}
 
     template<class T>
@@ -21,5 +21,13 @@ namespace Name
   };
 }
 
+
+// Test veto of fwd decl of funny template args:
+namespace TEST_N {
+   enum E { kVal_TEST = 12 };
+
+   template <typename U, int I = 1, int J = (I & kVal_TEST) ? kVal_TEST : I>
+   class X {};
+}
 
 #endif
