@@ -33,7 +33,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execState
 
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execSharedPtr
                   MACRO execSharedPtr.C
-                  OUTREF execSharedPtr.ref)
+                  ERRREF execSharedPtr.eref)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execTmpltD
                   MACRO execTmpltD.cxx+
