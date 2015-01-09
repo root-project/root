@@ -174,11 +174,12 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNode(Double_t point[3])
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
    Int_t id;
    Int_t ncheck = 0;
+   Int_t nd = fVolume->GetNdaughters();
    // get the list of nodes passing thorough the current voxel
    TGeoNodeCache *cache = nav->GetCache();
-   TGeoStateInfo &info = *cache->GetInfo();
+   TGeoStateInfo &info = *cache->GetMakePWInfo(nd);
    Int_t *check_list = voxels->GetCheckList(point, ncheck, info);
-   cache->ReleaseInfo(); // no hierarchical use
+//   cache->ReleaseInfo(); // no hierarchical use
    if (!check_list) return 0;
    // loop all nodes in voxel
    TGeoNode *node;
@@ -248,8 +249,9 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
    Int_t sumchecked = 0;
    Int_t *vlist = 0;
    TGeoNodeCache *cache = nav->GetCache();
-   TGeoStateInfo &info = *cache->GetInfo();
-   cache->ReleaseInfo(); // no hierarchical use
+   TGeoStateInfo &info = *cache->GetMakePWInfo(nd);
+//   TGeoStateInfo &info = *cache->GetInfo();
+//   cache->ReleaseInfo(); // no hierarchical use
    voxels->SortCrossedVoxels(point, dir, info);
    while ((sumchecked<nd) && (vlist=voxels->GetNextVoxel(point, dir, ncheck, info))) {
       for (i=0; i<ncheck; i++) {
