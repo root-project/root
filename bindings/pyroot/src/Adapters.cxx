@@ -385,8 +385,8 @@ PyROOT::TScopeAdapter::operator Bool_t() const
    gErrorIgnoreLevel = 3000;
    std::string scname = Name( Rflx::SCOPED );
    TClass* klass = TClass::GetClass( scname.c_str() );
-   if ( klass && klass->GetClassInfo() )     // works for normal case w/ dict
-      b = gInterpreter->ClassInfo_IsValid( klass->GetClassInfo() );
+   if ( klass && klass->HasInterpreterInfo() )     // works for normal case w/ dict
+      b = kTRUE;
    else {      // special case for forward declared classes
       ClassInfo_t* ci = gInterpreter->ClassInfo_Factory( scname.c_str() );
       if ( ci ) {
