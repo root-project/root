@@ -229,22 +229,25 @@
 
          if (JSROOT.gStyle.Tooltip) tooltip.hide();
 
-         var menu = JSROOT.Painter.createmenu(e.originalEvent);
+         var menu = JSROOT.createMenu();
 
-         var item = JSROOT.gStyle.Tooltip ? "Disable tooltip" : "Enable tooltip";
+         if (painter)
+            menu.add("header:"+ painter.histo['fName']);
 
-         JSROOT.Painter.menuitem(menu, item, function() {
+         menu.add(JSROOT.gStyle.Tooltip ? "Disable tooltip" : "Enable tooltip", function() {
             JSROOT.gStyle.Tooltip = !JSROOT.gStyle.Tooltip;
             tooltip.hide();
          });
 
          if (painter)
-            JSROOT.Painter.menuitem(menu, "Switch to 2D", function() {
+            menu.add("Switch to 2D", function() {
                $(painter.svg_pad()).show().parent().find(renderer.domElement).remove();
                tooltip.hide();
                painter.Draw2D();
             });
-         JSROOT.Painter.menuitem(menu, "Close", function() { });
+         menu.add("Close");
+
+         menu.show(e.originalEvent);
 
       });
    }

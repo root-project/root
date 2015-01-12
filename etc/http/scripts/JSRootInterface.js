@@ -119,12 +119,13 @@ function BuildNoBrowserGUI(online) {
 
    function read_object(file, indx) {
 
-      if (itemsarr[indx]=="StreamerInfo")
+      if (itemsarr[indx]=="StreamerInfo") {
          draw_object(indx, file.fStreamerInfos);
-
-      file.ReadObject(itemsarr[indx], function(obj) {
-         draw_object(indx, obj);
-      });
+      } else {
+         file.ReadObject(itemsarr[indx], function(obj) {
+            draw_object(indx, obj);
+         });
+      }
    }
 
    function request_object(indx) {
