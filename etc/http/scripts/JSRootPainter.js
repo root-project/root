@@ -24,8 +24,11 @@
    // list of user painters, called with arguments painter(vis, obj, opt)
    JSROOT.fDrawFunc = new Array;
 
-   JSROOT.addDrawFunc = function(_name, _func) {
-      JSROOT.fDrawFunc.push({ name:_name, func:_func });
+   // add draw function for the class
+   // one could specify supported options list, separated with ';'
+   // One could specify several draw functions for different draw options
+   JSROOT.addDrawFunc = function(_name, _func, _opt) {
+      JSROOT.fDrawFunc.push({ name:_name, func:_func, opt:_opt });
    }
 
    JSROOT.gStyle = {
@@ -80,14 +83,40 @@
    JSROOT.createMenu = function(menuname) {
       if (!menuname) menuname = "root_ctx_menu";
 
-      var menu = { divid: menuname, code:"", funcs : {} };
+      var menu = { divid: menuname, code:"", cnt: 1, funcs : {} };
 
-      menu.add = function(name,func) {
-         if (func == 'header')
-            this.code += "<li class='ui-widget-header'>"+name+"</li>";
-         else
-            this.code += "<li>"+name+"</li>";
-         if (typeof func == 'function') this.funcs[name] = func; // keep call-back function
+      menu.add = function(name, arg, func) {
+         if (name.indexOf("header:")==0) {
+            this.code += "<li class='ui-widget-header'>"+name.substr(7)+"</li>";
+            return;
+         }
+
+         if (name=="endsub:") { this.code += "</ul></li>"; return; }
+         var close_tag = "</li>";
+         if (name.indexOf("sub:")==0) { name = name.substr(4); close_tag="<ul>"; }
+
+         if (typeof arg == 'function') { func = arg; arg = name; }
+
+         if ((arg==null) || (typeof arg != 'string')) arg = name;
+         this.code += "<li cnt='" + this.cnt + "' arg='" + arg + "'>" + name + close_tag;
+         if (typeof func == 'function') this.funcs[this.cnt] = func; // keep call-back function
+
+         this.cnt++;
+      }
+
+      menu.addDrawMenu = function(menu_name, opts, call_back) {
+         if (opts==null) opts = new Array;
+         if (opts.length==0) opts.push("");
+
+         this.add((opts.length > 1) ? ("sub:" + menu_name) : menu_name, opts[0], call_back);
+         if (opts.length<2) return;
+
+         for (var i=0;i<opts.length;i++) {
+            var name = opts[i];
+            if (name=="") name = '&lt;dflt&gt;';
+            this.add(name, opts[i], call_back);
+         }
+         this.add("endsub:");
       }
 
       menu.show = function(event) {
@@ -104,9 +133,11 @@
             .menu({
                items: "> :not(.ui-widget-header)",
                select: function( event, ui ) {
-                  var func = menu.funcs[ui.item.text()];
+                  var arg = ui.item.attr('arg');
+                  var cnt = ui.item.attr('cnt');
+                  var func = cnt ? menu.funcs[cnt] : null;
                   $("#"+menuname).remove();
-                  if (typeof func == 'function') func();
+                  if (typeof func == 'function') func(arg);
               }
          });
       }
@@ -4323,7 +4354,7 @@
 
          menu['painter'] = pthis;
 
-         menu.add(pthis.histo['fName'], 'header');
+         menu.add("header:"+ pthis.histo['fName']);
 
          pthis.FillContextMenu(menu);
 
@@ -6877,10 +6908,12 @@
 
    JSROOT.HierarchyPainter.prototype.CheckCanDo = function(node) {
       var cando = { expand : false, display : false, scan : true, open : false,
-                    img1 : "", img2 : "", html : "", ctxt : false };
+                    img1 : "", img2 : "", html : "", ctxt : false, typename : "" };
 
       var kind = node["_kind"];
       if (kind == null) kind = "";
+
+      if (kind.indexOf("ROOT.") == 0) cando.typename = kind.slice(5);
 
       cando.expand = ('_more' in node);
 
@@ -6927,7 +6960,7 @@
          cando.img1 = 'img_question';
          cando.expand = false;
          cando.display = true;
-      } else if ((kind.indexOf("ROOT.") == 0) && JSROOT.canDraw(kind.slice(5))) {
+      } else if ((cando.typename != "") && JSROOT.canDraw(cando.typename)) {
          cando.img1 = "img_histo1d";
          cando.scan = false;
          cando.display = true;
@@ -7552,19 +7585,23 @@
 
       var node = this.Find(itemname);
       var cando = this.CheckCanDo(node);
+      var opts = JSROOT.getDrawOptions(cando.typename, 'nosame');
 
       if (cando.display)
-         menu.add("Draw", function() { painter.display(itemname); });
+         menu.addDrawMenu("Draw", opts, function(arg) { painter.display(itemname, arg); });
 
       if (cando.expand || cando.display)
          menu.add("Expand", function() { painter.expand(itemname); });
 
       var drawurl = onlineprop.server + onlineprop.itemname + "/draw.htm";
-      if (this.IsMonitoring())
-         drawurl += "?monitoring=" + this.MonitoringInterval();
+      var separ = "?";
+      if (this.IsMonitoring()) {
+         drawurl += separ + "monitoring=" + this.MonitoringInterval();
+         separ = "&";
+      }
 
       if (cando.display)
-         menu.add("Draw in new window", function() { window.open(drawurl); });
+         menu.addDrawMenu("Draw in new window", opts, function(arg) { window.open(drawurl+separ+"opt=" +arg); });
 
       if (cando.display)
          menu.add("Draw as png", function() {
@@ -7671,12 +7708,17 @@
          this.FillOnlineMenu(menu, onlineprop, itemname);
       } else
       if (fileprop != null) {
-         menu.add("Draw", function() { painter.display(itemname); });
+
+         var opts = JSROOT.getDrawOptions(cando.typename, 'nosame');
+
+         menu.addDrawMenu("Draw", opts, function(arg) { painter.display(itemname, arg); });
+
          var filepath = qualifyURL(fileprop.fileurl);
          if (filepath.indexOf(JSROOT.source_dir) == 0)
             filepath = filepath.slice(JSROOT.source_dir.length);
-         menu.add("Draw in new window", function() {
-             window.open(JSROOT.source_dir + "index.htm?nobrowser&file=" + filepath + "&item=" + fileprop.itemname);
+
+         menu.addDrawMenu("Draw in new window", opts, function(arg) {
+            window.open(JSROOT.source_dir + "index.htm?nobrowser&file=" + filepath + "&item=" + fileprop.itemname+"&opt="+arg);
          });
       }
 
@@ -8170,31 +8212,76 @@
    JSROOT.addDrawFunc("TLatex", JSROOT.Painter.drawText);
    JSROOT.addDrawFunc("TText", JSROOT.Painter.drawText);
    JSROOT.addDrawFunc("TPaveLabel", JSROOT.Painter.drawText);
-   JSROOT.addDrawFunc(/^TH1/, JSROOT.Painter.drawHistogram1D);
-   JSROOT.addDrawFunc("TProfile", JSROOT.Painter.drawHistogram1D);
-   JSROOT.addDrawFunc(/^TH2/, JSROOT.Painter.drawHistogram2D);
+   JSROOT.addDrawFunc(/^TH1/, JSROOT.Painter.drawHistogram1D, ";P;P0;same");
+   JSROOT.addDrawFunc("TProfile", JSROOT.Painter.drawHistogram1D, ";E1");
+   JSROOT.addDrawFunc(/^TH2/, JSROOT.Painter.drawHistogram2D, ";COL;COLZ;COL3;LEGO;same");
    JSROOT.addDrawFunc(/^TH3/, JSROOT.Painter.drawHistogram3D);
    JSROOT.addDrawFunc("THStack", JSROOT.Painter.drawHStack);
    JSROOT.addDrawFunc("TF1", JSROOT.Painter.drawFunction);
-   JSROOT.addDrawFunc(/^TGraph/, JSROOT.Painter.drawGraph);
-   JSROOT.addDrawFunc("TCutG", JSROOT.Painter.drawGraph);
-   JSROOT.addDrawFunc(/^RooHist/, JSROOT.Painter.drawGraph);
-   JSROOT.addDrawFunc(/^RooCurve/, JSROOT.Painter.drawGraph);
+   JSROOT.addDrawFunc(/^TGraph/, JSROOT.Painter.drawGraph,";L;P");
+   JSROOT.addDrawFunc("TCutG", JSROOT.Painter.drawGraph,";L;P");
+   JSROOT.addDrawFunc(/^RooHist/, JSROOT.Painter.drawGraph,";L;P");
+   JSROOT.addDrawFunc(/^RooCurve/, JSROOT.Painter.drawGraph,";L;P");
    JSROOT.addDrawFunc("TMultiGraph", JSROOT.Painter.drawMultiGraph);
    JSROOT.addDrawFunc("TStreamerInfoList", JSROOT.Painter.drawStreamerInfo);
 
-   JSROOT.getDrawFunc = function(classname) {
+   JSROOT.getDrawFunc = function(classname, drawopt) {
       if (typeof classname != 'string') return null;
+
+      var first_func = null;
 
       for (var i in JSROOT.fDrawFunc) {
          if ((typeof JSROOT.fDrawFunc[i].name) === "string") {
-            if (JSROOT.fDrawFunc[i].name == classname) return JSROOT.fDrawFunc[i].func;
+            if (JSROOT.fDrawFunc[i].name != classname) continue;
          } else {
-            if (classname.match(JSROOT.fDrawFunc[i].name)) return JSROOT.fDrawFunc[i].func;
+            if (!classname.match(JSROOT.fDrawFunc[i].name)) continue;
+         }
+         if (first_func == null) first_func = JSROOT.fDrawFunc[i].func;
+
+         if ((typeof drawopt=='string') && (drawopt!="")) {
+            // if drawoption specified, check it present in the list
+            if (JSROOT.fDrawFunc[i].opt == null) continue;
+            var opts = JSROOT.fDrawFunc[i].opt.split(';');
+            for (var j in opts) opts[j] = opts[j].toLowerCase();
+            if (opts.indexOf(drawopt.toLowerCase())<0) continue;
+         }
+
+         return JSROOT.fDrawFunc[i].func;
+      }
+      return first_func;
+   }
+
+   JSROOT.getDrawOptions = function(classname, selector) {
+      if ((typeof classname != 'string') || (classname=="")) return null;
+
+      var allopts = null, isany = false;
+
+      for (var i in JSROOT.fDrawFunc) {
+         if ((typeof JSROOT.fDrawFunc[i].name) === "string") {
+            if (JSROOT.fDrawFunc[i].name != classname) continue;
+         } else {
+            if (!classname.match(JSROOT.fDrawFunc[i].name)) continue;
+         }
+         isany = true;
+         if (JSROOT.fDrawFunc[i].opt == null) continue;
+         var opts = JSROOT.fDrawFunc[i].opt.split(';');
+         for (var i in opts) {
+            opts[i] = opts[i].toLowerCase();
+            if ((selector=='nosame') && (opts[i].indexOf('same')==0)) continue;
+
+            if (allopts==null) allopts = new Array;
+            if (allopts.indexOf(opts[i])<0) allopts.push(opts[i]);
          }
       }
-      return null;
+
+      if (isany && (allopts==null)) {
+         allopts = new Array;
+         allopts.push("");
+      }
+
+      return allopts;
    }
+
 
    JSROOT.canDraw = function(classname) {
       return JSROOT.getDrawFunc(classname) != null;
@@ -8206,7 +8293,7 @@
    JSROOT.draw = function(divid, obj, opt) {
       if ((typeof obj != 'object') || (!('_typename' in obj))) return null;
 
-      var draw_func = JSROOT.getDrawFunc(obj['_typename']);
+      var draw_func = JSROOT.getDrawFunc(obj['_typename'], opt);
 
       if (draw_func==null) return null;
 
