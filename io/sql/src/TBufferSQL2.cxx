@@ -2246,7 +2246,7 @@ void TBufferSQL2::WriteTString(const TString  &s)
 }
 
 //________________________________________________________________________
-void TBufferSQL2::ReadStdString(void    *s)
+void TBufferSQL2::ReadStdString(std::string &s)
 {
    // Read a std::string
   
@@ -2254,7 +2254,7 @@ void TBufferSQL2::ReadStdString(void    *s)
 }
 
 //________________________________________________________________________
-void TBufferSQL2::WriteStdString(const void  *s)
+void TBufferSQL2::WriteStdString(const std::string &s)
 {
    // Write a std::string
 

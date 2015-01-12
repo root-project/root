@@ -290,11 +290,11 @@ void TBufferFile::WriteTString(const TString &s)
 }
 
 //_______________________________________________________________________
-void TBufferFile::ReadStdString(void *s)
+void TBufferFile::ReadStdString(std::string &s)
 {
    // Read std::string from TBuffer.
 
-   std::string *obj = (std::string*)s;
+   std::string *obj = &s;
    Int_t   nbig;
    UChar_t nwh;
    *this >> nwh;
@@ -318,12 +318,12 @@ void TBufferFile::ReadStdString(void *s)
 }
 
 //_______________________________________________________________________
-void TBufferFile::WriteStdString(const void *s)
+void TBufferFile::WriteStdString(const std::string &s)
 {
    // Write std::string to TBuffer.
 
    if (s==0) return;
-   std::string *obj = (std::string*)s;
+   const std::string *obj = &s;
    UChar_t nwh;
    Int_t nbig = obj->length();
    if (nbig > 254) {

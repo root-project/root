@@ -313,7 +313,7 @@ void TBufferSQL::WriteTString(const TString   &s)
 }
 
 //________________________________________________________________________
-void TBufferSQL::ReadStdString(void   *s)
+void TBufferSQL::ReadStdString(std::string &s)
 {
    // Read a std::string
 
@@ -321,7 +321,7 @@ void TBufferSQL::ReadStdString(void   *s)
 }
 
 //________________________________________________________________________
-void TBufferSQL::WriteStdString(const void   *s)
+void TBufferSQL::WriteStdString(const std::string &s)
 {
    // Write a std::string
 

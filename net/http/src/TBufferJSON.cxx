@@ -2505,7 +2505,7 @@ void TBufferJSON::ReadTString(TString & /*s*/)
 }
 
 //______________________________________________________________________________
-void TBufferJSON::ReadStdString(void * /*s*/)
+void TBufferJSON::ReadStdString(std::string &/*s*/)
 {
    // Reads a std::string
 }
@@ -2665,7 +2665,7 @@ void TBufferJSON::WriteTString(const TString &s)
 }
 
 //______________________________________________________________________________
-void TBufferJSON::WriteStdString(const void *s)
+void TBufferJSON::WriteStdString(const std::string &s)
 {
    // Writes a std::string
 
