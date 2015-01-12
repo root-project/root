@@ -17,6 +17,9 @@
 ### TPostScript
 
 - Small fix for fill patterns 1, 2 and 3.
+- With `TMathtext`, only the fonts really used are now loaded in the PostScript
+  file. Typically it reduces the file size by a factor 10 (compare to the previous
+  implementation) for normal plots with math formulae and greek characters.
 
 ### TPDF
 

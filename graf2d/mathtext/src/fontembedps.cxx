@@ -60,6 +60,8 @@
 
 namespace mathtext {
 
+
+//______________________________________________________________________________
    void font_embed_postscript_t::append_asciihex(
                                                  std::string &ascii, const unsigned char *buffer,
                                                  const size_t length)
@@ -80,6 +82,8 @@ namespace mathtext {
       }
    }
 
+
+//______________________________________________________________________________
    unsigned int font_embed_postscript_t::ascii85_line_count(
                                                             const uint8_t *buffer, const size_t length)
    {
@@ -117,6 +121,8 @@ namespace mathtext {
       return line;
    }
 
+
+//______________________________________________________________________________
    void font_embed_postscript_t::append_ascii85(
                                                 std::string &ascii, const uint8_t *buffer,
                                                 const size_t length)
@@ -201,6 +207,8 @@ namespace mathtext {
       ascii.append("~>");
    }
 
+
+//______________________________________________________________________________
    std::string font_embed_postscript_t::font_embed_type_1(
                                                           std::string &font_name,
                                                           const std::vector<unsigned char> &font_data)
@@ -292,11 +300,13 @@ namespace mathtext {
       return std::string();
    }
 
+
+//______________________________________________________________________________
    std::string font_embed_postscript_t::font_embed_type_2(
                                                           std::string &font_name,
                                                           const std::vector<unsigned char> &font_data)
    {
-      // Embed an OpenType CFF (Type 2) file in ASCII85 encoding
+      // Embed an OpenType CFF font (Type 2) file in ASCII85 encoding
       // with the PostScript syntax
 
       unsigned short cid_encoding_id;
@@ -338,11 +348,13 @@ namespace mathtext {
       return ret;
    }
 
+
+//______________________________________________________________________________
    std::string font_embed_postscript_t::font_embed_type_42(
                                                            std::string &font_name,
                                                            const std::vector<unsigned char> &font_data)
    {
-      // Embed an TrueType as Type 42 with the PostScript syntax
+      // Embed a TrueType font as Type 42 with the PostScript syntax
 
       double font_bbox[4];
       std::map<wchar_t, uint16_t> cid_map;
