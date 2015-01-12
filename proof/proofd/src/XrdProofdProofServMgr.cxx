@@ -3286,13 +3286,11 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
          std::list<XpdEnv>::iterator ienvs = fProofServEnvs.begin();
          for ( ; ienvs != fProofServEnvs.end(); ienvs++) {
             int envmatch = (*ienvs).Matches(p->Client()->User(), p->Client()->Group(),
-                                            p->Client()->ROOT()->SvnRevision(),
                                             p->Client()->ROOT()->VersionCode());
             if (envmatch >= 0) {
                XpdEnv *env = sessenvs.Find((*ienvs).fName.c_str());
                if (env) {
                   int envmtcex = env->Matches(p->Client()->User(), p->Client()->Group(),
-                                              p->Client()->ROOT()->SvnRevision(),
                                               p->Client()->ROOT()->VersionCode());
                   if (envmatch > envmtcex) {
                      // Replace the entry
@@ -3803,13 +3801,11 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
          std::list<XpdEnv>::iterator ienvs = fProofServEnvs.begin();
          for ( ; ienvs != fProofServEnvs.end(); ienvs++) {
             int envmatch = (*ienvs).Matches(p->Client()->User(), p->Client()->Group(),
-                                            p->Client()->ROOT()->SvnRevision(),
                                             p->Client()->ROOT()->VersionCode());
             if (envmatch >= 0) {
                XpdEnv *env = sessenvs.Find((*ienvs).fName.c_str());
                if (env) {
                   int envmtcex = env->Matches(p->Client()->User(), p->Client()->Group(),
-                                              p->Client()->ROOT()->SvnRevision(),
                                               p->Client()->ROOT()->VersionCode());
                   if (envmatch > envmtcex) {
                      // Replace the entry
@@ -4060,13 +4056,11 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
          std::list<XpdEnv>::iterator ircs = fProofServRCs.begin();
          for ( ; ircs != fProofServRCs.end(); ircs++) {
             int rcmatch = (*ircs).Matches(p->Client()->User(), p->Client()->Group(),
-                                          p->Client()->ROOT()->SvnRevision(),
                                           p->Client()->ROOT()->VersionCode());
             if (rcmatch >= 0) {
                XpdEnv *rcenv = sessrcs.Find((*ircs).fName.c_str());
                if (rcenv) {
                   int rcmtcex = rcenv->Matches(p->Client()->User(), p->Client()->Group(),
-                                               p->Client()->ROOT()->SvnRevision(),
                                                p->Client()->ROOT()->VersionCode());
                   if (rcmatch > rcmtcex) {
                      // Replace the entry
@@ -5216,9 +5210,9 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
 }
 
 //______________________________________________________________________________
-int XpdEnv::Matches(const char *usr, const char *grp, int svn, int ver)
+int XpdEnv::Matches(const char *usr, const char *grp, int ver)
 {
-   // Check if this env applies to 'usr', 'grp, 'svn', 'ver'.
+   // Check if this env applies to 'usr', 'grp, 'ver'.
    // Returns -1 if it does not match, >=0 if it matches. The value is a linear
    // combination of matching lengths for user and group, with a weight of 1000 for
    // the users one, so that an exact user match will always win.
@@ -5244,11 +5238,6 @@ int XpdEnv::Matches(const char *usr, const char *grp, int svn, int ver)
    nmtc += nmtcg;
 
    TRACE(HDBG, fEnv <<", u:"<<usr<<", g:"<<grp<<" --> nmtc: "<<nmtc);
-
-   // Check the subversion number
-   TRACE(HDBG, fEnv <<", svn:"<<svn);
-   if (fSvnMin > 0 && svn < fSvnMin) return -1; 
-   if (fSvnMax > 0 && svn > fSvnMax) return -1; 
 
    // Check the version code
    TRACE(HDBG, fEnv <<", ver:"<<ver);
