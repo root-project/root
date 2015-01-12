@@ -37,8 +37,13 @@ public:
          fLRatio = pow(1 - rho, n);
       else if (x == n)
          fLRatio = pow(rho, n);
-      else
-         fLRatio = pow(rho/fRho_hat, x) * pow((1 - rho)/(1 - fRho_hat), n - x);
+      else {
+         // Impose this criterion: if any if the two terms is zero, the product is
+         // zero and not NaN.
+         const double term1 = pow(rho/fRho_hat, x);
+         const double term2 = pow((1 - rho)/(1 - fRho_hat), n - x);
+         fLRatio = (term1 == 0. || term2 == 0.) ? 0. : term1 * term2;
+         }
    }
 
    double Rho   () const { return fRho;    };
@@ -84,7 +89,7 @@ public:
       // in decreasing order, determined by the Sorter class.
       std::vector<BinomialProbHelper> probs;
       for (int i = 0; i <= ntot; ++i)
-         probs.push_back(BinomialProbHelper(rho, i, ntot));
+         probs.emplace_back(BinomialProbHelper(rho, i, ntot));
       std::sort(probs.begin(), probs.end(), fSorter);
 
       // Add up the probabilities until the total is 1 - alpha or
