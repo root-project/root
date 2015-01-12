@@ -51,7 +51,8 @@ namespace RooStats {
       ~AsymptoticCalculator() {
       }
 
-
+      // initialize the calculator by performin g a global fit and make the Asimov data set
+      bool Initialize() const; 
 
       // re-implement HypoTest computation using the asymptotic 
       virtual HypoTestResult *GetHypoTest() const; 
@@ -82,6 +83,21 @@ namespace RooStats {
 
       // set the test statistics for one-sided discovery
       void SetOneSidedDiscovery(bool on) { fOneSidedDiscovery = on; }
+
+      // re-implement setters since they needs to re-initialize the calculator
+      virtual void SetNullModel(const ModelConfig &nullModel) {
+         HypoTestCalculatorGeneric::SetNullModel(nullModel);
+         fIsInitialized = false; 
+      }
+      virtual void SetAlternateModel(const ModelConfig &altModel) {
+         HypoTestCalculatorGeneric::SetAlternateModel(altModel);
+         fIsInitialized = false; 
+      }
+      virtual void SetData(RooAbsData &data) { 
+         HypoTestCalculatorGeneric::SetData(data);
+         fIsInitialized = false; 
+      }
+
 
       bool IsTwoSided() const { return (!fOneSided && !fOneSidedDiscovery); }
       bool IsOneSidedDiscovery() const { return fOneSidedDiscovery; }
@@ -123,19 +139,21 @@ namespace RooStats {
       static bool SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs); 
 
    protected:
-      ClassDef(AsymptoticCalculator,1)
+      ClassDef(AsymptoticCalculator,2)
 
    private: 
 
       bool fOneSided;                // for one sided PL test statistic (upper limits)
-      bool fOneSidedDiscovery;                // for one sided PL test statistic (for discovery)
+      mutable bool fOneSidedDiscovery;                // for one sided PL test statistic (for discovery)
+      bool fNominalAsimov;                   // make Asimov at nominal parameter values
+      mutable bool fIsInitialized;                  //! flag to check if calculator is initialized
       mutable int fUseQTilde;              // flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
       static int fgPrintLevel;     // control print level  (0 minimal, 1 normal, 2 debug)
       mutable double fNLLObs; 
       mutable double fNLLAsimov; 
 
       mutable RooAbsData * fAsimovData;   // asimov data set 
-      RooArgSet  fAsimovGlobObs;  // snapshot of Asimov global observables 
+      mutable RooArgSet  fAsimovGlobObs;  // snapshot of Asimov global observables 
       mutable RooArgSet  fBestFitPoi;       // snapshot of best fitted POI values
       mutable RooArgSet  fBestFitParams;       // snapshot of all best fitted Parameter values
       

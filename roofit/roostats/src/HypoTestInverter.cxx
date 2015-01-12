@@ -1078,6 +1078,17 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::RebuildDistribution - no toy MC sampler existing" << std::endl;
       return 0;
    }
+   // set up test stat sampler in case of asymptotic calculator
+   if (dynamic_cast<RooStats::AsymptoticCalculator*>(fCalculator0) ) { 
+      toymcSampler->SetObservables(*sbModel->GetObservables() );
+      toymcSampler->SetParametersForTestStat(*sbModel->GetParametersOfInterest());
+      toymcSampler->SetPdf(*sbModel->GetPdf());
+      toymcSampler->SetNuisanceParameters(*sbModel->GetNuisanceParameters());
+      if (sbModel->GetGlobalObservables() )  toymcSampler->SetGlobalObservables(*sbModel->GetGlobalObservables() );
+      // set number of events
+      if (!sbModel->GetPdf()->canBeExtended())
+         toymcSampler->SetNEventsPerToy(1);
+   }
 
    // loop on data to generate 
    int nPoints = fNBins;
@@ -1139,6 +1150,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
    // create  temporary histograms to store the limit result 
    TH1D * hL = new TH1D("lowerLimitDist","Rebuilt lower limit distribution",100,1.,0.); 
    TH1D * hU = new TH1D("upperLimitDist","Rebuilt upper limit distribution",100,1.,0.); 
+   TH1D * hN = new TH1D("nObs","Observed events",100,1.,0.); 
    hL->SetBuffer(2*nToys); 
    hU->SetBuffer(2*nToys); 
    std::vector<TH1*> hCLb;
@@ -1156,9 +1168,12 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
    // loop now on the toys 
    for (int itoy = 0; itoy < nToys; ++itoy) { 
 
-      oocoutP((TObject*)0,Eval) << "HypoTestInverter - RebuildDistributions - running toy # " << itoy << " / " 
+      oocoutP((TObject*)0,Eval) << "\nHypoTestInverter - RebuildDistributions - running toy # " << itoy << " / " 
                                        << nToys << std::endl;      
 
+
+      printf("\n\nshnapshot of s+b model \n");
+      sbModel->GetSnapshot()->Print("v");
 
       // reset parameters to initial values to be sure in case they are not reset
       if (itoy> 0) *allParams = saveParams;
@@ -1170,16 +1185,27 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
 
       RooAbsData * bkgdata = toymcSampler->GenerateToyData(paramPoint);
 
+      double nObs = bkgdata->sumEntries(); 
       // for debugging in case of number counting models
-      if (bkgdata->numEntries() ==1) { 
+      if (bkgdata->numEntries() ==1 && !bModel->GetPdf()->canBeExtended()) {         
          oocoutP((TObject*)0,Generation) << "Generate observables are : ";
          RooArgList  genObs(*bkgdata->get(0)); 
          RooStats::PrintListContent(genObs, oocoutP((TObject*)0,Generation) );
+         nObs = 0;
+         for (int i = 0; i < genObs.getSize(); ++i) {
+            RooRealVar * x = dynamic_cast<RooRealVar*>(&genObs[i]);
+            if (x) nObs += x->getVal();
+         }
       }
+      hN->Fill(nObs);
 
       // by copying I will have the same min/max as previous ones
       HypoTestInverter inverter = *this; 
       inverter.SetData(*bkgdata);
+
+      // print global observables
+      auto gobs = bModel->GetPdf()->getVariables()->selectCommon(* sbModel->GetGlobalObservables() );
+      gobs->Print("v");
       
       HypoTestInverterResult * r  = inverter.GetInterval();
       
@@ -1197,6 +1223,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       if (itoy%10 == 0 || itoy == nToys-1) { 
          hU->Write("",TObject::kOverwrite);
          hL->Write("",TObject::kOverwrite);
+         hN->Write("",TObject::kOverwrite);
       }
 
       if (!storePValues) continue;

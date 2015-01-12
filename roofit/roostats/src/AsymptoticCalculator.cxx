@@ -67,12 +67,33 @@ AsymptoticCalculator::AsymptoticCalculator(
    const ModelConfig &altModel,
    const ModelConfig &nullModel, bool nominalAsimov) :
       HypoTestCalculatorGeneric(data, altModel, nullModel, 0), 
-      fOneSided(false), fOneSidedDiscovery(false), fUseQTilde(-1), 
+      fOneSided(false), fOneSidedDiscovery(false), fNominalAsimov(nominalAsimov),
+      fUseQTilde(-1), 
       fNLLObs(0), fNLLAsimov(0), 
       fAsimovData(0)   
 {
    // constructor for asymptotic calculator from Data set  and ModelConfig
-   // The constructor will perform a global fit of the model to the data 
+   if (!Initialize()) return; 
+
+   int verbose = fgPrintLevel; 
+   // try to guess default configuration
+   // (this part should be only in constructor because the null snapshot might change during HypoTestInversion
+   const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
+   assert(nullSnapShot);
+   RooRealVar * muNull  = dynamic_cast<RooRealVar*>( nullSnapshot->first() );
+   assert(muNull);
+   if (muNull->getVal() == muNull->getMin()) { 
+      fOneSidedDiscovery = true; 
+      if (verbose > 0) 
+         oocoutI((TObject*)0,InputArguments) << "AsymptotiCalculator: Minimum of POI is " << muNull->getMin() << " corresponds to null  snapshot   - default configuration is  one-sided discovery formulae  " << std::endl;
+   }
+
+}
+
+   
+bool AsymptoticCalculator::Initialize() const {
+   // Initialize the calculator 
+   // The initialization will perform a global fit of the model to the data 
    // and build an Asimov data set. 
    // It will then also fit the model to the Asimov data set to find the likelihood value  
    // of the Asimov data set
@@ -80,23 +101,33 @@ AsymptoticCalculator::AsymptoticCalculator(
    // By default the nuisance parameters are fitted to the data  
    // NOTE: If a fit has been done before, one for speeding up could set all the initial prameters 
    // to the fit value and in addition set the null snapshot to the best fit
-   
-
-   RooAbsPdf * nullPdf = GetNullModel()->GetPdf();
-   assert(nullPdf); 
 
    int verbose = fgPrintLevel; 
+   if (verbose >= 0)
+      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::Initialize...." << std::endl;
 
+
+   RooAbsPdf * nullPdf = GetNullModel()->GetPdf();
+   if (!nullPdf) {
+      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - ModelConfig has not a pdf defined" << std::endl;
+      return false;       
+   }
    RooAbsData * obsData = const_cast<RooAbsData *>(GetData() );
-   assert( obsData );
+   if (!obsData ) {
+      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - data set has not been defined" << std::endl;
+      return false;       
+   }
+   RooAbsData & data = *obsData;
+
+   
 
    const RooArgSet * poi = GetNullModel()->GetParametersOfInterest(); 
    if (!poi || poi->getSize() == 0) { 
-      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator: ModelConfig has not POI defined." << endl;
-      return;
+      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize -  ModelConfig has not POI defined." << endl;
+      return false;
    }
    if (poi->getSize() > 1) { 
-      oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator: ModelConfig has more than one POI defined \n\t" 
+      oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - ModelConfig has more than one POI defined \n\t" 
                                           << "The asymptotic calculator works for only one POI - consider as POI only the first parameter" 
                                           << std::endl;
    }
@@ -105,23 +136,31 @@ AsymptoticCalculator::AsymptoticCalculator(
    // This will set the poi value to the null snapshot value in the ModelConfig
    const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
    if(nullSnapshot == NULL || nullSnapshot->getSize() == 0) {
-      oocoutE((TObject*)0,InputArguments) << "Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
-      return;
+      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
+      return false;
    }
+   
+   // GetNullModel()->Print();
+   // printf("ASymptotic calc: null snapshot\n");
+   // nullSnapshot->Print("v");
+   // printf("PDF  variables " );
+   // nullPdf->getVariables()->Print("v");
    
    // keep snapshot for the initial parameter values (need for nominal Asimov)
    RooArgSet nominalParams; 
-   RooArgSet * allParams = nullPdf->getParameters(*obsData);
+   RooArgSet * allParams = nullPdf->getParameters(data);
    RemoveConstantParameters(allParams);
-   if (nominalAsimov) { 
+   if (fNominalAsimov) { 
       allParams->snapshot(nominalParams);
    }
-
-
+   fBestFitPoi.removeAll(); 
+   fBestFitParams.removeAll();
+   fAsimovGlobObs.removeAll();
+      
    // evaluate the unconditional nll for the full model on the  observed data 
    if (verbose >= 0)
-      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best unconditional NLL on observed data" << endl;
-   fNLLObs = EvaluateNLL( *nullPdf, *obsData, GetNullModel()->GetConditionalObservables());
+      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::Initialize - Find  best unconditional NLL on observed data" << endl;
+   fNLLObs = EvaluateNLL( *nullPdf, data, GetNullModel()->GetConditionalObservables());
    // fill also snapshot of best poi
    poi->snapshot(fBestFitPoi);
    RooRealVar * muBest = dynamic_cast<RooRealVar*>(fBestFitPoi.first());
@@ -136,7 +175,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    const RooArgSet * altSnapshot = GetAlternateModel()->GetSnapshot();
    if(altSnapshot == NULL || altSnapshot->getSize() == 0) {
       oocoutE((TObject*)0,InputArguments) << "Alt (Background)  model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
-      return;
+      return false;
    }
 
    RooArgSet poiAlt(*altSnapshot);  // this is the poi snapshot of B (i.e. for mu=0)
@@ -162,11 +201,11 @@ AsymptoticCalculator::AsymptoticCalculator(
       }
    }
 
-   if (!nominalAsimov) {
+   if (!fNominalAsimov) {
       if (verbose >= 0) 
          oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimov data will be generated using fitted nuisance parameter values" << endl;
       RooArgSet * tmp = (RooArgSet*) poiAlt.snapshot(); 
-      fAsimovData = MakeAsimovData( data, nullModel, poiAlt, fAsimovGlobObs,tmp);
+      fAsimovData = MakeAsimovData( data, *GetNullModel(), poiAlt, fAsimovGlobObs,tmp);
    }
 
    else {
@@ -174,12 +213,12 @@ AsymptoticCalculator::AsymptoticCalculator(
       if (verbose >= 0) 
          oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << endl;
       nominalParams = poiAlt; // set poi to alt value but keep nuisance at the nominal one
-      fAsimovData = MakeAsimovData( nullModel, nominalParams, fAsimovGlobObs);
+      fAsimovData = MakeAsimovData( *GetNullModel(), nominalParams, fAsimovGlobObs);
    }
 
    if (!fAsimovData) { 
       oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator: Error : Asimov data set could not be generated " << endl;
-      return;
+      return false;
    }
 
    // set global observables to their Asimov values 
@@ -200,7 +239,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    RooRealVar * muAlt = (RooRealVar*) poiAlt.first();
    assert(muAlt);
    if (verbose>=0)
-      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best conditional NLL on ASIMOV data set for given alt POI ( " << 
+      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::Initialize Find  best conditional NLL on ASIMOV data set for given alt POI ( " << 
          muAlt->GetName() << " ) = " << muAlt->getVal() << std::endl;
 
    fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData, GetNullModel()->GetConditionalObservables(), &poiAlt );
@@ -211,19 +250,11 @@ AsymptoticCalculator::AsymptoticCalculator(
    // restore previous value 
    globObs = globObsSnapshot;
 
-   // try to guess default configuration
-   // (this part should be in constructor)
-   RooRealVar * muNull  = dynamic_cast<RooRealVar*>( nullSnapshot->first() );
-   assert (muNull);
-   if (muNull->getVal() == muNull->getMin()) { 
-      fOneSidedDiscovery = true; 
-      if (verbose > 0) 
-         oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muNull->getMin() << " corresponds to null  snapshot   - default configuration is  one-sided discovery formulae  " << std::endl;
-   }
-
    // restore number of bins 
    if (prevBins > 0 && xobs) xobs->setBins(prevBins);
 
+   fIsInitialized = true; 
+   return true; 
 }
 
 //_________________________________________________________________
@@ -409,6 +440,14 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    // first one
 
    int verbose = fgPrintLevel;
+
+   // re-initialized the calculator in case it is needed (pdf or data modifided)
+   if (!fIsInitialized) {
+      if (!Initialize() ) {
+         oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::GetHypoTest - Error initializing Asymptotic calculator - return NULL result " << endl;
+         return 0;
+      }
+   }
 
    if (!fAsimovData) { 
        oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::GetHypoTest - Asimov data set has not been generated - return NULL result " << endl;
