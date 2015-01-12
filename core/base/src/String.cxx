@@ -25,9 +25,9 @@ void std_string_streamer(TBuffer &b, void *objadd)
 {
    // Streamer function for std::string object.
    if (b.IsReading()) {
-      b.ReadStdString(objadd);
+      b.ReadStdString(*(std::string*)objadd);
    } else {
-      b.WriteStdString(objadd);
+      b.WriteStdString(*(std::string*)objadd);
    }
 }
 
