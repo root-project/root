@@ -12,8 +12,9 @@ Changes in 3.2
    relative changes too large, redraw complete canvas again.
 3. Use touch-punch.min.js to process touch events with jquery-ui
 4. Even when several TH1/TGraph/TF1 objects with fill attribute overlap each other,
-   one able to get tooltip for underlying objects.  
+   one able to get tooltip for underlying objects
 5. Use jquery-ui menu for context menu
+6. In context menu one could select options for drawing
 
 
 Changes in 3.1
