@@ -61,6 +61,7 @@ TDirectoryFile::TDirectoryFile() : TDirectory()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Directory default constructor-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =============================
+
 }
 
 //______________________________________________________________________________
@@ -865,7 +866,7 @@ TObject *TDirectoryFile::Get(const char *namecycle)
 
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
-   TObject *idcur = fList->FindObject(namobj);
+   TObject *idcur = fList ? fList->FindObject(namobj) : nullptr;
    if (idcur) {
       if (idcur==this && strlen(namobj)!=0) {
          // The object has the same name has the directory and
@@ -970,7 +971,7 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
    if (expectedClass==0 || expectedClass->InheritsFrom(TObject::Class())) {
-      TObject *objcur = fList->FindObject(namobj);
+      TObject *objcur = fList ? fList->FindObject(namobj) : 0;
       if (objcur) {
          if (objcur==this && strlen(namobj)!=0) {
             // The object has the same name has the directory and
