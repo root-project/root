@@ -13,3 +13,11 @@ ROOT_GENERATE_DICTIONARY(G__ProofBench ${headers} MODULE ProofBench LINKDEF Link
 
 ROOT_LINKER_LIBRARY(ProofBench ${sources} G__ProofBench.cxx LIBRARIES Core  DEPENDENCIES Hist Gpad ProofPlayer)
 ROOT_INSTALL_HEADERS(OPTIONS REGEX "TSel" EXCLUDE)
+
+# Generation and installation of the PAR files required by the benchmark 
+add_custom_target(ProofBenchPARFiles ALL DEPENDS etc/proof/proofbench/ProofBenchCPUSel.par etc/proof/proofbench/ProofBenchDataSel.par)
+add_custom_command(OUTPUT etc/proof/proofbench/ProofBenchCPUSel.par etc/proof/proofbench/ProofBenchDataSel.par
+    COMMAND etc/proof/utils/makepbenchpars.sh ARGS ProofBenchCPUSel ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} 
+    COMMAND etc/proof/utils/makepbenchpars.sh ARGS ProofBenchDataSel ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} 
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/proof/proofbench DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/proof USE_SOURCE_PERMISSIONS)
