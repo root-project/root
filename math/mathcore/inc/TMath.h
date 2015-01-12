@@ -526,18 +526,31 @@ inline Double_t TMath::Log10(Double_t x)
    { return log10(x); }
 
 inline Int_t TMath::Finite(Double_t x)
-#if defined(R__HPUX11)
+#if defined(R__FAST_MATH)
+/* Check if it is finite with a mask in order to be consistent in presence of
+ * fast math.
+ * Inspired from the CMSSW FWCore/Utilities package
+ */
+{
+   const unsigned long long mask = 0x7FF0000000000000LL;
+   union { unsigned long long l; double d;} v;
+   v.d =x;
+   return (v.l&mask)!=mask;
+}
+#else
+#  if defined(R__HPUX11)
    { return isfinite(x); }
-#elif defined(R__MACOSX)
-#ifdef isfinite
+#  elif defined(R__MACOSX)
+#  ifdef isfinite
    // from math.h
    { return isfinite(x); }
-#else
+#  else
    // from cmath
    { return std::isfinite(x); }
-#endif
-#else
+#  endif
+#  else
    { return finite(x); }
+#  endif
 #endif
 
 #if defined (R__FAST_MATH)
