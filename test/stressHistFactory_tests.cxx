@@ -411,7 +411,9 @@ private:
       fPDF1value = rPDF1.getVal();
       fPDF2value = rPDF2.getVal();
 
-      h_diff->Fill((fPDF1value - fPDF2value)/fPDF1value);
+      float diff = (fPDF1value - fPDF2value);
+      if (fPDF1value!=0.f) diff /= fPDF1value; // Protect against NaN
+      h_diff->Fill(diff);
     }
 
     Bool_t bResult = kTRUE;
