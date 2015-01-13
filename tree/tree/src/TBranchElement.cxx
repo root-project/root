@@ -963,7 +963,7 @@ TBranchElement::~TBranchElement()
    fBranchCount2 = 0;
    fBranchCount = 0;
 
-   if (fType == 4) {
+   if (fType == 4 || fType == 0) {
       // Only the top level TBranchElement containing an STL container,
       // owns the collectionproxy.
       delete fCollProxy;
