@@ -4787,6 +4787,27 @@ const std::string& ROOT::TMetaUtils::GetPathSeparator()
 }
 
 //______________________________________________________________________________
+bool ROOT::TMetaUtils::EndsWith(const std::string &theString, const std::string &theSubstring)
+{
+   if (theString.size() < theSubstring.size()) return false;
+   const unsigned int theSubstringSize = theSubstring.size();
+   return 0 == theString.compare(theString.size() - theSubstringSize,
+                                 theSubstringSize,
+                                 theSubstring);
+}
+
+//______________________________________________________________________________
+bool ROOT::TMetaUtils::BeginsWith(const std::string &theString, const std::string &theSubstring)
+{
+   if (theString.size() < theSubstring.size()) return false;
+   const unsigned int theSubstringSize = theSubstring.size();
+   return 0 == theString.compare(0,
+                                 theSubstringSize,
+                                 theSubstring);
+}
+
+
+//______________________________________________________________________________
 const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls,
       const cling::Interpreter &interp)
 {

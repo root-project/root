@@ -3554,6 +3554,14 @@ bool IsImplementationName(const std::string &filename)
    return !IsHeaderName(filename);
 }
 
+//______________________________________________________________________________
+bool IsCorrectClingArgument(const std::string argument)
+{
+   // Check if the argument is a sane cling argument. Performing the following checks:
+   // 1) It does not start with "--".
+   if (ROOT::TMetaUtils::BeginsWith(argument,"--")) return false;
+   return true;
+}
 
 //______________________________________________________________________________
 int RootCling(int argc,
@@ -3904,10 +3912,15 @@ int RootCling(int argc,
 
    ROOT::TMetaUtils::SetPathsForRelocatability(clingArgs);
 
+   // Convert arguments to a C array and check if they are sane
    std::vector<const char *> clingArgsC;
-   for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
-         iclingArgs < nclingArgs; ++iclingArgs) {
-      clingArgsC.push_back(clingArgs[iclingArgs].c_str());
+   for (auto const & clingArg : clingArgs) {
+      if (!IsCorrectClingArgument(clingArg)){
+         std::cerr << "Argument \""<< clingArg << "\" is not a supported cling argument. "
+                   << "This could be mistyped rootcling argument. Please check the commandline.\n";
+         return 1;
+      }
+      clingArgsC.push_back(clingArg.c_str());
    }
 
    std::string resourceDir;
@@ -4569,26 +4582,6 @@ int RootCling(int argc,
 namespace genreflex {
 
 //______________________________________________________________________________
-   bool endsWith(const std::string &theString, const std::string &theSubstring)
-   {
-      if (theString.size() < theSubstring.size()) return false;
-      const unsigned int theSubstringSize = theSubstring.size();
-      return 0 == theString.compare(theString.size() - theSubstringSize,
-                                    theSubstringSize,
-                                    theSubstring);
-   }
-
-//______________________________________________________________________________
-   bool beginsWith(const std::string &theString, const std::string &theSubstring)
-   {
-      if (theString.size() < theSubstring.size()) return false;
-      const unsigned int theSubstringSize = theSubstring.size();
-      return 0 == theString.compare(0,
-                                    theSubstringSize,
-                                    theSubstring);
-   }
-
-//______________________________________________________________________________
    unsigned int checkHeadersNames(std::vector<std::string> &headersNames)
    {
       // Loop on arguments: stop at the first which starts with -
@@ -4615,8 +4608,8 @@ namespace genreflex {
       // loop on argv, spot strings which are not preceeded by something
       unsigned int argvCounter = 0;
       for (int i = 1; i < argc; ++i) {
-         if (!beginsWith(argv[i - 1], "-") && // so, if preceeding element starts with -, this is a value for an option
-               !beginsWith(argv[i], "-")) { // and the element itself is not an option
+         if (!ROOT::TMetaUtils::BeginsWith(argv[i - 1], "-") && // so, if preceeding element starts with -, this is a value for an option
+               !ROOT::TMetaUtils::BeginsWith(argv[i], "-")) { // and the element itself is not an option
             args.push_back(argv[i]);
             argvCounter++;
          } else  if (argvCounter) {
@@ -4884,7 +4877,7 @@ namespace genreflex {
       std::vector<std::string> ofilesNames;
       headers2outputsNames(headersNames, ofilesNames);
 
-      if (!outputDirName.empty() && !endsWith(outputDirName, gPathSeparator)) {
+      if (!outputDirName.empty() && !ROOT::TMetaUtils::EndsWith(outputDirName, gPathSeparator)) {
          outputDirName += gPathSeparator;
       }
 
@@ -5365,7 +5358,7 @@ int GenReflex(int argc, char **argv)
    std::string selectionFileName;
    if (options[SELECTIONFILENAME]) {
       selectionFileName = options[SELECTIONFILENAME].arg;
-      if (!endsWith(selectionFileName, ".xml")) {
+      if (!ROOT::TMetaUtils::EndsWith(selectionFileName, ".xml")) {
          ROOT::TMetaUtils::Error(0,
                                  "Invalid selection file extension: filename is %s and extension .xml is expected!\n",
                                  selectionFileName.c_str());
@@ -5390,7 +5383,7 @@ int GenReflex(int argc, char **argv)
    std::string targetLibName;
    if (options[TARGETLIB]) {
       targetLibName = options[TARGETLIB].arg;
-      if (!endsWith(targetLibName, gLibraryExtension)) {
+      if (!ROOT::TMetaUtils::EndsWith(targetLibName, gLibraryExtension)) {
          ROOT::TMetaUtils::Error("",
                                  "Invalid target library extension: filename is %s and extension %s is expected!\n",
                                  gLibraryExtension.c_str(),
@@ -5428,7 +5421,7 @@ int GenReflex(int argc, char **argv)
       writeEmptyRootPCM = true;
 
    // Add the .so extension to the rootmap lib if not there
-   if (!rootmapLibName.empty() && !endsWith(rootmapLibName, gLibraryExtension)) {
+   if (!rootmapLibName.empty() && !ROOT::TMetaUtils::EndsWith(rootmapLibName, gLibraryExtension)) {
       rootmapLibName += gLibraryExtension;
    }
 
