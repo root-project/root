@@ -793,39 +793,41 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          }
 
       } else {
-         // write like blob values, but skipping first element with size
-         // TODO: make special handling for std::map, should pack each each pair in separate object
          const char* separ = "[";
-         TString blob;
 
-         for (Int_t k=1;k<=stack->fValues.GetLast();k++) {
-            blob.Append(separ); separ = fArraySepar.Data();
-            blob.Append(stack->fValues.At(k)->GetName());
+         if (fValue.Length() > 0) {
+            stack->fValues.Add(new TObjString(fValue));
+            fValue.Clear();
          }
 
-         if (fValue.Length()>0) {
-            blob.Append(separ);
-            blob.Append(fValue);
+         Int_t size = TString(stack->fValues.At(0)->GetName()).Atoi();
+
+         if ((size*2 == stack->fValues.GetLast()) &&
+              ((special_kind==TClassEdit::kMap) || (special_kind==TClassEdit::kMultiMap))) {
+            // special handling for std::map. Create entries like { 'first' : key, 'second' : value }
+            for (Int_t k=1;k<stack->fValues.GetLast();k+=2) {
+               fValue.Append(separ); separ = fArraySepar.Data();
+               fValue.Append("{");
+               fValue.Append("\"first\"");
+               fValue.Append(fSemicolon);
+               fValue.Append(stack->fValues.At(k)->GetName());
+               fValue.Append(fArraySepar);
+               fValue.Append("\"second\"");
+               fValue.Append(fSemicolon);
+               fValue.Append(stack->fValues.At(k+1)->GetName());
+               fValue.Append("}");
+            }
+         } else {
+            // for most stl containers write just like blob, but skipping first element with size
+            for (Int_t k=1;k<=stack->fValues.GetLast();k++) {
+               fValue.Append(separ); separ = fArraySepar.Data();
+               fValue.Append(stack->fValues.At(k)->GetName());
+            }
          }
 
-         blob.Append("]");
+         fValue.Append("]");
          stack->fValues.Delete();
-         fValue = blob;
       }
-
-      /*
-      switch(isstlcont) {
-         case TClassEdit::kVector : break;
-         case TClassEdit::kList   : break;
-         case TClassEdit::kDeque  : break;
-         case TClassEdit::kMap    : break;
-         case TClassEdit::kMultiMap : break;
-         case TClassEdit::kSet : break;
-         case TClassEdit::kMultiSet : break;
-         case TClassEdit::kBitSet : break;
-         default: break;
-      }
-      */
    }
 
    if ((special_kind==0) &&
