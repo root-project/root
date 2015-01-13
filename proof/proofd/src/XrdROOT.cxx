@@ -237,8 +237,7 @@ int XrdROOT::ParseROOTVersionInfo()
       gitcommit += "/RGitCommit.h";
 
       // Open file
-      FILE *fv = fopen(gitcommit.c_str(), "r");
-      if (!fv) {
+      if (!(fv = fopen(gitcommit.c_str(), "r"))) {
          TRACE(REQ, "unable to open "<<gitcommit);
       }
 
