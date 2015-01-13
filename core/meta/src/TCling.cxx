@@ -4292,7 +4292,12 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
                      if (gDebug > 3)
                         Info("ReadRootmapFile", "namespace %s found in %s is already in %s",
                            keyname, lib_name.c_str(), isThere->GetValue());
-                  } else if (!TClassEdit::IsSTLCont(keyname)) {
+                  } else if (firstChar == 'h'){ // it is a header: add the libname to the list of libs to be loaded.
+                     lib_name+=" ";
+                     lib_name+=isThere->GetValue();
+                     fMapfile->SetValue(keyname, lib_name.c_str());
+                  }
+                  else if (!TClassEdit::IsSTLCont(keyname)) {
                      Warning("ReadRootmapFile", "%s %s found in %s is already in %s", line.substr(0, keyLen).c_str(),
                            keyname, lib_name.c_str(), isThere->GetValue());
                   }
