@@ -2221,10 +2221,18 @@ void CodeGenModule::EmitGlobalFunctionDefinition(GlobalDecl GD,
   }
 
   if (!GV->isDeclaration()) {
-    getDiags().Report(D->getLocation(), diag::err_duplicate_mangled_name);
-    GlobalDecl OldGD = Manglings.lookup(GV->getName());
-    if (auto *Prev = OldGD.getDecl())
-      getDiags().Report(Prev->getLocation(), diag::note_previous_definition);
+    // For cling this is fine:
+    // We can have a reference to a weak symbol in an early part of input,
+    // handle the DeferredDecl (DeferredDecl -> DeferredDeclToEmit -> IR).
+    // In later input, the same Decl can be emitted as a "proper" global,
+    // for instance by explicit instantiation, causing the emission of a
+    // symbol that was already emitted. Usually this is prevented by
+    // DeferredDeclsToEmit being emitted *after* the complete TU has been
+    // seen - not so with cling.
+    //getDiags().Report(D->getLocation(), diag::err_duplicate_mangled_name);
+    //GlobalDecl OldGD = Manglings.lookup(GV->getName());
+    //if (auto *Prev = OldGD.getDecl())
+    //  getDiags().Report(Prev->getLocation(), diag::note_previous_definition);
     return;
   }
 
