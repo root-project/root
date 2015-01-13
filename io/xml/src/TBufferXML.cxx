@@ -41,7 +41,6 @@
 #include "TStreamer.h"
 #include "TStreamerInfoActions.h"
 #include "RZip.h"
-#include <string>
 
 #ifdef R__VISUAL_CPLUSPLUS
 #define FLong64    "%I64d"
