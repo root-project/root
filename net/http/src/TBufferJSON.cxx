@@ -2671,10 +2671,8 @@ void TBufferJSON::WriteStdString(const std::string &s)
 
    TJSONPushValue();
    
-   const std::string* obj = (const std::string*) s;
-
    fValue.Append("\"");
-   fValue.Append(obj ? obj->c_str() : "");
+   fValue.Append(s);
    fValue.Append("\"");
 }
 
