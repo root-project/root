@@ -703,6 +703,12 @@ void Fatal(const char *location, const char *va_(fmt), ...);
 const std::string& GetPathSeparator();
 
 //______________________________________________________________________________
+bool EndsWith(const std::string &theString, const std::string &theSubstring);
+
+//______________________________________________________________________________
+bool BeginsWith(const std::string &theString, const std::string &theSubstring);
+
+//______________________________________________________________________________
 namespace AST2SourceTools {
 
 //______________________________________________________________________________
