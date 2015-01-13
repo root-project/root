@@ -41,6 +41,7 @@
 #include "TStreamer.h"
 #include "TStreamerInfoActions.h"
 #include "RZip.h"
+#include <string>
 
 #ifdef R__VISUAL_CPLUSPLUS
 #define FLong64    "%I64d"
@@ -68,8 +69,8 @@ TBufferXML::TBufferXML() :
    fCanUseCompact(kFALSE),
    fExpectedChain(kFALSE),
    fExpectedBaseClass(0),
-   fCompressLevel(0)
-
+   fCompressLevel(0),
+   fIOVersion(3)
 {
    // Default constructor
 }
@@ -87,7 +88,8 @@ TBufferXML::TBufferXML(TBuffer::EMode mode) :
    fCanUseCompact(kFALSE),
    fExpectedChain(kFALSE),
    fExpectedBaseClass(0),
-   fCompressLevel(0)
+   fCompressLevel(0),
+   fIOVersion(3)
 {
    // Creates buffer object to serailize/deserialize data to/from xml.
    // Mode should be either TBuffer::kRead or TBuffer::kWrite.
@@ -112,7 +114,8 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile* file) :
    fCanUseCompact(kFALSE),
    fExpectedChain(kFALSE),
    fExpectedBaseClass(0),
-   fCompressLevel(0)
+   fCompressLevel(0),
+   fIOVersion(3)
 {
    // Creates buffer object to serailize/deserialize data to/from xml.
    // This constructor should be used, if data from buffer supposed to be stored in file.
@@ -130,6 +133,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile* file) :
    if (XmlFile()) {
       SetXML(XmlFile()->XML());
       SetCompressionSettings(XmlFile()->GetCompressionSettings());
+      SetIOVersion(XmlFile()->GetIOVersion());
    }
 }
 
@@ -1252,17 +1256,19 @@ void TBufferXML::PerformPostProcessing()
 
    if ((elem==0) || (elemnode==0)) return;
 
-   if (elem->GetType()==TStreamerInfo::kTString) {
+   if (elem->GetType()==TStreamerInfo::kTString)  {
 
       XMLNodePointer_t node = fXML->GetChild(elemnode);
       fXML->SkipEmpty(node);
 
-      XMLNodePointer_t nodecharstar = 0;
-      XMLNodePointer_t nodeuchar = 0;
-      XMLNodePointer_t nodeint = 0;
+      XMLNodePointer_t nodecharstar(0), nodeuchar(0), nodeint(0), nodestring(0);
 
       while (node!=0) {
          const char* name = fXML->GetNodeName(node);
+         if (strcmp(name, xmlio::String)==0) {
+            if (nodestring) return;
+            nodestring = node;
+         } else
          if (strcmp(name, xmlio::UChar)==0) {
             if (nodeuchar) return;
             nodeuchar = node;
@@ -1277,17 +1283,23 @@ void TBufferXML::PerformPostProcessing()
          } else return; // can not be something else
          fXML->ShiftToNext(node);
       }
-
-      if (nodeuchar==0) return;
-
+      
       TString str;
-      if (nodecharstar!=0)
-         str = fXML->GetAttr(nodecharstar, xmlio::v);
+      
+      if (GetIOVersion()<3) {
+         if (nodeuchar==0) return;
+         if (nodecharstar!=0)
+            str = fXML->GetAttr(nodecharstar, xmlio::v);
+	 fXML->UnlinkFreeNode(nodeuchar);
+         fXML->UnlinkFreeNode(nodeint);
+         fXML->UnlinkFreeNode(nodecharstar);
+      } else {
+         if (nodestring!=0)
+            str = fXML->GetAttr(nodestring, xmlio::v);
+	 fXML->UnlinkFreeNode(nodestring);
+      }
+      
       fXML->NewAttr(elemnode, 0, "str", str);
-
-      fXML->UnlinkFreeNode(nodeuchar);
-      fXML->UnlinkFreeNode(nodeint);
-      fXML->UnlinkFreeNode(nodecharstar);
    } else
    if (elem->GetType()==TStreamerInfo::kTObject) {
       XMLNodePointer_t node = fXML->GetChild(elemnode);
@@ -1354,21 +1366,25 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, XMLNodePoint
       if (!fXML->HasAttr(elemnode,"str")) return;
       TString str = fXML->GetAttr(elemnode, "str");
       fXML->FreeAttr(elemnode, "str");
-      Int_t len = str.Length();
-
-      XMLNodePointer_t ucharnode = fXML->NewChild(elemnode, 0, xmlio::UChar,0);
-
-      char sbuf[20];
-      snprintf(sbuf, sizeof(sbuf), "%d", len);
-      if (len<255)
-         fXML->NewAttr(ucharnode,0,xmlio::v,sbuf);
-      else {
-         fXML->NewAttr(ucharnode,0,xmlio::v,"255");
-         XMLNodePointer_t intnode = fXML->NewChild(elemnode, 0, xmlio::Int, 0);
-         fXML->NewAttr(intnode, 0, xmlio::v, sbuf);
-      }
-      if (len>0) {
-         XMLNodePointer_t node = fXML->NewChild(elemnode, 0, xmlio::CharStar, 0);
+      
+      if (GetIOVersion()<3) {
+         Int_t len = str.Length();
+         XMLNodePointer_t ucharnode = fXML->NewChild(elemnode, 0, xmlio::UChar,0);
+         char sbuf[20];
+         snprintf(sbuf, sizeof(sbuf), "%d", len);
+         if (len<255) {
+            fXML->NewAttr(ucharnode,0,xmlio::v,sbuf);
+	 } else {
+            fXML->NewAttr(ucharnode,0,xmlio::v,"255");
+            XMLNodePointer_t intnode = fXML->NewChild(elemnode, 0, xmlio::Int, 0);
+            fXML->NewAttr(intnode, 0, xmlio::v, sbuf);
+         }
+         if (len>0) {
+            XMLNodePointer_t node = fXML->NewChild(elemnode, 0, xmlio::CharStar, 0);
+            fXML->NewAttr(node, 0, xmlio::v, str);
+         }
+      } else {
+         XMLNodePointer_t node = fXML->NewChild(elemnode, 0, xmlio::String, 0);
          fXML->NewAttr(node, 0, xmlio::v, str);
       }
    } else
@@ -2662,15 +2678,29 @@ void TBufferXML::ReadTString(TString &s)
 {
    // Reads a TString
 
-   TBufferFile::ReadTString(s);
+   if (GetIOVersion()<3) {
+      TBufferFile::ReadTString(s);
+   } else {
+      BeforeIOoperation();
+      const char* buf;
+      if ((buf = XmlReadValue(xmlio::String)))
+         s = buf;
+   }
 }
 
 //______________________________________________________________________________
 void TBufferXML::ReadStdString(void *s)
 {
-   // Reads a std::String
+   // Reads a std::string
 
-   TBufferFile::ReadStdString(s);
+   if (GetIOVersion()<3) {
+      TBufferFile::ReadStdString(s);
+   } else {
+      BeforeIOoperation();
+      const char* buf;
+      if ((buf = XmlReadValue(xmlio::String)))
+         *((std::string*)s) = buf;
+   }
 }
 
 
@@ -2799,7 +2829,12 @@ void TBufferXML::WriteTString(const TString &s)
 {
    // Writes a TString
 
-   TBufferFile::WriteTString(s);
+   if (GetIOVersion()<3) {
+      TBufferFile::WriteTString(s);
+   } else {
+      BeforeIOoperation();
+      XmlWriteValue(s.Data(), xmlio::String);
+   }
 }
 
 //______________________________________________________________________________
@@ -2807,7 +2842,12 @@ void TBufferXML::WriteStdString(const void *s)
 {
    // Writes a TString
 
-   TBufferFile::WriteStdString(s);
+   if (GetIOVersion()<3) {
+      TBufferFile::WriteStdString(s);
+   } else {
+      BeforeIOoperation();
+      XmlWriteValue(((std::string*)s)->c_str(), xmlio::String);
+   }
 }
 
 //______________________________________________________________________________
