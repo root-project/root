@@ -2228,11 +2228,13 @@ void CodeGenModule::EmitGlobalFunctionDefinition(GlobalDecl GD,
     // for instance by explicit instantiation, causing the emission of a
     // symbol that was already emitted. Usually this is prevented by
     // DeferredDeclsToEmit being emitted *after* the complete TU has been
-    // seen - not so with cling.
-    //getDiags().Report(D->getLocation(), diag::err_duplicate_mangled_name);
-    //GlobalDecl OldGD = Manglings.lookup(GV->getName());
-    //if (auto *Prev = OldGD.getDecl())
-    //  getDiags().Report(Prev->getLocation(), diag::note_previous_definition);
+    // seen - not so with cling. But do assert that the decl is the same!
+    GlobalDecl OldGD = Manglings.lookup(GV->getName());
+    if (D->getCanonicalDecl() != OldGD.getDecl()->getCanonicalDecl()) {
+      getDiags().Report(D->getLocation(), diag::err_duplicate_mangled_name);
+      if (auto *Prev = OldGD.getDecl())
+        getDiags().Report(Prev->getLocation(), diag::note_previous_definition);
+    }
     return;
   }
 
