@@ -1433,16 +1433,27 @@ void TBufferXML::BeforeIOoperation()
 //______________________________________________________________________________
 TClass* TBufferXML::ReadClass(const TClass*, UInt_t*)
 {
-   // suppressed function of TBuffer
+   // function to read class from buffer, used in old-style streamers
 
-   return 0;
+   const char* clname = 0;
+
+   if (VerifyItemNode(xmlio::Class)) {
+      clname = XmlReadValue(xmlio::Class);
+   }
+
+   if (gDebug>2) Info("ReadClass", "Try to read class %s", clname ? clname : "---");
+
+   return clname ? gROOT->GetClass(clname) : 0;
 }
 
 //______________________________________________________________________________
-void TBufferXML::WriteClass(const TClass*)
+void TBufferXML::WriteClass(const TClass* cl)
 {
-   // suppressed function of TBuffer
+   // function to write class into buffer, used in old-style streamers
 
+   if (gDebug>2) Info("WriteClass", "Try to write class %s", cl->GetName());
+
+   XmlWriteValue(cl->GetName(), xmlio::Class);
 }
 
 //______________________________________________________________________________
