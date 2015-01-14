@@ -826,6 +826,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          ROOT::TMetaUtils::Warning(0,"%s\n", message.str().c_str());
       }
 
+      fDeclSelRuleMap[recordDecl->getCanonicalDecl()]=selected;
+
       if(rcrdDeclNotAlreadySelected &&
          !fFirstPass){
 
