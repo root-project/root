@@ -490,7 +490,7 @@ void AnnotateFieldDecl(clang::FieldDecl &decl,
 
 //______________________________________________________________________________
 void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
-                  SelectionRules &selectionRules,
+                  const RScanner::DeclsSelRulesMap_t &declSelRulesMap,
                   cling::Interpreter &interpreter,
                   bool isGenreflex)
 {
@@ -509,27 +509,28 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
    SourceRange commentRange;
 
-   std::string declName;
-   const std::string thisClassName(CXXRD.getName());
-
 //    if (genreflex::verbose)
 //       std::cout << "\nInspecting class declaration " << thisClassName << " for annotations\n";
 
    // Fetch the selection rule associated to this class
    clang::Decl *declBaseClassPtr = static_cast<clang::Decl *>(&CXXRD);
-   const BaseSelectionRule *thisClassBaseSelectionRule(selectionRules.IsDeclSelected(declBaseClassPtr));
-   BaseSelectionRule::AttributesMap_t attrMap;
+   auto declSelRulePair = declSelRulesMap.find(declBaseClassPtr->getCanonicalDecl());
+   if (declSelRulePair == declSelRulesMap.end()){
+      const std::string thisClassName(CXXRD.getName());
+      ROOT::TMetaUtils::Error("AnnotateDecl","Cannot find class %s in the list of selected classes.\n",thisClassName.c_str());
+      return;
+   }
+   const BaseSelectionRule *thisClassBaseSelectionRule = declSelRulePair->second;
    // If the rule is there
    if (thisClassBaseSelectionRule) {
       // Fetch and loop over Class attributes
       // if the name of the attribute is not "name", add attr to the ast.
-      attrMap = thisClassBaseSelectionRule->GetAttributes();
       BaseSelectionRule::AttributesMap_t::iterator iter;
       std::string userDefinedProperty;
-      for (iter = attrMap.begin(); iter != attrMap.end(); iter++) {
-         const std::string &name = iter->first;
+      for (auto const & attr : thisClassBaseSelectionRule->GetAttributes()) {
+         const std::string &name = attr.first;
          if (name == ROOT::TMetaUtils::propNames::name) continue;
-         const std::string &value = iter->second;
+         const std::string &value = attr.second;
          userDefinedProperty = name + ROOT::TMetaUtils::propNames::separator + value;
          if (genreflex::verbose) std::cout << " * " << userDefinedProperty << std::endl;
          CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, userDefinedProperty, 0));
@@ -565,7 +566,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
             // The ClassDef annotation is for the class itself
             if (isClassDefMacro) {
                CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, comment.str(), 0));
-            } else if (!selectionRules.IsSelectionXMLFile()) {
+            } else if (!isGenreflex) {
                // Here we check if we are in presence of a selction file so that
                // the comment does not ends up as a decoration in the AST,
                // Nevertheless, w/o PCMS this has no effect, since the headers
@@ -576,7 +577,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          }
          // Match decls with sel rules if we are in presence of a selection file
          // and the cast was successful
-         if (selectionRules.IsSelectionXMLFile() && thisClassSelectionRule != 0) {
+         if (isGenreflex && thisClassSelectionRule != 0) {
             const std::list<VariableSelectionRule> &fieldSelRules = thisClassSelectionRule->GetFieldSelectionRules();
 
             // This check is here to avoid asserts in debug mode (LLVMDEV env variable set)
@@ -2687,17 +2688,18 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
    // This is done to avoid duplications of keys with typedefs
    std::unordered_set<std::string> classesKeys;
 
-   // Add the template definitions
-   if (!classesDefsList.empty()) {
-      rootmapFile << "{ decls }\n";
-      for (auto & classDef : classesDefsList) {
-         rootmapFile << classDef << std::endl;
-      }
-      rootmapFile << "\n";
-   }
 
    // Add the "section"
-   if (!nsNames.empty() || !classesNames.empty() || !tdNames.empty() || !enNames.empty()) {
+   if (!classesNames.empty() || !nsNames.empty() || !tdNames.empty() || !enNames.empty()) {
+
+      // Add the template definitions
+      if (!classesDefsList.empty()) {
+         rootmapFile << "{ decls }\n";
+         for (auto & classDef : classesDefsList) {
+            rootmapFile << classDef << std::endl;
+         }
+         rootmapFile << "\n";
+      }
       rootmapFile << "[" << rootmapLibName << " ]\n";
 
       // Loop on selected classes and insert them in the rootmap
@@ -2861,15 +2863,15 @@ void ExtractSelectedNamespaces(RScanner &scan, std::list<std::string> &nsList)
 
 //_____________________________________________________________________________
 void AnnotateAllDeclsForPCH(cling::Interpreter &interp,
-                            RScanner &scan,
-                            SelectionRules &selectionRules)
+                            RScanner &scan)
 {
    // We need annotations even in the PCH: // !, // || etc.
+   auto const & declSelRulesMap = scan.GetDeclsSelRulesMap();
    for (auto const & selClass : scan.fSelectedClasses) {
       // Very important: here we decide if we want to attach attributes to the decl.
       if (clang::CXXRecordDecl *CXXRD =
                llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl *>(selClass.GetRecordDecl()))) {
-         AnnotateDecl(*CXXRD, selectionRules, interp, false);
+         AnnotateDecl(*CXXRD, declSelRulesMap, interp, false);
       }
    }
 }
@@ -2926,7 +2928,6 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
 int GenerateFullDict(std::ostream &dictStream,
                      cling::Interpreter &interp,
                      RScanner &scan,
-                     SelectionRules &selectionRules,
                      const ROOT::TMetaUtils::RConstructorTypes &ctorTypes,
                      bool isSplit,
                      bool isGenreflex,
@@ -2975,7 +2976,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
       if (clang::CXXRecordDecl *CXXRD =
                llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl *>(selClass.GetRecordDecl()))) {
-         AnnotateDecl(*CXXRD, selectionRules, interp, isGenreflex);
+         AnnotateDecl(*CXXRD, scan.GetDeclsSelRulesMap() , interp, isGenreflex);
       }
 
       const clang::CXXRecordDecl *CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
@@ -4387,7 +4388,7 @@ int RootCling(int argc,
    int retCode(0);
 
    if (onepcm) {
-      AnnotateAllDeclsForPCH(interp, scan, selectionRules);
+      AnnotateAllDeclsForPCH(interp, scan);
    } else if (interpreteronly) {
       retCode = CheckClassesForInterpreterOnlyDicts(interp, scan);
       // generate an empty pcm nevertheless for consistency
@@ -4399,7 +4400,6 @@ int RootCling(int argc,
       retCode = GenerateFullDict(splitDictStream,
                                  interp,
                                  scan,
-                                 selectionRules,
                                  constructorTypes,
                                  doSplit,
                                  isGenreflex,

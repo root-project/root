@@ -807,6 +807,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       // We need this check since the same class can be selected through its name or typedef
       bool rcrdDeclNotAlreadySelected = fselectedRecordDecls.insert(recordDecl).second;
 
+      fDeclSelRuleMap[recordDecl->getCanonicalDecl()]=selected;
+
       if(rcrdDeclNotAlreadySelected &&
          !fFirstPass){
 
