@@ -660,6 +660,8 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
    fSafety = 0.;
    TGeoNode *top_node = fGeometry->GetTopNode();
    TGeoVolume *top_volume = top_node->GetVolume();
+   // If inside an assembly, go logically up in the hierarchy
+   while (fCurrentNode->GetVolume()->IsAssembly() && fLevel) CdUp();
    if (stepmax<1E29) {
       if (stepmax <= 0) {
          stepmax = - stepmax;
@@ -1184,6 +1186,8 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    fIsStepEntering = kFALSE;
    fStep = stepmax;
    Double_t snext = TGeoShape::Big();
+   // If inside an assembly, go logically up in the hierarchy
+   while (fCurrentNode->GetVolume()->IsAssembly() && fLevel) CdUp();
    if (compsafe) {
       // Try to get out easy if proposed step within safe region
       fIsOnBoundary = kFALSE;
