@@ -109,7 +109,7 @@ LinkdefReader::LinkdefReader(cling::Interpreter &interp,
  * The method records that 'include' has been explicitly requested in the linkdef file
  * to be added to the dictionary and interpreter.
  */
-bool LinkdefReader::AddInclude(std::string include)
+bool LinkdefReader::AddInclude(const std::string& include)
 {
    fIncludes += "#include ";
    fIncludes += include;
@@ -123,8 +123,8 @@ bool LinkdefReader::AddInclude(std::string include)
  * The method that processes the pragma statement.
  * Sometimes I had to do strange things to reflect the strange behavior of rootcint
  */
-bool LinkdefReader::AddRule(std::string ruletype,
-                            std::string identifier,
+bool LinkdefReader::AddRule(const std::string& ruletype,
+                            const std::string& identifier,
                             bool linkOn,
                             bool request_only_tclass,
                             LinkdefReader::Options *options /* = 0 */)
@@ -132,16 +132,14 @@ bool LinkdefReader::AddRule(std::string ruletype,
 
    EPragmaNames name = kUnknown;
    ROOT::TMetaUtils::Info("LinkdefReader::AddRule", "Ruletype is %s with the identifier %s\n", ruletype.c_str(), identifier.c_str());
-   std::map<std::string, EPragmaNames>::iterator it = LinkdefReader::fgMapPragmaNames.find(ruletype);
-   if (it != LinkdefReader::fgMapPragmaNames.end()) {
+   auto it = fgMapPragmaNames.find(ruletype);
+   if (it != fgMapPragmaNames.end()) {
       name = it->second;
    }
 
    switch (name) {
       case kAll:
-         if (identifier == "globals") {
-//            std::cout<<"all enums and variables selection rule to be impl."<<std::endl;
-
+         if (identifier == "globals" || identifier == "global") {
             VariableSelectionRule vsr(fCount++, fInterp);
             if (linkOn) {
                vsr.SetAttributeValue("pattern", "*");
@@ -178,9 +176,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
                   fSelectionRules->AddEnumSelectionRule(esr);
                }
             }
-         } else if (identifier == "functions") {
-//            std::cout<<"all functions selection rule to be impl."<<std::endl;
-
+         } else if (identifier == "functions" || identifier == "function") {
             FunctionSelectionRule fsr(fCount++, fInterp);
             fsr.SetAttributeValue("pattern", "*");
             if (linkOn) {
@@ -192,10 +188,8 @@ bool LinkdefReader::AddRule(std::string ruletype,
                   fSelectionRules->AddFunctionSelectionRule(fsr);
                }
             }
-         } else if (identifier == "classes" || identifier == "namespaces") {
-//            std::cout<<"all classes selection rule to be impl."<<std::endl;
-
-
+         } else if (identifier == "classes" || identifier == "namespaces" ||
+                    identifier == "class" || identifier == "namespace") {
             if (linkOn) {
 
                ClassSelectionRule csr3(fCount++, fInterp);
@@ -223,8 +217,10 @@ bool LinkdefReader::AddRule(std::string ruletype,
                   fSelectionRules->AddClassSelectionRule(csr2);
                }
             }
+         } else if (identifier == "typedef" || identifier == "typedef"){
+            // Silently ignore
          } else {
-            std::cerr << "Warning - possibly unimplemented pragma statement: " << std::endl;
+            ROOT::TMetaUtils::Warning("Unimplemented pragma statement: %s\n",identifier.c_str());
             return false;
          }
 
@@ -234,33 +230,31 @@ bool LinkdefReader::AddRule(std::string ruletype,
          }
          break;
       case kDefinedIn: {
-//         std::cout<<"sel rules for everything (pattern = \"*\") in "<<identifier<<" should be implemented"<<std::endl;
-
             fSelectionRules->SetHasFileNameRule(true);
 
             // add selection rules for everything
-
-            if (identifier.length() && identifier[0] == '"' && identifier[identifier.length() - 1] == '"') {
-               identifier = identifier.substr(1, identifier.length() - 2);
+            std::string localIdentifier(identifier);
+            if (localIdentifier.length() && localIdentifier[0] == '"' && localIdentifier[localIdentifier.length() - 1] == '"') {
+               localIdentifier = localIdentifier.substr(1, localIdentifier.length() - 2);
             }
 
             VariableSelectionRule vsr(fCount++, fInterp);
             vsr.SetAttributeValue("pattern", "*");
-            vsr.SetAttributeValue("file_name", identifier);
+            vsr.SetAttributeValue("file_name", localIdentifier);
             if (linkOn) vsr.SetSelected(BaseSelectionRule::kYes);
             else vsr.SetSelected(BaseSelectionRule::kNo);
             fSelectionRules->AddVariableSelectionRule(vsr);
 
             EnumSelectionRule esr(fCount++, fInterp);
             esr.SetAttributeValue("pattern", "*");
-            esr.SetAttributeValue("file_name", identifier);
+            esr.SetAttributeValue("file_name", localIdentifier);
             if (linkOn) esr.SetSelected(BaseSelectionRule::kYes);
             else esr.SetSelected(BaseSelectionRule::kNo);
             fSelectionRules->AddEnumSelectionRule(esr);
 
             FunctionSelectionRule fsr(fCount++, fInterp);
             fsr.SetAttributeValue("pattern", "*");
-            fsr.SetAttributeValue("file_name", identifier);
+            fsr.SetAttributeValue("file_name", localIdentifier);
             if (linkOn) fsr.SetSelected(BaseSelectionRule::kYes);
             else fsr.SetSelected(BaseSelectionRule::kNo);
             fSelectionRules->AddFunctionSelectionRule(fsr);
@@ -269,8 +263,8 @@ bool LinkdefReader::AddRule(std::string ruletype,
             csr.SetAttributeValue("pattern", "*");
             csr2.SetAttributeValue("pattern", "*::*");
 
-            csr.SetAttributeValue("file_name", identifier);
-            csr2.SetAttributeValue("file_name", identifier);
+            csr.SetAttributeValue("file_name", localIdentifier);
+            csr2.SetAttributeValue("file_name", localIdentifier);
             if (linkOn) {
                csr.SetSelected(BaseSelectionRule::kYes);
                csr2.SetSelected(BaseSelectionRule::kYes);
@@ -287,35 +281,35 @@ bool LinkdefReader::AddRule(std::string ruletype,
          break;
 
       case kFunction: {
+            std::string localIdentifier(identifier);
             bool name_or_proto = false; // if true = name, if flase = proto_name
-            if (!ProcessFunctionPrototype(identifier, name_or_proto)) {
+            if (!ProcessFunctionPrototype(localIdentifier, name_or_proto)) {
                return false;
             }
-            //std::cout<<"function selection rule for "<<identifier<<" ("<<(name_or_proto?"name":"proto_name")<<") to be impl."<<std::endl;
             FunctionSelectionRule fsr(fCount++, fInterp);
             if (linkOn) fsr.SetSelected(BaseSelectionRule::kYes);
             else fsr.SetSelected(BaseSelectionRule::kNo);
-            if (identifier.at(identifier.length() - 1) == '*') fsr.SetAttributeValue("pattern", identifier);
-            else if (name_or_proto) fsr.SetAttributeValue("name", identifier);
+            if (localIdentifier.at(localIdentifier.length() - 1) == '*') fsr.SetAttributeValue("pattern", localIdentifier);
+            else if (name_or_proto) fsr.SetAttributeValue("name", localIdentifier);
             else {
-               int pos = identifier.find("(*)"); //rootcint generates error here but I decided to implement that pattern
-               if (pos > -1) fsr.SetAttributeValue("proto_pattern", identifier);
+               int pos = localIdentifier.find("(*)"); //rootcint generates error here but I decided to implement that pattern
+               if (pos > -1) fsr.SetAttributeValue("proto_pattern", localIdentifier);
                else {
                   // No multiline
-                  ROOT::TMetaUtils::ReplaceAll(identifier, "\\\n", "", true);
+                  ROOT::TMetaUtils::ReplaceAll(localIdentifier, "\\\n", "", true);
                   // Types: We do not do IO of functions, so it is safe to
                   // put in some heuristics
-                  ROOT::TMetaUtils::ReplaceAll(identifier, "ULong_t", "unsigned long");
-                  ROOT::TMetaUtils::ReplaceAll(identifier, "Long_t", "long");
-                  ROOT::TMetaUtils::ReplaceAll(identifier, "Int_t", "int");
+                  ROOT::TMetaUtils::ReplaceAll(localIdentifier, "ULong_t", "unsigned long");
+                  ROOT::TMetaUtils::ReplaceAll(localIdentifier, "Long_t", "long");
+                  ROOT::TMetaUtils::ReplaceAll(localIdentifier, "Int_t", "int");
                   // Remove space after/before the commas if any
-                  ROOT::TMetaUtils::ReplaceAll(identifier, ", ", ",", true);
-                  ROOT::TMetaUtils::ReplaceAll(identifier, " ,", ",", true);
+                  ROOT::TMetaUtils::ReplaceAll(localIdentifier, ", ", ",", true);
+                  ROOT::TMetaUtils::ReplaceAll(localIdentifier, " ,", ",", true);
                   // Remove any space before/after the ( as well
-                  ROOT::TMetaUtils::ReplaceAll(identifier, " (", "(", true);
-                  ROOT::TMetaUtils::ReplaceAll(identifier, "( ", "(", true);
-                  ROOT::TMetaUtils::ReplaceAll(identifier, " )", ")", true);
-                  fsr.SetAttributeValue("proto_name", identifier);
+                  ROOT::TMetaUtils::ReplaceAll(localIdentifier, " (", "(", true);
+                  ROOT::TMetaUtils::ReplaceAll(localIdentifier, "( ", "(", true);
+                  ROOT::TMetaUtils::ReplaceAll(localIdentifier, " )", ")", true);
+                  fsr.SetAttributeValue("proto_name", localIdentifier);
                }
             }
             fSelectionRules->AddFunctionSelectionRule(fsr);
@@ -324,19 +318,18 @@ bool LinkdefReader::AddRule(std::string ruletype,
          break;
 
       case kOperators: {
-            if (!ProcessOperators(identifier)) // this creates the proto_pattern
+            std::string localIdentifier(identifier);
+            if (!ProcessOperators(localIdentifier)) // this creates the proto_pattern
                return false;
-//            std::cout<<"function selection rule for "<<identifier<<" (proto_pattern) to be impl."<<std::endl;
 
             FunctionSelectionRule fsr(fCount++, fInterp);
             if (linkOn) fsr.SetSelected(BaseSelectionRule::kYes);
             else fsr.SetSelected(BaseSelectionRule::kNo);
-            fsr.SetAttributeValue("proto_pattern", identifier);
+            fsr.SetAttributeValue("proto_pattern", localIdentifier);
             fSelectionRules->AddFunctionSelectionRule(fsr);
          }
          break;
       case kGlobal: {
-//           std::cout<<"variable selection rule for "<<identifier<<" to be impl."<<std::endl;
             VariableSelectionRule vsr(fCount++, fInterp);
             if (linkOn) vsr.SetSelected(BaseSelectionRule::kYes);
             else vsr.SetSelected(BaseSelectionRule::kNo);
@@ -346,7 +339,6 @@ bool LinkdefReader::AddRule(std::string ruletype,
          }
          break;
       case kEnum: {
-//            std::cout<<"enum selection rule for "<<identifier<<" to be impl."<<std::endl;
 
             EnumSelectionRule esr(fCount++, fInterp);
             if (linkOn) esr.SetSelected(BaseSelectionRule::kYes);
@@ -361,25 +353,25 @@ bool LinkdefReader::AddRule(std::string ruletype,
       case kNamespace:
       case kUnion:
       case kStruct: {
-//            std::cout<<"class selection rule for "<<identifier<<" to be impl."<<std::endl;
+            std::string localIdentifier(identifier);
             ClassSelectionRule csr(fCount++, fInterp);
 
             if (request_only_tclass) {
                csr.SetRequestOnlyTClass(true);
             }
-            int len = identifier.length();
+            int len = localIdentifier.length();
             if (len > 8) { // process class+protected and class+private
-               static std::string protStr("+protected");
-               static std::string privStr("+private");
+               const std::string protStr("+protected");
+               const std::string privStr("+private");
 
-               if (identifier.compare(0, protStr.length(), protStr) == 0) {
+               if (localIdentifier.compare(0, protStr.length(), protStr) == 0) {
                   csr.SetRequestProtected(true);
-                  identifier.erase(0, protStr.length() + 1);
-                  len = identifier.length();
-               } else if (identifier.compare(0, privStr.length(), privStr) == 0) {
+                  localIdentifier.erase(0, protStr.length() + 1);
+                  len = localIdentifier.length();
+               } else if (localIdentifier.compare(0, privStr.length(), privStr) == 0) {
                   csr.SetRequestPrivate(true);
-                  identifier.erase(0, privStr.length() + 1);
-                  len = identifier.length();
+                  localIdentifier.erase(0, privStr.length() + 1);
+                  len = localIdentifier.length();
                }
             }
             if (len > 1) { // process the +, -, -! endings of the classes
@@ -387,7 +379,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
                bool ending = false;
                int where = 1;
                while (!ending && where < len) {
-                  char last = identifier.at(len - where);
+                  char last = localIdentifier.at(len - where);
                   switch (last) {
                      case ';':
                         break;
@@ -415,20 +407,20 @@ bool LinkdefReader::AddRule(std::string ruletype,
                   if (options->fVersionNumber >= 0) csr.SetRequestedVersionNumber(options->fVersionNumber);
                }
                if (csr.RequestStreamerInfo() && csr.RequestNoStreamer()) {
-                  std::cerr << "Warning: " << identifier << " option + mutual exclusive with -, + prevails\n";
+                  std::cerr << "Warning: " << localIdentifier << " option + mutual exclusive with -, + prevails\n";
                   csr.SetRequestNoStreamer(false);
                }
                if (ending) {
-                  identifier.erase(len - (where - 2)); // We 'consumed' one of the class token
+                  localIdentifier.erase(len - (where - 2)); // We 'consumed' one of the class token
                } else {
-                  identifier.erase(len - (where - 1));
+                  localIdentifier.erase(len - (where - 1));
                }
             }
 
             if (linkOn) {
                csr.SetSelected(BaseSelectionRule::kYes);
 
-               if (identifier == "*") { // rootcint generates error here, but I decided to implement it
+               if (localIdentifier == "*") { // rootcint generates error here, but I decided to implement it
                   ClassSelectionRule csr2(fCount++, fInterp);
                   csr2.SetSelected(BaseSelectionRule::kYes);
                   csr2.SetAttributeValue("pattern", "*::*");
@@ -441,7 +433,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
                }
             } else {
                csr.SetSelected(BaseSelectionRule::kNo);
-               if (identifier == "*") { // rootcint generates error here, but I decided to implement it
+               if (localIdentifier == "*") { // rootcint generates error here, but I decided to implement it
                   ClassSelectionRule csr2(fCount++, fInterp);
                   csr2.SetSelected(BaseSelectionRule::kNo);
                   csr2.SetAttributeValue("pattern", "*::*");
@@ -459,22 +451,22 @@ bool LinkdefReader::AddRule(std::string ruletype,
                // else {
                //    EnumSelectionRule esr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
                //    esr.SetSelected(BaseSelectionRule::kNo);
-               //    esr.SetAttributeValue("pattern", identifier+"::*");
+               //    esr.SetAttributeValue("pattern", localIdentifier+"::*");
                //    fSelectionRules->AddEnumSelectionRule(esr);
 
                //    if (fSelectionRules->GetHasFileNameRule()) {
                //       FunctionSelectionRule fsr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
                //       fsr.SetSelected(BaseSelectionRule::kNo);
-               //       std::string value = identifier + "::*";
+               //       std::string value = localIdentifier + "::*";
                //       fsr.SetAttributeValue("pattern", value);
                //       fSelectionRules->AddFunctionSelectionRule(fsr);
                //    }
                // }
             }
-            if (IsPatternRule(identifier)) {
-               csr.SetAttributeValue("pattern", identifier);
+            if (IsPatternRule(localIdentifier)) {
+               csr.SetAttributeValue("pattern", localIdentifier);
             }
-            csr.SetAttributeValue("name", identifier);
+            csr.SetAttributeValue("name", localIdentifier);
 
             if (name == kTypeDef) {
                csr.SetAttributeValue("fromTypedef", "true");
@@ -493,7 +485,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
          // (mostly because we do not yet filter the dictionary/pcm).
          break;
       case kUnknown:
-         std::cerr << "Warning unimplemented pragma statement - it does nothing: ";
+         ROOT::TMetaUtils::Warning("Unimplemented pragma statement - it has no effect: %s\n", identifier.c_str());
          return false;
          break;
    }
