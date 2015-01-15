@@ -73,7 +73,7 @@ THttpCallArg::~THttpCallArg()
 //______________________________________________________________________________
 void THttpCallArg::SetBinData(void* data, Long_t length)
 {
-   // set binary data for http call
+   // set binary data, which will be returned as reply body
 
    if (fBinData) free(fBinData);
    fBinData = data;
@@ -207,7 +207,7 @@ Bool_t THttpCallArg::CompressWithGzip()
 class THttpTimer : public TTimer {
 public:
 
-   THttpServer *fServer;
+   THttpServer *fServer;  //!
 
    THttpTimer(Long_t milliSec, Bool_t mode, THttpServer *serv) :
       TTimer(milliSec, mode), fServer(serv)
@@ -261,6 +261,7 @@ public:
 // TGraph* gr = new TGraph(10);                                         //
 // gr->SetName("gr1");                                                  //
 // serv->Register("graphs/subfolder", gr);                              //
+//                                                                      //
 // If objects content is changing in the application, one could         //
 // enable monitoring flag in the browser - than objects view            //
 // will be regularly updated.                                           //
@@ -368,8 +369,29 @@ THttpServer::~THttpServer()
 //______________________________________________________________________________
 void THttpServer::SetSniffer(TRootSniffer *sniff)
 {
+   // Set TRootSniffer to the server
+   // Server takes ownership over sniffer
+
    if (fSniffer) delete fSniffer;
    fSniffer = sniff;
+}
+
+//______________________________________________________________________________
+Bool_t THttpServer::IsReadOnly() const
+{
+   // returns read-only mode
+
+   return fSniffer ? fSniffer->IsReadOnly() : kTRUE;
+}
+
+//______________________________________________________________________________
+void THttpServer::SetReadOnly(Bool_t readonly)
+{
+   // Set read-only mode for the server (default on)
+   // In read-only server is not allowed to change any ROOT object, registered to the server
+   // Server also cannot execute objects method via exe.json request
+
+   if (fSniffer) fSniffer->SetReadOnly(readonly);
 }
 
 //______________________________________________________________________________
@@ -443,8 +465,8 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 //______________________________________________________________________________
 Bool_t THttpServer::VerifyFilePath(const char* fname)
 {
-   // checked that filename does not contains relative path below current directory
-   // Used to prevent access to files below jsrootsys directory
+   // Checked that filename does not contains relative path below current directory
+   // Used to prevent access to files below current directory
 
    if ((fname==0) || (*fname==0)) return kFALSE;
 
@@ -485,7 +507,7 @@ Bool_t THttpServer::VerifyFilePath(const char* fname)
 //______________________________________________________________________________
 Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 {
-   // verifies that request just file name
+   // Verifies that request is just file name
    // File names typically contains prefix like "jsrootsys/"
    // If true, method returns real name of the file,
    // which should be delivered to the client
@@ -544,8 +566,6 @@ void THttpServer::ProcessRequests()
    // gSystem->ProcessEvents() is called.
    // User can call serv->ProcessRequests() directly, but only from main analysis thread.
 
-   // Info("ProcessRequests", "Server %p in main %ld curr %ld", this, (long) fMainThrdId, (long)TThread::SelfId());
-
    if (fMainThrdId != TThread::SelfId()) {
       Error("ProcessRequests", "Should be called only from main ROOT thread");
       return;
@@ -581,8 +601,6 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    // Process single http request
    // Depending from requested path and filename different actions will be performed.
    // In most cases information is provided by TRootSniffer class
-
-   // Info("ProcessRequest", "Path %s File %s", arg->fPathName.Data(), arg->fFileName.Data());
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
 
@@ -749,6 +767,8 @@ Bool_t THttpServer::Unregister(TObject *obj)
 //______________________________________________________________________________
 const char *THttpServer::GetMimeType(const char *path)
 {
+   // Returns MIME type base on file extension
+
    static const struct {
       const char *extension;
       int ext_len;

@@ -65,35 +65,59 @@ public:
 
    void SetTopName(const char *topname)
    {
+      // set engine-specific top-name
+
       fTopName = topname;
    }
+
    void SetPathAndFileName(const char *fullpath);
+
    void SetPathName(const char *p)
    {
+      // set request path name
+
       fPathName = p;
    }
+
    void SetFileName(const char *f)
    {
+      // set request file name
+
       fFileName = f;
    }
+
    void SetQuery(const char *q)
    {
+      // set request query
+
       fQuery = q;
    }
+
    const char *GetTopName() const
    {
+      // returns engine-specific top-name
+
       return fTopName.Data();
    }
+
    const char *GetPathName() const
    {
+      // returns path name from request URL
+
       return fPathName.Data();
    }
+
    const char *GetFileName() const
    {
+      // returns file name from request URL
+
       return fFileName.Data();
    }
+
    const char *GetQuery() const
    {
+      // returns request query (string after ? in request URL)
+
       return fQuery.Data();
    }
 
@@ -101,63 +125,79 @@ public:
 
    void SetContentType(const char *typ)
    {
+      // set content type like "text/xml" or "application/json"
+
       fContentType = typ;
    }
+
    void Set404()
    {
+      // mark reply as 404 error - page/request not exists
+
       SetContentType("_404_");
    }
 
-   // indicate that http request should response with file content
    void SetFile(const char* filename = 0)
    {
+      // indicate that http request should response with file content
+
       SetContentType("_file_");
       if (filename!=0) fContent = filename;
    }
 
    void SetXml()
    {
+      // set content type as JSON
+
       SetContentType("text/xml");
    }
 
    void SetJson()
    {
+      // set content type as JSON
+
       SetContentType("application/json");
    }
 
    void AddHeader(const char* name, const char* value)
    {
+      // Add name:value pair to reply header
+      // Same header can be specified only once
+
       fHeader.Append(TString::Format("%s: %s\r\n", name, value));
    }
 
-   // Set encoding like gzip
    void SetEncoding(const char *typ)
    {
+      // Set Content-Encoding header like gzip
+
       AddHeader("Content-Encoding", typ);
    }
 
-   // Set content directly
    void SetContent(const char *c)
    {
+      // Set content directly
+
       fContent = c;
    }
 
-   // Compress content with gzip, provides appropriate header
    Bool_t CompressWithGzip();
 
-   // Set kind of content zipping
-   // 0 - none
-   // 1 - only when supported in request header
-   // 2 - if supported and content size bigger than 10K
-   // 3 - always
    void SetZipping(Int_t kind)
    {
+      // Set kind of content zipping
+      // 0 - none
+      // 1 - only when supported in request header
+      // 2 - if supported and content size bigger than 10K
+      // 3 - always
+
       fZipping = kind;
    }
 
-   // return zipping
    Int_t GetZipping() const
    {
+      // return kind of content zipping
+
       return fZipping;
    }
 
@@ -217,7 +257,7 @@ protected:
 
    Long_t       fMainThrdId;  //! id of the main ROOT process
 
-   TString      fJsRootSys;   //! location of Root JS (if any)
+   TString      fJsRootSys;   //! location of JSROOT files
    TString      fTopName;     //! name of top folder, default - "ROOT"
 
    TString      fDefaultPage; //! file name for default page name
@@ -246,6 +286,10 @@ public:
    }
 
    void SetSniffer(TRootSniffer *sniff);
+
+   Bool_t IsReadOnly() const;
+
+   void SetReadOnly(Bool_t readonly);
 
    void SetTopName(const char *top)
    {
