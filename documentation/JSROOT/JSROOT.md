@@ -14,7 +14,7 @@ The latest version of JSROOT can also be found online on <http://root.cern.ch/js
 
 ## Reading ROOT files in JSROOT
 
-[The main page](http://root.cern.ch/js/3.1/) of the JSROOT project provides the possibility to interactively open ROOT files and draw objects like histogram or canvas.
+[The main page](https://root.cern.ch/js/3.2/) of the JSROOT project provides the possibility to interactively open ROOT files and draw objects like histogram or canvas.
 
 The following parameters can be specified in the URL string:
 
@@ -32,18 +32,18 @@ The following parameters can be specified in the URL string:
 
 Examples: 
 
-- <http://root.cern.ch/js/3.1/index.htm?file=../files/hsimple.root&item=hpx;1>
-- <http://root.cern.ch/js/3.1/index.htm?file=../files/hsimple.root&nobrowser&item=hpxpy;1&opt=colz>
-- <http://root.cern.ch/js/3.2/index.htm?file=../files/hsimple.root&noselect&layout=grid2x2&item=hprof;1>
+- <https://root.cern.ch/js/3.2/index.htm?file=../files/hsimple.root&item=hpx;1>
+- <https://root.cern.ch/js/3.2/index.htm?file=../files/hsimple.root&nobrowser&item=hpxpy;1&opt=colz>
+- <https://root.cern.ch/js/3.2/index.htm?file=../files/hsimple.root&noselect&layout=grid2x2&item=hprof;1>
 
 One can very easy integrate JSROOT graphic into other HTML pages using a __iframe__ tag:  
 
-<iframe width="600" height="500" src="http://root.cern.ch/js/3.1/index.htm?nobrowser&file=../files/hsimple.root&item=hpxpy;1&opt=colz">
+<iframe width="600" height="500" src="https://root.cern.ch/js/3.2/index.htm?nobrowser&file=../files/hsimple.root&item=hpxpy;1&opt=colz">
 </iframe>
 
 In principle, one could open any ROOT file placed in the web, providing the full URL to it like:
 
-<http://web-docs.gsi.de/~linev/js/3.1/?file=http://root.cern.ch/js/files/hsimple.root&item=hpx>
+<https://web-docs.gsi.de/~linev/js/3.2/?file=http://root.cern.ch/js/files/hsimple.root&item=hpx>
 
 But one should be aware of [Cross-Origin Request blocking](https://developer.mozilla.org/en/http_access_control),
 when the browser blocks requests to files from domains other than current web page.
@@ -54,7 +54,7 @@ In the second case, one could use the server with its default settings.
 A simple case is to copy only the top index.htm file on the server and specify the full path to JSRootCore.js script like:
 
     ...
-    <script type="text/javascript" src="http://root.cern.ch/js/3.1/scripts/JSRootCore.js"></script>
+    <script type="text/javascript" src="http://root.cern.ch/js/3.2/scripts/JSRootCore.js"></script>
     ...  
 
 In such case one can also specify a custom files list:
@@ -73,13 +73,13 @@ JSROOT is used to implement the user interface in the web browsers.
 
 The layout of the main page coming from THttpServer is similar to the file I/O one.
 One could browse existing items and display them. A snapshot of running
-server can be seen on the [demo page](http://root.cern.ch/js/3.1/demo/).
+server can be seen on the [demo page](https://root.cern.ch/js/3.2/demo/).
 
 One could also specify similar URL parameters to configure the displayed items and drawing options.
 
 It is also possible to display one single item from the THttpServer server like:
 
-<http://root.cern.ch/js/3.1/demo/Files/job1.root/hpxpy/draw.htm?opt=colz>
+<https://root.cern.ch/js/3.2/demo/Files/job1.root/hpxpy/draw.htm?opt=colz>
 
 
 ##  Data monitoring with JSROOT
@@ -92,7 +92,7 @@ changes and request only the items currently displayed in the browser.
 To enable monitoring, one should activate the appropriate checkbox or 
 provide __monitoring__ parameter in the URL string like: 
 
-<http://root.cern.ch/js/3.1/demo/Files/job1.root/hprof/draw.htm?monitoring=1000>
+<https://root.cern.ch/js/3.2/demo/Files/job1.root/hprof/draw.htm?monitoring=1000>
 
 The parameter value is the update interval in milliseconds.
 
@@ -106,16 +106,16 @@ create JSON files for selected objects and write such files in a directory,
 which can be accessed via web server. Then one can use JSROOT to read such files and display objects in a web browser.
 There is a demonstration page showing such functionality:
 
-<http://root.cern.ch/js/3.1/demo/demo.htm>
+<https://root.cern.ch/js/3.2/demo/demo.htm>
 
-<iframe width="500" height="300" src="http://root.cern.ch/js/3.1/demo/demo.htm">
+<iframe width="500" height="300" src="https://root.cern.ch/js/3.2/demo/demo.htm">
 </iframe>
 
 This demo page reads in cycle 20 json files and displays them.
 
 If one has a web server which already provides such JSON file, one could specify the URL to this file like:
 
-<http://root.cern.ch/js/3.1/demo/demo.htm?addr=Canvases/c1/root.json.gz>
+<https://root.cern.ch/js/3.2/demo/demo.htm?addr=Canvases/c1/root.json.gz>
 
 Here the same problem with [Cross-Origin Request](https://developer.mozilla.org/en/http_access_control) can appear.
 If the web server configuration cannot be changed, just copy JSROOT to the web server itself.
@@ -137,7 +137,7 @@ Let say that major classes like TH1 or TGraph or TCanvas will be supported, but 
 
 If somebody still want to test such functionality, try monitoring parameter like:
 
-<http://root.cern.ch/js/3.1/index.htm?nobrowser&file=../files/hsimple.root+&item=hpx;1&monitoring=2000>
+<https://root.cern.ch/js/3.2/index.htm?nobrowser&file=../files/hsimple.root+&item=hpx;1&monitoring=2000>
 
 In this particular case, the histogram is not changing.
 
@@ -146,7 +146,7 @@ In this particular case, the histogram is not changing.
 
 Even without any server-side application, JSROOT provides nice ROOT-like graphics,
 which could be used in arbitrary HTML pages.
-There is and [example page](http://root.cern.ch/js/3.1/demo/example.htm), 
+There is and [example page](https://root.cern.ch/js/3.2/demo/example.htm), 
 where a 2-D histogram is artificially generated and displayed.
 Details about the JSROOT API can be found in the next chapters.
 
@@ -163,7 +163,7 @@ Before JSROOT can be used, all appropriate scripts should be loaded.
 Any HTML pages where JSROOT is used should include the JSRootCore.js script.
 The <head> section of the HTML page should have the following line:
 
-    <script type="text/javascript" src="http://root.cern.ch/js/3.1/scripts/JSRootCore.js"></script>  
+    <script type="text/javascript" src="http://root.cern.ch/js/3.2/scripts/JSRootCore.js"></script>  
 
 Here, the default location of JSROOT is specified. One could have a local copy on the file system or on a private web server. When JSROOT is used with THttpServer, the address looks like:
 
@@ -251,5 +251,5 @@ For example, reading an object from a file and displaying it will look like:
 
 ## Links collection
 
-Many different examples of JSROOT usage can be found on [links collection](http://root.cern.ch/js/3.1/jslinks.htm) page 
+Many different examples of JSROOT usage can be found on [links collection](https://root.cern.ch/js/3.2/jslinks.htm) page 
 
