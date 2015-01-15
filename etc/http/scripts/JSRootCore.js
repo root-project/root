@@ -14,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.2 dev 12/01/2015";
+   JSROOT.version = "3.2 dev 15/01/2015";
 
    JSROOT.source_dir = function(){
       var scripts = document.getElementsByTagName('script');
@@ -80,9 +80,7 @@
    // https://github.com/graniteds/jsonr
    // Only unref part was used, arrays are not accounted as objects
    // Should be used to reintroduce objects references, produced by TBufferJSON
-
-   JSROOT.JSONR_unref = function(value, dy)
-   {
+   JSROOT.JSONR_unref = function(value, dy) {
       var c, i, k, ks;
       if (!dy) dy = [];
 
@@ -169,6 +167,15 @@
          url = url.slice(pos+1);
       }
       return dflt;
+   }
+
+   JSROOT.findFunction = function(name) {
+      var func = window[name];
+      if (typeof func == 'function') return func;
+      var separ = name.indexOf(".");
+      if ((separ>0) && window[name.slice(0, separ)])
+         func = window[name.slice(0, separ)][name.slice(separ+1)];
+      return (typeof func == 'function') ? func : null;
    }
 
    JSROOT.NewHttpRequest = function(url, kind, user_call_back) {
