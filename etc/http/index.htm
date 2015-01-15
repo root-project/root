@@ -9,7 +9,7 @@
       <script type="text/javascript" src="scripts/JSRootCore.js"></script>
    </head>
    <body onload="JSROOT.BuildSimpleGUI()">
-      <div id="simpleGUI" path="https://root.cern.ch/js/files/" files="ct.root;exclusion.root;fillrandom.root;glbox.root;graph.root;hsimple.root;legends.root;rf107.root;stacks.root;zdemo.root">
+      <div id="simpleGUI" path="../files/" files="ct.root;exclusion.root;fillrandom.root;glbox.root;graph.root;hsimple.root;legends.root;rf107.root;stacks.root;zdemo.root">
          loading scripts ...
       </div>
    </body>
@@ -30,18 +30,18 @@ Several parameters could be specified when opening page:
    autoload  - name of JavaScript(s), automatically loaded at the beginning 
 
 Example:
-   http://root.cern.ch/js/3.0/?file=../files/hsimple.root&layout=grid2x2&items=["hpx;1", "hpxpy;1"]&opts=["", "colz"]
+   http://root.cern.ch/js/3.2/?file=../files/hsimple.root&layout=grid2x2&items=["hpx;1", "hpxpy;1"]&opts=["", "colz"]
 
 Page can be used to open files from other web servers like:
 
-   http://web-docs.gsi.de/~linev/js/3.0/index.htm?file=http://root.cern.ch/js/files/hsimple.root
+   http://web-docs.gsi.de/~linev/js/3.2/index.htm?file=http://root.cern.ch/js/files/hsimple.root
 
 But one should be aware about Cross-Origin Request blocking.
 Read https://developer.mozilla.org/en/http_access_control for more details.
 
 To avoid problem at all, one can copy only index.htm on the web server where data files are located.
 And specify full path to the JSRootCore.js script like
-   <script type="text/javascript" src="http://root.cern.ch/js/3.0/scripts/JSRootCore.js"></script>
+   <script type="text/javascript" src="http://root.cern.ch/js/3.2/scripts/JSRootCore.js"></script>
 
 If necessary, complete JSROOT can be installed on the web server.
 Sources can be found in ROOT repository, etc/http/ subdirectory.

@@ -104,6 +104,8 @@
          this.cnt++;
       }
 
+      menu.size = function() { return this.cnt-1; }
+
       menu.addDrawMenu = function(menu_name, opts, call_back) {
          if (opts==null) opts = new Array;
          if (opts.length==0) opts.push("");
@@ -119,10 +121,12 @@
          this.add("endsub:");
       }
 
-      menu.show = function(event) {
-         $("#"+menuname).remove()
+      menu.remove = function() { $("#"+menuname).remove(); }
 
-         document.body.onclick = function(e) { $("#"+menuname).remove(); }
+      menu.show = function(event) {
+         menu.remove();
+
+         document.body.onclick = function(e) { menu.remove(); }
 
          $(document.body).append('<ul id="' + menuname + '">' + this.code + '</ul>');
 
@@ -136,7 +140,7 @@
                   var arg = ui.item.attr('arg');
                   var cnt = ui.item.attr('cnt');
                   var func = cnt ? menu.funcs[cnt] : null;
-                  $("#"+menuname).remove();
+                  menu.remove();
                   if (typeof func == 'function') func(arg);
               }
          });
@@ -1158,15 +1162,16 @@
 
    JSROOT.TObjectPainter.prototype.ForEachPainter = function(userfunc) {
       // Iterate over all known painters
+
+      var painter = $("#" + this.divid).children().eq(0).prop('painter');
+      if (painter!=null) { userfunc(painter); return; }
+
       var svg_c = this.svg_canvas();
-      if (svg_c!=null) {
-         userfunc(svg_c['pad_painter']);
-         var painters = svg_c['pad_painter'].painters;
-         for (var k in painters) userfunc(painters[k]);
-      } else {
-         var painter = $("#" + this.divid).children().eq(0).prop('painter');
-         if (painter!=null) userfunc(painter);
-      }
+      if (svg_c==null) return;
+
+      userfunc(svg_c['pad_painter']);
+      var painters = svg_c['pad_painter'].painters;
+      for (var k in painters) userfunc(painters[k]);
    }
 
    JSROOT.TObjectPainter.prototype.Cleanup = function() {
@@ -6661,6 +6666,128 @@
       return painter;
    }
 
+   // ===========================================================
+
+
+   JSROOT.TTreePlayer = function(itemname) {
+      JSROOT.TBasePainter.call(this);
+      this.SetItemName(itemname);
+      this.hpainter = null;
+      return this;
+   }
+
+   JSROOT.TTreePlayer.prototype = Object.create( JSROOT.TBasePainter.prototype );
+
+   JSROOT.TTreePlayer.prototype.Show = function(divid) {
+      this.drawid = divid + "_draw";
+
+      $("#" + divid)
+        .html("<div class='treedraw_buttons' style='padding-left:0.5em'>" +
+            "<button class='treedraw_exe'>Draw</button>" +
+            " Expr:<input class='treedraw_varexp' style='width:12em'></input> " +
+            "<button class='treedraw_more'>More</button>" +
+            "</div>" +
+            "<div id='" + this.drawid + "' style='width:100%'></div>");
+
+      var player = this;
+
+      $("#" + divid).find('.treedraw_exe').click(function() { player.PerformDraw(); });
+      $("#" + divid).find('.treedraw_varexp')
+           .val("px:py")
+           .keyup(function(e){
+               if(e.keyCode == 13) player.PerformDraw();
+            });
+
+      $("#" + divid).find('.treedraw_more').click(function() {
+         $(this).remove();
+         $("#" + divid).find(".treedraw_buttons")
+         .append(" Cut:<input class='treedraw_cut' style='width:8em'></input>"+
+                 " Opt:<input class='treedraw_opt' style='width:5em'></input>"+
+                 " Num:<input class='treedraw_number' style='width:7em'></input>" +
+                 " First:<input class='treedraw_first' style='width:7em'></input>");
+
+         $("#" + divid +" .treedraw_opt").val("");
+         $("#" + divid +" .treedraw_number").val("").spinner({ numberFormat: "n", min: 0, page: 1000});
+         $("#" + divid +" .treedraw_first").val("").spinner({ numberFormat: "n", min: 0, page: 1000});
+      });
+
+      this.CheckResize();
+
+      this.SetDivId(divid);
+   }
+
+   JSROOT.TTreePlayer.prototype.PerformDraw = function() {
+
+      var frame = $("#" + this.divid);
+
+      var url = this.GetItemName() + '/exe.json?method=Draw';
+      var expr = frame.find('.treedraw_varexp').val();
+      var hname = "h_tree_draw";
+
+      var pos = expr.indexOf(">>");
+      if (pos<0) {
+         expr += ">>" + hname;
+      } else {
+         hname = expr.substr(pos+2);
+         if (hname[0]=='+') hname = hname.substr(1);
+         var pos2 = hname.indexOf("(");
+         if (pos2>0) hname = hname.substr(0, pos2);
+      }
+
+      if (frame.find('.treedraw_more').length==0) {
+         var cut = frame.find('.treedraw_cut').val();
+         var option = frame.find('.treedraw_opt').val();
+         var nentries = frame.find('.treedraw_number').val();
+         var firstentry = frame.find('.treedraw_first').val();
+
+         url += '&prototype="const char*,const char*,Option_t*,Long64_t,Long64_t"&varexp="' + expr + '"&selection="' + cut + '"';
+
+         // if any of optional arguments specified, specify all of them
+         if ((option!="") || (nentries!="") || (firstentry!="")) {
+            if (nentries=="") nentries = "1000000000";
+            if (firstentry=="") firstentry = "0";
+            url += '&option="' + option + '"&nentries=' + nentries + '&firstentry=' + firstentry;
+         }
+      } else {
+         url += '&prototype="Option_t*"&opt="' + expr + '"';
+      }
+      url += '&_ret_object_=' + hname;
+
+      var player = this;
+
+      var req = JSROOT.NewHttpRequest(url, 'object', function(res) {
+         if (res==0) return;
+         $("#"+player.drawid).empty();
+         player.hpainter = JSROOT.draw(player.drawid, res)
+      });
+      req.send();
+   }
+
+   JSROOT.TTreePlayer.prototype.CheckResize = function(force) {
+      $("#" + this.drawid).width($("#" + this.divid).width());
+      var h = $("#" + this.divid).height();
+      var h0 = $("#" + this.divid +" .treedraw_buttons").height();
+      if (h>h0+30) $("#" + this.drawid).height(h - 1 - h0);
+
+      if (this.hpainter) {
+         this.hpainter.CheckResize(force);
+      }
+   }
+
+   JSROOT.drawTreePlayer = function(hpainter, itemname) {
+      var mdi = hpainter.CreateDisplay();
+      if (mdi == null) return null;
+
+      var frame = mdi.FindFrame(itemname, true);
+      if (frame==null) return null;
+
+      var divid = frame.attr('id');
+
+      var player = new JSROOT.TTreePlayer(itemname);
+      player.Show(divid);
+      return player;
+   }
+
    // =========== painter of hierarchical structures =================================
 
    JSROOT.HierarchyPainter = function(name, frameid) {
@@ -7270,6 +7397,19 @@
       return JSROOT.draw(divid, obj, drawopt);
    }
 
+   JSROOT.HierarchyPainter.prototype.player = function(itemname, option, call_back) {
+      var item = this.Find(itemname);
+
+      var player_func = (item && ('_player' in item)) ?  JSROOT.findFunction(item._player) : null;
+
+      var res = null;
+
+      if (player_func && this.CreateDisplay())
+         res = player_func(this, itemname, option);
+
+      if (typeof call_back=='function') call_back(res);
+   }
+
    JSROOT.HierarchyPainter.prototype.display = function(itemname, drawopt, call_back) {
 
       function do_call_back(res) {
@@ -7284,8 +7424,14 @@
 
       var updating = drawopt=="update";
 
+      var item = h.Find(itemname);
+
+      if (item!=null) {
+         var cando = this.CheckCanDo(item);
+         if (!cando.display) return this.player(itemname, drawopt, call_back);
+      }
+
       if (updating) {
-         var item = h.Find(itemname);
          if ((item==null) || ('_doing_update' in item)) return do_call_back(null);
          item['_doing_update'] = true;
       }
@@ -7607,6 +7753,9 @@
          menu.add("Draw as png", function() {
             window.open(onlineprop.server + onlineprop.itemname + "/root.png?w=400&h=300&opt=");
          });
+
+      if ('_player' in node)
+         menu.add("Player", function() { painter.player(itemname); });
    }
 
    JSROOT.HierarchyPainter.prototype.ShowStreamerInfo = function(sinfo) {
@@ -7651,7 +7800,7 @@
 
       var cando = this.CheckCanDo(hitem);
 
-      if (!cando.display && !cando.ctxt && (itemname!="")) return;
+      // if (!cando.display && !cando.ctxt && (itemname!="")) return;
 
       var onlineprop = this.GetOnlineProp(itemname);
       var fileprop = this.GetFileProp(itemname);
@@ -7722,9 +7871,10 @@
          });
       }
 
-      menu.add("Close");
-
-      menu.show(event);
+      if (menu.size()>0) {
+         menu.add("Close");
+         menu.show(event);
+      }
 
       return false;
    }
@@ -7747,13 +7897,13 @@
 
    JSROOT.HierarchyPainter.prototype.CreateDisplay = function(force) {
       if ('disp' in this) {
-         if (!force && this['disp'].NumDraw() > 0) return true;
+         if (!force && this['disp'].NumDraw() > 0) return this['disp'];
          this['disp'].Reset();
          delete this['disp'];
       }
 
       // check that we can found frame where drawing should be done
-      if (document.getElementById(this['disp_frameid']) == null) return false;
+      if (document.getElementById(this['disp_frameid']) == null) return null;
 
       if (this['disp_kind'] == "tabs")
          this['disp'] = new JSROOT.TabsDisplay(this['disp_frameid']);
@@ -7763,7 +7913,7 @@
       else
          this['disp'] = new JSROOT.CollapsibleDisplay(this['disp_frameid']);
 
-      return true;
+      return this['disp'];
    }
 
    JSROOT.HierarchyPainter.prototype.CheckResize = function(force) {
@@ -7822,9 +7972,16 @@
    }
 
    JSROOT.MDIDisplay.prototype.CheckResize = function() {
-      this.ForEachPainter(function(painter) {
-         if ((painter.GetItemName()!=null) && (typeof painter['CheckResize'] == 'function'))
-             painter.CheckResize();
+      // perform resize for each frame
+      var resized_frame = null;
+
+      this.ForEachPainter(function(painter, frame) {
+         if ((painter.GetItemName()!=null) && (typeof painter['CheckResize'] == 'function')) {
+            // do not call resize for many painters on the same frame
+            if (resized_frame === frame) return;
+            painter.CheckResize();
+            resized_frame = frame;
+         }
       });
    }
 
