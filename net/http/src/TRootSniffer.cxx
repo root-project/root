@@ -563,6 +563,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
       TDirectory* dir = (TDirectory *) obj;
       ScanCollection(rec, dir->GetList(), 0, kFALSE, dir->GetListOfKeys());
    } else if (obj->InheritsFrom(TTree::Class())) {
+      if (!fReadOnly) rec.SetField("_player", "JSROOT.drawTreePlayer");
       ScanCollection(rec, ((TTree *) obj)->GetListOfLeaves());
    } else if (obj->InheritsFrom(TBranch::Class())) {
       ScanCollection(rec, ((TBranch *) obj)->GetListOfLeaves());
@@ -570,7 +571,6 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
       ScanObjectMemebers(rec, obj->IsA(), (char *) obj, 0);
    }
 }
-
 
 //______________________________________________________________________________
 void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
@@ -672,21 +672,6 @@ Bool_t TRootSniffer::IsDrawableClass(TClass *cl)
 }
 
 //______________________________________________________________________________
-Bool_t TRootSniffer::IsBrowsableClass(TClass *cl)
-{
-   // return true if object can be browsed?
-
-   if (cl == 0) return kFALSE;
-
-   if (cl->InheritsFrom(TTree::Class())) return kTRUE;
-   if (cl->InheritsFrom(TBranch::Class())) return kTRUE;
-   if (cl->InheritsFrom(TLeaf::Class())) return kTRUE;
-   if (cl->InheritsFrom(TFolder::Class())) return kTRUE;
-
-   return kFALSE;
-}
-
-//______________________________________________________________________________
 void TRootSniffer::ScanHierarchy(const char *topname, const char *path,
                                  TRootSnifferStore *store)
 {
@@ -715,14 +700,12 @@ void TRootSniffer::ScanHierarchy(const char *topname, const char *path,
 void *TRootSniffer::FindInHierarchy(const char *path, TClass **cl,
                                     TDataMember **member, Int_t *chld)
 {
-   // search element with specified path
-   // returns pointer on element
-   // optionally one could obtain element class, member description and number
-   // of childs
-   // when chld!=0, not only element is searched, but also number of childs are
-   // counted
-   // when member!=0, any object will be scanned for its data members (disregard
-   // of extra options)
+   // Search element with specified path
+   // Returns pointer on element
+   // Optionally one could obtain element class, member description
+   // and number of childs. When chld!=0, not only element is searched,
+   // but also number of childs are counted. When member!=0, any object
+   // will be scanned for its data members (disregard of extra options)
 
    TRootSnifferStore store;
 
@@ -744,7 +727,7 @@ void *TRootSniffer::FindInHierarchy(const char *path, TClass **cl,
 //______________________________________________________________________________
 TObject *TRootSniffer::FindTObjectInHierarchy(const char *path)
 {
-   // search element in hierarchy, derived from TObject
+   // Search element in hierarchy, derived from TObject
 
    TClass *cl(0);
 
@@ -756,8 +739,8 @@ TObject *TRootSniffer::FindTObjectInHierarchy(const char *path)
 //______________________________________________________________________________
 ULong_t TRootSniffer::GetStreamerInfoHash()
 {
-   // returns hash value for streamer infos
-   // at the moment - just number of items in streamer infos list.
+   // Returns hash value for streamer infos
+   // At the moment - just number of items in streamer infos list.
 
    return fSinfoSize;
 }
@@ -765,7 +748,7 @@ ULong_t TRootSniffer::GetStreamerInfoHash()
 //______________________________________________________________________________
 ULong_t TRootSniffer::GetItemHash(const char *itemname)
 {
-   // get hash function for specified item
+   // Get hash function for specified item
    // used to detect any changes in the specified object
 
    if (IsStreamerInfoItem(itemname)) return GetStreamerInfoHash();
@@ -778,7 +761,7 @@ ULong_t TRootSniffer::GetItemHash(const char *itemname)
 //______________________________________________________________________________
 Bool_t TRootSniffer::CanDrawItem(const char *path)
 {
-   // method verifies if object can be drawn
+   // Method verifies if object can be drawn
 
    TClass *obj_cl(0);
    void *res = FindInHierarchy(path, &obj_cl);
@@ -788,7 +771,7 @@ Bool_t TRootSniffer::CanDrawItem(const char *path)
 //______________________________________________________________________________
 Bool_t TRootSniffer::CanExploreItem(const char *path)
 {
-   // method returns true when object has childs or
+   // Method returns true when object has childs or
    // one could try to expand item
 
    TClass *obj_cl(0);
@@ -800,9 +783,9 @@ Bool_t TRootSniffer::CanExploreItem(const char *path)
 //______________________________________________________________________________
 void TRootSniffer::CreateMemFile()
 {
-   // creates TMemFile instance, which used for objects streaming
-   // One could not use TBuffer directly, while one also require streamer infos
-   // list
+   // Creates TMemFile instance, which used for objects streaming
+   // One could not use TBufferFile directly,
+   // while one also require streamer infos list
 
    if (fMemFile != 0) return;
 
@@ -942,59 +925,104 @@ Bool_t TRootSniffer::ProduceXml(const char *path, const char * /*options*/,
    return res.Length() > 0;
 }
 
+TString TRootSniffer::DecodeUrlOptionValue(const char* value, Bool_t remove_quotes)
+{
+   // method replaces all kind of special symbols, which could appear in URL options
+
+   if ((value==0) || (strlen(value)==0)) return TString();
+
+   TString res = value;
+
+   res.ReplaceAll("%27","\'");
+   res.ReplaceAll("%22","\"");
+   res.ReplaceAll("%3E",">");
+   res.ReplaceAll("%3C","<");
+   res.ReplaceAll("%20"," ");
+
+   if (remove_quotes && (res.Length()>1) &&
+       ((res[0]=='\'') || (res[0]=='\"')) && (res[0]==res[res.Length()-1])) {
+      res.Remove(res.Length()-1);
+      res.Remove(0,1);
+   }
+
+   return res;
+}
+
+
 //______________________________________________________________________________
-Bool_t TRootSniffer::ProduceExe(const char *path, const char * options, TString &res)
+Bool_t TRootSniffer::ProduceExe(const char *path, const char * options, TString &ret, Bool_t astxt)
 {
    // execute command for specified object
    // options include method and extra list of parameters
    // sniffer should be not-readonly to allow execution of the commands
 
-   if ((path == 0) || (*path == 0) || fReadOnly) return kFALSE;
+   TString* debug = astxt ? &ret : 0;
+
+   if ((path == 0) || (*path == 0)) {
+      if (debug) debug->Append("Item name not specified\n");
+      return debug!=0;
+   }
+
+   if (fReadOnly) {
+      if (debug) debug->Append("Server runs in read-only mode, methods cannot be executed\n");
+      return debug!=0;
+   }
 
    if (*path == '/') path++;
 
    TClass *obj_cl(0);
    void *obj_ptr = FindInHierarchy(path, &obj_cl);
-   if ((obj_ptr == 0) || (obj_cl == 0)) return kFALSE;
+   if (debug) debug->Append(TString::Format("Item:%s found:%s\n", path, obj_ptr ? "true" : "false"));
+   if ((obj_ptr == 0) || (obj_cl == 0)) return debug!=0;
 
    TUrl url;
    url.SetOptions(options);
 
    const char* method_name = url.GetValueFromOptions("method");
-   if (method_name==0) return kFALSE;
+   TString prototype = DecodeUrlOptionValue(url.GetValueFromOptions("prototype"), kTRUE);
+   TMethod* method = 0;
+   if (method_name!=0) {
+      if (prototype.Length()==0) {
+         if (debug) debug->Append(TString::Format("Search for any method with name \'%s\'\n", method_name));
+         method = obj_cl->GetMethodAllAny(method_name);
+      } else {
+         if (debug) debug->Append(TString::Format("Search for method \'%s\' with prototype \'%s\'\n", method_name, prototype.Data()));
+         method = obj_cl->GetMethodWithPrototype(method_name, prototype);
+      }
+   }
 
-   TMethod* method = obj_cl->GetMethodAllAny(method_name);
-   if (method==0) return kFALSE;
+   if (method==0) { if (debug) debug->Append("Method not found\n"); return debug!=0; }
+
+   if (debug) debug->Append(TString::Format("Method: %s\n", method->GetPrototype()));
 
    TList* args = method->GetListOfMethodArgs();
-
-   res.Form("Method: %s\n", method_name);
 
    TIter next(args);
    TMethodArg* arg = 0;
    TString call_args;
    while ((arg = (TMethodArg*) next()) != 0) {
 
-      const char* val = url.GetValueFromOptions(arg->GetName());
-      if (val==0) val = arg->GetDefault();
-
       if ((strcmp(arg->GetName(),"rest_url_opt")==0) &&
           (strcmp(arg->GetFullTypeName(),"const char*")==0) && (args->GetSize()==1)) {
          // very special case - function requires list of options after method=argument
 
          const char* pos = strstr(options,"method=");
-         if ((pos == 0) || (strlen(pos) < strlen(method_name)+8)) return kFALSE;
+         if ((pos == 0) || (strlen(pos) < strlen(method_name)+8)) return debug!=0;
          call_args.Form("\"%s\"", pos + strlen(method_name)+8);
          break;
       }
 
-      res += TString::Format("  Argument:%s Type:%s Specified:%s \n", arg->GetName(), arg->GetFullTypeName(), val ? val : "<missed>");
+      TString sval;
+      const char* val = url.GetValueFromOptions(arg->GetName());
+      if (val) { sval = DecodeUrlOptionValue(val, kFALSE); val = sval.Data(); }
+      if (val==0) val = arg->GetDefault();
 
-      if (val==0) { res += "missing argument\n"; return kTRUE; }
+      if (debug) debug->Append(TString::Format("  Argument:%s Type:%s Value:%s \n", arg->GetName(), arg->GetFullTypeName(), val ? val : "<missed>"));
+      if (val==0) return debug!=0;
 
       if (call_args.Length()>0) call_args+=", ";
 
-      if (strcmp(arg->GetFullTypeName(),"const char*")==0) {
+      if ((strcmp(arg->GetFullTypeName(),"const char*")==0) || (strcmp(arg->GetFullTypeName(),"Option_t*")==0)) {
          int len = strlen(val);
          if ((strlen(val)<2) || (*val != '\"') || (val[len-1]!='\"'))
             call_args.Append(TString::Format("\"%s\"", val));
@@ -1005,21 +1033,90 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char * options, TString 
       }
    }
 
-   res += TString::Format("Calling obj->%s(%s);\n", method_name, call_args.Data());
+   if (debug) debug->Append(TString::Format("Calling obj->%s(%s);\n", method_name, call_args.Data()));
 
    TMethodCall call(obj_cl, method_name, call_args.Data());
 
-   if (!call.IsValid()) { res += "Fail: invalid TMethodCall\n"; return kTRUE; }
+   if (!call.IsValid()) { if (debug) debug->Append("Fail: invalid TMethodCall\n"); return debug!=0; }
 
-   call.Execute(obj_ptr);
+   Int_t compact = 0;
+   if (url.GetValueFromOptions("compact"))
+      compact = url.GetIntValueFromOptions("compact");
 
-   res += "Execution done!\n";
+   TString res = "null";
+
+   switch(call.ReturnType()) {
+      case TMethodCall::kLong: {
+         Long_t l(0);
+         call.Execute(obj_ptr, l);
+         res.Form("%ld",l);
+         break;
+      }
+      case TMethodCall::kDouble : {
+         Double_t d(0.);
+         call.Execute(obj_ptr, d);
+         res.Form(TBufferJSON::GetFloatFormat(),d);
+         break;
+      }
+      case TMethodCall::kString : {
+         char* txt(0);
+         call.Execute(obj_ptr, &txt);
+         if (txt!=0)
+            res.Form("\"%s\"",txt);
+         break;
+      }
+      case TMethodCall::kOther : {
+         TClass* ret_cl = 0;
+
+         std::string ret_kind = method->GetReturnTypeNormalizedName();
+         if ((ret_kind.length()>0) && (ret_kind[ret_kind.length()-1]=='*')) {
+            ret_kind.resize(ret_kind.length()-1);
+            ret_cl = gROOT->GetClass(ret_kind.c_str(), kFALSE, kTRUE);
+         }
+
+         if (ret_cl!=0) {
+            Long_t l(0);
+            call.Execute(obj_ptr, l);
+            if (l!=0) res = TBufferJSON::ConvertToJSON((void*) l, ret_cl, compact);
+         } else {
+            call.Execute(obj_ptr);
+         }
+         break;
+      }
+      case TMethodCall::kNone : {
+         call.Execute(obj_ptr);
+         break;
+      }
+   }
+
+   if (debug) debug->Append(TString::Format("Result = %s\n", res.Data()));
+
+   const char* ret_obj = url.GetValueFromOptions("_ret_object_");
+   if (ret_obj!=0) {
+      TObject* obj = 0;
+      if (gDirectory!=0) obj = gDirectory->Get(ret_obj);
+      if (debug) debug->Append(TString::Format("Return object %s found %s\n", ret_obj, obj ? "true" : "false"));
+
+      if (obj==0)
+         res = "null";
+      else
+         res = TBufferJSON::ConvertToJSON(obj, compact);
+
+      if (debug) debug->Append(TString::Format("Return:\n%s\n", res.Data()));
+   }
+
+   if (debug) debug->Append("Execution done!\n");
+
+   if (!astxt) ret = res;
+
    return kTRUE;
 }
 
 //______________________________________________________________________________
 Bool_t TRootSniffer::IsStreamerInfoItem(const char *itemname)
 {
+   // Return true if it is streamer info item name
+
    if ((itemname == 0) || (*itemname == 0)) return kFALSE;
 
    return (strcmp(itemname, "StreamerInfo") == 0) || (strcmp(itemname, "StreamerInfo/") == 0);
@@ -1140,8 +1237,6 @@ Bool_t TRootSniffer::ProduceBinary(const char *path, const char* query, void *&p
       memcpy(ptr, sbuf->Buffer(), sbuf->Length());
       length = sbuf->Length();
    }
-
-
 
    return kTRUE;
 }
@@ -1264,6 +1359,8 @@ Bool_t TRootSniffer::Produce(const char *path, const char *file,
    //   "root.gif"  - gif image
    //   "root.xml"  - xml representation
    //   "root.json" - json representation
+   //   "exe.json"  - method execution with json reply
+   //   "exe.txt"   - method execution with debug output
 
    if ((file == 0) || (*file == 0)) return kFALSE;
 
@@ -1297,9 +1394,9 @@ Bool_t TRootSniffer::Produce(const char *path, const char *file,
       return kTRUE;
    }
 
-   if (strcmp(file, "exe.txt") == 0) {
+   if ((strcmp(file, "exe.txt") == 0) || (strcmp(file, "exe.json") == 0))  {
       TString res;
-      if (!ProduceExe(path, options, res)) return kFALSE;
+      if (!ProduceExe(path, options, res, (strcmp(file, "exe.txt") == 0))) return kFALSE;
       length = res.Length();
       ptr = malloc(length);
       memcpy(ptr, res.Data(), length);

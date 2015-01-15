@@ -53,21 +53,27 @@ AUTHOR:
 
 CHANGES:
 
+  January 2015
+   - Provide exe.json request to execute arbitrary object method and return
+     result in JSON format. Server should run in non-readonly mode
+
+  Fall 2014
+   - Implement gzip for result of any submitted requests, automatically done 
+     when .gz extension is provided
+   - Provide access to arbitrary data member of objects, registered to the server
+   - Prevent data caching in the browser by setting no-cache header
 
   April 2014
-
   - In TCivetweb class support digest authentication method. User
     can specify auth_file and auth_domain parameters to protect
     access to the server
   - Fix error in FastCgi, now correctly works with Apache
   - Avoid direct usage of TASImage
 
-
-  March 2014:
-
+  March 2014
   - Replace mongoose by civetweb due to more liberal MIT license.
     Works out of the box while civetweb version fully corresponds to
-    previousely used version of mongoose.
+    previously used version of mongoose.
   - Introduce TBufferJSON class to store arbitrary ROOT object
     into JSON format. It is not one-to-one storage (like XML), but
     rather JS-like structures. For instance, all TCollections converted
@@ -100,9 +106,7 @@ CHANGES:
     only when fCompact==0. By default, THttpServer uses compact=1 for member
   - Support both get.json and root.json requests, they have similar meaning.
 
-
-  January 2014:
-
+  January 2014
   - Make THttpServer::CreateEngine as factory method. One could
     create http, fastcgi and dabc engines to access data from server.
     Syntax allows to provide arbitrary arguments. Examples:
@@ -117,7 +121,7 @@ CHANGES:
   - Support additional options for mongoose and fastcgi servers
   - Port to ROOT 6 (adjust makefiles), keep Module.mk.ver5
 
-  December 2013:
+  December 2013
   - Start of project
   - Move ROOT-relevant functionality from DABC plugin
   - Introduce THttpServer, THttpEngine and TRootSniffer classes
