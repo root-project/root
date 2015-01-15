@@ -14,9 +14,9 @@ To start the http server, at any time, create an instance of the **`THttpServer`
 
 This will start a civetweb-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (IE, Firefox, Chrome, Opera) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
 
-There is a [snapshot (frozen copy)](http://root.cern.ch/js/3.1/demo/) of such server, running in httpserver.C macro from ROOT tutorial.
+There is a [snapshot (frozen copy)](https://root.cern.ch/js/3.2/demo/) of such server, running in httpserver.C macro from ROOT tutorial.
 
-<iframe width="800" height="500" src="http://root.cern.ch/js/3.1/demo/?item=Canvases/c1">
+<iframe width="800" height="500" src="https://root.cern.ch/js/3.2/demo/?item=Canvases/c1">
 </iframe>
 
 At any time, one could register other objects with the command:
@@ -136,6 +136,12 @@ One could also access the class members of an object like:
   
 The result will be: "title".
 
+Or one could call object method:
+
+    [shell] wget http://localhost:8080/Objects/subfolder/obj/exe.json?method=GetTitle
+  
+Result also will be: "title".
+
 If the access to the server is restricted with htdigest, it is recommended to use the **curl** program since only curl correctly implements such authentication method. The command will look like:
 
     [shell] curl --user "accout:password" http://localhost:8080/Objects/subfolder/obj/fTitle/root.json --digest -o title.json
@@ -148,18 +154,22 @@ The following requests can be performed:
   - root.png  - PNG image
   - root.gif  - GIF image
   - root.jpeg - JPEG image
+  - exe.json  - method execution in the object
 
 All data will be automatically zipped if '.gz' extension is appended. Like:
 
     wget http://localhost:8080/Files/hsimple.root/hpx/root.bin.gz
 
-For images, one could specify h (height), w (width) and opt (drawing) options. Like:
 
-    wget "http://localhost:8080/Files/hsimple.root/hpx/root.png?w=500&h=500&opt=lego1" -O lego1.png
+### Access to object data
+
+Request root.json implemented with [TBufferJSON class](https://root.cern.ch/root/html/TBufferJSON.html)
+and be used to access objects (or objects members). It generates such JSON representation,
+which could be directly used in JSROOT for drawing.
 
 For the root.json request, one could specify the 'compact' parameter, which will reduce the number of spaces and new lines without lost of data. This parameter can have values from '0' - no compression, till '3' - no spaces at all.
- 
-Comparison of different request methods with TH1 object table:
+
+Comparison of different request methods with TH1 object shown in the table:
 
 +-------------------------+------------+
 | Request                 |    Size    |
@@ -177,3 +187,41 @@ Comparison of different request methods with TH1 object table:
 
 One should take into account that json always includes names of the data fields which are not present in the binary representation. Even then, the size difference is negligible.  
 
+
+### Generating images out of objects
+
+Three kinds of requests (root.png, root.gif, root.jpeg) could be used for creating images like:  
+
+    wget "http://localhost:8080/Files/hsimple.root/hpx/root.png?w=500&h=500&opt=lego1" -O lego1.png
+
+For all such requests one could specify following parameters:
+   - h - image height
+   - w - image width
+   - opt - draw options
+
+Receiving such requests, THttpServer creates TCanvas and draw specified object with provided draw option. 
+
+
+### Methods execution 
+
+By default THttpServer starts in monitoring (read-only) mode and therefore forbid any methods execution.
+One could specify read-write mode when server is started:
+ 
+    serv = new THttpServer("http:8080;rw");
+
+Or one could disable read-only mode with the call:
+
+    serv->SetReadOnly(kFALSE);
+    
+'exe.json' accepts following parameters:
+   - method - name of method to execute
+   - prototype - method prototype (see [TClass::GetMethodWithPrototype](https://root.cern.ch/root/html/TClass.html#TClass:GetMethodWithPrototype), required only when several methods with same name exists  
+   - compact - compact parameter for return value
+   `_ret_object_` - name of the object which should be returned as result of method execution (used in TTree::Draw call)  
+
+Example of TTree::Draw command execution:
+   
+   [shell] wget 'http://localhost:8080/Files/job1.root/ntuple/exe.json?method=Draw&prototype="Option_t*"&opt="px:py>>h1"&_ret_object_=h1' -O exe.json
+
+To get debug information about command execution, one could submit 'exe.txt' request with same arguments.
+   
