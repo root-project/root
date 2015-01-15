@@ -116,13 +116,14 @@ protected:
 
    void CreateMemFile();
 
+   TString DecodeUrlOptionValue(const char* value, Bool_t remove_quotes = kTRUE);
+
 public:
 
    TRootSniffer(const char *name, const char *objpath = "online");
    virtual ~TRootSniffer();
 
    static Bool_t IsDrawableClass(TClass *cl);
-   static Bool_t IsBrowsableClass(TClass *cl);
 
    /** When readonly on (default), sniffer is not allowed to change ROOT structures.
     * For instance, it is not allowed to read new objects from files */
@@ -160,7 +161,7 @@ public:
 
    Bool_t ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length);
 
-   Bool_t ProduceExe(const char *path, const char *options, TString &res);
+   Bool_t ProduceExe(const char *path, const char *options, TString &res, Bool_t astxt = kFALSE);
 
    Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length);
 
