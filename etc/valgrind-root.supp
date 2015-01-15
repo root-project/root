@@ -307,7 +307,6 @@
 {
    Leaking TROOT member collections
    Memcheck:Leak
-   match-leak-kinds: definite
    fun:_Znwm
    fun:_ZN8TStorage11ObjectAllocEm
    fun:_ZN7TObjectnwEm
@@ -321,7 +320,6 @@
 {
    TEnums leak
    Memcheck:Leak
-   match-leak-kinds: definite
    fun:_Znwm
    fun:_ZN8TStorage11ObjectAllocEm
    fun:_ZN7TObjectnwEm
@@ -332,7 +330,6 @@
 {
    TDataTypes leak
    Memcheck:Leak
-   match-leak-kinds: definite
    fun:_Znwm
    fun:_ZN8TStorage11ObjectAllocEm
    fun:_ZN7TObjectnwEm
@@ -343,7 +340,6 @@
 {
    Globals leak (collection part)
    Memcheck:Leak
-   match-leak-kinds: definite
    fun:_Znwm
    fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
    fun:_ZN5TList7AddLastEP7TObject
@@ -358,7 +354,6 @@
 {
    Globals leak (element / TObjLink part)
    Memcheck:Leak
-   match-leak-kinds: definite
    fun:_Znwm
    fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
    fun:_ZN5TList7AddLastEP7TObject
@@ -372,7 +367,6 @@
 {
    Globals leak (element / TGlobal part)
    Memcheck:Leak
-   match-leak-kinds: definite
    fun:_Znwm
    fun:_ZN8TStorage11ObjectAllocEm
    fun:_ZN7TObjectnwEm
