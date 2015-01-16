@@ -16,7 +16,7 @@ This will start a civetweb-based http server on the port 8080. Then one should b
 
 There is a [snapshot (frozen copy)](https://root.cern.ch/js/3.2/demo/) of such server, running in httpserver.C macro from ROOT tutorial.
 
-<iframe width="800" height="500" src="https://root.cern.ch/js/3.2/demo/?item=Canvases/c1">
+<iframe width="800" height="500" src="https://root.cern.ch/js/3.2/demo/?layout=grid2x2&item=Canvases/c1">
 </iframe>
 
 At any time, one could register other objects with the command:
@@ -148,13 +148,13 @@ If the access to the server is restricted with htdigest, it is recommended to us
 
 The following requests can be performed:
 
-  - root.bin  - binary data produced by object streaming with TBufferFile
-  - root.json - ROOT JSON representation for object and objects members
-  - root.xml  - ROOT XML representation
-  - root.png  - PNG image
-  - root.gif  - GIF image
-  - root.jpeg - JPEG image
-  - exe.json  - method execution in the object
+  - `root.bin`  - binary data produced by object streaming with TBufferFile
+  - `root.json` - ROOT JSON representation for object and objects members
+  - `root.xml`  - ROOT XML representation
+  - `root.png`  - PNG image
+  - `root.gif`  - GIF image
+  - `root.jpeg` - JPEG image
+  - `exe.json`  - method execution in the object
 
 All data will be automatically zipped if '.gz' extension is appended. Like:
 
@@ -195,9 +195,10 @@ Three kinds of requests (root.png, root.gif, root.jpeg) could be used for creati
     wget "http://localhost:8080/Files/hsimple.root/hpx/root.png?w=500&h=500&opt=lego1" -O lego1.png
 
 For all such requests one could specify following parameters:
-   - h - image height
-   - w - image width
-   - opt - draw options
+
+   - `h` - image height
+   - `w` - image width
+   - `opt` - draw options
 
 Receiving such requests, THttpServer creates TCanvas and draw specified object with provided draw option. 
 
@@ -214,14 +215,19 @@ Or one could disable read-only mode with the call:
     serv->SetReadOnly(kFALSE);
     
 'exe.json' accepts following parameters:
-   - method - name of method to execute
-   - prototype - method prototype (see [TClass::GetMethodWithPrototype](https://root.cern.ch/root/html/TClass.html#TClass:GetMethodWithPrototype), required only when several methods with same name exists  
-   - compact - compact parameter for return value
-   `_ret_object_` - name of the object which should be returned as result of method execution (used in TTree::Draw call)  
 
-Example of TTree::Draw command execution:
+   - `method` - name of method to execute
+   - `prototype` - method prototype (see [TClass::GetMethodWithPrototype](https://root.cern.ch/root/html/TClass.html#TClass:GetMethodWithPrototype) for details)
+   - `compact` - compact parameter, used to compress return value
+   - `_ret_object_` - name of the object which should be returned as result of method execution (used in TTree::Draw call)  
+
+Example of retrieving object title:
+
+    [shell] wget 'http://localhost:8080/Objects/subfolder/obj/exe.json?method=GetTitle' -O title.txt
+
+Example of TTree::Draw method execution:
    
-   [shell] wget 'http://localhost:8080/Files/job1.root/ntuple/exe.json?method=Draw&prototype="Option_t*"&opt="px:py>>h1"&_ret_object_=h1' -O exe.json
+    [shell] wget 'http://localhost:8080/Files/job1.root/ntuple/exe.json?method=Draw&prototype="Option_t*"&opt="px:py>>h1"&_ret_object_=h1' -O exe.json
 
 To get debug information about command execution, one could submit 'exe.txt' request with same arguments.
    
