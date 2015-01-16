@@ -6720,7 +6720,7 @@
 
       var frame = $("#" + this.divid);
 
-      var url = this.GetItemName() + '/exe.json?method=Draw';
+      var url = this.GetItemName() + '/exe.json.gz?compact=3&method=Draw';
       var expr = frame.find('.treedraw_varexp').val();
       var hname = "h_tree_draw";
 
