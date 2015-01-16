@@ -47,9 +47,20 @@ In principle, one could open any ROOT file placed in the web, providing the full
 
 But one should be aware of [Cross-Origin Request blocking](https://developer.mozilla.org/en/http_access_control),
 when the browser blocks requests to files from domains other than current web page.
+To enable CORS on Apache web server, hosting ROOT files, one should add following lines to `.htaccess` file:
 
-There are two solutions. Either one configures the web-server accordingly or one copies the JSROOT to the same location than where the data files are located.
-In the second case, one could use the server with its default settings.
+    <IfModule mod_headers.c>
+      <FilesMatch "\.root">
+         Header set Access-Control-Allow-Origin "*"
+         Header set Access-Control-Allow-Headers "range"
+         Header set Access-Control-Expose-Headers "content-range,content-length,accept-ranges"
+         Header set Access-Control-Allow-Methods "HEAD,GET"
+      </FilesMatch>
+    </IfModule>
+
+
+Other solution - copy all JSROOT files to the same location than where the data files are located. 
+In such case one could use the server with its default settings.
 
 A simple case is to copy only the top index.htm file on the server and specify the full path to JSRootCore.js script like:
 
@@ -60,7 +71,7 @@ A simple case is to copy only the top index.htm file on the server and specify t
 In such case one can also specify a custom files list:
 
     ...
-     <div id="simpleGUI" files="userfile1.root;subdir/usefile2.root">
+     <div id="simpleGUI" path="files/subdir" files="userfile1.root;subdir/usefile2.root">
        loading scripts ...
      </div>
     ...
