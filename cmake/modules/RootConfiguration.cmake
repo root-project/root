@@ -425,11 +425,9 @@ set(ROOT_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\")
 set(ROOT_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS}\")")
 
 #---To be used from the binary tree--------------------------------------------------------------------------
-get_property(buildtree_include_dirs GLOBAL PROPERTY ROOT_INCLUDE_DIRS)
-list(REMOVE_DUPLICATES buildtree_include_dirs)
 set(ROOT_INCLUDE_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
-set(ROOT_INCLUDE_DIRS ${buildtree_include_dirs})
+set(ROOT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
 ")
 set(ROOT_LIBRARY_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
