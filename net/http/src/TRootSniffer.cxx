@@ -938,6 +938,8 @@ TString TRootSniffer::DecodeUrlOptionValue(const char* value, Bool_t remove_quot
    res.ReplaceAll("%3E",">");
    res.ReplaceAll("%3C","<");
    res.ReplaceAll("%20"," ");
+   res.ReplaceAll("%5B", "[");
+   res.ReplaceAll("%5D", "]");
 
    if (remove_quotes && (res.Length()>1) &&
        ((res[0]=='\'') || (res[0]=='\"')) && (res[0]==res[res.Length()-1])) {
