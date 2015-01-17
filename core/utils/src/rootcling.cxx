@@ -2833,11 +2833,26 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
       }
       if (isClassSelected) {
          // Now, check if this is an internal class. If yes, we check the name of the outermost one
+         // This is because of ROOT-6517. On the other hand, we exclude from this treatment
+         // classes which are template instances which are nested in classes. For example:
+         // class A{
+         //   class B{};
+         // };
+         // selection: <class name="A::B" />
+         // Will result in a rootmap entry like "class A"
+         // On the other hand, taking
+         // class A{
+         //    public:
+         //     template <class T> class B{};
+         //  };
+         // selection: <class name="A::B<int>" />
+         // Would result in an entry like "class A::B<int>"
          std::string outerMostClassName;
          GetMostExternalEnclosingClassName(*rDecl, outerMostClassName, interpreter);
          if (!outerMostClassName.empty() &&
-               classesSet.insert(outerMostClassName).second &&
-               outerMostClassesSet.insert(outerMostClassName).second) {
+             !llvm::isa<clang::ClassTemplateSpecializationDecl>(rDecl) &&
+             classesSet.insert(outerMostClassName).second &&
+             outerMostClassesSet.insert(outerMostClassName).second) {
             classesListForRootmap.push_back(outerMostClassName);
          } else {
             classesListForRootmap.push_back(normalizedName);
