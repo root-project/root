@@ -1,4 +1,4 @@
-class A{
+class AA{
 public:
    template <class T>
    class B{};
