@@ -35,7 +35,7 @@ def executeGenreflex(XMLFileName,headerName):
   """
   retcode=0
   dictName=os.path.basename(XMLFileName)+"dummy_dict.cxx"
-  genreflexCommand="genreflex %s -o %s -s %s " %(headerName,dictName, XMLFileName)
+  genreflexCommand="genreflex %s -o %s -s %s --selSyntaxOnly" %(headerName,dictName, XMLFileName)
   print "Parsing %s" %XMLFileName
   try:
     subprocess.check_output(genreflexCommand, shell=True)
