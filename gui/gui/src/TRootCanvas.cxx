@@ -1478,19 +1478,23 @@ void TRootCanvas::ShowEditor(Bool_t show)
          fEmbedded = kTRUE;
          if (show && (!fEditor || !((TGedEditor *)fEditor)->IsMapped())) {
             if (!browser->GetTabLeft()->GetTabTab("Pad Editor")) {
-               browser->StartEmbedding(TRootBrowser::kLeft);
-               if (!fEditor)
-                  fEditor = TVirtualPadEditor::GetPadEditor(kTRUE);
-               else {
-                  ((TGedEditor *)fEditor)->ReparentWindow(fClient->GetRoot());
-                  ((TGedEditor *)fEditor)->MapWindow();
-               }
-               browser->StopEmbedding("Pad Editor");
-               fEditor->SetGlobal(kFALSE);
-               gROOT->GetListOfCleanups()->Remove((TGedEditor *)fEditor);
-               if (fEditor) {
-                  ((TGedEditor *)fEditor)->SetCanvas(fCanvas);
-                  ((TGedEditor *)fEditor)->SetModel(fCanvas, fCanvas, kButton1Down);
+               if (browser->GetActFrame()) { //already in edit mode
+                  TTimer::SingleShot(200, "TRootCanvas", this, "ShowEditor(=kTRUE)");
+               } else {
+                  browser->StartEmbedding(TRootBrowser::kLeft);
+                  if (!fEditor)
+                     fEditor = TVirtualPadEditor::GetPadEditor(kTRUE);
+                  else {
+                     ((TGedEditor *)fEditor)->ReparentWindow(fClient->GetRoot());
+                     ((TGedEditor *)fEditor)->MapWindow();
+                  }
+                  browser->StopEmbedding("Pad Editor");
+                  fEditor->SetGlobal(kFALSE);
+                  gROOT->GetListOfCleanups()->Remove((TGedEditor *)fEditor);
+                  if (fEditor) {
+                     ((TGedEditor *)fEditor)->SetCanvas(fCanvas);
+                     ((TGedEditor *)fEditor)->SetModel(fCanvas, fCanvas, kButton1Down);
+                  }
                }
             }
             else
