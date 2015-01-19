@@ -79,7 +79,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    // try to guess default configuration
    // (this part should be only in constructor because the null snapshot might change during HypoTestInversion
    const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
-   assert(nullSnapShot);
+   assert(nullSnapshot);
    RooRealVar * muNull  = dynamic_cast<RooRealVar*>( nullSnapshot->first() );
    assert(muNull);
    if (muNull->getVal() == muNull->getMin()) { 
