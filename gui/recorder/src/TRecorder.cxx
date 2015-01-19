@@ -133,6 +133,7 @@
 #include "TVirtualDragManager.h"
 #include "TGPicture.h"
 #include "KeySymbols.h"
+#include "Riostream.h"
 
 // Names of ROOT GUI events. Used for listing event logs.
 const char *kRecEventNames[] = {

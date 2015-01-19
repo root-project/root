@@ -118,9 +118,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Riostream
-#include "Riostream.h"
-#endif
 #ifndef ROOT_TApplication
 #include "TApplication.h"
 #endif
@@ -144,6 +141,7 @@
 #endif
 
 #include <time.h>
+#include <iostream>
 
 class TMutex;
 class TTree;
@@ -234,7 +232,7 @@ public:
 
    virtual void ReplayEvent(Bool_t) {
       // Stored command is executed again
-      cout << GetText() << endl;
+      std::cout << GetText() << std::endl;
       gApplication->ProcessLine(GetText());
    }
 
