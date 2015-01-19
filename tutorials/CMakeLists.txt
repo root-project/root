@@ -282,6 +282,12 @@ if(ROOT_python_FOUND)
   set(pyroot-na49view-depends tutorial-pyroot-geometry)
 
   foreach(t ${pytutorials})
+    list(FIND returncode_1 ${t} index)
+    if(index EQUAL -1)
+       set(rc 0)
+    else()
+       set(rc 1)
+    endif()
     string(REPLACE ".py" "" tname ${t})
     string(REPLACE "/" "-" tname ${tname})
     ROOT_ADD_TEST(tutorial-${tname}
