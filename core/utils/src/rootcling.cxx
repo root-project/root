@@ -3788,6 +3788,7 @@ int RootCling(int argc,
    bool dictSelection = true;
    bool multiDict = false;
    bool writeEmptyRootPCM = false;
+   bool selSyntaxOnly = false;
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = true;
@@ -3892,6 +3893,12 @@ int RootCling(int argc,
             continue;
          }
 
+         if (strcmp("-selSyntaxOnly", argv[ic]) == 0) {
+            // validate the selection grammar w/o creating the dictionary
+            selSyntaxOnly = true;
+            ic += 1;
+            continue;
+         }
 
          if (strcmp("-pipe", argv[ic]) != 0 && strcmp("-pthread", argv[ic]) != 0) {
             // filter out undesirable options
@@ -4299,6 +4306,11 @@ int RootCling(int argc,
       ROOT::TMetaUtils::Error(0, "Unrecognized selection file: %s\n", linkdefFilename.c_str());
 
    }
+
+   // If we want to validate the selection only, we just quit.
+   if (selSyntaxOnly)
+      return 0;
+
 
    //---------------------------------------------------------------------------
    // Write schema evolution related headers and declarations
@@ -4740,6 +4752,7 @@ namespace genreflex {
                        bool doSplit,
                        bool isDeep,
                        bool writeEmptyRootPCM,
+                       bool selSyntaxOnly,
                        const std::vector<std::string> &headersNames,
                        const std::string &ofilename)
    {
@@ -4834,6 +4847,10 @@ namespace genreflex {
       if (writeEmptyRootPCM)
          argvVector.push_back(string2charptr("-writeEmptyRootPCM"));
 
+      // Just test the syntax of the selection file
+      if (selSyntaxOnly)
+         argvVector.push_back(string2charptr("-selSyntaxOnly"));
+
       // Clingargs
       AddToArgVector(argvVector, includes, "-I");
       AddToArgVector(argvVector, preprocDefines, "-D");
@@ -4886,6 +4903,7 @@ namespace genreflex {
                            bool doSplit,
                            bool isDeep,
                            bool writeEmptyRootPCM,
+                           bool selSyntaxOnly,
                            const std::vector<std::string> &headersNames,
                            const std::string &outputDirName_const = "")
    {
@@ -4924,6 +4942,7 @@ namespace genreflex {
                                           doSplit,
                                           isDeep,
                                           writeEmptyRootPCM,
+                                          selSyntaxOnly,
                                           namesSingleton,
                                           ofilenameFullPath);
          if (returnCode != 0)
@@ -5029,6 +5048,7 @@ int GenReflex(int argc, char **argv)
                        WRITEEMPTYROOTPCM,
                        HELP,
                        CAPABILITIESFILENAME,
+                       SELSYNTAXONLY,
                        INTERPRETERONLY,
                        SPLIT,
                        NOMEMBERTYPEDEFS,
@@ -5269,6 +5289,14 @@ int GenReflex(int argc, char **argv)
          "--help\tPrint usage and exit.\n"
       },
 
+      {
+         SELSYNTAXONLY,
+         NOTYPE,
+         "", "selSyntaxOnly",
+         ROOT::option::Arg::None,
+         "--selSyntaxOnly\tValidate selection file w/o generating the dictionary.\n"
+      },
+
       // Left intentionally empty not to be shown in the help, like in the first genreflex
       {
          INCLUDE,
@@ -5440,6 +5468,11 @@ int GenReflex(int argc, char **argv)
    if (options[WRITEEMPTYROOTPCM])
       writeEmptyRootPCM = true;
 
+   bool selSyntaxOnly = false;
+   if (options[SELSYNTAXONLY]) {
+      selSyntaxOnly = true;
+   }
+
    // Add the .so extension to the rootmap lib if not there
    if (!rootmapLibName.empty() && !ROOT::TMetaUtils::EndsWith(rootmapLibName, gLibraryExtension)) {
       rootmapLibName += gLibraryExtension;
@@ -5502,6 +5535,7 @@ int GenReflex(int argc, char **argv)
                                     doSplit,
                                     isDeep,
                                     writeEmptyRootPCM,
+                                    selSyntaxOnly,
                                     headersNames,
                                     ofileName);
    } else {
@@ -5523,6 +5557,7 @@ int GenReflex(int argc, char **argv)
                                         doSplit,
                                         isDeep,
                                         writeEmptyRootPCM,
+                                        selSyntaxOnly,
                                         headersNames,
                                         ofileName);
    }
