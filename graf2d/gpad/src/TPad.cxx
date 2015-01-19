@@ -5084,8 +5084,8 @@ void TPad::ResizePad(Option_t *option)
          //resulting in a frozen xterm
          if (   !(TMath::Finite(fX1)) || !(TMath::Finite(fX2))
              || !(TMath::Finite(fY1)) || !(TMath::Finite(fY2))
-             || !(TMath::IsNaN(fX1))  || !(TMath::IsNaN(fX2))
-             || !(TMath::IsNaN(fY1))  || !(TMath::IsNaN(fY2)))
+             || (TMath::IsNaN(fX1))  || (TMath::IsNaN(fX2))
+             || (TMath::IsNaN(fY1))  || (TMath::IsNaN(fY2)))
             Warning("ResizePad", "Inf/NaN propagated to the pad. Check drawn objects.");
          if (w <= 0 || w > 10000) {
             Warning("ResizePad", "%s width changed from %d to %d\n",GetName(),w,10);
