@@ -160,6 +160,7 @@ namespace HistFactory{
     // Name of an 'edited' model, if necessary
     std::string NewModelName = "newSimPdf"; // <- This name is hard-coded in HistoToWorkspaceFactoryFast::EditSyt.  Probably should be changed to : std::string("new") + ModelName;
 
+#ifdef DO_EDIT_WS    
     // Activate Additional Constraint Terms
     if(    measurement.GetGammaSyst().size() > 0 
 	|| measurement.GetUniformSyst().size() > 0 
@@ -173,7 +174,8 @@ namespace HistFactory{
 
       proto_config->SetPdf( *ws_single->pdf( "newSimPdf" ) );
     }
-  
+#endif
+    
     // Set the ModelConfig's Params of Interest
     RooAbsData* expData = ws_single->data("asimovData");
     if( !expData ) {
@@ -582,7 +584,7 @@ namespace HistFactory{
       return sigmaEpsilon;
   }        
 
-  void HistoToWorkspaceFactoryFast::AddEfficiencyTerms(RooWorkspace* proto, string prefix, 
+   void HistoToWorkspaceFactoryFast::AddEfficiencyTerms(RooWorkspace* proto, Measurement & meas, string prefix, 
 						       string interpName,
 						       std::vector<OverallSys>& systList, 
 						       vector<string>& constraintTermNames, 
@@ -597,34 +599,62 @@ namespace HistFactory{
     RooArgSet params(prefix.c_str());
     vector<double> lowVec, highVec;
 
+    std::map<std::string, double>::iterator itconstr;
     for(unsigned int i = 0; i < systList.size(); ++i) {
 
-      OverallSys& sys = systList.at(i); 
+      OverallSys& sys = systList.at(i);
 
       // add efficiency term
-      RooRealVar* temp = (RooRealVar*) proto->var((prefix + sys.GetName()).c_str());
-      if(!temp) {
-
-	temp = (RooRealVar*) proto->factory((prefix + sys.GetName() + range).c_str());
-	string command=("Gaussian::" + prefix + sys.GetName() + 
-			"Constraint(" + prefix + sys.GetName() +
-			",nom_" + prefix + sys.GetName() + "[0.,-10,10],1.)");
-
-        cout << command << endl;
-        constraintTermNames.push_back( proto->factory( command.c_str() )->GetName() );
-	proto->var(("nom_" + prefix + sys.GetName()).c_str())->setConstant();
-	const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var(("nom_" + prefix + sys.GetName()).c_str()));	
+      RooRealVar* alpha = (RooRealVar*) proto->var((prefix + sys.GetName()).c_str());
+      if(!alpha) {
+         
+         alpha = (RooRealVar*) proto->factory((prefix + sys.GetName() + range).c_str());
+         string command=("Gaussian::" + prefix + sys.GetName() + 
+                         "Constraint(" + prefix + sys.GetName() +
+                         ",nom_" + prefix + sys.GetName() + "[0.,-10,10],1.)");
+         
+         cout << command << endl;
+         constraintTermNames.push_back( proto->factory( command.c_str() )->GetName() );
+         proto->var(("nom_" + prefix + sys.GetName()).c_str())->setConstant();
+         const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var(("nom_" + prefix + sys.GetName()).c_str()));	
       } 
-
-      params.add(*temp);
-
+         
+         
       // add constraint in terms of bifrucated gauss with low/high as sigmas
       std::stringstream lowhigh;
       double low = sys.GetLow();
       double high = sys.GetHigh();
       lowVec.push_back(low);
       highVec.push_back(high);
-      
+
+      // check if exists a log-normal constraint
+      if (meas.GetLogNormSyst().count(sys.GetName()) == 0 &&  meas.GetGammaSyst().count(sys.GetName()) == 0 ) { 
+
+         // just add the alpha for the parameters of the FlexibleInterpVar function 
+         params.add(*alpha);
+
+         
+      }
+      else if (meas.GetLogNormSyst().count(sys.GetName()) > 0 ) {
+         // log normal constraint for parameter
+         double relerr = meas.GetLogNormSyst().find(sys.GetName() )->second;
+         double tauVal = 1./relerr; 
+         std::string tauName = "tau_" + sys.GetName();
+         proto->factory(TString::Format("%s[%f]",tauName.c_str(),tauVal ) );
+         double kappaVal = 1. + relerr; 
+         std::string kappaName = "kappa_" + sys.GetName();
+         proto->factory(TString::Format("%s[%f]",kappaName.c_str(),kappaVal ) );
+         const char * alphaName = alpha->GetName(); 
+         
+         std::string alphaOfBetaName = "alphaOfBeta_" + sys.GetName(); 
+         RooAbsArg * tmp = proto->factory(TString::Format("expr::%s('%s*(pow(%s,%s)-1.)',%s,%s,%s)",alphaOfBetaName.c_str(),
+                                                           tauName.c_str(),kappaName.c_str(),alphaName,
+                                                           tauName.c_str(),kappaName.c_str(),alphaName ) );
+
+         std::cout << "after using a log-normal constraint" << std::endl;
+         proto->Print(); 
+         params.add(*tmp);
+      }
     }
 
     if(systList.size() > 0){
@@ -632,6 +662,7 @@ namespace HistFactory{
       //      LinInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
       FlexibleInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);      
       interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise linear to 6th order polynomial interpolation + linear extrapolation )
+      //interp.setAllInterpCodes(0); // simple linear interpolation
       proto->import(interp); // params have already been imported in first loop of this function
     } else{
       // some strange behavior if params,lowVec,highVec are empty.  
@@ -639,6 +670,9 @@ namespace HistFactory{
       RooConstVar interp( (interpName).c_str(), "", 1.);
       proto->import(interp); // params have already been imported in first loop of this function
     }
+
+    std::cout << "after creating FlexibleInterpVar " << std::endl;
+    proto->Print();
     
   }
 
@@ -807,6 +841,7 @@ namespace HistFactory{
     unsigned int nskipped = 0;
     map<string,double>::iterator it;
 
+    
     // add gamma terms and their constraints
     for(it=gammaSyst.begin(); it!=gammaSyst.end(); ++it) {
       //cout << "edit for " << it->first << "with rel uncert = " << it->second << endl;
@@ -1197,7 +1232,7 @@ namespace HistFactory{
 
       // constraintTermNames and totSystTermNames are vectors that are passed
       // by reference and filled by this method
-      AddEfficiencyTerms(proto,systSourcePrefix, overallSystName,
+      AddEfficiencyTerms(proto,measurement, systSourcePrefix, overallSystName,
 			 sample.GetOverallSysList(), constraintTermNames , totSystTermNames);    
 
       // GHL: Consider passing the NormFactor list instead of the entire sample
