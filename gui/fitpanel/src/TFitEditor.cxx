@@ -229,13 +229,14 @@ TF1* copyTF1(TF1* f)
 
    double xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0;
 
+   // no need to use kNotGlobal bit. TF1::Copy does not add in the list by default
    if ( dynamic_cast<TF3*>(f) != 0 ) {
       TF3* fnew = (TF3*)f->IsA()->New();
       f->Copy(*fnew);
       f->GetRange(xmin,ymin,zmin,xmax,ymax,zmax);
       fnew->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
       fnew->SetParent( 0 );
-      fnew->SetBit(TFormula::kNotGlobal);
+      fnew->AddToGlobalList(false);
       return fnew;
    } else if ( dynamic_cast<TF2*>(f) != 0 ) {
       TF2* fnew = (TF2*)f->IsA()->New();
@@ -244,7 +245,7 @@ TF1* copyTF1(TF1* f)
       fnew->SetRange(xmin,ymin,xmax,ymax);
       fnew->Save(xmin,xmax,ymin,ymax,0,0);
       fnew->SetParent( 0 );
-      fnew->SetBit(TFormula::kNotGlobal);
+      fnew->AddToGlobalList(false);
       return fnew;
    } else {
       TF1* fnew = (TF1*)f->IsA()->New();
@@ -256,7 +257,7 @@ TF1* copyTF1(TF1* f)
       if ( '\0' != fnew->GetExpFormula()[0] )
          fnew->Save(xmin,xmax,0,0,0,0);
       fnew->SetParent( 0 );
-      fnew->SetBit(TFormula::kNotGlobal);
+      fnew->AddToGlobalList(false);
       return fnew;
    }
 }

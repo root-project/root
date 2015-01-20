@@ -58,6 +58,8 @@ class TF1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 protected:
    Double_t    fXmin;        //Lower bounds for the range
    Double_t    fXmax;        //Upper bounds for the range
+   Double_t    fMaximum;     //Maximum value for plotting
+   Double_t    fMinimum;     //Minimum value for plotting
    Int_t       fNpx;         //Number of points used for the graphical representation
    Int_t       fType;        //(=0 for standard functions, 1 if pointer to function)
    Int_t       fNpfits;      //Number of points used in the fit
@@ -75,8 +77,6 @@ protected:
    Double_t    *fGamma;      //!Array gamma.
    TObject     *fParent;     //!Parent object hooking this function (if one)
    TH1         *fHistogram;  //!Pointer to histogram used for visualisation
-   Double_t     fMaximum;    //Maximum value for plotting
-   Double_t     fMinimum;    //Minimum value for plotting
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
    ROOT::Math::ParamFunctor fFunctor;   //! Functor object to wrap any C++ callable object
    TFormula    *fFormula;    //Pointer to TFormula in case when user define formula
@@ -90,6 +90,11 @@ protected:
    virtual Double_t GetMinMaxNDim(Double_t * x , Bool_t findmax, Double_t epsilon = 0, Int_t maxiter = 0) const;
    virtual void GetRange(Double_t * xmin, Double_t * xmax) const;
    virtual TH1 *DoCreateHistogram(Double_t xmin, Double_t xmax, Bool_t recreate = kFALSE);
+
+   enum {
+       kNotGlobal   = BIT(10)  // don't register in global list of functions
+   };
+   
 public:
     // TF1 status bits
     enum {
@@ -195,7 +200,8 @@ public:
    virtual void     AddParameter(const TString &name, Double_t value) { fFormula->AddParameter(name,value); }
    //virtual void     AddParameters(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddParameters(pairs,size); } 
    virtual void     AddVariable(const TString &name, Double_t value) { fFormula->AddVariable(name,value); }
-   virtual void     AddVariables(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddVariables(pairs,size); } 
+   virtual void     AddVariables(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddVariables(pairs,size); }
+   virtual Bool_t   AddToGlobalList(Bool_t on = kTRUE); 
    virtual void     Browse(TBrowser *b);
    virtual void     Copy(TObject &f1) const;
    virtual Double_t Derivative (Double_t x, Double_t *params=0, Double_t epsilon=0.001) const;

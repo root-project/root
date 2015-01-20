@@ -125,17 +125,20 @@ protected:
 
    Double_t       DoEval(const Double_t * x  = nullptr, const Double_t * p = nullptr);
 
+   enum {      
+      kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction (it should be protected)
+   };
 
 public:
-   enum {
-      kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction
+   
+   enum { 
       kNormalized    = BIT(14),   // set to true if the TFormula (ex gausn) is normalized
       kLinear        = BIT(16)    //set to true if the TFormula is for linear fitting
    };
                   TFormula();
    virtual        ~TFormula();
    TFormula&      operator=(const TFormula &rhs);
-                  TFormula(const TString &name, TString formula);
+   TFormula(const TString &name, TString formula, bool addToGlobList = true);
                   TFormula(const TFormula &formula);
                   TFormula(const char *name, Int_t nparams, Int_t ndims);
    

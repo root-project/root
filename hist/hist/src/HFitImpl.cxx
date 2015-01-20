@@ -619,7 +619,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
       fnew1->SetRange(xmin,xmax);
       fnew1->Save(xmin,xmax,0,0,0,0);
       if (!drawFunction) fnew1->SetBit(TF1::kNotDraw);
-      fnew1->SetBit(TFormula::kNotGlobal);
+      fnew1->AddToGlobalList(false);
    } else if (ndim < 3) {
       if (!reuseOldFunction) {
          fnew2 = (TF2*)f1->IsA()->New();
@@ -635,7 +635,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
       fnew2->SetParent( h1 );
       fnew2->Save(xmin,xmax,ymin,ymax,0,0);
       if (!drawFunction) fnew2->SetBit(TF1::kNotDraw);
-      fnew2->SetBit(TFormula::kNotGlobal);
+      fnew2->AddToGlobalList(false);
    } else {
       if (!reuseOldFunction) {
          fnew3 = (TF3*)f1->IsA()->New();
@@ -651,7 +651,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
       fnew3->SetParent( h1 );
       fnew3->Save(xmin,xmax,ymin,ymax,zmin,zmax);
       if (!drawFunction) fnew3->SetBit(TF1::kNotDraw);
-      fnew3->SetBit(TFormula::kNotGlobal);
+      fnew3->AddToGlobalList(false);
    }
    if (h1->TestBit(kCanDelete)) return;
    // draw only in case of histograms

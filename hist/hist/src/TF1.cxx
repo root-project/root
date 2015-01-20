@@ -739,6 +739,37 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    CreateFromFunctor(name, npar,ndim);
 }
 
+//_____________________________________________________________________________
+Bool_t TF1::AddToGlobalList(Bool_t on)
+{ 
+   // Add to global list of functions (gROOT->GetListOfFunctions() )
+   // return previous status (true of functions was already in the list false if not)
+
+   if (!gROOT) return false; 
+
+   bool prevStatus = TestBit(kNotGlobal);
+   if (prevStatus != on) SetBit(kNotGlobal,on);
+   if (on )  {
+      if (prevStatus) { 
+         assert (gROOT->GetListOfFunctions()->FindObject(this) != nullptr);
+         return on; // do nothing
+      }
+      // do I need to delete previous one with the same name ???
+      //TF1 * old = dynamic_cast<TF1*>( gROOT->GetListOfFunctions()->FindObject(GetName()) );
+      //if (old) gROOT->GetListOfFunctions()->Remove(old);
+      gROOT->GetListOfFunctions()->Add(this);
+   }
+   else if (prevStatus) {
+      // if previous status was on and now is off
+      TF1 * old = dynamic_cast<TF1*>( gROOT->GetListOfFunctions()->FindObject(GetName()) );
+      if (!old) {
+         Warning("AddToGlobalList","Function is supposed to be in the global list but it is not present");
+         return kFALSE; 
+      }
+      gROOT->GetListOfFunctions()->Remove(this);
+   }
+   return prevStatus; 
+}
 
 //______________________________________________________________________________
 void TF1::CreateFromFunctor(const char *name, Int_t npar,Int_t ndim)
@@ -3282,22 +3313,53 @@ void TF1::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
-      if (v > 4) {
+      // process new version with new TFormula class whuich is contained in TF1
+      if (v > 7) {
+         // new classes with new TFormula
+         // need to register the objects
          b.ReadClassBuffer(TF1::Class(), this, v, R__s, R__c);
-         if (v == 5 && fNsave > 0) {
-            //correct badly saved fSave in 3.00/06
-            Int_t np = fNsave - 3;
-            fSave[np]   = fSave[np-1];
-            fSave[np+1] = fXmin;
-            fSave[np+2] = fXmax;
+         if (!TestBit(kNotGlobal)) {
+            R__LOCKGUARD2(gROOTMutex);
+            gROOT->GetListOfFunctions()->Add(this);
          }
          return;
       }
-      //====process old versions before automatic schema evolution
-      TNamed::Streamer(b);
+      fFormula = new TFormula(); 
+      fFormula->Streamer(b);
+      //std::cout << "Reading an old TF1 from file - old tformula is " << std::endl;
+      //fFormula->Print();
+      fNpar = fFormula->GetNpar(); 
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
       TAttMarker::Streamer(b);
+
+      // for latest version
+      // if (v == 7) {
+      // // old case of TF1 inheriting from old TFormula
+      //    b >> fXmin;
+      //    b >> fXmax;
+      //    b >> fNpx;
+      //    b >> fType;
+      //    b >> fNpfits;
+      //    b >> fNDF;
+      //    b >> fNsave;
+      //    b >> fChisquare; 
+      //    if (fNpar > 0) { 
+      //       b.ReadArray(fParErrors);
+      //       b.ReadArray(fParMin); 
+      //       b.ReadArray(fParMax);
+      //    }
+      //    if (fNsave > 0) b.ReadArray(fSave);
+
+      //    b >> fMaximum;
+      //    b >> fMinimum;
+
+      //    //b.CheckByteCount(R__s, R__c, TF1::IsA());
+      //    Dump();
+      //    return;
+
+      // }
+      
       if (v < 4) {
          Float_t xmin,xmax;
          b >> xmin; fXmin = xmin;
@@ -3308,16 +3370,17 @@ void TF1::Streamer(TBuffer &b)
       }
       b >> fNpx;
       b >> fType;
+      b >> fNpfits;
+      if (v > 6)  b >> fNDF; 
       b >> fChisquare;
       b.ReadArray(fParErrors);
       if (v > 1) {
          b.ReadArray(fParMin);
          b.ReadArray(fParMax);
       } else {
-         fParMin = new Double_t[GetNpar()+1];
-         fParMax = new Double_t[GetNpar()+1];
+         fParMin = new Double_t[fNpar+1];
+         fParMax = new Double_t[fNpar+1];
       }
-      b >> fNpfits;
       if (v == 1) {
          b >> fHistogram;
          delete fHistogram; fHistogram = 0;
@@ -3328,26 +3391,49 @@ void TF1::Streamer(TBuffer &b)
             b >> minimum; fMinimum =minimum;
             b >> maximum; fMaximum =maximum;
          } else {
-            b >> fMinimum;
             b >> fMaximum;
+            b >> fMinimum;
+         }
+         // sometimes 0,0 is read instead of -1111,-1111
+         if (fMaximum <= fMinimum) {
+            fMinimum = -1111;
+            fMaximum = -1111;
          }
       }
       if (v > 2) {
          b >> fNsave;
          if (fNsave > 0) {
-            fSave = new Double_t[fNsave+10];
-            b.ReadArray(fSave);
-            //correct fSave limits to match new version
-            fSave[fNsave]   = fSave[fNsave-1];
-            fSave[fNsave+1] = fSave[fNsave+2];
-            fSave[fNsave+2] = fSave[fNsave+3];
-            fNsave += 3;
-         } else fSave = 0;
+            if (v < 4) {
+               fSave = new Double_t[fNsave+10];
+               b.ReadArray(fSave);
+               fSave[fNsave]   = fSave[fNsave-1];
+               fSave[fNsave+1] = fSave[fNsave+2];
+               fSave[fNsave+2] = fSave[fNsave+3];
+               fNsave += 3;
+            }
+            else { 
+               fSave = new Double_t[fNsave];
+               b.ReadArray(fSave);
+               if (v == 5 && fNsave > 0) {
+                  //correct badly saved fSave in 3.00/06
+                  Int_t np = fNsave - 3;
+                  fSave[np]   = fSave[np-1];
+                  fSave[np+1] = fXmin;
+                  fSave[np+2] = fXmax;
+               }
+            }
+         }
+         else
+            fSave = 0;
+         
       }
+      // skip check (we don;t read all TFormula old info)
       b.CheckByteCount(R__s, R__c, TF1::IsA());
       //====end of old versions
-
-   } else {
+   }
+   
+   // Writing   
+   else {
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
 

@@ -17,6 +17,7 @@
 #include "TClass.h"
 #include "TMethod.h"
 #include "TMath.h"
+#include "TF1.h"
 #include "TMethodCall.h"
 #include <TBenchmark.h>
 #include "TError.h"
@@ -154,7 +155,11 @@ TFormula::TFormula()
 TFormula::~TFormula()
 {
 
-   if (gROOT) gROOT->GetListOfFunctions()->Remove(this);
+   // N.B. a memory leak may happen if user set bit after constructing the object,
+   // Setting of bit should be done only internally
+   if (!TestBit(TFormula::kNotGlobal) && gROOT ) {
+      gROOT->GetListOfFunctions()->Remove(this);
+   }
 
    if(fMethod)
    {  
@@ -193,34 +198,34 @@ TFormula::TFormula(const char *name, Int_t nparams, Int_t ndims)
    }
 }
 
-TFormula::TFormula(const TString &name, TString formula)
-   :fClingInput(formula),fFormula(formula)
+TFormula::TFormula(const TString &name, TString formula, bool addToGlobList)   :
+   TNamed(name,formula),
+   fClingInput(formula),fFormula(formula)
 {
    fReadyToExecute = false;
    fClingInitialized = false;
    fMethod = 0;
-   TNamed(fName,formula);
    fNdim = 0;
    fNpar = 0;
    fNumber = 0;
    FillDefaults();
 
-   fName = gNamePrefix + name;
-
-
-   TFormula *old = 0; 
-   if (gROOT) old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(fName);
-   if (old) 
-   {
-      if (gROOT) gROOT->GetListOfFunctions()->Remove(old);
+   
+   if (addToGlobList && gROOT) { 
+      TFormula *old = 0;
+      R__LOCKGUARD2(gROOTMutex);
+      old = dynamic_cast<TFormula*> ( gROOT->GetListOfFunctions()->FindObject(name) );
+      if (old) 
+         gROOT->GetListOfFunctions()->Remove(old);
+      if (name == "x" || name == "y" || name == "z" || name == "t")
+         Error("TFormula","The name %s is reserved as a TFormula variable name.\n",name.Data());
+      else
+         gROOT->GetListOfFunctions()->Add(this);      
    }
-   if (name == "x" || name == "y" || name == "z" || name == "t")
-   {
-      Error("TFormula","The name %s is reserved as a TFormula variable name.\n",name.Data());
-   } else 
-   {
-      if (gROOT) gROOT->GetListOfFunctions()->Add(this);      
-   }
+   SetBit(kNotGlobal,!addToGlobList);
+
+   //fName = gNamePrefix + name;  // is this needed 
+   
    PreProcessFormula(fFormula);
    //std::cout << "formula " << GetName() << " is preprocessed " << std::endl;
 
@@ -228,7 +233,8 @@ TFormula::TFormula(const TString &name, TString formula)
    PrepareFormula(fClingInput);
 
 
-   //std::cout << "formula " << GetName() << " is prepared " << std::endl;
+   // std::cout << "formula " << GetName() << " is prepared " << std::endl;
+   // std::cout << fClingInput.Data() << std::endl;
 
 }
 
@@ -243,21 +249,21 @@ TFormula::TFormula(const TFormula &formula) : TNamed(formula.GetName(),formula.G
    fFormula = formula.GetExpFormula();
 
    FillDefaults();
-   fName = gNamePrefix + formula.GetName();
+   //fName = gNamePrefix + formula.GetName();
 
-   TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(formula.GetName());
-   if (old) 
-   {
-      gROOT->GetListOfFunctions()->Remove(old);
+   if (!TestBit(TFormula::kNotGlobal) && gROOT ) {
+      R__LOCKGUARD2(gROOTMutex);
+      TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(formula.GetName());
+      if (old) 
+         gROOT->GetListOfFunctions()->Remove(old);
+      
+      if (strcmp(formula.GetName(),"x") == 0 || strcmp(formula.GetName(),"y") == 0 ||
+          strcmp(formula.GetName(),"z") == 0 || strcmp(formula.GetName(),"t") == 0) {
+         Error("TFormula","The name %s is reserved as a TFormula variable name.\n",formula.GetName());
+      } else 
+         gROOT->GetListOfFunctions()->Add(this);
    }
-   if (strcmp(formula.GetName(),"x") == 0 || strcmp(formula.GetName(),"y") == 0 ||
-       strcmp(formula.GetName(),"z") == 0 || strcmp(formula.GetName(),"t") == 0)
-   {
-      Error("TFormula","The name %s is reserved as a TFormula variable name.\n",formula.GetName());
-   } else 
-   {
-      gROOT->GetListOfFunctions()->Add(this);
-   }
+   
    PreProcessFormula(fFormula);
    fClingInput = fFormula;
    PrepareFormula(fClingInput);
@@ -871,14 +877,10 @@ void TFormula::HandleLinear(TString &formula)
          
       formula.ReplaceAll(pattern,replacement);
       if (first) { 
-         TFormula *lin1 = new TFormula("__linear1",left);
-         lin1->SetBit(kNotGlobal,1);
-         gROOT->GetListOfFunctions()->Remove(lin1);
+         TFormula *lin1 = new TFormula("__linear1",left,false);
          fLinearParts.Add(lin1);
       }
-      TFormula *lin2 = new TFormula("__linear2",right);
-      lin2->SetBit(kNotGlobal,1);
-      gROOT->GetListOfFunctions()->Remove(lin2);
+      TFormula *lin2 = new TFormula("__linear2",right,false);
       fLinearParts.Add(lin2);
 
       linPos = formula.Index("@");
@@ -906,7 +908,17 @@ Bool_t TFormula::PrepareFormula(TString &formula)
 {
    fFuncs.clear();
    fReadyToExecute = false;
-   ExtractFunctors(formula);
+   ExtractFunctors(formula);   
+
+   // update the expression with the new formula
+   fFormula = formula;
+   // replace all { and }
+   fFormula.ReplaceAll("{","");
+   fFormula.ReplaceAll("}","");
+   
+   // std::cout << "functors are extracted formula is " << std::endl;
+   // std::cout << fFormula << std::endl << std::endl;
+   
    fFuncs.sort();
    fFuncs.unique();
 
@@ -999,7 +1011,13 @@ void TFormula::ExtractFunctors(TString &formula)
             //std::cout << "check if character : " << i << " " << formula[i] << " from name " << name << "  is a function " << std::endl;
 
             // check if function is provided by gROOT
-            TFormula *f = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + name);
+            TObject *obj = gROOT->GetListOfFunctions()->FindObject(name);
+            TFormula * f = dynamic_cast<TFormula*> (obj);  
+            if (!f) {
+               // maybe object is a TF1
+               TF1 * f1 = dynamic_cast<TF1*> (obj);
+               if (f1) f = f1->GetFormula();
+            }
             if (f) { 
                TString replacementFormula = f->GetExpFormula(); 
                // analyze expression string 
@@ -1030,13 +1048,16 @@ void TFormula::ExtractFunctors(TString &formula)
                      // names are the same between current formula and replaced one
                      SetParameter(f->GetParName(jpar),  f->GetParameter(jpar) );
                }
-
+               // need to add parenthesis at begin end end of replacementFormula
+               replacementFormula.Insert(0,'(');
+               replacementFormula.Insert(replacementFormula.Length(),')');
                formula.Replace(i-name.Length(),name.Length(), replacementFormula, replacementFormula.Length());
                // move forward the index i of the main loop
                i += replacementFormula.Length()-name.Length();
 
                // we have extracted all the functor for "fname"
-               //std::cout << " i = " << i << " f[i] = " << formula[i] << " - " << formula << std::endl; 
+               std::cout << " i = " << i << " f[i] = " << formula[i] << " - " << formula << std::endl;
+               
                continue;
             }
 
@@ -1102,7 +1123,7 @@ void TFormula::ProcessFormula(TString &formula)
                                                    
             Bool_t silent = true;
             TClass *tclass = new TClass(className,silent);
-            std::cout << "looking for class " << className << std::endl;
+            // std::cout << "looking for class " << className << std::endl;
             const TList *methodList = tclass->GetListOfAllPublicMethods();
             TIter next(methodList);
             TMethod *p;
@@ -1719,7 +1740,7 @@ void TFormula::SetParameters(const Double_t *params, Int_t size)
    if(!params || size < 0 || size > fNpar) return;
    // reset vector of cling parameters
    if (size != (int) fClingParameters.size() ) {
-      Warning("SetParameters","size is not same of cling parameter size %d - %d",size,fClingParameters.size() );
+      Warning("SetParameters","size is not same of cling parameter size %d - %d",size,int(fClingParameters.size()) );
       for(Int_t i = 0; i < size; ++i)
       {
          TString name = TString::Format("%d",i);
@@ -1931,7 +1952,8 @@ void TFormula::Streamer(TBuffer &b)
          // old TFormula class
          TFormulaOld * fold = new TFormulaOld(); 
          b.ReadClassBuffer(TFormulaOld::Class(), fold, v, R__s, R__c);
-         fold->Print();
+         //std::cout << "read old tformula class " << std::endl;
+         //fold->Print();
          TFormula fnew(fold->GetName(), fold->GetExpFormula() );
          *this = fnew;
          SetParameters(fold->GetParameters() );
@@ -1939,6 +1961,7 @@ void TFormula::Streamer(TBuffer &b)
             Error("Streamer","Old formula read from file is NOT valid");
             Print("v");
          }
+         delete fold; 
          return;
       }
       else if (v > 8) {
@@ -1966,7 +1989,7 @@ void TFormula::Streamer(TBuffer &b)
 
          // restore parameter values
          if (fNpar != (int) parValues.size() ) { 
-            Error("Streamer","number of parameters computed (%d) is not same as the stored parameters (%d)",fNpar,parValues.size() );
+            Error("Streamer","number of parameters computed (%d) is not same as the stored parameters (%d)",fNpar,int(parValues.size()) );
             Print("v");
          }
          assert(fNpar == (int) parValues.size() );
