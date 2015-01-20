@@ -1388,12 +1388,14 @@ void TCling::RegisterModule(const char* modulename,
 
    // Treat Aclic Libs in a special way. Do not delay the parsing.
    bool hasHeaderParsingOnDemand = fHeaderParsingOnDemand;
+   bool isACLiC = false;
    if (hasHeaderParsingOnDemand &&
        strstr(modulename, "_ACLiC_dict") != nullptr){
       if (gDebug>1)
          Info("TCling::RegisterModule",
               "Header parsing on demand is active but this is an Aclic library. Disabling it for this library.");
       hasHeaderParsingOnDemand = false;
+      isACLiC = true;
    }
 
 
@@ -1619,18 +1621,23 @@ void TCling::RegisterModule(const char* modulename,
 
       clangDiagSuppr diagSuppr(fInterpreter->getSema().getDiagnostics());
 
-      #if defined(R__MUST_REVISIT)
-      #if R__MUST_REVISIT(6,2)
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
       Warning("TCling::RegisterModule","Diagnostics suppression should be gone by now.");
-      #endif
-      #endif
+#endif
+#endif
 
-      if(!hasHeaderParsingOnDemand){
+      if (!hasHeaderParsingOnDemand){
+         const cling::Transaction* watermark = fInterpreter->getLastTransaction();
          cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
+         if (isACLiC) {
+            // Register an unload point.
+            fMetaProcessor->registerUnloadPoint(watermark, headers[0]);
+         }
 
          assert(cling::Interpreter::kSuccess == compRes &&
                         "Payload code of a dictionary could not be parsed correctly.");
-         if (compRes!=cling::Interpreter::kSuccess){
+         if (compRes!=cling::Interpreter::kSuccess) {
             Warning("TCling::RegisterModule",
                   "Problems declaring payload for module %s.", modulename) ;
          }
