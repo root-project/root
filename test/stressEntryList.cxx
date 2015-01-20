@@ -35,6 +35,8 @@
 // *******************Deleting the data files****************************
 // **********************************************************************
 
+#include <map>
+#include <list>
 #include <stdlib.h>
 #include "TApplication.h"
 #include "TEntryList.h"
@@ -395,14 +397,15 @@ Bool_t Test4()
    return kTRUE;
 }
 
-Bool_t Test5()
+Bool_t Test5And6(const std::list<const char*>& treeNamesForChain )
 {
 //Test entry lists with very many or very few events
 //Only makes sense to check if there are > 64000 events
 
    TChain *chain = new TChain("chain", "chain");
-   chain->Add("stressEntryListTrees*.root/tree1");
-   chain->Add("stressEntryListTrees*.root/tree2");
+   for (auto treeName : treeNamesForChain){
+      chain->Add(treeName);
+   }
    Int_t wrongentries1=0;
    Int_t wrongentries2=0;
    Int_t wrongentries3=0;
@@ -512,44 +515,77 @@ Bool_t Test5()
       return kTRUE;
 }
 
+Bool_t Test5()
+{
+   return Test5And6({"stressEntryListTrees*.root/tree1",
+                     "stressEntryListTrees*.root/tree2"});
+}
+
+Bool_t Test6()
+{
+   return Test5And6({"stressEntryListTrees*.root/tree1",
+                     "stressEntryListTrees*.root/tree2",
+                     "stressEntryListTrees*.root/Dir1/tree1",
+                     "stressEntryListTrees*.root/Dir1/tree2",
+                     "stressEntryListTrees*.root/Dir2/tree1",
+                     "stressEntryListTrees*.root/Dir2/tree2"});
+}
+
+
+void SetupTree(TTree* tree, Double_t x, Double_t y, Double_t z)
+{
+   tree->Branch("x", &x, "x/D");
+   tree->Branch("y", &y, "y/D");
+   tree->Branch("z", &z, "z/D");
+}
+
+const char* gRootFileNameTemplate = "stressEntryListTrees_%d.root";
 
 void MakeTrees(Int_t nentries, Int_t nfiles)
 {
    //Creates nfiles files with 2 trees of nentries each
 
-   TFile *f1;
-   TTree *tree1, *tree2;
-
-   Double_t x, y, z;
-   Double_t range = nentries/100.;
+   Double_t x=0., y=0., z=0.;
+   Double_t range = nentries*0.01;
 
    char buffer[50];
    for (Int_t ifile=0; ifile<nfiles; ifile++){
-      snprintf(buffer,50, "stressEntryListTrees_%d.root", ifile);
-      f1 = new TFile(buffer, "UPDATE");
-      tree1 = new TTree("tree1", "tree1");
-      tree1->Branch("x", &x, "x/D");
-      tree1->Branch("y", &y, "y/D");
-      tree1->Branch("z", &z, "z/D");
-      tree2 = new TTree("tree2", "tree2");
-      tree2->Branch("x", &x, "x/D");
-      tree2->Branch("y", &y, "y/D");
-      tree2->Branch("z", &z, "z/D");
-      for (Int_t i=0; i<nentries; i++){
-         x = gRandom->Uniform(-range, range);
-         y = gRandom->Uniform(-range, range);
-         z = gRandom->Uniform(-range, range);
-         tree1->Fill();
-         x = gRandom->Uniform(-range, range);
-         y = gRandom->Uniform(-range, range);
-         z = gRandom->Uniform(-range, range);
-         tree2->Fill();
-      }
-      tree1->Write();
-      tree2->Write();
+      snprintf(buffer,50, gRootFileNameTemplate, ifile);
+      TFile f1(buffer, "UPDATE");
+      auto dir1 = f1.mkdir("Dir1");
+      auto dir2 = f1.mkdir("Dir2");
+      // Init trees
+      std::array<TTree*,6> trees = {{
+      new TTree("tree1", "tree1"),
+      new TTree("tree2", "tree2"),
+      new TTree("tree1", "tree3"),
+      new TTree("tree2", "tree4"),
+      new TTree("tree1", "tree4"),
+      new TTree("tree2", "tree5")}};
 
-      f1->Write();
-      f1->Close();
+      // Set up branches
+      for (auto tree : trees) {
+         SetupTree(tree,x,y,z);
+      }
+
+      // Fill trees
+      Int_t treeCount=0;
+      for (auto tree : trees) {
+         if (treeCount == 2 || treeCount == 3) dir1->cd();
+         if (treeCount == 4 || treeCount == 5) dir2->cd();
+         for (Int_t i=0; i<nentries; i++){
+            x = gRandom->Uniform(-range, range);
+            y = gRandom->Uniform(-range, range);
+            z = gRandom->Uniform(-range, range);
+            tree->Fill();
+         }
+         tree->Write();
+         if (treeCount > 1)f1.cd("/");
+         treeCount++;
+      }
+
+      // Close File
+      f1.Close();
    }
 
 }
@@ -558,15 +594,14 @@ void CleanUp(Int_t nfiles)
 {
    char buffer[50];
    for (Int_t i=0; i<nfiles; i++){
-      snprintf(buffer,50, "stressEntryListTrees_%d.root", i);
+      snprintf(buffer,50, gRootFileNameTemplate, i);
       gSystem->Unlink(buffer);
    }
 }
 
 Int_t stressEntryList(Int_t nentries, Int_t nfiles)
 {
-   //Int_t nentries = 1000;
-   //Int_t nfiles = 10;
+
    MakeTrees(nentries, nfiles);
    printf("**********************************************************************\n");
    printf("***************Starting TEntryList stress test************************\n");
@@ -574,51 +609,30 @@ Int_t stressEntryList(Int_t nentries, Int_t nfiles)
    printf("**********Generating %d data files, 2 trees of %d in each**********\n", nfiles, nentries);
    printf("**********************************************************************\n");
 
-   Bool_t ok1=kTRUE;
-   Bool_t ok2=kTRUE;
-   Bool_t ok3=kTRUE;
-   Bool_t ok4=kTRUE;
-   Bool_t ok5=kTRUE;
+   Int_t retval = 0;
+   using fcnCharPtrPair = std::pair<std::function<bool()>,const char*>;
+   std::list<fcnCharPtrPair> testDescrList = {
+      {Test1, "Test1: Applying different entry lists to different chains---------- "},
+      {Test2, "Test2: Adding and subtracting entry lists-------------------------- "},
+      {Test3, "Test3: TEntryList and TEventList for TChain------------------------ "},
+      {Test4, "Test4: TEntryList and TEventList for TTree------------------------- "},
+      {Test5, "Test5: Full and Empty TEntryList----------------------------------- "},
+      {Test6, "Test6: Full and Empty TEntryList w/ TTrees in TDirectories--------- "}
+   };
 
-   ok1 = Test1();
-   if (ok1)
-      printf("Test1: Applying different entry lists to different chains --------- OK\n");
-   else{
-      printf("Test1: Applying different entry lists to different chains --------- FAILED\n");
-
+   for (auto const & testDescrPair : testDescrList) {
+      auto test = testDescrPair.first;
+      auto descr = testDescrPair.second;
+      Bool_t testRes = test();
+      retval += !testRes; // increment by one upon failure
+      printf("%s %s\n", descr, testRes ? "OK" : "FAILED" );
    }
-   ok2 = Test2();
-   if (ok2)
-      printf("Test2: Adding and subtracting entry lists-------------------------- OK\n");
-   else{
-      printf("Test1: Adding and subtracting entry lists-------------------------- FAILED\n");
-   }
-
-   ok3 = Test3();
-   if (ok3)
-      printf("Test3: TEntryList and TEventList for TChain------------------------ OK\n");
-   else{
-      printf("Test3: TEntryList and TEventList for TChain------------------------ FAILED\n");
-   }
-
-   ok4 = Test4();
-   if (ok4)
-      printf("Test4: TEntryList and TEventList for TTree------------------------- OK\n");
-   else{
-      printf("Test4: TEntryList and TEventList for TTree------------------------- FAILED\n");
-   }
-
-   ok5 = Test5();
-   if (ok5)
-      printf("Test5: Full and Empty TEntryList----------------------------------- OK\n");
-   else
-      printf("Test5: Full and Empty TEntryList----------------------------------- FAILED\n");
 
    printf("**********************************************************************\n");
    printf("*******************Deleting the data files****************************\n");
    printf("**********************************************************************\n");
    CleanUp(nfiles);
-   return 0;
+   return retval;
 }
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -631,8 +645,7 @@ int main(int argc, char *argv[])
    Int_t nfiles = 10;
    if (argc > 1) nentries = atoi(argv[1]);
    if (argc > 2) nfiles = atoi(argv[2]);
-   stressEntryList(nentries, nfiles);
-   return 0;
+   return stressEntryList(nentries, nfiles);
 }
 
 #endif

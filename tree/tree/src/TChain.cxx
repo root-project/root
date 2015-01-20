@@ -2491,9 +2491,10 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
 
    TEntryList *templist = 0;
    for (Int_t ie = 0; ie<ne; ie++){
-      treename = gSystem->BaseName( ((TChainElement*)fFiles->UncheckedAt(ie))->GetName() );
-      filename = ((TChainElement*)fFiles->UncheckedAt(ie))->GetTitle();
-      templist = elist->GetEntryList(treename.Data(), filename.Data(), opt);
+      auto chainElement = (TChainElement*)fFiles->UncheckedAt(ie);
+      treename = chainElement->GetName();
+      filename = chainElement->GetTitle();
+      templist = elist->GetEntryList(treename, filename, opt);
       if (templist) {
          listfound++;
          templist->SetTreeNumber(ie);
