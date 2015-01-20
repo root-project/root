@@ -742,13 +742,14 @@ Rint.Canvas.HighLightColor:      5
 # cache size is the historical one (equivalent to factor 1.0). If set to
 # non zero auto cache creation is enabled and both auto created and
 # default sized caches will use the configured factor:
-#               0.0 no automatic cache (default)
+#               0.0 no automatic cache
 #              >0.0 enable automatic cache
+#               1.0 enable automatic cache to fit one cluster (default)
 # Can be overridden by the environment variable ROOT_TTREECACHE_SIZE
 # TTreeCache.Size: 1.0
 
 # Set the default TTreeCache prefilling type.
-# The prefill type may be: 0 No Prefill (default)
-#                          1 All Branches
+# The prefill type may be: 0 No Prefill
+#                          1 All Branches (default)
 # Can be overridden by the environment variable ROOT_TTREECACHE_PREFILL
 # TTreeCache.Prefill: 1
