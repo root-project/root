@@ -37,6 +37,7 @@
 
 #include <map>
 #include <list>
+#include <array>
 #include <stdlib.h>
 #include "TApplication.h"
 #include "TEntryList.h"
