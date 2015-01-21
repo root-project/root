@@ -93,6 +93,20 @@ static void R__TObjArray_InsertAt(TObjArray *arr, TObject *obj, Int_t at)
    arr->AddAt( obj, at);
 }
 
+static void R__TObjArray_InsertAt(TObjArray *arr, std::vector<TStreamerArtificial*> &objs, Int_t at)
+{
+   // Slide by enough.
+   Int_t offset = objs.size();
+   Int_t last = arr->GetLast();
+   arr->AddAtAndExpand(arr->At(last),last+offset);
+   for(Int_t ind = last-1; ind >= at; --ind) {
+      arr->AddAt( arr->At(ind), ind+offset);
+   };
+   for(size_t ins = 0; ins < objs.size(); ++ins) {
+      arr->AddAt(objs[ins], at+ins);
+   }
+}
+
 static void R__TObjArray_InsertAfter(TObjArray *arr, TObject *newobj, TObject *oldobj)
 {
    // Slide by one.
@@ -4121,7 +4135,11 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
             break;
          }
       }
+
       TStreamerArtificial *newel;
+      typedef std::vector<TStreamerArtificial*> vec_t;
+      vec_t toAdd;
+
       if (rule->GetTarget()==0) {
          TString newName;
          newName.Form("%s_rule%d",fClass->GetName(),count);
@@ -4132,8 +4150,9 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
          newel->SetBit(TStreamerElement::kWholeObject);
          newel->SetReadFunc( rule->GetReadFunctionPointer() );
          newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
-         fElements->Add(newel);
+         toAdd.push_back(newel);
       } else {
+         toAdd.reserve(rule->GetTarget()->GetEntries());
          TObjString * objstr = (TObjString*)(rule->GetTarget()->At(0));
          if (objstr) {
             TString newName = objstr->String();
@@ -4144,7 +4163,7 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
                                                fClass->GetDataMember( newName )->GetTypeName());
                newel->SetReadFunc( rule->GetReadFunctionPointer() );
                newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
-               fElements->Add(newel);
+               toAdd.push_back(newel);
             } else {
                // This would be a completely new member (so it would need to be cached)
                // TOBEDONE
@@ -4158,11 +4177,30 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
                                                      fClass->GetDataMemberOffset(newName),
                                                      TStreamerInfo::kArtificial,
                                                      fClass->GetDataMember( newName )->GetTypeName());
-                     fElements->Add(newel);
+                     toAdd.push_back(newel);
                   }
                }
             }
          } // For each target of the rule
+      }
+      // Now find we with need to add them
+      TIter s_iter(rule->GetSource());
+      Int_t loc = -1;
+      while( TObjString *s = (TObjString*)s_iter() ) {
+         for(Int_t i = fElements->GetLast(); i >= 0 && (i+1) >= loc; --i) {
+            if (s->String() == fElements->UncheckedAt(i)->GetName()) {
+               if (loc == -1 || (i+1)>loc) {
+                  loc = i+1;
+               }
+            }
+         }
+      }
+      if (loc == -1) {
+         for(vec_t::iterator iter = toAdd.begin(); iter != toAdd.end(); ++iter) {
+            fElements->Add(*iter);
+         }
+      } else {
+         R__TObjArray_InsertAt(fElements, toAdd, loc);
       }
    } // None of the target of the rule are on file.
 }
