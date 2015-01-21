@@ -39,7 +39,7 @@ include/%.h:    $(TEXTINPUTDIRI)/%.h
 $(LTEXTINPUTO): %.o: $(ROOT_SRCDIR)/%.cpp
 		$(MAKEDIR)
 		$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-		$(CXX) $(OPT) $(CXXFLAGS) -I$(TEXTINPUTDIRS) $(CXXOUT)$@ -c $<
+		$(CXX) $(OPT) $(CXXMKDEPFLAGS) $(CXXFLAGS) -I$(TEXTINPUTDIRS) $(CXXOUT)$@ -c $<
 
 clean-$(MODNAME):
 		@rm -f $(TEXTINPUTO) $(LTEXTINPUTO)

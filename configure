@@ -2539,6 +2539,22 @@ fi
 
 ######################################################################
 #
+### echo %%% Use compiler to generate dependency files.
+#
+if test ! "x$arch" = "win32"; then
+    message "Checking whether compiler can generate dependencies"
+    check_cxxopt "-MMD -MP"
+    if test $cxxopt_result -eq 0 ; then
+        cxxmkdepflags=""
+        result "no"
+    else
+        cxxmkdepflags="-MMD -MP"
+        result "yes"
+    fi
+fi
+
+######################################################################
+#
 ### echo %%% C++11 - compile using c++11 compatible option
 #
 # needs gcc > 4.7.x or clang
@@ -7562,6 +7578,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@c++14@|$enable_cxx14|"               \
     -e "s|@libc++@|$enable_libcxx|"             \
     -e "s|@werror@|$enable_werror|"             \
+    -e "s|@cxxmkdepflags@|$cxxmkdepflags|"      \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 

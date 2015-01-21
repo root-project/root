@@ -72,6 +72,7 @@ EXTRA_LDFLAGS  := @ldflags@
 WERROR         := @werror@
 WINRTDEBUG     := @winrtdebug@
 CTORSINITARRAY := @ctorsinitarray@
+CXXMKDEPFLAGS  := @cxxmkdepflags@
 
 GLBPATCHFLAGS  := @glbpatchcflags@
 EXTRA_AUTHFLAGS:= @srpextracflags@ @krb5extracflags@ @glbextracflags@ @sslextracflags@
