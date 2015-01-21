@@ -4304,6 +4304,15 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
          }
       }
       if (loc == -1) {
+         // Verify if the last one is not 'skipped'.
+         for(Int_t i = fElements->GetLast(); i >= 0 && (i+1) >= loc; --i) {
+            if ( ((TStreamerElement*)fElements->UncheckedAt(i))->GetNewType() != -2 ) {
+               break;
+            }
+            loc = i;
+         }
+      }
+      if (loc == -1) {
          for(vec_t::iterator iter = toAdd.begin(); iter != toAdd.end(); ++iter) {
             fElements->Add(*iter);
          }
