@@ -9,8 +9,11 @@ void execWriteOrderClass(const char* filename = "orderClassTest.root")
    //	gSystem->Load("libMyClass_v1.so");
 	
 	TFile file(filename, "RECREATE");
+   MyClass* myobj = new MyClass;
+
+   file.WriteObject(myobj,"obj");
+
 	TTree tree("testtree", "Tree with test objects");
-	MyClass* myobj = new MyClass;
 	tree.Branch("myObjects", &myobj);
 
    myobj->addSomeData();

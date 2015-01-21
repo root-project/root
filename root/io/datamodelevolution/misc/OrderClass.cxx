@@ -12,7 +12,8 @@
 
 void MyClass::Print(Option_t* /* option */) const
 {
-  std::cout << "ver: " << ver << "\n";
-  //std::cout << "arr[0]: " << fArray[0] << "\n";
-  //std::cout << "arr[1]: " << fArray[1] << "\n";
+   std::cout << "ver: " << ver << "\n";
+   std::cout << "transientMember: " << transientMember << "\n";
+   //std::cout << "arr[0]: " << fArray[0] << "\n";
+   //std::cout << "arr[1]: " << fArray[1] << "\n";
 }
