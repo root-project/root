@@ -104,7 +104,9 @@ ClassImp(TFormula)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 // prefix used for function name passed to Cling    
-static const TString gNamePrefix = "T__"; 
+static const TString gNamePrefix = "T__";
+// function index number used to append in cling name to avoid a clash
+static int gFormulaIndex = 0; 
 
 Bool_t TFormula::IsOperator(const char c)
 {
@@ -128,7 +130,7 @@ Bool_t TFormula::IsBracket(const char c)
 
 Bool_t TFormula::IsFunctionNameChar(const char c)
 {
-   return !IsBracket(c) && !IsOperator(c) && c != ',';
+   return !IsBracket(c) && !IsOperator(c) && c != ',' && c != ' ';
 }
 
 Bool_t TFormula::IsDefaultVariableName(const TString &name)
@@ -228,7 +230,9 @@ TFormula::TFormula(const TString &name, TString formula, bool addToGlobList)   :
    //fName = gNamePrefix + name;  // is this needed 
    
    PreProcessFormula(fFormula);
+   
    //std::cout << "formula " << GetName() << " is preprocessed " << std::endl;
+   //std::cout << fFormula << std::endl;
 
    fClingInput = fFormula;
    PrepareFormula(fClingInput);
@@ -615,13 +619,27 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
       {
 
          // should also check that function is not something else (e.g. exponential - parse the expo)
-         Int_t lastFunPos = funPos + funName.Length(); 
+         Int_t lastFunPos = funPos + funName.Length();
+
+         // check that first and last character is not alphanumeric
+         Int_t iposBefore = funPos - 1;
+         //std::cout << "looping on  funpos is " << funPos << " formula is " << formula << std::endl;
+         if (iposBefore >= 0) {
+            assert( iposBefore < formula.Length() );
+            if (isalpha(formula[iposBefore] ) ) {
+               //std::cout << "previous character for function " << funName << " is -" << formula[iposBefore] << "- skip " << std::endl;
+               break;
+            }
+         }
+         
          Bool_t isNormalized = false; 
          if (lastFunPos < formula.Length() ) { 
             // check if function is normalized by looking at "n" character after function name (e.g. gausn)
             isNormalized = (formula[lastFunPos] == 'n');
             if (isNormalized) lastFunPos += 1; 
             if (lastFunPos < formula.Length() ) {
+               // check if also last character is not alphanumeric or a digit
+               if (isalnum(formula[lastFunPos] ) ) break; 
                if (formula[lastFunPos] != '[' && formula[lastFunPos] != '(' && ! IsOperator(formula[lastFunPos] ) ) { 
                   funPos = formula.Index(funName,lastFunPos);
                   continue; 
@@ -917,8 +935,8 @@ Bool_t TFormula::PrepareFormula(TString &formula)
    fFormula.ReplaceAll("{","");
    fFormula.ReplaceAll("}","");
    
-   // std::cout << "functors are extracted formula is " << std::endl;
-   // std::cout << fFormula << std::endl << std::endl;
+   //std::cout << "functors are extracted formula is " << std::endl;
+   //std::cout << fFormula << std::endl << std::endl;
    
    fFuncs.sort();
    fFuncs.unique();
@@ -1021,7 +1039,8 @@ void TFormula::ExtractFunctors(TString &formula)
             }
             if (f) { 
                TString replacementFormula = f->GetExpFormula(); 
-               // analyze expression string 
+               // analyze expression string
+               //std::cout << "formula to replace for " << f->GetName() << " is " << replacementFormula << std::endl;
                PreProcessFormula(replacementFormula);
                // we need to define different parameters if we use the unnamed default parameters ([0])
                // I need to replace all the terms in the functor for backward compatibility of the case
@@ -1029,15 +1048,19 @@ void TFormula::ExtractFunctors(TString &formula)
                //std::cout << "current number of parameter is " << fNpar << std::endl;
                int nparOffset = 0; 
                if (fParams.find("0") != fParams.end() ) { 
-                  nparOffset = fNpar; 
-                  for (int jpar = 0; jpar < f->GetNpar(); ++jpar ) { 
+                  nparOffset = fNpar;
+                  // start from higher number to avoid overlap
+                  for (int jpar = f->GetNpar()-1; jpar >= 0; --jpar ) { 
                      TString oldName = TString::Format("[%s]",f->GetParName(jpar));
                      TString newName = TString::Format("[%d]",nparOffset+jpar);
-                     //std::cout << "replace - paramters " << f->GetParName(jpar) << " with " <<  newName << std::endl;
+                     //std::cout << "replace - parameter " << f->GetParName(jpar) << " with " <<  newName << std::endl;
                      replacementFormula.ReplaceAll(oldName,newName);
                   }
+                  //std::cout << "after replacing params " << replacementFormula << std::endl;
                }
-               ExtractFunctors(replacementFormula); 
+               ExtractFunctors(replacementFormula);
+               //std::cout << "after re-extracting functors " << replacementFormula << std::endl;
+                                 
                // set parameter value from replacement formula
                for (int jpar = 0; jpar < f->GetNpar(); ++jpar) { 
                   if (nparOffset> 0) { 
@@ -1057,7 +1080,7 @@ void TFormula::ExtractFunctors(TString &formula)
                i += replacementFormula.Length()-name.Length();
 
                // we have extracted all the functor for "fname"
-               std::cout << " i = " << i << " f[i] = " << formula[i] << " - " << formula << std::endl;
+               //std::cout << " i = " << i << " f[i] = " << formula[i] << " - " << formula << std::endl;
                
                continue;
             }
@@ -1290,7 +1313,7 @@ void TFormula::ProcessFormula(TString &formula)
       TString argumentsPrototype = 
          TString::Format("%s%s%s",(hasVariables ? "Double_t *x" : ""), (hasBoth ? "," : ""),
                         (hasParameters  ? "Double_t *p" : ""));
-      // add also pointer to function name to make it unique
+      // add also an increasing index to function name to make it unique
       fClingName = fName; 
       fClingName.ReplaceAll(" ",""); // remove also white space from function name;
       // remova also parenthesis
@@ -1304,7 +1327,11 @@ void TFormula::ProcessFormula(TString &formula)
       // hack for function names created with ++ in doing linear fitter. In this case use a different name
       // shuld make to all the case where special operator character are use din the name 
       if (fClingName.Contains("++") ) fClingName = "T__linearFunction";
-      fClingName = TString::Format("%s_%p",fClingName.Data(),  this);
+      {
+         R__LOCKGUARD2(gROOTMutex);
+         gFormulaIndex++;
+      }
+      fClingName = TString::Format("%s_%d",fClingName.Data(),  gFormulaIndex);
 
       fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(),argumentsPrototype.Data(),formula.Data());
 
