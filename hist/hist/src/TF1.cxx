@@ -44,13 +44,15 @@
 #include "Math/Factory.h"
 #include "Math/ChebyshevPol.h"
 #include "Fit/FitResult.h"
+// for I/O backward compatibility 
+#include "TF1Old.h"
 
 //#include <iostream>
 
 Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
+Bool_t TF1::fgAddToGlobList = kTRUE; 
 static Double_t gErrorTF1 = 0;
-
 
 ClassImp(TF1)
 
@@ -365,39 +367,29 @@ TF1 *TF1::fgCurrent = 0;
 
 
 //______________________________________________________________________________
-TF1::TF1():TNamed(), TAttLine(), TAttFill(), TAttMarker()
+TF1::TF1():
+   TNamed(), TAttLine(), TAttFill(), TAttMarker(),
+   fXmin(0), fXmax(0), fNpar(0), fNdim(0),
+   fNpx(100), fType(0),
+   fNpfits(0), fNDF(0), fChisquare(0),
+   fMinimum(-1111), fMaximum(-1111),
+   fParent(0), fHistogram(0),
+   fMethodCall(0), fFormula(0), fParams(0)
 {
-   // F1 default constructor.
-
-   fXmin      = 0;
-   fXmax      = 0;
-   fNpx       = 100;
-   fType      = 0;
-   fNpfits    = 0;
-   fNDF       = 0;
-   fNsave     = 0;
-   fChisquare = 0;
-   fIntegral  = 0;
-   fParErrors = 0;
-   fParMin    = 0;
-   fParMax    = 0;
-   fAlpha     = 0;
-   fBeta      = 0;
-   fGamma     = 0;
-   fParent    = 0;
-   fSave      = 0;
-   fHistogram = 0;
-   fMinimum   = -1111;
-   fMaximum   = -1111;
-   fMethodCall = 0;
-   fFormula   = 0;
+   // TF1 default constructor.
    SetFillStyle(0);
 }
 
 
 //______________________________________________________________________________
-TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
-      :TNamed(name,formula), TAttLine(), TAttFill(), TAttMarker()
+TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax) :
+   TNamed(name,formula), TAttLine(), TAttFill(), TAttMarker(),
+   fNpx(100), fType(0),
+   fNpfits(0), fNDF(0), fChisquare(0),
+   fMinimum(-1111), fMaximum(-1111),
+   fParent(0), fHistogram(0),
+   fMethodCall(0), fFormula(0), fParams(0)
+
 {
    // F1 constructor using a formula definition
    //
@@ -419,60 +411,38 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
       fXmin = xmax; //when called from TF2,TF3
       fXmax = xmin;
    }
-   fNpx       = 100;
-   fType      = 0;
-   fFormula = new TFormula(name,formula);
-   Int_t npar = fFormula->GetNpar();
-   fNpar = npar; 
-   if (npar) {
-      fParErrors = new Double_t[npar];
-      fParMin    = new Double_t[npar];
-      fParMax    = new Double_t[npar];
-      for (int i = 0; i < npar; i++) {
-         fParErrors[i]  = 0;
-         fParMin[i]     = 0;
-         fParMax[i]     = 0;
-      }
-   } else {
-      fParErrors = 0;
-      fParMin    = 0;
-      fParMax    = 0;
+   // create rep formula (no need to add to gROOT list since we will add the TF1 object)
+   fFormula = new TFormula(name,formula,false);
+   fNpar = fFormula->GetNpar();
+   fNdim = fFormula->GetNdim(); 
+   if (fNpar) {
+      fParErrors.resize(fNpar);
+      fParMin.resize(fNpar);
+      fParMax.resize(fNpar); 
    }
-   fChisquare  = 0;
-   fIntegral   = 0;
-   fAlpha      = 0;
-   fBeta       = 0;
-   fGamma      = 0;
-   fParent     = 0;
-   fNpfits     = 0;
-   fNDF        = 0;
-   fNsave      = 0;
-   fSave       = 0;
-   fHistogram  = 0;
-   fMinimum    = -1111;
-   fMaximum    = -1111;
-   fMethodCall = 0;
-   Int_t ndim = fFormula->GetNdim();
-   if (ndim > 1 && xmin < xmax) {
-      Error("TF1","function: %s/%s has %d parameters instead of 1",name,formula,ndim);
+   if (fNdim > 1 && xmin < xmax) {
+      Error("TF1","function: %s/%s has dimension %d instead of 1",name,formula,fNdim);
       MakeZombie();
    }
 
-   if (!gStyle) return;
-   SetLineColor(gStyle->GetFuncColor());
-   SetLineWidth(gStyle->GetFuncWidth());
-   SetLineStyle(gStyle->GetFuncStyle());
-   SetFillStyle(0);
-   SetName(name);
-   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   gROOT->GetListOfFunctions()->Remove(f1old);
-   gROOT->GetListOfFunctions()->Add(this);
+   DoInitialize();
 }
 
 
 //______________________________________________________________________________
-TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim)
-      : TNamed(name,name), TAttLine(), TAttFill(), TAttMarker()
+TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim) :
+   TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
+   fXmin(xmin), fXmax(xmax),
+   fNpar(npar), fNdim(ndim),
+   fNpx(100), fType(2),
+   fNpfits(0), fNDF(0), fChisquare(0),   
+   fMinimum(-1111), fMaximum(-1111),
+   fParErrors(std::vector<Double_t>(npar)), 
+   fParMin(std::vector<Double_t>(npar)), 
+   fParMax(std::vector<Double_t>(npar)), 
+   fParent(0), fHistogram(0),
+   fMethodCall(0), fFormula(0),
+   fParams(new TF1Parameters(npar) )
 {
    // F1 constructor using name of an interpreted function.
    //
@@ -486,75 +456,44 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim)
    //
    // WARNING! A function created with this constructor cannot be Cloned.
 
-   fXmin       = xmin;
-   fXmax       = xmax;
-   fNpx        = 100;
-   fType       = 2;
-   fFormula    = new TFormula(name,npar,ndim);
-   fNpar       = npar; 
-   if (npar > 0) {
-      fParErrors  = new Double_t[npar];
-      fParMin     = new Double_t[npar];
-      fParMax     = new Double_t[npar];
-      for (int i = 0; i < npar; i++) {
-         fParErrors[i]  = 0;
-         fParMin[i]     = 0;
-         fParMax[i]     = 0;
-      }
-   } else {
-      fParErrors = 0;
-      fParMin    = 0;
-      fParMax    = 0;
+   if (fName == "*") {      
+      Info("TF1","TF1 has name * - it is not well defined");
+      return; //case happens via SavePrimitive
    }
-   fChisquare  = 0;
-   fIntegral   = 0;
-   fAlpha      = 0;
-   fBeta       = 0;
-   fGamma      = 0;
-   fParent     = 0;
-   fNpfits     = 0;
-   fNDF        = 0;
-   fNsave      = 0;
-   fSave       = 0;
-   fHistogram  = 0;
-   fMinimum    = -1111;
-   fMaximum    = -1111;
-   fMethodCall = 0;
-
-   //Don't call SetName since it would just be TNamed::SetName which would
-   // attempt to refresh gPad which is not necessary
-   fName = name;
-
-   if (gStyle) {
-      SetLineColor(gStyle->GetFuncColor());
-      SetLineWidth(gStyle->GetFuncWidth());
-      SetLineStyle(gStyle->GetFuncStyle());
-   }
-   SetFillStyle(0);
-
-   SetTitle(name);
-   if (name) {
-      if (*name == '*') return; //case happens via SavePrimitive
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(name,"Double_t*,Double_t*");
-      {
-         R__LOCKGUARD2(gROOTMutex);
-         TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-         gROOT->GetListOfFunctions()->Remove(f1old);
-         gROOT->GetListOfFunctions()->Add(this);
-      }
-      if (! fMethodCall->IsValid() ) {
-         Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",name);
-      }
-   } else {
+   else if (fName.IsNull() ) {
       Error("TF1","requires a proper function name!");
+      return;
    }
+
+   fMethodCall = new TMethodCall();
+   fMethodCall->InitWithPrototype(fName,"Double_t*,Double_t*");
+
+   if (! fMethodCall->IsValid() ) {
+      Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",name);
+      return;
+   }
+
+   DoInitialize();
 }
 
 
 //______________________________________________________________________________
-TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim)
-      :TNamed(name,name), TAttLine(), TAttFill(), TAttMarker()
+TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim) :
+   TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
+   fXmin(xmin), fXmax(xmax), 
+   fNpar(npar), fNdim(ndim),
+   fNpx(100), fType(1),
+   fNpfits(0), fNDF(0), fChisquare(0),   
+   fMinimum(-1111), fMaximum(-1111),
+   fParErrors(std::vector<Double_t>(npar)), 
+   fParMin(std::vector<Double_t>(npar)), 
+   fParMax(std::vector<Double_t>(npar)), 
+   fParent(0), fHistogram(0),
+   fMethodCall(0),
+   fFunctor(ROOT::Math::ParamFunctor(fcn)),
+   fFormula(0),
+   fParams(new TF1Parameters(npar) )
+
 {
    // F1 constructor using a pointer to a real function.
    //
@@ -568,65 +507,25 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    //
    // WARNING! A function created with this constructor cannot be Cloned.
 
-   fXmin       = xmin;
-   fXmax       = xmax;
-   fNpx        = 100;
-
-   fType       = 1;
-   fMethodCall = 0;
-   fFunctor = ROOT::Math::ParamFunctor(fcn);
-   fFormula    = new TFormula(name,npar,ndim);
-   fNpar       = npar; 
-   if (npar > 0) {
-      fParErrors  = new Double_t[npar];
-      fParMin     = new Double_t[npar];
-      fParMax     = new Double_t[npar];
-      for (int i = 0; i < npar; i++) {
-         fParErrors[i]  = 0;
-         fParMin[i]     = 0;
-         fParMax[i]     = 0;
-      }
-   } else {
-      fParErrors = 0;
-      fParMin    = 0;
-      fParMax    = 0;
-   }
-   fChisquare  = 0;
-   fIntegral   = 0;
-   fAlpha      = 0;
-   fBeta       = 0;
-   fGamma      = 0;
-   fNsave      = 0;
-   fSave       = 0;
-   fParent     = 0;
-   fNpfits     = 0;
-   fNDF        = 0;
-   fHistogram  = 0;
-   fMinimum    = -1111;
-   fMaximum    = -1111;
-
-   //Don't call SetName since it would just be TNamed::SetName which would
-   // attempt to refresh gPad which is not necessary
-   fName = name;
-   {
-      R__LOCKGUARD2(gROOTMutex);
-      // Store formula in linked list of formula in ROOT
-      TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-      gROOT->GetListOfFunctions()->Remove(f1old);
-      gROOT->GetListOfFunctions()->Add(this);
-   }
-
-   if (!gStyle) return;
-   SetLineColor(gStyle->GetFuncColor());
-   SetLineWidth(gStyle->GetFuncWidth());
-   SetLineStyle(gStyle->GetFuncStyle());
-   SetFillStyle(0);
-
+   DoInitialize();
 }
 
 //______________________________________________________________________________
-TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim)
-      :TNamed(name,name), TAttLine(), TAttFill(), TAttMarker()
+TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim) :
+   TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
+   fXmin(xmin), fXmax(xmax), 
+   fNpar(npar), fNdim(ndim),
+   fNpx(100), fType(1),
+   fNpfits(0), fNDF(0), fChisquare(0),   
+   fMinimum(-1111), fMaximum(-1111),
+   fParErrors(std::vector<Double_t>(npar)), 
+   fParMin(std::vector<Double_t>(npar)), 
+   fParMax(std::vector<Double_t>(npar)), 
+   fParent(0), fHistogram(0),
+   fMethodCall(0),
+   fFunctor(ROOT::Math::ParamFunctor(fcn)),
+   fFormula(0),
+   fParams(new TF1Parameters(npar) )
 {
    // F1 constructor using a pointer to real function.
    //
@@ -640,92 +539,27 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
    //
    // WARNING! A function created with this constructor cannot be Cloned.
 
-   fXmin       = xmin;
-   fXmax       = xmax;
-   fNpx        = 100;
-
-   fType       = 1;
-   fMethodCall = 0;
-   fFunctor    = ROOT::Math::ParamFunctor(fcn);
-   fFormula    = new TFormula(name,npar,ndim);
-   fNpar       = npar; 
-   if (npar > 0) {
-      fParErrors  = new Double_t[npar];
-      fParMin     = new Double_t[npar];
-      fParMax     = new Double_t[npar];
-      for (int i = 0; i < npar; i++) {
-         fParErrors[i]  = 0;
-         fParMin[i]     = 0;
-         fParMax[i]     = 0;
-      }
-   } else {
-      fParErrors = 0;
-      fParMin    = 0;
-      fParMax    = 0;
-   }
-   fChisquare  = 0;
-   fIntegral   = 0;
-   fAlpha      = 0;
-   fBeta       = 0;
-   fGamma      = 0;
-   fNsave      = 0;
-   fSave       = 0;
-   fParent     = 0;
-   fNpfits     = 0;
-   fNDF        = 0;
-   fHistogram  = 0;
-   fMinimum    = -1111;
-   fMaximum    = -1111;
-
-   //Don't call SetName since it would just be TNamed::SetName which would
-   // attempt to refresh gPad which is not necessary
-   fName = name;
-   {
-      R__LOCKGUARD2(gROOTMutex);
-      // Store formula in linked list of formula in ROOT
-     TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-     gROOT->GetListOfFunctions()->Remove(f1old);
-     gROOT->GetListOfFunctions()->Add(this);
-   }
-   if (!gStyle) return;
-   SetLineColor(gStyle->GetFuncColor());
-   SetLineWidth(gStyle->GetFuncWidth());
-   SetLineStyle(gStyle->GetFuncStyle());
-   SetFillStyle(0);
-
+   DoInitialize(); 
 }
 
 
 //______________________________________________________________________________
 TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim ) :
-   TNamed(name,name),
-   TAttLine(),
-   TAttFill(),
-   TAttMarker(),
-   fXmin      ( xmin ),
-   fXmax      ( xmax ),
-   fNpx       ( 100 ),
-   fType      ( 1 ),
-   fNpfits    ( 0 ),
-   fNDF       ( 0 ),
-   fNsave     ( 0 ),
-   fNpar      ( 0 ),
-   fChisquare ( 0 ),
-   fIntegral  ( 0 ),
-   fParErrors ( 0 ),
-   fParMin    ( 0 ),
-   fParMax    ( 0 ),
-   fSave      ( 0 ),
-   fAlpha     ( 0 ),
-   fBeta      ( 0 ),
-   fGamma     ( 0 ),
-   fParent    ( 0 ),
-   fHistogram ( 0 ),
-   fMaximum   ( -1111 ),
-   fMinimum   ( -1111 ),
-   fMethodCall( 0 ),
-   fFunctor   ( ROOT::Math::ParamFunctor(f) ), 
-   fFormula(0)
+   TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
+   fXmin(xmin), fXmax(xmax), 
+   fNpar(npar), fNdim(ndim),
+   fNpx(100), fType(1),
+   fNpfits(0), fNDF(0), fChisquare(0),   
+   fMinimum(-1111), fMaximum(-1111),
+   fParErrors(std::vector<Double_t>(npar)), 
+   fParMin(std::vector<Double_t>(npar)), 
+   fParMax(std::vector<Double_t>(npar)), 
+   fParent(0), fHistogram(0),
+   fMethodCall(0),
+   fFunctor(ROOT::Math::ParamFunctor(f)),
+   fFormula(0),
+   fParams(new TF1Parameters(npar) )
+
 {
    // F1 constructor using the Functor class.
    //
@@ -736,7 +570,32 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    //
    // WARNING! A function created with this constructor cannot be Cloned.
 
-   CreateFromFunctor(name, npar,ndim);
+   DoInitialize(); 
+}
+
+//______________________________________________________________________________
+void TF1::DoInitialize() {
+
+   // common initialization of the TF1
+   // add to the global list and
+   // set the default style
+
+   fMinimum = -1111;
+   fMaximum = -1111;
+   
+   if (fgAddToGlobList && gROOT) { 
+      R__LOCKGUARD2(gROOTMutex);
+      // Store formula in linked list of formula in ROOT
+      TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(fName);
+      gROOT->GetListOfFunctions()->Remove(f1old);
+      gROOT->GetListOfFunctions()->Add(this);
+   }
+   if (gStyle) {
+      SetLineColor(gStyle->GetFuncColor());
+      SetLineWidth(gStyle->GetFuncWidth());
+      SetLineStyle(gStyle->GetFuncStyle());
+   }
+   SetFillStyle(0);
 }
 
 //_____________________________________________________________________________
@@ -771,51 +630,6 @@ Bool_t TF1::AddToGlobalList(Bool_t on)
    return prevStatus; 
 }
 
-//______________________________________________________________________________
-void TF1::CreateFromFunctor(const char *name, Int_t npar,Int_t ndim)
-{
-   // Internal Function to Create a TF1  using a Functor.
-   //
-   //          Used by the template constructors
-   if(!fFormula)
-   {
-      fFormula = new TFormula(name,npar,ndim);
-   }
-
-   fNpar = npar; 
-   if (npar > 0) {
-      fParErrors  = new Double_t[npar];
-      fParMin     = new Double_t[npar];
-      fParMax     = new Double_t[npar];
-      for (int i = 0; i < npar; i++) {
-         fParErrors[i]  = 0;
-         fParMin[i]     = 0;
-         fParMax[i]     = 0;
-      }
-   } else {
-      fParErrors = 0;
-      fParMin    = 0;
-      fParMax    = 0;
-   }
-
-   //Don't call SetName since it would just be TNamed::SetName which would
-   // attempt to refresh gPad which is not necessary
-   fName = name;
-   {
-      R__LOCKGUARD2(gROOTMutex);
-      // Store formula in linked list of formula in ROOT
-      TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-      gROOT->GetListOfFunctions()->Remove(f1old);
-      gROOT->GetListOfFunctions()->Add(this);
-   }
-
-   if (!gStyle) return;
-   SetLineColor(gStyle->GetFuncColor());
-   SetLineWidth(gStyle->GetFuncWidth());
-   SetLineStyle(gStyle->GetFuncStyle());
-   SetFillStyle(0);
-
-}
 
 //______________________________________________________________________________
 TF1& TF1::operator=(const TF1 &rhs)
@@ -834,16 +648,8 @@ TF1::~TF1()
 {
    // TF1 default destructor.
 
-   if (fParMin)    delete [] fParMin;
-   if (fParMax)    delete [] fParMax;
-   if (fParErrors) delete [] fParErrors;
-   if (fIntegral)  delete [] fIntegral;
-   if (fAlpha)     delete [] fAlpha;
-   if (fBeta)      delete [] fBeta;
-   if (fGamma)     delete [] fGamma;
-   if (fSave)      delete [] fSave;
-   delete fHistogram;
-   delete fMethodCall;
+   if (fHistogram) delete fHistogram;
+   if (fMethodCall) delete fMethodCall;
 
    // this was before in TFormula destructor
    {
@@ -852,38 +658,22 @@ TF1::~TF1()
    }
    
    if (fParent) fParent->RecursiveRemove(this);
+
+   if (fFormula) delete fFormula;
+   if (fParams) delete fParams; 
 }
 
 
 //______________________________________________________________________________
-TF1::TF1(const TF1 &f1) : TNamed(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
+TF1::TF1(const TF1 &f1) :
+   TNamed(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1),
+   fXmin(0), fXmax(0), fNpar(0), fNdim(0),
+   fNpx(100), fType(0),
+   fNpfits(0), fNDF(0), fChisquare(0),
+   fMinimum(-1111), fMaximum(-1111),
+   fParent(0), fHistogram(0),
+   fMethodCall(0), fFormula(0), fParams(0)
 {
-   // Constuctor.
-
-   fXmin      = 0;
-   fXmax      = 0;
-   fNpx       = 100;
-   fType      = 0;
-   fNpfits    = 0;
-   fNDF       = 0;
-   fNsave     = 0;
-   fNpar      = 0;
-   fChisquare = 0;
-   fIntegral  = 0;
-   fParErrors = 0;
-   fParMin    = 0;
-   fParMax    = 0;
-   fAlpha     = 0;
-   fBeta      = 0;
-   fGamma     = 0;
-   fParent    = 0;
-   fSave      = 0;
-   fHistogram = 0;
-   fMinimum   = -1111;
-   fMaximum   = -1111;
-   fMethodCall = 0;
-   fFormula   = 0;
-   SetFillStyle(0);
 
    ((TF1&)f1).Copy(*this);
 }
@@ -918,14 +708,6 @@ void TF1::Copy(TObject &obj) const
    // Note that the cached integral with its related arrays are not copied
    // (they are also set as transient data members)
 
-   if (((TF1&)obj).fParMin)    delete [] ((TF1&)obj).fParMin;
-   if (((TF1&)obj).fParMax)    delete [] ((TF1&)obj).fParMax;
-   if (((TF1&)obj).fParErrors) delete [] ((TF1&)obj).fParErrors;
-   if (((TF1&)obj).fIntegral)  delete [] ((TF1&)obj).fIntegral;
-   if (((TF1&)obj).fAlpha)     delete [] ((TF1&)obj).fAlpha;
-   if (((TF1&)obj).fBeta)      delete [] ((TF1&)obj).fBeta;
-   if (((TF1&)obj).fGamma)     delete [] ((TF1&)obj).fGamma;
-   if (((TF1&)obj).fSave)      delete [] ((TF1&)obj).fSave;
    delete ((TF1&)obj).fHistogram;
    delete ((TF1&)obj).fMethodCall;
 
@@ -936,6 +718,8 @@ void TF1::Copy(TObject &obj) const
    ((TF1&)obj).fXmin = fXmin;
    ((TF1&)obj).fXmax = fXmax;
    ((TF1&)obj).fNpx  = fNpx;
+   ((TF1&)obj).fNpar = fNpar;
+   ((TF1&)obj).fNdim = fNdim;
    ((TF1&)obj).fType = fType;
    ((TF1&)obj).fFunctor   = fFunctor;
    ((TF1&)obj).fChisquare = fChisquare;
@@ -944,35 +728,17 @@ void TF1::Copy(TObject &obj) const
    ((TF1&)obj).fMinimum = fMinimum;
    ((TF1&)obj).fMaximum = fMaximum;
 
-   ((TF1&)obj).fParErrors = 0;
-   ((TF1&)obj).fParMin    = 0;
-   ((TF1&)obj).fParMax    = 0;
-   ((TF1&)obj).fIntegral  = 0;
-   ((TF1&)obj).fAlpha     = 0;
-   ((TF1&)obj).fBeta      = 0;
-   ((TF1&)obj).fGamma     = 0;
+   ((TF1&)obj).fParErrors = fParErrors;
+   ((TF1&)obj).fParMin    = fParMin;
+   ((TF1&)obj).fParMax    = fParMax;
    ((TF1&)obj).fParent    = fParent;
-   ((TF1&)obj).fNsave     = fNsave;
-   ((TF1&)obj).fSave      = 0;
+   ((TF1&)obj).fSave      = fSave;
    ((TF1&)obj).fHistogram = 0;
    ((TF1&)obj).fMethodCall = 0;
    ((TF1&)obj).fFormula   = 0;
-   if (fNsave) {
-      ((TF1&)obj).fSave = new Double_t[fNsave];
-      for (Int_t j=0;j<fNsave;j++) ((TF1&)obj).fSave[j] = fSave[j];
-   }
-   Int_t npar = 0;
-   if (fFormula) npar = fFormula->GetNpar();
-   ((TF1&)obj).fNpar = npar;
-   if (npar) {
-      ((TF1&)obj).fParErrors = new Double_t[npar];
-      ((TF1&)obj).fParMin    = new Double_t[npar];
-      ((TF1&)obj).fParMax    = new Double_t[npar];
-      Int_t i;
-      for (i=0;i<npar;i++)   ((TF1&)obj).fParErrors[i] = fParErrors[i];
-      for (i=0;i<npar;i++)   ((TF1&)obj).fParMin[i]    = fParMin[i];
-      for (i=0;i<npar;i++)   ((TF1&)obj).fParMax[i]    = fParMax[i];
-   }
+   
+   if (fFormula) assert(fFormula->GetNpar() == fNpar); 
+
    if (fMethodCall) {
       // use copy-constructor of TMethodCall
       if (((TF1&)obj).fMethodCall) delete ((TF1&)obj).fMethodCall;
@@ -987,6 +753,11 @@ void TF1::Copy(TObject &obj) const
       formulaToCopy = new TFormula();
       fFormula->Copy( *formulaToCopy );
       ((TF1&)obj).fFormula =  formulaToCopy;
+   }
+   if (fParams) {
+      TF1Parameters * paramsToCopy = ((TF1&)obj).fParams;
+      if (paramsToCopy) *paramsToCopy = *fParams;
+      ((TF1&)obj).fParams = new TF1Parameters(*fParams);
    }
 }
 
@@ -1377,22 +1148,15 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 
    if (fType == 0)
    {
-      // Int_t ndim = fFormula->GetNdim();
-      // if(ndim >= 1) fFormula->SetVariable("x",x[0]);
-      // if(ndim >= 2) fFormula->SetVariable("y",x[1]);
-      // if(ndim >= 3) fFormula->SetVariable("z",x[2]);
-      // if(ndim >= 4) fFormula->SetVariable("t",x[3]);
-      // fFormula->SetParameters(params);
+      assert(fFormula); 
       return fFormula->EvalPar(x,params); 
    } 
    Double_t result = 0;
    if (fType == 1)  {
-//       if (fFunction) {
-//          if (params) result = (*fFunction)((Double_t*)x,(Double_t*)params);
-//          else        result = (*fFunction)((Double_t*)x,fParams);
       if (!fFunctor.Empty()) {
+         assert(fParams); 
          if (params) result = fFunctor((Double_t*)x,(Double_t*)params);
-         else        result = fFunctor((Double_t*)x,fFormula->GetParameters());
+         else        result = fFunctor((Double_t*)x,(Double_t*)fParams->GetParameters());
 
       }else          result = GetSave(x);
       return result;
@@ -1789,9 +1553,11 @@ void TF1::GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax) const
 
    parmin = 0;
    parmax = 0;
-   if (ipar < 0 || ipar > GetNpar()-1) return;
-   if (fParMin) parmin = fParMin[ipar];
-   if (fParMax) parmax = fParMax[ipar];
+   int n = fParMin.size(); 
+   assert(n == int(fParMax.size()) && n <= fNpar); 
+   if (ipar < 0 || ipar > n-1) return;
+   parmin = fParMin[ipar];
+   parmax = fParMax[ipar];
 }
 
 
@@ -1932,11 +1698,15 @@ Double_t TF1::GetRandom()
    //   of bins is greater than 50.
 
    //  Check if integral array must be build
-   if (fIntegral == 0) {
-      fIntegral = new Double_t[fNpx+1];
-      fAlpha    = new Double_t[fNpx+1];
-      fBeta     = new Double_t[fNpx];
-      fGamma    = new Double_t[fNpx];
+   if (fIntegral.size() == 0) {
+      // fIntegral = new Double_t[fNpx+1];
+      // fAlpha    = new Double_t[fNpx+1];
+      // fBeta     = new Double_t[fNpx];
+      // fGamma    = new Double_t[fNpx];
+      fIntegral.resize(fNpx+1);
+      fAlpha.resize(fNpx+1);
+      fBeta.resize(fNpx);
+      fGamma.resize(fNpx);
       fIntegral[0] = 0;
       fAlpha[fNpx] = 0;
       Double_t integ;
@@ -2001,7 +1771,7 @@ Double_t TF1::GetRandom()
 
    // return random number
    Double_t r  = gRandom->Rndm();
-   Int_t bin  = TMath::BinarySearch(fNpx,fIntegral,r);
+   Int_t bin  = TMath::BinarySearch(fNpx,fIntegral.data(),r);
    Double_t rr = r - fIntegral[bin];
 
    Double_t yy;
@@ -2039,13 +1809,17 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
    //  such that the peak is correctly tabulated at several points.
 
    //  Check if integral array must be build
-   if (fIntegral == 0) {
+   if (fIntegral.size() == 0) {
+      // fIntegral = new Double_t[fNpx+1];
+      // fAlpha    = new Double_t[fNpx+1];
+      // fBeta     = new Double_t[fNpx];
+      // fGamma    = new Double_t[fNpx];
+      fIntegral.resize(fNpx+1);
+      fAlpha.resize(fNpx);
+      fBeta.resize(fNpx);
+      fGamma.resize(fNpx);
+      
       Double_t dx = (fXmax-fXmin)/fNpx;
-      fIntegral = new Double_t[fNpx+1];
-      fAlpha    = new Double_t[fNpx];
-      fBeta     = new Double_t[fNpx];
-      fGamma    = new Double_t[fNpx];
-      fIntegral[0] = 0;
       Double_t integ;
       Int_t intNegative = 0;
       Int_t i;
@@ -2095,7 +1869,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
    do {
       r  = gRandom->Uniform(pmin,pmax);
 
-      Int_t bin  = TMath::BinarySearch(fNpx,fIntegral,r);
+      Int_t bin  = TMath::BinarySearch(fNpx,fIntegral.data(),r);
       rr = r - fIntegral[bin];
 
       if(fGamma[bin] != 0)
@@ -2174,8 +1948,9 @@ Double_t TF1::GetSave(const Double_t *xx)
 {
     // Get value corresponding to X in array of fSave values
 
-   if (fNsave <= 0) return 0;
-   if (fSave == 0) return 0;
+   if (fSave.size() == 0) return 0;
+   //if (fSave == 0) return 0;
+   int fNsave = fSave.size(); 
    Double_t x    = Double_t(xx[0]);
    Double_t y,dx,xmin,xmax,xlow,xup,ylow,yup;
    if (fParent && fParent->InheritsFrom(TH1::Class())) {
@@ -2701,11 +2476,15 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
 
 
 //______________________________________________________________________________
-Bool_t TF1::IsInside(const Double_t *x) const
+Bool_t TF1::IsValid() const
 {
-   // Return kTRUE if the point is inside the function range
+   // Return kTRUE if the function is valid
 
-   if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
+   if (fFormula) return fFormula->IsValid();
+   if (fMethodCall) return fMethodCall->IsValid(); 
+   // function built on compiled functors are always valid by definition
+   // (checked at compiled time)
+   if (fFunctor.Empty() && fSave.empty()) return kFALSE; 
    return kTRUE;
 }
 
@@ -2715,8 +2494,45 @@ Bool_t TF1::IsInside(const Double_t *x) const
 
 void TF1::Print(Option_t *option) const
 {
-   if (fFormula) fFormula->Print(option);
-   if (fHistogram) fHistogram->Print(option);
+   if (fType == 0) {
+      printf("Formula based function:     %s \n",GetName());
+      assert(fFormula); 
+      fFormula->Print(option);
+   }
+   else if (fType >  0) {
+      if (fType == 2) 
+         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n",GetName(), GetNpar(), GetNdim());
+      else {
+         if (!fFunctor.Empty())
+            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n",GetName(),GetNpar(), GetNdim());
+         else {
+            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx = %d\n",GetName(),GetNpar(), GetNdim(),int(fSave.size()));
+            if (fSave.empty() )
+               Warning("Print","Function %s is based on a list of points but list is empty",GetName());
+         }
+      }
+      TString opt(option);
+      opt.ToUpper();
+      if (opt.Contains("V") ) {
+         // print list of parameters
+         if (fNpar > 0) {
+            printf("List of  Parameters: \n");
+            for ( int i = 0; i < fNpar; ++i) 
+               printf(" %20s =  %10f \n",GetParName(i), GetParameter(i) );
+         }
+         if (!fSave.empty() ) {
+            // print list of saved points
+            printf("List of  Saved points (N=%d): \n",int(fSave.size()));
+            for ( auto & x : fSave)
+               printf("( %10f )  ",x);
+            printf("\n"); 
+         }
+      }
+   }
+   if (fHistogram) { 
+      printf("Contained histogram\n"); 
+      fHistogram->Print(option);
+   }
 }
 
 //______________________________________________________________________________
@@ -2909,15 +2725,16 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
 {
    // Save values of function in array fSave
    Double_t *parameters = GetParameters();
-   if (fSave != 0) {delete [] fSave; fSave = 0;}
+   //if (fSave != 0) {delete [] fSave; fSave = 0;}
    if (fParent && fParent->InheritsFrom(TH1::Class())) {
       //if parent is a histogram save the function at the center of the bins
       if ((xmin >0 && xmax > 0) && TMath::Abs(TMath::Log10(xmax/xmin) > TMath::Log10(fNpx))) {
          TH1 *h = (TH1*)fParent;
          Int_t bin1 = h->GetXaxis()->FindBin(xmin);
          Int_t bin2 = h->GetXaxis()->FindBin(xmax);
-         fNsave = bin2-bin1+4;
-         fSave  = new Double_t[fNsave];
+         int fNsave = bin2-bin1+4;
+         //fSave  = new Double_t[fNsave];
+         fSave.resize(fNsave);
          Double_t xv[1];
 
          InitArgs(xv,parameters);
@@ -2931,9 +2748,10 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
          return;
       }
    }
-   fNsave = fNpx+3;
-   if (fNsave <= 3) {fNsave=0; return;}
-   fSave  = new Double_t[fNsave];
+   int fNsave = fNpx+3;
+   if (fNsave <= 3) { return;}
+   //fSave  = new Double_t[fNsave];
+   fSave.resize(fNsave);
    Double_t dx = (xmax-xmin)/fNpx;
    if (dx <= 0) {
       dx = (fXmax-fXmin)/fNpx;
@@ -3209,8 +3027,12 @@ void TF1::SetParName(Int_t ipar, const char *name)
 {
 // Set name of parameter number ipar
 
-   if (ipar <0 || ipar >= GetNpar()) return;
-   fFormula->SetParName(ipar,name);
+   if (fFormula) { 
+      if (ipar <0 || ipar >= GetNpar()) return;
+      fFormula->SetParName(ipar,name);
+   }
+   else
+      fParams->SetParName(ipar,name); 
 }
 
 //______________________________________________________________________________
@@ -3220,7 +3042,10 @@ void TF1::SetParNames(const char*name0,const char*name1,const char*name2,const c
 //*-*-*-*-*-*-*-*-*-*Set up to 10 parameter names*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ============================
 
-   fFormula->SetParNames(name0,name1,name2,name3,name4,name5,name6,name7,name8,name9,name10);
+   if (fFormula) 
+      fFormula->SetParNames(name0,name1,name2,name3,name4,name5,name6,name7,name8,name9,name10);
+   else
+      fParams->SetParNames(name0,name1,name2,name3,name4,name5,name6,name7,name8,name9,name10);
 }
 //______________________________________________________________________________
 void TF1::SetParError(Int_t ipar, Double_t error)
@@ -3253,9 +3078,8 @@ void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
    // To fix a parameter, use TF1::FixParameter
    Int_t npar = GetNpar();
    if (ipar < 0 || ipar > npar-1) return;
-   Int_t i;
-   if (!fParMin) {fParMin = new Double_t[npar]; for (i=0;i<npar;i++) fParMin[i]=0;}
-   if (!fParMax) {fParMax = new Double_t[npar]; for (i=0;i<npar;i++) fParMax[i]=0;}
+   if (int(fParMin.size()) != npar) {fParMin.resize(npar); }
+   if (int(fParMax.size()) != npar) {fParMax.resize(npar); }
    fParMin[ipar] = parmin;
    fParMax[ipar] = parmax;
 }
@@ -3280,11 +3104,10 @@ void TF1::SetSavedPoint(Int_t point, Double_t value)
 {
    // Restore value of function saved at point
 
-   if (!fSave) {
-      fNsave = fNpx+3;
-      fSave  = new Double_t[fNsave];
+   if (fSave.size() == 0) {
+      fSave.resize(fNpx+3); 
    }
-   if (point < 0 || point >= fNsave) return;
+   if (point < 0 || point >= int(fSave.size())) return;
    fSave[point] = value;
 }
 
@@ -3324,122 +3147,56 @@ void TF1::Streamer(TBuffer &b)
          }
          return;
       }
-      fFormula = new TFormula(); 
-      fFormula->Streamer(b);
-      //std::cout << "Reading an old TF1 from file - old tformula is " << std::endl;
-      //fFormula->Print();
-      fNpar = fFormula->GetNpar(); 
-      TAttLine::Streamer(b);
-      TAttFill::Streamer(b);
-      TAttMarker::Streamer(b);
-
-      // for latest version
-      // if (v == 7) {
-      // // old case of TF1 inheriting from old TFormula
-      //    b >> fXmin;
-      //    b >> fXmax;
-      //    b >> fNpx;
-      //    b >> fType;
-      //    b >> fNpfits;
-      //    b >> fNDF;
-      //    b >> fNsave;
-      //    b >> fChisquare; 
-      //    if (fNpar > 0) { 
-      //       b.ReadArray(fParErrors);
-      //       b.ReadArray(fParMin); 
-      //       b.ReadArray(fParMax);
-      //    }
-      //    if (fNsave > 0) b.ReadArray(fSave);
-
-      //    b >> fMaximum;
-      //    b >> fMinimum;
-
-      //    //b.CheckByteCount(R__s, R__c, TF1::IsA());
-      //    Dump();
-      //    return;
-
-      // }
-      
-      if (v < 4) {
-         Float_t xmin,xmax;
-         b >> xmin; fXmin = xmin;
-         b >> xmax; fXmax = xmax;
-      } else {
-         b >> fXmin;
-         b >> fXmax;
-      }
-      b >> fNpx;
-      b >> fType;
-      b >> fNpfits;
-      if (v > 6)  b >> fNDF; 
-      b >> fChisquare;
-      b.ReadArray(fParErrors);
-      if (v > 1) {
-         b.ReadArray(fParMin);
-         b.ReadArray(fParMax);
-      } else {
-         fParMin = new Double_t[fNpar+1];
-         fParMax = new Double_t[fNpar+1];
-      }
-      if (v == 1) {
-         b >> fHistogram;
-         delete fHistogram; fHistogram = 0;
-      }
-      if (v > 1) {
-         if (v < 4) {
-            Float_t minimum,maximum;
-            b >> minimum; fMinimum =minimum;
-            b >> maximum; fMaximum =maximum;
+      else {
+         TF1Old fold;
+         b.ReadClassBuffer(TF1Old::Class(), &fold, v, R__s, R__c);
+         // convert old TF1 to new one
+         fNpar = fold.GetNpar();
+         fNdim = fold.GetNdim(); 
+         if (fold.fType == 0) {
+            // formula functions
+            TF1 fnew(fold.GetName(), fold.GetExpFormula(), fold.fXmin, fold.fXmax );
+            fnew.Copy(*this); 
          } else {
-            b >> fMaximum;
-            b >> fMinimum;
+            // case of a function pointers
+            fParams = new TF1Parameters(fNpar);
          }
-         // sometimes 0,0 is read instead of -1111,-1111
-         if (fMaximum <= fMinimum) {
-            fMinimum = -1111;
-            fMaximum = -1111;
+         // need to set parameter values
+         SetParameters(fold.GetParameters() );
+         // copy the other data members
+         fNpx = fold.fNpx;
+         fType = fold.fType;
+         fNpfits = fold.fNpfits;
+         fNDF = fold.fNDF;
+         fChisquare = fold.fChisquare;
+         fMaximum = fold.fMaximum;
+         fMinimum = fold.fMinimum;
+         if (fold.fParErrors) fParErrors = std::vector<Double_t>(fold.fParErrors, fold.fParErrors+fNpar);
+         if (fold.fParMin) fParMin = std::vector<Double_t>(fold.fParMin, fold.fParMin+fNpar);
+         if (fold.fParMax) fParMax = std::vector<Double_t>(fold.fParMax, fold.fParMax+fNpar);
+         if (fold.fNsave > 0) {
+            assert(fold.fSave);
+            fSave = std::vector<Double_t>(fold.fSave, fold.fSave+fold.fNsave);
          }
+
+         // copy the graph classes
+      //          TAttLine::Streamer(b);
+      // TAttFill::Streamer(b);
+      // TAttMarker::Streamer(b);
+
       }
-      if (v > 2) {
-         b >> fNsave;
-         if (fNsave > 0) {
-            if (v < 4) {
-               fSave = new Double_t[fNsave+10];
-               b.ReadArray(fSave);
-               fSave[fNsave]   = fSave[fNsave-1];
-               fSave[fNsave+1] = fSave[fNsave+2];
-               fSave[fNsave+2] = fSave[fNsave+3];
-               fNsave += 3;
-            }
-            else { 
-               fSave = new Double_t[fNsave];
-               b.ReadArray(fSave);
-               if (v == 5 && fNsave > 0) {
-                  //correct badly saved fSave in 3.00/06
-                  Int_t np = fNsave - 3;
-                  fSave[np]   = fSave[np-1];
-                  fSave[np+1] = fXmin;
-                  fSave[np+2] = fXmax;
-               }
-            }
-         }
-         else
-            fSave = 0;
-         
-      }
-      // skip check (we don;t read all TFormula old info)
-      b.CheckByteCount(R__s, R__c, TF1::IsA());
-      //====end of old versions
    }
    
    // Writing   
    else {
       Int_t saved = 0;
-      if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
+      // save not-formula functions as aray of points
+      if (fType > 0 && fSave.empty()) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
 
       b.WriteClassBuffer(TF1::Class(),this);
 
-      if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
+      // clear vector contents
+      if (saved) { fSave.clear(); }
    }
 }
 
@@ -3452,11 +3209,11 @@ void TF1::Update()
 
    delete fHistogram;
    fHistogram = 0;
-   if (fIntegral) {
-      delete [] fIntegral; fIntegral = 0;
-      delete [] fAlpha;    fAlpha    = 0;
-      delete [] fBeta;     fBeta     = 0;
-      delete [] fGamma;    fGamma    = 0;
+   if (!fIntegral.empty()) {
+      fIntegral.clear();
+      fAlpha.clear();
+      fBeta.clear();
+      fGamma.clear();
    }
 }
 
@@ -3615,4 +3372,59 @@ void TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, D
    gli.GetWeightVectors(x, w);
 
 
+}
+
+
+//TF1 Parameters class
+
+//______________________________________________________________________________
+Int_t TF1Parameters::GetParNumber(const char * name) const
+{
+   // return the parameter number given a name
+   // not very efficient but list of parameters is typically small
+   // could use a map if needed
+   for (unsigned int i = 0; i < fParNames.size(); ++i) {
+      if (fParNames[i] == std::string(name) ) return i; 
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+void  TF1Parameters::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Double_t p4,
+                                   Double_t p5,Double_t p6,Double_t p7,Double_t p8,
+                                   Double_t p9,Double_t p10)
+{
+   // set parameter values 
+   unsigned int npar = fParameters.size(); 
+   if (npar > 0) fParameters[0] = p0;
+   if (npar > 1) fParameters[1] = p1;
+   if (npar > 2) fParameters[2] = p2;
+   if (npar > 3) fParameters[3] = p3;
+   if (npar > 4) fParameters[4] = p4;
+   if (npar > 5) fParameters[5] = p5;
+   if (npar > 6) fParameters[6] = p6;
+   if (npar > 7) fParameters[7] = p7;
+   if (npar > 8) fParameters[8] = p8;
+   if (npar > 9) fParameters[9] = p9;
+   if (npar >10) fParameters[10]= p10;
+}
+
+//______________________________________________________________________________
+void TF1Parameters::SetParNames(const char *name0,const char *name1,const char *name2,const char *name3,
+                                const char *name4, const char *name5,const char *name6,const char *name7,
+                                const char *name8,const char *name9,const char *name10)
+{
+   // set parameter names 
+   unsigned int npar = fParNames.size(); 
+   if (npar > 0) fParNames[0] = name0;
+   if (npar > 1) fParNames[1] = name1;
+   if (npar > 2) fParNames[2] = name2;
+   if (npar > 3) fParNames[3] = name3;
+   if (npar > 4) fParNames[4] = name4;
+   if (npar > 5) fParNames[5] = name5;
+   if (npar > 6) fParNames[6] = name6;
+   if (npar > 7) fParNames[7] = name7;
+   if (npar > 8) fParNames[8] = name8;
+   if (npar > 9) fParNames[9] = name9;
+   if (npar >10) fParNames[10]= name10;
 }

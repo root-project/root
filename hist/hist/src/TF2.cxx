@@ -73,7 +73,7 @@ TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    fNpy    = 30;
    fContour.Set(0);
    if (GetNdim() != 2 && xmin < xmax && ymin < ymax) {
-      Error("TF2","function: %s/%s has %d parameters instead of 2",name,formula,GetNdim());
+      Error("TF2","function: %s/%s has dimension %d instead of 2",name,formula,GetNdim());
       MakeZombie();
    }
 }
@@ -520,8 +520,8 @@ void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom)
    Double_t dx   = (fXmax-fXmin)/fNpx;
    Double_t dy   = (fYmax-fYmin)/fNpy;
    Int_t ncells = fNpx*fNpy;
-   if (fIntegral == 0) {
-      fIntegral = new Double_t[ncells+1];
+   if (fIntegral.empty()) {
+      fIntegral.resize(ncells+1);
       fIntegral[0] = 0;
       Double_t integ;
       Int_t intNegative = 0;
@@ -549,7 +549,7 @@ void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom)
 // return random numbers
    Double_t r,ddx,ddy,dxint;
    r     = gRandom->Rndm();
-   cell  = TMath::BinarySearch(ncells,fIntegral,r);
+   cell  = TMath::BinarySearch(ncells,fIntegral.data(),r);
    dxint = fIntegral[cell+1] - fIntegral[cell];
    if (dxint > 0) ddx = dx*(r - fIntegral[cell])/dxint;
    else           ddx = 0;
@@ -592,8 +592,9 @@ Double_t TF2::GetSave(const Double_t *xx)
 {
     // Get value corresponding to X in array of fSave values
 
-   if (fNsave <= 0) return 0;
-   if (fSave == 0) return 0;
+   //if (fNsave <= 0) return 0;
+   if (fSave.empty()) return 0;
+   Int_t fNsave = fSave.size(); 
    Int_t np = fNsave - 6;
    Double_t xmin = Double_t(fSave[np+0]);
    Double_t xmax = Double_t(fSave[np+1]);
@@ -762,12 +763,13 @@ void TF2::Paint(Option_t *option)
 void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t, Double_t)
 {
     // Save values of function in array fSave
-
-   if (fSave != 0) {delete [] fSave; fSave = 0;}
+   if (!fSave.empty()) fSave.clear(); 
+   //if (fSave != 0) {delete [] fSave; fSave = 0;}
    Int_t nsave = (fNpx+1)*(fNpy+1);
-   fNsave = nsave+6;
+   Int_t fNsave = nsave+6;
    if (fNsave <= 6) {fNsave=0; return;}
-   fSave  = new Double_t[fNsave];
+   //fSave  = new Double_t[fNsave];
+   fSave.resize(fNsave);
    Int_t i,j,k=0;
    Double_t dx = (xmax-xmin)/fNpx;
    Double_t dy = (ymax-ymin)/fNpy;
@@ -983,11 +985,11 @@ void TF2::Streamer(TBuffer &R__b)
 
    } else {
       Int_t saved = 0;
-      if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,0,0);}
+      if (fType > 0 && fSave.empty()) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,0,0);}
 
       R__b.WriteClassBuffer(TF2::Class(),this);
 
-      if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
+      if (saved) {fSave.clear(); }
    }
 }
 

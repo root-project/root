@@ -21,6 +21,7 @@
 #include "TVirtualFitter.h"
 #include "TVirtualHistPainter.h"
 #include "TClass.h"
+#include <cassert>
 
 ClassImp(TF3)
 
@@ -342,8 +343,9 @@ void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
    Double_t xx[3];
    Double_t *parameters = GetParameters();
    InitArgs(xx,parameters);
-   if (fIntegral == 0) {
-      fIntegral = new Double_t[ncells+1];
+   if (fIntegral.empty() ) {
+      fIntegral.resize(ncells+1);
+      //fIntegral = new Double_t[ncells+1];
       fIntegral[0] = 0;
       Double_t integ;
       Int_t intNegative = 0;
@@ -376,7 +378,7 @@ void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
 // return random numbers
    Double_t r;
    r    = gRandom->Rndm();
-   cell = TMath::BinarySearch(ncells,fIntegral,r);
+   cell = TMath::BinarySearch(ncells,fIntegral.data(),r);
    k    = cell/(fNpx*fNpy);
    j    = (cell -k*fNpx*fNpy)/fNpx;
    i    = cell -fNpx*(j +fNpy*k);
@@ -405,9 +407,9 @@ Double_t TF3::GetSave(const Double_t *xx)
 {
     // Get value corresponding to X in array of fSave values
 
-   if (fNsave <= 0) return 0;
-   if (fSave == 0) return 0;
-   Int_t np = fNsave - 9;
+   //if (fNsave <= 0) return 0;
+   if (fSave.empty()) return 0;
+   Int_t np = fSave.size() - 9;
    Double_t xmin = Double_t(fSave[np+0]);
    Double_t xmax = Double_t(fSave[np+1]);
    Double_t ymin = Double_t(fSave[np+2]);
@@ -547,11 +549,12 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 {
     // Save values of function in array fSave
 
-   if (fSave != 0) {delete [] fSave; fSave = 0;}
+   if (!fSave.empty()) fSave.clear(); 
    Int_t nsave = (fNpx+1)*(fNpy+1)*(fNpz+1);
-   fNsave = nsave+9;
-   if (fNsave <= 9) {fNsave=0; return;}
-   fSave  = new Double_t[fNsave];
+   Int_t fNsave = nsave+9;
+   assert(fNsave > 9); 
+   //fSave  = new Double_t[fNsave];
+   fSave.resize(fNsave); 
    Int_t i,j,k,l=0;
    Double_t dx = (xmax-xmin)/fNpx;
    Double_t dy = (ymax-ymin)/fNpy;
@@ -718,11 +721,11 @@ void TF3::Streamer(TBuffer &R__b)
 
    } else {
       Int_t saved = 0;
-      if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,fZmin,fZmax);}
+      if (fType > 0 && fSave.empty() ) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,fZmin,fZmax);}
 
       R__b.WriteClassBuffer(TF3::Class(),this);
 
-      if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
+      if (saved) { fSave.clear(); }
    }
 }
 

@@ -27,6 +27,8 @@
 #pragma link C++ class TFitResult+;
 #pragma link C++ class TFitResultPtr+;
 #pragma link C++ class TF1-;
+#pragma link C++ class TF1Old-;
+#pragma link C++ class TF1Parameters+;
 #pragma link C++ class TF12+;
 #pragma link C++ class TF2-;
 #pragma link C++ class TF3-;

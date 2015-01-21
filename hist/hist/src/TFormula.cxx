@@ -158,6 +158,7 @@ TFormula::~TFormula()
    // N.B. a memory leak may happen if user set bit after constructing the object,
    // Setting of bit should be done only internally
    if (!TestBit(TFormula::kNotGlobal) && gROOT ) {
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfFunctions()->Remove(this);
    }
 
