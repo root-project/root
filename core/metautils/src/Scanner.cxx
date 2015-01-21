@@ -809,8 +809,6 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
       fDeclSelRuleMap[recordDecl->getCanonicalDecl()]=selected;
 
-      fDeclSelRuleMap[recordDecl->getCanonicalDecl()]=selected;
-
       if(rcrdDeclNotAlreadySelected &&
          !fFirstPass){
 
