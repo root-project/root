@@ -2000,7 +2000,10 @@ void TStreamerInfo::BuildOld()
 
       if (newType > 0) {
          // Case of a numerical type
-         if (element->GetType() != newType) {
+         if (element->GetType() >= TStreamerInfo::kObject) {
+            // Old type was not a numerical type.
+            element->SetNewType(-2);
+         } else if (element->GetType() != newType) {
             element->SetNewType(newType);
             if (gDebug > 0) {
                // coverity[mixed_enums] - All the values of EDataType have the same semantic in EReadWrite
@@ -2338,7 +2341,7 @@ void TStreamerInfo::BuildOld()
       }
 
       if (element->GetNewType() == -2) {
-         Warning("BuildOld", "Cannot convert %s::%s from type:%s to type:%s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass->GetName());
+         Warning("BuildOld", "Cannot convert %s::%s from type:%s to type:%s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass ? newClass->GetName() : (dm ? dm->GetFullTypeName() : "unknown") );
       }
    }
 
