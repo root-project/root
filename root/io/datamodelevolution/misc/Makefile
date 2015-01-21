@@ -81,6 +81,8 @@ postobj.log: readTree.C treeTest.root MyClass_cxx.$(DllSuf) SomeClass_cxx.$(DllS
 postobj: postobj.log
 	$(TestDiff)
 
+execReadOrderClass.clog: execWriteOrderClass.success
+
 arr_cint.cpp: arrayRules.h arrayRulesLinkDef.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) rootcint -f arr_cint.cpp -c arrayRules.h arrayRulesLinkDef.h > arr_cint.log 2>&1 || handleError.sh --cmd='rootcint -f arr_cint.cxx -c arrayRules.h ArrayRulesLinkDef.h' --result=$$? --log=arr_cint.log --test=$@  
 
