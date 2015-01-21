@@ -549,7 +549,7 @@ void TObject::ls(Option_t *option) const
    TROOT::IndentLevel();
    cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : ";
    cout << Int_t(TestBit(kCanDelete));  
-   if (strstr(option,"noaddr")==0) {
+   if (option && strstr(option,"noaddr")==0) {
       cout <<" at: "<< this ;
    }
    cout << endl;
