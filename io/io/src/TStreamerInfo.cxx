@@ -4258,8 +4258,10 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
          TObjString * objstr = (TObjString*)(rule->GetTarget()->At(0));
          if (objstr) {
             TString newName = objstr->String();
-            if ( fClass->GetDataMember( newName ) ) {
-               newel = new TStreamerArtificial(newName,"",
+            TString realDataName;
+            if ( TDataMember* dm = fClass->GetDataMember( newName ) ) {
+               TRealData::GetName(realDataName,dm);
+               newel = new TStreamerArtificial(realDataName,"",
                                                fClass->GetDataMemberOffset(newName),
                                                TStreamerInfo::kArtificial,
                                                fClass->GetDataMember( newName )->GetTypeName());
@@ -4274,8 +4276,9 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
                objstr = (TObjString*)(rule->GetTarget()->At(other));
                if (objstr) {
                   newName = objstr->String();
-                  if ( fClass->GetDataMember( newName ) ) {
-                     newel = new TStreamerArtificial(newName,"",
+                  if ( TDataMember* dm = fClass->GetDataMember( newName ) ) {
+                     TRealData::GetName(realDataName,dm);
+                     newel = new TStreamerArtificial(realDataName,"",
                                                      fClass->GetDataMemberOffset(newName),
                                                      TStreamerInfo::kArtificial,
                                                      fClass->GetDataMember( newName )->GetTypeName());
