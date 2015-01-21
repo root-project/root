@@ -796,7 +796,7 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
-   if (fFormula->GetNdim() > 1) {
+   if (GetNdim() > 1) {
       Warning("Derivative","Function dimension is larger than one");
    }
 
@@ -859,7 +859,7 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
-   if (fFormula->GetNdim() > 1) {
+   if (GetNdim() > 1) {
       Warning("Derivative2","Function dimension is larger than one");
    }
 
@@ -1117,7 +1117,7 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 
 
   Double_t xx[4] = {x, y, z, t};
-  Double_t *pp = fFormula->GetParameters();
+  Double_t *pp = GetParameters();
    ((TF1*)this)->InitArgs(xx,pp);
  
    return ((TF1*)this)->EvalPar(xx,pp);
@@ -1192,7 +1192,7 @@ void TF1::FixParameter(Int_t ipar, Double_t value)
    // Fix the value of a parameter
    // The specified value will be used in a fit operation
 
-   if (ipar < 0 || ipar > fFormula->GetNpar()-1) return;
+   if (ipar < 0 || ipar > GetNpar()-1) return;
    SetParameter(ipar,value);
    if (value != 0) SetParLimits(ipar,value,value);
    else            SetParLimits(ipar,1,1);
