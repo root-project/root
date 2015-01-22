@@ -1684,7 +1684,7 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
-   if (!fromRootCling) {
+   if (!fromRootCling && !hasHeaderParsingOnDemand) {
       // __ROOTCLING__ might be pulled in through PCH
       fInterpreter->declare("#ifdef __ROOTCLING__\n"
                             "#undef __ROOTCLING__\n"
