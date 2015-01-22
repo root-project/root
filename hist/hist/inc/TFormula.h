@@ -112,7 +112,7 @@ protected:
    Int_t                          fNdim;  //!
    Int_t                          fNpar;  //!
    Int_t                          fNumber;  //!
-   TObjArray                      fLinearParts;  //!
+   std::vector<TObject*>          fLinearParts;  // vector of linear functions 
 
    Bool_t IsOperator(const char c);
    Bool_t IsBracket(const char c);
@@ -152,7 +152,7 @@ public:
    Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t );
    Double_t       EvalPar(const Double_t *x, const Double_t *params=0);
    TString        GetExpFormula() const { return fFormula; }
-   const TObject *GetLinearPart(Int_t i);
+   const TObject *GetLinearPart(Int_t i) const;
    Int_t          GetNdim() const {return fNdim;}
    Int_t          GetNpar() const {return fNpar;}
    Int_t          GetNumber() const { return fNumber; }

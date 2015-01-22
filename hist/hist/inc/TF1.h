@@ -283,8 +283,8 @@ public:
    virtual TH1     *GetHistogram() const;
    virtual TH1     *CreateHistogram() { return DoCreateHistogram(fXmin, fXmax); }
    virtual TFormula *GetFormula() { return fFormula;}
-   virtual TString  GetExpFormula() { return (fFormula) ? fFormula->GetExpFormula() : ""; }
-   virtual const TObject *GetLinearPart(Int_t i) { return (fFormula) ? fFormula->GetLinearPart(i) : nullptr;}
+   virtual TString  GetExpFormula() const { return (fFormula) ? fFormula->GetExpFormula() : ""; }
+   virtual const TObject *GetLinearPart(Int_t i) const { return (fFormula) ? fFormula->GetLinearPart(i) : nullptr;}
    virtual Double_t GetMaximum(Double_t xmin=0, Double_t xmax=0, Double_t epsilon = 1.E-10, Int_t maxiter = 100, Bool_t logx = false) const;
    virtual Double_t GetMinimum(Double_t xmin=0, Double_t xmax=0, Double_t epsilon = 1.E-10, Int_t maxiter = 100, Bool_t logx = false) const;
    virtual Double_t GetMaximumX(Double_t xmin=0, Double_t xmax=0, Double_t epsilon = 1.E-10, Int_t maxiter = 100, Bool_t logx = false) const;

@@ -168,10 +168,9 @@ TFormula::~TFormula()
    {  
       fMethod->Delete();
    }
-   int nLinParts = fLinearParts.GetSize(); 
+   int nLinParts = fLinearParts.size(); 
    if (nLinParts > 0) { 
       for (int i = 0; i < nLinParts; ++i) delete fLinearParts[i]; 
-      fLinearParts.Clear();
    }
 }
 
@@ -287,37 +286,61 @@ TFormula& TFormula::operator=(const TFormula &rhs)
 }
 void TFormula::Copy(TObject &obj) const
 {
+   TNamed::Copy(obj);
    // need to copy also cling parameters
+   TFormula & fnew = dynamic_cast<TFormula&>(obj); 
 
-   ((TFormula&)obj).fClingParameters = fClingParameters;
-   ((TFormula&)obj).fClingVariables = fClingVariables;
+   fnew.fClingParameters = fClingParameters;
+   fnew.fClingVariables = fClingVariables;
 
-   ((TFormula&)obj).fFuncs = fFuncs;
-   ((TFormula&)obj).fVars = fVars;
-   ((TFormula&)obj).fParams = fParams;
-   ((TFormula&)obj).fConsts = fConsts;
-   ((TFormula&)obj).fFunctionsShortcuts = fFunctionsShortcuts;
-   ((TFormula&)obj).fFormula  = fFormula;
-   ((TFormula&)obj).fNdim = fNdim;
-   ((TFormula&)obj).fNpar = fNpar;
-   ((TFormula&)obj).fNumber = fNumber;
-   ((TFormula&)obj).fLinearParts = fLinearParts;
-   ((TFormula&)obj).SetParameters(GetParameters());
-
-   ((TFormula&)obj).fClingInput = fClingInput;
-   ((TFormula&)obj).fReadyToExecute = fReadyToExecute;
-   ((TFormula&)obj).fClingInitialized = fClingInitialized;
-   ((TFormula&)obj).fAllParametersSetted = fAllParametersSetted;
-   ((TFormula&)obj).fClingName = fClingName;
-
-   if (fMethod) {
-      if (((TFormula&)obj).fMethod) delete ((TFormula&)obj).fMethod;
-      // use copy-constructor of TMethodCall
-      TMethodCall *m = new TMethodCall(*fMethod);
-      ((TFormula&)obj).fMethod  = m;
+   fnew.fFuncs = fFuncs;
+   fnew.fVars = fVars;
+   fnew.fParams = fParams;
+   fnew.fConsts = fConsts;
+   fnew.fFunctionsShortcuts = fFunctionsShortcuts;
+   fnew.fFormula  = fFormula;
+   fnew.fNdim = fNdim;
+   fnew.fNpar = fNpar;
+   fnew.fNumber = fNumber;
+   fnew.SetParameters(GetParameters());
+   // copy Linear parts (it is a vector of TFormula pointers) needs to be copied one by one
+   // looping at all the elements
+   // delete first previous elements
+   int nLinParts = fnew.fLinearParts.size(); 
+   if (nLinParts > 0) { 
+      for (int i = 0; i < nLinParts; ++i) delete fnew.fLinearParts[i]; 
+      fnew.fLinearParts.clear();
+   }
+   // old size that needs to be copied 
+   nLinParts = fLinearParts.size();
+   if (nLinParts > 0) { 
+      fnew.fLinearParts.reserve(nLinParts);
+      for (int i = 0; i < nLinParts; ++i) {
+         TFormula * linearNew = new TFormula();
+         TFormula * linearOld = (TFormula*) fLinearParts[i];
+         if (linearOld) {
+            linearOld->Copy(*linearNew); 
+            fnew.fLinearParts.push_back(linearNew);
+         }
+         else
+            Warning("Copy","Function %s - expr %s has a dummy linear part %d",GetName(),GetExpFormula().Data(),i);
+      }
    }
 
-   ((TFormula&)obj).fFuncPtr = fFuncPtr;
+   fnew.fClingInput = fClingInput;
+   fnew.fReadyToExecute = fReadyToExecute;
+   fnew.fClingInitialized = fClingInitialized;
+   fnew.fAllParametersSetted = fAllParametersSetted;
+   fnew.fClingName = fClingName;
+
+   if (fMethod) {
+      if (fnew.fMethod) delete fnew.fMethod;
+      // use copy-constructor of TMethodCall
+      TMethodCall *m = new TMethodCall(*fMethod);
+      fnew.fMethod  = m;
+   }
+
+   fnew.fFuncPtr = fFuncPtr;
 
 }
 void TFormula::PrepareEvalMethod()
@@ -865,8 +888,10 @@ void TFormula::HandleLinear(TString &formula)
 {
    formula.ReplaceAll("++","@");
    Int_t linPos = formula.Index("@");
+   if (linPos == kNPOS ) return;  // function is not linear 
    Int_t NofLinParts = formula.CountChar((int)'@');
-   fLinearParts.Expand(NofLinParts + 1);
+   assert(NofLinParts > 0); 
+   fLinearParts.reserve(NofLinParts + 1);
    Int_t Nlinear = 0;
    bool first = true; 
    while(linPos != kNPOS)
@@ -897,10 +922,10 @@ void TFormula::HandleLinear(TString &formula)
       formula.ReplaceAll(pattern,replacement);
       if (first) { 
          TFormula *lin1 = new TFormula("__linear1",left,false);
-         fLinearParts.Add(lin1);
+         fLinearParts.push_back(lin1);
       }
       TFormula *lin2 = new TFormula("__linear2",right,false);
-      fLinearParts.Add(lin2);
+      fLinearParts.push_back(lin2);
 
       linPos = formula.Index("@");
       first = false; 
@@ -1313,25 +1338,30 @@ void TFormula::ProcessFormula(TString &formula)
       TString argumentsPrototype = 
          TString::Format("%s%s%s",(hasVariables ? "Double_t *x" : ""), (hasBoth ? "," : ""),
                         (hasParameters  ? "Double_t *p" : ""));
-      // add also an increasing index to function name to make it unique
-      fClingName = fName; 
+     
+      // hack for function names created with ++ in doing linear fitter. In this case use a different name
+      // shuld make to all the case where special operator character are use din the name 
+      if (fClingName.Contains("++") )
+         fClingName = gNamePrefix + TString("linearFunction_of_") + fClingName;
+      else
+         fClingName = gNamePrefix + fName;
+      
       fClingName.ReplaceAll(" ",""); // remove also white space from function name;
       // remova also parenthesis
       fClingName.ReplaceAll("(","_");
       fClingName.ReplaceAll(")","_");
       // remove also operators
+      fClingName.ReplaceAll("++","_and_"); // for linear function 
       fClingName.ReplaceAll("+","_plus_"); 
       fClingName.ReplaceAll("-","_minus_");
       fClingName.ReplaceAll("*","_times_");
       fClingName.ReplaceAll("/","_div_");
-      // hack for function names created with ++ in doing linear fitter. In this case use a different name
-      // shuld make to all the case where special operator character are use din the name 
-      if (fClingName.Contains("++") ) fClingName = "T__linearFunction";
+      // add also an increasing index to function name to make it unique
       {
          R__LOCKGUARD2(gROOTMutex);
          gFormulaIndex++;
       }
-      fClingName = TString::Format("%s_%d",fClingName.Data(),  gFormulaIndex);
+      fClingName = TString::Format("%s__id%d",fClingName.Data(),  gFormulaIndex);
 
       fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(),argumentsPrototype.Data(),formula.Data());
 
@@ -1363,13 +1393,19 @@ void TFormula::ProcessFormula(TString &formula)
    while( itvar != fVars.end() ); 
 
 }
-const TObject* TFormula::GetLinearPart(Int_t i)
+const TObject* TFormula::GetLinearPart(Int_t i) const
 {
    // Return linear part.
 
-   if (!fLinearParts.IsEmpty())
-      return fLinearParts.UncheckedAt(i);
-   return 0;
+   if (!fLinearParts.empty()) {
+      int n = fLinearParts.size();
+      if (i < 0 || i >= n ) { 
+         Error("GetLinearPart","Formula %s has only %d linear parts - requested %d",GetName(),n,i);
+         return nullptr;
+      }
+      return fLinearParts[i];
+   }
+   return nullptr;
 }
 void TFormula::AddVariable(const TString &name, Double_t value)
 {
@@ -2011,6 +2047,8 @@ void TFormula::Streamer(TBuffer &b)
          
          FillDefaults();
 
+         //std::cout << "preprocess the formula " << fFormula << std::endl;
+         
          PreProcessFormula(fFormula);
          fClingInput = fFormula;
          PrepareFormula(fClingInput);
