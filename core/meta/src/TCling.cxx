@@ -4581,9 +4581,13 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
    if (T){
       ExtVisibleStorageAdder evsAdder(fNSFromRootmaps);
       for (auto declIt = T->decls_begin(); declIt < T->decls_end(); ++declIt) {
-         if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(declIt->m_DGR.getSingleDecl())) {
-            evsAdder.TraverseDecl(NSD);
+         if (declIt->m_DGR.isSingleDecl()) {
+            if (Decl* D = declIt->m_DGR.getSingleDecl()) {
+               if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(D)) {
+                  evsAdder.TraverseDecl(NSD);
+               }
             }
+         }
       }
    }
 
