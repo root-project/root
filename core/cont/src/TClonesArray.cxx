@@ -113,6 +113,11 @@
 //      empty contained in TObject). This method must be overridden in
 //      the relevant TClonesArray object class, implementing the reset
 //      procedure for pointer objects.
+//    * If the objects are added using the placement new then the Clear must
+//      deallocate the memory.
+//    * If the objects are added using TClonesArray::ConstructedAt then the
+//      heap-based memory can stay allocated and reused as the constructor is
+//      not called for already constructed/added object.
 //    * To reduce memory fragmentation, please make sure that the
 //      TClonesArrays are not destroyed and created on every event. They
 //      must only be constructed/destructed at the beginning/end of the
