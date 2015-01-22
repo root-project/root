@@ -93,6 +93,8 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
 
    // Reset the content of the pcm
    if (writeEmptyRootPCM) {
+      TObject obj;
+      obj.Write("EMPTY");
       return true;
    };
 
