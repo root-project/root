@@ -104,9 +104,9 @@ private:
 protected:
    
    list<TFormulaFunction>         fFuncs;    //!
-   map<TString,TFormulaVariable>  fVars;     //!
-   map<TString,TFormulaVariable>  fParams;   //!
-   map<TString,Double_t>          fConsts;   //!
+   map<TString,TFormulaVariable>  fVars;     //!  list of  variable names
+   map<TString,Int_t>             fParams;   //!  list of  parameter names 
+   map<TString,Double_t>          fConsts;   //!  
    map<TString,TString>           fFunctionsShortcuts;  //!
    TString                        fFormula;     
    Int_t                          fNdim;  //!
@@ -157,19 +157,20 @@ public:
    Int_t          GetNpar() const {return fNpar;}
    Int_t          GetNumber() const { return fNumber; }
    const char *   GetParName(Int_t ipar) const;
-   Double_t       GetParameter(const TString &name);
-   Double_t       GetParameter(Int_t param);
+   Int_t          GetParNumber(const char * name) const;
+   Double_t       GetParameter(const char * name) const;
+   Double_t       GetParameter(Int_t param) const;
    Double_t*      GetParameters() const;
-   void           GetParameters(Double_t *params);
+   void           GetParameters(Double_t *params) const;
    Double_t       GetVariable(const TString &name);
    Bool_t         IsValid() const { return fReadyToExecute && fAllParametersSetted; }
    Bool_t         IsLinear() const { return TestBit(kLinear); } 
    void           Print(Option_t *option = "") const;
-   void           SetParameter(const TString &name, Double_t value);
+   void           SetParameter(const char* name, Double_t value);
    void           SetParameter(Int_t param, Double_t value);
    void           SetParameters(const Double_t *params,Int_t size);
    void           SetParameters(const Double_t *params);
-   void           SetParameters(const pair<TString,Double_t> *params, const Int_t size);
+   //void           SetParameters(const pair<TString,Double_t> *params, const Int_t size);
    void           SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0,
                                      Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,
                                      Double_t p9=0,Double_t p10=0); // *MENU*

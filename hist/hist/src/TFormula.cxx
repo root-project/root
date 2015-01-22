@@ -1072,7 +1072,9 @@ void TFormula::ExtractFunctors(TString &formula)
                // f1("[0]*x") f2("[0]*x") f1+f2 - it is weird but it is better to support
                //std::cout << "current number of parameter is " << fNpar << std::endl;
                int nparOffset = 0; 
-               if (fParams.find("0") != fParams.end() ) { 
+               //if (fParams.find("0") != fParams.end() ) {
+               // do in any case if parameters are existing
+               if (fNpar > 0) { 
                   nparOffset = fNpar;
                   // start from higher number to avoid overlap
                   for (int jpar = f->GetNpar()-1; jpar >= 0; --jpar ) { 
@@ -1148,7 +1150,9 @@ void TFormula::ProcessFormula(TString &formula)
    for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
    {
       TFormulaFunction & fun = *funcsIt;
+      
       //std::cout << "fun is " << fun.GetName() << std::endl;
+
       if(fun.fFound)
          continue;
       if(fun.IsFuncCall())
@@ -1243,6 +1247,8 @@ void TFormula::ProcessFormula(TString &formula)
             TString pattern = TString::Format("{%s}",name.Data());   
             TString replacement = TString::Format("x[%d]",(*varsIt).second.fArrayPos);
             formula.ReplaceAll(pattern,replacement);
+
+            //std::cout << "Found an observable for " << fun.GetName()  << std::endl;
               
             fun.fFound = true; 
             continue;          
@@ -1266,7 +1272,7 @@ void TFormula::ProcessFormula(TString &formula)
                      }
                }
             }
-            //std::cout << "Found matching for " << funname  << std::endl;
+            //std::cout << "Found matching observable for " << funname  << std::endl;
             fun.fFound = true; 
             // remove the "{.. }" added around the variable
             TString pattern = TString::Format("{%s}",funname.Data());   
@@ -1275,26 +1281,16 @@ void TFormula::ProcessFormula(TString &formula)
          } 
          //}
 
-
-         map<TString,Double_t>::iterator constIt = fConsts.find(fun.GetName());
-         if(constIt != fConsts.end())
-         {
-            TString pattern = TString::Format("{%s}",fun.GetName());
-            TString value = TString::Format("%lf",(*constIt).second);
-            formula.ReplaceAll(pattern,value);
-            fun.fFound = true;
-            continue;
-         }
-         
-         map<TString,TFormulaVariable>::iterator paramsIt = fParams.find(fun.GetName());
+         auto paramsIt = fParams.find(fun.GetName());
          if(paramsIt != fParams.end())
          {
-            TString name = (*paramsIt).second.GetName();
+            //TString name = (*paramsIt).second.GetName();
             TString pattern = TString::Format("{[%s]}",fun.GetName());
             //std::cout << "pattern is " << pattern << std::endl;
             if(formula.Index(pattern) != kNPOS)
             {
-               TString replacement = TString::Format("p[%d]",(*paramsIt).second.fArrayPos);
+               //TString replacement = TString::Format("p[%d]",(*paramsIt).second.fArrayPos);
+               TString replacement = TString::Format("p[%d]",(*paramsIt).second);
                //std::cout << "replace pattern  " << pattern << " with " << replacement << std::endl;
                formula.ReplaceAll(pattern,replacement);
                
@@ -1302,6 +1298,23 @@ void TFormula::ProcessFormula(TString &formula)
             fun.fFound = true;
             continue;
          }
+         else {
+            //std::cout << "functor  " << fun.GetName() << " is not a parameter " << std::endl;
+         }
+
+         // looking for constants (needs to be done after looking at the parameters)
+         map<TString,Double_t>::iterator constIt = fConsts.find(fun.GetName());
+         if(constIt != fConsts.end())
+         {
+            TString pattern = TString::Format("{%s}",fun.GetName());
+            TString value = TString::Format("%lf",(*constIt).second);
+            formula.ReplaceAll(pattern,value);
+            fun.fFound = true;
+            //std::cout << "constant with name " << fun.GetName() << " is found " << std::endl;
+            continue;
+         }
+         
+
          fun.fFound = false;
       }
    }
@@ -1549,17 +1562,19 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
    // if parameter is already defined in fParams - just set the new value
    if(fParams.find(name) != fParams.end() )
    {
-      TFormulaVariable & par = fParams[name];
-      par.fValue = value;
-      if (par.fArrayPos < 0)
+      int ipos = fParams[name];
+      //TFormulaVariable & par = fParams[name];
+      //par.fValue = value;
+      if (ipos < 0)
       {
-         par.fArrayPos = fParams.size();
+         ipos = fParams.size();
+         fParams[name] = ipos; 
       }
-      if(par.fArrayPos >= (int)fClingParameters.capacity())
+      if(ipos >= (int)fClingParameters.capacity())
       {
          fClingParameters.reserve(2 * fClingParameters.capacity());
       }
-      fClingParameters[par.fArrayPos] = value;
+      fClingParameters[ipos] = value;
    }
    else
    {
@@ -1567,7 +1582,8 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
       fNpar++;
       //TFormulaVariable(name,value,fParams.size());
       int pos = fParams.size(); 
-      fParams.insert(pair<TString,TFormulaVariable>(name,TFormulaVariable(name,value,pos)));
+      //fParams.insert(std::make_pair<TString,TFormulaVariable>(name,TFormulaVariable(name,value,pos)));
+      fParams.insert(std::make_pair(name,pos));
       fClingParameters.push_back(value);
       if (processFormula) { 
          // replace first in input parameter name with [name]
@@ -1576,44 +1592,51 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
       }
    }
 
-} 
-Double_t TFormula::GetParameter(const TString &name)
+}
+Int_t TFormula::GetParNumber(const char * name) const {
+   // return parameter index given a name (return -1 for not existing parameters)
+   auto it = fParams.find(name); 
+   if(it == fParams.end())
+   {
+      Error("GetParameter","Parameter %s is not defined.",name);
+      return -1;
+   }
+   return it->second;
+
+}
+
+Double_t TFormula::GetParameter(const char * name) const
 {
    //*-*    
    //*-*    Returns parameter value given by string.
-   //*-*    
-   if(fParams.find(name) == fParams.end())
-   {
-      Error("GetParameter","Parameter %s is not defined.",name.Data());
-      return -1;
-   }
-   return fClingInitialized ? fClingParameters[fParams[name].fArrayPos] : fParams[name].fValue;
+   //*-*
+   return GetParameter( GetParNumber(name) ); 
 }
-Double_t TFormula::GetParameter(Int_t param)
+Double_t TFormula::GetParameter(Int_t param) const
 {
    //*-*    
    //*-*    Return parameter value given by integer.
    //*-*    
    //*-*    
    //TString name = TString::Format("%d",param);
-   if(param < (int) fClingParameters.size())
+   if(param >=0 && param < (int) fClingParameters.size())
       return fClingParameters[param];
-   Error("GetParName","Not all parameters defined - use GetParameter(name)");
+   Error("GetParameter","wrong index used - use GetParameter(name)");
    return 0; 
 }
 const char * TFormula::GetParName(Int_t ipar) const
 {
    //*-*    
    //*-*    Return parameter name given by integer.
-   //*-*    
-   TString name = TString::Format("%d",ipar);
-   map<TString,TFormulaVariable>::const_iterator it = fParams.find(name);
-   if(it == fParams.end())
-   {
-      Error("GetParName","Parameter %s is not defined.",name.Data());
-      return 0;
+   //*-*
+   if (ipar < 0 || ipar >= fNpar) return "";
+
+   // need to loop on the map to find corresponding parameter
+   for ( auto & p : fParams) {
+      if (p.second == ipar) return p.first.Data(); 
    }
-   return it->second.GetName();
+   Warning("GetParName","Parameter with index not found !!");
+   return TString::Format("p%d",ipar);
 }
 Double_t* TFormula::GetParameters() const
 {
@@ -1622,7 +1645,7 @@ Double_t* TFormula::GetParameters() const
    return 0;
 }
 
-void TFormula::GetParameters(Double_t *params)
+void TFormula::GetParameters(Double_t *params) const
 {
    for(Int_t i = 0; i < fNpar; ++i)
    {
@@ -1632,11 +1655,16 @@ void TFormula::GetParameters(Double_t *params)
          params[i] = -1;
    }
 }
-void TFormula::SetParameter(const TString &name, Double_t value)
+void TFormula::SetParameter(const char *name, Double_t value)
 {
    //*-*    
    //*-*    Sets parameter value.
-   //*-*    
+   //*-*
+
+   SetParameter( GetParNumber(name), value);
+
+   // do we need this ???
+#ifdef OLDPARAMS
    if(fParams.find(name) == fParams.end())
    {
       Error("SetParameter","Parameter %s is not defined.",name.Data());
@@ -1654,7 +1682,9 @@ void TFormula::SetParameter(const TString &name, Double_t value)
          break;
       }
    }
+#endif   
 }
+#ifdef OLDPARAMS
 void TFormula::SetParameters(const pair<TString,Double_t> *params,const Int_t size)
 {
    //*-*    
@@ -1686,6 +1716,8 @@ void TFormula::SetParameters(const pair<TString,Double_t> *params,const Int_t si
       }
    }
 }
+#endif
+
 void TFormula::SetParameters(const Double_t *params)
 {
    SetParameters(params,fNpar);
@@ -1708,8 +1740,11 @@ void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Dou
 }
 void TFormula::SetParameter(Int_t param, Double_t value)
 {
-   TString name = TString::Format("%d",param);
-   SetParameter(name,value);
+   if (param < 0 || param >= fNpar) return;
+   assert(int(fClingParameters.size()) == fNpar);
+   fClingParameters[param] = value; 
+   // TString name = TString::Format("%d",param);
+   // SetParameter(name,value);
 }
 void TFormula::SetParNames(const char *name0,const char *name1,const char *name2,const char *name3,
                  const char *name4, const char *name5,const char *name6,const char *name7,
@@ -1730,12 +1765,17 @@ void TFormula::SetParNames(const char *name0,const char *name1,const char *name2
 void TFormula::SetParName(Int_t ipar, const char * name)
 {
 
+   if (ipar < 0 || ipar > fNpar) {
+      Error("SetParName","Wrong Parameter index %d ",ipar);
+      return;
+   }
    TString oldName; 
    // find parameter with given index 
    for ( auto &it : fParams) { 
-      if (it.second.fArrayPos == ipar) { 
-         oldName =  it.second.fName;
-         it.second.fName = name;          
+      if (it.second  == ipar) { 
+         oldName =  it.first;
+         fParams.erase(oldName); 
+         fParams.insert(std::make_pair(name, ipar) );  
          break;
       }
    }
@@ -1963,13 +2003,13 @@ void TFormula::Print(Option_t *option) const
       if (fNdim > 0) {
          printf("List of  Variables: \n");
          for ( map<TString,TFormulaVariable>::const_iterator it = fVars.begin(); it != fVars.end(); ++it) { 
-            printf(" %20s =  %10f \n",it->first.Data(), fClingVariables[it->second.GetArrayPos()] );
+            printf(" %20s =  %10f (%s)\n",it->first.Data(), fClingVariables[it->second.GetArrayPos()],it->second.GetName() );
          }
       }
       if (fNpar > 0) {
          printf("List of  Parameters: \n");
-         for ( map<TString,TFormulaVariable>::const_iterator it = fParams.begin(); it != fParams.end(); ++it) { 
-            printf(" %20s =  %10f \n",it->first.Data(), fClingParameters[it->second.GetArrayPos()] );
+         for ( auto & it : fParams) { 
+            printf(" %20s =  %10f \n",it.first.Data(), fClingParameters[it.second] );
          }
       }
       printf("Expression passed to Cling:\n");
@@ -2047,11 +2087,17 @@ void TFormula::Streamer(TBuffer &b)
          
          FillDefaults();
 
-         //std::cout << "preprocess the formula " << fFormula << std::endl;
+         //std::cout << "Streamer::Reading preprocess the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
          
          PreProcessFormula(fFormula);
+
+         //std::cout << "Streamer::after pre-process the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
+         
          fClingInput = fFormula;
          PrepareFormula(fClingInput);
+
+         //std::cout << "Streamer::after prepared " << fClingInput << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
+
 
          // restore parameter values
          if (fNpar != (int) parValues.size() ) { 
