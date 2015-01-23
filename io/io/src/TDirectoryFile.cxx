@@ -46,6 +46,7 @@
 #include "TStreamerElement.h"
 #include "TProcessUUID.h"
 #include "TVirtualMutex.h"
+#include "TEmulatedCollectionProxy.h"
 
 const UInt_t kIsBigFile = BIT(16);
 const Int_t  kMaxLen = 2048;
@@ -1908,18 +1909,29 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    }
 
    if (!obj) return 0;
+
+   const char *className = cl->GetName();
+   const char *oname;
+   if (name && *name)
+      oname = name;
+   else
+      oname = className;
+
+   if (cl && cl->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(cl->GetCollectionProxy())) {
+      Error("WriteObjectAny",
+            "The class requested (%s) for the key name \"%s\""
+            " is an instance of an stl collection and does not have a compiled CollectionProxy."
+            " Please generate the dictionary for this collection (%s). No data will be written.",
+            className, oname, className);
+      return 0;
+   }
+
    TKey *key, *oldkey=0;
    Int_t bsize = GetBufferSize();
    if (bufsize > 0) bsize = bufsize;
 
    TString opt = option;
    opt.ToLower();
-
-   const char *oname;
-   if (name && *name)
-      oname = name;
-   else
-      oname = cl->GetName();
 
    // Remove trailing blanks in object name
    Int_t nch = strlen(oname);
