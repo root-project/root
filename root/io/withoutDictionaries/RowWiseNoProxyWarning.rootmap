@@ -1,0 +1,10 @@
+{ decls }
+
+namespace std {  }
+
+[ libRowWiseNoProxyWarning_dictrflx.so ]
+# List of selected classes
+class CustomClass
+class list<CustomClass2>
+class set<CustomClass2>
+class vector<CustomClass2>

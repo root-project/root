@@ -1,0 +1,9 @@
+{ decls }
+
+namespace std {  }
+
+[ libIOWithoutDictionaries_dictrflx.so ] 
+# List of selected classes
+class classWithDictionary1
+class classWithDictionary2
+class vector<classWithoutDictionary1>
