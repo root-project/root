@@ -2,7 +2,7 @@
 Processing runvectorOfvector.C+...
 Total created 10
 Total created 165
-Error in <TTree::Branch>: The class requested (vector<vector<vector<int> > >) for the branch "vec" refer to an stl collection and do not have a compiled CollectionProxy.  Please generate the dictionary for this class (vector<vector<vector<int> > >)
+Error in <TTree::Branch>: The class requested (vector<vector<vector<int> > >) for the branch "vec" is an instance of an stl collection and does not have a compiled CollectionProxy. Please generate the dictionary for this collection (vector<vector<vector<int> > >) to avoid to write corrupted data.
 Total created 165
 Error in <TTreeFormula::Compile>:  Bad numerical expression : "vec"
 Info in <TSelectorDraw::AbortProcess>: Variable compilation failed: {vec,}
