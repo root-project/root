@@ -1799,6 +1799,7 @@ with options, prefix with --with-, enables corresponding support
   xml-incdir         XML support, location of libxml/tree.h
   xml-libdir         XML support, location of libxml2
   x11-libdir         X11 support, path to libX11
+  xpm-incdir         XPM support, path to X11/Xpm.h
   xpm-libdir         XPM support, path to libXpm
   xft-libdir         Xft support, path to libXft
   xext-libdir        Xext support, path to libXext
@@ -2179,6 +2180,7 @@ if test $# -gt 0 ; then
       --with-xml-incdir=*)     xmlincdir=$optarg     ; enable_xml="yes"     ;;
       --with-xml-libdir=*)     xmllibdir=$optarg     ; enable_xml="yes"     ;;
       --with-x11-libdir=*)     x11libdir=$optarg     ;;
+      --with-xpm-incdir=*)     xpmincdir=$optarg     ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
       --with-xft-libdir=*)     xftlibdir=$optarg     ;;
       --with-xext-libdir=*)    xextlibdir=$optarg    ;;
@@ -2808,7 +2810,7 @@ if test ! "x$enable_x11" = "xno" ; then
         exit 1
     fi
 
-    check_header "X11/xpm.h" "" \
+    check_header "X11/xpm.h" "" "$xpmincdir" \
         $XPM ${XPM:+$XPM/include} \
         ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
