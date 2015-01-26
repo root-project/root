@@ -3,6 +3,7 @@
 
 #include "RConversionRuleParser.h"
 #include "TSchemaRuleProcessor.h"
+#include "TMetaUtils.h"
 
 #include <iostream>
 #include <algorithm>
@@ -11,7 +12,24 @@
 #include <map>
 #include <sstream>
 
-// #include "clang/AST/DeclCXX.h"
+namespace {
+   static void RemoveEscapeSequences(std::string& rawString)
+   {
+      const std::vector<std::pair<const std::string, const std::string>> subPairs { {"\\\\","\\"},
+                                                                                    {"\\\"","\""},
+                                                                                    {"\\\'","\'"}};
+      size_t start_pos = 0;
+      for (auto const & subPair : subPairs){
+         start_pos = 0;
+         auto from = subPair.first;
+         auto to = subPair.second;
+         while((start_pos = rawString.find(from, start_pos)) != std::string::npos) {
+            rawString.replace(start_pos, from.length(), to);
+            start_pos += to.length();
+         }
+      }
+   }
+}
 
 namespace ROOT
 {
@@ -165,7 +183,9 @@ namespace ROOT
                error_string += "Expected }\" at the end of the value.";
                return false;
             }
-            result[key] = command.substr( 2, l-2 );
+            auto rawCode = command.substr( 2, l-2 );
+            RemoveEscapeSequences(rawCode);
+            result[key] = rawCode;
             ++l;
          }
          //--------------------------------------------------------------------
