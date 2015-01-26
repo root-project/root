@@ -2341,7 +2341,7 @@ void TStreamerInfo::BuildOld()
       }
 
       if (element->GetNewType() == -2) {
-         Warning("BuildOld", "Cannot convert %s::%s from type:%s to type:%s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass ? newClass->GetName() : (dm ? dm->GetFullTypeName() : "unknown") );
+         Warning("BuildOld", "Cannot convert %s::%s from type: %s to type: %s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass ? newClass->GetName() : (dm ? dm->GetFullTypeName() : "unknown") );
       }
    }
 
