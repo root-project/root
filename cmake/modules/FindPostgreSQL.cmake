@@ -18,12 +18,35 @@ endif (POSTGRESQL_INCLUDE_DIR AND POSTGRESQL_LIBRARIES)
 
 
 find_path(POSTGRESQL_INCLUDE_DIR libpq-fe.h
-   /usr/include/pgsql/
-   /usr/local/include/pgsql/
-   /usr/include/postgresql/
+   PATHS ${POSTGRESQL_DIR}/include $ENV{POSTGRESQL_DIR}/include
+   "/usr/include/pgsql/"
+   "/usr/local/include/pgsql/"
+   "/usr/include/postgresql/"
+   "/usr/local/include/pgsql/server"
+   "/usr/local/include/postgresql/server"
+   "/usr/local/include/postgresql/*/server"
+   "/usr/local/pgsql/postgresql/server"
+   "/usr/local/pgsql/postgresql/*/server"
+   "/usr/local/*/include/"
+   "/usr/local/*/include/postgresql/"
+   "/usr/local/*/include/postgresql/server"
+   "/usr/include/server"
+   "/usr/include/pgsql/server"
+   "/usr/include/postgresql/server"
+   "/usr/include/postgresql/*/server"
 )
 
-find_library(POSTGRESQL_LIBRARIES NAMES pq)
+find_library(POSTGRESQL_LIBRARIES NAMES pq
+    PATHS ${POSTGRESQL_DIR}/lib $ENV{POSTGRESQL_DIR}/lib
+    "/usr/lib/"
+    "/usr/lib64/"
+    "/usr/local/lib/"
+    "/usr/local/lib64/"
+    "/usr/lib/*/"
+    "/usr/local/*/"
+    "/usr/lib/posgresql/"
+    "/usr/lib64/posgresql/"
+)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PostgreSQL DEFAULT_MSG
