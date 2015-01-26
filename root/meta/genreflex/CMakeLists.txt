@@ -1,5 +1,25 @@
 ROOTTEST_ADD_TESTDIRS()
 
+
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(MyClass_v1 MyClass_v1.h SELECTION MyClass_v1_selection.xml NO_ROOTMAP)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-escapedQuotesRootmapGen
+                  MACRO execwriteFirstRootmap.C
+                  OUTREF execwriteFirstRootmap.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST})
+
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(MyClass_v2 MyClass_v2.h SELECTION MyClass_v2_selection.xml NO_ROOTMAP)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-escapedQuotesWriteTree
+                  MACRO execwriteTree.C
+                  OUTREF execwriteTree.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST} roottest-root-meta-genreflex-escapedQuotesRootmapGen)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-escapedQuotesreadTree
+                  MACRO execreadTree.C
+                  OUTREF execreadTree.ref
+                  DEPENDS roottest-root-meta-genreflex-escapedQuotesWriteTree)
+
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-classSelectedTwice
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice.h --select=${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice_selection.xml
                   OUTREF classSelectedTwice.ref)
