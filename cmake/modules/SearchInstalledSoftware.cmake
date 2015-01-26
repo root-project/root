@@ -174,6 +174,12 @@ endif()
 
 #---Check for all kind of graphics includes needed by libAfterImage--------------------
 if(asimage)
+  if(NOT x11 AND NOT cocoa)
+    message(STATUS "Switching off 'asimage' because neither 'x11' nor 'cocoa' are enabled")
+    set(asimage OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+if(asimage)
   set(ASEXTRA_LIBRARIES)
   find_Package(GIF)
   if(GIF_FOUND)
