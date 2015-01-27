@@ -5475,20 +5475,24 @@ Long64_t TH1::Merge(TCollection *li)
                   // do we need to support case when there are bins with labels and bins without them ??
                   // NO -then return an error
                   if (label == 0 ) {
-                     Fatal("Merge","Histogram %s with labels has NULL label pointer for bin %d",
+                     Error("Merge","Histogram %s with labels has NULL label pointer for bin %d",
                            hist->GetName(),binx );
                      return -1;
                   }
+                  // special case for underflow/overflows
+                  if (label[0] == 0 &&  (binx == 0 || binx ==(nx+1)) ) { 
+                        ix = binx;
+                  }
+                  else { 
                      // if bin does not exists FindBin will add it automatically
                      // by calling LabelsInflate() if the bit is set
                      // otherwise it will return zero and bin will be merged in underflow/overflow
                      // Do we want to keep this case ??
                      ix = fXaxis.FindBin(label);
-                     if (ix == 0) Warning("Merge", "Histogram %s has labels but CanExtendAllAxes() is false - label %s is lost", GetName(), label);
-                  // ix cannot be -1 . Can be 0 in case label is not found and bit is not set
-                  if (ix <0) {
-                     Fatal("Merge","Error return from TAxis::FindBin for label %s",label);
-                     return -1;
+                     if (ix <= 0) {
+                        Warning("Merge", "Histogram %s has labels but CanExtendAllAxes() is false - label %s is lost", GetName(), label);
+                        continue;
+                     }
                   }
                }
                if (ix >= 0) {
