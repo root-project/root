@@ -6,5 +6,6 @@ set(depends ${depends} ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_ADD_TEST(roottest-root-meta-ROOT-5694-execLoadLibs
                   MACRO execLoadLibs.C
-                  OUTREF execLoadLibs.ref
+                  OUTREF execLoadLibs.oref
+                  ERRREF execLoadLibs.eref
                   DEPENDS ${depends})

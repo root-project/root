@@ -4,7 +4,8 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(IOWithoutDictionaries
 
 ROOTTEST_ADD_TEST(roottest-root-io-withoutDictionaries-IOWithoutDictionaries
                   MACRO execIOWithoutDictionaries.C
-                  OUTREF execIOWithoutDictionaries.ref
+                  OUTREF execIOWithoutDictionaries.oref
+                  ERRREF execIOWithoutDictionaries.eref
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(RowWiseNoProxyWarning
