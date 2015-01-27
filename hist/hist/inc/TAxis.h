@@ -50,12 +50,14 @@ private:
 
    // TAxis extra status bits (stored in fBits2)
    enum {
-      kAlphanumeric = BIT(0),
-      kCanExtend = BIT(1)
+      kAlphanumeric = BIT(0),   // axis is alphanumeric
+      kCanExtend = BIT(1),      // axis can be extended
+      kNotAlpha = BIT(2)    // axis is forced to be not alphanumeric
    };
 
    Bool_t       HasBinWithoutLabel() const;
    Bool_t       IsAlphanumeric() { return fBits2 & kAlphanumeric; }
+   Bool_t       CanBeAlphanumeric() { return !(fBits2 & kNotAlpha); }
    void         SetAlphanumeric(Bool_t alphanumeric = kTRUE);
 
 public:
@@ -85,10 +87,11 @@ public:
    virtual ~TAxis();
    TAxis& operator=(const TAxis&);
 
-           Bool_t     CanExtend() const { return fBits2 & kCanExtend; }
-           void       SetCanExtend(Bool_t canExtend) { fBits2 = canExtend ? (fBits2 | kCanExtend) : (fBits2 & ~kCanExtend); }
-           void       CenterLabels(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterLabels
-           void       CenterTitle(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterTitle
+   Bool_t     CanExtend() const { return (fBits2 & kCanExtend);  } 
+   void       SetCanExtend(Bool_t canExtend) { fBits2 = canExtend ? (fBits2 | kCanExtend) : (fBits2 & ~kCanExtend); }
+   void       SetNoAlphaNumeric(Bool_t noalpha = kTRUE) { fBits2 = noalpha ? (fBits2 | kNotAlpha) : (fBits2 & ~kNotAlpha); }
+   void       CenterLabels(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterLabels
+   void       CenterTitle(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterTitle
    const char        *ChooseTimeFormat(Double_t axislength=0);
    virtual void       Copy(TObject &axis) const;
    virtual void       Delete(Option_t * /*option*/ ="") { }
@@ -99,6 +102,7 @@ public:
    virtual Int_t      FindBin(Double_t x) const { return FindFixBin(x); }
    virtual Int_t      FindBin(const char *label);
    virtual Int_t      FindFixBin(Double_t x) const;
+   virtual Int_t      FindFixBin(const char *label) const;
    virtual Double_t   GetBinCenter(Int_t bin) const;
    virtual Double_t   GetBinCenterLog(Int_t bin) const;
    const char        *GetBinLabel(Int_t bin) const;

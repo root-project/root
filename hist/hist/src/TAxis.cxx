@@ -261,10 +261,12 @@ Int_t TAxis::FindBin(Double_t x)
 {
    // Find bin number corresponding to abscissa x. NOTE: this method does not work with alphanumeric bins !!!
    //
-   // If x is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true. Otherwise, return 0 or fNbins+1.
+   // If x is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true.
+   // Otherwise, return 0 or fNbins+1.
 
    Int_t bin;
-   // NOTE: This should not be allowed for Alphanumeric histograms, but it is heavily used (legacy) in the TTreePlayer to fill alphanumeric histograms.
+   // NOTE: This should not be allowed for Alphanumeric histograms,
+   // but it is heavily used (legacy) in the TTreePlayer to fill alphanumeric histograms.
    if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
@@ -311,13 +313,16 @@ Int_t TAxis::FindBin(const char *label)
       if (!fParent) return -1;
       fLabels = new THashList(fNbins,3);
       // we set the axis alphanumeric
-      // when list of labels does not exis
-      SetCanExtend(kTRUE);
-      SetAlphanumeric(kTRUE);
-      if (fXmax <= fXmin) {
-         //L.M. Dec 2010 in case of no min and max specified use 0 ->NBINS
-         fXmin = 0;
-         fXmax = fNbins;
+      // when list of labels does not exist
+      // do we want to do this also when histogram is not empty ?????
+      if (CanBeAlphanumeric() ) { 
+         SetCanExtend(kTRUE);
+         SetAlphanumeric(kTRUE);
+         if (fXmax <= fXmin) {
+            //L.M. Dec 2010 in case of no min and max specified use 0 ->NBINS
+            fXmin = 0;
+            fXmax = fNbins;
+         }
       }
    }
 
@@ -327,12 +332,13 @@ Int_t TAxis::FindBin(const char *label)
 
    // if labels is not in the list and we have already labels
    if (!IsAlphanumeric()) {
-      if (HasBinWithoutLabel()) {
-         Warning("FindBin","Label %s is not in the list and the axis is not alphanumeric - ignore it",label);
+      // if bins without labels exist or if the axis cannot be set to alphanumeric
+      if (HasBinWithoutLabel() || !CanBeAlphanumeric() ) {         
+         Info("FindBin","Label %s is not in the list and the axis is not alphanumeric - ignore it",label);
          return -1;
       }
       else {
-         Info("FindBin","Label %s not in the list will be added to the histogram",label);
+         Info("FindBin","Label %s not in the list. It will be added to the histogram",label);
          SetCanExtend(kTRUE);
          SetAlphanumeric(kTRUE);
       }
@@ -358,6 +364,21 @@ Int_t TAxis::FindBin(const char *label)
    return n+1;
 }
 
+//______________________________________________________________________________
+Int_t TAxis::FindFixBin(const char *label) const
+{
+   // Find bin number with label.
+   // If the List of labels does not exist or the label doe not exist just return -1 .
+   // Do not attempt to modify the axis. This is different than FindBin
+
+   //create list of labels if it does not exist yet
+   if (!fLabels) return -1; 
+ 
+   // search for label in the existing list and return it if it exists
+   TObjString *obj = (TObjString*)fLabels->FindObject(label);
+   if (obj) return (Int_t)obj->GetUniqueID();
+   return -1;
+}   
 
 
 //______________________________________________________________________________
@@ -728,8 +749,17 @@ void TAxis::SetAlphanumeric(Bool_t alphanumeric)
 
    // clear underflow and overflow (in an alphanumeric situation they do not make sense)
    // NOTE: using AddBinContent instead of SetBinContent in order to not change
-   //   the number of entries
-   ((TH1 *)fParent)->ClearUnderflowAndOverflow();
+   //  the number of entries
+   //((TH1 *)fParent)->ClearUnderflowAndOverflow();
+   // L.M. 26.1.15 Keep underflow and overflows (see ROOT-7034)
+   if (gDebug && fParent) {
+      TH1 * h = dynamic_cast<TH1*>( fParent);
+      if (!h) return;
+      double s[TH1::kNstat];
+      h->GetStats(s);
+      if (s[0] != 0.)
+         Warning("SetAlphanumeric","Histogram %s is set alphanumeric but has non-zero content",GetName());
+   }
 }
 
 
