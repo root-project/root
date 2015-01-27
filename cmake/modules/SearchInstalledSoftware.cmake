@@ -174,8 +174,8 @@ endif()
 
 #---Check for all kind of graphics includes needed by libAfterImage--------------------
 if(asimage)
-  if(NOT x11 AND NOT cocoa)
-    message(STATUS "Switching off 'asimage' because neither 'x11' nor 'cocoa' are enabled")
+  if(NOT x11 AND NOT cocoa AND NOT WIN32)
+    message(STATUS "Switching off 'asimage' because neither 'x11' nor 'cocoa' nor 'WIN32' are enabled")
     set(asimage OFF CACHE BOOL "" FORCE)
   endif()
 endif()
