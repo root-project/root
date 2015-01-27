@@ -542,12 +542,13 @@ void TClonesArray::ExpandCreateFast(Int_t n)
    // "new (arr[i]) MyObj()" (i.e. the vtbl is already set correctly).
    // This is a simplified version of ExpandCreate used in the TTree mechanism.
 
+   Int_t oldSize = fKeep->GetSize();
    if (n > fSize)
       Expand(TMath::Max(n, GrowBy(fSize)));
 
    Int_t i;
    for (i = 0; i < n; i++) {
-      if (!fKeep->fCont[i]) {
+      if (i >= oldSize || !fKeep->fCont[i]) {
          fKeep->fCont[i] = (TObject*)fClass->New();
       } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
          // The object has been deleted (or never initialized)
