@@ -32,6 +32,7 @@
 #include "TBufferJSON.h"
 
 #include <typeinfo>
+#include <string>
 
 #include "Compression.h"
 
@@ -315,12 +316,8 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
             case kVoid_t:
                break;
          }
-      } else if ((member->GetArrayDim() == 1) || (fCompact > 0)) {
-
+      } else if (member->GetArrayDim()==1) {
          Int_t n = member->GetMaxIndex(0);
-         for (Int_t ndim = 1; ndim < member->GetArrayDim(); ndim++)
-            n *= member->GetMaxIndex(ndim);
-
          switch (tid) {
             case kChar_t:
                WriteFastArray((Char_t *)ptr, n);
@@ -807,6 +804,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
             // special handling for std::map. Create entries like { 'first' : key, 'second' : value }
             for (Int_t k=1;k<stack->fValues.GetLast();k+=2) {
                fValue.Append(separ); separ = fArraySepar.Data();
+
                fValue.Append("{");
                fValue.Append("\"first\"");
                fValue.Append(fSemicolon);
@@ -2689,7 +2687,7 @@ void TBufferJSON::WriteStdString(const std::string &s)
    // Writes a std::string
 
    TJSONPushValue();
-   
+
    fValue.Append("\"");
    fValue.Append(s);
    fValue.Append("\"");
