@@ -1,3 +1,5 @@
+## Networking Libraries
+
 Introduce GZIP compression on the server side. Now one can request JSON (or any other data) in zipped form like:
 
     wget http://localhost:8080/Canvases/c1/root.json.gz
