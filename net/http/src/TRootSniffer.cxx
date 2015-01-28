@@ -31,8 +31,11 @@
 #include "TObjString.h"
 #include "TUrl.h"
 #include "TImage.h"
+#ifdef COMPILED_WITH_DABC
+extern "C" void R__zip(int cxlevel, int *srcsize, char* src, int *tgtsize, char* tgt, int* irep);
+#else
 #include "RZip.h"
-
+#endif
 #include "TRootSnifferStore.h"
 
 #include <stdlib.h>
