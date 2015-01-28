@@ -3,7 +3,7 @@
 PACKAGES="core io net sql tree proof hist interpreter bindings math roofit \
           tmva geom montecarlo gui graf2d graf3d html misc tutorials"
 
-VERS="600"
+VERS="602"
 
 OUTDIR="README/ReleaseNotes"
 
