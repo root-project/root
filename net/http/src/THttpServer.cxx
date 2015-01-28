@@ -691,20 +691,23 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    if (filename == "h.xml")  {
 
-      arg->fContent.Form(
-         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-         "<root>\n");
+      Bool_t compact = arg->fQuery.Index("compact")!=kNPOS;
 
+      arg->fContent.Form("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+      if (!compact) arg->fContent.Append("\n");
+      arg->fContent.Append("<root>");
+      if (!compact) arg->fContent.Append("\n");
       {
-         TRootSnifferStoreXml store(arg->fContent, arg->fQuery.Index("compact")!=kNPOS);
+         TRootSnifferStoreXml store(arg->fContent, compact);
 
          const char *topname = fTopName.Data();
          if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
-
          fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
       }
 
-      arg->fContent.Append("</root>\n");
+      arg->fContent.Append("</root>");
+      if (!compact) arg->fContent.Append("\n");
+
       arg->SetXml();
    } else
 
