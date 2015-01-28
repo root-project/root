@@ -6287,7 +6287,6 @@
             .attr("y1", h + (lwidth / 2))
             .attr("x2", w + lwidth - 1)
             .attr("y2", h + (lwidth / 2))
-            .style("stroke", lcolor)
             .call(lcolor.func);
       }
 
@@ -6565,7 +6564,6 @@
                .attr("y1", height + (lwidth / 2))
                .attr("x2", width + lwidth - 1)
                .attr("y2", height + (lwidth / 2))
-               .style("stroke", lcolor)
                .call(lcolor.func);
       }
    }
@@ -7044,9 +7042,10 @@
 
       cando.expand = ('_more' in node);
 
-      if (node == this.h) {
-         cando.ctxt = true;
-      } else if (kind == "ROOT.Session") {
+      // enable context menu for top item
+      if (node === this.h) cando.ctxt = true;
+
+      if (kind == "ROOT.Session") {
          cando.img1 = "img_globe";
       } else if (kind.match(/^ROOT.TH1/)) {
          cando.img1 = "img_histo1d";
@@ -7092,6 +7091,8 @@
          cando.scan = false;
          cando.display = true;
       }
+
+      if ('_player' in node) cando.display = true;
 
       return cando;
    }
@@ -7276,8 +7277,9 @@
          if (cando.expand && (hitem['_childs'] == null))
             return this.expand(itemname, hitem, node.parent());
 
-         if (cando.display)
+         if (cando.display) {
             return this.display(itemname);
+         }
 
          if (!('_childs' in hitem) || (hitem === this.h)) return;
       }
@@ -7428,7 +7430,7 @@
 
       if (item!=null) {
          var cando = this.CheckCanDo(item);
-         if (!cando.display) return this.player(itemname, drawopt, call_back);
+         if (!cando.display || ('_player' in item)) return this.player(itemname, drawopt, call_back);
       }
 
       if (updating) {
@@ -7642,6 +7644,26 @@
       ready_callback();
    }
 
+   JSROOT.HierarchyPainter.prototype.GetOnlineItem = function(item, callback) {
+      // method used to request object from the http server
+
+      var url = this.itemFullName(item);
+      if (url.length > 0) url += "/";
+      var h_get = ('_more' in item) || ('_doing_expand' in item);
+      url += h_get ? 'h.json?compact=3' : 'root.json.gz?compact=3';
+
+      var itemreq = JSROOT.NewHttpRequest(url, 'object', function(obj) {
+         if ((obj != null) && !h_get && (item._name === "StreamerInfo")
+               && (obj['_typename'] === 'TList'))
+            obj['_typename'] = 'TStreamerInfoList';
+
+         if (typeof callback == 'function')
+            callback(item, obj);
+      });
+
+      itemreq.send(null);
+   }
+
    JSROOT.HierarchyPainter.prototype.OpenOnline = function(server_address, user_callback) {
       var painter = this;
 
@@ -7653,22 +7675,7 @@
          painter.h['_online'] = server_address;
 
          painter.h['_get'] = function(item, callback) {
-
-            var url = painter.itemFullName(item);
-            if (url.length > 0) url += "/";
-            var h_get = ('_more' in item) || ('_doing_expand' in item);
-            url += h_get ? 'h.json?compact=3' : 'root.json.gz?compact=3';
-
-            var itemreq = JSROOT.NewHttpRequest(url, 'object', function(obj) {
-               if ((obj != null) && !h_get && (item._name === "StreamerInfo")
-                     && (obj['_typename'] === 'TList'))
-                  obj['_typename'] = 'TStreamerInfoList';
-
-               if (typeof callback == 'function')
-                  callback(item, obj);
-            });
-
-            itemreq.send(null);
+            painter.GetOnlineItem(item, callback);
          }
 
          painter.h['_expand'] = function(node, obj) {
