@@ -1372,7 +1372,7 @@ void gdk_window_set_transient_for(GdkWindow * window, GdkWindow * parent)
    SetLastError (0);
    if (SetWindowLongPtr (GDK_DRAWABLE_XID(window), GWLP_HWNDPARENT,
        (LONG_PTR) GDK_DRAWABLE_XID(parent)) == 0 && GetLastError () != 0) {
-      WIN32_API_FAILED ("SetWindowLong");
+      WIN32_API_FAILED ("SetWindowLongPtr");
    }
 }
 
