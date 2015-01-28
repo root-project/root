@@ -5084,7 +5084,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
       if (auto tmplDeclPtr = tmplSpecDeclPtr->getSpecializedTemplate()){
          retCode = FwdDeclFromTmplDecl(*tmplDeclPtr,interpreter,defString);
       }
-      defString = argsFwdDecl + defString;
+      defString = argsFwdDecl + "\n" + defString;
       return retCode;
 
    }
@@ -5095,7 +5095,10 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
    if (rcd){
       FwdDeclFromRcdDecl(*rcd, interpreter,defString);
    }
-   defString = argsFwdDecl + defString;
+   // Add a \n here to avoid long lines which contain duplications, for example (from MathCore):
+   // namespace ROOT { namespace Math { class IBaseFunctionMultiDim; } }namespace ROOT { namespace Fit { template <typename FunType> class Chi2FCN; } }
+   // namespace ROOT { namespace Math { class IGradientFunctionMultiDim; } }namespace ROOT { namespace Fit { template <typename FunType> class Chi2FCN; } }
+   defString = argsFwdDecl + "\n" + defString;
 
    return 0;
 }

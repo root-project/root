@@ -2756,14 +2756,80 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
 
 }
 
-//______________________________________________________________________________
-template <class T>
-bool AppendIfNotThere(const T &el, std::list<T> &el_list)
+std::pair<std::string,std::string> GetExternalNamespaceAndContainedEntities(const std::string line)
 {
-   if (std::find(el_list.begin(), el_list.end(), el) == el_list.end()) {
-      el_list.push_back(el);
-      return true;
+   // Performance is not critical here.
+
+   auto nsPattern = '{'; auto nsPatternLength = 1;
+   auto foundNsPos = line.find_last_of(nsPattern);
+   if (foundNsPos == std::string::npos) return {"",""};
+   foundNsPos+=nsPatternLength;
+   auto extNs = line.substr(0,foundNsPos);
+
+   auto nsEndPattern = '}';
+   auto foundEndNsPos = line.find(nsEndPattern);
+   auto contained = line.substr(foundNsPos, foundEndNsPos-foundNsPos);
+
+   return {extNs, contained};
+
+
+}
+
+//______________________________________________________________________________
+std::list<std::string> CollapseIdenticalNamespaces(const std::list<std::string>& fwdDeclarationsList)
+{
+   // If two identical namespaces are there, just declare one only
+   // Example:
+   // namespace A { namespace B { fwd1; }}
+   // namespace A { namespace B { fwd2; }}
+   // get a namespace A { namespace B { fwd1; fwd2; }} line
+
+   // Temp data structure holding the namespaces and the entities therewith
+   // contained
+   std::map<std::string, std::string> nsEntitiesMap;
+   std::list<std::string> optFwdDeclList;
+   for (auto const & fwdDecl : fwdDeclarationsList){
+      // Check if the decl(s) are contained in a ns and which one
+      auto extNsAndEntities = GetExternalNamespaceAndContainedEntities(fwdDecl);
+      if (extNsAndEntities.first.empty()) {
+         // no namespace found. Just put this on top
+         optFwdDeclList.push_front(fwdDecl);
+      };
+      auto currentVal = nsEntitiesMap[extNsAndEntities.first];
+      nsEntitiesMap[extNsAndEntities.first] = currentVal +=extNsAndEntities.second;
    }
+
+   // Now fill the new, optimised list
+   std::string optFwdDecl;
+   for (auto const & extNsAndEntities : nsEntitiesMap) {
+      optFwdDecl = extNsAndEntities.first;
+      optFwdDecl += extNsAndEntities.second;
+      for (int i = 0; i < std::count(optFwdDecl.begin(), optFwdDecl.end(), '{'); ++i ){
+         optFwdDecl += " }";
+      }
+      optFwdDeclList.push_front(optFwdDecl);
+   }
+
+   return optFwdDeclList;
+
+}
+
+//______________________________________________________________________________
+bool ProcessAndAppendIfNotThere(const std::string &el,
+                                std::list<std::string> &el_list,
+                                std::unordered_set<std::string> &el_set)
+{
+   // Separate multiline strings
+   std::stringstream elStream(el);
+   std::string tmp;
+   while (getline(elStream, tmp, '\n')) {
+      // Add if not there
+      if (el_set.insert(tmp).second && !tmp.empty()) {
+         el_list.push_back(tmp);
+         return true;
+      }
+   }
+
    return false;
 }
 
@@ -2786,6 +2852,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
 
    std::string attrName, attrValue;
    bool isClassSelected;
+   std::unordered_set<std::string> availableFwdDecls;
    // Loop on selected classes and put them in a list
    for (auto const & selClass : scan.fSelectedClasses) {
       isClassSelected = true;
@@ -2810,14 +2877,13 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
       // Get always the containing namespace, put it in the list if not there
       std::string fwdDeclaration;
       int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*rDecl, fwdDeclaration);
-      if (retCode == 0) AppendIfNotThere(fwdDeclaration, fwdDeclarationsList);
+      if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
 
       // Get template definition and put it in if not there
       if (llvm::isa<clang::ClassTemplateSpecializationDecl>(rDecl)) {
          fwdDeclaration = "";
          retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(*rDecl, interpreter, fwdDeclaration);
-         // Linear search. Probably optimisable
-         if (retCode == 0) AppendIfNotThere(fwdDeclaration, fwdDeclarationsList);
+         if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
       }
 
 
@@ -2863,6 +2929,10 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
       }
    }
    classesListForRootmap.sort();
+
+   // Disable for the moment
+   // fwdDeclarationsList = CollapseIdenticalNamespaces(fwdDeclarationsList);
+
    return 0;
 }
 
