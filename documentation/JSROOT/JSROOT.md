@@ -209,7 +209,7 @@ THttpServer  provides a JSON representation for every registered object with an 
 
     http://your_root_server:8080/Canvases/c1/root.json
 
-One can also generate JSON representation, using the [TBufferJSON](http://root.cern.ch/root/html/TBufferJSON.html) class.
+Such JSON representation generated using the [TBufferJSON](http://root.cern.ch/root/html/TBufferJSON.html) class.
 
 To access data from a remote web server, it is recommended to use the [XMLHttpRequest](http://en.wikipedia.org/wiki/XMLHttpRequest) class.
 JSROOT provides a special method to create such class and properly handle it in different browsers.
@@ -262,5 +262,4 @@ For example, reading an object from a file and displaying it will look like:
 
 ## Links collection
 
-Many different examples of JSROOT usage can be found on [links collection](https://root.cern.ch/js/3.2/jslinks.htm) page 
-
+Many different examples of JSROOT usage can be found on [links collection](https://root.cern.ch/js/3.2/demo/jslinks.htm) page 
