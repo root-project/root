@@ -102,7 +102,8 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
       const clang::FileEntry *hdrFileEntry
          =  HdrSearch.LookupFile(filename, clang::SourceLocation(),
                                  true /*isAngled*/, 0 /*FromDir*/, CurDir,
-                                 clang::ArrayRef<const clang::FileEntry *>(),
+                                 clang::ArrayRef<std::pair<const clang::FileEntry*,
+                                                           const clang::DirectoryEntry*>>(),
                                  0 /*SearchPath*/, 0 /*RelativePath*/,
                                  0 /*SuggestedModule*/);
       if (hdrFileEntry) {

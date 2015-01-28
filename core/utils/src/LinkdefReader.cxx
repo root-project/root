@@ -26,6 +26,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <memory>
 #include "LinkdefReader.h"
 #include "SelectionRules.h"
 #include "RConversionRuleParser.h"
@@ -1001,8 +1002,8 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
    }
 
    // Extract all #pragmas
-   llvm::MemoryBuffer *memBuf = llvm::MemoryBuffer::getMemBuffer(code, "CINT #pragma extraction");
-   clang::CompilerInstance *pragmaCI = cling::CIFactory::createCI(memBuf, parserArgsC.size(), &parserArgsC[0], llvmdir, /*stateCollector=*/0);
+   std::unique_ptr<llvm::MemoryBuffer> memBuf = llvm::MemoryBuffer::getMemBuffer(code, "CINT #pragma extraction");
+   clang::CompilerInstance *pragmaCI = cling::CIFactory::createCI(std::move(memBuf), parserArgsC.size(), &parserArgsC[0], llvmdir, true /*OnlyLex*/);
 
    clang::Preprocessor &PP = pragmaCI->getPreprocessor();
    clang::DiagnosticConsumer &DClient = pragmaCI->getDiagnosticClient();

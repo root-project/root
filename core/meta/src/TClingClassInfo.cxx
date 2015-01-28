@@ -618,8 +618,7 @@ ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address, b
    R__LOCKGUARD(gInterpreterMutex);
 
    // Check for the offset in the cache.
-   llvm::DenseMapIterator<const clang::Decl *, std::pair<ptrdiff_t, ptrdiff_t (*)(void*, bool)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter
-      = fOffsetCache.find(base->GetDecl());
+   auto iter = fOffsetCache.find(base->GetDecl());
    if (iter != fOffsetCache.end()) {
       std::pair<ptrdiff_t, OffsetPtrFunc_t> offsetCache = (*iter).second;
       if (OffsetPtrFunc_t executableFunc = offsetCache.second) {

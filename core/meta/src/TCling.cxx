@@ -1102,8 +1102,10 @@ TCling::TCling(const char *name, const char *title)
 #endif // R__WIN32
 
    // Attach cling callbacks
-   fClingCallbacks = new TClingCallbacks(fInterpreter);
-   fInterpreter->setCallbacks(fClingCallbacks);
+   std::unique_ptr<TClingCallbacks>
+      clingCallbacks(new TClingCallbacks(fInterpreter));
+   fClingCallbacks = clingCallbacks.get();
+   fInterpreter->setCallbacks(std::move(clingCallbacks));
 
    if (!fromRootCling) {
       fInterpreter->enableDynamicLookup();
@@ -2379,7 +2381,8 @@ Bool_t TCling::IsLoaded(const char* filename) const
                                               clang::SourceLocation(),
                                               /*isAngled*/ false,
                                               /*FromDir*/ 0, CurDir,
-                                              clang::ArrayRef<const clang::FileEntry*>(),
+                                              clang::ArrayRef<std::pair<const clang::FileEntry *,
+                                                                        const clang::DirectoryEntry *>>(),
                                               /*SearchPath*/ 0,
                                               /*RelativePath*/ 0,
                                               /*SuggestedModule*/ 0,
