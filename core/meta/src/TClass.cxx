@@ -3369,6 +3369,19 @@ Bool_t TClass::HasDictionary()
 }
 
 //______________________________________________________________________________
+Bool_t TClass::HasDictionarySelection(const char* clname)
+{
+   // Check whether a class has a dictionary or ROOT can load one.
+   // This is equivalent to ask HasDictionary() or whether a library is known
+   // where it can be loaded from, or whether a Dictionary function is
+   // available because the class's dictionary library was already loaded.
+
+   if (TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(clname))
+      return cl->IsLoaded();
+   return  gClassTable->GetDict(clname) || gInterpreter->GetClassSharedLibs(clname);
+}
+
+//______________________________________________________________________________
 void TClass::GetMissingDictionariesForBaseClasses(TCollection& result, TCollection& visited, bool recurse)
 {
    // Verify the base classes always.
