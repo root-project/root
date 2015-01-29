@@ -459,24 +459,7 @@ void TDataMember::Init(bool afterReading)
    // if option string does not exist but it's an Enum - parse it!!!!
    } else if (IsEnum()) {
       fOptions = new TList();
-      TEnum* enumDict = 0;
-      {
-         // We need to find "A" in "A::E". A can be complex, E not.
-         const char* typeName = GetTypeName();
-         if (const char* posCol = strrchr(typeName, ':')) {
-            TString declContext(typeName, posCol - typeName - 1);
-            TClass* clDeclContext = TClass::GetClass(declContext);
-            if (clDeclContext && clDeclContext->GetListOfEnums()) {
-               enumDict = (TEnum*)clDeclContext->GetListOfEnums()
-                  ->FindObject(posCol + 1);
-            }
-         }
-         if (!enumDict) {
-            enumDict = (TEnum*) gROOT->GetListOfEnums()->FindObject(typeName);
-         }
-      }
-
-      if (enumDict) {
+      if (TEnum* enumDict = TEnum::GetEnum(GetTypeName()) ){
          TIter iEnumConst(enumDict->GetConstants());
          while (TEnumConstant* enumConst = (TEnumConstant*)iEnumConst()) {
             TOptionListItem *it
