@@ -2234,6 +2234,19 @@ void TFormula::ClearFormula(Option_t * /*option*/ )
    // if we don't, what happens if it fails the new compilation?
 }
 
+namespace {
+   template <class T>
+   inline static void ResizeArrayIfAllocated(T*& oldArray, int newSize){
+
+      // Don't do anything in this case.
+      if (!oldArray || newSize <=0) return;
+
+      T* newArray = new T[newSize];
+      std::copy(oldArray, oldArray+newSize, newArray);
+      delete [] oldArray;
+      oldArray = newArray;
+   }
+}
 
 //______________________________________________________________________________
 Int_t TFormula::Compile(const char *expression)
@@ -2400,6 +2413,22 @@ Int_t TFormula::Compile(const char *expression)
          SetParName(4,"SigmaY");
       }
    }
+
+   // Here we shrink the arrays allocated like this:
+   //    fExpr   = new TString[gMAXOP];
+   //    fConst  = new Double_t[gMAXCONST];
+   //    fParams = new Double_t[gMAXPAR];
+   //    fNames  = new TString[gMAXPAR];
+   //    fOper   = new Int_t[gMAXOP];
+   // fParams and fNames may be already 0, so we have to check.
+   if (!err){
+      ResizeArrayIfAllocated(fExpr, fNoper);
+      ResizeArrayIfAllocated(fConst, fNconst);
+      ResizeArrayIfAllocated(fParams, fNpar);
+      ResizeArrayIfAllocated(fNames, fNpar);
+      ResizeArrayIfAllocated(fOper, fNoper);
+      }
+
 
    if (err) { fNdim = 0; return 1; }
    //   Convert(5);
