@@ -1359,6 +1359,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
                                             << " has no global observables - skip it" << std::endl;
             continue; 
          }
+         // the variable representing the global observable
          RooRealVar &rrv = dynamic_cast<RooRealVar &>(*cgobs->first());
 
          // remove the constant parameters in cpars 
@@ -1369,17 +1370,8 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
             continue;
          }
 
-         // look at server of the constraint term
-         RooAbsArg * arg = cterm->findServer(rrv); 
-         if (!arg) {
-            oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
-                                            << cterm->GetName() << " has no direct dependence on global observable- cannot generate it " << std::endl;
-            continue;
-
-         }
-         RooFIter iter2(cterm->serverMIterator() );
          bool foundServer = false;
-         // note : this will work only for thi stype of constraints
+         // note : this will work only for this type of constraints
          // expressed as RooPoisson, RooGaussian, RooLognormal, RooGamma
          TClass * cClass = cterm->IsA();
          if (verbose > 2) std::cout << "Constraint " << cterm->GetName() << " of type " << cClass->GetName() << std::endl;
@@ -1392,13 +1384,49 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
                                             << " is a non-supported type - result might be not correct " << std::endl;
          }
 
-         // in cae of a Poisson constraint make sure the rounding is not set 
+         // in case of a Poisson constraint make sure the rounding is not set 
          if (cClass == RooPoisson::Class() ) { 
             RooPoisson * pois = dynamic_cast<RooPoisson*>(cterm); 
             assert(pois); 
             pois->setNoRounding(true); 
          }
 
+         // look at server of the constraint term and check if the global observable is part of the server
+         RooAbsArg * arg = cterm->findServer(rrv); 
+         if (!arg) {
+            // special case is for the Gamma where one might define the global observable n and you have a Gamma(b, n+1, ...._
+            // in this case n+1 is the server and we don;t have a direct dependency, but we want to set n to the b value
+            // so in case of the Gamma ignore this test
+            if ( cClass != RooGamma::Class() ) {
+               oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
+                                               << cterm->GetName() << " has no direct dependence on global observable- cannot generate it " << std::endl;
+               continue;
+            }
+         }
+
+         // loop on the server of the constraint term
+         // neeed to treat the Gamma as a special case
+         // the mode of the Gamma is (k-1)*theta where theta is the inverse of the rate parameter.
+         // we assume that the global observable is defined as ngobs = k-1 and the theta parameter has the name theta otherwise we use other procedure which might be wrong
+         RooAbsReal * thetaGamma = 0;
+         if ( cClass == RooGamma::Class() ) {
+            RooFIter itc(cterm->serverMIterator() );
+            for (RooAbsArg *a2 = itc.next(); a2 != 0; a2 = itc.next()) {
+               if (TString(a2->GetName()).Contains("theta") ) {
+                  thetaGamma = dynamic_cast<RooAbsReal*>(a2);
+                  break;
+               }
+            }
+            if (thetaGamma == 0) {
+               oocoutI((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
+                                               << cterm->GetName() << " is a Gamma distribution and no server named theta is found. Assume that the Gamma scale is  1 " << std::endl;
+            }
+            else {
+               if (verbose>2)
+                  std::cout << "Gamma constraint has a scale " << thetaGamma->GetName() << "  = " << thetaGamma->getVal() << std::endl;
+            }
+         }         
+         RooFIter iter2(cterm->serverMIterator() );
          for (RooAbsArg *a2 = iter2.next(); a2 != 0; a2 = iter2.next()) {
             RooAbsReal * rrv2 = dynamic_cast<RooAbsReal *>(a2); 
             if (verbose > 2) std::cout << "Loop on constraint server term  " << a2->GetName() << std::endl;
@@ -1413,7 +1441,10 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
                   foundServer = false;
                   break;
                }
-               rrv.setVal( rrv2->getVal() );
+               if (thetaGamma && thetaGamma->getVal() > 0)
+                  rrv.setVal( rrv2->getVal() / thetaGamma->getVal() ); 
+               else 
+                  rrv.setVal( rrv2->getVal() );
                foundServer = true;
 
                if (verbose>2) 

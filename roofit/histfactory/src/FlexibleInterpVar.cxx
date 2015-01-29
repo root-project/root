@@ -72,11 +72,17 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
-      assert(0) ;
+      R__ASSERT(0) ;
     }
     _paramList.add(*param) ;
     _interpCode.push_back(0); // default code
   }
+  if (int(_low.size() ) != _paramList.getSize() || _low.size() != _high.size()) {
+     coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") invalid input low/high vectors " << endl;
+     R__ASSERT(int(_low.size() ) == _paramList.getSize());
+     R__ASSERT(_low.size() == _high.size());
+  }
+
   delete paramIter ;
   TRACE_CREATE
 
@@ -113,11 +119,17 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
-      assert(0) ;
+      R__ASSERT(0) ;
     }
     _paramList.add(*param) ;
     _interpCode.push_back(0); // default code
   }
+  if (int(_low.size() ) != _paramList.getSize() || _low.size() != _high.size()) {
+     coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") invalid input low/high lists " << endl;
+     R__ASSERT(int(_low.size() ) == _paramList.getSize());
+     R__ASSERT(_low.size() == _high.size());
+  }
+
   delete paramIter ;
   TRACE_CREATE
 
@@ -146,9 +158,16 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
-      assert(0) ;
+      // use R__ASSERT which remains also in release mode 
+      R__ASSERT(0) ;
     }
     _paramList.add(*param) ;
+  } 
+  if (int(_low.size() ) != _paramList.getSize() || _low.size() != _high.size() || _low.size() != _interpCode.size()) {
+     coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") invalid input vectors " << endl;
+     R__ASSERT(int(_low.size() ) == _paramList.getSize());
+     R__ASSERT(_low.size() == _high.size());
+     R__ASSERT(_low.size() == _interpCode.size());
   }
   delete paramIter ;
   TRACE_CREATE
@@ -289,7 +308,7 @@ double FlexibleInterpVar::PolyInterpValue(int i, double x) const {
 
 
    // cache the polynomial coefficient values
-   // which do not dpened on x but on the boundaries values
+   // which do not depend on x but on the boundaries values
    if (!_logInit) {
       
       _logInit=kTRUE ;
@@ -339,15 +358,17 @@ double FlexibleInterpVar::PolyInterpValue(int i, double x) const {
    // if( _low[i] == 0 ) _low[i] = 0.0001;
    // if( _high[i] == 0 ) _high[i] = 0.0001;
    
-   // get pointer to location of coefficients in the vector 
-   const double * coeff = &_polCoeff.front() + 6*i;  
+   // get pointer to location of coefficients in the vector
+
+   assert(int(_polCoeff.size()) > i ); 
+   const double * coefficients = &_polCoeff.front() + 6*i;  
    
-   double a = coeff[0];
-   double b = coeff[1];
-   double c = coeff[2];
-   double d = coeff[3];
-   double e = coeff[4];
-   double f = coeff[5];
+   double a = coefficients[0];
+   double b = coefficients[1];
+   double c = coefficients[2];
+   double d = coefficients[3];
+   double e = coefficients[4];
+   double f = coefficients[5];
    
 
    // evaluate the 6-th degree polynomial using Horner's method
