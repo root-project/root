@@ -28,10 +28,10 @@ ClassImp(TAliEnFind);
 //______________________________________________________________________________
 TAliEnFind::TAliEnFind(const TString &basePath, const TString &fileName,
   const TString &anchor, const Bool_t archSubst, const TString &treeName,
-  const TString &regexp, const TString& filter, const TString& alirootVersionForFilter) :
+  const TString &regexp, const TString& filter, const TString& aliphysicsVersionForFilter) :
   fBasePath(basePath), fFileName(fileName), fTreeName(treeName),
   fRegexpRaw(regexp), fAnchor(anchor),
-  fFilter(filter), fAliRootVersionForFilter(alirootVersionForFilter),
+  fFilter(filter), fAliphysicsVersionForFilter(aliphysicsVersionForFilter),
   fArchSubst(archSubst), fRegexp(0), fSearchId(""), fGridResult(0)
 {
    // Constructor
@@ -51,7 +51,7 @@ TAliEnFind::TAliEnFind(const TAliEnFind &src) : TObject()
    fAnchor = src.fAnchor;
    fArchSubst = src.fArchSubst;
    fFilter = src.fFilter;
-   fAliRootVersionForFilter = src.fAliRootVersionForFilter;
+   fAliphysicsVersionForFilter = src.fAliphysicsVersionForFilter;
    fTreeName = src.fTreeName;
    fRegexpRaw = src.fRegexpRaw;
 
@@ -74,7 +74,7 @@ TAliEnFind &TAliEnFind::operator=(const TAliEnFind &rhs)
       fAnchor = rhs.fAnchor;
       fArchSubst = rhs.fArchSubst;
       fFilter = rhs.fFilter;
-      fAliRootVersionForFilter = rhs.fAliRootVersionForFilter;
+      fAliphysicsVersionForFilter = rhs.fAliphysicsVersionForFilter;
       fTreeName = rhs.fTreeName;
 
       SetRegexp(rhs.fRegexpRaw);
@@ -172,10 +172,10 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
           file += ".";
           file += "FILTER_";
           file += fFilter;
-          if ( fAliRootVersionForFilter.Length() )
+          if ( fAliphysicsVersionForFilter.Length() )
           {
-            file += "_WITH_ALIROOT_";
-            file += fAliRootVersionForFilter;
+            file += "_WITH_ALIPHYSICS_";
+            file += fAliphysicsVersionForFilter;
           }
           file += tmp(ix,tmp.Length()-ix);
           os->SetString(file.Data());
@@ -461,12 +461,12 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
     TString fileName;
     TString anchor;
     TString filter;
-    TString alirootVersionForFilter;
+    TString aliphysicsVersionForFilter;
     TString treeName;
     TString regexp;
 
     // Custom search URI
-    if (!ParseCustomFindUri(uri, basePath, fileName, anchor, filter, alirootVersionForFilter, treeName,
+    if (!ParseCustomFindUri(uri, basePath, fileName, anchor, filter, aliphysicsVersionForFilter, treeName,
       regexp)) {
       Error("GetFindCommandsFromUri", "Malformed AliEn find command");
       return NULL;
@@ -475,7 +475,7 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
     findCommands = new TList();
     findCommands->SetOwner();
     findCommands->Add( new TAliEnFind(basePath, fileName, anchor, kFALSE,
-      treeName, regexp, filter, alirootVersionForFilter) );
+      treeName, regexp, filter, aliphysicsVersionForFilter) );
 
   }
   else {  // Data or Sim
@@ -625,7 +625,7 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
 //______________________________________________________________________________
 Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
    TString &basePath, TString &fileName, TString &anchor, TString& filter,
-   TString& alirootVersionForFilter,
+   TString& aliphysicsVersionForFilter,
    TString &treeName, TString &regexp)
 {
 
@@ -679,13 +679,13 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
     filter = reFilter[3];
   }
 
-  // AliRoot version for filter string (optional)
-  TPMERegexp reAliRoot("(^|;)(AliRoot=([^; ]+))(;|$)");
-  if (reAliRoot.Match(uri) != 5)
-    alirootVersionForFilter = "";
+  // Aliphysics version for filter string (optional)
+  TPMERegexp reAliphysics("(^|;)(Aliphysics=([^; ]+))(;|$)");
+  if (reAliphysics.Match(uri) != 5)
+    aliphysicsVersionForFilter = "";
   else {
-    checkUri.ReplaceAll(reAliRoot[2], "");
-    alirootVersionForFilter = reAliRoot[3];
+    checkUri.ReplaceAll(reAliphysics[2], "");
+    aliphysicsVersionForFilter = reAliphysics[3];
   }
 
   // Tree name (optional)
@@ -715,17 +715,17 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
     return kFALSE;
   }
   
-  if ( !alirootVersionForFilter.IsNull() && filter.IsNull() )
+  if ( !aliphysicsVersionForFilter.IsNull() && filter.IsNull() )
   {
     ::Error("TDataSetManagerAliEn::ParseCustomFindUri",
-            "Cannot specificy AliRoot version without specifying a Filter name");
+            "Cannot specificy Aliphysics version without specifying a Filter name");
     return kFALSE;
   }
 
-  if ( alirootVersionForFilter.IsNull() && !filter.IsNull() )
+  if ( aliphysicsVersionForFilter.IsNull() && !filter.IsNull() )
   {
     ::Error("TDataSetManagerAliEn::ParseCustomFindUri",
-            "Cannot specificy a filter name without specifying the corresponding AliRoot version to be used");
+            "Cannot specificy a filter name without specifying the corresponding Aliphysics version to be used");
     return kFALSE;
   }
 
