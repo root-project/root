@@ -104,7 +104,7 @@ void TRootSnifferStoreXml::BeforeNextChild(Int_t, Int_t nchld, Int_t)
 }
 
 //______________________________________________________________________________
-void TRootSnifferStoreXml::CloseNode(Int_t lvl, const char *, Int_t numchilds)
+void TRootSnifferStoreXml::CloseNode(Int_t lvl, Int_t numchilds)
 {
    // called when node should be closed
    // depending from number of childs different xml format is applied
@@ -163,7 +163,7 @@ void TRootSnifferStoreJson::BeforeNextChild(Int_t lvl, Int_t nchld, Int_t)
 }
 
 //______________________________________________________________________________
-void TRootSnifferStoreJson::CloseNode(Int_t lvl, const char *, Int_t numchilds)
+void TRootSnifferStoreJson::CloseNode(Int_t lvl, Int_t numchilds)
 {
    // called when node should be closed
    // depending from number of childs different xml format is applied

@@ -60,16 +60,16 @@ const char *item_prop_realname = "_realname"; // real object name
 
 //______________________________________________________________________________
 TRootSnifferScanRec::TRootSnifferScanRec() :
-   parent(0),
-   mask(0),
-   searchpath(0),
-   lvl(0),
+   fParent(0),
+   fMask(0),
+   fSearchPath(0),
+   fLevel(0),
    fItemsNames(),
-   store(0),
-   has_more(kFALSE),
-   started_node(),
-   num_fields(0),
-   num_childs(0)
+   fStore(0),
+   fHasMore(kFALSE),
+   fNodeStarted(kFALSE),
+   fNumFields(0),
+   fNumChilds(0)
 {
    // constructor
 
@@ -89,8 +89,8 @@ void TRootSnifferScanRec::SetField(const char *name, const char *value, Bool_t w
 {
    // record field for current element
 
-   if (CanSetFields()) store->SetField(lvl, name, value, with_quotes);
-   num_fields++;
+   if (CanSetFields()) fStore->SetField(fLevel, name, value, with_quotes);
+   fNumFields++;
 }
 
 //______________________________________________________________________________
@@ -98,8 +98,8 @@ void TRootSnifferScanRec::BeforeNextChild()
 {
    // indicates that new child for current element will be started
 
-   if (CanSetFields()) store->BeforeNextChild(lvl, num_childs, num_fields);
-   num_childs++;
+   if (CanSetFields()) fStore->BeforeNextChild(fLevel, fNumChilds, fNumFields);
+   fNumChilds++;
 }
 
 //______________________________________________________________________________
@@ -139,11 +139,11 @@ void TRootSnifferScanRec::CreateNode(const char *_node_name)
 
    if (!CanSetFields()) return;
 
-   started_node = _node_name;
+   fNodeStarted = kTRUE;
 
-   if (parent) parent->BeforeNextChild();
+   if (fParent) fParent->BeforeNextChild();
 
-   if (store) store->CreateNode(lvl, started_node.Data());
+   if (fStore) fStore->CreateNode(fLevel, _node_name);
 }
 
 //______________________________________________________________________________
@@ -151,9 +151,9 @@ void TRootSnifferScanRec::CloseNode()
 {
    // close started node
 
-   if (store && !started_node.IsNull()) {
-      store->CloseNode(lvl, started_node.Data(), num_childs);
-      started_node = "";
+   if (fStore && fNodeStarted) {
+      fStore->CloseNode(fLevel, fNumChilds);
+      fNodeStarted = kFALSE;
    }
 }
 
@@ -174,14 +174,14 @@ Bool_t TRootSnifferScanRec::Done() const
    // returns true if scanning is done
    // Can happen when searched element is found
 
-   if (store == 0)
+   if (fStore == 0)
       return kFALSE;
 
-   if ((mask & mask_Search) && store->GetResPtr())
+   if ((fMask & kSearch) && fStore->GetResPtr())
       return kTRUE;
 
-   if ((mask & mask_CheckChld) && store->GetResPtr() &&
-         (store->GetResNumChilds() >= 0))
+   if ((fMask & kCheckChilds) && fStore->GetResPtr() &&
+         (fStore->GetResNumChilds() >= 0))
       return kTRUE;
 
    return kFALSE;
@@ -197,12 +197,12 @@ Bool_t TRootSnifferScanRec::IsReadyForResult() const
    if (Done()) return kFALSE;
 
    // only when doing search, result will be propagated
-   if ((mask & (mask_Search | mask_CheckChld)) == 0) return kFALSE;
+   if ((fMask & (kSearch | kCheckChilds)) == 0) return kFALSE;
 
    // only when full search path is scanned
-   if (searchpath != 0) return kFALSE;
+   if (fSearchPath != 0) return kFALSE;
 
-   if (store == 0) return kFALSE;
+   if (fStore == 0) return kFALSE;
 
    return kTRUE;
 }
@@ -217,7 +217,7 @@ Bool_t TRootSnifferScanRec::SetResult(void *obj, TClass *cl, TDataMember *member
 
    if (!IsReadyForResult()) return kFALSE;
 
-   store->SetResult(obj, cl, member, chlds);
+   fStore->SetResult(obj, cl, member, chlds);
 
    return Done();
 }
@@ -229,8 +229,8 @@ Int_t TRootSnifferScanRec::Depth() const
 
    Int_t cnt = 0;
    const TRootSnifferScanRec *rec = this;
-   while (rec->parent) {
-      rec = rec->parent;
+   while (rec->fParent) {
+      rec = rec->fParent;
       cnt++;
    }
 
@@ -248,8 +248,8 @@ Int_t TRootSnifferScanRec::ExtraFolderLevel()
    TRootSnifferScanRec *rec = this;
    Int_t cnt = 0;
    while (rec) {
-      if (rec->mask & mask_ExtraFolder) return cnt;
-      rec = rec->parent;
+      if (rec->fMask & kExtraFolder) return cnt;
+      rec = rec->fParent;
       cnt++;
    }
 
@@ -262,12 +262,12 @@ Bool_t TRootSnifferScanRec::CanExpandItem()
    // returns true if current item can be expanded - means one could explore
    // objects members
 
-   if (mask & (mask_Expand | mask_Search | mask_CheckChld)) return kTRUE;
+   if (fMask & (kExpand | kSearch | kCheckChilds)) return kTRUE;
 
-   if (!has_more) return kFALSE;
+   if (!fHasMore) return kFALSE;
 
    // if parent has expand mask, allow to expand item
-   if (parent && (parent->mask & mask_Expand)) return kTRUE;
+   if (fParent && (fParent->fMask & kExpand)) return kTRUE;
 
    return kFALSE;
 }
@@ -304,22 +304,22 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 
    super.MakeItemName(obj_name, obj_item_name);
 
-   lvl = super.lvl;
-   store = super.store;
-   searchpath = super.searchpath;
-   mask = super.mask & mask_Actions;
-   parent = &super;
+   fLevel = super.fLevel;
+   fStore = super.fStore;
+   fSearchPath = super.fSearchPath;
+   fMask = super.fMask & kActions;
+   fParent = &super;
 
-   if (mask & mask_Scan) {
-      // only when doing scan, increment lvl, used for text formatting
-      lvl++;
+   if (fMask & kScan) {
+      // only when doing scan, increment level, used for text formatting
+      fLevel++;
    } else {
-      if (searchpath == 0) return kFALSE;
+      if (fSearchPath == 0) return kFALSE;
 
-      if (strncmp(searchpath, obj_item_name.Data(), obj_item_name.Length()) != 0)
+      if (strncmp(fSearchPath, obj_item_name.Data(), obj_item_name.Length()) != 0)
          return kFALSE;
 
-      const char *separ = searchpath + obj_item_name.Length();
+      const char *separ = fSearchPath + obj_item_name.Length();
 
       Bool_t isslash = kFALSE;
       while (*separ == '/') {
@@ -328,16 +328,16 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
       }
 
       if (*separ == 0) {
-         searchpath = 0;
-         if (mask & mask_Expand) {
-            mask = mask_Scan;
-            searchpath = 0;
-            has_more = true; // when found selected object, allow to scan it (and only it)
+         fSearchPath = 0;
+         if (fMask & kExpand) {
+            fMask = kScan;
+            fSearchPath = 0;
+            fHasMore = kTRUE; // when found selected object, allow to scan it (and only it)
          }
 
       } else {
          if (!isslash) return kFALSE;
-         searchpath = separ;
+         fSearchPath = separ;
       }
    }
 
@@ -398,8 +398,6 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
 
    if ((cl == 0) || (ptr == 0) || rec.Done()) return;
 
-   //DOUT0("SCAN CLASS %s mask %u", cl->GetName(), rec.mask);
-
    // first of all expand base classes
    TIter cliter(cl->GetListOfBases());
    TObject *obj = 0;
@@ -444,7 +442,7 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
          Bool_t iscollection = (coll_offset >= 0);
          if (iscollection) {
             chld.SetField(item_prop_more, "true", kFALSE);
-            chld.has_more = kTRUE;
+            chld.fHasMore = kTRUE;
          }
 
          if (chld.SetResult(member_ptr, mcl, member)) break;
@@ -476,7 +474,7 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
             }
          }
 
-         if (chld.SetResult(member_ptr, mcl, member, chld.num_childs)) break;
+         if (chld.SetResult(member_ptr, mcl, member, chld.fNumChilds)) break;
       }
    }
 }
@@ -507,7 +505,7 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
    ScanObjectChilds(rec, obj);
 
    // here we should know how many childs are accumulated
-   rec.SetResult(obj, obj_class, 0, rec.num_childs);
+   rec.SetResult(obj, obj_class, 0, rec.fNumChilds);
 }
 
 
@@ -525,7 +523,7 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject* &obj,
 
    if ((isextra == 1) || ((isextra > 1) && !IsDrawableClass(obj->IsA()))) {
       rec.SetField(item_prop_more, "true", kFALSE);
-      rec.has_more = kTRUE;
+      rec.fHasMore = kTRUE;
    }
 
    // special handling of TKey class - in non-readonly mode
@@ -534,7 +532,7 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject* &obj,
    if (!fReadOnly && obj->InheritsFrom(TKey::Class())) {
       TKey* key = (TKey *) obj;
       if (strcmp(key->GetClassName(),"TDirectoryFile")==0) {
-         if (rec.lvl==0) {
+         if (rec.fLevel==0) {
             TDirectory* dir = dynamic_cast<TDirectory*> (key->ReadObj());
             if (dir!=0) {
                obj = dir;
@@ -542,7 +540,7 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject* &obj,
             }
          } else {
             rec.SetField(item_prop_more, "true", kFALSE);
-            rec.has_more = kTRUE;
+            rec.fHasMore = kTRUE;
          }
       } else {
          obj_class = TClass::GetClass(key->GetClassName());
@@ -559,7 +557,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
       // starting from special folder, we automatically scan members
 
       TFolder *fold = (TFolder *) obj;
-      if (fold->TestBit(BIT(19))) rec.mask = rec.mask | mask_ExtraFolder;
+      if (fold->TestBit(BIT(19))) rec.fMask = rec.fMask | TRootSnifferScanRec::kExtraFolder;
 
       ScanCollection(rec, fold->GetListOfFolders());
    } else if (obj->InheritsFrom(TDirectory::Class())) {
@@ -586,7 +584,7 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
    TRootSnifferScanRec folderrec;
    if (foldername) {
       if (!folderrec.GoInside(rec, 0, foldername)) return;
-      if (extra) folderrec.mask = folderrec.mask | mask_ExtraFolder;
+      if (extra) folderrec.fMask = folderrec.fMask | TRootSnifferScanRec::kExtraFolder;
    }
 
    {
@@ -613,7 +611,7 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
             TKey* key = dynamic_cast<TKey*> (kobj);
             if (key == 0) continue;
             TObject* obj = (lst == 0) ? 0 : lst->FindObject(key->GetName());
-            if ((obj!=0) && (master.mask & mask_Scan)) continue;
+            if ((obj!=0) && (master.fMask & TRootSnifferScanRec::kScan)) continue;
 
             if (obj==0) obj = key; // if object exists, provide it to for scan instead of  key
 
@@ -681,16 +679,16 @@ void TRootSniffer::ScanHierarchy(const char *topname, const char *path,
    // scan ROOT hierarchy with provided store object
 
    TRootSnifferScanRec rec;
-   rec.searchpath = path;
-   if (rec.searchpath) {
-      if (*rec.searchpath == '/') rec.searchpath++;
-      if (*rec.searchpath == 0) rec.searchpath = 0;
+   rec.fSearchPath = path;
+   if (rec.fSearchPath) {
+      if (*rec.fSearchPath == '/') rec.fSearchPath++;
+      if (*rec.fSearchPath == 0) rec.fSearchPath = 0;
    }
 
    // if path non-empty, we should find item first and than start scanning
-   rec.mask = rec.searchpath == 0 ? mask_Scan : mask_Expand;
+   rec.fMask = rec.fSearchPath == 0 ? TRootSnifferScanRec::kScan : TRootSnifferScanRec::kExpand;
 
-   rec.store = store;
+   rec.fStore = store;
 
    rec.CreateNode(topname);
 
@@ -713,10 +711,10 @@ void *TRootSniffer::FindInHierarchy(const char *path, TClass **cl,
    TRootSnifferStore store;
 
    TRootSnifferScanRec rec;
-   rec.searchpath = path;
-   rec.mask = (chld != 0) ? mask_CheckChld : mask_Search;
-   if (*rec.searchpath == '/') rec.searchpath++;
-   rec.store = &store;
+   rec.fSearchPath = path;
+   rec.fMask = (chld != 0) ? TRootSnifferScanRec::kCheckChilds : TRootSnifferScanRec::kSearch;
+   if (*rec.fSearchPath == '/') rec.fSearchPath++;
+   rec.fStore = &store;
 
    ScanRoot(rec);
 
