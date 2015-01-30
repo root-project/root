@@ -87,13 +87,7 @@
 #include "Math/SMatrix.h"
 
 #include "TrackMathCore.h"
-
-
-//#define USE_REFLEX
-#ifdef USE_REFLEX
-#include "Cintex/Cintex.h"
-#include "Reflex/Reflex.h"
-#endif
+#include "Math/GenVector/RotationZ.h" // Workaround to autoload libGenVector ROOT-7056
 
 using namespace ROOT::Math;
 
@@ -1573,7 +1567,6 @@ int stressMathCore(double nscale = 1) {
      std::cerr <<"Error Loading libSmatrix" << std::endl;
      io = false;
    }
-
 
    iret |= testGenVectors(n,io);
 
