@@ -27,7 +27,7 @@ public:
    virtual void CreateNode(Int_t, const char *) {}
    virtual void SetField(Int_t, const char *, const char *, Bool_t) {}
    virtual void BeforeNextChild(Int_t, Int_t, Int_t) {}
-   virtual void CloseNode(Int_t, const char *, Int_t) {}
+   virtual void CloseNode(Int_t, Int_t) {}
 
    void SetResult(void *_res, TClass *_rescl, TDataMember *_resmemb, Int_t _res_chld);
 
@@ -71,7 +71,7 @@ public:
    virtual void CreateNode(Int_t lvl, const char *nodename);
    virtual void SetField(Int_t lvl, const char *field, const char *value, Bool_t);
    virtual void BeforeNextChild(Int_t lvl, Int_t nchld, Int_t);
-   virtual void CloseNode(Int_t lvl, const char *nodename, Int_t numchilds);
+   virtual void CloseNode(Int_t lvl, Int_t numchilds);
 
    virtual Bool_t IsXml() const { return kTRUE; }
 
@@ -95,7 +95,7 @@ public:
    virtual void CreateNode(Int_t lvl, const char *nodename);
    virtual void SetField(Int_t lvl, const char *field, const char *value, Bool_t with_quotes);
    virtual void BeforeNextChild(Int_t lvl, Int_t nchld, Int_t nfld);
-   virtual void CloseNode(Int_t lvl, const char *nodename, Int_t numchilds);
+   virtual void CloseNode(Int_t lvl, Int_t numchilds);
 
    ClassDef(TRootSnifferStoreJson, 0) // json results store of objects sniffer
 };

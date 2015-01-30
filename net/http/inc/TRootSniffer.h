@@ -12,15 +12,6 @@
 #include "TList.h"
 #endif
 
-enum {
-   mask_Scan        = 0x0001,  ///< normal scan of hierarchy
-   mask_Expand      = 0x0002,  ///< expand of specified item - allowed to scan object members
-   mask_Search      = 0x0004,  ///< search for specified item (only objects and collections)
-   mask_CheckChld   = 0x0008,  ///< check if there childs, very similar to search
-   mask_Actions     = 0x000F,  ///< mask for actions, only actions copied to child rec
-   mask_ExtraFolder = 0x0010   ///< bit marks folder where all childs can be expanded
-};
-
 class TMemFile;
 class TBufferFile;
 class TDataMember;
@@ -29,17 +20,27 @@ class TRootSnifferStore;
 class TRootSnifferScanRec {
 public:
 
-   TRootSnifferScanRec *parent; //! pointer on parent record
-   UInt_t mask;                 //! defines operation kind
-   const char *searchpath;      //! current path searched
-   Int_t lvl;                   //! current level of hierarchy
-   TList fItemsNames;           //! list of created items names, need to avoid duplication
+   enum {
+      kScan        = 0x0001,  ///< normal scan of hierarchy
+      kExpand      = 0x0002,  ///< expand of specified item - allowed to scan object members
+      kSearch      = 0x0004,  ///< search for specified item (only objects and collections)
+      kCheckChilds = 0x0008,  ///< check if there childs, very similar to search
+      kActions     = 0x000F,  ///< mask for actions, only actions copied to child rec
+      kExtraFolder = 0x0010   ///< bit marks folder where all childs can be expanded
+   };
 
-   TRootSnifferStore *store;  //! object to store results
-   Bool_t has_more;           //! indicates that potentially there are more items can be found
-   TString started_node;      //! name of node stared
-   Int_t num_fields;          //! number of fields
-   Int_t num_childs;          //! number of childs
+
+   TRootSnifferScanRec *fParent; //! pointer on parent record
+   UInt_t fMask;                 //! defines operation kind
+   const char *fSearchPath;      //! current path searched
+   Int_t fLevel;                 //! current level of hierarchy
+   TList fItemsNames;            //! list of created items names, need to avoid duplication
+
+   TRootSnifferStore *fStore; //! object to store results
+   Bool_t fHasMore;           //! indicates that potentially there are more items can be found
+   Bool_t fNodeStarted;       //! indicate if node was started
+   Int_t fNumFields;          //! number of fields
+   Int_t fNumChilds;          //! number of childs
 
    TRootSnifferScanRec();
    virtual ~TRootSnifferScanRec();
@@ -49,7 +50,7 @@ public:
    /** return true when fields could be set to the hierarchy item */
    Bool_t CanSetFields()
    {
-      return (mask & mask_Scan) && (store != 0);
+      return (fMask & kScan) && (fStore != 0);
    }
 
    /** Starts new node, must be closed at the end */
@@ -75,7 +76,7 @@ public:
    /** Returns depth of hierarchy */
    Int_t Depth() const;
 
-   /** Returns level till extra folder, marked as mask_ExtraFolder */
+   /** Returns level till extra folder, marked as kExtraFolder */
    Int_t ExtraFolderLevel();
 
    /** Method indicates that scanning can be interrupted while result is set */

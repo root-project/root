@@ -172,7 +172,7 @@ Only the central classes and functions will be documented here.
 
 Before JSROOT can be used, all appropriate scripts should be loaded.
 Any HTML pages where JSROOT is used should include the JSRootCore.js script.
-The <head> section of the HTML page should have the following line:
+The `<head>` section of the HTML page should have the following line:
 
     <script type="text/javascript" src="http://root.cern.ch/js/3.2/scripts/JSRootCore.js"></script>  
 
