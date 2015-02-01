@@ -1219,11 +1219,11 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
     if (context->_printEvalErrors>=0) {
 
       if (context->_doEvalErrorWall) {
-	oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status." << endl
+	oocoutW(context,Minimization) << "RooMinuitGlue: Minimized function has error status." << endl
 				      << "Returning maximum FCN so far (" << maxFCN
 				      << ") to force MIGRAD to back out of this region. Error log follows" << endl ;
       } else {
-	oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status but is ignored" << endl ;
+	oocoutW(context,Minimization) << "RooMinuitGlue: Minimized function has error status but is ignored" << endl ;
       }
 
       TIterator* iter = context->_floatParamList->createIterator() ;
