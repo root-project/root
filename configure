@@ -3667,8 +3667,10 @@ if test ! "x$enable_rfio" = "xno" ; then
         $RFIO ${RFIO:+$RFIO/include} \
         ${RFIO:+$RFIO/include/shift} ${RFIO:+$RFIO/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
-        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
-        /usr/local/include/shift /usr/include /usr/local/include
+        /opt/shift/include /usr/local/shift/inlcude \
+        /usr/include/shift /usr/local/include/shift \
+        /usr/include/dpm /usr/local/include/dpm \
+        /usr/include /usr/local/include
     shiftinc=$found_hdr
     shiftincdir=$found_dir
 
@@ -3835,6 +3837,7 @@ if test ! "x$enable_gfal" = "xno"; then
     # Check for GFAL include and library
     check_header "gfal_api.h" "$gfalincdir" \
         $GFAL ${GFAL:+$GFAL/include} \
+        /usr/include/gfal2 /usr/include \
         /opt/lcg/include /opt/gfal/include /usr/local/lcg/include \
         /usr/local/gfal/include
     gfalinc=$found_hdr
@@ -3843,11 +3846,13 @@ if test ! "x$enable_gfal" = "xno"; then
     if test ! "x$gfalincdir" = "x" && grep GFAL2 $gfalincdir/gfal_api.h > /dev/null 2>&1 ; then
         check_library "libgfal2" "$enable_shared" "$gfallibdir" \
             $GFAL ${GFAL:+$GFAL/lib} \
+            /usr/lib \
             /opt/lcg/lib /opt/gfal2/lib /usr/local/lcg/lib \
             /usr/local/gfal2/lib
     else
         check_library "libgfal" "$enable_shared" "$gfallibdir" \
             $GFAL ${GFAL:+$GFAL/lib} \
+            /usr/lib \
             /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
             /usr/local/gfal/lib
     fi
@@ -4283,7 +4288,7 @@ if test ! "x$enable_hdfs" = "xno" ; then
     check_header "hdfs.h" "$hdfsincdir" \
         $HDFS ${HDFS:+$HDFS/include} ${HDFS:+$HDFS/src/c++/libhdfs} \
         $HADOOP_HOME ${HADOOP_HOME:+$HADOOP_HOME/src/c++/libhdfs} \
-        /usr/include /usr/local/include
+        /usr/include /usr/include/hadoop /usr/local/include
     hdfsinc=$found_hdr
     hdfsincdir=$found_dir
 
