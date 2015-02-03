@@ -621,7 +621,7 @@ namespace HistFactory{
          double sqtau = 1./relerr;
          RooAbsArg * beta = proto->factory(TString::Format("beta_%s[1,0,10]",name) );
          // the global observable (y_s)
-         RooAbsArg * yvar = proto->factory(TString::Format("nom_%s[%f]",beta->GetName(),tauVal)) ;
+         RooAbsArg * yvar = proto->factory(TString::Format("nom_%s[%f,0,10]",beta->GetName(),tauVal)) ;
          // the rate of the gamma distribution (theta)
          RooAbsArg * theta = proto->factory(TString::Format("theta_%s[%f]",name,1./tauVal));
          // find alpha as function of beta

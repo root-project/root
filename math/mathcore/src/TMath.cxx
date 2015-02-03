@@ -2253,7 +2253,7 @@ Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta
    //End_Html
 
    if ((x<mu) || (gamma<=0) || (beta <=0)) {
-      Error("TMath::GammaDist", "illegal parameter values");
+      Error("TMath::GammaDist", "illegal parameter values x = %f , gamma = %f beta = %f",x,gamma,beta);
       return 0;
    }
    return ::ROOT::Math::gamma_pdf(x, gamma, beta, mu);
