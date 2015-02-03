@@ -3782,7 +3782,7 @@ if test ! "x$enable_rfio" = "xno" ; then
         $RFIO ${RFIO:+$RFIO/include} \
         ${RFIO:+$RFIO/include/shift} ${RFIO:+$RFIO/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
-        /opt/shift/include /usr/local/shift/inlcude \
+        /opt/shift/include /usr/local/shift/include \
         /usr/include/shift /usr/local/include/shift \
         /usr/include/dpm /usr/local/include/dpm \
         /usr/include /usr/local/include
@@ -3859,7 +3859,7 @@ if test ! "x$enable_castor" = "xno" ; then
         $CASTOR ${CASTOR:+$CASTOR/include} \
         ${CASTOR:+$CASTOR/include/shift} ${CASTOR:+$CASTOR/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
-        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+        /opt/shift/include /usr/local/shift/include /usr/include/shift \
         /usr/local/include/shift /usr/include /usr/local/include
     castorinc=$found_hdr
     castorincdir=$found_dir
@@ -3881,7 +3881,7 @@ if test ! "x$enable_castor" = "xno" ; then
         $CASTOR ${CASTOR:+$CASTOR/include} \
         ${CASTOR:+$CASTOR/include/shift} ${CASTOR:+$CASTOR/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
-        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+        /opt/shift/include /usr/local/shift/include /usr/include/shift \
         /usr/local/include/shift /usr/include /usr/local/include
     stagerinc=$found_hdr
 
