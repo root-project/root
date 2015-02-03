@@ -369,7 +369,7 @@ void TRobustEstimator::Evaluate()
    // init the subdat matrix
    for (int iii = 0; iii < sum; ++iii) subdat[iii] = -999;
    RDraw(subdat, nsub, indsubdat);
-   for (int iii = 0; i < sum; ++iii) {
+   for (int iii = 0; iii < sum; ++iii) {
       if (subdat[iii] < 0 || subdat[iii] >= fN ) {
          Error("Evaluate","subdat index is invalid subdat[%d] = %d",iii, subdat[iii] );
          R__ASSERT(0);
