@@ -17,6 +17,7 @@
 #pragma link C++ class TMVA::TActivationSigmoid+;
 #pragma link C++ class TMVA::TActivationIdentity+;
 #pragma link C++ class TMVA::TActivationTanh+;
+#pragma link C++ class TMVA::TActivationReLU+;
 #pragma link C++ class TMVA::TActivationRadial+;
 #pragma link C++ class TMVA::TNeuronInputChooser+;
 #pragma link C++ class TMVA::TNeuronInput+;

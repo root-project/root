@@ -148,6 +148,7 @@ void TMVA::MethodANNBase::ProcessOptions()
 {
    // do nothing specific at this moment
    if      ( DoRegression() || DoMulticlass())  fEstimatorS = "MSE";    //zjh
+   else    fEstimatorS = "CE" ;                                         //hhv
    if      (fEstimatorS == "MSE" )  fEstimator = kMSE;   
    else if (fEstimatorS == "CE")    fEstimator = kCE;      //zjh
    std::vector<Int_t>* layout = ParseLayoutString(fLayerSpec);

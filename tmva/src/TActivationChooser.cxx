@@ -47,6 +47,9 @@
 #ifndef ROOT_TMVA_TActivationTanh
 #include "TMVA/TActivationTanh.h"
 #endif
+#ifndef ROOT_TMVA_TActivationReLU
+#include "TMVA/TActivationReLU.h"
+#endif
 #ifndef ROOT_TMVA_TActivationRadial
 #include "TMVA/TActivationRadial.h"
 #endif
@@ -59,6 +62,7 @@ TMVA::TActivationChooser::TActivationChooser() :
    fLINEAR("linear"),
    fSIGMOID("sigmoid"),
    fTANH("tanh"),
+   fRELU("ReLU"),
    fRADIAL("radial"),
    fLogger( new MsgLogger("TActivationChooser") )
 {
@@ -81,6 +85,7 @@ TMVA::TActivationChooser::CreateActivation(EActivationType type) const
    case kLinear:  return new TActivationIdentity();
    case kSigmoid: return new TActivationSigmoid(); 
    case kTanh:    return new TActivationTanh();    
+   case kReLU:    return new TActivationReLU();    
    case kRadial:  return new TActivationRadial();  
    default:
       Log() << kFATAL << "no Activation function of type " << type << " found" << Endl;
@@ -98,6 +103,7 @@ TMVA::TActivationChooser::CreateActivation(const TString& type) const
    if      (type == fLINEAR)  return CreateActivation(kLinear);
    else if (type == fSIGMOID) return CreateActivation(kSigmoid);
    else if (type == fTANH)    return CreateActivation(kTanh);
+   else if (type == fRELU)    return CreateActivation(kReLU);
    else if (type == fRADIAL)  return CreateActivation(kRadial);
    else {
       Log() << kFATAL << "no Activation function of type " << type << " found" << Endl;
@@ -114,6 +120,7 @@ TMVA::TActivationChooser::GetAllActivationNames() const
    names->push_back(fLINEAR);
    names->push_back(fSIGMOID);
    names->push_back(fTANH);
+   names->push_back(fRELU);
    names->push_back(fRADIAL);
    return names;
 }

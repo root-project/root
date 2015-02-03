@@ -49,6 +49,7 @@ namespace TMVA {
       enum EActivationType { kLinear = 0,
                              kSigmoid,
                              kTanh,
+                             kReLU,
                              kRadial
       };
 
@@ -64,6 +65,7 @@ namespace TMVA {
       TString fLINEAR;  // activation function name
       TString fSIGMOID; // activation function name
       TString fTANH;    // activation function name
+      TString fRELU;    // activation function name
       TString fRADIAL;  // activation function name
 
       mutable MsgLogger* fLogger;                     //! message logger
