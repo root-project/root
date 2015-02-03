@@ -214,16 +214,20 @@ namespace HistFactory{
 	(RooDataSet*) AsymptoticCalculator::GenerateAsimovData(*pdf, *observables);
 
       std::cout << "Importing Asimov dataset" << std::endl;
-      double failure = ws_single->import(*asimov_dataset, Rename(AsimovName.c_str()));
+      bool failure = ws_single->import(*asimov_dataset, Rename(AsimovName.c_str()));
       if( failure ) {
 	std::cout << "Error: Failed to import Asimov dataset: " << AsimovName
 		  << std::endl;
+        delete asimov_dataset;
 	throw hf_exc();
       }
 
       // Load the snapshot at the end of every loop iteration
       // so we start each loop with a "clean" snapshot
       ws_single->loadSnapshot(SnapShotName.c_str());
+
+      // we can now deleted the data set after having imported it
+      delete asimov_dataset;
 
     }
 
@@ -369,7 +373,10 @@ namespace HistFactory{
     proto->import(*histFunc);
 
     /// now create the product of the overall efficiency times the sigma(params) for this estimate
-    proto->factory(("prod:"+productPrefix+"("+prefix+"_nominal,"+systTerm+")").c_str() );    
+    proto->factory(("prod:"+productPrefix+"("+prefix+"_nominal,"+systTerm+")").c_str() );
+
+    delete histDHist;
+    delete histFunc; 
 
   }
 
@@ -870,6 +877,8 @@ namespace HistFactory{
      delete [] obsForTree;
 
      proto->import(*data);
+
+     delete data; 
 
   }
 
@@ -1950,6 +1959,7 @@ namespace HistFactory{
       */
 
       proto->import(*obsDataUnbinned);
+      delete obsDataUnbinned; 
     } // End: Has non-null 'data' entry
 
     
@@ -2005,8 +2015,16 @@ namespace HistFactory{
       */
 
       proto->import(*obsDataUnbinned);
+
+      delete obsDataUnbinned;
+      
     } // End: Has non-null 'data' entry
 
+    // clean up 
+    delete model;
+    delete proto_config;
+    delete asimov_dataset; 
+    
     proto->Print();
     return proto;
   }
@@ -2185,6 +2203,7 @@ namespace HistFactory{
       std::cout << "Error: Failed to create combined asimov dataset" << std::endl;
       throw hf_exc();
     }
+    delete asimov_combined; 
 
     // Now merge the observable datasets across the channels
     if(chs[0]->data("obsData") != NULL) { 
@@ -2285,6 +2304,10 @@ namespace HistFactory{
     combined->importClassCode();
     //    combined->writeToFile("results/model_combined.root");
 
+    //clean up
+    delete combined_config;
+    delete simPdf; 
+    
     return combined;
   }
 
@@ -2331,13 +2354,15 @@ namespace HistFactory{
     // and import it into the workspace
     if(simData) {
       combined->import(*simData, Rename(dataSetName.c_str()));
+      delete simData;
+      simData = (RooDataSet*) combined->data(dataSetName.c_str() );
     }
     else {
       std::cout << "Error: Unable to merge observable datasets" << std::endl;
       throw hf_exc();
     }
 
-    return simData;
+    return simData; 
 
   }
     
