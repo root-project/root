@@ -105,6 +105,94 @@ namespace {
 
 std::atomic<Int_t> TClass::fgClassCount;
 
+// Implementation of the TDeclNameRegistry
+
+//______________________________________________________________________________
+TClass::TDeclNameRegistry::TDeclNameRegistry(Int_t verbLevel): fVerbLevel(verbLevel){}
+
+//______________________________________________________________________________
+void TClass::TDeclNameRegistry::AddQualifiedName(const char *name)
+{
+   // Extract this part of the name
+   // 1) Templates ns::ns2::,,,::THISPART<...
+   // 2) Namespaces,classes ns::ns2::,,,::THISPART
+
+   // Sanity check
+   auto strLen = strlen(name);
+   if (strLen == 0) return;
+   // find <. If none, put end of string
+   const char* endCharPtr = strchr(name, '<');
+   endCharPtr = !endCharPtr ? &name[strLen] : endCharPtr;
+   // find last : before the <. If not found, put begin of string
+   const char* beginCharPtr = endCharPtr;
+   while (beginCharPtr!=name){
+      if (*beginCharPtr==':'){
+         beginCharPtr++;
+         break;
+      }
+      beginCharPtr--;
+   }
+   beginCharPtr = beginCharPtr!=endCharPtr ? beginCharPtr : name;
+   std::string s(beginCharPtr, endCharPtr);
+   if (fVerbLevel>1)
+      printf("TDeclNameRegistry::AddQualifiedName Adding key %s for class/namespace %s\n", s.c_str(), name);
+   TClass::TSpinLockGuard slg(fSpinLock);
+   fClassNamesSet.insert(s);
+}
+
+//______________________________________________________________________________
+Bool_t TClass::TDeclNameRegistry::HasDeclName(const char *name) const
+{
+   Bool_t found = false;
+   {
+      TClass::TSpinLockGuard slg(fSpinLock);
+      found = fClassNamesSet.find(name) != fClassNamesSet.end();
+   }
+   return found;
+}
+
+//______________________________________________________________________________
+TClass::TDeclNameRegistry::~TDeclNameRegistry()
+{
+   if (fVerbLevel>1){
+      printf("TDeclNameRegistry Destructor. List of %lu names:\n",fClassNamesSet.size());
+      for(auto const & key:fClassNamesSet){
+         printf(" - %s\n",key.c_str());
+      }
+   }
+}
+
+// Implementation of the spinlock guard in the registry
+
+//______________________________________________________________________________
+TClass::TSpinLockGuard::TSpinLockGuard(std::atomic_flag& aflag):fAFlag(aflag)
+{
+   while (fAFlag.test_and_set(std::memory_order_acquire));
+}
+
+//______________________________________________________________________________
+TClass::TSpinLockGuard::~TSpinLockGuard()
+{
+   fAFlag.clear(std::memory_order_release);
+}
+
+//______________________________________________________________________________
+TClass::InsertTClassInRegistryRAII::InsertTClassInRegistryRAII(TClass::EState &state,
+                                   const char *name,
+                                   TDeclNameRegistry &emuRegistry): fState(state),fName(name), fNoInfoOrEmuOrFwdDeclNameRegistry(emuRegistry) {}
+
+//______________________________________________________________________________
+TClass::InsertTClassInRegistryRAII::~InsertTClassInRegistryRAII() {
+   if (fState == TClass::kNoInfo ||
+       fState == TClass::kEmulated ||
+       fState == TClass::kForwardDeclared){
+      fNoInfoOrEmuOrFwdDeclNameRegistry.AddQualifiedName(fName);
+      }
+   }
+
+// In itialise the global member of TClass
+TClass::TDeclNameRegistry TClass::fNoInfoOrEmuOrFwdDeclNameRegistry;
+
 //Intent of why/how TClass::New() is called
 //[Not a static datamember because MacOS does not support static thread local data member ... who knows why]
 TClass::ENewType &TClass__GetCallingNew() {
@@ -1199,6 +1287,8 @@ void TClass::Init(const char *name, Version_t cversion,
    ResetInstanceCount();
 
    TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(fName.Data());
+
+   InsertTClassInRegistryRAII insertRAII(fState,fName,fNoInfoOrEmuOrFwdDeclNameRegistry);
 
    if (oldcl && oldcl->TestBit(kLoading)) {
       // Do not recreate a class while it is already being created!
@@ -2921,6 +3011,11 @@ TClass *TClass::GetClass(ClassInfo_t *info, Bool_t load, Bool_t silent)
 }
 
 //______________________________________________________________________________
+Bool_t TClass::HasNoInfoOrEmuOrFwdDeclaredDecl(const char* name){
+   return fNoInfoOrEmuOrFwdDeclNameRegistry.HasDeclName(name);
+}
+
+//______________________________________________________________________________
 Bool_t TClass::GetClass(DeclId_t id, std::vector<TClass*> &classes)
 {
 
@@ -3598,6 +3693,8 @@ void TClass::ResetClassInfo()
 {
    // Make sure that the current ClassInfo is up to date.
    R__LOCKGUARD2(gInterpreterMutex);
+
+   InsertTClassInRegistryRAII insertRAII(fState,fName,fNoInfoOrEmuOrFwdDeclNameRegistry);
 
    if (fClassInfo) {
       TClass::RemoveClassDeclId(gInterpreter->GetDeclId(fClassInfo));
