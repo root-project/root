@@ -44,14 +44,15 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
 
    // observables
   if (!GetObservables()) {
-    SetObservables(*GetPdf()->getObservables(data));
-    //const RooArgSet* temp = data.get();
-    //     SetObservables(*(RooArgSet*)temp->snapshot());
-    //     delete temp;
+     const RooArgSet * obs = GetPdf()->getObservables(data);
+     SetObservables(*obs);
+     delete obs; 
    }
+  // global observables 
    if (!GetGlobalObservables()) {
       RooArgSet co(*GetObservables());
-      co.remove(*GetPdf()->getObservables(data));
+      const RooArgSet * obs = GetPdf()->getObservables(data);     
+      co.remove(*obs);
       RemoveConstantParameters(&co);
       if(co.getSize()>0)
 	SetGlobalObservables(co);
@@ -62,6 +63,7 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
       o.remove(co);
       SetObservables(o);
       */
+      delete obs; 
    }
 
    // parameters
@@ -69,11 +71,13 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
    //      SetParametersOfInterest(RooArgSet());
    //   }
    if (!GetNuisanceParameters()) {
-      RooArgSet p(*GetPdf()->getParameters(data));
+      const RooArgSet * params = GetPdf()->getParameters(data);
+      RooArgSet p(*params);
       p.remove(*GetParametersOfInterest());
       RemoveConstantParameters(&p);
       if(p.getSize()>0)
 	SetNuisanceParameters(p);
+      delete params;
    }
    
    // print Modelconfig as an info message

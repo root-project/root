@@ -1009,7 +1009,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovDataSinglePdf(const RooAbsPdf &
    int printLevel = fgPrintLevel;
 
    // Get observables defined by the pdf associated with this state
-   RooArgSet* obs = pdf.getObservables(allobs) ;
+   std::unique_ptr<RooArgSet> obs(pdf.getObservables(allobs) );
 
 
    // if pdf cannot be extended assume is then a counting experiment
@@ -1074,7 +1074,6 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovDataSinglePdf(const RooAbsPdf &
       asimovData = 0;
     }
 
-    delete obs;
     return asimovData;
 
 }
