@@ -6,7 +6,7 @@
 #  HDFS_INCLUDE_DIRS (not cached)
 #  HDFS_LIBRARIES
 
-find_path(HDFS_INCLUDE_DIR NAMES hdfs.h  HINTS ${HDFS_DIR}/include $ENV{HDFS_DIR}/inlcude)
+find_path(HDFS_INCLUDE_DIR NAMES hdfs.h  HINTS ${HDFS_DIR}/include $ENV{HDFS_DIR}/include)
 find_library(HDFS_LIBRARY NAMES hdfs HINTS ${HDFS_DIR}/lib/native $ENV{HDFS_DIR}/lib/native)
 
 set(HDFS_INCLUDE_DIRS ${HDFS_INCLUDE_DIR})
