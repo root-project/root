@@ -1890,7 +1890,7 @@ void TXMLEngine::DisplayError(Int_t error, Int_t linenumber)
 {
    // Displays xml parsing error
    switch(error) {
-      case -14: Error("ParseFile", "Error inlcude external XML file at line %d", linenumber); break;
+      case -14: Error("ParseFile", "Error include external XML file at line %d", linenumber); break;
       case -13: Error("ParseFile", "Error processing DTD part of XML file at line %d", linenumber); break;
       case -12: Error("ParseFile", "DOCTYPE missing after <! at line %d", linenumber); break;
       case -11: Error("ParseFile", "Node cannot be closed with > symbol at line %d, for instance <?xml ... ?> node", linenumber); break;
