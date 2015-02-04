@@ -101,8 +101,6 @@
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
 
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
-
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
 
@@ -3663,24 +3661,8 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
 //______________________________________________________________________________
 TInterpreter::DeclId_t TCling::GetDataMemberWithValue(const void *ptrvalue) const
 {
-   // Return pointer to cling DeclId for a global variable that is a pointer
-   // whose value is 'ptrvalue'.
-
-   llvm::Module* module = fInterpreter->getLastTransaction()->getModule();
-   llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
-
-   llvm::Module::global_iterator iter = module->global_begin();
-   llvm::Module::global_iterator end = module->global_end ();
-   while (iter != end) {
-      if ( (*iter).getType()->getElementType()->isPointerTy() ) {
-         void **ptr = (void**)EE->getPointerToGlobalIfAvailable( iter );
-         if (ptr && *ptr == ptrvalue) {
-            // Found it
-            return GetDeclId( iter );
-         }
-      }
-      ++iter;
-   }
+   // NOT IMPLEMENTED.
+   Error("GetDataMemberWithValue()", "not implemented");
    return 0;
 }
 
@@ -3689,16 +3671,9 @@ TInterpreter::DeclId_t TCling::GetDataMemberAtAddr(const void *addr) const
 {
    // Return pointer to cling DeclId for a data member with a given name.
 
-   if (!addr) return 0;
-
-   R__LOCKGUARD2(gInterpreterMutex);
-
-   llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
-
-   const llvm::GlobalValue *gv = EE->getGlobalValueAtAddress( const_cast<void*>(addr) );
-   if (!gv) return 0;
-   else return GetDeclId(gv);
-
+   // NOT IMPLEMENTED.
+   Error("GetDataMemberAtAddr()", "not implemented");
+   return 0;
 }
 
 //______________________________________________________________________________
