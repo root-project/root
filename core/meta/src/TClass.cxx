@@ -155,7 +155,7 @@ Bool_t TClass::TDeclNameRegistry::HasDeclName(const char *name) const
 TClass::TDeclNameRegistry::~TDeclNameRegistry()
 {
    if (fVerbLevel>1){
-      printf("TDeclNameRegistry Destructor. List of %lu names:\n",fClassNamesSet.size());
+      printf("TDeclNameRegistry Destructor. List of names:\n");
       for(auto const & key:fClassNamesSet){
          printf(" - %s\n",key.c_str());
       }
