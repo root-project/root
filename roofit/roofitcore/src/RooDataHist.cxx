@@ -1528,7 +1528,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
   for (i=0 ; i<dset.numEntries() ; i++) {
     const RooArgSet* row = dset.get(i) ;
     if (!cloneVar || cloneVar->getVal()) {
-      add(*row,wgt*dset.weight()) ;
+       add(*row,wgt*dset.weight(), wgt*wgt*dset.weightSquared()) ;
     }
   }
 
