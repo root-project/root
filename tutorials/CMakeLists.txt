@@ -279,7 +279,7 @@ if(ROOT_python_FOUND)
     string(REPLACE "/" "-" tname ${tname})
     ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t} -b
-                PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
+                FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ})
