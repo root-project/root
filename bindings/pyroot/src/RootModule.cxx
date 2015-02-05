@@ -17,12 +17,11 @@
 #include "Utility.h"
 
 // ROOT
-#include "TROOT.h"
-#include "TClass.h"
-#include "TInterpreter.h"
-#include "TObject.h"
+#include "TObject.h"         // for FindObject
+#include "TROOT.h"           // for ProcessLine and FindObject
 
-#include "TBufferFile.h"
+
+#include "TBufferFile.h"     // for pickling
 
 // Standard
 #include <string>
@@ -195,7 +194,7 @@ namespace {
             return BindCppObject( object, object->IsA()->GetName() );
 
       // 5th attempt: global enum (pretend int, TODO: is fine for C++98, not in C++11)
-         if ( gInterpreter->ClassInfo_IsEnum( name.c_str() ) ) {
+         if ( Cppyy::IsEnum( name ) ) {
             Py_INCREF( &PyInt_Type );
             return (PyObject*)&PyInt_Type;
          }

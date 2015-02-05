@@ -11,6 +11,7 @@
 #include "Utility.h"
 
 // ROOT
+#include "TClass.h"
 #include "TMethod.h"
 
 

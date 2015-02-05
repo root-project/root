@@ -507,8 +507,8 @@ Bool_t Cppyy::IsAbstract( TCppType_t klass ) {
    return kFALSE;
 }
 
-Bool_t Cppyy::IsEnum( const std::string& /* type_name */ ) {
-   return kFALSE;
+Bool_t Cppyy::IsEnum( const std::string& type_name ) {
+   return gInterpreter->ClassInfo_IsEnum( type_name.c_str() );
 }
     
     

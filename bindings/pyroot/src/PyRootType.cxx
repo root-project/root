@@ -11,8 +11,8 @@
 #include "TemplateProxy.h"
 
 // ROOT
-#include "TDataMember.h"
-#include "TList.h"
+#include "TClass.h"     // for method and enum finding
+#include "TList.h"      // id.
 
 // Standard
 #include <string.h>

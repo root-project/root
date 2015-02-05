@@ -8,18 +8,33 @@
 #include "Utility.h"
 
 // ROOT
-#include "TObject.h"
 #include "TBufferFile.h"      // for pickling
-#include "TROOT.h"
-#include "TInterpreterValue.h"
+#include "TObject.h"          // for gROOT life-check
+#include "TROOT.h"            // id.
 
 // Standard
 #include <algorithm>
 
 
+//______________________________________________________________________________
+//                          Python-side proxy objects
+//                          =========================
+//
+// C++ objects are represented in Python by ObjectProxy's, which encapsulate
+// them using either a pointer (normal), pointer-to-pointer (kIsReference set),
+// or as an owned value (kIsValue set). Objects held as reference are never
+// owned, otherwise the object is owned if kIsOwner is set.
+//
+// In addition to encapsulation, ObjectProxy offers pickling (using TBufferFile
+// with a copy into a Python string); rudimentary comparison operators (based on
+// pointer value and class comparisons); stubs for numeric operators; and a
+// representation that prints the C++ pointer values, rather than the PyObject*
+// ones as is the default.
+
+
 //- data _______________________________________________________________________
 namespace PyROOT {
-   R__EXTERN PyObject* gRootModule;
+   R__EXTERN PyObject* gRootModule;    // needed for pickling
 }
 
 //____________________________________________________________________________
@@ -55,6 +70,10 @@ namespace {
 //= PyROOT object explicit destruction =======================================
    PyObject* op_destruct( ObjectProxy* self )
    {
+   // User access to force deletion of the object. Needed in case of a true
+   // garbage collector (like in PyPy), to allow the user control over when
+   // the C++ destructor is called. This method requires that the C++ object
+   // is owned (no-op otherwise).
       op_dealloc_nofree( self );
       Py_INCREF( Py_None );
       return Py_None;
@@ -112,6 +131,8 @@ namespace {
 //= PyROOT object dispatch support ===========================================
    PyObject* op_dispatch( PyObject* self, PyObject* args, PyObject* /* kdws */ )
    {
+   // User-side __dispatch__ method to allow selection of a specific overloaded
+   // method. The actual selection is in the disp() method of MethodProxy.
       PyObject *mname = 0, *sigarg = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!:__dispatch__" ),
               &PyROOT_PyUnicode_Type, &mname, &PyROOT_PyUnicode_Type, &sigarg ) )
@@ -162,7 +183,7 @@ namespace {
 //____________________________________________________________________________
    void op_dealloc( ObjectProxy* pyobj )
    {
-   // Remove memory held by the object proxy.
+   // Remove (Python-side) memory held by the object proxy.
       op_dealloc_nofree( pyobj );
       Py_TYPE(pyobj)->tp_free( (PyObject*)pyobj );
    }

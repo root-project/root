@@ -23,9 +23,7 @@
 // ROOT
 #include "TROOT.h"
 #include "TSystem.h"
-#include "TFunction.h"
 #include "TDataMember.h"
-#include "TBaseClass.h"
 #include "TClassEdit.h"
 #include "TEnum.h"
 #include "TEnumConstant.h"
@@ -846,15 +844,6 @@ PyObject* PyROOT::BindCppObjectArray(
    return TTupleOfInstances_New( address, klass, size );
 }
 
-
-//____________________________________________________________________________
-namespace PyROOT {
-   PyObject* BindCppGlobal( DataMemberInfo_t* dmi );
-}
-PyObject* PyROOT::BindCppGlobal( DataMemberInfo_t* dmi ) {
-   TGlobal gbl( gInterpreter->DataMemberInfo_FactoryCopy( dmi ) );
-   return BindCppGlobal( &gbl );
-}
 
 //____________________________________________________________________________
 PyObject* PyROOT::BindCppGlobal( TGlobal* gbl )

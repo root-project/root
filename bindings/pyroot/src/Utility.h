@@ -4,9 +4,6 @@
 #ifndef PYROOT_UTILITY_H
 #define PYROOT_UTILITY_H
 
-// ROOT
-#include "TClass.h"
-
 // Standard
 #include <map>
 #include <string>

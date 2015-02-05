@@ -11,9 +11,9 @@
 #include "Utility.h"
 
 // ROOT
-#include "TClassEdit.h"
-#include "TInterpreter.h"
-#include "TInterpreterValue.h"
+#include "TClassEdit.h"           // for ShortType and CleanType
+#include "TInterpreter.h"         // for by-value returns
+#include "TInterpreterValue.h"    // id.
 
 // Standard
 #include <cstring>
@@ -549,7 +549,7 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
       }
       else
          result = new TCppObjectExecutor( klass );
-   } else if ( gInterpreter->ClassInfo_IsEnum( realType.c_str() ) ) {
+   } else if ( Cppyy::IsEnum( realType ) ) {
    // enums don't resolve to unsigned ints, but that's what they are ...
       h = gExecFactories.find( "UInt_t" + cpd );
    } else {

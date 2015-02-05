@@ -4,6 +4,15 @@
 #ifndef PYROOT_OBJECTPROXY_H
 #define PYROOT_OBJECTPROXY_H
 
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+// PyROOT::ObjectProxy                                                      //
+//                                                                          //
+// Python-side proxy, encapsulaties a C++ object.                           //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
+
+
 // Bindings
 #include "PyRootType.h"
 

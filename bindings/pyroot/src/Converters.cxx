@@ -14,9 +14,8 @@
 #include "RootWrapper.h"
 
 // ROOT
-#include "TClass.h"
-#include "TClassEdit.h"
-#include "TInterpreter.h"
+#include "TClass.h"          // for checking class info existence
+#include "TClassEdit.h"      // for CleanType and ShortType
 
 // Standard
 #include <limits.h>
@@ -1149,7 +1148,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
       else if ( cpd == "" )               // by value
          result = new TStrictCppObjectConverter( klass, kTRUE );
 
-   } else if ( gInterpreter->ClassInfo_IsEnum( realType.c_str() ) ) {
+   } else if ( Cppyy::IsEnum( realType ) ) {
    // special case (Cling): represent enums as unsigned integers
       if ( cpd == "&" )
          h = isConst ? gConvFactories.find( "const long&" ) : gConvFactories.find( "long&" );
