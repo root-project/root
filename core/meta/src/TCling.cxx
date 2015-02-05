@@ -5000,14 +5000,44 @@ Int_t TCling::AutoParse(const char *cls)
    Int_t nHheadersParsed = 0;
 
    // Loop on the possible autoparse keys
+   bool skipFirstEntry = false;
    std::vector<std::string> autoparseKeys;
    if (strchr(cls, '<')) {
       int nestedLoc = 0;
       TClassEdit::GetSplit(cls, autoparseKeys, nestedLoc, TClassEdit::kDropTrailStar);
+      // Check if we can skip the name of the template in the autoparses
+      // Take all the scopes one by one. If all of them are in the AST, we do not
+      // need to autoparse for that particular template.
+      if (!autoparseKeys.empty()){
+         TString templateName(autoparseKeys[0]);
+         auto tokens = templateName.Tokenize("::");
+         clang::NamedDecl* previousScopeAsNamedDecl = nullptr;
+         clang::DeclContext* previousScopeAsContext = nullptr;
+         for (auto const & scopeObj : *tokens){
+            auto scopeName = ((TObjString*) scopeObj)->String().Data();
+            previousScopeAsNamedDecl = cling::utils::Lookup::Named(&fInterpreter->getSema(), scopeName, previousScopeAsContext);
+            // Check if we have multipple nodes in the AST with this name
+            if ((clang::NamedDecl*)-1 == previousScopeAsNamedDecl) break;
+            previousScopeAsContext = llvm::dyn_cast_or_null<clang::DeclContext>(previousScopeAsNamedDecl);
+            if (!previousScopeAsContext) break; // this is not a context
+         }
+         delete tokens;
+         // Now, let's check if the last scope, the template, has a definition, i.e. it's not a fwd decl
+         if (auto templateDecl = llvm::dyn_cast_or_null<clang::ClassTemplateDecl>(previousScopeAsNamedDecl)) {
+            if (auto templatedDecl = templateDecl->getTemplatedDecl()) {
+               skipFirstEntry = nullptr != templatedDecl->getDefinition();
+            }
+         }
+
+      }
    }
    autoparseKeys.emplace_back(cls);
 
    for (const auto & apKeyStr : autoparseKeys) {
+      if (skipFirstEntry) {
+         skipFirstEntry=false;
+         continue;
+      }
       if (apKeyStr.empty()) continue;
       const char *apKey = apKeyStr.c_str();
       std::size_t normNameHash(fStringHashFunction(apKey));
