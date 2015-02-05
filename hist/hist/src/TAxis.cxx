@@ -812,7 +812,7 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
    obj->SetUniqueID((UInt_t)bin);
 
    // check for Alphanumeric case (labels for each bin)
-   if (fLabels->GetSize() == fNbins) {
+   if (CanBeAlphanumeric() && fLabels->GetSize() == fNbins) {      
       SetAlphanumeric(kTRUE);
       SetCanExtend(kTRUE);
    }
