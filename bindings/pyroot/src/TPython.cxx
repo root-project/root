@@ -357,7 +357,7 @@ Bool_t TPython::Bind( TObject* object, const char* label )
 // bind object in the main namespace
    TClass* klass = object->IsA();
    if ( klass != 0 ) {
-      PyObject* bound = PyROOT::BindRootObject( (void*)object, klass );
+      PyObject* bound = PyROOT::BindCppObject( (void*)object, klass->GetName() );
 
       if ( bound ) {
          Bool_t bOk = PyDict_SetItemString( gMainDict, const_cast< char* >( label ), bound ) == 0;
@@ -466,7 +466,7 @@ PyObject* TPython::ObjectProxy_FromVoidPtr(
       return 0;
 
 // perform cast (the call will check TClass and addr, and set python errors)
-   PyObject* pyobject = PyROOT::BindRootObjectNoCast( addr, TClass::GetClass( classname ), kFALSE );
+   PyObject* pyobject = PyROOT::BindCppObjectNoCast( addr, Cppyy::GetScope( classname ), kFALSE );
 
 // give ownership, for ref-counting, to the python side, if so requested
    if ( python_owns && PyROOT::ObjectProxy_Check( pyobject ) )

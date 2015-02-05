@@ -13,8 +13,8 @@
 #include "TCustomPyTypes.h"
 #include "TTupleOfInstances.h"
 #include "RootWrapper.h"
+#include "TCallContext.h"
 #include "Utility.h"
-#include "Adapters.h"
 
 // ROOT
 #include "TROOT.h"
@@ -192,7 +192,7 @@ namespace {
          PyErr_Clear();
          TObject* object = gROOT->FindObject( name.c_str() );
          if ( object != 0 )
-            return BindRootObject( object, object->IsA() );
+            return BindCppObject( object, object->IsA()->GetName() );
 
       // 5th attempt: global enum (pretend int, TODO: is fine for C++98, not in C++11)
          if ( gInterpreter->ClassInfo_IsEnum( name.c_str() ) ) {
@@ -257,6 +257,17 @@ namespace {
 
    // all failed, start calling into ROOT
       gDictLookupActive = kTRUE;
+
+   // ROOT globals (the round-about lookup is to prevent recursion)
+      PyObject* gval = PyDict_GetItem( PyModule_GetDict( gRootModule ), key );
+      if ( gval ) {
+         Py_INCREF( gval );
+         ep->me_value = gval;
+         ep->me_key   = key;
+         ep->me_hash  = hash;
+         gDictLookupActive = kFALSE;
+         return ep;
+      }
 
    // attempt to get ROOT enum/global/class
       PyObject* val = LookupCppEntity( key, 0 );
@@ -379,6 +390,22 @@ namespace {
       return 0;
    }
 
+   PyObject* _addressof_common( PyObject* dummy ) {
+      if ( dummy == Py_None || dummy == gNullPtrObject ) {
+         Py_INCREF( gNullPtrObject );
+         return gNullPtrObject;
+      }
+      if ( !PyErr_Occurred() ) {
+         PyObject* str = PyObject_Str( dummy );
+         if ( str && PyString_Check( str ) )
+            PyErr_Format( PyExc_ValueError, "unknown object %s", PyBytes_AS_STRING( str ) );
+         else
+            PyErr_Format( PyExc_ValueError, "unknown object at %p", (void*)dummy );
+         Py_XDECREF( str );
+      }
+      return 0;
+   }
+
    PyObject* AddressOf( PyObject* dummy, PyObject* args )
    {
    // Return object proxy address as an indexable buffer.
@@ -390,7 +417,7 @@ namespace {
          if ( addr )
             return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)&addr, 1 );
       }
-      return 0;
+      return 0;//_addressof_common( dummy );
    }
 
    PyObject* addressof( PyObject* dummy, PyObject* args )
@@ -404,7 +431,7 @@ namespace {
          Utility::GetBuffer( PyTuple_GetItem( args, 0 ), '*', 1, addr, kFALSE );
          if ( addr ) return PyLong_FromLong( (Long_t)addr );
       }
-      return 0;
+      return _addressof_common( dummy );
    }
 
    PyObject* AsCObject( PyObject* dummy, PyObject* args )
@@ -432,7 +459,7 @@ namespace {
          Py_INCREF( pyname );
       }
 
-      TClass* klass = TClass::GetClass( PyROOT_PyUnicode_AsString( pyname ) );
+      Cppyy::TCppType_t klass = (Cppyy::TCppType_t)Cppyy::GetScope( PyROOT_PyUnicode_AsString( pyname ) );
       Py_DECREF( pyname );
 
       if ( ! klass ) {
@@ -441,7 +468,7 @@ namespace {
          return 0;
       }
 
-      return BindRootObjectNoCast( addr, klass, kFALSE );
+      return BindCppObjectNoCast( addr, klass, kFALSE );
    }
 
 //____________________________________________________________________________
@@ -533,7 +560,7 @@ namespace {
          newObj = buf.ReadObjectAny( 0 );
       }
 
-      PyObject* result = BindRootObject( newObj, TClass::GetClass( clname ) );
+      PyObject* result = BindCppObject( newObj, clname );
       if ( result ) {
       // this object is to be owned by the interpreter, assuming that the call
       // originated from there
@@ -553,7 +580,7 @@ namespace {
          return 0;
 
       Long_t l = PyInt_AS_LONG( policy );
-      if ( Utility::SetMemoryPolicy( (Utility::EMemoryPolicy)l ) ) {
+      if ( TCallContext::SetMemoryPolicy( (TCallContext::ECallFlags)l ) ) {
          Py_INCREF( Py_None );
          return Py_None;
       }
@@ -572,7 +599,7 @@ namespace {
          return 0;
 
       Long_t l = PyInt_AS_LONG( policy );
-      if ( Utility::SetSignalPolicy( (Utility::ESignalPolicy)l ) ) {
+      if ( TCallContext::SetSignalPolicy( (TCallContext::ECallFlags)l ) ) {
          Py_INCREF( Py_None );
          return Py_None;
       }
@@ -751,16 +778,20 @@ extern "C" void initlibPyROOT()
    PyModule_AddObject( gRootModule, (char*)"nullptr", gNullPtrObject );
 
 // policy labels
-   PyModule_AddObject( gRootModule, (char*)"kMemoryHeuristics", PyInt_FromLong( 1l ) );
-   PyModule_AddObject( gRootModule, (char*)"kMemoryStrict",     PyInt_FromLong( 2l ) );
-   PyModule_AddObject( gRootModule, (char*)"kSignalFast",       PyInt_FromLong( 1l ) );
-   PyModule_AddObject( gRootModule, (char*)"kSignalSafe",       PyInt_FromLong( 2l ) );
+   PyModule_AddObject( gRootModule, (char*)"kMemoryHeuristics",
+      PyInt_FromLong( (int)TCallContext::kUseHeuristics ) );
+   PyModule_AddObject( gRootModule, (char*)"kMemoryStrict",
+      PyInt_FromLong( (int)TCallContext::kUseStrict ) );
+   PyModule_AddObject( gRootModule, (char*)"kSignalFast",
+      PyInt_FromLong( (int)TCallContext::kFast ) );
+   PyModule_AddObject( gRootModule, (char*)"kSignalSafe",
+      PyInt_FromLong( (int)TCallContext::kSafe ) );
 
 // setup ROOT
    PyROOT::InitRoot();
 
 // signal policy: don't abort interpreter in interactive mode
-   Utility::SetSignalPolicy( gROOT->IsBatch() ? Utility::kFast : Utility::kSafe );
+   TCallContext::SetSignalPolicy( gROOT->IsBatch() ? TCallContext::kFast : TCallContext::kSafe );
 
 // inject ROOT namespace for convenience
    PyModule_AddObject( gRootModule, (char*)"ROOT", CreateScopeProxy( "ROOT" ) );

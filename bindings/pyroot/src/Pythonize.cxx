@@ -14,7 +14,6 @@
 #include "TFunctionHolder.h"
 #include "Converters.h"
 #include "TMemoryRegulator.h"
-#include "Adapters.h"
 #include "Utility.h"
 
 // ROOT
@@ -48,6 +47,11 @@
 #include <stdio.h>
 #include <string.h>     // only needed for Cling TMinuit workaround
 
+// temp (?)
+static inline TClass* OP2TCLASS( PyROOT::ObjectProxy* pyobj ) {
+   return TClass::GetClass( Cppyy::GetFinalName( pyobj->ObjectIsA() ).c_str());
+}
+//-- temp
 
 namespace {
 
@@ -310,10 +314,8 @@ namespace {
          return 0;
 
    // check the given arguments (dcasts are necessary b/c of could be a TQClass
-      TClass* from =
-         (TClass*)self->ObjectIsA()->DynamicCast( TClass::Class(), self->GetObject() );
-      TClass* to   =
-         (TClass*)pyclass->ObjectIsA()->DynamicCast( TClass::Class(), pyclass->GetObject() );
+      TClass* from = (TClass*)OP2TCLASS(self)->DynamicCast( TClass::Class(), self->GetObject() );
+      TClass* to   = (TClass*)OP2TCLASS(self)->DynamicCast( TClass::Class(), pyclass->GetObject() );
 
       if ( ! from ) {
          PyErr_SetString( PyExc_TypeError, "unbound method TClass::StaticCast "
@@ -354,7 +356,7 @@ namespace {
       void* result = from->DynamicCast( to, address, (Bool_t)up );
 
    // at this point, "result" can't be null (but is still safe if it is)
-      return BindRootObjectNoCast( result, to );
+      return BindCppObjectNoCast( result, Cppyy::GetScope( to->GetName() ) );
    }
 
 //____________________________________________________________________________
@@ -392,12 +394,12 @@ namespace {
    // now use binding to return a usable class
       TClass* klass = 0;
       if ( up ) {                  // up-cast: result is a base
-         klass = (TClass*)pyclass->ObjectIsA()->DynamicCast( TClass::Class(), pyclass->GetObject() );
+         klass = (TClass*)OP2TCLASS(pyclass)->DynamicCast( TClass::Class(), pyclass->GetObject() );
       } else {                     // down-cast: result is a derived
-         klass = (TClass*)self->ObjectIsA()->DynamicCast( TClass::Class(), self->GetObject() );
+         klass = (TClass*)OP2TCLASS(self)->DynamicCast( TClass::Class(), self->GetObject() );
       }
 
-      PyObject* result = BindRootObjectNoCast( (void*)address, klass );
+      PyObject* result = BindCppObjectNoCast( (void*)address, Cppyy::GetScope( klass->GetName() ) );
       Py_DECREF( ptr );
 
       return result;
@@ -467,7 +469,7 @@ namespace {
          return 0;
       }
 
-      PyObject* nseq = BindRootObject( self->ObjectIsA()->New(), self->ObjectIsA() );
+      PyObject* nseq = BindCppObject( Cppyy::Allocate( self->ObjectIsA() ), self->ObjectIsA() );
 
       for ( Long_t i = 0; i < imul; ++i ) {
          PyObject* result = CallPyObjMethod( nseq, "extend", (PyObject*)self );
@@ -526,9 +528,9 @@ namespace {
       }
 
       TCollection* col =
-         (TCollection*)self->ObjectIsA()->DynamicCast( TCollection::Class(), self->GetObject() );
+         (TCollection*)OP2TCLASS(self)->DynamicCast( TCollection::Class(), self->GetObject() );
 
-      PyObject* pyobject = BindRootObject( (void*) new TIter( col ), TIter::Class() );
+      PyObject* pyobject = BindCppObject( (void*) new TIter( col ), "TIter" );
       ((ObjectProxy*)pyobject)->HoldOn();
       return pyobject;
    }
@@ -544,7 +546,7 @@ namespace {
             return 0;
          }
 
-         TClass* clSeq = self->ObjectIsA();
+         TClass* clSeq = OP2TCLASS(self);
          TSeqCollection* oseq =
             (TSeqCollection*)clSeq->DynamicCast( TSeqCollection::Class(), self->GetObject() );
          TSeqCollection* nseq = (TSeqCollection*)clSeq->New();
@@ -556,7 +558,7 @@ namespace {
             nseq->Add( oseq->At( (Int_t)i ) );
          }
 
-         return BindRootObject( (void*) nseq, clSeq );
+         return BindCppObject( (void*) nseq, clSeq->GetName() );
       }
 
       return CallSelfIndex( self, (PyObject*)index, "At" );
@@ -577,7 +579,7 @@ namespace {
             return 0;
          }
 
-         TSeqCollection* oseq = (TSeqCollection*)self->ObjectIsA()->DynamicCast(
+         TSeqCollection* oseq = (TSeqCollection*)OP2TCLASS(self)->DynamicCast(
             TSeqCollection::Class(), self->GetObject() );
 
          Py_ssize_t start, stop, step;
@@ -623,7 +625,7 @@ namespace {
             return 0;
          }
 
-         TSeqCollection* oseq = (TSeqCollection*)self->ObjectIsA()->DynamicCast(
+         TSeqCollection* oseq = (TSeqCollection*)OP2TCLASS(self)->DynamicCast(
             TSeqCollection::Class(), self->GetObject() );
 
          Py_ssize_t start, stop, step;
@@ -796,16 +798,16 @@ namespace {
 
    // get hold of the actual TClonesArray
       TClonesArray* cla =
-         (TClonesArray*)self->ObjectIsA()->DynamicCast( TClonesArray::Class(), self->GetObject() );
+         (TClonesArray*)OP2TCLASS(self)->DynamicCast( TClonesArray::Class(), self->GetObject() );
 
       if ( ! cla ) {
          PyErr_SetString( PyExc_TypeError, "attempt to call with null object" );
          return 0;
       }
 
-      if ( cla->GetClass() != pyobj->ObjectIsA() ) {
+      if ( Cppyy::GetScope( cla->GetClass()->GetName() ) != pyobj->ObjectIsA() ) {
          PyErr_Format( PyExc_TypeError, "require object of type %s, but %s given",
-            cla->GetClass()->GetName(), pyobj->ObjectIsA()->GetName() );
+            cla->GetClass()->GetName(), Cppyy::GetFinalName( pyobj->ObjectIsA() ).c_str() );
       }
 
    // destroy old stuff, if applicable
@@ -872,12 +874,12 @@ namespace {
       int index = (int)PyLong_AsLong( pyindex );
       Py_DECREF( pyindex );
 
-      std::string clName = self->ObjectIsA()->GetName();
+      std::string clName = Cppyy::GetFinalName( self->ObjectIsA() );
       std::string::size_type pos = clName.find( "vector<bool" );
       if ( pos != 0 && pos != 5 /* following std:: */ ) {
          PyErr_Format( PyExc_TypeError,
                        "require object of type std::vector<bool>, but %s given",
-                       self->ObjectIsA()->GetName() );
+                       Cppyy::GetFinalName( self->ObjectIsA() ).c_str() );
          return 0;
       }
 
@@ -1173,7 +1175,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
          return 0;
 
       TDirectory* dir =
-         (TDirectory*)self->ObjectIsA()->DynamicCast( TDirectory::Class(), self->GetObject() );
+         (TDirectory*)OP2TCLASS(self)->DynamicCast( TDirectory::Class(), self->GetObject() );
 
       if ( ! dir ) {
          PyErr_SetString( PyExc_TypeError,
@@ -1181,7 +1183,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
          return 0;
       }
 
-      void* address = dir->GetObjectChecked( PyROOT_PyUnicode_AsString( name ), ptr->ObjectIsA() );
+      void* address = dir->GetObjectChecked( PyROOT_PyUnicode_AsString( name ), OP2TCLASS(ptr) );
       if ( address ) {
          ptr->Set( address );
 
@@ -1206,7 +1208,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
          return 0;
 
       TDirectory* dir =
-         (TDirectory*)self->ObjectIsA()->DynamicCast( TDirectory::Class(), self->GetObject() );
+         (TDirectory*)OP2TCLASS(self)->DynamicCast( TDirectory::Class(), self->GetObject() );
 
       if ( ! dir ) {
          PyErr_SetString( PyExc_TypeError,
@@ -1216,11 +1218,11 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 
       Int_t result = 0;
       if ( option != 0 ) {
-         result = dir->WriteObjectAny( wrt->GetObject(), wrt->ObjectIsA(),
+         result = dir->WriteObjectAny( wrt->GetObject(), OP2TCLASS(wrt),
             PyROOT_PyUnicode_AsString( name ), PyROOT_PyUnicode_AsString( option ), bufsize );
       } else {
          result = dir->WriteObjectAny(
-            wrt->GetObject(), wrt->ObjectIsA(), PyROOT_PyUnicode_AsString( name ) );
+            wrt->GetObject(), OP2TCLASS(wrt), PyROOT_PyUnicode_AsString( name ) );
       }
 
       return PyInt_FromLong( (Long_t)result );
@@ -1241,7 +1243,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
    // get hold of actual tree
       TTree* tree =
-         (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
+         (TTree*)OP2TCLASS(self)->DynamicCast( TTree::Class(), self->GetObject() );
 
       if ( ! tree ) {
          PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
@@ -1263,7 +1265,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             TBranchElement* be = (TBranchElement*)branch;
             if ( be->GetCurrentClass() && (be->GetCurrentClass() != be->GetTargetClass()) && (0 <= be->GetID()) ) {
                Long_t offset = ((TStreamerElement*)be->GetInfo()->GetElements()->At(be->GetID()))->GetOffset();
-               return BindRootObjectNoCast( be->GetObject() + offset, be->GetCurrentClass() );
+               return BindCppObjectNoCast( be->GetObject() + offset, Cppyy::GetScope( be->GetCurrentClass()->GetName() ) );
             }
          }
 
@@ -1271,11 +1273,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          if ( branch->IsA() == TBranchElement::Class() || branch->IsA() == TBranchObject::Class() ) {
             TClass* klass = TClass::GetClass( branch->GetClassName() );
             if ( klass && branch->GetAddress() )
-               return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
+               return BindCppObjectNoCast( *(char**)branch->GetAddress(), Cppyy::GetScope( branch->GetClassName() ) );
 
          // try leaf, otherwise indicate failure by returning a typed null-object
             if ( klass && ! tree->GetLeaf( name ) )
-               return BindRootObjectNoCast( NULL, klass );
+               return BindCppObjectNoCast( NULL, Cppyy::GetScope( branch->GetClassName() ) );
          }
       }
 
@@ -1351,10 +1353,10 @@ namespace PyROOT {      // workaround for Intel icc on Linux
    public:
       virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "(...)" ); }
       virtual PyObject* GetPrototype() { return PyObject_GetAttrString( (PyObject*)fOrg, (char*)"__doc__" ); }
-      virtual PyObject* GetScope()
-      {
-         return CreateScopeProxy( "TTree" );
-      }
+      virtual Int_t GetPriority() { return 100; }
+      virtual PyObject* GetArgSpec( Int_t ) { return PyROOT_PyUnicode_FromString( "" ); }
+      virtual PyObject* GetArgDefault( Int_t ) { return PyROOT_PyUnicode_FromString( "" ); }
+      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TTree" ); }
 
    protected:
       MethodProxy* fOrg;
@@ -1366,10 +1368,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTreeBranch( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
+      virtual Int_t GetMaxArgs() { return 5; }
       virtual PyCallable* Clone() { return new TTreeBranch( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds,
-                                    Long_t, Bool_t /* release_gil */ )
+      virtual PyObject* Call(
+         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
       {
       // acceptable signatures:
       //   ( const char*, void*, const char*, Int_t = 32000 )
@@ -1379,7 +1382,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
          if ( 2 <= argc ) {
             TTree* tree =
-               (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
+               (TTree*)OP2TCLASS(self)->DynamicCast( TTree::Class(), self->GetObject() );
 
             if ( ! tree ) {
                PyErr_SetString( PyExc_TypeError,
@@ -1412,7 +1415,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                         PyROOT_PyUnicode_AsString( leaflist ) );
                   }
 
-                  return BindRootObject( branch, TBranch::Class() );
+                  return BindCppObject( branch, "TBranch" );
                }
 
             }
@@ -1446,7 +1449,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                      buf = (void*)&((ObjectProxy*)address)->fObject;
 
                   if ( ! clName ) {
-                     klName = ((ObjectProxy*)address)->ObjectIsA()->GetName();
+                     klName = OP2TCLASS((ObjectProxy*)address)->GetName();
                      argc += 1;
                   }
                } else
@@ -1464,7 +1467,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                         PyInt_AS_LONG( bufsize ), PyInt_AS_LONG( splitlevel ) );
                   }
 
-                  return BindRootObject( branch, TBranch::Class() );
+                  return BindCppObject( branch, "TBranch" );
                }
             }
          }
@@ -1491,10 +1494,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          return PyROOT_PyUnicode_FromString( "TBranch* TTree::SetBranchAddress( ... )" );
       }
 
+      virtual Int_t GetMaxArgs() { return 2; }
       virtual PyCallable* Clone() { return new TTreeSetBranchAddress( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds,
-                                    Long_t, Bool_t /* release_gil */ )
+      virtual PyObject* Call(
+         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
       {
       // acceptable signature:
       //   ( const char*, void* )
@@ -1502,7 +1506,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
          if ( 2 == argc ) {
             TTree* tree =
-               (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
+               (TTree*)OP2TCLASS(self)->DynamicCast( TTree::Class(), self->GetObject() );
 
             if ( ! tree ) {
                PyErr_SetString( PyExc_TypeError,
@@ -1566,6 +1570,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          return PyROOT_PyUnicode_FromString( "TBranch* TChain::SetBranchAddress( ... )" );
       }
 
+      virtual Int_t GetMaxArgs() { return 2; }
       virtual PyCallable* Clone() { return new TChainSetBranchAddress( *this ); }
 
    protected:
@@ -1669,6 +1674,10 @@ namespace {
 
    public:
       Int_t GetNArgs() { return fNArgs; }
+      virtual Int_t GetPriority() { return 100; }
+      virtual Int_t GetMaxArgs() { return GetNArgs()+1; }
+      virtual PyObject* GetArgSpec( Int_t ) { return PyROOT_PyUnicode_FromString( "" ); }
+      virtual PyObject* GetArgDefault( Int_t ) { return PyROOT_PyUnicode_FromString( "" ); }
 
       Bool_t IsCallable( PyObject* pyobject )
       {
@@ -1701,10 +1710,11 @@ namespace {
             "TF1::TF1(const char* name, PyObject* callable, "
             "Double_t xmin, Double_t xmax, Int_t npar = 0)" );
       }
-
+      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TF1" ); }
       virtual PyCallable* Clone() { return new TF1InitWithPyFunc( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t, Bool_t )
+      virtual PyObject* Call(
+         ObjectProxy* self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
       {
       // expected signature: ( char* name, pyfunc, double xmin, double xmax, int npar = 0 )
          int argc = PyTuple_GET_SIZE( args );
@@ -1778,7 +1788,7 @@ namespace {
             "Double_t xmin, Double_t xmax, "
             "Double_t ymin, Double_t ymax, Int_t npar = 0)" );
       }
-
+      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TF2" ); }
       virtual PyCallable* Clone() { return new TF2InitWithPyFunc( *this ); }
    };
 
@@ -1796,13 +1806,13 @@ namespace {
             "Double_t ymin, Double_t ymax, "
             "Double_t zmin, Double_t zmax, Int_t npar = 0)" );
       }
-
+      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TF3" ); }
       virtual PyCallable* Clone() { return new TF3InitWithPyFunc( *this ); }
    };
 
 //- TFunction behavior ---------------------------------------------------------
    PyObject* TFunctionCall( ObjectProxy* self, PyObject* args ) {
-      return TFunctionHolder( (TFunction*)self->GetObject() )( self, args, 0 );
+      return TFunctionHolder( Cppyy::gGlobalScope, (Cppyy::TCppMethod_t)self->GetObject() ).Call( self, args, 0 );
    }
 
 
@@ -1818,10 +1828,11 @@ namespace {
          return PyROOT_PyUnicode_FromString(
             "TMinuit::SetFCN(PyObject* callable)" );
       }
-
+      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TMinuit" ); }
       virtual PyCallable* Clone() { return new TMinuitSetFCN( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t, Bool_t )
+      virtual PyObject* Call(
+         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );
@@ -1880,7 +1891,7 @@ namespace {
       // re-run
       // CLING WORKAROUND: this is to be the call once TMinuit is fixed:
          // PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
-         PyObject* result = setFCN->operator()( self, newArgs, NULL );
+         PyObject* result = setFCN->Call( self, newArgs, kwds, ctxt );
       // END CLING WORKAROUND
 
       // done, may have worked, if not: 0 is returned
@@ -1903,8 +1914,8 @@ namespace {
 
       virtual PyCallable* Clone() { return new TMinuitFitterSetFCN( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*,
-                                    Long_t, Bool_t release_gil )
+      virtual PyObject* Call(
+         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );
@@ -1915,7 +1926,7 @@ namespace {
             return 0;              // reported as an overload failure
          }
 
-         return TMinuitSetFCN::operator()( self, args, 0, 0, release_gil );
+         return TMinuitSetFCN::Call( self, args, kwds, ctxt );
       }
    };
 
@@ -1962,16 +1973,16 @@ namespace {
          return PyROOT_PyUnicode_FromString(
             "(PyObject* callable, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false)" );
       }
-
       virtual PyObject* GetPrototype()
       {
          return PyROOT_PyUnicode_FromString(
             "TFitter::FitFCN(PyObject* callable, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false)" );
       }
-
+      virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TFitter" ); }
       virtual PyCallable* Clone() { return new TFitterFitFCN( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t, Bool_t )
+      virtual PyObject* Call(
+         ObjectProxy* self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
       {
       // expected signature: ( self, pyfunc, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false )
          int argc = PyTuple_GET_SIZE( args );
@@ -2350,7 +2361,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TStyle" ) {
       MethodProxy* ctor = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gInit );
-      ctor->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
+      ctor->fMethodInfo->fFlags &= ~TCallContext::kIsCreator;
       Py_DECREF( ctor );
    }
 
@@ -2382,7 +2393,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // TFile::Open really is a constructor, really
       PyObject* attr = PyObject_GetAttrString( pyclass, (char*)"Open" );
       if ( MethodProxy_Check( attr ) )
-         ((MethodProxy*)attr)->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsCreator;
+         ((MethodProxy*)attr)->fMethodInfo->fFlags |= TCallContext::kIsCreator;
       Py_XDECREF( attr );
 
    // allow member-style access to entries in file

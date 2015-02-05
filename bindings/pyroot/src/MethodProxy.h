@@ -18,30 +18,14 @@
 
 namespace PyROOT {
 
-/** Method proxy object to hold ROOT methods
-      @author  WLAV
-      @date    01/07/2005
-      @version 1.0
- */
-
    class MethodProxy {
    public:
       typedef std::map< Long_t, Int_t >  DispatchMap_t;
       typedef std::vector< PyCallable* > Methods_t;
 
       struct MethodInfo_t {
-         MethodInfo_t() : fFlags( kNone ) { fRefCount = new int(1); }
+         MethodInfo_t() : fFlags( TCallContext::kNone ) { fRefCount = new int(1); }
          ~MethodInfo_t();
-
-         enum EMethodInfoFlags {
-            kNone            =  0,
-            kIsSorted        =  1,      // if method overload priority determined
-            kIsCreator       =  2,      // if method creates python-owned objects
-            kIsConstructor   =  4,      // if method is a C++ constructor
-            kIsHeuristics    =  8,      // if method requires heuristics memory policy
-            kIsStrict        = 16,      // if method requires strict memory policy
-            kReleaseGIL      = 32       // if method should release the GIL
-         };
 
          std::string                 fName;
          MethodProxy::DispatchMap_t  fDispatchMap;
@@ -51,8 +35,8 @@ namespace PyROOT {
          int* fRefCount;
 
       private:
-         MethodInfo_t( const MethodInfo_t& );
-         MethodInfo_t& operator=( const MethodInfo_t& );
+         MethodInfo_t( const MethodInfo_t& ) = delete;
+         MethodInfo_t& operator=( const MethodInfo_t& ) = delete;
       };
 
    public:

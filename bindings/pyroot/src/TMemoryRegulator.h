@@ -36,7 +36,7 @@ namespace PyROOT {
       static Bool_t UnregisterObject( TObject* object );
 
    // new reference to python object corresponding to object, or 0 on failure
-      static PyObject* RetrieveObject( TObject* object, TClass* klass );
+      static PyObject* RetrieveObject( TObject* object, Cppyy::TCppType_t klass );
 
    // callback when weak refs to managed objects are destroyed
       static PyObject* ObjectEraseCallback( PyObject*, PyObject* pyref );

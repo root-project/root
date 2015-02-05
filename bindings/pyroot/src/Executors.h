@@ -3,10 +3,8 @@
 #ifndef PYROOT_EXECUTORS_H
 #define PYROOT_EXECUTORS_H
 
-// ROOT
-#include "DllImport.h"
-#include "TClassRef.h"
-#include "TDictionary.h"
+// Bindings
+#include "TCallContext.h"
 
 // Standard
 #include <string>
@@ -18,13 +16,15 @@ namespace PyROOT {
    class TExecutor {
    public:
       virtual ~TExecutor() {}
-      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil ) = 0;
+      virtual PyObject* Execute(
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* ) = 0;
    };
 
 #define PYROOT_DECLARE_BASIC_EXECUTOR( name )                                 \
    class T##name##Executor : public TExecutor {                               \
    public:                                                                    \
-      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );    \
+      virtual PyObject* Execute(                                              \
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* );           \
    }
 
 // executors for built-ins
@@ -59,19 +59,21 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_EXECUTOR( STLString );
    PYROOT_DECLARE_BASIC_EXECUTOR( TGlobal );
 
-   class TRootObjectExecutor : public TExecutor {
+   class TCppObjectExecutor : public TExecutor {
    public:
-      TRootObjectExecutor( const TClassRef& klass ) : fClass( klass ) {}
-      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
+      TCppObjectExecutor( Cppyy::TCppType_t klass ) : fClass( klass ) {}
+      virtual PyObject* Execute(
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t,TCallContext* );
 
    protected:
-      TClassRef fClass;
+      Cppyy::TCppType_t fClass;
    };
 
-   class TRootObjectByValueExecutor : public TRootObjectExecutor {
+   class TCppObjectByValueExecutor : public TCppObjectExecutor {
    public:
-      TRootObjectByValueExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
-      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
+      using TCppObjectExecutor::TCppObjectExecutor;
+      virtual PyObject* Execute(
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t,TCallContext* );
    };
 
    class TRefExecutor : public TExecutor {
@@ -91,7 +93,8 @@ namespace PyROOT {
 #define PYROOT_DECLARE_BASIC_REFEXECUTOR( name )                              \
    class T##name##RefExecutor : public TRefExecutor {                         \
    public:                                                                    \
-      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );    \
+      virtual PyObject* Execute(                                              \
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* );           \
    }
 
    PYROOT_DECLARE_BASIC_REFEXECUTOR( Bool );
@@ -111,41 +114,40 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_REFEXECUTOR( STLString );
 
 // special cases
-   class TRootObjectRefExecutor : public TRefExecutor {
+   class TCppObjectRefExecutor : public TRefExecutor {
    public:
-      TRootObjectRefExecutor( const TClassRef& klass ) : fClass( klass ) {}
-      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
+      TCppObjectRefExecutor( Cppyy::TCppType_t klass ) : fClass( klass ) {}
+      virtual PyObject* Execute(
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* );
 
    protected:
-      TClassRef fClass;
+      Cppyy::TCppType_t fClass;
    };
 
-   class TRootObjectPtrPtrExecutor : public TRootObjectExecutor {
+   class TCppObjectPtrPtrExecutor : public TCppObjectExecutor {
    public:
-      TRootObjectPtrPtrExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
-      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
+      using TCppObjectExecutor::TCppObjectExecutor;
+      virtual PyObject* Execute(
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* );
    };
 
-   class TRootObjectPtrRefExecutor : public TRootObjectExecutor {
+   class TCppObjectPtrRefExecutor : public TCppObjectExecutor {
    public:
-      TRootObjectPtrRefExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
-      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
+      using TCppObjectExecutor::TCppObjectExecutor;
+      virtual PyObject* Execute(
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* );
    };
 
-   class TRootObjectArrayExecutor : public TRootObjectExecutor {
+   class TCppObjectArrayExecutor : public TCppObjectExecutor {
    public:
-      TRootObjectArrayExecutor( const TClassRef& klass, Py_ssize_t array_size )
-         : TRootObjectExecutor ( klass ), fArraySize( array_size ) {}
-      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
+      TCppObjectArrayExecutor( Cppyy::TCppType_t klass, Py_ssize_t array_size )
+         : TCppObjectExecutor ( klass ), fArraySize( array_size ) {}
+      virtual PyObject* Execute(
+         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, TCallContext* );
 
    protected:
       Py_ssize_t fArraySize;
    };
-
-// factories
-   typedef TExecutor* (*ExecutorFactory_t) ();
-   typedef std::map< std::string, ExecutorFactory_t > ExecFactories_t;
-   R__EXTERN ExecFactories_t gExecFactories;
 
 // create executor from fully qualified type
    TExecutor* CreateExecutor( const std::string& fullType );

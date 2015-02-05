@@ -11,6 +11,7 @@
 #include "TObject.h"
 #include "TBufferFile.h"      // for pickling
 #include "TROOT.h"
+#include "TInterpreterValue.h"
 
 // Standard
 #include <algorithm>
@@ -24,10 +25,10 @@ namespace PyROOT {
 //____________________________________________________________________________
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
 // Destroy the held C++ object, if owned; does not deallocate the proxy.
-   if ( gROOT && !gROOT->TestBit(TObject::kInvalidObject ) ) {
+   if ( gROOT && !gROOT->TestBit( TObject::kInvalidObject ) ) {
       if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
          if ( ! (pyobj->fFlags & ObjectProxy::kIsValue) )
-            pyobj->ObjectIsA()->Destructor( pyobj->fObject );
+            Cppyy::Destruct( pyobj->ObjectIsA(), pyobj->GetObject() );
          else
             delete (TInterpreterValue*)pyobj->fObject;
       } else if ( pyobj->fFlags & ObjectProxy::kIsValue )
@@ -74,7 +75,7 @@ namespace {
 
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
-      static TClassRef s_bfClass( "TBufferFile" );
+      static Cppyy::TCppType_t s_bfClass = Cppyy::GetScope( "TBufferFile" );
 
       TBufferFile* buff = 0;
       if ( s_bfClass == self->ObjectIsA() ) {
@@ -84,9 +85,10 @@ namespace {
       // so use WriteObjectAny()
          static TBufferFile s_buff( TBuffer::kWrite );
          s_buff.Reset();
-         if ( s_buff.WriteObjectAny( self->GetObject(), self->ObjectIsA() ) != 1 ) {
+         if ( s_buff.WriteObjectAny( self->GetObject(),
+               TClass::GetClass( Cppyy::GetFinalName( self->ObjectIsA() ).c_str() ) ) != 1 ) {
             PyErr_Format( PyExc_IOError,
-               "could not stream object of type %s", self->ObjectIsA()->GetName() );
+               "could not stream object of type %s", Cppyy::GetFinalName( self->ObjectIsA() ).c_str() );
             return 0;
          }
          buff = &s_buff;
@@ -97,7 +99,7 @@ namespace {
    // on reading back in (see RootModule.cxx:TObjectExpand)
       PyObject* res2 = PyTuple_New( 2 );
       PyTuple_SET_ITEM( res2, 0, PyBytes_FromStringAndSize( buff->Buffer(), buff->Length() ) );
-      PyTuple_SET_ITEM( res2, 1, PyBytes_FromString( self->ObjectIsA()->GetName() ) );
+      PyTuple_SET_ITEM( res2, 1, PyBytes_FromString( Cppyy::GetFinalName( self->ObjectIsA() ).c_str() ) );
 
       PyObject* result = PyTuple_New( 2 );
       Py_INCREF( s_expand );
@@ -199,8 +201,8 @@ namespace {
    {
    // Build a representation string of the object proxy that shows the address
    // of the C++ object that is held, as well as its type.
-      TClass* klass = pyobj->ObjectIsA();
-      std::string clName = klass ? klass->GetName() : "<unknown>";
+      Cppyy::TCppType_t klass = pyobj->ObjectIsA();
+      std::string clName = klass ? Cppyy::GetFinalName( klass ) : "<unknown>";
       if ( pyobj->fFlags & ObjectProxy::kIsReference )
          clName.append( "*" );
 

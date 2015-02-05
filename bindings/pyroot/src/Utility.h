@@ -5,7 +5,6 @@
 #define PYROOT_UTILITY_H
 
 // ROOT
-#include "DllImport.h"
 #include "TClass.h"
 
 // Standard
@@ -20,16 +19,6 @@ namespace PyROOT {
 
    R__EXTERN dict_lookup_func gDictLookupOrg;
    R__EXTERN Bool_t gDictLookupActive;
-
-// general place holder for function parameters
-   union TParameter_t {
-      Long_t     fLong;
-      ULong_t    fULong;
-      Long64_t   fLongLong;
-      ULong64_t  fULongLong;
-      Double_t   fDouble;
-      void*      fVoidp;
-   };
 
 // additional converter functions
    ULong_t PyLongOrInt_AsULong( PyObject* pyobject );
@@ -64,16 +53,6 @@ namespace PyROOT {
    // true, some heuristics will be applied to check buffer compatibility with the type
       int GetBuffer( PyObject* pyobject, char tc, int size, void*& buf, Bool_t check = kTRUE );
 
-   // memory handling
-      enum EMemoryPolicy { kHeuristics = 1, kStrict = 2 };
-      R__EXTERN EMemoryPolicy gMemoryPolicy;
-      Bool_t SetMemoryPolicy( EMemoryPolicy e );
-
-   // signal safety
-      enum ESignalPolicy { kFast = 1, kSafe = 2 };
-      R__EXTERN ESignalPolicy gSignalPolicy;
-      Bool_t SetSignalPolicy( ESignalPolicy e );
-
    // data/operator mappings
       std::string MapOperatorName( const std::string& name, Bool_t bTakesParames );
 
@@ -81,19 +60,6 @@ namespace PyROOT {
       const std::string Compound( const std::string& name );
       Py_ssize_t ArraySize( const std::string& name );
       const std::string ClassName( PyObject* pyobj );
-      const std::string ResolveTypedef( const std::string& name, TClass* containing_scope = 0 );
-
-   // offsets to move between classes
-      Long_t UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj, bool derivedObj );
-      inline Long_t UpcastOffset( TClass* clDerived, TClass* clBase, void* obj, bool derivedObj ) {
-         return UpcastOffset( clDerived->GetClassInfo(), clBase->GetClassInfo(), obj, derivedObj );
-      }
-      inline Long_t DowncastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj, bool derivedObj ) {
-         return -UpcastOffset( clDerived, clBase, obj, derivedObj );
-      }
-      inline Long_t DowncastOffset( TClass* clDerived, TClass* clBase, void* obj, bool derivedObj ) {
-         return DowncastOffset( clDerived->GetClassInfo(), clBase->GetClassInfo(), obj, derivedObj );
-      }
 
    // CINT integration
       void ErrMsgCallback( char* msg );

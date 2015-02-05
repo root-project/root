@@ -250,7 +250,7 @@ void TPySelector::Init( TTree* tree )
    fChain = tree;
 
 // forward call
-   PyObject* pytree = PyROOT::BindRootObject( (void*)tree, tree->IsA() );
+   PyObject* pytree = PyROOT::BindCppObject( (void*)tree, tree->IsA()->GetName() );
    PyObject* result = CallSelf( "Init", pytree );
    Py_DECREF( pytree );
 
@@ -303,7 +303,7 @@ void TPySelector::SlaveBegin( TTree* tree )
 
    PyObject* result = 0;
    if ( tree ) {
-      PyObject* pytree = PyROOT::BindRootObject( (void*)tree, tree->IsA() );
+      PyObject* pytree = PyROOT::BindCppObject( (void*)tree, tree->IsA()->GetName() );
       result = CallSelf( "SlaveBegin", pytree );
       Py_DECREF( pytree );
    } else {

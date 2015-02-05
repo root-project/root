@@ -5,7 +5,6 @@
 #define PYROOT_ROOTWRAPPER_H
 
 // ROOT
-class TClass;
 class TGlobal;
 
 // Standard
@@ -18,20 +17,28 @@ namespace PyROOT {
    void InitRoot();
 
 // construct a Python shadow class for the named C++ class
+   PyObject* CreateScopeProxy( Cppyy::TCppScope_t );
+   PyObject* CreateScopeProxy( PyObject*, PyObject* args );
    PyObject* CreateScopeProxy(
       const std::string& scope_name, PyObject* parent = 0 );
-   PyObject* CreateScopeProxy( PyObject*, PyObject* args );
 
 // convenience function to retrieve global variables and enums
    PyObject* GetCppGlobal( const std::string& name );
    PyObject* GetCppGlobal( PyObject*, PyObject* args );
 
 // bind a ROOT object into a Python object
-   PyObject* BindRootObjectNoCast(
-      void* object, TClass* klass, Bool_t isRef = kFALSE, Bool_t isValue = kFALSE );
-   PyObject* BindRootObject( void* object, TClass* klass, Bool_t isRef = kFALSE );
-   PyObject* BindRootObjectArray( void* address, TClass* klass, Int_t size );
-   PyObject* BindRootGlobal( TGlobal* );
+   PyObject* BindCppObjectNoCast( Cppyy::TCppObject_t object, Cppyy::TCppType_t klass,
+      Bool_t isRef = kFALSE, Bool_t isValue = kFALSE );
+   PyObject* BindCppObject(
+      Cppyy::TCppObject_t object, Cppyy::TCppType_t klass, Bool_t isRef = kFALSE );
+   inline PyObject* BindCppObject(
+      Cppyy::TCppObject_t object, const std::string& clName, Bool_t isRef = kFALSE )
+   {
+      return BindCppObject( object, Cppyy::GetScope( clName ), isRef );
+   }
+
+   PyObject* BindCppObjectArray( Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Int_t size );
+   PyObject* BindCppGlobal( TGlobal* );
 
 } // namespace PyROOT
 

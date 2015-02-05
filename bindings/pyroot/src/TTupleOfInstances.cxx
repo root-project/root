@@ -2,26 +2,24 @@
 
 // Bindings
 #include "PyROOT.h"
-#include "RootWrapper.h"
 #include "TTupleOfInstances.h"
-
-// ROOT
-#include "TClass.h"
+#include "RootWrapper.h"
 
 
 namespace PyROOT {
 
 //= support for C-style arrays of objects ====================================
-PyObject* TTupleOfInstances_New( void* address, TClass* klass, Py_ssize_t size )
+PyObject* TTupleOfInstances_New(
+      Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Py_ssize_t nelems )
 {
 // TODO: the extra copy is inefficient, but it appears that the only way to
 // initialize a subclass of a tuple is through a sequence
-   PyObject* tup = PyTuple_New( size );
-   for ( int i = 0; i < size; ++i ) {
+   PyObject* tup = PyTuple_New( nelems );
+   for ( int i = 0; i < nelems; ++i ) {
    // TODO: there's an assumption here that there is no padding, which is bound
    // to be incorrect in certain cases
       PyTuple_SetItem( tup, i,
-         BindRootObject( (char*)address + i*klass->Size(), klass, kFALSE /* isRef */ ) );
+         BindCppObject( (char*)address + i*Cppyy::SizeOf( klass ), klass, kFALSE /* isRef */ ) );
    // Note: objects are bound as pointers, yet since the pointer value stays in
    // place, updates propagate just as if they were bound by-reference
    }

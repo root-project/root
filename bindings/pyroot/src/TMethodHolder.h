@@ -5,9 +5,7 @@
 #define PYROOT_TMETHODHOLDER_H
 
 // Bindings
-#include "Adapters.h"
 #include "PyCallable.h"
-#include "Utility.h"
 
 // Standard
 #include <string>
@@ -16,18 +14,12 @@
 
 namespace PyROOT {
 
-/** Python side ROOT method
-      @author  WLAV
-      @date    15/03/2013
-      @version 4.0
- */
-
    class TExecutor;
    class TConverter;
 
    class TMethodHolder : public PyCallable {
    public:
-      TMethodHolder( const TScopeAdapter& klass, const TMemberAdapter& method );
+      TMethodHolder( Cppyy::TCppScope_t scope, Cppyy::TCppMethod_t method );
       TMethodHolder( const TMethodHolder& );
       TMethodHolder& operator=( const TMethodHolder& );
       virtual ~TMethodHolder();
@@ -40,24 +32,25 @@ namespace PyROOT {
       virtual Int_t GetMaxArgs();
       virtual PyObject* GetArgSpec( Int_t iarg );
       virtual PyObject* GetArgDefault( Int_t iarg );
-      virtual PyObject* GetScope();
+      virtual PyObject* GetScopeProxy();
 
       virtual PyCallable* Clone() { return new TMethodHolder( *this ); }
 
    public:
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds,
-                                    Long_t user = 0, Bool_t release_gil = kFALSE );
+      virtual PyObject* Call(
+         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
 
       virtual Bool_t Initialize();
-      virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
-      virtual Bool_t SetMethodArgs( PyObject* args, Long_t user );
-      virtual PyObject* Execute( void* self, Bool_t release_gil = kFALSE );
+      virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
+      virtual Bool_t    ConvertAndSetArgs( PyObject* args, TCallContext* ctxt = 0 );
+      virtual PyObject* Execute( void* self, TCallContext* ctxt = 0 );
 
    protected:
-      const TMemberAdapter& GetMethod() { return fMethod; }
-      const TScopeAdapter& GetClass() { return fClass; }
-      TExecutor* GetExecutor() { return fExecutor; }
-      const std::string& GetSignatureString();
+      Cppyy::TCppMethod_t GetMethod()   { return fMethod; }
+      Cppyy::TCppScope_t  GetScope()    { return fScope; }
+      TExecutor*          GetExecutor() { return fExecutor; }
+      std::string         GetSignatureString();
+      std::string         GetReturnTypeName();
 
       virtual Bool_t InitExecutor_( TExecutor*& );
 
@@ -65,32 +58,25 @@ namespace PyROOT {
       void Copy_( const TMethodHolder& );
       void Destroy_() const;
 
-      PyObject* CallFast( void*, Bool_t release_gil );
-      PyObject* CallSafe( void*, Bool_t release_gil );
+      PyObject* CallFast( void*, TCallContext* );
+      PyObject* CallSafe( void*, TCallContext* );
 
-      Bool_t InitCallFunc_();
+      Bool_t InitConverters_();
 
-      void CreateSignature_();
       void SetPyError_( PyObject* msg );
 
    private:
    // representation
-      TMemberAdapter fMethod;
-      TScopeAdapter  fClass;
-      CallFunc_t*    fMethodCall;
-      TExecutor*     fExecutor;
-
-      std::string fSignature;
+      Cppyy::TCppMethod_t fMethod;
+      Cppyy::TCppScope_t  fScope;
+      TExecutor*          fExecutor;
 
    // call dispatch buffers
       std::vector< TConverter* > fConverters;
 
-      std::vector< TParameter_t > fParameters;
-      std::vector< void* >      fParamPtrs;
-
    // cached values
-      Int_t        fArgsRequired;
-      Long_t       fOffset;
+      Int_t  fArgsRequired;
+      Long_t fOffset;
 
    // admin
       Bool_t fIsInitialized;
