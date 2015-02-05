@@ -58,10 +58,12 @@
 #include "TMVA/TNeuron.h"
 #include "TMVA/TSynapse.h"
 #include "TMVA/TActivationChooser.h"
+#include "TMVA/TActivationTanh.h"
 #include "TMVA/Types.h"
 #include "TMVA/Tools.h"
 #include "TMVA/TNeuronInputChooser.h"
 #include "TMVA/Ranking.h"
+#include "TMVA/Version.h"
 
 using std::vector;
 
@@ -781,6 +783,13 @@ void TMVA::MethodANNBase::ReadWeightsFromXML( void* wghtnode )
    }
 
    BuildNetwork( layout, NULL, fromFile );
+   // use 'slow' (exact) TanH if processing old weighfile to ensure 100% compatible results
+   // otherwise use the new default, the 'tast tanh' approximation
+   if (GetTrainingTMVAVersionCode() < TMVA_VERSION(4,2,1) && fActivation->GetExpression().Contains("tanh")){
+      TActivationTanh* act = dynamic_cast<TActivationTanh*>( fActivation );
+      if (act) act->SetSlow();
+   }
+
    // fill the weights of the synapses
    UInt_t nSyn;
    Float_t weight;
