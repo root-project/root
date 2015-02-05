@@ -39,7 +39,6 @@
 #include "TMVA/TActivationTanh.h"
 #endif
 
-static const Int_t  UNINITIALIZED = -1;
 
 ClassImp(TMVA::TActivationTanh)
 
@@ -47,19 +46,23 @@ ClassImp(TMVA::TActivationTanh)
 TMVA::TActivationTanh::TActivationTanh()
 {
    // constructor for tanh sigmoid (normalized in [-1,1])
-
-   fEqn = new TFormula("sigmoid", "TMath::TanH(x)");
-   fEqnDerivative = 
-      new TFormula("derivative", "1-(TMath::TanH(x))^2");
+   fFAST=kTRUE;
 }
 
 //______________________________________________________________________________
 TMVA::TActivationTanh::~TActivationTanh()
 {
    // destructor
+}
 
-   if (fEqn != NULL) delete fEqn;
-   if (fEqnDerivative != NULL) delete fEqnDerivative;
+//______________________________________________________________________________
+Double_t TMVA::TActivationTanh::fast_tanh(Double_t arg){
+   // a fast tanh approximation
+
+   float arg2 = arg * arg;
+   float a = arg * (135135.0f + arg2 * (17325.0f + arg2 * (378.0f + arg2)));
+   float b = 135135.0f + arg2 * (62370.0f + arg2 * (3150.0f + arg2 * 28.0f));
+   return a / b;
 }
 
 //______________________________________________________________________________
@@ -67,8 +70,7 @@ Double_t TMVA::TActivationTanh::Eval(Double_t arg)
 {
    // evaluate the tanh
 
-   if (fEqn == NULL) return UNINITIALIZED;
-   return fEqn->Eval(arg);
+   return fFAST ? fast_tanh(arg) : TMath::TanH(arg);
 }
 
 //______________________________________________________________________________
@@ -76,25 +78,17 @@ Double_t TMVA::TActivationTanh::EvalDerivative(Double_t arg)
 {
    // evaluate the derivative
 
-   if (fEqnDerivative == NULL) return UNINITIALIZED;
-   return fEqnDerivative->Eval(arg);
+   Double_t tmp=Eval(arg);
+   return ( 1-tmp*tmp);
 }
 
 //______________________________________________________________________________
 TString TMVA::TActivationTanh::GetExpression()
 {
    // get expressions for the tanh and its derivative
+   // whatever that may be good for ... 
 
-   TString expr = "";
-
-   if (fEqn == NULL) expr += "<null>";
-   else              expr += fEqn->GetExpFormula();
-
-   expr += "\t\t";
-
-   if (fEqnDerivative == NULL) expr += "<null>";
-   else                        expr += fEqnDerivative->GetExpFormula();
-
+   TString expr = "tanh(x)\t\t (1-tanh()^2)";
    return expr;
 }
 

@@ -70,10 +70,11 @@ namespace TMVA {
       // writer of function code
       virtual void MakeFunction(std::ostream& fout, const TString& fncName);
 
+      void SetSlow(){fFAST=kFALSE;} // to ensure old training files will be process with old tanh code
    private:
-
-      TFormula* fEqn;             // equation of tanh sigmoid
-      TFormula* fEqnDerivative;   // equation of tanh sigmoid derivative
+      // fast tanh approximation
+      Double_t fast_tanh(Double_t arg);
+      Bool_t   fFAST;
 
       ClassDef(TActivationTanh,0) // Tanh sigmoid activation function for TNeuron
    };
