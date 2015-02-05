@@ -89,7 +89,13 @@ public:
 
    Bool_t     CanExtend() const { return (fBits2 & kCanExtend);  } 
    void       SetCanExtend(Bool_t canExtend) { fBits2 = canExtend ? (fBits2 | kCanExtend) : (fBits2 & ~kCanExtend); }
-   void       SetNoAlphaNumeric(Bool_t noalpha = kTRUE) { fBits2 = noalpha ? (fBits2 | kNotAlpha) : (fBits2 & ~kNotAlpha); }
+   void       SetNoAlphanumeric(Bool_t noalpha = kTRUE) {
+      fBits2 = noalpha ? (fBits2 | kNotAlpha) : (fBits2 & ~kNotAlpha);
+      if (IsAlphanumeric() ) {
+         SetCanExtend(kFALSE);
+         SetAlphanumeric(kFALSE);
+      }
+   }
    void       CenterLabels(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterLabels
    void       CenterTitle(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterTitle
    const char        *ChooseTimeFormat(Double_t axislength=0);
