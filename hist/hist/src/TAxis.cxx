@@ -267,17 +267,18 @@ Int_t TAxis::FindBin(Double_t x)
    Int_t bin;
    // NOTE: This should not be allowed for Alphanumeric histograms,
    // but it is heavily used (legacy) in the TTreePlayer to fill alphanumeric histograms.
+   // but in case of alphanumeric do-not extend the axis. It makes no sense 
    if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
       if (fParent == 0) return bin;
-      if (!CanExtend()) return bin;
+      if (!CanExtend() || IsAlphanumeric() ) return bin;   
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
       bin = fNbins+1;
       if (fParent == 0) return bin;
-      if (!CanExtend()) return bin;
+      if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else {
