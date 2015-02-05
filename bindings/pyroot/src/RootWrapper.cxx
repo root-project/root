@@ -251,7 +251,9 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
    getattrofunc oldgetattro = Py_TYPE(pyclass)->tp_getattro;
    Py_TYPE(pyclass)->tp_getattro = PyType_Type.tp_getattro;
 
-   const size_t nMethods = klass.FunctionMemberSize();
+// functions in namespaces are properly found through lazy lookup, so do not
+// create them until needed (the same is not true for data members)
+   const size_t nMethods = klass.IsNamespace() ? 0 : klass.FunctionMemberSize();
    for ( size_t inm = 0; inm < nMethods; ++inm ) {
       const TMemberAdapter& method = klass.FunctionMemberAt( inm );
 
