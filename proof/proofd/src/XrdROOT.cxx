@@ -237,25 +237,27 @@ int XrdROOT::ParseROOTVersionInfo()
       gitcommit += "/RGitCommit.h";
 
       // Open file
-      if (!(fv = fopen(gitcommit.c_str(), "r"))) {
-         TRACE(REQ, "unable to open "<<gitcommit);
-      }
+      if ((fv = fopen(gitcommit.c_str(), "r"))) {
 
-      // Read the file
-      pv = 0;
-      while (fgets(line, sizeof(line), fv)) {
-         if (fGitCommit.length() <= 0 && (pv = (char *) strstr(line, "ROOT_GIT_COMMIT"))) {
-            if (line[strlen(line)-1] == '\n')
-               line[strlen(line)-1] = 0;
-            pv += strlen("ROOT_GIT_COMMIT") + 1;
-            fGitCommit = pv;
-            fGitCommit.replace("\"","");
-            if (fGitCommit.length() > 0) break;
+         // Read the file
+         pv = 0;
+         while (fgets(line, sizeof(line), fv)) {
+            if (fGitCommit.length() <= 0 && (pv = (char *) strstr(line, "ROOT_GIT_COMMIT"))) {
+               if (line[strlen(line)-1] == '\n')
+                  line[strlen(line)-1] = 0;
+               pv += strlen("ROOT_GIT_COMMIT") + 1;
+               fGitCommit = pv;
+               fGitCommit.replace("\"","");
+               if (fGitCommit.length() > 0) break;
+            }
          }
-      }
 
-      // Close the file
-      fclose(fv);
+         // Close the file
+         fclose(fv);
+
+      } else {
+         TRACE(REQ, "file "<<gitcommit<<" not found");
+      }
    }
 
    // Done
