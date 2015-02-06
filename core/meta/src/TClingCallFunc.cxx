@@ -80,12 +80,12 @@ using namespace llvm;
 using namespace clang;
 using namespace std;
 
-static unsigned long long wrapper_serial = 0LL;
-static const string indent_string("   ");
+static unsigned long long gWrapperSerial = 0LL;
+static const string kIndentString("   ");
 
-static map<const FunctionDecl *, void *> wrapper_store;
-static map<const Decl *, void *> ctor_wrapper_store;
-static map<const Decl *, void *> dtor_wrapper_store;
+static map<const FunctionDecl *, void *> gWrapperStore;
+static map<const Decl *, void *> gCtorWrapperStore;
+static map<const Decl *, void *> gDtorWrapperStore;
 
 static
 inline
@@ -93,7 +93,7 @@ void
 indent(ostringstream &buf, int indent_level)
 {
    for (int i = 0; i < indent_level; ++i) {
-      buf << indent_string;
+      buf << kIndentString;
    }
 }
 
@@ -285,14 +285,14 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
       string fp_typedef_name;
       {
          ostringstream nm;
-         nm << "FP" << wrapper_serial++;
+         nm << "FP" << gWrapperSerial++;
          type_name = nm.str();
          raw_string_ostream OS(fp_typedef_name);
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
       for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << indent_string;
+         typedefbuf << kIndentString;
       }
       typedefbuf << "typedef " << fp_typedef_name << ";\n";
       return;
@@ -300,14 +300,14 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
       string mp_typedef_name;
       {
          ostringstream nm;
-         nm << "MP" << wrapper_serial++;
+         nm << "MP" << gWrapperSerial++;
          type_name = nm.str();
          raw_string_ostream OS(mp_typedef_name);
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
       for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << indent_string;
+         typedefbuf << kIndentString;
       }
       typedefbuf << "typedef " << mp_typedef_name << ";\n";
       return;
@@ -323,14 +323,14 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
       string ar_typedef_name;
       {
          ostringstream ar;
-         ar << "AR" << wrapper_serial++;
+         ar << "AR" << gWrapperSerial++;
          type_name = ar.str();
          raw_string_ostream OS(ar_typedef_name);
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
       for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << indent_string;
+         typedefbuf << kIndentString;
       }
       typedefbuf << "typedef " << ar_typedef_name << ";\n";
       return;
@@ -365,7 +365,7 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
          } else {
             callbuf << "\n";
             for (int j = 0; j <= indent_level; ++j) {
-               callbuf << indent_string;
+               callbuf << kIndentString;
             }
          }
       }
@@ -429,7 +429,7 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
          } else {
             callbuf << "\n";
             for (int j = 0; j <= indent_level; ++j) {
-               callbuf << indent_string;
+               callbuf << kIndentString;
             }
          }
       }
@@ -461,7 +461,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
    // }
    //
    for (int i = 0; i < indent_level; ++i) {
-      buf << indent_string;
+      buf << kIndentString;
    }
    buf << "if (ret) {\n";
    ++indent_level;
@@ -472,7 +472,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
       //  Write the return value assignment part.
       //
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       callbuf << "(*(" << class_name << "**)ret) = ";
       //
@@ -484,7 +484,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
       //
       callbuf << ";\n";
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       callbuf << "return;\n";
       //
@@ -494,11 +494,11 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
    }
    --indent_level;
    for (int i = 0; i < indent_level; ++i) {
-      buf << indent_string;
+      buf << kIndentString;
    }
    buf << "}\n";
    for (int i = 0; i < indent_level; ++i) {
-      buf << indent_string;
+      buf << kIndentString;
    }
    buf << "else {\n";
    ++indent_level;
@@ -506,19 +506,19 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
       ostringstream typedefbuf;
       ostringstream callbuf;
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       make_narg_ctor(N, typedefbuf, callbuf, class_name, indent_level);
       callbuf << ";\n";
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       callbuf << "return;\n";
       buf << typedefbuf.str() << callbuf.str();
    }
    --indent_level;
    for (int i = 0; i < indent_level; ++i) {
-      buf << indent_string;
+      buf << kIndentString;
    }
    buf << "}\n";
 }
@@ -546,18 +546,18 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
       ostringstream typedefbuf;
       ostringstream callbuf;
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       make_narg_call(N, typedefbuf, callbuf, class_name, indent_level);
       callbuf << ";\n";
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       callbuf << "return;\n";
       buf << typedefbuf.str() << callbuf.str();
    } else {
       for (int i = 0; i < indent_level; ++i) {
-         buf << indent_string;
+         buf << kIndentString;
       }
       buf << "if (ret) {\n";
       ++indent_level;
@@ -568,7 +568,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          //  Write the placement part of the placement new.
          //
          for (int i = 0; i < indent_level; ++i) {
-            callbuf << indent_string;
+            callbuf << kIndentString;
          }
          callbuf << "new (ret) ";
          string type_name;
@@ -596,7 +596,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          //
          callbuf << ");\n";
          for (int i = 0; i < indent_level; ++i) {
-            callbuf << indent_string;
+            callbuf << kIndentString;
          }
          callbuf << "return;\n";
          //
@@ -606,11 +606,11 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
       }
       --indent_level;
       for (int i = 0; i < indent_level; ++i) {
-         buf << indent_string;
+         buf << kIndentString;
       }
       buf << "}\n";
       for (int i = 0; i < indent_level; ++i) {
-         buf << indent_string;
+         buf << kIndentString;
       }
       buf << "else {\n";
       ++indent_level;
@@ -618,19 +618,19 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          ostringstream typedefbuf;
          ostringstream callbuf;
          for (int i = 0; i < indent_level; ++i) {
-            callbuf << indent_string;
+            callbuf << kIndentString;
          }
          make_narg_call(N, typedefbuf, callbuf, class_name, indent_level);
          callbuf << ";\n";
          for (int i = 0; i < indent_level; ++i) {
-            callbuf << indent_string;
+            callbuf << kIndentString;
          }
          callbuf << "return;\n";
          buf << typedefbuf.str() << callbuf.str();
       }
       --indent_level;
       for (int i = 0; i < indent_level; ++i) {
-         buf << indent_string;
+         buf << kIndentString;
       }
       buf << "}\n";
    }
@@ -1022,7 +1022,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
       //string mn;
       //fInterp->maybeMangleDeclName(ND, mn);
       //buf << '_' << mn;
-      buf << '_' << wrapper_serial++;
+      buf << '_' << gWrapperSerial++;
       wrapper_name = buf.str();
    }
    //
@@ -1045,14 +1045,14 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
       // possible number of arguments per call.
       for (unsigned N = min_args; N <= num_params; ++N) {
          for (int i = 0; i < indent_level; ++i) {
-            buf << indent_string;
+            buf << kIndentString;
          }
          buf << "if (nargs == " << N << ") {\n";
          ++indent_level;
          make_narg_call_with_return(N, class_name, buf, indent_level);
          --indent_level;
          for (int i = 0; i < indent_level; ++i) {
-            buf << indent_string;
+            buf << kIndentString;
          }
          buf << "}\n";
       }
@@ -1066,7 +1066,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    //
    void *F = compile_wrapper(wrapper_name, wrapper);
    if (F) {
-      wrapper_store.insert(make_pair(FD, F));
+      gWrapperStore.insert(make_pair(FD, F));
    } else {
       Error("TClingCallFunc::make_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -1145,7 +1145,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
       //string mn;
       //fInterp->maybeMangleDeclName(ND, mn);
       //buf << '_dtor_' << mn;
-      buf << '_' << wrapper_serial++;
+      buf << '_' << gWrapperSerial++;
       wrapper_name = buf.str();
    }
    //
@@ -1231,7 +1231,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
-      ctor_wrapper_store.insert(make_pair(info->GetDecl(), F));
+      gCtorWrapperStore.insert(make_pair(info->GetDecl(), F));
    } else {
       Error("TClingCallFunc::make_ctor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -1299,7 +1299,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
       //string mn;
       //fInterp->maybeMangleDeclName(ND, mn);
       //buf << '_dtor_' << mn;
-      buf << '_' << wrapper_serial++;
+      buf << '_' << gWrapperSerial++;
       wrapper_name = buf.str();
    }
    //
@@ -1395,7 +1395,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
-      dtor_wrapper_store.insert(make_pair(info->GetDecl(), F));
+      gDtorWrapperStore.insert(make_pair(info->GetDecl(), F));
    } else {
       Error("TClingCallFunc::make_dtor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -2303,8 +2303,8 @@ void *TClingCallFunc::InterfaceMethod()
 
    R__LOCKGUARD(gInterpreterMutex);
    const FunctionDecl *decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl *, void *>::iterator I = wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
+   map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
+   if (I != gWrapperStore.end()) {
       fWrapper = (tcling_callfunc_Wrapper_t) I->second;
    } else {
       fWrapper = make_wrapper();
@@ -2331,8 +2331,8 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
  
    const FunctionDecl *decl = fMethod->GetMethodDecl();
    map<const FunctionDecl *, void *>::iterator I =
-      wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
+      gWrapperStore.find(decl);
+   if (I != gWrapperStore.end()) {
       fWrapper = (tcling_callfunc_Wrapper_t) I->second;
    } else {
       fWrapper = make_wrapper();
