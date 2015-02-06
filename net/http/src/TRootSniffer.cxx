@@ -1223,23 +1223,11 @@ Bool_t TRootSniffer::ProduceBinary(const char *path, const char* query, void *&p
 
    if (sbuf==0) return kFALSE;
 
-   if ((query!=0) && (strstr(query,"zipped")!=0)) {
-      Int_t buflen = 20 + sbuf->Length() + sbuf->Length()/20; // keep safety margin
-      if (buflen<512) buflen = 512;
+   ptr = malloc(sbuf->Length());
+   memcpy(ptr, sbuf->Buffer(), sbuf->Length());
+   length = sbuf->Length();
 
-      ptr = malloc(buflen);
-
-      int irep(0), srcsize(sbuf->Length()), tgtsize(buflen);
-
-      R__zip(5, &srcsize, (char*) sbuf->Buffer(), &tgtsize, (char*) ptr, &irep);
-
-      length = irep;
-
-   } else {
-      ptr = malloc(sbuf->Length());
-      memcpy(ptr, sbuf->Buffer(), sbuf->Length());
-      length = sbuf->Length();
-   }
+   delete sbuf;
 
    return kTRUE;
 }
