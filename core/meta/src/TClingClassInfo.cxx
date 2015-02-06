@@ -302,6 +302,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname) const
    }
 
    R__LOCKGUARD(gInterpreterMutex);
+
    if (fType) {
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
@@ -352,6 +353,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
    }
 
    R__LOCKGUARD(gInterpreterMutex);
+
    if (fType) {
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
@@ -571,6 +573,9 @@ int TClingClassInfo::GetMethodNArg(const char *method, const char *proto,
    if (!IsLoaded()) {
       return -1;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    TClingMethodInfo mi = GetMethod(method, proto, objectIsConst, 0, mode);
    int clang_val = -1;
    if (mi.IsValid()) {
@@ -582,6 +587,9 @@ int TClingClassInfo::GetMethodNArg(const char *method, const char *proto,
 
 long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
 {
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    long offset = 0L;
    const CXXRecordDecl* definer = md->getParent();
    const CXXRecordDecl* accessor =
@@ -606,6 +614,9 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
 
 ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address, bool isDerivedObject)
 {
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    // Check for the offset in the cache.
    llvm::DenseMapIterator<const clang::Decl *, std::pair<ptrdiff_t, ptrdiff_t (*)(void*, bool)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter
       = fOffsetCache.find(base->GetDecl());
@@ -752,6 +763,9 @@ void TClingClassInfo::Init(int tagnum)
 void TClingClassInfo::Init(const Type &tag)
 {
    fType = &tag;
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    const TagType *tagtype = fType->getAs<TagType>();
    if (tagtype) {
       fDecl = tagtype->getDecl();
@@ -778,6 +792,9 @@ bool TClingClassInfo::IsBase(const char *name) const
    if (!base.IsValid()) {
       return false;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    const CXXRecordDecl *CRD =
       llvm::dyn_cast<CXXRecordDecl>(fDecl);
    if (!CRD) {
@@ -812,6 +829,9 @@ bool TClingClassInfo::IsLoaded() const
    if (fDecl == 0) {
       return false;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    const CXXRecordDecl *CRD = llvm::dyn_cast<CXXRecordDecl>(fDecl);
    if ( CRD ) {
       if (!CRD->hasDefinition()) {
@@ -850,6 +870,9 @@ bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
 
 int TClingClassInfo::InternalNext()
 {
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (!*fIter) {
       // Iterator is already invalid.
       if (fFirstTime && fDecl) {
@@ -985,7 +1008,7 @@ void *TClingClassInfo::New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) co
          //      FullyQualifiedName(fDecl).c_str());
          return 0;
       }
-   }
+   } // End of Lock section.
    void* obj = 0;
    TClingCallFunc cf(fInterp,normCtxt);
    obj = cf.ExecDefaultConstructor(this, /*address=*/0, /*nary=*/0);
@@ -1012,8 +1035,10 @@ void *TClingClassInfo::New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normC
             FullyQualifiedName(fDecl).c_str());
       return 0;
    }
+
    {
       R__LOCKGUARD(gInterpreterMutex);
+
       const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
       if (!RD) {
          Error("TClingClassInfo::New(n)", "This is a namespace!: %s",
@@ -1027,7 +1052,7 @@ void *TClingClassInfo::New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normC
          //      FullyQualifiedName(fDecl).c_str());
          return 0;
       }
-   }
+   } // End of Lock section.
    void* obj = 0;
    TClingCallFunc cf(fInterp,normCtxt);
    obj = cf.ExecDefaultConstructor(this, /*address=*/0,
@@ -1072,7 +1097,7 @@ void *TClingClassInfo::New(int n, void *arena, const ROOT::TMetaUtils::TNormaliz
          //      FullyQualifiedName(fDecl).c_str());
          return 0;
       }
-   }
+   } // End of Lock section
    void* obj = 0;
    TClingCallFunc cf(fInterp,normCtxt);
    // Note: This will always return arena.
@@ -1097,6 +1122,7 @@ void *TClingClassInfo::New(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt 
    }
    {
       R__LOCKGUARD(gInterpreterMutex);
+
       const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
       if (!RD) {
          Error("TClingClassInfo::New(arena)", "This is a namespace!: %s",
@@ -1110,7 +1136,7 @@ void *TClingClassInfo::New(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt 
          //      FullyQualifiedName(fDecl).c_str());
          return 0;
       }
-   }
+   } // End of Locked section.
    void* obj = 0;
    TClingCallFunc cf(fInterp,normCtxt);
    // Note: This will always return arena.
@@ -1123,6 +1149,9 @@ long TClingClassInfo::Property() const
    if (!IsValid()) {
       return 0L;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    long property = 0L;
    property |= kIsCPPCompiled;
    const clang::DeclContext *ctxt = fDecl->getDeclContext();
@@ -1184,6 +1213,9 @@ int TClingClassInfo::Size() const
       // A forward declared class.
       return 0;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    Decl::Kind DK = fDecl->getKind();
    if (DK == Decl::Namespace) {
       // Namespaces are special for cint.
@@ -1255,8 +1287,8 @@ const char *TClingClassInfo::Name() const
    if (!IsValid()) {
       return 0;
    }
-   // Note: This *must* be static because we are returning a pointer inside it!
-   static std::string buf;
+   // Note: This *must* be static/thread_local because we are returning a pointer inside it!
+   thread_local std::string buf;
    buf.clear();
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
       PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
@@ -1276,6 +1308,9 @@ const char *TClingClassInfo::Title()
    // file, if present.
    // Iterate over the redeclarations, we can have muliple definitions in the
    // redecl chain (came from merging of pcms).
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (const TagDecl *TD = llvm::dyn_cast<TagDecl>(GetDecl())) {
       if ( (TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(TD)) ) {
          if (AnnotateAttr *A = TD->getAttr<AnnotateAttr>()) {
@@ -1308,8 +1343,11 @@ const char *TClingClassInfo::TmpltName() const
    if (!IsValid()) {
       return 0;
    }
-   // Note: This *must* be static because we are returning a pointer inside it!
-   static std::string buf;
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   // Note: This *must* be static/thread_local because we are returning a pointer inside it!
+   thread_local std::string buf;
    buf.clear();
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
       // Note: This does *not* include the template arguments!
