@@ -25,7 +25,7 @@ The following parameters can be specified in the URL string:
 - opts - array of options ['any', 'colz']
 - layout - can be 'collapsible', 'tabs' or 'gridNxM' where N and M are integer values
 - nobrowser - do not display file browser
-- autoload - name of JavaScript to load
+- load - name of JavaScript to load
 - optimize - drawing optimization 0:off, 1:only large histograms (default), 2:always
 - interactive - enable/disable interactive functions 0-disable all, 1-enable all
 - noselect - hide file-selection part in the browser (only when file name is specified)
@@ -65,7 +65,7 @@ In such case one could use the server with its default settings.
 A simple case is to copy only the top index.htm file on the server and specify the full path to JSRootCore.js script like:
 
     ...
-    <script type="text/javascript" src="http://root.cern.ch/js/3.2/scripts/JSRootCore.js"></script>
+    <script type="text/javascript" src="http://root.cern.ch/js/3.2/scripts/JSRootCore.js?2d"></script>
     ...  
 
 In such case one can also specify a custom files list:
@@ -174,32 +174,19 @@ Before JSROOT can be used, all appropriate scripts should be loaded.
 Any HTML pages where JSROOT is used should include the JSRootCore.js script.
 The `<head>` section of the HTML page should have the following line:
 
-    <script type="text/javascript" src="http://root.cern.ch/js/3.2/scripts/JSRootCore.js"></script>  
+    <script type="text/javascript" src="http://root.cern.ch/js/3.2/scripts/JSRootCore.js?2d"></script>  
 
 Here, the default location of JSROOT is specified. One could have a local copy on the file system or on a private web server. When JSROOT is used with THttpServer, the address looks like:
 
-    <script type="text/javascript" src="http://your_root_server:8080/jsrootsys/scripts/JSRootCore.js"></script>  
+    <script type="text/javascript" src="http://your_root_server:8080/jsrootsys/scripts/JSRootCore.js?2d"></script>  
 
-Then one should call the JSROOT.AssertPrerequisites(kind,callback,debug) method, which accepts the following arguments:
+In URL string with JSRootCore.js script one should specify which JSROOT functionality will be loaded:
 
-- kind - functionality to load. It can be a combination of:
     + '2d' normal drawing for 1D/2D objects
     + '3d' 3D drawing for 2D/3D histograms
     + 'io' binary file I/O
-    + 'user:scirpt.js' load user scripts, should be at the end of kind string
-- callback - call back function which is called when all necessary scripts are loaded
-- debug - id of HTML element where debug information will be shown while scripts are loading
-
-
-JSROOT.AssertPrerequisites should be called before any other JSROOT functions can be used.
-At the best, one should call it with `onload` handler like:
-
-    <body onload="JSROOT.AssertPrerequisites('2d', userInitFunction, 'drawing')">
-       <div id="drawing">loading...</div>
-    </body>
-
-Internally, the JSROOT.loadScript(urllist, callback, debug) method is used. It can be useful when some other scripts should be loaded as well. __urllist__ is a string with scripts names, separated by ';' symbol. If a script name starts with __$$$__ (triple dollar sign), the script will be loaded from a location relative to the main JSROOT directory. 
-This location is automatically detected when JSRootCore.js script is loaded.
+    + 'load' name of user script(s) to load
+    + 'onload' name of function to call when scripts loading completed
 
 
 ### Use of JSON

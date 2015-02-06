@@ -19,15 +19,47 @@ There is a [snapshot (frozen copy)](https://root.cern.ch/js/3.2/demo/) of such s
 <iframe width="800" height="500" src="https://root.cern.ch/js/3.2/demo/?layout=grid2x2&item=Canvases/c1">
 </iframe>
 
+
+## Registering objects
+
 At any time, one could register other objects with the command:
 
     TGraph* gr = new TGraph(10);
     gr->SetName("gr1");
     serv->Register("graphs/subfolder", gr);
 
-If the objects content is changing in the application, one could enable monitoring flag in the browser - then objects view will be regularly updated.
-   
+One should specify sub-folder name, where objects will be registered.
+If sub-folder name does not starts with slash `/`, than top-name folder `/Objects/` will be prepended.
+At any time one unregister objects:
+ 
+    serv->Unregister(gr);
 
+THttpServer does not take ownership over registered objects - they should be deleted by user.
+
+If the objects content is changing in the application, one could enable monitoring flag in the browser - then objects view will be regularly updated.
+
+
+## Command interface
+
+THttpServer class provide simple interface to invoke command from web browser.
+One just register command like:
+
+    serv->RegisterCommand("/DoSomething","SomeFunction()");
+     
+Element with name `DoSomething` will appear in the web browser and can be clicked.
+It will result in `gROOT->ProcessLineSync("SomeFunction()")` call. When registering command,
+one could specify icon name which will be displayed with the command.  
+
+    serv->RegisterCommand("/DoSomething","SomeFunction()", "/rootsys/icons/ed_execute.png");
+    
+In example usage of images from `$ROOTSYS/icons` directory is shown. One could prepend `button;`
+string to the icon name to let browser show command as extra button. In last case one could 
+hide command element from elements list:
+
+    serv->Hide("/DoSomething");
+
+
+  
 ## Configuring user access
 
 By default, the http server is open for anonymous access. One could restrict the access to the server for authenticated users only. First of all, one should create a password file, using the **htdigest** utility.  
@@ -104,6 +136,8 @@ The second method is preferable - one just inserts in the application regular ca
 In such case, one can fully disable the timer of the server:
 
     serv->SetTimer(0, kTRUE);
+
+
 
 
 ## Data access from command shell
@@ -230,4 +264,17 @@ Example of TTree::Draw method execution:
     [shell] wget 'http://localhost:8080/Files/job1.root/ntuple/exe.json?method=Draw&prototype="Option_t*"&opt="px:py>>h1"&_ret_object_=h1' -O exe.json
 
 To get debug information about command execution, one could submit 'exe.txt' request with same arguments.
-   
+
+
+### Commands execution
+
+If command registered to the server:
+
+    serv->RegisterCommand("/Folder/Start", "DoSomthing()");
+    
+It can be invoked with cmd.json request like:
+
+    [shell] wget 'http://localhost:8080/Folder/Start/cmd.json' -O title.txt
+
+If command fails, `false` will be returned, otherwise result of gROOT->ProcessLineSync() execution
+    
