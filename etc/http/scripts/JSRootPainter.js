@@ -336,9 +336,8 @@
 
       res.SetMarker = function(selection) {
          selection.style("fill", this.fill)
-         selection.style("stroke", this.stroke)
-         selection.attr("d", this.marker);
-
+                  .style("stroke", this.stroke)
+                  .attr("d", this.marker);
       }
       res.func = res.SetMarker.bind(res);
 
@@ -1644,22 +1643,21 @@
       this.RecreateDrawG();
 
       var pthis = this;
-      var x = this.main_painter().x;
-      var y = this.main_painter().y;
+      var pmain = this.main_painter();
 
       var attline = JSROOT.Painter.createAttLine(this.tf1);
       var fill = this.createAttFill(this.tf1);
       if (fill.color == 'white') fill.color = 'none';
 
       var line = d3.svg.line()
-                   .x(function(d) { return x(d.x).toFixed(1); })
-                   .y(function(d) { return y(d.y).toFixed(1); })
+                   .x(function(d) { return pmain.grx(d.x).toFixed(1); })
+                   .y(function(d) { return pmain.gry(d.y).toFixed(1); })
                    .interpolate(this.interpolate_method);
 
       var area = d3.svg.area()
-                  .x(function(d) { return x(d.x).toFixed(1); })
+                  .x(function(d) { return pmain.grx(d.x).toFixed(1); })
                   .y1(h)
-                  .y0(function(d) { return y(d.y).toFixed(1); });
+                  .y0(function(d) { return pmain.gry(d.y).toFixed(1); });
 
       if (attline.color != "none")
          this.draw_g.append("svg:path")
@@ -1681,12 +1679,12 @@
          this.draw_g.selectAll()
                    .data(this.bins).enter()
                    .append("svg:circle")
-                   .attr("cx", function(d) { return x(d.x).toFixed(1); })
-                   .attr("cy", function(d) { return y(d.y).toFixed(1); })
+                   .attr("cx", function(d) { return pmain.grx(d.x).toFixed(1); })
+                   .attr("cy", function(d) { return pmain.gry(d.y).toFixed(1); })
                    .attr("r", 4)
                    .style("opacity", 0)
                    .append("svg:title")
-                   .text( function(d) { return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4); });
+                   .text( function(d) { return "x = " + pmain.AxisAsText("x",d.x) + " \ny = " + pmain.AxisAsText("y", d.y); });
    }
 
    JSROOT.TF1Painter.prototype.UpdateObject = function(obj) {
@@ -1735,11 +1733,6 @@
    }
 
    JSROOT.TGraphPainter.prototype.DecodeOptions = function(opt) {
-      this.logx = false;
-      this.logy = false;
-      this.logz = false;
-      this.gridx = false;
-      this.gridy = false;
       this.draw_all = true;
       this.optionLine = 0;
       this.optionAxis = 0;
@@ -1801,31 +1794,10 @@
          this.optionFill = 0;
       }
 
-      var pad = this.root_pad();
-      if (pad) {
-         this.logx = pad['fLogx'];
-         this.logy = pad['fLogy'];
-         this.logz = pad['fLogz'];
-         this.gridx = pad['fGridx'];
-         this.gridy = pad['fGridy'];
-      }
-
-      this.xaxis_type = this.logx ? 'logarithmic' : 'linear';
-      this.yaxis_type = this.logy ? 'logarithmic' : 'linear';
-
-      if (this.graph['_typename'] == 'TGraph') {
-         // check for axis scale format, and convert if required
-         if (this.graph['fHistogram']['fXaxis']['fTimeDisplay']) {
-            this.xaxis_type = 'datetime';
-         }
-
-         if (this.graph['fHistogram']['fYaxis']['fTimeDisplay']) {
-            this.yaxis_type = 'datetime';
-         }
-      } else if (this.graph['_typename'] == 'TGraphErrors') {
-         this.maxEX = d3.max(this.graph['fEX']);
-         this.maxEY = d3.max(this.graph['fEY']);
-         if (this.maxEX < 1.0e-300 && this.maxEY < 1.0e-300)
+      if (this.graph['_typename'] == 'TGraphErrors') {
+         var maxEX = d3.max(this.graph['fEX']);
+         var maxEY = d3.max(this.graph['fEY']);
+         if (maxEX < 1.0e-300 && maxEY < 1.0e-300)
             this.draw_errors = false;
       }
       this.seriesType = 'scatter';
@@ -2090,6 +2062,9 @@
       xf[nf] = xt[0];
       yf[nf] = yt[0];
       nf++;
+      ;
+      
+      
       for (i = 0; i < nf; i++) {
          if (w > h) {
             xf[i] = xmin + (xf[i] * (xmax - xmin));
@@ -2101,10 +2076,8 @@
             xf[i] = xmin + (xf[i] * (xmax - xmin));
             yf[i] = ymin + (yf[i] * (ymax - ymin));
          }
-         if (this.logx && xf[i] <= 0.0)
-            xf[i] = xmin;
-         if (this.logy && yf[i] <= 0.0)
-            yf[i] = ymin;
+         if ((xf[i] <= 0.0) && this.main_painter().options.Logx) xf[i] = xmin;
+         if ((yf[i] <= 0.0) && this.main_painter().options.Logy) yf[i] = ymin;
       }
 
       this.excl = d3.range(nf).map(function(p) { return { x : xf[p], y : yf[p] }; });
@@ -2134,46 +2107,45 @@
       this.RecreateDrawG();
 
       var pthis = this;
+      var pmain = this.main_painter();
 
       var fill = this.createAttFill(this.graph);
 
       function TooltipText(d) {
 
-         var res = "x = " + pthis.main_painter().AxisAsText("x", d.x) + "\n" +
-                   "y = " + pthis.main_painter().AxisAsText("y", d.y);
+         var res = "x = " + pmain.AxisAsText("x", d.x) + "\n" +
+                   "y = " + pmain.AxisAsText("y", d.y);
 
-         if (pthis.draw_errors  && ('exlow' in d) && ((d.exlow!=0) || (d.exhigh!=0)))
-            res += "\nerror x = -" + pthis.main_painter().AxisAsText("x", d.exlow) +
-                              "/+" + pthis.main_painter().AxisAsText("x", d.exhigh);
+         if (pthis.draw_errors  && !pmain.x_time && ('exlow' in d) && ((d.exlow!=0) || (d.exhigh!=0)))
+            res += "\nerror x = -" + pmain.AxisAsText("x", d.exlow) +
+                              "/+" + pmain.AxisAsText("x", d.exhigh);
 
-         if (pthis.draw_errors  && ('eylow' in d) && ((d.eylow!=0) || (d.eyhigh!=0)) )
-            res += "\nerror y = -" + pthis.main_painter().AxisAsText("y", d.eylow) +
-                              "/+" + pthis.main_painter().AxisAsText("y", d.eyhigh);
+         if (pthis.draw_errors  && !pmain.y_time && ('eylow' in d) && ((d.eylow!=0) || (d.eyhigh!=0)) )
+            res += "\nerror y = -" + pmain.AxisAsText("y", d.eylow) +
+                               "/+" + pmain.AxisAsText("y", d.eyhigh);
 
          return res;
       }
 
-      var x = this.main_painter().x;
-      var y = this.main_painter().y;
       var line = d3.svg.line()
-                  .x(function(d) { return Math.round(x(d.x)); })
-                  .y(function(d) { return Math.round(y(d.y)); });
+                  .x(function(d) { return pmain.grx(d.x).toFixed(1); })
+                  .y(function(d) { return Math.round(pmain.gry(d.y)); });
 
       if (this.seriesType == 'bar') {
          var fillcolor = JSROOT.Painter.root_colors[this.graph['fFillColor']];
          if (typeof (fillcolor) == 'undefined') fillcolor = "rgb(204,204,204)";
          /* filled bar graph */
-         var xdom = this.main_painter().x.domain();
+         var xdom = pmain.x.domain();
          var xfactor = xdom[1] - xdom[0];
          this.draw_errors = false;
 
          var nodes = this.draw_g.selectAll("bar_graph")
                   .data(pthis.bins).enter()
                   .append("svg:rect")
-                  .attr("x", function(d) { return x(d.x) })
-                  .attr("y", function(d) { return y(d.y) })
-                  .attr("width", function(d) { return (w / (xdom[1] - xdom[0])) - 1 })
-                  .attr("height", function(d) { return y(d.y) - y(d.y + d.bh); })
+                  .attr("x", function(d) { return pmain.grx(d.x).toFixed(1); })
+                  .attr("y", function(d) { return pmain.gry(d.y).toFixed(1); })
+                  .attr("width", function(d) { return (w / (xdom[1] - xdom[0]))-1; })
+                  .attr("height", function(d) { return pmain.gry(d.y) - pmain.gry(d.y + d.bh); })
                   .style("fill", fillcolor);
 
          if (JSROOT.gStyle.Tooltip)
@@ -2215,8 +2187,8 @@
             this.draw_g.selectAll("draw_line")
                        .data(pthis.bins).enter()
                        .append("svg:circle")
-                       .attr("cx", function(d) { return Math.round(x(d.x)); })
-                       .attr("cy", function(d) { return Math.round(y(d.y)); })
+                       .attr("cx", function(d) { return pmain.grx(d.x).toFixed(1); })
+                       .attr("cy", function(d) { return Math.round(pmain.gry(d.y)); })
                        .attr("r", 3)
                        .style("opacity", 0)
                        .append("svg:title")
@@ -2234,17 +2206,17 @@
          var draw_bins = new Array;
          for (var i in this.bins) {
             var pnt = this.bins[i];
-            var grx = x(pnt.x);
-            var gry = y(pnt.y);
+            var grx = pmain.grx(pnt.x);
+            var gry = pmain.gry(pnt.y);
             if ((grx<0) || (grx>w) || (gry<0) || (gry>h)) continue;
 
             // caluclate graphical coordinates
             pnt['grx1'] = grx.toFixed(1);
             pnt['gry1'] = gry.toFixed(1);
-            if (pnt.exlow > 0)  pnt['grx0'] = (x(pnt.x - pnt.exlow) - grx).toFixed(1);
-            if (pnt.exhigh > 0) pnt['grx2'] = (x(pnt.x + pnt.exhigh) - grx).toFixed(1);
-            if (pnt.eylow > 0)  pnt['gry0'] = (y(pnt.y - pnt.eylow) - gry).toFixed(1);
-            if (pnt.eyhigh > 0) pnt['gry2'] = (y(pnt.y + pnt.eyhigh) - gry).toFixed(1);
+            if (pnt.exlow > 0)  pnt['grx0'] = (pmain.grx(pnt.x - pnt.exlow) - grx).toFixed(1);
+            if (pnt.exhigh > 0) pnt['grx2'] = (pmain.grx(pnt.x + pnt.exhigh) - grx).toFixed(1);
+            if (pnt.eylow > 0)  pnt['gry0'] = (pmain.gry(pnt.y - pnt.eylow) - gry).toFixed(1);
+            if (pnt.eyhigh > 0) pnt['gry2'] = (pmain.gry(pnt.y + pnt.eyhigh) - gry).toFixed(1);
 
             draw_bins.push(pnt);
          }
@@ -2253,7 +2225,7 @@
                      .data(draw_bins)
                      .enter()
                      .append("svg:g")
-                     .attr("transform", function(d) { return "translate(" + d.grx1 + "," + d.gry1 + ")"; })
+                     .attr("transform", function(d) { return "translate(" + d.grx1 + "," + d.gry1 + ")"; });
       }
 
       if (JSROOT.gStyle.Tooltip && nodes)
@@ -3657,6 +3629,12 @@
    JSROOT.THistPainter.prototype.CreateXY = function() {
       // here we create x,y objects which maps our physical coordnates into pixels
       // while only first painter really need such object, all others just reuse it
+      // following functions are introduced
+      //    this.GetBin[X/Y]  return bin coordinate
+      //    this.Convert[X/Y]  converts root value in JS date when date scale is used
+      //    this.[x,y]  these are d3.scale objects
+      //    this.gr[x,y]  converts root scale into graphical value
+      //    this.Revert[X/Y]  converts graphical coordinates to root scale value
 
       if (!this.is_main_painter()) {
          this['x'] = this.main_painter()['x'];
@@ -3666,7 +3644,18 @@
 
       var w = Number(this.svg_frame(true).attr("width")),
           h = Number(this.svg_frame(true).attr("height"));
-
+      
+      if (this.histo['fXaxis']['fTimeDisplay']) {
+         this.x_time = true;
+         this['timeoffsetx'] = JSROOT.Painter.getTimeOffset(this.histo['fXaxis']);
+         this['ConvertX'] = function(x) { return new Date(this.timeoffsetx + x*1000); };
+         this['RevertX'] = function(grx) { return (this.x.invert(grx) - this.timeoffsetx) / 1000; };
+      } else {
+         this.x_time = false;
+         this['ConvertX'] = function(x) { return x; };
+         this['RevertX'] = function(grx) { return this.x.invert(grx); };
+      }
+      
       this['scale_xmin'] = this.xmin;
       this['scale_xmax'] = this.xmax;
       if (this.zoom_xmin != this.zoom_xmax) {
@@ -3679,7 +3668,7 @@
 
          if ((this.scale_xmin <= 0) && (this.nbinsx>0))
             for (var i=0;i<this.nbinsx;i++) {
-               var left = this.xmin + i*this.binwidthx;
+               var left = this.GetBinX(i);
                if (left>0) { this.scale_xmin = left; break; }
             }
 
@@ -3687,9 +3676,21 @@
             this.scale_xmin = this.scale_xmax * 0.0001;
          }
 
-         this['x'] = d3.scale.log().domain([ this.scale_xmin, this.scale_xmax ]).range([ 0, w ]); // .clamp(true);
+         this['x'] = d3.scale.log();
+      } else 
+      if (this.x_time) {
+         this['x'] = d3.time.scale();
       } else {
-         this['x'] = d3.scale.linear().domain([ this.scale_xmin, this.scale_xmax ]).range([ 0, w ]);
+         this['x'] = d3.scale.linear();
+      }
+      
+      this.x.domain([this.ConvertX(this.scale_xmin), this.ConvertX(this.scale_xmax)]).range([ 0, w ]);
+      
+      if (this.x_time) {
+         // we emulate scale functionality
+         this['grx'] = function(x) { return this.x(this.ConvertX(x)); }
+      } else {
+         this['grx'] = this.x;
       }
 
       this['scale_ymin'] = this.ymin;
@@ -3706,12 +3707,23 @@
          this['scale_ymax'] = this.zoom_ymax;
       }
 
+      if (this.histo['fYaxis']['fTimeDisplay']) {
+         this.y_time = true;
+         this['timeoffsety'] = JSROOT.Painter.getTimeOffset(this.histo['fYaxis']);
+         this['ConvertY'] = function(y) { return new Date(this.timeoffsety + y*1000); };
+         this['RevertY'] = function(gry) { return (this.y.invert(gry) - this.timeoffsety) / 1000; };
+      } else {
+         this.y_time = false;
+         this['ConvertY'] = function(y) { return y; };
+         this['RevertY'] = function(gry) { return this.y.invert(gry); };
+      }
+      
       if (this.options.Logy) {
          if (this.scale_ymax <= 0) this.scale_ymax = 1;
 
          if ((this.scale_ymin <= 0) && (this.nbinsy>0))
             for (var i=0;i<this.nbinsy;i++) {
-               var down = this.ymin + i*this.binwidthy;
+               var down = this.GetBinY(i);
                if (down>0) { this.scale_ymin = down; break; }
             }
 
@@ -3720,10 +3732,23 @@
 
          if ((this.scale_ymin <= 0) || (this.scale_ymin >= this.scale_ymax))
             this.scale_ymin = 0.000001 * this.scale_ymax;
-         this['y'] = d3.scale.log().domain([ this.scale_ymin, this.scale_ymax ]).range([ h, 0 ]); // .clamp(true);
+         this['y'] = d3.scale.log();
+      } else 
+      if (this.y_time) {
+         this['y'] = d3.time.scale();
       } else {
-         this['y'] = d3.scale.linear().domain([ this.scale_ymin, this.scale_ymax ]).range([ h, 0 ]);
+         this['y'] = d3.scale.linear()
       }
+      
+      this['y'].domain([ this.scale_ymin, this.scale_ymax ]).range([ h, 0 ]);
+      
+      if (this.y_time) {
+         // we emulate scale functionality
+         this['gry'] = function(y) { return this.y(this.ConvertY(y)); }
+      } else {
+         this['gry'] = this.y;
+      }
+
    }
 
    JSROOT.THistPainter.prototype.DrawGrids = function() {
@@ -3782,14 +3807,15 @@
 
    JSROOT.THistPainter.prototype.AxisAsText = function(axis, value) {
       if (axis == "x") {
-         // this is indication
-         if ('dfx' in this) {
-            return this.dfx(new Date(this.timeoffsetx + value * 1000));
+         if (this.x_time) {
+            value = this.ConvertX(value);
+            // this is indication of time format
+            if ('formatx' in this) return this.formatx(value);
+            return value.toString();
          }
 
          if (Math.abs(value) < 1e-14)
-            if (Math.abs(this.xmax - this.xmin) > 1e-5)
-               value = 0;
+            if (Math.abs(this.xmax - this.xmin) > 1e-5) value = 0;
          return value.toPrecision(4);
       }
 
@@ -3810,15 +3836,9 @@
       // axes can be drawn only for main histogram
 
       if (!this.is_main_painter()) return;
-
+      
       var w = Number(this.svg_frame(true).attr("width")),
           h = Number(this.svg_frame(true).attr("height"));
-      var noexpx = this.histo['fXaxis'].TestBit(JSROOT.EAxisBits.kNoExponent);
-      var noexpy = this.histo['fYaxis'].TestBit(JSROOT.EAxisBits.kNoExponent);
-      var moreloglabelsx = this.histo['fXaxis'].TestBit(JSROOT.EAxisBits.kMoreLogLabels);
-      var moreloglabelsy = this.histo['fYaxis'].TestBit(JSROOT.EAxisBits.kMoreLogLabels);
-      if (this.histo['fXaxis']['fXmax'] < 100 && this.histo['fXaxis']['fXmax'] / this.histo['fXaxis']['fXmin'] < 100) noexpx = true;
-      if (this.histo['fYaxis']['fXmax'] < 100 && this.histo['fYaxis']['fXmax'] / this.histo['fYaxis']['fXmin'] < 100) noexpy = true;
 
       var xax_g = this.svg_frame(true).selectAll(".xaxis_container");
       if (xax_g.empty())
@@ -3830,8 +3850,6 @@
       var yax_g = this.svg_frame(true).selectAll(".yaxis_container");
       if (yax_g.empty()) yax_g = this.svg_frame(true).select(".axis_layer").append("svg:g").attr("class", "yaxis_container");
       yax_g.selectAll("*").remove();
-
-      var x_axis = null, y_axis = null;
 
       var ndivx = this.histo['fXaxis']['fNdivisions'];
       this['x_nticks'] = ndivx % 100; // used also to draw grids
@@ -3889,126 +3907,121 @@
       /*
        * Define the scales, according to the information from the pad
        */
-      var xrange = this.xmax - this.xmin;
-      if (this.histo['fXaxis']['fTimeDisplay']) {
+      
+      delete this['formatx'];
+      
+      if (this.x_time) {
          if (this.x_nticks > 8) this.x_nticks = 8;
 
-         var timeformatx = JSROOT.Painter.getTimeFormat(this.histo['fXaxis']);
-
-         this['timeoffsetx'] = JSROOT.Painter.getTimeOffset(this.histo['fXaxis']);
-
          var scale_xrange = this.scale_xmax - this.scale_xmin;
-
-         if ((timeformatx.length == 0) || (scale_xrange < 0.1 * xrange)) {
+         var timeformatx = JSROOT.Painter.getTimeFormat(this.histo['fXaxis']);
+         if ((timeformatx.length == 0) || (scale_xrange < 0.1 * (this.xmax - this.xmin)))
             timeformatx = JSROOT.Painter.chooseTimeFormat(scale_xrange, this.x_nticks);
-         }
 
-         this['dfx'] = d3.time.format(timeformatx);
-
-         x_axis = d3.svg.axis().scale(this.x).orient("bottom")
-                    .tickPadding(xAxisLabelOffset)
-                    .tickSize(-xDivLength, -xDivLength / 2, -xDivLength / 4)
-                    .tickFormat(function(d) { return pthis.dfx(new Date(pthis.timeoffsetx + d * 1000)); })
-                    .ticks(this.x_nticks);
+         if (timeformatx.length > 0) 
+            this['formatx'] = d3.time.format(timeformatx);
+         
       } else if (this.options.Logx) {
-         x_axis = d3.svg.axis().scale(this.x).orient("bottom")
-                     .tickPadding(xAxisLabelOffset)
-                     .tickSize(-xDivLength, -xDivLength / 2, -xDivLength / 4)
-                     .tickFormat(function(d) {
-                        var val = parseFloat(d);
-                        var vlog = Math.abs(JSROOT.Math.log10(val));
-                        if (moreloglabelsx) {
-                           if (vlog % 1 < 0.7 || vlog % 1 > 0.9999) {
-                              if (noexpx)
-                                 return val.toFixed();
-                              else
-                                 return JSROOT.Painter.formatExp(val.toExponential(0));
-                           } else
-                              return null;
-                        } else {
-                           if (vlog % 1 < 0.0001 || vlog % 1 > 0.9999) {
-                              if (noexpx)
-                                 return val.toFixed();
-                              else
-                                 return JSROOT.Painter.formatExp(val.toExponential(0));
-                           } else
-                              return null;
-                        }
-                     });
-      } else {
-         x_axis = d3.svg.axis()
-                    .scale(this.x)
-                    .orient("bottom")
-                    .tickPadding(xAxisLabelOffset)
-                    .tickSize(-xDivLength, -xDivLength / 2, -xDivLength / 4)
-                    .tickFormat(function(d) {
-                       // avoid rounding problems around 0
-                        if ((Math.abs(d) < 1e-14) && (Math.abs(xrange) > 1e-5)) d = 0;
-                        return parseFloat(d.toPrecision(12)); })
-                     .ticks(this.x_nticks);
-      }
 
-      var yrange = this.ymax - this.ymin;
-      if (this.histo['fYaxis']['fTimeDisplay']) {
+         var noexpx = this.histo['fXaxis'].TestBit(JSROOT.EAxisBits.kNoExponent);
+         if (this.scale_xmax < 100 && this.scale_xmin > 0 && this.scale_xmax / this.scale_xmin < 100) noexpx = true;
+         var moreloglabelsx = this.histo['fXaxis'].TestBit(JSROOT.EAxisBits.kMoreLogLabels);
+
+         this['formatx'] = function(d) {
+            var val = parseFloat(d);
+            var vlog = Math.abs(JSROOT.Math.log10(val));
+            if (moreloglabelsx) {
+               if (vlog % 1 < 0.7 || vlog % 1 > 0.9999) {
+                  if (noexpx)
+                     return val.toFixed();
+                  else
+                     return JSROOT.Painter.formatExp(val.toExponential(0));
+               } else
+                  return null;
+            } else {
+               if (vlog % 1 < 0.0001 || vlog % 1 > 0.9999) {
+                  if (noexpx)
+                     return val.toFixed();
+                  else
+                     return JSROOT.Painter.formatExp(val.toExponential(0));
+               } else
+                  return null;
+            }
+         }
+      } else {
+         this['formatx'] = function(d) {
+            if ((Math.abs(d) < 1e-14) && (Math.abs(this.xmax - this.xmin) > 1e-5)) d = 0;
+            return parseFloat(d.toPrecision(12));
+         }
+      }
+      
+      var x_axis = d3.svg.axis().scale(this.x).orient("bottom")
+                           .tickPadding(xAxisLabelOffset)
+                           .tickSize(-xDivLength, -xDivLength / 2, -xDivLength / 4)
+                           .ticks(this.x_nticks);
+      
+      if ('formatx' in this)
+         x_axis.tickFormat(function(d) { return pthis.formatx(d); });
+      
+      delete this['formaty'];
+
+      if (this.y_time) {
          if (this.y_nticks > 8)  this.y_nticks = 8;
+         
          var timeformaty = JSROOT.Painter.getTimeFormat(this.histo['fYaxis']);
 
-         this['timeoffsety'] = JSROOT.Painter
-               .getTimeOffset(this.histo['fYaxis']);
-
-         var scale_yrange = this.scale_ymax - this.scale_ymin;
-
-         if ((timeformaty.length == 0) || (scale_yrange < 0.1 * yrange))
+         if ((timeformaty.length == 0) || (scale_yrange < 0.1 * (this.ymax - this.ymin)))
             timeformaty = JSROOT.Painter.chooseTimeFormat(scale_yrange, this.y_nticks);
 
-         this['dfy'] = d3.time.format(timeformaty);
-
-         y_axis = d3.svg.axis()
-                      .scale(this.y)
-                      .orient("left")
-                      .tickPadding(yAxisLabelOffset)
-                      .tickSize(-yDivLength, -yDivLength / 2,-yDivLength / 4)
-                      .tickFormat(function(d) { return pthis.dfy(new Date(pthis.timeoffsety + d * 1000)); })
-                      .ticks(this.y_nticks);
+         if (timeformaty.length > 0) 
+            this['formaty'] = d3.time.format(timeformaty);
+         
       } else if (this.options.Logy) {
-         y_axis = d3.svg.axis()
-                    .scale(this.y)
-                    .orient("left")
-                    .tickPadding(yAxisLabelOffset)
-                    .tickSize(-yDivLength, -yDivLength / 2, -yDivLength / 4)
-                    .tickFormat(function(d) {
-                       var val = parseFloat(d);
-                       var vlog = Math.abs(JSROOT.Math.log10(val));
-                       if (moreloglabelsy) {
-                          if (vlog % 1 < 0.7 || vlog % 1 > 0.9999) {
-                             if (noexpy)
-                                return val.toFixed();
-                             else
-                                return JSROOT.Painter.formatExp(val.toExponential(0));
-                          } else
-                             return null;
-                       } else {
-                          if (vlog % 1 < 0.0001 || vlog % 1 > 0.9999) {
-                             if (noexpy)
-                                return val.toFixed();
-                             else
-                                return JSROOT.Painter.formatExp(val.toExponential(0));
-                          } else
-                             return null;
-                       }
-                    });
+         var noexpy = this.histo['fYaxis'].TestBit(JSROOT.EAxisBits.kNoExponent);
+         var moreloglabelsy = this.histo['fYaxis'].TestBit(JSROOT.EAxisBits.kMoreLogLabels);
+         if (this.scale_ymax < 100 && this.scale_ymin > 0 && this.scale_ymax / this.scale_ymin < 100) noexpy = true;
+         
+         this['formaty'] = function(d) {
+            var val = parseFloat(d);
+            var vlog = Math.abs(JSROOT.Math.log10(val));
+            if (moreloglabelsy) {
+               if (vlog % 1 < 0.7 || vlog % 1 > 0.9999) {
+                  if (noexpy)
+                     return val.toFixed();
+                  else
+                     return JSROOT.Painter.formatExp(val.toExponential(0));
+               } else
+                  return null;
+            } else {
+               if (vlog % 1 < 0.0001 || vlog % 1 > 0.9999) {
+                  if (noexpy)
+                     return val.toFixed();
+                  else
+                     return JSROOT.Painter.formatExp(val.toExponential(0));
+               } else
+                  return null;
+            }
+         };
       } else {
          if (this.y_nticks >= 10) this.y_nticks -= 2;
-         y_axis = d3.svg.axis()
+         
+         this['formaty'] = function(d) {
+            if ((Math.abs(d) < 1e-14) && (Math.abs(pthis.ymax - pthis.ymin) > 1e-5)) d = 0;
+            return parseFloat(d.toPrecision(12)); 
+         }
+      }
+
+      var y_axis = d3.svg.axis()
                    .scale(this.y)
                    .orient("left")
                    .tickPadding(yAxisLabelOffset)
                    .tickSize(-yDivLength, -yDivLength / 2,-yDivLength / 4)
-                   .tickFormat(function(d) {
-                       if ((Math.abs(d) < 1e-14) && (Math.abs(yrange) > 1e-5)) d = 0;
-                       return parseFloat(d.toPrecision(12)); })
                    .ticks(this.y_nticks);
-      }
+
+      if ('formaty' in this)
+         y_axis.tickFormat(function(d) { return pthis.formaty(d); });
+
+      
 
       xax_g.append("svg:g").attr("class", "xaxis").call(x_axis);
 
@@ -4029,7 +4042,7 @@
       if ((n2ay > 0) && !this.options.Logy) {
          var y_axis_sub = d3.svg.axis().scale(this.y).orient("left")
                .tickPadding(yAxisLabelOffset).innerTickSize(-yDivLength / 2)
-               .tickFormat(function(d) {  return; })
+               .tickFormat(function(d) { return; })
                .ticks(this.y.ticks(this.y_nticks).length * n2ay);
 
          yax_g.append("svg:g").attr("class", "yaxis").call(y_axis_sub);
@@ -4506,8 +4519,8 @@
          var isany = false;
 
          if ((zoom_kind != 103) && (Math.abs(curr[0] - origin[0]) > 10)) {
-            xmin = Math.min(pthis.x.invert(origin[0]), pthis.x.invert(curr[0]));
-            xmax = Math.max(pthis.x.invert(origin[0]), pthis.x.invert(curr[0]));
+            xmin = Math.min(pthis.RevertX(origin[0]), pthis.RevertX(curr[0]));
+            xmax = Math.max(pthis.RevertX(origin[0]), pthis.RevertX(curr[0]));
             isany = true;
          }
 
@@ -4658,8 +4671,8 @@
          var isany = false;
 
          if ((zoom_kind != 3) && (Math.abs(curr[0] - origin[0]) > 10)) {
-            xmin = Math.min(pthis.x.invert(origin[0]), pthis.x.invert(curr[0]));
-            xmax = Math.max(pthis.x.invert(origin[0]), pthis.x.invert(curr[0]));
+            xmin = Math.min(pthis.RevertX(origin[0]), pthis.RevertX(curr[0]));
+            xmax = Math.max(pthis.RevertX(origin[0]), pthis.RevertX(curr[0]));
             isany = true;
          }
 
@@ -4766,6 +4779,8 @@
       this.binwidthx = (this.xmax - this.xmin);
       if (this.nbinsx > 0)
          this.binwidthx = this.binwidthx / this.nbinsx;
+      
+      this['GetBinX'] = function(bin) { return this.xmin+bin*this.binwidthx; };
 
       this.ymin = this.histo['fYaxis']['fXmin'];
       this.ymax = this.histo['fYaxis']['fXmax'];
@@ -4812,7 +4827,7 @@
       var xx = 0, w = 0, xmax = null, wmax = null;
 
       for (var i = left; i < right; i++) {
-         xx = this.xmin + (i + 0.5) * this.binwidthx;
+         xx = this.GetBinX(i+0.5);
 
          if ((cond!=null) && !cond(xx)) continue;
 
@@ -4942,22 +4957,23 @@
       var can_optimize = ((JSROOT.gStyle.OptimizeDraw > 0) && (right-left > 5000)) ||
                          ((JSROOT.gStyle.OptimizeDraw > 1) && (right-left > 2*width));
 
-      var x1, x2 = this.xmin + left * this.binwidthx;
+      var x1, x2 = this.GetBinX(left);
       var grx1 = -1111, grx2 = -1111, gry;
-
+      
       var point = null;
       var searchmax = false;
+      var pmain = this.main_painter();
 
       for (var i = left; i < right; i++) {
          // if interval wider than specified range, make it shorter
          x1 = x2;
-         x2 += this.binwidthx;
+         x2 = this.GetBinX(i+1);
 
          if (this.options.Logx && (x1 <= 0)) continue;
 
          grx1 = grx2;
-         grx2 = this.x(x2);
-         if (grx1 < 0) grx1 = this.x(x1);
+         grx2 = pmain.grx(x2);
+         if (grx1 < 0) grx1 = pmain.grx(x1);
 
          var pmax = i, cont = this.histo.getBinContent(i + 1);
 
@@ -4965,15 +4981,15 @@
             searchmax = !searchmax;
 
             // consider all points which are not far than 0.5 pixel away
-            while ((i+1<right) && (this.x(x2 + this.binwidthx) < grx2 + 0.5)) {
-               i++; x2 += this.binwidthx;
+            while ((i+1<right) && (pmain.grx(this.GetBinX(i+2)) < grx2 + 0.5)) {
+               i++; x2 = this.GetBinX(i+1);
                var ccc = this.histo.getBinContent(i + 1);
                if (searchmax ? ccc>cont : ccc<cont) {
                   cont = ccc;
                   pmax = i;
                }
             }
-            grx2 = this.x(x2);
+            grx2 = pmain.grx(x2);
          }
 
          // exclude zero bins from profile drawings
@@ -4982,24 +4998,24 @@
          if (this.options.Logy && (cont < this.scale_ymin))
             gry = height + 10;
          else
-            gry = this.y(cont);
+            gry = pmain.gry(cont);
 
          point = { x : grx1, y : gry };
 
          if (this.options.Error > 0) {
             point['xerr'] = (grx2 - grx1) / 2;
-            point['yerr'] = gry - this.y(cont + this.histo.getBinError(pmax + 1));
+            point['yerr'] = gry - pmain.gry(cont + this.histo.getBinError(pmax + 1));
          }
 
          if (this.options.Error > 0) {
             point['x'] = (grx1 + grx2) / 2;
-            point['tip'] = "x = " + this.AxisAsText("x", (x1 + x2)/2 ) + "\n" +
+            point['tip'] = "x = " + this.AxisAsText("x", (x1 + x2)/2) + "\n" +
                            "y = " + this.AxisAsText("y", cont) + "\n" +
                            "error x = " + ((x2 - x1) / 2).toPrecision(4) + "\n" +
                            "error y = " + this.histo.getBinError(pmax + 1).toPrecision(4);
          } else {
             point['width'] = grx2 - grx1;
-
+            
             point['tip'] = "bin = " + (pmax + 1) + "\n" +
                            "x = [" + this.AxisAsText("x", x1) + ", " + this.AxisAsText("x", x2) + "]\n" +
                            "entries = " + cont;
@@ -5183,7 +5199,7 @@
       while ((left < right) && (this.histo.getBinContent(right) <= min)) right--;
 
       if ((right - left < dist) && (left < right))
-         this.Zoom(this.xmin + left * this.binwidthx, this.xmin + right * this.binwidthx, 0, 0);
+         this.Zoom(this.GetBinX(left), this.GetBinX(right), 0, 0);
    }
 
    JSROOT.Painter.drawHistogram1D = function(divid, histo, opt) {
@@ -5307,13 +5323,13 @@
       var xmin = 0, xmax = 0, ymin = 0, ymax = 0;
 
       if ((ileft > i1 || iright < i2) && (ileft < iright - 1)) {
-         xmin = this.xmin + ileft * this.binwidthx;
-         xmax = this.xmin + iright * this.binwidthx;
+         xmin = this.GetBinX(ileft);
+         xmax = this.GetBinX(iright);
       }
 
       if ((jleft > j1 || jright < j2) && (jleft < jright - 1)) {
-         ymin = this.ymin + jleft * this.binwidthy;
-         ymax = this.ymin + jright * this.binwidthy;
+         ymin = this.GetBinY(jleft);
+         ymax = this.GetBinY(jright);
       }
 
       this.Zoom(xmin, xmax, ymin, ymax);
@@ -5434,10 +5450,14 @@
       this.binwidthx = (this.xmax - this.xmin);
       if (this.nbinsx > 0)
          this.binwidthx = this.binwidthx / this.nbinsx;
+      
+      this['GetBinX'] = function(bin) { return this.xmin+bin*this.binwidthx; };
 
       this.binwidthy = (this.ymax - this.ymin);
       if (this.nbinsy > 0)
          this.binwidthy = this.binwidthy / this.nbinsy
+         
+      this['GetBinY'] = function(bin) { return this.ymin+bin*this.binwidthy; };
 
       this.gmaxbin = this.histo.getBinContent(1, 1);
       this.gminbin = this.gmaxbin; // global min/max, used at the moment in 3D drawing
@@ -5467,7 +5487,7 @@
 
       for (var xi = 0; xi <= this.nbinsx + 1; xi++) {
          var xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
-         var xx = this.xmin + (xi - 0.5) * this.binwidthx;
+         var xx = this.GetBinX(xi - 0.5);
 
          for (var yi = 0; yi <= this.nbinsx + 1; yi++) {
             var yside = (yi <= yleft) ? 0 : (yi > yright ? 2 : 1);
@@ -5627,27 +5647,29 @@
 
       var local_bins = new Array;
 
-      x2 = this.xmin + i1 * this.binwidthx;
+      x2 = this.GetBinX(i1);
       grx2 = -11111;
       for (var i = i1; i < i2; i++) {
          x1 = x2;
-         x2 += this.binwidthx;
-
+         x2 = this.GetBinX(i+1);
+         
          if (this.options.Logx && (x1 <= 0)) continue;
 
          grx1 = grx2;
-         if (grx1 < 0) grx1 = this.x(x1);
-         grx2 = this.x(x2);
+         if (grx1 < 0) grx1 = this.grx(x1);
+         grx2 = this.grx(x2);
 
-         y2 = this.ymin + j1 * this.binwidthy;
+         y2 = this.GetBinY(j1);
          gry2 = -1111;
          for (var j = j1; j < j2; j++) {
             y1 = y2;
-            y2 += this.binwidthy;
+            y2 = this.GetBinY(j+1);
             if (this.options.Logy && (y1 <= 0)) continue;
             gry1 = gry2;
-            if (gry1 < 0) gry1 = this.y(y1);
-            gry2 = this.y(y2);
+            if (gry1 < 0) gry1 = this.gry(y1);
+            gry2 = this.gry(y2);
+
+            
             binz = this.histo.getBinContent(i + 1, j + 1);
             if ((binz == 0) || (binz < this.minbin)) continue;
 
@@ -6360,7 +6382,7 @@
       var histo = this.mgraph['fHistogram'];
       var graphs = this.mgraph['fGraphs'];
       var scalex = 1, scaley = 1;
-      var logx = false, logy = false, logz = false, gridx = false, gridy = false;
+      var logx = false, logy = false;
       var draw_all = true;
 
       var pad = this.root_pad();
@@ -6372,9 +6394,6 @@
          rwymax = pad.fUymax;
          logx = pad['fLogx'];
          logy = pad['fLogy'];
-         logz = pad['fLogz'];
-         gridx = pad['fGridx'];
-         gridy = pad['fGridy'];
       }
       if (histo!=null) {
          minimum = histo['fYaxis']['fXmin'];
@@ -6400,8 +6419,7 @@
          uxmin = rwxmin - dx;
          uxmax = rwxmax + dx;
          if (logy) {
-            if (rwymin <= 0)
-               rwymin = 0.001 * rwymax;
+            if (rwymin <= 0) rwymin = 0.001 * rwymax;
             minimum = rwymin / (1 + 0.5 * JSROOT.Math.log10(rwymax / rwymin));
             maximum = rwymax * (1 + 0.2 * JSROOT.Math.log10(rwymax / rwymin));
          } else {
@@ -6458,7 +6476,7 @@
       // interactive actions
       this.firstpainter = JSROOT.Painter.drawHistogram1D(this.divid, histo);
 
-      for ( var i in graphs.arr) {
+      for (var i in graphs.arr) {
          var subpainter = JSROOT.Painter.drawGraph(this.divid, graphs.arr[i]);
          this.painters.push(subpainter);
       }
@@ -6595,8 +6613,8 @@
          pos_y = (1 - pos_y) * h;
       } else
       if (this.main_painter()!=null) {
-         pos_x = this.main_painter().x(pos_x);
-         pos_y = this.main_painter().y(pos_y);
+         pos_x = this.main_painter().grx(pos_x);
+         pos_y = this.main_painter().gry(pos_y);
       } else
       if (this.root_pad()!=null) {
          var pad = this.root_pad();
@@ -6976,6 +6994,21 @@
 
       return folder;
    }
+   
+   JSROOT.HierarchyPainter.prototype.ForEach = function(callback) {
+      if ((this.h==null) || (typeof callback != 'function')) return;
+      
+      function each_item(item) {
+         callback(item);
+         if ('_childs' in item)
+            for (var n in item._childs) {
+               item._childs[n]._parent = item;
+               each_item(item._childs[n]);
+            }
+      }
+      
+      each_item(this.h);
+   }
 
    JSROOT.HierarchyPainter.prototype.Find = function(itemname, force) {
 
@@ -7033,7 +7066,7 @@
 
    JSROOT.HierarchyPainter.prototype.CheckCanDo = function(node) {
       var cando = { expand : false, display : false, scan : true, open : false,
-                    img1 : "", img2 : "", html : "", ctxt : false, typename : "" };
+                    img1 : "", img2 : "", html : "", ctxt : false, typename : "", execute: false };
 
       var kind = node["_kind"];
       if (kind == null) kind = "";
@@ -7047,6 +7080,10 @@
 
       if (kind == "ROOT.Session") {
          cando.img1 = "img_globe";
+      } else if (kind=="Command") {
+         cando.ctxt = true;
+         cando.execute = true;
+         cando.img1 = "img_execute";
       } else if (kind.match(/^ROOT.TH1/)) {
          cando.img1 = "img_histo1d";
          cando.scan = false;
@@ -7093,8 +7130,37 @@
       }
 
       if ('_player' in node) cando.display = true;
+      if ('_icon' in node) cando.img1 = node['_icon'];  
 
       return cando;
+   }
+   
+   JSROOT.HierarchyPainter.prototype.FindFastCommands = function() {
+      var arr = [];
+      
+      this.ForEach(function(item) { if ('_fastcmd' in item) arr.push(item); });
+
+      return arr.length > 0 ? arr : null;
+   }
+   
+   JSROOT.HierarchyPainter.prototype.ExecuteCommand = function(itemname, callback) {
+      // execute item marked as 'Command'
+      
+      var hitem = this.Find(itemname);
+      var url = itemname + "/cmd.json";
+      if ((callback!=null) && (typeof callback == 'object')) {
+         callback.css('background','yellow');
+         if (hitem && hitem._title) callback.attr('title', "Executing " + hitem._title); 
+      }
+      var req = JSROOT.NewHttpRequest(url, 'text', function(res) {
+         if (typeof callback=='function') return callback(res); 
+         if ((callback!=null) && (typeof callback == 'object')) {
+            var col = ((res!=null) && (res!='false')) ? 'green' : 'red';
+            if (hitem && hitem._title) callback.attr('title', hitem._title + " lastres=" + res); 
+            callback.animate({ backgroundColor: col}, 2000, function() { callback.css('background', ''); });
+         }
+      });
+      req.send();
    }
 
    JSROOT.HierarchyPainter.prototype.RefreshHtml = function(force) {
@@ -7103,9 +7169,15 @@
       if (elem.length == 0) return;
 
       if (this.h == null) return elem.html("<h2>null</h2>");
+      
+      var factcmds = this.FindFastCommands();
 
-      this['html'] = "<p>";
-
+      this['html'] = "";
+      if (factcmds) {
+         for (var n in factcmds)
+            this['html'] += "<button class='fast_command'> </button>";
+      }
+      this['html'] += "<p>";
       this['html'] += "<a href='#open_all'>open all</a>";
       this['html'] += "| <a href='#close_all'>close all</a>";
       if ('_online' in this.h)
@@ -7144,20 +7216,38 @@
                     .next().click(function() { h.toggle(false); return false; })
                     .next().click(function() { h.reload(); return false; })
                     .next().click(function() { h.clear(false); return false; });
+      
+      if (factcmds)
+         elem.find('.fast_command').each(function(index) {
+            if ('_icon' in factcmds[index])
+               $(this).text("").append('<img src="' + factcmds[index]['_icon'] + '"/>');
+            $(this).button()
+                   .attr("item", h.itemFullName(factcmds[index]))
+                   .attr("title", factcmds[index]._title)
+                   .click(function() { h.ExecuteCommand($(this).attr("item"), $(this)); });
+         });
    }
 
    JSROOT.HierarchyPainter.prototype.isLastSibling = function(hitem) {
-      return hitem && hitem._parent && hitem._parent._childs &&
-             (hitem._parent._childs.indexOf(hitem) == hitem._parent._childs.length-1);
+      if (!hitem || !hitem._parent || !hitem._parent._childs) return false;
+      var chlds = hitem._parent._childs;
+      var indx = chlds.indexOf(hitem);
+      if (indx<0) return false;
+      while (++indx < chlds.length)
+         if (!('_hidden' in chlds[indx])) return false;
+      return true;
    }
 
    JSROOT.HierarchyPainter.prototype.addItemHtml = function(hitem, parent) {
       var isroot = (parent == null);
       var has_childs = '_childs' in hitem;
+      
+      if ('_hidden' in hitem) return;
+      
       var cando = this.CheckCanDo(hitem);
 
       if (!isroot) hitem._parent = parent;
-
+      
       var can_click = false;
 
       if (!has_childs || !cando.scan) {
@@ -7168,7 +7258,7 @@
                cando.img2 = 'img_folderopen';
             }
          } else
-         if (cando.display) {
+         if (cando.display || cando.execute) {
             can_click = true;
          } else
          if (cando.html.length > 0) can_click = true;
@@ -7228,7 +7318,7 @@
       if (icon_name.indexOf("img_")==0)
          this['html'] += '<div class="' + icon_name + '"/>';
       else
-         this['html'] += '<img src="' + icon_name + '" alt=""/>';
+         this['html'] += '<img src="' + icon_name + '" alt="" style="vertical-align:top"/>';
 
       this['html'] += '<a';
       if (can_click || has_childs) this['html'] +=' class="h_item"';
@@ -7277,9 +7367,11 @@
          if (cando.expand && (hitem['_childs'] == null))
             return this.expand(itemname, hitem, node.parent());
 
-         if (cando.display) {
+         if (cando.display) 
             return this.display(itemname);
-         }
+         
+         if (cando.execute)
+            return this.ExecuteCommand(itemname, node);
 
          if (!('_childs' in hitem) || (hitem === this.h)) return;
       }
@@ -7745,6 +7837,9 @@
 
       if (cando.expand || cando.display)
          menu.add("Expand", function() { painter.expand(itemname); });
+      
+      if (cando.execute)
+         menu.add("Execute", function() { painter.ExecuteCommand(itemname, menu['tree_node']); });
 
       var drawurl = onlineprop.server + onlineprop.itemname + "/draw.htm";
       var separ = "?";
@@ -7879,6 +7974,7 @@
       }
 
       if (menu.size()>0) {
+         menu['tree_node'] = node; 
          menu.add("Close");
          menu.show(event);
       }

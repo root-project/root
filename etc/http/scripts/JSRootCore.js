@@ -14,25 +14,9 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.2 28/01/2015";
-
-   JSROOT.source_dir = function(){
-      var scripts = document.getElementsByTagName('script');
-
-      for (var n in scripts) {
-         if (scripts[n]['type'] != 'text/javascript') continue;
-
-         var src = scripts[n]['src'];
-         if ((src == null) || (src.length == 0)) continue;
-
-         var pos = src.indexOf("scripts/JSRootCore.js");
-         if (pos<0) continue;
-
-         console.log("Set JSROOT.source_dir to " + src.substr(0, pos));
-         return src.substr(0, pos);
-      }
-      return "";
-   }();
+   JSROOT.version = "3.3 dev 6/02/2015";
+   
+   JSROOT.source_dir = "";
 
    // TODO: all jQuery-related functions should go into extra script
    JSROOT.clone = function(obj) {
@@ -234,9 +218,10 @@
          xhr.onreadystatechange = function() {
             if (xhr.readyState != 4) return;
 
-            if (xhr.status != 0 && xhr.status != 200 && xhr.status != 206) {
+            if (xhr.status != 200 && xhr.status != 206) {
                return callback(null);
             }
+            
             if (kind == "xml") return callback(xhr.responseXML);
             if (kind == "text") return callback(xhr.responseText);
             if (kind == "object") return callback(JSROOT.parse(xhr.responseText));
@@ -312,6 +297,8 @@
          if (debugout)
             document.getElementById(debugout).innerHTML = "";
 
+         if (typeof callback == 'string') callback = JSROOT.findFunction(callback);
+         
          if (typeof callback == 'function') callback();
       }
 
@@ -333,7 +320,7 @@
          filename = filename.slice(3);
       }
       var isstyle = filename.indexOf('.css') > 0;
-
+      
       if (isstyle) {
          var styles = document.getElementsByTagName('link');
          for (var n in styles) {
@@ -357,8 +344,9 @@
             var src = scripts[n]['src'];
             if ((src == null) || (src.length == 0)) continue;
 
-            if (src.indexOf(filename)>=0) {
-               // debug("script "+  filename + " already loaded");
+            if ((src.indexOf(filename)>=0) && (src.indexOf("load=")<0)) {
+               // avoid wrong decision when script name is specified as more argument
+               // debug("script "+  filename + " already loaded src = " + src);
                return completeLoad();
             }
          }
@@ -404,7 +392,7 @@
       // '2d' for 2d graphic
       // '3d' for 3d graphic
       // 'simple' for basic user interface
-      // 'user:' list of user-specific scripts at the end of kind string
+      // 'load:' list of user-specific scripts at the end of kind string
 
       if (typeof kind == 'function') { andThan = kind; kind = null; }
 
@@ -440,8 +428,8 @@
                      ';$$$style/JSRootInterface.css';
 
       var pos = kind.indexOf("user:");
-      if (pos>0)
-         allfiles += ";" + kind.slice(pos+5);
+      if (pos<0) pos = kind.indexOf("load:");
+      if (pos>=0) allfiles += ";" + kind.slice(pos+5);
 
       JSROOT.loadScript(allfiles, andThan, debugout);
    }
@@ -459,11 +447,11 @@
       if (document.getElementById('simpleGUI')) debugout = 'simpleGUI'; else
       if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;simple;"; }
 
-      if (user_scripts == null)
-         user_scripts = JSROOT.GetUrlOption("autoload");
+      if (user_scripts == null) user_scripts = JSROOT.GetUrlOption("autoload");
+      if (user_scripts == null) user_scripts = JSROOT.GetUrlOption("load");
 
       if (user_scripts != null)
-         requirements += "user:" + user_scripts + ";";
+         requirements += "load:" + user_scripts + ";";
 
       JSROOT.AssertPrerequisites(requirements, function() {
          if (typeof BuildSimpleGUI == 'function') BuildSimpleGUI();
@@ -2038,6 +2026,45 @@
    JSROOT.Math.landaun = function(f, x, i) {
       return JSROOT.Math.Landau(x, f['fParams'][i+1],f['fParams'][i+2], true);
    };
+
+   
+   // it is important to run this function at the end when all other
+   // functions are available
+   (function() {
+      var scripts = document.getElementsByTagName('script');
+
+      for (var n in scripts) {
+         if (scripts[n]['type'] != 'text/javascript') continue;
+
+         var src = scripts[n]['src'];
+         if ((src == null) || (src.length == 0)) continue;
+
+         var pos = src.indexOf("scripts/JSRootCore.js");
+         if (pos<0) continue;
+
+         JSROOT.source_dir = src.substr(0, pos);
+         
+         console.log("Set JSROOT.source_dir to " + JSROOT.source_dir);
+
+         if (JSROOT.GetUrlOption('gui', src)!=null) return JSROOT.BuildSimpleGUI();
+         
+         var prereq = "";
+         if (JSROOT.GetUrlOption('io', src)!=null) prereq += "io;";
+         if (JSROOT.GetUrlOption('2d', src)!=null) prereq += "2d;";
+         if (JSROOT.GetUrlOption('3d', src)!=null) prereq += "3d;";
+         var user = JSROOT.GetUrlOption('load', src);
+         if ((user!=null) && (user.length>0)) prereq += "load:" + user;
+         var onload = JSROOT.GetUrlOption('onload', src);
+         if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, onload); else
+         if (onload!=null) {
+            onload = JSROOT.findFunction(onload);
+            if (typeof onload == 'function') onload();
+         }
+         
+         return;
+      }
+   })();
+
 
 })();
 
