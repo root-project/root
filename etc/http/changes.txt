@@ -6,6 +6,15 @@ project of Bertrand Bellenot, but provides same functionality in default mode.
 Main motivation for changes - fix different errors,
 make JavaScript code more flexible and applicable for online environment.
 
+Changes in 3.3
+1. Use d3.time.scale for display of time scales 
+2. Within JSRootCore.js script URL one could specify JSROOT 
+   functionality to be loaded: '2d', '3d', 'io', 'load', 'onload'. 
+   Old method with JSROOT.AssertPrerequisites will also work.
+3. With THttpServer JSROOT now provides simple control functionality.
+   One could publish commands and execute them from the browser
+
+
 Changes in 3.2
 1. Support JSON objects embedding in html pages, produced by THttpServer
 2. For small resize of canvas use autoscale functionality of SVG. Only when

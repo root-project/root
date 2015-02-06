@@ -342,7 +342,7 @@ function BuildOnlineGUI() {
       opts = JSON.parse(opts);
       for (var i in opts) optionsarr.push(opts[i]);
    }
-
+   
    if (hpainter==null) hpainter = new JSROOT.HierarchyPainter("root", "browser");
    hpainter.SetDisplay(layout, 'right-div');
 
@@ -353,7 +353,7 @@ function BuildOnlineGUI() {
       .prop('checked', monitor!=null)
       .click(function() {
          hpainter.EnableMonitoring(this.checked);
-         if (this.checked) h.updateAll();
+         if (this.checked) hpainter.updateAll();
       });
 
    var h0 = null;
