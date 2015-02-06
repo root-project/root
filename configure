@@ -5238,6 +5238,8 @@ if test "x$enable_xrootd" = "xyes" ; then
    if test "x$enable_xrootd" = "xyes"; then
       if test -d "$xrdincdir/private"; then
          xrdincprivate="yes"
+      elif test -d "proof/xrdinc"; then
+         xrdincprivate="proof"
       fi
    fi
 
