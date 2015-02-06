@@ -8,6 +8,7 @@
 #include "TImage.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TFolder.h"
 #include "RVersion.h"
 #include "RConfigure.h"
 
@@ -188,7 +189,6 @@ Bool_t THttpCallArg::CompressWithGzip()
    SetEncoding("gzip");
 
    return kTRUE;
-
 }
 
 // ====================================================================
@@ -277,7 +277,8 @@ THttpServer::THttpServer(const char *engine) :
    fTimer(0),
    fSniffer(0),
    fMainThrdId(0),
-   fJsRootSys(),
+   fJSROOTSYS(),
+   fROOTSYS(),
    fTopName("ROOT"),
    fDefaultPage(),
    fDefaultPageCont(),
@@ -305,13 +306,13 @@ THttpServer::THttpServer(const char *engine) :
 #ifdef COMPILED_WITH_DABC
    const char *dabcsys = gSystem->Getenv("DABCSYS");
    if (dabcsys != 0)
-      fJsRootSys = TString::Format("%s/plugins/root/js", dabcsys);
+      fJSROOTSYS = TString::Format("%s/plugins/root/js", dabcsys);
 #endif
 
    const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
-   if (jsrootsys != 0) fJsRootSys = jsrootsys;
+   if (jsrootsys != 0) fJSROOTSYS = jsrootsys;
 
-   if (fJsRootSys.Length() == 0) {
+   if (fJSROOTSYS.Length() == 0) {
 #ifdef ROOTETCDIR
       TString jsdir = TString::Format("%s/http", ROOTETCDIR);
 #else
@@ -319,14 +320,28 @@ THttpServer::THttpServer(const char *engine) :
 #endif
       if (gSystem->ExpandPathName(jsdir)) {
          Warning("THttpServer", "problems resolving '%s', use JSROOTSYS to specify $ROOTSYS/etc/http location", jsdir.Data());
-         fJsRootSys = ".";
+         fJSROOTSYS = ".";
       } else {
-         fJsRootSys = jsdir;
+         fJSROOTSYS = jsdir;
       }
    }
 
-   fDefaultPage = fJsRootSys + "/files/online.htm";
-   fDrawPage = fJsRootSys + "/files/draw.htm";
+   const char* rootsys = gSystem->Getenv("ROOTSYS");
+   if (rootsys!=0) fROOTSYS = rootsys;
+   if (fROOTSYS.Length()==0) {
+#ifdef ROOTPREFIX
+      TString sysdir = ROOTPREFIX;
+#else
+      TString sysdir = "$(ROOTSYS)";
+#endif
+      if (gSystem->ExpandPathName(sysdir))
+         fROOTSYS = ".";
+      else
+         fROOTSYS = sysdir;
+   }
+
+   fDefaultPage = fJSROOTSYS + "/files/online.htm";
+   fDrawPage = fJSROOTSYS + "/files/draw.htm";
 
    SetSniffer(new TRootSniffer("sniff"));
 
@@ -521,11 +536,26 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
    if (pos != kNPOS) {
       fname.Remove(0, pos + 9);
       // check that directory below jsrootsys will not be accessed
-      if (!VerifyFilePath(fname.Data())) {
-         // Error("IsFileRequested","Prevent access to filepath %s", fname.Data());
-         return kFALSE;
-      }
-      res = fJsRootSys + fname;
+      if (!VerifyFilePath(fname.Data())) return kFALSE;
+      res = fJSROOTSYS + fname;
+      return kTRUE;
+   }
+
+   pos = fname.Index("rootsys/");
+   if (pos != kNPOS) {
+      fname.Remove(0, pos + 7);
+      // check that directory below rootsys will not be accessed
+      if (!VerifyFilePath(fname.Data())) return kFALSE;
+      res = fROOTSYS + fname;
+      return kTRUE;
+   }
+
+   pos = fname.Index("currentdir/");
+   if (pos != kNPOS) {
+      fname.Remove(0, pos + 10);
+      // check that directory below currentdir will not be accessed
+      if (!VerifyFilePath(fname.Data())) return kFALSE;
+      res = TString(".") + fname;
       return kTRUE;
    }
 
@@ -766,6 +796,51 @@ Bool_t THttpServer::Unregister(TObject *obj)
    return fSniffer->UnregisterObject(obj);
 }
 
+//______________________________________________________________________________
+Bool_t THttpServer::RegisterCommand(const char* cmdname, const char* method, const char* icon)
+{
+   // Register command which can be executed from web interface
+   //
+   // As method one typically specifies string, which is executed with
+   // gROOT->ProcessLine() method. For instance
+   //    serv->RegisterCommand("Invoke","InvokeFunction()");
+   //
+   // Or one could specify any method of the object which is already registered
+   // to the server. For instance:
+   //     serv->Register("/", hpx);
+   //     serv->RegisterCommand("ResetHPX", "/hpx/->Reset()");
+   // Here symbols '/->' separates item name from method to be executed
+   //
+   // Optionally one could specify icon name which will appear in
+   // the web browser together with the command item.
+   // If icon name starts with 'button;' string, than shortcut button
+   // will appear on the top of the browser. For instance:
+   //    serv->RegisterCommand("Invoke","InvokeFunction()","button;/rootsys/icons/ed_execute.png");
+   // Here one see example of images usage from $ROOTSYS/icons directory.
+
+   TFolder* cmd = fSniffer->CreateItem(cmdname, Form("command %s", method));
+   fSniffer->SetItemField(cmd, "_kind", "Command");
+   if (icon!=0) {
+      if (strncmp(icon,"button;",7)==0) {
+         fSniffer->SetItemField(cmd, "_fastcmd", "true");
+         icon+=7;
+      }
+      if (*icon!=0) fSniffer->SetItemField(cmd, "_icon", icon);
+   }
+   fSniffer->SetItemField(cmd, "method", method);
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t THttpServer::Hide(const char* foldername, Bool_t hide)
+{
+   // hides folder from web gui
+
+   TFolder* f = fSniffer->GetSubFolder(foldername);
+
+   return fSniffer->SetItemField(f, "_hidden", hide ? "true" : (const char*) 0);
+}
 
 //______________________________________________________________________________
 const char *THttpServer::GetMimeType(const char *path)

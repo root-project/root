@@ -12,9 +12,11 @@
 #include "TList.h"
 #endif
 
+class TFolder;
 class TMemFile;
 class TBufferFile;
 class TDataMember;
+class THttpServer;
 class TRootSnifferStore;
 
 class TRootSnifferScanRec {
@@ -90,11 +92,17 @@ public:
    ClassDef(TRootSnifferScanRec, 0) // Scan record for objects sniffer
 };
 
+//_______________________________________________________________________
 
 class TRootSniffer : public TNamed {
-
+   friend class THttpServer;
+   enum {
+      kMoreFolder = BIT(19),  // all elements in such folder marked with _more
+                              // attribute and can be expanded from browser
+      kItemFolder = BIT(20)   // such folder interpreted as hierarchy item,
+                              // with attributes coded into TNamed elements
+   };
 protected:
-
    TString     fObjectsPath; //! path for registered objects
    TMemFile   *fMemFile;     //! file used to manage streamer infos
    Int_t       fSinfoSize;   //! number of elements in streamer info, used as version
@@ -108,6 +116,8 @@ protected:
 
    virtual void ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj);
 
+   virtual void ScanItem(TRootSnifferScanRec &rec, TFolder* item);
+
    void ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
                        const char *foldername = 0, Bool_t extra = kFALSE, TCollection* keys_lst = 0);
 
@@ -119,9 +129,19 @@ protected:
 
    TString DecodeUrlOptionValue(const char* value, Bool_t remove_quotes = kTRUE);
 
+   TFolder* GetSubFolder(const char* foldername, Bool_t force = kFALSE, Bool_t owner = kFALSE);
+
+   TFolder* CreateItem(const char* fullname, const char* title);
+
+   Bool_t SetItemField(TFolder* item, const char* name, const char* value);
+
+   TFolder* FindItem(const char* path);
+
+   const char* GetItemField(TFolder* item, const char* name);
+
 public:
 
-   TRootSniffer(const char *name, const char *objpath = "online");
+   TRootSniffer(const char *name, const char *objpath = "Objects");
    virtual ~TRootSniffer();
 
    static Bool_t IsDrawableClass(TClass *cl);
@@ -162,7 +182,9 @@ public:
 
    Bool_t ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length);
 
-   Bool_t ProduceExe(const char *path, const char *options, TString &res, Bool_t astxt = kFALSE);
+   Bool_t ProduceExe(const char *path, const char *options, Int_t reskind, TString *ret_str, void **ret_ptr = 0, Long_t *ret_length = 0);
+
+   Bool_t ExecuteCmd(const char *path, const char *options, TString& res);
 
    Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length);
 

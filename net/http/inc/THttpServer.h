@@ -246,6 +246,7 @@ public:
    ClassDef(THttpCallArg, 0) // Arguments for single HTTP call
 };
 
+// ______________________________________________________________________
 
 class THttpServer : public TNamed {
 
@@ -257,7 +258,8 @@ protected:
 
    Long_t       fMainThrdId;  //! id of the main ROOT process
 
-   TString      fJsRootSys;   //! location of JSROOT files
+   TString      fJSROOTSYS;   //! location of JSROOT files
+   TString      fROOTSYS;     //! location of ROOT files
    TString      fTopName;     //! name of top folder, default - "ROOT"
 
    TString      fDefaultPage; //! file name for default page name
@@ -317,6 +319,12 @@ public:
 
    /** Unregister object */
    Bool_t Unregister(TObject *obj);
+
+   /** Register command, which can be activated via web interface */
+   Bool_t RegisterCommand(const char* cmdname, const char* method, const char* icon = 0);
+
+   /** Hide folder or element in objects hierarchy in web interface */
+   Bool_t Hide(const char* foldername, Bool_t hide = kTRUE);
 
    /** Guess mime type base on file extension */
    static const char *GetMimeType(const char *path);
