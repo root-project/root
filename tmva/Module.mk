@@ -14,7 +14,7 @@ TMVADIRI     := $(TMVADIR)/inc
 
 ##### libTMVA #####
 TMVAL0       := $(MODDIRI)/LinkDef.h
-TMVALS       := $(MODDIRI)/LinkDef1.h $(MODDIRI)/LinkDef2.h $(MODDIRI)/LinkDef3.h $(MODDIRI)/LinkDef4.h
+TMVALS       := $(MODDIRI)/LinkDef1.h $(MODDIRI)/LinkDef2.h $(MODDIRI)/LinkDef3.h $(MODDIRI)/LinkDef4.h $(MODDIRI)/LinkDef5.h
 TMVADS       := $(call stripsrc,$(MODDIRS)/G__TMVA.cxx)
 TMVADO       := $(TMVADS:.cxx=.o)
 TMVADH       := $(TMVADS:.cxx=.h)
@@ -43,14 +43,19 @@ TMVAH4       := TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivat
 		TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h \
 		VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h \
 		VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h ROCCalc.h
-#TMVAH1C      := $(patsubst %,include/TMVA/%,$(TMVAH1))
-#TMVAH2C      := $(patsubst %,include/TMVA/%,$(TMVAH2))
-#TMVAH3C      := $(patsubst %,include/TMVA/%,$(TMVAH3))
-#TMVAH4C      := $(patsubst %,include/TMVA/%,$(TMVAH4))
+TMVAH5       := annconvergencetest.h  deviations.h mvaeffs.h PlotFoams.h  TMVAGui.h\
+	 BDTControlPlots.h  correlationscatters.h efficiencies.h  mvas.h probas.h \
+	 BDT.h   correlationscattersMultiClass.h  likelihoodrefs.h  mvasMulticlass.h  regression_averagedevs.h  TMVAMultiClassGui.h\
+	 BDT_Reg.h  correlations.h   mvaweights.h rulevisCorr.h  TMVARegGui.h\
+	 BoostControlPlots.h correlationsMultiClass.h network.h rulevis.h   variables.h\
+	 CorrGui.h  paracoor.h  rulevisHists.h variablesMultiClass.h\
+	 compareanapp.h  CorrGuiMultiClass.h   MovieMaker.h tmvaglob.h
+
 TMVAH1       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH1))
 TMVAH2       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH2))
 TMVAH3       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH3))
 TMVAH4       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH4))
+TMVAH5       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH5))
 TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/TMVA/*.h))
 TMVAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TMVAO        := $(call stripsrc,$(TMVAS:.cxx=.o))

@@ -22,17 +22,20 @@ DICTL1       := inc/LinkDef1.h
 DICTL2       := inc/LinkDef2.h
 DICTL3       := inc/LinkDef3.h
 DICTL4       := inc/LinkDef4.h
-DICTL        := $(DICTL1) $(DICTL2) $(DICTL3) $(DICTL4)
+DICTL5       := inc/LinkDef5.h
+DICTL        := $(DICTL1) $(DICTL2) $(DICTL3) $(DICTL4) $(DICTL5)
 DICTS1       := src/$(PACKAGE)_Dict1.C
 DICTS2       := src/$(PACKAGE)_Dict2.C
 DICTS3       := src/$(PACKAGE)_Dict3.C
 DICTS4       := src/$(PACKAGE)_Dict4.C
-DICTS        := $(DICTS1) $(DICTS2) $(DICTS3) $(DICTS4)
+DICTS5       := src/$(PACKAGE)_Dict5.C
+DICTS        := $(DICTS1) $(DICTS2) $(DICTS3) $(DICTS4) $(DICTS5)
 DICTO1       := $(OBJDIR)/$(PACKAGE)_Dict1.o
 DICTO2       := $(OBJDIR)/$(PACKAGE)_Dict2.o
 DICTO3       := $(OBJDIR)/$(PACKAGE)_Dict3.o
 DICTO4       := $(OBJDIR)/$(PACKAGE)_Dict4.o
-DICTO        := $(DICTO1) $(DICTO2) $(DICTO3) $(DICTO4)
+DICTO5       := $(OBJDIR)/$(PACKAGE)_Dict5.o
+DICTO        := $(DICTO1) $(DICTO2) $(DICTO3) $(DICTO4) $(DICTO5)
 DICTH1       := Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBase.h \
 		MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h \
 		MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h \
@@ -57,12 +60,21 @@ DICTH4       := TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivat
 		TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h \
 		VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h \
 		VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h ROCCalc.h  
+DICTH5       := annconvergencetest.h  deviations.h mvaeffs.h PlotFoams.h  TMVAGui.h\
+	 BDTControlPlots.h  correlationscatters.h efficiencies.h  mvas.h probas.h \
+	 BDT.h   correlationscattersMultiClass.h  likelihoodrefs.h  mvasMulticlass.h  regression_averagedevs.h  TMVAMultiClassGui.h\
+	 BDT_Reg.h  correlations.h  mvaweights.h rulevisCorr.h  TMVARegGui.h\
+	 BoostControlPlots.h correlationsMultiClass.h network.h rulevis.h   variables.h\
+	 CorrGui.h paracoor.h  rulevisHists.h variablesMultiClass.h\
+	 compareanapp.h  CorrGuiMultiClass.h   MovieMaker.h tmvaglob.h
+
+
 DICTH1       := $(patsubst %,inc/TMVA/%,$(DICTH1))
 DICTH2       := $(patsubst %,inc/TMVA/%,$(DICTH2))
 DICTH3       := $(patsubst %,inc/TMVA/%,$(DICTH3))
 DICTH4       := $(patsubst %,inc/TMVA/%,$(DICTH4))
-DICTH        := $(DICTH1) $(DICTH2) $(DICTH3) $(DICTH4)
-
+DICTH5       := $(patsubst %,inc/TMVA/%,$(DICTH5))
+DICTH        := $(DICTH1) $(DICTH2) $(DICTH3) $(DICTH4) $(DICTH5)
 
 SKIPCPPLIST  := 
 SKIPHLIST    := $(DICTHEAD) $(DICTL)
@@ -100,7 +112,7 @@ $(OBJDIR)/%.o : src/%.cxx
 	@echo "Done"
 
 # Rule to make the dictionary
-dict: sl $(DICTO1) $(DICTO2) $(DICTO3) $(DICTO4)
+dict: sl $(DICTO1) $(DICTO2) $(DICTO3) $(DICTO4) $(DICT05)
 
 $(DICTS1):  $(DICTH1) $(DICTL1)
 	@echo "Generating dictionary and rootmap $@" 
@@ -126,6 +138,12 @@ $(DICTS4):  $(DICTH4) $(DICTL4)
 	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rmf lib/libTMVA4.rootmap -rml libTMVA.so $^
 #	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rml libMinuit.so  -rml libMLP.so  -rml libMatrix.so  -rml libTree.so  -rml libGraf.so  -rml libTreePlayer.so  -rml libXMLIO.so -rmf lib/libTMVA4.rootmap $^
 
+$(DICTS5):  $(DICTH5) $(DICTL5)
+	@echo "Generating dictionary and rootmap $@" 
+	@mkdir -p $(LIBDIR)
+	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rmf lib/libTMVA5.rootmap -rml libTMVA.so $^
+#	$(shell root-config --exec-prefix)/bin/rootcling -f $@ -c -p $(INCLUDES) -rml libMinuit.so  -rml libMLP.so  -rml libMatrix.so  -rml libTree.so  -rml libGraf.so  -rml libTreePlayer.so  -rml libXMLIO.so -rmf lib/libTMVA5.rootmap $^
+
 $(DICTO1): $(DICTS1)
 	@echo "Compiling dictionary $<"
 	@mkdir -p $(OBJDIR)
@@ -145,6 +163,12 @@ $(DICTO4): $(DICTS4)
 	@echo "Compiling dictionary $<"
 	@mkdir -p $(OBJDIR)
 	@$(CXX) $(INCLUDES) $(CXXFLAGS) -g -c  -o $@ $<
+
+$(DICTO5): $(DICTS5)
+	@echo "Compiling dictionary $<"
+	@mkdir -p $(OBJDIR)
+	@$(CXX) $(INCLUDES) $(CXXFLAGS) -g -c  -o $@ $<
+
 
 
 
