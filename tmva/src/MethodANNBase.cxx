@@ -989,7 +989,7 @@ void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
    if (fEstimatorHistTrain) fEstimatorHistTrain->Write();
    if (fEstimatorHistTest ) fEstimatorHistTest ->Write();
 
-   // histograms containing weights for architecture plotting (used in macro "network.C")
+   // histograms containing weights for architecture plotting (used in macro "network.cxx")
    CreateWeightMonitoringHists( "weights_hist" );
 
    // now save all the epoch-wise monitoring information

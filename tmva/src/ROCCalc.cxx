@@ -20,6 +20,8 @@
 #include "TROOT.h"
 #include "TMatrixDSymEigen.h"
 #include "TColor.h"
+#include "TMVA/Config.h"
+
 
 #ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
@@ -125,7 +127,7 @@ void TMVA::ROCCalc::ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any 
    Int_t LineWidth__S = 2;
 
    // background
-   //Int_t icolor = UsePaperStyle ? 2 + 100 : 2;
+   //Int_t icolor = gConfig().fVariablePlotting.fUsePaperStyle ? 2 + 100 : 2;
    Int_t FillColor__B = c_BackgroundFill;
    Int_t FillStyle__B = 3554;
    Int_t LineColor__B = c_BackgroundLine;
