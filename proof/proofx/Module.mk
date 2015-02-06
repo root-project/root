@@ -65,6 +65,10 @@ PROOFXINCEXTRA += $(XROOTDDIRI:%=-I%)
 PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
 ifeq ($(XRDINCPRIVATE),yes)
 PROOFXINCEXTRA += -I$(XRDINCDIR)/private
+else
+ifeq ($(XRDINCPRIVATE),proof)
+PROOFXINCEXTRA += -Iproof/xrdinc
+endif
 endif
 
 # Xrootd client libs
