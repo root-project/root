@@ -28,27 +28,27 @@ void TMVA::PlotFoams( TString fileName,
    TControlBar* cbar = new TControlBar( "vertical", "Choose cell value for plot:", 50, 50 );
    if ((gDirectory->Get("SignalFoam") && gDirectory->Get("BgFoam")) ||
        gDirectory->Get("MultiTargetRegressionFoam")) {
-      TString macro = Form( "TMVA::Plot(\"%s\",%d, \"Event density\", %s)",
-                            fileName.Data(), TMVA::kValueDensity, (useTMVAStyle ? "kTRUE" : "kFALSE") );
+      TString macro = Form( "TMVA::Plot(\"%s\",%s, \"Event density\", %s)",
+                            fileName.Data(), "TMVA::kValueDensity", (useTMVAStyle ? "kTRUE" : "kFALSE") );
       cbar->AddButton( "Event density", macro, "Plot event density", "button" );
    } else if (gDirectory->Get("DiscrFoam") || gDirectory->Get("MultiClassFoam0")){
-      TString macro = Form( "TMVA::Plot(\"%s\", %d, \"Discriminator\", %s)",
-                            fileName.Data(), TMVA::kValue, (useTMVAStyle ? "kTRUE" : "kFALSE") );
+      TString macro = Form( "TMVA::Plot(\"%s\", %s, \"Discriminator\", %s)",
+                            fileName.Data(), "TMVA::kValue", (useTMVAStyle ? "kTRUE" : "kFALSE") );
       cbar->AddButton( "Discriminator", macro, "Plot discriminator", "button" );
    } else if (gDirectory->Get("MonoTargetRegressionFoam")){
-      TString macro = Form( "TMVA::Plot(\"%s\", %d, \"Target\", %s)",
-                            fileName.Data(), TMVA::kValue,  (useTMVAStyle ? "kTRUE" : "kFALSE") );
+      TString macro = Form( "TMVA::Plot(\"%s\", %s, \"Target\", %s)",
+                            fileName.Data(), "TMVA::kValue",  (useTMVAStyle ? "kTRUE" : "kFALSE") );
       cbar->AddButton( "Target", macro, "Plot target", "button" );
    } else {
       cout << "Error: no foams found in file: " << fileName << endl;
       return;
    }
 
-   TString macro_rms = Form( "TMVA::Plot(\"%s\", %d, \"Variance\", %s)",
-                             fileName.Data(), TMVA::kRms, (useTMVAStyle ? "kTRUE" : "kFALSE") );
+   TString macro_rms = Form( "TMVA::Plot(\"%s\", %s, \"Variance\", %s)",
+                             fileName.Data(), "TMVA::kRms", (useTMVAStyle ? "kTRUE" : "kFALSE") );
    cbar->AddButton( "Variance", macro_rms, "Plot variance", "button" );
-   TString macro_rms_ov_mean = Form( "TMVA::Plot(\"%s\", %d, \"Variance/Mean\", %s)",
-                                     fileName.Data(), TMVA::kRmsOvMean, (useTMVAStyle ? "kTRUE" : "kFALSE") );
+   TString macro_rms_ov_mean = Form( "TMVA::Plot(\"%s\", %s, \"Variance/Mean\", %s)",
+                                     fileName.Data(), "TMVA::kRmsOvMean", (useTMVAStyle ? "kTRUE" : "kFALSE") );
    cbar->AddButton( "Variance/Mean", macro_rms_ov_mean, "Plot variance over mean", "button" );
    TString macro_cell_tree = Form( "TMVA::PlotCellTree(\"%s\", \"Cell tree\", %s)",
                                    fileName.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
