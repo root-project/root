@@ -334,7 +334,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
-                                        -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
+                                        ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
   get_filename_component(dictname ${dictionary} NAME)
 
