@@ -16,7 +16,8 @@ void TMVA::rulevisHists( TString fin, TMVAGlob::TypeOfPlot type , bool useTMVASt
    TMVAGlob::Initialize( useTMVAStyle );
    
    // checks if file with name "fin" is already open, and if not opens one
-   TFile *file = TMVAGlob::OpenFile( fin );
+   //TFile *file =
+   TMVAGlob::OpenFile( fin );
 
    // get all titles of the method rulefit
    TList titles;

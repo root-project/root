@@ -49,7 +49,8 @@ void TMVA::compareanapp( TString finAn , TString finApp ,
 
       cout << "--- Method: " << methodName << endl;
 
-      TDirectory* mDir = (TDirectory*)key->ReadObj();
+      //TDirectory* mDir = (TDirectory*)
+      key->ReadObj();
       TList titles;
       //      UInt_t ninst = TMVAGlob::GetListOfTitles(mDir,titles);
       TIter nextTitle(&titles);

@@ -34,7 +34,8 @@ void TMVA::CorrGuiMultiClass(  TString fin , TString dirName , TString title ,
 
    // configure buttons      
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   //TFile* file =
+   TMVAGlob::OpenFile( fin );  
 
    TDirectory* dir = (TDirectory*)gDirectory->Get( dirName );
    if (!dir) {

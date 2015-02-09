@@ -16,7 +16,8 @@ ROOT_USE_PACKAGE(math/minuit)
 ROOT_USE_PACKAGE(math/mlp)
 ROOT_USE_PACKAGE(hist/histpainter)
 ROOT_USE_PACKAGE(tree/treeplayer)
-ROOT_USE_PACKAGE(io/xml)
+ROOT_USE_PACKAGE(io/xml) 
+ROOT_USE_PACKAGE(gui/gui) 
 
 set(headers1 Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBase.h
 	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
@@ -38,22 +39,29 @@ set(headers3 Config.h KDEKernel.h Interval.h LogInterval.h FitterBase.h MCFitter
          BDTEventWrapper.h CCTreeWrapper.h
          CCPruner.h CostComplexityPruneTool.h SVEvent.h OptimizeConfigParameters.h)
 set(headers4 TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivationSigmoid.h TActivationIdentity.h
-         TActivationTanh.h TActivationRadial.h TNeuronInputChooser.h TNeuronInput.h TNeuronInputSum.h
+         TActivationTanh.h TActivationRadial.h TActivationReLU.h TNeuronInputChooser.h TNeuronInput.h TNeuronInputSum.h
 	     TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h
 	     VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h 
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h ROCCalc.h)
+set(headers5 annconvergencetest.h  deviations.h mvaeffs.h PlotFoams.h  TMVAGui.h
+	 BDTControlPlots.h  correlationscatters.h efficiencies.h  mvas.h probas.h 
+	 BDT.h   correlationscattersMultiClass.h  likelihoodrefs.h  mvasMulticlass.h  regression_averagedevs.h  TMVAMultiClassGui.h
+	 BDT_Reg.h  correlations.h   mvaweights.h rulevisCorr.h  TMVARegGui.h
+	 BoostControlPlots.h correlationsMultiClass.h network.h rulevis.h   variables.h
+	 CorrGui.h  paracoor.h  rulevisHists.h variablesMultiClass.h
+	 compareanapp.h  CorrGuiMultiClass.h   MovieMaker.h tmvaglob.h)
 
 #---Need to suffix each header name by TMVA/  -----------------
-foreach(hs headers1 headers2 headers3 headers4)
+foreach(hs headers1 headers2 headers3 headers4 headers5)
   foreach(h ${${hs}})
     set(t${hs} ${t${hs}} TMVA/${h})
   endforeach()
 endforeach()
 
-ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx LIBRARIES Core
-                    DEPENDENCIES RIO Hist Tree MLP Minuit XMLIO)
+                    DEPENDENCIES RIO Hist Tree TreeViewer  MLP Minuit XMLIO Gui)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
                             COMPONENT headers
@@ -70,7 +78,7 @@ if(NOT gnuinstall)
                  PATTERN "data" EXCLUDE)
 endif()
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
+#ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 
 

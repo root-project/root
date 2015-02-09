@@ -15,7 +15,8 @@ void TMVA::BoostControlPlots( TString fin , Bool_t useTMVAStyle  )
    TMVAGlob::Initialize( useTMVAStyle );
   
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   //TFile* file =
+   TMVAGlob::OpenFile( fin );  
 
    // get all titles of the method Boost
    TList titles;

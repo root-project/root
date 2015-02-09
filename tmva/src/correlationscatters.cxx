@@ -11,7 +11,7 @@
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
 void TMVA::correlationscatters( TString fin , TString var, 
-                          TString dirName_, TString title ,
+                                TString dirName_, TString /*title */ ,
                           Bool_t isRegression ,
                           Bool_t useTMVAStyle  )
 {
@@ -29,7 +29,8 @@ void TMVA::correlationscatters( TString fin , TString var,
         << "\" (extension: \"" << extension << "\")" << endl;
 
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   //TFile* file =
+   TMVAGlob::OpenFile( fin );  
 
    TString dirName = dirName_ + "/CorrelationPlots";
   

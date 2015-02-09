@@ -11,8 +11,8 @@
 // input: - Input file (result from TMVA),
 //        - use of colors or grey scale
 //        - use of TMVA plotting TStyle
-void TMVA::correlationsMultiClass( TString fin , Bool_t isRegression , 
-                   Bool_t greyScale , Bool_t useTMVAStyle  )
+void TMVA::correlationsMultiClass( TString fin , Bool_t /* isRegression */ , 
+                                   Bool_t /* greyScale */ , Bool_t useTMVAStyle  )
 {
 
    // set style and remove existing canvas'

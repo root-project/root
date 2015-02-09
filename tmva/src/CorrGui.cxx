@@ -59,7 +59,7 @@ void TMVA::CorrGui(  TString fin, TString dirName , TString title ,
    // how many variables  are in the directory?
    Int_t noVar = TMVAGlob::GetNumberOfInputVariables(dir);
    cout << "found number of variables='" << noVar<< endl;
-   TString Var[noVar]; 
+   std::vector<TString> Var(noVar); 
 
    TIter next(dir->GetListOfKeys());
    Int_t it=0;

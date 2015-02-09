@@ -47,7 +47,8 @@ void TMVA::probas( TString fin , Bool_t useTMVAStyle  )
    const Bool_t Save_Images     = kTRUE;
 
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   //TFile* file =
+   TMVAGlob::OpenFile( fin );  
 
    const Int_t width = 600;   // size of canvas
 

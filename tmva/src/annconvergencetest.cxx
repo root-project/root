@@ -67,7 +67,8 @@ void TMVA::annconvergencetest( TString fin , Bool_t useTMVAStyle  )
    TMVAGlob::Initialize( useTMVAStyle );
   
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   //TFile* file =
+   TMVAGlob::OpenFile( fin );  
 
    // get all titles of the method likelihood
    TList titles;
