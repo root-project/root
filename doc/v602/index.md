@@ -1,10 +1,10 @@
-% ROOT Version 6.02/00 Release Notes
-% September 2014
+% ROOT Version 6.02/05 Release Notes
+% February 2015
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.02/00 has been released on September 30, 2014.
+ROOT version 6.02/05 has been released on February 9, 2015.
 
 For more information, see:
 
