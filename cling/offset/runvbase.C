@@ -31,9 +31,14 @@ struct Bottom : public Mid1, Mid2
    int fBottom;
 };
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winaccessible-base"
+
 struct Basement: public Fill, public Mid2, public Bottom {
    char FillMore[17];
 };
+
+#pragma clang diagnostic pop
 
 extern "C" int printf(const char*,...);
 
