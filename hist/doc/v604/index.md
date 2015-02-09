@@ -44,6 +44,8 @@
 }
     ```
     ![COLZ0 plot example](colzo.png "COLZ0 plot example")
+- The parameter `gStyle->SetHistTopMargin()` was ignored when plotting a 2D histogram
+  using the option `E`. This can be seen plotting the histogram with `"LEGO E"`.
 
 ### THStack
 

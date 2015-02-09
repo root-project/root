@@ -6027,7 +6027,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    fXbuf[1] = Hparam.ymin;
    fYbuf[1] = Hparam.ymax;
    fXbuf[2] = Hparam.zmin;
-   fYbuf[2] = Hparam.zmax;
+   fYbuf[2] = Hparam.zmax*(1. + gStyle->GetHistTopMargin());
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
    TView *view = gPad->GetView();
    if (!view) {
