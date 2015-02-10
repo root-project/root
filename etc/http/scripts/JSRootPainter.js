@@ -7602,7 +7602,7 @@
    JSROOT.HierarchyPainter.prototype.display = function(itemname, drawopt, call_back) {
 
       function do_call_back(res) {
-         if (typeof call_back=='function') call_back(res);
+         if (typeof call_back=='function') call_back(res, itemname);
       }
 
       if (!this.CreateDisplay()) return do_call_back(null);
@@ -7617,7 +7617,7 @@
 
       if (item!=null) {
          var cando = this.CheckCanDo(item);
-         if (!cando.display || ('_player' in item)) return this.player(itemname, drawopt, call_back);
+         if (!cando.display || ('_player' in item)) return this.player(itemname, drawopt, do_call_back);
       }
 
       if (updating) {
@@ -7762,16 +7762,28 @@
 
       var h = this;
 
-      // Display and drop all items
+      // We start display of all items parallel
       for (var i in items)
-         this.display(items[i], options[i], function(painter) {
-            var islastitem = i==items.length-1;
-            if ((painter!=0) && (dropitems[i]!=null)) {
-               for (var j in dropitems[i])
-                  h.dropitem(dropitems[i][j], painter.divid, islastitem && (j==dropitems[i].length-1) ? call_back : null);
-            } else {
-               if (islastitem && (typeof call_back == 'function')) call_back();
+         this.display(items[i], options[i], function(painter, itemname) {
+            // one cannot use index i in callback - it is asynchron
+            var indx = items.indexOf(itemname);
+            if (indx<0) return console.log('did not found item ' + itemname);
+
+            items[indx] = "---"; // mark item as ready
+
+            function DropNextItem() {
+               if ((painter!=null) && (dropitems[indx]!=null) && (dropitems[indx].length>0))
+                  h.dropitem(dropitems[indx].shift(), painter.divid, DropNextItem);
+
+               var isany = false;
+               for (var cnt in items)
+                  if (items[cnt]!='---') isany = true;
+
+               // only when items drawn and all sub-items dropped, one could call call-back
+               if (!isany && (typeof call_back == 'function')) call_back();
             }
+
+            DropNextItem();
          });
    }
 
