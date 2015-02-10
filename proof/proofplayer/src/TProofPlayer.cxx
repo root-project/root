@@ -1030,7 +1030,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    TCleanup clean(this);
 
    fSelectorClass = 0;
-   Int_t version = -1;
    TString wmsg;
    TRY {
       if (AssertSelector(selector_file) != 0 || !fSelector) {
@@ -1039,7 +1038,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
 
       fSelectorClass = fSelector->IsA();
-      version = fSelector->Version();
+      Int_t version = fSelector->Version();
       if (version == 0 && IsClient()) fSelector->GetOutputList()->Clear();
  
       fOutput = (THashList *) fSelector->GetOutputList();
@@ -1313,7 +1312,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             // Set the last entry
             TProofServ::SetLastEntry(entry);
 
-            if (version == 0) {
+            if (fSelector->Version() == 0) {
                PDB(kLoop,3)
                   Info("Process","Call ProcessCut(%lld)", entry);
                if (fSelector->ProcessCut(entry)) {
@@ -1460,7 +1459,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       MapOutputListToDataMembers();
 
       if (!fSelStatus->TestBit(TStatus::kNotOk)) {
-         if (version == 0) {
+         if (fSelector->Version() == 0) {
             PDB(kLoop,1) Info("Process","Call Terminate()");
             fSelector->Terminate();
          } else {
