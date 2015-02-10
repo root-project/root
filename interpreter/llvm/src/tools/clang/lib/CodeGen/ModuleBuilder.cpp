@@ -125,7 +125,7 @@ namespace clang {
       return M.get();
     }
 
-    void print(llvm::raw_ostream& out) {
+    void print(llvm::raw_ostream& out) override {
       out << "\n\nCodeGen:\n";
       //llvm::SmallPtrSet<llvm::GlobalValue*, 10> WeakRefReferences;
       out << " WeakRefReferences (llvm::SmallPtrSet<llvm::GlobalValue*, 10>)\n";
@@ -239,7 +239,7 @@ namespace clang {
       out.flush();
     }
 
-    virtual void forgetGlobal(llvm::GlobalValue* GV) {
+    virtual void forgetGlobal(llvm::GlobalValue* GV) override {
       for(auto I = Builder->ConstantStringMap.begin(),
             E = Builder->ConstantStringMap.end(); I != E; ++I) {
         if (I->second == GV) {
