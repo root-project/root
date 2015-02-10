@@ -6066,6 +6066,12 @@ Int_t TProofServ::HandleWorkerLists(TMessage *mess)
                      if (IsEndMaster())
                         PDB(kGlobal, 1) Info("HandleWorkerList", "%d workers could not be (re-)activated", nactmax - nactnew);
                   }
+               } else if (ord == "restore") {
+                  if (nwc > 0) {
+                     PDB(kGlobal, 1) Info("HandleWorkerList","active worker(s) restored");
+                  } else {
+                     Error("HandleWorkerList", "some active worker(s) could not be restored; check logs");
+                  }
                } else {
                   if (nactnew == (nact + nwc)) {
                      if (nwc > 0)

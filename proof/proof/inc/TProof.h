@@ -704,7 +704,7 @@ private:
 
    Bool_t   IsEndMaster() const { return fEndMaster; }
    Int_t    ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save);
-   void     RestoreActiveList();
+   Int_t    RestoreActiveList();
    void     SaveActiveList();
 
    Bool_t   IsSync() const { return fSync; }
