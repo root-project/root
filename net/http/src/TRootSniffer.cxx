@@ -1212,7 +1212,7 @@ Bool_t TRootSniffer::IsStreamerInfoItem(const char *itemname)
 }
 
 //______________________________________________________________________________
-Bool_t TRootSniffer::ProduceBinary(const char *path, const char* query, void *&ptr,
+Bool_t TRootSniffer::ProduceBinary(const char *path, const char* /*query*/, void *&ptr,
                                    Long_t &length)
 {
    // produce binary data for specified item
