@@ -920,7 +920,7 @@ Bool_t TRootSniffer::ProduceJson(const char *path, const char *options,
 }
 
 //______________________________________________________________________________
-Bool_t TRootSniffer::ExecuteCmd(const char *path, const char */*options*/,
+Bool_t TRootSniffer::ExecuteCmd(const char *path, const char * /*options*/,
                                 TString& res)
 {
    // execute command marked as _kind=='Command'
