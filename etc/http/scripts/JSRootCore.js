@@ -14,8 +14,8 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.3 dev 6/02/2015";
-   
+   JSROOT.version = "3.3 dev 10/02/2015";
+
    JSROOT.source_dir = "";
 
    // TODO: all jQuery-related functions should go into extra script
@@ -153,6 +153,45 @@
       return dflt;
    }
 
+   JSROOT.GetUrlOptionAsArray = function(opt, url) {
+      // special handling of URL options to produce array
+      // if normal option is specified ...?opt=abc, than array with single element will be created
+      // one could specify normal JSON array ...?opt=['item1','item2']
+      // but also one could skip quotes ...?opt=[item1,item2]
+      // one could collect values from several options, specifying
+      // options names via semicolon like opt='item;items'
+
+      var res = [];
+
+      while (opt.length>0) {
+         var separ = opt.indexOf(";");
+         var part = separ>0 ? opt.substr(0, separ) : opt;
+         if (separ>0) opt = opt.substr(separ+1); else opt = "";
+
+         var val = this.GetUrlOption(part, url, null);
+         if (val==null) continue;
+         val = val.trim();
+         if (val=="") continue;
+
+         // return as array with single element
+         if ((val[0]!='[') && (val[val.length-1]!=']')) {
+            res.push(val); continue;
+         }
+
+         // try to parse ourself
+         var arr = val.substr(1, val.length-2).split(","); // remove brackets
+
+         for (var i in arr) {
+            var sub = arr[i].trim();
+            if ((sub.length>1) && (sub[0]==sub[sub.length-1]) && ((sub[0]=='"') || (sub[0]=="'")))
+               sub = sub.substr(1, sub.length-2);
+            res.push(sub);
+         }
+      }
+      return res;
+   }
+
+
    JSROOT.findFunction = function(name) {
       var func = window[name];
       if (typeof func == 'function') return func;
@@ -221,7 +260,7 @@
             if (xhr.status != 200 && xhr.status != 206) {
                return callback(null);
             }
-            
+
             if (kind == "xml") return callback(xhr.responseXML);
             if (kind == "text") return callback(xhr.responseText);
             if (kind == "object") return callback(JSROOT.parse(xhr.responseText));
@@ -298,7 +337,7 @@
             document.getElementById(debugout).innerHTML = "";
 
          if (typeof callback == 'string') callback = JSROOT.findFunction(callback);
-         
+
          if (typeof callback == 'function') callback();
       }
 
@@ -320,7 +359,7 @@
          filename = filename.slice(3);
       }
       var isstyle = filename.indexOf('.css') > 0;
-      
+
       if (isstyle) {
          var styles = document.getElementsByTagName('link');
          for (var n in styles) {
@@ -2027,7 +2066,7 @@
       return JSROOT.Math.Landau(x, f['fParams'][i+1],f['fParams'][i+2], true);
    };
 
-   
+
    // it is important to run this function at the end when all other
    // functions are available
    (function() {
@@ -2043,11 +2082,11 @@
          if (pos<0) continue;
 
          JSROOT.source_dir = src.substr(0, pos);
-         
+
          console.log("Set JSROOT.source_dir to " + JSROOT.source_dir);
 
          if (JSROOT.GetUrlOption('gui', src)!=null) return JSROOT.BuildSimpleGUI();
-         
+
          var prereq = "";
          if (JSROOT.GetUrlOption('io', src)!=null) prereq += "io;";
          if (JSROOT.GetUrlOption('2d', src)!=null) prereq += "2d;";
@@ -2060,7 +2099,7 @@
             onload = JSROOT.findFunction(onload);
             if (typeof onload == 'function') onload();
          }
-         
+
          return;
       }
    })();

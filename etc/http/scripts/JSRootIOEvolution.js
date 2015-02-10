@@ -1255,6 +1255,7 @@
       this._typename = "TFile";
       this.fOffset = 0;
       this.fEND = 0;
+      this.fFullURL = url;
       this.fURL = url;
       this.fAcceptRanges = true; // when disabled ('+' at the end of file name), complete file content read with single operation
       this.fUseStampPar = true;  // use additional stamp parameter for file name to avoid browser caching problem
@@ -1499,6 +1500,8 @@
       }
 
       if ((typeof cycle != 'number') || (cycle<0)) cycle = 1;
+      // remove leading slashes
+      while ((obj_name.length>0) && (obj_name[0] == "/")) obj_name = obj_name.substr(1);
 
       var file = this;
 

@@ -7,12 +7,22 @@ Main motivation for changes - fix different errors,
 make JavaScript code more flexible and applicable for online environment.
 
 Changes in 3.3
-1. Use d3.time.scale for display of time scales 
-2. Within JSRootCore.js script URL one could specify JSROOT 
-   functionality to be loaded: '2d', '3d', 'io', 'load', 'onload'. 
+1. Use d3.time.scale for display of time scales
+2. Within JSRootCore.js script URL one could specify JSROOT
+   functionality to be loaded: '2d', '3d', 'io', 'load', 'onload'.
    Old method with JSROOT.AssertPrerequisites will also work.
 3. With THttpServer JSROOT now provides simple control functionality.
    One could publish commands and execute them from the browser
+4. One could open several ROOT files simultaneously
+5. Add 'simple' layout - drawing uses full space on the right side
+6. Allow to open ROOT files in online session (via url parameter)
+7. One could monitor simultaneously objects from server and root files
+8. Implement 'autocol' draw option  - when superimposing histograms,
+   their line colors will be automatically assigned
+9. Implement 'nostat' draw option - disabled stat drawing
+10.Using '_same_' identifier in item name, one can easily superimpose
+   same items from different files. Could be used in URL like:
+      &files=[file1.root,file2.root]&item=file1.root/hpx+file2.root/_same_
 
 
 Changes in 3.2
