@@ -1360,6 +1360,7 @@ guess_architecture() {
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
         linux:x32:*)           arch=linuxx32gcc     ;;
         linux:arm*:*)          arch=linuxarm        ;;
+        linux:aarch64:*)       arch=linuxarm64      ;;
         linux:hppa*:*)         arch=linux           ;;
         linux:sparc*:*)        arch=linux           ;;
         linux:parisc*:*)       arch=linuxhppa       ;;
@@ -1903,6 +1904,10 @@ linuxx8664k1om*)
    enable_tmva="no"
    ;;
 linuxx8664*)
+   logmsg "Will check 64bit libraries"
+   checklinux64="yes"
+   checklib64="yes" ;;
+linuxarm64)
    logmsg "Will check 64bit libraries"
    checklinux64="yes"
    checklib64="yes" ;;
