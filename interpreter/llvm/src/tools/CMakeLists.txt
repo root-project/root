@@ -87,6 +87,10 @@ if(LLVM_NOCLING)
   ignore_llvm_tool_subdirectory(cling)
 endif()
 
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../../cling)
+  add_llvm_external_project(../../../cling)
+endif()
+
 if( NOT LLVM_INCLUDE_TOOLS STREQUAL "bootstrap-only" )
   add_llvm_external_project(lld)
   add_llvm_external_project(lldb)
