@@ -87,10 +87,10 @@ public:
   unsigned size() const { return NumParams; }
 
   ArrayRef<NamedDecl*> asArray() {
-    return ArrayRef<NamedDecl*>(begin(), size());
+    return llvm::makeArrayRef(begin(), end());
   }
   ArrayRef<const NamedDecl*> asArray() const {
-    return ArrayRef<const NamedDecl*>(begin(), size());
+    return llvm::makeArrayRef(begin(), size());
   }
 
   NamedDecl* getParam(unsigned Idx) {
@@ -204,7 +204,7 @@ public:
 
   /// \brief Produce this as an array ref.
   ArrayRef<TemplateArgument> asArray() const {
-    return ArrayRef<TemplateArgument>(data(), size());
+    return llvm::makeArrayRef(data(), size());
   }
 
   /// \brief Retrieve the number of template arguments in this
@@ -236,7 +236,7 @@ protected:
       TemplateParams(nullptr) {}
 
   // Construct a template decl with the given name and parameters.
-  // Used when there is not templated element (tt-params, alias?).
+  // Used when there is not templated element (tt-params).
   TemplateDecl(Kind DK, DeclContext *DC, SourceLocation L,
                DeclarationName Name, TemplateParameterList *Params)
     : NamedDecl(DK, DC, L, Name), TemplatedDecl(nullptr),
@@ -550,42 +550,24 @@ protected:
     }
   };
 
-  template <typename EntryType,
-            typename _SETraits = SpecEntryTraits<EntryType>,
-            typename _DeclType = typename _SETraits::DeclType>
-  class SpecIterator : public std::iterator<std::forward_iterator_tag,
-                                            _DeclType*, ptrdiff_t,
-                                            _DeclType*, _DeclType*> {
-    typedef _SETraits SETraits;
-    typedef _DeclType DeclType;
-
-    typedef typename llvm::FoldingSetVector<EntryType>::iterator
-      SetIteratorType;
-
-    SetIteratorType SetIter;
-
-  public:
-    SpecIterator() : SetIter() {}
-    SpecIterator(SetIteratorType SetIter) : SetIter(SetIter) {}
+  template <typename EntryType, typename SETraits = SpecEntryTraits<EntryType>,
+            typename DeclType = typename SETraits::DeclType>
+  struct SpecIterator
+      : llvm::iterator_adaptor_base<
+            SpecIterator<EntryType, SETraits, DeclType>,
+            typename llvm::FoldingSetVector<EntryType>::iterator,
+            typename std::iterator_traits<typename llvm::FoldingSetVector<
+                EntryType>::iterator>::iterator_category,
+            DeclType *, ptrdiff_t, DeclType *, DeclType *> {
+    SpecIterator() {}
+    explicit SpecIterator(
+        typename llvm::FoldingSetVector<EntryType>::iterator SetIter)
+        : SpecIterator::iterator_adaptor_base(std::move(SetIter)) {}
 
     DeclType *operator*() const {
-      return SETraits::getMostRecentDecl(&*SetIter);
+      return SETraits::getMostRecentDecl(&*this->I);
     }
     DeclType *operator->() const { return **this; }
-
-    SpecIterator &operator++() { ++SetIter; return *this; }
-    SpecIterator operator++(int) {
-      SpecIterator tmp(*this);
-      ++(*this);
-      return tmp;
-    }
-
-    bool operator==(SpecIterator Other) const {
-      return SetIter == Other.SetIter;
-    }
-    bool operator!=(SpecIterator Other) const {
-      return SetIter != Other.SetIter;
-    }
   };
 
   template <typename EntryType>
@@ -788,9 +770,6 @@ protected:
 
   friend class FunctionDecl;
 
-  /// \brief Load any lazily-loaded specializations from the external source.
-  void LoadLazySpecializations() const;
-
   /// \brief Retrieve the set of function template specializations of this
   /// function template.
   llvm::FoldingSetVector<FunctionTemplateSpecializationInfo> &
@@ -804,6 +783,9 @@ protected:
                          void *InsertPos);
 
 public:
+  /// \brief Load any lazily-loaded specializations from the external source.
+  void LoadLazySpecializations() const;
+
   /// Get the underlying function declaration of the template.
   FunctionDecl *getTemplatedDecl() const {
     return static_cast<FunctionDecl*>(TemplatedDecl);
@@ -1827,9 +1809,6 @@ protected:
     uint32_t *LazySpecializations;
   };
 
-  /// \brief Load any lazily-loaded specializations from the external source.
-  void LoadLazySpecializations() const;
-
   /// \brief Retrieve the set of specializations of this class template.
   llvm::FoldingSetVector<ClassTemplateSpecializationDecl> &
   getSpecializations() const;
@@ -1851,6 +1830,9 @@ protected:
   }
 
 public:
+  /// \brief Load any lazily-loaded specializations from the external source.
+  void LoadLazySpecializations() const;
+
   /// \brief Get the underlying class declarations of the template.
   CXXRecordDecl *getTemplatedDecl() const {
     return static_cast<CXXRecordDecl *>(TemplatedDecl);
@@ -2662,9 +2644,6 @@ protected:
     uint32_t *LazySpecializations;
   };
 
-  /// \brief Load any lazily-loaded specializations from the external source.
-  void LoadLazySpecializations() const;
-
   /// \brief Retrieve the set of specializations of this variable template.
   llvm::FoldingSetVector<VarTemplateSpecializationDecl> &
   getSpecializations() const;
@@ -2686,6 +2665,9 @@ protected:
   }
 
 public:
+  /// \brief Load any lazily-loaded specializations from the external source.
+  void LoadLazySpecializations() const;
+
   /// \brief Get the underlying variable declarations of the template.
   VarDecl *getTemplatedDecl() const {
     return static_cast<VarDecl *>(TemplatedDecl);

@@ -56,6 +56,8 @@ def FeatureCRBits    : SubtargetFeature<"crbits", "UseCRBits", "true",
                               "Use condition-register bits individually">;
 def FeatureAltivec   : SubtargetFeature<"altivec","HasAltivec", "true",
                                         "Enable Altivec instructions">;
+def FeatureSPE       : SubtargetFeature<"spe","HasSPE", "true",
+                                        "Enable SPE instructions">;
 def FeatureMFOCRF    : SubtargetFeature<"mfocrf","HasMFOCRF", "true",
                                         "Enable the MFOCRF instruction">;
 def FeatureFSqrt     : SubtargetFeature<"fsqrt","HasFSQRT", "true",
@@ -86,13 +88,35 @@ def FeaturePOPCNTD   : SubtargetFeature<"popcntd","HasPOPCNTD", "true",
                                         "Enable the popcnt[dw] instructions">;
 def FeatureLDBRX     : SubtargetFeature<"ldbrx","HasLDBRX", "true",
                                         "Enable the ldbrx instruction">;
+def FeatureCMPB      : SubtargetFeature<"cmpb", "HasCMPB", "true",
+                                        "Enable the cmpb instruction">;
+def FeatureICBT      : SubtargetFeature<"icbt","HasICBT", "true",
+                                        "Enable icbt instruction">;
 def FeatureBookE     : SubtargetFeature<"booke", "IsBookE", "true",
-                                        "Enable Book E instructions">;
+                                        "Enable Book E instructions",
+                                        [FeatureICBT]>;
+def FeatureMSYNC     : SubtargetFeature<"msync", "HasOnlyMSYNC", "true",
+                              "Has only the msync instruction instead of sync",
+                              [FeatureBookE]>;
+def FeatureE500      : SubtargetFeature<"e500", "IsE500", "true",
+                                        "Enable E500/E500mc instructions">;
+def FeaturePPC4xx    : SubtargetFeature<"ppc4xx", "IsPPC4xx", "true",
+                                        "Enable PPC 4xx instructions">;
+def FeaturePPC6xx    : SubtargetFeature<"ppc6xx", "IsPPC6xx", "true",
+                                        "Enable PPC 6xx instructions">;
 def FeatureQPX       : SubtargetFeature<"qpx","HasQPX", "true",
                                         "Enable QPX instructions">;
 def FeatureVSX       : SubtargetFeature<"vsx","HasVSX", "true",
                                         "Enable VSX instructions",
                                         [FeatureAltivec]>;
+def FeatureP8Vector  : SubtargetFeature<"power8-vector", "HasP8Vector", "true",
+                                        "Enable POWER8 vector instructions",
+                                        [FeatureVSX, FeatureAltivec]>;
+
+def FeatureInvariantFunctionDescriptors :
+  SubtargetFeature<"invariant-function-descriptors",
+                   "HasInvariantFunctionDescriptors", "true",
+                   "Assume function descriptors are invariant">;
 
 def DeprecatedMFTB   : SubtargetFeature<"", "DeprecatedMFTB", "true",
                                         "Treat mftb as deprecated">;
@@ -102,10 +126,8 @@ def DeprecatedDST    : SubtargetFeature<"", "DeprecatedDST", "true",
 // Note: Future features to add when support is extended to more
 // recent ISA levels:
 //
-// CMPB         p6, p6x, p7        cmpb
 // DFP          p6, p6x, p7        decimal floating-point instructions
 // POPCNTB      p5 through p7      popcntb and related instructions
-// VSX          p7                 vector-scalar instruction set
 
 //===----------------------------------------------------------------------===//
 // ABI Selection                                                              //
@@ -188,10 +210,12 @@ include "PPCInstrInfo.td"
 def : Processor<"generic", G3Itineraries, [Directive32]>;
 def : ProcessorModel<"440", PPC440Model, [Directive440, FeatureISEL,
                                           FeatureFRES, FeatureFRSQRTE,
-                                          FeatureBookE, DeprecatedMFTB]>;
+                                          FeatureICBT, FeatureBookE, 
+                                          FeatureMSYNC, DeprecatedMFTB]>;
 def : ProcessorModel<"450", PPC440Model, [Directive440, FeatureISEL,
                                           FeatureFRES, FeatureFRSQRTE,
-                                          FeatureBookE, DeprecatedMFTB]>;
+                                          FeatureICBT, FeatureBookE, 
+                                          FeatureMSYNC, DeprecatedMFTB]>;
 def : Processor<"601", G3Itineraries, [Directive601]>;
 def : Processor<"602", G3Itineraries, [Directive602]>;
 def : Processor<"603", G3Itineraries, [Directive603,
@@ -218,6 +242,34 @@ def : Processor<"7450", G4PlusItineraries, [Directive7400, FeatureAltivec,
                                             FeatureFRES, FeatureFRSQRTE]>;
 def : Processor<"g4+", G4PlusItineraries, [Directive7400, FeatureAltivec,
                                            FeatureFRES, FeatureFRSQRTE]>;
+
+/*  Since new processors generally contain a superset of features of those that
+    came before them, the idea is to make implementations of new processors
+    less error prone and easier to read.
+    Namely:
+        list<SubtargetFeature> Power8FeatureList = ...
+        list<SubtargetFeature> FutureProcessorSpecificFeatureList =
+            [ features that Power8 does not support ]
+        list<SubtargetFeature> FutureProcessorFeatureList =
+            !listconcat(Power8FeatureList, FutureProcessorSpecificFeatureList)
+
+    Makes it explicit and obvious what is new in FutureProcesor vs. Power8 as
+    well as providing a single point of definition if the feature set will be
+    used elsewhere.
+    
+*/
+def ProcessorFeatures {
+    list<SubtargetFeature> Power8FeatureList =
+        [DirectivePwr8, FeatureAltivec, FeatureVSX, FeatureP8Vector,
+        FeatureMFOCRF, FeatureFCPSGN, FeatureFSqrt, FeatureFRE,
+        FeatureFRES, FeatureFRSQRTE, FeatureFRSQRTES,
+        FeatureRecipPrec, FeatureSTFIWX, FeatureLFIWAX,
+        FeatureFPRND, FeatureFPCVT, FeatureISEL,
+        FeaturePOPCNTD, FeatureCMPB, FeatureLDBRX,
+        Feature64Bit /*, Feature64BitRegs */, FeatureICBT,
+        DeprecatedMFTB, DeprecatedDST];
+}
+
 def : ProcessorModel<"970", G5Model,
                   [Directive970, FeatureAltivec,
                    FeatureMFOCRF, FeatureFSqrt,
@@ -231,27 +283,27 @@ def : ProcessorModel<"g5", G5Model,
                    DeprecatedMFTB, DeprecatedDST]>;
 def : ProcessorModel<"e500mc", PPCE500mcModel,
                   [DirectiveE500mc, FeatureMFOCRF,
-                   FeatureSTFIWX, FeatureBookE, FeatureISEL,
-                   DeprecatedMFTB]>;
+                   FeatureSTFIWX, FeatureICBT, FeatureBookE, 
+                   FeatureISEL, DeprecatedMFTB]>;
 def : ProcessorModel<"e5500", PPCE5500Model,
                   [DirectiveE5500, FeatureMFOCRF, Feature64Bit,
-                   FeatureSTFIWX, FeatureBookE, FeatureISEL,
-                   DeprecatedMFTB]>;
+                   FeatureSTFIWX, FeatureICBT, FeatureBookE, 
+                   FeatureISEL, DeprecatedMFTB]>;
 def : ProcessorModel<"a2", PPCA2Model,
-                  [DirectiveA2, FeatureBookE, FeatureMFOCRF,
+                  [DirectiveA2, FeatureICBT, FeatureBookE, FeatureMFOCRF,
                    FeatureFCPSGN, FeatureFSqrt, FeatureFRE, FeatureFRES,
                    FeatureFRSQRTE, FeatureFRSQRTES, FeatureRecipPrec,
                    FeatureSTFIWX, FeatureLFIWAX,
                    FeatureFPRND, FeatureFPCVT, FeatureISEL,
-                   FeaturePOPCNTD, FeatureLDBRX, Feature64Bit
+                   FeaturePOPCNTD, FeatureCMPB, FeatureLDBRX, Feature64Bit
                /*, Feature64BitRegs */, DeprecatedMFTB]>;
 def : ProcessorModel<"a2q", PPCA2Model,
-                  [DirectiveA2, FeatureBookE, FeatureMFOCRF,
+                  [DirectiveA2, FeatureICBT, FeatureBookE, FeatureMFOCRF,
                    FeatureFCPSGN, FeatureFSqrt, FeatureFRE, FeatureFRES,
                    FeatureFRSQRTE, FeatureFRSQRTES, FeatureRecipPrec,
                    FeatureSTFIWX, FeatureLFIWAX,
                    FeatureFPRND, FeatureFPCVT, FeatureISEL,
-                   FeaturePOPCNTD, FeatureLDBRX, Feature64Bit
+                   FeaturePOPCNTD, FeatureCMPB, FeatureLDBRX, Feature64Bit
                /*, Feature64BitRegs */, FeatureQPX, DeprecatedMFTB]>;
 def : ProcessorModel<"pwr3", G5Model,
                   [DirectivePwr3, FeatureAltivec,
@@ -277,45 +329,33 @@ def : ProcessorModel<"pwr6", G5Model,
                   [DirectivePwr6, FeatureAltivec,
                    FeatureMFOCRF, FeatureFCPSGN, FeatureFSqrt, FeatureFRE,
                    FeatureFRES, FeatureFRSQRTE, FeatureFRSQRTES,
-                   FeatureRecipPrec, FeatureSTFIWX, FeatureLFIWAX,
+                   FeatureRecipPrec, FeatureSTFIWX, FeatureLFIWAX, FeatureCMPB,
                    FeatureFPRND, Feature64Bit /*, Feature64BitRegs */,
                    DeprecatedMFTB, DeprecatedDST]>;
 def : ProcessorModel<"pwr6x", G5Model,
                   [DirectivePwr5x, FeatureAltivec, FeatureMFOCRF,
                    FeatureFCPSGN, FeatureFSqrt, FeatureFRE, FeatureFRES,
                    FeatureFRSQRTE, FeatureFRSQRTES, FeatureRecipPrec,
-                   FeatureSTFIWX, FeatureLFIWAX,
+                   FeatureSTFIWX, FeatureLFIWAX, FeatureCMPB,
                    FeatureFPRND, Feature64Bit,
                    DeprecatedMFTB, DeprecatedDST]>;
 def : ProcessorModel<"pwr7", P7Model,
-                  [DirectivePwr7, FeatureAltivec,
+                  [DirectivePwr7, FeatureAltivec, FeatureVSX,
                    FeatureMFOCRF, FeatureFCPSGN, FeatureFSqrt, FeatureFRE,
                    FeatureFRES, FeatureFRSQRTE, FeatureFRSQRTES,
                    FeatureRecipPrec, FeatureSTFIWX, FeatureLFIWAX,
                    FeatureFPRND, FeatureFPCVT, FeatureISEL,
-                   FeaturePOPCNTD, FeatureLDBRX,
+                   FeaturePOPCNTD, FeatureCMPB, FeatureLDBRX,
                    Feature64Bit /*, Feature64BitRegs */,
                    DeprecatedMFTB, DeprecatedDST]>;
-def : ProcessorModel<"pwr8", P7Model /* FIXME: Update to P8Model when available */,
-                  [DirectivePwr8, FeatureAltivec,
-                   FeatureMFOCRF, FeatureFCPSGN, FeatureFSqrt, FeatureFRE,
-                   FeatureFRES, FeatureFRSQRTE, FeatureFRSQRTES,
-                   FeatureRecipPrec, FeatureSTFIWX, FeatureLFIWAX,
-                   FeatureFPRND, FeatureFPCVT, FeatureISEL,
-                   FeaturePOPCNTD, FeatureLDBRX,
-                   Feature64Bit /*, Feature64BitRegs */,
-                   DeprecatedMFTB, DeprecatedDST]>;
+def : ProcessorModel<"pwr8", P8Model, ProcessorFeatures.Power8FeatureList>;
 def : Processor<"ppc", G3Itineraries, [Directive32]>;
 def : ProcessorModel<"ppc64", G5Model,
                   [Directive64, FeatureAltivec,
                    FeatureMFOCRF, FeatureFSqrt, FeatureFRES,
                    FeatureFRSQRTE, FeatureSTFIWX,
                    Feature64Bit /*, Feature64BitRegs */]>;
-def : ProcessorModel<"ppc64le", G5Model,
-                  [Directive64, FeatureAltivec,
-                   FeatureMFOCRF, FeatureFSqrt, FeatureFRES,
-                   FeatureFRSQRTE, FeatureSTFIWX,
-                   Feature64Bit /*, Feature64BitRegs */]>;
+def : ProcessorModel<"ppc64le", P8Model, ProcessorFeatures.Power8FeatureList>;
 
 //===----------------------------------------------------------------------===//
 // Calling Conventions

@@ -115,8 +115,14 @@ public:
     /// This scope corresponds to an enum.
     EnumScope = 0x40000,
 
-    /// This scope corresponds to a SEH try.
+    /// This scope corresponds to an SEH try.
     SEHTryScope = 0x80000,
+
+    /// This scope corresponds to an SEH except.
+    SEHExceptScope = 0x100000,
+
+    /// We are currently in the filter expression of an SEH except block.
+    SEHFilterScope = 0x200000,
   };
 private:
   /// The parent scope for this scope.  This is null for the translation-unit
@@ -300,6 +306,9 @@ public:
     return ErrorTrap.hasUnrecoverableErrorOccurred();
   }
 
+  /// isFunctionScope() - Return true if this scope is a function scope.
+  bool isFunctionScope() const { return (getFlags() & Scope::FnScope); }
+
   /// isClassScope - Return true if this scope is a class/struct/union scope.
   bool isClassScope() const {
     return (getFlags() & Scope::ClassScope);
@@ -403,6 +412,9 @@ public:
 
   /// \brief Determine whether this scope is a SEH '__try' block.
   bool isSEHTryScope() const { return getFlags() & Scope::SEHTryScope; }
+
+  /// \brief Determine whether this scope is a SEH '__except' block.
+  bool isSEHExceptScope() const { return getFlags() & Scope::SEHExceptScope; }
 
   /// containedInPrototypeScope - Return true if this or a parent scope
   /// is a FunctionPrototypeScope.

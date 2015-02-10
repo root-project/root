@@ -18,12 +18,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CODEGEN_LIVEDEBUGVARIABLES_H
-#define LLVM_CODEGEN_LIVEDEBUGVARIABLES_H
+#ifndef LLVM_LIB_CODEGEN_LIVEDEBUGVARIABLES_H
+#define LLVM_LIB_CODEGEN_LIVEDEBUGVARIABLES_H
 
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/IR/DebugInfo.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
+#include "llvm/IR/DebugInfo.h"
 
 namespace llvm {
 
@@ -72,4 +72,4 @@ private:
 
 } // namespace llvm
 
-#endif // LLVM_CODEGEN_LIVEDEBUGVARIABLES_H
+#endif

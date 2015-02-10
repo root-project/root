@@ -31,15 +31,16 @@ class DbgDeclareInst;
 class StoreInst;
 class LoadInst;
 class Value;
-class Pass;
 class PHINode;
 class AllocaInst;
+class AssumptionCache;
 class ConstantExpr;
 class DataLayout;
 class TargetLibraryInfo;
 class TargetTransformInfo;
 class DIBuilder;
 class AliasAnalysis;
+class DominatorTree;
 
 template<typename T> class SmallVectorImpl;
 
@@ -113,7 +114,7 @@ void RemovePredecessorAndSimplify(BasicBlock *BB, BasicBlock *Pred,
 /// between them, moving the instructions in the predecessor into BB.  This
 /// deletes the predecessor block.
 ///
-void MergeBasicBlockIntoOnlyPred(BasicBlock *BB, Pass *P = nullptr);
+void MergeBasicBlockIntoOnlyPred(BasicBlock *BB, DominatorTree *DT = nullptr);
 
 /// TryToSimplifyUncondBranchFromEmptyBlock - BB is known to contain an
 /// unconditional branch, and contains no instructions other than PHI nodes,
@@ -136,7 +137,8 @@ bool EliminateDuplicatePHINodes(BasicBlock *BB);
 /// the basic block that was pointed to.
 ///
 bool SimplifyCFG(BasicBlock *BB, const TargetTransformInfo &TTI,
-                 const DataLayout *TD = nullptr);
+                 unsigned BonusInstThreshold, const DataLayout *TD = nullptr,
+                 AssumptionCache *AC = nullptr);
 
 /// FlatternCFG - This function is used to flatten a CFG.  For
 /// example, it uses parallel-and and parallel-or mode to collapse
@@ -148,7 +150,8 @@ bool FlattenCFG(BasicBlock *BB, AliasAnalysis *AA = nullptr);
 /// and if a predecessor branches to us and one of our successors, fold the
 /// setcc into the predecessor and use logical operations to pick the right
 /// destination.
-bool FoldBranchToCommonDest(BranchInst *BI, const DataLayout *DL = nullptr);
+bool FoldBranchToCommonDest(BranchInst *BI, const DataLayout *DL = nullptr,
+                            unsigned BonusInstThreshold = 1);
 
 /// DemoteRegToStack - This function takes a virtual register computed by an
 /// Instruction and replaces it with a slot in the stack frame, allocated via
@@ -170,12 +173,18 @@ AllocaInst *DemotePHIToStack(PHINode *P, Instruction *AllocaPoint = nullptr);
 /// and it is more than the alignment of the ultimate object, see if we can
 /// increase the alignment of the ultimate object, making this check succeed.
 unsigned getOrEnforceKnownAlignment(Value *V, unsigned PrefAlign,
-                                    const DataLayout *TD = nullptr);
+                                    const DataLayout *TD = nullptr,
+                                    AssumptionCache *AC = nullptr,
+                                    const Instruction *CxtI = nullptr,
+                                    const DominatorTree *DT = nullptr);
 
 /// getKnownAlignment - Try to infer an alignment for the specified pointer.
 static inline unsigned getKnownAlignment(Value *V,
-                                         const DataLayout *TD = nullptr) {
-  return getOrEnforceKnownAlignment(V, 0, TD);
+                                         const DataLayout *TD = nullptr,
+                                         AssumptionCache *AC = nullptr,
+                                         const Instruction *CxtI = nullptr,
+                                         const DominatorTree *DT = nullptr) {
+  return getOrEnforceKnownAlignment(V, 0, TD, AC, CxtI, DT);
 }
 
 /// EmitGEPOffset - Given a getelementptr instruction/constantexpr, emit the
@@ -265,15 +274,21 @@ bool LowerDbgDeclare(Function &F);
 /// an alloca, if any.
 DbgDeclareInst *FindAllocaDbgDeclare(Value *V);
 
-/// replaceDbgDeclareForAlloca - Replaces llvm.dbg.declare instruction when
-/// alloca is replaced with a new value.
+/// \brief Replaces llvm.dbg.declare instruction when an alloca is replaced with
+/// a new value.  If Deref is true, tan additional DW_OP_deref is prepended to
+/// the expression.
 bool replaceDbgDeclareForAlloca(AllocaInst *AI, Value *NewAllocaAddress,
-                                DIBuilder &Builder);
+                                DIBuilder &Builder, bool Deref);
 
 /// \brief Remove all blocks that can not be reached from the function's entry.
 ///
 /// Returns true if any basic block was removed.
 bool removeUnreachableBlocks(Function &F);
+
+/// \brief Combine the metadata of two instructions so that K can replace J
+///
+/// Metadata not listed as known via KnownIDs is removed
+void combineMetadata(Instruction *K, const Instruction *J, ArrayRef<unsigned> KnownIDs);
 
 } // End llvm namespace
 

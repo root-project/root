@@ -51,10 +51,10 @@ class AArch64AsmPrinter : public AsmPrinter {
   StackMaps SM;
 
 public:
-  AArch64AsmPrinter(TargetMachine &TM, MCStreamer &Streamer)
-      : AsmPrinter(TM, Streamer),
+  AArch64AsmPrinter(TargetMachine &TM, std::unique_ptr<MCStreamer> Streamer)
+      : AsmPrinter(TM, std::move(Streamer)),
         Subtarget(&TM.getSubtarget<AArch64Subtarget>()),
-        MCInstLowering(OutContext, *Mang, *this), SM(*this), AArch64FI(nullptr),
+        MCInstLowering(OutContext, *this), SM(*this), AArch64FI(nullptr),
         LOHLabelCounter(0) {}
 
   const char *getPassName() const override {
@@ -252,8 +252,8 @@ bool AArch64AsmPrinter::printAsmRegInClass(const MachineOperand &MO,
                                            const TargetRegisterClass *RC,
                                            bool isVector, raw_ostream &O) {
   assert(MO.isReg() && "Should only get here with a register!");
-  const AArch64RegisterInfo *RI =
-      static_cast<const AArch64RegisterInfo *>(TM.getRegisterInfo());
+  const AArch64RegisterInfo *RI = static_cast<const AArch64RegisterInfo *>(
+      TM.getSubtargetImpl()->getRegisterInfo());
   unsigned Reg = MO.getReg();
   unsigned RegToPrint = RC->getRegister(RI->getEncodingValue(Reg));
   assert(RI->regsOverlap(RegToPrint, Reg));
@@ -381,8 +381,23 @@ void AArch64AsmPrinter::LowerSTACKMAP(MCStreamer &OutStreamer, StackMaps &SM,
   unsigned NumNOPBytes = MI.getOperand(1).getImm();
 
   SM.recordStackMap(MI);
-  // Emit padding.
   assert(NumNOPBytes % 4 == 0 && "Invalid number of NOP bytes requested!");
+
+  // Scan ahead to trim the shadow.
+  const MachineBasicBlock &MBB = *MI.getParent();
+  MachineBasicBlock::const_iterator MII(MI);
+  ++MII;
+  while (NumNOPBytes > 0) {
+    if (MII == MBB.end() || MII->isCall() ||
+        MII->getOpcode() == AArch64::DBG_VALUE ||
+        MII->getOpcode() == TargetOpcode::PATCHPOINT ||
+        MII->getOpcode() == TargetOpcode::STACKMAP)
+      break;
+    ++MII;
+    NumNOPBytes -= 4;
+  }
+
+  // Emit nops.
   for (unsigned i = 0; i < NumNOPBytes; i += 4)
     EmitToStreamer(OutStreamer, MCInstBuilder(AArch64::HINT).addImm(0));
 }

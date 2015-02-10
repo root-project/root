@@ -22,38 +22,38 @@ include "SparcInstrFormats.td"
 //===----------------------------------------------------------------------===//
 
 // True when generating 32-bit code.
-def Is32Bit : Predicate<"!Subtarget.is64Bit()">;
+def Is32Bit : Predicate<"!Subtarget->is64Bit()">;
 
 // True when generating 64-bit code. This also implies HasV9.
-def Is64Bit : Predicate<"Subtarget.is64Bit()">;
+def Is64Bit : Predicate<"Subtarget->is64Bit()">;
 
 // HasV9 - This predicate is true when the target processor supports V9
 // instructions.  Note that the machine may be running in 32-bit mode.
-def HasV9   : Predicate<"Subtarget.isV9()">,
+def HasV9   : Predicate<"Subtarget->isV9()">,
               AssemblerPredicate<"FeatureV9">;
 
 // HasNoV9 - This predicate is true when the target doesn't have V9
 // instructions.  Use of this is just a hack for the isel not having proper
 // costs for V8 instructions that are more expensive than their V9 ones.
-def HasNoV9 : Predicate<"!Subtarget.isV9()">;
+def HasNoV9 : Predicate<"!Subtarget->isV9()">;
 
 // HasVIS - This is true when the target processor has VIS extensions.
-def HasVIS : Predicate<"Subtarget.isVIS()">,
+def HasVIS : Predicate<"Subtarget->isVIS()">,
              AssemblerPredicate<"FeatureVIS">;
-def HasVIS2 : Predicate<"Subtarget.isVIS2()">,
+def HasVIS2 : Predicate<"Subtarget->isVIS2()">,
              AssemblerPredicate<"FeatureVIS2">;
-def HasVIS3 : Predicate<"Subtarget.isVIS3()">,
+def HasVIS3 : Predicate<"Subtarget->isVIS3()">,
              AssemblerPredicate<"FeatureVIS3">;
 
 // HasHardQuad - This is true when the target processor supports quad floating
 // point instructions.
-def HasHardQuad : Predicate<"Subtarget.hasHardQuad()">;
+def HasHardQuad : Predicate<"Subtarget->hasHardQuad()">;
 
 // UseDeprecatedInsts - This predicate is true when the target processor is a
 // V8, or when it is V9 but the V8 deprecated instructions are efficient enough
 // to use when appropriate.  In either of these cases, the instruction selector
 // will pick deprecated instructions.
-def UseDeprecatedInsts : Predicate<"Subtarget.useDeprecatedV8Instructions()">;
+def UseDeprecatedInsts : Predicate<"Subtarget->useDeprecatedV8Instructions()">;
 
 //===----------------------------------------------------------------------===//
 // Instruction Pattern Stuff
@@ -331,7 +331,7 @@ let hasSideEffects = 1, mayStore = 1 in {
                    [(flushw)]>;
 }
 
-let isBarrier = 1, isTerminator = 1, rd = 0b1000, rs1 = 0, simm13 = 5 in
+let isBarrier = 1, isTerminator = 1, rd = 0b01000, rs1 = 0, simm13 = 5 in
   def TA5 : F3_2<0b10, 0b111010, (outs), (ins), "ta 5", [(trap)]>;
 
 let rd = 0 in

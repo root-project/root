@@ -44,11 +44,12 @@ namespace MCOI {
 
   /// Operand Type - Operands are tagged with one of the values of this enum.
   enum OperandType {
-    OPERAND_UNKNOWN,
-    OPERAND_IMMEDIATE,
-    OPERAND_REGISTER,
-    OPERAND_MEMORY,
-    OPERAND_PCREL
+    OPERAND_UNKNOWN      = 0,
+    OPERAND_IMMEDIATE    = 1,
+    OPERAND_REGISTER     = 2,
+    OPERAND_MEMORY       = 3,
+    OPERAND_PCREL        = 4,
+    OPERAND_FIRST_TARGET = 5
   };
 }
 
@@ -125,7 +126,10 @@ namespace MCID {
     Rematerializable,
     CheapAsAMove,
     ExtraSrcRegAllocReq,
-    ExtraDefRegAllocReq
+    ExtraDefRegAllocReq,
+    RegSequence,
+    ExtractSubreg,
+    InsertSubreg
   };
 }
 
@@ -355,6 +359,47 @@ public:
   /// only virtual register definition.
   bool canFoldAsLoad() const {
     return Flags & (1 << MCID::FoldableAsLoad);
+  }
+
+  /// \brief Return true if this instruction behaves
+  /// the same way as the generic REG_SEQUENCE instructions.
+  /// E.g., on ARM,
+  /// dX VMOVDRR rY, rZ
+  /// is equivalent to
+  /// dX = REG_SEQUENCE rY, ssub_0, rZ, ssub_1.
+  ///
+  /// Note that for the optimizers to be able to take advantage of
+  /// this property, TargetInstrInfo::getRegSequenceLikeInputs has to be
+  /// override accordingly.
+  bool isRegSequenceLike() const { return Flags & (1 << MCID::RegSequence); }
+
+  /// \brief Return true if this instruction behaves
+  /// the same way as the generic EXTRACT_SUBREG instructions.
+  /// E.g., on ARM,
+  /// rX, rY VMOVRRD dZ
+  /// is equivalent to two EXTRACT_SUBREG:
+  /// rX = EXTRACT_SUBREG dZ, ssub_0
+  /// rY = EXTRACT_SUBREG dZ, ssub_1
+  ///
+  /// Note that for the optimizers to be able to take advantage of
+  /// this property, TargetInstrInfo::getExtractSubregLikeInputs has to be
+  /// override accordingly.
+  bool isExtractSubregLike() const {
+    return Flags & (1 << MCID::ExtractSubreg);
+  }
+
+  /// \brief Return true if this instruction behaves
+  /// the same way as the generic INSERT_SUBREG instructions.
+  /// E.g., on ARM,
+  /// dX = VSETLNi32 dY, rZ, Imm
+  /// is equivalent to a INSERT_SUBREG:
+  /// dX = INSERT_SUBREG dY, rZ, translateImmToSubIdx(Imm)
+  ///
+  /// Note that for the optimizers to be able to take advantage of
+  /// this property, TargetInstrInfo::getInsertSubregLikeInputs has to be
+  /// override accordingly.
+  bool isInsertSubregLike() const {
+    return Flags & (1 << MCID::InsertSubreg);
   }
 
   //===--------------------------------------------------------------------===//

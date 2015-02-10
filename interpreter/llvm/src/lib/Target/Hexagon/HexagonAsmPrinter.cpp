@@ -18,7 +18,7 @@
 #include "HexagonMachineFunctionInfo.h"
 #include "HexagonSubtarget.h"
 #include "HexagonTargetMachine.h"
-#include "InstPrinter/HexagonInstPrinter.h"
+#include "MCTargetDesc/HexagonInstPrinter.h"
 #include "MCTargetDesc/HexagonMCInst.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
@@ -60,6 +60,12 @@ using namespace llvm;
 static cl::opt<bool> AlignCalls(
          "hexagon-align-calls", cl::Hidden, cl::init(true),
           cl::desc("Insert falign after call instruction for Hexagon target"));
+
+HexagonAsmPrinter::HexagonAsmPrinter(TargetMachine &TM,
+                                     std::unique_ptr<MCStreamer> Streamer)
+    : AsmPrinter(TM, std::move(Streamer)) {
+  Subtarget = &TM.getSubtarget<HexagonSubtarget>();
+}
 
 void HexagonAsmPrinter::printOperand(const MachineInstr *MI, unsigned OpNo,
                                     raw_ostream &O) {
@@ -174,7 +180,7 @@ bool HexagonAsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI,
 ///
 void HexagonAsmPrinter::EmitInstruction(const MachineInstr *MI) {
   if (MI->isBundle()) {
-    std::vector<const MachineInstr*> BundleMIs;
+    std::vector<MachineInstr const *> BundleMIs;
 
     const MachineBasicBlock *MBB = MI->getParent();
     MachineBasicBlock::const_instr_iterator MII = MI;
@@ -183,33 +189,35 @@ void HexagonAsmPrinter::EmitInstruction(const MachineInstr *MI) {
     while (MII != MBB->end() && MII->isInsideBundle()) {
       const MachineInstr *MInst = MII;
       if (MInst->getOpcode() == TargetOpcode::DBG_VALUE ||
-          MInst->getOpcode() == TargetOpcode::IMPLICIT_DEF) {
-          IgnoreCount++;
-          ++MII;
-          continue;
+        MInst->getOpcode() == TargetOpcode::IMPLICIT_DEF) {
+        IgnoreCount++;
+        ++MII;
+        continue;
       }
-      //BundleMIs.push_back(&*MII);
+      // BundleMIs.push_back(&*MII);
       BundleMIs.push_back(MInst);
       ++MII;
     }
     unsigned Size = BundleMIs.size();
-    assert((Size+IgnoreCount) == MI->getBundleSize() && "Corrupt Bundle!");
+    assert((Size + IgnoreCount) == MI->getBundleSize() && "Corrupt Bundle!");
     for (unsigned Index = 0; Index < Size; Index++) {
       HexagonMCInst MCI;
-      MCI.setPacketStart(Index == 0);
-      MCI.setPacketEnd(Index == (Size-1));
 
       HexagonLowerToMC(BundleMIs[Index], MCI, *this);
+      HexagonMCInst::AppendImplicitOperands(MCI);
+      MCI.setPacketBegin(Index == 0);
+      MCI.setPacketEnd(Index == (Size - 1));
       EmitToStreamer(OutStreamer, MCI);
     }
   }
   else {
     HexagonMCInst MCI;
+    HexagonLowerToMC(MI, MCI, *this);
+    HexagonMCInst::AppendImplicitOperands(MCI);
     if (MI->getOpcode() == Hexagon::ENDLOOP0) {
-      MCI.setPacketStart(true);
+      MCI.setPacketBegin(true);
       MCI.setPacketEnd(true);
     }
-    HexagonLowerToMC(MI, MCI, *this);
     EmitToStreamer(OutStreamer, MCI);
   }
 

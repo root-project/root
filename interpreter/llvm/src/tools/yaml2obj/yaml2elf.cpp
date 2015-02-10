@@ -62,11 +62,7 @@ class NameToIdxMap {
 public:
   /// \returns true if name is already present in the map.
   bool addName(StringRef Name, unsigned i) {
-    StringMapEntry<int> &Entry = Map.GetOrCreateValue(Name, -1);
-    if (Entry.getValue() != -1)
-      return true;
-    Entry.setValue((int)i);
-    return false;
+    return !Map.insert(std::make_pair(Name, (int)i)).second;
   }
   /// \returns true if name is not present in the map
   bool lookup(StringRef Name, unsigned &Idx) const {
@@ -190,7 +186,7 @@ bool ELFState<ELFT>::initSectionHeaders(std::vector<Elf_Shdr> &SHeaders,
 
   for (const auto &Sec : Doc.Sections)
     DotShStrtab.add(Sec->Name);
-  DotShStrtab.finalize();
+  DotShStrtab.finalize(StringTableBuilder::ELF);
 
   for (const auto &Sec : Doc.Sections) {
     zero(SHeader);
@@ -261,7 +257,7 @@ void ELFState<ELFT>::initSymtabSectionHeader(Elf_Shdr &SHeader,
     DotStrtab.add(Sym.Name);
   for (const auto &Sym : Doc.Symbols.Weak)
     DotStrtab.add(Sym.Name);
-  DotStrtab.finalize();
+  DotStrtab.finalize(StringTableBuilder::ELF);
 
   addSymbols(Doc.Symbols.Local, Syms, ELF::STB_LOCAL);
   addSymbols(Doc.Symbols.Global, Syms, ELF::STB_GLOBAL);
@@ -304,7 +300,7 @@ void ELFState<ELFT>::addSymbols(const std::vector<ELFYAML::Symbol> &Symbols,
       Symbol.st_shndx = Index;
     } // else Symbol.st_shndex == SHN_UNDEF (== 0), since it was zero'd earlier.
     Symbol.st_value = Sym.Value;
-    Symbol.st_other = Sym.Visibility;
+    Symbol.st_other = Sym.Other;
     Symbol.st_size = Sym.Size;
     Syms.push_back(Symbol);
   }
@@ -323,6 +319,12 @@ ELFState<ELFT>::writeSectionContent(Elf_Shdr &SHeader,
     OS.write(0);
   SHeader.sh_entsize = 0;
   SHeader.sh_size = Section.Size;
+}
+
+static bool isMips64EL(const ELFYAML::Object &Doc) {
+  return Doc.Header.Machine == ELFYAML::ELF_EM(llvm::ELF::EM_MIPS) &&
+         Doc.Header.Class == ELFYAML::ELF_ELFCLASS(ELF::ELFCLASS64) &&
+         Doc.Header.Data == ELFYAML::ELF_ELFDATA(ELF::ELFDATA2LSB);
 }
 
 template <class ELFT>
@@ -355,13 +357,13 @@ ELFState<ELFT>::writeSectionContent(Elf_Shdr &SHeader,
       zero(REntry);
       REntry.r_offset = Rel.Offset;
       REntry.r_addend = Rel.Addend;
-      REntry.setSymbolAndType(SymIdx, Rel.Type);
+      REntry.setSymbolAndType(SymIdx, Rel.Type, isMips64EL(Doc));
       OS.write((const char *)&REntry, sizeof(REntry));
     } else {
       Elf_Rel REntry;
       zero(REntry);
       REntry.r_offset = Rel.Offset;
-      REntry.setSymbolAndType(SymIdx, Rel.Type);
+      REntry.setSymbolAndType(SymIdx, Rel.Type, isMips64EL(Doc));
       OS.write((const char *)&REntry, sizeof(REntry));
     }
   }

@@ -11,11 +11,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_TARGET_AArch64INSTRINFO_H
-#define LLVM_TARGET_AArch64INSTRINFO_H
+#ifndef LLVM_LIB_TARGET_AARCH64_AARCH64INSTRINFO_H
+#define LLVM_LIB_TARGET_AARCH64_AARCH64INSTRINFO_H
 
 #include "AArch64.h"
 #include "AArch64RegisterInfo.h"
+#include "llvm/CodeGen/MachineCombinerPattern.h"
 #include "llvm/Target/TargetInstrInfo.h"
 
 #define GET_INSTRINFO_HEADER
@@ -50,6 +51,10 @@ public:
 
   bool isCoalescableExtInstr(const MachineInstr &MI, unsigned &SrcReg,
                              unsigned &DstReg, unsigned &SubIdx) const override;
+
+  bool
+  areMemAccessesTriviallyDisjoint(MachineInstr *MIa, MachineInstr *MIb,
+                                  AliasAnalysis *AA = nullptr) const override;
 
   unsigned isLoadFromStackSlot(const MachineInstr *MI,
                                int &FrameIndex) const override;
@@ -89,6 +94,10 @@ public:
                             unsigned &Offset,
                             const TargetRegisterInfo *TRI) const override;
 
+  bool getLdStBaseRegImmOfsWidth(MachineInstr *LdSt, unsigned &BaseReg,
+                                 int &Offset, int &Width,
+                                 const TargetRegisterInfo *TRI) const;
+
   bool enableClusterLoads() const override { return true; }
 
   bool shouldClusterLoads(MachineInstr *FirstLdSt, MachineInstr *SecondLdSt,
@@ -98,8 +107,8 @@ public:
                               MachineInstr *Second) const override;
 
   MachineInstr *emitFrameIndexDebugValue(MachineFunction &MF, int FrameIx,
-                                         uint64_t Offset, const MDNode *MDPtr,
-                                         DebugLoc DL) const;
+                                         uint64_t Offset, const MDNode *Var,
+                                         const MDNode *Expr, DebugLoc DL) const;
   void copyPhysRegTuple(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
                         DebugLoc DL, unsigned DestReg, unsigned SrcReg,
                         bool KillSrc, unsigned Opcode,
@@ -156,9 +165,27 @@ public:
   bool optimizeCompareInstr(MachineInstr *CmpInstr, unsigned SrcReg,
                             unsigned SrcReg2, int CmpMask, int CmpValue,
                             const MachineRegisterInfo *MRI) const override;
+  bool optimizeCondBranch(MachineInstr *MI) const override;
+  /// hasPattern - return true when there is potentially a faster code sequence
+  /// for an instruction chain ending in <Root>. All potential patterns are
+  /// listed
+  /// in the <Pattern> array.
+  bool hasPattern(MachineInstr &Root,
+                  SmallVectorImpl<MachineCombinerPattern::MC_PATTERN> &Pattern)
+      const override;
+
+  /// genAlternativeCodeSequence - when hasPattern() finds a pattern
+  /// this function generates the instructions that could replace the
+  /// original code sequence
+  void genAlternativeCodeSequence(
+      MachineInstr &Root, MachineCombinerPattern::MC_PATTERN P,
+      SmallVectorImpl<MachineInstr *> &InsInstrs,
+      SmallVectorImpl<MachineInstr *> &DelInstrs,
+      DenseMap<unsigned, unsigned> &InstrIdxForVirtReg) const override;
+  /// useMachineCombiner - AArch64 supports MachineCombiner
+  bool useMachineCombiner() const override;
 
   bool expandPostRAPseudo(MachineBasicBlock::iterator MI) const override;
-
 private:
   void instantiateCondBranch(MachineBasicBlock &MBB, DebugLoc DL,
                              MachineBasicBlock *TBB,

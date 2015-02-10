@@ -69,8 +69,6 @@ PrintingPolicy Sema::getPrintingPolicy(const ASTContext &Context,
 void Sema::ActOnTranslationUnitScope(Scope *S) {
   TUScope = S;
   PushDeclContext(S, Context.getTranslationUnitDecl());
-
-  VAListTagName = PP.getIdentifierInfo("__va_list_tag");
 }
 
 Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
@@ -89,12 +87,14 @@ Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
     CodeSegStack(nullptr), CurInitSeg(nullptr), VisContext(nullptr),
     IsBuildingRecoveryCallExpr(false),
     ExprNeedsCleanups(false), LateTemplateParser(nullptr),
+    LateTemplateParserCleanup(nullptr),
     OpaqueParser(nullptr), IdResolver(pp), StdInitializerList(nullptr),
     CXXTypeInfoDecl(nullptr), MSVCGuidDecl(nullptr),
     NSNumberDecl(nullptr),
     NSStringDecl(nullptr), StringWithUTF8StringMethod(nullptr),
     NSArrayDecl(nullptr), ArrayWithObjectsMethod(nullptr),
     NSDictionaryDecl(nullptr), DictionaryWithObjectsMethod(nullptr),
+    MSAsmLabelNameCounter(0),
     GlobalNewDeleteDeclared(false),
     TUKind(TUKind),
     NumSFINAEErrors(0),
@@ -149,6 +149,10 @@ void Sema::Initialize() {
   if (ExternalSemaSource *ExternalSema
       = dyn_cast_or_null<ExternalSemaSource>(Context.getExternalSource()))
     ExternalSema->InitializeSema(*this);
+
+  // This needs to happen after ExternalSemaSource::InitializeSema(this) or we
+  // will not be able to merge any duplicate __va_list_tag decls correctly.
+  VAListTagName = PP.getIdentifierInfo("__va_list_tag");
 
   // Initialize predefined 128-bit integer types, if needed.
   if (Context.getTargetInfo().hasInt128Type()) {
@@ -236,6 +240,8 @@ Sema::~Sema() {
 
   // Destroys data sharing attributes stack for OpenMP
   DestroyDataSharingAttributesStack();
+
+  assert(DelayedTypos.empty() && "Uncorrected typos!");
 }
 
 /// makeUnavailableInSystemHeader - There is an error in the current
@@ -326,18 +332,6 @@ ExprResult Sema::ImpCastExprToType(Expr *E, QualType Ty,
 
   if (ExprTy == TypeTy)
     return E;
-
-  // If this is a derived-to-base cast to a through a virtual base, we
-  // need a vtable.
-  if (Kind == CK_DerivedToBase &&
-      BasePathInvolvesVirtualBase(*BasePath)) {
-    QualType T = E->getType();
-    if (const PointerType *Pointer = T->getAs<PointerType>())
-      T = Pointer->getPointeeType();
-    if (const RecordType *RecordTy = T->getAs<RecordType>())
-      MarkVTableUsed(E->getLocStart(),
-                     cast<CXXRecordDecl>(RecordTy->getDecl()));
-  }
 
   if (ImplicitCastExpr *ImpCast = dyn_cast<ImplicitCastExpr>(E)) {
     if (ImpCast->getCastKind() == Kind && (!BasePath || BasePath->empty())) {
@@ -534,7 +528,12 @@ static bool MethodsAndNestedClassesComplete(const CXXRecordDecl *RD,
     if (const CXXMethodDecl *M = dyn_cast<CXXMethodDecl>(*I))
       Complete = M->isDefined() || (M->isPure() && !isa<CXXDestructorDecl>(M));
     else if (const FunctionTemplateDecl *F = dyn_cast<FunctionTemplateDecl>(*I))
-      Complete = F->getTemplatedDecl()->isDefined();
+      // If the template function is marked as late template parsed at this point,
+      // it has not been instantiated and therefore we have not performed semantic
+      // analysis on it yet, so we cannot know if the type can be considered
+      // complete.
+      Complete = !F->getTemplatedDecl()->isLateTemplateParsed() &&
+                  F->getTemplatedDecl()->isDefined();
     else if (const CXXRecordDecl *R = dyn_cast<CXXRecordDecl>(*I)) {
       if (R->isInjectedClassName())
         continue;
@@ -585,6 +584,19 @@ static bool IsRecordFullyDefined(const CXXRecordDecl *RD,
   }
   RecordsComplete[RD] = Complete;
   return Complete;
+}
+
+void Sema::emitAndClearUnusedLocalTypedefWarnings() {
+  if (ExternalSource)
+    ExternalSource->ReadUnusedLocalTypedefNameCandidates(
+        UnusedLocalTypedefNameCandidates);
+  for (const TypedefNameDecl *TD : UnusedLocalTypedefNameCandidates) {
+    if (TD->isReferenced())
+      continue;
+    Diag(TD->getLocation(), diag::warn_unused_local_typedef)
+        << isa<TypeAliasDecl>(TD) << TD->getDeclName();
+  }
+  UnusedLocalTypedefNameCandidates.clear();
 }
 
 /// ActOnEndOfTranslationUnit - This is called at the very end of the
@@ -643,13 +655,16 @@ void Sema::ActOnEndOfTranslationUnit() {
     }
     PerformPendingInstantiations();
 
+    if (LateTemplateParserCleanup)
+      LateTemplateParserCleanup(OpaqueParser);
+
     CheckDelayedMemberExceptionSpecs();
   }
 
   // All delayed member exception specs should be checked or we end up accepting
   // incompatible declarations.
   assert(DelayedDefaultedMemberExceptionSpecs.empty());
-  assert(DelayedDestructorExceptionSpecChecks.empty());
+  assert(DelayedExceptionSpecChecks.empty());
 
   // Remove file scoped decls that turned out to be used.
   UnusedFileScopedDecls.erase(
@@ -710,6 +725,10 @@ void Sema::ActOnEndOfTranslationUnit() {
       }
     }
 
+    // Warnings emitted in ActOnEndOfTranslationUnit() should be emitted for
+    // modules when they are built, not every time they are used.
+    emitAndClearUnusedLocalTypedefWarnings();
+
     // Modules don't need any of the checking below.
     TUScope = nullptr;
     return;
@@ -737,7 +756,7 @@ void Sema::ActOnEndOfTranslationUnit() {
     // If the tentative definition was completed, getActingDefinition() returns
     // null. If we've already seen this variable before, insert()'s second
     // return value is false.
-    if (!VD || VD->isInvalidDecl() || !Seen.insert(VD))
+    if (!VD || VD->isInvalidDecl() || !Seen.insert(VD).second)
       continue;
 
     if (const IncompleteArrayType *ArrayT
@@ -818,6 +837,8 @@ void Sema::ActOnEndOfTranslationUnit() {
     if (ExternalSource)
       ExternalSource->ReadUndefinedButUsed(UndefinedButUsed);
     checkUndefinedButUsed(*this);
+
+    emitAndClearUnusedLocalTypedefWarnings();
   }
 
   if (!Diags.isIgnored(diag::warn_unused_private_field, SourceLocation())) {

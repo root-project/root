@@ -13,8 +13,8 @@
 |*                                                                            *|
 \*===----------------------------------------------------------------------===*/
 
-#ifndef CLANG_C_INDEX_H
-#define CLANG_C_INDEX_H
+#ifndef LLVM_CLANG_C_INDEX_H
+#define LLVM_CLANG_C_INDEX_H
 
 #include <time.h>
 
@@ -32,7 +32,7 @@
  * compatible, thus CINDEX_VERSION_MAJOR is expected to remain stable.
  */
 #define CINDEX_VERSION_MAJOR 0
-#define CINDEX_VERSION_MINOR 27
+#define CINDEX_VERSION_MINOR 29
 
 #define CINDEX_VERSION_ENCODE(major, minor) ( \
       ((major) * 10000)                       \
@@ -334,6 +334,12 @@ clang_isFileMultipleIncludeGuarded(CXTranslationUnit tu, CXFile file);
  */
 CINDEX_LINKAGE CXFile clang_getFile(CXTranslationUnit tu,
                                     const char *file_name);
+
+/**
+ * \brief Returns non-zero if the \c file1 and \c file2 point to the same file,
+ * or they are both NULL.
+ */
+CINDEX_LINKAGE int clang_File_isEqual(CXFile file1, CXFile file2);
 
 /**
  * @}
@@ -2120,7 +2126,7 @@ enum CXCursorKind {
    */
   CXCursor_MSAsmStmt                     = 229,
 
-  /** \brief The null satement ";": C99 6.8.3p3.
+  /** \brief The null statement ";": C99 6.8.3p3.
    *
    * This cursor kind is used to describe the null statement.
    */
@@ -2135,7 +2141,7 @@ enum CXCursorKind {
    */
   CXCursor_OMPParallelDirective          = 232,
 
-  /** \brief OpenMP simd directive.
+  /** \brief OpenMP SIMD directive.
    */
   CXCursor_OMPSimdDirective              = 233,
 
@@ -2203,7 +2209,23 @@ enum CXCursorKind {
    */
   CXCursor_OMPAtomicDirective            = 249,
 
-  CXCursor_LastStmt                      = CXCursor_OMPAtomicDirective,
+  /** \brief OpenMP for SIMD directive.
+   */
+  CXCursor_OMPForSimdDirective           = 250,
+
+  /** \brief OpenMP parallel for SIMD directive.
+   */
+  CXCursor_OMPParallelForSimdDirective   = 251,
+
+  /** \brief OpenMP target directive.
+   */
+  CXCursor_OMPTargetDirective            = 252,
+
+  /** \brief OpenMP teams directive.
+   */
+  CXCursor_OMPTeamsDirective             = 253,
+
+  CXCursor_LastStmt                      = CXCursor_OMPTeamsDirective,
 
   /**
    * \brief Cursor that represents the translation unit itself.
@@ -2236,7 +2258,8 @@ enum CXCursorKind {
   CXCursor_CUDADeviceAttr                = 413,
   CXCursor_CUDAGlobalAttr                = 414,
   CXCursor_CUDAHostAttr                  = 415,
-  CXCursor_LastAttr                      = CXCursor_CUDAHostAttr,
+  CXCursor_CUDASharedAttr                = 416,
+  CXCursor_LastAttr                      = CXCursor_CUDASharedAttr,
 
   /* Preprocessing */
   CXCursor_PreprocessingDirective        = 500,
@@ -2253,7 +2276,12 @@ enum CXCursorKind {
    */
   CXCursor_ModuleImportDecl              = 600,
   CXCursor_FirstExtraDecl                = CXCursor_ModuleImportDecl,
-  CXCursor_LastExtraDecl                 = CXCursor_ModuleImportDecl
+  CXCursor_LastExtraDecl                 = CXCursor_ModuleImportDecl,
+
+  /**
+   * \brief A code completion overload candidate.
+   */
+  CXCursor_OverloadCandidate             = 700
 };
 
 /**
@@ -2826,10 +2854,11 @@ enum CXCallingConv {
   CXCallingConv_X86Pascal = 5,
   CXCallingConv_AAPCS = 6,
   CXCallingConv_AAPCS_VFP = 7,
-  CXCallingConv_PnaclCall = 8,
+  /* Value 8 was PnaclCall, but it was never used, so it could safely be re-used. */
   CXCallingConv_IntelOclBicc = 9,
   CXCallingConv_X86_64Win64 = 10,
   CXCallingConv_X86_64SysV = 11,
+  CXCallingConv_X86VectorCall = 12,
 
   CXCallingConv_Invalid = 100,
   CXCallingConv_Unexposed = 200
@@ -2918,6 +2947,124 @@ CINDEX_LINKAGE int clang_Cursor_getNumArguments(CXCursor C);
  * invalid cursor is returned.
  */
 CINDEX_LINKAGE CXCursor clang_Cursor_getArgument(CXCursor C, unsigned i);
+
+/**
+ * \brief Describes the kind of a template argument.
+ *
+ * See the definition of llvm::clang::TemplateArgument::ArgKind for full
+ * element descriptions.
+ */
+enum CXTemplateArgumentKind {
+  CXTemplateArgumentKind_Null,
+  CXTemplateArgumentKind_Type,
+  CXTemplateArgumentKind_Declaration,
+  CXTemplateArgumentKind_NullPtr,
+  CXTemplateArgumentKind_Integral,
+  CXTemplateArgumentKind_Template,
+  CXTemplateArgumentKind_TemplateExpansion,
+  CXTemplateArgumentKind_Expression,
+  CXTemplateArgumentKind_Pack,
+  /* Indicates an error case, preventing the kind from being deduced. */
+  CXTemplateArgumentKind_Invalid
+};
+
+/**
+ *\brief Returns the number of template args of a function decl representing a
+ * template specialization.
+ *
+ * If the argument cursor cannot be converted into a template function
+ * declaration, -1 is returned.
+ *
+ * For example, for the following declaration and specialization:
+ *   template <typename T, int kInt, bool kBool>
+ *   void foo() { ... }
+ *
+ *   template <>
+ *   void foo<float, -7, true>();
+ *
+ * The value 3 would be returned from this call.
+ */
+CINDEX_LINKAGE int clang_Cursor_getNumTemplateArguments(CXCursor C);
+
+/**
+ * \brief Retrieve the kind of the I'th template argument of the CXCursor C.
+ *
+ * If the argument CXCursor does not represent a FunctionDecl, an invalid
+ * template argument kind is returned.
+ *
+ * For example, for the following declaration and specialization:
+ *   template <typename T, int kInt, bool kBool>
+ *   void foo() { ... }
+ *
+ *   template <>
+ *   void foo<float, -7, true>();
+ *
+ * For I = 0, 1, and 2, Type, Integral, and Integral will be returned,
+ * respectively.
+ */
+CINDEX_LINKAGE enum CXTemplateArgumentKind clang_Cursor_getTemplateArgumentKind(
+    CXCursor C, unsigned I);
+
+/**
+ * \brief Retrieve a CXType representing the type of a TemplateArgument of a
+ *  function decl representing a template specialization.
+ *
+ * If the argument CXCursor does not represent a FunctionDecl whose I'th
+ * template argument has a kind of CXTemplateArgKind_Integral, an invalid type
+ * is returned.
+ *
+ * For example, for the following declaration and specialization:
+ *   template <typename T, int kInt, bool kBool>
+ *   void foo() { ... }
+ *
+ *   template <>
+ *   void foo<float, -7, true>();
+ *
+ * If called with I = 0, "float", will be returned.
+ * Invalid types will be returned for I == 1 or 2.
+ */
+CINDEX_LINKAGE CXType clang_Cursor_getTemplateArgumentType(CXCursor C,
+                                                           unsigned I);
+
+/**
+ * \brief Retrieve the value of an Integral TemplateArgument (of a function
+ *  decl representing a template specialization) as a signed long long.
+ *
+ * It is undefined to call this function on a CXCursor that does not represent a
+ * FunctionDecl or whose I'th template argument is not an integral value.
+ *
+ * For example, for the following declaration and specialization:
+ *   template <typename T, int kInt, bool kBool>
+ *   void foo() { ... }
+ *
+ *   template <>
+ *   void foo<float, -7, true>();
+ *
+ * If called with I = 1 or 2, -7 or true will be returned, respectively.
+ * For I == 0, this function's behavior is undefined.
+ */
+CINDEX_LINKAGE long long clang_Cursor_getTemplateArgumentValue(CXCursor C,
+                                                               unsigned I);
+
+/**
+ * \brief Retrieve the value of an Integral TemplateArgument (of a function
+ *  decl representing a template specialization) as an unsigned long long.
+ *
+ * It is undefined to call this function on a CXCursor that does not represent a
+ * FunctionDecl or whose I'th template argument is not an integral value.
+ *
+ * For example, for the following declaration and specialization:
+ *   template <typename T, int kInt, bool kBool>
+ *   void foo() { ... }
+ *
+ *   template <>
+ *   void foo<float, 2147483649, true>();
+ *
+ * If called with I = 1 or 2, 2147483649 or true will be returned, respectively.
+ * For I == 0, this function's behavior is undefined.
+ */
+CINDEX_LINKAGE unsigned long long clang_Cursor_getTemplateArgumentUnsignedValue(
+    CXCursor C, unsigned I);
 
 /**
  * \brief Determine whether two CXTypes represent the same type.
@@ -3200,6 +3347,29 @@ enum CX_CXXAccessSpecifier {
  * access specifier, the specifier itself is returned.
  */
 CINDEX_LINKAGE enum CX_CXXAccessSpecifier clang_getCXXAccessSpecifier(CXCursor);
+
+/**
+ * \brief Represents the storage classes as declared in the source. CX_SC_Invalid
+ * was added for the case that the passed cursor in not a declaration.
+ */
+enum CX_StorageClass {
+  CX_SC_Invalid,
+  CX_SC_None,
+  CX_SC_Extern,
+  CX_SC_Static,
+  CX_SC_PrivateExtern,
+  CX_SC_OpenCLWorkGroupLocal,
+  CX_SC_Auto,
+  CX_SC_Register
+};
+
+/**
+ * \brief Returns the storage class for a function or variable declaration.
+ *
+ * If the passed in Cursor is not a function or variable declaration,
+ * CX_SC_Invalid is returned else the storage class.
+ */
+CINDEX_LINKAGE enum CX_StorageClass clang_Cursor_getStorageClass(CXCursor);
 
 /**
  * \brief Determine the number of overloaded declarations referenced by a 

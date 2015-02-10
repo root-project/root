@@ -10,8 +10,8 @@
 //  This file provides internal definitions used in the AST reader.
 //
 //===----------------------------------------------------------------------===//
-#ifndef LLVM_CLANG_SERIALIZATION_ASTREADER_INTERNALS_H
-#define LLVM_CLANG_SERIALIZATION_ASTREADER_INTERNALS_H
+#ifndef LLVM_CLANG_LIB_SERIALIZATION_ASTREADERINTERNALS_H
+#define LLVM_CLANG_LIB_SERIALIZATION_ASTREADERINTERNALS_H
 
 #include "clang/AST/DeclarationName.h"
 #include "clang/Serialization/ASTBitCodes.h"
@@ -156,6 +156,8 @@ public:
     SelectorID ID;
     unsigned InstanceBits;
     unsigned FactoryBits;
+    bool InstanceHasMoreThanOneDecl;
+    bool FactoryHasMoreThanOneDecl;
     SmallVector<ObjCMethodDecl *, 2> Instance;
     SmallVector<ObjCMethodDecl *, 2> Factory;
   };
@@ -194,15 +196,14 @@ typedef llvm::OnDiskChainedHashTable<ASTSelectorLookupTrait>
 ///
 /// The on-disk hash table contains a mapping from each header path to 
 /// information about that header (how many times it has been included, its
-/// controlling macro, etc.). Note that we actually hash based on the 
-/// filename, and support "deep" comparisons of file names based on current
+/// controlling macro, etc.). Note that we actually hash based on the size
+/// and mtime, and support "deep" comparisons of file names based on current
 /// inode numbers, so that the search can cope with non-normalized path names
 /// and symlinks.
 class HeaderFileInfoTrait {
   ASTReader &Reader;
   ModuleFile &M;
   HeaderSearch *HS;
-  const llvm::StringMap<std::string>& OriginalFileMap;
   const char *FrameworkStrings;
 
 public:
@@ -212,6 +213,7 @@ public:
     off_t Size;
     time_t ModTime;
     const char *Filename;
+    bool Imported;
   };
   typedef const internal_key_type &internal_key_ref;
   
@@ -220,10 +222,8 @@ public:
   typedef unsigned offset_type;
   
   HeaderFileInfoTrait(ASTReader &Reader, ModuleFile &M, HeaderSearch *HS,
-                      const llvm::StringMap<std::string>& OFM,
                       const char *FrameworkStrings)
-  : Reader(Reader), M(M), HS(HS), OriginalFileMap(OFM),
-  FrameworkStrings(FrameworkStrings) { }
+  : Reader(Reader), M(M), HS(HS), FrameworkStrings(FrameworkStrings) { }
   
   static hash_value_type ComputeHash(internal_key_ref ikey);
   static internal_key_type GetInternalKey(const FileEntry *FE);

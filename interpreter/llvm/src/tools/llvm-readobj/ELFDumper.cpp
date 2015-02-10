@@ -372,9 +372,10 @@ static const EnumEntry<unsigned> ElfMachineType[] = {
 };
 
 static const EnumEntry<unsigned> ElfSymbolBindings[] = {
-  { "Local",  ELF::STB_LOCAL  },
-  { "Global", ELF::STB_GLOBAL },
-  { "Weak",   ELF::STB_WEAK   }
+  { "Local",  ELF::STB_LOCAL        },
+  { "Global", ELF::STB_GLOBAL       },
+  { "Weak",   ELF::STB_WEAK         },
+  { "Unique", ELF::STB_GNU_UNIQUE   }
 };
 
 static const EnumEntry<unsigned> ElfSymbolTypes[] = {
@@ -604,7 +605,7 @@ void ELFDumper<ELFT>::printSections() {
       }
     }
 
-    if (opts::SectionData) {
+    if (opts::SectionData && Section->sh_type != ELF::SHT_NOBITS) {
       ArrayRef<uint8_t> Data = errorOrDefault(Obj->getSectionContents(Section));
       W.printBinaryBlock("SectionData",
                          StringRef((const char *)Data.data(), Data.size()));
@@ -676,7 +677,8 @@ void ELFDumper<ELFT>::printRelocation(const Elf_Shdr *Sec,
     DictScope Group(W, "Relocation");
     W.printHex("Offset", Rel.r_offset);
     W.printNumber("Type", RelocName, (int)Rel.getType(Obj->isMips64EL()));
-    W.printString("Symbol", SymbolName.size() > 0 ? SymbolName : "-");
+    W.printNumber("Symbol", SymbolName.size() > 0 ? SymbolName : "-",
+                  Rel.getSymbol(Obj->isMips64EL()));
     W.printHex("Addend", Rel.r_addend);
   } else {
     raw_ostream& OS = W.startLine();

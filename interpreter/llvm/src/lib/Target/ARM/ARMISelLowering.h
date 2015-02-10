@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef ARMISELLOWERING_H
-#define ARMISELLOWERING_H
+#ifndef LLVM_LIB_TARGET_ARM_ARMISELLOWERING_H
+#define LLVM_LIB_TARGET_ARM_ARMISELLOWERING_H
 
 #include "MCTargetDesc/ARMBaseInfo.h"
 #include "llvm/CodeGen/CallingConvLower.h"
@@ -232,7 +232,8 @@ namespace llvm {
 
   class ARMTargetLowering : public TargetLowering {
   public:
-    explicit ARMTargetLowering(TargetMachine &TM);
+    explicit ARMTargetLowering(const TargetMachine &TM,
+                               const ARMSubtarget &STI);
 
     unsigned getJumpTableEncoding() const override;
 
@@ -392,14 +393,26 @@ namespace llvm {
     bool functionArgumentNeedsConsecutiveRegisters(
         Type *Ty, CallingConv::ID CallConv, bool isVarArg) const override;
 
+    bool hasLoadLinkedStoreConditional() const override;
+    Instruction *makeDMB(IRBuilder<> &Builder, ARM_MB::MemBOpt Domain) const;
     Value *emitLoadLinked(IRBuilder<> &Builder, Value *Addr,
                           AtomicOrdering Ord) const override;
     Value *emitStoreConditional(IRBuilder<> &Builder, Value *Val,
                                 Value *Addr, AtomicOrdering Ord) const override;
 
-    bool shouldExpandAtomicInIR(Instruction *Inst) const override;
+    Instruction* emitLeadingFence(IRBuilder<> &Builder, AtomicOrdering Ord,
+                          bool IsStore, bool IsLoad) const override;
+    Instruction* emitTrailingFence(IRBuilder<> &Builder, AtomicOrdering Ord,
+                           bool IsStore, bool IsLoad) const override;
+
+    bool shouldExpandAtomicLoadInIR(LoadInst *LI) const override;
+    bool shouldExpandAtomicStoreInIR(StoreInst *SI) const override;
+    bool shouldExpandAtomicRMWInIR(AtomicRMWInst *AI) const override;
 
     bool useLoadStackGuardNode() const override;
+
+    bool canCombineStoreAndExtract(Type *VectorTy, Value *Idx,
+                                   unsigned &Cost) const override;
 
   protected:
     std::pair<const TargetRegisterClass*, uint8_t>
@@ -476,6 +489,10 @@ namespace llvm {
     SDValue LowerFSINCOS(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerDivRem(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerDYNAMIC_STACKALLOC(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerFP_ROUND(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerFP_EXTEND(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerFP_TO_INT(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerINT_TO_FP(SDValue Op, SelectionDAG &DAG) const;
 
     unsigned getRegisterByName(const char* RegName, EVT VT) const override;
 
@@ -565,6 +582,9 @@ namespace llvm {
 
     bool mayBeEmittedAsTailCall(CallInst *CI) const override;
 
+    SDValue getCMOV(SDLoc dl, EVT VT, SDValue FalseVal, SDValue TrueVal,
+                    SDValue ARMcc, SDValue CCR, SDValue Cmp,
+                    SelectionDAG &DAG) const;
     SDValue getARMCmp(SDValue LHS, SDValue RHS, ISD::CondCode CC,
                       SDValue &ARMcc, SelectionDAG &DAG, SDLoc dl) const;
     SDValue getVFPCmp(SDValue LHS, SDValue RHS,

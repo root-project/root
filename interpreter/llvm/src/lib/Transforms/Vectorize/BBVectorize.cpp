@@ -201,14 +201,16 @@ namespace {
       initializeBBVectorizePass(*PassRegistry::getPassRegistry());
     }
 
-    BBVectorize(Pass *P, const VectorizeConfig &C)
+    BBVectorize(Pass *P, Function &F, const VectorizeConfig &C)
       : BasicBlockPass(ID), Config(C) {
       AA = &P->getAnalysis<AliasAnalysis>();
       DT = &P->getAnalysis<DominatorTreeWrapperPass>().getDomTree();
       SE = &P->getAnalysis<ScalarEvolution>();
       DataLayoutPass *DLP = P->getAnalysisIfAvailable<DataLayoutPass>();
       DL = DLP ? &DLP->getDataLayout() : nullptr;
-      TTI = IgnoreTargetInfo ? nullptr : &P->getAnalysis<TargetTransformInfo>();
+      TTI = IgnoreTargetInfo
+                ? nullptr
+                : &P->getAnalysis<TargetTransformInfoWrapperPass>().getTTI(F);
     }
 
     typedef std::pair<Value *, Value *> ValuePair;
@@ -391,8 +393,6 @@ namespace {
                      Instruction *&InsertionPt,
                      Instruction *I, Instruction *J);
 
-    void combineMetadata(Instruction *K, const Instruction *J);
-
     bool vectorizeBB(BasicBlock &BB) {
       if (skipOptnoneFunction(BB))
         return false;
@@ -444,7 +444,10 @@ namespace {
       SE = &getAnalysis<ScalarEvolution>();
       DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
       DL = DLP ? &DLP->getDataLayout() : nullptr;
-      TTI = IgnoreTargetInfo ? nullptr : &getAnalysis<TargetTransformInfo>();
+      TTI = IgnoreTargetInfo
+                ? nullptr
+                : &getAnalysis<TargetTransformInfoWrapperPass>().getTTI(
+                      *BB.getParent());
 
       return vectorizeBB(BB);
     }
@@ -454,7 +457,7 @@ namespace {
       AU.addRequired<AliasAnalysis>();
       AU.addRequired<DominatorTreeWrapperPass>();
       AU.addRequired<ScalarEvolution>();
-      AU.addRequired<TargetTransformInfo>();
+      AU.addRequired<TargetTransformInfoWrapperPass>();
       AU.addPreserved<AliasAnalysis>();
       AU.addPreserved<DominatorTreeWrapperPass>();
       AU.addPreserved<ScalarEvolution>();
@@ -687,6 +690,8 @@ namespace {
       case Intrinsic::trunc:
       case Intrinsic::floor:
       case Intrinsic::fabs:
+      case Intrinsic::minnum:
+      case Intrinsic::maxnum:
         return Config.VectorizeMath;
       case Intrinsic::bswap:
       case Intrinsic::ctpop:
@@ -1277,7 +1282,7 @@ namespace {
             CostSavings, FixedOrder)) continue;
 
         // J is a candidate for merging with I.
-        if (!PairableInsts.size() ||
+        if (PairableInsts.empty() ||
              PairableInsts[PairableInsts.size()-1] != I) {
           PairableInsts.push_back(I);
         }
@@ -2609,7 +2614,6 @@ namespace {
                                                      true, o, 1));
           NewI1->insertBefore(IBeforeJ ? J : I);
           I1 = NewI1;
-          I1T = I2T;
           I1Elem = I2Elem;
         } else if (I1Elem > I2Elem) {
           std::vector<Constant *> Mask(I1Elem);
@@ -2626,8 +2630,6 @@ namespace {
                                                      true, o, 1));
           NewI2->insertBefore(IBeforeJ ? J : I);
           I2 = NewI2;
-          I2T = I1T;
-          I2Elem = I1Elem;
         }
 
         // Now that both I1 and I2 are the same length we can shuffle them
@@ -2964,35 +2966,6 @@ namespace {
     }
   }
 
-  // When the first instruction in each pair is cloned, it will inherit its
-  // parent's metadata. This metadata must be combined with that of the other
-  // instruction in a safe way.
-  void BBVectorize::combineMetadata(Instruction *K, const Instruction *J) {
-    SmallVector<std::pair<unsigned, MDNode*>, 4> Metadata;
-    K->getAllMetadataOtherThanDebugLoc(Metadata);
-    for (unsigned i = 0, n = Metadata.size(); i < n; ++i) {
-      unsigned Kind = Metadata[i].first;
-      MDNode *JMD = J->getMetadata(Kind);
-      MDNode *KMD = Metadata[i].second;
-
-      switch (Kind) {
-      default:
-        K->setMetadata(Kind, nullptr); // Remove unknown metadata
-        break;
-      case LLVMContext::MD_tbaa:
-        K->setMetadata(Kind, MDNode::getMostGenericTBAA(JMD, KMD));
-        break;
-      case LLVMContext::MD_alias_scope:
-      case LLVMContext::MD_noalias:
-        K->setMetadata(Kind, MDNode::intersect(JMD, KMD));
-        break;
-      case LLVMContext::MD_fpmath:
-        K->setMetadata(Kind, MDNode::getMostGenericFPMath(JMD, KMD));
-        break;
-      }
-    }
-  }
-
   // This function fuses the chosen instruction pairs into vector instructions,
   // taking care preserve any needed scalar outputs and, then, it reorders the
   // remaining instructions as needed (users of the first member of the pair
@@ -3142,7 +3115,13 @@ namespace {
       if (!isa<StoreInst>(K))
         K->mutateType(getVecTypeForPair(L->getType(), H->getType()));
 
-      combineMetadata(K, H);
+      unsigned KnownIDs[] = {
+        LLVMContext::MD_tbaa,
+        LLVMContext::MD_alias_scope,
+        LLVMContext::MD_noalias,
+        LLVMContext::MD_fpmath
+      };
+      combineMetadata(K, H, KnownIDs);
       K->intersectOptionalDataWith(H);
 
       for (unsigned o = 0; o < NumOperands; ++o)
@@ -3218,7 +3197,7 @@ char BBVectorize::ID = 0;
 static const char bb_vectorize_name[] = "Basic-Block Vectorization";
 INITIALIZE_PASS_BEGIN(BBVectorize, BBV_NAME, bb_vectorize_name, false, false)
 INITIALIZE_AG_DEPENDENCY(AliasAnalysis)
-INITIALIZE_AG_DEPENDENCY(TargetTransformInfo)
+INITIALIZE_PASS_DEPENDENCY(TargetTransformInfoWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(ScalarEvolution)
 INITIALIZE_PASS_END(BBVectorize, BBV_NAME, bb_vectorize_name, false, false)
@@ -3229,7 +3208,7 @@ BasicBlockPass *llvm::createBBVectorizePass(const VectorizeConfig &C) {
 
 bool
 llvm::vectorizeBasicBlock(Pass *P, BasicBlock &BB, const VectorizeConfig &C) {
-  BBVectorize BBVectorizer(P, C);
+  BBVectorize BBVectorizer(P, *BB.getParent(), C);
   return BBVectorizer.vectorizeBB(BB);
 }
 

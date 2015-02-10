@@ -11,8 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef NVPTXSUBTARGET_H
-#define NVPTXSUBTARGET_H
+#ifndef LLVM_LIB_TARGET_NVPTX_NVPTXSUBTARGET_H
+#define LLVM_LIB_TARGET_NVPTX_NVPTXSUBTARGET_H
 
 #include "NVPTX.h"
 #include "NVPTXFrameLowering.h"
@@ -41,7 +41,6 @@ class NVPTXSubtarget : public NVPTXGenSubtargetInfo {
   // SM version x.y is represented as 10*x+y, e.g. 3.1 == 31
   unsigned int SmVersion;
 
-  const DataLayout DL; // Calculates type size & alignment
   NVPTXInstrInfo InstrInfo;
   NVPTXTargetLowering TLInfo;
   TargetSelectionDAGInfo TSInfo;
@@ -57,14 +56,19 @@ public:
   NVPTXSubtarget(const std::string &TT, const std::string &CPU,
                  const std::string &FS, const TargetMachine &TM, bool is64Bit);
 
-  const TargetFrameLowering *getFrameLowering() const { return &FrameLowering; }
-  const NVPTXInstrInfo *getInstrInfo() const { return &InstrInfo; }
-  const DataLayout *getDataLayout() const { return &DL; }
-  const NVPTXRegisterInfo *getRegisterInfo() const {
+  const TargetFrameLowering *getFrameLowering() const override {
+    return &FrameLowering;
+  }
+  const NVPTXInstrInfo *getInstrInfo() const override { return &InstrInfo; }
+  const NVPTXRegisterInfo *getRegisterInfo() const override {
     return &InstrInfo.getRegisterInfo();
   }
-  const NVPTXTargetLowering *getTargetLowering() const { return &TLInfo; }
-  const TargetSelectionDAGInfo *getSelectionDAGInfo() const { return &TSInfo; }
+  const NVPTXTargetLowering *getTargetLowering() const override {
+    return &TLInfo;
+  }
+  const TargetSelectionDAGInfo *getSelectionDAGInfo() const override {
+    return &TSInfo;
+  }
 
   bool hasBrkPt() const { return SmVersion >= 11; }
   bool hasAtomRedG32() const { return SmVersion >= 11; }
@@ -113,4 +117,4 @@ public:
 
 } // End llvm namespace
 
-#endif // NVPTXSUBTARGET_H
+#endif

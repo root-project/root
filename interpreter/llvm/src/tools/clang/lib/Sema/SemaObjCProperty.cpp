@@ -19,6 +19,7 @@
 #include "clang/AST/ExprObjC.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Lex/Lexer.h"
+#include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Initialization.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallString.h"
@@ -116,9 +117,9 @@ static unsigned deduceWeakPropertyFromType(Sema &S, QualType T) {
 static void
 CheckPropertyAgainstProtocol(Sema &S, ObjCPropertyDecl *Prop,
                              ObjCProtocolDecl *Proto,
-                             llvm::SmallPtrSet<ObjCProtocolDecl *, 16> &Known) {
+                             llvm::SmallPtrSetImpl<ObjCProtocolDecl *> &Known) {
   // Have we seen this protocol before?
-  if (!Known.insert(Proto))
+  if (!Known.insert(Proto).second)
     return;
 
   // Look for a property with the same name.
@@ -1547,25 +1548,6 @@ void Sema::DefaultSynthesizeProperties(Scope *S, ObjCImplDecl* IMPDecl,
       if (IMPDecl->getInstanceMethod(Prop->getSetterName()))
         continue;
     }
-    // If property to be implemented in the super class, ignore.
-    if (SuperPropMap[Prop->getIdentifier()]) {
-      ObjCPropertyDecl *PropInSuperClass = SuperPropMap[Prop->getIdentifier()];
-      if ((Prop->getPropertyAttributes() & ObjCPropertyDecl::OBJC_PR_readwrite) &&
-          (PropInSuperClass->getPropertyAttributes() &
-           ObjCPropertyDecl::OBJC_PR_readonly) &&
-          !IMPDecl->getInstanceMethod(Prop->getSetterName()) &&
-          !IDecl->HasUserDeclaredSetterMethod(Prop)) {
-        Diag(Prop->getLocation(), diag::warn_no_autosynthesis_property)
-          << Prop->getIdentifier();
-        Diag(PropInSuperClass->getLocation(), diag::note_property_declare);
-      }
-      else {
-        Diag(Prop->getLocation(), diag::warn_autosynthesis_property_in_superclass)
-          << Prop->getIdentifier();
-        Diag(IMPDecl->getLocation(), diag::note_while_in_implementation);
-      }
-      continue;
-    }
     if (ObjCPropertyImplDecl *PID =
         IMPDecl->FindPropertyImplIvarDecl(Prop->getIdentifier())) {
       Diag(Prop->getLocation(), diag::warn_no_autosynthesis_shared_ivar_property)
@@ -1574,12 +1556,14 @@ void Sema::DefaultSynthesizeProperties(Scope *S, ObjCImplDecl* IMPDecl,
         Diag(PID->getLocation(), diag::note_property_synthesize);
       continue;
     }
+    ObjCPropertyDecl *PropInSuperClass = SuperPropMap[Prop->getIdentifier()];
     if (ObjCProtocolDecl *Proto =
           dyn_cast<ObjCProtocolDecl>(Prop->getDeclContext())) {
       // We won't auto-synthesize properties declared in protocols.
       // Suppress the warning if class's superclass implements property's
       // getter and implements property's setter (if readwrite property).
-      if (!SuperClassImplementsProperty(IDecl, Prop)) {
+      // Or, if property is going to be implemented in its super class.
+      if (!SuperClassImplementsProperty(IDecl, Prop) && !PropInSuperClass) {
         Diag(IMPDecl->getLocation(),
              diag::warn_auto_synthesizing_protocol_property)
           << Prop << Proto;
@@ -1587,7 +1571,25 @@ void Sema::DefaultSynthesizeProperties(Scope *S, ObjCImplDecl* IMPDecl,
       }
       continue;
     }
-
+    // If property to be implemented in the super class, ignore.
+    if (PropInSuperClass) {
+      if ((Prop->getPropertyAttributes() & ObjCPropertyDecl::OBJC_PR_readwrite) &&
+          (PropInSuperClass->getPropertyAttributes() &
+           ObjCPropertyDecl::OBJC_PR_readonly) &&
+          !IMPDecl->getInstanceMethod(Prop->getSetterName()) &&
+          !IDecl->HasUserDeclaredSetterMethod(Prop)) {
+        Diag(Prop->getLocation(), diag::warn_no_autosynthesis_property)
+        << Prop->getIdentifier();
+        Diag(PropInSuperClass->getLocation(), diag::note_property_declare);
+      }
+      else {
+        Diag(Prop->getLocation(), diag::warn_autosynthesis_property_in_superclass)
+        << Prop->getIdentifier();
+        Diag(PropInSuperClass->getLocation(), diag::note_property_declare);
+        Diag(IMPDecl->getLocation(), diag::note_while_in_implementation);
+      }
+      continue;
+    }
     // We use invalid SourceLocations for the synthesized ivars since they
     // aren't really synthesized at a particular location; they just exist.
     // Saying that they are located at the @implementation isn't really going
@@ -1853,6 +1855,39 @@ void Sema::DiagnoseOwningPropertyGetterSynthesis(const ObjCImplementationDecl *D
           Diag(PD->getLocation(), diag::err_cocoa_naming_owned_rule);
         else
           Diag(PD->getLocation(), diag::warn_cocoa_naming_owned_rule);
+
+        // Look for a getter explicitly declared alongside the property.
+        // If we find one, use its location for the note.
+        SourceLocation noteLoc = PD->getLocation();
+        SourceLocation fixItLoc;
+        for (auto *getterRedecl : method->redecls()) {
+          if (getterRedecl->isImplicit())
+            continue;
+          if (getterRedecl->getDeclContext() != PD->getDeclContext())
+            continue;
+          noteLoc = getterRedecl->getLocation();
+          fixItLoc = getterRedecl->getLocEnd();
+        }
+
+        Preprocessor &PP = getPreprocessor();
+        TokenValue tokens[] = {
+          tok::kw___attribute, tok::l_paren, tok::l_paren,
+          PP.getIdentifierInfo("objc_method_family"), tok::l_paren,
+          PP.getIdentifierInfo("none"), tok::r_paren,
+          tok::r_paren, tok::r_paren
+        };
+        StringRef spelling = "__attribute__((objc_method_family(none)))";
+        StringRef macroName = PP.getLastMacroWithSpelling(noteLoc, tokens);
+        if (!macroName.empty())
+          spelling = macroName;
+
+        auto noteDiag = Diag(noteLoc, diag::note_cocoa_naming_declare_family)
+            << method->getDeclName() << spelling;
+        if (fixItLoc.isValid()) {
+          SmallString<64> fixItText(" ");
+          fixItText += spelling;
+          noteDiag << FixItHint::CreateInsertion(fixItLoc, fixItText);
+        }
       }
     }
   }

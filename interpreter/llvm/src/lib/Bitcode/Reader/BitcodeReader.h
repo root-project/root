@@ -11,17 +11,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BITCODE_READER_H
-#define BITCODE_READER_H
+#ifndef LLVM_LIB_BITCODE_READER_BITCODEREADER_H
+#define LLVM_LIB_BITCODE_READER_BITCODEREADER_H
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/Bitcode/BitstreamReader.h"
 #include "llvm/Bitcode/LLVMBitCodes.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/GVMaterializer.h"
+#include "llvm/IR/Metadata.h"
 #include "llvm/IR/OperandTraits.h"
+#include "llvm/IR/TrackingMDRef.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/ValueHandle.h"
+#include <deque>
 #include <system_error>
 #include <vector>
 
@@ -94,22 +97,25 @@ public:
 //===----------------------------------------------------------------------===//
 
 class BitcodeReaderMDValueList {
-  std::vector<WeakVH> MDValuePtrs;
+  unsigned NumFwdRefs;
+  bool AnyFwdRefs;
+  std::vector<TrackingMDRef> MDValuePtrs;
 
   LLVMContext &Context;
 public:
-  BitcodeReaderMDValueList(LLVMContext& C) : Context(C) {}
+  BitcodeReaderMDValueList(LLVMContext &C)
+      : NumFwdRefs(0), AnyFwdRefs(false), Context(C) {}
 
   // vector compatibility methods
   unsigned size() const       { return MDValuePtrs.size(); }
   void resize(unsigned N)     { MDValuePtrs.resize(N); }
-  void push_back(Value *V)    { MDValuePtrs.push_back(V);  }
+  void push_back(Metadata *MD) { MDValuePtrs.emplace_back(MD); }
   void clear()                { MDValuePtrs.clear();  }
-  Value *back() const         { return MDValuePtrs.back(); }
+  Metadata *back() const      { return MDValuePtrs.back(); }
   void pop_back()             { MDValuePtrs.pop_back(); }
   bool empty() const          { return MDValuePtrs.empty(); }
 
-  Value *operator[](unsigned i) const {
+  Metadata *operator[](unsigned i) const {
     assert(i < MDValuePtrs.size());
     return MDValuePtrs[i];
   }
@@ -119,12 +125,14 @@ public:
     MDValuePtrs.resize(N);
   }
 
-  Value *getValueFwdRef(unsigned Idx);
-  void AssignValue(Value *V, unsigned Idx);
+  Metadata *getValueFwdRef(unsigned Idx);
+  void AssignValue(Metadata *MD, unsigned Idx);
+  void tryToResolveCycles();
 };
 
 class BitcodeReader : public GVMaterializer {
   LLVMContext &Context;
+  DiagnosticHandlerFunction DiagnosticHandler;
   Module *TheModule;
   std::unique_ptr<MemoryBuffer> Buffer;
   std::unique_ptr<BitstreamReader> StreamFile;
@@ -142,6 +150,7 @@ class BitcodeReader : public GVMaterializer {
   std::vector<std::pair<GlobalVariable*, unsigned> > GlobalInits;
   std::vector<std::pair<GlobalAlias*, unsigned> > AliasInits;
   std::vector<std::pair<Function*, unsigned> > FunctionPrefixes;
+  std::vector<std::pair<Function*, unsigned> > FunctionPrologues;
 
   SmallVector<Instruction*, 64> InstsWithTBAATag;
 
@@ -180,9 +189,10 @@ class BitcodeReader : public GVMaterializer {
   DenseMap<Function*, uint64_t> DeferredFunctionInfo;
 
   /// These are basic blocks forward-referenced by block addresses.  They are
-  /// inserted lazily into functions when they're loaded.
-  typedef std::pair<unsigned, BasicBlock *> BasicBlockRefTy;
-  DenseMap<Function *, std::vector<BasicBlockRefTy>> BasicBlockFwdRefs;
+  /// inserted lazily into functions when they're loaded.  The basic block ID is
+  /// its index into the vector.
+  DenseMap<Function *, std::vector<BasicBlock *>> BasicBlockFwdRefs;
+  std::deque<Function *> BasicBlockFwdRefQueue;
 
   /// UseRelativeIDs - Indicates that we are using a new encoding for
   /// instruction operands where most operands in the current
@@ -201,30 +211,26 @@ class BitcodeReader : public GVMaterializer {
   SmallPtrSet<const Function *, 4> BlockAddressesTaken;
 
 public:
-  std::error_code Error(BitcodeError E) { return make_error_code(E); }
+  std::error_code Error(BitcodeError E, const Twine &Message);
+  std::error_code Error(BitcodeError E);
+  std::error_code Error(const Twine &Message);
 
-  explicit BitcodeReader(MemoryBuffer *buffer, LLVMContext &C)
-      : Context(C), TheModule(nullptr), Buffer(buffer), LazyStreamer(nullptr),
-        NextUnreadBit(0), SeenValueSymbolTable(false), ValueList(C),
-        MDValueList(C), SeenFirstFunctionBody(false), UseRelativeIDs(false),
-        WillMaterializeAllForwardRefs(false) {}
-  explicit BitcodeReader(DataStreamer *streamer, LLVMContext &C)
-      : Context(C), TheModule(nullptr), Buffer(nullptr), LazyStreamer(streamer),
-        NextUnreadBit(0), SeenValueSymbolTable(false), ValueList(C),
-        MDValueList(C), SeenFirstFunctionBody(false), UseRelativeIDs(false),
-        WillMaterializeAllForwardRefs(false) {}
+  explicit BitcodeReader(MemoryBuffer *buffer, LLVMContext &C,
+                         DiagnosticHandlerFunction DiagnosticHandler);
+  explicit BitcodeReader(DataStreamer *streamer, LLVMContext &C,
+                         DiagnosticHandlerFunction DiagnosticHandler);
   ~BitcodeReader() { FreeState(); }
 
   std::error_code materializeForwardReferencedFunctions();
 
   void FreeState();
 
-  void releaseBuffer() override;
+  void releaseBuffer();
 
-  bool isMaterializable(const GlobalValue *GV) const override;
   bool isDematerializable(const GlobalValue *GV) const override;
-  std::error_code Materialize(GlobalValue *GV) override;
+  std::error_code materialize(GlobalValue *GV) override;
   std::error_code MaterializeModule(Module *M) override;
+  std::vector<StructType *> getIdentifiedStructTypes() const override;
   void Dematerialize(GlobalValue *GV) override;
 
   /// @brief Main interface to parsing a bitcode buffer.
@@ -238,11 +244,18 @@ public:
   static uint64_t decodeSignRotatedValue(uint64_t V);
 
 private:
+  std::vector<StructType *> IdentifiedStructTypes;
+  StructType *createIdentifiedStructType(LLVMContext &Context, StringRef Name);
+  StructType *createIdentifiedStructType(LLVMContext &Context);
+
   Type *getTypeByID(unsigned ID);
   Value *getFnValueByID(unsigned ID, Type *Ty) {
     if (Ty && Ty->isMetadataTy())
-      return MDValueList.getValueFwdRef(ID);
+      return MetadataAsValue::get(Ty->getContext(), getFnMetadataByID(ID));
     return ValueList.getValueFwdRef(ID, Ty);
+  }
+  Metadata *getFnMetadataByID(unsigned ID) {
+    return MDValueList.getValueFwdRef(ID);
   }
   BasicBlock *getBasicBlock(unsigned ID) const {
     if (ID >= FunctionBBs.size()) return nullptr; // Invalid ID
