@@ -264,6 +264,10 @@ void stressGraphics(Int_t verbose = 0)
 
    // Read the reference file "stressGraphics.ref"
    FILE *sg = fopen("stressGraphics.ref","r");
+   if (!sg) {
+      printf("Could not open stressGraphics.ref\n");
+      return;
+   }
    char line[160];
    Int_t i = -1;
    while (fgets(line,160,sg)) {
