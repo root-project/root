@@ -1054,8 +1054,14 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
    // find the Delaunay triangles.
 
    if (fNpoints <= 0) {
-      Error("GetHistogram", "Empty TGraph2D");
-      return 0;
+      if (!fHistogram) {
+         Bool_t add = TH1::AddDirectoryStatus();
+         TH1::AddDirectory(kFALSE);
+         fHistogram = new TH2D(GetName(), GetTitle(), fNpx , 0., 1., fNpy, 0., 1.);
+         TH1::AddDirectory(add);
+         fHistogram->SetBit(TH1::kNoStats);
+      }
+      return fHistogram;
    }
 
    TString opt = option;
@@ -1068,6 +1074,7 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
             delete fHistogram;
             fHistogram = 0;
          }
+      } else if (fHistogram->GetEntries() == 0){;
       } else {
          return fHistogram;
       }
@@ -1105,9 +1112,14 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
             hymax = hymax+hymax*0.01;
          }
       }
-      fHistogram = new TH2D(GetName(), GetTitle(),
-                            fNpx , hxmin, hxmax,
-                            fNpy, hymin, hymax);
+      if (fHistogram) {
+         fHistogram->GetXaxis()->SetLimits(hxmin, hxmax);
+         fHistogram->GetYaxis()->SetLimits(hymin, hymax);
+      } else {
+         fHistogram = new TH2D(GetName(), GetTitle(),
+                               fNpx , hxmin, hxmax,
+                               fNpy, hymin, hymax);
+      }
       TH1::AddDirectory(add);
       fHistogram->SetBit(TH1::kNoStats);
    } else {
@@ -1131,13 +1143,11 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
          hzmin = fMinimum;
       } else {
          hzmin = GetZmin();
-///         hzmin = GetZminE();
       }
       if (fMaximum != -1111) {
          hzmax = fMaximum;
       } else {
          hzmax = GetZmax();
-///         hzmax = GetZmaxE();
       }
       if (hzmin == hzmax) {
          hzmin = hzmin - 0.01 * hzmin;
