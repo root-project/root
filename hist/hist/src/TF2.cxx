@@ -265,20 +265,21 @@ TF1 *TF2::DrawCopy(Option_t *option) const
    return newf2;
 }
 
+// remove this function
 //______________________________________________________________________________
-void TF2::DrawF2(const char *formula, Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Option_t *option)
-{
-//*-*-*-*-*-*-*-*-*-*Draw formula between xmin,ymin and xmax,ymax*-*-*-*-*-*-*-*
-//*-*                ============================================
-//*-*
+// void TF2::DrawF2(const char *formula, Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Option_t *option)
+// {
+// //*-*-*-*-*-*-*-*-*-*Draw formula between xmin,ymin and xmax,ymax*-*-*-*-*-*-*-*
+// //*-*                ============================================
+// //*-*
 
-   //if (Compile((char*)formula)) return;
+//    //if (Compile((char*)formula)) return;
 
-   SetRange(xmin, ymin, xmax, ymax);
+//    SetRange(xmin, ymin, xmax, ymax);
 
-   Draw(option);
+//    Draw(option);
 
-}
+// }
 
 //______________________________________________________________________________
 void TF2::ExecuteEvent(Int_t event, Int_t px, Int_t py)
