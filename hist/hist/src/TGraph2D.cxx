@@ -512,8 +512,8 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
 
 //______________________________________________________________________________
 TGraph2D::TGraph2D(const TGraph2D &g)
-: TNamed(g), TAttLine(g), TAttFill(g), TAttMarker(g), 
-   fX(0), fY(0), fZ(0), 
+: TNamed(g), TAttLine(g), TAttFill(g), TAttMarker(g),
+   fX(0), fY(0), fZ(0),
    fHistogram(0), fDirectory(0), fPainter(0)
 {
    // Graph2D copy constructor.
@@ -534,7 +534,7 @@ TGraph2D::TGraph2D(const TGraph2D &g)
       }
    }
 
-   
+
 }
 
 
@@ -564,22 +564,22 @@ TGraph2D& TGraph2D::operator=(const TGraph2D &g)
    }
    // copy everyting except the function list
    fNpoints = g.fNpoints;
-   fNpx = g.fNpx; 
+   fNpx = g.fNpx;
    fNpy = g.fNpy;
-   fMaxIter = g.fMaxIter; 
-   fSize = fNpoints; // force size to be the same of npoints  
+   fMaxIter = g.fMaxIter;
+   fSize = fNpoints; // force size to be the same of npoints
    fX         = (fSize > 0) ? new Double_t[fSize] : 0;
    fY         = (fSize > 0) ? new Double_t[fSize] : 0;
    fZ         = (fSize > 0) ? new Double_t[fSize] : 0;
-   fMinimum = g.fMinimum; 
-   fMaximum = g.fMaximum; 
-   fMargin = g.fMargin; 
-   fZout = g.fZout; 
-   fUserHisto = g.fUserHisto; 
-   if (g.fHistogram) 
+   fMinimum = g.fMinimum;
+   fMaximum = g.fMaximum;
+   fMargin = g.fMargin;
+   fZout = g.fZout;
+   fUserHisto = g.fUserHisto;
+   if (g.fHistogram)
       fHistogram = (fUserHisto ) ? g.fHistogram : new TH2D(*g.fHistogram);
 
-   
+
 
    // copy the points
    for (Int_t n = 0; n < fSize; n++) {
@@ -1054,8 +1054,14 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
    // find the Delaunay triangles.
 
    if (fNpoints <= 0) {
-      Error("GetHistogram", "Empty TGraph2D");
-      return 0;
+      if (!fHistogram) {
+         Bool_t add = TH1::AddDirectoryStatus();
+         TH1::AddDirectory(kFALSE);
+         fHistogram = new TH2D(GetName(), GetTitle(), fNpx , 0., 1., fNpy, 0., 1.);
+         TH1::AddDirectory(add);
+         fHistogram->SetBit(TH1::kNoStats);
+      }
+      return fHistogram;
    }
 
    TString opt = option;
@@ -1068,6 +1074,7 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
             delete fHistogram;
             fHistogram = 0;
          }
+      } else if (fHistogram->GetEntries() == 0){;
       } else {
          return fHistogram;
       }
@@ -1105,9 +1112,14 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
             hymax = hymax+hymax*0.01;
          }
       }
-      fHistogram = new TH2D(GetName(), GetTitle(),
-                            fNpx , hxmin, hxmax,
-                            fNpy, hymin, hymax);
+      if (fHistogram) {
+         fHistogram->GetXaxis()->SetLimits(hxmin, hxmax);
+         fHistogram->GetYaxis()->SetLimits(hymin, hymax);
+      } else {
+         fHistogram = new TH2D(GetName(), GetTitle(),
+                               fNpx , hxmin, hxmax,
+                               fNpy, hymin, hymax);
+      }
       TH1::AddDirectory(add);
       fHistogram->SetBit(TH1::kNoStats);
    } else {
@@ -1131,13 +1143,11 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
          hzmin = fMinimum;
       } else {
          hzmin = GetZmin();
-///         hzmin = GetZminE();
       }
       if (fMaximum != -1111) {
          hzmax = fMaximum;
       } else {
          hzmax = GetZmax();
-///         hzmax = GetZmaxE();
       }
       if (hzmin == hzmax) {
          hzmin = hzmin - 0.01 * hzmin;
