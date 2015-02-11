@@ -26,10 +26,10 @@ static int begin_request_handler(struct mg_connection *conn)
    Bool_t execres = kTRUE;
 
    if (serv->IsFileRequested(request_info->uri, filename)) {
-      if ((filename.Index(".js")!=kNPOS) || (filename.Index(".css")!=kNPOS)) {
+      if ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS)) {
          Int_t length = 0;
          char *buf = THttpServer::ReadFileContent(filename.Data(), length);
-         if (buf==0) {
+         if (buf == 0) {
             arg.Set404();
          } else {
             arg.SetContentType(THttpServer::GetMimeType(filename.Data()));
@@ -52,27 +52,32 @@ static int begin_request_handler(struct mg_connection *conn)
       TString hdr;
       arg.FillHttpHeader(hdr, "HTTP/1.1");
       mg_printf(conn, "%s", hdr.Data());
-   } else
-   if (arg.IsFile()) {
+   } else if (arg.IsFile()) {
       mg_send_file(conn, (const char *) arg.GetContent());
    } else {
 
       Bool_t dozip = arg.GetZipping() > 0;
       switch (arg.GetZipping()) {
-         case 2: if (arg.GetContentLength() < 10000) { dozip = kFALSE; break; }
+         case 2:
+            if (arg.GetContentLength() < 10000) {
+               dozip = kFALSE;
+               break;
+            }
          case 1:
             // check if request header has Accept-Encoding
             dozip = kFALSE;
-            for (int n=0;n<request_info->num_headers;n++) {
+            for (int n = 0; n < request_info->num_headers; n++) {
                TString name = request_info->http_headers[n].name;
-               if (name.Index("Accept-Encoding", 0, TString::kIgnoreCase)!=0) continue;
+               if (name.Index("Accept-Encoding", 0, TString::kIgnoreCase) != 0) continue;
                TString value = request_info->http_headers[n].value;
-               dozip = (value.Index("gzip", 0, TString::kIgnoreCase)!=kNPOS);
+               dozip = (value.Index("gzip", 0, TString::kIgnoreCase) != kNPOS);
                break;
             }
 
             break;
-         case 3: dozip = kTRUE; break;
+         case 3:
+            dozip = kTRUE;
+            break;
       }
 
       if (dozip) arg.CompressWithGzip();
@@ -167,13 +172,13 @@ Bool_t TCivetweb::Create(const char *args)
 
       // first extract port number
       sport = "";
-      while ((*args!=0) && (*args>='0') && (*args<='9'))
+      while ((*args != 0) && (*args >= '0') && (*args <= '9'))
          sport.Append(*args++);
 
       // than search for extra parameters
-      while ((*args!=0) && (*args!='?')) args++;
+      while ((*args != 0) && (*args != '?')) args++;
 
-      if (*args=='?') {
+      if (*args == '?') {
          TUrl url(TString::Format("http://localhost/folder%s", args));
 
          if (url.IsValid()) {

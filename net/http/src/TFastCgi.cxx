@@ -136,13 +136,13 @@ Bool_t TFastCgi::Create(const char *args)
 
       // first extract port number
       sport = ":";
-      while ((*args!=0) && (*args>='0') && (*args<='9'))
+      while ((*args != 0) && (*args >= '0') && (*args <= '9'))
          sport.Append(*args++);
 
       // than search for extra parameters
-      while ((*args!=0) && (*args!='?')) args++;
+      while ((*args != 0) && (*args != '?')) args++;
 
-      if (*args=='?') {
+      if (*args == '?') {
          TUrl url(TString::Format("http://localhost/folder%s", args));
 
          if (url.IsValid()) {
@@ -159,7 +159,7 @@ Bool_t TFastCgi::Create(const char *args)
 //      Info("Create", "valid url opt %s debug = %d", url.GetOptions(), fDebugMode);
    }
 
-   Info("Create", "Starting FastCGI server on port %s", sport.Data()+1);
+   Info("Create", "Starting FastCGI server on port %s", sport.Data() + 1);
 
    fSocket = FCGX_OpenSocket(sport.Data(), 10);
    fThrd = new TThread("FastCgiThrd", TFastCgi::run_func, this);
@@ -271,7 +271,7 @@ void *TFastCgi::run_func(void *args)
       } else {
 
          // TODO: check in request header that gzip encoding is supported
-         if (arg.GetZipping()>0) arg.CompressWithGzip();
+         if (arg.GetZipping() > 0) arg.CompressWithGzip();
 
          arg.FillHttpHeader(hdr, "Status:");
          FCGX_FPrintF(request.out, hdr.Data());

@@ -85,7 +85,7 @@ public:
    Bool_t Done() const;
 
    /** Construct item name, using object name as basis */
-   void MakeItemName(const char *objname, TString& itemname);
+   void MakeItemName(const char *objname, TString &itemname);
 
    Bool_t GoInside(TRootSnifferScanRec &super, TObject *obj, const char *obj_name = 0);
 
@@ -98,9 +98,9 @@ class TRootSniffer : public TNamed {
    friend class THttpServer;
    enum {
       kMoreFolder = BIT(19),  // all elements in such folder marked with _more
-                              // attribute and can be expanded from browser
+      // attribute and can be expanded from browser
       kItemFolder = BIT(20)   // such folder interpreted as hierarchy item,
-                              // with attributes coded into TNamed elements
+                    // with attributes coded into TNamed elements
    };
 protected:
    TString     fObjectsPath; //! path for registered objects
@@ -112,14 +112,14 @@ protected:
 
    void ScanObject(TRootSnifferScanRec &rec, TObject *obj);
 
-   virtual void ScanObjectProperties(TRootSnifferScanRec &rec, TObject* &obj, TClass* &obj_class);
+   virtual void ScanObjectProperties(TRootSnifferScanRec &rec, TObject *&obj, TClass *&obj_class);
 
    virtual void ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj);
 
-   virtual void ScanItem(TRootSnifferScanRec &rec, TFolder* item);
+   virtual void ScanItem(TRootSnifferScanRec &rec, TFolder *item);
 
    void ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
-                       const char *foldername = 0, Bool_t extra = kFALSE, TCollection* keys_lst = 0);
+                       const char *foldername = 0, Bool_t extra = kFALSE, TCollection *keys_lst = 0);
 
    /* Method is used to scan ROOT objects.
     * Can be reimplemented to extend scanning */
@@ -127,17 +127,17 @@ protected:
 
    void CreateMemFile();
 
-   TString DecodeUrlOptionValue(const char* value, Bool_t remove_quotes = kTRUE);
+   TString DecodeUrlOptionValue(const char *value, Bool_t remove_quotes = kTRUE);
 
-   TFolder* GetSubFolder(const char* foldername, Bool_t force = kFALSE, Bool_t owner = kFALSE);
+   TFolder *GetSubFolder(const char *foldername, Bool_t force = kFALSE, Bool_t owner = kFALSE);
 
-   TFolder* CreateItem(const char* fullname, const char* title);
+   TFolder *CreateItem(const char *fullname, const char *title);
 
-   Bool_t SetItemField(TFolder* item, const char* name, const char* value);
+   Bool_t SetItemField(TFolder *item, const char *name, const char *value);
 
-   TFolder* FindItem(const char* path);
+   TFolder *FindItem(const char *path);
 
-   const char* GetItemField(TFolder* item, const char* name);
+   const char *GetItemField(TFolder *item, const char *name);
 
 public:
 
@@ -148,10 +148,16 @@ public:
 
    /** When readonly on (default), sniffer is not allowed to change ROOT structures.
     * For instance, it is not allowed to read new objects from files */
-   void  SetReadOnly(Bool_t on = kTRUE) { fReadOnly = on; }
+   void  SetReadOnly(Bool_t on = kTRUE)
+   {
+      fReadOnly = on;
+   }
 
    /** Return readonly mode */
-   Bool_t IsReadOnly() const { return fReadOnly; }
+   Bool_t IsReadOnly() const
+   {
+      return fReadOnly;
+   }
 
    Bool_t RegisterObject(const char *subfolder, TObject *obj);
 
@@ -184,7 +190,7 @@ public:
 
    Bool_t ProduceExe(const char *path, const char *options, Int_t reskind, TString *ret_str, void **ret_ptr = 0, Long_t *ret_length = 0);
 
-   Bool_t ExecuteCmd(const char *path, const char *options, TString& res);
+   Bool_t ExecuteCmd(const char *path, const char *options, TString &res);
 
    Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length);
 

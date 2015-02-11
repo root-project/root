@@ -137,12 +137,12 @@ public:
       SetContentType("_404_");
    }
 
-   void SetFile(const char* filename = 0)
+   void SetFile(const char *filename = 0)
    {
       // indicate that http request should response with file content
 
       SetContentType("_file_");
-      if (filename!=0) fContent = filename;
+      if (filename != 0) fContent = filename;
    }
 
    void SetXml()
@@ -159,7 +159,7 @@ public:
       SetContentType("application/json");
    }
 
-   void AddHeader(const char* name, const char* value)
+   void AddHeader(const char *name, const char *value)
    {
       // Add name:value pair to reply header
       // Same header can be specified only once
@@ -201,13 +201,13 @@ public:
       return fZipping;
    }
 
-   void SetExtraHeader(const char* name, const char* value)
+   void SetExtraHeader(const char *name, const char *value)
    {
       AddHeader(name, value);
    }
 
    // Fill http header
-   void FillHttpHeader(TString &buf, const char* header = 0);
+   void FillHttpHeader(TString &buf, const char *header = 0);
 
    // these methods used to return results of http request processing
 
@@ -231,7 +231,7 @@ public:
       return fContentType.Data();
    }
 
-   void SetBinData(void* data, Long_t length);
+   void SetBinData(void *data, Long_t length);
 
    Long_t GetContentLength() const
    {
@@ -273,7 +273,7 @@ protected:
    // Here any request can be processed
    virtual void ProcessRequest(THttpCallArg *arg);
 
-   static Bool_t VerifyFilePath(const char* fname);
+   static Bool_t VerifyFilePath(const char *fname);
 
 public:
 
@@ -321,16 +321,16 @@ public:
    Bool_t Unregister(TObject *obj);
 
    /** Register command, which can be activated via web interface */
-   Bool_t RegisterCommand(const char* cmdname, const char* method, const char* icon = 0);
+   Bool_t RegisterCommand(const char *cmdname, const char *method, const char *icon = 0);
 
    /** Hide folder or element in objects hierarchy in web interface */
-   Bool_t Hide(const char* foldername, Bool_t hide = kTRUE);
+   Bool_t Hide(const char *foldername, Bool_t hide = kTRUE);
 
    /** Guess mime type base on file extension */
    static const char *GetMimeType(const char *path);
 
    /** Reads content of file from the disk */
-   static char* ReadFileContent(const char* filename, Int_t& len);
+   static char *ReadFileContent(const char *filename, Int_t &len);
 
    ClassDef(THttpServer, 0) // HTTP server for ROOT analysis
 };
