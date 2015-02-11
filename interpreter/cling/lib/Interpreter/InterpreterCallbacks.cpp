@@ -159,7 +159,8 @@ namespace cling {
                              bool enableExternalSemaSourceCallbacks/* = false*/,
                         bool enableDeserializationListenerCallbacks/* = false*/,
                                              bool enablePPCallbacks/* = false*/)
-    : m_Interpreter(interp), m_IsRuntime(false) {
+    : m_Interpreter(interp), m_ExternalSemaSource(0), m_PPCallbacks(0),
+      m_IsRuntime(false) {
     Sema& SemaRef = interp->getSema();
     ASTReader* Reader = m_Interpreter->getCI()->getModuleManager().get();
     ExternalSemaSource* externalSemaSrc = SemaRef.getExternalSource();
@@ -190,9 +191,9 @@ namespace cling {
     }
 
     if (enablePPCallbacks) {
-      m_PPCallbacks = new InterpreterPPCallbacks(this);
       Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
-      PP.addPPCallbacks(m_PPCallbacks);
+      m_PPCallbacks = new InterpreterPPCallbacks(this);
+      PP.addPPCallbacks(std::unique_ptr<InterpreterPPCallbacks>(m_PPCallbacks));
     }
   }
 

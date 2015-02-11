@@ -25,8 +25,6 @@
 #include "clang/Lex/MacroInfo.h"
 #include "clang/Lex/Preprocessor.h"
 
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/JIT.h" // For debugging the EE in gdb
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Module.h"
@@ -46,10 +44,9 @@ namespace clang {
     Globals VisitedGlobals;
     llvm::SmallPtrSet<llvm::Constant *, 8> SeenConstants;
     clang::CodeGenerator* m_CodeGen;
-    llvm::ExecutionEngine* m_EEngine;
   public:
-    GlobalValueEraser(clang::CodeGenerator* CG, llvm::ExecutionEngine* EE)
-      : m_CodeGen(CG), m_EEngine(EE) { }
+    GlobalValueEraser(clang::CodeGenerator* CG)
+      : m_CodeGen(CG) { }
 
     ///\brief Erases the given global value and all unused leftovers
     ///
@@ -94,7 +91,6 @@ namespace clang {
           if ((*I)->getName().equals("_Unwind_Resume"))
             continue;
 
-          m_EEngine->updateGlobalMapping(*I, 0);
           m_CodeGen->forgetGlobal(*I);
           (*I)->eraseFromParent();
         }
@@ -132,7 +128,7 @@ namespace clang {
     void CollectAllUsesOfGlobals(llvm::GlobalValue *G) {
       using namespace llvm;
       // If the global is already in the set, no need to reprocess it.
-      if (!VisitedGlobals.insert(G))
+      if (!VisitedGlobals.insert(G).second)
         return;
 
       if (GlobalVariable *GV = dyn_cast<GlobalVariable>(G)) {
@@ -173,7 +169,7 @@ namespace clang {
       for (User::op_iterator I = C->op_begin(), E = C->op_end(); I != E; ++I) {
         Constant *Op = dyn_cast<Constant>(*I);
         // We already processed this constant there's no need to do it again.
-        if (Op && SeenConstants.insert(Op))
+        if (Op && SeenConstants.insert(Op).second)
           MarkConstant(Op);
       }
     }
@@ -208,10 +204,6 @@ namespace clang {
     ///
     clang::CodeGenerator* m_CodeGen;
 
-    ///\brief The execution engine, either JIT or MCJIT, being recovered.
-    ///
-    llvm::ExecutionEngine* m_EEngine;
-
     ///\brief The current transaction being unloaded.
     ///
     const Transaction* m_CurTransaction;
@@ -225,9 +217,8 @@ namespace clang {
     FileIDs m_FilesToUncache;
 
   public:
-    DeclUnloader(Sema* S, clang::CodeGenerator* CG, llvm::ExecutionEngine* EE,
-                 const Transaction* T)
-      : m_Sema(S), m_CodeGen(CG), m_EEngine(EE), m_CurTransaction(T) { }
+    DeclUnloader(Sema* S, clang::CodeGenerator* CG, const Transaction* T)
+      : m_Sema(S), m_CodeGen(CG), m_CurTransaction(T) { }
     ~DeclUnloader();
 
     ///\brief Interface with nice name, forwarding to Visit.
@@ -846,12 +837,12 @@ namespace clang {
     // Brute-force all possibly generated ctors.
     // Ctor_Complete            Complete object ctor.
     // Ctor_Base                Base object ctor.
-    // Ctor_CompleteAllocating  Complete object allocating ctor.
+    // Ctor_Comdat              The COMDAT used for ctors.
     GlobalDecl GD(CXXCtor, Ctor_Complete);
     MaybeRemoveDeclFromModule(GD);
     GD = GlobalDecl(CXXCtor, Ctor_Base);
     MaybeRemoveDeclFromModule(GD);
-    GD = GlobalDecl(CXXCtor, Ctor_CompleteAllocating);
+    GD = GlobalDecl(CXXCtor, Ctor_Comdat);
     MaybeRemoveDeclFromModule(GD);
 
     bool Successful = VisitCXXMethodDecl(CXXCtor);
@@ -865,13 +856,16 @@ namespace clang {
 
     // Brute-force all possibly generated dtors.
     // Dtor_Deleting            Deleting dtor.
-    // Dtor_Base                Base object dtor.
     // Dtor_Complete            Complete object dtor.
+    // Dtor_Base                Base object dtor.
+    // Dtor_Comdat              The COMDAT used for dtors.
     GlobalDecl GD(CXXDtor, Dtor_Deleting);
     MaybeRemoveDeclFromModule(GD);
     GD = GlobalDecl(CXXDtor, Dtor_Complete);
     MaybeRemoveDeclFromModule(GD);
     GD = GlobalDecl(CXXDtor, Dtor_Base);
+    MaybeRemoveDeclFromModule(GD);
+    GD = GlobalDecl(CXXDtor, Dtor_Comdat);
     MaybeRemoveDeclFromModule(GD);
 
     bool Successful = VisitCXXMethodDecl(CXXDtor);
@@ -999,7 +993,7 @@ namespace clang {
       llvm::Module* M = m_CurTransaction->getModule();
       GlobalValue* GV = M->getNamedValue(mangledName);
       if (GV) { // May be deferred decl and thus 0
-        GlobalValueEraser GVEraser(m_CodeGen, m_EEngine);
+        GlobalValueEraser GVEraser(m_CodeGen);
         GVEraser.EraseGlobalValue(GV);
       }
     }
@@ -1175,16 +1169,15 @@ namespace clang {
 } // end namespace clang
 
 namespace cling {
-  TransactionUnloader::TransactionUnloader(Sema* S, clang::CodeGenerator* CG,
-                                           llvm::ExecutionEngine* EE)
-    : m_Sema(S), m_CodeGen(CG), m_EEngine(EE) {
+  TransactionUnloader::TransactionUnloader(Sema* S, clang::CodeGenerator* CG)
+    : m_Sema(S), m_CodeGen(CG) {
   }
 
   TransactionUnloader::~TransactionUnloader() {
   }
 
   bool TransactionUnloader::RevertTransaction(Transaction* T) {
-    DeclUnloader DeclU(m_Sema, m_CodeGen, m_EEngine, T);
+    DeclUnloader DeclU(m_Sema, m_CodeGen, T);
     bool Successful = true;
 
     for (Transaction::const_reverse_iterator I = T->rdecls_begin(),

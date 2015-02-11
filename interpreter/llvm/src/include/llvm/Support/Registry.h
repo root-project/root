@@ -16,7 +16,6 @@
 
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Compiler.h"
-
 #include <memory>
 
 namespace llvm {
@@ -120,6 +119,10 @@ namespace llvm {
 
     static iterator begin() { return iterator(Head); }
     static iterator end()   { return iterator(nullptr); }
+
+    static iterator_range<iterator> entries() {
+      return iterator_range<iterator>(begin(), end());
+    }
 
 
     /// Abstract base class for registry listeners, which are informed when new

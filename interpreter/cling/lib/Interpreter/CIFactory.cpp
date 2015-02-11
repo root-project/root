@@ -450,9 +450,8 @@ namespace {
            I = HostCXXI.begin(), E = HostCXXI.end(); I != E; ++I)
       args.push_back(I->c_str());
   }
-} // unnamed namespace
 
-namespace cling {
+
   //
   //  Dummy function so we can use dladdr to find the executable path.
   //
@@ -475,7 +474,7 @@ namespace cling {
 
     // The one job we find should be to invoke clang again.
     const clang::driver::Command *Cmd
-      = cast<clang::driver::Command>(*Jobs.begin());
+      = cast<clang::driver::Command>(&(*Jobs.begin()));
     if (llvm::StringRef(Cmd->getCreator().getName()) != "clang") {
       // diagnose this...
       return NULL;
@@ -484,19 +483,12 @@ namespace cling {
     return &Cmd->getArguments();
   }
 
-  CompilerInstance* CIFactory::createCI(llvm::StringRef code,
-                                        int argc,
-                                        const char* const *argv,
-                                        const char* llvmdir) {
-    return createCI(llvm::MemoryBuffer::getMemBuffer(code), argc, argv,
-                    llvmdir, new DeclCollector());
-  }
-
-  CompilerInstance* CIFactory::createCI(llvm::MemoryBuffer* buffer,
+  static CompilerInstance* createCIImpl(
+                                     std::unique_ptr<llvm::MemoryBuffer> buffer,
                                         int argc,
                                         const char* const *argv,
                                         const char* llvmdir,
-                                        DeclCollector* stateCollector) {
+                                        bool OnlyLex) {
     // Create an instance builder, passing the llvmdir and arguments.
     //
 
@@ -659,7 +651,7 @@ namespace cling {
     }
     CI->getTarget().adjust(CI->getLangOpts());
     SetClingTargetLangOpts(CI->getLangOpts(), CI->getTarget());
-    if (CI->getTarget().getTriple().getOS() == llvm::Triple::Cygwin) {
+    if (CI->getTarget().getTriple().getEnvironment() == llvm::Triple::Cygnus) {
       // clang "forgets" the basic arch part needed by winnt.h:
       if (CI->getTarget().getTriple().getArch() == llvm::Triple::x86) {
         CI->getInvocation().getPreprocessorOpts().addMacroDef("_X86_=1");
@@ -700,7 +692,7 @@ namespace cling {
       = MainFileSLocE.getFile().getContentCache();
     if (!buffer)
       buffer = llvm::MemoryBuffer::getMemBuffer("/*CLING DEFAULT MEMBUF*/\n");
-    const_cast<SrcMgr::ContentCache*>(MainFileCC)->setBuffer(buffer);
+    const_cast<SrcMgr::ContentCache*>(MainFileCC)->setBuffer(std::move(buffer));
 
     // Set up the preprocessor
     CI->createPreprocessor(TU_Complete);
@@ -711,24 +703,25 @@ namespace cling {
     // Set up the ASTContext
     CI->createASTContext();
 
-    //FIXME: This is bad workaround for use-cases which need only a CI to parse
-    //things, like pragmas. In that case we cannot controll the interpreter's
-    // state collector thus detach from whatever possible.
-    if (stateCollector) {
+    if (OnlyLex) {
+      class IgnoreConsumer: public clang::ASTConsumer {
+      };
+      std::unique_ptr<clang::ASTConsumer> ignoreConsumer(new IgnoreConsumer());
+      CI->setASTConsumer(std::move(ignoreConsumer));
+    } else {
+      std::unique_ptr<cling::DeclCollector>
+        stateCollector(new cling::DeclCollector());
+
+      // Set up the ASTConsumers
+      CI->getASTContext().setASTMutationListener(stateCollector.get());
       // Add the callback keeping track of the macro definitions
-      PP.addPPCallbacks(stateCollector);
+      PP.addPPCallbacks(std::move(stateCollector->MakePPAdapter()));
+      CI->setASTConsumer(std::move(stateCollector));
     }
-    else
-      stateCollector = new DeclCollector();
-    // Set up the ASTConsumers
-    CI->setASTConsumer(stateCollector);
-    CI->getASTContext().setASTMutationListener(stateCollector);
 
     // Set up Sema
     CodeCompleteConsumer* CCC = 0;
     CI->createSema(TU_Complete, CCC);
-
-    CI->takeASTConsumer(); // Transfer to ownership to the PP only
 
     // Set CodeGen options
     // CI->getCodeGenOpts().DebugInfo = 1; // want debug info
@@ -741,4 +734,23 @@ namespace cling {
 
     return CI.release(); // Passes over the ownership to the caller.
   }
+
+} // unnamed namespace
+
+namespace cling {
+  CompilerInstance* CIFactory::createCI(llvm::StringRef code,
+                                        int argc,
+                                        const char* const *argv,
+                                        const char* llvmdir) {
+    return createCIImpl(llvm::MemoryBuffer::getMemBuffer(code), argc, argv, llvmdir, false /*OnlyLex*/);
+  }
+
+  CompilerInstance* CIFactory::createCI(MemBufPtr_t buffer,
+                                        int argc,
+                                        const char* const *argv,
+                                        const char* llvmdir,
+                                        bool OnlyLex) {
+    return createCIImpl(std::move(buffer), argc, argv, llvmdir, OnlyLex);
+  }
+
 } // end namespace

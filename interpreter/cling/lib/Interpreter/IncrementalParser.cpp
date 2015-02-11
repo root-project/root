@@ -10,11 +10,11 @@
 #include "IncrementalParser.h"
 
 #include "AutoSynthesizer.h"
-#include "BackendPass.h"
 #include "CheckEmptyTransactionTransformer.h"
 #include "DeclCollector.h"
 #include "DeclExtractor.h"
 #include "DynamicLookup.h"
+#include "IncrementalExecutor.h"
 #include "NullDerefProtectionTransformer.h"
 #include "ValueExtractionSynthesizer.h"
 #include "TransactionPool.h"
@@ -155,7 +155,7 @@ namespace cling {
   IncrementalParser::IncrementalParser(Interpreter* interp,
                                        int argc, const char* const *argv,
                                        const char* llvmdir):
-    m_Interpreter(interp), m_Consumer(0) {
+    m_Interpreter(interp), m_Consumer(0), m_ModuleNo(0) {
 
     CompilerInstance* CI = CIFactory::createCI("", argc, argv, llvmdir);
     assert(CI && "CompilerInstance is (null)!");
@@ -166,9 +166,8 @@ namespace cling {
     m_CI.reset(CI);
 
     if (CI->getFrontendOpts().ProgramAction != clang::frontend::ParseSyntaxOnly){
-      m_CodeGen.reset(CreateLLVMCodeGen(CI->getDiagnostics(), "cling input",
+      m_CodeGen.reset(CreateLLVMCodeGen(CI->getDiagnostics(), "cling-module-0",
                                         CI->getCodeGenOpts(),
-                                        CI->getTargetOpts(),
                                         *m_Interpreter->getLLVMContext()
                                         ));
     }
@@ -185,25 +184,6 @@ namespace cling {
     m_ASTTransformers.push_back(new ValueExtractionSynthesizer(TheSema));
     m_ASTTransformers.push_back(new NullDerefProtectionTransformer(TheSema));
     m_ASTTransformers.push_back(new CheckEmptyTransactionTransformer(TheSema));
-
-
-#ifdef _LIBCPP_VERSION
-    // libc++ relies on force_inline attributes, else symbols will be missing.
-    // But its passes (CallGraph and Inliner) - being module passes - have a
-    // quadratically increasing runtime: for each transaction they need to
-    // iterate over all previous transactions' functions.
-    // Until this is solved (for instance by feeding only the new functions
-    // to the CallGraph) we penalize only the use of libc++.
-    if (m_CodeGen) {
-      llvm::Module* TheModule = m_CodeGen->GetModule();
-      // IR passes make sense if we do CodeGen.
-      m_IRTransformers.push_back(new BackendPass(TheSema, TheModule,
-                                                 CI->getDiagnostics(),
-                                                 CI->getTargetOpts(),
-                                                 CI->getLangOpts(),
-                                                 CI->getCodeGenOpts()));
-    }
-#endif
   }
 
   void
@@ -271,9 +251,6 @@ namespace cling {
   }
 
   IncrementalParser::~IncrementalParser() {
-    if (hasCodeGenerator()) {
-      getCodeGenerator()->ReleaseModule();
-    }
     const Transaction* T = getFirstTransaction();
     const Transaction* nextT = 0;
     while (T) {
@@ -419,11 +396,12 @@ namespace cling {
       transformTransactionIR(T);
       T->setState(Transaction::kCommitted);
       if (!T->getParent()) {
-        if (m_Interpreter->runStaticInitializersOnce(*T)
+        if (m_Interpreter->executeTransaction(*T)
             >= Interpreter::kExeFirstError) {
-          // Roll back on error in a transformer
-          assert(0 && "Error on inits.");
-          //rollbackTransaction(nestedT);
+          // Roll back on error in initializers
+          //assert(0 && "Error on inits.");
+          rollbackTransaction(T);
+          T->setState(Transaction::kRolledBackWithErrors);
           return;
         }
       }
@@ -467,8 +445,6 @@ namespace cling {
     assert(T->getState() == Transaction::kCompleted && "Must be completed");
     assert(hasCodeGenerator() && "No CodeGen");
 
-    T->setModule(getCodeGenerator()->GetModule());
-
     // Could trigger derserialization of decls.
     Transaction* deserT = beginTransaction(CompilationOptions());
     for (Transaction::const_iterator TI = T->decls_begin(), TE = T->decls_end();
@@ -489,7 +465,7 @@ namespace cling {
       }
       else if (I.m_Call == Transaction::kCCIHandleVTable) {
         CXXRecordDecl* CXXRD = cast<CXXRecordDecl>(I.m_DGR.getSingleDecl());
-        getCodeGenerator()->HandleVTable(CXXRD, /*isRequired*/true);
+        getCodeGenerator()->HandleVTable(CXXRD);
       }
       else if (I.m_Call
                == Transaction::kCCIHandleCXXImplicitFunctionInstantiation) {
@@ -555,7 +531,7 @@ namespace cling {
         }
         else if (I->m_Call == Transaction::kCCIHandleVTable) {
           CXXRecordDecl* CXXRD = cast<CXXRecordDecl>(*DI);
-          getCodeGenerator()->HandleVTable(CXXRD, /*isRequired*/true);
+          getCodeGenerator()->HandleVTable(CXXRD);
         }
         else if (I->m_Call
                  == Transaction::kCCIHandleCXXImplicitFunctionInstantiation) {
@@ -578,9 +554,46 @@ namespace cling {
       } // for decls in DGR
     } // for deserialized DGRs
 
-    getCodeGenerator()->HandleTranslationUnit(getCI()->getASTContext());
+    // The initializers are emitted to the symbol "_GLOBAL__sub_I_" + filename.
+    // Make that unique!
+    ASTContext& Context = getCI()->getASTContext();
+    SourceManager &SM = Context.getSourceManager();
+    const FileEntry *MainFile = SM.getFileEntryForID(SM.getMainFileID());
+    FileEntry* NcMainFile = const_cast<FileEntry*>(MainFile);
+    // Hack to temporarily set the file entry's name to a unique name.
+    assert(MainFile->getName() == *(const char**)MainFile
+           && "FileEntry does not start with the name");
+    const char* &FileName = *(const char**)NcMainFile;
+    const char* OldName = FileName;
+    std::string ModName = getCodeGenerator()->GetModule()->getName().str();
+    FileName = ModName.c_str();
+    getCodeGenerator()->HandleTranslationUnit(Context);
+    FileName = OldName;
+
+    // Commit this transaction first - T might need symbols from it, so
+    // trigger emission of weak symbols by providing use.
     if ((deserT = endTransaction(deserT)))
       commitTransaction(deserT);
+
+    // This llvm::Module is done; finalize it and pass it to the execution
+    // engine.
+    if (!T->isNestedTransaction() && hasCodeGenerator()) {
+      std::unique_ptr<llvm::Module> M(getCodeGenerator()->ReleaseModule());
+
+      if (M) {
+        m_Interpreter->addModule(M.get());
+        T->setModule(std::move(M));
+      }
+
+      // Create a new module.
+      std::string ModuleName;
+      {
+        llvm::raw_string_ostream strm(ModuleName);
+        strm << "cling-module-" << ++m_ModuleNo;
+      }
+      getCodeGenerator()->StartModule(ModuleName,
+                                      *m_Interpreter->getLLVMContext());
+    }
   }
 
   void IncrementalParser::transformTransactionAST(Transaction* T) {
@@ -618,8 +631,7 @@ namespace cling {
     if (m_Interpreter->getOptions().ErrorOut)
       return;
 
-    TransactionUnloader U(&getCI()->getSema(), m_CodeGen.get(),
-                          m_Interpreter->getExecutionEngine());
+    TransactionUnloader U(&getCI()->getSema(), m_CodeGen.get());
 
     if (U.RevertTransaction(T))
       T->setState(Transaction::kRolledBack);
@@ -733,9 +745,9 @@ namespace cling {
     // Create an uninitialized memory buffer, copy code in and append "\n"
     size_t InputSize = input.size(); // don't include trailing 0
     // MemBuffer size should *not* include terminating zero
-    llvm::MemoryBuffer* MB
-      = llvm::MemoryBuffer::getNewUninitMemBuffer(InputSize + 1,
-                                                  source_name.str());
+    std::unique_ptr<llvm::MemoryBuffer>
+      MB(llvm::MemoryBuffer::getNewUninitMemBuffer(InputSize + 1,
+                                                   source_name.str()));
     char* MBStart = const_cast<char*>(MB->getBufferStart());
     memcpy(MBStart, input.data(), InputSize);
     memcpy(MBStart + InputSize, "\n", 2);
@@ -746,11 +758,13 @@ namespace cling {
     // candidates for example
     SourceLocation NewLoc = getLastMemoryBufferEndLoc().getLocWithOffset(1);
 
+    llvm::MemoryBuffer* MBNonOwn = MB.get();
     // Create FileID for the current buffer
-    FileID FID = SM.createFileID(MB, SrcMgr::C_User, /*LoadedID*/0,
+    FileID FID = SM.createFileID(std::move(MB), SrcMgr::C_User,
+                                 /*LoadedID*/0,
                                  /*LoadedOffset*/0, NewLoc);
 
-    m_MemoryBuffers.push_back(std::make_pair(MB, FID));
+    m_MemoryBuffers.push_back(std::make_pair(MBNonOwn, FID));
 
     PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
     m_Consumer->getTransaction()->setBufferFID(FID);

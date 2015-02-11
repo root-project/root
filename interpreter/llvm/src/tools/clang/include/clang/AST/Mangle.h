@@ -132,6 +132,9 @@ public:
   virtual void mangleDynamicAtExitDestructor(const VarDecl *D,
                                              raw_ostream &) = 0;
 
+  virtual void mangleSEHFilterExpression(const NamedDecl *EnclosingDecl,
+                                         raw_ostream &Out) = 0;
+
   /// Generates a unique string for an externally visible type for use with TBAA
   /// or type uniquing.
   /// TODO: Extend this to internal types by generating names that are unique
@@ -155,6 +158,11 @@ public:
                                             raw_ostream &) = 0;
   virtual void mangleItaniumThreadLocalWrapper(const VarDecl *D,
                                                raw_ostream &) = 0;
+
+  virtual void mangleCXXCtorComdat(const CXXConstructorDecl *D,
+                                   raw_ostream &) = 0;
+  virtual void mangleCXXDtorComdat(const CXXDestructorDecl *D,
+                                   raw_ostream &) = 0;
 
   static bool classof(const MangleContext *C) {
     return C->getKind() == MK_Itanium;

@@ -18,16 +18,17 @@
 #include <vector>
 
 namespace llvm {
-class TargetLibraryInfo;
 class Pass;
+class TargetLibraryInfoImpl;
+class TargetMachine;
 
 // The old pass manager infrastructure is hidden in a legacy namespace now.
 namespace legacy {
-class PassManagerBase;
 class FunctionPassManager;
+class PassManagerBase;
 }
-using legacy::PassManagerBase;
 using legacy::FunctionPassManager;
+using legacy::PassManagerBase;
 
 /// PassManagerBuilder - This class is used to set up a standard optimization
 /// sequence for languages like C and C++, allowing some APIs to customize the
@@ -104,7 +105,7 @@ public:
   /// LibraryInfo - Specifies information about the runtime library for the
   /// optimizer.  If this is non-null, it is added to both the function and
   /// per-module pass pipeline.
-  TargetLibraryInfo *LibraryInfo;
+  TargetLibraryInfoImpl *LibraryInfo;
 
   /// Inliner - Specifies the inliner to use.  If this is non-null, it is
   /// added to the per-module passes.
@@ -118,6 +119,11 @@ public:
   bool LoopVectorize;
   bool RerollLoops;
   bool LoadCombine;
+  bool DisableGVNLoadPRE;
+  bool VerifyInput;
+  bool VerifyOutput;
+  bool StripDebug;
+  bool MergeFunctions;
 
 private:
   /// ExtensionList - This is list of all of the extensions that are registered.
@@ -135,6 +141,7 @@ public:
 private:
   void addExtensionsToPM(ExtensionPointTy ETy, PassManagerBase &PM) const;
   void addInitialAliasAnalysisPasses(PassManagerBase &PM) const;
+  void addLTOOptimizationPasses(PassManagerBase &PM);
 
 public:
   /// populateFunctionPassManager - This fills in the function pass manager,
@@ -144,8 +151,7 @@ public:
 
   /// populateModulePassManager - This sets up the primary pass manager.
   void populateModulePassManager(PassManagerBase &MPM);
-  void populateLTOPassManager(PassManagerBase &PM, bool Internalize,
-                              bool RunInliner, bool DisableGVNLoadPRE = false);
+  void populateLTOPassManager(PassManagerBase &PM);
 };
 
 /// Registers a function for adding a standard set of passes.  This should be

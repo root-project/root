@@ -12,8 +12,8 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CLANG_DIAGNOSTIC_H
-#define LLVM_CLANG_DIAGNOSTIC_H
+#ifndef LLVM_CLANG_BASIC_DIAGNOSTIC_H
+#define LLVM_CLANG_BASIC_DIAGNOSTIC_H
 
 #include "clang/Basic/DiagnosticIDs.h"
 #include "clang/Basic/DiagnosticOptions.h"
@@ -187,7 +187,7 @@ private:
   IntrusiveRefCntPtr<DiagnosticIDs> Diags;
   IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts;
   DiagnosticConsumer *Client;
-  bool OwnsDiagClient;
+  std::unique_ptr<DiagnosticConsumer> Owner;
   SourceManager *SourceMgr;
 
   /// \brief Mapping information for diagnostics.
@@ -302,7 +302,6 @@ private:
 
   unsigned NumWarnings;         ///< Number of warnings reported
   unsigned NumErrors;           ///< Number of errors reported
-  unsigned NumErrorsSuppressed; ///< Number of errors suppressed
 
   /// \brief A function pointer that converts an opaque diagnostic
   /// argument to a strings.
@@ -369,14 +368,11 @@ public:
   const DiagnosticConsumer *getClient() const { return Client; }
 
   /// \brief Determine whether this \c DiagnosticsEngine object own its client.
-  bool ownsClient() const { return OwnsDiagClient; }
-  
+  bool ownsClient() const { return Owner != nullptr; }
+
   /// \brief Return the current diagnostic client along with ownership of that
   /// client.
-  DiagnosticConsumer *takeClient() {
-    OwnsDiagClient = false;
-    return Client;
-  }
+  std::unique_ptr<DiagnosticConsumer> takeClient() { return std::move(Owner); }
 
   bool hasSourceManager() const { return SourceMgr != nullptr; }
   SourceManager &getSourceManager() const {
@@ -542,9 +538,13 @@ public:
   /// \returns true (and ignores the request) if "Group" was unknown, false
   /// otherwise.
   ///
+  /// \param Flavor The flavor of group to affect. -Rfoo does not affect the
+  /// state of the -Wfoo group and vice versa.
+  ///
   /// \param Loc The source location that this change of diagnostic state should
   /// take affect. It can be null if we are setting the state from command-line.
-  bool setSeverityForGroup(StringRef Group, diag::Severity Map,
+  bool setSeverityForGroup(diag::Flavor Flavor, StringRef Group,
+                           diag::Severity Map,
                            SourceLocation Loc = SourceLocation());
 
   /// \brief Set the warning-as-error flag for the given diagnostic group.
@@ -561,11 +561,12 @@ public:
   /// \returns True if the given group is unknown, false otherwise.
   bool setDiagnosticGroupErrorAsFatal(StringRef Group, bool Enabled);
 
-  /// \brief Add the specified mapping to all diagnostics.
+  /// \brief Add the specified mapping to all diagnostics of the specified
+  /// flavor.
   ///
   /// Mainly to be used by -Wno-everything to disable all warnings but allow
   /// subsequent -W options to enable specific warnings.
-  void setSeverityForAll(diag::Severity Map,
+  void setSeverityForAll(diag::Flavor Flavor, diag::Severity Map,
                          SourceLocation Loc = SourceLocation());
 
   bool hasErrorOccurred() const { return ErrorOccurred; }

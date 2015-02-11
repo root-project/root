@@ -203,25 +203,31 @@ namespace clang {
     CC_X86StdCall,  // __attribute__((stdcall))
     CC_X86FastCall, // __attribute__((fastcall))
     CC_X86ThisCall, // __attribute__((thiscall))
+    CC_X86VectorCall, // __attribute__((vectorcall))
     CC_X86Pascal,   // __attribute__((pascal))
     CC_X86_64Win64, // __attribute__((ms_abi))
     CC_X86_64SysV,  // __attribute__((sysv_abi))
     CC_AAPCS,       // __attribute__((pcs("aapcs")))
     CC_AAPCS_VFP,   // __attribute__((pcs("aapcs-vfp")))
-    CC_PnaclCall,   // __attribute__((pnaclcall))
-    CC_IntelOclBicc // __attribute__((intel_ocl_bicc))
+    CC_IntelOclBicc, // __attribute__((intel_ocl_bicc))
+    CC_SpirFunction, // default for OpenCL functions on SPIR target
+    CC_SpirKernel    // inferred for OpenCL kernels on SPIR target
   };
 
-  /// \brief Checks whether the given calling convention is callee-cleanup.
-  inline bool isCalleeCleanup(CallingConv CC) {
+  /// \brief Checks whether the given calling convention supports variadic
+  /// calls. Unprototyped calls also use the variadic call rules.
+  inline bool supportsVariadicCall(CallingConv CC) {
     switch (CC) {
     case CC_X86StdCall:
     case CC_X86FastCall:
     case CC_X86ThisCall:
     case CC_X86Pascal:
-      return true;
-    default:
+    case CC_X86VectorCall:
+    case CC_SpirFunction:
+    case CC_SpirKernel:
       return false;
+    default:
+      return true;
     }
   }
 

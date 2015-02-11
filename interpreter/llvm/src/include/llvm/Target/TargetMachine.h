@@ -24,7 +24,6 @@
 namespace llvm {
 
 class InstrItineraryData;
-class JITCodeEmitter;
 class GlobalValue;
 class Mangler;
 class MCAsmInfo;
@@ -35,18 +34,17 @@ class Target;
 class DataLayout;
 class TargetLibraryInfo;
 class TargetFrameLowering;
-class TargetInstrInfo;
+class TargetIRAnalysis;
 class TargetIntrinsicInfo;
-class TargetJITInfo;
 class TargetLowering;
 class TargetPassConfig;
 class TargetRegisterInfo;
 class TargetSelectionDAGInfo;
 class TargetSubtargetInfo;
-class ScalarTargetTransformInfo;
-class VectorTargetTransformInfo;
+class TargetTransformInfo;
 class formatted_raw_ostream;
 class raw_ostream;
+class TargetLoweringObjectFile;
 
 // The old pass manager infrastructure is hidden in a legacy namespace now.
 namespace legacy {
@@ -87,48 +85,27 @@ protected: // Can only create subclasses.
   unsigned RequireStructuredCFG : 1;
 
 public:
+  mutable TargetOptions Options;
+
   virtual ~TargetMachine();
 
   const Target &getTarget() const { return TheTarget; }
 
-  const StringRef getTargetTriple() const { return TargetTriple; }
-  const StringRef getTargetCPU() const { return TargetCPU; }
-  const StringRef getTargetFeatureString() const { return TargetFS; }
+  StringRef getTargetTriple() const { return TargetTriple; }
+  StringRef getTargetCPU() const { return TargetCPU; }
+  StringRef getTargetFeatureString() const { return TargetFS; }
 
   /// getSubtargetImpl - virtual method implemented by subclasses that returns
   /// a reference to that target's TargetSubtargetInfo-derived member variable.
   virtual const TargetSubtargetInfo *getSubtargetImpl() const {
     return nullptr;
   }
-  virtual TargetSubtargetInfo *getSubtargetImpl() { return nullptr; }
-
-  mutable TargetOptions Options;
-
-  /// \brief Reset the target options based on the function's attributes.
-  void resetTargetOptions(const MachineFunction *MF) const;
-
-  // Interfaces to the major aspects of target machine information:
-  //
-  // -- Instruction opcode and operand information
-  // -- Pipelines and scheduling information
-  // -- Stack frame information
-  // -- Selection DAG lowering information
-  //
-  // N.B. These objects may change during compilation. It's not safe to cache
-  // them between functions.
-  virtual const TargetInstrInfo  *getInstrInfo() const { return nullptr; }
-  virtual const TargetFrameLowering *getFrameLowering() const {
+  virtual const TargetSubtargetInfo *getSubtargetImpl(const Function &) const {
+    return getSubtargetImpl();
+  }
+  virtual TargetLoweringObjectFile *getObjFileLowering() const {
     return nullptr;
   }
-  virtual const TargetLowering *getTargetLowering() const { return nullptr; }
-  virtual const TargetSelectionDAGInfo *getSelectionDAGInfo() const {
-    return nullptr;
-  }
-  virtual const DataLayout *getDataLayout() const { return nullptr; }
-
-  /// getMCAsmInfo - Return target specific asm information.
-  ///
-  const MCAsmInfo *getMCAsmInfo() const { return AsmInfo; }
 
   /// getSubtarget - This method returns a pointer to the specified type of
   /// TargetSubtargetInfo.  In debug builds, it verifies that the object being
@@ -136,27 +113,29 @@ public:
   template<typename STC> const STC &getSubtarget() const {
     return *static_cast<const STC*>(getSubtargetImpl());
   }
+  template <typename STC> const STC &getSubtarget(const Function *) const {
+    return *static_cast<const STC*>(getSubtargetImpl());
+  }
 
-  /// getRegisterInfo - If register information is available, return it.  If
-  /// not, return null.  This is kept separate from RegInfo until RegInfo has
-  /// details of graph coloring register allocation removed from it.
+  /// getDataLayout - This method returns a pointer to the DataLayout for
+  /// the target. It should be unchanging for every subtarget.
+  virtual const DataLayout *getDataLayout() const {
+    return nullptr;
+  }
+
+  /// \brief Reset the target options based on the function's attributes.
+  // FIXME: Remove TargetOptions that affect per-function code generation
+  // from TargetMachine.
+  void resetTargetOptions(const Function &F) const;
+
+  /// getMCAsmInfo - Return target specific asm information.
   ///
-  virtual const TargetRegisterInfo *getRegisterInfo() const { return nullptr; }
+  const MCAsmInfo *getMCAsmInfo() const { return AsmInfo; }
 
   /// getIntrinsicInfo - If intrinsic information is available, return it.  If
   /// not, return null.
   ///
-  virtual const TargetIntrinsicInfo *getIntrinsicInfo() const { return nullptr;}
-
-  /// getJITInfo - If this target supports a JIT, return information for it,
-  /// otherwise return null.
-  ///
-  virtual TargetJITInfo *getJITInfo() { return nullptr; }
-
-  /// getInstrItineraryData - Returns instruction itinerary data for the target
-  /// or specific subtarget.
-  ///
-  virtual const InstrItineraryData *getInstrItineraryData() const {
+  virtual const TargetIntrinsicInfo *getIntrinsicInfo() const {
     return nullptr;
   }
 
@@ -209,8 +188,12 @@ public:
   /// sections.
   void setFunctionSections(bool);
 
-  /// \brief Register analysis passes for this target with a pass manager.
-  virtual void addAnalysisPasses(PassManagerBase &) {}
+  /// \brief Get a \c TargetIRAnalysis appropriate for the target.
+  ///
+  /// This is used to construct the new pass manager's target IR analysis pass,
+  /// set up appropriately for this target machine. Even the old pass manager
+  /// uses this to answer queries about the IR.
+  virtual TargetIRAnalysis getTargetIRAnalysis();
 
   /// CodeGenFileType - These enums are meant to be passed into
   /// addPassesToEmitFile to indicate what type of file to emit, and returned by
@@ -231,18 +214,6 @@ public:
                                    bool /*DisableVerify*/ = true,
                                    AnalysisID /*StartAfter*/ = nullptr,
                                    AnalysisID /*StopAfter*/ = nullptr) {
-    return true;
-  }
-
-  /// addPassesToEmitMachineCode - Add passes to the specified pass manager to
-  /// get machine code emitted.  This uses a JITCodeEmitter object to handle
-  /// actually outputting the machine code and resolving things like the address
-  /// of functions.  This method returns true if machine code emission is
-  /// not supported.
-  ///
-  virtual bool addPassesToEmitMachineCode(PassManagerBase &,
-                                          JITCodeEmitter &,
-                                          bool /*DisableVerify*/ = true) {
     return true;
   }
 
@@ -275,10 +246,11 @@ protected: // Can only create subclasses.
 
   void initAsmInfo();
 public:
-  /// \brief Register analysis passes for this target with a pass manager.
+  /// \brief Get a TargetIRAnalysis implementation for the target.
   ///
-  /// This registers target independent analysis passes.
-  void addAnalysisPasses(PassManagerBase &PM) override;
+  /// This analysis will produce a TTI result which uses the common code
+  /// generator to answer queries about the IR.
+  TargetIRAnalysis getTargetIRAnalysis() override;
 
   /// createPassConfig - Create a pass configuration object to be used by
   /// addPassToEmitX methods for generating a pipeline of CodeGen passes.
@@ -292,15 +264,6 @@ public:
                            AnalysisID StartAfter = nullptr,
                            AnalysisID StopAfter = nullptr) override;
 
-  /// addPassesToEmitMachineCode - Add passes to the specified pass manager to
-  /// get machine code emitted.  This uses a JITCodeEmitter object to handle
-  /// actually outputting the machine code and resolving things like the address
-  /// of functions.  This method returns true if machine code emission is
-  /// not supported.
-  ///
-  bool addPassesToEmitMachineCode(PassManagerBase &PM, JITCodeEmitter &MCE,
-                                  bool DisableVerify = true) override;
-
   /// addPassesToEmitMC - Add passes to the specified pass manager to get
   /// machine code emitted with the MCJIT. This method returns true if machine
   /// code is not supported. It fills the MCContext Ctx pointer which can be
@@ -308,14 +271,6 @@ public:
   ///
   bool addPassesToEmitMC(PassManagerBase &PM, MCContext *&Ctx,
                          raw_ostream &OS, bool DisableVerify = true) override;
-
-  /// addCodeEmitter - This pass should be overridden by the target to add a
-  /// code emitter, if supported.  If this is not supported, 'true' should be
-  /// returned.
-  virtual bool addCodeEmitter(PassManagerBase &,
-                              JITCodeEmitter &) {
-    return true;
-  }
 };
 
 } // End llvm namespace

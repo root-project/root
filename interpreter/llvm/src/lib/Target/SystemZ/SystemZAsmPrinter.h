@@ -7,8 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef SYSTEMZASMPRINTER_H
-#define SYSTEMZASMPRINTER_H
+#ifndef LLVM_LIB_TARGET_SYSTEMZ_SYSTEMZASMPRINTER_H
+#define LLVM_LIB_TARGET_SYSTEMZ_SYSTEMZASMPRINTER_H
 
 #include "SystemZTargetMachine.h"
 #include "llvm/CodeGen/AsmPrinter.h"
@@ -26,8 +26,8 @@ private:
   const SystemZSubtarget *Subtarget;
 
 public:
-  SystemZAsmPrinter(TargetMachine &TM, MCStreamer &Streamer)
-    : AsmPrinter(TM, Streamer) {
+  SystemZAsmPrinter(TargetMachine &TM, std::unique_ptr<MCStreamer> Streamer)
+      : AsmPrinter(TM, std::move(Streamer)) {
     Subtarget = &TM.getSubtarget<SystemZSubtarget>();
   }
 

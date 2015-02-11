@@ -239,7 +239,7 @@ namespace cling {
     ///
     void WrapInput(std::string& input, std::string& fname);
 
-    ///\brief Runs given function.
+    ///\brief Runs given wrapper function void(*)(Value*).
     ///
     ///\param [in] fname - The function name.
     ///\param [in,out] res - The return result of the run function. Must be
@@ -501,7 +501,7 @@ namespace cling {
     ///\brief Generates code for all Decls of a transaction.
     ///
     /// @param[in] T - The cling::Transaction that contains the declarations and
-    ///                the compilation/generation options.
+    ///                the compilation/generation options. Takes ownership!
     ///
     ///\returns Whether the operation was fully successful.
     ///
@@ -546,14 +546,13 @@ namespace cling {
 
     clang::CompilerInstance* getCI() const;
     clang::Sema& getSema() const;
-    llvm::ExecutionEngine* getExecutionEngine() const;
 
     //FIXME: This must be in InterpreterCallbacks.
     void installLazyFunctionCreator(void* (*fp)(const std::string&));
 
     //FIXME: Terrible hack to let the IncrementalParser run static inits on
     // transaction completed.
-    ExecutionResult runStaticInitializersOnce(const Transaction& T) const;
+    ExecutionResult executeTransaction(Transaction& T);
 
     ///\brief Evaluates given expression within given declaration context.
     ///
@@ -570,7 +569,7 @@ namespace cling {
     ///\brief Interpreter callbacks accessors.
     /// Note that this class takes ownership of any callback object given to it.
     ///
-    void setCallbacks(InterpreterCallbacks* C);
+    void setCallbacks(std::unique_ptr<InterpreterCallbacks> C);
     const InterpreterCallbacks* getCallbacks() const {return m_Callbacks.get();}
     InterpreterCallbacks* getCallbacks() { return m_Callbacks.get(); }
 
@@ -624,6 +623,9 @@ namespace cling {
     ///
     void AddAtExitFunc(void (*Func) (void*), void* Arg);
 
+    ///\brief Forwards to cling::IncrementalExecutor::addModule.
+    ///
+    void addModule(llvm::Module* module);
 
     void GenerateAutoloadingMap(llvm::StringRef inFile, llvm::StringRef outFile,
                                 bool enableMacros = false, bool enableLogs = true);

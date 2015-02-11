@@ -77,6 +77,9 @@ namespace cling {
     ///
     std::deque<Transaction*> m_Transactions;
 
+    ///\brief Number of created modules.
+    unsigned m_ModuleNo;
+
     ///\brief Code generator
     ///
     std::unique_ptr<clang::CodeGenerator> m_CodeGen;
@@ -171,6 +174,12 @@ namespace cling {
     ///\brief Returns the currently active transaction.
     ///
     const Transaction* getCurrentTransaction() const;
+
+
+    ///\brief Add a user-generated transaction.
+    void addTransaction(Transaction* T) {
+      m_Transactions.push_back(T);
+    }
 
     ///\brief Returns the list of transactions seen by the interpreter.
     /// Intentionally makes a copy - that function is meant to be use for debug

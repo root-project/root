@@ -11,19 +11,22 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef AArch64MCTARGETDESC_H
-#define AArch64MCTARGETDESC_H
+#ifndef LLVM_LIB_TARGET_AARCH64_MCTARGETDESC_AARCH64MCTARGETDESC_H
+#define LLVM_LIB_TARGET_AARCH64_MCTARGETDESC_AARCH64MCTARGETDESC_H
 
 #include "llvm/Support/DataTypes.h"
 #include <string>
 
 namespace llvm {
+class formatted_raw_ostream;
 class MCAsmBackend;
 class MCCodeEmitter;
 class MCContext;
 class MCInstrInfo;
+class MCInstPrinter;
 class MCRegisterInfo;
 class MCObjectWriter;
+class MCStreamer;
 class MCSubtargetInfo;
 class StringRef;
 class Target;
@@ -50,6 +53,11 @@ MCObjectWriter *createAArch64ELFObjectWriter(raw_ostream &OS, uint8_t OSABI,
 MCObjectWriter *createAArch64MachObjectWriter(raw_ostream &OS, uint32_t CPUType,
                                             uint32_t CPUSubtype);
 
+MCStreamer *
+createAArch64MCAsmStreamer(MCContext &Ctx, formatted_raw_ostream &OS,
+                           bool isVerboseAsm, bool useDwarfDirectory,
+                           MCInstPrinter *InstPrint, MCCodeEmitter *CE,
+                           MCAsmBackend *TAB, bool ShowInst);
 } // End llvm namespace
 
 // Defines symbolic names for AArch64 registers.  This defines a mapping from

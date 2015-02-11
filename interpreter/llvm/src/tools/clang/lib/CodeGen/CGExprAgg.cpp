@@ -98,6 +98,11 @@ public:
   //                            Visitor Methods
   //===--------------------------------------------------------------------===//
 
+  void Visit(Expr *E) {
+    ApplyDebugLocation DL(CGF, E);
+    StmtVisitor<AggExprEmitter>::Visit(E);
+  }
+
   void VisitStmt(Stmt *S) {
     CGF.ErrorUnsupported(S, "aggregate expression");
   }

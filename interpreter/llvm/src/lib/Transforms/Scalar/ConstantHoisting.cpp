@@ -91,7 +91,7 @@ struct RebasedConstantInfo {
   Constant *Offset;
 
   RebasedConstantInfo(ConstantUseListType &&Uses, Constant *Offset)
-    : Uses(Uses), Offset(Offset) { }
+    : Uses(std::move(Uses)), Offset(Offset) { }
 };
 
 /// \brief A base constant and all its rebased constants.
@@ -131,14 +131,14 @@ public:
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesCFG();
     AU.addRequired<DominatorTreeWrapperPass>();
-    AU.addRequired<TargetTransformInfo>();
+    AU.addRequired<TargetTransformInfoWrapperPass>();
   }
 
 private:
   /// \brief Initialize the pass.
   void setup(Function &Fn) {
     DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
-    TTI = &getAnalysis<TargetTransformInfo>();
+    TTI = &getAnalysis<TargetTransformInfoWrapperPass>().getTTI(Fn);
     Entry = &Fn.getEntryBlock();
   }
 
@@ -176,7 +176,7 @@ char ConstantHoisting::ID = 0;
 INITIALIZE_PASS_BEGIN(ConstantHoisting, "consthoist", "Constant Hoisting",
                       false, false)
 INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
-INITIALIZE_AG_DEPENDENCY(TargetTransformInfo)
+INITIALIZE_PASS_DEPENDENCY(TargetTransformInfoWrapperPass)
 INITIALIZE_PASS_END(ConstantHoisting, "consthoist", "Constant Hoisting",
                     false, false)
 
@@ -395,7 +395,7 @@ void ConstantHoisting::findAndMakeBaseConstant(ConstCandVecType::iterator S,
     ConstInfo.RebasedConstants.push_back(
       RebasedConstantInfo(std::move(ConstCand->Uses), Offset));
   }
-  ConstantVec.push_back(ConstInfo);
+  ConstantVec.push_back(std::move(ConstInfo));
 }
 
 /// \brief Finds and combines constant candidates that can be easily

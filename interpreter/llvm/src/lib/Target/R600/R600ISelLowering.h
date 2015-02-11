@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef R600ISELLOWERING_H
-#define R600ISELLOWERING_H
+#ifndef LLVM_LIB_TARGET_R600_R600ISELLOWERING_H
+#define LLVM_LIB_TARGET_R600_R600ISELLOWERING_H
 
 #include "AMDGPUISelLowering.h"
 
@@ -23,7 +23,7 @@ class R600InstrInfo;
 
 class R600TargetLowering : public AMDGPUTargetLowering {
 public:
-  R600TargetLowering(TargetMachine &TM);
+  R600TargetLowering(TargetMachine &TM, const AMDGPUSubtarget &STI);
   MachineBasicBlock * EmitInstrWithCustomInserter(MachineInstr *MI,
       MachineBasicBlock * BB) const override;
   SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
@@ -74,4 +74,4 @@ private:
 
 } // End namespace llvm;
 
-#endif // R600ISELLOWERING_H
+#endif

@@ -505,13 +505,11 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          CO.Debug = 0;
          CO.CodeGeneration = 1;
 
-         cling::Transaction T(CO, SemaR);
-         T.append(VD);
-         T.setState(cling::Transaction::kCompleted);
+         cling::Transaction* T = new cling::Transaction(CO, SemaR);
+         T->append(VD);
+         T->setState(cling::Transaction::kCompleted);
 
-         m_Interpreter->emitAllDecls(&T);
-         assert(T.getState() == Transaction::kCommitted
-                && "Compilation should never fail!");
+         m_Interpreter->emitAllDecls(T);
       }
       assert(VD && "Cannot be null!");
       R.addDecl(VD);

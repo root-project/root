@@ -93,6 +93,15 @@ public:
     return Info.OpDecl;
   }
 
+  StringRef LookupInlineAsmLabel(StringRef Identifier, llvm::SourceMgr &LSM,
+                                 llvm::SMLoc Location,
+                                 bool Create) override {
+    SourceLocation Loc = translateLocation(LSM, Location);
+    LabelDecl *Label =
+      TheParser.getActions().GetOrCreateMSAsmLabel(Identifier, Loc, Create);
+    return Label->getMSAsmLabel();
+  }
+
   bool LookupInlineAsmField(StringRef Base, StringRef Member,
                             unsigned &Offset) override {
     return TheParser.getActions().LookupInlineAsmField(Base, Member, Offset,
@@ -133,14 +142,13 @@ private:
     }
   }
 
-  void handleDiagnostic(const llvm::SMDiagnostic &D) {
+  SourceLocation translateLocation(const llvm::SourceMgr &LSM, llvm::SMLoc SMLoc) {
     // Compute an offset into the inline asm buffer.
     // FIXME: This isn't right if .macro is involved (but hopefully, no
     // real-world code does that).
-    const llvm::SourceMgr &LSM = *D.getSourceMgr();
     const llvm::MemoryBuffer *LBuf =
-        LSM.getMemoryBuffer(LSM.FindBufferContainingLoc(D.getLoc()));
-    unsigned Offset = D.getLoc().getPointer() - LBuf->getBufferStart();
+        LSM.getMemoryBuffer(LSM.FindBufferContainingLoc(SMLoc));
+    unsigned Offset = SMLoc.getPointer() - LBuf->getBufferStart();
 
     // Figure out which token that offset points into.
     const unsigned *TokOffsetPtr =
@@ -157,6 +165,12 @@ private:
       Loc = Tok.getLocation();
       Loc = Loc.getLocWithOffset(Offset - TokOffset);
     }
+    return Loc;
+  }
+
+  void handleDiagnostic(const llvm::SMDiagnostic &D) {
+    const llvm::SourceMgr &LSM = *D.getSourceMgr();
+    SourceLocation Loc = translateLocation(LSM, D.getLoc());
     TheParser.Diag(Loc, diag::err_inline_ms_asm_parsing) << D.getMessage();
   }
 };
@@ -498,11 +512,13 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
 
   llvm::SourceMgr TempSrcMgr;
   llvm::MCContext Ctx(MAI.get(), MRI.get(), MOFI.get(), &TempSrcMgr);
-  llvm::MemoryBuffer *Buffer =
+  MOFI->InitMCObjectFileInfo(TT, llvm::Reloc::Default, llvm::CodeModel::Default,
+                             Ctx);
+  std::unique_ptr<llvm::MemoryBuffer> Buffer =
       llvm::MemoryBuffer::getMemBuffer(AsmString, "<MS inline asm>");
 
   // Tell SrcMgr about this buffer, which is what the parser will pick up.
-  TempSrcMgr.AddNewSourceBuffer(Buffer, llvm::SMLoc());
+  TempSrcMgr.AddNewSourceBuffer(std::move(Buffer), llvm::SMLoc());
 
   std::unique_ptr<llvm::MCStreamer> Str(createNullStreamer(Ctx));
   std::unique_ptr<llvm::MCAsmParser> Parser(
@@ -599,6 +615,11 @@ StmtResult Parser::ParseAsmStatement(bool &msAsm) {
     msAsm = true;
     return ParseMicrosoftAsmStatement(AsmLoc);
   }
+
+  // Check if GNU-style inline Asm is disabled.
+  if (!getLangOpts().GNUAsm)
+    Diag(AsmLoc, diag::err_gnu_inline_asm_disabled);
+
   DeclSpec DS(AttrFactory);
   SourceLocation Loc = Tok.getLocation();
   ParseTypeQualifierListOpt(DS, AR_VendorAttributesParsed);
@@ -758,7 +779,7 @@ bool Parser::ParseAsmOperandsOpt(SmallVectorImpl<IdentifierInfo *> &Names,
     // Read the parenthesized expression.
     BalancedDelimiterTracker T(*this, tok::l_paren);
     T.consumeOpen();
-    ExprResult Res(ParseExpression());
+    ExprResult Res = Actions.CorrectDelayedTyposInExpr(ParseExpression());
     T.consumeClose();
     if (Res.isInvalid()) {
       SkipUntil(tok::r_paren, StopAtSemi);

@@ -3176,7 +3176,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
          = HdrSearch.LookupFile(llvm::sys::path::filename(headerFE->getName()),
                                 SourceLocation(),
                                 true /*isAngled*/, 0/*FromDir*/, foundDir,
-                                ArrayRef<const FileEntry*>(),
+                                ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                 0/*Searchpath*/, 0/*RelPath*/,
                                 0/*SuggModule*/, false /*SkipCache*/,
                                 false /*OpenFile*/, true /*CacheFailures*/);
@@ -3219,7 +3219,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       const DirectoryLookup* FoundDir = 0;
       FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                     true /*isAngled*/, 0/*FromDir*/, FoundDir,
-                                    ArrayRef<const FileEntry*>(),
+                                    ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                     0/*Searchpath*/, 0/*RelPath*/,
                                     0/*SuggModule*/);
    }
@@ -3244,7 +3244,8 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       // (or are we back to the previously found spelling, which is fine, too)
       if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                true /*isAngled*/, 0/*FromDir*/, FoundDir,
-                               ArrayRef<const FileEntry*>(), 0/*Searchpath*/,
+                               ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
+                               0/*Searchpath*/,
                                0/*RelPath*/, 0/*SuggModule*/) == FELong) {
          return trailingPart;
       }
@@ -3868,8 +3869,8 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
    std::pair<clang::Module*, bool> modCreation;
 
    modCreation
-      = ModuleMap.findOrCreateModule(moduleName.str().c_str(),
-                                     0 /*ActiveModule*/, /*ModuleMap*/ 0,
+      = ModuleMap.findOrCreateModule(moduleName.str(),
+                                     0 /*Parent*/,
                                      false /*Framework*/, false /*Explicit*/);
    if (!modCreation.second && !strstr(moduleFileName, "/allDict_rdict.pcm")) {
       std::cerr << "TMetaUtils::declareModuleMap: "
@@ -3885,7 +3886,8 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
       const clang::FileEntry* hdrFileEntry
          =  HdrSearch.LookupFile(*hdr, clang::SourceLocation(),
                                  false /*isAngled*/, 0 /*FromDir*/, CurDir,
-                                 llvm::ArrayRef<const clang::FileEntry*>(),
+                                 llvm::ArrayRef<std::pair<const clang::FileEntry *,
+                                    const clang::DirectoryEntry *>>(),
                                  0 /*SearchPath*/, 0 /*RelativePath*/,
                                  0/*SuggModule*/, false /*SkipCache*/,
                                  false /*OpenFile*/, true /*CacheFailures*/);
@@ -3908,7 +3910,8 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
          }
       }
 
-      ModuleMap.addHeader(modCreation.first, hdrFileEntry,
+      ModuleMap.addHeader(modCreation.first,
+                          clang::Module::Header{*hdr,hdrFileEntry},
                           clang::ModuleMap::NormalHeader);
    } // for headers
    return modCreation.first;

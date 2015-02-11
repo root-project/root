@@ -1,12 +1,11 @@
 set(LLVM_LINK_COMPONENTS
   ${LLVM_TARGETS_TO_BUILD}
+  Core
   LTO
   MC
   MCDisassembler
   Support
   )
-
-add_definitions( -DLLVM_VERSION_INFO=\"${PACKAGE_VERSION}\" )
 
 set(SOURCES
   LTODisassembler.cpp

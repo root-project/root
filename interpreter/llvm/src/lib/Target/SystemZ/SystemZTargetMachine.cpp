@@ -11,6 +11,7 @@
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 
 using namespace llvm;
 
@@ -25,9 +26,16 @@ SystemZTargetMachine::SystemZTargetMachine(const Target &T, StringRef TT,
                                            Reloc::Model RM, CodeModel::Model CM,
                                            CodeGenOpt::Level OL)
     : LLVMTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL),
+      TLOF(make_unique<TargetLoweringObjectFileELF>()),
+      // Make sure that global data has at least 16 bits of alignment by
+      // default, so that we can refer to it using LARL.  We don't have any
+      // special requirements for stack variables though.
+      DL("E-m:e-i1:8:16-i8:8:16-i64:64-f128:64-a:8:16-n32:64"),
       Subtarget(TT, CPU, FS, *this) {
   initAsmInfo();
 }
+
+SystemZTargetMachine::~SystemZTargetMachine() {}
 
 namespace {
 /// SystemZ Code Generator Pass Configuration Options.
@@ -42,8 +50,8 @@ public:
 
   void addIRPasses() override;
   bool addInstSelector() override;
-  bool addPreSched2() override;
-  bool addPreEmitPass() override;
+  void addPreSched2() override;
+  void addPreEmitPass() override;
 };
 } // end anonymous namespace
 
@@ -56,14 +64,13 @@ bool SystemZPassConfig::addInstSelector() {
   return false;
 }
 
-bool SystemZPassConfig::addPreSched2() {
+void SystemZPassConfig::addPreSched2() {
   if (getOptLevel() != CodeGenOpt::None &&
       getSystemZTargetMachine().getSubtargetImpl()->hasLoadStoreOnCond())
     addPass(&IfConverterID);
-  return true;
 }
 
-bool SystemZPassConfig::addPreEmitPass() {
+void SystemZPassConfig::addPreEmitPass() {
   // We eliminate comparisons here rather than earlier because some
   // transformations can change the set of available CC values and we
   // generally want those transformations to have priority.  This is
@@ -88,11 +95,10 @@ bool SystemZPassConfig::addPreEmitPass() {
   // between the comparison and the branch, but it isn't clear whether
   // preventing that would be a win or not.
   if (getOptLevel() != CodeGenOpt::None)
-    addPass(createSystemZElimComparePass(getSystemZTargetMachine()));
+    addPass(createSystemZElimComparePass(getSystemZTargetMachine()), false);
   if (getOptLevel() != CodeGenOpt::None)
-    addPass(createSystemZShortenInstPass(getSystemZTargetMachine()));
+    addPass(createSystemZShortenInstPass(getSystemZTargetMachine()), false);
   addPass(createSystemZLongBranchPass(getSystemZTargetMachine()));
-  return true;
 }
 
 TargetPassConfig *SystemZTargetMachine::createPassConfig(PassManagerBase &PM) {

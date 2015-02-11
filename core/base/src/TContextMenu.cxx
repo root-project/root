@@ -291,22 +291,14 @@ const char *TContextMenu::CreatePopupTitle(TObject *object)
    static TString popupTitle;
 
    if (object) {
+      const char* clname = object->IsA()->GetContextMenuTitle();
+      if (!clname[0])
+         clname = object->ClassName();
+
       if (!*(object->GetName()) || !strcmp(object->GetName(), object->ClassName())) {
-         TGlobal *global = (TGlobal *) gROOT->GetGlobal(object);
-         if (global && *(global->GetName()))
-            popupTitle.Form("  %s::%s  ", object->ClassName(), global->GetName());
-         else {
-            if (!strcmp(object->IsA()->GetContextMenuTitle(), ""))
-               popupTitle.Form("  %s  ", object->ClassName());
-            else
-               popupTitle.Form("  %s  ", object->IsA()->GetContextMenuTitle());
-         }
+         popupTitle.Form("  %s  ", clname);
       } else {
-         if (!strcmp(object->IsA()->GetContextMenuTitle(), ""))
-            popupTitle.Form("  %s::%s  ", object->ClassName(), object->GetName());
-         else
-            popupTitle.Form("  %s::%s  ", object->IsA()->GetContextMenuTitle(),
-                            object->GetName());
+         popupTitle.Form("  %s::%s  ", clname, object->GetName());
       }
       if (popupTitle.Length() > 60) {
          popupTitle.Remove(60);

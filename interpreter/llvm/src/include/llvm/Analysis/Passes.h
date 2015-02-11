@@ -66,6 +66,13 @@ namespace llvm {
 
   //===--------------------------------------------------------------------===//
   //
+  // createCFLAliasAnalysisPass - This pass implements a set-based approach to
+  // alias analysis.
+  //
+  ImmutablePass *createCFLAliasAnalysisPass();
+
+  //===--------------------------------------------------------------------===//
+  //
   /// createLibCallAliasAnalysisPass - Create an alias analysis pass that knows
   /// about the semantics of a set of libcalls specified by LCI.  The newly
   /// constructed pass takes ownership of the pointer that is provided.
@@ -99,6 +106,8 @@ namespace llvm {
   // alias analysis.
   //
   ImmutablePass *createObjCARCAliasAnalysisPass();
+
+  FunctionPass *createPAEvalPass();
 
   //===--------------------------------------------------------------------===//
   //
