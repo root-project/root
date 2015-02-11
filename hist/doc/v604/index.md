@@ -47,6 +47,13 @@
 - The parameter `gStyle->SetHistTopMargin()` was ignored when plotting a 2D histogram
   using the option `E`. This can be seen plotting the histogram with `"LEGO E"`.
 
+### TGraph2D
+
+- Change `GetHistogram()` in order to be able to access the returned histogram
+  before the 2D graph has been filled with points. That was not possible previously.
+  This problem was reported
+ <a href="https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=19186">here</a>.
+
 ### THStack
 
 - Implement `GetNhists()` to return the number of histograms in the stack.
