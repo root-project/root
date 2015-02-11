@@ -23,13 +23,15 @@
 #include <fstream>
 
 #ifdef COMPILED_WITH_DABC
-   extern "C" unsigned long crc32(unsigned long crc, const unsigned char* buf, unsigned int buflen);
-   extern "C" unsigned long R__memcompress(char* tgt, unsigned long tgtsize, char* src, unsigned long srcsize);
+extern "C" unsigned long crc32(unsigned long crc, const unsigned char *buf, unsigned int buflen);
+extern "C" unsigned long R__memcompress(char *tgt, unsigned long tgtsize, char *src, unsigned long srcsize);
 
-   unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int buflen)
-   { return crc32(crc, buf, buflen); }
+unsigned long R__crc32(unsigned long crc, const unsigned char *buf, unsigned int buflen)
+{
+   return crc32(crc, buf, buflen);
+}
 #else
-   #include "RZip.h"
+#include "RZip.h"
 #endif
 
 
@@ -72,7 +74,7 @@ THttpCallArg::~THttpCallArg()
 }
 
 //______________________________________________________________________________
-void THttpCallArg::SetBinData(void* data, Long_t length)
+void THttpCallArg::SetBinData(void *data, Long_t length)
 {
    // set binary data, which will be returned as reply body
 
@@ -109,11 +111,11 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
 }
 
 //______________________________________________________________________________
-void THttpCallArg::FillHttpHeader(TString &hdr, const char* kind)
+void THttpCallArg::FillHttpHeader(TString &hdr, const char *kind)
 {
    // fill HTTP header
 
-   if (kind==0) kind = "HTTP/1.1";
+   if (kind == 0) kind = "HTTP/1.1";
 
    if ((fContentType.Length() == 0) || Is404()) {
       hdr.Form("%s 404 Not Found\r\n"
@@ -137,19 +139,19 @@ Bool_t THttpCallArg::CompressWithGzip()
 {
    // compress reply data with gzip compression
 
-   char *objbuf = (char*) GetContent();
+   char *objbuf = (char *) GetContent();
    Long_t objlen = GetContentLength();
 
    unsigned long objcrc = R__crc32(0, NULL, 0);
-   objcrc = R__crc32(objcrc, (const unsigned char*) objbuf, objlen);
+   objcrc = R__crc32(objcrc, (const unsigned char *) objbuf, objlen);
 
    // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
    Int_t buflen = 10 + objlen + 8;
-   if (buflen<512) buflen = 512;
+   if (buflen < 512) buflen = 512;
 
-   void* buffer = malloc(buflen);
+   void *buffer = malloc(buflen);
 
-   char *bufcur = (char*) buffer;
+   char *bufcur = (char *) buffer;
 
    *bufcur++ = 0x1f;  // first byte of ZIP identifier
    *bufcur++ = 0x8b;  // second byte of ZIP identifier
@@ -165,14 +167,14 @@ Bool_t THttpCallArg::CompressWithGzip()
    //bufcur += strlen("get.json")+1;
 
    char dummy[8];
-   memcpy(dummy, bufcur-6, 6);
+   memcpy(dummy, bufcur - 6, 6);
 
    // R__memcompress fills first 6 bytes with own header, therefore just overwrite them
-   unsigned long ziplen = R__memcompress(bufcur-6, objlen + 6, objbuf, objlen);
+   unsigned long ziplen = R__memcompress(bufcur - 6, objlen + 6, objbuf, objlen);
 
-   memcpy(bufcur-6, dummy, 6);
+   memcpy(bufcur - 6, dummy, 6);
 
-   bufcur += (ziplen-6); // jump over compressed data (6 byte is extra ROOT header)
+   bufcur += (ziplen - 6); // jump over compressed data (6 byte is extra ROOT header)
 
    *bufcur++ = objcrc & 0xff;    // CRC32
    *bufcur++ = (objcrc >> 8) & 0xff;
@@ -184,7 +186,7 @@ Bool_t THttpCallArg::CompressWithGzip()
    *bufcur++ = (objlen >> 16) & 0xff;  // original data length
    *bufcur++ = (objlen >> 24) & 0xff;  // original data length
 
-   SetBinData(buffer, bufcur - (char*) buffer);
+   SetBinData(buffer, bufcur - (char *) buffer);
 
    SetEncoding("gzip");
 
@@ -326,9 +328,9 @@ THttpServer::THttpServer(const char *engine) :
       }
    }
 
-   const char* rootsys = gSystem->Getenv("ROOTSYS");
-   if (rootsys!=0) fROOTSYS = rootsys;
-   if (fROOTSYS.Length()==0) {
+   const char *rootsys = gSystem->Getenv("ROOTSYS");
+   if (rootsys != 0) fROOTSYS = rootsys;
+   if (fROOTSYS.Length() == 0) {
 #ifdef ROOTPREFIX
       TString sysdir = ROOTPREFIX;
 #else
@@ -348,17 +350,16 @@ THttpServer::THttpServer(const char *engine) :
    // start timer
    SetTimer(20, kTRUE);
 
-   if (strchr(engine,';')==0) {
+   if (strchr(engine, ';') == 0) {
       CreateEngine(engine);
    } else {
-      TObjArray* lst = TString(engine).Tokenize(";");
+      TObjArray *lst = TString(engine).Tokenize(";");
 
-      for (Int_t n=0;n<=lst->GetLast();n++) {
-         const char* opt = lst->At(n)->GetName();
-         if ((strcmp(opt,"readonly")==0) || (strcmp(opt,"ro")==0)) {
+      for (Int_t n = 0; n <= lst->GetLast(); n++) {
+         const char *opt = lst->At(n)->GetName();
+         if ((strcmp(opt, "readonly") == 0) || (strcmp(opt, "ro") == 0)) {
             GetSniffer()->SetReadOnly(kTRUE);
-         } else
-         if ((strcmp(opt,"readwrite")==0) || (strcmp(opt,"rw")==0)) {
+         } else if ((strcmp(opt, "readwrite") == 0) || (strcmp(opt, "rw") == 0)) {
             GetSniffer()->SetReadOnly(kFALSE);
          } else
             CreateEngine(opt);
@@ -478,25 +479,26 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 }
 
 //______________________________________________________________________________
-Bool_t THttpServer::VerifyFilePath(const char* fname)
+Bool_t THttpServer::VerifyFilePath(const char *fname)
 {
    // Checked that filename does not contains relative path below current directory
    // Used to prevent access to files below current directory
 
-   if ((fname==0) || (*fname==0)) return kFALSE;
+   if ((fname == 0) || (*fname == 0)) return kFALSE;
 
    Int_t level = 0;
 
    while (*fname != 0) {
 
       // find next slash or backslash
-      const char* next = strpbrk(fname, "/\\");
-      if (next==0) return kTRUE;
+      const char *next = strpbrk(fname, "/\\");
+      if (next == 0) return kTRUE;
 
       // most important - change to parent dir
-      if ((next == fname + 2) && (*fname == '.') && (*(fname+1) == '.')) {
-         fname += 3; level--;
-         if (level<0) return kFALSE;
+      if ((next == fname + 2) && (*fname == '.') && (*(fname + 1) == '.')) {
+         fname += 3;
+         level--;
+         if (level < 0) return kFALSE;
          continue;
       }
 
@@ -507,12 +509,12 @@ Bool_t THttpServer::VerifyFilePath(const char* fname)
       }
 
       // ignore slash at the front
-      if (next==fname) {
+      if (next == fname) {
          fname ++;
          continue;
       }
 
-      fname = next+1;
+      fname = next + 1;
       level++;
    }
 
@@ -634,20 +636,20 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
 
-      if (fDefaultPageCont.Length()==0) {
+      if (fDefaultPageCont.Length() == 0) {
          Int_t len = 0;
-         char* buf = ReadFileContent(fDefaultPage.Data(), len);
-         if (len>0) fDefaultPageCont.Append(buf, len);
+         char *buf = ReadFileContent(fDefaultPage.Data(), len);
+         if (len > 0) fDefaultPageCont.Append(buf, len);
          delete buf;
       }
 
-      if (fDefaultPageCont.Length()==0) {
+      if (fDefaultPageCont.Length() == 0) {
          arg->Set404();
       } else {
-         const char* hjsontag = "\"$$$h.json$$$\"";
+         const char *hjsontag = "\"$$$h.json$$$\"";
 
          Ssiz_t pos = fDefaultPageCont.Index(hjsontag);
-         if (pos==kNPOS) {
+         if (pos == kNPOS) {
             arg->fContent = fDefaultPageCont;
          } else {
             TString h_json;
@@ -662,7 +664,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->fContent.Append(fDefaultPageCont.Data() + pos + strlen(hjsontag));
 
             arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
-            if (arg->fQuery.Index("nozip")==kNPOS) arg->SetZipping(2);
+            if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
          }
          arg->SetContentType("text/html");
       }
@@ -670,32 +672,32 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    }
 
    if (arg->fFileName == "draw.htm") {
-      if (fDrawPageCont.Length()==0) {
+      if (fDrawPageCont.Length() == 0) {
          Int_t len = 0;
-         char* buf = ReadFileContent(fDrawPage.Data(), len);
-         if (len>0) fDrawPageCont.Append(buf, len);
+         char *buf = ReadFileContent(fDrawPage.Data(), len);
+         if (len > 0) fDrawPageCont.Append(buf, len);
          delete buf;
       }
 
-      if (fDrawPageCont.Length()==0) {
+      if (fDrawPageCont.Length() == 0) {
          arg->Set404();
       } else {
-         const char* rootjsontag = "\"$$$root.json$$$\"";
+         const char *rootjsontag = "\"$$$root.json$$$\"";
 
          Ssiz_t pos = fDrawPageCont.Index(rootjsontag);
-         if (pos==kNPOS) {
+         if (pos == kNPOS) {
             arg->fContent = fDrawPageCont;
          } else {
-            void* bindata(0);
+            void *bindata(0);
             Long_t bindatalen(0);
 
             if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=3", bindata, bindatalen)) {
                arg->fContent.Clear();
                arg->fContent.Append(fDrawPageCont, pos);
-               arg->fContent.Append((char*) bindata, bindatalen);
+               arg->fContent.Append((char *) bindata, bindatalen);
                arg->fContent.Append(fDrawPageCont.Data() + pos + strlen(rootjsontag));
                arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
-               if (arg->fQuery.Index("nozip")==kNPOS) arg->SetZipping(2);
+               if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
             } else {
                arg->fContent = fDrawPageCont;
             }
@@ -715,13 +717,13 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    filename = arg->fFileName;
    Bool_t iszip = kFALSE;
    if (filename.EndsWith(".gz")) {
-      filename.Resize(filename.Length()-3);
+      filename.Resize(filename.Length() - 3);
       iszip = kTRUE;
    }
 
    if (filename == "h.xml")  {
 
-      Bool_t compact = arg->fQuery.Index("compact")!=kNPOS;
+      Bool_t compact = arg->fQuery.Index("compact") != kNPOS;
 
       arg->fContent.Form("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
       if (!compact) arg->fContent.Append("\n");
@@ -741,25 +743,25 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       arg->SetXml();
    } else
 
-   if (filename == "h.json")  {
+      if (filename == "h.json")  {
 
-      TRootSnifferStoreJson store(arg->fContent, arg->fQuery.Index("compact")!=kNPOS);
+         TRootSnifferStoreJson store(arg->fContent, arg->fQuery.Index("compact") != kNPOS);
 
-      const char *topname = fTopName.Data();
-      if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
+         const char *topname = fTopName.Data();
+         if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
 
-      fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
+         fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
 
-      arg->SetJson();
-   } else
+         arg->SetJson();
+      } else
 
-   if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), arg->fBinData, arg->fBinDataLength)) {
-      // define content type base on extension
-      arg->SetContentType(GetMimeType(filename.Data()));
-   } else {
-      // request is not processed
-      arg->Set404();
-   }
+         if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), arg->fBinData, arg->fBinDataLength)) {
+            // define content type base on extension
+            arg->SetContentType(GetMimeType(filename.Data()));
+         } else {
+            // request is not processed
+            arg->Set404();
+         }
 
    if (arg->Is404()) return;
 
@@ -768,7 +770,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    if (filename == "root.bin") {
       // only for binary data master version is important
       // it allows to detect if streamer info was modified
-      const char* parname = fSniffer->IsStreamerInfoItem(arg->fPathName.Data()) ? "BVersion" : "MVersion";
+      const char *parname = fSniffer->IsStreamerInfoItem(arg->fPathName.Data()) ? "BVersion" : "MVersion";
       arg->AddHeader(parname, Form("%u", (unsigned) fSniffer->GetStreamerInfoHash()));
    }
 
@@ -797,7 +799,7 @@ Bool_t THttpServer::Unregister(TObject *obj)
 }
 
 //______________________________________________________________________________
-Bool_t THttpServer::RegisterCommand(const char* cmdname, const char* method, const char* icon)
+Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, const char *icon)
 {
    // Register command which can be executed from web interface
    //
@@ -818,14 +820,14 @@ Bool_t THttpServer::RegisterCommand(const char* cmdname, const char* method, con
    //    serv->RegisterCommand("Invoke","InvokeFunction()","button;/rootsys/icons/ed_execute.png");
    // Here one see example of images usage from $ROOTSYS/icons directory.
 
-   TFolder* cmd = fSniffer->CreateItem(cmdname, Form("command %s", method));
+   TFolder *cmd = fSniffer->CreateItem(cmdname, Form("command %s", method));
    fSniffer->SetItemField(cmd, "_kind", "Command");
-   if (icon!=0) {
-      if (strncmp(icon,"button;",7)==0) {
+   if (icon != 0) {
+      if (strncmp(icon, "button;", 7) == 0) {
          fSniffer->SetItemField(cmd, "_fastcmd", "true");
-         icon+=7;
+         icon += 7;
       }
-      if (*icon!=0) fSniffer->SetItemField(cmd, "_icon", icon);
+      if (*icon != 0) fSniffer->SetItemField(cmd, "_icon", icon);
    }
    fSniffer->SetItemField(cmd, "method", method);
 
@@ -833,13 +835,13 @@ Bool_t THttpServer::RegisterCommand(const char* cmdname, const char* method, con
 }
 
 //______________________________________________________________________________
-Bool_t THttpServer::Hide(const char* foldername, Bool_t hide)
+Bool_t THttpServer::Hide(const char *foldername, Bool_t hide)
 {
    // hides folder from web gui
 
-   TFolder* f = fSniffer->GetSubFolder(foldername);
+   TFolder *f = fSniffer->GetSubFolder(foldername);
 
-   return fSniffer->SetItemField(f, "_hidden", hide ? "true" : (const char*) 0);
+   return fSniffer->SetItemField(f, "_hidden", hide ? "true" : (const char *) 0);
 }
 
 //______________________________________________________________________________
@@ -917,7 +919,7 @@ const char *THttpServer::GetMimeType(const char *path)
 }
 
 //______________________________________________________________________________
-char* THttpServer::ReadFileContent(const char* filename, Int_t& len)
+char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
 {
    // reads file content
 

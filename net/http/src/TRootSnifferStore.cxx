@@ -53,7 +53,7 @@ void TRootSnifferStoreXml::CreateNode(Int_t lvl, const char *nodename)
 {
    // starts new xml node, will be closed by CloseNode
 
-   fBuf->Append(TString::Format("%*s<item _name=\"%s\"", fCompact ? 0 : (lvl+1) * 2, "", nodename));
+   fBuf->Append(TString::Format("%*s<item _name=\"%s\"", fCompact ? 0 : (lvl + 1) * 2, "", nodename));
 }
 
 //______________________________________________________________________________
@@ -110,7 +110,7 @@ void TRootSnifferStoreXml::CloseNode(Int_t lvl, Int_t numchilds)
    // depending from number of childs different xml format is applied
 
    if (numchilds > 0)
-      fBuf->Append(TString::Format("%*s</item>%s", fCompact ? 0 : (lvl+1) * 2, "",  (fCompact ? "" : "\n")));
+      fBuf->Append(TString::Format("%*s</item>%s", fCompact ? 0 : (lvl + 1) * 2, "", (fCompact ? "" : "\n")));
    else
       fBuf->Append(TString::Format("/>%s", (fCompact ? "" : "\n")));
 }
