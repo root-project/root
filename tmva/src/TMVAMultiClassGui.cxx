@@ -143,28 +143,28 @@ void TMVA::TMVAMultiClassGui( const char* fName )
    title =Form( "(%ia) Classifier Output Distributions (test sample)", ++ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvasMulticlass(\"%s\",0)", fName ),
+                 Form( "TMVA::mvasMulticlass(\"%s\",TMVA::kMVAType)", fName ),
                  "Plots the output of each classifier for the test data (macro mvas(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    title =Form( "(%ib) Classifier Output Distributions (test and training samples superimposed)", ic );
    MultiClassActionButton( cbar,  
                  title,
-                 Form( "TMVA::mvasMulticlass(\"%s\",1)", fName ),
+                 Form( "TMVA::mvasMulticlass(\"%s\",TMVA::kCompareType)", fName ),
                  "Plots the output of each classifier for the test (histograms) and training (dots) data (macro mvas(...,3))",
                  buttonType, defaultRequiredClassifier );
    /*
      title = Form( "(%ic) Classifier Probability Distributions (test sample)", ic );
      MultiClassActionButton( cbar,  
      Form( "(%ic) Classifier Probability Distributions (test sample)", ic ),
-     Form( "TMVA::mvas(\"%s\",1)", fName ),
+     Form( "TMVA::mvas(\"%s\",TMVA::kProbaType)", fName ),
      "Plots the probability of each classifier for the test data (macro mvas(...,1))",
      buttonType, defaultRequiredClassifier );
      
      title =Form( "(%id) Classifier Rarity Distributions (test sample)", ic );
      MultiClassActionButton( cbar,  
      Form( "(%id) Classifier Rarity Distributions (test sample)", ic ),
-     Form( "TMVA::mvas(\"%s\",2)", fName ),
+     Form( "TMVA::mvas(\"%s\",TMVA::kRarityType)", fName ),
      "Plots the Rarity of each classifier for the test data (macro mvas(...,2)) - background distribution should be uniform",
      buttonType, defaultRequiredClassifier );
    
