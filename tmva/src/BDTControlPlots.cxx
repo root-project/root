@@ -17,6 +17,10 @@ void TMVA::BDTControlPlots( TString fin , Bool_t useTMVAStyle  )
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file;
    file = TMVAGlob::OpenFile( fin );  
+   if (file == NULL) {
+      cout << "Problems with input file, tried to open " << fin << " but somehow did not succeed .." << endl;
+      return;
+   }
 
    // get all titles of the method BDT
    TList titles;
