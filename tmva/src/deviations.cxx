@@ -75,7 +75,7 @@ void TMVA::deviations( TString fin,
                TString s(dirKey->ReadObj()->GetName());
                if (s.Contains("_reg_") && 
                    ( (showTarget && s.Contains("_tgt")) || (!showTarget && !s.Contains("_tgt")) ) && 
-                   s.Contains( (htype == CompareType ? "train" : "test" ))) {
+                   s.Contains( (htype == kCompareType ? "train" : "test" ))) {
                   c[countCanvas] = new TCanvas( Form("canvas%d", countCanvas+1), 
                                                 Form( "Regression output deviation versus %s for method: %s",
                                                       (showTarget ? "target" : "input variables"), methodName.Data() ),
@@ -83,8 +83,8 @@ void TMVA::deviations( TString fin,
                   c[countCanvas]->SetRightMargin(0.10); // leave space for border
                   TH1* h = (TH1*)dirKey->ReadObj();
                   h->SetTitle( Form("Output deviation for method: %s (%s sample)", 
-                                    hname.Data(), (htype == CompareType ? "training" : "test" )) );
-                  //                                    methodName.Data(), (htype == CompareType ? "training" : "test" )) );
+                                    hname.Data(), (htype == kCompareType ? "training" : "test" )) );
+                  //                                    methodName.Data(), (htype == kCompareType ? "training" : "test" )) );
                   h->Draw("colz");
                   TLine* l = new TLine( h->GetXaxis()->GetXmin(), 0, h->GetXaxis()->GetXmax(), 0 );
                   l->SetLineStyle(2);
@@ -98,7 +98,7 @@ void TMVA::deviations( TString fin,
                   TString fname = Form( "plots/deviation_%s_%s_%s_c%i", 
                                         methodName.Data(), 
                                         (showTarget ? "target" : "vars"),
-                                        (htype == CompareType ? "training" : "test" ), countPlots );
+                                        (htype == kCompareType ? "training" : "test" ), countPlots );
                   TMVAGlob::imgconv( c[countCanvas], fname );
 
                   countPlots++;

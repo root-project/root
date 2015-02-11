@@ -68,7 +68,7 @@ namespace TMVA {
       kSILENT  = 7
    };
 
-   enum HistType { MVAType = 0, ProbaType = 1, RarityType = 2, CompareType = 3 };
+   enum HistType { kMVAType = 0, kProbaType = 1, kRarityType = 2, kCompareType = 3 };
 
 
    class Types {

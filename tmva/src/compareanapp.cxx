@@ -71,21 +71,21 @@ void TMVA::compareanapp( TString finAn , TString finApp ,
 
          // chop off useless stuff
          sig->SetTitle( Form("TMVA output for classifier: %s", methodTitle.Data()) );
-         if      (htype == ProbaType) 
+         if      (htype == kProbaType) 
             sig->SetTitle( Form("TMVA probability for classifier: %s", methodTitle.Data()) );
-         else if (htype == RarityType) 
+         else if (htype == kRarityType) 
             sig->SetTitle( Form("TMVA Rarity for classifier: %s", methodTitle.Data()) );
          
          // create new canvas
-         TString ctitle = ((htype == TMVA::MVAType) ? 
+         TString ctitle = ((htype == TMVA::kMVAType) ? 
                            Form("TMVA output %s",methodTitle.Data()) : 
-                           (htype == ProbaType) ? 
+                           (htype == kProbaType) ? 
                            Form("TMVA probability %s",methodTitle.Data()) :
                            Form("TMVA rarity %s",methodTitle.Data()));
 
-         TString cname = ((htype == TMVA::MVAType) ? 
+         TString cname = ((htype == TMVA::kMVAType) ? 
                           Form("output_%s",methodTitle.Data()) : 
-                          (htype == ProbaType) ? 
+                          (htype == kProbaType) ? 
                           Form("probability_%s",methodTitle.Data()) :
                           Form("rarity_%s",methodTitle.Data()));
 
@@ -116,8 +116,8 @@ void TMVA::compareanapp( TString finAn , TString finApp ,
          TH2F* frame = new TH2F( TString("frame") + methodTitle, sig->GetTitle(), 
                                  nb, xmin, xmax, nb, ymin, ymax );
          frame->GetXaxis()->SetTitle(methodTitle);
-         if      (htype == ProbaType ) frame->GetXaxis()->SetTitle( "Signal probability" );
-         else if (htype == RarityType) frame->GetXaxis()->SetTitle( "Signal rarity" );
+         if      (htype == kProbaType ) frame->GetXaxis()->SetTitle( "Signal probability" );
+         else if (htype == kRarityType) frame->GetXaxis()->SetTitle( "Signal rarity" );
          frame->GetYaxis()->SetTitle("Normalized");
          TMVAGlob::SetFrameStyle( frame );
          
@@ -177,8 +177,8 @@ void TMVA::compareanapp( TString finAn , TString finApp ,
          c->Update();
          TMVAGlob::plot_logo();
          if (Save_Images) {
-            if      (htype == TMVA::MVAType)   TMVAGlob::imgconv( c, Form("plots/mva_%s",    methodTitle.Data()) );
-            else if (htype == TMVA::ProbaType) TMVAGlob::imgconv( c, Form("plots/proba_%s",  methodTitle.Data()) ); 
+            if      (htype == TMVA::kMVAType)   TMVAGlob::imgconv( c, Form("plots/mva_%s",    methodTitle.Data()) );
+            else if (htype == TMVA::kProbaType) TMVAGlob::imgconv( c, Form("plots/proba_%s",  methodTitle.Data()) ); 
             else                         TMVAGlob::imgconv( c, Form("plots/rarity_%s", methodTitle.Data()) ); 
          }
          countCanvas++;

@@ -17,7 +17,7 @@ namespace TMVA{
    // input: - Input file (result from TMVA);
    //        - use of TMVA plotting TStyle
    void deviations( TString fin = "TMVAReg.root", 
-                    HistType htype = MVAType, Bool_t showTarget =kTRUE, Bool_t useTMVAStyle = kTRUE );
+                    HistType htype = kMVAType, Bool_t showTarget =kTRUE, Bool_t useTMVAStyle = kTRUE );
 
 
 

@@ -58,19 +58,19 @@ void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
 
 	 std::cout << "--- Found directory for method: " << methodName << "::" << methodTitle << std::flush;
          TString hname = "MVA_" + methodTitle;
-         if      (htype == ProbaType  ) hname += "_Proba";
-         else if (htype == RarityType ) hname += "_Rarity";
+         if      (htype == kProbaType  ) hname += "_Proba";
+         else if (htype == kRarityType ) hname += "_Rarity";
          TH1* sig = dynamic_cast<TH1*>(titDir->Get( hname + "_S" ));
          TH1* bgd = dynamic_cast<TH1*>(titDir->Get( hname + "_B" ));
 
          if (sig==0 || bgd==0) {
-            if     (htype == MVAType)     
+            if     (htype == kMVAType)     
                cout << ":\t mva distribution not available (this is normal for Cut classifier)" << endl;
-            else if(htype == ProbaType)   
+            else if(htype == kProbaType)   
                cout << ":\t probability distribution not available" << endl;
-            else if(htype == RarityType)  
+            else if(htype == kRarityType)  
                cout << ":\t rarity distribution not available" << endl;
-            else if(htype == CompareType) 
+            else if(htype == kCompareType) 
                cout << ":\t overtraining check not available" << endl;
             else cout << endl;
             continue;
@@ -79,19 +79,19 @@ void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
          cout << " containing " << hname << "_S/_B" << endl;
          // chop off useless stuff
          sig->SetTitle( Form("TMVA response for classifier: %s", methodTitle.Data()) );
-         if      (htype == ProbaType) 
+         if      (htype == kProbaType) 
             sig->SetTitle( Form("TMVA probability for classifier: %s", methodTitle.Data()) );
-         else if (htype == RarityType) 
+         else if (htype == kRarityType) 
             sig->SetTitle( Form("TMVA Rarity for classifier: %s", methodTitle.Data()) );
-         else if (htype == CompareType) 
+         else if (htype == kCompareType) 
             sig->SetTitle( Form("TMVA overtraining check for classifier: %s", methodTitle.Data()) );
          
          // create new canvas
-         TString ctitle = ((htype == MVAType) ? 
+         TString ctitle = ((htype == kMVAType) ? 
                            Form("TMVA response %s",methodTitle.Data()) : 
-                           (htype == ProbaType) ? 
+                           (htype == kProbaType) ? 
                            Form("TMVA probability %s",methodTitle.Data()) :
-                           (htype == CompareType) ? 
+                           (htype == kCompareType) ? 
                            Form("TMVA comparison %s",methodTitle.Data()) :
                            Form("TMVA Rarity %s",methodTitle.Data()));
          
@@ -115,7 +115,7 @@ void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
                                                bgd->GetMean() + nrms*bgd->GetRMS() ),
                                     sig->GetXaxis()->GetXmax() );
          Float_t ymin = 0;
-         Float_t maxMult = (htype == CompareType) ? 1.3 : 1.2;
+         Float_t maxMult = (htype == kCompareType) ? 1.3 : 1.2;
          Float_t ymax = TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*maxMult;
    
          // build a frame
@@ -125,9 +125,9 @@ void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
          if(o) delete o;
          TH2F* frame = new TH2F( hFrameName, sig->GetTitle(), 
                                  nb, xmin, xmax, nb, ymin, ymax );
-         frame->GetXaxis()->SetTitle( methodTitle + ((htype == MVAType || htype == CompareType) ? " response" : "") );
-         if      (htype == ProbaType  ) frame->GetXaxis()->SetTitle( "Signal probability" );
-         else if (htype == RarityType ) frame->GetXaxis()->SetTitle( "Signal rarity" );
+         frame->GetXaxis()->SetTitle( methodTitle + ((htype == kMVAType || htype == kCompareType) ? " response" : "") );
+         if      (htype == kProbaType  ) frame->GetXaxis()->SetTitle( "Signal probability" );
+         else if (htype == kRarityType ) frame->GetXaxis()->SetTitle( "Signal rarity" );
          frame->GetYaxis()->SetTitle("(1/N) dN^{ }/^{ }dx");
          TMVAGlob::SetFrameStyle( frame );
    
@@ -139,19 +139,19 @@ void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
 
          // Draw legend               
          TLegend *legend= new TLegend( c->GetLeftMargin(), 1 - c->GetTopMargin() - 0.12, 
-                                       c->GetLeftMargin() + (htype == CompareType ? 0.40 : 0.3), 1 - c->GetTopMargin() );
+                                       c->GetLeftMargin() + (htype == kCompareType ? 0.40 : 0.3), 1 - c->GetTopMargin() );
          legend->SetFillStyle( 1 );
-         legend->AddEntry(sig,TString("Signal")     + ((htype == CompareType) ? " (test sample)" : ""), "F");
-         legend->AddEntry(bgd,TString("Background") + ((htype == CompareType) ? " (test sample)" : ""), "F");
+         legend->AddEntry(sig,TString("Signal")     + ((htype == kCompareType) ? " (test sample)" : ""), "F");
+         legend->AddEntry(bgd,TString("Background") + ((htype == kCompareType) ? " (test sample)" : ""), "F");
          legend->SetBorderSize(1);
-         legend->SetMargin( (htype == CompareType ? 0.2 : 0.3) );
+         legend->SetMargin( (htype == kCompareType ? 0.2 : 0.3) );
          legend->Draw("same");
 
          // overlay signal and background histograms
          sig->Draw("samehist");
          bgd->Draw("samehist");
    
-         if (htype == CompareType) {
+         if (htype == kCompareType) {
             // if overtraining check, load additional histograms
             TH1* sigOv = 0;
             TH1* bgdOv = 0;
@@ -235,9 +235,9 @@ void TMVA::mvas( TString fin, HistType htype, Bool_t useTMVAStyle )
 
          TMVAGlob::plot_logo(1.058);
          if (Save_Images) {
-            if      (htype == MVAType)     TMVAGlob::imgconv( c, Form("plots/mva_%s",     methodTitle.Data()) );
-            else if (htype == ProbaType)   TMVAGlob::imgconv( c, Form("plots/proba_%s",   methodTitle.Data()) ); 
-            else if (htype == CompareType) TMVAGlob::imgconv( c, Form("plots/overtrain_%s", methodTitle.Data()) ); 
+            if      (htype == kMVAType)     TMVAGlob::imgconv( c, Form("plots/mva_%s",     methodTitle.Data()) );
+            else if (htype == kProbaType)   TMVAGlob::imgconv( c, Form("plots/proba_%s",   methodTitle.Data()) ); 
+            else if (htype == kCompareType) TMVAGlob::imgconv( c, Form("plots/overtrain_%s", methodTitle.Data()) ); 
             else                           TMVAGlob::imgconv( c, Form("plots/rarity_%s",  methodTitle.Data()) ); 
          }
          countCanvas++;

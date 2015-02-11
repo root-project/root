@@ -8,6 +8,6 @@ namespace TMVA{
 #define CheckDerivedPlots 0
 
    void compareanapp( TString finAn = "TMVA.root", TString finApp = "TMVApp.root", 
-                      HistType htype = MVAType, bool useTMVAStyle=kTRUE );
+                      HistType htype = kMVAType, bool useTMVAStyle=kTRUE );
 }
 #endif

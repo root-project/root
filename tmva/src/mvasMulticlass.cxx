@@ -85,7 +85,7 @@ void TMVA::mvasMulticlass( TString fin , HistType htype , Bool_t useTMVAStyle  )
             
             // create new canvas
             //cout << "Create canvas..." << endl;
-            TString ctitle = ((htype == MVAType) ? 
+            TString ctitle = ((htype == kMVAType) ? 
                               Form("TMVA response for class %s %s", classnames.at(icls).Data(),methodTitle.Data()) :                
                               Form("TMVA comparison for class %s %s", classnames.at(icls).Data(),methodTitle.Data())) ;
             
@@ -108,7 +108,7 @@ void TMVA::mvasMulticlass( TString fin , HistType htype , Bool_t useTMVAStyle  )
             Float_t xmin = 0;
             Float_t xmax = 1;
             Float_t ymin = 0;
-            Float_t maxMult = (htype == CompareType) ? 1.3 : 1.2;
+            Float_t maxMult = (htype == kCompareType) ? 1.3 : 1.2;
             Float_t ymax = histmax*maxMult; 
             // build a frame
             Int_t nb = 500;
@@ -129,7 +129,7 @@ void TMVA::mvasMulticlass( TString fin , HistType htype , Bool_t useTMVAStyle  )
             
             // Draw legend               
             TLegend *legend= new TLegend( c->GetLeftMargin(), 1 - c->GetTopMargin() - 0.12, 
-                                          c->GetLeftMargin() + (htype == CompareType ? 0.40 : 0.3), 1 - c->GetTopMargin() );
+                                          c->GetLeftMargin() + (htype == kCompareType ? 0.40 : 0.3), 1 - c->GetTopMargin() );
             legend->SetFillStyle( 1 );
             classiter = classnames.begin();
             
@@ -151,7 +151,7 @@ void TMVA::mvasMulticlass( TString fin , HistType htype , Bool_t useTMVAStyle  )
             }
             
             
-            if (htype == CompareType) {
+            if (htype == kCompareType) {
                
                TObjArray othists; 
                // if overtraining check, load additional histograms
@@ -248,8 +248,8 @@ void TMVA::mvasMulticlass( TString fin , HistType htype , Bool_t useTMVAStyle  )
             
             TMVAGlob::plot_logo(1.058);
             if (Save_Images) {
-               if      (htype == MVAType)     TMVAGlob::imgconv( c, Form("plots/mva_%s_%s",classnames.at(icls).Data(), methodTitle.Data()) );
-               else if      (htype == CompareType)     TMVAGlob::imgconv( c, Form("plots/overtrain_%s_%s",classnames.at(icls).Data(), methodTitle.Data()) );
+               if      (htype == kMVAType)     TMVAGlob::imgconv( c, Form("plots/mva_%s_%s",classnames.at(icls).Data(), methodTitle.Data()) );
+               else if      (htype == kCompareType)     TMVAGlob::imgconv( c, Form("plots/overtrain_%s_%s",classnames.at(icls).Data(), methodTitle.Data()) );
                
             }
             countCanvas++;
