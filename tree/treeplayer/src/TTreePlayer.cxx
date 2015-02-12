@@ -1163,10 +1163,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          fprintf(fp,"      // of trees.\n");
          fprintf(fp,"      TChain * chain = new TChain(\"%s\",\"%s\");\n",
                  fTree->GetName(),fTree->GetTitle());
-         TIter next(((TChain*)fTree)->GetListOfFiles());
-         TChainElement *element;
-         while ((element = (TChainElement*)next())) {
-            fprintf(fp,"      chain->Add(\"%s/%s\");\n",element->GetTitle(),element->GetName());
+         {
+            R__LOCKGUARD(gROOTMutex);
+            TIter next(((TChain*)fTree)->GetListOfFiles());
+            TChainElement *element;
+            while ((element = (TChainElement*)next())) {
+               fprintf(fp,"      chain->Add(\"%s/%s\");\n",element->GetTitle(),element->GetName());
+            }
          }
          fprintf(fp,"      tree = chain;\n");
          fprintf(fp,"#endif // SINGLE_TREE\n\n");
@@ -1604,10 +1607,13 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       fprintf(fp,"   // of trees.\n");
       fprintf(fp,"   TChain *%s = new TChain(\"%s\",\"%s\");\n",
                  fTree->GetName(),fTree->GetName(),fTree->GetTitle());
-      TIter next(((TChain*)fTree)->GetListOfFiles());
-      TChainElement *element;
-      while ((element = (TChainElement*)next())) {
-         fprintf(fp,"   %s->Add(\"%s/%s\");\n",fTree->GetName(),element->GetTitle(),element->GetName());
+      {
+         R__LOCKGUARD(gROOTMutex);
+         TIter next(((TChain*)fTree)->GetListOfFiles());
+         TChainElement *element;
+         while ((element = (TChainElement*)next())) {
+            fprintf(fp,"   %s->Add(\"%s/%s\");\n",fTree->GetName(),element->GetTitle(),element->GetName());
+         }
       }
       fprintf(fp,"#endif // SINGLE_TREE\n\n");
    }
