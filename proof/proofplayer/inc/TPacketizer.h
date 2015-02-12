@@ -67,6 +67,10 @@ private:
                                  // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
                                  // It can be set with PROOF_PacketAsAFraction in input list.
 
+   // Add workers controls
+   Bool_t fHeuristicPSiz;   // Whether the packet size is calculated heuristically
+   Bool_t fDefMaxWrkNode;   // Whether the default is used for the max workers per node
+
    TPacketizer();
    TPacketizer(const TPacketizer&);     // no implementation, will generate
    void operator=(const TPacketizer&);  // error on accidental usage
@@ -89,6 +93,7 @@ public:
                 TList *input, TProofProgressStatus *st);
    virtual ~TPacketizer();
 
+   Int_t         AddWorkers(TList *workers);
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
 
