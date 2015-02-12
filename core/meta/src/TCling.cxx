@@ -5148,6 +5148,25 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
       name.erase(0, sizeof("typeinfo for ")-1);
    } else if (!strncmp(name.c_str(), "vtable for ", sizeof("vtable for ")-1)) {
       name.erase(0, sizeof("vtable for ")-1);
+   } else if (!strncmp(name.c_str(), "operator", sizeof("operator")-1)
+              && !isalnum(name[sizeof("operator")])) {
+     // operator...(A, B) - let's try with A!
+     name.erase(0, sizeof("operator")-1);
+     std::string::size_type pos = name.rfind('(');
+     if (pos != std::string::npos) {
+       name.erase(0, pos + 1);
+       pos = name.find(",");
+       if (pos != std::string::npos) {
+         // remove next arg up to end, leaving only the first argument type.
+         name.erase(pos);
+       }
+       pos = name.rfind(" const");
+       if (pos != std::string::npos) {
+         name.erase(pos, strlen(" const"));
+       }
+       while (!name.empty() && strchr("&*", name.back()))
+         name.erase(name.length() - 1);
+     }
    } else {
       // Remove the function arguments.
       std::string::size_type pos = name.rfind('(');
