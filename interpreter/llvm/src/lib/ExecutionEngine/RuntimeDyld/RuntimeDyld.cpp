@@ -813,7 +813,8 @@ void RuntimeDyldImpl::resolveExternalSymbols() {
 
     ExternalSymbolRelocations.erase(i);
   }
-  WeakSymbolTable.clear();
+  // Later Objects might still need them!
+  // WeakSymbolTable.clear();
 }
 
 //===----------------------------------------------------------------------===//
