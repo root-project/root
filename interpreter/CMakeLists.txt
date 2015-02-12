@@ -4,8 +4,17 @@
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF)
 set(LLVM_BUILD_TOOLS OFF)
-set(LLVM_TARGETS_TO_BUILD X86 CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
+
+if(ROOT_ARCHITECTURE MATCHES linuxarm64)
+  set(ROOT_CLING_TARGET "AArch64")
+elseif(ROOT_ARCHITECTURE MATCHES linux)
+  set(ROOT_CLING_TARGET "X86")
+else()
+  set(ROOT_CLING_TARGET "all")
+endif()
+
+set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 
 #---Protect against warnings clang would fire-------------------------------------------------------
 
