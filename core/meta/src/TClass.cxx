@@ -5475,10 +5475,10 @@ Long_t TClass::Property() const
          kl->fStreamerType  = kExternal;
          kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
-      //must set this last since other threads may read fProperty
-      // and think all test bits have been properly set
-      kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
       kl->fClassProperty = gCling->ClassInfo_ClassProperty(GetClassInfo());
+      // Must set this last since other threads may read fProperty
+      // and think all test bits have been properly set.
+      kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
 
    } else {
 
@@ -5489,6 +5489,8 @@ Long_t TClass::Property() const
 
       kl->fStreamerType |= kEmulatedStreamer;
       kl->SetStreamerImpl();
+      // fProperty was *not* set so that it can be forced to be recalculated
+      // next time.
       return 0;
    }
 
