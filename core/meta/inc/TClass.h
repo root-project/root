@@ -282,7 +282,7 @@ private:
    static TDeclNameRegistry fNoInfoOrEmuOrFwdDeclNameRegistry; // Store the decl names of the forwardd and no info instances
    static Bool_t HasNoInfoOrEmuOrFwdDeclaredDecl(const char*);
 
-   // Internal status bits
+   // Internal status bits, set and reset only during initialization and thus under the protection of the global lock.
    enum { kLoading = BIT(14), kUnloading = BIT(14) };
    // Internal streamer type.
    enum EStreamerType {kDefault=0, kEmulatedStreamer=1, kTObject=2, kInstrumented=4, kForeign=8, kExternal=16};
