@@ -1,6 +1,7 @@
+
 ## Core Libraries
 
-### Interpreter</h4>
+### Interpreter
 
 The new interface `TInterpreter::Declare(const char* code)` will declare the
 code to the interpreter with all interpreter extensions disabled, i.e. as
