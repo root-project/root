@@ -5225,8 +5225,8 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
       }
       clang::QualType type( td->getTypeForDecl(), 0 );
 
-      auto declName=ND->getNameAsString().c_str();
-      if (!TClass::HasNoInfoOrEmuOrFwdDeclaredDecl(declName)){
+      auto declName=ND->getNameAsString();
+      if (!TClass::HasNoInfoOrEmuOrFwdDeclaredDecl(declName.c_str())){
 //          printf ("Impossible to find a TClassEntry in kNoInfo or kEmulated the decl of which would be called %s. Skip w/o building the normalized name.\n",declName );
          return;
       }
