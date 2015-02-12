@@ -207,7 +207,7 @@ function BuildSimpleGUI() {
       if (filesarr.length>0)
          hpainter.OpenRootFile(filesarr.shift(), OpenAllFiles);
       else
-         hpainter.displayAll(itemsarr, optionsarr, function() { hpainter.UpdateRootFilesHierarchy(); });
+         hpainter.displayAll(itemsarr, optionsarr, function() { hpainter.RefreshHtml(); });
    }
 
    if (h0!=null) hpainter.OpenOnline(h0, OpenAllFiles);

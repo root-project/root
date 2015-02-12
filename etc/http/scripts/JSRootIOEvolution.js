@@ -1113,7 +1113,7 @@
       // retrieve a key by its name and cycle in the list of keys
       for (var i in this.fKeys) {
          if (this.fKeys[i]['fName'] == keyname && this.fKeys[i]['fCycle'] == cycle) {
-            if (typeof call_back == 'function') call_back(this.fKeys[i]);
+            JSROOT.CallBack(call_back, this.fKeys[i]);
             return this.fKeys[i];
          }
       }
@@ -1137,15 +1137,12 @@
          pos = keyname.lastIndexOf("/", pos-1);
       }
 
-      if (typeof call_back == 'function') call_back(null);
+
+      JSROOT.CallBack(call_back, null);
       return null;
    }
 
    JSROOT.TDirectory.prototype.ReadKeys = function(readkeys_callback) {
-
-      if (typeof readkeys_callback != 'function')
-         readkeys_callback = function() {};
-
       var thisdir = this;
       var file = this.fFile;
 
@@ -1159,7 +1156,7 @@
 
       file.Seek(this.fSeekDir, this.fFile.ERelativeTo.kBeg);
       file.ReadBuffer(nbytes, function(blob1) {
-         if (blob1==null) return readkeys_callback(null);
+         if (blob1==null) return JSROOT.CallBack(readkeys_callback,null);
          var buf = new JSROOT.TBuffer(blob1, thisdir.fNbytesName, file);
 
          thisdir.StreamHeader(buf);
@@ -1175,16 +1172,16 @@
          thisdir.fTitle = buf.ReadTString();
          if (thisdir.fNbytesName < 10 || thisdir.fNbytesName > 10000) {
             console.log("Cannot read directory info of file " + file.fURL);
-            return readkeys_callback(null);
+            return JSROOT.CallBack(readkeys_callback, null);
          }
          //*-* -------------Read keys of the top directory
 
          if (thisdir.fSeekKeys <=0)
-            return readkeys_callback(null);
+            return JSROOT.CallBack(readkeys_callback, null);
 
          file.Seek(thisdir.fSeekKeys, file.ERelativeTo.kBeg);
          file.ReadBuffer(thisdir.fNbytesKeys, function(blob2) {
-            if (blob2 == null) readkeys_callback(null);
+            if (blob2 == null) return JSROOT.CallBack(readkeys_callback, null);
 
             var buf = new JSROOT.TBuffer(blob2, 0, file);
 
@@ -1198,7 +1195,7 @@
             file.fDirectories.push(thisdir);
             delete buf;
 
-            readkeys_callback(thisdir);
+            JSROOT.CallBack(readkeys_callback, thisdir);
          });
 
          delete buf;
@@ -1288,11 +1285,8 @@
          var file = this;
 
          var xhr = JSROOT.NewHttpRequest(this.fURL, "head", function(res) {
-            if (res==null) {
-               if (typeof newfile_callback == 'function')
-                  newfile_callback(null);
-               return;
-            }
+            if (res==null)
+               return JSROOT.CallBack(newfile_callback, null);
 
             var accept_ranges = res.getResponseHeader("Accept-Ranges");
             if (accept_ranges==null) file.fAcceptRanges = false;
@@ -1413,6 +1407,12 @@
 
    JSROOT.TFile.prototype.GetDir = function(dirname, cycle) {
       // check first that directory with such name exists
+
+      if ((cycle==null) && (typeof dirname == 'string')) {
+         var pos = dirname.lastIndexOf(';');
+         if (pos>0) { cycle = dirname.substr(pos+1); dirname = dirname.substr(0,pos); }
+      }
+
       for (var j in this.fDirectories) {
          var dir = this.fDirectories[j];
          if (dir['dir_name'] != dirname) continue;
@@ -1428,7 +1428,7 @@
 
       for (var i in this.fKeys) {
          if (this.fKeys[i]['fName'] == keyname && this.fKeys[i]['fCycle'] == cycle) {
-            if (typeof getkey_callback == 'function') getkey_callback(this.fKeys[i]);
+            JSROOT.CallBack(getkey_callback, this.fKeys[i]);
             return this.fKeys[i];
          }
       }
@@ -1443,7 +1443,7 @@
          if (dir!=null) return dir.GetKey(subname, cycle, getkey_callback);
 
          var dirkey = this.GetKey(dirname, 1);
-         if ((dirkey!=null) && (typeof getkey_callback == 'function') &&
+         if ((dirkey!=null) && (getkey_callback != null) &&
              (dirkey['fClassName'].indexOf("TDirectory")==0)) {
 
             this.ReadObject(dirname, function(newdir) {
@@ -1455,7 +1455,7 @@
          pos = keyname.lastIndexOf("/", pos-1);
       }
 
-      if (typeof call_back == 'function') call_back(null);
+      JSROOT.CallBack(getkey_callback, null);
       return null;
    }
 
@@ -1510,26 +1510,22 @@
       // in such situation calls are asynchrone
       this.GetKey(obj_name, cycle, function(key) {
 
-         if (key == null) {
-            if (typeof user_call_back == 'function') user_call_back(null);
-            return;
-         }
+         if (key == null)
+            return JSROOT.CallBack(user_call_back, null);
+
+         if ((obj_name=="StreamerInfo") && (key['fClassName']=="TList"))
+            return file.fStreamerInfos;
 
          var isdir = false;
          if ((key['fClassName'] == 'TDirectory' || key['fClassName'] == 'TDirectoryFile')) {
             isdir = true;
             var dir = file.GetDir(obj_name, cycle);
-            if (dir!=null) {
-               if (typeof user_call_back == 'function') user_call_back(dir);
-               return;
-            }
+            if (dir!=null)
+               return JSROOT.CallBack(user_call_back, dir);
          }
 
          file.ReadObjBuffer(key, function(buf) {
-            if (!buf) {
-               if (typeof user_call_back == 'function') user_call_back(null);
-               return;
-            }
+            if (!buf) return JSROOT.CallBack(user_call_back, null);
 
             if (isdir) {
                var dir = new JSROOT.TDirectory(file, obj_name, cycle);
@@ -1537,7 +1533,7 @@
                if (dir.fSeekKeys) {
                   dir.ReadKeys(user_call_back);
                } else {
-                  if (typeof user_call_back == 'function') user_call_back(dir);
+                  JSROOT.CallBack(user_call_back,dir);
                }
 
                return;
@@ -1547,7 +1543,7 @@
             buf.MapObject(1, obj); // tag object itself with id==1
             buf.ClassStreamer(obj, key['fClassName']);
 
-            if (typeof user_call_back == 'function') user_call_back(obj);
+            JSROOT.CallBack(user_call_back, obj);
          }); // end of ReadObjBuffer callback
       }); // end of GetKey callback
    }
@@ -1599,18 +1595,15 @@
    JSROOT.TFile.prototype.ReadKeys = function(readkeys_callback) {
       // read keys only in the root file
 
-      if (typeof readkeys_callback != 'function')
-         readkeys_callback = function() {};
-
       var file = this;
 
       // with the first readbuffer we read bigger amount to create header cache
       this.ReadBuffer(1024, function(blob1) {
-         if (blob1==null) return readkeys_callback(null);
+         if (blob1==null) return JSROOT.CallBack(readkeys_callback, null);
 
          if (blob1.substring(0, 4)!='root') {
             alert("NOT A ROOT FILE! " + file.fURL);
-            return readkeys_callback(null);
+            return JSROOT.CallBack(readkeys_callback, null);
          }
 
          var buf = new JSROOT.TBuffer(blob1, 4, file); // skip the "root" file identifier
@@ -1640,7 +1633,7 @@
 
          // empty file
          if (!file.fSeekInfo && !file.fNbytesInfo)
-            return readkeys_callback(null);
+            return JSROOT.CallBack(readkeys_callback, null);
 
          //*-*-------------Read directory info
          var nbytes = file.fNbytesName + 22;
@@ -1653,7 +1646,7 @@
          file.Seek(file.fBEGIN, file.ERelativeTo.kBeg);
 
          file.ReadBuffer(Math.max(300, nbytes), function(blob3) {
-            if (blob3==null) return readkeys_callback(null);
+            if (blob3==null) return JSROOT.CallBack(readkeys_callback, null);
 
             var buf3 = new JSROOT.TBuffer(blob3, file.fNbytesName, file);
 
@@ -1671,18 +1664,18 @@
             file.fTitle = buf3.ReadTString();
             if (file.fNbytesName < 10 || this.fNbytesName > 10000) {
                console.log("Init : cannot read directory info of file " + file.fURL);
-               return readkeys_callback(null);
+               return JSROOT.CallBack(readkeys_callback, null);
             }
             //*-* -------------Read keys of the top directory
 
             if (file.fSeekKeys <= 0) {
                console.log("Empty keys list - not supported" + file.fURL);
-               return readkeys_callback(null);
+               return JSROOT.CallBack(readkeys_callback, null);
             }
 
             file.Seek(file.fSeekKeys, file.ERelativeTo.kBeg);
             file.ReadBuffer(file.fNbytesKeys, function(blob4) {
-               if (blob4==null) return readkeys_callback(null);
+               if (blob4==null) return JSROOT.CallBack(readkeys_callback, null);
 
                var buf4 = new JSROOT.TBuffer(blob4, 0, file);
 
