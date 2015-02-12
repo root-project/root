@@ -706,6 +706,7 @@ void TSQLFile::Close(Option_t *option)
    }
    pidDeleted.Delete();
 
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfFiles()->Remove(this);
 }
 
@@ -1049,7 +1050,10 @@ void TSQLFile::InitSqlDatabase(Bool_t create)
       }
    }
 
-   gROOT->GetListOfFiles()->Add(this);
+   {
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfFiles()->Add(this);
+   }
    cd();
 
    fNProcessIDs = 0;
