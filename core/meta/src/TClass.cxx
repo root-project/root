@@ -3893,7 +3893,7 @@ TMethod *TClass::GetMethodAny(const char *method)
    // of the class.
 
    if (!HasInterpreterInfo()) return 0;
-   return (TMethod*) GetListOfMethods()->FindObject(method);
+   return (TMethod*) GetMethodList()->FindObject(method);
 }
 
 //______________________________________________________________________________
