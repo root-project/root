@@ -1206,13 +1206,22 @@ Int_t TH1::BufferEmpty(Int_t action)
 
    // nbentries correspond to the number of entries of histogram
 
-   if (nbentries == 0) return 0;
+   if (nbentries == 0) {
+      // if action is 1 we delete the buffer
+      // this will avoid infinite recursion
+      if (action > 0) {
+         delete [] fBuffer;
+         fBuffer = 0;
+         fBufferSize = 0;
+      }         
+      return 0;      
+   }
    if (nbentries < 0 && action == 0) return 0;    // case histogram has been already filled from the buffer
 
    Double_t *buffer = fBuffer;
    if (nbentries < 0) {
       nbentries  = -nbentries;
-      //  a reset might call BufferEmpty() giving an infinite loop
+      //  a reset might call BufferEmpty() giving an infinite recursion
       // Protect it by setting fBuffer = 0
       fBuffer=0;
        //do not reset the list of functions
@@ -1288,7 +1297,11 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
    }
    if (2*nbentries+2 >= fBufferSize) {
       BufferEmpty(1);
-      return Fill(x,w);
+      if (!fBuffer) 
+         // to avoid infinite recursion Fill->BufferFill->Fill
+         return Fill(x,w);
+      // this cannot happen
+      R__ASSERT(0); 
    }
    fBuffer[2*nbentries+1] = w;
    fBuffer[2*nbentries+2] = x;
