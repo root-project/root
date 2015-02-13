@@ -9,7 +9,7 @@ int runstring()
       cerr << "== is not working for strings\n";
       result = 1;
    }
-   TFormula* pf2 = new TFormula("f2","strstr(\"abc\",\"def\") != 0");
+   TFormulaOld* pf2 = new TFormulaOld("f2","strstr(\"abc\",\"def\") != 0");
    i = pf2->Eval(0,0,0,0);
    if (i!=0) {
       cerr << "strstr is not working for strings\n";
