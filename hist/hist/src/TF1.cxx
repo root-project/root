@@ -3155,7 +3155,16 @@ void TF1::Streamer(TBuffer &b)
          fNdim = fold.GetNdim(); 
          if (fold.fType == 0) {
             // formula functions
-            TF1 fnew(fold.GetName(), fold.GetExpFormula(), fold.fXmin, fold.fXmax );
+            // if ndim is not 1  set xmin max to zero to avoid error in ctor
+            double xmin = fold.fXmin;
+            double xmax = fold.fXmax; 
+            if (fNdim >  1) {
+               xmin = 0; xmax = 0; 
+            }
+            TF1 fnew(fold.GetName(), fold.GetExpFormula(), xmin, xmax );
+            if (fNdim > 1) {
+               fnew.SetRange(fold.fXmin, fold.fXmax);
+            }
             fnew.Copy(*this); 
          } else {
             // case of a function pointers
