@@ -1,8 +1,8 @@
 int assertTernary() {
    TF1 f6( "f6", "(x*[0])*((x<[1])?([2]*x):([3]+x))", 1, 10 );
    f6.SetParameters( 1, 4, 2, 4 );
-   long eval = (long) f6.Eval(1);
-   double x=1; 
+   long eval = (long) f6.Eval(2);
+   double x=2; 
    long calc = x*1*((x<4)?(2*x):(4+x));
    
    int result = 0;

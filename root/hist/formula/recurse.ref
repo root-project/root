@@ -1,26 +1,10 @@
 
 Processing runrecurse.C...
-                   f2 : [0]+f1 Ndim= 1, Npar= 2, Noper= 3
- fExpr[0] = [0]  action = 140 action param = 0 
- fExpr[1] = [1]  action = 140 action param = 1 
- fExpr[2] = +  action = 1 action param = 0 
-Optimized expression
- fExpr[0] = [0],[1],+		  action = 148 action param = 0 
- Par  0                    p0 = 2
- Par  1                    p1 = 1
-                   f3 : [0]+[1]+f2 Ndim= 1, Npar= 4, Noper= 7
- fExpr[0] = [0]  action = 140 action param = 0 
- fExpr[1] = [1]  action = 140 action param = 1 
- fExpr[2] = +  action = 1 action param = 0 
- fExpr[3] = [2]  action = 140 action param = 2 
- fExpr[4] = [3]  action = 140 action param = 3 
- fExpr[5] = +  action = 1 action param = 0 
- fExpr[6] = +  action = 1 action param = 0 
-Optimized expression
- fExpr[0] = [0],[1],+		  action = 148 action param = 0 
- fExpr[1] = [2],[3],+		  action = 148 action param = 0 
- fExpr[2] = +		  action = 1 action param = 0 
- Par  0                    p0 = 3
- Par  1                    p1 = 0
- Par  2                    p2 = 2
- Par  3                    p3 = 1
+Formula based function:     f2 
+                   f2 : [0]+f1 Ndim= 1, Npar= 2, Number= 0 
+ Formula expression: 
+	[0]+([1]) 
+Formula based function:     f3 
+                   f3 : [0]+[1]+f2 Ndim= 1, Npar= 4, Number= 0 
+ Formula expression: 
+	[0]+[1]+([2]+([3])) 

@@ -1,29 +1,5 @@
 
 Processing testBoolOpt.C...
-                  for : left()||right() Ndim= 1, Npar= 0, Noper= 4
- fExpr[0] = bool left()  action = 145 action param = 0 
- fExpr[1] = || checkpoint  action = 142 action param = 22 
- fExpr[2] = bool right()  action = 145 action param = 1000 
- fExpr[3] = ||  action = 61 action param = 0 
-Optimized expression
- fExpr[0] = bool left()		  action = 145 action param = 0 
- fExpr[1] = || checkpoint		  action = 156 action param = 3 
- fExpr[2] = bool right()		  action = 145 action param = 1000 
- fExpr[3] = ||		  action = 61 action param = 0 
-                 fand : !left()&&!right() Ndim= 1, Npar= 0, Noper= 6
- fExpr[0] = bool left()  action = 145 action param = 0 
- fExpr[1] = !  action = 68 action param = 0 
- fExpr[2] = && checkpoint  action = 142 action param = 31 
- fExpr[3] = bool right()  action = 145 action param = 1000 
- fExpr[4] = !  action = 68 action param = 0 
- fExpr[5] = &&  action = 60 action param = 0 
-Optimized expression
- fExpr[0] = bool left()		  action = 145 action param = 0 
- fExpr[1] = !		  action = 68 action param = 0 
- fExpr[2] = && checkpoint		  action = 157 action param = 5 
- fExpr[3] = bool right()		  action = 145 action param = 1000 
- fExpr[4] = !		  action = 68 action param = 0 
- fExpr[5] = &&		  action = 60 action param = 0 
 regular C++: left() || right()
 running left side
 TFormula: left() || right()
@@ -52,3 +28,9 @@ TFormula: left()+ (!left() && !right()) + right()
 running left side
 running left side
 running right side
+               T__for :  Ndim= 0, Npar= 0, Number= 0 
+ Formula expression: 
+	left()||right() 
+              T__fand :  Ndim= 0, Npar= 0, Number= 0 
+ Formula expression: 
+	!left()&&!right() 
