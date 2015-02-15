@@ -89,8 +89,8 @@ ALIENLIBDEPM           = $(XMLLIB) $(NETXLIB) $(TREELIB) $(PROOFLIB) \
                          $(PROOFPLAYERLIB) $(NETLIB) $(IOLIB)
 ROOFITCORELIBDEPM      = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                          $(MINUITLIB) $(IOLIB) $(MATHCORELIB) $(FOAMLIB)
-ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(MATRIXLIB) \
-                         $(MATHCORELIB)
+ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(HISTLIB) \
+                         $(MATRIXLIB) $(MATHCORELIB)
 ROOSTATSLIBDEPM        = $(ROOFITLIB) $(ROOFITCORELIB) $(TREELIB) $(IOLIB) \
                          $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB) $(MINUITLIB) \
                          $(FOAMLIB) $(GRAFLIB) $(GPADLIB)
