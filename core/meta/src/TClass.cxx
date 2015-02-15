@@ -77,6 +77,7 @@
 #include <cmath>
 #include <assert.h>
 #include <vector>
+#include <memory>
 
 #include "TListOfDataMembers.h"
 #include "TListOfFunctions.h"
@@ -1551,7 +1552,7 @@ TClass::~TClass()
    delete fFuncTemplate; fFuncTemplate = 0;
 
    if (fMethod)
-      fMethod->Delete();
+      (*fMethod).Delete();
    delete fMethod;   fMethod=0;
 
    if (fRealData)
@@ -3384,10 +3385,10 @@ TList *TClass::GetListOfMethods(Bool_t load /* = kTRUE */)
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   if (!fMethod) fMethod = new TListOfFunctions(this);
+   if (!fMethod) GetMethodList();
    if (load) {
       if (gDebug>0) Info("GetListOfMethods","Header Parsing - Asking for all the methods of class %s: this can involve parsing.",GetName());
-      fMethod->Load();
+      (*fMethod).Load();
    }
    return fMethod;
 }
@@ -3396,7 +3397,7 @@ TList *TClass::GetListOfMethods(Bool_t load /* = kTRUE */)
 TCollection *TClass::GetListOfMethodOverloads(const char* name) const
 {
    // Return the collection of functions named "name".
-   return ((TListOfFunctions*)fMethod)->GetListForObject(name);
+   return const_cast<TClass*>(this)->GetMethodList()->GetListForObject(name);
 }
 
 
@@ -3750,7 +3751,7 @@ void TClass::ResetCaches()
    if (fEnums)
       fEnums->Unload();
    if (fMethod)
-      fMethod->Unload();
+      (*fMethod).Unload();
 
    delete fAllPubData; fAllPubData = 0;
 
@@ -3879,7 +3880,13 @@ TListOfFunctions *TClass::GetMethodList()
    // the internal type of fMethod and thus can not be made public.
    // It also never 'loads' the content of the list.
 
-   if (!fMethod) fMethod = new TListOfFunctions(this);
+   if (!fMethod) {
+      std::unique_ptr<TListOfFunctions> temp{ new TListOfFunctions(this) };
+      TListOfFunctions* expected = nullptr;
+      if(fMethod.compare_exchange_strong(expected, temp.get()) ) {
+         temp.release();
+      }
+   }
    return fMethod;
 }
 
@@ -5625,7 +5632,7 @@ void TClass::SetUnloaded()
    fTypeInfo     = 0;
 
    if (fMethod) {
-      fMethod->Unload();
+      (*fMethod).Unload();
    }
    if (fData) {
       fData->Unload();
