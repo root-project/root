@@ -187,7 +187,7 @@ private:
    TListOfDataMembers*fData;            //linked list for data members
    TListOfEnums      *fEnums;           //linked list for the enums
    TListOfFunctionTemplates *fFuncTemplate; //linked list for function templates [Not public until implemented as active list]
-   TListOfFunctions  *fMethod;          //linked list for methods
+   std::atomic<TListOfFunctions*> fMethod;          //linked list for methods
    TViewPubDataMembers*fAllPubData;      //all public data members (including from base classes)
    TViewPubFunctions *fAllPubMethod;    //all public methods (including from base classes)
    mutable TList     *fClassMenuList;   //list of class menu items
