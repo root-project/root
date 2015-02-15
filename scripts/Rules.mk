@@ -6,20 +6,19 @@
 all: summary
 
 test: tests ;
+# The previous line contains just ';' in order to disable the implicit
+# rule building an executable 'test' from test.C
 
 summary:
 	@CALLDIR= ; $(MAKE) --no-print-directory  tests || \
 	if [ `ls $(SUMMARY).*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
-          res=`grep FAILING $(SUMMARY).*.summary  | wc -l` ; \
+          res=`grep --text FAILING $(SUMMARY).*.summary  | wc -l` ; \
 	  echo "At least $$res tests have failed:" ; \
-	  grep -h FAILING $(SUMMARY).*.summary; \
+	  grep --text -h FAILING $(SUMMARY).*.summary; \
           exit $$res; \
 	fi
 
-# The previous line contains just ';' in order to disable the implicit 
-# rule building an executable 'test' from test.C
-
-ifneq ($(V),) 
+ifneq ($(V),)
 VERBOSE:=$(V)
 endif
 ifeq ($(VERBOSE),) 
