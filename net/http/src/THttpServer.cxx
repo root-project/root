@@ -282,6 +282,7 @@ THttpServer::THttpServer(const char *engine) :
    fJSROOTSYS(),
    fROOTSYS(),
    fTopName("ROOT"),
+   fJSROOT(),
    fDefaultPage(),
    fDefaultPageCont(),
    fDrawPage(),
@@ -408,6 +409,54 @@ void THttpServer::SetReadOnly(Bool_t readonly)
    // Server also cannot execute objects method via exe.json request
 
    if (fSniffer) fSniffer->SetReadOnly(readonly);
+}
+
+//______________________________________________________________________________
+void THttpServer::SetJSROOT(const char* location)
+{
+   // Set location of JSROOT to use with the server
+   // One could specify address like:
+   //   https://root.cern.ch/js/3.3/
+   //   http://web-docs.gsi.de/~linev/js/3.3/
+   // This allows to get new JSROOT features with old server,
+   // reduce load on THttpServer instance, also startup time can be improved
+   // When empty string specified (default), local copy of JSROOT is used (distributed with ROOT)
+
+   fJSROOT = location ? location : "";
+}
+
+//______________________________________________________________________________
+void THttpServer::SetDefaultPage(const char* filename)
+{
+   // Set file name of HTML page, delivered by the server when
+   // http address is opened in the browser.
+   // By default, $ROOTSYS/etc/http/files/online.htm page is used
+   // When empty filename is specified, default page will be used
+
+   if ((filename!=0) && (*filename!=0))
+      fDefaultPage = filename;
+   else
+      fDefaultPage = fJSROOTSYS + "/files/online.htm";
+
+   // force to read page content next time again
+   fDefaultPageCont.Clear();
+}
+
+//______________________________________________________________________________
+void THttpServer::SetDrawPage(const char* filename)
+{
+   // Set file name of HTML page, delivered by the server when
+   // objects drawing page is requested from the browser
+   // By default, $ROOTSYS/etc/http/files/draw.htm page is used
+   // When empty filename is specified, default page will be used
+
+   if ((filename!=0) && (*filename!=0))
+      fDrawPage = filename;
+   else
+      fDrawPage = fJSROOTSYS + "/files/draw.htm";
+
+   // force to read page content next time again
+   fDrawPageCont.Clear();
 }
 
 //______________________________________________________________________________
@@ -646,22 +695,26 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       if (fDefaultPageCont.Length() == 0) {
          arg->Set404();
       } else {
+         arg->fContent = fDefaultPageCont;
+
+         // replace all references on JSROOT
+         if (fJSROOT.Length() > 0) {
+            TString repl = TString("=\"") + fJSROOT;
+            if (!repl.EndsWith("/")) repl+="/";
+            arg->fContent.ReplaceAll("=\"/jsrootsys/", repl);
+         }
+
          const char *hjsontag = "\"$$$h.json$$$\"";
 
-         Ssiz_t pos = fDefaultPageCont.Index(hjsontag);
-         if (pos == kNPOS) {
-            arg->fContent = fDefaultPageCont;
-         } else {
+         // add h.json caching
+         if (arg->fContent.Index(hjsontag) != kNPOS) {
             TString h_json;
             TRootSnifferStoreJson store(h_json, kTRUE);
             const char *topname = fTopName.Data();
             if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
             fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
 
-            arg->fContent.Clear();
-            arg->fContent.Append(fDefaultPageCont, pos);
-            arg->fContent.Append(h_json);
-            arg->fContent.Append(fDefaultPageCont.Data() + pos + strlen(hjsontag));
+            arg->fContent.ReplaceAll(hjsontag, h_json);
 
             arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
             if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
@@ -684,24 +737,24 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       } else {
          const char *rootjsontag = "\"$$$root.json$$$\"";
 
-         Ssiz_t pos = fDrawPageCont.Index(rootjsontag);
-         if (pos == kNPOS) {
-            arg->fContent = fDrawPageCont;
-         } else {
-            void *bindata(0);
-            Long_t bindatalen(0);
+         arg->fContent = fDrawPageCont;
 
-            if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=3", bindata, bindatalen)) {
-               arg->fContent.Clear();
-               arg->fContent.Append(fDrawPageCont, pos);
-               arg->fContent.Append((char *) bindata, bindatalen);
-               arg->fContent.Append(fDrawPageCont.Data() + pos + strlen(rootjsontag));
+         // replace all references on JSROOT
+         if (fJSROOT.Length() > 0) {
+            TString repl = TString("=\"") + fJSROOT;
+            if (!repl.EndsWith("/")) repl+="/";
+            arg->fContent.ReplaceAll("=\"/jsrootsys/", repl);
+         }
+
+         if (arg->fContent.Index(rootjsontag) != kNPOS) {
+            TString str;
+            void *bindata = 0;
+            Long_t bindatalen = 0;
+            if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=3", bindata, bindatalen, str)) {
+               arg->fContent.ReplaceAll(rootjsontag, str);
                arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
                if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
-            } else {
-               arg->fContent = fDrawPageCont;
             }
-            free(bindata);
          }
          arg->SetContentType("text/html");
       }
@@ -721,7 +774,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       iszip = kTRUE;
    }
 
-   if (filename == "h.xml")  {
+   if ((filename == "h.xml") || (filename == "get.xml"))  {
 
       Bool_t compact = arg->fQuery.Index("compact") != kNPOS;
 
@@ -734,7 +787,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
          const char *topname = fTopName.Data();
          if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
-         fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
+         fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store, filename == "get.xml");
       }
 
       arg->fContent.Append("</root>");
@@ -743,25 +796,21 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       arg->SetXml();
    } else
 
-      if (filename == "h.json")  {
+   if ((filename == "h.json") || (filename == "get.json"))  {
+      TRootSnifferStoreJson store(arg->fContent, arg->fQuery.Index("compact") != kNPOS);
+      const char *topname = fTopName.Data();
+      if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
+      fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store, (filename == "get.json"));
+      arg->SetJson();
+   } else
 
-         TRootSnifferStoreJson store(arg->fContent, arg->fQuery.Index("compact") != kNPOS);
-
-         const char *topname = fTopName.Data();
-         if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
-
-         fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
-
-         arg->SetJson();
-      } else
-
-         if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), arg->fBinData, arg->fBinDataLength)) {
-            // define content type base on extension
-            arg->SetContentType(GetMimeType(filename.Data()));
-         } else {
-            // request is not processed
-            arg->Set404();
-         }
+   if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), arg->fBinData, arg->fBinDataLength, arg->fContent)) {
+      // define content type base on extension
+      arg->SetContentType(GetMimeType(filename.Data()));
+   } else {
+      // request is not processed
+      arg->Set404();
+   }
 
    if (arg->Is404()) return;
 
@@ -810,26 +859,26 @@ Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, con
    // Or one could specify any method of the object which is already registered
    // to the server. For instance:
    //     serv->Register("/", hpx);
-   //     serv->RegisterCommand("ResetHPX", "/hpx/->Reset()");
+   //     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()");
    // Here symbols '/->' separates item name from method to be executed
    //
-   // Optionally one could specify icon name which will appear in
-   // the web browser together with the command item.
-   // If icon name starts with 'button;' string, than shortcut button
-   // will appear on the top of the browser. For instance:
-   //    serv->RegisterCommand("Invoke","InvokeFunction()","button;/rootsys/icons/ed_execute.png");
-   // Here one see example of images usage from $ROOTSYS/icons directory.
+   // Once command is registered, one could specify icon which will appear in the browser:
+   //     serv->SetIcon("/ResetHPX", "/rootsys/icons/ed_execute.png");
+   //
+   // One also can set extra property '_fastcmd', that command appear as
+   // tool button on the top of the browser tree:
+   //     serv->SetItemField("/ResetHPX", "_fastcmd", "true");
 
-   TFolder *cmd = fSniffer->CreateItem(cmdname, Form("command %s", method));
-   fSniffer->SetItemField(cmd, "_kind", "Command");
+   CreateItem(cmdname, Form("command %s", method));
+   SetItemField(cmdname, "_kind", "Command");
    if (icon != 0) {
       if (strncmp(icon, "button;", 7) == 0) {
-         fSniffer->SetItemField(cmd, "_fastcmd", "true");
+         SetItemField(cmdname, "_fastcmd", "true");
          icon += 7;
       }
-      if (*icon != 0) fSniffer->SetItemField(cmd, "_icon", icon);
+      if (*icon != 0) SetItemField(cmdname, "_icon", icon);
    }
-   fSniffer->SetItemField(cmd, "method", method);
+   SetItemField(cmdname, "method", method);
 
    return kTRUE;
 }
@@ -837,11 +886,38 @@ Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, con
 //______________________________________________________________________________
 Bool_t THttpServer::Hide(const char *foldername, Bool_t hide)
 {
-   // hides folder from web gui
+   // hides folder or element from web gui
 
-   TFolder *f = fSniffer->GetSubFolder(foldername);
+   return SetItemField(foldername, "_hidden", hide ? "true" : (const char *) 0);
+}
 
-   return fSniffer->SetItemField(f, "_hidden", hide ? "true" : (const char *) 0);
+//______________________________________________________________________________
+Bool_t THttpServer::SetIcon(const char *fullname, const char *iconname)
+{
+   // set name of icon, used in browser together with the item
+   //
+   // One could use images from $ROOTSYS directory like:
+   //    serv->SetIcon("/ResetHPX","/rootsys/icons/ed_execute.png");
+
+   return SetItemField(fullname, "_icon", iconname);
+}
+
+//______________________________________________________________________________
+Bool_t THttpServer::CreateItem(const char *fullname, const char *title)
+{
+   return fSniffer->CreateItem(fullname, title);
+}
+
+//______________________________________________________________________________
+Bool_t THttpServer::SetItemField(const char *fullname, const char *name, const char *value)
+{
+   return fSniffer->SetItemField(fullname, name, value);
+}
+
+//______________________________________________________________________________
+const char *THttpServer::GetItemField(const char *fullname, const char *name)
+{
+   return fSniffer->GetItemField(fullname, name);
 }
 
 //______________________________________________________________________________
