@@ -3067,7 +3067,6 @@
 
       /* decode string 'opt' and fill the option structure */
       var hdim = this.Dimension();
-      var nch = opt.length;
       var option = {
          Axis: 0, Bar: 0, Curve: 0, Error: 0, Hist: 0, Line: 0,
          Mark: 0, Fill: 0, Same: 0, Scat: 0, Func: 0, Star: 0,
@@ -3082,7 +3081,6 @@
       var chopt = opt.toUpperCase();
       chopt = JSROOT.Painter.clearCuts(chopt);
       if (hdim > 1) option.Scat = 1;
-      if (!nch) option.Hist = 1;
       if (this.IsTProfile()) option.Error = 2;
       if ('fFunctions' in this.histo) option.Func = 1;
 
@@ -3103,6 +3101,12 @@
          option.Logy = 1;
          chopt = chopt.replace('LOGY', '');
       }
+
+      chopt = chopt.trim();
+      var nch = chopt.length;
+
+      if (!nch) option.Hist = 1;
+
 
       var l = chopt.indexOf('SPEC');
       if (l != -1) {
@@ -7240,7 +7244,7 @@
    JSROOT.HierarchyPainter.prototype.FindFastCommands = function() {
       var arr = [];
 
-      this.ForEach(function(item) { if ('_fastcmd' in item) arr.push(item); });
+      this.ForEach(function(item) { if (('_fastcmd' in item) && (item._kind == 'Command')) arr.push(item); });
 
       return arr.length > 0 ? arr : null;
    }
@@ -7884,25 +7888,27 @@
       // first check that file with such URL already opened
 
       var isfileopened = false;
-      this.ForEachRootFile(function(item) { if (item._file.fFullURL==filepath) isfileopened = true; });
+      this.ForEachRootFile(function(item) { if (item._fullurl==filepath) isfileopened = true; });
       if (isfileopened) return JSROOT.CallBack(call_back);
 
       var pthis = this;
 
-      var f = new JSROOT.TFile(filepath, function(file) {
-         if (file == null) return JSROOT.CallBack(call_back);
-         var h1 = pthis.FileHierarchy(file);
-         h1._isopen = true;
-         if (pthis.h == null) pthis.h = h1; else
-         if (pthis.h._kind == 'JSROOT.TopFolder') pthis.h._childs.push(h1); else {
-            var h0 = pthis.h;
-            var topname = (h0._kind == "ROOT.TFile") ? "Files" : "Items";
-            pthis.h = { _name: topname, _kind: 'JSROOT.TopFolder', _childs : [h0, h1] };
-         }
+      JSROOT.AssertPrerequisites('io', function() {
+         new JSROOT.TFile(filepath, function(file) {
+            if (file == null) return JSROOT.CallBack(call_back);
+            var h1 = pthis.FileHierarchy(file);
+            h1._isopen = true;
+            if (pthis.h == null) pthis.h = h1; else
+            if (pthis.h._kind == 'JSROOT.TopFolder') pthis.h._childs.push(h1); else {
+               var h0 = pthis.h;
+               var topname = (h0._kind == "ROOT.TFile") ? "Files" : "Items";
+               pthis.h = { _name: topname, _kind: 'JSROOT.TopFolder', _childs : [h0, h1] };
+            }
 
-         pthis.RefreshHtml();
+            pthis.RefreshHtml();
 
-         JSROOT.CallBack(call_back);
+            JSROOT.CallBack(call_back);
+         });
       });
    }
 
@@ -7928,8 +7934,9 @@
    JSROOT.HierarchyPainter.prototype.CompleteOnline = function(ready_callback) {
       // method called at the moment when new description (h.json) is loaded
       // and before any graphical element is created
-      // one can load extra scripts here or assign draw functions
-      JSROOT.CallBack(ready_callback);
+      // one can load extra scripts here
+
+      return JSROOT.CallBack(ready_callback);
    }
 
    JSROOT.HierarchyPainter.prototype.GetOnlineItem = function(item, callback) {
@@ -7985,7 +7992,7 @@
             if (painter.h != null)
                painter.RefreshHtml(true);
 
-            JSROOT.CallBack(user_callback,painter);
+            JSROOT.CallBack(user_callback, painter);
          });
       }
 
@@ -8070,8 +8077,9 @@
       this.RefreshHtml();
    }
 
-   JSROOT.HierarchyPainter.prototype.MonitoringInterval = function() {
+   JSROOT.HierarchyPainter.prototype.MonitoringInterval = function(val) {
       // returns interval
+      if (val!=null) this['_monitoring_interval'] = val;
       var monitor = this['_monitoring_interval'];
       if (monitor == null) {
          monitor = JSROOT.GetUrlOption("monitoring");
