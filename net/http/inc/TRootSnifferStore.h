@@ -13,13 +13,14 @@
 #endif
 
 class TDataMember;
+class TFolder;
 
 class TRootSnifferStore : public TObject {
 protected:
-   void *fResPtr;           //! pointer on found item
-   TClass *fResClass;       //! class of found item
-   TDataMember *fResMember; //! datamember pointer of found item
-   Int_t fResNumChilds;     //! count of found childs, -1 by default
+   void         *fResPtr;       //! pointer on found item
+   TClass       *fResClass;     //! class of found item
+   TDataMember  *fResMember;    //! datamember pointer of found item
+   Int_t         fResNumChilds; //! count of found childs, -1 by default
 public:
    TRootSnifferStore();
    virtual ~TRootSnifferStore();

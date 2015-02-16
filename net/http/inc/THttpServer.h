@@ -258,9 +258,10 @@ protected:
 
    Long_t       fMainThrdId;  //! id of the main ROOT process
 
-   TString      fJSROOTSYS;   //! location of JSROOT files
+   TString      fJSROOTSYS;   //! location of local JSROOT files
    TString      fROOTSYS;     //! location of ROOT files
    TString      fTopName;     //! name of top folder, default - "ROOT"
+   TString      fJSROOT;      //! location of external JSROOT files
 
    TString      fDefaultPage; //! file name for default page name
    TString      fDefaultPageCont; //! content of the file content
@@ -284,6 +285,8 @@ public:
 
    TRootSniffer *GetSniffer() const
    {
+      // returns pointer on objects sniffer
+
       return fSniffer;
    }
 
@@ -295,13 +298,21 @@ public:
 
    void SetTopName(const char *top)
    {
+      // set name of top item in objects hierarchy
       fTopName = top;
    }
 
    const char *GetTopName() const
    {
+      // returns name of top item in objects hierarchy
       return fTopName.Data();
    }
+
+   void SetJSROOT(const char* location);
+
+   void SetDefaultPage(const char* filename);
+
+   void SetDrawPage(const char* filename);
 
    void SetTimer(Long_t milliSec = 100, Bool_t mode = kTRUE);
 
@@ -320,11 +331,17 @@ public:
    /** Unregister object */
    Bool_t Unregister(TObject *obj);
 
-   /** Register command, which can be activated via web interface */
    Bool_t RegisterCommand(const char *cmdname, const char *method, const char *icon = 0);
 
-   /** Hide folder or element in objects hierarchy in web interface */
-   Bool_t Hide(const char *foldername, Bool_t hide = kTRUE);
+   Bool_t Hide(const char *fullname, Bool_t hide = kTRUE);
+
+   Bool_t SetIcon(const char *fullname, const char *iconname);
+
+   Bool_t CreateItem(const char *fullname, const char *title);
+
+   Bool_t SetItemField(const char *fullname, const char *name, const char *value);
+
+   const char *GetItemField(const char *fullname, const char *name);
 
    /** Guess mime type base on file extension */
    static const char *GetMimeType(const char *path);
