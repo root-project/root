@@ -3187,6 +3187,9 @@ void TF1::Streamer(TBuffer &b)
             assert(fold.fSave);
             fSave = std::vector<Double_t>(fold.fSave, fold.fSave+fold.fNsave);
          }
+         // set the bits
+         for (int ibit = 0; ibit < 24; ++ibit) 
+            if (fold.TestBit(BIT(ibit) ) ) SetBit(BIT(ibit)); 
 
          // copy the graph classes
       //          TAttLine::Streamer(b);
