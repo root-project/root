@@ -210,7 +210,31 @@ function BuildSimpleGUI() {
          hpainter.displayAll(itemsarr, optionsarr, function() { hpainter.RefreshHtml(); });
    }
 
-   if (h0!=null) hpainter.OpenOnline(h0, OpenAllFiles);
+   function AfterOnlineOpened() {
+      // check if server enables monitoring
+      if ('_monitoring' in hpainter.h) {
+         var v = parseInt(hpainter.h._monitoring);
+         if ((v == NaN) || (hpainter.h._monitoring == 'false')) {
+            hpainter.EnableMonitoring(false);
+         } else {
+            hpainter.EnableMonitoring(true);
+            hpainter.MonitoringInterval(v);
+         }
+         if (!nobrowser) $("#monitoring").prop('checked', hpainter.IsMonitoring());
+      }
+
+      if ('_loadfile' in hpainter.h)
+         filesarr.push(hpainter.h._loadfile);
+
+      if ('_drawitem' in hpainter.h) {
+         itemsarr.push(hpainter.h._drawitem);
+         optionsarr.push('_drawopt' in hpainter.h ? hpainter.h._drawopt : "");
+      }
+
+      OpenAllFiles();
+   }
+
+   if (h0!=null) hpainter.OpenOnline(h0, AfterOnlineOpened);
             else OpenAllFiles();
 
    setInterval(function() { if (hpainter.IsMonitoring()) hpainter.updateAll(); }, hpainter.MonitoringInterval());
