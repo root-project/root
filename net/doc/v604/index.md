@@ -17,3 +17,13 @@ Correctly set 'Cache-Control' headers when replying to http requests.
 Better support of STL containers when converting objects into json with TBufferJSON class.
 
 
+## JavaScript ROOT
+
+- Several files can now be loaded simultaneously
+- Use d3.time.scale to display time scales
+- Implemented drag and drop to superimpose histograms or graphs
+- Allow selection of drawing option via context menu
+- Better support of touch devices
+- Provide simple layout, making it default
+
+
