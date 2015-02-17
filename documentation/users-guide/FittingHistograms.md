@@ -30,50 +30,50 @@ parameters:
 -   `*option:` The second parameter is the fitting option. Here is the
     list of fitting options:
 
--   "`W`" Set all weights to 1 for non empty bins; ignore error bars
+	-   "`W`" Set all weights to 1 for non empty bins; ignore error bars
 
--   "`WW`" Set all weights to 1 including empty bins; ignore error
+	-   "`WW`" Set all weights to 1 including empty bins; ignore error
     bars
 
--   "`I`" Use integral of function in bin instead of value at bin
+	-   "`I`" Use integral of function in bin instead of value at bin
     center
 
--   "`L`" Use log likelihood method (default is chi-square method). To be used when
+	-   "`L`" Use log likelihood method (default is chi-square method). To be used when
 the histogram represents counts
 
--  "`WL`" Weighted log likelihood method. To be used when the histogram has been filled with
+	-  "`WL`" Weighted log likelihood method. To be used when the histogram has been filled with
    weights different than 1. 
 
--   "`Q`" Quiet mode (minimum printing)
+	-   "`Q`" Quiet mode (minimum printing)
 
--   "`V`" Verbose mode (default is between Q and V)
+	-   "`V`" Verbose mode (default is between Q and V)
 
--   "`S`"  The result of the fit is returned in the `TFitResultPtr`.
+	-   "`S`"  The result of the fit is returned in the `TFitResultPtr`.
 
--   "`E`" Perform better errors estimation using the Minos technique
+	-   "`E`" Perform better errors estimation using the Minos technique
 
--   "`M`" Improve fit results, by using the *IMPROVE* algorithm of TMinuit. 
+	-   "`M`" Improve fit results, by using the *IMPROVE* algorithm of TMinuit. 
 
--   "`R`" Use the range specified in the function range
+	-   "`R`" Use the range specified in the function range
 
--   "`N`" Do not store the graphics function, do not draw
+	-   "`N`" Do not store the graphics function, do not draw
 
--   "`0`" Do not plot the result of the fit. By default the fitted
+	-   "`0`" Do not plot the result of the fit. By default the fitted
     function is drawn unless the option "`N`" above is specified.
 
--   "`+`" Add this new fitted function to the list of fitted functions
+	-   "`+`" Add this new fitted function to the list of fitted functions
     (by default, the previous function is deleted and only the last
     one is kept)
 
--   "`B`"Use this option when you want to fix one or more parameters
+	-   "`B`"Use this option when you want to fix one or more parameters
 and the fitting function is a predefined one, like `polN`, `expo`, `landau`, `gaus`.
 Note that in case of pre-defined functions some default initial values and limits are set. 
 
 
--   "`C`"In case of linear fitting, don't calculate the chisquare
+	-   "`C`"In case of linear fitting, don't calculate the chisquare
     (saves time).
 
--   "`F`"If fitting a linear function (e.g. `polN`), switch to use the default minimizer (e.g. `Minuit`). By default,
+	-   "`F`"If fitting a linear function (e.g. `polN`), switch to use the default minimizer (e.g. `Minuit`). By default,
     `polN` functions are fitted by the linear fitter.
 
 -   `*goption: `The third parameter is the graphics option that is the
@@ -89,16 +89,16 @@ is drawn in the current pad.
 ### The TGraph::Fit Method
 
 The signature for fitting a TGraph is exactly the same as for the `TH1`. Only some options apply only for fitting histograms,
-these are the options `L`, `WL` and `I`.
-These options apply instead only for `TGraph::Fit`:
+these are the options "`L`", "`WL`" and "`I`".
+These options apply instead only for `TGraph::Fit`, the rest of options (appart from "`L`", "`WL`" and "`I`" are the same)
 
 * `TGraph` specific *options*
 
--  "`EX0`"  When fitting a `TGraphErrors` or a `TgraphAsymErrors` the errors on the coordinates are not used in the fit
+	-  "`EX0`"  When fitting a `TGraphErrors` or a `TgraphAsymErrors` the errors on the coordinates are not used in the fit
 
--  "`ROB`"  in case of linear fitting use the Robust fitting. Compute  the LTS regression coefficients (robust (resistant) regression),
+	-  "`ROB`"  in case of linear fitting use the Robust fitting. Compute  the LTS regression coefficients (robust (resistant) regression),
     using the default fraction of good points. 
--  "`ROB=0.x`"  as above, but compute the LTS regression coefficients, using 0.x as a fraction of good points.
+	-  "`ROB=0.x`"  as above, but compute the LTS regression coefficients, using 0.x as a fraction of good points.
 
 ## The `TF1` function class 
 
@@ -1030,11 +1030,11 @@ choose. Others are based on a single algorithm (e.g. *Fumili*)
        No specific algorithm exists
 
   - **`GSLMultiMin`** (library *libMathMore*). Minimizer based on the Multidimensional Minimization routines of the Gnu Scientific Library (GSL). The list of available algorithms is
-   - *`BFGS2`* (default) : second version of the vector Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm; 
-   - *`BFGS`*  : old version of the vector Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm; 
-   - *`ConjugateFR`* : Fletcher-Reeves conjugate gradient algorithm;
-   - *`ConjugatePR`* : Polak-Ribiere conjugate gradient algorithm;
-   - *`SteepestDescent`*:  steepest descent algorithm; 
+	- *`BFGS2`* (default) : second version of the vector Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm; 
+	- *`BFGS`*  : old version of the vector Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm; 
+	- *`ConjugateFR`* : Fletcher-Reeves conjugate gradient algorithm;
+	- *`ConjugatePR`* : Polak-Ribiere conjugate gradient algorithm;
+	- *`SteepestDescent`*:  steepest descent algorithm; 
 
   - **`GSLMultiFit`** (library *libMathMore*). Minimizer based on the Non-Linear Least-Square routines of GSL. This minimizer can be used only for least-square fits. 
 
@@ -1043,18 +1043,19 @@ choose. Others are based on a single algorithm (e.g. *Fumili*)
   - **`Genetic`** (library *libGenetic*). Genetic minimizer based on an algorithm implemented in the *TMVA* package.
 
 Each minimizer can be configured using the `ROOT::Math::MinimizerOptions` class. The list of possible option that can be set are:
-* Minimizer type (`MinimizerOptions::SetMinimizerType(const char *)`) .
-* Minimizer algorithm (`MinimizerOptions::SetMinimizerAlgorithm(const char *)`).
-* Print Level (`MinimizerOptions::SetPrintLevel(int )`)  to set the verbose printing level (default is 0).  
-* Tolerance (`MinimizerOptions::SetTolerance(double )`)  tolerance used to control the iterations.
-* Maximum number of function calls (`MinimizerOptions::SetMaxFunctionCalls(int )`).
-* Maximum number of iterations (`MinimizerOptions::SetMaxIterations(int )`). Note that this is not used by *Minuit*
-* FCN Upper value for Error Definition (`MinimizerOptions::SetMaxIterations(int )`). Value in the minimization function used to compute the parameter errors.
-  The default is to get the uncertainties at the 68% CL is a value of 1 for a chi-squared function minimization  and 0.5 for a log-likelihood function.
-  * Strategy (`MinimizerOptions::SetStrategy(int )`), minimization strategy used. For each minimization strategy *Minuit* uses different configuration parameters
-  (e.g. different requirements in computing derivatives, computing full Hessian (strategy = 2) or an approximate version.  The default is a value of 1. In this case the full Hessian matrix
-  is computed only after the minimization. 
-* Precision (`MinimizerOptions::SetTolerance(double )`).  Precision value in the evaluation of the minimization function. Default is numerical double precision.  
+
+*   *Minimizer type* (`MinimizerOptions::SetMinimizerType(const char *)`) .
+*   *Minimizer algorithm* (`MinimizerOptions::SetMinimizerAlgorithm(const char *)`).
+*   *Print Level* (`MinimizerOptions::SetPrintLevel(int )`)  to set the verbose printing level (default is 0).  
+*   *Tolerance* (`MinimizerOptions::SetTolerance(double )`)  tolerance used to control the iterations.
+*   *Maximum number of function calls* (`MinimizerOptions::SetMaxFunctionCalls(int )`).
+*   *Maximum number of iterations* (`MinimizerOptions::SetMaxIterations(int )`). Note that this is not used by *Minuit*
+*   *FCN Upper value for Error Definition* (`MinimizerOptions::SetMaxIterations(int )`). Value in the minimization function used to compute the parameter errors.
+    The default is to get the uncertainties at the 68% CL is a value of 1 for a chi-squared function minimization  and 0.5 for a log-likelihood function.
+*   *Strategy* (`MinimizerOptions::SetStrategy(int )`), minimization strategy used. For each minimization strategy *Minuit* uses different configuration parameters
+    (e.g. different requirements in computing derivatives, computing full Hessian (strategy = 2) or an approximate version.  The default is a value of 1. In this case the full Hessian matrix
+    is computed only after the minimization. 
+*  *Precision* (`MinimizerOptions::SetTolerance(double )`).  Precision value in the evaluation of the minimization function. Default is numerical double precision.  
 
 Note that not all the options are implemented by all the minimizers.
 For example in *Minuit* is possible to set the maximum number of function calls, but not the maximum number of iterations.  The Strategy and the Precision options apply instead only for *Minuit*  (and
