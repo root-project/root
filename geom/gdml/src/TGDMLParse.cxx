@@ -104,6 +104,9 @@ When most solids or volumes are added to the geometry they
 #include "TGeoVolume.h"
 #include "TROOT.h"
 #include "TMath.h"
+#include "TMap.h"
+#include "TObjString.h"
+#include "TGeoExtension.h"
 #include "TGeoMaterial.h"
 #include "TGeoBoolNode.h"
 #include "TGeoMedium.h"
@@ -248,10 +251,10 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    else if ((strcmp(name, matestr)) == 0 && gdml->HasAttr(node, "Z")) {
      childtmp = gdml->GetChild(node);
 //     if ((strcmp(gdml->GetNodeName(childtmp), "fraction") == 0) || (strcmp(gdml->GetNodeName(childtmp), "D") == 0)){
-     Bool_t frac = kFALSE;
+     // Bool_t frac = kFALSE;
      Bool_t atom = kFALSE;
      while(childtmp) {
-       frac = strcmp(gdml->GetNodeName(childtmp),"fraction")==0;
+       // frac = strcmp(gdml->GetNodeName(childtmp),"fraction")==0;
        atom = strcmp(gdml->GetNodeName(childtmp),"atom")==0;
        gdml->ShiftToNext(childtmp);
      }
@@ -1136,8 +1139,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
    const Double_t* parentrot = 0;
    int yesrefl = 0;
    TString reftemp = "";
-   Bool_t auxInit=kTRUE;
-   TMap *auxmap;
+   TMap *auxmap = 0;
 
    while (child != 0) {
       if ((strcmp(gdml->GetNodeName(child), "solidref")) == 0) {
@@ -1615,9 +1617,8 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
 	 } //End of replicavol
       else if (strcmp(gdml->GetNodeName(child), "auxiliary") == 0) {
-         if(auxInit) {
+         if(!auxmap) {
             printf("Auxiliary values for volume %s\n",vol->GetName());
-            auxInit = kFALSE;
             auxmap = new TMap();
             vol->SetUserExtension(new TGeoRCExtension(auxmap));
          }
