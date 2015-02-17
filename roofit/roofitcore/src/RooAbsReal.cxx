@@ -4078,14 +4078,14 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
   case 1: {
     RooRealVar* x = (RooRealVar*)obs.at(0) ;
     f = functor(obs,pars,nset) ;
-    tf = new TF1(GetName(),f,x->getMin(),x->getMax(),pars.getSize(),1,"RooFunctor") ;
+    tf = new TF1(GetName(),f,x->getMin(),x->getMax(),pars.getSize()) ;
     break ;
   }
   case 2: {
     RooRealVar* x = (RooRealVar*)obs.at(0) ;
     RooRealVar* y = (RooRealVar*)obs.at(1) ;
     f = functor(obs,pars,nset) ;
-    tf = new TF2(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),pars.getSize(),2,"RooFunctor") ;
+    tf = new TF2(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),pars.getSize()) ;
     break ;
   }
   case 3: {
@@ -4093,7 +4093,7 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
     RooRealVar* y = (RooRealVar*)obs.at(1) ;
     RooRealVar* z = (RooRealVar*)obs.at(2) ;
     f = functor(obs,pars,nset) ;
-    tf = new TF3(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),z->getMin(),z->getMax(),pars.getSize(),3,"RooFunctor") ;
+    tf = new TF3(GetName(),f,x->getMin(),x->getMax(),y->getMin(),y->getMax(),z->getMin(),z->getMax(),pars.getSize()) ;
     break ;
   }
   default:

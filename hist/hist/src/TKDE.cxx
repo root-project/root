@@ -1000,7 +1000,7 @@ TF1* TKDE::GetPDFUpperConfidenceInterval(Double_t confidenceLevel, UInt_t npx, D
    TString name;
    name.Form("KDE_UpperCL%f5.3_%s",confidenceLevel,GetName());
    if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
-   TF1 * upperPDF = new TF1(name, this, &TKDE::UpperConfidenceInterval, xMin, xMax, 1,1, "TKDE", "UpperConfidenceInterval");
+   TF1 * upperPDF = new TF1(name, this, &TKDE::UpperConfidenceInterval, xMin, xMax, 1);
    upperPDF->SetParameter(0, confidenceLevel);
    if (npx > 0) upperPDF->SetNpx(npx);
    TF1 * f =  (TF1*)upperPDF->Clone();

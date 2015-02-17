@@ -54,21 +54,39 @@ public:
    // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
    // MemFn.
    template <class PtrObj, typename MemFn>
-   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2, const char * c1 = 0, const char * c2 = 0) : 
-      TF1(name,p,memFn,xmin,xmax,npar,ndim,c1,c2),
+   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2) :
+      TF1(name,p,memFn,xmin,xmax,npar,ndim),
 	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
       fNpx = 30; 
-   } 
+   }
+   /// backward compatible ctor 
+   template <class PtrObj, typename MemFn>
+   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * , const char *) :
+      TF1(name,p,memFn,xmin,xmax,npar,2),
+	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
+   {
+      fNpx = 30; 
+   }
+   
    // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
    // and returning a double.    
    template <typename Func> 
-   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,Int_t ndim = 2, const char * tmp = 0 ) : 
-      TF1(name,f,xmin,xmax,npar,ndim,tmp),
+   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,Int_t ndim = 2) : 
+      TF1(name,f,xmin,xmax,npar,ndim),
 	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
       fNpx = 30; 
-   } 
+   }
+   /// backward compatible ctor 
+   template <typename Func> 
+   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,const char *) : 
+      TF1(name,f,xmin,xmax,npar,2),
+	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
+   {
+      fNpx = 30; 
+   }
+
 
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);

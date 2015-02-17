@@ -54,16 +54,30 @@ public:
    // MemFn.
    template <class PtrObj, typename MemFn>
    TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, 
-       Int_t ndim = 3, const char * c1 = 0, const char * c2 = 0) :
-      TF2(name,p,memFn,xmin,xmax,ymin,ymax,npar,ndim,c1,c2),
+       Int_t ndim = 3) :
+      TF2(name,p,memFn,xmin,xmax,ymin,ymax,npar,ndim),
+      fZmin(zmin), fZmax(zmax), fNpz(30) 
+   {   }
+   /// Backward compatible ctor 
+   template <class PtrObj, typename MemFn>
+   TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, 
+       const char * , const char *  ) :
+      TF2(name,p,memFn,xmin,xmax,ymin,ymax,npar,3),
       fZmin(zmin), fZmax(zmax), fNpz(30) 
    {   }
    // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
    // and returning a double.
    template <typename Func>
    TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, 
-       Int_t ndim = 3, const char * c1 = 0 ) :
-      TF2(name,f,xmin,xmax,ymin,ymax,npar,ndim,c1),
+       Int_t ndim = 3 ) :
+      TF2(name,f,xmin,xmax,ymin,ymax,npar,ndim),
+      fZmin(zmin), fZmax(zmax), fNpz(30)
+   { }
+   /// backward compatible ctor
+   template <typename Func>
+   TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, 
+       const char *  ) :
+      TF2(name,f,xmin,xmax,ymin,ymax,npar,3),
       fZmin(zmin), fZmax(zmax), fNpz(30)
    { }
 

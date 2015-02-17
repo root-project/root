@@ -205,7 +205,7 @@ public:
    // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <typename Func>
-   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1, const char * = 0  ) :
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1 ) :
       TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
       fXmin(xmin), fXmax(xmax), 
       fNpar(npar), fNdim(ndim),
@@ -223,6 +223,13 @@ public:
    {
       DoInitialize(); 
    }
+   // backward compatible interface
+   template <typename Func>
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *   ) {
+      TF1 tmp(name,f,xmin,xmax,npar,1);
+      *this = tmp; 
+   }
+   
 
    // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
    // MemFn.
@@ -233,7 +240,7 @@ public:
    // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <class PtrObj, typename MemFn>
-   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1, const char * = 0, const char * = 0) :
+   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1) :
       TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
       fXmin(xmin), fXmax(xmax), 
       fNpar(npar), fNdim(ndim),
@@ -250,6 +257,12 @@ public:
       fParams(new TF1Parameters(npar) )
    {
       DoInitialize(); 
+   }
+   // backward compatible interface
+   template <class PtrObj, typename MemFn>
+   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,const char * , const char * ) {
+      TF1 tmp(name,p, memFn,xmin,xmax,npar,1);
+      *this = tmp; 
    }
 
    TF1(const TF1 &f1);
