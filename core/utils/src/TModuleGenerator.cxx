@@ -50,11 +50,6 @@ TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
    fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
 {
 
-   // Clean the dictionary name from characters which are not accepted in C++
-   std::string tmpName = fDictionaryName;
-   fDictionaryName.clear();
-   ROOT::TMetaUtils::GetCppName(fDictionaryName, tmpName.c_str());
-
    // Need to resolve _where_ to create the pcm
    // We default in the lib subdirectory
    // otherwise we put it in the same directory as the dictionary file (for ACLiC)
@@ -66,6 +61,12 @@ TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
 
    fModuleFileName = fModuleDirName
                      + ROOT::TMetaUtils::GetModuleFileName(fDictionaryName.c_str());
+
+   // Clean the dictionary name from characters which are not accepted in C++
+   std::string tmpName = fDictionaryName;
+   fDictionaryName.clear();
+   ROOT::TMetaUtils::GetCppName(fDictionaryName, tmpName.c_str());
+
    // .pcm -> .pch
    if (IsPCH()) fModuleFileName[fModuleFileName.length() - 1] = 'h';
 
