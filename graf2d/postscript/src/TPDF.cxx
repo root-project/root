@@ -2367,8 +2367,29 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
 }
 
 
+void TPDF::Text(Double_t, Double_t, const wchar_t *)
+//______________________________________________________________________________
+{
+   // Write a string of characters
+   //
+   // This routine writes the string chars into a PostScript file
+   // at position xx,yy in world coordinates.
+}
+
+
 //______________________________________________________________________________
 void TPDF::TextNDC(Double_t u, Double_t v, const char *chars)
+{
+   // Write a string of characters in NDC
+
+   Double_t x = gPad->GetX1() + u*(gPad->GetX2() - gPad->GetX1());
+   Double_t y = gPad->GetY1() + v*(gPad->GetY2() - gPad->GetY1());
+   Text(x, y, chars);
+}
+
+
+//______________________________________________________________________________
+void TPDF::TextNDC(Double_t u, Double_t v, const wchar_t *chars)
 {
    // Write a string of characters in NDC
 
