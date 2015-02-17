@@ -255,13 +255,8 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
        atom = strcmp(gdml->GetNodeName(childtmp),"atom")==0;
        gdml->ShiftToNext(childtmp);
      }
-     if (frac) {
-       int z = 0;
-       node = MatProcess(gdml, node, attr, z);}
-//     else if ((strcmp(gdml->GetNodeName(childtmp), "atom") == 0) || (strcmp(gdml->GetNodeName(childtmp), "D") == 0)){
-     else if (atom) {
-       int z = 1;
-       node = MatProcess(gdml, node, attr, z);}
+     int z = (atom) ? 1 : 0;
+     node = MatProcess(gdml, node, attr, z);
    }
    else if ((strcmp(name, matestr)) == 0 && !gdml->HasAttr(node, "Z")) {
      int z = 0;
@@ -1141,6 +1136,8 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
    const Double_t* parentrot = 0;
    int yesrefl = 0;
    TString reftemp = "";
+   Bool_t auxInit=kTRUE;
+   TMap *auxmap;
 
    while (child != 0) {
       if ((strcmp(gdml->GetNodeName(child), "solidref")) == 0) {
@@ -1617,8 +1614,28 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          fvolmap[NameShort(reftemp)] = divvol;
 
 	 } //End of replicavol
+      else if (strcmp(gdml->GetNodeName(child), "auxiliary") == 0) {
+         if(auxInit) {
+            printf("Auxiliary values for volume %s\n",vol->GetName());
+            auxInit = kFALSE;
+            auxmap = new TMap();
+            vol->SetUserExtension(new TGeoRCExtension(auxmap));
+         }
+         attr = gdml->GetFirstAttr(child);
+         while(attr) {
+            if(strcmp(gdml->GetAttrName(attr),"auxtype")) Fatal("VolProcess","Expecting auxtype, found %s",
+                                          gdml->GetAttrName(attr));
+            const char *auxType = gdml->GetAttrValue(attr);
+            attr = gdml->GetNextAttr(attr);
+            if(strcmp(gdml->GetAttrName(attr),"auxvalue")) Fatal("VolProcess","Expecting auxvalue, found %s",
+                                          gdml->GetAttrName(attr));
+            const char *auxValue = gdml->GetAttrValue(attr);
 
-
+            printf("%s = %s\n",auxType, auxValue);
+            auxmap->Add(new TObjString(auxType),new TObjString(auxValue));
+            attr = gdml->GetNextAttr(attr);
+         }
+      }
 
       child = gdml->GetNext(child);
    }
