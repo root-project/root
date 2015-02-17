@@ -37,7 +37,8 @@ namespace {
 
    class GILControl {
    public:
-      GILControl( PyROOT::TCallContext* ctxt ) : fRelease( ReleasesGIL( ctxt ) ) {
+      GILControl( PyROOT::TCallContext* ctxt ) :
+         fRelease( ReleasesGIL( ctxt ) ), fSave( nullptr ) {
 #ifdef WITH_THREAD
          if ( fRelease ) fSave = PyEval_SaveThread();
 #endif
