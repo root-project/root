@@ -393,14 +393,6 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
       // this is how normal object streaming works
       ScanObjectMemebers(rec, bclass, ptr, cloffset + baseclass->GetDelta());
       if (rec.Done()) break;
-
-//    this code was used when each base class creates its own sub level
-
-//      TRootSnifferScanRec chld;
-//      if (chld.GoInside(rec, baseclass)) {
-//         ScanObjectMemebers(chld, bclass, ptr, cloffset + baseclass->GetDelta());
-//         if (chld.Done()) break;
-//      }
    }
 
    // than expand data members
@@ -409,13 +401,14 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
       TDataMember *member = dynamic_cast<TDataMember *>(obj);
       // exclude enum or static variables
       if ((member == 0) || (member->Property() & (kIsStatic | kIsEnum | kIsUnion))) continue;
-
       char *member_ptr = ptr + cloffset + member->GetOffset();
+
       if (member->IsaPointer()) member_ptr = *((char **) member_ptr);
 
       TRootSnifferScanRec chld;
 
       if (chld.GoInside(rec, member)) {
+
          TClass *mcl = (member->IsBasic() || member->IsSTLContainer()) ? 0 :
                        gROOT->GetClass(member->GetTypeName());
 
@@ -512,16 +505,18 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
       if (lst != 0) {
          TIter iter(lst);
          TObject *next = iter();
-
-         // special case - in the beginning one could have items for parent folder
-         while (IsItemField(next)) {
-            if ((next->GetName() != 0) && ((*(next->GetName()) == '_') || master.ScanOnlyFields()))
-               master.SetField(next->GetName(), next->GetTitle());
-
-            next = iter();
-         }
+         Bool_t isany = kFALSE;
 
          while (next!=0) {
+            if (IsItemField(next)) {
+               // special case - in the beginning one could have items for master folder
+               if (!isany && (next->GetName() != 0) && ((*(next->GetName()) == '_') || master.ScanOnlyFields()))
+                  master.SetField(next->GetName(), next->GetTitle());
+               next = iter();
+               continue;
+            }
+
+            isany = kTRUE;
             TObject* obj = next;
 
             TRootSnifferScanRec chld;
