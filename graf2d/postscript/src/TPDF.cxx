@@ -14,7 +14,7 @@
 /* Begin_Html
 <center><h2>TPDF: Graphics interface to PDF</h2></center>
 Like PostScript, PDF is a vector graphics output format allowing a very high
-graphics output quality. The functionnalities provided by this class are very
+graphics output quality. The functionalities provided by this class are very
 similar to those provided by <tt>TPostScript</tt>.
 <p>
 Compare to PostScript output, the PDF files are usually smaller because some
@@ -2338,7 +2338,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    // Restore text attributes.
    saveAttText.TAttText::Modify();
 
-   // Ouput the text. Escape some characters if needed
+   // Output the text. Escape some characters if needed
    if (kerning) PrintStr(" [");
    else         PrintStr(" (");
 

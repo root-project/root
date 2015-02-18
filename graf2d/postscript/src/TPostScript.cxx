@@ -1646,7 +1646,7 @@ void TPostScript::FontEmbed(void)
 //______________________________________________________________________________
 void TPostScript::FontEncode()
 {
-   // Font Reencoding
+   // Font Re-encoding
 
    PrintStr("/reEncode ");
    PrintStr("{exch findfont");
@@ -1816,7 +1816,7 @@ void TPostScript::Initialize()
 
    if( fMode == 3)PrintStr("80 dict begin@");
 
-   // Initialization of PostScript procedures
+   // Initialisation of PostScript procedures
    PrintStr("/s {stroke} def /l {lineto} def /m {moveto} def /t {translate} def@");
    PrintStr("/r {rotate} def /rl {roll}  def /R {repeat} def@");
    PrintStr("/d {rlineto} def /rm {rmoveto} def /gr {grestore} def /f {eofill} def@");
