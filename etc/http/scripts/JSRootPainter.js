@@ -7939,20 +7939,25 @@
       return JSROOT.CallBack(ready_callback);
    }
 
-   JSROOT.HierarchyPainter.prototype.GetOnlineItem = function(item, callback) {
+   JSROOT.HierarchyPainter.prototype.GetOnlineItem = function(item, itemname, callback) {
       // method used to request object from the http server
 
-      var top = item;
-      while ((top!=null) && (!('_online' in top))) top = top._parent;
+      var url = itemname, h_get = false;
 
-      var url = this.itemFullName(item, top);
+      if (item != null) {
+         var top = item;
+         while ((top!=null) && (!('_online' in top))) top = top._parent;
+         url = this.itemFullName(item, top);
+         h_get = ('_doing_expand' in item);
+      }
+
       if (url.length > 0) url += "/";
-      var h_get = ('_more' in item) || ('_doing_expand' in item);
       url += h_get ? 'h.json?compact=3' : 'root.json.gz?compact=3';
 
       var itemreq = JSROOT.NewHttpRequest(url, 'object', function(obj) {
-         if ((obj != null) && !h_get && (item._name === "StreamerInfo")
-               && (obj['_typename'] === 'TList'))
+
+         if ((item != null) && (obj != null) && !h_get &&
+             (item._name === "StreamerInfo") && (obj['_typename'] === 'TList'))
             obj['_typename'] = 'TStreamerInfoList';
 
          JSROOT.CallBack(callback, item, obj);
@@ -7974,7 +7979,7 @@
          painter.h['_online'] = server_address;
 
          painter.h['_get'] = function(item, itemname, callback) {
-            painter.GetOnlineItem(item, callback);
+            painter.GetOnlineItem(item, itemname, callback);
          }
 
          painter.h['_expand'] = function(node, obj) {
