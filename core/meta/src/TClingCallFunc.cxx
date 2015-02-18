@@ -2081,6 +2081,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
 
 void TClingCallFunc::EvaluateArgList(const string &ArgList)
 {
+   R__LOCKGUARD(gInterpreterMutex);
    SmallVector<Expr *, 4> exprs;
    fInterp->getLookupHelper().findArgList(ArgList, exprs,
                                           gDebug > 5 ? cling::LookupHelper::WithDiagnostics
@@ -2303,6 +2304,7 @@ void TClingCallFunc::ResetArg()
 
 void TClingCallFunc::SetArg(unsigned long param)
 {
+   R__LOCKGUARD(gInterpreterMutex);
    ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.UnsignedLongTy, *fInterp));
    fArgVals.back().getLL() = param;
@@ -2310,6 +2312,7 @@ void TClingCallFunc::SetArg(unsigned long param)
 
 void TClingCallFunc::SetArg(long param)
 {
+   R__LOCKGUARD(gInterpreterMutex);
    ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.LongTy, *fInterp));
    fArgVals.back().getLL() = param;
@@ -2317,6 +2320,7 @@ void TClingCallFunc::SetArg(long param)
 
 void TClingCallFunc::SetArg(float param)
 {
+   R__LOCKGUARD(gInterpreterMutex);
    ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.FloatTy, *fInterp));
    fArgVals.back().getFloat() = param;
@@ -2324,6 +2328,7 @@ void TClingCallFunc::SetArg(float param)
 
 void TClingCallFunc::SetArg(double param)
 {
+   R__LOCKGUARD(gInterpreterMutex);
    ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.DoubleTy, *fInterp));
    fArgVals.back().getDouble() = param;
@@ -2331,6 +2336,7 @@ void TClingCallFunc::SetArg(double param)
 
 void TClingCallFunc::SetArg(long long param)
 {
+   R__LOCKGUARD(gInterpreterMutex);
    ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.LongLongTy, *fInterp));
    fArgVals.back().getLL() = param;
@@ -2338,6 +2344,7 @@ void TClingCallFunc::SetArg(long long param)
 
 void TClingCallFunc::SetArg(unsigned long long param)
 {
+   R__LOCKGUARD(gInterpreterMutex);
    ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.UnsignedLongLongTy, *fInterp));
    fArgVals.back().getULL() = param;
@@ -2368,7 +2375,10 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
 {
    fWrapper = 0;
    delete fMethod;
-   fMethod = new TClingMethodInfo(fInterp);
+   {
+     R__LOCKGUARD(gInterpreterMutex);
+     fMethod = new TClingMethodInfo(fInterp);
+   }
    if (poffset) {
       *poffset = 0L;
    }
@@ -2397,7 +2407,10 @@ void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 {
    fWrapper = 0;
    delete fMethod;
-   fMethod = new TClingMethodInfo(*info);
+   {
+     R__LOCKGUARD(gInterpreterMutex);
+     fMethod = new TClingMethodInfo(*info);
+   }
    ResetArg();
    if (!fMethod->IsValid()) {
       return;
@@ -2417,7 +2430,10 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
 {
    fWrapper = 0;
    delete fMethod;
-   fMethod = new TClingMethodInfo(fInterp);
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+      fMethod = new TClingMethodInfo(fInterp);
+   }
    if (poffset) {
       *poffset = 0L;
    }
@@ -2447,7 +2463,10 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
    delete fMethod;
-   fMethod = new TClingMethodInfo(fInterp);
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+      fMethod = new TClingMethodInfo(fInterp);
+   }
    if (poffset) {
       *poffset = 0L;
    }
