@@ -1,3 +1,13 @@
+Usage
+===============
+
+ * Place LibOVR in the same directory as the ROOT source directory.
+ * Compile LibOVR and ROOT
+ * Start example: root tutorials/eve/geom_lhcb.C
+
+There are a lot of options, which can be activated and modified in the
+OculusInterface class, to fine-tune the stereoscopic effect. Take a look
+
 The ROOT System
 ===============
 
