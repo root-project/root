@@ -254,7 +254,7 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       PrintFast(1,",");
       WriteReal(y2c, kFALSE);
       PrintStr(");");
-   } else if (fillis>1) {
+   } else if (fillis>1 && fillis<4) {
       SetColor(fFillColor);
       PrintStr("@");
       PrintStr("\\draw [pattern=");
