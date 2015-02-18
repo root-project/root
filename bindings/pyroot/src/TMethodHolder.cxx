@@ -304,6 +304,11 @@ Int_t PyROOT::TMethodHolder::GetPriority()
 
    }
 
+// add a small penalty to prefer non-const methods over const ones for
+// getitem/setitem
+   if ( Cppyy::IsConstMethod( fMethod ) && Cppyy::GetMethodName( fMethod ) == "operator[]" )
+       priority -= 1;
+
    return priority;
 }
 

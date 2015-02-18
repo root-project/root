@@ -718,6 +718,16 @@ std::string Cppyy::GetMethodSignature( TCppScope_t /* scope */, TCppIndex_t /* i
    return "<unknown>";
 }
 
+Bool_t Cppyy::IsConstMethod( TCppMethod_t method )
+{
+   if ( method ) {
+      TFunction* f = (TFunction*)method;
+      return f->Property() & kIsConstMethod;
+   }
+   return kFALSE;
+}
+
+
 Bool_t Cppyy::IsMethodTemplate( TCppMethod_t method )
 {
    if ( method ) {
