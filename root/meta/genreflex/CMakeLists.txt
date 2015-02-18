@@ -1,5 +1,11 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(mangledName mangledTest_lhapdf-5.9.1.h  SELECTION mangledTest_lhapdf-5.9.1_selection.xml)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-mangledName
+                  MACRO  execmangledTest.C
+                  OUTREF execmangledTest.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(MyClass_v1 MyClass_v1.h SELECTION MyClass_v1_selection.xml NO_ROOTMAP)
 

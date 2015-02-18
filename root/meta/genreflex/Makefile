@@ -13,7 +13,8 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
-
+# check sanity of pcm name
+execmangledTest.log: libmangledTest_lhapdf-5.9.1_dictrflx.$(DllSuf)
 # escape quotes test
 execwriteFirstRootmap.log: execwriteFirstRootmap.C
 execwriteTree.log: libMyClass_v1_dictrflx.$(DllSuf) execwriteFirstRootmap.log
