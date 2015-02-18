@@ -47,6 +47,7 @@ TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
    fIsPCH(shLibFileName == "allDict.cxx"),
    fInlineInputHeaders(inlineInputHeaders),
    fDictionaryName(llvm::sys::path::stem(shLibFileName)),
+   fDemangledDictionaryName(llvm::sys::path::stem(shLibFileName)),
    fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
 {
 
@@ -370,7 +371,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
                               "    " << headersClassesMapString << "\n"
                               "    static bool isInitialized = false;\n"
                               "    if (!isInitialized) {\n"
-                              "      TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
+                              "      TROOT::RegisterModule(\"" << GetDemangledDictionaryName() << "\",\n"
                               "        headers, includePaths, payloadCode, fwdDeclCode,\n"
                               "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << ", classesHeaders);\n"
                               "      isInitialized = true;\n"
