@@ -51,6 +51,11 @@ class Regression02PyException( MyTestCase ):
    def test1RaiseAndTrapPyException( self ):
       """Test thrown TPyException object processing"""
 
+      # re-enabled as there are still issues with exceptions on Mac, and linker
+      # issues on some of the test machines
+      if FIXCLING:
+         return
+
       gROOT.LoadMacro( "Scott.C+" )
 
     # test of not overloaded global function
