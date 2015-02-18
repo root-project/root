@@ -66,6 +66,8 @@
 #include <Compression.h>
 #include "Event.h"
 
+R__LOAD_LIBRARY( libEvent )
+
 void stressIOPlugins();
 void stressIOPluginsForProto(const char *protoName = 0);
 void stressIOPlugins1();
@@ -87,35 +89,6 @@ int main(int argc, char **argv)
 
 class TH1;
 class TTree;
-
-#if defined(__CINT__) || defined(__CLING__)
-struct ensureEventLoaded {
-   public:
-   ensureEventLoaded() {
-     // if needed load the Event shard library, making sure it exists
-     // This test dynamic linking when running in interpreted mode
-     if (!TClassTable::GetDict("Event")) {
-        Int_t st1 = -1;
-        if (gSystem->DynamicPathName("$ROOTSYS/test/libEvent",kTRUE)) {
-           st1 = gSystem->Load("$(ROOTSYS)/test/libEvent");
-        }
-        if (st1 == -1) {
-           if (gSystem->DynamicPathName("test/libEvent",kTRUE)) {
-              st1 = gSystem->Load("test/libEvent");
-           }
-           if (st1 == -1) {
-              printf("===>stress8 will try to build the libEvent library\n");
-              Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
-              if (UNIX) gSystem->Exec("(cd $ROOTSYS/test; make Event)");
-              else      gSystem->Exec("(cd %ROOTSYS%\\test && nmake libEvent.dll)");
-              st1 = gSystem->Load("$(ROOTSYS)/test/libEvent");
-           }
-        }
-     }
-   }
-   ~ensureEventLoaded() { }
-} myStaticObject;
-#endif
 
 //_______________________ common part_________________________
 
