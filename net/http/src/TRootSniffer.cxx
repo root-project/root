@@ -380,6 +380,9 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
 
    if ((cl == 0) || (ptr == 0) || rec.Done()) return;
 
+   // ensure that real class data (including parents) exists
+   if (!(cl->Property() & kIsAbstract)) cl->BuildRealData();
+
    // first of all expand base classes
    TIter cliter(cl->GetListOfBases());
    TObject *obj = 0;
