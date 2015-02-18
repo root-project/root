@@ -6,6 +6,16 @@
 - The character position was not correct with the Cocoa backend.
   (see https://sft.its.cern.ch/jira/browse/ROOT-6561)
 
+### TLegend
+
+- Use the new `TStyle` global attribute `gStyle->GetLegendTextSize()` to set the
+  legend item text size. If this value is 0 and if the text size directly set on
+  the `TLegend` object is also 0, then the text size is automatically computed to
+  fit the legend box. If `gStyle->GetLegendTextSize()` is non equal to 0 and if
+  text size  directly set on the `TLegend` object is 0, then the `gStyle` value is
+  used to draw the legend text. If the text size directly set on the `TLegend`
+  object is not null, then it is used to draw the legend text.
+
 ### TTexDump
 
 - The hollow fill style was not rendered correctly.

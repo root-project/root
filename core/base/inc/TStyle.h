@@ -83,6 +83,7 @@ private:
    Width_t       fLegendBorderSize;  //legend box border size
    Color_t       fLegendFillColor;   //legend fill color
    Style_t       fLegendFont;        //legend font style
+   Double_t      fLegendTextSize;    //legend text size. If 0 the size is computed automatically
    Int_t         fHatchesLineWidth;  //hatches line width for hatch styles > 3100
    Double_t      fHatchesSpacing;    //hatches spacing for hatch styles > 3100
    Color_t       fFrameFillColor;    //pad frame fill color
@@ -208,6 +209,7 @@ public:
    Width_t          GetLegendBorderSize() const   {return fLegendBorderSize;}
    Color_t          GetLegendFillColor() const {return fLegendFillColor;}
    Style_t          GetLegendFont() const {return fLegendFont;}
+   Double_t         GetLegendTextSize() const {return fLegendTextSize;}
    Int_t            GetNumberOfColors() const;
    Color_t          GetPadColor() const        {return fPadColor;}
    Width_t          GetPadBorderSize() const   {return fPadBorderSize;}
@@ -341,6 +343,7 @@ public:
    void             SetLegendBorderSize(Width_t size=4) {fLegendBorderSize = size;}
    void             SetLegendFillColor(Color_t color=0) {fLegendFillColor = color;}
    void             SetLegendFont(Style_t font=62) {fLegendFont = font;}
+   void             SetLegendTextSize(Double_t size=0.) {fLegendTextSize = size;}
    void             SetPadColor(Color_t color=19) {fPadColor = color;}
    void             SetPadBorderSize(Width_t size=1) {fPadBorderSize = size;}
    void             SetPadBorderMode(Int_t mode=1) {fPadBorderMode = mode;}
@@ -410,7 +413,7 @@ public:
    void             SavePrimitive(std::ostream &out, Option_t * = "");
    void             SaveSource(const char *filename, Option_t *option=0);
 
-   ClassDef(TStyle, 15);  //A collection of all graphics attributes
+   ClassDef(TStyle, 16);  //A collection of all graphics attributes
 };
 
 
