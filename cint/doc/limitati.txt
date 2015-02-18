@@ -18,7 +18,8 @@ Limitation of CINT
    Because ANSI/ISO C++ standard is a huge document, it is impractical to 
   describe every details of differences in this document.  Only major 
   differences and cautions are described. To avoid unnecessary confusion,
-  please use simple expression whenever possible. 
+  please use simple expression whenever possible. For instance, CINT has
+  problems with the lifetime management of temporaries.
 
 
 # Scope:
