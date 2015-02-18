@@ -4,6 +4,7 @@
 #  TCMALLOC_FOUND
 #  TCMALLOC_INCLUDE_DIR
 #  TCMALLOC_INCLUDE_DIRS (not cached)
+#  TCMALLOC_LIBRARY_PATH
 #  TCMALLOC_tcmalloc_LIBRARY
 #  TCMALLOC_profiler_LIBRARY
 #  TCMALLOC_LIBRARIES (not cached)
@@ -34,3 +35,5 @@ if(TCMALLOC_tcmalloc_LIBRARY)
 elseif(TCMALLOC_profiler_LIBRARY)
   get_filename_component(TCMALLOC_LIBRARY_DIRS ${TCMALLOC_profiler_LIBRARY} PATH)
 endif()
+
+get_filename_component(TCMALLOC_LIBRARY_PATH ${TCMALLOC_tcmalloc_LIBRARY} DIRECTORY)
