@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 05/04/11
+# Last: 02/17/15
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -32,6 +32,7 @@ __all__ = [
    'Regression14TPyException',
    'Regression15ConsRef',
    'Regression16NestedNamespace',
+   'Regression17MatrixD',
 ]
 
 
@@ -350,6 +351,21 @@ class Regression16NestedNamespace( MyTestCase ):
 
       gROOT.ProcessLine('#include "NestedNamespace.h"')
       self.assert_( ABCDEFG.ABCD.Nested )
+
+### matrix access has to go through non-const lookup =========================
+class Regression17MatrixD( MyTestCase ):
+   def test1MatrixElementAssignment( self ):
+      """Matrix lookup has to be non-const to allow assigment"""
+
+      m = TMatrixD( 5, 5 )
+      self.assert_( not 'const' in type(m[0]).__name__ )
+
+    # test assignment
+      m[1][2] = 3.
+      self.assertEqual( m[1][2], 3. )
+
+      m[1, 2] = 4.
+      self.assertEqual( m[1][2], 4. )
 
 
 ## actual test run
