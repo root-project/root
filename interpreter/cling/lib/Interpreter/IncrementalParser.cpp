@@ -12,6 +12,7 @@
 #include "AutoSynthesizer.h"
 #include "BackendPasses.h"
 #include "CheckEmptyTransactionTransformer.h"
+#include "ClingPragmas.h"
 #include "DeclCollector.h"
 #include "DeclExtractor.h"
 #include "DynamicLookup.h"
@@ -218,9 +219,11 @@ namespace cling {
 
     Transaction* CurT = beginTransaction(CO);
     Sema* TheSema = &m_CI->getSema();
-    m_Parser.reset(new Parser(m_CI->getPreprocessor(), *TheSema,
+    Preprocessor& PP = m_CI->getPreprocessor();
+    addClingPragmas(*m_Interpreter);
+    m_Parser.reset(new Parser(PP, *TheSema,
                               false /*skipFuncBodies*/));
-    m_CI->getPreprocessor().EnterMainSourceFile();
+    PP.EnterMainSourceFile();
     // Initialize the parser after we have entered the main source file.
     m_Parser->Initialize();
     // Perform initialization that occurs after the parser has been initialized
@@ -275,6 +278,15 @@ namespace cling {
     for (size_t i = 0; i < m_IRTransformers.size(); ++i)
       delete m_IRTransformers[i];
   }
+
+  void IncrementalParser::addTransaction(Transaction* T) {
+    if (!T->isNestedTransaction() && T != getLastTransaction()) {
+      if (getLastTransaction())
+        m_Transactions.back()->setNext(T);
+      m_Transactions.push_back(T);
+    }
+  }
+
 
   Transaction* IncrementalParser::beginTransaction(const CompilationOptions&
                                                    Opts) {
@@ -337,11 +349,7 @@ namespace cling {
     if (Diags.hasErrorOccurred() || Diags.hasFatalErrorOccurred())
       T->setIssuedDiags(Transaction::kErrors);
 
-    if (!T->isNestedTransaction() && T != getLastTransaction()) {
-      if (getLastTransaction())
-        m_Transactions.back()->setNext(T);
-      m_Transactions.push_back(T);
-    }
+    addTransaction(T);
     return T;
   }
 
@@ -631,7 +639,19 @@ namespace cling {
 
   void IncrementalParser::rollbackTransaction(Transaction* T) {
     assert(T && "Must have value");
-    assert(T == getLastTransaction() && "We always must revert the last T");
+#ifndef NDEBUG
+    {
+      bool canRevertTransaction = T == getLastTransaction();
+      Transaction* ChkT = T;
+      while (!canRevertTransaction && ChkT->getParent())
+        canRevertTransaction |=
+          ChkT->getState() == Transaction::kCollecting
+          || ChkT->getState() == Transaction::kCompleted;
+      assert(canRevertTransaction &&
+             "Can only revert most recent transaction or uncommitted nested "
+             "transaction");
+    }
+#endif
     assert((T->getState() != Transaction::kRolledBack ||
             T->getState() != Transaction::kRolledBackWithErrors) &&
            "Transaction already rolled back.");
@@ -645,8 +665,12 @@ namespace cling {
     else
       T->setState(Transaction::kRolledBackWithErrors);
 
-    // Remove from the queue
-    m_Transactions.pop_back();
+    if (Transaction* Parent = T->getParent()) {
+      Parent->removeNestedTransaction(T);
+    } else {
+      // Remove from the queue
+      m_Transactions.pop_back();
+    }
     //m_TransactionPool->releaseTransaction(T);
   }
 
