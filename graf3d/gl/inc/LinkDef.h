@@ -81,6 +81,8 @@
 
 #pragma link C++ class TGLViewerBase+;
 #pragma link C++ class TGLViewer+;
+#pragma link C++ class TGLSAOculusViewer+;
+#pragma link C++ class TGLEmbeddedOculusViewer+;
 #pragma link C++ class TGLEventHandler;
 #pragma link C++ class TGLFaderHelper+;
 #pragma link C++ class TGLViewerEditor+;

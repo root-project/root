@@ -19,6 +19,8 @@
 #include "TGLFormat.h"
 #include "TGLSAViewer.h"
 #include "TGLEmbeddedViewer.h"
+#include "TGLOculusViewer.h"
+
 #include "TGLScenePad.h"
 
 #include "TGLEventHandler.h"
@@ -174,7 +176,8 @@ TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo)
    TGLSAViewer* v = 0;
    try
    {
-      v = new TGLSAViewer(cf, 0, ged, form);
+      //v = new TGLSAViewer(cf, 0, ged, form);
+      v = new TGLSAOculusViewer(cf, 0, ged, form);
    }
    catch (std::exception&)
    {
@@ -208,7 +211,8 @@ TGLEmbeddedViewer* TEveViewer::SpawnGLEmbeddedViewer(TGedEditor* ged, Int_t bord
 
    TGCompositeFrame* cf = GetGUICompositeFrame();
 
-   TGLEmbeddedViewer* v = new TGLEmbeddedViewer(cf, 0, ged, border);
+   //TGLEmbeddedViewer* v = new TGLEmbeddedViewer(cf, 0, ged, border);
+   TGLEmbeddedViewer* v = new TGLEmbeddedOculusViewer(cf, 0, ged, border);
    SetGLViewer(v, v->GetFrame());
 
    cf->AddFrame(fGLViewerFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));

@@ -44,7 +44,7 @@ GLH2         := $(filter-out $(GLH1), $(GLH))
 
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                $(XLIBS) -lm
+                $(XLIBS) -lm -lovr -ludev -lpthread -lGL -lX11  -lXrandr -lrt -L../LibOVR/Lib/Linux/Release/x86_64/
 endif
 ifeq ($(ARCH),win32)
 GLLIBS       := opengl32.lib glu32.lib

@@ -311,9 +311,9 @@ public:
    virtual void PreRender();
    virtual void Render();
    virtual void PostRender();
-   void DoDraw(Bool_t swap_buffers=kTRUE);
-   void DoDrawMono(Bool_t swap_buffers);
-   void DoDrawStereo(Bool_t swap_buffers);
+   virtual void DoDraw(Bool_t swap_buffers=kTRUE);
+   virtual void DoDrawMono(Bool_t swap_buffers);
+   virtual void DoDrawStereo(Bool_t swap_buffers);
 
    void DrawGuides();
    void DrawDebugInfo();
