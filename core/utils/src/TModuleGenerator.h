@@ -56,6 +56,11 @@ namespace ROOT {
       const std::string &GetDictionaryName() const {
          return fDictionaryName;
       }
+
+      const std::string &GetDemangledDictionaryName() const {
+         return fDemangledDictionaryName;
+      }
+
       const std::string &GetModuleFileName() const {
          return fModuleFileName;
       }
@@ -129,6 +134,7 @@ namespace ROOT {
       bool fInlineInputHeaders;
 
       std::string fDictionaryName; // Name of the dictionary, e.g. "Base"
+      std::string fDemangledDictionaryName; // Demangled name of the dictionary
       std::string fModuleFileName; // PCM file name
       std::string fModuleDirName; // PCM output directory
       std::string fUmbrellaName; // name of umbrella header in PCM
