@@ -9,7 +9,7 @@ It is the successor of the JSRootIO project.
 
 The actual version of JSROOT can be found in ROOT repository, etc/http/ subfolder.
 All necessary files are located there. Just copy them on any web server or use them directly from the file system.
-The latest version of JSROOT can also be found online on <http://root.cern.ch/js/> or <http://web-docs.gsi.de/~linev/js/>.
+The latest version of JSROOT can also be found online on <http://root.cern.ch/js/jsroot.html> or <http://web-docs.gsi.de/~linev/js/>.
  
 
 ## Reading ROOT files in JSROOT
@@ -66,7 +66,7 @@ In such case one could use the server with its default settings.
 A simple case is to copy only the top index.htm file on the server and specify the full path to JSRootCore.js script like:
 
     ...
-    <script type="text/javascript" src="http://root.cern.ch/js/3.3/scripts/JSRootCore.js?2d"></script>
+    <script type="text/javascript" src="https://root.cern.ch/js/3.3/scripts/JSRootCore.js?gui"></script>
     ...  
 
 In such case one can also specify a custom files list:
@@ -85,7 +85,7 @@ JSROOT is used to implement the user interface in the web browsers.
 
 The layout of the main page coming from THttpServer is similar to the file I/O one.
 One could browse existing items and display them. A snapshot of running
-server can be seen on the [demo page](https://root.cern.ch/js/3.3/demo/).
+server can be seen on the [demo page](https://root.cern.ch/js/3.3/httpserver.C/).
 
 One could also specify similar URL parameters to configure the displayed items and drawing options.
 
@@ -127,7 +127,7 @@ This demo page reads in cycle 20 json files and displays them.
 
 If one has a web server which already provides such JSON file, one could specify the URL to this file like:
 
-<https://root.cern.ch/js/3.3/demo/demo.htm?addr=Canvases/c1/root.json.gz>
+<https://root.cern.ch/js/3.3/demo/demo.htm?addr=../httpserver.C/Canvases/c1/root.json.gz>
 
 Here the same problem with [Cross-Origin Request](https://developer.mozilla.org/en/http_access_control) can appear.
 If the web server configuration cannot be changed, just copy JSROOT to the web server itself.
@@ -138,16 +138,16 @@ If the web server configuration cannot be changed, just copy JSROOT to the web s
 Theoretically, one could use binary ROOT files to implement monitoring.
 With such approach, a ROOT-based application creates and regularly updates content of a ROOT file, which can be accessed via normal web server. From the browser side, JSROOT could regularly read the specified objects and update their drawings. But such solution has three major caveats.
 
-First of all, one need to store the data of all objects, which could only be potentially displayed in the browser. In case of 10 objects it does not matter, but for 1000 or 100000 objects this will be a major performance penalty. With such big amount of data one will never achieve high update rate. 
+First of all, one need to store the data of all objects, which only potentially could be displayed in the browser. In case of 10 objects it does not matter, but for 1000 or 100000 objects this will be a major performance penalty. With such big amount of data one will never achieve higher update rate. 
 
-The second problem is I/O. To read the first object from the ROOT file, one need to perform several (about 7) file-reading operations via http protocol. 
+The second problem is I/O. To read the first object from the ROOT file, one need to perform several (about 5) file-reading operations via http protocol. 
 There is no http file locking mechanism (at least not for standard web servers), 
-therefore there is no guarantee that the file content is not changed/replaced between consequent read operations. Therefore, one should expect frequent I/O failures while trying to monitor data from ROOT binary files. There is a workaround for the problem - one could load the file completely and exclude many partial I/O operations by this. To achieve this with JSROOT, one should add "+" sign at the end of the file name.
+therefore there is no guarantee that the file content is not changed/replaced between consequent read operations. Therefore, one should expect frequent I/O failures while trying to monitor data from ROOT binary files. There is a workaround for the problem - one could load the file completely and exclude many partial I/O operations by this. To achieve this with JSROOT, one should add "+" sign at the end of the file name. Of course, it only could work for small files.
 
-The third problem is the limitations of ROOT I/O in JavaScript. Although it tries to fully repeat binary I/O with the streamer info evaluation, the JavaScript ROOT I/O will never have 100% functionality of native ROOT. Especially, the custom streamers are a problem for JavaScript - one need to implement them once again and keep them synchronous with ROOT itself. And ROOT is full of custom streamers! Therefore it is just a nice feature and it is great that one can read binary files from a web browser, but one should never rely on the fact that such I/O works for all cases. 
+The third problem is the limitations of ROOT I/O in JavaScript. Although it tries to fully repeat logic of binary I/O with the streamer infos evaluation, the JavaScript ROOT I/O will never have 100% functionality of native ROOT. Especially, the custom streamers are a problem for JavaScript - one need to implement them once again and keep them synchronous with ROOT itself. And ROOT is full of custom streamers! Therefore it is just great feature that one can read binary files from a web browser, but one should never rely on the fact that such I/O works for all cases. 
 Let say that major classes like TH1 or TGraph or TCanvas will be supported, but one will never see full support of TTree or RooWorkspace in JavaScript.
 
-If somebody still want to test such functionality, try monitoring parameter like:
+If somebody still wants to use monitoring of data from ROOT files, could try link like:
 
 <https://root.cern.ch/js/3.3/index.htm?nobrowser&file=../files/hsimple.root+&item=hpx;1&monitoring=2000>
 
@@ -158,7 +158,7 @@ In this particular case, the histogram is not changing.
 
 Even without any server-side application, JSROOT provides nice ROOT-like graphics,
 which could be used in arbitrary HTML pages.
-There is and [example page](https://root.cern.ch/js/3.3/demo/example.htm), 
+There is [example page](https://root.cern.ch/js/3.3/demo/example.htm), 
 where a 2-D histogram is artificially generated and displayed.
 Details about the JSROOT API can be found in the next chapters.
 
@@ -175,17 +175,18 @@ Before JSROOT can be used, all appropriate scripts should be loaded.
 Any HTML pages where JSROOT is used should include the JSRootCore.js script.
 The `<head>` section of the HTML page should have the following line:
 
-    <script type="text/javascript" src="http://root.cern.ch/js/3.3/scripts/JSRootCore.js?2d"></script>  
+    <script type="text/javascript" src="https://root.cern.ch/js/3.3/scripts/JSRootCore.js?gui"></script>  
 
 Here, the default location of JSROOT is specified. One could have a local copy on the file system or on a private web server. When JSROOT is used with THttpServer, the address looks like:
 
-    <script type="text/javascript" src="http://your_root_server:8080/jsrootsys/scripts/JSRootCore.js?2d"></script>  
+    <script type="text/javascript" src="http://your_root_server:8080/jsrootsys/scripts/JSRootCore.js?gui"></script>  
 
 In URL string with JSRootCore.js script one should specify which JSROOT functionality will be loaded:
 
     + '2d' normal drawing for 1D/2D objects
     + '3d' 3D drawing for 2D/3D histograms
     + 'io' binary file I/O
+    + 'gui' default gui for offline/online applications
     + 'load' name of user script(s) to load
     + 'onload' name of function to call when scripts loading completed
 
@@ -234,7 +235,7 @@ The JSROOT.redraw function will call JSROOT.draw if the drawing was not performe
 
 JSROOT defines the JSROOT.TFile class, which can be used to access binary ROOT files.
 
-    var filename = "http://root.cern.ch/js/files/hsimple.root";
+    var filename = "https://root.cern.ch/js/files/hsimple.root";
     var f = new JSROOT.TFile(filename, fileReadyCallback);
 
 One should always remember that all I/O operations are asynchronous in JSROOT.

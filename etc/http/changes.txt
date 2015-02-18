@@ -1,10 +1,7 @@
-This is further development of JSRootIO, original version was download from
-https://root.cern.ch/svn/root/trunk/js
+JSROOT project
 
-At its current state code is very differ from original
-project of Bertrand Bellenot, but provides same functionality in default mode.
-Main motivation for changes - fix different errors,
-make JavaScript code more flexible and applicable for online environment.
+This is further development of JSRootIO project of Bertrand Bellenot. 
+Many old problems and errors are fixed, new functions are provided.  
 
 Changes in 3.3
 1. Use d3.time.scale for display of time scales
@@ -23,6 +20,7 @@ Changes in 3.3
 10.Using '_same_' identifier in item name, one can easily superimpose
    same items from different files. Could be used in URL like:
       &files=[file1.root,file2.root]&item=file1.root/hpx+file2.root/_same_
+   Main limitation - file names should have similar length.   
 
 
 Changes in 3.2
