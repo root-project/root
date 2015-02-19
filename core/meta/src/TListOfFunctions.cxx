@@ -550,6 +550,7 @@ TListOfFunctionsIter::TListOfFunctionsIter(const TListOfFunctions *l, Bool_t dir
 //______________________________________________________________________________
 TObject *TListOfFunctionsIter::Next()
 {
-  R__LOCKGUARD(gInterpreterMutex);
-  return TListIter::Next();
+   R__LOCKGUARD(gInterpreterMutex);
+   return TListIter::Next();
 }
+
