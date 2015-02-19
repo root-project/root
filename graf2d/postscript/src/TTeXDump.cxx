@@ -95,9 +95,9 @@ TTeXDump::TTeXDump() : TVirtualPS()
    fRange        = kFALSE;
    fXsize        = 0.;
    fYsize        = 0.;
-   fCurrentRed   = 0.;
-   fCurrentGreen = 0.;
-   fCurrentBlue  = 0.;
+   fCurrentRed   = -1.;
+   fCurrentGreen = -1.;
+   fCurrentBlue  = -1.;
 }
 
 
@@ -119,9 +119,9 @@ TTeXDump::TTeXDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    fRange        = kFALSE;
    fXsize        = 0.;
    fYsize        = 0.;
-   fCurrentRed   = 0.;
-   fCurrentGreen = 0.;
-   fCurrentBlue  = 0.;
+   fCurrentRed   = -1.;
+   fCurrentGreen = -1.;
+   fCurrentBlue  = -1.;
 
    Open(fname, wtype);
 }
@@ -254,7 +254,8 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       PrintFast(1,",");
       WriteReal(y2c, kFALSE);
       PrintStr(");");
-   } else if (fillis>1 && fillis<4) {
+   }
+   if (fillis>1 && fillis<4) {
       SetColor(fFillColor);
       PrintStr("@");
       PrintStr("\\draw [pattern=");
@@ -275,7 +276,8 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       PrintFast(1,",");
       WriteReal(y2c, kFALSE);
       PrintStr(");");
-   } else {
+   }
+   if (fillis == 0) {
       SetColor(fLineColor);
       PrintStr("@");
       PrintStr("\\draw [c] (");
