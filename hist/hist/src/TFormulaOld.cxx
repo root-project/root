@@ -420,10 +420,8 @@ Bool_t TFormulaOld::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 
    // ROOT does yet have a complete TType class, but TCling does,
    // so let's use that for now.
-   static TypeInfo_t *doubletype = 0;
-   if (doubletype == 0) {
-      doubletype = gInterpreter->TypeInfo_Factory("double");
-   }
+   static TypeInfo_t *const doubletype { gInterpreter->TypeInfo_Factory("double") };
+
    std::vector<TypeInfo_t*> proto(nargs,doubletype);
 
    CallFunc_t *callfunc = gInterpreter->CallFunc_Factory();
