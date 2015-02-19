@@ -279,7 +279,11 @@ Bool_t TFunction::Update(MethodInfo_t *info)
    // (info being the 'new' decl address).
 
    if (info == 0) {
-      if (fInfo) gCling->MethodInfo_Delete(fInfo);
+
+      if (fInfo) {
+         R__LOCKGUARD(gInterpreterMutex);
+         gCling->MethodInfo_Delete(fInfo);
+      }
       fInfo = 0;
       if (fMethodArgs) {
         for (Int_t i = 0; i < fMethodArgs->LastIndex() + 1; i ++) {
@@ -289,7 +293,10 @@ Bool_t TFunction::Update(MethodInfo_t *info)
       }
       return kTRUE;
    } else {
-      if (fInfo) gCling->MethodInfo_Delete(fInfo);
+      if (fInfo) {
+         R__LOCKGUARD(gInterpreterMutex);
+         gCling->MethodInfo_Delete(fInfo);
+      }
       fInfo = info;
       TString newMangledName = gCling->MethodInfo_GetMangledName(fInfo);
       if (newMangledName != fMangledName) {
@@ -302,6 +309,7 @@ Bool_t TFunction::Update(MethodInfo_t *info)
       if (fMethodArgs) {
          MethodArgInfo_t *arg = gCling->MethodArgInfo_Factory(fInfo);
          Int_t i = 0;
+         R__LOCKGUARD(gInterpreterMutex);
          while (gCling->MethodArgInfo_Next(arg)) {
             if (gCling->MethodArgInfo_IsValid(arg)) {
                MethodArgInfo_t *new_arg = gCling->MethodArgInfo_FactoryCopy(arg);

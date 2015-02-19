@@ -6114,6 +6114,7 @@ Double_t TCling::CallFunc_ExecDouble(CallFunc_t* func, void* address) const
 //______________________________________________________________________________
 CallFunc_t* TCling::CallFunc_Factory() const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (CallFunc_t*) new TClingCallFunc(fInterpreter,*fNormalizedCtxt);
 }
 
@@ -6140,6 +6141,7 @@ void TCling::CallFunc_IgnoreExtraArgs(CallFunc_t* func, bool ignore) const
 //______________________________________________________________________________
 void TCling::CallFunc_Init(CallFunc_t* func) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->Init();
 }
@@ -6357,6 +6359,7 @@ void TCling::ClassInfo_Destruct(ClassInfo_t* cinfo, void* arena) const
 //______________________________________________________________________________
 ClassInfo_t* TCling::ClassInfo_Factory(Bool_t all) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (ClassInfo_t*) new TClingClassInfo(fInterpreter, all);
 }
 
@@ -6369,6 +6372,7 @@ ClassInfo_t* TCling::ClassInfo_Factory(ClassInfo_t* cinfo) const
 //______________________________________________________________________________
 ClassInfo_t* TCling::ClassInfo_Factory(const char* name) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (ClassInfo_t*) new TClingClassInfo(fInterpreter, name);
 }
 
@@ -6396,6 +6400,7 @@ bool TCling::ClassInfo_HasMethod(ClassInfo_t* cinfo, const char* name) const
 //______________________________________________________________________________
 void TCling::ClassInfo_Init(ClassInfo_t* cinfo, const char* name) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    TClinginfo->Init(name);
 }
@@ -6403,6 +6408,7 @@ void TCling::ClassInfo_Init(ClassInfo_t* cinfo, const char* name) const
 //______________________________________________________________________________
 void TCling::ClassInfo_Init(ClassInfo_t* cinfo, int tagnum) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    TClinginfo->Init(tagnum);
 }
@@ -6557,6 +6563,7 @@ void TCling::BaseClassInfo_Delete(BaseClassInfo_t* bcinfo) const
 //______________________________________________________________________________
 BaseClassInfo_t* TCling::BaseClassInfo_Factory(ClassInfo_t* cinfo) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return (BaseClassInfo_t*) new TClingBaseClassInfo(fInterpreter, TClinginfo);
 }
@@ -6565,6 +6572,7 @@ BaseClassInfo_t* TCling::BaseClassInfo_Factory(ClassInfo_t* cinfo) const
 BaseClassInfo_t* TCling::BaseClassInfo_Factory(ClassInfo_t* derived,
    ClassInfo_t* base) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    TClingClassInfo* TClinginfo = (TClingClassInfo*) derived;
    TClingClassInfo* TClinginfoBase = (TClingClassInfo*) base;
    return (BaseClassInfo_t*) new TClingBaseClassInfo(fInterpreter, TClinginfo, TClinginfoBase);
@@ -6668,6 +6676,7 @@ void TCling::DataMemberInfo_Delete(DataMemberInfo_t* dminfo) const
 //______________________________________________________________________________
 DataMemberInfo_t* TCling::DataMemberInfo_Factory(ClassInfo_t* clinfo /*= 0*/) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    TClingClassInfo* TClingclass_info = (TClingClassInfo*) clinfo;
    return (DataMemberInfo_t*) new TClingDataMemberInfo(fInterpreter, TClingclass_info);
 }
@@ -6675,6 +6684,7 @@ DataMemberInfo_t* TCling::DataMemberInfo_Factory(ClassInfo_t* clinfo /*= 0*/) co
 //______________________________________________________________________________
 DataMemberInfo_t* TCling::DataMemberInfo_Factory(DeclId_t declid, ClassInfo_t* clinfo) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    const clang::Decl* decl = reinterpret_cast<const clang::Decl*>(declid);
    const clang::ValueDecl* vd = llvm::dyn_cast_or_null<clang::ValueDecl>(decl);
    return (DataMemberInfo_t*) new TClingDataMemberInfo(fInterpreter, vd, (TClingClassInfo*)clinfo);
@@ -7018,12 +7028,14 @@ void TCling::MethodInfo_CreateSignature(MethodInfo_t* minfo, TString& signature)
 //______________________________________________________________________________
 MethodInfo_t* TCling::MethodInfo_Factory() const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (MethodInfo_t*) new TClingMethodInfo(fInterpreter);
 }
 
 //______________________________________________________________________________
 MethodInfo_t* TCling::MethodInfo_Factory(ClassInfo_t* clinfo) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (MethodInfo_t*) new TClingMethodInfo(fInterpreter, (TClingClassInfo*)clinfo);
 }
 
@@ -7031,6 +7043,7 @@ MethodInfo_t* TCling::MethodInfo_Factory(ClassInfo_t* clinfo) const
 MethodInfo_t* TCling::MethodInfo_Factory(DeclId_t declid) const
 {
    const clang::Decl* decl = reinterpret_cast<const clang::Decl*>(declid);
+   R__LOCKGUARD(gInterpreterMutex);
    const clang::FunctionDecl* fd = llvm::dyn_cast_or_null<clang::FunctionDecl>(decl);
    return (MethodInfo_t*) new TClingMethodInfo(fInterpreter, fd);
 }
@@ -7215,12 +7228,14 @@ void TCling::MethodArgInfo_Delete(MethodArgInfo_t* marginfo) const
 //______________________________________________________________________________
 MethodArgInfo_t* TCling::MethodArgInfo_Factory() const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (MethodArgInfo_t*) new TClingMethodArgInfo(fInterpreter);
 }
 
 //______________________________________________________________________________
 MethodArgInfo_t* TCling::MethodArgInfo_Factory(MethodInfo_t *minfo) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (MethodArgInfo_t*) new TClingMethodArgInfo(fInterpreter, (TClingMethodInfo*)minfo);
 }
 
@@ -7294,12 +7309,14 @@ void TCling::TypeInfo_Delete(TypeInfo_t* tinfo) const
 //______________________________________________________________________________
 TypeInfo_t* TCling::TypeInfo_Factory() const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (TypeInfo_t*) new TClingTypeInfo(fInterpreter);
 }
 
 //______________________________________________________________________________
 TypeInfo_t* TCling::TypeInfo_Factory(const char *name) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (TypeInfo_t*) new TClingTypeInfo(fInterpreter, name);
 }
 
@@ -7312,6 +7329,7 @@ TypeInfo_t* TCling::TypeInfo_FactoryCopy(TypeInfo_t* tinfo) const
 //______________________________________________________________________________
 void TCling::TypeInfo_Init(TypeInfo_t* tinfo, const char* name) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    TClingTypeInfo* TClinginfo = (TClingTypeInfo*) tinfo;
    TClinginfo->Init(name);
 }
@@ -7373,12 +7391,14 @@ void TCling::TypedefInfo_Delete(TypedefInfo_t* tinfo) const
 //______________________________________________________________________________
 TypedefInfo_t* TCling::TypedefInfo_Factory() const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (TypedefInfo_t*) new TClingTypedefInfo(fInterpreter);
 }
 
 //______________________________________________________________________________
 TypedefInfo_t* TCling::TypedefInfo_Factory(const char *name) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return (TypedefInfo_t*) new TClingTypedefInfo(fInterpreter, name);
 }
 
@@ -7392,6 +7412,7 @@ TypedefInfo_t* TCling::TypedefInfo_FactoryCopy(TypedefInfo_t* tinfo) const
 void TCling::TypedefInfo_Init(TypedefInfo_t* tinfo,
                               const char* name) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    TClinginfo->Init(name);
 }
