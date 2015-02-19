@@ -4469,6 +4469,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    Int_t lenfil =  filename ? strlen(filename) : 0;
    TString opt = (!option) ? opt_default : option;
+   if (strstr(opt,"Title:")) opt = "pdf";
    Bool_t image = kFALSE;
 
    if ( !lenfil )  {
