@@ -202,7 +202,7 @@ void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt 
    if (!IsValid()) {
       return 0;
    }
-   R__LOCKGUARD(gInterpreterMutex);   
+   R__LOCKGUARD(gInterpreterMutex);
    TClingCallFunc cf(fInterp,normCtxt);
    cf.SetFunc(this);
    return cf.InterfaceMethod();
