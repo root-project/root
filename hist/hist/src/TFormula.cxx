@@ -1743,7 +1743,6 @@ void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Dou
                    Double_t p5,Double_t p6,Double_t p7,Double_t p8,
                    Double_t p9,Double_t p10)
 {
-   printf("setting parameters\n");
    if(fNpar >= 1) SetParameter(0,p0);
    if(fNpar >= 2) SetParameter(1,p1);
    if(fNpar >= 3) SetParameter(2,p2);
