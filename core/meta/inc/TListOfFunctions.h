@@ -117,7 +117,7 @@ public:
 //////////////////////////////////////////////////////////////////////////
 class TListOfFunctionsIter : public TListIter
 {
- public:
+public:
    TListOfFunctionsIter(const TListOfFunctions *l, Bool_t dir = kIterForward);
 
    using TListIter::operator=;
