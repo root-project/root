@@ -147,7 +147,7 @@ protected:
 
    Long64_t          fKeyCounter;           //! counter of created keys, used for keys id
 
-ClassDef(TXMLFile, 2)  //ROOT file in XML format
+ClassDef(TXMLFile, 3)  //ROOT file in XML format
 };
 
 

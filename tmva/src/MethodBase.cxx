@@ -1351,7 +1351,7 @@ void TMVA::MethodBase::ReadStateFromFile()
 void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
    // for reading from memory
 
-#if (ROOT_SVN_REVISION >= 32259) && (ROOT_VERSION_CODE >= 334336) // 5.26/00
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,26,00)
    void* doc = gTools().xmlengine().ParseString(xmlstr);
    void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
    ReadStateFromXML(rootnode);
@@ -2284,7 +2284,7 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
 
       // search for overlap point where, when cutting on it,
       // one would obtain: eff_S = rej_B = 1 - eff_B
-      Double_t effS, rejB, effS_ = 0, rejB_ = 0;
+      Double_t effS = 0., rejB, effS_ = 0., rejB_ = 0.;
       Int_t    nbins_ = 5000;
       for (Int_t bini=1; bini<=nbins_; bini++) {
 
@@ -2518,7 +2518,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
    if (0 == fSplTrainEffBvsS) return 0.0;
 
    // now find signal efficiency that corresponds to required background efficiency
-   Double_t effS, effB, effS_ = 0, effB_ = 0;
+   Double_t effS = 0., effB, effS_ = 0., effB_ = 0.;
    Int_t    nbins_ = 1000;
    for (Int_t bini=1; bini<=nbins_; bini++) {
 

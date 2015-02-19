@@ -77,14 +77,21 @@ private:
 public:
    TLockGuard(TVirtualMutex *mutex)
      : fMutex(mutex) { if (fMutex) fMutex->Lock(); }
-   virtual ~TLockGuard() { if (fMutex) fMutex->UnLock(); }
+   Int_t UnLock() { 
+      if (!fMutex) return 0;
+      auto tmp = fMutex;
+      fMutex = 0;
+      return tmp->UnLock();
+   }
+   ~TLockGuard() { if (fMutex) fMutex->UnLock(); }
 
-   ClassDef(TLockGuard,0)  // Exception safe locking/unlocking of mutex
+   ClassDefNV(TLockGuard,0)  // Exception safe locking/unlocking of mutex
 };
 
 // Zero overhead macros in case not compiled with thread support
 #if defined (_REENTRANT) || defined (WIN32)
 #define R__LOCKGUARD(mutex) TLockGuard _R__UNIQUE_(R__guard)(mutex)
+#define R__LOCKGUARD_NAMED(name,mutex) TLockGuard name(mutex)
 #define R__LOCKGUARD2(mutex)                             \
    if (gGlobalMutex && !mutex) {                         \
       gGlobalMutex->Lock();                              \
@@ -95,6 +102,7 @@ public:
    R__LOCKGUARD(mutex)
 #else
 #define R__LOCKGUARD(mutex)  if (mutex) { }
+#define R__LOCKGUARD_NAMED(name,mutex) if (mutex) { }
 #define R__LOCKGUARD2(mutex) if (mutex) { }
 #endif
 

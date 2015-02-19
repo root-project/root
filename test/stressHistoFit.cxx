@@ -286,7 +286,7 @@ void SetParsLimits(vector<ParLimit>& v, TF1* func)
 //     parLimits limits of the parameters to be set before fitting
 class fitFunctions {
 public:
-   const char* name;
+   TString name;
    double (*func)(double*, double*);
    unsigned int npars;
    vector<double> origPars;
@@ -1132,8 +1132,8 @@ void init_structures()
    graphErrorAlgos.push_back( algoType( "Minuit2",      "Migrad",      "Q0EX0", CompareResult()) );
 
 
-   // For testing the liear fitter we can force the use by setting Linear the default minimizer and use
-   // teh G option. In this case the fit is linearized using the gradient as the linear components
+   // For testing the linear fitter we can force the use by setting Linear the default minimizer and use
+   // the G option. In this case the fit is linearized using the gradient as the linear components
    // Option "G" has not to be set as first option character to avoid using Fitter class in
    // the test program
    // Use option "X" to force Chi2 calculations

@@ -4,7 +4,6 @@
 /// @namespace JSROOT
 /// Holder of all JSROOT functions and classes
 
-
 (function(){
 
    if (typeof JSROOT == "object") {
@@ -15,25 +14,9 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.1 dev 17/11/2014";
+   JSROOT.version = "3.3 dev 18/02/2015";
 
-   JSROOT.source_dir  = function(){
-      var scripts = document.getElementsByTagName('script');
-
-      for (var n in scripts) {
-         if (scripts[n]['type'] != 'text/javascript') continue;
-
-         var src = scripts[n]['src'];
-         if ((src == null) || (src.length == 0)) continue;
-
-         var pos = src.indexOf("scripts/JSRootCore.js");
-         if (pos<0) continue;
-
-         console.log("Set JSROOT.source_dir to " + src.substr(0, pos));
-         return src.substr(0, pos);
-      }
-      return "";
-   }();
+   JSROOT.source_dir = "";
 
    // TODO: all jQuery-related functions should go into extra script
    JSROOT.clone = function(obj) {
@@ -41,6 +24,8 @@
    }
 
    JSROOT.id_counter = 0;
+
+   JSROOT.touches = ('ontouchend' in document); // identify if touch events are supported
 
    JSROOT.function_list = []; // do we really need it here?
 
@@ -79,9 +64,7 @@
    // https://github.com/graniteds/jsonr
    // Only unref part was used, arrays are not accounted as objects
    // Should be used to reintroduce objects references, produced by TBufferJSON
-
-   JSROOT.JSONR_unref = function(value, dy)
-   {
+   JSROOT.JSONR_unref = function(value, dy) {
       var c, i, k, ks;
       if (!dy) dy = [];
 
@@ -130,9 +113,9 @@
    }
 
    JSROOT.parse = function(arg) {
-      if (arg==null) return null;
+      if ((arg==null) || (arg=="")) return null;
       var obj = JSON.parse(arg);
-      if (obj!=null) obj = JSROOT.JSONR_unref(obj)
+      if (obj!=null) obj = JSROOT.JSONR_unref(obj);
       return obj;
    }
 
@@ -162,12 +145,73 @@
 
             // replace several symbols which are known to make a problem
             if (url.charAt(opt.length)=="=")
-               return url.slice(opt.length+1, pos).replace(/%27/g, "'").replace(/%22/g, '"').replace(/%20/g, ' ').replace(/%3C/g, '<').replace(/%3E/g, '>');
+               return url.slice(opt.length+1, pos).replace(/%27/g, "'").replace(/%22/g, '"').replace(/%20/g, ' ').replace(/%3C/g, '<').replace(/%3E/g, '>').replace(/%5B/g, '[').replace(/%5D/g, ']');
          }
 
          url = url.slice(pos+1);
       }
       return dflt;
+   }
+
+   JSROOT.GetUrlOptionAsArray = function(opt, url) {
+      // special handling of URL options to produce array
+      // if normal option is specified ...?opt=abc, than array with single element will be created
+      // one could specify normal JSON array ...?opt=['item1','item2']
+      // but also one could skip quotes ...?opt=[item1,item2]
+      // one could collect values from several options, specifying
+      // options names via semicolon like opt='item;items'
+
+      var res = [];
+
+      while (opt.length>0) {
+         var separ = opt.indexOf(";");
+         var part = separ>0 ? opt.substr(0, separ) : opt;
+         if (separ>0) opt = opt.substr(separ+1); else opt = "";
+
+         var val = this.GetUrlOption(part, url, null);
+         if (val==null) continue;
+         val = val.trim();
+         if (val=="") continue;
+
+         // return as array with single element
+         if ((val[0]!='[') && (val[val.length-1]!=']')) {
+            res.push(val); continue;
+         }
+
+         // try to parse ourself
+         var arr = val.substr(1, val.length-2).split(","); // remove brackets
+
+         for (var i in arr) {
+            var sub = arr[i].trim();
+            if ((sub.length>1) && (sub[0]==sub[sub.length-1]) && ((sub[0]=='"') || (sub[0]=="'")))
+               sub = sub.substr(1, sub.length-2);
+            res.push(sub);
+         }
+      }
+      return res;
+   }
+
+   JSROOT.findFunction = function(name) {
+      var func = window[name];
+      if (typeof func == 'function') return func;
+      var separ = name.indexOf(".");
+      if ((separ>0) && window[name.slice(0, separ)])
+         func = window[name.slice(0, separ)][name.slice(separ+1)];
+      return (typeof func == 'function') ? func : null;
+   }
+
+   JSROOT.CallBack = function(func, arg1, arg2) {
+      // generic method to invoke callback function
+      // func either normal function or container like
+      // { obj: _ object_pointer_, func: name of method to call }
+      // arg1, arg2 are optional arguments of the callback
+
+      if (func==null) return;
+
+      if (typeof func=='function') return func(arg1,arg2);
+
+      if (typeof func=='obj' && typeof func.obj == 'object' &&
+         typeof func.fun == 'string' && typeof func.obj[func.func] == 'function') return func.obj[func.func](arg1, arg2);
    }
 
    JSROOT.NewHttpRequest = function(url, kind, user_call_back) {
@@ -226,9 +270,10 @@
          xhr.onreadystatechange = function() {
             if (xhr.readyState != 4) return;
 
-            if (xhr.status != 0 && xhr.status != 200 && xhr.status != 206) {
+            if (xhr.status != 200 && xhr.status != 206) {
                return callback(null);
             }
+
             if (kind == "xml") return callback(xhr.responseXML);
             if (kind == "text") return callback(xhr.responseText);
             if (kind == "object") return callback(JSROOT.parse(xhr.responseText));
@@ -304,6 +349,8 @@
          if (debugout)
             document.getElementById(debugout).innerHTML = "";
 
+         if (typeof callback == 'string') callback = JSROOT.findFunction(callback);
+
          if (typeof callback == 'function') callback();
       }
 
@@ -349,8 +396,9 @@
             var src = scripts[n]['src'];
             if ((src == null) || (src.length == 0)) continue;
 
-            if (src.indexOf(filename)>=0) {
-               // debug("script "+  filename + " already loaded");
+            if ((src.indexOf(filename)>=0) && (src.indexOf("load=")<0)) {
+               // avoid wrong decision when script name is specified as more argument
+               // debug("script "+  filename + " already loaded src = " + src);
                return completeLoad();
             }
          }
@@ -396,7 +444,7 @@
       // '2d' for 2d graphic
       // '3d' for 3d graphic
       // 'simple' for basic user interface
-      // 'user:' list of user-specific scripts at the end of kind string
+      // 'load:' list of user-specific scripts at the end of kind string
 
       if (typeof kind == 'function') { andThan = kind; kind = null; }
 
@@ -410,12 +458,15 @@
          allfiles += ";$$$scripts/rawinflate.js" +
                      ";$$$scripts/JSRootIOEvolution.js";
 
-      if (kind.indexOf('2d;')>=0)
+      if (kind.indexOf('2d;')>=0) {
          allfiles += ';$$$style/jquery-ui.css' +
                      ';$$$scripts/jquery-ui.min.js' +
                      ';$$$scripts/d3.v3.min.js' +
                      ';$$$scripts/JSRootPainter.js' +
                      ';$$$style/JSRootPainter.css';
+         if (JSROOT.touches)
+            allfiles += ';$$$scripts/touch-punch.min.js';
+      }
 
       if (kind.indexOf("3d;")>=0)
          allfiles += ";$$$scripts/jquery.mousewheel.js" +
@@ -429,8 +480,8 @@
                      ';$$$style/JSRootInterface.css';
 
       var pos = kind.indexOf("user:");
-      if (pos>0)
-         allfiles += ";" + kind.slice(pos+5);
+      if (pos<0) pos = kind.indexOf("load:");
+      if (pos>=0) allfiles += ";" + kind.slice(pos+5);
 
       JSROOT.loadScript(allfiles, andThan, debugout);
    }
@@ -448,11 +499,11 @@
       if (document.getElementById('simpleGUI')) debugout = 'simpleGUI'; else
       if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;simple;"; }
 
-      if (user_scripts == null)
-         user_scripts = JSROOT.GetUrlOption("autoload");
+      if (user_scripts == null) user_scripts = JSROOT.GetUrlOption("autoload");
+      if (user_scripts == null) user_scripts = JSROOT.GetUrlOption("load");
 
       if (user_scripts != null)
-         requirements += "user:" + user_scripts + ";";
+         requirements += "load:" + user_scripts + ";";
 
       JSROOT.AssertPrerequisites(requirements, function() {
          if (typeof BuildSimpleGUI == 'function') BuildSimpleGUI();
@@ -554,7 +605,7 @@
       } else
       if (typename == 'TH1I' || typename == 'TH1F' || typename == 'TH1D' || typename == 'TH1S' || typename == 'TH1C') {
          JSROOT.Create("TH1", obj);
-         jQuery.extend(obj, { fN : 0, fArray: [] });
+         jQuery.extend(obj, { fArray: [] });
       } else
       if (typename == 'TH2') {
          JSROOT.Create("TH1", obj);
@@ -562,7 +613,7 @@
       } else
       if (typename == 'TH2I' || typename == 'TH2F' || typename == 'TH2D' || typename == 'TH2S' || typename == 'TH2C') {
          JSROOT.Create("TH2", obj);
-         jQuery.extend(obj, { fN : 0, fArray: [] });
+         jQuery.extend(obj, { fArray: [] });
       } else
       if (typename == 'TGraph') {
          JSROOT.Create("TNamed", obj);
@@ -586,7 +637,7 @@
       jQuery.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
       if (nbinsx!=null) {
-         histo['fN'] = histo['fNcells'] = nbinsx+2;
+         histo['fNcells'] = nbinsx+2;
          for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
          jQuery.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0,  fXmax: nbinsx });
       }
@@ -598,7 +649,7 @@
       jQuery.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
       if ((nbinsx!=null) && (nbinsy!=null)) {
-         histo['fN'] = histo['fNcells'] = (nbinsx+2) * (nbinsy+2);
+         histo['fNcells'] = (nbinsx+2) * (nbinsy+2);
          for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
          jQuery.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
          jQuery.extend(histo['fYaxis'], { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
@@ -682,7 +733,7 @@
          obj['getBinCenter'] = function(bin) {
             // Return center of bin
             var binwidth;
-            if (!this['fN'] || bin < 1 || bin > this['fNbins']) {
+            if (!this['fNbins'] || bin < 1 || bin > this['fNbins']) {
                binwidth = (this['fXmax'] - this['fXmin']) / this['fNbins'];
                return this['fXmin'] + (bin-1) * binwidth + 0.5*binwidth;
             } else {
@@ -788,7 +839,7 @@
             //    otherwise it returns the sqrt(contents) for this bin.
             if (bin < 0) bin = 0;
             if (bin >= this['fNcells']) bin = this['fNcells'] - 1;
-            if (this['fN'] && this['fSumw2'].length > 0) {
+            if (this['fNcells'] && this['fSumw2'].length > 0) {
                var err2 = this['fSumw2'][bin];
                return Math.sqrt(err2);
             }
@@ -799,7 +850,7 @@
             //   -*-*-*-*-*Return lower error associated to bin number bin*-*-*-*-*
             //    The error will depend on the statistic option used will return
             //     the binContent - lower interval value
-            if (this['fBinStatErrOpt'] == EBinErrorOpt.kNormal || this['fN']) return this.getBinError(bin);
+            if (this['fBinStatErrOpt'] == EBinErrorOpt.kNormal) return this.getBinError(bin);
             if (bin < 0) bin = 0;
             if (bin >= this['fNcells']) bin = this['fNcells'] - 1;
             var alpha = 1.0 - 0.682689492;
@@ -818,7 +869,7 @@
             //   -*-*-*-*-*Return lower error associated to bin number bin*-*-*-*-*
             //    The error will depend on the statistic option used will return
             //     the binContent - lower interval value
-            if (this['fBinStatErrOpt'] == EBinErrorOpt.kNormal || this['fN']) return this.getBinError(bin);
+            if (this['fBinStatErrOpt'] == EBinErrorOpt.kNormal) return this.getBinError(bin);
             if (bin < 0) bin = 0;
             if (bin >= this['fNcells']) bin = this['fNcells'] - 1;
             var alpha = 1.0 - 0.682689492;
@@ -837,7 +888,7 @@
          };
          obj['getBinLowEdge'] = function(bin) {
             // Return low edge of bin
-            if (this['fXaxis']['fXbins']['fN'] && bin > 0 && bin <= this['fXaxis']['fNbins'])
+            if (this['fXaxis']['fXbins'].length && bin > 0 && bin <= this['fXaxis']['fNbins'])
                return this['fXaxis']['fXbins']['fArray'][bin-1];
             var binwidth = (this['fXaxis']['fXmax'] - this['fXaxis']['fXmin']) / this['fXaxis']['fNbins'];
             return this['fXaxis']['fXmin'] + (bin-1) * binwidth;
@@ -845,7 +896,7 @@
          obj['getBinUpEdge'] = function(bin) {
             // Return up edge of bin
             var binwidth;
-            if (!this['fXaxis']['fXbins']['fN'] || bin < 1 || bin > this['fXaxis']['fNbins']) {
+            if (!this['fXaxis']['fXbins'].length || bin < 1 || bin > this['fXaxis']['fNbins']) {
                binwidth = (this['fXaxis']['fXmax'] - this['fXaxis']['fXmin']) / this['fXaxis']['fNbins'];
                return this['fXaxis']['fXmin'] + bin * binwidth;
             } else {
@@ -856,7 +907,7 @@
          obj['getBinWidth'] = function(bin) {
             // Return bin width
             if (this['fXaxis']['fNbins'] <= 0) return 0;
-            if (this['fXaxis']['fXbins']['fN'] <= 0)
+            if (this['fXaxis']['fXbins'].length <= 0)
                return (this['fXaxis']['fXmax'] - this['fXaxis']['fXmin']) / this['fXaxis']['fNbins'];
             if (bin > this['fXaxis']['fNbins']) bin = this['fXaxis']['fNbins'];
             if (bin < 1) bin = 1;
@@ -880,7 +931,7 @@
             if (this['fDimension'] < 3) nbinsz = -1;
 
             // Create Sumw2 if h1 has Sumw2 set
-            if (this['fSumw2']['fN'] == 0 && h1['fSumw2']['fN'] != 0) this.sumw2();
+            if (this['fSumw2'].length == 0 && h1['fSumw2'].length != 0) this.sumw2();
 
             // - Add statistics
             if (this['fEntries'] == NaN) this['fEntries'] = 0;
@@ -919,7 +970,7 @@
                         // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
                         if (e1 > 0)
                            w1 = 1.0 / (e1 * e1);
-                        else if (h1['fSumw2']['fN']) {
+                        else if (h1['fSumw2'].length) {
                            w1 = 1.E200; // use an arbitrary huge value
                            if (y1 == 0) {
                               // use an estimated error from the global histogram scale
@@ -929,7 +980,7 @@
                         }
                         if (e2 > 0)
                            w2 = 1.0 / (e2 * e2);
-                        else if (this['fSumw2']['fN']) {
+                        else if (this['fSumw2'].length) {
                            w2 = 1.E200; // use an arbitrary huge value
                            if (y2 == 0) {
                               // use an estimated error from the global histogram scale
@@ -939,19 +990,19 @@
                         }
                         var y = (w1 * y1 + w2 * y2) / (w1 + w2);
                         this.setBinContent(bin, y);
-                        if (this['fSumw2']['fN']) {
+                        if (this['fSumw2'].length) {
                            var err2 =  1.0 / (w1 + w2);
                            if (err2 < 1.E-200) err2 = 0;  // to remove arbitrary value when e1=0 AND e2=0
-                           this['fSumw2']['fArray'][bin] = err2;
+                           this['fSumw2'][bin] = err2;
                         }
                      }
                      //normal case of addition between histograms
                      else {
                         cu  = c1 * factor * h1.getBinContent(bin);
                         this['fArray'][bin] += cu;
-                        if (this['fSumw2']['fN']) {
+                        if (this['fSumw2'].length) {
                            var e1 = factor * h1.getBinError(bin);
-                           this['fSumw2']['fArray'][bin] += c1 * c1 * e1 * e1;
+                           this['fSumw2'][bin] += c1 * c1 * e1 * e1;
                         }
                      }
                   }
@@ -1091,11 +1142,11 @@
          };
          obj['getSumOfWeights'] = function() {
             //   -*-*-*-*-*-*Return the sum of weights excluding under/overflows*-*-*-*-*
-            var bin, binx, biny, binz, sum = 0;
-            for (binz=1; binz<=this['fZaxis']['fXbins']['fN']; binz++) {
-               for (biny=1; biny<=this['fYaxis']['fXbins']['fN']; biny++) {
-                  for (binx=1; binx<=this['fXaxis']['fXbins']['fN']; binx++) {
-                     bin = this.getBin(binx,biny,binz);
+            var sum = 0;
+            for (var binz=1; binz<=this['fZaxis']['fNbins']; binz++) {
+               for (var biny=1; biny<=this['fYaxis']['fNbins']; biny++) {
+                  for (var binx=1; binx<=this['fXaxis']['fNbins']; binx++) {
+                     var bin = this.getBin(binx,biny,binz);
                      sum += this.getBinContent(bin);
                   }
                }
@@ -1132,7 +1183,7 @@
             axis['fXmax']  = xmax;
             this['fNcells'] = -1;
             this['fArray'].length = -1;
-            var errors = this['fSumw2']['fN'];
+            var errors = this['fSumw2'].length;
             if (errors) ['fSumw2'].length = this['fNcells'];
             axis['fTimeDisplay'] = timedisp;
 
@@ -1152,7 +1203,7 @@
                if (bin > 0)  {
                   var cu = hold.getBinContent(bin);
                   this['fArray'][bin] += cu;
-                  if (errors) this['fSumw2']['fArray'][ibin] += hold['fSumw2']['fArray'][bin];
+                  if (errors) this['fSumw2'][ibin] += hold['fSumw2'][bin];
                }
             }
             this['fEntries'] = oldEntries;
@@ -1172,7 +1223,7 @@
             this['fTsumwx2'] = stats[3];
             this['fEntries'] = Math.abs(this['fTsumw']);
             // use effective entries for weighted histograms:  (sum_w) ^2 / sum_w2
-            if (this['fSumw2']['fN'] > 0 && this['fTsumw'] > 0 && stats[1] > 0 )
+            if (this['fSumw2'].length > 0 && this['fTsumw'] > 0 && stats[1] > 0 )
                this['fEntries'] = stats[0] * stats[0] / stats[1];
          }
          obj['setBinContent'] = function(bin, content) {
@@ -1207,13 +1258,11 @@
             //  This function is automatically called when the histogram is created
             //  if the static function TH1::SetDefaultSumw2 has been called before.
 
-            if (this['fSumw2']['fN'] == this['fNcells']) {
-               return;
-            }
+            if (this['fSumw2'].length == this['fNcells']) return;
             this['fSumw2'].length = this['fNcells'];
             if ( this['fEntries'] > 0 ) {
                for (var bin=0; bin<this['fNcells']; bin++) {
-                  this['fSumw2']['fArray'][bin] = Math.abs(this.getBinContent(bin));
+                  this['fSumw2'][bin] = Math.abs(this.getBinContent(bin));
                }
             }
          };
@@ -1519,7 +1568,7 @@
          obj['getBinEffectiveEntries'] = function(bin) {
             if (bin < 0 || bin >= this['fNcells']) return 0;
             var sumOfWeights = this['fBinEntries'][bin];
-            if ( this['fBinSumw2'].length == 0 || this['fBinSumw2'].length != this['fNcells']) {
+            if ( this['fBinSumw2'] == null || this['fBinSumw2'].length != this['fNcells']) {
                // this can happen  when reading an old file
                return sumOfWeights;
             }
@@ -1533,7 +1582,7 @@
                var lastBinX  = this['fXaxis'].getLast();
                for (binx = this['firstBinX']; binx <= lastBinX; binx++) {
                   var w   = onj['fBinEntries'][binx];
-                  var w2  = (this['fN'] ? this['fBinSumw2'][binx] : w);
+                  var w2  = (this['fBinSumw2'] ? this['fBinSumw2'][binx] : w);
                   var x   = fXaxis.GetBinCenter(binx);
                   stats[0] += w;
                   stats[1] += w2;
@@ -2029,6 +2078,45 @@
    JSROOT.Math.landaun = function(f, x, i) {
       return JSROOT.Math.Landau(x, f['fParams'][i+1],f['fParams'][i+2], true);
    };
+
+
+   // it is important to run this function at the end when all other
+   // functions are available
+   (function() {
+      var scripts = document.getElementsByTagName('script');
+
+      for (var n in scripts) {
+         if (scripts[n]['type'] != 'text/javascript') continue;
+
+         var src = scripts[n]['src'];
+         if ((src == null) || (src.length == 0)) continue;
+
+         var pos = src.indexOf("scripts/JSRootCore.js");
+         if (pos<0) continue;
+
+         JSROOT.source_dir = src.substr(0, pos);
+
+         console.log("Set JSROOT.source_dir to " + JSROOT.source_dir);
+
+         if (JSROOT.GetUrlOption('gui', src)!=null) return JSROOT.BuildSimpleGUI();
+
+         var prereq = "";
+         if (JSROOT.GetUrlOption('io', src)!=null) prereq += "io;";
+         if (JSROOT.GetUrlOption('2d', src)!=null) prereq += "2d;";
+         if (JSROOT.GetUrlOption('3d', src)!=null) prereq += "3d;";
+         var user = JSROOT.GetUrlOption('load', src);
+         if ((user!=null) && (user.length>0)) prereq += "load:" + user;
+         var onload = JSROOT.GetUrlOption('onload', src);
+         if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, onload); else
+         if (onload!=null) {
+            onload = JSROOT.findFunction(onload);
+            if (typeof onload == 'function') onload();
+         }
+
+         return;
+      }
+   })();
+
 
 })();
 

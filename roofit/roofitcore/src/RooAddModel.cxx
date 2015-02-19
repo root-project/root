@@ -255,7 +255,7 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
   // RooAddModel will clone all the component models to create a composite convolution object
 
   // Check that primary variable of basis functions is our convolution variable  
-  if (inBasis->findServer(0) != x.absArg()) {
+  if (inBasis->getParameter(0) != x.absArg()) {
     coutE(InputArguments) << "RooAddModel::convolution(" << GetName() 
 			  << ") convolution parameter of basis function and PDF don't match" << endl ;
     ccoutE(InputArguments) << "basis->findServer(0) = " << inBasis->findServer(0) << " " << inBasis->findServer(0)->GetName() << endl ;
@@ -292,6 +292,14 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
   }
     
   RooAddModel* convSum = new RooAddModel(newName,newTitle,modelList,theCoefList,kTRUE) ;
+  for (std::set<std::string>::const_iterator attrIt = _boolAttrib.begin();
+      attrIt != _boolAttrib.end(); ++attrIt) {
+    convSum->setAttribute((*attrIt).c_str()) ;
+  }
+  for (std::map<std::string,std::string>::const_iterator attrIt = _stringAttrib.begin();
+      attrIt != _stringAttrib.end(); ++attrIt) {
+    convSum->setStringAttribute((attrIt->first).c_str(), (attrIt->second).c_str()) ;
+  }
   convSum->changeBasis(inBasis) ;
   return convSum ;
 }

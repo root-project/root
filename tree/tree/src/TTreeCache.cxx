@@ -877,7 +877,7 @@ TTreeCache::EPrefillType TTreeCache::GetConfiguredPrefillType() const
    Int_t s = 0;
 
    if (!(stcp = gSystem->Getenv("ROOT_TTREECACHE_PREFILL")) || !*stcp) {
-      s = gEnv->GetValue("TTreeCache.Prefill", 0);
+      s = gEnv->GetValue("TTreeCache.Prefill", 1);
    } else {
       s = TString(stcp).Atoi();
    }

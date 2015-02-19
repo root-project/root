@@ -168,13 +168,15 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // We strongly recommend setting the variable to 2 if your scripts include <vector>
    // and you execute your scripts multiple times.
    if (includes > 0) {
-      ProcessLine("#include <iostream>", kTRUE);
-      ProcessLine("#include <string>", kTRUE); // for std::string std::iostream.
-      ProcessLine("#include <DllImport.h>", kTRUE);// Defined R__EXTERN
+      TString code;
+      code = "#include <iostream>\n"
+             "#include <string>\n" // for std::string std::iostream.
+             "#include <DllImport.h>\n";// Defined R__EXTERN
       if (includes > 1) {
-         ProcessLine("#include <vector>", kTRUE);
-         ProcessLine("#include <utility>", kTRUE);
+         code += "#include <vector>\n"
+                 "#include <utility>";
       }
+      ProcessLine(code, kTRUE);
    }
 
    // Load user functions

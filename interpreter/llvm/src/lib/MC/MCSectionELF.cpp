@@ -19,8 +19,8 @@ using namespace llvm;
 
 MCSectionELF::~MCSectionELF() {} // anchor.
 
-// ShouldOmitSectionDirective - Decides whether a '.section' directive
-// should be printed before the section name
+// Decides whether a '.section' directive
+// should be printed before the section name.
 bool MCSectionELF::ShouldOmitSectionDirective(StringRef Name,
                                               const MCAsmInfo &MAI) const {
 
@@ -156,14 +156,4 @@ bool MCSectionELF::UseCodeAlign() const {
 
 bool MCSectionELF::isVirtualSection() const {
   return getType() == ELF::SHT_NOBITS;
-}
-
-unsigned MCSectionELF::DetermineEntrySize(SectionKind Kind) {
-  if (Kind.isMergeable1ByteCString()) return 1;
-  if (Kind.isMergeable2ByteCString()) return 2;
-  if (Kind.isMergeable4ByteCString()) return 4;
-  if (Kind.isMergeableConst4())       return 4;
-  if (Kind.isMergeableConst8())       return 8;
-  if (Kind.isMergeableConst16())      return 16;
-  return 0;
 }

@@ -41,13 +41,14 @@
 #include "RooAbsCategory.h"
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
+#include "RooTrace.h"
 
 using namespace std ;
 
 ClassImp(RooProduct)
 ;
 
-class RooProduct::ProdMap : public  std::vector<std::pair<RooArgSet*,RooArgSet*> > {} ;
+class RooProduct::ProdMap : public  std::vector<std::pair<RooArgSet*,RooArgList*> > {} ;
 
 // Namespace with helper functions that have STL stuff that we don't want to expose to CINT
 namespace {
@@ -64,6 +65,7 @@ RooProduct::RooProduct() :
   _compCIter( _compCSet.createIterator() )
 {
   // Default constructor
+  TRACE_CREATE
 }
 
 
@@ -80,6 +82,7 @@ RooProduct::~RooProduct()
   if (_compCIter) {
     delete _compCIter ;
   }
+  TRACE_DESTROY
 }
 
 
@@ -109,6 +112,7 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
     }
   }
   delete compIter ;
+  TRACE_CREATE
 }
 
 
@@ -123,6 +127,7 @@ RooProduct::RooProduct(const RooProduct& other, const char* name) :
   _cacheMgr(other._cacheMgr,this)
 {
   // Copy constructor
+  TRACE_CREATE
 }
 
 
@@ -155,7 +160,7 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   // Do we have any terms which do not depend on the
   // on the variables we integrate over?
   RooAbsReal* rcomp ; _compRIter->Reset() ;
-  RooArgSet *indep = new RooArgSet();
+  RooArgList *indep = new RooArgList();
   while((rcomp=(RooAbsReal*)_compRIter->Next())) {
     if( !rcomp->dependsOn(allVars) ) indep->add(*rcomp);
   }
@@ -168,7 +173,7 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   RooAbsReal* var ;
   while((var=(RooAbsReal*)allVarsIter->Next())) {
     RooArgSet *vars  = new RooArgSet(); vars->add(*var);
-    RooArgSet *comps = new RooArgSet();
+    RooArgList *comps = new RooArgList();
     RooAbsReal* rcomp2 ; 
     
     _compRIter->Reset() ;
@@ -186,7 +191,17 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
     overlap = (i.first!=i.second);
     if (overlap) {
       i.first->first->add(*i.second->first);
-      i.first->second->add(*i.second->second);
+
+      // In the merging step, make sure not to duplicate
+      RooFIter it = i.second->second->fwdIterator() ;
+      RooAbsArg* targ ;
+      while ((targ = it.next())) {
+	if (!i.first->second->find(*targ)) {
+	  i.first->second->add(*targ) ;
+	}
+      }
+      //i.first->second->add(*i.second->second);
+
       delete i.second->first;
       delete i.second->second;
       map->erase(i.second);
@@ -450,6 +465,28 @@ RooArgList RooProduct::CacheElem::containedArgs(Action)
   RooArgList ret(_ownedList) ;
   return ret ;
 }
+
+
+
+
+//_____________________________________________________________________________
+void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes) 
+{
+  // Label OK'ed components of a RooProduct with cache-and-track
+
+  RooArgSet comp(components()) ;
+  RooFIter piter = comp.fwdIterator() ;
+  RooAbsArg* parg ;
+  while ((parg=piter.next())) {
+    if (parg->isDerived()) {
+      if (parg->canNodeBeCached()==Always) {
+	trackNodes.add(*parg) ;
+	//cout << "tracking node RooProduct component " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
+      }
+    }
+  }
+}							    
+
 
 
 

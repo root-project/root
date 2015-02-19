@@ -220,7 +220,7 @@ Double_t TGeoEltu::DistFromOutside(const Double_t *point, const Double_t *dir, I
          Double_t phi1=0;
          Double_t phi2=0.5*TMath::Pi();
          Double_t phi3;
-         Double_t x3,y3,d;
+         Double_t x3=0.,y3=0.,d;
          for (Int_t i=0; i<10; i++) {
             phi3=(phi1+phi2)*0.5;
             x3=fRmin*TMath::Cos(phi3);

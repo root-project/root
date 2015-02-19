@@ -619,10 +619,11 @@ namespace {
       for (unsigned I = 0; I != NumCandidates; ++I) {
         CodeCompletionString *StoredCompletion
           = Candidates[I].CreateSignatureString(CurrentArg, S, getAllocator(),
-                                                getCodeCompletionTUInfo());
+                                                getCodeCompletionTUInfo(),
+                                                includeBriefComments());
         
         CXCompletionResult R;
-        R.CursorKind = CXCursor_NotImplemented;
+        R.CursorKind = CXCursor_OverloadCandidate;
         R.CompletionString = StoredCompletion;
         StoredResults.push_back(R);
       }
@@ -692,9 +693,9 @@ void clang_codeCompleteAt_Impl(void *UserData) {
   SmallVector<ASTUnit::RemappedFile, 4> RemappedFiles;
 
   for (auto &UF : CCAI->unsaved_files) {
-    llvm::MemoryBuffer *MB =
+    std::unique_ptr<llvm::MemoryBuffer> MB =
         llvm::MemoryBuffer::getMemBufferCopy(getContents(UF), UF.Filename);
-    RemappedFiles.push_back(std::make_pair(UF.Filename, MB));
+    RemappedFiles.push_back(std::make_pair(UF.Filename, MB.release()));
   }
 
   if (EnableLogging) {

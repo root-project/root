@@ -18,6 +18,7 @@
 #include <cassert>
 
 #include "Math/Error.h"
+#include "Math/Math.h"
 #include "Math/Integrator.h"
 #include "Math/ProbFuncMathCore.h"
 
@@ -312,17 +313,27 @@ namespace Math {
       for (UInt_t i = 0; i < ns.size(); ++i) {
          H += 1.0 /  double( ns[i] );
       }
+
+      // use approximate formulas for large N
       // cache Sum( 1 / i)
-      std::vector<double> invI(N); 
-      for (UInt_t i = 1; i <= N - 1; ++i) {
-         invI[i] = 1.0 / i; 
-         h += invI[i]; 
-      }
-      for (UInt_t i = 1; i <= N - 2; ++i) {
-         double tmp = invI[N-i];
-         for (UInt_t j = i + 1; j <= N - 1; ++j) {
-            g += tmp * invI[j];
+      if (N < 2000) { 
+         std::vector<double> invI(N); 
+         for (UInt_t i = 1; i <= N - 1; ++i) {
+            invI[i] = 1.0 / i; 
+            h += invI[i]; 
          }
+         for (UInt_t i = 1; i <= N - 2; ++i) {
+            double tmp = invI[N-i];
+            for (UInt_t j = i + 1; j <= N - 1; ++j) {
+               g += tmp * invI[j];
+            }
+         }
+      }
+      else {
+         // for N larger than 2000 error difference in g is ~ 5 10^-3 while in h is at the level of 10^-5
+         const double emc = 0.5772156649015328606065120900824024; // Euler-Mascheroni constant
+         h = std::log(double(N-1) ) + emc;
+         g = (M_PI)*(M_PI)/6.0;
       }
       double k2 = std::pow(k,2);
       a = (4 * g - 6) * k + (10 - 6 * g) * H - 4 * g + 6;

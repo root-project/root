@@ -6,22 +6,18 @@
 #include "PyStrings.h"
 #include "PropertyProxy.h"
 #include "ObjectProxy.h"
-#include "TPyBufferFactory.h"
-#include "RootWrapper.h"
 #include "Utility.h"
-
-// ROOT
-#include "TROOT.h"
-#include "TClass.h"
-#include "TDataMember.h"
-#include "TEnumConstant.h"
-#include "TGlobal.h"
-#include "TDataType.h"
-#include "TClassEdit.h"
-#include "TInterpreter.h"
 
 
 namespace PyROOT {
+
+   enum ETypeDetails {
+      kNone           =    0,
+      kIsStaticData   =    1,
+      kIsEnumData     =    2,
+      kIsConstData    =    4,
+      kIsArrayType    =    8
+   };
 
 namespace {
 
@@ -29,20 +25,20 @@ namespace {
    PyObject* pp_get( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* )
    {
    // normal getter access
-      Long_t address = pyprop->GetAddress( pyobj );
+      void* address = pyprop->GetAddress( pyobj );
       if ( PyErr_Occurred() )
          return 0;
 
+   // for fixed size arrays
+      void* ptr = address;
+      if ( pyprop->fProperty & kIsArrayType )
+         ptr = &address;
+
    // not-initialized or public data accesses through class (e.g. by help())
-      if ( ! address || address == -1 /* Cling error */ ) {
+      if ( ! ptr || (ptrdiff_t)ptr == -1 /* Cling error */ ) {
          Py_INCREF( pyprop );
          return (PyObject*)pyprop;
       }
-
-   // for fixed size arrays
-      void* ptr = (void*)address;
-      if ( pyprop->fProperty & kIsArray )
-         ptr = &address;
 
       if ( pyprop->fConverter != 0 ) {
          PyObject* result = pyprop->fConverter->FromMemory( ptr );
@@ -72,18 +68,18 @@ namespace {
       const int errret = -1;
 
    // filter const objects to prevent changing their values
-      if ( ( pyprop->fProperty & kIsConstant ) ) {
+      if ( ( pyprop->fProperty & kIsConstData ) ) {
          PyErr_SetString( PyExc_TypeError, "assignment to const data not allowed" );
          return errret;
       }
 
-      Long_t address = pyprop->GetAddress( pyobj );
+      ptrdiff_t address = (ptrdiff_t)pyprop->GetAddress( pyobj );
       if ( ! address || address == -1 /* Cling error */ || PyErr_Occurred() )
          return errret;
 
    // for fixed size arrays
       void* ptr = (void*)address;
-      if ( pyprop->fProperty & kIsArray )
+      if ( pyprop->fProperty & kIsArrayType )
          ptr = &address;
 
    // actual conversion; return on success
@@ -187,68 +183,41 @@ PyTypeObject PropertyProxy_Type = {
 
 
 //- public members -----------------------------------------------------------
-void PyROOT::PropertyProxy::Set( TDataMember* dm )
+void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata )
 {
-// initialize from <dm> info
-   fOffset    = dm->GetOffsetCint();
-   fProperty  = (Long_t)dm->Property();
+   fEnclosingScope = scope;
+   fName           = Cppyy::GetDatamemberName( scope, idata );
+   fOffset         = Cppyy::GetDatamemberOffset( scope, idata );
+   fProperty       = Cppyy::IsStaticData( scope, idata ) ? kIsStaticData : 0;
 
-// arrays of objects do not require extra dereferencing
-   if ( ! dm->IsBasic() ) fProperty &= ~kIsArray;
+   Int_t size = Cppyy::GetDimensionSize( scope, idata, 0 );
+   if ( size != -1 )
+      fProperty |= kIsArrayType;
 
-   std::string fullType = dm->GetFullTypeName();
-   if ( (int)dm->GetArrayDim() != 0 || ( ! dm->IsBasic() && dm->IsaPointer() ) ) {
-      fullType.append( "*" );
-   } else if ( dm->Property() & kIsEnum )
+   std::string fullType = Cppyy::GetDatamemberType( scope, idata );
+   if ( Cppyy::IsEnumData( scope, idata ) ) {
       fullType = "UInt_t";
-   fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
+      fProperty |= kIsEnumData;
+   }
 
-   if ( dm->GetClass() )
-      fEnclosingScope = dm->GetClass()->GetClassInfo();
-   else
-      fEnclosingScope = NULL;    // namespaces
-
-   fName      = dm->GetName();
+   fConverter = CreateConverter( fullType, size );
 }
 
 //____________________________________________________________________________
-void PyROOT::PropertyProxy::Set( TEnumConstant* tec )
+void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, const std::string& name, void* address )
 {
-// initialize from <tec> info
-   fOffset    = (Long_t)tec->GetAddress();
-   fProperty  = tec->Property() | kIsStatic | kIsEnum;
-
-   fConverter = CreateConverter( "UInt_t", tec->GetMaxIndex( 0 ) );
-
-   fEnclosingScope = 0;            // no enclosure (global scope; maybe pretend)
-   fName      = tec->GetName();
+   fEnclosingScope = scope;
+   fName           = name;
+   fOffset         = (ptrdiff_t)address;
+   fProperty       = (kIsStaticData | kIsConstData | kIsEnumData /* true, but may chance */ );
+   fConverter      = CreateConverter( "UInt_t", -1 );
 }
 
 //____________________________________________________________________________
-void PyROOT::PropertyProxy::Set( TGlobal* gbl )
-{
-// initialize from <gbl> info
-   fOffset    = (Long_t)gbl->GetAddress();
-   fProperty  = gbl->Property() | kIsStatic;    // force static flag
-
-   std::string fullType = gbl->GetFullTypeName();
-   if ( fullType == "void*" ) // actually treated as address to void*
-      fullType = "void**";
-   else if ( (int)gbl->GetArrayDim() != 0 )
-      fullType.append( "*" );
-   else if ( gbl->Property() & kIsEnum )
-      fullType = "UInt_t";
-   fConverter = CreateConverter( fullType, gbl->GetMaxIndex( 0 ) );
-
-   fEnclosingScope = 0;            // no enclosure (global scope)
-   fName      = gbl->GetName();
-}
-
-//____________________________________________________________________________
-Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
+void* PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
 // class attributes, global properties
-   if ( (fProperty & kIsStatic) || fEnclosingScope == 0 )
-      return fOffset;
+   if ( fProperty & kIsStaticData )
+      return (void*)fOffset;
 
 // special case: non-static lookup through class
    if ( ! pyobj )
@@ -268,8 +237,8 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
    }
 
 // the proxy's internal offset is calculated from the enclosing class
-   Long_t offset = Utility::UpcastOffset(
-      pyobj->ObjectIsA()->GetClassInfo(), fEnclosingScope, obj, true /*isDerived*/ );
+   ptrdiff_t offset = Cppyy::GetBaseOffset(
+      pyobj->ObjectIsA(), fEnclosingScope, obj, 1 /* up-cast */ );
 
-   return (Long_t)obj + offset + fOffset;
+   return (void*)((ptrdiff_t)obj + offset + fOffset);
 }

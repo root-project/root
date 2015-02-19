@@ -227,11 +227,11 @@ void TMVA::RuleFit::MakeForest()
       // fsig = Double_t(nsig)/Double_t(nsig+nbkg);
       // do not implement the above in this release...just set it to default
 
-      DecisionTree *dt;
+      DecisionTree *dt=nullptr;
       Bool_t tryAgain=kTRUE;
       Int_t ntries=0;
       const Int_t ntriesMax=10;
-      Double_t frnd;
+      Double_t frnd = 0.;
       while (tryAgain) {
          frnd = 100*rndGen.Uniform( fMethodRuleFit->GetMinFracNEve(), 0.5*fMethodRuleFit->GetMaxFracNEve() );
          Int_t     iclass = 0; // event class being treated as signal during training

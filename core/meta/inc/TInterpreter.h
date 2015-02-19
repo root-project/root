@@ -47,6 +47,9 @@ class TInterpreter : public TNamed {
 
 protected:
    virtual void Execute(TMethod *method, TObjArray *params, int *error = 0) = 0;
+   virtual Bool_t SetSuspendAutoParsing(Bool_t value) = 0;
+
+   friend class SuspendAutoParsing;
 
 public:
    enum EErrorCode {
@@ -87,6 +90,15 @@ public:
          Dtor_t fDtor;
       };
    };
+
+   class SuspendAutoParsing {
+      TInterpreter *fInterp;
+      Bool_t        fPrevious;
+   public:
+      SuspendAutoParsing(TInterpreter *where, Bool_t value = kTRUE) : fInterp(where), fPrevious(fInterp->SetSuspendAutoParsing(value)) {}
+      ~SuspendAutoParsing() { fInterp->SetSuspendAutoParsing(fPrevious); }
+   };
+   virtual Bool_t IsAutoParsingSuspended() const = 0;
 
    typedef int (*AutoLoadCallBack_t)(const char*);
    typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
@@ -275,6 +287,9 @@ public:
    void CallFunc_SetArg(CallFunc_t * func, UChar_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
    void CallFunc_SetArg(CallFunc_t * func, UShort_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
    void CallFunc_SetArg(CallFunc_t * func, UInt_t param) const { CallFunc_SetArg(func,(ULong_t)param); }
+
+   template <typename T>
+   void CallFunc_SetArgRef(CallFunc_t * func, T &param) const { CallFunc_SetArg(func,(ULong_t)&param); }
 
    void CallFunc_SetArg(CallFunc_t *func, void *arg)
    {

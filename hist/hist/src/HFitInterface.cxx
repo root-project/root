@@ -174,6 +174,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    int ndim = hdim;
    // case of function dimension less than histogram
    if (func !=0 && func->GetNdim() == hdim-1) ndim = hdim-1;
+  
    assert( ndim > 0 );
    //typedef  BinPoint::CoordData CoordData;
    //CoordData x = CoordData( hfit->GetDimension() );

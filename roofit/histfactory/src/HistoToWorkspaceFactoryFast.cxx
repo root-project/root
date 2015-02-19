@@ -160,6 +160,7 @@ namespace HistFactory{
     // Name of an 'edited' model, if necessary
     std::string NewModelName = "newSimPdf"; // <- This name is hard-coded in HistoToWorkspaceFactoryFast::EditSyt.  Probably should be changed to : std::string("new") + ModelName;
 
+#ifdef DO_EDIT_WS    
     // Activate Additional Constraint Terms
     if(    measurement.GetGammaSyst().size() > 0 
 	|| measurement.GetUniformSyst().size() > 0 
@@ -173,7 +174,8 @@ namespace HistFactory{
 
       proto_config->SetPdf( *ws_single->pdf( "newSimPdf" ) );
     }
-  
+#endif
+    
     // Set the ModelConfig's Params of Interest
     RooAbsData* expData = ws_single->data("asimovData");
     if( !expData ) {
@@ -212,16 +214,20 @@ namespace HistFactory{
 	(RooDataSet*) AsymptoticCalculator::GenerateAsimovData(*pdf, *observables);
 
       std::cout << "Importing Asimov dataset" << std::endl;
-      double failure = ws_single->import(*asimov_dataset, Rename(AsimovName.c_str()));
+      bool failure = ws_single->import(*asimov_dataset, Rename(AsimovName.c_str()));
       if( failure ) {
 	std::cout << "Error: Failed to import Asimov dataset: " << AsimovName
 		  << std::endl;
+        delete asimov_dataset;
 	throw hf_exc();
       }
 
       // Load the snapshot at the end of every loop iteration
       // so we start each loop with a "clean" snapshot
       ws_single->loadSnapshot(SnapShotName.c_str());
+
+      // we can now deleted the data set after having imported it
+      delete asimov_dataset;
 
     }
 
@@ -367,7 +373,10 @@ namespace HistFactory{
     proto->import(*histFunc);
 
     /// now create the product of the overall efficiency times the sigma(params) for this estimate
-    proto->factory(("prod:"+productPrefix+"("+prefix+"_nominal,"+systTerm+")").c_str() );    
+    proto->factory(("prod:"+productPrefix+"("+prefix+"_nominal,"+systTerm+")").c_str() );
+
+    delete histDHist;
+    delete histFunc; 
 
   }
 
@@ -582,7 +591,7 @@ namespace HistFactory{
       return sigmaEpsilon;
   }        
 
-  void HistoToWorkspaceFactoryFast::AddEfficiencyTerms(RooWorkspace* proto, string prefix, 
+   void HistoToWorkspaceFactoryFast::AddConstraintTerms(RooWorkspace* proto, Measurement & meas, string prefix, 
 						       string interpName,
 						       std::vector<OverallSys>& systList, 
 						       vector<string>& constraintTermNames, 
@@ -597,48 +606,136 @@ namespace HistFactory{
     RooArgSet params(prefix.c_str());
     vector<double> lowVec, highVec;
 
+    std::map<std::string, double>::iterator itconstr;
     for(unsigned int i = 0; i < systList.size(); ++i) {
 
-      OverallSys& sys = systList.at(i); 
+      OverallSys& sys = systList.at(i);
+      const char * name = sys.GetName().c_str();
 
-      // add efficiency term
-      RooRealVar* temp = (RooRealVar*) proto->var((prefix + sys.GetName()).c_str());
-      if(!temp) {
+      // case of no systematic (is it possible)
+      if (meas.GetNoSyst().count(sys.GetName()) > 0 ) {
+         std::cout << "HistoToWorkspaceFast::AddConstraintTerm - skip systematic " << sys.GetName() << std::endl;
+         continue;
+      }
+      // case systematic is a  gamma constraint 
+      if (meas.GetGammaSyst().count(sys.GetName()) > 0 ) {
+         double relerr = meas.GetGammaSyst().find(sys.GetName() )->second;
+         if (relerr <= 0) {
+            std::cout << "HistoToWorkspaceFast::AddConstraintTerm - zero uncertainty assigned - skip systematic  " << sys.GetName() << std::endl;
+            continue; 
+         }
+         double tauVal = 1./(relerr*relerr);
+         double sqtau = 1./relerr;
+         RooAbsArg * beta = proto->factory(TString::Format("beta_%s[1,0,10]",name) );
+         // the global observable (y_s)
+         RooAbsArg * yvar = proto->factory(TString::Format("nom_%s[%f,0,10]",beta->GetName(),tauVal)) ;
+         // the rate of the gamma distribution (theta)
+         RooAbsArg * theta = proto->factory(TString::Format("theta_%s[%f]",name,1./tauVal));
+         // find alpha as function of beta
+         RooAbsArg* alphaOfBeta = proto->factory(TString::Format("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",name,name,-sqtau,sqtau));
 
-	temp = (RooRealVar*) proto->factory((prefix + sys.GetName() + range).c_str());
-	string command=("Gaussian::" + prefix + sys.GetName() + 
-			"Constraint(" + prefix + sys.GetName() +
-			",nom_" + prefix + sys.GetName() + "[0.,-10,10],1.)");
+         // add now the constraint itself  Gamma_beta_constraint(beta, y+1, tau, 0 )
+         // build the gamma parameter k = as y_s + 1
+         RooAbsArg * kappa = proto->factory(TString::Format("sum::k_%s(%s,1.)",name,yvar->GetName()) ); 
+         RooAbsArg * gamma = proto->factory(TString::Format("Gamma::%sConstraint(%s, %s, %s, 0.0)",beta->GetName(),beta->GetName(), kappa->GetName(), theta->GetName() ) );  
+         alphaOfBeta->Print("t");
+         gamma->Print("t"); 
+         constraintTermNames.push_back(gamma->GetName());
+         // set global observables
+         RooRealVar * gobs = dynamic_cast<RooRealVar*>(yvar); assert(gobs);
+         gobs->setConstant(true);
+         const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*yvar);
 
-        cout << command << endl;
-        constraintTermNames.push_back( proto->factory( command.c_str() )->GetName() );
-	proto->var(("nom_" + prefix + sys.GetName()).c_str())->setConstant();
-	const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var(("nom_" + prefix + sys.GetName()).c_str()));	
-      } 
+         // add alphaOfBeta in the list of params to interpolate
+         params.add(*alphaOfBeta);
+         std::cout << "Added a gamma constraint for " << name << std::endl;
+                  
+      }
+      else {
 
-      params.add(*temp);
+         // add the Gaussian constraint part 
 
-      // add constraint in terms of bifrucated gauss with low/high as sigmas
-      std::stringstream lowhigh;
+         // case systematic is uniform (asssume they are like a gauaaian bbut with a large width
+         // (100 instead of 1)
+         double gaussSigma = 1;
+         if (meas.GetUniformSyst().count(sys.GetName()) > 0 ) {
+            gaussSigma = 100;
+            std::cout << "Added a uniform constraint for " << name << " as a gaussian constraint with a very large sigma " << std::endl;
+         }
+         
+         // add Gaussian constraint terms (normal + log-normal case) 
+         RooRealVar* alpha = (RooRealVar*) proto->var((prefix + sys.GetName()).c_str());
+         if(!alpha) {
+            
+            alpha = (RooRealVar*) proto->factory((prefix + sys.GetName() + range).c_str());
+            RooAbsArg * nomAlpha = proto->factory(TString::Format("nom_%s[0.,-10,10]",alpha->GetName() ) );
+            RooAbsArg * gausConstraint =  proto->factory(TString::Format("Gaussian::%sConstraint(%s,%s,%f)",alpha->GetName(),alpha->GetName(), nomAlpha->GetName(), gaussSigma) );             
+             //cout << command << endl;
+            constraintTermNames.push_back( gausConstraint->GetName() );
+            proto->var(("nom_" + prefix + sys.GetName()).c_str())->setConstant();
+            const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*nomAlpha);	
+         } 
+         
+         
+         // add constraint in terms of bifrucated gauss with low/high as sigmas
+         //std::stringstream lowhigh;
+         
+         // check if exists a log-normal constraint
+         if (meas.GetLogNormSyst().count(sys.GetName()) == 0 &&  meas.GetGammaSyst().count(sys.GetName()) == 0 ) {             
+            // just add the alpha for the parameters of the FlexibleInterpVar function 
+            params.add(*alpha);                    
+         }
+                  // case systematic is a  log-normal constraint 
+         if (meas.GetLogNormSyst().count(sys.GetName()) > 0 ) {
+            // log normal constraint for parameter
+            double relerr = meas.GetLogNormSyst().find(sys.GetName() )->second;
+            double tauVal = 1./relerr; 
+            std::string tauName = "tau_" + sys.GetName();
+            proto->factory(TString::Format("%s[%f]",tauName.c_str(),tauVal ) );
+            double kappaVal = 1. + relerr; 
+            std::string kappaName = "kappa_" + sys.GetName();
+            proto->factory(TString::Format("%s[%f]",kappaName.c_str(),kappaVal ) );
+            const char * alphaName = alpha->GetName(); 
+            
+            std::string alphaOfBetaName = "alphaOfBeta_" + sys.GetName(); 
+            RooAbsArg * alphaOfBeta = proto->factory(TString::Format("expr::%s('%s*(pow(%s,%s)-1.)',%s,%s,%s)",alphaOfBetaName.c_str(),
+                                                                     tauName.c_str(),kappaName.c_str(),alphaName,
+                                                                     tauName.c_str(),kappaName.c_str(),alphaName ) );
+
+            std::cout << "Added a log-normal constraint for " << name << std::endl;
+            alphaOfBeta->Print("t"); 
+            params.add(*alphaOfBeta);
+         }
+
+      }
+      // add low/high vectors
       double low = sys.GetLow();
       double high = sys.GetHigh();
       lowVec.push_back(low);
       highVec.push_back(high);
-      
-    }
+
+    }  // end sys loop 
 
     if(systList.size() > 0){
-      // this is epsilon(alpha_j), a piece-wise linear interpolation
-      //      LinInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
-      FlexibleInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);      
-      interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise linear to 6th order polynomial interpolation + linear extrapolation )
-      proto->import(interp); // params have already been imported in first loop of this function
+       // this is epsilon(alpha_j), a piece-wise linear interpolation
+       //      LinInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
+       
+       assert( params.getSize() > 0);
+       assert(int(lowVec.size()) == params.getSize() );
+       
+       FlexibleInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);      
+       interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise linear to 6th order polynomial interpolation + linear extrapolation )
+       //interp.setAllInterpCodes(0); // simple linear interpolation
+       proto->import(interp); // params have already been imported in first loop of this function
     } else{
-      // some strange behavior if params,lowVec,highVec are empty.  
-      //cout << "WARNING: No OverallSyst terms" << endl;
-      RooConstVar interp( (interpName).c_str(), "", 1.);
-      proto->import(interp); // params have already been imported in first loop of this function
+       // some strange behavior if params,lowVec,highVec are empty.  
+       //cout << "WARNING: No OverallSyst terms" << endl;
+       RooConstVar interp( (interpName).c_str(), "", 1.);
+       proto->import(interp); // params have already been imported in first loop of this function
     }
+
+    // std::cout << "after creating FlexibleInterpVar " << std::endl;
+    // proto->Print();
     
   }
 
@@ -781,6 +878,8 @@ namespace HistFactory{
 
      proto->import(*data);
 
+     delete data; 
+
   }
 
   //_____________________________________________________________
@@ -807,6 +906,7 @@ namespace HistFactory{
     unsigned int nskipped = 0;
     map<string,double>::iterator it;
 
+    
     // add gamma terms and their constraints
     for(it=gammaSyst.begin(); it!=gammaSyst.end(); ++it) {
       //cout << "edit for " << it->first << "with rel uncert = " << it->second << endl;
@@ -956,23 +1056,24 @@ namespace HistFactory{
       double scale = relativeUncertainty;
       //double scale = kappa; 
 
+      const char * cname  = it->first.c_str(); 
+
       // this is the LogNormal
-      proto->factory(Form("beta_%s[1,0,10]",it->first.c_str()));
-      proto->factory(Form("kappa_%s[%f]",it->first.c_str(),kappa));
-      proto->factory(Form("Lognormal::beta_%sConstraint(beta_%s,one[1],kappa_%s)",
-			  it->first.c_str(),
-			  it->first.c_str(),
-			  it->first.c_str())) ;
-      proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",it->first.c_str(),it->first.c_str(),-1./scale,1./scale));
-      //      proto->factory(Form("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",it->first.c_str(),it->first.c_str(),-1.,1./scale));
+      proto->factory(TString::Format("beta_%s[1,0,10]",cname));
+      proto->factory(TString::Format("nom_beta_%s[1]",cname));
+      proto->factory(TString::Format("kappa_%s[%f]",cname,kappa));
+      proto->factory(TString::Format("Lognormal::beta_%sConstraint(beta_%s,nom_beta_%s,kappa_%s)",
+                                     cname, cname, cname, cname)) ;
+      proto->factory(TString::Format("PolyVar::alphaOfBeta_%s(beta_%s,{%f,%f})",cname,cname,-1./scale,1./scale));
+      
       
       // set beta const status to be same as alpha
-      if(proto->var(Form("alpha_%s",it->first.c_str()))->isConstant())
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(true);
+      if(proto->var(TString::Format("alpha_%s",cname))->isConstant())
+	proto->var(TString::Format("beta_%s",cname))->setConstant(true);
       else
-	proto->var(Form("beta_%s",it->first.c_str()))->setConstant(false);
+	proto->var(TString::Format("beta_%s",cname))->setConstant(false);
       // set alpha const status to true
-      //      proto->var(Form("alpha_%s",it->first.c_str()))->setConstant(true);
+      //      proto->var(TString::Format("alpha_%s",cname))->setConstant(true);
 
       // replace alphas with alphaOfBeta and replace constraints
       cout <<         "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint" << endl;
@@ -999,6 +1100,14 @@ namespace HistFactory{
 	  cout << "\n\n ---------------------\n WARNING: failed to make EDIT\n\n" << endl;
 	
       }
+      // add global observables
+      const RooArgSet * gobs = proto->set("globalObservables");
+      RooArgSet gobsNew(*gobs); 
+      gobsNew.add(*proto->var(TString::Format("nom_beta_%s",cname)) );
+      proto->removeSet("globalObservables");
+      proto->defineSet("globalObservables",gobsNew);
+      gobsNew.Print();
+      
     }
 
     /////////////////////////////////////////
@@ -1188,7 +1297,7 @@ namespace HistFactory{
 
       // constraintTermNames and totSystTermNames are vectors that are passed
       // by reference and filled by this method
-      AddEfficiencyTerms(proto,systSourcePrefix, overallSystName,
+      AddConstraintTerms(proto,measurement, systSourcePrefix, overallSystName,
 			 sample.GetOverallSysList(), constraintTermNames , totSystTermNames);    
 
       // GHL: Consider passing the NormFactor list instead of the entire sample
@@ -1695,14 +1804,14 @@ namespace HistFactory{
 	if(systToFix.at(i)=="Lumi"){
 	  auxMeas = proto->var("nominalLumi");
 	} else {
-	  auxMeas = proto->var(Form("nom_%s",temp->GetName()));
+	  auxMeas = proto->var(TString::Format("nom_%s",temp->GetName()));
 	}
 
 	if(auxMeas){
 	  const_cast<RooArgSet*>(proto->set("globalObservables"))->remove(*auxMeas);
 	} else{
 	  cout << "could not corresponding auxiliary measurement  " 
-	       << Form("nom_%s",temp->GetName()) << endl;
+	       << TString::Format("nom_%s",temp->GetName()) << endl;
 	}
       } else {
 	cout << "could not find variable " << systToFix.at(i) 
@@ -1749,8 +1858,8 @@ namespace HistFactory{
     // We create two sets, one for backwards compatability
     // The other to make a consistent naming convention
     // between individual channels and the combined workspace
-    proto->defineSet("observables", Form("%s",observablesStr.c_str()));
-    proto->defineSet("observablesSet", Form("%s",observablesStr.c_str()));
+    proto->defineSet("observables", TString::Format("%s",observablesStr.c_str()));
+    proto->defineSet("observablesSet", TString::Format("%s",observablesStr.c_str()));
     
     // Create the ParamHistFunc
     // after observables have been made
@@ -1775,8 +1884,8 @@ namespace HistFactory{
     // make data sets
       // THis works and is natural, but the memory size of the simultaneous dataset grows exponentially with channels
     const char* weightName="weightVar";
-    proto->factory(Form("%s[0,-1e10,1e10]",weightName));
-    proto->defineSet("obsAndWeight",Form("%s,%s",weightName,observablesStr.c_str()));
+    proto->factory(TString::Format("%s[0,-1e10,1e10]",weightName));
+    proto->defineSet("obsAndWeight",TString::Format("%s,%s",weightName,observablesStr.c_str()));
 
     /* Old code for generating the asimov
        Asimov generation is now done later...
@@ -1850,6 +1959,7 @@ namespace HistFactory{
       */
 
       proto->import(*obsDataUnbinned);
+      delete obsDataUnbinned; 
     } // End: Has non-null 'data' entry
 
     
@@ -1905,8 +2015,16 @@ namespace HistFactory{
       */
 
       proto->import(*obsDataUnbinned);
+
+      delete obsDataUnbinned;
+      
     } // End: Has non-null 'data' entry
 
+    // clean up 
+    delete model;
+    delete proto_config;
+    delete asimov_dataset; 
+    
     proto->Print();
     return proto;
   }
@@ -2085,6 +2203,7 @@ namespace HistFactory{
       std::cout << "Error: Failed to create combined asimov dataset" << std::endl;
       throw hf_exc();
     }
+    delete asimov_combined; 
 
     // Now merge the observable datasets across the channels
     if(chs[0]->data("obsData") != NULL) { 
@@ -2185,6 +2304,10 @@ namespace HistFactory{
     combined->importClassCode();
     //    combined->writeToFile("results/model_combined.root");
 
+    //clean up
+    delete combined_config;
+    delete simPdf; 
+    
     return combined;
   }
 
@@ -2231,13 +2354,15 @@ namespace HistFactory{
     // and import it into the workspace
     if(simData) {
       combined->import(*simData, Rename(dataSetName.c_str()));
+      delete simData;
+      simData = (RooDataSet*) combined->data(dataSetName.c_str() );
     }
     else {
       std::cout << "Error: Unable to merge observable datasets" << std::endl;
       throw hf_exc();
     }
 
-    return simData;
+    return simData; 
 
   }
     

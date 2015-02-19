@@ -23,8 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFormula
-#include "TFormula.h"
+#ifndef ROOT_TFormulaOld
+#include "TFormulaOld.h"
 #endif
 
 #ifndef ROOT_TLeaf
@@ -45,7 +45,7 @@ namespace std {
 }
 #endif
 
-const Int_t kMAXCODES = kMAXFOUND; // must be the same as kMAXFOUND in TFormula
+const Int_t kMAXCODES = kMAXFOUND; // must be the same as kMAXFOUND in TFormulaOld
 const Int_t kMAXFORMDIM = 5; // Maximum number of array dimensions support in TTreeFormula
 
 class TTree;
@@ -61,7 +61,7 @@ class TAxis;
 class TTreeFormulaManager;
 
 
-class TTreeFormula : public TFormula {
+class TTreeFormula : public TFormulaOld {
 
 friend class TTreeFormulaManager;
 

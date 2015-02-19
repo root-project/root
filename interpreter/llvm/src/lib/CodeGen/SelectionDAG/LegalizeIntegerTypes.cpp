@@ -66,6 +66,7 @@ void DAGTypeLegalizer::PromoteIntegerResult(SDNode *N, unsigned ResNo) {
   case ISD::EXTRACT_VECTOR_ELT:
                          Res = PromoteIntRes_EXTRACT_VECTOR_ELT(N); break;
   case ISD::LOAD:        Res = PromoteIntRes_LOAD(cast<LoadSDNode>(N));break;
+  case ISD::MLOAD:       Res = PromoteIntRes_MLOAD(cast<MaskedLoadSDNode>(N));break;
   case ISD::SELECT:      Res = PromoteIntRes_SELECT(N); break;
   case ISD::VSELECT:     Res = PromoteIntRes_VSELECT(N); break;
   case ISD::SELECT_CC:   Res = PromoteIntRes_SELECT_CC(N); break;
@@ -342,9 +343,10 @@ SDValue DAGTypeLegalizer::PromoteIntRes_CTLZ(SDNode *N) {
   EVT NVT = Op.getValueType();
   Op = DAG.getNode(N->getOpcode(), dl, NVT, Op);
   // Subtract off the extra leading bits in the bigger type.
-  return DAG.getNode(ISD::SUB, dl, NVT, Op,
-                     DAG.getConstant(NVT.getSizeInBits() -
-                                     OVT.getSizeInBits(), NVT));
+  return DAG.getNode(
+      ISD::SUB, dl, NVT, Op,
+      DAG.getConstant(NVT.getScalarSizeInBits() - OVT.getScalarSizeInBits(),
+                      NVT));
 }
 
 SDValue DAGTypeLegalizer::PromoteIntRes_CTPOP(SDNode *N) {
@@ -362,8 +364,8 @@ SDValue DAGTypeLegalizer::PromoteIntRes_CTTZ(SDNode *N) {
     // The count is the same in the promoted type except if the original
     // value was zero.  This can be handled by setting the bit just off
     // the top of the original type.
-    APInt TopBit(NVT.getSizeInBits(), 0);
-    TopBit.setBit(OVT.getSizeInBits());
+    auto TopBit = APInt::getOneBitSet(NVT.getScalarSizeInBits(),
+                                      OVT.getScalarSizeInBits());
     Op = DAG.getNode(ISD::OR, dl, NVT, Op, DAG.getConstant(TopBit, NVT));
   }
   return DAG.getNode(N->getOpcode(), dl, NVT, Op);
@@ -453,6 +455,24 @@ SDValue DAGTypeLegalizer::PromoteIntRes_LOAD(LoadSDNode *N) {
   return Res;
 }
 
+SDValue DAGTypeLegalizer::PromoteIntRes_MLOAD(MaskedLoadSDNode *N) {
+  EVT NVT = TLI.getTypeToTransformTo(*DAG.getContext(), N->getValueType(0));
+  SDValue ExtSrc0 = GetPromotedInteger(N->getSrc0());
+
+  SDValue Mask = N->getMask();
+  EVT NewMaskVT = getSetCCResultType(NVT);
+  if (NewMaskVT != N->getMask().getValueType())
+    Mask = PromoteTargetBoolean(Mask, NewMaskVT);
+  SDLoc dl(N);
+
+  SDValue Res = DAG.getMaskedLoad(NVT, dl, N->getChain(), N->getBasePtr(),
+                                  Mask, ExtSrc0, N->getMemoryVT(),
+                                  N->getMemOperand(), ISD::SEXTLOAD);
+  // Legalized the chain result - switch anything that used the old chain to
+  // use the new one.
+  ReplaceValueWith(SDValue(N, 1), Res.getValue(1));
+  return Res;
+}
 /// Promote the overflow flag of an overflowing arithmetic node.
 SDValue DAGTypeLegalizer::PromoteIntRes_Overflow(SDNode *N) {
   // Simply change the return type of the boolean result.
@@ -824,6 +844,10 @@ bool DAGTypeLegalizer::PromoteIntegerOperand(SDNode *N, unsigned OpNo) {
   case ISD::SINT_TO_FP:   Res = PromoteIntOp_SINT_TO_FP(N); break;
   case ISD::STORE:        Res = PromoteIntOp_STORE(cast<StoreSDNode>(N),
                                                    OpNo); break;
+  case ISD::MSTORE:       Res = PromoteIntOp_MSTORE(cast<MaskedStoreSDNode>(N),
+                                                    OpNo); break;
+  case ISD::MLOAD:        Res = PromoteIntOp_MLOAD(cast<MaskedLoadSDNode>(N),
+                                                    OpNo); break;
   case ISD::TRUNCATE:     Res = PromoteIntOp_TRUNCATE(N); break;
   case ISD::FP16_TO_FP:
   case ISD::UINT_TO_FP:   Res = PromoteIntOp_UINT_TO_FP(N); break;
@@ -861,7 +885,26 @@ void DAGTypeLegalizer::PromoteSetCCOperands(SDValue &NewLHS,SDValue &NewRHS,
   switch (CCCode) {
   default: llvm_unreachable("Unknown integer comparison!");
   case ISD::SETEQ:
-  case ISD::SETNE:
+  case ISD::SETNE: {
+    SDValue OpL = GetPromotedInteger(NewLHS);
+    SDValue OpR = GetPromotedInteger(NewRHS);
+
+    // We would prefer to promote the comparison operand with sign extension,
+    // if we find the operand is actually to truncate an AssertSext. With this
+    // optimization, we can avoid inserting real truncate instruction, which
+    // is redudant eventually.
+    if (OpL->getOpcode() == ISD::AssertSext &&
+        cast<VTSDNode>(OpL->getOperand(1))->getVT() == NewLHS.getValueType() &&
+        OpR->getOpcode() == ISD::AssertSext &&
+        cast<VTSDNode>(OpR->getOperand(1))->getVT() == NewRHS.getValueType()) {
+      NewLHS = OpL;
+      NewRHS = OpR;
+    } else {
+      NewLHS = ZExtPromotedInteger(NewLHS);
+      NewRHS = ZExtPromotedInteger(NewRHS);
+    }
+    break;
+  }
   case ISD::SETUGE:
   case ISD::SETUGT:
   case ISD::SETULE:
@@ -945,7 +988,7 @@ SDValue DAGTypeLegalizer::PromoteIntOp_BUILD_VECTOR(SDNode *N) {
   EVT VecVT = N->getValueType(0);
   unsigned NumElts = VecVT.getVectorNumElements();
   assert(!((NumElts & 1) && (!TLI.isTypeLegal(VecVT))) &&
-		 "Legal vector of one illegal element?");
+         "Legal vector of one illegal element?");
 
   // Promote the inserted value.  The type does not need to match the
   // vector element type.  Check that any extra bits introduced will be
@@ -1069,6 +1112,64 @@ SDValue DAGTypeLegalizer::PromoteIntOp_STORE(StoreSDNode *N, unsigned OpNo){
   // Truncate the value and store the result.
   return DAG.getTruncStore(Ch, dl, Val, Ptr,
                            N->getMemoryVT(), N->getMemOperand());
+}
+
+SDValue DAGTypeLegalizer::PromoteIntOp_MSTORE(MaskedStoreSDNode *N, unsigned OpNo){
+
+  assert(OpNo == 2 && "Only know how to promote the mask!");
+  SDValue DataOp = N->getValue();
+  EVT DataVT = DataOp.getValueType();
+  SDValue Mask = N->getMask();
+  EVT MaskVT = Mask.getValueType();
+  SDLoc dl(N);
+
+  bool TruncateStore = false;
+  if (!TLI.isTypeLegal(DataVT)) {
+    if (getTypeAction(DataVT) == TargetLowering::TypePromoteInteger) {
+      DataOp = GetPromotedInteger(DataOp);
+      Mask = PromoteTargetBoolean(Mask, DataOp.getValueType());
+      TruncateStore = true;
+    }
+    else {
+      assert(getTypeAction(DataVT) == TargetLowering::TypeWidenVector &&
+             "Unexpected data legalization in MSTORE");
+      DataOp = GetWidenedVector(DataOp);
+
+      if (getTypeAction(MaskVT) == TargetLowering::TypeWidenVector)
+        Mask = GetWidenedVector(Mask);
+      else {
+        EVT BoolVT = getSetCCResultType(DataOp.getValueType());
+
+        // We can't use ModifyToType() because we should fill the mask with
+        // zeroes
+        unsigned WidenNumElts = BoolVT.getVectorNumElements();
+        unsigned MaskNumElts = MaskVT.getVectorNumElements();
+
+        unsigned NumConcat = WidenNumElts / MaskNumElts;
+        SmallVector<SDValue, 16> Ops(NumConcat);
+        SDValue ZeroVal = DAG.getConstant(0, MaskVT);
+        Ops[0] = Mask;
+        for (unsigned i = 1; i != NumConcat; ++i)
+          Ops[i] = ZeroVal;
+
+        Mask = DAG.getNode(ISD::CONCAT_VECTORS, dl, BoolVT, Ops);
+      }
+    }
+  }
+  else
+    Mask = PromoteTargetBoolean(N->getMask(), DataOp.getValueType());
+  return DAG.getMaskedStore(N->getChain(), dl, DataOp, N->getBasePtr(), Mask,
+                            N->getMemoryVT(), N->getMemOperand(),
+                            TruncateStore);
+}
+
+SDValue DAGTypeLegalizer::PromoteIntOp_MLOAD(MaskedLoadSDNode *N, unsigned OpNo){
+  assert(OpNo == 2 && "Only know how to promote the mask!");
+  EVT DataVT = N->getValueType(0);
+  SDValue Mask = PromoteTargetBoolean(N->getOperand(OpNo), DataVT);
+  SmallVector<SDValue, 4> NewOps(N->op_begin(), N->op_end());
+  NewOps[OpNo] = Mask;
+  return SDValue(DAG.UpdateNodeOperands(N, NewOps), 0);
 }
 
 SDValue DAGTypeLegalizer::PromoteIntOp_TRUNCATE(SDNode *N) {

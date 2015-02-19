@@ -1286,37 +1286,10 @@ void TString::Streamer(TBuffer &b)
 {
    // Stream a string object.
 
-   Int_t   nbig;
-   UChar_t nwh;
    if (b.IsReading()) {
-      b >> nwh;
-      if (nwh == 0) {
-         UnLink();
-         Zero();
-      } else {
-         if (nwh == 255)
-            b >> nbig;
-         else
-            nbig = nwh;
-
-         Clobber(nbig);
-         char *data = GetPointer();
-         data[nbig] = 0;
-         SetSize(nbig);
-         b.ReadFastArray(data, nbig);
-      }
+      b.ReadTString(*this);
    } else {
-      nbig = Length();
-      if (nbig > 254) {
-         nwh = 255;
-         b << nwh;
-         b << nbig;
-      } else {
-         nwh = UChar_t(nbig);
-         b << nwh;
-      }
-      const char *data = GetPointer();
-      b.WriteFastArray(data, nbig);
+      b.WriteTString(*this);
    }
 }
 

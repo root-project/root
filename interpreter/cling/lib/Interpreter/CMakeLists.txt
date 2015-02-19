@@ -8,7 +8,8 @@
 
 set( LLVM_LINK_COMPONENTS
   bitwriter
-  jit
+  mcjit
+  orcjit
   native
   option
   ipo
@@ -19,10 +20,11 @@ set( LLVM_LINK_COMPONENTS
 add_cling_library(clingInterpreter
   AutoSynthesizer.cpp
   AutoloadCallback.cpp
-  BackendPass.cpp
+  BackendPasses.cpp
   CheckEmptyTransactionTransformer.cpp
   CIFactory.cpp
   ClangInternalState.cpp
+  ClingPragmas.cpp
   DeclCollector.cpp
   DeclExtractor.cpp
   DynamicLibraryManager.cpp
@@ -30,6 +32,7 @@ add_cling_library(clingInterpreter
   DynamicExprInfo.cpp
   ForwardDeclPrinter.cpp
   IncrementalExecutor.cpp
+  IncrementalJIT.cpp
   IncrementalParser.cpp
   Interpreter.cpp
   InterpreterCallbacks.cpp

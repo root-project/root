@@ -44,7 +44,7 @@ XrdROOT::XrdROOT(const char *dir, const char *tag, const char *bindir,
    fStatus = -1;
    fSrvProtVers = -1;
    fRelease = "";
-   fSvnRevision = -1;
+   fGitCommit = "";
    fVersionCode = -1;
    fVrsMajor = -1;
    fVrsMinor = -1;
@@ -183,7 +183,7 @@ int XrdROOT::ParseROOTVersionInfo()
 
    // Reset the related variables
    fRelease = "";
-   fSvnRevision = -1;
+   fGitCommit = "";
    fVersionCode = -1;
    fVrsMajor = -1;
    fVrsMinor = -1;
@@ -200,11 +200,12 @@ int XrdROOT::ParseROOTVersionInfo()
          pv += strlen("ROOT_RELEASE") + 1;
          fRelease = pv;
          fRelease.replace("\"","");
-      } else if ((pv = (char *) strstr(line, "ROOT_SVN_REVISION"))) {
-         if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = 0;
-         pv += strlen("ROOT_SVN_REVISION");
-         while (pv[0] == ' ') pv++;
-         fSvnRevision = atoi(pv);
+      } else if (fGitCommit.length() <= 0 && (pv = (char *) strstr(line, "ROOT_GIT_COMMIT"))) {
+         if (line[strlen(line)-1] == '\n')
+            line[strlen(line)-1] = 0;
+         pv += strlen("ROOT_GIT_COMMIT") + 1;
+         fGitCommit = pv;
+         fGitCommit.replace("\"","");
       } else if ((pv = (char *) strstr(line, "ROOT_VERSION_CODE"))) {
          if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = 0;
          pv += strlen("ROOT_VERSION_CODE");
@@ -227,6 +228,36 @@ int XrdROOT::ParseROOTVersionInfo()
        XrdROOT::ParseReleaseString(fRelease.c_str(), fVrsMajor, fVrsMinor, fVrsPatch) < 0) {
       TRACE(XERR, "incomplete info found in "<<versfile<<": release tag missing or bad: "<<fRelease);
       return rc;
+   }
+
+   // Retrieve GIT commit string from dedicated file if the case
+   if (fGitCommit.length() <= 0) {
+
+      XrdOucString gitcommit = fIncDir;
+      gitcommit += "/RGitCommit.h";
+
+      // Open file
+      if ((fv = fopen(gitcommit.c_str(), "r"))) {
+
+         // Read the file
+         pv = 0;
+         while (fgets(line, sizeof(line), fv)) {
+            if (fGitCommit.length() <= 0 && (pv = (char *) strstr(line, "ROOT_GIT_COMMIT"))) {
+               if (line[strlen(line)-1] == '\n')
+                  line[strlen(line)-1] = 0;
+               pv += strlen("ROOT_GIT_COMMIT") + 1;
+               fGitCommit = pv;
+               fGitCommit.replace("\"","");
+               if (fGitCommit.length() > 0) break;
+            }
+         }
+
+         // Close the file
+         fclose(fv);
+
+      } else {
+         TRACE(REQ, "file "<<gitcommit<<" not found");
+      }
    }
 
    // Done
@@ -362,8 +393,8 @@ int XrdROOTMgr::Config(bool rcf)
                fROOT.push_back(rootc);
                TRACE(ALL, msg);
                XrdOucString mnp;
-               XPDFORM(mnp, "ROOT version details: svn: %d, code: %d, {mnp} = {%d,%d,%d}",
-                            rootc->SvnRevision(), rootc->VersionCode(), rootc->VrsMajor(),
+               XPDFORM(mnp, "ROOT version details: git: '%s', code: %d, {mnp} = {%d,%d,%d}",
+                            rootc->GitCommit(), rootc->VersionCode(), rootc->VrsMajor(),
                             rootc->VrsMinor(), rootc->VrsPatch());
                TRACE(ALL, mnp);
             } else {
@@ -454,8 +485,8 @@ int XrdROOTMgr::DoDirectiveRootSys(char *val, XrdOucStream *cfg, bool)
          if (Validate(rootc, fMgr->Sched()) == 0) {
             TRACE(REQ, "validation OK for: "<<rootc->Export());
             XrdOucString mnp;
-            XPDFORM(mnp, "version details: svn: %d, code: %d, {mnp} = {%d,%d,%d}",
-                         rootc->SvnRevision(), rootc->VersionCode(), rootc->VrsMajor(),
+            XPDFORM(mnp, "version details: git: '%s', code: %d, {mnp} = {%d,%d,%d}",
+                         rootc->GitCommit(), rootc->VersionCode(), rootc->VrsMajor(),
                          rootc->VrsMinor(), rootc->VrsPatch());
             TRACE(REQ, mnp);
             // Add to the list

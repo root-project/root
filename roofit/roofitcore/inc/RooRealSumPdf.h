@@ -36,7 +36,7 @@ public:
   Double_t evaluate() const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& arg) const { return arg.isFundamental() ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
@@ -52,7 +52,7 @@ public:
     return expectedEvents(&nset) ; 
   }
 
-  virtual Bool_t selfNormalized() const { return getAttribute("BinnedLikelihood") ; }
+  virtual Bool_t selfNormalized() const { return getAttribute("BinnedLikelihoodActive") ; }
 
   void printMetaArgs(std::ostream& os) const ;
 
@@ -65,6 +65,9 @@ public:
   Bool_t getFloor() const { return _doFloor ; }
   static void setFloorGlobal(Bool_t flag) { _doFloorGlobal = flag ; }
   static Bool_t getFloorGlobal() { return _doFloorGlobal ; }
+
+  virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
+  virtual void setCacheAndTrackHints(RooArgSet&) ;
 
 protected:
   

@@ -20,7 +20,7 @@ pad3.Draw()
 # We connect the ROOT file generated in a previous tutorial
 # see begin_html <a href="hsimple.C.html">An example creating/filling/saving histograms/ntuples on file</a> end_html
 #
-example = TFile( 'hsimple.root' )
+example = TFile( 'py-hsimple.root' )
 example.ls()
 
 # Draw a global picture title

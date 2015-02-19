@@ -89,6 +89,20 @@ static void R__TObjArray_InsertAt(TObjArray *arr, TObject *obj, Int_t at)
    arr->AddAt( obj, at);
 }
 
+static void R__TObjArray_InsertAt(TObjArray *arr, std::vector<TStreamerArtificial*> &objs, Int_t at)
+{
+   // Slide by enough.
+   Int_t offset = objs.size();
+   Int_t last = arr->GetLast();
+   arr->AddAtAndExpand(arr->At(last),last+offset);
+   for(Int_t ind = last-1; ind >= at; --ind) {
+      arr->AddAt( arr->At(ind), ind+offset);
+   };
+   for(size_t ins = 0; ins < objs.size(); ++ins) {
+      arr->AddAt(objs[ins], at+ins);
+   }
+}
+
 static void R__TObjArray_InsertAfter(TObjArray *arr, TObject *newobj, TObject *oldobj)
 {
    // Slide by one.
@@ -1986,7 +2000,10 @@ void TStreamerInfo::BuildOld()
 
       if (newType > 0) {
          // Case of a numerical type
-         if (element->GetType() != newType) {
+         if (element->GetType() >= TStreamerInfo::kObject) {
+            // Old type was not a numerical type.
+            element->SetNewType(-2);
+         } else if (element->GetType() != newType) {
             element->SetNewType(newType);
             if (gDebug > 0) {
                // coverity[mixed_enums] - All the values of EDataType have the same semantic in EReadWrite
@@ -2324,7 +2341,7 @@ void TStreamerInfo::BuildOld()
       }
 
       if (element->GetNewType() == -2) {
-         Warning("BuildOld", "Cannot convert %s::%s from type:%s to type:%s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass->GetName());
+         Warning("BuildOld", "Cannot convert %s::%s from type: %s to type: %s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass ? newClass->GetName() : (dm ? dm->GetFullTypeName() : "unknown") );
       }
    }
 
@@ -4198,6 +4215,7 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
             break;
          }
       }
+
       // NOTE: Before adding the rule we should check that the source do
       // existing in this StreamerInfo.
       const TObjArray *sources = rule->GetSource();
@@ -4224,6 +4242,9 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
       if (!rule) continue;
 
       TStreamerArtificial *newel;
+      typedef std::vector<TStreamerArtificial*> vec_t;
+      vec_t toAdd;
+
       if (rule->GetTarget()==0) {
          TString newName;
          newName.Form("%s_rule%d",fClass->GetName(),count);
@@ -4234,19 +4255,22 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
          newel->SetBit(TStreamerElement::kWholeObject);
          newel->SetReadFunc( rule->GetReadFunctionPointer() );
          newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
-         fElements->Add(newel);
+         toAdd.push_back(newel);
       } else {
+         toAdd.reserve(rule->GetTarget()->GetEntries());
          TObjString * objstr = (TObjString*)(rule->GetTarget()->At(0));
          if (objstr) {
             TString newName = objstr->String();
-            if ( fClass->GetDataMember( newName ) ) {
-               newel = new TStreamerArtificial(newName,"",
+            TString realDataName;
+            if ( TDataMember* dm = fClass->GetDataMember( newName ) ) {
+               TRealData::GetName(realDataName,dm);
+               newel = new TStreamerArtificial(realDataName,"",
                                                fClass->GetDataMemberOffset(newName),
                                                TStreamerInfo::kArtificial,
                                                fClass->GetDataMember( newName )->GetTypeName());
                newel->SetReadFunc( rule->GetReadFunctionPointer() );
                newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
-               fElements->Add(newel);
+               toAdd.push_back(newel);
             } else {
                // This would be a completely new member (so it would need to be cached)
                // TOBEDONE
@@ -4255,16 +4279,45 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
                objstr = (TObjString*)(rule->GetTarget()->At(other));
                if (objstr) {
                   newName = objstr->String();
-                  if ( fClass->GetDataMember( newName ) ) {
-                     newel = new TStreamerArtificial(newName,"",
+                  if ( TDataMember* dm = fClass->GetDataMember( newName ) ) {
+                     TRealData::GetName(realDataName,dm);
+                     newel = new TStreamerArtificial(realDataName,"",
                                                      fClass->GetDataMemberOffset(newName),
                                                      TStreamerInfo::kArtificial,
                                                      fClass->GetDataMember( newName )->GetTypeName());
-                     fElements->Add(newel);
+                     toAdd.push_back(newel);
                   }
                }
             }
          } // For each target of the rule
+      }
+      // Now find we with need to add them
+      TIter s_iter(rule->GetSource());
+      Int_t loc = -1;
+      while( TObjString *s = (TObjString*)s_iter() ) {
+         for(Int_t i = fElements->GetLast(); i >= 0 && (i+1) >= loc; --i) {
+            if (s->String() == fElements->UncheckedAt(i)->GetName()) {
+               if (loc == -1 || (i+1)>loc) {
+                  loc = i+1;
+               }
+            }
+         }
+      }
+      if (loc == -1) {
+         // Verify if the last one is not 'skipped'.
+         for(Int_t i = fElements->GetLast(); i >= 0 && (i+1) >= loc; --i) {
+            if ( ((TStreamerElement*)fElements->UncheckedAt(i))->GetNewType() != -2 ) {
+               break;
+            }
+            loc = i;
+         }
+      }
+      if (loc == -1) {
+         for(vec_t::iterator iter = toAdd.begin(); iter != toAdd.end(); ++iter) {
+            fElements->Add(*iter);
+         }
+      } else {
+         R__TObjArray_InsertAt(fElements, toAdd, loc);
       }
    } // None of the target of the rule are on file.
 }

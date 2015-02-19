@@ -15,26 +15,17 @@ h4 { font-size: 14pt; font-weight:bold; color:#C71585; margin-bottom:2px; margin
 h5 { font-size: 10pt; font-weight:bold; color:#6495ED; margin-bottom:2px; }
 h6 { font-size: 10pt; font-weight:bold; color:navy }
 
-body {
-   margin-left: 10px;
-   margin-right: 10px;
-   margin-top: 10px;
-   margin-bottom: 10px;
-}
+body { margin: 1px; }
 
 textarea { font-size: 100%;}
 
-p { margin-top: 6px; padding: 0 10px 1em; }
+p { margin-top: 5px; margin-bottom: 5px; }
 
-#left-div { left: 2px; width: 300px; margin-right: 1px; overflow: auto; }
+#left-div { left: 1px; width: 300px; padding: 5px; overflow: auto; }
 
-#separator-div { left: 304px; width: 4px; width: 2px; background-color: white; cursor: ew-resize }
+#separator-div { left: 305px; width: 4px; border: 0px; position: absolute; top: 1px; bottom: 1px; background-color: white; cursor: ew-resize }
 
-#right-div {
-   left: 310px;
-   right: 2px;
-   margin-left: 1px;
-}
+#right-div { left: 310px; right: 1px; margin-left: 0px; }
 
 #browser { font-size:70%; }
 
@@ -42,9 +33,8 @@ div.column {
    border: 1px dotted #666;
    background-color: #E6E6FA;
    position: absolute;
-   top: 3px;
-   bottom: 17px;
-   padding: 6px;
+   top: 1px;
+   bottom: 1px;
 }
 
 input.tb {
@@ -92,17 +82,6 @@ button.closeButton {
    margin-top: -3px;
    margin-right: -2px;
    float: right;
-}
-
-#overlay {
-   z-index:1000;
-   position:absolute;
-   border: 1px solid #7777ff;
-   bottom:1px;
-   left:3px;
-   background:#ddddff;
-   opacity:0.6;
-   -moz-opacity:0.6;
 }
 
 .ui-icon-close { float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; }

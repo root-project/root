@@ -75,7 +75,7 @@ int PrintStatus(const char* begin, double result, double expected, double time)
 
 int TestRoot(TF1* f1)
 {
-   double x, root;
+   double x = 0., root;
    int status = 0;
    TStopwatch w;
    double totalTime = 0;
@@ -117,7 +117,7 @@ int TestRoot(TF1* f1)
 
 int TestMaxMin(TF1* f1)
 {
-   double x, maxmin;
+   double x = 0., maxmin;
    int status = 0;
    TStopwatch w;
    double totalTime = 0;
@@ -154,7 +154,7 @@ int TestMaxMin(TF1* f1)
 
 int TestDerivative(TF1* f1)
 {
-   double x, derivative;
+   double x = 0., derivative;
    int status = 0;
    TStopwatch w;
    double totalTime = 0;
@@ -183,7 +183,7 @@ int TestDerivative(TF1* f1)
 
 int TestIntegral(TF1* f1)
 {
-   double x, integral;
+   double x = 0., integral;
    int status = 0;
    TStopwatch w;
    double totalTime = 0;

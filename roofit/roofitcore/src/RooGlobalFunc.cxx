@@ -238,6 +238,9 @@ namespace RooFit {
   RooCmdArg AxisLabel(const char* name)                                   { return RooCmdArg("AxisLabel",0,0,0,0,name,0,0,0) ; }
   RooCmdArg Scaling(Bool_t flag)                                          { return RooCmdArg("Scaling",flag,0,0,0,0,0,0,0) ; }
 
+  // RooAbsReal::createHistogram arguments
+  RooCmdArg IntrinsicBinning(Bool_t flag)                                 { return RooCmdArg("IntrinsicBinning",flag,0,0,0,0,0,0,0) ; }
+
   // RooAbsData::createHistogram arguments
   RooCmdArg AutoSymBinning(Int_t nbins, Double_t marginFactor) { return RooCmdArg("AutoRangeData",1,nbins,marginFactor,0,0,0,0,0) ; }
   RooCmdArg AutoBinning(Int_t nbins, Double_t marginFactor) { return RooCmdArg("AutoRangeData",0,nbins,marginFactor,0,0,0,0,0) ; }
@@ -299,7 +302,7 @@ namespace RooFit {
 
 
   // RooWorkspace::import() arguments
-  RooCmdArg RenameConflictNodes(const char* suffix)         { return RooCmdArg("RenameConflictNodes",0,0,0,0,suffix,0,0,0) ; }
+  RooCmdArg RenameConflictNodes(const char* suffix, Bool_t ro) { return RooCmdArg("RenameConflictNodes",ro,0,0,0,suffix,0,0,0) ; }
   RooCmdArg RecycleConflictNodes(Bool_t flag)               { return RooCmdArg("RecycleConflictNodes",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg RenameAllNodes(const char* suffix)              { return RooCmdArg("RenameAllNodes",0,0,0,0,suffix,0,0,0) ; }
   RooCmdArg RenameAllVariables(const char* suffix)          { return RooCmdArg("RenameAllVariables",0,0,0,0,suffix,0,0,0) ; }
@@ -307,6 +310,7 @@ namespace RooFit {
   RooCmdArg RenameVariable(const char* in, const char* out) { return RooCmdArg("RenameVar",0,0,0,0,in,out,0,0) ; }
   RooCmdArg Rename(const char* suffix)                      { return RooCmdArg("Rename",0,0,0,0,suffix,0,0,0) ; }
   RooCmdArg Embedded(Bool_t flag)                           { return RooCmdArg("Embedded",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg NoRecursion(Bool_t flag)                        { return RooCmdArg("NoRecursion",flag,0,0,0,0,0,0,0) ; }
 
   // RooSimCloneTool::build() arguments
   RooCmdArg SplitParam(const char* varname, const char* catname)         { return RooCmdArg("SplitParam",0,0,0,0,varname,catname,0,0) ; }

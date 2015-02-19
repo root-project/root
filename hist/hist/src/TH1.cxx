@@ -1206,13 +1206,22 @@ Int_t TH1::BufferEmpty(Int_t action)
 
    // nbentries correspond to the number of entries of histogram
 
-   if (nbentries == 0) return 0;
+   if (nbentries == 0) {
+      // if action is 1 we delete the buffer
+      // this will avoid infinite recursion
+      if (action > 0) {
+         delete [] fBuffer;
+         fBuffer = 0;
+         fBufferSize = 0;
+      }         
+      return 0;      
+   }
    if (nbentries < 0 && action == 0) return 0;    // case histogram has been already filled from the buffer
 
    Double_t *buffer = fBuffer;
    if (nbentries < 0) {
       nbentries  = -nbentries;
-      //  a reset might call BufferEmpty() giving an infinite loop
+      //  a reset might call BufferEmpty() giving an infinite recursion
       // Protect it by setting fBuffer = 0
       fBuffer=0;
        //do not reset the list of functions
@@ -1240,7 +1249,8 @@ Int_t TH1::BufferEmpty(Int_t action)
       }
    }
 
-   FillN(nbentries,&fBuffer[2],&fBuffer[1],2);
+   // call DoFillN which will not put entries in the buffer as FillN does
+   DoFillN(nbentries,&fBuffer[2],&fBuffer[1],2);
 
    // if action == 1 - delete the buffer
    if (action > 0) {
@@ -1287,7 +1297,11 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
    }
    if (2*nbentries+2 >= fBufferSize) {
       BufferEmpty(1);
-      return Fill(x,w);
+      if (!fBuffer) 
+         // to avoid infinite recursion Fill->BufferFill->Fill
+         return Fill(x,w);
+      // this cannot happen
+      R__ASSERT(0); 
    }
    fBuffer[2*nbentries+1] = w;
    fBuffer[2*nbentries+2] = x;
@@ -1860,6 +1874,8 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    TString opt = option;
    opt.ToUpper();
 
+   if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
+
    const TAxis *xaxis1 = GetXaxis();
    const TAxis *xaxis2 = h2->GetXaxis();
    const TAxis *yaxis1 = GetYaxis();
@@ -2416,6 +2432,10 @@ void TH1::Copy(TObject &obj) const
    //
    // Note that this function does not copy the list of associated functions.
    // Use TObject::Clone to make a full copy of an histogram.
+   //
+   // Note also that the histogram it will be created in gDirectory (if AddDirectoryStatus()=true)
+   // or will not be added to any directory if  AddDirectoryStatus()=false
+   // independently of the current directory stored in the original histogram 
 
    if (((TH1&)obj).fDirectory) {
       // We are likely to change the hash value of this object
@@ -2474,10 +2494,15 @@ void TH1::Copy(TObject &obj) const
    fContour.Copy(((TH1&)obj).fContour);
    fSumw2.Copy(((TH1&)obj).fSumw2);
    //   fFunctions->Copy(((TH1&)obj).fFunctions);
+   // when copying an histogram if the AddDirectoryStatus() is true it
+   // will be added to gDirectory independently of the fDirectory stored.
+   // and if the AddDirectoryStatus() is false it will not be added to
+   // any directory (fDirectory = 0)
    if (fgAddDirectory && gDirectory) {
       gDirectory->Append(&obj);
-      ((TH1&)obj).fDirectory = gDirectory;
-   }
+      ((TH1&)obj).fDirectory = gDirectory;      
+   } else
+      ((TH1&)obj).fDirectory = 0; 
 
 }
 
@@ -2493,10 +2518,7 @@ TObject* TH1::Clone(const char* newname) const
 
    //Now handle the parts that Copy doesn't do
    if(fFunctions) {
-      if(not obj->fFunctions) {
-         obj->fFunctions = new TList;
-      }
-      fFunctions->Copy( *(obj->fFunctions) );
+      obj->fFunctions = (TList*)fFunctions->Clone();
    }
    if(newname and strlen(newname) ) {
       obj->SetName(newname);
@@ -3087,7 +3109,7 @@ Int_t TH1::Fill(Double_t x)
    //
    //    The function returns the corresponding bin number which has its content incremented by 1
 
-   if (fBuffer) return BufferFill(x,1);
+   if (fBuffer)  return BufferFill(x,1);
 
    Int_t bin;
    fEntries++;
@@ -3120,6 +3142,7 @@ Int_t TH1::Fill(Double_t x, Double_t w)
    //
    //    The function returns the corresponding bin number which has its content incremented by w
 
+   
    if (fBuffer) return BufferFill(x,w);
 
    Int_t bin;
@@ -3191,17 +3214,33 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
    //    weights is automatically triggered and the sum of the squares of weights is incremented
    //    by w^2 in the bin corresponding to x.
    //    if w is NULL each entry is assumed a weight=1
+   
+   //If a buffer is activated, fill buffer
+   if (fBuffer) {
+      ntimes *= stride;
+      Int_t i = 0;
+      for (i=0;i<ntimes;i+=stride) {
+         if (!fBuffer) break;   // buffer can be deleted in BufferFill when is empty
+         if (w) BufferFill(x[i],w[i]);
+         else BufferFill(x[i], 1.);
+      }
+      // fill the remaining entries if the buffer has been deleted 
+      if (i < ntimes && fBuffer==0) 
+         DoFillN((ntimes-i)/stride,&x[i],&w[i],stride);
+      return;
+   }
+   // call internal method 
+   DoFillN(ntimes, x, w, stride);
+}
+
+//______________________________________________________________________________
+void TH1::DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride)
+{
+   // internal method to fill histogram content from a vector
+   // called directly by TH1::BufferEmpty
 
    Int_t bin,i;
-   //If a buffer is activated, go via standard Fill (sorry)
-   //if (fBuffer) {
-   //   for (i=0;i<ntimes;i+=stride) {
-   //      if (w) Fill(x[i],w[i]);
-   //      else   Fill(x[i],0);
-   //   }
-   //   return;
-   //}
-
+   
    fEntries += ntimes;
    Double_t ww = 1;
    Int_t nbins   = fXaxis.GetNbins();
@@ -5456,20 +5495,24 @@ Long64_t TH1::Merge(TCollection *li)
                   // do we need to support case when there are bins with labels and bins without them ??
                   // NO -then return an error
                   if (label == 0 ) {
-                     Fatal("Merge","Histogram %s with labels has NULL label pointer for bin %d",
+                     Error("Merge","Histogram %s with labels has NULL label pointer for bin %d",
                            hist->GetName(),binx );
                      return -1;
                   }
+                  // special case for underflow/overflows
+                  if (label[0] == 0 &&  (binx == 0 || binx ==(nx+1)) ) { 
+                        ix = binx;
+                  }
+                  else { 
                      // if bin does not exists FindBin will add it automatically
                      // by calling LabelsInflate() if the bit is set
                      // otherwise it will return zero and bin will be merged in underflow/overflow
                      // Do we want to keep this case ??
                      ix = fXaxis.FindBin(label);
-                     if (ix == 0) Warning("Merge", "Histogram %s has labels but CanExtendAllAxes() is false - label %s is lost", GetName(), label);
-                  // ix cannot be -1 . Can be 0 in case label is not found and bit is not set
-                  if (ix <0) {
-                     Fatal("Merge","Error return from TAxis::FindBin for label %s",label);
-                     return -1;
+                     if (ix <= 0) {
+                        Warning("Merge", "Histogram %s has labels but CanExtendAllAxes() is false - label %s is lost", GetName(), label);
+                        continue;
+                     }
                   }
                }
                if (ix >= 0) {
@@ -5995,8 +6038,9 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
       return;
 
    //save a copy of this histogram
-   TH1 *hold = (TH1*)Clone();
+   TH1 *hold = (TH1*)IsA()->New(); 
    hold->SetDirectory(0);
+   Copy(*hold);
    //set new axis limits
    axis->SetLimits(xmin,xmax);
 
@@ -6207,163 +6251,114 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
    // in Proc.of the 1974 CERN School of Computing, Norway, 11-24 August, 1974.
 
    if (nn < 3 ) {
-      if (gROOT) gROOT->Error("SmoothArray","Need at least 3 points for smoothing: n = %d",nn);
+      ::Error("SmoothArray","Need at least 3 points for smoothing: n = %d",nn);
       return;
    }
 
-   Int_t ii, jj, ik, jk, kk, nn2;
+   Int_t ii;
    Double_t hh[6] = {0,0,0,0,0,0};
-   Double_t *yy = new Double_t[nn];
-   Double_t *zz = new Double_t[nn];
-   Double_t *rr = new Double_t[nn];
+
+   std::vector<double> yy(nn); 
+   std::vector<double> zz(nn); 
+   std::vector<double> rr(nn); 
 
    for (Int_t pass=0;pass<ntimes;pass++) {
       // first copy original data into temp array
+      std::copy(xx, xx+nn, zz.begin() ); 
 
-      for (ii = 0; ii < nn; ii++) {
-         yy[ii] = xx[ii];
-      }
 
-      //  do 353 i.e. running median 3, 5, and 3 in a single loop
-      for  (kk = 1; kk <= 3; kk++)  {
-         ik = 0;
-         if  (kk == 2)  ik = 1;
-         nn2 = nn - ik - 1;
-         // do all elements beside the first and last point for median 3
-         //  and first two and last 2 for median 5
-         for  (ii = ik + 1; ii < nn2; ii++)  {
-            for  (jj = 0; jj < 3; jj++)   {
-               hh[jj] = yy[ii + jj - 1];
+
+      for (int noent = 0; noent < 2; ++noent) { // run algorithm two times 
+      
+         //  do 353 i.e. running median 3, 5, and 3 in a single loop
+         for  (int kk = 0; kk < 3; kk++)  {
+            std::copy(zz.begin(), zz.end(), yy.begin());
+            int medianType = (kk != 1)  ?  3 : 5; 
+            int ifirst      = (kk != 1 ) ?  1 : 2;
+            int ilast       = (kk != 1 ) ? nn-1 : nn -2; 
+            //nn2 = nn - ik - 1;
+            // do all elements beside the first and last point for median 3
+            //  and first two and last 2 for median 5
+            for  ( ii = ifirst; ii < ilast; ii++)  {
+               assert(ii - ifirst >= 0);
+               for  (int jj = 0; jj < medianType; jj++)   {
+                  hh[jj] = yy[ii - ifirst + jj ];
+               }
+               zz[ii] = TMath::Median(medianType, hh);
             }
-            zz[ii] = TMath::Median(3 + 2*ik, hh);
+
+            if  (kk == 0)  {   // first median 3
+               // first point
+               hh[0] = zz[1];
+               hh[1] = zz[0];
+               hh[2] = 3*zz[1] - 2*zz[2];
+               zz[0] = TMath::Median(3, hh);
+               // last point
+               hh[0] = zz[nn - 2];
+               hh[1] = zz[nn - 1];
+               hh[2] = 3*zz[nn - 2] - 2*zz[nn - 3];
+               zz[nn - 1] = TMath::Median(3, hh);
+            }
+
+
+            if  (kk == 1)  {   //  median 5
+               for  (ii = 0; ii < 3; ii++) {
+                  hh[ii] = yy[ii];
+               }
+               zz[1] = TMath::Median(3, hh);
+               // last two points
+               for  (ii = 0; ii < 3; ii++) {
+                  hh[ii] = yy[nn - 3 + ii];
+               }
+               zz[nn - 2] = TMath::Median(3, hh);
+            }
+
          }
 
-         if  (kk == 1)  {   // first median 3
-            // first point
-            hh[0] = 3*yy[1] - 2*yy[2];
-            hh[1] = yy[0];
-            hh[2] = yy[1];
-            zz[0] = TMath::Median(3, hh);
-            // last point
-            hh[0] = yy[nn - 2];
-            hh[1] = yy[nn - 1];
-            hh[2] = 3*yy[nn - 2] - 2*yy[nn - 3];
-            zz[nn - 1] = TMath::Median(3, hh);
-         }
-         if  (kk == 2)  {   //  median 5
-            //  first point remains the same
-            zz[0] = yy[0];
-            for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = yy[ii];
-            }
-            zz[1] = TMath::Median(3, hh);
-            // last two points
-            for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = yy[nn - 3 + ii];
-            }
-            zz[nn - 2] = TMath::Median(3, hh);
-            zz[nn - 1] = yy[nn - 1];
-         }
-      }
+         std::copy ( zz.begin(), zz.end(), yy.begin() );
 
-      // quadratic interpolation for flat segments
-      for (ii = 2; ii < (nn - 2); ii++) {
-         if  (zz[ii - 1] != zz[ii]) continue;
-         if  (zz[ii] != zz[ii + 1]) continue;
-         hh[0] = zz[ii - 2] - zz[ii];
-         hh[1] = zz[ii + 2] - zz[ii];
-         if  (hh[0] * hh[1] < 0) continue;
-         jk = 1;
-         if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
-         yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii]/0.75 + zz[ii + 2*jk] /6.;
-         yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii];
-      }
-
-      // running means
-      for  (ii = 1; ii < nn - 1; ii++) {
-         rr[ii] = 0.25*yy[ii - 1] + 0.5*yy[ii] + 0.25*yy[ii + 1];
-      }
-      rr[0] = yy[0];
-      rr[nn - 1] = yy[nn - 1];
-
-      // now do the same for residuals
-
-      for  (ii = 0; ii < nn; ii++)  {
-         yy[ii] = xx[ii] - rr[ii];
-      }
-
-      //  do 353 i.e. running median 3, 5, and 3 in a single loop
-      for  (kk = 1; kk <= 3; kk++)  {
-         ik = 0;
-         if  (kk == 2)  ik = 1;
-         nn2 = nn - ik - 1;
-         // do all elements beside the first and last point for median 3
-         //  and first two and last 2 for median 5
-         for  (ii = ik + 1; ii < nn2; ii++)  {
-            for  (jj = 0; jj < 3; jj++) {
-               hh[jj] = yy[ii + jj - 1];
-            }
-            zz[ii] = TMath::Median(3 + 2*ik, hh);
+         // quadratic interpolation for flat segments
+         for (ii = 2; ii < (nn - 2); ii++) {
+            if  (zz[ii - 1] != zz[ii]) continue;
+            if  (zz[ii] != zz[ii + 1]) continue;
+            hh[0] = zz[ii - 2] - zz[ii];
+            hh[1] = zz[ii + 2] - zz[ii];
+            if  (hh[0] * hh[1] <= 0) continue;
+            int jk = 1;
+            if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
+            yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii]/0.75 + zz[ii + 2*jk] /6.;
+            yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii];
          }
 
-         if  (kk == 1)  {   // first median 3
-            // first point
-            hh[0] = 3*yy[1] - 2*yy[2];
-            hh[1] = yy[0];
-            hh[2] = yy[1];
-            zz[0] = TMath::Median(3, hh);
-            // last point
-            hh[0] = yy[nn - 2];
-            hh[1] = yy[nn - 1];
-            hh[2] = 3*yy[nn - 2] - 2*yy[nn - 3];
-            zz[nn - 1] = TMath::Median(3, hh);
+         // running means
+         //std::copy(zz.begin(), zz.end(), yy.begin()); 
+         for  (ii = 1; ii < nn - 1; ii++) {
+            zz[ii] = 0.25*yy[ii - 1] + 0.5*yy[ii] + 0.25*yy[ii + 1];
          }
-         if  (kk == 2)  {   //  median 5
-            //  first point remains the same
-            zz[0] = yy[0];
-            for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = yy[ii];
+         zz[0] = yy[0];
+         zz[nn - 1] = yy[nn - 1];
+
+         if (noent == 0) { 
+
+            // save computed values 
+            std::copy(zz.begin(), zz.end(), rr.begin()); 
+
+            // COMPUTE  residuals
+            for  (ii = 0; ii < nn; ii++)  {
+               zz[ii] = xx[ii] - zz[ii];
             }
-            zz[1] = TMath::Median(3, hh);
-            // last two points
-            for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = yy[nn - 3 + ii];
-            }
-            zz[nn - 2] = TMath::Median(3, hh);
-            zz[nn - 1] = yy[nn - 1];
          }
-      }
 
-      // quadratic interpolation for flat segments
-      for (ii = 2; ii < (nn - 2); ii++) {
-         if  (zz[ii - 1] != zz[ii]) continue;
-         if  (zz[ii] != zz[ii + 1]) continue;
-         hh[0] = zz[ii - 2] - zz[ii];
-         hh[1] = zz[ii + 2] - zz[ii];
-         if  (hh[0] * hh[1] < 0) continue;
-         jk = 1;
-         if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
-         yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii]/0.75 + zz[ii + 2*jk]/6.;
-         yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii];
-      }
-
-      // running means
-      for  (ii = 1; ii < (nn - 1); ii++) {
-         zz[ii] = 0.25*yy[ii - 1] + 0.5*yy[ii] + 0.25*yy[ii + 1];
-      }
-      zz[0] = yy[0];
-      zz[nn - 1] = yy[nn - 1];
-
-      //  add smoothed xx and smoothed residuals
-
+      }  // end loop on noent
+      
+ 
+      double xmin = TMath::MinElement(nn,xx);
       for  (ii = 0; ii < nn; ii++) {
-         if (xx[ii] < 0) xx[ii] = rr[ii] + zz[ii];
-         else            xx[ii] = TMath::Abs(rr[ii] + zz[ii]);
+         if (xmin < 0) xx[ii] = rr[ii] + zz[ii];
+         // make smoothing defined positive - not better using 0 ?
+         else  xx[ii] = TMath::Max((rr[ii] + zz[ii]),0.0 );
       }
    }
-   delete [] yy;
-   delete [] zz;
-   delete [] rr;
 }
 
 
@@ -6510,6 +6505,7 @@ void TH1::Print(Option_t *option) const
    //  If option "all" is given, bin contents and errors are also printed
    //                     for all bins including under and overflows.
 
+   if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
    printf( "TH1.Print Name  = %s, Entries= %d, Total sum= %g\n",GetName(),Int_t(fEntries),GetSumOfWeights());
    TString opt = option;
    opt.ToLower();
@@ -7285,6 +7281,8 @@ void TH1::ResetStats()
 Double_t TH1::GetSumOfWeights() const
 {
    // Return the sum of weights excluding under/overflows.
+
+   if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
    Int_t bin,binx,biny,binz;
    Double_t sum =0;
@@ -8163,6 +8161,12 @@ void TH1::SetDirectory(TDirectory *dir)
    // Remove reference to this histogram from current directory and add
    // reference to new directory dir. dir can be 0 in which case the
    // histogram does not belong to any directory.
+   //
+   // Note that the directory is not a real property of the histogram and
+   // it will not be copied when the histogram is copied or cloned.
+   // If the user wants to have the copied (cloned) histogram in the same
+   // directory, he needs to set again the directory using SetDirectory to the
+   // copied histograms
 
    if (fDirectory == dir) return;
    if (fDirectory) fDirectory->Remove(this);

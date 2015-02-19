@@ -198,6 +198,7 @@ static STRUCT_UTMP *SearchEntry(int n, const char *tty)
    return 0;
 }
 
+#ifndef ROOTPREFIX
 static const char *GetExePath()
 {
    static std::string exepath;
@@ -244,6 +245,7 @@ static void SetRootSys()
       delete [] ep;
    }
 }
+#endif
 
 static void SetDisplay()
 {

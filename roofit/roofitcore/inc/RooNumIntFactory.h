@@ -37,8 +37,8 @@ public:
   const RooAbsIntegrator* getProtoIntegrator(const char* name) ;
   const char* getDepIntegratorName(const char* name) ;
 
-  RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0) ;
-
+  RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0, Bool_t isBinned=kFALSE) ;
+  
   static void cleanup() ;
 
 

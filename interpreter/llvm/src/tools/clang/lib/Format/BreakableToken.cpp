@@ -106,7 +106,7 @@ getStringSplit(StringRef Text, unsigned UsedColumns, unsigned ColumnLimit,
           Text.substr(0, Advance), UsedColumns + Chars, TabWidth, Encoding);
     }
 
-    if (Chars > MaxSplit || Text.size() == Advance)
+    if (Chars > MaxSplit || Text.size() <= Advance)
       break;
 
     if (IsBlank(Text[0]))
@@ -303,7 +303,8 @@ BreakableBlockComment::BreakableBlockComment(
     StartOfLineColumn[i] += Decoration.size();
     Lines[i] = Lines[i].substr(Decoration.size());
     LeadingWhitespace[i] += Decoration.size();
-    IndentAtLineBreak = std::min<int>(IndentAtLineBreak, StartOfLineColumn[i]);
+    IndentAtLineBreak =
+        std::min<int>(IndentAtLineBreak, std::max(0, StartOfLineColumn[i]));
   }
   IndentAtLineBreak = std::max<unsigned>(IndentAtLineBreak, Decoration.size());
   DEBUG({

@@ -28,6 +28,10 @@ namespace HistFactory{
     FlexibleInterpVar() ;
     FlexibleInterpVar(const char *name, const char *title,
 		      const RooArgList& _paramList, 
+		      Double_t nominal, const RooArgList& low, const RooArgList& high);
+
+    FlexibleInterpVar(const char *name, const char *title,
+		      const RooArgList& _paramList, 
 		      double nominal, std::vector<double> low, std::vector<double> high);
 
     FlexibleInterpVar(const char *name, const char *title,
@@ -49,6 +53,8 @@ namespace HistFactory{
     virtual TObject* clone(const char* newname) const { return new FlexibleInterpVar(*this, newname); }
     virtual ~FlexibleInterpVar() ;
 
+    virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose = kFALSE, TString indent = "") const;
+    virtual void printFlexibleInterpVars(std::ostream& os) const;
 
   private:
 

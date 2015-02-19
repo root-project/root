@@ -17,9 +17,6 @@
 #endif
 
 #if !defined(__CINT__)
-#ifndef R__WIN32
-#include <sys/time.h>
-#endif
 #include <occi.h>
 #ifdef CONST
 #undef CONST

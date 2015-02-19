@@ -87,6 +87,7 @@ private:
    TGeoHMatrix         **fMPB;              // pre-built matrices
    TGeoNode            **fNodeBranch;       // current branch of nodes
    TGeoStateInfo       **fInfoBranch;       // current branch of nodes
+   TGeoStateInfo        *fPWInfo;           //! State info for the parallel world
    Int_t                *fNodeIdArray;      //! array of node id's
 
    TGeoNodeCache(const TGeoNodeCache&); // Not implemented
@@ -118,6 +119,7 @@ public:
    TGeoNode            *GetNode() const        {return fNode;}
    TGeoNode            *GetTopNode() const     {return fTop;}
    TGeoStateInfo       *GetInfo();
+   TGeoStateInfo       *GetMakePWInfo(Int_t nd);
    void                 ReleaseInfo();
    Int_t                GetLevel() const       {return fLevel;}
    const char          *GetPath();

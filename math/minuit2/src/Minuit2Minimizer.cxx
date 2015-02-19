@@ -570,7 +570,7 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
    bool validMinimum = min.IsValid();
    if (validMinimum) {
       // print a warning message in case something is not ok
-      if (fStatus != 0)  MN_INFO_MSG2("Minuit2Minimizer::Minimize",txt);
+      if (fStatus != 0 && debugLevel > 0)  MN_INFO_MSG2("Minuit2Minimizer::Minimize",txt);
    }
    else {
       // minimum is not valid when state is not valid and edm is over max or has passed call limits
@@ -1026,10 +1026,18 @@ bool Minuit2Minimizer::Hesse( ) {
 
    ROOT::Minuit2::MnHesse hesse( strategy );
 
+
    // case when function minimum exists
    if (fMinimum  ) {
+      
+      // if (PrintLevel() >= 3) {
+      //    std::cout << "Minuit2Minimizer::Hesse  - State before running Hesse " << std::endl;
+      //    std::cout << fState << std::endl;
+      // }
+
       // run hesse and function minimum will be updated with Hesse result
       hesse( *fMinuitFCN, *fMinimum, maxfcn );
+      // update user state 
       fState = fMinimum->UserState();
    }
 
@@ -1042,13 +1050,18 @@ bool Minuit2Minimizer::Hesse( ) {
    if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
 
    if (PrintLevel() >= 3) {
-      std::cout << "State returned from Hesse " << std::endl;
+      std::cout << "Minuit2Minimizer::Hesse  - State returned from Hesse " << std::endl;
       std::cout << fState << std::endl;
    }
 
+   int covStatus = fState.CovarianceStatus();
+   std::string covStatusType = "not valid";
+   if (covStatus == 1) covStatusType = "approximate";
+   if (covStatus == 2) covStatusType = "full but made positive defined";
+   if (covStatus == 3) covStatusType = "accurate";
+
    if (!fState.HasCovariance() ) {
       // if false means error is not valid and this is due to a failure in Hesse
-      if (PrintLevel() > 0) MN_INFO_MSG2("Minuit2Minimizer::Hesse","Hesse failed ");
       // update minimizer error status
       int hstatus = 4;
       // information on error state can be retrieved only if fMinimum is available
@@ -1057,8 +1070,17 @@ bool Minuit2Minimizer::Hesse( ) {
          if (fMinimum->Error().InvertFailed() ) hstatus = 2;
          else if (!(fMinimum->Error().IsPosDef()) ) hstatus = 3;
       }
+      if (PrintLevel() > 0) {
+         std::string msg = "Hesse failed - matrix is " + covStatusType; 
+         MN_INFO_MSG2("Minuit2Minimizer::Hesse",msg);
+         MN_INFO_VAL2("MInuit2Minimizer::Hesse",hstatus);
+      }
       fStatus += 100*hstatus;
       return false;
+   }
+   if (PrintLevel() > 0) {
+      std::string msg = "Hesse is valid - matrix is " + covStatusType; 
+      MN_INFO_MSG2("Minuit2Minimizer::Hesse",msg);
    }
 
    return true;

@@ -447,6 +447,7 @@ public:
 
   virtual void beginEnumScalar() = 0;
   virtual bool matchEnumScalar(const char*, bool) = 0;
+  virtual bool matchEnumFallback() = 0;
   virtual void endEnumScalar() = 0;
 
   virtual bool beginBitSetScalar(bool &) = 0;
@@ -469,6 +470,16 @@ public:
   void enumCase(T &Val, const char* Str, const uint32_t ConstVal) {
     if ( matchEnumScalar(Str, outputting() && Val == static_cast<T>(ConstVal)) ) {
       Val = ConstVal;
+    }
+  }
+
+  template <typename FBT, typename T>
+  void enumFallback(T &Val) {
+    if ( matchEnumFallback() ) {
+      // FIXME: Force integral conversion to allow strong typedefs to convert.
+      FBT Res = (uint64_t)Val;
+      yamlize(*this, Res, true);
+      Val = (uint64_t)Res;
     }
   }
 
@@ -532,7 +543,7 @@ public:
   void mapOptional(const char* Key, T& Val, const T& Default) {
     this->processKeyWithDefault(Key, Val, Default, false);
   }
-  
+
 private:
   template <typename T>
   void processKeyWithDefault(const char *Key, Optional<T> &Val,
@@ -706,7 +717,7 @@ struct ScalarTraits<StringRef> {
   static StringRef input(StringRef, void*, StringRef &);
   static bool mustQuote(StringRef S) { return needsQuotes(S); }
 };
- 
+
 template<>
 struct ScalarTraits<std::string> {
   static void output(const std::string &, void*, llvm::raw_ostream &);
@@ -899,6 +910,7 @@ private:
   void endFlowSequence() override;
   void beginEnumScalar() override;
   bool matchEnumScalar(const char*, bool) override;
+  bool matchEnumFallback() override;
   void endEnumScalar() override;
   bool beginBitSetScalar(bool &) override;
   bool bitSetMatch(const char *, bool ) override;
@@ -943,16 +955,17 @@ private:
   };
 
   class MapHNode : public HNode {
+    virtual void anchor();
+
   public:
     MapHNode(Node *n) : HNode(n) { }
-    virtual ~MapHNode();
 
     static inline bool classof(const HNode *n) {
       return MappingNode::classof(n->_node);
     }
     static inline bool classof(const MapHNode *) { return true; }
 
-    typedef llvm::StringMap<HNode*> NameToNode;
+    typedef llvm::StringMap<std::unique_ptr<HNode>> NameToNode;
 
     bool isValidKey(StringRef key);
 
@@ -961,19 +974,20 @@ private:
   };
 
   class SequenceHNode : public HNode {
+    virtual void anchor();
+
   public:
     SequenceHNode(Node *n) : HNode(n) { }
-    virtual ~SequenceHNode();
 
     static inline bool classof(const HNode *n) {
       return SequenceNode::classof(n->_node);
     }
     static inline bool classof(const SequenceHNode *) { return true; }
 
-    std::vector<HNode*> Entries;
+    std::vector<std::unique_ptr<HNode>> Entries;
   };
 
-  Input::HNode *createHNodes(Node *node);
+  std::unique_ptr<Input::HNode> createHNodes(Node *node);
   void setError(HNode *hnode, const Twine &message);
   void setError(Node *node, const Twine &message);
 
@@ -1024,6 +1038,7 @@ public:
   void endFlowSequence() override;
   void beginEnumScalar() override;
   bool matchEnumScalar(const char*, bool) override;
+  bool matchEnumFallback() override;
   void endEnumScalar() override;
   bool beginBitSetScalar(bool &) override;
   bool bitSetMatch(const char *, bool ) override;

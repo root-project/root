@@ -94,6 +94,7 @@ public:
    const char    *GetMethodName() const { return fMethod.Data(); }
    const char    *GetParams() const { return fParams.Data(); }
    const char    *GetProto() const { return fProto.Data(); }
+   CallFunc_t    *GetCallFunc() const { return fFunc; }
    EReturnType    ReturnType();
 
    void     SetParamPtrs(void *paramArr, Int_t nparam = -1);

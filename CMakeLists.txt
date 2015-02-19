@@ -46,6 +46,18 @@ ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 include(SearchInstalledSoftware)
 ROOT_SHOW_OPTIONS()
 
+#---Here we add tcmalloc to the linker flags if needed------------------------------------------
+if (TCMALLOC_FOUND)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -L ${TCMALLOC_LIBRARY_PATH}")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ltcmalloc -L ${TCMALLOC_LIBRARY_PATH}")
+endif()
+
+#---Here we add jemalloc to the linker flags if needed------------------------------------------
+if (JEMALLOC_FOUND)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -L ${JEMALLOC_LIBRARY_PATH}")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ljemalloc -L ${JEMALLOC_LIBRARY_PATH}")
+endif()
+
 #---Populate the configure arguments returned by 'root-config --config'-------------------------
 get_cmake_property(variables CACHE_VARIABLES)
 foreach(var ${variables})
@@ -124,7 +136,7 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.sh ${__allFiles})
 
 add_custom_command(OUTPUT etc/allDict.cxx.pch
-                   COMMAND ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh etc/allDict.cxx.pch
+                   COMMAND ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}
                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh
                            etc/dictpch/allLinkDefs.h
                            etc/dictpch/allHeaders.h

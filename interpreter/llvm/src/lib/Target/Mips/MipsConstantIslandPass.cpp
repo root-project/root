@@ -28,6 +28,7 @@
 #include "MipsTargetMachine.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
+#include "llvm/CodeGen/MachineConstantPool.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
@@ -343,7 +344,6 @@ namespace {
 
   const TargetMachine &TM;
   bool IsPIC;
-  unsigned ABI;
   const MipsSubtarget *STI;
   const Mips16InstrInfo *TII;
   MipsFunctionInfo *MFI;
@@ -366,8 +366,7 @@ namespace {
     static char ID;
     MipsConstantIslands(TargetMachine &tm)
         : MachineFunctionPass(ID), TM(tm),
-          IsPIC(TM.getRelocationModel() == Reloc::PIC_),
-          ABI(TM.getSubtarget<MipsSubtarget>().getTargetABI()), STI(nullptr),
+          IsPIC(TM.getRelocationModel() == Reloc::PIC_), STI(nullptr),
           MF(nullptr), MCP(nullptr), PrescannedForConstants(false) {}
 
     const char *getPassName() const override {
@@ -449,12 +448,12 @@ bool MipsConstantIslands::runOnMachineFunction(MachineFunction &mf) {
   // FIXME:
   MF = &mf;
   MCP = mf.getConstantPool();
-  STI = &mf.getTarget().getSubtarget<MipsSubtarget>();
+  STI = &static_cast<const MipsSubtarget &>(mf.getSubtarget());
   DEBUG(dbgs() << "constant island machine function " << "\n");
   if (!STI->inMips16Mode() || !MipsSubtarget::useConstantIslands()) {
     return false;
   }
-  TII = (const Mips16InstrInfo*)MF->getTarget().getInstrInfo();
+  TII = (const Mips16InstrInfo *)STI->getInstrInfo();
   MFI = MF->getInfo<MipsFunctionInfo>();
   DEBUG(dbgs() << "constant island processing " << "\n");
   //
@@ -587,9 +586,7 @@ MipsConstantIslands::doInitialPlacement(std::vector<MachineInstr*> &CPEMIs) {
       if (InsPoint[a] == InsAt)
         InsPoint[a] = CPEMI;
     // Add a new CPEntry, but no corresponding CPUser yet.
-    std::vector<CPEntry> CPEs;
-    CPEs.push_back(CPEntry(CPEMI, i));
-    CPEntries.push_back(CPEs);
+    CPEntries.emplace_back(1, CPEntry(CPEMI, i));
     ++NumCPEs;
     DEBUG(dbgs() << "Moved CPI#" << i << " to end of function, size = "
                  << Size << ", align = " << Align <<'\n');

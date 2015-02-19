@@ -31,9 +31,9 @@ public:
   RooMomentMorph() ;
 
   RooMomentMorph(const char *name, const char *title, RooAbsReal& _m, const RooArgList& varList,
-	       const RooArgList& pdfList, const RooArgList& mrefList, const Setting& setting = NonLinearPosFractions);
+	       const RooArgList& pdfList, const RooArgList& mrefList, Setting setting = NonLinearPosFractions);
   RooMomentMorph(const char *name, const char *title, RooAbsReal& _m, const RooArgList& varList,
-	       const RooArgList& pdfList, const TVectorD& mrefpoints, const Setting& setting = NonLinearPosFractions );
+	       const RooArgList& pdfList, const TVectorD& mrefpoints, Setting setting = NonLinearPosFractions );
   RooMomentMorph(const RooMomentMorph& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooMomentMorph(*this,newname); }
   virtual ~RooMomentMorph();

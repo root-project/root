@@ -24,26 +24,32 @@ The class
 
 ClassImp(TFitResultPtr)
 
-TFitResultPtr::TFitResultPtr(TFitResult * p) :
+TFitResultPtr::TFitResultPtr(const std::shared_ptr<TFitResult> & p) :
    fStatus(-1),
    fPointer(p)
 {
    // constructor from a TFitResult pointer
-   if (fPointer != 0) fStatus = fPointer->Status();
+   if (fPointer) fStatus = fPointer->Status();
+}
+
+TFitResultPtr::TFitResultPtr(TFitResult * p) :
+   fStatus(-1),
+   fPointer(std::shared_ptr<TFitResult>(p))
+{
+   // constructor from a TFitResult pointer
+   if (fPointer) fStatus = fPointer->Status();
 }
 
 TFitResultPtr::TFitResultPtr(const TFitResultPtr& rhs) :
-   fStatus(rhs.fStatus), fPointer(0)
+   fStatus(rhs.fStatus), fPointer(rhs.fPointer)
 {
-   // copy constructor - create a new TFitResult if needed
-   if (rhs.fPointer != 0)  fPointer = new TFitResult(*rhs);
 }
 
 TFitResultPtr::~TFitResultPtr()
 {
    // destructor - delete the contained TFitResult pointer if needed
-   if ( fPointer != 0)
-      delete fPointer;
+   // if ( fPointer != 0)
+   //    delete fPointer;
 }
 
 
@@ -51,9 +57,8 @@ TFitResult& TFitResultPtr::operator*() const
 {
    // implement the de-reference operator to make the class acts as a pointer to a TFitResult
    // assert in case the class does not contain a pointer to TFitResult
-   if  (fPointer == 0) {
+   if  (!fPointer) {
       Error("TFitResultPtr","TFitResult is empty - use the fit option S");
-      return *(new TFitResult() );
    }
    return *fPointer;
 }
@@ -62,13 +67,16 @@ TFitResult* TFitResultPtr::operator->() const
 {
    // implement the -> operator to make the class acts as a pointer to a TFitResult
    // assert in case the class does not contain a pointer to TFitResult
-   if  (fPointer == 0) {
+   if  (!fPointer) {
       Error("TFitResultPtr","TFitResult is empty - use the fit option S");
-      return new TFitResult();
    }
-   return fPointer;
+   return fPointer.get();
 }
 
+TFitResult * TFitResultPtr::Get() const {
+   // return contained pointer
+   return fPointer.get();
+}
 
 TFitResultPtr & TFitResultPtr::operator=(const TFitResultPtr& rhs)
 {
@@ -76,9 +84,10 @@ TFitResultPtr & TFitResultPtr::operator=(const TFitResultPtr& rhs)
    // if needed copy the TFitResult  object and delete previous one if existing
    if ( &rhs == this) return *this; // self assignment
    fStatus = rhs.fStatus;
-   if ( fPointer ) delete fPointer;
-   fPointer = 0;
-   if (rhs.fPointer != 0)  fPointer = new TFitResult(*rhs);
+   fPointer = rhs.fPointer; 
+   // if ( fPointer ) delete fPointer;
+   // fPointer = 0;
+   // if (rhs.fPointer != 0)  fPointer = new TFitResult(*rhs);
    return *this;
 }
 

@@ -40,6 +40,7 @@ namespace cling {
 }
 
 class SelectionRules;
+class BaseSelectionRule;
 
 class RScanner: public clang::RecursiveASTVisitor<RScanner>
 {
@@ -67,6 +68,7 @@ public:
    typedef std::vector<clang::VarDecl*> VariableColl_t;
    typedef std::vector<clang::EnumDecl*> EnumColl_t;
    typedef void (*DeclCallback)(const char *type);
+   typedef std::map<clang::Decl*,const BaseSelectionRule*> DeclsSelRulesMap_t;
 
    enum class EScanType : char {kNormal, kTwoPasses, kOnePCM};
 
@@ -114,6 +116,8 @@ public:
    static const char* fgClangDeclKey; // property key used for CLang declaration objects
    static const char* fgClangFuncKey; // property key for function (demangled) names
 
+   const DeclsSelRulesMap_t& GetDeclsSelRulesMap() const {return fDeclSelRuleMap;};
+
    // public for now, the list of selected classes.
    ClassColl_t     fSelectedClasses;
    NamespaceColl_t fSelectedNamespaces;
@@ -123,6 +127,8 @@ public:
    EnumColl_t      fSelectedEnums;
 
    virtual ~ RScanner ();
+
+
 
 private:
 
@@ -177,7 +183,7 @@ private:
    std::set<clang::RecordDecl*> fselectedRecordDecls; // Set for O(logN)
    EScanType fScanType; // Differentiate among different kind of scans
    bool fFirstPass; // This flag allows to run twice, for example in presence of dict selection and recursive template list manipulations.
-
+   DeclsSelRulesMap_t fDeclSelRuleMap; // Map decls to selection rules which selected them
 
 };
 

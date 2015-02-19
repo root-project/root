@@ -2967,7 +2967,9 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    for (int i = 0; i < ndim; ++i)
       vlist[i] = fSelector->GetVal(i);
 
-   // fill the data
+   // fill the fit data object
+   // the object will be then managed by the fitted classes - however it will be invalid when the
+   // data pointers (given by fSelector->GetVal() ) wil be invalidated   
    ROOT::Fit::UnBinData * fitdata = new ROOT::Fit::UnBinData(nrows, ndim, vlist.begin());
 
 

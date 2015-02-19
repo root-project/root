@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 06/29/14
+# Last: 01/05/15
 
 """PyROOT user module.
 
@@ -15,12 +15,13 @@ from __future__ import generators
 
 """
 
-__version__ = '7.0.0'
+__version__ = '8.0.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
 ### system and interpreter setup ------------------------------------------------
 import os, sys, types
+import cppyy
 
 ## there's no version_info in 1.5.2
 if sys.version[0:3] < '2.2':
@@ -53,7 +54,7 @@ try:
          return matches
 
       def root_global_matches( self, text, prefix = '' ):
-         gClassTable = _root.GetRootGlobal( 'gClassTable' )
+         gClassTable = _root.GetCppGlobal( 'gClassTable' )
          all = [ gClassTable.At(i) for i in xrange(gClassTable.Classes()) ]
          all += [ g.GetName() for g in _root.gROOT.GetListOfGlobals() ]
          matches = filter( lambda x: x[:len(text)] == text, all )
@@ -93,19 +94,7 @@ if sys.platform == 'darwin':
       message='class \S* already in TClassTable$' )
 
 ### load PyROOT C++ extension module, special case for linux and Sun ------------
-needsGlobal =  ( 0 <= sys.platform.find( 'linux' ) ) or\
-               ( 0 <= sys.platform.find( 'sunos' ) )
-if needsGlobal:
- # change dl flags to load dictionaries from pre-linked .so's
-   dlflags = sys.getdlopenflags()
-   sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
-
-import libPyROOT as _root
-
-# reset dl flags if needed
-if needsGlobal:
-   sys.setdlopenflags( dlflags )
-del needsGlobal
+_root = cppyy._backend
 
 ## convince 2.2 it's ok to use the expand function
 if sys.version[0:3] == '2.2':
@@ -184,58 +173,15 @@ def split( str ):
       return str, ''
 
 
-### template support ------------------------------------------------------------
-class Template:
-   def __init__( self, name ):
-      self.__name__ = name
-
-   def __call__( self, *args ):
-      newargs = [ self.__name__[ 0 <= self.__name__.find( 'std::' ) and 5 or 0:] ]
-      for arg in args:
-         if type(arg) == str:
-            arg = ','.join( map( lambda x: x.strip(), arg.split(',') ) )
-         newargs.append( arg )
-      result = _root.MakeRootTemplateClass( *newargs )
-
-    # special case pythonization (builtin_map is not available from the C-API)
-      if hasattr( result, 'push_back' ):
-         def iadd( self, ll ):
-            [ self.push_back(x) for x in ll ]
-            return self
-
-         result.__iadd__ = iadd
-
-      return result
-
-_root.Template = Template
-
-
-### scope place holder for STL classes ------------------------------------------
-class _stdmeta( type ):
-   def __getattr__( cls, attr ):   # for non-templated classes in std
-      klass = _root.MakeRootClass( attr, cls )
-      setattr( cls, attr, klass )
-      return klass
-
-class std( object ):
-   __metaclass__ = _stdmeta
-
-   stlclasses = ( 'complex', 'pair', \
-      'deque', 'list', 'queue', 'stack', 'vector', 'map', 'multimap', 'set', 'multiset' )
-
-   for name in stlclasses:
-      locals()[ name ] = Template( "std::%s" % name )
-
-   string = _root.MakeRootClass( 'string' )
-
-_root.std = std
-sys.modules['ROOT.std'] = std
+### put std namespace directly onto ROOT ----------------------------------------
+_root.std = cppyy.gbl.std
+sys.modules['ROOT.std'] = cppyy.gbl.std
 
 
 ### special cases for gPad, gVirtualX (are C++ macro's) -------------------------
 class _ExpandMacroFunction( object ):
    def __init__( self, klass, func ):
-      c = _root.MakeRootClass( klass )
+      c = _root.CreateScopeProxy( klass )
       self.func = getattr( c, func )
 
    def __getattr__( self, what ):
@@ -274,7 +220,7 @@ def _TTree__iter__( self ):
    if bytes_read == -1:
       raise RuntimeError( "TTree I/O error" )
 
-_root.MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
+_root.CreateScopeProxy( "TTree" ).__iter__    = _TTree__iter__
 
 
 ### RINT command emulation ------------------------------------------------------
@@ -341,7 +287,10 @@ def _displayhook( v ):
 
 
 ### set import hook to be able to trigger auto-loading as appropriate
-import __builtin__
+try:
+   import __builtin__
+except ImportError:
+   import builtins as __builtin__  # name change in p3
 _orig_ihook = __builtin__.__import__
 def _importhook( name, glbls = {}, lcls = {}, fromlist = [], level = -1 ):
    if name[0:5] == 'ROOT.':
@@ -427,7 +376,7 @@ class ModuleFacade( types.ModuleType ):
       if not name in self.__dict__:
          try:
           # assignment to an existing ROOT global (establishes proxy)
-            setattr( self.__class__, name, _root.GetRootGlobal( name ) )
+            setattr( self.__class__, name, _root.GetCppGlobal( name ) )
          except LookupError:
           # allow a few limited cases where new globals can be set
             if sys.hexversion >= 0x3000000:
@@ -441,7 +390,7 @@ class ModuleFacade( types.ModuleType ):
                      str         : 'string %s = "%s";' }
             try:
                _root.gROOT.ProcessLine( tcnv[ type(value) ] % (name,value) );
-               setattr( self.__class__, name, _root.GetRootGlobal( name ) )
+               setattr( self.__class__, name, _root.GetCppGlobal( name ) )
             except KeyError:
                pass           # can still assign normally, to the module
 
@@ -485,7 +434,7 @@ class ModuleFacade( types.ModuleType ):
          return self.module.__all__
 
     # lookup into ROOT (which may cause python-side enum/class/global creation)
-      attr = _root.LookupRootEntity( name, PyConfig.ExposeCppMacros )
+      attr = _root.LookupCppEntity( name, PyConfig.ExposeCppMacros )
 
     # the call above will raise AttributeError as necessary; so if we get here,
     # attr is valid: cache as appropriate, so we don't come back
@@ -525,7 +474,7 @@ class ModuleFacade( types.ModuleType ):
          argv = sys.argv
          sys.argv = []
 
-      appc = _root.MakeRootClass( 'PyROOT::TPyROOTApplication' )
+      appc = _root.CreateScopeProxy( 'PyROOT::TPyROOTApplication' )
       if appc.CreatePyROOTApplication():
          appc.InitROOTGlobals()
          # TODO Cling equivalent needed: appc.InitCINTMessageCallback();
@@ -541,8 +490,8 @@ class ModuleFacade( types.ModuleType ):
          sys.modules[ '__main__' ].__builtins__ = __builtins__
 
     # special case for cout (backwards compatibility)
-      if hasattr( std, '__1' ):
-         self.__dict__[ 'cout' ] = getattr( std, '__1' ).cout
+      if hasattr( cppyy.gbl.std, '__1' ):
+         self.__dict__[ 'cout' ] = getattr( cppyy.gbl.std, '__1' ).cout
 
     # custom logon file (must be after creation of ROOT globals)
       if hasargv and not '-n' in sys.argv:
@@ -601,8 +550,8 @@ class ModuleFacade( types.ModuleType ):
     # the macro NULL is not available from Cling globals, but might be useful
       setattr( _root, 'NULL', 0 )
 
-      for name in std.stlclasses:
-         setattr( _root, name, getattr( std, name ) )
+      for name in cppyy.gbl.std.stlclasses:
+         setattr( _root, name, getattr( cppyy.gbl.std, name ) )
 
     # set the display hook
       sys.displayhook = _displayhook

@@ -63,7 +63,7 @@ namespace RooStats{
 
     protected:
 
-      void AddEfficiencyTerms(RooWorkspace* proto, std::string prefix, std::string interpName,
+       void AddConstraintTerms(RooWorkspace* proto, Measurement& measurement, std::string prefix, std::string interpName,
 			      std::vector<OverallSys>& systList, 			 
 			      std::vector<std::string>& likelihoodTermNames, 
 			      std::vector<std::string>& totSystTermNames);

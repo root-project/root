@@ -3176,7 +3176,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
          = HdrSearch.LookupFile(llvm::sys::path::filename(headerFE->getName()),
                                 SourceLocation(),
                                 true /*isAngled*/, 0/*FromDir*/, foundDir,
-                                ArrayRef<const FileEntry*>(),
+                                ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                 0/*Searchpath*/, 0/*RelPath*/,
                                 0/*SuggModule*/, false /*SkipCache*/,
                                 false /*OpenFile*/, true /*CacheFailures*/);
@@ -3219,7 +3219,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       const DirectoryLookup* FoundDir = 0;
       FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                     true /*isAngled*/, 0/*FromDir*/, FoundDir,
-                                    ArrayRef<const FileEntry*>(),
+                                    ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                     0/*Searchpath*/, 0/*RelPath*/,
                                     0/*SuggModule*/);
    }
@@ -3244,7 +3244,8 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       // (or are we back to the previously found spelling, which is fine, too)
       if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                true /*isAngled*/, 0/*FromDir*/, FoundDir,
-                               ArrayRef<const FileEntry*>(), 0/*Searchpath*/,
+                               ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
+                               0/*Searchpath*/,
                                0/*RelPath*/, 0/*SuggModule*/) == FELong) {
          return trailingPart;
       }
@@ -3868,8 +3869,8 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
    std::pair<clang::Module*, bool> modCreation;
 
    modCreation
-      = ModuleMap.findOrCreateModule(moduleName.str().c_str(),
-                                     0 /*ActiveModule*/, /*ModuleMap*/ 0,
+      = ModuleMap.findOrCreateModule(moduleName.str(),
+                                     0 /*Parent*/,
                                      false /*Framework*/, false /*Explicit*/);
    if (!modCreation.second && !strstr(moduleFileName, "/allDict_rdict.pcm")) {
       std::cerr << "TMetaUtils::declareModuleMap: "
@@ -3885,7 +3886,8 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
       const clang::FileEntry* hdrFileEntry
          =  HdrSearch.LookupFile(*hdr, clang::SourceLocation(),
                                  false /*isAngled*/, 0 /*FromDir*/, CurDir,
-                                 llvm::ArrayRef<const clang::FileEntry*>(),
+                                 llvm::ArrayRef<std::pair<const clang::FileEntry *,
+                                    const clang::DirectoryEntry *>>(),
                                  0 /*SearchPath*/, 0 /*RelativePath*/,
                                  0/*SuggModule*/, false /*SkipCache*/,
                                  false /*OpenFile*/, true /*CacheFailures*/);
@@ -3893,7 +3895,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
          std::cerr << "TMetaUtils::declareModuleMap: "
             "Cannot find header file " << *hdr
                    << " included in dictionary module "
-                   << moduleName.data()
+                   << moduleName.str()
                    << " in include search path!";
          hdrFileEntry = PP.getFileManager().getFile(*hdr, /*OpenFile=*/false,
                                                     /*CacheFailure=*/false);
@@ -3908,7 +3910,8 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
          }
       }
 
-      ModuleMap.addHeader(modCreation.first, hdrFileEntry,
+      ModuleMap.addHeader(modCreation.first,
+                          clang::Module::Header{*hdr,hdrFileEntry},
                           clang::ModuleMap::NormalHeader);
    } // for headers
    return modCreation.first;
@@ -3946,6 +3949,10 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 
    // If the location is a macro get the expansion location.
    sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+   if (sourceManager.isLoadedSourceLocation(sourceLocation)) {
+      // Do not touch disk for nodes coming from the PCH.
+      return "";
+   }
 
    bool invalid;
    const char *commentStart = sourceManager.getCharacterData(sourceLocation, &invalid);
@@ -4009,11 +4016,20 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    }
 
    // Treat by default c++ comments (+2) but also Doxygen comments (+4)
+   //   Int_t fPx; ///< Some doxygen comment for persistent data.
+   //   Int_t fPy; //!< Some doxygen comment for persistent data.
+   //   Int_t fPz; /*!< Some doxygen comment for persistent data. */
+   //   Int_t fPa; /**< Some doxygen comment for persistent data. */
    unsigned int skipChars = 2;
    if (commentStart[0] == '/' &&
        commentStart[1] == '/' &&
        (commentStart[2] == '/' || commentStart[2] == '!') &&
        commentStart[3] == '<') {
+      skipChars = 4;
+   } else if (commentStart[0] == '/' &&
+              commentStart[1] == '*' &&
+              (commentStart[2] == '*' || commentStart[2] == '!') &&
+              commentStart[3] == '<') {
       skipChars = 4;
    }
 
@@ -4774,6 +4790,27 @@ const std::string& ROOT::TMetaUtils::GetPathSeparator()
 }
 
 //______________________________________________________________________________
+bool ROOT::TMetaUtils::EndsWith(const std::string &theString, const std::string &theSubstring)
+{
+   if (theString.size() < theSubstring.size()) return false;
+   const unsigned int theSubstringSize = theSubstring.size();
+   return 0 == theString.compare(theString.size() - theSubstringSize,
+                                 theSubstringSize,
+                                 theSubstring);
+}
+
+//______________________________________________________________________________
+bool ROOT::TMetaUtils::BeginsWith(const std::string &theString, const std::string &theSubstring)
+{
+   if (theString.size() < theSubstring.size()) return false;
+   const unsigned int theSubstringSize = theSubstring.size();
+   return 0 == theString.compare(0,
+                                 theSubstringSize,
+                                 theSubstring);
+}
+
+
+//______________________________________________________________________________
 const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls,
       const cling::Interpreter &interp)
 {
@@ -5050,7 +5087,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
       if (auto tmplDeclPtr = tmplSpecDeclPtr->getSpecializedTemplate()){
          retCode = FwdDeclFromTmplDecl(*tmplDeclPtr,interpreter,defString);
       }
-      defString = argsFwdDecl + defString;
+      defString = argsFwdDecl + "\n" + defString;
       return retCode;
 
    }
@@ -5061,7 +5098,10 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
    if (rcd){
       FwdDeclFromRcdDecl(*rcd, interpreter,defString);
    }
-   defString = argsFwdDecl + defString;
+   // Add a \n here to avoid long lines which contain duplications, for example (from MathCore):
+   // namespace ROOT { namespace Math { class IBaseFunctionMultiDim; } }namespace ROOT { namespace Fit { template <typename FunType> class Chi2FCN; } }
+   // namespace ROOT { namespace Math { class IGradientFunctionMultiDim; } }namespace ROOT { namespace Fit { template <typename FunType> class Chi2FCN; } }
+   defString = argsFwdDecl + "\n" + defString;
 
    return 0;
 }

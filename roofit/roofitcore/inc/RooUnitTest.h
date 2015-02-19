@@ -27,6 +27,11 @@
 #include <string>
 #include <map>
 
+/*
+ * The tolerance for the curve test is put to 0.4 instead of 0.2 to take into
+ * account the small variations in the values of the likelihood which can occur
+ * in presence of a different treatment of floating point numbers.
+ */
 
 class RooUnitTest : public TNamed {
 public:
@@ -51,7 +56,11 @@ public:
   virtual Bool_t testCode() = 0 ;  
 
   virtual Double_t htol() { return 5e-4 ; } // histogram test tolerance (KS dist != prob)
+#ifdef R__FAST_MATH
   virtual Double_t ctol() { return 2e-3 ; } // curve test tolerance
+#else
+  virtual Double_t ctol() { return 4e-3 ; } // curve test tolerance
+#endif
   virtual Double_t fptol() { return 1e-3 ; } // fit parameter test tolerance
   virtual Double_t fctol() { return 1e-3 ; } // fit correlation test tolerance
   virtual Double_t vtol() { return 1e-3 ; } // value test tolerance

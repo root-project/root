@@ -57,6 +57,13 @@ namespace cling {
 
   class AutoloadingVisitor: public RecursiveASTVisitor<AutoloadingVisitor> {
   private:
+    ///\brief Flag determining the visitor's actions. If true, register autoload
+    /// entries, i.e. remember the connection between filename and the declaration
+    /// that needs to be updated on #include of the filename.
+    /// If false, react on an #include by adjusting the forward decls, e.g. by
+    /// removing the default tremplate arguments (that will now be provided by
+    /// the definition read from the include) and by removing enum declarations
+    /// that would otherwise be duplicates.
     bool m_IsStoringState;
     AutoloadCallback::FwdDeclsMap* m_Map;
     clang::Preprocessor* m_PP;
@@ -76,14 +83,15 @@ namespace cling {
       const FileEntry* FE = 0;
       SourceLocation fileNameLoc;
       bool isAngled = false;
-      const DirectoryLookup* LookupFrom = 0;
+      const DirectoryLookup* FromDir = 0;
+      const FileEntry* FromFile = 0;
       const DirectoryLookup* CurDir = 0;
       llvm::StringRef FileName = annotation.drop_front(lenAnnoTag);
       if (FileName.equals(m_PrevFileName))
         FE = m_PrevFE;
       else {
         FE = m_PP->LookupFile(fileNameLoc, FileName, isAngled,
-                              LookupFrom, CurDir, /*SearchPath*/0,
+                              FromDir, FromFile, CurDir, /*SearchPath*/0,
                               /*RelativePath*/ 0, /*suggestedModule*/0,
                               /*SkipCache*/ false, /*OpenFile*/ false,
                               /*CacheFail*/ true);
@@ -189,6 +197,16 @@ namespace cling {
         return true;
 
       VisitDecl(D);
+
+      // If we have a definition we might be about to re-#include the
+      // same header containing definition that was #included previously,
+      // i.e. we might have multiple fwd decls for the same template.
+      // DO NOT remove the defaults here; the definition needs to keep it.
+      // (ROOT-7037)
+      if (ClassTemplateDecl* CTD = dyn_cast<ClassTemplateDecl>(D))
+        if (CXXRecordDecl* TemplatedD = CTD->getTemplatedDecl())
+          if (TemplatedD->getDefinition())
+            return true;
 
       for(auto P: D->getTemplateParameters()->asArray())
         TraverseDecl(P);

@@ -1,8 +1,4 @@
-""" PyCintex compatibility module.
-    This module allows transferring away from PyCintex from ROOT v5 to v6.
-    It provides both the original PyCintex.py (most code here is copied over
-    from PyCintex.py) as well as the newer cppyy (from PyPy) APIs. In ROOT6,
-    these codes are consolidated.
+""" Dynamic C++ bindings generator.
 """
 
 import sys, string
@@ -32,13 +28,13 @@ if 'cppyy' in sys.builtin_module_names:
    _backend = _thismodule.gbl
 
    # custom behavior that is not yet part of PyPy's cppyy
-   def _MakeRootClass( self, name ):
+   def _CreateScopeProxy( self, name ):
       return getattr( self, name )
-   type(_backend).MakeRootClass = _MakeRootClass
+   type(_backend).CreateScopeProxy = _CreateScopeProxy
 
-   def _LookupRootEntity( self, name ):
+   def _LookupCppEntity( self, name ):
       return getattr( self, name )
-   type(_backend).LookupRootEntity = _LookupRootEntity
+   type(_backend).LookupCppEntity = _LookupCppEntity
 
    class _Double(float): pass
    type(_backend).Double = _Double
@@ -48,7 +44,7 @@ if 'cppyy' in sys.builtin_module_names:
       return array.array('L', [_thismodule.addressof( obj )] )
    type(_backend).AddressOf = _AddressOf
 
-   del _AddressOf, _Double, _LookupRootEntity, _MakeRootClass
+   del _AddressOf, _Double, _LookupCppEntity, _CreateScopeProxy
 
 else:
    _builtin_cppyy = False
@@ -123,7 +119,7 @@ def load_reflection_info(name):
 if not _builtin_cppyy:
    class _ns_meta( type ):
       def __getattr__( cls, name ):
-         attr = _backend.LookupRootEntity( name )
+         attr = _backend.LookupCppEntity( name )
          if type(attr) is _backend.PropertyProxy:
             setattr( cls.__class__, name, attr )
             return attr.__get__(cls)
@@ -132,7 +128,7 @@ if not _builtin_cppyy:
 
    class _stdmeta( type ):
       def __getattr__( cls, name ):   # for non-templated classes in std
-         klass = _backend.MakeRootClass( name, cls )
+         klass = _backend.CreateScopeProxy( name, cls )
          setattr( cls, name, klass )
          return klass
 
@@ -148,18 +144,18 @@ if not _builtin_cppyy:
          for name in stlclasses:
             locals()[ name ] = Template( 'std::%s' % name )
 
-         string = _backend.MakeRootClass( 'string' )
+         string = _backend.CreateScopeProxy( 'string' )
 
 else:
    _global_cpp = _backend
  
 def Namespace( name ) :
    if name == '' : return _global_cpp
-   else :          return _backend.LookupRootEntity( name )
+   else :          return _backend.LookupCppEntity( name )
 makeNamespace = Namespace
 
 def makeClass( name ) :
-   return _backend.MakeRootClass( name )
+   return _backend.CreateScopeProxy( name )
   
 def addressOf( obj ) :                  # Cintex-style
    return _backend.AddressOf( obj )[0]
@@ -178,7 +174,7 @@ def getAllClasses() :
 #--- Global namespace and global objects -------------------------------
 gbl  = _global_cpp
 sys.modules['cppyy.gbl'] = gbl
-NULL = 0 # _backend.GetRootGlobal returns a descriptor, which needs a class
+NULL = 0
 class double(float): pass
 class short(int): pass
 class long_int(int): pass

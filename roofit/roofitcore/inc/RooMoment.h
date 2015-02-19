@@ -16,7 +16,7 @@
 #ifndef ROO_MOMENT
 #define ROO_MOMENT
 
-#include "RooAbsReal.h"
+#include "RooAbsMoment.h"
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
 
@@ -24,7 +24,7 @@
 class RooRealVar;
 class RooArgList ;
 
-class RooMoment : public RooAbsReal {
+class RooMoment : public RooAbsMoment {
 public:
 
   RooMoment() ;
@@ -36,23 +36,11 @@ public:
   RooMoment(const RooMoment& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooMoment(*this, newname); }
 
-  Int_t order() const { return _order ; }
-  Bool_t central() const { return _mean.absArg() ? kTRUE : kFALSE ; }
-
-  RooAbsReal* mean() { return (RooAbsReal*) _mean.absArg() ; }
-
   const RooAbsReal& xF() { return _xf.arg() ; }
   const RooAbsReal& ixF() { return _ixf.arg() ; }
   const RooAbsReal& iF() { return _if.arg() ; }
 
 protected:
-
-  Int_t _order ;                         // Moment order
-  Int_t _takeRoot ;                      // Return n-order root of moment
-  RooSetProxy  _nset ;                   // Normalization set (optional)
-  RooRealProxy _func ;                   // Input function
-  RooRealProxy _x     ;                  // Observable
-  RooRealProxy _mean ;                   // Mean (if calculated for central moment)
 
   RooRealProxy _xf ;                     // X*F 
   RooRealProxy _ixf ;                    // Int(X*F(X))dx ;

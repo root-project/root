@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "AArch64InstrInfo.h"
+#include "AArch64Subtarget.h"
 #include "MCTargetDesc/AArch64AddressingModes.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/Statistic.h"
@@ -108,7 +109,7 @@ private:
   int getMemSize(MachineInstr *MemMI);
 };
 char AArch64LoadStoreOpt::ID = 0;
-}
+} // namespace
 
 static bool isUnscaledLdst(unsigned Opc) {
   switch (Opc) {
@@ -133,6 +134,8 @@ static bool isUnscaledLdst(unsigned Opc) {
   case AArch64::LDURWi:
     return true;
   case AArch64::LDURXi:
+    return true;
+  case AArch64::LDURSWi:
     return true;
   }
 }
@@ -172,6 +175,9 @@ int AArch64LoadStoreOpt::getMemSize(MachineInstr *MemMI) {
   case AArch64::LDRXui:
   case AArch64::LDURXi:
     return 8;
+  case AArch64::LDRSWui:
+  case AArch64::LDURSWi:
+    return 4;
   }
 }
 
@@ -209,6 +215,9 @@ static unsigned getMatchingPairOpcode(unsigned Opc) {
   case AArch64::LDRXui:
   case AArch64::LDURXi:
     return AArch64::LDPXi;
+  case AArch64::LDRSWui:
+  case AArch64::LDURSWi:
+    return AArch64::LDPSWi;
   }
 }
 
@@ -236,6 +245,8 @@ static unsigned getPreIndexedOpcode(unsigned Opc) {
     return AArch64::LDRWpre;
   case AArch64::LDRXui:
     return AArch64::LDRXpre;
+  case AArch64::LDRSWui:
+    return AArch64::LDRSWpre;
   }
 }
 
@@ -263,6 +274,8 @@ static unsigned getPostIndexedOpcode(unsigned Opc) {
     return AArch64::LDRWpost;
   case AArch64::LDRXui:
     return AArch64::LDRXpost;
+  case AArch64::LDRSWui:
+    return AArch64::LDRSWpost;
   }
 }
 
@@ -779,6 +792,7 @@ bool AArch64LoadStoreOpt::optimizeBlock(MachineBasicBlock &MBB) {
     case AArch64::LDRQui:
     case AArch64::LDRXui:
     case AArch64::LDRWui:
+    case AArch64::LDRSWui:
     // do the unscaled versions as well
     case AArch64::STURSi:
     case AArch64::STURDi:
@@ -789,7 +803,8 @@ bool AArch64LoadStoreOpt::optimizeBlock(MachineBasicBlock &MBB) {
     case AArch64::LDURDi:
     case AArch64::LDURQi:
     case AArch64::LDURWi:
-    case AArch64::LDURXi: {
+    case AArch64::LDURXi:
+    case AArch64::LDURSWi: {
       // If this is a volatile load/store, don't mess with it.
       if (MI->hasOrderedMemoryRef()) {
         ++MBBI;
@@ -930,9 +945,8 @@ bool AArch64LoadStoreOpt::optimizeBlock(MachineBasicBlock &MBB) {
 }
 
 bool AArch64LoadStoreOpt::runOnMachineFunction(MachineFunction &Fn) {
-  const TargetMachine &TM = Fn.getTarget();
-  TII = static_cast<const AArch64InstrInfo *>(TM.getInstrInfo());
-  TRI = TM.getRegisterInfo();
+  TII = static_cast<const AArch64InstrInfo *>(Fn.getSubtarget().getInstrInfo());
+  TRI = Fn.getSubtarget().getRegisterInfo();
 
   bool Modified = false;
   for (auto &MBB : Fn)

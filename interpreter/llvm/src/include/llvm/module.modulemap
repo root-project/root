@@ -55,6 +55,7 @@ module LLVM_ExecutionEngine {
   exclude header "ExecutionEngine/JIT.h"
   exclude header "ExecutionEngine/MCJIT.h"
   exclude header "ExecutionEngine/Interpreter.h"
+  exclude header "ExecutionEngine/OrcMCJITReplacement.h"
 }
 
 module LLVM_IR {
@@ -75,8 +76,9 @@ module LLVM_IR {
   exclude header "IR/PassManager.h"
   exclude header "IR/LegacyPassManager.h"
 
-  // Exclude this; it's intended for (repeated) textual inclusion.
-  exclude header "IR/Instruction.def"
+  // These are intended for (repeated) textual inclusion.
+  textual header "IR/Instruction.def"
+  textual header "IR/Metadata.def"
 }
 
 module LLVM_LegacyPassManager {
@@ -108,9 +110,6 @@ module LLVM_MC {
   umbrella "MC"
   module * { export * }
 
-  // FIXME: Excluded due to mislayering.
-  exclude header "MC/MCObjectSymbolizer.h"
-
   // Exclude this; it's fundamentally non-modular.
   exclude header "MC/MCTargetOptionsCommandFlags.h"
 }
@@ -119,8 +118,6 @@ module LLVM_Object {
   requires cplusplus
   umbrella "Object"
   module * { export * }
-
-  module LLVM_MC_MCObjectSymbolizer { header "MC/MCObjectSymbolizer.h" export * }
 }
 
 module LLVM_Option { requires cplusplus umbrella "Option" module * { export * } }
@@ -158,9 +155,6 @@ module LLVM_Utils {
     exclude header "Support/AIXDataTypesFix.h"
 
     // Exclude this; it's fundamentally non-modular.
-    exclude header "Support/Debug.h"
-
-    // Exclude this; it's fundamentally non-modular.
     exclude header "Support/PluginLoader.h"
 
     // Exclude this; it's a weirdly-factored part of llvm-gcov and conflicts
@@ -169,6 +163,18 @@ module LLVM_Utils {
 
     // FIXME: Mislayered?
     exclude header "Support/TargetRegistry.h"
+
+    // These are intended for textual inclusion.
+    textual header "Support/ELFRelocs/AArch64.def"
+    textual header "Support/ELFRelocs/ARM.def"
+    textual header "Support/ELFRelocs/Hexagon.def"
+    textual header "Support/ELFRelocs/i386.def"
+    textual header "Support/ELFRelocs/Mips.def"
+    textual header "Support/ELFRelocs/PowerPC64.def"
+    textual header "Support/ELFRelocs/PowerPC.def"
+    textual header "Support/ELFRelocs/Sparc.def"
+    textual header "Support/ELFRelocs/SystemZ.def"
+    textual header "Support/ELFRelocs/x86_64.def"
   }
 }
 

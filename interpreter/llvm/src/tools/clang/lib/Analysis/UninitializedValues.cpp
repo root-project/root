@@ -15,7 +15,7 @@
 #include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/StmtVisitor.h"
-#include "clang/Analysis/Analyses/DataflowWorklist.h"
+#include "clang/Analysis/Analyses/PostOrderCFGView.h"
 #include "clang/Analysis/Analyses/UninitializedValues.h"
 #include "clang/Analysis/AnalysisContext.h"
 #include "clang/Analysis/CFG.h"
@@ -199,6 +199,66 @@ ValueVector::reference CFGBlockValues::operator[](const VarDecl *vd) {
 }
 
 //------------------------------------------------------------------------====//
+// Worklist: worklist for dataflow analysis.
+//====------------------------------------------------------------------------//
+
+namespace {
+class DataflowWorklist {
+  PostOrderCFGView::iterator PO_I, PO_E;
+  SmallVector<const CFGBlock *, 20> worklist;
+  llvm::BitVector enqueuedBlocks;
+public:
+  DataflowWorklist(const CFG &cfg, PostOrderCFGView &view)
+    : PO_I(view.begin()), PO_E(view.end()),
+      enqueuedBlocks(cfg.getNumBlockIDs(), true) {
+        // Treat the first block as already analyzed.
+        if (PO_I != PO_E) {
+          assert(*PO_I == &cfg.getEntry());
+          enqueuedBlocks[(*PO_I)->getBlockID()] = false;
+          ++PO_I;
+        }
+      }
+  
+  void enqueueSuccessors(const CFGBlock *block);
+  const CFGBlock *dequeue();
+};
+}
+
+void DataflowWorklist::enqueueSuccessors(const clang::CFGBlock *block) {
+  for (CFGBlock::const_succ_iterator I = block->succ_begin(),
+       E = block->succ_end(); I != E; ++I) {
+    const CFGBlock *Successor = *I;
+    if (!Successor || enqueuedBlocks[Successor->getBlockID()])
+      continue;
+    worklist.push_back(Successor);
+    enqueuedBlocks[Successor->getBlockID()] = true;
+  }
+}
+
+const CFGBlock *DataflowWorklist::dequeue() {
+  const CFGBlock *B = nullptr;
+
+  // First dequeue from the worklist.  This can represent
+  // updates along backedges that we want propagated as quickly as possible.
+  if (!worklist.empty())
+    B = worklist.pop_back_val();
+
+  // Next dequeue from the initial reverse post order.  This is the
+  // theoretical ideal in the presence of no back edges.
+  else if (PO_I != PO_E) {
+    B = *PO_I;
+    ++PO_I;
+  }
+  else {
+    return nullptr;
+  }
+
+  assert(enqueuedBlocks[B->getBlockID()] == true);
+  enqueuedBlocks[B->getBlockID()] = false;
+  return B;
+}
+
+//------------------------------------------------------------------------====//
 // Classification of DeclRefExprs as use or initialization.
 //====------------------------------------------------------------------------//
 
@@ -300,10 +360,25 @@ void ClassifyRefs::classify(const Expr *E, Class C) {
   // The result of a ?: could also be an lvalue.
   E = E->IgnoreParens();
   if (const ConditionalOperator *CO = dyn_cast<ConditionalOperator>(E)) {
-    const Expr *TrueExpr = CO->getTrueExpr();
-    if (!isa<OpaqueValueExpr>(TrueExpr))
-      classify(TrueExpr, C);
+    classify(CO->getTrueExpr(), C);
     classify(CO->getFalseExpr(), C);
+    return;
+  }
+
+  if (const BinaryConditionalOperator *BCO =
+          dyn_cast<BinaryConditionalOperator>(E)) {
+    classify(BCO->getFalseExpr(), C);
+    return;
+  }
+
+  if (const OpaqueValueExpr *OVE = dyn_cast<OpaqueValueExpr>(E)) {
+    classify(OVE->getSourceExpr(), C);
+    return;
+  }
+
+  if (const BinaryOperator *BO = dyn_cast<BinaryOperator>(E)) {
+    if (BO->getOpcode() == BO_Comma)
+      classify(BO->getRHS(), C);
     return;
   }
 
@@ -341,6 +416,17 @@ void ClassifyRefs::VisitUnaryOperator(UnaryOperator *UO) {
 }
 
 void ClassifyRefs::VisitCallExpr(CallExpr *CE) {
+  // Classify arguments to std::move as used.
+  if (CE->getNumArgs() == 1) {
+    if (FunctionDecl *FD = CE->getDirectCallee()) {
+      if (FD->isInStdNamespace() && FD->getIdentifier() &&
+          FD->getIdentifier()->isStr("move")) {
+        classify(CE->getArg(0), Use);
+        return;
+      }
+    }
+  }
+
   // If a value is passed by const reference to a function, we should not assume
   // that it is initialized by the call, and we conservatively do not assume
   // that it is used.
@@ -771,7 +857,7 @@ void clang::runUninitializedVariablesAnalysis(
   }
 
   // Proceed with the workist.
-  DataflowWorklist worklist(cfg, ac);
+  DataflowWorklist worklist(cfg, *ac.getAnalysis<PostOrderCFGView>());
   llvm::BitVector previouslyVisited(cfg.getNumBlockIDs());
   worklist.enqueueSuccessors(&cfg.getEntry());
   llvm::BitVector wasAnalyzed(cfg.getNumBlockIDs(), false);

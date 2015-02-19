@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef SPARC_ISELLOWERING_H
-#define SPARC_ISELLOWERING_H
+#ifndef LLVM_LIB_TARGET_SPARC_SPARCISELLOWERING_H
+#define LLVM_LIB_TARGET_SPARC_SPARCISELLOWERING_H
 
 #include "Sparc.h"
 #include "llvm/Target/TargetLowering.h"
@@ -54,7 +54,7 @@ namespace llvm {
   class SparcTargetLowering : public TargetLowering {
     const SparcSubtarget *Subtarget;
   public:
-    SparcTargetLowering(TargetMachine &TM);
+    SparcTargetLowering(TargetMachine &TM, const SparcSubtarget &STI);
     SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
 
     /// computeKnownBitsForTargetNode - Determine which of the bits specified

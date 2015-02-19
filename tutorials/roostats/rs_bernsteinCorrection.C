@@ -80,6 +80,9 @@ void rs_bernsteinCorrection(){
   wks->import(*data, Rename("data"));
   wks->import(nominal);
 
+  // use Minuit2
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2"); 
+
   // The tolerance sets the probability to add an unnecessary term.
   // lower tolerance will add fewer terms, while higher tolerance
   // will add more terms and provide a more flexible function.
@@ -87,22 +90,33 @@ void rs_bernsteinCorrection(){
   BernsteinCorrection bernsteinCorrection(tolerance);
   Int_t degree = bernsteinCorrection.ImportCorrectedPdf(wks,"nominal","x","data");
 
+  if (degree < 0) {
+     Error("rs_bernsteinCorrection","Bernstein correction failed ! ");
+     return;
+  }
+
   cout << " Correction based on Bernstein Poly of degree " << degree << endl;
+  
 
   RooPlot* frame = x.frame();
   data->plotOn(frame);
   // plot the best fit nominal model in blue
-  nominal.fitTo(*data,PrintLevel(-1));
+  TString minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+  nominal.fitTo(*data,PrintLevel(0),Minimizer(minimType));
   nominal.plotOn(frame);
 
   // plot the best fit corrected model in red
   RooAbsPdf* corrected = wks->pdf("corrected");
-  corrected->fitTo(*data,PrintLevel(-1));
+  if (!corrected) return;
+
+  // fit corrected model
+  corrected->fitTo(*data,PrintLevel(0),Minimizer(minimType) );
   corrected->plotOn(frame,LineColor(kRed));
 
   // plot the correction term (* norm constant) in dashed green
   // should make norm constant just be 1, not depend on binning of data
   RooAbsPdf* poly = wks->pdf("poly");
+  if (poly) 
   poly->plotOn(frame,LineColor(kGreen), LineStyle(kDashed));
 
   // this is a switch to check the sampling distribution
@@ -112,7 +126,8 @@ void rs_bernsteinCorrection(){
   // Here we choose n to be the one chosen by the tolerance
   // critereon above, eg. n = "degree" in the code.
   // Setting this to true is takes about 10 min.
-  bool checkSamplingDist = false;
+  bool checkSamplingDist = true;
+  int numToyMC = 20;  // increse this value for sensible results 
 
   TCanvas* c1 = new TCanvas();
   if(checkSamplingDist) {
@@ -120,12 +135,13 @@ void rs_bernsteinCorrection(){
     c1->cd(1);
   }
   frame->Draw();
+  gPad->Update(); 
 
   if(checkSamplingDist) {
     // check sampling dist
+    ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(-1); 
     TH1F* samplingDist = new TH1F("samplingDist","",20,0,10);
     TH1F* samplingDistExtra = new TH1F("samplingDistExtra","",20,0,10);
-    int numToyMC = 1000;
     bernsteinCorrection.CreateQSamplingDist(wks,"nominal","x","data",samplingDist, samplingDistExtra, degree,numToyMC);
 
     c1->cd(2);

@@ -288,6 +288,9 @@ void stress1()
    //Fit h1form with original function f1form
    h1form->Fit("f1form","q0");
 
+   // std::cout << "done formula" << std::endl;
+   // f1form->Print("v");
+
    //same operation with an interpreted function f1int
    TF1 *f1 = new TF1("f1int",f1int,-10,10,9);
    f1->SetParameters(f1params);
@@ -320,7 +323,7 @@ void stress1()
    if (hdiff > 0.1 || pdifftot > 2.e-3 || rint > 10) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s hdiff=%g, pdifftot=%g, rint=%g\n"," ",hdiff,pdifftot,rint);
    }
    if (gPrintSubBench) { printf("Test  1 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
@@ -332,9 +335,9 @@ void stress1()
    h1int->Write();
    ntotout += local.GetBytesWritten();
    //do not close the file. should be done by the destructor automatically
-   delete h1int;
-   delete h1form;
-   delete h1diff;
+   // delete h1int;
+   // delete h1form;
+   // delete h1diff;
 }
 
 //_______________________________________________________________
@@ -347,11 +350,12 @@ void stress2()
    Float_t comp = f.GetCompressionFactor();
 
    Bool_t OK = kTRUE;
-   Long64_t lastgood = 9428;
+   //Long64_t lastgood = 12383; //9428;
+   Long64_t lastgood = 9529;  // changes for new TFormula
    if (last <lastgood-200 || last > lastgood+200 || comp <2.0 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s last =%lld, comp=%f\n"," ",last,comp);
    }
    if (gPrintSubBench) { printf("Test  2 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
@@ -378,11 +382,12 @@ void stress3()
    Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   Long64_t lastgood = 49203;
+   //Long64_t lastgood = 65547; //49203;
+   Long64_t lastgood = 50753; //for new TFormula
    if (last <lastgood-900 || last > lastgood+900 || comp <1.8 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s last =%lld, comp=%f\n"," ",last,comp);
    }
    if (gPrintSubBench) { printf("Test  3 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
@@ -428,13 +433,13 @@ void stress4()
          if (f2params[idx] != 0.) dp0 /=  f2params[idx];
          bool testok =  (dp0 < 5.e-2);
          if (!testok) {
-            printf("\nfailed:   ipar=%d delta=%g, par=%g, nom=%g",idx,dp0,f2form->GetParameter(idx),f2params[idx]);
+            printf("\nFAILED:   ipar=%d delta=%g, par=%g, nom=%g",idx,dp0,f2form->GetParameter(idx),f2params[idx]);
          }
          OK &= testok;
       }
    }
    if (OK) printf("OK\n");
-   else    printf("\ntest failed !\n");
+   else    printf("\ntest FAILED !\n");
    if (gPrintSubBench) { printf("Test  4 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
@@ -494,7 +499,7 @@ void stress5()
    if (nlines < nlinesGood-110 || nlines > nlinesGood+110) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s nlines in stress.ps file = %d\n"," ",nlines);
    }
    delete c1;
@@ -581,7 +586,7 @@ void stress6()
    if (nentriesGood != nentries || diffrms > 1.e-2 || diffmean > 1.e-2) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s nentries=%d, diffmean=%g, diffrms=%g\n"," ",nentries,diffmean,diffrms);
    }
    if (gPrintSubBench) { printf("Test  6 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
@@ -723,7 +728,7 @@ void stress7()
                 || TMath::Abs(pxrms0-pxrms2) > 0.01) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s n1=%d, n2=%d, n3=%d, elistallN=%d\n"," ",n1,n2,n3,elistall->GetN());
       printf("%-8s pxmean0=%g, pxmean2=%g, pxrms0=%g\n"," ",pxmean0,pxmean2,pxrms0);
       printf("%-8s pxrms2=%g, compsum=%g, npxpy=%d\n"," ",pxrms2,compsum,npxpy);
@@ -850,7 +855,7 @@ void stress8(Int_t nevent)
    if (nbw0 != nbw1) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s nbw0=%d, nbr0=%d, nbw1=%d\n"," ",nbw0,nbr0,nbw1);
       printf("%-8s nbr1=%d, nbw2=%d, nbr2=%d\n"," ",nbr1,nbw2,nbr2);
    }
@@ -1137,7 +1142,7 @@ void stress9tree(TTree *tree, Int_t realTestNum)
    if (cRowMatOper || cMatchDiffOper || cFullOper2 ) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s cNtrak =%d, cNseg  =%d, cTemp  =%d, cHmean =%d\n"," ",cNtrack,cNseg,cTemp,cHmean);
       printf("%-8s cPx    =%d, cPy    =%d, cPz    =%d, cRandom=%d\n"," ",cPx,cPy,cPz,cRandom);
       printf("%-8s cMass2 =%d, cbx    =%d, cBy    =%d, cXfirst=%d\n"," ",cMass2,cBx,cBy,cXfirst);
@@ -1187,7 +1192,7 @@ void stress10()
    TFile *hfile = new TFile("Event.root");
    if (hfile==0 || hfile->IsZombie()) {
       delete hfile;
-      printf("failed\n");
+      printf("FAILED\n");
       return;
    }
    TTree *tree; hfile->GetObject("T",tree);
@@ -1239,7 +1244,7 @@ void stress10()
    if (nbin != nbout || nev != ntot) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s nbin=%d, nbout=%d, nev=%d, ntot=%d\n"," ",nbin,nbout,nev,ntot);
    }
    if (gPrintSubBench) { printf("Test 10 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
@@ -1305,7 +1310,7 @@ void stress12(Int_t testid)
    if (ngood < 40) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s ngood=%d\n"," ",ngood);
    }
    if (gPrintSubBench) { printf("Test 12 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
@@ -1349,7 +1354,7 @@ void stress13()
    if (chentries != tree->GetEntries()) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
    }
    if (gPrintSubBench) { printf("Test 13 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
@@ -1375,7 +1380,7 @@ void stress15()
    //We want to copy only a few branches.
    TFile *oldfile = new TFile("Event.root");
    if (oldfile->IsZombie()) {
-      printf("failed\n");
+      printf("FAILED\n");
       return;
    }
    TTree *oldtree; oldfile->GetObject("T",oldtree);
@@ -1417,7 +1422,7 @@ void stress15()
    // Open old reference file of stress9
    oldfile = new TFile("stress_test9.root");
    if (oldfile->IsZombie()) {
-      printf("failed\n");
+      printf("FAILED\n");
       return;
    }
    TH1F *bNtrack; oldfile->GetObject("bNtrack",bNtrack);
@@ -1433,7 +1438,7 @@ void stress15()
    if (cNtrack || cHmean) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s cNtrack=%d, cHmean=%d\n"," ",cNtrack,cHmean);
    }
    if (gPrintSubBench) { printf("Test 15 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
@@ -1555,7 +1560,7 @@ void stress16()
    if (nlines < nlinesGood-100 || nlines > nlinesGood+100) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
-      printf("failed\n");
+      printf("FAILED\n");
       printf("%-8s nlines in stress_lhcb.ps file = %d\n"," ",nlines);
    }
    if (gPrintSubBench) { printf("Test 16 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }

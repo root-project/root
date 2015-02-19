@@ -47,7 +47,7 @@ ClassImp(RooChangeTracker)
 ;
 
 //_____________________________________________________________________________
-RooChangeTracker::RooChangeTracker() : _checkVal(kFALSE)
+RooChangeTracker::RooChangeTracker() : _checkVal(kFALSE), _init(kFALSE)
 {
   // Default constructor
 
@@ -64,7 +64,8 @@ RooChangeTracker::RooChangeTracker(const char* name, const char* title, const Ro
   _catSet("catSet","Set of discrete-valued components to be tracked",this),
   _realRef(trackSet.getSize()),
   _catRef(trackSet.getSize()),
-  _checkVal(checkValues)
+  _checkVal(checkValues),
+  _init(kFALSE)
 {
   // Constructor. The set trackSet contains the observables to be
   // tracked for changes. If checkValues is true an additional
@@ -91,6 +92,8 @@ RooChangeTracker::RooChangeTracker(const char* name, const char* title, const Ro
     RooAbsReal* real  ;
     RooAbsCategory* cat  ;
     Int_t i(0) ;
+    _realSetIter->Reset() ;
+    _catSetIter->Reset() ;
     while((real=(RooAbsReal*)_realSetIter->Next())) {
       _realRef[i++] = real->getVal() ;
     }
@@ -111,7 +114,8 @@ RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* na
   _catSet("catSet",this,other._catSet),
   _realRef(other._realRef),
   _catRef(other._catRef),
-  _checkVal(other._checkVal)
+  _checkVal(other._checkVal),
+  _init(kFALSE)
 {
   // Copy constructor
 
@@ -164,23 +168,32 @@ Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
 
     // Check if any of the real values changed
     while ((real=(RooAbsReal*)_realSetIter->Next())) {
-      if (real->getVal() != _realRef[i++]) {
-	//cout << "RooChangeTracker(" << GetName() << ") value of " << real->GetName() << " has changed from " << _realRef[i-1] << " to " << real->getVal() << endl ;
+      if (real->getVal() != _realRef[i]) {
+	// cout << "RooChangeTracker(" << this << "," << GetName() << ") value of " << real->GetName() << " has changed from " << _realRef[i] << " to " << real->getVal() << " clearState = " << (clearState?"T":"F") << endl ;
 	valuesChanged = kTRUE ;
-	_realRef[i-1] = real->getVal() ;
+	_realRef[i] = real->getVal() ;
       }
+      i++ ;
     }
     // Check if any of the categories changed
     i=0 ;
     while ((cat=(RooAbsCategory*)_catSetIter->Next())) {
       if (cat->getIndex() != _catRef[i++]) {
-	//cout << "RooChangeTracker(" << GetName() << ") value of " << cat->GetName() << " has changed from " << _catRef[i-1] << " to " << cat->getIndex() << endl ;
+	// cout << "RooChangeTracker(" << this << "," << GetName() << ") value of " << cat->GetName() << " has changed from " << _catRef[i-1] << " to " << cat->getIndex() << endl ;
 	valuesChanged = kTRUE ;
 	_catRef[i-1] = cat->getIndex() ;
       }
     }
 
     clearValueDirty() ;
+
+
+    if (!_init) {
+      valuesChanged=kTRUE ;
+      _init = kTRUE ;
+    }
+    
+    // cout << "RooChangeTracker(" << GetName() << ") returning " << (valuesChanged?"T":"F") << endl ;
 
     return valuesChanged ;
 

@@ -12,8 +12,8 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CLANG_MACROINFO_H
-#define LLVM_CLANG_MACROINFO_H
+#ifndef LLVM_CLANG_LEX_MACROINFO_H
+#define LLVM_CLANG_LEX_MACROINFO_H
 
 #include "clang/Lex/Token.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -524,7 +524,7 @@ public:
                                unsigned ImportedFromModuleID = 0,
                                ArrayRef<unsigned> Overrides = None)
       : MacroDirective(MD_Undefine, UndefLoc, ImportedFromModuleID, Overrides) {
-    assert(UndefLoc.isValid() && "Invalid UndefLoc!");
+    assert((UndefLoc.isValid() || ImportedFromModuleID) && "Invalid UndefLoc!");
   }
 
   static bool classof(const MacroDirective *MD) {

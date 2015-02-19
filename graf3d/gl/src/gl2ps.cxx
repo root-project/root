@@ -2433,7 +2433,7 @@ static void gl2psPrintPostScriptPixmap(GLfloat x, GLfloat y, GL2PSimage *im)
 {
   GLuint nbhex, nbyte, nrgb, nbits;
   GLuint row, col, ibyte, icase;
-  GLfloat dr, dg, db, fgrey;
+  GLfloat dr, dg = 0.f, db = 0.f, fgrey;
   unsigned char red = 0, green = 0, blue = 0, b, grey;
   GLuint width = (GLuint)im->width;
   GLuint height = (GLuint)im->height;

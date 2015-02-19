@@ -174,6 +174,8 @@ public:
    TDictionary(const TDictionary& dict);
    virtual ~TDictionary();
 
+   TDictionary& operator=(const TDictionary& other);
+
    void                CreateAttributeMap();
    TDictAttributeMap  *GetAttributeMap() const
    {

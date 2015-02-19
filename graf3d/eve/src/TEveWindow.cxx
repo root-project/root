@@ -1406,7 +1406,7 @@ TEveWindowPack::TEveWindowPack(TGPack* p, const char* n, const char* t) :
    fPack        (p ? p : new TGPack())
 {
    // Constructor.
-   // If passed pack is 0, a defualt one is instantiated.
+   // If passed pack is 0, a default one is instantiated.
 }
 
 //______________________________________________________________________________
@@ -1493,7 +1493,7 @@ TEveWindowTab::TEveWindowTab(TGTab* tab, const char* n, const char* t) :
    fTab (tab ? tab : new TGTab())
 {
    // Constructor.
-   // If passed tab is 0, a defualt one is instantiated.
+   // If passed tab is 0, a default one is instantiated.
 }
 
 //______________________________________________________________________________

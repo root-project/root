@@ -16,7 +16,7 @@
 
 ClassImp(TGeoStateInfo)
 //_____________________________________________________________________________
-TGeoStateInfo::TGeoStateInfo()
+TGeoStateInfo::TGeoStateInfo(Int_t maxdaughters)
               :fNode(0),
                fAsmCurrent(0),
                fAsmNext(0),
@@ -37,7 +37,7 @@ TGeoStateInfo::TGeoStateInfo()
                fXtruPoly(0)
 {
 // Constructor
-   Int_t maxDaughters = TGeoManager::GetMaxDaughters();
+   Int_t maxDaughters = (maxdaughters>0) ? maxdaughters : TGeoManager::GetMaxDaughters();
    Int_t maxXtruVert  = TGeoManager::GetMaxXtruVert();
    fVoxCheckList = new Int_t[maxDaughters];
    fVoxBits1 = new UChar_t[2 + ((maxDaughters-1)>>3)];

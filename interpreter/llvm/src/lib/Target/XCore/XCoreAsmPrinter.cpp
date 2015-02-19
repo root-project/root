@@ -55,9 +55,10 @@ namespace {
     XCoreTargetStreamer &getTargetStreamer();
 
   public:
-    explicit XCoreAsmPrinter(TargetMachine &TM, MCStreamer &Streamer)
-      : AsmPrinter(TM, Streamer), Subtarget(TM.getSubtarget<XCoreSubtarget>()),
-        MCInstLowering(*this) {}
+    explicit XCoreAsmPrinter(TargetMachine &TM,
+                             std::unique_ptr<MCStreamer> Streamer)
+        : AsmPrinter(TM, std::move(Streamer)),
+          Subtarget(TM.getSubtarget<XCoreSubtarget>()), MCInstLowering(*this) {}
 
     const char *getPassName() const override {
       return "XCore Assembly Printer";
@@ -105,7 +106,6 @@ void XCoreAsmPrinter::emitArrayBound(MCSymbol *Sym, const GlobalVariable *GV) {
                                                       OutContext));
     if (GV->hasWeakLinkage() || GV->hasLinkOnceLinkage() ||
         GV->hasCommonLinkage()) {
-      // TODO Use COMDAT groups for LinkOnceLinkage
       OutStreamer.EmitSymbolAttribute(SymGlob, MCSA_Weak);
     }
   }
@@ -140,7 +140,6 @@ void XCoreAsmPrinter::EmitGlobalVariable(const GlobalVariable *GV) {
     emitArrayBound(GVSym, GV);
     OutStreamer.EmitSymbolAttribute(GVSym, MCSA_Global);
 
-    // TODO Use COMDAT groups for LinkOnceLinkage
     if (GV->hasWeakLinkage() || GV->hasLinkOnceLinkage() ||
         GV->hasCommonLinkage())
       OutStreamer.EmitSymbolAttribute(GVSym, MCSA_Weak);

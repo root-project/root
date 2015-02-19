@@ -25,15 +25,34 @@ use Text::ParseWords;
 # Compiler command setup.
 ##===----------------------------------------------------------------------===##
 
+# Search in the PATH if the compiler exists
+sub SearchInPath {
+    my $file = shift;
+    foreach my $dir (split (':', $ENV{PATH})) {
+        if (-x "$dir/$file") {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 my $Compiler;
 my $Clang;
 my $DefaultCCompiler;
 my $DefaultCXXCompiler;
 my $IsCXX;
 
+# If on OSX, use xcrun to determine the SDK root.
+my $UseXCRUN = 0;
+
 if (`uname -a` =~ m/Darwin/) {
   $DefaultCCompiler = 'clang';
   $DefaultCXXCompiler = 'clang++';
+  # Older versions of OSX do not have xcrun to
+  # query the SDK location.
+  if (-x "/usr/bin/xcrun") {
+    $UseXCRUN = 1;
+  }
 } else {
   $DefaultCCompiler = 'gcc';
   $DefaultCXXCompiler = 'g++';
@@ -41,7 +60,7 @@ if (`uname -a` =~ m/Darwin/) {
 
 if ($FindBin::Script =~ /c\+\+-analyzer/) {
   $Compiler = $ENV{'CCC_CXX'};
-  if (!defined $Compiler || ! -x $Compiler) { $Compiler = $DefaultCXXCompiler; }
+  if (!defined $Compiler || (! -x $Compiler && ! SearchInPath($Compiler))) { $Compiler = $DefaultCXXCompiler; }
 
   $Clang = $ENV{'CLANG_CXX'};
   if (!defined $Clang || ! -x $Clang) { $Clang = 'clang++'; }
@@ -50,7 +69,7 @@ if ($FindBin::Script =~ /c\+\+-analyzer/) {
 }
 else {
   $Compiler = $ENV{'CCC_CC'};
-  if (!defined $Compiler || ! -x $Compiler) { $Compiler = $DefaultCCompiler; }
+  if (!defined $Compiler || (! -x $Compiler && ! SearchInPath($Compiler))) { $Compiler = $DefaultCCompiler; }
 
   $Clang = $ENV{'CLANG'};
   if (!defined $Clang || ! -x $Clang) { $Clang = 'clang'; }
@@ -467,6 +486,7 @@ my $HtmlDir = $ENV{'CCC_ANALYZER_HTML'};
 my %DisabledArchs = ('ppc' => 1, 'ppc64' => 1);
 my %ArchsSeen;
 my $HadArch = 0;
+my $HasSDK = 0;
 
 # Process the arguments.
 foreach (my $i = 0; $i < scalar(@ARGV); ++$i) {
@@ -487,6 +507,12 @@ foreach (my $i = 0; $i < scalar(@ARGV); ++$i) {
     $HadArch = 1;
     ++$i;
     next;
+  }
+
+  # On OSX/iOS, record if an SDK path was specified.  This
+  # is innocuous for other platforms, so the check just happens.
+  if ($Arg =~ /^-isysroot/) {
+    $HasSDK = 1;
   }
 
   # Options with possible arguments that should pass through to compiler.
@@ -631,6 +657,15 @@ foreach (my $i = 0; $i < scalar(@ARGV); ++$i) {
     push @Files, $Arg;
     next;
   }
+}
+
+# If we are on OSX and have an installation where the
+# default SDK is inferred by xcrun use xcrun to infer
+# the SDK.
+if (not $HasSDK and $UseXCRUN) {
+  my $sdk = `/usr/bin/xcrun --show-sdk-path -sdk macosx`;
+  chomp $sdk;
+  push @CompileOpts, "-isysroot", $sdk;
 }
 
 if ($Action eq 'compile' or $Action eq 'link') {

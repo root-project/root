@@ -48,7 +48,7 @@ llvm::Constant *CodeGenModule::GetAddrOfThunk(GlobalDecl GD,
 
   llvm::Type *Ty = getTypes().GetFunctionTypeForVTable(GD);
   return GetOrCreateLLVMFunction(Name, Ty, GD, /*ForVTable=*/true,
-                                 /*DontDefer*/ true);
+                                 /*DontDefer=*/true, /*IsThunk=*/true);
 }
 
 static void setThunkVisibility(CodeGenModule &CGM, const CXXMethodDecl *MD,
@@ -159,14 +159,10 @@ void CodeGenFunction::GenerateVarArgsThunk(
   // with "this".
   llvm::Value *ThisPtr = &*AI;
   llvm::BasicBlock *EntryBB = Fn->begin();
-  llvm::Instruction *ThisStore = nullptr;
-  for (llvm::BasicBlock::iterator I = EntryBB->begin(), E = EntryBB->end();
-       I != E; I++) {
-    if (isa<llvm::StoreInst>(I) && I->getOperand(0) == ThisPtr) {
-      ThisStore = cast<llvm::StoreInst>(I);
-      break;
-    }
-  }
+  llvm::Instruction *ThisStore =
+      std::find_if(EntryBB->begin(), EntryBB->end(), [&](llvm::Instruction &I) {
+    return isa<llvm::StoreInst>(I) && I.getOperand(0) == ThisPtr;
+  });
   assert(ThisStore && "Store of this should be in entry block?");
   // Adjust "this", if necessary.
   Builder.SetInsertPoint(ThisStore);
@@ -200,25 +196,25 @@ void CodeGenFunction::StartThunk(llvm::Function *Fn, GlobalDecl GD,
   const CXXMethodDecl *MD = cast<CXXMethodDecl>(GD.getDecl());
   QualType ThisType = MD->getThisType(getContext());
   const FunctionProtoType *FPT = MD->getType()->getAs<FunctionProtoType>();
-  QualType ResultType =
-      CGM.getCXXABI().HasThisReturn(GD) ? ThisType : FPT->getReturnType();
+  QualType ResultType = CGM.getCXXABI().HasThisReturn(GD)
+                            ? ThisType
+                            : CGM.getCXXABI().hasMostDerivedReturn(GD)
+                                  ? CGM.getContext().VoidPtrTy
+                                  : FPT->getReturnType();
   FunctionArgList FunctionArgs;
 
   // Create the implicit 'this' parameter declaration.
   CGM.getCXXABI().buildThisParam(*this, FunctionArgs);
 
   // Add the rest of the parameters.
-  for (FunctionDecl::param_const_iterator I = MD->param_begin(),
-                                          E = MD->param_end();
-       I != E; ++I)
-    FunctionArgs.push_back(*I);
+  FunctionArgs.append(MD->param_begin(), MD->param_end());
 
   if (isa<CXXDestructorDecl>(MD))
     CGM.getCXXABI().addImplicitStructorParams(*this, ResultType, FunctionArgs);
 
   // Start defining the function.
   StartFunction(GlobalDecl(), ResultType, Fn, FnInfo, FunctionArgs,
-                MD->getLocation(), SourceLocation());
+                MD->getLocation(), MD->getLocation());
 
   // Since we didn't pass a GlobalDecl to StartFunction, do this ourselves.
   CGM.getCXXABI().EmitInstanceFunctionProlog(*this);
@@ -281,8 +277,11 @@ void CodeGenFunction::EmitCallAndReturnForThunk(llvm::Value *Callee,
 #endif
 
   // Determine whether we have a return value slot to use.
-  QualType ResultType =
-      CGM.getCXXABI().HasThisReturn(CurGD) ? ThisType : FPT->getReturnType();
+  QualType ResultType = CGM.getCXXABI().HasThisReturn(CurGD)
+                            ? ThisType
+                            : CGM.getCXXABI().hasMostDerivedReturn(CurGD)
+                                  ? CGM.getContext().VoidPtrTy
+                                  : FPT->getReturnType();
   ReturnValueSlot Slot;
   if (!ResultType->isVoidType() &&
       CurFnInfo->getReturnInfo().getKind() == ABIArgInfo::Indirect &&
@@ -378,7 +377,10 @@ void CodeGenFunction::GenerateThunk(llvm::Function *Fn,
 
   // Set the right linkage.
   CGM.setFunctionLinkage(GD, Fn);
-  
+
+  if (CGM.supportsCOMDAT() && Fn->isWeakForLinker())
+    Fn->setComdat(CGM.getModule().getOrInsertComdat(Fn->getName()));
+
   // Set the right visibility.
   const CXXMethodDecl *MD = cast<CXXMethodDecl>(GD.getDecl());
   setThunkVisibility(CGM, MD, Thunk, Fn);
@@ -680,7 +682,8 @@ CodeGenModule::getVTableLinkage(const CXXRecordDecl *RD) {
 
   // We're at the end of the translation unit, so the current key
   // function is fully correct.
-  if (const CXXMethodDecl *keyFunction = Context.getCurrentKeyFunction(RD)) {
+  const CXXMethodDecl *keyFunction = Context.getCurrentKeyFunction(RD);
+  if (keyFunction && !RD->hasAttr<DLLImportAttr>()) {
     // If this class has a key function, use that to determine the
     // linkage of the vtable.
     const FunctionDecl *def = nullptr;
@@ -747,19 +750,13 @@ CodeGenModule::getVTableLinkage(const CXXRecordDecl *RD) {
   llvm_unreachable("Invalid TemplateSpecializationKind!");
 }
 
-/// This is a callback from Sema to tell us that it believes that a
-/// particular v-table is required to be emitted in this translation
-/// unit.
+/// This is a callback from Sema to tell us that that a particular v-table is
+/// required to be emitted in this translation unit.
 ///
-/// The reason we don't simply trust this callback is because Sema
-/// will happily report that something is used even when it's used
-/// only in code that we don't actually have to emit.
-///
-/// \param isRequired - if true, the v-table is mandatory, e.g.
-///   because the translation unit defines the key function
-void CodeGenModule::EmitVTable(CXXRecordDecl *theClass, bool isRequired) {
-  if (!isRequired) return;
-
+/// This is only called for vtables that _must_ be emitted (mainly due to key
+/// functions).  For weak vtables, CodeGen tracks when they are needed and
+/// emits them as-needed.
+void CodeGenModule::EmitVTable(CXXRecordDecl *theClass) {
   VTables.GenerateClassData(theClass);
 }
 

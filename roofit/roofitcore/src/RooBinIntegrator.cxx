@@ -224,8 +224,8 @@ Double_t RooBinIntegrator::integral(const Double_t *)
       Double_t xhi = *iter ;
       Double_t xcenter = (xhi+xlo)/2 ;
       Double_t binInt = integrand(xvec(xcenter))*(xhi-xlo) ;
-      //cout << "RBI::integral 1D binInt[" << xcenter << "] = " << binInt << endl ;
       sum += binInt ;
+      //cout << "RBI::integral over " << _function->getName() << " 1D binInt[" << xcenter << "] = " << binInt << " running sum = " << sum << endl ;
       xlo=xhi ;
     }
   }

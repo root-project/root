@@ -9,6 +9,11 @@ ROOT_USE_PACKAGE(net/net)
 
 include_directories(${DAVIX_INCLUDE_DIRS})
 
+# Workaround for defects in davix 0.3.1: https://its.cern.ch/jira/browse/DMC-577
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-ignored-qualifiers")
+endif()
+
 ROOT_GENERATE_DICTIONARY(G__DAVIX *.h MODULE RDAVIX LINKDEF LinkDef.h)
 
 ROOT_LINKER_LIBRARY(RDAVIX *.cxx G__DAVIX.cxx LIBRARIES ${DAVIX_LIBRARIES} ${OPENSSL_LIBRARIES} ${LIBXML2_LIBRARIES} ${SYSLIBS} DEPENDENCIES RIO Net)

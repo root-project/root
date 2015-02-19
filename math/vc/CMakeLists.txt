@@ -1,11 +1,17 @@
 set(Vc_INSIDE_ROOT TRUE)
 
+if (CMAKE_BUILD_TYPE STREQUAL OPTIMIZED)
+  set(VC_EXTRA_CONSERVATIVE_FLAGS "-fno-fast-math")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${VC_EXTRA_CONSERVATIVE_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${VC_EXTRA_CONSERVATIVE_FLAGS}")
+endif()
+
 include(cmake/VcMacros.cmake)
 include(cmake/AddTargetProperty.cmake)
 vc_determine_compiler()
 vc_set_preferred_compiler_flags(WARNING_FLAGS BUILDTYPE_FLAGS)
 add_definitions("${Vc_DEFINITIONS}")
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(libvc_compile_flags "-DVC_COMPILE_LIB")
 vc_compile_for_all_implementations(_objs src/trigonometric.cpp FLAGS ${libvc_compile_flags}

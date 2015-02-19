@@ -56,6 +56,7 @@ public:
   Bool_t isSealed() const { return _sealed ; }
   const char* sealNotice() const { return _sealNotice.Data() ; }
 
+
 protected:
 
   Bool_t setDataSlave(RooAbsData& data, Bool_t cloneData=kTRUE, Bool_t ownNewDataAnyway=kFALSE) ;

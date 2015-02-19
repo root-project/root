@@ -294,7 +294,7 @@ public:
 
 
 
-   bool Empty() { return fImpl == 0; }
+   bool Empty() const { return fImpl == 0; }
 
 
    void SetFunction(Impl * f) {

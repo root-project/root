@@ -27,6 +27,7 @@
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooDataSet.h"
+#include "RooTrace.h"
 
 #include "TError.h"
 
@@ -62,6 +63,7 @@ const Double_t RooKeysPdf::_nSigma = std::sqrt(-2. *
 			     _asymLeft(kFALSE), _asymRight(kFALSE)
 { 
   // coverity[UNINIT_CTOR]
+  TRACE_CREATE
 }
 
 
@@ -70,7 +72,7 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
                        RooAbsReal& x, RooDataSet& data,
                        Mirror mirror, Double_t rho) :
   RooAbsPdf(name,title),
-  _x("x","Dependent",this,x),
+  _x("x","observable",this,x),
   _nEvents(0),
   _dataPts(0),
   _dataWgts(0),
@@ -83,13 +85,44 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 {
   // cache stuff about x
   snprintf(_varName, 128,"%s", x.GetName());
-  RooRealVar real= (RooRealVar&)(_x.arg());
+  RooAbsRealLValue& real= (RooRealVar&)(_x.arg());
   _lo = real.getMin();
   _hi = real.getMax();
   _binWidth = (_hi-_lo)/(_nPoints-1);
 
   // form the lookup table
   LoadDataSet(data);
+  TRACE_CREATE
+}
+
+
+
+//_____________________________________________________________________________
+RooKeysPdf::RooKeysPdf(const char *name, const char *title,
+                       RooAbsReal& xpdf, RooRealVar& xdata, RooDataSet& data,
+                       Mirror mirror, Double_t rho) :
+  RooAbsPdf(name,title),
+  _x("x","Observable",this,xpdf),
+  _nEvents(0),
+  _dataPts(0),
+  _dataWgts(0),
+  _weights(0),
+  _mirrorLeft(mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
+  _mirrorRight(mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
+  _asymLeft(mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
+  _asymRight(mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
+  _rho(rho)
+{
+  // cache stuff about x
+  snprintf(_varName, 128,"%s", xdata.GetName());
+  RooAbsRealLValue& real= (RooRealVar&)(xdata);
+  _lo = real.getMin();
+  _hi = real.getMax();
+  _binWidth = (_hi-_lo)/(_nPoints-1);
+
+  // form the lookup table
+  LoadDataSet(data);
+  TRACE_CREATE
 }
 
 
@@ -120,6 +153,7 @@ RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   for (Int_t i= 0; i<_nPoints+1; i++)
     _lookupTable[i]= other._lookupTable[i];
   
+  TRACE_CREATE
 }
 
 
@@ -128,17 +162,14 @@ RooKeysPdf::~RooKeysPdf() {
   delete[] _dataPts;
   delete[] _dataWgts;
   delete[] _weights;
+
+  TRACE_DESTROY
 }
 
 
-void
 
 //_____________________________________________________________________________
-RooKeysPdf::LoadDataSet( RooDataSet& data) {
-  delete[] _dataPts;
-  delete[] _dataWgts;
-  delete[] _weights;
-
+namespace {
   // small helper structure
   struct Data {
     Double_t x;
@@ -149,6 +180,12 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
     inline bool operator()(const struct Data& a, const struct Data& b) const
     { return a.x < b.x; }
   };
+}
+void RooKeysPdf::LoadDataSet( RooDataSet& data) {
+  delete[] _dataPts;
+  delete[] _dataWgts;
+  delete[] _weights;
+
   std::vector<Data> tmp;
   tmp.reserve((1 + _mirrorLeft + _mirrorRight) * data.numEntries());
   Double_t x0 = 0., x1 = 0., x2 = 0.;
@@ -218,8 +255,8 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
       if (xlo >= xhi) continue;
       const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
       const Double_t weightratio = _dataWgts[j] / _weights[j];
-      const Int_t binlo = std::floor((xlo - _lo) / _binWidth);
-      const Int_t binhi = _nPoints - std::floor((_hi - xhi) / _binWidth);
+      const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
+      const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
       const Double_t x = (Double_t(_nPoints - binlo) * _lo +
 	      Double_t(binlo) * _hi) / Double_t(_nPoints);
       Double_t chi = (x - _dataPts[j]) / _weights[j] / std::sqrt(2.);
@@ -236,8 +273,8 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 	  if (xlo >= xhi) continue;
 	  const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
 	  const Double_t weightratio = _dataWgts[j] / _weights[j];
-	  const Int_t binlo = std::floor((xlo - _lo) / _binWidth);
-	  const Int_t binhi = _nPoints - std::floor((_hi - xhi) / _binWidth);
+	  const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
+	  const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
 	  const Double_t x = (Double_t(_nPoints - binlo) * _lo +
 		  Double_t(binlo) * _hi) / Double_t(_nPoints);
 	  Double_t chi = (x - (2. * _lo - _dataPts[j])) / _weights[j] / std::sqrt(2.);
@@ -255,8 +292,8 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 	  if (xlo >= xhi) continue;
 	  const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
 	  const Double_t weightratio = _dataWgts[j] / _weights[j];
-	  const Int_t binlo = std::floor((xlo - _lo) / _binWidth);
-	  const Int_t binhi = _nPoints - std::floor((_hi - xhi) / _binWidth);
+	  const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
+	  const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
 	  const Double_t x = (Double_t(_nPoints - binlo) * _lo +
 		  Double_t(binlo) * _hi) / Double_t(_nPoints);
 	  Double_t chi = (x - (2. * _hi - _dataPts[j])) / _weights[j] / std::sqrt(2.);
@@ -274,22 +311,24 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 Double_t RooKeysPdf::evaluate() const {
   Int_t i = (Int_t)floor((Double_t(_x)-_lo)/_binWidth);
   if (i<0) {
-    cerr << "got point below lower bound:"
-	 << Double_t(_x) << " < " << _lo
-	 << " -- performing linear extrapolation..." << endl;
+//     cerr << "got point below lower bound:"
+// 	 << Double_t(_x) << " < " << _lo
+// 	 << " -- performing linear extrapolation..." << endl;
     i=0;
   }
   if (i>_nPoints-1) {
-    cerr << "got point above upper bound:"
-	 << Double_t(_x) << " > " << _hi
-	 << " -- performing linear extrapolation..." << endl;
+//     cerr << "got point above upper bound:"
+// 	 << Double_t(_x) << " > " << _hi
+// 	 << " -- performing linear extrapolation..." << endl;
     i=_nPoints-1;
   }
   Double_t dx = (Double_t(_x)-(_lo+i*_binWidth))/_binWidth;
   
   // for now do simple linear interpolation.
   // one day replace by splines...
-  return (_lookupTable[i]+dx*(_lookupTable[i+1]-_lookupTable[i]));
+  Double_t ret = (_lookupTable[i]+dx*(_lookupTable[i+1]-_lookupTable[i]));
+  if (ret<0) ret=0 ;
+  return ret ;
 }
 
 Int_t RooKeysPdf::getAnalyticalIntegral(

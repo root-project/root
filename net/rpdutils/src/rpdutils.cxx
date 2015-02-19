@@ -785,7 +785,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
 
       // Now scan over entries
       int pr = 0, pw = 0;
-      int lsec, act, oldofs = 0, bytesread = 0;
+      int lsec, act = 0, oldofs = 0, bytesread = 0;
       char ln[kMAXPATHLEN], dumm[kMAXPATHLEN];
       bool fwr = 0;
 

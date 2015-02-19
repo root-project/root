@@ -96,25 +96,27 @@ public:
    
 
   // Constant term  optimizer interface
-  virtual void cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset=0) = 0 ;
+  virtual void cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) = 0 ;
   virtual const RooAbsArg* cacheOwner() = 0 ;
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) = 0 ;
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) = 0 ;
   const RooArgSet& cachedVars() const { return _cachedVars ; }
   virtual void resetCache() = 0 ;
-  virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/) {} ;
+  virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/, Bool_t /* skipZeroWeights*/) {} ;
 
   virtual void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
   Bool_t dirtyProp() const { return _doDirtyProp ; }
 
   virtual void checkInit() const {} ;
   
-  Bool_t hasFilledCache() const { return _cachedVars.getSize()>0 ; }
-
+  virtual Bool_t hasFilledCache() const { return kFALSE ; }
+  
   virtual const TTree* tree() const { return 0 ; }
   virtual void dump() {} 
 
   virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) = 0 ;
+
+  virtual void forceCacheUpdate() {} ;
   
  protected:
 

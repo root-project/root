@@ -166,7 +166,7 @@ public:
 
    PosteriorCdfFunction(RooAbsReal & nll,  RooArgList & bindParams, RooAbsReal * prior = 0, const char * integType = 0, double nllMinimum = 0) : 
       fFunctor(nll, bindParams, RooArgList() ),              // functor 
-      fPriorFunc(std::auto_ptr<RooFunctor>((RooFunctor*)0)),
+      fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
       fLikelihood(fFunctor, 0, nllMinimum),         // integral of exp(-nll) function
       fIntegrator(ROOT::Math::IntegratorMultiDim::GetType(integType) ),  // integrator 
       fXmin(bindParams.getSize() ),               // vector of parameters (min values) 
@@ -176,7 +176,7 @@ public:
    {     
 
       if (prior) { 
-         fPriorFunc = std::auto_ptr<RooFunctor>(new RooFunctor(*prior, bindParams, RooArgList() ));
+         fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*prior, bindParams, RooArgList() ));
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
@@ -215,8 +215,9 @@ public:
    PosteriorCdfFunction(const PosteriorCdfFunction & rhs) : 
       ROOT::Math::IGenFunction(),
       fFunctor(rhs.fFunctor),
-      fPriorFunc(std::auto_ptr<RooFunctor>((RooFunctor*)0)),
-      fLikelihood(fFunctor, 0, rhs.fLikelihood.fOffset),  
+      //fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
+      fPriorFunc(rhs.fPriorFunc),
+      fLikelihood(fFunctor, fPriorFunc.get(), rhs.fLikelihood.fOffset),  
       fIntegrator(ROOT::Math::IntegratorMultiDim::GetType( rhs.fIntegrator.Name().c_str() ) ),  // integrator 
       fXmin( rhs.fXmin), 
       fXmax( rhs.fXmax), 
@@ -230,11 +231,11 @@ public:
       fNormCdfValues(rhs.fNormCdfValues)
    { 
       fIntegrator.SetFunction(fLikelihood, fXmin.size() );
-      // need special treatment for the auto_ptr
-      if (rhs.fPriorFunc.get() ) { 
-         fPriorFunc = std::auto_ptr<RooFunctor>(new RooFunctor(*(rhs.fPriorFunc) ) );
-         fLikelihood.SetPrior( fPriorFunc.get() );
-      }
+      // need special treatment for the smart pointer
+      // if (rhs.fPriorFunc.get() ) { 
+      //    fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*(rhs.fPriorFunc) ) );
+      //    fLikelihood.SetPrior( fPriorFunc.get() );
+      // }
    }
                                    
     
@@ -323,7 +324,7 @@ private:
    }
 
    mutable RooFunctor fFunctor;                   // functor binding nll 
-   mutable std::auto_ptr<RooFunctor> fPriorFunc;  // functor binding the prior 
+   mutable std::shared_ptr<RooFunctor> fPriorFunc;  // functor binding the prior 
    LikelihoodFunction fLikelihood;               // likelihood function
    mutable ROOT::Math::IntegratorMultiDim  fIntegrator; // integrator  (mutable because Integral() is not const
    mutable std::vector<double> fXmin;    // min value of parameters (poi+nuis) - 
@@ -351,7 +352,7 @@ public:
    PosteriorFunction(RooAbsReal & nll, RooRealVar & poi, RooArgList & nuisParams, RooAbsReal * prior = 0, const char * integType = 0, double
                      norm = 1.0,  double nllOffset = 0, int niter = 0) :
       fFunctor(nll, nuisParams, RooArgList() ),
-      fPriorFunc(std::auto_ptr<RooFunctor>((RooFunctor*)0)),
+      fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
       fLikelihood(fFunctor, 0, nllOffset), 
       fPoi(&poi),
       fXmin(nuisParams.getSize() ),
@@ -361,7 +362,7 @@ public:
    { 
 
       if (prior) { 
-         fPriorFunc = std::auto_ptr<RooFunctor>(new RooFunctor(*prior, nuisParams, RooArgList() ));
+         fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*prior, nuisParams, RooArgList() ));
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
@@ -374,17 +375,15 @@ public:
                                               << " in interval [" <<  fXmin[i] << " , " << fXmax[i] << " ] " << std::endl;
       }
       if (fXmin.size() == 1) { // 1D case  
-         fIntegratorOneDim = std::auto_ptr<ROOT::Math::Integrator>(
-            new ROOT::Math::Integrator(ROOT::Math::IntegratorOneDim::GetType(integType) ) );
+         fIntegratorOneDim.reset( new ROOT::Math::Integrator(ROOT::Math::IntegratorOneDim::GetType(integType) ) );
+                                          
          fIntegratorOneDim->SetFunction(fLikelihood);
          // interested only in relative tolerance
          //fIntegratorOneDim->SetAbsTolerance(1.E-300);
          fIntegratorOneDim->Options().Print(ooccoutD((TObject*)0,NumIntegration) );
       }
       else if (fXmin.size() > 1) { // multiDim case          
-         fIntegratorMultiDim = 
-            std::auto_ptr<ROOT::Math::IntegratorMultiDim>(
-               new ROOT::Math::IntegratorMultiDim(ROOT::Math::IntegratorMultiDim::GetType(integType) ) );
+         fIntegratorMultiDim.reset(new ROOT::Math::IntegratorMultiDim(ROOT::Math::IntegratorMultiDim::GetType(integType) ) );
          fIntegratorMultiDim->SetFunction(fLikelihood, fXmin.size());
          ROOT::Math::IntegratorMultiDimOptions opt = fIntegratorMultiDim->Options();
          if (niter > 0) { 
@@ -447,11 +446,11 @@ private:
    }
 
    mutable RooFunctor fFunctor; 
-   mutable std::auto_ptr<RooFunctor> fPriorFunc;  // functor binding the prior 
+   mutable std::shared_ptr<RooFunctor> fPriorFunc;  // functor binding the prior 
    LikelihoodFunction fLikelihood; 
    RooRealVar * fPoi;
-   std::auto_ptr<ROOT::Math::Integrator>  fIntegratorOneDim; 
-   std::auto_ptr<ROOT::Math::IntegratorMultiDim>  fIntegratorMultiDim; 
+   std::unique_ptr<ROOT::Math::Integrator>  fIntegratorOneDim; 
+   std::unique_ptr<ROOT::Math::IntegratorMultiDim>  fIntegratorMultiDim; 
    std::vector<double> fXmin; 
    std::vector<double> fXmax; 
    double fNorm;
@@ -468,7 +467,7 @@ public:
    PosteriorFunctionFromToyMC(RooAbsReal & nll, RooAbsPdf & pdf, RooRealVar & poi, RooArgList & nuisParams, RooAbsReal * prior = 0, double
                               nllOffset = 0, int niter = 0, bool redoToys = true ) :
       fFunctor(nll, nuisParams, RooArgList() ),
-      fPriorFunc(std::auto_ptr<RooFunctor>((RooFunctor*)0)),
+      fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
       fLikelihood(fFunctor, 0, nllOffset), 
       fPdf(&pdf),
       fPoi(&poi),
@@ -481,7 +480,7 @@ public:
       if (niter == 0) fNumIterations = 100; // default value 
 
       if (prior) { 
-         fPriorFunc = std::auto_ptr<RooFunctor>(new RooFunctor(*prior, nuisParams, RooArgList() ));
+         fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*prior, nuisParams, RooArgList() ));
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
@@ -621,7 +620,7 @@ private:
    }
 
    mutable RooFunctor fFunctor; 
-   mutable std::auto_ptr<RooFunctor> fPriorFunc;  // functor binding the prior 
+   mutable std::shared_ptr<RooFunctor> fPriorFunc;  // functor binding the prior 
    LikelihoodFunction fLikelihood; 
    mutable RooAbsPdf * fPdf;
    RooRealVar * fPoi;

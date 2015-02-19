@@ -1525,6 +1525,9 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
          if ((entry->fStatus & kMenuActiveMask) && entry->fType != kMenuLabel) {
             gVirtualX->FillRectangle(fId, fSelbackGC, entry->fEx+1, entry->fEy-1,
                                      fMenuWidth-6, entry->fEh);
+            if (gClient->GetStyle() > 1)
+               gVirtualX->DrawRectangle(fId, GetShadowGC()(), entry->fEx+1, entry->fEy-2,
+                                        fMenuWidth-7, entry->fEh);
             if (entry->fType == kMenuPopup)
                DrawTrianglePattern(fSelGC, fMenuWidth-10, entry->fEy+fEntrySep, fMenuWidth-6, entry->fEy+11);
             if (entry->fStatus & kMenuCheckedMask)
@@ -1540,6 +1543,9 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
                entry->fShortcut->Draw(fId, (entry->fStatus & kMenuEnableMask) ? fSelGC : GetShadowGC()(),
                                       fMenuWidth - tw, ty);
          } else {
+            if (gClient->GetStyle() > 1)
+               gVirtualX->DrawRectangle(fId, GetBckgndGC()(), entry->fEx+1, entry->fEy-2,
+                                        fMenuWidth-7, entry->fEh);
             gVirtualX->FillRectangle(fId, GetBckgndGC()(), entry->fEx+1, entry->fEy-1,
                                      fMenuWidth-6, entry->fEh);
             if (entry->fType == kMenuPopup)
@@ -2076,7 +2082,13 @@ void TGMenuTitle::DoRedraw()
 
    if (fState) {
       gVirtualX->SetForeground(fNormGC, GetDefaultSelectedBackground());
-      gVirtualX->FillRectangle(fId,fNormGC, 0, 0, fWidth, fHeight);
+      if (gClient->GetStyle() > 1) {
+         gVirtualX->FillRectangle(fId, fNormGC, 1, 2, fWidth-3, fHeight-4);
+         gVirtualX->DrawRectangle(fId, GetShadowGC()(), 1, 1, fWidth-3, fHeight-3);
+      }
+      else {
+         gVirtualX->FillRectangle(fId, fNormGC, 0, 0, fWidth, fHeight);
+      }
       gVirtualX->SetForeground(fNormGC, GetForeground());
       fLabel->Draw(fId, fSelGC, x, y + max_ascent);
    } else {
@@ -2085,7 +2097,13 @@ void TGMenuTitle::DoRedraw()
       if (fMenu && fMenu->fMenuBar && fMenu->fMenuBar->GetBackground() != back)
          back = fMenu->fMenuBar->GetBackground();
       gVirtualX->SetForeground(fNormGC, back);
-      gVirtualX->FillRectangle(fId,fNormGC, 0, 0, fWidth, fHeight);
+      if (gClient->GetStyle() > 1) {
+         gVirtualX->DrawRectangle(fId, fNormGC, 1, 1, fWidth-3, fHeight-3);
+         gVirtualX->FillRectangle(fId, fNormGC, 1, 2, fWidth-3, fHeight-4);
+      }
+      else {
+         gVirtualX->FillRectangle(fId, fNormGC, 0, 0, fWidth, fHeight);
+      }
       gVirtualX->SetForeground(fNormGC, fTextColor);
       fLabel->Draw(fId, fNormGC, x, y + max_ascent);
       if (fTextColor != GetForeground())

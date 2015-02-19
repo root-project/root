@@ -225,8 +225,11 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameterState& state) {
    os <<"function Value: " << state.Fval()<<std::endl;
    os <<"expected distance to the Minimum (edm): " << state.Edm()<<std::endl;
    os <<"external parameters: "<<state.Parameters()<<std::endl;
+   os <<"covariance matrix status: " << state.CovarianceStatus() << std::endl;
    if(state.HasCovariance())
       os <<"covariance matrix: "<<state.Covariance()<<std::endl;
+   else
+      os <<"covariance matrix is not present or not valid "<<std::endl;
    if(state.HasGlobalCC())
       os <<"global correlation coefficients : "<<state.GlobalCC()<<std::endl;
 

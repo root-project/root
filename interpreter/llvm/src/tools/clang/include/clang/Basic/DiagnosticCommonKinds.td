@@ -81,6 +81,8 @@ def err_deleted_non_function : Error<
   "only functions can have deleted definitions">;
 def err_module_not_found : Error<"module '%0' not found">, DefaultFatal;
 def err_module_not_built : Error<"could not build module '%0'">, DefaultFatal;
+def err_module_lock_failure : Error<
+  "could not acquire lock file for module '%0'">, DefaultFatal;
 def err_module_cycle : Error<"cyclic dependency in module '%0': %1">, 
   DefaultFatal;
 def note_pragma_entered_here : Note<"#pragma entered here">;  
@@ -110,6 +112,16 @@ def ext_integer_literal_too_large_for_signed : ExtWarn<
   "interpreting as unsigned">,
   InGroup<DiagGroup<"implicitly-unsigned-literal">>;
 
+// SEH
+def err_seh_expected_handler : Error<
+  "expected '__except' or '__finally' block">;
+def err_seh___except_block : Error<
+  "%0 only allowed in __except block or filter expression">;
+def err_seh___except_filter : Error<
+  "%0 only allowed in __except filter expression">;
+def err_seh___finally_block : Error<
+  "%0 only allowed in __finally block">;
+
 // Sema && AST
 def note_invalid_subexpr_in_const_expr : Note<
   "subexpression not valid in a constant expression">;
@@ -123,6 +135,8 @@ def err_target_unknown_abi : Error<"unknown target ABI '%0'">;
 def err_target_unknown_fpmath : Error<"unknown FP unit '%0'">;
 def err_target_unsupported_fpmath : Error<
     "the '%0' unit is not supported with this instruction set">;
+def err_target_unsupported_unaligned : Error<
+  "the %0 sub-architecture does not support unaligned accesses">;
 
 // Source manager
 def err_cannot_open_file : Error<"cannot open file '%0': %1">, DefaultFatal;

@@ -145,6 +145,7 @@ times, it is better to divide into a small number of cells.
 End_Html */
 
 
+
 //______________________________________________________________________________
 TH2Poly::TH2Poly()
 {
@@ -190,10 +191,11 @@ TH2Poly::~TH2Poly()
 {
    // Destructor.
 
-   delete fBins;
    delete[] fCells;
    delete[] fIsEmpty;
    delete[] fCompletelyInside;
+   // delete at the end the bin List since it owns the objects
+   delete fBins;
 }
 
 
@@ -269,9 +271,9 @@ Int_t TH2Poly::AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    // Add a new bin to the histogram. The bin shape is a rectangle.
    // It returns the bin number of the bin in the histogram.
 
-   Double_t x[] = {x1, x1, x2, x2};
-   Double_t y[] = {y1, y2, y2, y1};
-   TGraph *g = new TGraph(4, x, y);
+   Double_t x[] = {x1, x1, x2, x2, x1};
+   Double_t y[] = {y1, y2, y2, y1, y1};
+   TGraph *g = new TGraph(5, x, y);
    Int_t bin = AddBin(g);
    return bin;
 }
@@ -363,7 +365,7 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
    binYmax = bin->GetYMax();
    binYmin = bin->GetYMin();
    nl = (Int_t)(floor((binXmin - fXaxis.GetXmin())/fStepX));
-   nr = (Int_t)(floor((binXmax - fXaxis.GetXmin())/fStepX));
+   nr = (Int_t)(floor((binXmax - fXaxis.GetXmin())/fStepX)); 
    mb = (Int_t)(floor((binYmin - fYaxis.GetXmin())/fStepY));
    mt = (Int_t)(floor((binYmax - fYaxis.GetXmin())/fStepY));
 
@@ -373,6 +375,8 @@ void TH2Poly::AddBinToPartition(TH2PolyBin *bin)
    if (nl<0)       nl = 0;
    if (mb<0)       mb = 0;
 
+   // number of cells in the grid
+   //N.B. not to be confused with fNcells (the number of bins) ! 
    fNCells = fCellX*fCellY;
 
    // Loop over all cells
@@ -429,6 +433,8 @@ void TH2Poly::ChangePartition(Int_t n, Int_t m)
 
    delete [] fCells;                    // Deletes the old partition
 
+   // number of cells in the grid
+   //N.B. not to be confused with fNcells (the number of bins) ! 
    fNCells = fCellX*fCellY;
    fCells  = new TList [fNCells];  // Sets an empty partition
 
@@ -455,6 +461,18 @@ void TH2Poly::ChangePartition(Int_t n, Int_t m)
    }
 }
 
+//______________________________________________________________________________
+TObject* TH2Poly::Clone(const char* newname) const
+{
+   // Make a complete copy of the underlying object.  If 'newname' is set,
+   // the copy's name will be set to that name.
+
+   // TH1::Clone relies on ::Copy to implemented by the derived class.
+   // Until this is implemented, revert to the much slower default version
+   // (and possibly non-thread safe).
+
+   return TNamed::Clone(newname);
+}
 
 //______________________________________________________________________________
 void TH2Poly::ClearBinContents()
@@ -579,7 +597,7 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
    else if(x > fXaxis.GetXmin())  overflow += -1;
    if (overflow != -5) {
       fOverflow[-overflow - 1]++;
-      return 0;
+      return overflow;
    }
 
    // Finds the cell (x,y) coordinates belong to
@@ -592,7 +610,10 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
    if (n<0)       n = 0;
    if (m<0)       m = 0;
 
-   if (fIsEmpty[n+fCellX*m]) return 0;
+   if (fIsEmpty[n+fCellX*m]) {
+      fOverflow[4]++;
+      return -5;
+   }
 
    TH2PolyBin *bin;
    Int_t bi;
@@ -622,7 +643,7 @@ Int_t TH2Poly::Fill(Double_t x, Double_t y, Double_t w)
    }
 
    fOverflow[4]++;
-   return 0;
+   return -5;
 }
 
 
@@ -715,11 +736,10 @@ Double_t TH2Poly::GetBinContent(Int_t bin) const
    //
    // where -5 is the "sea" bin (i.e. unbinned areas)
 
-   if (bin>fNcells || bin==0) return 0;
+   if (bin > fNcells || bin == 0 || bin < -9) return 0; 
    if (bin<0) return fOverflow[-bin - 1];
    return ((TH2PolyBin*) fBins->At(bin-1))->GetContent();
 }
-
 
 //______________________________________________________________________________
 Double_t TH2Poly::GetBinError(Int_t bin) const
@@ -941,6 +961,8 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    fCellX = n; // Set the number of cells to default
    fCellY = m; // Set the number of cells to default
 
+   // number of cells in the grid
+   //N.B. not to be confused with fNcells (the number of bins) ! 
    fNCells = fCellX*fCellY;
    fCells  = new TList [fNCells];  // Sets an empty partition
    fStepX  = (fXaxis.GetXmax() - fXaxis.GetXmin())/fCellX; // Cell width
@@ -1200,12 +1222,15 @@ void TH2Poly::Scale(Double_t c1, Option_t*)
 void TH2Poly::SetBinContent(Int_t bin, Double_t content)
 {
    // Sets the contents of the input bin to the input content
+   // Negative values between -1 and -9 are for the overflows and the sea 
 
-   if (bin > (fNcells)) return;
-   ((TH2PolyBin*) fBins->At(bin-1))->SetContent(content);
+   if (bin > (fNcells) || bin == 0 || bin < -9 ) return;
+   if (bin > 0) 
+      ((TH2PolyBin*) fBins->At(bin-1))->SetContent(content);
+   else
+      fOverflow[-bin - 1] += content;
    SetBinContentChanged(kTRUE);
 }
-
 
 //______________________________________________________________________________
 void TH2Poly::SetFloat(Bool_t flag)

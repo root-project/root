@@ -7,6 +7,7 @@
 #include "Math/Error.h"
 
 #include <cmath>
+#include <algorithm>
 
 namespace ROOT {
 namespace Math {

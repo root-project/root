@@ -11,8 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef X86TARGETMACHINE_H
-#define X86TARGETMACHINE_H
+#ifndef LLVM_LIB_TARGET_X86_X86TARGETMACHINE_H
+#define LLVM_LIB_TARGET_X86_X86TARGETMACHINE_H
 #include "X86InstrInfo.h"
 #include "X86Subtarget.h"
 #include "llvm/IR/DataLayout.h"
@@ -23,47 +23,29 @@ namespace llvm {
 class StringRef;
 
 class X86TargetMachine final : public LLVMTargetMachine {
-  virtual void anchor();
-  X86Subtarget       Subtarget;
+  std::unique_ptr<TargetLoweringObjectFile> TLOF;
+  // Calculates type size & alignment
+  const DataLayout DL;
+  X86Subtarget Subtarget;
+
+  mutable StringMap<std::unique_ptr<X86Subtarget>> SubtargetMap;
 
 public:
-  X86TargetMachine(const Target &T, StringRef TT,
-                   StringRef CPU, StringRef FS, const TargetOptions &Options,
-                   Reloc::Model RM, CodeModel::Model CM,
-                   CodeGenOpt::Level OL);
-
-  const DataLayout *getDataLayout() const override {
-    return getSubtargetImpl()->getDataLayout();
-  }
-  const X86InstrInfo *getInstrInfo() const override {
-    return getSubtargetImpl()->getInstrInfo();
-  }
-  const TargetFrameLowering *getFrameLowering() const override {
-    return getSubtargetImpl()->getFrameLowering();
-  }
-  X86JITInfo *getJITInfo() override { return getSubtargetImpl()->getJITInfo(); }
+  X86TargetMachine(const Target &T, StringRef TT, StringRef CPU, StringRef FS,
+                   const TargetOptions &Options, Reloc::Model RM,
+                   CodeModel::Model CM, CodeGenOpt::Level OL);
+  ~X86TargetMachine() override;
+  const DataLayout *getDataLayout() const override { return &DL; }
   const X86Subtarget *getSubtargetImpl() const override { return &Subtarget; }
-  X86Subtarget *getSubtargetImpl() override { return &Subtarget; }
-  const X86TargetLowering *getTargetLowering() const override {
-    return getSubtargetImpl()->getTargetLowering();
-  }
-  const X86SelectionDAGInfo *getSelectionDAGInfo() const override {
-    return getSubtargetImpl()->getSelectionDAGInfo();
-  }
-  const X86RegisterInfo  *getRegisterInfo() const override {
-    return &getInstrInfo()->getRegisterInfo();
-  }
-  const InstrItineraryData *getInstrItineraryData() const override {
-    return &getSubtargetImpl()->getInstrItineraryData();
-  }
+  const X86Subtarget *getSubtargetImpl(const Function &F) const override;
 
-  /// \brief Register X86 analysis passes with a pass manager.
-  void addAnalysisPasses(PassManagerBase &PM) override;
+  TargetIRAnalysis getTargetIRAnalysis() override;
 
   // Set up the pass pipeline.
   TargetPassConfig *createPassConfig(PassManagerBase &PM) override;
-
-  bool addCodeEmitter(PassManagerBase &PM, JITCodeEmitter &JCE) override;
+  TargetLoweringObjectFile *getObjFileLowering() const override {
+    return TLOF.get();
+  }
 };
 
 } // End llvm namespace

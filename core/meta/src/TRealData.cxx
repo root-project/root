@@ -76,6 +76,28 @@ void TRealData::AdoptStreamer(TMemberStreamer *str)
 }
 
 //______________________________________________________________________________
+void TRealData::GetName(TString &output, TDataMember *dm)
+{
+   // Return the name of the data member as represented in the list of
+   // real data.
+
+   output.Clear();
+   // keep an empty name if data member is not found
+   if (dm) output = dm->GetName();
+   if (dm->IsaPointer())
+      output = TString("*")+output;
+   else {
+      if (dm && dm->GetArrayDim() > 0) {
+         // in case of array (like fMatrix[2][2] we need to add max index )
+         // this only in case of it os not a pointer
+         for (int idim = 0; idim < dm->GetArrayDim(); ++idim)
+            output += TString::Format("[%d]",dm->GetMaxIndex(idim) );
+      }
+   }
+}
+
+
+//______________________________________________________________________________
 TMemberStreamer *TRealData::GetStreamer() const
 {
    // Return the associate streamer object.

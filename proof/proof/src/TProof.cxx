@@ -4938,7 +4938,7 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
       if (ios != kNPOS) {
          from = ios + tags.Length();
          if (!opt.Tokenize(stfopt, from, "[; ]"))
-            if (gDebug > 0) Info("HandleOutputOptions", "save-to-file not found: use defualt");
+            if (gDebug > 0) Info("HandleOutputOptions", "save-to-file not found: use default");
          // For removal from original options string
          tags += stfopt;
          // It must be digit
@@ -11847,12 +11847,14 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
    }
    if (gDebug > 0)
       Info("ModifyWorkerLists", "ord: '%s' (add: %d, save: %d)", ord, add, save);
-
+   
+   Int_t nwc = 0;
+   Bool_t restoring = !strcmp(ord, "restore") ? kTRUE : kFALSE;
    if (IsEndMaster()) {
-      if (!strcmp(ord, "restore")) {
+      if (restoring) {
          // We are asked to restore the previous settings
-         RestoreActiveList();
-      } else {
+         nwc = RestoreActiveList();
+      } else { 
          if (save) SaveActiveList();
       }
    }
@@ -11873,8 +11875,7 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
    TList *in = (add) ? fInactiveSlaves : fActiveSlaves;
    TList *out = (add) ? fActiveSlaves : fInactiveSlaves;
 
-   Int_t nwc = 0;
-   if (IsEndMaster()) {
+   if (IsEndMaster() && !restoring) {
       // Create the hash list of ordinal numbers
       THashList *ords = 0;
       if (!allord) {
@@ -12001,7 +12002,7 @@ void TProof::SaveActiveList()
 }
 
 //_____________________________________________________________________________
-void TProof::RestoreActiveList()
+Int_t TProof::RestoreActiveList()
 {
    // Restore saved list of active workers
 
@@ -12009,7 +12010,9 @@ void TProof::RestoreActiveList()
    DeactivateWorker("*", kFALSE);
    // Restore the previous active list
    if (!fActiveSlavesSaved.IsNull())
-      ActivateWorker(fActiveSlavesSaved, kFALSE);
+      return ActivateWorker(fActiveSlavesSaved, kFALSE);
+
+   return 0;
 }
 
 //_____________________________________________________________________________

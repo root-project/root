@@ -67,7 +67,7 @@ TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
 
 //______________________________________________________________________________
 TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
-   TEveElement(fMarkerColor),
+   TEveElement(),
    TPointSet3D(n_points),
    TEvePointSelectorConsumer(tv_type),
    TEveProjectable(),
@@ -81,6 +81,7 @@ TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_t
 
    fMarkerStyle = 20;
    SetName(name);
+   SetMainColorPtr(&fMarkerColor);
 
    // Override from TEveElement.
    fPickable = kTRUE;

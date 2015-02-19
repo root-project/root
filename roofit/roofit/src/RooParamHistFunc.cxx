@@ -14,9 +14,9 @@
 #include <math.h> 
 #include "TMath.h" 
 
-#include "TError.h"
 
-using namespace std;
+using namespace std ;
+
 
 ClassImp(RooParamHistFunc) 
   ;  
@@ -50,6 +50,33 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
 
 
 //_____________________________________________________________________________
+RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const RooAbsArg& /*x*/, RooDataHist& dh, Bool_t paramRelative) :
+  RooAbsReal(name,title), 
+  _x("x","x",this),
+  _p("p","p",this),
+  _dh(dh),
+  _relParam(paramRelative)
+{ 
+  // Populate x with observables
+  _x.add(*_dh.get()) ;
+
+  // Now populate p with parameters 
+  RooArgSet allVars ;
+  for (Int_t i=0 ; i<_dh.numEntries() ; i++) {
+    _dh.get(i) ;
+    const char* vname = Form("%s_gamma_bin_%i",GetName(),i) ;
+    RooRealVar* var = new RooRealVar(vname,vname,0,1000) ;    
+    var->setVal(_relParam ? 1 : _dh.weight()) ;
+    var->setConstant(kTRUE) ;
+    allVars.add(*var) ;
+    _p.add(*var) ;
+  }
+  addOwnedComponents(allVars) ;
+} 
+
+
+
+//_____________________________________________________________________________
 RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, const RooParamHistFunc& paramSource, Bool_t paramRelative) :
   RooAbsReal(name,title), 
   _x("x","x",this),
@@ -57,8 +84,6 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
   _dh(dh),
   _relParam(paramRelative)
 { 
-
-  cout << "RooParamHistFunc(" << GetName() << ") IMPORT CTOR" << endl ;
 
   // Populate x with observables
   _x.add(*_dh.get()) ;

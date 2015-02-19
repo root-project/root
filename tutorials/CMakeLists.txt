@@ -182,6 +182,9 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphics/earth.C graphics/ellipse.C
                  graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
+                 graphs/timeonaxis.C
+                 graphs/timeonaxis2.C
+                 graphs/timeonaxis3.C
                  graphs/exclusiongraph.C graphs/multigraph.C
                  graphs/multipalette.C
                  graphs/graphstruct.C
@@ -192,6 +195,8 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C
                  hist/cumulative.C
+                 hist/hlabels1.C
+                 hist/hlabels2.C
                  tree/h1analysis.C
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
@@ -205,6 +210,8 @@ set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
 set(tree-staff-depends  tutorial-tree-cernbuild)
+set(tree-cernstaff-depends  tutorial-tree-cernbuild)
+set(hist-hbars-depends  tutorial-tree-cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
                        tutorial-hist-h1draw
@@ -265,12 +272,22 @@ if(ROOT_python_FOUND)
 
   #---Python tutorials dependencies--------------------------------------
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
-  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple tutorial-pyroot-fit1
-                                tutorial-pyroot-na49view )
+  set(pyroot-h1draw-depends tutorial-pyroot-hsimple)
+  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple
+                                tutorial-pyroot-fit1
+                                tutorial-pyroot-na49view
+                                tutorial-pyroot-h1draw
+                                tutorial-pyroot-ntuple1)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
-  set(pyroot-na49view-depends tutorial-geom-geometry)
+  set(pyroot-na49view-depends tutorial-pyroot-geometry)
 
   foreach(t ${pytutorials})
+    list(FIND returncode_1 ${t} index)
+    if(index EQUAL -1)
+       set(rc 0)
+    else()
+       set(rc 1)
+    endif()
     string(REPLACE ".py" "" tname ${t})
     string(REPLACE "/" "-" tname ${tname})
     ROOT_ADD_TEST(tutorial-${tname}

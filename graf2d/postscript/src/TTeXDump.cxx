@@ -95,9 +95,9 @@ TTeXDump::TTeXDump() : TVirtualPS()
    fRange        = kFALSE;
    fXsize        = 0.;
    fYsize        = 0.;
-   fCurrentRed   = 0.;
-   fCurrentGreen = 0.;
-   fCurrentBlue  = 0.;
+   fCurrentRed   = -1.;
+   fCurrentGreen = -1.;
+   fCurrentBlue  = -1.;
 }
 
 
@@ -119,9 +119,9 @@ TTeXDump::TTeXDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    fRange        = kFALSE;
    fXsize        = 0.;
    fYsize        = 0.;
-   fCurrentRed   = 0.;
-   fCurrentGreen = 0.;
-   fCurrentBlue  = 0.;
+   fCurrentRed   = -1.;
+   fCurrentGreen = -1.;
+   fCurrentBlue  = -1.;
 
    Open(fname, wtype);
 }
@@ -254,7 +254,8 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       PrintFast(1,",");
       WriteReal(y2c, kFALSE);
       PrintStr(");");
-   } else if (fillis>1) {
+   }
+   if (fillis>1 && fillis<4) {
       SetColor(fFillColor);
       PrintStr("@");
       PrintStr("\\draw [pattern=");
@@ -275,7 +276,8 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       PrintFast(1,",");
       WriteReal(y2c, kFALSE);
       PrintStr(");");
-   } else {
+   }
+   if (fillis == 0) {
       SetColor(fLineColor);
       PrintStr("@");
       PrintStr("\\draw [c] (");
@@ -739,6 +741,7 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    } else {
       t.ReplaceAll("<","$<$");
       t.ReplaceAll(">","$>$");
+      t.ReplaceAll("_","\\_");
    }
    t.ReplaceAll("&","\\&");
    t.ReplaceAll("#","\\#");
@@ -748,7 +751,7 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
    Int_t txalv = fTextAlign%10;
    if (txalv <1) txalv = 1; if (txalv > 3) txalv = 3;
-
+   SetColor(fTextColor);
    PrintStr("@");
    PrintStr("\\draw");
    if (txalh!=2 || txalv!=2) {
@@ -765,7 +768,7 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    WriteReal(YtoTeX(y), kFALSE);
    PrintStr(") node[scale=");
    WriteReal(ftsize, kFALSE);
-   PrintStr(", rotate=");
+   PrintStr(", color=c, rotate=");
    WriteReal(fTextAngle, kFALSE);
    PrintFast(2,"]{");
    PrintStr(t.Data());

@@ -6,10 +6,6 @@
 #include "TMemoryRegulator.h"
 #include "ObjectProxy.h"
 
-// ROOT
-#include "TObject.h"
-#include "TClass.h"
-
 // Standard
 #include <assert.h>
 #include <string.h>
@@ -224,7 +220,7 @@ Bool_t PyROOT::TMemoryRegulator::UnregisterObject( TObject* object )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object, TClass* klass )
+PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object, Cppyy::TCppType_t klass )
 {
 // lookup <object>, return old proxy if tracked
    if ( ! object )
@@ -253,8 +249,10 @@ PyObject* PyROOT::TMemoryRegulator::ObjectEraseCallback( PyObject*, PyObject* py
 
    if ( ObjectProxy_Check( pyobj ) && pyobj->GetObject() != 0 ) {
    // get TObject pointer to the object
-      TObject* object = (TObject*)pyobj->ObjectIsA()->DynamicCast(
-         TObject::Class(), pyobj->GetObject() );
+      // WOKRHERE
+      TObject* object = 0;
+     //(TObject*)pyobj->ObjectIsA()->DynamicCast(
+      //   TObject::Class(), pyobj->GetObject() );
 
       if ( object != 0 ) {
       // erase if tracked

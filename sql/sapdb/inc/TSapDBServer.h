@@ -16,8 +16,7 @@
 #include "TSQLServer.h"
 #endif
 
-#if !defined(__CINT__)
-#include <sys/time.h>
+#include <ctime>
 #include <WINDOWS.H>
 #ifdef min
 #undef min
@@ -27,13 +26,6 @@
 #endif
 #include <sql.h>
 #include <sqlext.h>
-#else
-typedef long SQLHENV;
-typedef long SQLHDBC;
-typedef long SQLHSTMT;
-#endif
-
-
 
 class TSapDBServer : public TSQLServer {
 

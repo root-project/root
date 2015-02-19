@@ -20,6 +20,8 @@
 
 using namespace TMVA;
 
+void TMVAGui( const char* fName /*= "TMVA.root"*/ );
+
 void Boost(){
    // This loads the library
    TMVA::Tools::Instance();
@@ -47,7 +49,7 @@ void Boost(){
    else {
       TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
       gROOT->LoadMacro( dir + "/createData.C");
-      create_circ(20000);
+      gROOT->ProcessLine("create_circ(20000);");
       cout << " created data.root with data and circle arranged in half circles"<<endl;
       input = TFile::Open( fname );
    }
@@ -100,7 +102,6 @@ void Boost(){
    delete factory;
    
    // Launch the GUI for the root macros
-   if (!gROOT->IsBatch()) TMVAGui( outfileName );
-   
-   
+   if (!gROOT->IsBatch())
+      gROOT->ProcessLine(TString::Format("TMVAGui(\"%s\")", outfileName.Data()));
 }

@@ -38,6 +38,8 @@ namespace llvm {
 }
 
 namespace cling {
+  class IncrementalExecutor;
+
   ///\brief Contains information about the consumed input at once.
   ///
   /// A transaction could be:
@@ -59,6 +61,11 @@ namespace cling {
       kCCIHandleCXXStaticMemberVarInstantiation,
       kCCICompleteTentativeDefinition,
       kCCINumStates
+    };
+
+    ///\brief Sort of opaque handle for unloading a transaction from the JIT.
+    struct ExeUnloadHandle {
+      void* m_Opaque;
     };
 
     ///\brief Each declaration group came through different interface at
@@ -141,7 +148,15 @@ namespace cling {
 
     ///\brief The llvm Module containing the information that we will revert
     ///
-    llvm::Module* m_Module;
+    std::unique_ptr<llvm::Module> m_Module;
+
+    ///\brief The JIT handle allowing a removal of the Transaction's symbols.
+    ///
+    ExeUnloadHandle m_ExeUnload;
+
+    ///\brief The Executor to use m_ExeUnload on.
+    ///
+    IncrementalExecutor* m_Exe;
 
     ///\brief The wrapper function produced by the intepreter if any.
     ///
@@ -426,8 +441,15 @@ namespace cling {
         m_NestedTransactions->clear();
     }
 
-    llvm::Module* getModule() const { return m_Module; }
-    void setModule(llvm::Module* M) { m_Module = M ; }
+    llvm::Module* getModule() const { return m_Module.get(); }
+    void setModule(std::unique_ptr<llvm::Module> M) { m_Module.swap(M); }
+
+    ExeUnloadHandle getExeUnloadHandle() const { return m_ExeUnload; }
+    IncrementalExecutor* getExecutor() const { return m_Exe; }
+    void setExeUnloadHandle(IncrementalExecutor* Exe, ExeUnloadHandle H) {
+      m_Exe = Exe;
+      m_ExeUnload = H;
+    }
 
     clang::FunctionDecl* getWrapperFD() const { return m_WrapperFD; }
 

@@ -20,7 +20,7 @@
 #include "TF2.h"
 #include "TH1.h"
 #include "TList.h"
-
+#include "TClass.h"
 
 ClassImp(TLinearFitter)
 
@@ -623,8 +623,20 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
       //general case
       for (ii=0; ii<fNfunctions; ii++){
          if (!fFunctions.IsEmpty()){
-            TFormula *f1 = (TFormula*)(fFunctions.UncheckedAt(ii));
-            fVal[ii]=f1->EvalPar(x)/e;
+            // ffunctions can be TF1 or TFormula depending on how they are created 
+            TObject * obj = fFunctions.UncheckedAt(ii);
+            if (obj->IsA() == TFormula::Class() ) {
+               TFormula *f1 = (TFormula*)(obj);
+               fVal[ii]=f1->EvalPar(x)/e;
+            }
+            else if  (obj->IsA() == TF1::Class() ) {
+               TF1 *f1 = (TF1*)(obj);
+               fVal[ii]=f1->EvalPar(x)/e;               
+            }
+            else {
+               Error("AddToDesign","Basis Function %s is of an invalid type %s",obj->GetName(),obj->IsA()->GetName());
+               return;
+            }
          } else {
             TFormula *f=(TFormula*)fInputFunction->GetLinearPart(ii);
             if (!f){
@@ -1482,7 +1494,7 @@ void TLinearFitter::SetFormula(const char *formula)
   //  input formula:    "TMath::Gaus(x, 0, 1)++y"
   //fills the array of functions
 
-   Int_t size, special = 0;
+   Int_t size = 0, special = 0;
    Int_t i;
    //Int_t len = strlen(formula);
    if (fInputFunction)
@@ -1725,7 +1737,7 @@ Int_t TLinearFitter::GraphLinearFitter(Double_t h)
    Int_t fitResult = 0;
    //set the fitting formula
    SetDim(1);
-   SetFormula(f1);
+   SetFormula(f1->GetFormula());
 
    if (fitOption.Robust){
       fRobust=kTRUE;
@@ -1787,7 +1799,7 @@ Int_t TLinearFitter::Graph2DLinearFitter(Double_t h)
    Double_t z, e;
    Int_t fitResult=0;
    SetDim(2);
-   SetFormula(f2);
+   SetFormula(f2->GetFormula());
 
    if (fitOption.Robust){
       fRobust=kTRUE;
@@ -1859,7 +1871,7 @@ Int_t TLinearFitter::MultiGraphLinearFitter(Double_t h)
       fRobust=kTRUE;
       StoreData(kTRUE);
    }
-   SetFormula(f1);
+   SetFormula(f1->GetFormula());
 
    TGraph *gr;
    TIter next(mg->GetListOfGraphs());
@@ -1929,7 +1941,7 @@ Int_t TLinearFitter::HistLinearFitter()
    Foption_t fitOption = GetFitOption();
    //SetDim(hfit->GetDimension());
    SetDim(f1->GetNdim());
-   SetFormula(f1);
+   SetFormula(f1->GetFormula());
 
    Int_t hxfirst = GetXfirst();
    Int_t hxlast  = GetXlast();

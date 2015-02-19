@@ -16,23 +16,12 @@
 #include "TSQLStatement.h"
 #endif
 
-#if !defined(__CINT__)
-#ifdef R__WIN32
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#endif
+
 #include <mysql.h>
 
 #if MYSQL_VERSION_ID < 40100
 typedef struct { int dummy; } MYSQL_STMT;
 typedef struct { int dummy; } MYSQL_BIND;
-#endif
-
-#else
-struct MYSQL_STMT;
-struct MYSQL_BIND;
-typedef char my_bool;
 #endif
 
 class TMySQLStatement : public TSQLStatement {

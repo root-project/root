@@ -318,7 +318,7 @@ XMLReader::ETagNames XMLReader::GetNameOfTag(const std::string& tag, std::string
  method check if out is empty. All the error handling conserning attributes is done here
  and this is the reason why the logic is somtimes a bit obscure.
  */
-bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& out)
+bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& out, const char* lineNum)
 {
    // Get position of first symbol of the name of the tag
    std::string name;
@@ -358,7 +358,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
 
          if (c == '=') {
             if (!namefound){ // if no name was read, report error (i.e. <class ="x">)
-               ROOT::TMetaUtils::Error(0,"No name of attribute\n");
+               ROOT::TMetaUtils::Error(0,"At line %s. No name of attribute\n", lineNum);
                return false;
             }
             else {
@@ -381,7 +381,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
                else { // if !value is false, then value is true which means that these are the closing quotes for the
                   // attribute value
                   if (attr_name.length() == 0) { // checks if attribute name is empty
-                     ROOT::TMetaUtils::Error(0,"Attribute - missing attribute name!\n");
+                     ROOT::TMetaUtils::Error(0,"At line %s. Attribute - missing attribute name!\n", lineNum);
                      return false;
                   }
                   // Lift this: one may had an empty attribute value
@@ -400,6 +400,10 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
 //                      printf("XMLReader::GetAttributes(): proto_pattern selection not implemented yet!\n");
 //                   }
                   ROOT::TMetaUtils::Info(0, "*** Attribute: %s = \"%s\"\n", attr_name.c_str(), attr_value.c_str());
+                  if (attr_name=="pattern" && attr_value.find("*") == std::string::npos){
+                     ROOT::TMetaUtils::Warning(0,"At line %s. A pattern, \"%s\", without wildcards is being used. This selection rule would not have any effect. Transforming it to a rule based on name.\n", lineNum, attr_value.c_str());
+                     attr_name="name";
+                  }
                   out.emplace_back(attr_name, attr_value);
                   attr_name = "";
                   attr_value = "";
@@ -411,14 +415,14 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
             }
             else { // this is the case in which (name && equalfound) is false i.e. we miss either the attribute name or the
                // = symbol
-               ROOT::TMetaUtils::Error(0,"Attribute - missing attribute name or =\n");
+               ROOT::TMetaUtils::Error(0,"At line %s. Attribute - missing attribute name or =\n", lineNum);
                return false;
             }
          }
          else if (lastsymbol == '=') { // this is the case in which the symbol is not ", space or = and the last symbol read
             // (diferent than space) is =. This is a situation which is represented by for example <class name = x"value">
             // this is an error
-            ROOT::TMetaUtils::Error(0,"Wrong quotes placement or lack of quotes\n");
+            ROOT::TMetaUtils::Error(0,"At line %s. Wrong quotes placement or lack of quotes\n", lineNum);
             return false;
          }
          else if ((newattr || namefound) && !value){ // else - if name or newattr is Set, we should write in the attr_name variable
@@ -433,7 +437,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
       }
 
       if (namefound && (!equalfound || !value)) { // this catches the situation <class name = "value" something >
-         ROOT::TMetaUtils::Error(0,"Attribute - missing attribute value\n");
+         ROOT::TMetaUtils::Error(0,"At line %s. Attribute - missing attribute value\n", lineNum);
          return false;
       }
    }
@@ -490,7 +494,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
          std::vector<Attributes> attrs;
          std::string name;
          ETagNames tagKind = GetNameOfTag(tagStr, name);
-         bool attrError = GetAttributes(tagStr, attrs);
+         bool attrError = GetAttributes(tagStr, attrs, lineNumCharp);
          if (!attrError) {
             ROOT::TMetaUtils::Error(0,"Attribute at line %s. Bad tag: %s\n", lineNumCharp, tagStrCharp);
             out.ClearSelectionRules();

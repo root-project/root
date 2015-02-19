@@ -369,4 +369,26 @@ namespace ROOT {                                                     \
    R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                       \
 }
 
+//---- Macro to load a library into the interpreter --------------
+// Call as R__LOAD_LIBRARY(libEvent)
+// This macro intentionally does not take string as argument, to
+// prevent compilation errors with complex diagnostics due to
+//   TString BAD_DO_NOT_TRY = "lib";
+//   R__LOAD_LIBRARY(BAD_DO_NOT_TRY + "BAD_DO_NOT_TRY.so") // ERROR!
+#define _R_PragmaStr(x) _Pragma(#x)
+#ifdef __CLING__
+# define R__LOAD_LIBRARY(LIBRARY) _R_PragmaStr(cling load ( #LIBRARY ))
+#elif defined(R__WIN32)
+# define R__LOAD_LIBRARY(LIBRARY) _R_PragmaStr(comment(lib, #LIBRARY))
+#else
+// No way to inform linker though preprocessor :-(
+// We could even inform the user:
+/*
+# define R__LOAD_LIBRARY(LIBRARY) \
+   _R_PragmaStr(message "Compiler cannot handle linking against " #LIBRARY \
+                ". Use -L and -l instead.")
+*/
+# define R__LOAD_LIBRARY(LIBRARY)
+#endif
+
 #endif

@@ -202,7 +202,10 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fNewType     = fType;
    fArrayDim    = 0;
    fArrayLength = 0;
-   {
+   if (typeName && !strcmp(typeName, "BASE")) {
+      // TStreamerBase case; fTypeName should stay "BASE".
+      fTypeName = typeName;
+   } else {
       //must protect call into the interpreter
       R__LOCKGUARD2(gInterpreterMutex);
       fTypeName    = TClassEdit::ResolveTypedef(typeName);

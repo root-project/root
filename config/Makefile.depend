@@ -90,8 +90,8 @@ ALIENLIBDEPM           = $(XMLLIB) $(NETXLIB) $(TREELIB) $(PROOFLIB) \
                          $(PROOFPLAYERLIB) $(NETLIB) $(IOLIB)
 ROOFITCORELIBDEPM      = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                          $(MINUITLIB) $(IOLIB) $(MATHCORELIB) $(FOAMLIB)
-ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(MATRIXLIB) \
-                         $(MATHCORELIB)
+ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(HISTLIB) \
+                         $(MATRIXLIB) $(MATHCORELIB)
 ROOSTATSLIBDEPM        = $(ROOFITLIB) $(ROOFITCORELIB) $(TREELIB) $(IOLIB) \
                          $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB) $(MINUITLIB) \
                          $(FOAMLIB) $(GRAFLIB) $(GPADLIB)
@@ -366,7 +366,7 @@ ROOFITCORELIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libMinuit.lib lib/libRIO.lib \
                           lib/libMathCore.lib lib/libFoam.lib
 ROOFITLIBEXTRA          = lib/libRooFitCore.lib lib/libTree.lib lib/libRIO.lib \
-                          lib/libMatrix.lib lib/libMathCore.lib
+                          lib/libHist.lib lib/libMatrix.lib lib/libMathCore.lib
 ROOSTATSLIBEXTRA        = lib/libRooFit.lib lib/libRooFitCore.lib \
                           lib/libTree.lib lib/libRIO.lib lib/libHist.lib \
                           lib/libMatrix.lib lib/libMathCore.lib \
@@ -515,7 +515,7 @@ ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProof -lProofPlayer \
                           -lNet -lRIO
 ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lRIO \
                           -lMathCore -lFoam
-ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lMatrix -lMathCore
+ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lHist -lMatrix -lMathCore
 ROOSTATSLIBEXTRA        = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lHist \
                           -lMatrix -lMathCore -lMinuit -lFoam -lGraf -lGpad
 HISTFACTORYLIBEXTRA     = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lHist \

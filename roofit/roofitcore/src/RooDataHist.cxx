@@ -47,6 +47,7 @@
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
 #include "TTree.h"
+#include "RooTrace.h"
 #include "RooTreeData.h"
 
 using namespace std ;
@@ -75,13 +76,15 @@ RooDataHist::RooDataHist() : _pbinvCacheMgr(0,10)
   _curVolume = 1 ;
   _curWgtErrHi = 0 ;
   _curWgtErrLo = 0 ;
+  _cache_sum_valid = 0 ;
+  TRACE_CREATE
 }
 
 
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const char* binningName) : 
-  RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Constructor of an empty data hist from a RooArgSet defining the dimensions
   // of the data space. The range and number of bins in each dimensions are taken
@@ -108,13 +111,14 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 
   appendToDir(this,kTRUE) ;
+  TRACE_CREATE
 }
 
 
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t wgt) :
-  RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Constructor of a data hist from an existing data collection (binned or unbinned)
   // The RooArgSet 'vars' defines the dimensions of the histogram. 
@@ -145,6 +149,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
   add(data,(const RooFormulaVar*)0,wgt) ;
   appendToDir(this,kTRUE) ;
+  TRACE_CREATE
 }
 
 
@@ -153,7 +158,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, 
 			 map<string,TH1*> histMap, Double_t wgt) :
   RooAbsData(name,title,RooArgSet(vars,&indexCat)), 
-  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Constructor of a data hist from a map of TH1,TH2 or TH3 that are collated into a x+1 dimensional
   // RooDataHist where the added dimension is a category that labels the input source as defined
@@ -170,6 +175,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   importTH1Set(vars, indexCat, histMap, wgt, kFALSE) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  TRACE_CREATE
 }
 
 
@@ -178,7 +184,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, 
 			 map<string,RooDataHist*> dhistMap, Double_t wgt) :
   RooAbsData(name,title,RooArgSet(vars,&indexCat)), 
-  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Constructor of a data hist from a map of RooDataHists that are collated into a x+1 dimensional
   // RooDataHist where the added dimension is a category that labels the input source as defined
@@ -195,13 +201,14 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   importDHistSet(vars, indexCat, dhistMap, wgt) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  TRACE_CREATE
 }
 
 
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t wgt) :
-  RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  RooAbsData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Constructor of a data hist from an TH1,TH2 or TH3
   // The RooArgSet 'vars' defines the dimensions of the histogram. The ranges
@@ -222,6 +229,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   importTH1(vars,*const_cast<TH1*>(hist),wgt, kFALSE) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  TRACE_CREATE
 }
 
 
@@ -230,7 +238,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
 			 const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) :
   RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8))), 
-  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Constructor of a binned dataset from a RooArgSet defining the dimensions
   // of the data space. The range and number of bins in each dimensions are taken
@@ -355,6 +363,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   }
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  TRACE_CREATE
 
 }
 
@@ -881,7 +890,7 @@ void RooDataHist::checkBinBounds() const
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
-  RooAbsData(other,newname), RooDirItem(), _idxMult(other._idxMult), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(other._pbinvCacheMgr,0)
+  RooAbsData(other,newname), RooDirItem(), _idxMult(other._idxMult), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(other._pbinvCacheMgr,0), _cache_sum_valid(0)
 {
   // Copy constructor
 
@@ -932,7 +941,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 			 const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) :
   RooAbsData(name,title,varSubset),
-  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _cache_sum_valid(0)
 {
   // Constructor of a data hist from (part of) an existing data hist. The dimensions
   // of the data set are defined by the 'vars' RooArgSet, which can be identical
@@ -962,6 +971,7 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
 
 
   appendToDir(this,kTRUE) ;
+  TRACE_CREATE
 }
 
 
@@ -1061,6 +1071,7 @@ RooDataHist::~RooDataHist()
   }
 
    removeFromDir(this) ;
+  TRACE_DESTROY
 }
 
 
@@ -1164,6 +1175,8 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   // contained in 'bin' is returned. For higher values,
   // the result is interpolated in the real dimensions 
   // of the dataset
+  
+  //cout << "RooDataHist::weight(" << bin << "," << intOrder << "," << correctForBinSize << "," << cdfBoundaries << "," << oneSafe << ")" << endl ;
 
   checkInit() ;
 
@@ -1173,7 +1186,6 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
     return 0 ;
   }
 
-
   // Handle no-interpolation case
   if (intOrder==0) {    
     _vars.assignValueOnly(bin,oneSafe) ;
@@ -1181,8 +1193,10 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
     //cout << "intOrder 0, idx = " << idx << endl ;
     if (correctForBinSize) {
       //calculatePartialBinVolume(*get()) ;
+      //cout << "binw[" << idx << "] = " << _wgt[idx] <<  " / " << _binv[idx] << endl ;
       return _wgt[idx] / _binv[idx] ;
     } else {
+      //cout << "binw[" << idx << "] = " << _wgt[idx] << endl ;
       return _wgt[idx] ;
     }
   }
@@ -1404,6 +1418,8 @@ void RooDataHist::add(const RooArgSet& row, Double_t wgt, Double_t sumw2)
   _sumw2[idx] += (sumw2>0?sumw2:wgt*wgt) ;
   _errLo[idx] = -1 ;
   _errHi[idx] = -1 ;
+
+  _cache_sum_valid = kFALSE ;
 }
 
 
@@ -1422,6 +1438,8 @@ void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErrLo, Dou
   _wgt[idx] = wgt ;  
   _errLo[idx] = wgtErrLo ;  
   _errHi[idx] = wgtErrHi ;  
+
+  _cache_sum_valid = kFALSE ;
 }
 
 
@@ -1443,6 +1461,8 @@ void RooDataHist::set(Double_t wgt, Double_t wgtErr)
   _errLo[_curIndex] = wgtErr ;  
   _errHi[_curIndex] = wgtErr ;  
   _sumw2[_curIndex] = wgtErr*wgtErr ;
+
+  _cache_sum_valid = kFALSE ;
 }
 
 
@@ -1462,6 +1482,8 @@ void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErr)
   _errLo[idx] = wgtErr ;  
   _errHi[idx] = wgtErr ;  
   _sumw2[idx] = wgtErr*wgtErr ;
+
+  _cache_sum_valid = kFALSE ;
 }
 
 
@@ -1506,13 +1528,15 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
   for (i=0 ; i<dset.numEntries() ; i++) {
     const RooArgSet* row = dset.get(i) ;
     if (!cloneVar || cloneVar->getVal()) {
-      add(*row,wgt*dset.weight()) ;
+       add(*row,wgt*dset.weight(), wgt*wgt*dset.weightSquared()) ;
     }
   }
 
   if (cloneVar) {
     delete tmp ;
   } 
+
+  _cache_sum_valid = kFALSE ;
 }
 
 
@@ -1529,6 +1553,12 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize, Bool_t inverseBinCor) const
 
   checkInit() ;
 
+  // Check if result was cached
+  Int_t cache_code = 1 + (correctForBinSize?1:0) + ((correctForBinSize&&inverseBinCor)?1:0) ;
+  if (_cache_sum_valid==cache_code) {
+    return _cache_sum ;
+  }
+
   Int_t i ;
   Double_t total(0), carry(0);
   for (i=0 ; i<_arrSize ; i++) {
@@ -1540,6 +1570,10 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize, Bool_t inverseBinCor) const
     carry = (t - total) - y;
     total = t;
   }
+
+  // Store result in cache
+  _cache_sum_valid=cache_code ;
+  _cache_sum = total ;
 
   return total ;
 }
@@ -1875,6 +1909,8 @@ void RooDataHist::reset()
   _curWgtErrHi = -1 ;
   _curVolume = 1 ;
 
+  _cache_sum_valid = kFALSE ;
+
 }
 
 
@@ -1925,6 +1961,8 @@ void RooDataHist::setAllWeights(Double_t value)
   for (Int_t i=0 ; i<_arrSize ; i++) {
     _wgt[i] = value ;
   }
+
+  _cache_sum_valid = kFALSE ;
 }
 
 

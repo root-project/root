@@ -79,7 +79,7 @@ public:
       ClassDef(TExceptionHandler, 0); // Exception handler for Eve exceptions.
    };
 
-private:
+protected:
    TExceptionHandler        *fExcHandler;
 
    TMap                     *fVizDB;
@@ -110,7 +110,6 @@ private:
    Bool_t                    fTimerActive;
    TTimer                    fRedrawTimer;
 
-protected:
    // Fine grained scene updates.
    TExMap                   *fStampedElements;
 

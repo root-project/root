@@ -42,9 +42,10 @@ ClassImp(RooObjCacheManager)
 Bool_t RooObjCacheManager::_clearObsList(kFALSE) ;
 
 //_____________________________________________________________________________
-RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t clearCacheOnServerRedirect) : 
+RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t clearCacheOnServerRedirect, Bool_t allowOptimize) : 
   RooCacheManager<RooAbsCacheElement>(owner,maxSize), 
   _clearOnRedirect(clearCacheOnServerRedirect), 
+  _allowOptimize(allowOptimize),
   _optCacheModeSeen(kFALSE),
   _optCacheObservables(0)
 {
@@ -60,6 +61,7 @@ RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t c
 RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager& other, RooAbsArg* owner) : 
   RooCacheManager<RooAbsCacheElement>(other,owner),
   _clearOnRedirect(other._clearOnRedirect),
+  _allowOptimize(other._allowOptimize),
   _optCacheModeSeen(kFALSE), // cache mode properties are not transferred in copy ctor
   _optCacheObservables(0)
 {
@@ -84,7 +86,6 @@ Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServer
   // the cache (i.e. keep the structure but delete all contents). If not
   // forward serverRedirect to cache elements
 
-  
   if (_clearOnRedirect) {
 
     sterilize() ;
@@ -92,7 +93,9 @@ Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServer
   } else {
 
     for (Int_t i=0 ; i<cacheSize() ; i++) {
-      _object[i]->redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
+      if (_object[i]) {
+	_object[i]->redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
+      }
     }
 
   }
@@ -207,7 +210,7 @@ void RooObjCacheManager::findConstantNodes(const RooArgSet& obs, RooArgSet& cach
   // If clearOnRedirect is false, forward constant term optimization calls to
   // cache elements
 
-  if (_clearOnRedirect) {
+  if (!_allowOptimize) {
     return ;
   }
   

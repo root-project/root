@@ -23,7 +23,6 @@
 #pragma warning( disable : 4066)
 #endif
 
-#include <cmath>
 #include <iostream>
 #include <algorithm>
 #include <string>

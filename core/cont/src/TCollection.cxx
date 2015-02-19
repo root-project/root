@@ -316,7 +316,7 @@ void TCollection::PrintCollectionEntry(TObject* entry, Option_t* option, Int_t r
 //______________________________________________________________________________
 void TCollection::Print(Option_t *option) const
 {
-   // Defualt print for collections, calls Print(option, 1).
+   // Default print for collections, calls Print(option, 1).
    // This will print the collection header and Print() methods of
    // all the collection entries.
    //

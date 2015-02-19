@@ -47,7 +47,7 @@ private:
    kXR_int16    fSrvProtVers;
 
    XrdOucString fRelease;
-   int          fSvnRevision;
+   XrdOucString fGitCommit;
    int          fVersionCode;
 
    int          fVrsMajor;
@@ -68,6 +68,7 @@ public:
    const char *IncDir() const { return fIncDir.c_str(); }
    const char *LibDir() const { return fLibDir.c_str(); }
    const char *Export() const { return fExport.c_str(); }
+   const char *GitCommit() const { return fGitCommit.c_str(); }
    bool        IsParked() const { return ((fStatus == 2) ? 1: 0); }
    bool        IsValid() const { return ((fStatus == 1) ? 1: 0); }
    bool        IsInvalid() const { return ((fStatus == -1) ? 1: 0); }
@@ -79,7 +80,6 @@ public:
    const char *Release() const { return fRelease.c_str(); }
    void        SetValid(kXR_int16 vers = -1);
    kXR_int16   SrvProtVers() const { return fSrvProtVers; }
-   int         SvnRevision() const { return fSvnRevision; }
    const char *Tag() const { return fTag.c_str(); }
    int         VersionCode() const { return fVersionCode; }
    int         VrsMajor() const { return fVrsMajor; }

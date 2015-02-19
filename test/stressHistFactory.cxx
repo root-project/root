@@ -239,10 +239,6 @@ int main(int argc, const char *argv[])
 
    }
 
-   // Disable caching of complex error function calculation, as we don't
-   // want to write out the cache file as part of the validation procedure
-   RooMath::cacheCERF(kFALSE) ;
-
    gBenchmark = new TBenchmark();
    return stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
 }

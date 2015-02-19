@@ -203,4 +203,7 @@ inline Py_ssize_t PyNumber_AsSsize_t( PyObject* obj, PyObject* ) {
 #endif
 #endif
 
+// C++ version of the cppyy API
+#include "Cppyy.h"
+
 #endif // !PYROOT_PYROOT_H

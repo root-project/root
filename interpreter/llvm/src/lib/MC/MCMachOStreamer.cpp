@@ -55,6 +55,12 @@ public:
       : MCObjectStreamer(Context, MAB, OS, Emitter),
         LabelSections(label) {}
 
+  /// state management
+  void reset() override {
+    HasSectionLabel.clear();
+    MCObjectStreamer::reset();
+  }
+
   /// @name MCStreamer Interface
   /// @{
 
@@ -90,8 +96,8 @@ public:
                              unsigned ByteAlignment) override;
   void EmitZerofill(const MCSection *Section, MCSymbol *Symbol = nullptr,
                     uint64_t Size = 0, unsigned ByteAlignment = 0) override;
-  virtual void EmitTBSSSymbol(const MCSection *Section, MCSymbol *Symbol,
-                      uint64_t Size, unsigned ByteAlignment = 0) override;
+  void EmitTBSSSymbol(const MCSection *Section, MCSymbol *Symbol, uint64_t Size,
+                      unsigned ByteAlignment = 0) override;
 
   void EmitFileDirective(StringRef Filename) override {
     // FIXME: Just ignore the .file; it isn't important enough to fail the
@@ -177,7 +183,7 @@ void MCMachOStreamer::EmitDataRegionEnd() {
   if (!getAssembler().getBackend().hasDataInCodeSupport())
     return;
   std::vector<DataRegionData> &Regions = getAssembler().getDataRegions();
-  assert(Regions.size() && "Mismatched .end_data_region!");
+  assert(!Regions.empty() && "Mismatched .end_data_region!");
   DataRegionData &Data = Regions.back();
   assert(!Data.End && "Mismatched .end_data_region!");
   // Create a temporary label to mark the end of the data region.
