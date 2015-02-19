@@ -1718,14 +1718,32 @@ void TFormula::SetParameters(const pair<TString,Double_t> *params,const Int_t si
 }
 #endif
 
+void TFormula::DoSetParameters(const Double_t *params, Int_t size)
+{
+   if(!params || size < 0 || size > fNpar) return;
+   // reset vector of cling parameters
+   if (size != (int) fClingParameters.size() ) {
+      Warning("SetParameters","size is not same of cling parameter size %d - %d",size,int(fClingParameters.size()) );
+      for(Int_t i = 0; i < size; ++i)
+      {
+         TString name = TString::Format("%d",i);
+         SetParameter(name,params[i]);
+      }
+      return; 
+   }
+   fAllParametersSetted = true;
+   std::copy(params, params+size, fClingParameters.begin() );
+}
+
 void TFormula::SetParameters(const Double_t *params)
 {
-   SetParameters(params,fNpar);
+   DoSetParameters(params,fNpar);
 }
 void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Double_t p4,
                    Double_t p5,Double_t p6,Double_t p7,Double_t p8,
                    Double_t p9,Double_t p10)
 {
+   printf("setting parameters\n");
    if(fNpar >= 1) SetParameter(0,p0);
    if(fNpar >= 2) SetParameter(1,p1);
    if(fNpar >= 3) SetParameter(2,p2);
@@ -1838,22 +1856,6 @@ void TFormula::SetParName(Int_t ipar, const char * name)
 
 
 
-}
-void TFormula::SetParameters(const Double_t *params, Int_t size)
-{
-   if(!params || size < 0 || size > fNpar) return;
-   // reset vector of cling parameters
-   if (size != (int) fClingParameters.size() ) {
-      Warning("SetParameters","size is not same of cling parameter size %d - %d",size,int(fClingParameters.size()) );
-      for(Int_t i = 0; i < size; ++i)
-      {
-         TString name = TString::Format("%d",i);
-         SetParameter(name,params[i]);
-      }
-      return; 
-   }
-   fAllParametersSetted = true;
-   std::copy(params, params+size, fClingParameters.begin() );
 }
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params)
 {

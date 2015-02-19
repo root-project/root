@@ -387,9 +387,6 @@ public:
    virtual void     SetParameter(const TString &name, Double_t value) {
       (fFormula) ? fFormula->SetParameter(name,value) : fParams->SetParameter(name,value);
    }
-   virtual void     SetParameters(const Double_t *params,Int_t size) {
-      (fFormula) ? fFormula->SetParameters(params,size) : fParams->SetParameters(params);
-   }
    virtual void     SetParameters(const Double_t *params) {
       (fFormula) ? fFormula->SetParameters(params) : fParams->SetParameters(params); 
    }

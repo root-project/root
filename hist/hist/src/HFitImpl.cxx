@@ -373,8 +373,8 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       f1->SetNDF(fitResult.Ndf() );
       f1->SetNumberFitPoints(fitdata->Size() );
 
-
-      f1->SetParameters( const_cast<double*>(&(fitResult.Parameters().front())),(Int_t)fitResult.Parameters().size() ); 
+      assert((Int_t)fitResult.Parameters().size() >= f1->GetNpar() );
+      f1->SetParameters( const_cast<double*>(&(fitResult.Parameters().front()))); 
       if ( int( fitResult.Errors().size()) >= f1->GetNpar() ) 
          f1->SetParErrors( &(fitResult.Errors().front()) ); 
   
@@ -862,7 +862,8 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * data, TF1 * fitfunc, Fo
       fitfunc->SetNDF(fitResult.Ndf() );
       fitfunc->SetNumberFitPoints(fitdata->Size() );
 
-      fitfunc->SetParameters( const_cast<double*>(&(fitResult.Parameters().front())), (Int_t)fitResult.Parameters().size());
+      assert(  (Int_t)fitResult.Parameters().size() >= fitfunc->GetNpar() );
+      fitfunc->SetParameters( const_cast<double*>(&(fitResult.Parameters().front())));
       if ( int( fitResult.Errors().size()) >= fitfunc->GetNpar() ) 
          fitfunc->SetParErrors( &(fitResult.Errors().front()) ); 
   

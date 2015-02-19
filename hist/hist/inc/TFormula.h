@@ -122,6 +122,7 @@ protected:
    void   ProcessFormula(TString &formula);
    Bool_t PrepareFormula(TString &formula);
    void   DoAddParameter(const TString &name, Double_t value, bool processFormula);
+   void   DoSetParameters(const Double_t * p, Int_t size); 
 
    Double_t       DoEval(const Double_t * x  = nullptr, const Double_t * p = nullptr);
 
@@ -163,12 +164,11 @@ public:
    Double_t*      GetParameters() const;
    void           GetParameters(Double_t *params) const;
    Double_t       GetVariable(const TString &name);
-   Bool_t         IsValid() const { return fReadyToExecute && fAllParametersSetted; }
+   Bool_t         IsValid() const { return fReadyToExecute; }
    Bool_t         IsLinear() const { return TestBit(kLinear); } 
    void           Print(Option_t *option = "") const;
    void           SetParameter(const char* name, Double_t value);
    void           SetParameter(Int_t param, Double_t value);
-   void           SetParameters(const Double_t *params,Int_t size);
    void           SetParameters(const Double_t *params);
    //void           SetParameters(const pair<TString,Double_t> *params, const Int_t size);
    void           SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0,
