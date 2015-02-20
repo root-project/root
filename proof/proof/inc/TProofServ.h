@@ -221,7 +221,7 @@ protected:
    virtual Int_t HandleDataSets(TMessage *mess, TString *slb = 0);
    virtual void  HandleSubmerger(TMessage *mess);
    virtual void  HandleFork(TMessage *mess);
-   virtual void  HandleLibIncPath(TMessage *mess);
+   virtual Int_t HandleLibIncPath(TMessage *mess);
    virtual void  HandleProcess(TMessage *mess, TString *slb = 0);
    virtual void  HandleQueryList(TMessage *mess);
    virtual void  HandleRemove(TMessage *mess, TString *slb = 0);

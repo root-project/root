@@ -1495,7 +1495,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
    timer.Start();
 
-   Int_t rc = 0;
+   Int_t rc = 0, lirc = 0;
    TString slb;
    TString *pslb = (fgLogToSysLog > 0) ? &slb : (TString *)0;
 
@@ -2050,12 +2050,12 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
       case kPROOF_LIB_INC_PATH:
          if (all) {
-            HandleLibIncPath(mess);
+            lirc = HandleLibIncPath(mess);
          } else {
             rc = -1;
          }
          // Notify the client
-         SendLogFile();
+         if (lirc > 0) SendLogFile();
          break;
 
       case kPROOF_REALTIMELOG:
@@ -5065,19 +5065,21 @@ void TProofServ::HandleRetrieve(TMessage *mess, TString *slb)
 }
 
 //______________________________________________________________________________
-void TProofServ::HandleLibIncPath(TMessage *mess)
+Int_t TProofServ::HandleLibIncPath(TMessage *mess)
 {
    // Handle lib, inc search paths modification request
 
    TString type;
    Bool_t add;
    TString path;
+   Int_t rc = 1;
    (*mess) >> type >> add >> path;
+   if (mess->BufferSize() > mess->Length()) (*mess) >> rc;
 
    // Check type of action
    if ((type != "lib") && (type != "inc")) {
       Error("HandleLibIncPath","unknown action type: %s", type.Data());
-      return;
+      return rc;
    }
 
    // Separators can be either commas or blanks
@@ -5088,7 +5090,7 @@ void TProofServ::HandleLibIncPath(TMessage *mess)
    if (path.Length() > 0 && path != "-") {
       if (!(op = path.Tokenize(" "))) {
          Error("HandleLibIncPath","decomposing path %s", path.Data());
-         return;
+         return rc;
       }
    }
 
@@ -5188,6 +5190,8 @@ void TProofServ::HandleLibIncPath(TMessage *mess)
             fProof->RemoveIncludePath(path);
       }
    }
+   // Done
+   return rc;
 }
 
 //______________________________________________________________________________
