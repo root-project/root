@@ -144,10 +144,25 @@ void TRootSnifferStoreJson::SetField(Int_t lvl, const char *field,
    fBuf->Append(",");
    if (!fCompact) fBuf->Append("\n");
    fBuf->Append(TString::Format("%*s\"%s\"%s", fCompact ? 0 : lvl * 4 + 2, "", field, (fCompact ? ":" : " : ")));
-   if (with_quotes) {
-      fBuf->Append(TString::Format("\"%s\"", value));
-   } else {
+   if (!with_quotes) {
       fBuf->Append(value);
+   } else {
+      fBuf->Append("\"");
+      for (const char *v = value; *v != 0; v++) {
+         switch (*v) {
+            case '\n':
+               fBuf->Append("\\\\n");
+               break;
+            case '\t':
+               fBuf->Append("\\\\t");
+               break;
+            default:
+               fBuf->Append(*v);
+               // double escape character, only keep \' and \" sequences untouched
+               if ((*v == '\\') && (*(v+1) != '\'') && (*(v+1) != '\"')) fBuf->Append("\\");
+         }
+      }
+      fBuf->Append("\"");
    }
 }
 
