@@ -562,6 +562,7 @@ void TProof::InitMembers()
    fGlobalPackageDirList = 0;
    fPackageLock = 0;
    fEnabledPackagesOnClient = 0;
+   fEnabledPackagesOnCluster = 0;
 
    fInputData = 0;
 
@@ -790,6 +791,9 @@ Int_t TProof::Init(const char *, const char *conffile,
    fInputData      = 0;
    ResetBit(TProof::kNewInputData);
    fPrintProgress  = 0;
+
+   fEnabledPackagesOnCluster = new TList;
+   fEnabledPackagesOnCluster->SetOwner();
 
    // Timeout for some collect actions
    fCollectTimeout = gEnv->GetValue("Proof.CollectTimeout", -1);
@@ -1342,10 +1346,11 @@ Int_t TProof::AddWorkers(TList *workerList)
    UInt_t nSlavesDone = 0;
    Int_t ord = 0;
 
-   // Loop over all new workers and start them
-   Bool_t goMoreParallel = (fSlaves->GetEntries() > 0);
+   // Loop over all new workers and start them (if we had already workers it means we are
+   // increasing parallelism or that is not the first time we are called)
+   Bool_t goMoreParallel = (fSlaves->GetEntries() > 0) ? kTRUE : kFALSE;
 
-   // a list of TSlave objects for workers that are being added
+   // A list of TSlave objects for workers that are being added
    TList *addedWorkers = new TList();
    if (!addedWorkers) {
       // This is needed to silence Coverity ...
@@ -1478,7 +1483,7 @@ Int_t TProof::AddWorkers(TList *workerList)
    if (fDynamicStartup && goMoreParallel) {
 
       PDB(kGlobal, 3)
-         Info("AddWorkers", "Will invoke GoMoreParallel()");
+         Info("AddWorkers", "will invoke GoMoreParallel()");
       Int_t nw = GoMoreParallel(nwrk);
       PDB(kGlobal, 3)
          Info("AddWorkers", "GoMoreParallel()=%d", nw);
@@ -1491,53 +1496,8 @@ Int_t TProof::AddWorkers(TList *workerList)
       GoParallel(nwrk, kFALSE, 0);
    }
 
-   if (gProofServ && gProofServ->GetEnabledPackages() &&
-       gProofServ->GetEnabledPackages()->GetSize() > 0) {
-      TIter nxp(gProofServ->GetEnabledPackages());
-      TPair *pck = 0;
-      while ((pck = (TPair *) nxp())) {
-         // Upload and Enable methods are intelligent and avoid
-         // re-uploading or re-enabling of a package to a node that has it.
-         if (fDynamicStartup && goMoreParallel) {
-            // Upload only on added workers
-            PDB(kGlobal, 3)
-               Info("AddWorkers", "Will invoke UploadPackage() and EnablePackage() on added workers");
-            if (UploadPackage(pck->GetName(), kUntar, addedWorkers) >= 0)
-               EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE, addedWorkers);
-         }
-         else {
-            PDB(kGlobal, 3)
-               Info("AddWorkers", "Will invoke UploadPackage() and EnablePackage() on all workers");
-            if (UploadPackage(pck->GetName()) >= 0)
-               EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE);
-         }
-      }
-   }
-
-   if (fLoadedMacros) {
-      TIter nxp(fLoadedMacros);
-      TObjString *os = 0;
-      while ((os = (TObjString *) nxp())) {
-         PDB(kGlobal, 3)
-            Info("AddWorkers", "Will invoke Load() on selected workers");
-         Printf("Loading a macro : %s", os->GetName());
-         Load(os->GetName(), kTRUE, kTRUE, addedWorkers);
-      }
-   }
-
-   TString dyn = gSystem->GetDynamicPath();
-   dyn.ReplaceAll(":", " ");
-   dyn.ReplaceAll("\"", " ");
-   PDB(kGlobal, 3)
-      Info("AddWorkers", "Will invoke AddDynamicPath() on selected workers");
-   AddDynamicPath(dyn, kFALSE, addedWorkers, fDynamicStartup);
-
-   TString inc = gSystem->GetIncludePath();
-   inc.ReplaceAll("-I", " ");
-   inc.ReplaceAll("\"", " ");
-   PDB(kGlobal, 3)
-      Info("AddWorkers", "Will invoke AddIncludePath() on selected workers");
-   AddIncludePath(inc, kFALSE, addedWorkers, fDynamicStartup);
+   // Set worker processing environment
+   SetupWorkersEnv(addedWorkers, goMoreParallel);
 
    // Update list of current workers
    PDB(kGlobal, 3)
@@ -1564,6 +1524,67 @@ Int_t TProof::AddWorkers(TList *workerList)
    delete addedWorkers;
 
    return 0;
+}
+
+//______________________________________________________________________________
+void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
+{
+   // Set up packages, loaded macros, include and lib paths ...
+
+   // Packages
+   TList *packs = gProofServ ? gProofServ->GetEnabledPackages() : GetEnabledPackages();
+   if (packs->GetSize() > 0) {
+      TIter nxp(packs);      
+      TPair *pck = 0;
+      while ((pck = (TPair *) nxp())) {
+         // Upload and Enable methods are intelligent and avoid
+         // re-uploading or re-enabling of a package to a node that has it.
+         if (fDynamicStartup && increasingWorkers) {
+            // Upload only on added workers
+            PDB(kGlobal, 3)
+               Info("SetupWorkersEnv", "will invoke UploadPackage() and EnablePackage() on added workers");
+            if (UploadPackage(pck->GetName(), kUntar, addedWorkers) >= 0)
+               EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE, addedWorkers);
+         } else {
+            PDB(kGlobal, 3)
+               Info("SetupWorkersEnv", "will invoke UploadPackage() and EnablePackage() on all workers");
+            if (UploadPackage(pck->GetName()) >= 0)
+               EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE);
+         }
+      }
+   }
+
+   // Loaded macros
+   if (fLoadedMacros) {
+      TIter nxp(fLoadedMacros);
+      TObjString *os = 0;
+      while ((os = (TObjString *) nxp())) {
+         PDB(kGlobal, 3) {
+            Info("SetupWorkersEnv", "will invoke Load() on selected workers");
+            Printf("Loading a macro : %s", os->GetName());
+         }
+         Load(os->GetName(), kTRUE, kTRUE, addedWorkers);
+      }
+   }
+
+   // Dynamic path
+   TString dyn = gSystem->GetDynamicPath();
+   dyn.ReplaceAll(":", " ");
+   dyn.ReplaceAll("\"", " ");
+   PDB(kGlobal, 3)
+      Info("SetupWorkersEnv", "will invoke AddDynamicPath() on selected workers");
+   AddDynamicPath(dyn, kFALSE, addedWorkers, !fDynamicStartup); // Do not Collect
+
+   // Include path
+   TString inc = gSystem->GetIncludePath();
+   inc.ReplaceAll("-I", " ");
+   inc.ReplaceAll("\"", " ");
+   PDB(kGlobal, 3)
+      Info("SetupWorkersEnv", "will invoke AddIncludePath() on selected workers");
+   AddIncludePath(inc, kFALSE, addedWorkers, !fDynamicStartup);  // Do not Collect
+
+   // Done
+   return;
 }
 
 //______________________________________________________________________________
@@ -2771,7 +2792,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
    // Timeout counter
    Long_t nto = timeout;
    PDB(kCollect, 2)
-      Info("Collect","active: %d", mon->GetActive());
+      Info("Collect","#%04d: active: %d", collectId, mon->GetActive());
 
    // On clients, handle Ctrl-C during collection
    if (fIntHandler)
@@ -2809,9 +2830,11 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
       if (TestBit(TProof::kIsMaster) && !IsIdle() && fDynamicStartup && !fIsPollingWorkers &&
          ((fLastPollWorkers_s == -1) || (time(0)-fLastPollWorkers_s >= kPROOF_DynWrkPollInt_s))) {
          fIsPollingWorkers = kTRUE;
-         PollForNewWorkers();
+         if (PollForNewWorkers() > 0) DeActivateAsyncInput();
          fLastPollWorkers_s = time(0);
          fIsPollingWorkers = kFALSE;
+         PDB(kCollect, 1)
+            Info("Collect","#%04d: now active: %d", collectId, mon->GetActive());
       }
 
       // Wait for a ready socket
@@ -2826,7 +2849,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
             // Deactivate it if we are done with it
             mon->DeActivate(s);
             PDB(kCollect, 2)
-               Info("Collect","deactivating %p (active: %d, %p)",
+               Info("Collect","#%04d: deactivating %p (active: %d, %p)", collectId,
                               s, mon->GetActive(),
                               mon->GetListOfActives()->First());
          } else if (rc == 2) {
@@ -3155,6 +3178,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
 
       case kPROOF_GETPACKET:
          {
+            PDB(kGlobal,2)
+               Info("HandleInputMessage","%s: kPROOF_GETPACKET", sl->GetOrdinal());
             TDSetElement *elem = 0;
             elem = fPlayer ? fPlayer->GetNextPacket(sl, mess) : 0;
 
@@ -3224,6 +3249,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
          {
             (*mess) >> sl->fBytesRead >> sl->fRealTime >> sl->fCpuTime
                   >> sl->fWorkDir >> sl->fProofWorkDir;
+            PDB(kCollect,2)
+               Info("HandleInputMessage", "kPROOF_GETSTATS: %s", sl->fWorkDir.Data());
             TString img;
             if ((mess->BufferSize() > mess->Length()))
                (*mess) >> img;
@@ -3625,7 +3652,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
       case kPROOF_SETIDLE:
          {
             PDB(kGlobal,2)
-               Info("HandleInputMessage","kPROOF_SETIDLE: enter");
+               Info("HandleInputMessage","kPROOF_SETIDLE from '%s': enter (%d)", sl->GetOrdinal(), fNotIdle);
 
             // The session is idle
             if (IsLite()) {
@@ -6660,6 +6687,22 @@ Int_t TProof::GetRC(const char *rcenv, TString &env, const char *ord)
 }
 
 //______________________________________________________________________________
+Int_t TProof::SendCurrentState(TList *list)
+{
+   // Transfer the current state of the master to the active slave servers.
+   // The current state includes: the current working directory, etc.
+   // Returns the number of active slaves. Returns -1 in case of error.
+
+   if (!IsValid()) return -1;
+
+   // Go to the new directory, reset the interpreter environment and
+   // tell slave to delete all objects from its new current directory.
+   Broadcast(gDirectory->GetPath(), kPROOF_RESET, list);
+
+   return GetParallel();
+}
+
+//______________________________________________________________________________
 Int_t TProof::SendCurrentState(ESlaves list)
 {
    // Transfer the current state of the master to the active slave servers.
@@ -7079,11 +7122,11 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
    // Returns -1 on error, number of total (not added!) workers on success.
 
    if (!IsValid() || !IsMaster() || IsIdle()) {
-      Error("GoMoreParallel", "Can't invoke here -- should not happen!");
+      Error("GoMoreParallel", "can't invoke here -- should not happen!");
       return -1;
    }
-   if (!gProofServ) {
-      Error("GoMoreParallel", "No ProofServ available -- should not happen!");
+   if (!gProofServ && !IsLite()) {
+      Error("GoMoreParallel", "no ProofServ available nor Lite -- should not happen!");
       return -1;
    }
 
@@ -7165,7 +7208,7 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
    s.Form("PROOF just went more parallel (%d additional worker%s, %d worker%s total)",
       nAddedWorkers, (nAddedWorkers == 1) ? "" : "s",
       nTotalWorkers, (nTotalWorkers == 1) ? "" : "s");
-   gProofServ->SendAsynMessage(s);
+   if (gProofServ) gProofServ->SendAsynMessage(s);   
    Info("GoMoreParallel", "%s", s.Data());
 
    return nTotalWorkers;
@@ -7943,7 +7986,8 @@ Int_t TProof::DisablePackages()
 }
 
 //______________________________________________________________________________
-Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt, Int_t chkveropt)
+Int_t TProof::BuildPackage(const char *package,
+                           EBuildPackageOpt opt, Int_t chkveropt, TList *workers)
 {
    // Build specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists on all unique nodes. If opt is kBuildOnSlavesNoWait
@@ -7984,13 +8028,20 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt, Int_t chkv
    }
 
    if (opt <= kBuildAll && (!IsLite() || !buildOnClient)) {
-      TMessage mess(kPROOF_CACHE);
-      mess << Int_t(kBuildPackage) << pac << chkveropt;
-      Broadcast(mess, kUnique);
+      if (workers) {
+         TMessage mess(kPROOF_CACHE);
+         mess << Int_t(kBuildPackage) << pac << chkveropt;
+         Broadcast(mess, workers);
 
-      TMessage mess2(kPROOF_CACHE);
-      mess2 << Int_t(kBuildSubPackage) << pac << chkveropt;
-      Broadcast(mess2, fNonUniqueMasters);
+      } else {
+         TMessage mess(kPROOF_CACHE);
+         mess << Int_t(kBuildPackage) << pac << chkveropt;
+         Broadcast(mess, kUnique);
+
+         TMessage mess2(kPROOF_CACHE);
+         mess2 << Int_t(kBuildSubPackage) << pac << chkveropt;
+         Broadcast(mess2, fNonUniqueMasters);
+      }
    }
 
    if (opt >= kBuildAll) {
@@ -8001,9 +8052,19 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt, Int_t chkv
          if (TestBit(TProof::kIsClient) && fPackageLock) fPackageLock->Unlock();
       }
 
+
       fStatus = 0;
-      if (!IsLite() || !buildOnClient)
-         Collect(kAllUnique);
+      if (!IsLite() || !buildOnClient) {
+
+        // On the master, workers that fail are deactivated
+        // Bool_t deactivateOnFailure = (IsMaster()) ? kTRUE : kFALSE;
+         if (workers) {
+//            Collect(workers, -1, -1, deactivateOnFailure);
+            Collect(workers);
+         } else {
+            Collect(kAllUnique);
+         }
+      }
 
       if (fStatus < 0 || st < 0)
          return -1;
@@ -8246,13 +8307,14 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient,
    // On the master, workers that fail are deactivated
    Bool_t deactivateOnFailure = (IsMaster()) ? kTRUE : kFALSE;
 
+   Bool_t doCollect = (fDynamicStartup && !IsIdle()) ? kFALSE : kTRUE;
+
    if (workers) {
       PDB(kPackage, 3)
          Info("LoadPackage", "Sending load message to selected workers only");
       Broadcast(mess, workers);
-      Collect(workers, -1, -1, deactivateOnFailure);
-   }
-   else {
+      if (doCollect) Collect(workers, -1, -1, deactivateOnFailure);
+   } else {
       Broadcast(mess);
       Collect(kActive, -1, -1, deactivateOnFailure);
    }
@@ -8663,8 +8725,8 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
    }
   if (gDebug > 0)
       Info("EnablePackage", "using check version option: %d", chkveropt);
-
-   if (BuildPackage(pac, opt, chkveropt) == -1)
+   
+   if (BuildPackage(pac, opt, chkveropt, workers) == -1)
       return -1;
 
    TList *optls = (loadopts && loadopts->GetSize() > 0) ? loadopts : 0;
@@ -8675,6 +8737,13 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
 
    if (LoadPackage(pac, notOnClient, optls, workers) == -1)
       return -1;
+
+   // Record the information for later usage (simulation of dynamic start on PROOF-Lite)
+   if (!fEnabledPackagesOnCluster->FindObject(pac)) {
+      TPair *pck = (optls && optls->GetSize() > 0) ? new TPair(new TObjString(pac), optls->Clone())
+                                                   : new TPair(new TObjString(pac), 0);
+      fEnabledPackagesOnCluster->Add(pck);
+   }
 
    return 0;
 }
@@ -9104,11 +9173,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
       return -1;
    }
 
-   if (TestBit(TProof::kIsClient)) {
-      if (wrks) {
-         Error("Load", "the 'wrks' arg can be used only on the master");
-         return -1;
-      }
+   if (TestBit(TProof::kIsClient) && !wrks) {
 
       // Extract the file implementation name first
       TString addsname, implname = macro;
@@ -9239,6 +9304,16 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
       // Wait for master and workers to be done
       Collect(kActive);
 
+      if (IsLite()) {
+         PDB(kGlobal, 1) Info("Load", "adding loaded macro: %s", macro);
+         if (!fLoadedMacros) {
+            fLoadedMacros = new TList();
+            fLoadedMacros->SetOwner();
+         }
+         // if wrks is specified the macro should already be loaded on the master.
+         fLoadedMacros->Add(new TObjString(macro));
+      }
+
    } else {
       // On master
 
@@ -9249,10 +9324,12 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
 
       if (uniqueWorkers) {
          mess << Int_t(kLoadMacro) << basemacro;
-         if (wrks)
+         if (wrks) {
             Broadcast(mess, wrks);
-         else
+            Collect(wrks);
+         } else {
             Broadcast(mess, kUnique);
+         }
       } else {
          // Wait for the result of the previous sending
          Collect(kUnique);
@@ -9320,6 +9397,9 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks,
    else
       m << TString("-");
 
+   // Tell the server to send back or not
+   m << (Int_t)doCollect;
+
    // Forward the request
    if (wrks) {
       Broadcast(m, wrks);
@@ -9361,6 +9441,9 @@ Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks,
       m << TString(incpath);
    else
       m << TString("-");
+
+   // Tell the server to send back or not
+   m << (Int_t)doCollect;
 
    // Forward the request
    if (wrks) {
@@ -11880,10 +11963,11 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
       THashList *ords = 0;
       if (!allord) {
          ords = new THashList();
+         const char *masterord = (gProofServ) ? gProofServ->GetOrdinal() : "0";
          TString oo(ord), o;
          Int_t from = 0;
          while(oo.Tokenize(o, from, ","))
-            if (o.BeginsWith(gProofServ->GetOrdinal())) ords->Add(new TObjString(o));
+            if (o.BeginsWith(masterord)) ords->Add(new TObjString(o));
       }
       // We do not need to send forward
       fw = kFALSE;
