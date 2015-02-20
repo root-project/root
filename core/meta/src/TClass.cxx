@@ -1553,7 +1553,7 @@ TClass::~TClass()
 
    if (fMethod)
       (*fMethod).Delete();
-   delete fMethod;   fMethod=0;
+   delete fMethod.load();   fMethod=0;
 
    if (fRealData)
       fRealData->Delete();
