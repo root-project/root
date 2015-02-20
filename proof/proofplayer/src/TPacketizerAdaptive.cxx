@@ -503,18 +503,18 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
 
    Long_t maxSlaveCnt = 0;
    if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt) == 0) {
-      if (maxSlaveCnt < 1) {
+      if (maxSlaveCnt < 0) {
          Info("TPacketizerAdaptive",
-              "The value of PROOF_MaxSlavesPerNode must be grater than 0");
+              "The value of PROOF_MaxSlavesPerNode must be positive");
          maxSlaveCnt = 0;
       }
    } else {
       // Try also with Int_t (recently supported in TProof::SetParameter)
       Int_t mxslcnt = -1;
       if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", mxslcnt) == 0) {
-         if (mxslcnt < 1) {
+         if (mxslcnt < 0) {
             Info("TPacketizerAdaptive",
-                 "The value of PROOF_MaxSlavesPerNode must be grater than 0");
+                 "The value of PROOF_MaxSlavesPerNode must be positive");
             mxslcnt = 0;
          }
          maxSlaveCnt = (Long_t) mxslcnt;
