@@ -87,6 +87,7 @@ enum ERootCanvasCommands {
    kFileSaveAsGIF,
    kFileSaveAsJPG,
    kFileSaveAsPNG,
+   kFileSaveAsTEX,
    kFilePrint,
    kFileCloseCanvas,
    kFileQuit,
@@ -339,6 +340,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fFileSaveMenu->AddEntry(Form("%s.&ps",  name), kFileSaveAsPS);
    fFileSaveMenu->AddEntry(Form("%s.&eps", name), kFileSaveAsEPS);
    fFileSaveMenu->AddEntry(Form("%s.p&df", name), kFileSaveAsPDF);
+   fFileSaveMenu->AddEntry(Form("%s.&tex", name), kFileSaveAsTEX);
    fFileSaveMenu->AddEntry(Form("%s.&gif", name), kFileSaveAsGIF);
 
    static Int_t img = 0;
@@ -922,6 +924,9 @@ again:
                      break;
                   case kFileSaveAsPNG:
                      fCanvas->SaveAs(".png");
+                     break;
+                  case kFileSaveAsTEX:
+                     fCanvas->SaveAs(".tex");
                      break;
                   case kFilePrint:
                      PrintCanvas();
