@@ -98,6 +98,7 @@ TTeXDump::TTeXDump() : TVirtualPS()
    fCurrentRed   = -1.;
    fCurrentGreen = -1.;
    fCurrentBlue  = -1.;
+   fCurrentAlpha = 1.;
 }
 
 
@@ -122,6 +123,7 @@ TTeXDump::TTeXDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    fCurrentRed   = -1.;
    fCurrentGreen = -1.;
    fCurrentBlue  = -1.;
+   fCurrentAlpha = 1.;
 
    Open(fname, wtype);
 }
@@ -245,7 +247,12 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (fillis==1) {
       SetColor(fFillColor);
       PrintStr("@");
-      PrintStr("\\draw [color=c, fill=c] (");
+      PrintStr("\\draw [color=c, fill=c");
+      if (fCurrentAlpha != 1.) {
+         PrintStr(", fill opacity=");
+         WriteReal(fCurrentAlpha, kFALSE);
+      }
+      PrintStr("] (");
       WriteReal(x1c, kFALSE);
       PrintFast(1,",");
       WriteReal(y1c, kFALSE);
@@ -267,7 +274,12 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       if (fillsi==7)  PrintStr("horizontal lines");
       if (fillsi==10) PrintStr("bricks");
       if (fillsi==13) PrintStr("crosshatch");
-      PrintStr(", pattern color=c] (");
+      PrintStr(", pattern color=c");
+      if (fCurrentAlpha != 1.) {
+         PrintStr(", fill opacity=");
+         WriteReal(fCurrentAlpha, kFALSE);
+      }
+      PrintStr("] (");
       WriteReal(x1c, kFALSE);
       PrintFast(1,",");
       WriteReal(y1c, kFALSE);
@@ -280,7 +292,12 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (fillis == 0) {
       SetColor(fLineColor);
       PrintStr("@");
-      PrintStr("\\draw [c] (");
+      PrintStr("\\draw [c");
+      if (fCurrentAlpha != 1.) {
+         PrintStr(", opacity=");
+         WriteReal(fCurrentAlpha, kFALSE);
+      }
+      PrintStr("] (");
       WriteReal(x1c, kFALSE);
       PrintFast(1,",");
       WriteReal(y1c, kFALSE);
@@ -548,8 +565,11 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
          if (fillsi==13) PrintStr("crosshatch");
          PrintStr(", pattern color=c");
       }
+      if (fCurrentAlpha != 1.) {
+         PrintStr(", fill opacity=");
+         WriteReal(fCurrentAlpha, kFALSE);
+      }
    }
-
    PrintStr("] (");
    WriteReal(x, kFALSE);
    PrintFast(1,",");
@@ -673,6 +693,7 @@ void TTeXDump::SetColor(Int_t color)
    TColor *col = gROOT->GetColor(color);
    if (col) SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
    else     SetColor(1., 1., 1.);
+   fCurrentAlpha = col->GetAlpha();
 }
 
 
