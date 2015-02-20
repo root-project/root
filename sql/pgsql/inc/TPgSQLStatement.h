@@ -16,13 +16,6 @@
 #include "TSQLStatement.h"
 #endif
 
-#if !defined(__CINT__)
-
-#ifdef R__WIN32
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#endif
 #include <libpq-fe.h>
 #include <pg_config.h> // to get PG_VERSION_NUM
 #ifdef USE_LDAP
@@ -32,12 +25,6 @@
 #define pgsql_success(x) (((x) == PGRES_EMPTY_QUERY) \
                         || ((x) == PGRES_COMMAND_OK) \
                         || ((x) == PGRES_TUPLES_OK))
-
-#else
-struct PGconn;
-struct PGresult;
-#endif
-
 
 struct PgSQL_Stmt_t {
    PGconn   *fConn;

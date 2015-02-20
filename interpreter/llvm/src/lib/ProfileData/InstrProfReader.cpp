@@ -13,39 +13,39 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ProfileData/InstrProfReader.h"
-#include "llvm/ProfileData/InstrProf.h"
-
 #include "InstrProfIndexed.h"
-
+#include "llvm/ProfileData/InstrProf.h"
 #include <cassert>
 
 using namespace llvm;
 
-static std::error_code
-setupMemoryBuffer(std::string Path, std::unique_ptr<MemoryBuffer> &Buffer) {
+static ErrorOr<std::unique_ptr<MemoryBuffer>>
+setupMemoryBuffer(std::string Path) {
   ErrorOr<std::unique_ptr<MemoryBuffer>> BufferOrErr =
       MemoryBuffer::getFileOrSTDIN(Path);
   if (std::error_code EC = BufferOrErr.getError())
     return EC;
-  Buffer = std::move(BufferOrErr.get());
+  auto Buffer = std::move(BufferOrErr.get());
 
   // Sanity check the file.
   if (Buffer->getBufferSize() > std::numeric_limits<unsigned>::max())
     return instrprof_error::too_large;
-  return instrprof_error::success;
+  return std::move(Buffer);
 }
 
 static std::error_code initializeReader(InstrProfReader &Reader) {
   return Reader.readHeader();
 }
 
-std::error_code
-InstrProfReader::create(std::string Path,
-                        std::unique_ptr<InstrProfReader> &Result) {
+ErrorOr<std::unique_ptr<InstrProfReader>>
+InstrProfReader::create(std::string Path) {
   // Set up the buffer to read.
-  std::unique_ptr<MemoryBuffer> Buffer;
-  if (std::error_code EC = setupMemoryBuffer(Path, Buffer))
+  auto BufferOrError = setupMemoryBuffer(Path);
+  if (std::error_code EC = BufferOrError.getError())
     return EC;
+
+  auto Buffer = std::move(BufferOrError.get());
+  std::unique_ptr<InstrProfReader> Result;
 
   // Create the reader.
   if (IndexedInstrProfReader::hasFormat(*Buffer))
@@ -58,16 +58,20 @@ InstrProfReader::create(std::string Path,
     Result.reset(new TextInstrProfReader(std::move(Buffer)));
 
   // Initialize the reader and return the result.
-  return initializeReader(*Result);
+  if (std::error_code EC = initializeReader(*Result))
+    return EC;
+
+  return std::move(Result);
 }
 
 std::error_code IndexedInstrProfReader::create(
     std::string Path, std::unique_ptr<IndexedInstrProfReader> &Result) {
   // Set up the buffer to read.
-  std::unique_ptr<MemoryBuffer> Buffer;
-  if (std::error_code EC = setupMemoryBuffer(Path, Buffer))
+  auto BufferOrError = setupMemoryBuffer(Path);
+  if (std::error_code EC = BufferOrError.getError())
     return EC;
 
+  auto Buffer = std::move(BufferOrError.get());
   // Create the reader.
   if (!IndexedInstrProfReader::hasFormat(*Buffer))
     return instrprof_error::bad_magic;
@@ -189,6 +193,9 @@ RawInstrProfReader<IntPtrT>::readNextHeader(const char *CurrentPos) {
   // If there isn't enough space for another header, this is probably just
   // garbage at the end of the file.
   if (CurrentPos + sizeof(RawHeader) > End)
+    return instrprof_error::malformed;
+  // The writer ensures each profile is padded to start at an aligned address.
+  if (reinterpret_cast<size_t>(CurrentPos) % alignOf<uint64_t>())
     return instrprof_error::malformed;
   // The magic should have the same byte order as in the previous header.
   uint64_t Magic = *reinterpret_cast<const uint64_t *>(CurrentPos);

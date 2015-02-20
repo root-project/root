@@ -46,7 +46,7 @@ void SparcFrameLowering::emitSPAdjustment(MachineFunction &MF,
 
   DebugLoc dl = (MBBI != MBB.end()) ? MBBI->getDebugLoc() : DebugLoc();
   const SparcInstrInfo &TII =
-    *static_cast<const SparcInstrInfo*>(MF.getTarget().getInstrInfo());
+      *static_cast<const SparcInstrInfo *>(MF.getSubtarget().getInstrInfo());
 
   if (NumBytes >= -4096 && NumBytes < 4096) {
     BuildMI(MBB, MBBI, dl, TII.get(ADDri), SP::O6)
@@ -88,7 +88,7 @@ void SparcFrameLowering::emitPrologue(MachineFunction &MF) const {
   MachineBasicBlock &MBB = MF.front();
   MachineFrameInfo *MFI = MF.getFrameInfo();
   const SparcInstrInfo &TII =
-    *static_cast<const SparcInstrInfo*>(MF.getTarget().getInstrInfo());
+      *static_cast<const SparcInstrInfo *>(MF.getSubtarget().getInstrInfo());
   MachineBasicBlock::iterator MBBI = MBB.begin();
   DebugLoc dl = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
 
@@ -103,9 +103,7 @@ void SparcFrameLowering::emitPrologue(MachineFunction &MF) const {
     SAVEri = SP::ADDri;
     SAVErr = SP::ADDrr;
   }
-  NumBytes =
-      -MF.getTarget().getSubtarget<SparcSubtarget>().getAdjustedFrameSize(
-          NumBytes);
+  NumBytes = -MF.getSubtarget<SparcSubtarget>().getAdjustedFrameSize(NumBytes);
   emitSPAdjustment(MF, MBB, MBBI, NumBytes, SAVErr, SAVEri);
 
   MachineModuleInfo &MMI = MF.getMMI();
@@ -153,7 +151,7 @@ void SparcFrameLowering::emitEpilogue(MachineFunction &MF,
   SparcMachineFunctionInfo *FuncInfo = MF.getInfo<SparcMachineFunctionInfo>();
   MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
   const SparcInstrInfo &TII =
-    *static_cast<const SparcInstrInfo*>(MF.getTarget().getInstrInfo());
+      *static_cast<const SparcInstrInfo *>(MF.getSubtarget().getInstrInfo());
   DebugLoc dl = MBBI->getDebugLoc();
   assert(MBBI->getOpcode() == SP::RETL &&
          "Can only put epilog before 'retl' instruction!");
@@ -168,8 +166,7 @@ void SparcFrameLowering::emitEpilogue(MachineFunction &MF,
   if (NumBytes == 0)
     return;
 
-  NumBytes = MF.getTarget().getSubtarget<SparcSubtarget>().getAdjustedFrameSize(
-      NumBytes);
+  NumBytes = MF.getSubtarget<SparcSubtarget>().getAdjustedFrameSize(NumBytes);
   emitSPAdjustment(MF, MBB, MBBI, NumBytes, SP::ADDrr, SP::ADDri);
 }
 

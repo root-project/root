@@ -20,6 +20,7 @@
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
+#include "RooTrace.h"
 
 class RooRealVar;
 class RooAbsReal;
@@ -29,9 +30,10 @@ class RooHistFunc : public RooAbsReal {
 public:
   RooHistFunc() ; 
   RooHistFunc(const char *name, const char *title, const RooArgSet& vars, const RooDataHist& dhist, Int_t intOrder=0);
+  RooHistFunc(const char *name, const char *title, const RooArgList& funcObs, const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistFunc(const RooHistFunc& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooHistFunc(*this,newname); }
-  inline virtual ~RooHistFunc() { }
+  virtual ~RooHistFunc() ;
 
   RooDataHist& dataHist()  { 
     // Return RooDataHist that is represented
@@ -82,7 +84,12 @@ protected:
   friend class RooAbsCachedReal ;
   Double_t totVolume() const ;
 
-  RooSetProxy       _depList ;   // List of dependents defining dimensions of histogram
+  virtual void ioStreamerPass2() ;
+
+  RooArgSet         _histObsList ; // List of observables defining dimensions of histogram
+  RooSetProxy       _depList ;  // List of observables mapped onto histogram observables
+  TIterator*         _histObsIter ; //! 
+  TIterator*         _pdfObsIter ; //! 
   RooDataHist*      _dataHist ;  // Unowned pointer to underlying histogram
   mutable RooAICRegistry _codeReg ; //! Auxiliary class keeping tracking of analytical integration code
   Int_t             _intOrder ; // Interpolation order
@@ -90,7 +97,7 @@ protected:
   mutable Double_t  _totVolume ; //! Total volume of space (product of ranges of observables)
   Bool_t            _unitNorm  ; //! Assume contents is unit normalized (for use as pdf cache)
 
-  ClassDef(RooHistFunc,1) // Histogram based function
+  ClassDef(RooHistFunc,2) // Histogram based function
 };
 
 #endif

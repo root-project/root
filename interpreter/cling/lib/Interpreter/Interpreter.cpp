@@ -67,16 +67,6 @@ namespace {
 } // unnamed namespace
 
 namespace cling {
-  namespace runtime {
-    namespace internal {
-      // "Declared" to the JIT in RuntimeUniverse.h
-      void local_cxa_atexit(void (*func) (void*), void* arg, void* interp) {
-        Interpreter* cling = (cling::Interpreter*)interp;
-        cling->AddAtExitFunc(func, arg);
-      }
-    } // end namespace internal
-  } // end namespace runtime
-
   // FIXME: workaround until JIT supports exceptions
   jmp_buf* Interpreter::m_JumpBuf;
 
@@ -154,6 +144,10 @@ namespace cling {
     return *m_IncrParser->getParser();
   }
 
+  Parser& Interpreter::getParser() {
+    return *m_IncrParser->getParser();
+  }
+
   clang::SourceLocation Interpreter::getNextAvailableLoc() const {
     return m_IncrParser->getLastMemoryBufferEndLoc().getLocWithOffset(1);
   }
@@ -166,9 +160,8 @@ namespace cling {
 
   Interpreter::Interpreter(int argc, const char* const *argv,
                            const char* llvmdir /*= 0*/, bool noRuntime) :
-    m_UniqueCounter(0), m_PrintDebug(false),
-    m_DynamicLookupEnabled(false), m_RawInputEnabled(false),
-    m_LastCustomPragmaDiagPopPoint(){
+    m_UniqueCounter(0), m_PrintDebug(false), m_DynamicLookupDeclared(false),
+    m_DynamicLookupEnabled(false), m_RawInputEnabled(false) {
 
     m_LLVMContext.reset(new llvm::LLVMContext);
     std::vector<unsigned> LeftoverArgsIdx;
@@ -195,10 +188,9 @@ namespace cling {
                                                      /*SkipFunctionBodies*/false,
                                                      /*isTemp*/true), this));
 
-    if (!isInSyntaxOnlyMode()) {
-      llvm::Module* theModule = m_IncrParser->getCodeGenerator()->GetModule();
-      m_Executor.reset(new IncrementalExecutor(theModule, SemaRef.Diags));
-    }
+    if (!isInSyntaxOnlyMode())
+      m_Executor.reset(new IncrementalExecutor(SemaRef.Diags));
+
     // Tell the diagnostic client that we are entering file parsing mode.
     DiagnosticConsumer& DClient = getCI()->getDiagnosticClient();
     DClient.BeginSourceFile(getCI()->getLangOpts(), &PP);
@@ -224,7 +216,9 @@ namespace cling {
       m_IncrParser->commitTransaction(*I);
     // Disable suggestions for ROOT
     bool showSuggestions = !llvm::StringRef(CLING_VERSION).startswith("ROOT");
-    setCallbacks(new AutoloadCallback(this, showSuggestions));
+    std::unique_ptr<InterpreterCallbacks>
+       AutoLoadCB(new AutoloadCallback(this, showSuggestions));
+    setCallbacks(std::move(AutoLoadCB));
   }
 
   Interpreter::~Interpreter() {
@@ -287,21 +281,23 @@ namespace cling {
     // only at runtime
     // Make sure that the universe won't be included to compile time by using
     // -D __CLING__ as CompilerInstance's arguments
+
+    std::stringstream initializer;
 #ifdef _WIN32
     // We have to use the #defined __CLING__ on windows first.
     //FIXME: Find proper fix.
-    declare("#ifdef __CLING__ \n#endif");
+    initializer << "#ifdef __CLING__ \n#endif\n";
 #endif
-    declare("#include \"cling/Interpreter/RuntimeUniverse.h\"");
+
+    initializer << "#include \"cling/Interpreter/RuntimeUniverse.h\"\n";
 
     if (!isInSyntaxOnlyMode()) {
       // Set up the gCling variable if it can be used
-      std::stringstream initializer;
       initializer << "namespace cling {namespace runtime { "
         "cling::Interpreter *gCling=(cling::Interpreter*)"
                   << (uintptr_t)this << ";} }";
-      declare(initializer.str());
     }
+    declare(initializer.str());
   }
 
   void Interpreter::IncludeCRuntime() {
@@ -363,7 +359,7 @@ namespace cling {
     ClangInternalState* state
       = new ClangInternalState(getCI()->getASTContext(),
                                getCI()->getPreprocessor(),
-                               CG ? CG->GetModule() : 0,
+                               getLastTransaction()->getModule(),
                                CG, name);
     m_StoredStates.push_back(state);
   }
@@ -481,11 +477,6 @@ namespace cling {
     return getCI()->getSema();
   }
 
-  llvm::ExecutionEngine* Interpreter::getExecutionEngine() const {
-    if (!m_Executor) return 0;
-    return m_Executor->getExecutionEngine();
-  }
-
   ///\brief Maybe transform the input line to implement cint command line
   /// semantics (declarations are global) and compile to produce a module.
   ///
@@ -529,13 +520,14 @@ namespace cling {
     // Clang doc says:
     // "LookupFrom is set when this is a \#include_next directive, it specifies
     // the file to start searching from."
-    const DirectoryLookup* LookupFrom = 0;
+    const DirectoryLookup* FromDir = 0;
+    const FileEntry* FromFile = 0;
     const DirectoryLookup* CurDir = 0;
 
     ModuleMap::KnownHeader suggestedModule;
     // PP::LookupFile uses it to issue 'nice' diagnostic
     SourceLocation fileNameLoc;
-    PP.LookupFile(fileNameLoc, headerFile, isAngled, LookupFrom, CurDir,
+    PP.LookupFile(fileNameLoc, headerFile, isAngled, FromDir, FromFile, CurDir,
                   /*SearchPath*/0, /*RelativePath*/ 0, &suggestedModule,
                   /*SkipCache*/false, /*OpenFile*/ false, /*CacheFail*/ false);
     if (!suggestedModule)
@@ -583,7 +575,10 @@ namespace cling {
     DiagnosticsEngine& Diag = getCI()->getDiagnostics();
     Diag.setSeverity(clang::diag::warn_field_is_uninit,
                      clang::diag::Severity::Ignored, SourceLocation());
-    return DeclareInternal(input, CO);
+    CompilationResult Result = DeclareInternal(input, CO);
+    Diag.setSeverity(clang::diag::warn_field_is_uninit,
+                     clang::diag::Severity::Warning, SourceLocation());
+    return Result;
   }
 
   Interpreter::CompilationResult
@@ -635,14 +630,15 @@ namespace cling {
 
   Interpreter::CompilationResult Interpreter::emitAllDecls(Transaction* T) {
     assert(!isInSyntaxOnlyMode() && "No CodeGenerator?");
+    m_IncrParser->addTransaction(T);
     m_IncrParser->markWholeTransactionAsUsed(T);
-    m_IncrParser->codeGenTransaction(T);
+    m_IncrParser->commitTransaction(T);
 
     // The static initializers might run anything and can thus cause more
     // decls that need to end up in a transaction. But this one is done
     // with CodeGen...
     T->setState(Transaction::kCommitted);
-    if (runStaticInitializersOnce(*T))
+    if (executeTransaction(*T))
       return Interpreter::kSuccess;
 
     return Interpreter::kFailure;
@@ -753,7 +749,7 @@ namespace cling {
     std::string mangledNameIfNeeded;
     utils::Analyze::maybeMangleDeclName(FD, mangledNameIfNeeded);
     IncrementalExecutor::ExecutionResult ExeRes =
-       m_Executor->executeFunction(mangledNameIfNeeded.c_str(), res);
+       m_Executor->executeWrapper(mangledNameIfNeeded.c_str(), res);
     return ConvertExecutionResult(ExeRes);
   }
 
@@ -852,6 +848,9 @@ namespace cling {
     cling::Interpreter::CompilationResult CR = declare(code, &T);
     LO.AccessControl = savedAccessControl;
 
+    Diag.setSeverity(clang::diag::ext_nested_name_member_ref_lookup_ambiguous,
+                     clang::diag::Severity::Warning, SourceLocation());
+
     if (CR != cling::Interpreter::kSuccess)
       return 0;
 
@@ -880,27 +879,28 @@ namespace cling {
     //
     //  Compile the wrapper code.
     //
-    const llvm::GlobalValue* GV = 0;
+
     if (isInSyntaxOnlyMode())
       return 0;
 
-    if (ifUnique)
-      GV = getLastTransaction()->getModule()->getNamedValue(name);
-
-    if (!GV) {
-      const FunctionDecl* FD = DeclareCFunction(name, code, withAccessControl);
-      if (!FD) return 0;
-      //
-      //  Get the wrapper function pointer
-      //  from the ExecutionEngine (the JIT).
-      //
-      GV = getLastTransaction()->getModule()->getNamedValue(name);
+    if (ifUnique) {
+      if (void* Addr = (void*)getAddressOfGlobal(name)) {
+        return Addr;
+      }
     }
 
-    if (!GV)
+    const FunctionDecl* FD = DeclareCFunction(name, code, withAccessControl);
+    if (!FD)
       return 0;
+    //
+    //  Get the wrapper function pointer
+    //  from the ExecutionEngine (the JIT).
+    //
+    if (const llvm::GlobalValue* GV
+        = getLastTransaction()->getModule()->getNamedValue(name))
+      return m_Executor->getPointerToGlobalFromJIT(*GV);
 
-    return m_Executor->getPointerToGlobalFromJIT(*GV);
+    return 0;
   }
 
   void Interpreter::createUniqueName(std::string& out) {
@@ -940,13 +940,15 @@ namespace cling {
       return Interpreter::kFailure;
     }
 
-    // Even if the transaction was empty it is still success.
+    // Even if the transaction was empty it can still be a success.
+    if (getCI()->getDiagnostics().hasErrorOccurred())
+      return Interpreter::kFailure;
     return Interpreter::kSuccess;
   }
 
   Interpreter::CompilationResult
   Interpreter::EvaluateInternal(const std::string& input,
-                                const CompilationOptions& CO,
+                                CompilationOptions CO,
                                 Value* V, /* = 0 */
                                 Transaction** T /* = 0 */) {
     StateDebuggerRAII stateDebugger(this);
@@ -956,63 +958,41 @@ namespace cling {
     std::string Wrapper = input;
     WrapInput(Wrapper, WrapperName);
 
-    // Disable warnings which doesn't make sense when using the prompt
-    // This gets reset with the clang::Diagnostics().Reset(/*soft*/=false)
-    // using clang's API we simulate:
-    // #pragma warning push
-    // #pragma warning ignore ...
-    // #pragma warning ignore ...
-    // #pragma warning pop
-    SourceLocation Loc = getNextAvailableLoc();
-    DiagnosticsEngine& Diags = getCI()->getDiagnostics();
-    Diags.pushMappings(Loc);
-    // The source locations of #pragma warning ignore must be greater than
-    // the ones from #pragma push
-    Diags.setSeverity(clang::diag::warn_unused_expr,
-                      clang::diag::Severity::Ignored, SourceLocation());
-    Diags.setSeverity(clang::diag::warn_unused_call,
-                      clang::diag::Severity::Ignored, SourceLocation());
-    Diags.setSeverity(clang::diag::warn_unused_comparison,
-                      clang::diag::Severity::Ignored, SourceLocation());
-    Diags.setSeverity(clang::diag::ext_return_has_expr,
-                      clang::diag::Severity::Ignored, SourceLocation());
+    // We have wrapped and need to disable warnings that are caused by
+    // non-default C++ at the prompt:
+    CO.IgnorePromptDiags = 1;
+
     if (Transaction* lastT = m_IncrParser->Compile(Wrapper, CO)) {
-      Loc = m_IncrParser->getLastMemoryBufferEndLoc().getLocWithOffset(1);
-      // if the location was the same we are in recursive calls and to avoid an
-      // assert in clang we should increment by a value.
-      if (SourceLocation::getFromRawEncoding(m_LastCustomPragmaDiagPopPoint)
-          == Loc)
-        // Nested #pragma pop-s must be on different source locations.
-        Loc = Loc.getLocWithOffset(1);
-      m_LastCustomPragmaDiagPopPoint = Loc.getRawEncoding();
 
-      Diags.popMappings(Loc);
       assert((lastT->getState() == Transaction::kCommitted
-              || lastT->getState() == Transaction::kRolledBack)
+              || lastT->getState() == Transaction::kRolledBack
+              || lastT->getState() == Transaction::kRolledBackWithErrors)
              && "Not committed?");
-      if (lastT->getIssuedDiags() != Transaction::kErrors) {
-        Value resultV;
-        if (!V)
-          V = &resultV;
-        if (!lastT->getWrapperFD()) // no wrapper to run
-          return Interpreter::kSuccess;
-        else if (RunFunction(lastT->getWrapperFD(), V) < kExeFirstError){
-          if (lastT->getCompilationOpts().ValuePrinting
-              != CompilationOptions::VPDisabled
-              && V->isValid()
-              // the !V->needsManagedAllocation() case is handled by
-              // dumpIfNoStorage.
-              && V->needsManagedAllocation())
-            V->dump();
-          return Interpreter::kSuccess;
-        }
-      }
-      if (V)
-        *V = Value();
 
-      return Interpreter::kFailure;
+      if (lastT->getIssuedDiags() == Transaction::kErrors
+          || lastT->getState() != Transaction::kCommitted) {
+         if (V)
+            *V = Value();
+
+         return Interpreter::kFailure;
+      }
+
+      Value resultV;
+      if (!V)
+         V = &resultV;
+      if (!lastT->getWrapperFD()) // no wrapper to run
+         return Interpreter::kSuccess;
+      else if (RunFunction(lastT->getWrapperFD(), V) < kExeFirstError){
+         if (lastT->getCompilationOpts().ValuePrinting
+             != CompilationOptions::VPDisabled
+             && V->isValid()
+             // the !V->needsManagedAllocation() case is handled by
+             // dumpIfNoStorage.
+             && V->needsManagedAllocation())
+            V->dump();
+         return Interpreter::kSuccess;
+      }
     }
-    Diags.popMappings(Loc.getLocWithOffset(1));
     return Interpreter::kSuccess;
   }
 
@@ -1027,13 +1007,14 @@ namespace cling {
     // Clang doc says:
     // "LookupFrom is set when this is a \#include_next directive, it
     // specifies the file to start searching from."
-    const DirectoryLookup* LookupFrom = 0;
+    const DirectoryLookup* FromDir = 0;
+    const FileEntry* FromFile = 0;
     const DirectoryLookup* CurDir = 0;
     Preprocessor& PP = getCI()->getPreprocessor();
     // PP::LookupFile uses it to issue 'nice' diagnostic
     SourceLocation fileNameLoc;
-    FE = PP.LookupFile(fileNameLoc, canonicalFile, isAngled, LookupFrom, CurDir,
-                       /*SearchPath*/0, /*RelativePath*/ 0,
+    FE = PP.LookupFile(fileNameLoc, canonicalFile, isAngled, FromDir, FromFile,
+                       CurDir, /*SearchPath*/0, /*RelativePath*/ 0,
                        /*suggestedModule*/0, /*SkipCache*/false,
                        /*OpenFile*/ false, /*CacheFail*/ false);
     if (FE)
@@ -1070,6 +1051,10 @@ namespace cling {
   void Interpreter::unload(unsigned numberOfTransactions) {
     while(true) {
       cling::Transaction* T = m_IncrParser->getLastTransaction();
+      if (!T) {
+         llvm::errs() << "cling: invalid last transaction; unload failed!\n";
+         return;
+      }
       if (InterpreterCallbacks* callbacks = getCallbacks())
         callbacks->TransactionUnloaded(*T);
       if (m_Executor) // we also might be in fsyntax-only mode.
@@ -1107,7 +1092,7 @@ namespace cling {
     return Result;
   }
 
-  void Interpreter::setCallbacks(InterpreterCallbacks* C) {
+  void Interpreter::setCallbacks(std::unique_ptr<InterpreterCallbacks> C) {
     // We need it to enable LookupObject callback.
     if (!m_Callbacks) {
       m_Callbacks.reset(new MultiplexInterpreterCallbacks(this));
@@ -1117,7 +1102,7 @@ namespace cling {
     }
 
     static_cast<MultiplexInterpreterCallbacks*>(m_Callbacks.get())
-      ->addCallback(C);
+      ->addCallback(std::move(C));
   }
 
   const Transaction* Interpreter::getFirstTransaction() const {
@@ -1136,28 +1121,25 @@ namespace cling {
   void Interpreter::enableDynamicLookup(bool value /*=true*/) {
     m_DynamicLookupEnabled = value;
 
-    if (isDynamicLookupEnabled()) {
+    if (!m_DynamicLookupDeclared && isDynamicLookupEnabled()) {
      if (loadModuleForHeader("cling/Interpreter/DynamicLookupRuntimeUniverse.h")
          != kSuccess)
       declare("#include \"cling/Interpreter/DynamicLookupRuntimeUniverse.h\"");
     }
+    m_DynamicLookupDeclared = true;
   }
 
   Interpreter::ExecutionResult
-  Interpreter::runStaticInitializersOnce(const Transaction& T) const {
+  Interpreter::executeTransaction(Transaction& T) {
     assert(!isInSyntaxOnlyMode() && "Running on what?");
     assert(T.getState() == Transaction::kCommitted && "Must be committed");
+
+    T.setExeUnloadHandle(m_Executor.get(), m_Executor->emitToJIT());
+
     // Forward to IncrementalExecutor; should not be called by
     // anyone except for IncrementalParser.
-    llvm::Module* module = m_IncrParser->getCodeGenerator()->GetModule();
     IncrementalExecutor::ExecutionResult ExeRes
-       = m_Executor->runStaticInitializersOnce(module);
-
-    // Avoid eternal additions to llvm.ident; see
-    // CodeGenModule::EmitVersionIdentMetadata().
-    llvm::NamedMDNode *IdentMetadata = module->getNamedMetadata("llvm.ident");
-    if (IdentMetadata)
-      module->eraseNamedMetadata(IdentMetadata);
+       = m_Executor->runStaticInitializersOnce(T);
 
     // Reset the module builder to clean up global initializers, c'tors, d'tors
     ASTContext& C = getCI()->getASTContext();
@@ -1174,6 +1156,11 @@ namespace cling {
     return m_Executor->addSymbol(symbolName, symbolAddress);
   }
 
+  void Interpreter::addModule(llvm::Module* module) {
+     m_Executor->addModule(module);
+  }
+
+
   void* Interpreter::getAddressOfGlobal(const GlobalDecl& GD,
                                         bool* fromJIT /*=0*/) const {
     // Return a symbol's address, and whether it was jitted.
@@ -1187,12 +1174,11 @@ namespace cling {
     // Return a symbol's address, and whether it was jitted.
     if (isInSyntaxOnlyMode())
       return 0;
-    llvm::Module* module = getLastTransaction()->getModule();
-    return m_Executor->getAddressOfGlobal(module, SymName, fromJIT);
+    return m_Executor->getAddressOfGlobal(SymName, fromJIT);
   }
 
   void Interpreter::AddAtExitFunc(void (*Func) (void*), void* Arg) {
-    m_Executor->AddAtExitFunc(Func, Arg, getLastTransaction());
+    m_Executor->AddAtExitFunc(Func, Arg);
   }
 
   void Interpreter::GenerateAutoloadingMap(llvm::StringRef inFile,
@@ -1230,11 +1216,11 @@ namespace cling {
     if (!T)
       return;
 
-    std::string err;
-    llvm::raw_fd_ostream out(outFile.data(), err,
+    std::error_code EC;
+    llvm::raw_fd_ostream out(outFile.data(), EC,
                              llvm::sys::fs::OpenFlags::F_None);
     llvm::raw_fd_ostream log((outFile + ".skipped").str().c_str(),
-                             err, llvm::sys::fs::OpenFlags::F_None);
+                             EC, llvm::sys::fs::OpenFlags::F_None);
     log << "Generated for :" << inFile << "\n";
     forwardDeclare(*T, fwdGen.getCI()->getSema(), out, enableMacros,
                    &log);

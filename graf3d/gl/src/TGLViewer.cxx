@@ -749,7 +749,7 @@ void TGLViewer::DoDrawStereo(Bool_t swap_buffers)
 //______________________________________________________________________________
 Bool_t TGLViewer::SavePicture()
 {
-   // Save current image using the defualt file name which can be set
+   // Save current image using the default file name which can be set
    // via SetPictureFileName() and defaults to "viewer.jpg".
    // Really useful for the files ending with 'gif+'.
 

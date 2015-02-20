@@ -240,6 +240,11 @@ linuxarm)
    auxcflags="${cxxversionflag} -fsigned-char"
    auxlibs="-lm -ldl -rdynamic"
    ;;
+linuxarm64)
+   # ARMv8-A (AArch64) Linux with gcc
+   auxcflags="${cxxversionflag} -fsigned-char"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
 freebsd)
    # FreeBSD with libc5
    auxcflags="${cxxversionflag} -Wno-deprecated-declarations"

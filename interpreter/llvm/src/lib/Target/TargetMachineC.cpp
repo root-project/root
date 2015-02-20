@@ -14,6 +14,7 @@
 #include "llvm-c/TargetMachine.h"
 #include "llvm-c/Core.h"
 #include "llvm-c/Target.h"
+#include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Module.h"
 #include "llvm/PassManager.h"
@@ -24,6 +25,7 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/Target/TargetSubtargetInfo.h"
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -189,7 +191,7 @@ static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
 
   std::string error;
 
-  const DataLayout* td = TM->getDataLayout();
+  const DataLayout *td = TM->getDataLayout();
 
   if (!td) {
     error = "No DataLayout in TargetMachine";
@@ -197,7 +199,7 @@ static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
     return true;
   }
   Mod->setDataLayout(td);
-  pass.add(new DataLayoutPass(Mod));
+  pass.add(new DataLayoutPass());
 
   TargetMachine::CodeGenFileType ft;
   switch (codegen) {
@@ -222,10 +224,10 @@ static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
 
 LLVMBool LLVMTargetMachineEmitToFile(LLVMTargetMachineRef T, LLVMModuleRef M,
   char* Filename, LLVMCodeGenFileType codegen, char** ErrorMessage) {
-  std::string error;
-  raw_fd_ostream dest(Filename, error, sys::fs::F_None);
-  if (!error.empty()) {
-    *ErrorMessage = strdup(error.c_str());
+  std::error_code EC;
+  raw_fd_ostream dest(Filename, EC, sys::fs::F_None);
+  if (EC) {
+    *ErrorMessage = strdup(EC.message().c_str());
     return true;
   }
   formatted_raw_ostream destf(dest);
@@ -254,5 +256,6 @@ char *LLVMGetDefaultTargetTriple(void) {
 }
 
 void LLVMAddAnalysisPasses(LLVMTargetMachineRef T, LLVMPassManagerRef PM) {
-  unwrap(T)->addAnalysisPasses(*unwrap(PM));
+  unwrap(PM)->add(
+      createTargetTransformInfoWrapperPass(unwrap(T)->getTargetIRAnalysis()));
 }

@@ -44,49 +44,66 @@ TGeoBranchArray::TGeoBranchArray(Int_t maxlevel)
 }
 
 //______________________________________________________________________________
-TGeoBranchArray * TGeoBranchArray::MakeInstance(size_t maxlevel, void *addr)
+TGeoBranchArray * TGeoBranchArray::MakeInstance(size_t maxlevel)
 {
 // Make an instance of the class which allocates the node array. To be
 // released using ReleaseInstance. If addr is non-zero, the user promised that 
 // addr contains at least that many bytes:  size_t needed = SizeOf(maxlevel);
    TGeoBranchArray* ba = 0;
-   if (!addr) {
-      size_t needed = SizeOf(maxlevel);
-      char *ptr = new char[ needed ];
-      if (!ptr) return 0;
-      new (ptr) TGeoBranchArray(maxlevel);
-      ba = reinterpret_cast<TGeoBranchArray*>(ptr);
-      ba->SetBit(kBASelfAlloc, kTRUE);
-   } else {
-      new (addr) TGeoBranchArray(maxlevel);
-      ba = reinterpret_cast<TGeoBranchArray*>(addr);
-      ba->SetBit(kBASelfAlloc, kFALSE);
-   }   
+   size_t needed = SizeOf(maxlevel);
+   char *ptr = new char[ needed ];
+   if (!ptr) return 0;
+   new (ptr) TGeoBranchArray(maxlevel);
+   ba = reinterpret_cast<TGeoBranchArray*>(ptr);
+   ba->SetBit(kBASelfAlloc, kTRUE);
    return ba;
 }
 
 //______________________________________________________________________________
-TGeoBranchArray * TGeoBranchArray::MakeCopy(const TGeoBranchArray &other, void *addr)
+TGeoBranchArray * TGeoBranchArray::MakeInstanceAt(size_t maxlevel, void *addr)
+{
+   // Make an instance of the class which allocates the node array. To be
+   // released using ReleaseInstance. If addr is non-zero, the user promised that
+   // addr contains at least that many bytes:  size_t needed = SizeOf(maxlevel);
+   TGeoBranchArray* ba = 0;
+   new (addr) TGeoBranchArray(maxlevel);
+   ba = reinterpret_cast<TGeoBranchArray*>(addr);
+   ba->SetBit(kBASelfAlloc, kFALSE);
+   return ba;
+}
+
+
+//______________________________________________________________________________
+TGeoBranchArray * TGeoBranchArray::MakeCopy(const TGeoBranchArray &other)
 {
 // Make a copy of a branch array at the location (if indicated)
    TGeoBranchArray *copy = 0;
-   if (addr) {      
-      new (addr) TGeoBranchArray(other.fMaxLevel);
-      copy = reinterpret_cast<TGeoBranchArray*>(addr);
-      copy->SetBit(kBASelfAlloc, kFALSE);
-   } else {
-      size_t needed = SizeOf(other.fMaxLevel);
-      char *ptr = new char[ needed ];
-      if (!ptr) return 0;
-      new (ptr) TGeoBranchArray(other.fMaxLevel);
-      copy = reinterpret_cast<TGeoBranchArray*>(ptr);
-      copy->SetBit(kBASelfAlloc, kTRUE);
-   }
+   size_t needed = SizeOf(other.fMaxLevel);
+   char *ptr = new char[ needed ];
+   if (!ptr) return 0;
+   new (ptr) TGeoBranchArray(other.fMaxLevel);
+   copy = reinterpret_cast<TGeoBranchArray*>(ptr);
+   copy->SetBit(kBASelfAlloc, kTRUE);
    copy->fLevel = other.fLevel;
    copy->fMatrix = other.fMatrix;   
    if (other.fLevel+1) memcpy(copy->fArray, other.fArray, (other.fLevel+1)*sizeof(TGeoNode*));
    return copy;
 }
+
+//______________________________________________________________________________
+TGeoBranchArray * TGeoBranchArray::MakeCopyAt(const TGeoBranchArray &other, void *addr)
+{
+   // Make a copy of a branch array at the location (if indicated)
+   TGeoBranchArray *copy = 0;
+   new (addr) TGeoBranchArray(other.fMaxLevel);
+   copy = reinterpret_cast<TGeoBranchArray*>(addr);
+   copy->SetBit(kBASelfAlloc, kFALSE);
+   copy->fLevel = other.fLevel;
+   copy->fMatrix = other.fMatrix;
+   if (other.fLevel+1) memcpy(copy->fArray, other.fArray, (other.fLevel+1)*sizeof(TGeoNode*));
+   return copy;
+}
+
 
 //______________________________________________________________________________
 void TGeoBranchArray::CopyTo(TGeoBranchArray *dest)

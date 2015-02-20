@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: 725e0cf2ee411db3c264a8c94d1432c21569b191 $
+// @(#)root/treeplayer:$Id$
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -124,7 +124,7 @@ public:
 //
 
 //______________________________________________________________________________
-TTreeFormula::TTreeFormula(): TFormula(), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
+TTreeFormula::TTreeFormula(): TFormulaOld(), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
    fDidBooleanOptimization(kFALSE), fDimensionSetup(0)
 
 {
@@ -156,7 +156,7 @@ TTreeFormula::TTreeFormula(): TFormula(), fQuickLoad(kFALSE), fNeedLoading(kTRUE
 
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
-   :TFormula(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
+   :TFormulaOld(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
     fDidBooleanOptimization(kFALSE), fDimensionSetup(0)
 {
    // Normal TTree Formula Constuctor
@@ -167,7 +167,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree,
                            const std::vector<std::string>& aliases)
-   :TFormula(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
+   :TFormulaOld(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
     fDidBooleanOptimization(kFALSE), fDimensionSetup(0), fAliasesUsed(aliases)
 {
    // Constructor used during the expansion of an alias
@@ -2185,6 +2185,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
    Int_t nchname = strlen(cname);
    Int_t i;
    Bool_t foundAtSign = kFALSE;
+   Bool_t startWithParan = kFALSE;
 
    for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) {
       // We will treated the terminator as a token.
@@ -2196,6 +2197,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
          if (current==work+1) {
             // If the expression starts with a paranthesis, we are likely
             // to have a cast operator inside.
+            startWithParan = kTRUE;
             current--;
          }
          continue;
@@ -2212,28 +2214,33 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             Error("DefinedVariable","Unmatched paranthesis in %s",fullExpression);
             return -1;
          }
-         // Let's see if work is a classname.
-         *(--current) = 0;
          paran_level--;
-         TString cast_name = gInterpreter->TypeName(work);
-         TClass *cast_cl = TClass::GetClass(cast_name);
-         if (cast_cl) {
-            // We must have a cast
-            castqueue.AddAtAndExpand(cast_cl,paran_level);
-            current = &(work[0]);
-            *current = 0;
-            //            Warning("DefinedVariable","Found cast to %s",cast_fullExpression);
-            continue;
-         } else if (gROOT->GetType(cast_name)) {
-            // We reset work
-            current = &(work[0]);
-            *current = 0;
-            Warning("DefinedVariable",
-               "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
-            continue;
+
+         if (startWithParan) {
+            startWithParan = kFALSE; // the next match wont be against the starting paranthesis.
+
+            // Let's see if work is a classname and thus we have a cast.
+            *(--current) = 0;
+            TString cast_name = gInterpreter->TypeName(work);
+            TClass *cast_cl = TClass::GetClass(cast_name);
+            if (cast_cl) {
+               // We must have a cast
+               castqueue.AddAtAndExpand(cast_cl,paran_level);
+               current = &(work[0]);
+               *current = 0;
+               //            Warning("DefinedVariable","Found cast to %s",cast_fullExpression);
+               continue;
+            } else if (gROOT->GetType(cast_name)) {
+               // We reset work
+               current = &(work[0]);
+               *current = 0;
+               Warning("DefinedVariable",
+                       "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
+               continue;
+            }
+            *(current++)=')';
          }
 
-         *(current++)=')';
          *current='\0';
          char *params = strchr(work,'(');
          if (params) {
@@ -2289,7 +2296,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                }
 
                // This is actually not really any error, we probably received something
-               // like "abs(some_val)", let TFormula decompose it first.
+               // like "abs(some_val)", let TFormulaOld decompose it first.
                return -1;
             }
             //         if (!leaf->InheritsFrom(TLeafObject::Class()) ) {
@@ -2632,7 +2639,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 //*-*-*-*-*-*Check if name is in the list of Tree/Branch leaves*-*-*-*-*
 //*-*        ==================================================
 //
-//   This member function redefines the function in TFormula
+//   This member function redefines the function in TFormulaOld
 //   If a leaf has a name corresponding to the argument name, then
 //   returns a new code.
 //   A TTreeFormula may contain more than one variable.
@@ -3687,7 +3694,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
    if (instance==0) fNeedLoading = kTRUE;                                                       \
-   if (real_instance>=fNdata[0]) return 0;                                                      \
+   if (real_instance>=fNdata[0]) return 0;                                                       \
                                                                                                 \
    /* Since the only operation in this formula is reading this branch,                          \
       we are guaranteed that this function is first called with instance==0 and                 \
@@ -3977,7 +3984,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
       const Int_t newaction = oper >> kTFOperShift;
 
       if (newaction<kDefinedVariable) {
-         // TFormula operands.
+         // TFormulaOld operands.
 
          // one of the most used cases
          if (newaction==kConstant) { pos++; tab[pos-1] = GetConstant<T>(oper & kTFOperMask); continue; }
@@ -4646,7 +4653,7 @@ Bool_t TTreeFormula::IsString(Int_t oper) const
    // return true if the expression at the index 'oper' is to be treated as
    // as string
 
-   if (TFormula::IsString(oper)) return kTRUE;
+   if (TFormulaOld::IsString(oper)) return kTRUE;
    if (GetAction(oper)==kDefinedString) return kTRUE;
    if (GetAction(oper)==kAliasString) return kTRUE;
    if (GetAction(oper)==kAlternateString) return kTRUE;
@@ -4951,7 +4958,7 @@ void TTreeFormula::Streamer(TBuffer &R__b)
          return;
       }
       //====process old versions before automatic schema evolution
-      TFormula::Streamer(R__b);
+      TFormulaOld::Streamer(R__b);
       R__b >> fTree;
       R__b >> fNcodes;
       R__b.ReadFastArray(fCodes, fNcodes);
@@ -5563,14 +5570,14 @@ void TTreeFormula::Convert(UInt_t oldversion)
 {
    // Convert the fOper of a TTTreeFormula version fromVersion to the current in memory version
 
-   enum { kOldAlias           = /*TFormula::kVariable*/ 100000+10000+1,
+   enum { kOldAlias           = /*TFormulaOld::kVariable*/ 100000+10000+1,
           kOldAliasString     = kOldAlias+1,
           kOldAlternate       = kOldAlias+2,
           kOldAlternateString = kOldAliasString+2
    };
 
    for (int k=0; k<fNoper; k++) {
-      // First hide from TFormula convertion
+      // First hide from TFormulaOld convertion
 
       Int_t action = GetOper()[k];
 
@@ -5583,7 +5590,7 @@ void TTreeFormula::Convert(UInt_t oldversion)
       }
    }
 
-   TFormula::Convert(oldversion);
+   TFormulaOld::Convert(oldversion);
 
    for (int i=0,offset=0; i<fNoper; i++) {
       Int_t action = GetOper()[i+offset];

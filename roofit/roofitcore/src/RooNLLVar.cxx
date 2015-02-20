@@ -115,6 +115,9 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
   // Retrieve and cache bin widths needed to convert unnormalized binnedPdf values back to yields
   if (_binnedPdf) {
+
+    // The Active label will disable pdf integral calculations
+    _binnedPdf->setAttribute("BinnedLikelihoodActive") ;
     
     RooArgSet* obs = _funcClone->getObservables(_dataClone) ;
     if (obs->getSize()!=1) {
@@ -246,7 +249,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
 
   // cout << "RooNLLVar::evaluatePartition(" << GetName() << ") projDeps = " << (_projDeps?*_projDeps:RooArgSet()) << endl ;
   
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize ) ;
+  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,(_binnedPdf?kFALSE:kTRUE) ) ;
 
   Double_t sumWeight(0), sumWeightCarry(0);
 
@@ -261,22 +264,38 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
       
       Double_t eventWeight = _dataClone->weight();
 
+
       // Calculate log(Poisson(N|mu) for this bin
       Double_t N = eventWeight ;
       Double_t mu = _binnedPdf->getVal()*_binw[i] ; 
-      Double_t term = -1*(-mu + N*log(mu) - TMath::LnGamma(N+1)) ;
+      //cout << "RooNLLVar::binnedL(" << GetName() << ") N=" << N << " mu = " << mu << endl ;
 
-      // Kahan summation of sumWeight
-      Double_t y = eventWeight - sumWeightCarry;
-      Double_t t = sumWeight + y;
-      sumWeightCarry = (t - sumWeight) - y;
-      sumWeight = t;
-      
-      // Kahan summation of result
-      y = term - carry;
-      t = result + y;
-      carry = (t - result) - y;
-      result = t;
+      if (mu<=0 && N>0) {
+
+	// Catch error condition: data present where zero events are predicted
+	logEvalError(Form("Observed %f events in bin %d with zero event yield",N,i)) ;
+	
+      } else if (fabs(mu)<1e-10 && fabs(N)<1e-10) {
+
+	// Special handling of this case since log(Poisson(0,0)=0 but can't be calculated with usual log-formula
+	// since log(mu)=0. No update of result is required since term=0.
+
+      } else {
+
+	Double_t term = -1*(-mu + N*log(mu) - TMath::LnGamma(N+1)) ;
+
+	// Kahan summation of sumWeight
+	Double_t y = eventWeight - sumWeightCarry;
+	Double_t t = sumWeight + y;
+	sumWeightCarry = (t - sumWeight) - y;
+	sumWeight = t;
+	
+	// Kahan summation of result
+	y = term - carry;
+	t = result + y;
+	carry = (t - result) - y;
+	result = t;
+      }
     }
 
 

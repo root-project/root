@@ -35,6 +35,7 @@ typedef unsigned __int64 uint64_t;
 #include <math.h>
 #include <string>
 #include <iostream>
+#include <algorithm>
 #include "mathtext.h"
 
 namespace mathtext {

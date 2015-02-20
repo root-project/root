@@ -27,6 +27,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetLowering.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/Target/TargetSubtargetInfo.h"
 
 using namespace llvm;
 
@@ -41,14 +42,12 @@ static cl::opt<signed> RegPressureThreshold(
   cl::desc("Track reg pressure and switch priority to in-depth"));
 
 ResourcePriorityQueue::ResourcePriorityQueue(SelectionDAGISel *IS)
-    : Picker(this),
-      InstrItins(
-          IS->getTargetLowering()->getTargetMachine().getInstrItineraryData()) {
-  const TargetMachine &TM = (*IS->MF).getTarget();
-  TRI = TM.getRegisterInfo();
-  TLI = IS->getTargetLowering();
-  TII = TM.getInstrInfo();
-  ResourcesModel = TII->CreateTargetScheduleState(&TM, nullptr);
+    : Picker(this), InstrItins(IS->MF->getSubtarget().getInstrItineraryData()) {
+  const TargetSubtargetInfo &STI = IS->MF->getSubtarget();
+  TRI = STI.getRegisterInfo();
+  TLI = IS->TLI;
+  TII = STI.getInstrInfo();
+  ResourcesModel = TII->CreateTargetScheduleState(STI);
   // This hard requirement could be relaxed, but for now
   // do not let it procede.
   assert(ResourcesModel && "Unimplemented CreateTargetScheduleState.");
@@ -318,7 +317,7 @@ void ResourcePriorityQueue::reserveResources(SUnit *SU) {
 
   // If packet is now full, reset the state so in the next cycle
   // we start fresh.
-  if (Packet.size() >= InstrItins->SchedModel->IssueWidth) {
+  if (Packet.size() >= InstrItins->SchedModel.IssueWidth) {
     ResourcesModel->clearResources();
     Packet.clear();
   }

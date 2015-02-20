@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "PPC.h"
-#include "PPCSubtarget.h"
 #include "MCTargetDesc/PPCMCExpr.h"
+#include "PPCSubtarget.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/CodeGen/AsmPrinter.h"
@@ -40,7 +40,7 @@ static MCSymbol *GetSymbolFromOperand(const MachineOperand &MO, AsmPrinter &AP){
   Mangler *Mang = AP.Mang;
   const DataLayout *DL = TM.getDataLayout();
   MCContext &Ctx = AP.OutContext;
-  bool isDarwin = TM.getSubtarget<PPCSubtarget>().isDarwin();
+  bool isDarwin = Triple(TM.getTargetTriple()).isOSDarwin();
 
   SmallString<128> Name;
   StringRef Suffix;
@@ -136,6 +136,12 @@ static MCOperand GetSymbolRef(const MachineOperand &MO, const MCSymbol *Symbol,
       break;
     case PPCII::MO_TLS:
       RefKind = MCSymbolRefExpr::VK_PPC_TLS;
+      break;
+    case PPCII::MO_TLSGD:
+      RefKind = MCSymbolRefExpr::VK_PPC_TLSGD;
+      break;
+    case PPCII::MO_TLSLD:
+      RefKind = MCSymbolRefExpr::VK_PPC_TLSLD;
       break;
   }
 

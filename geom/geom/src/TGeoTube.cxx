@@ -2844,7 +2844,7 @@ Double_t TGeoCtub::DistFromInside(const Double_t *point, const Double_t *dir, In
          sr=-b+d;
          if (sr<0) sr=TGeoShape::Big();
       } else {
-         Error("DistFromInside", "In shape %s cannot get outside !", GetName());
+         return 0.; // already outside
       }
    }
    // phi planes

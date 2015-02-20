@@ -3,14 +3,33 @@
 
 #include "RConversionRuleParser.h"
 #include "TSchemaRuleProcessor.h"
+#include "TMetaUtils.h"
 
 #include <iostream>
+#include <algorithm>
 #include <string>
 #include <utility>
 #include <map>
 #include <sstream>
 
-// #include "clang/AST/DeclCXX.h"
+namespace {
+   static void RemoveEscapeSequences(std::string& rawString)
+   {
+      const std::vector<std::pair<const std::string, const std::string>> subPairs { {"\\\\","\\"},
+                                                                                    {"\\\"","\""},
+                                                                                    {"\\\'","\'"}};
+      size_t start_pos = 0;
+      for (auto const & subPair : subPairs){
+         start_pos = 0;
+         auto from = subPair.first;
+         auto to = subPair.second;
+         while((start_pos = rawString.find(from, start_pos)) != std::string::npos) {
+            rawString.replace(start_pos, from.length(), to);
+            start_pos += to.length();
+         }
+      }
+   }
+}
 
 namespace ROOT
 {
@@ -69,7 +88,7 @@ namespace ROOT
    {
       // Parse the schema rule as specified in the LinkDef file
 
-      std::string::size_type l;
+      std::string::size_type l=0;
       command = TSchemaRuleProcessor::Trim( command );
 
       //-----------------------------------------------------------------------
@@ -164,7 +183,9 @@ namespace ROOT
                error_string += "Expected }\" at the end of the value.";
                return false;
             }
-            result[key] = command.substr( 2, l-2 );
+            auto rawCode = command.substr( 2, l-2 );
+            RemoveEscapeSequences(rawCode);
+            result[key] = rawCode;
             ++l;
          }
          //--------------------------------------------------------------------
@@ -206,6 +227,22 @@ namespace ROOT
       if ( result.find("version") == result.end() && result.find("checksum") == result.end() ) {
          result["version"] = "[1-]";
       }
+
+      //------------------------------------------------------------------------
+      // "include" tag. Replace ";" with "," for backwards compatibility with
+      // ROOT5
+      //------------------------------------------------------------------------
+      auto const includeKeyName = "include";
+      auto includeTag = result.find(includeKeyName);
+      if (includeTag != result.end()){
+         auto & includeTagValue = includeTag->second;
+         std::replace_if (includeTagValue.begin(),
+                          includeTagValue.end(),
+                          [](char c){ return c == ';';},
+                          ',');
+         result[includeKeyName] = includeTagValue;
+      }
+
       return ValidateRule( result, error_string);
    }
 

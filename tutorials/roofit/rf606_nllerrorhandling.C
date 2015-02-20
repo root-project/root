@@ -65,7 +65,7 @@ void rf606_nllerrorhandling()
   // is to return a very high value of the likelihood to MINUIT if errors occur,
   // which will force MINUIT to retreat from the problematic area
 
-  argus.fitTo(*data,PrintEvalErrors(10)) ;    
+  argus.fitTo(*data,PrintEvalErrors(10)) ;
 
   // Peform another fit. In this configuration only the number of errors per
   // likelihood evaluation is shown, if it is greater than zero. The 
@@ -79,7 +79,7 @@ void rf606_nllerrorhandling()
   // illustrated in the second plot
 
   m0.setError(0.1) ;
-  argus.fitTo(*data,PrintEvalErrors(0),EvalErrorWall(kFALSE)) ;    
+  argus.fitTo(*data,PrintEvalErrors(0),EvalErrorWall(kFALSE)) ;
 
 
 
@@ -90,33 +90,19 @@ void rf606_nllerrorhandling()
   RooNLLVar nll("nll","nll",argus,*data) ;
 
   // Plot likelihood in m0 in range that includes problematic values
-  // In this configuration the number of errors per likelihood point 
-  // evaluated for the curve is shown. A positive number in PrintEvalErrors(N)
-  // will show details for up to N events. By default the values for likelihood
-  // evaluations with errors are shown normally (unlike fitting), but the shape
-  // of the curve can be erratic in these regions.
-
-  RooPlot* frame2 = m0.frame(Range(5.288,5.293),Title("-log(L) scan vs m0")) ;
-  nll.plotOn(frame2,PrintEvalErrors(0),ShiftToZero(),LineColor(kRed),Precision(1e-4)) ;
-  frame2->SetMaximum(15) ;
-  frame2->SetMinimum(0) ;
-
-
-  // Plot likelihood in m0 in range that includes problematic values
   // In this configuration no messages are printed for likelihood evaluation errors,
   // but if an likelihood value evaluates with error, the corresponding value
   // on the curve will be set to the value given in EvalErrorValue().
 
-  RooPlot* frame3 = m0.frame(Range(5.288,5.293),Title("-log(L) scan vs m0, problematic regions masked")) ;
-  nll.plotOn(frame3,PrintEvalErrors(-1),ShiftToZero(),EvalErrorValue(nll.getVal()+10),LineColor(kRed)) ; 
-  frame3->SetMaximum(15) ;
-  frame3->SetMinimum(0) ;
+  RooPlot* frame2 = m0.frame(Range(5.288,5.293),Title("-log(L) scan vs m0, problematic regions masked")) ;
+  nll.plotOn(frame2,PrintEvalErrors(-1),ShiftToZero(),EvalErrorValue(nll.getVal()+10),LineColor(kRed)) ;
+  frame2->SetMaximum(15) ;
+  frame2->SetMinimum(0) ;
 
 
   TCanvas* c = new TCanvas("rf606_nllerrorhandling","rf606_nllerrorhandling",1200,400) ;
-  c->Divide(3) ;
+  c->Divide(2) ;
   c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame1->GetYaxis()->SetTitleOffset(1.4) ; frame1->Draw() ;
   c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.4) ; frame2->Draw() ;
-  c->cd(3) ; gPad->SetLeftMargin(0.15) ; frame3->GetYaxis()->SetTitleOffset(1.4) ; frame3->Draw() ;
 
 }

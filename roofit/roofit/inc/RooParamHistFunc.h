@@ -20,6 +20,7 @@ class RooParamHistFunc : public RooAbsReal {
 public:
   RooParamHistFunc() {} ; 
   RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, Bool_t paramRelative=kTRUE);
+  RooParamHistFunc(const char *name, const char *title, const RooAbsArg& x, RooDataHist& dh, Bool_t paramRelative=kTRUE);
   RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, const RooParamHistFunc& paramSource, Bool_t paramRelative=kTRUE) ;
   RooParamHistFunc(const RooParamHistFunc& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooParamHistFunc(*this,newname); }

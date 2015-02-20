@@ -17,7 +17,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
 // BEGIN_HTML
-// RooFormula an implementation of TFormula that interfaces it to RooAbsArg
+// RooFormula an implementation of TFormulaOld that interfaces it to RooAbsArg
 // value objects. It allows to use the value of a given list of RooAbsArg objects in the formula
 // expression. Reference is done either by the RooAbsArgs name
 // or by list ordinal postion ('@0,@1,...'). State information
@@ -40,6 +40,7 @@
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
+#include "RooTrace.h"
 
 using namespace std;
 
@@ -47,7 +48,7 @@ ClassImp(RooFormula)
 
 
 //_____________________________________________________________________________
-RooFormula::RooFormula() : TFormula(), _nset(0)
+RooFormula::RooFormula() : TFormulaOld(), _nset(0)
 {
   // Default constructor
   // coverity[UNINIT_CTOR]
@@ -56,7 +57,7 @@ RooFormula::RooFormula() : TFormula(), _nset(0)
 
 //_____________________________________________________________________________
 RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& list) : 
-  TFormula(), _isOK(kTRUE), _compiled(kFALSE)
+  TFormulaOld(), _isOK(kTRUE), _compiled(kFALSE)
 {
   // Constructor with expression string and list of RooAbsArg variables
 
@@ -82,7 +83,7 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& 
 
 //_____________________________________________________________________________
 RooFormula::RooFormula(const RooFormula& other, const char* name) : 
-  TFormula(), RooPrintable(other), _isOK(other._isOK), _compiled(kFALSE) 
+  TFormulaOld(), RooPrintable(other), _isOK(other._isOK), _compiled(kFALSE) 
 {
   // Copy constructor
 
@@ -186,7 +187,7 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
   // Change used variables to those with the same name in given list
   // If mustReplaceAll is true and error is generated if one of the
   // elements of newDeps is not found as a server
-  
+
   //Change current servers to new servers with the same name given in list
   Bool_t errorStat(kFALSE) ;
   int i ;
@@ -208,6 +209,11 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
     RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newDeps,nameChange) ;
     if (replace) {
       _origList.Replace(arg,replace) ;
+      if (arg->getStringAttribute("origName")) {
+	replace->setStringAttribute("origName",arg->getStringAttribute("origName")) ;
+      } else {
+	replace->setStringAttribute("origName",arg->GetName()) ;
+      }
     } else if (mustReplaceAll) {
       errorStat = kTRUE ;
     }
@@ -222,7 +228,7 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
 //_____________________________________________________________________________
 Double_t RooFormula::eval(const RooArgSet* nset)
 { 
-  // Evaluate TFormula using given normalization set to be used as
+  // Evaluate TFormulaOld using given normalization set to be used as
   // observables definition passed to RooAbsReal::getVal()
 
   if (!_compiled) {
@@ -248,7 +254,7 @@ Double_t
 //_____________________________________________________________________________
 RooFormula::DefinedValue(Int_t code) 
 {
-  // Interface to TFormula, return value defined by object with id 'code'
+  // Interface to TFormulaOld, return value defined by object with id 'code'
   // Object ids are mapped from object names by method DefinedVariable()
 
   // Return current value for variable indicated by internal reference code
@@ -282,7 +288,7 @@ RooFormula::DefinedValue(Int_t code)
 //_____________________________________________________________________________
 Int_t RooFormula::DefinedVariable(TString &name, int& action)
 {
-  // Interface to TFormula. If name passed by TFormula is recognized
+  // Interface to TFormulaOld. If name passed by TFormulaOld is recognized
   // as one of our RooAbsArg servers, return a unique id integer
   // that represent this variable.
 
@@ -304,7 +310,7 @@ Int_t RooFormula::DefinedVariable(TString &name, int& action)
 //_____________________________________________________________________________
 Int_t RooFormula::DefinedVariable(TString &name) 
 {
-  // Interface to TFormula. If name passed by TFormula is recognized
+  // Interface to TFormulaOld. If name passed by TFormulaOld is recognized
   // as one of our RooAbsArg servers, return a unique id integer
   // that represent this variable.
 
@@ -333,6 +339,13 @@ Int_t RooFormula::DefinedVariable(TString &name)
   } else {
     // Access by name
     arg= (RooAbsArg*) _origList.FindObject(argName) ;
+    if (!arg) {
+      for (RooLinkedListIter it = _origList.iterator(); RooAbsArg* v = dynamic_cast<RooAbsArg*>(it.Next());) {
+	if (!TString(argName).CompareTo(v->getStringAttribute("origName"))) {
+	  arg= v ;
+	}
+      }
+    }
   }
 
   // Check that arg exists
@@ -360,7 +373,8 @@ Int_t RooFormula::DefinedVariable(TString &name)
   Int_t i ;
   for(i=0 ; i<_useList.GetSize() ; i++) {
     RooAbsArg* var = (RooAbsArg*) _useList.At(i) ;
-    Bool_t varMatch = !TString(var->GetName()).CompareTo(arg->GetName()) ;
+    //Bool_t varMatch = !TString(var->GetName()).CompareTo(arg->GetName()) ;
+    Bool_t varMatch = !TString(var->GetName()).CompareTo(arg->GetName()) && !TString(var->getStringAttribute("origName")).CompareTo(arg->GetName());
 
     if (varMatch) {
       TString& lbl= ((TObjString*) _labelList.At(i))->String() ;

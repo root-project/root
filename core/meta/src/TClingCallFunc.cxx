@@ -80,12 +80,12 @@ using namespace llvm;
 using namespace clang;
 using namespace std;
 
-static unsigned long long wrapper_serial = 0LL;
-static const string indent_string("   ");
+static unsigned long long gWrapperSerial = 0LL;
+static const string kIndentString("   ");
 
-static map<const FunctionDecl *, void *> wrapper_store;
-static map<const Decl *, void *> ctor_wrapper_store;
-static map<const Decl *, void *> dtor_wrapper_store;
+static map<const FunctionDecl *, void *> gWrapperStore;
+static map<const Decl *, void *> gCtorWrapperStore;
+static map<const Decl *, void *> gDtorWrapperStore;
 
 static
 inline
@@ -93,7 +93,7 @@ void
 indent(ostringstream &buf, int indent_level)
 {
    for (int i = 0; i < indent_level; ++i) {
-      buf << indent_string;
+      buf << kIndentString;
    }
 }
 
@@ -101,6 +101,8 @@ static
 void
 EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
 {
+   R__LOCKGUARD(gInterpreterMutex);
+
    // Evaluate an Expr* and return its cling::Value
    ASTContext &C = interp.getCI()->getASTContext();
    APSInt res;
@@ -276,9 +278,6 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
    PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
    isReference = false;
    if (QT->isRecordType() && forArgument) {
-      // Note: We treat object of class type as if it were a reference
-      //       type because we hold it by pointer.
-      isReference = true;
       ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
       return;
    }
@@ -286,14 +285,14 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
       string fp_typedef_name;
       {
          ostringstream nm;
-         nm << "FP" << wrapper_serial++;
+         nm << "FP" << gWrapperSerial++;
          type_name = nm.str();
          raw_string_ostream OS(fp_typedef_name);
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
       for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << indent_string;
+         typedefbuf << kIndentString;
       }
       typedefbuf << "typedef " << fp_typedef_name << ";\n";
       return;
@@ -301,14 +300,14 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
       string mp_typedef_name;
       {
          ostringstream nm;
-         nm << "MP" << wrapper_serial++;
+         nm << "MP" << gWrapperSerial++;
          type_name = nm.str();
          raw_string_ostream OS(mp_typedef_name);
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
       for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << indent_string;
+         typedefbuf << kIndentString;
       }
       typedefbuf << "typedef " << mp_typedef_name << ";\n";
       return;
@@ -324,14 +323,14 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
       string ar_typedef_name;
       {
          ostringstream ar;
-         ar << "AR" << wrapper_serial++;
+         ar << "AR" << gWrapperSerial++;
          type_name = ar.str();
          raw_string_ostream OS(ar_typedef_name);
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
       for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << indent_string;
+         typedefbuf << kIndentString;
       }
       typedefbuf << "typedef " << ar_typedef_name << ";\n";
       return;
@@ -366,12 +365,12 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
          } else {
             callbuf << "\n";
             for (int j = 0; j <= indent_level; ++j) {
-               callbuf << indent_string;
+               callbuf << kIndentString;
             }
          }
       }
       if (isReference) {
-         callbuf << "**(" << type_name.c_str() << "**)args["
+         callbuf << "(" << type_name.c_str() << "&)*(" << type_name.c_str() << "*)args["
                  << i << "]";
       } else if (isPointer) {
          callbuf << "*(" << type_name.c_str() << "**)args["
@@ -430,12 +429,12 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
          } else {
             callbuf << "\n";
             for (int j = 0; j <= indent_level; ++j) {
-               callbuf << indent_string;
+               callbuf << kIndentString;
             }
          }
       }
       if (isReference) {
-         callbuf << "**(" << type_name.c_str() << "**)args["
+         callbuf << "(" << type_name.c_str() << "&)*(" << type_name.c_str() << "*)args["
                  << i << "]";
       } else if (isPointer) {
          callbuf << "*(" << type_name.c_str() << "**)args["
@@ -462,7 +461,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
    // }
    //
    for (int i = 0; i < indent_level; ++i) {
-      buf << indent_string;
+      buf << kIndentString;
    }
    buf << "if (ret) {\n";
    ++indent_level;
@@ -473,7 +472,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
       //  Write the return value assignment part.
       //
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       callbuf << "(*(" << class_name << "**)ret) = ";
       //
@@ -485,7 +484,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
       //
       callbuf << ";\n";
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       callbuf << "return;\n";
       //
@@ -495,11 +494,11 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
    }
    --indent_level;
    for (int i = 0; i < indent_level; ++i) {
-      buf << indent_string;
+      buf << kIndentString;
    }
    buf << "}\n";
    for (int i = 0; i < indent_level; ++i) {
-      buf << indent_string;
+      buf << kIndentString;
    }
    buf << "else {\n";
    ++indent_level;
@@ -507,19 +506,19 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
       ostringstream typedefbuf;
       ostringstream callbuf;
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       make_narg_ctor(N, typedefbuf, callbuf, class_name, indent_level);
       callbuf << ";\n";
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       callbuf << "return;\n";
       buf << typedefbuf.str() << callbuf.str();
    }
    --indent_level;
    for (int i = 0; i < indent_level; ++i) {
-      buf << indent_string;
+      buf << kIndentString;
    }
    buf << "}\n";
 }
@@ -547,18 +546,18 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
       ostringstream typedefbuf;
       ostringstream callbuf;
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       make_narg_call(N, typedefbuf, callbuf, class_name, indent_level);
       callbuf << ";\n";
       for (int i = 0; i < indent_level; ++i) {
-         callbuf << indent_string;
+         callbuf << kIndentString;
       }
       callbuf << "return;\n";
       buf << typedefbuf.str() << callbuf.str();
    } else {
       for (int i = 0; i < indent_level; ++i) {
-         buf << indent_string;
+         buf << kIndentString;
       }
       buf << "if (ret) {\n";
       ++indent_level;
@@ -569,7 +568,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          //  Write the placement part of the placement new.
          //
          for (int i = 0; i < indent_level; ++i) {
-            callbuf << indent_string;
+            callbuf << kIndentString;
          }
          callbuf << "new (ret) ";
          string type_name;
@@ -597,7 +596,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          //
          callbuf << ");\n";
          for (int i = 0; i < indent_level; ++i) {
-            callbuf << indent_string;
+            callbuf << kIndentString;
          }
          callbuf << "return;\n";
          //
@@ -607,11 +606,11 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
       }
       --indent_level;
       for (int i = 0; i < indent_level; ++i) {
-         buf << indent_string;
+         buf << kIndentString;
       }
       buf << "}\n";
       for (int i = 0; i < indent_level; ++i) {
-         buf << indent_string;
+         buf << kIndentString;
       }
       buf << "else {\n";
       ++indent_level;
@@ -619,19 +618,19 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          ostringstream typedefbuf;
          ostringstream callbuf;
          for (int i = 0; i < indent_level; ++i) {
-            callbuf << indent_string;
+            callbuf << kIndentString;
          }
          make_narg_call(N, typedefbuf, callbuf, class_name, indent_level);
          callbuf << ";\n";
          for (int i = 0; i < indent_level; ++i) {
-            callbuf << indent_string;
+            callbuf << kIndentString;
          }
          callbuf << "return;\n";
          buf << typedefbuf.str() << callbuf.str();
       }
       --indent_level;
       for (int i = 0; i < indent_level; ++i) {
-         buf << indent_string;
+         buf << kIndentString;
       }
       buf << "}\n";
    }
@@ -639,6 +638,8 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
 
 tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 {
+   R__LOCKGUARD(gInterpreterMutex);
+
    const FunctionDecl *FD = fMethod->GetMethodDecl();
    ASTContext &Context = FD->getASTContext();
    PrintingPolicy Policy(Context.getPrintingPolicy());
@@ -1021,7 +1022,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
       //string mn;
       //fInterp->maybeMangleDeclName(ND, mn);
       //buf << '_' << mn;
-      buf << '_' << wrapper_serial++;
+      buf << '_' << gWrapperSerial++;
       wrapper_name = buf.str();
    }
    //
@@ -1044,14 +1045,14 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
       // possible number of arguments per call.
       for (unsigned N = min_args; N <= num_params; ++N) {
          for (int i = 0; i < indent_level; ++i) {
-            buf << indent_string;
+            buf << kIndentString;
          }
          buf << "if (nargs == " << N << ") {\n";
          ++indent_level;
          make_narg_call_with_return(N, class_name, buf, indent_level);
          --indent_level;
          for (int i = 0; i < indent_level; ++i) {
-            buf << indent_string;
+            buf << kIndentString;
          }
          buf << "}\n";
       }
@@ -1065,7 +1066,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    //
    void *F = compile_wrapper(wrapper_name, wrapper);
    if (F) {
-      wrapper_store.insert(make_pair(FD, F));
+      gWrapperStore.insert(make_pair(FD, F));
    } else {
       Error("TClingCallFunc::make_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -1144,7 +1145,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
       //string mn;
       //fInterp->maybeMangleDeclName(ND, mn);
       //buf << '_dtor_' << mn;
-      buf << '_' << wrapper_serial++;
+      buf << '_' << gWrapperSerial++;
       wrapper_name = buf.str();
    }
    //
@@ -1230,7 +1231,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
-      ctor_wrapper_store.insert(make_pair(info->GetDecl(), F));
+      gCtorWrapperStore.insert(make_pair(info->GetDecl(), F));
    } else {
       Error("TClingCallFunc::make_ctor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -1298,7 +1299,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
       //string mn;
       //fInterp->maybeMangleDeclName(ND, mn);
       //buf << '_dtor_' << mn;
-      buf << '_' << wrapper_serial++;
+      buf << '_' << gWrapperSerial++;
       wrapper_name = buf.str();
    }
    //
@@ -1394,7 +1395,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
-      dtor_wrapper_store.insert(make_pair(info->GetDecl(), F));
+      gDtorWrapperStore.insert(make_pair(info->GetDecl(), F));
    } else {
       Error("TClingCallFunc::make_dtor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -1438,443 +1439,446 @@ void TClingCallFunc::exec(void *address, void *ret) const
    SmallVector<void *, 8> vp_ary;
    const FunctionDecl *FD = fMethod->GetMethodDecl();
 
-   //
-   //  Convert the arguments from cling::Value to their
-   //  actual type and store them in a holder for passing to the
-   //  wrapper function by pointer to value.
-   //
-   unsigned num_params = FD->getNumParams();
    unsigned num_args = fArgVals.size();
 
-   if (num_args < FD->getMinRequiredArguments()) {
-      Error("TClingCallFunc::exec",
-            "Not enough arguments provided for %s (%d instead of the minimum %d)",
-            fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())),
-            num_args, FD->getMinRequiredArguments());
-      return;
-   }
-   if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
-         && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
-         && !dyn_cast<CXXConstructorDecl>(FD)) {
-      Error("TClingCallFunc::exec",
-            "The method %s is called without an object.",
-            fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())));
-      return;
-   }
-   vh_ary.reserve(num_args);
-   vp_ary.reserve(num_args);
-   for (unsigned i = 0U; i < num_args; ++i) {
-      QualType Ty;
-      if (i < num_params) {
-         const ParmVarDecl *PVD = FD->getParamDecl(i);
-         Ty = PVD->getType();
-      } else {
-         Ty = fArgVals[i].getType();
-      }
-      QualType QT = Ty.getCanonicalType();
-      if (QT->isReferenceType()) {
-         ValHolder vh;
-         vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
-         vh_ary.push_back(vh);
-         vp_ary.push_back(&vh_ary.back());
-      } else if (QT->isMemberPointerType()) {
-         ValHolder vh;
-         vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
-         vh_ary.push_back(vh);
-         vp_ary.push_back(&vh_ary.back());
-      } else if (QT->isPointerType() || QT->isArrayType()) {
-         ValHolder vh;
-         vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
-         vh_ary.push_back(vh);
-         vp_ary.push_back(&vh_ary.back());
-      } else if (QT->isRecordType()) {
-         ValHolder vh;
-         vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
-         vh_ary.push_back(vh);
-         vp_ary.push_back(&vh_ary.back());
-      } else if (const EnumType *ET =
-                    dyn_cast<EnumType>(&*QT)) {
-         // Note: We may need to worry about the underlying type
-         //       of the enum here.
-         (void) ET;
-         ValHolder vh;
-         vh.u.i = (int) sv_to_long_long(fArgVals[i]);
-         vh_ary.push_back(vh);
-         vp_ary.push_back(&vh_ary.back());
-      } else if (const BuiltinType *BT =
-                    dyn_cast<BuiltinType>(&*QT)) {
-         //
-         //  WARNING!!!
-         //
-         //  This switch is organized in order-of-declaration
-         //  so that the produced assembly code is optimal.
-         //  Do not reorder!
-         //
-         switch (BT->getKind()) {
-               //
-               //  Builtin Types
-               //
-            case BuiltinType::Void: {
-                  // void
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'Void'!");
-                  return;
-               }
-               break;
-               //
-               //  Unsigned Types
-               //
-            case BuiltinType::Bool: {
-                  // bool
-                  ValHolder vh;
-                  vh.u.b = (bool) sv_to_ulong_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::Char_U: {
-                  // char on targets where it is unsigned
-                  ValHolder vh;
-                  vh.u.c = (char) sv_to_ulong_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::UChar: {
-                  // unsigned char
-                  ValHolder vh;
-                  vh.u.uc = (unsigned char) sv_to_ulong_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::WChar_U: {
-                  // wchar_t on targets where it is unsigned.
-                  // The standard doesn't allow to specify signednedd of wchar_t
-                  // thus this maps simply to wchar_t.
-                  ValHolder vh;
-                  vh.u.wc = (wchar_t) sv_to_ulong_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::Char16: {
-                  // char16_t
-                  //ValHolder vh;
-                  //vh.u.c16 = (char16_t) sv_to_ulong_long(fArgVals[i]);
-                  //vh_ary.push_back(vh);
-                  //vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::Char32: {
-                  // char32_t
-                  //ValHolder vh;
-                  //vh.u.c32 = (char32_t) sv_to_ulong_long(fArgVals[i]);
-                  //vh_ary.push_back(vh);
-                  //vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::UShort: {
-                  // unsigned short
-                  ValHolder vh;
-                  vh.u.us = (unsigned short) sv_to_ulong_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::UInt: {
-                  // unsigned int
-                  ValHolder vh;
-                  vh.u.ui = (unsigned int) sv_to_ulong_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::ULong: {
-                  // unsigned long
-                  ValHolder vh;
-                  vh.u.ul = (unsigned long) sv_to_ulong_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::ULongLong: {
-                  // unsigned long long
-                  ValHolder vh;
-                  vh.u.ull = (unsigned long long) sv_to_ulong_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::UInt128: {
-                  // __uint128_t
-               }
-               break;
-               //
-               //  Signed Types
-               //
-               //
-               //  Signed Types
-               //
-            case BuiltinType::Char_S: {
-                  // char on targets where it is signed
-                  ValHolder vh;
-                  vh.u.c = (char) sv_to_long_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::SChar: {
-                  // signed char
-                  ValHolder vh;
-                  vh.u.sc = (signed char) sv_to_long_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::WChar_S: {
-                  // wchar_t on targets where it is signed.
-                  // The standard doesn't allow to specify signednedd of wchar_t
-                  // thus this maps simply to wchar_t.
-                  ValHolder vh;
-                  vh.u.wc = (wchar_t) sv_to_long_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::Short: {
-                  // short
-                  ValHolder vh;
-                  vh.u.s = (short) sv_to_long_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::Int: {
-                  // int
-                  ValHolder vh;
-                  vh.u.i = (int) sv_to_long_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::Long: {
-                  // long
-                  ValHolder vh;
-                  vh.u.l = (long) sv_to_long_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::LongLong: {
-                  // long long
-                  ValHolder vh;
-                  vh.u.ll = (long long) sv_to_long_long(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::Int128: {
-                  // __int128_t
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'Int128'!");
-                  return;
-               }
-               break;
-            case BuiltinType::Half: {
-                  // half in OpenCL, __fp16 in ARM NEON
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'Half'!");
-                  return;
-               }
-               break;
-            case BuiltinType::Float: {
-                  // float
-                  ValHolder vh;
-                  vh.u.flt = sv_to<float>(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::Double: {
-                  // double
-                  ValHolder vh;
-                  vh.u.dbl = sv_to<double>(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::LongDouble: {
-                  // long double
-                  ValHolder vh;
-                  vh.u.ldbl = sv_to<long double>(fArgVals[i]);
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-               //
-               //  Language-Specific Types
-               //
-            case BuiltinType::NullPtr: {
-                  // C++11 nullptr
-                  ValHolder vh;
-                  vh.u.vp = fArgVals[i].getPtr();
-                  vh_ary.push_back(vh);
-                  vp_ary.push_back(&vh_ary.back());
-               }
-               break;
-            case BuiltinType::ObjCId: {
-                  // Objective C 'id' type
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'ObjCId'!");
-                  return;
-               }
-               break;
-            case BuiltinType::ObjCClass: {
-                  // Objective C 'Class' type
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'ObjCClass'!");
-                  return;
-               }
-               break;
-            case BuiltinType::ObjCSel: {
-                  // Objective C 'SEL' type
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'ObjCSel'!");
-                  return;
-               }
-               break;
-            case BuiltinType::OCLImage1d: {
-                  // OpenCL image type
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'OCLImage1d'!");
-                  return;
-               }
-               break;
-            case BuiltinType::OCLImage1dArray: {
-                  // OpenCL image type
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'OCLImage1dArray'!");
-                  return;
-               }
-               break;
-            case BuiltinType::OCLImage1dBuffer: {
-                  // OpenCL image type
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'OCLImage1dBuffer'!");
-                  return;
-               }
-               break;
-            case BuiltinType::OCLImage2d: {
-                  // OpenCL image type
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'OCLImage2d'!");
-                  return;
-               }
-               break;
-            case BuiltinType::OCLImage2dArray: {
-                  // OpenCL image type
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'OCLImage2dArray'!");
-                  return;
-               }
-               break;
-            case BuiltinType::OCLImage3d: {
-                  // OpenCL image type
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'OCLImage3d'!");
-                  return;
-               }
-               break;
-            case BuiltinType::OCLSampler: {
-                  // OpenCL sampler_t
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'OCLSampler'!");
-                  return;
-               }
-               break;
-            case BuiltinType::OCLEvent: {
-                  // OpenCL event_t
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'OCLEvent'!");
-                  return;
-               }
-               break;
-               //
-               //  Placeholder types.
-               //
-               //  These types are used during intermediate phases
-               //  of semantic analysis.  They are eventually resolved
-               //  to one of the preceeding types.
-               //
-            case BuiltinType::Dependent: {
-                  // dependent on a template argument
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'Dependent'!");
-                  return;
-               }
-               break;
-            case BuiltinType::Overload: {
-                  // an unresolved function overload set
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'Overload'!");
-                  return;
-               }
-               break;
-            case BuiltinType::BoundMember: {
-                  // a bound C++ non-static member function
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'BoundMember'!");
-                  return;
-               }
-               break;
-            case BuiltinType::PseudoObject: {
-                  // Object C @property or VS.NET __property
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'PseudoObject'!");
-                  return;
-               }
-               break;
-            case BuiltinType::UnknownAny: {
-                  // represents an unknown type
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'UnknownAny'!");
-                  return;
-               }
-               break;
-            case BuiltinType::BuiltinFn: {
-                  // a compiler builtin function
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'BuiltinFn'!");
-                  return;
-               }
-               break;
-            case BuiltinType::ARCUnbridgedCast: {
-                  // Objective C Automatic Reference Counting cast
-                  // which would normally require __bridge, but which
-                  // may be ok because of the context.
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'ARCUnbridgedCast'!");
-                  return;
-               }
-               break;
-            default: {
-                  // There should be no others.  This is here in case
-                  // this changes in the future.
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid builtin type (unrecognized)!");
-                  QT->dump();
-                  return;
-               }
-               break;
-         }
-      } else {
-         Error("TClingCallFunc::exec(void*)",
-               "Invalid type (unrecognized)!");
-         QT->dump();
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+
+      //
+      //  Convert the arguments from cling::Value to their
+      //  actual type and store them in a holder for passing to the
+      //  wrapper function by pointer to value.
+      //
+      unsigned num_params = FD->getNumParams();
+
+      if (num_args < FD->getMinRequiredArguments()) {
+         Error("TClingCallFunc::exec",
+               "Not enough arguments provided for %s (%d instead of the minimum %d)",
+               fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())),
+               num_args, FD->getMinRequiredArguments());
          return;
       }
-   }
+      if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
+          && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
+          && !dyn_cast<CXXConstructorDecl>(FD)) {
+         Error("TClingCallFunc::exec",
+               "The method %s is called without an object.",
+               fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())));
+         return;
+      }
+      vh_ary.reserve(num_args);
+      vp_ary.reserve(num_args);
+      for (unsigned i = 0U; i < num_args; ++i) {
+         QualType Ty;
+         if (i < num_params) {
+            const ParmVarDecl *PVD = FD->getParamDecl(i);
+            Ty = PVD->getType();
+         } else {
+            Ty = fArgVals[i].getType();
+         }
+         QualType QT = Ty.getCanonicalType();
+         if (QT->isReferenceType()) {
+            // the argument is already a pointer value (point to the same thing
+            // as the reference.
+            vp_ary.push_back((void *) sv_to_ulong_long(fArgVals[i]));
+         } else if (QT->isMemberPointerType()) {
+            ValHolder vh;
+            vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
+            vh_ary.push_back(vh);
+            vp_ary.push_back(&vh_ary.back());
+         } else if (QT->isPointerType() || QT->isArrayType()) {
+            ValHolder vh;
+            vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
+            vh_ary.push_back(vh);
+            vp_ary.push_back(&vh_ary.back());
+         } else if (QT->isRecordType()) {
+            // the argument is already a pointer value (pointing to object passed
+            // by value).
+            vp_ary.push_back((void *) sv_to_ulong_long(fArgVals[i]));
+         } else if (const EnumType *ET =
+                    dyn_cast<EnumType>(&*QT)) {
+            // Note: We may need to worry about the underlying type
+            //       of the enum here.
+            (void) ET;
+            ValHolder vh;
+            vh.u.i = (int) sv_to_long_long(fArgVals[i]);
+            vh_ary.push_back(vh);
+            vp_ary.push_back(&vh_ary.back());
+         } else if (const BuiltinType *BT =
+                    dyn_cast<BuiltinType>(&*QT)) {
+            //
+            //  WARNING!!!
+            //
+            //  This switch is organized in order-of-declaration
+            //  so that the produced assembly code is optimal.
+            //  Do not reorder!
+            //
+         switch (BT->getKind()) {
+                  //
+                  //  Builtin Types
+                  //
+               case BuiltinType::Void: {
+                     // void
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'Void'!");
+                     return;
+                  }
+                  break;
+                  //
+                  //  Unsigned Types
+                  //
+               case BuiltinType::Bool: {
+                     // bool
+                     ValHolder vh;
+                     vh.u.b = (bool) sv_to_ulong_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::Char_U: {
+                     // char on targets where it is unsigned
+                     ValHolder vh;
+                     vh.u.c = (char) sv_to_ulong_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::UChar: {
+                     // unsigned char
+                     ValHolder vh;
+                     vh.u.uc = (unsigned char) sv_to_ulong_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::WChar_U: {
+                     // wchar_t on targets where it is unsigned.
+                     // The standard doesn't allow to specify signednedd of wchar_t
+                     // thus this maps simply to wchar_t.
+                     ValHolder vh;
+                     vh.u.wc = (wchar_t) sv_to_ulong_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::Char16: {
+                     // char16_t
+                     //ValHolder vh;
+                     //vh.u.c16 = (char16_t) sv_to_ulong_long(fArgVals[i]);
+                     //vh_ary.push_back(vh);
+                     //vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::Char32: {
+                     // char32_t
+                     //ValHolder vh;
+                     //vh.u.c32 = (char32_t) sv_to_ulong_long(fArgVals[i]);
+                     //vh_ary.push_back(vh);
+                     //vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::UShort: {
+                     // unsigned short
+                     ValHolder vh;
+                     vh.u.us = (unsigned short) sv_to_ulong_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::UInt: {
+                     // unsigned int
+                     ValHolder vh;
+                     vh.u.ui = (unsigned int) sv_to_ulong_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::ULong: {
+                     // unsigned long
+                     ValHolder vh;
+                     vh.u.ul = (unsigned long) sv_to_ulong_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::ULongLong: {
+                     // unsigned long long
+                     ValHolder vh;
+                     vh.u.ull = (unsigned long long) sv_to_ulong_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::UInt128: {
+                     // __uint128_t
+                  }
+                  break;
+                  //
+                  //  Signed Types
+                  //
+                  //
+                  //  Signed Types
+                  //
+               case BuiltinType::Char_S: {
+                     // char on targets where it is signed
+                     ValHolder vh;
+                     vh.u.c = (char) sv_to_long_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::SChar: {
+                     // signed char
+                     ValHolder vh;
+                     vh.u.sc = (signed char) sv_to_long_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::WChar_S: {
+                     // wchar_t on targets where it is signed.
+                     // The standard doesn't allow to specify signednedd of wchar_t
+                     // thus this maps simply to wchar_t.
+                     ValHolder vh;
+                     vh.u.wc = (wchar_t) sv_to_long_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::Short: {
+                     // short
+                     ValHolder vh;
+                     vh.u.s = (short) sv_to_long_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::Int: {
+                     // int
+                     ValHolder vh;
+                     vh.u.i = (int) sv_to_long_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::Long: {
+                     // long
+                     ValHolder vh;
+                     vh.u.l = (long) sv_to_long_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::LongLong: {
+                     // long long
+                     ValHolder vh;
+                     vh.u.ll = (long long) sv_to_long_long(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::Int128: {
+                     // __int128_t
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'Int128'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::Half: {
+                     // half in OpenCL, __fp16 in ARM NEON
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'Half'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::Float: {
+                     // float
+                     ValHolder vh;
+                     vh.u.flt = sv_to<float>(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::Double: {
+                     // double
+                     ValHolder vh;
+                     vh.u.dbl = sv_to<double>(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::LongDouble: {
+                     // long double
+                     ValHolder vh;
+                     vh.u.ldbl = sv_to<long double>(fArgVals[i]);
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+                  //
+                  //  Language-Specific Types
+                  //
+               case BuiltinType::NullPtr: {
+                     // C++11 nullptr
+                     ValHolder vh;
+                     vh.u.vp = fArgVals[i].getPtr();
+                     vh_ary.push_back(vh);
+                     vp_ary.push_back(&vh_ary.back());
+                  }
+                  break;
+               case BuiltinType::ObjCId: {
+                     // Objective C 'id' type
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'ObjCId'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::ObjCClass: {
+                     // Objective C 'Class' type
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'ObjCClass'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::ObjCSel: {
+                     // Objective C 'SEL' type
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'ObjCSel'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::OCLImage1d: {
+                     // OpenCL image type
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'OCLImage1d'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::OCLImage1dArray: {
+                     // OpenCL image type
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'OCLImage1dArray'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::OCLImage1dBuffer: {
+                     // OpenCL image type
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'OCLImage1dBuffer'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::OCLImage2d: {
+                     // OpenCL image type
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'OCLImage2d'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::OCLImage2dArray: {
+                     // OpenCL image type
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'OCLImage2dArray'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::OCLImage3d: {
+                     // OpenCL image type
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'OCLImage3d'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::OCLSampler: {
+                     // OpenCL sampler_t
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'OCLSampler'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::OCLEvent: {
+                     // OpenCL event_t
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'OCLEvent'!");
+                     return;
+                  }
+                  break;
+                  //
+                  //  Placeholder types.
+                  //
+                  //  These types are used during intermediate phases
+                  //  of semantic analysis.  They are eventually resolved
+                  //  to one of the preceeding types.
+                  //
+               case BuiltinType::Dependent: {
+                     // dependent on a template argument
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'Dependent'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::Overload: {
+                     // an unresolved function overload set
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'Overload'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::BoundMember: {
+                     // a bound C++ non-static member function
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'BoundMember'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::PseudoObject: {
+                     // Object C @property or VS.NET __property
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'PseudoObject'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::UnknownAny: {
+                     // represents an unknown type
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'UnknownAny'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::BuiltinFn: {
+                     // a compiler builtin function
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'BuiltinFn'!");
+                     return;
+                  }
+                  break;
+               case BuiltinType::ARCUnbridgedCast: {
+                     // Objective C Automatic Reference Counting cast
+                     // which would normally require __bridge, but which
+                     // may be ok because of the context.
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid type 'ARCUnbridgedCast'!");
+                     return;
+                  }
+                  break;
+               default: {
+                     // There should be no others.  This is here in case
+                     // this changes in the future.
+                     Error("TClingCallFunc::exec(void*)",
+                           "Invalid builtin type (unrecognized)!");
+                     QT->dump();
+                     return;
+                  }
+                  break;
+            }
+         } else {
+            Error("TClingCallFunc::exec(void*)",
+                  "Invalid type (unrecognized)!");
+            QT->dump();
+            return;
+         }
+      }
+   } // End of scope holding the lock
    (*fWrapper)(address, (int)num_args, (void **)vp_ary.data(), ret);
 }
 
@@ -1902,6 +1906,8 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
       exec(address, 0);
       return;
    }
+   R__LOCKGUARD_NAMED(mutex,gInterpreterMutex);
+
    const FunctionDecl *FD = fMethod->GetMethodDecl();
    ASTContext &Context = FD->getASTContext();
 
@@ -1911,12 +1917,14 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
       QualType QT = Context.getLValueReferenceType(ClassTy);
       *ret = cling::Value(QT, *fInterp);
       // Store the new()'ed address in getPtr()
+      mutex.UnLock(); // Release lock during user function execution
       exec(address, &ret->getPtr());
       return;
    }
    QualType QT = FD->getReturnType().getCanonicalType();
    if (QT->isReferenceType()) {
       *ret = cling::Value(QT, *fInterp);
+      mutex.UnLock(); // Release lock during user function execution
       exec(address, &ret->getPtr());
       return;
    } else if (QT->isMemberPointerType()) {
@@ -1928,20 +1936,24 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
          // But that's not relevant: we use it as a non-builtin, allocated
          // type.
          *ret = cling::Value(QT, *fInterp);
+         mutex.UnLock(); // Release lock during user function execution
          exec(address, ret->getPtr());
          return;
       }
       // We are a function member pointer.
       *ret = cling::Value(QT, *fInterp);
+      mutex.UnLock(); // Release lock during user function execution
       exec(address, &ret->getPtr());
       return;
    } else if (QT->isPointerType() || QT->isArrayType()) {
       // Note: ArrayType is an illegal function return value type.
       *ret = cling::Value(QT, *fInterp);
+      mutex.UnLock(); // Release lock during user function execution
       exec(address, &ret->getPtr());
       return;
    } else if (QT->isRecordType()) {
       *ret = cling::Value(QT, *fInterp);
+      mutex.UnLock(); // Release lock during user function execution
       exec(address, ret->getPtr());
       return;
    } else if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
@@ -1949,12 +1961,14 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
       //       of the enum here.
       (void) ET;
       *ret = cling::Value(QT, *fInterp);
+      mutex.UnLock(); // Release lock during user function execution
       execWithLL<int>(address, QT, ret);
       return;
    } else if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
       *ret = cling::Value(QT, *fInterp);
       switch (BT->getKind()) {
          case BuiltinType::Void:
+            mutex.UnLock(); // Release lock during user function execution
             exec(address, 0);
             return;
             break;
@@ -1963,11 +1977,13 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             //  Unsigned Types
             //
          case BuiltinType::Bool:
+            mutex.UnLock(); // Release lock during user function execution
             execWithULL<bool>(address, QT, ret);
             return;
             break;
          case BuiltinType::Char_U: // char on targets where it is unsigned
          case BuiltinType::UChar:
+            mutex.UnLock(); // Release lock during user function execution
             execWithULL<char>(address, QT, ret);
             return;
             break;
@@ -1975,6 +1991,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             // wchar_t on targets where it is unsigned.
             // The standard doesn't allow to specify signednedd of wchar_t
             // thus this maps simply to wchar_t.
+            mutex.UnLock(); // Release lock during user function execution
             execWithULL<wchar_t>(address, QT, ret);
             return;
             break;
@@ -1989,18 +2006,22 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             return;
             break;
          case BuiltinType::UShort:
+            mutex.UnLock(); // Release lock during user function execution
             execWithULL<unsigned short>(address, QT, ret);
             return;
             break;
          case BuiltinType::UInt:
+            mutex.UnLock(); // Release lock during user function execution
             execWithULL<unsigned int>(address, QT, ret);
             return;
             break;
          case BuiltinType::ULong:
+            mutex.UnLock(); // Release lock during user function execution
             execWithULL<unsigned long>(address, QT, ret);
             return;
             break;
          case BuiltinType::ULongLong:
+            mutex.UnLock(); // Release lock during user function execution
             execWithULL<unsigned long long>(address, QT, ret);
             return;
             break;
@@ -2016,6 +2037,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             //
          case BuiltinType::Char_S: // char on targets where it is signed
          case BuiltinType::SChar:
+            mutex.UnLock(); // Release lock during user function execution
             execWithLL<signed char>(address, QT, ret);
             return;
             break;
@@ -2023,22 +2045,27 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             // wchar_t on targets where it is signed.
             // The standard doesn't allow to specify signednedd of wchar_t
             // thus this maps simply to wchar_t.
+            mutex.UnLock(); // Release lock during user function execution
             execWithLL<wchar_t>(address, QT, ret);
             return;
             break;
          case BuiltinType::Short:
+            mutex.UnLock(); // Release lock during user function execution
             execWithLL<short>(address, QT, ret);
             return;
             break;
          case BuiltinType::Int:
+            mutex.UnLock(); // Release lock during user function execution
             execWithLL<int>(address, QT, ret);
             return;
             break;
          case BuiltinType::Long:
+            mutex.UnLock(); // Release lock during user function execution
             execWithLL<long>(address, QT, ret);
             return;
             break;
          case BuiltinType::LongLong:
+            mutex.UnLock(); // Release lock during user function execution
             execWithLL<long long>(address, QT, ret);
             return;
             break;
@@ -2054,14 +2081,17 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
             return;
             break;
          case BuiltinType::Float:
+            mutex.UnLock(); // Release lock during user function execution
             exec(address, &ret->getFloat());
             return;
             break;
          case BuiltinType::Double:
+            mutex.UnLock(); // Release lock during user function execution
             exec(address, &ret->getDouble());
             return;
             break;
          case BuiltinType::LongDouble:
+            mutex.UnLock(); // Release lock during user function execution
             exec(address, &ret->getLongDouble());
             return;
             break;
@@ -2188,26 +2218,29 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info, void *
       Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
       return 0;
    }
-   const Decl *D = info->GetDecl();
-   //if (!info->HasDefaultConstructor()) {
-   //   // FIXME: We might have a ROOT ioctor, we might
-   //   //        have to check for that here.
-   //   Error("TClingCallFunc::ExecDefaultConstructor",
-   //         "Class has no default constructor: %s",
-   //         info->Name());
-   //   return 0;
-   //}
-   map<const Decl *, void *>::iterator I = ctor_wrapper_store.find(D);
    tcling_callfunc_ctor_Wrapper_t wrapper = 0;
-   if (I != ctor_wrapper_store.end()) {
-      wrapper = (tcling_callfunc_ctor_Wrapper_t) I->second;
-   } else {
-      wrapper = make_ctor_wrapper(info);
-   }
-   if (!wrapper) {
-      Error("TClingCallFunc::ExecDefaultConstructor",
-            "Called with no wrapper, not implemented!");
-      return 0;
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+      const Decl *D = info->GetDecl();
+      //if (!info->HasDefaultConstructor()) {
+      //   // FIXME: We might have a ROOT ioctor, we might
+      //   //        have to check for that here.
+      //   Error("TClingCallFunc::ExecDefaultConstructor",
+      //         "Class has no default constructor: %s",
+      //         info->Name());
+      //   return 0;
+      //}
+      map<const Decl *, void *>::iterator I = gCtorWrapperStore.find(D);
+      if (I != gCtorWrapperStore.end()) {
+         wrapper = (tcling_callfunc_ctor_Wrapper_t) I->second;
+      } else {
+         wrapper = make_ctor_wrapper(info);
+      }
+      if (!wrapper) {
+         Error("TClingCallFunc::ExecDefaultConstructor",
+               "Called with no wrapper, not implemented!");
+         return 0;
+      }
    }
    void *obj = 0;
    (*wrapper)(&obj, address, nary);
@@ -2221,18 +2254,21 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
       Error("TClingCallFunc::ExecDestructor", "Invalid class info!");
       return;
    }
-   const Decl *D = info->GetDecl();
-   map<const Decl *, void *>::iterator I = dtor_wrapper_store.find(D);
    tcling_callfunc_dtor_Wrapper_t wrapper = 0;
-   if (I != dtor_wrapper_store.end()) {
-      wrapper = (tcling_callfunc_dtor_Wrapper_t) I->second;
-   } else {
-      wrapper = make_dtor_wrapper(info);
-   }
-   if (!wrapper) {
-      Error("TClingCallFunc::ExecDestructor",
-            "Called with no wrapper, not implemented!");
-      return;
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+      const Decl *D = info->GetDecl();
+      map<const Decl *, void *>::iterator I = gDtorWrapperStore.find(D);
+      if (I != gDtorWrapperStore.end()) {
+         wrapper = (tcling_callfunc_dtor_Wrapper_t) I->second;
+      } else {
+         wrapper = make_dtor_wrapper(info);
+      }
+      if (!wrapper) {
+         Error("TClingCallFunc::ExecDestructor",
+               "Called with no wrapper, not implemented!");
+         return;
+      }
    }
    (*wrapper)(address, nary, withFree);
 }
@@ -2264,9 +2300,11 @@ void *TClingCallFunc::InterfaceMethod()
    if (!IsValid()) {
       return 0;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
    const FunctionDecl *decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl *, void *>::iterator I = wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
+   map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
+   if (I != gWrapperStore.end()) {
       fWrapper = (tcling_callfunc_Wrapper_t) I->second;
    } else {
       fWrapper = make_wrapper();
@@ -2289,10 +2327,12 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
             "Attempt to get interface while invalid.");
       return TInterpreter::CallFuncIFacePtr_t();
    }
+   R__LOCKGUARD(gInterpreterMutex);
+ 
    const FunctionDecl *decl = fMethod->GetMethodDecl();
    map<const FunctionDecl *, void *>::iterator I =
-      wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
+      gWrapperStore.find(decl);
+   if (I != gWrapperStore.end()) {
       fWrapper = (tcling_callfunc_Wrapper_t) I->second;
    } else {
       fWrapper = make_wrapper();

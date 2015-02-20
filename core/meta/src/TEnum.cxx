@@ -37,7 +37,7 @@ TEnum::TEnum(const char *name, void *info, TClass *cls)
    //and interpreter info.
    //Constant List is owner if enum not on global scope (thus constants not
    //in TROOT::GetListOfGlobals).
-   SetNameTitle(name, "An enum type");
+   SetName(name);
    if (cls) {
       fConstantList.SetOwner(kTRUE);
    }
@@ -174,15 +174,20 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          // autoparsing if enabled.
          bool canLoadEnums (sa_local & kInterpLookup);
          const bool scopeIsNamespace (tClassScope->Property() & kIsNamespace);
-         const bool oldAutoparseVal = gInterpreter->SetClassAutoparsing(true);
-         if (!oldAutoparseVal) gInterpreter->SetClassAutoparsing(oldAutoparseVal);
-         if (scopeIsNamespace && oldAutoparseVal){
-            gInterpreter->SetClassAutoparsing(false);
+
+         const bool autoParseSuspended = gInterpreter->IsAutoParsingSuspended();
+         const bool suspendAutoParse = autoParseSuspended || scopeIsNamespace;
+
+         TInterpreter::SuspendAutoParsing autoParseRaii(gInterpreter, suspendAutoParse);
+
+         if (scopeIsNamespace && !autoParseSuspended){
             canLoadEnums=true;
          }
-         auto listOfEnums = tClassScope->GetListOfEnums(canLoadEnums);
-         gInterpreter->SetClassAutoparsing(oldAutoparseVal);
 
+         auto listOfEnums = tClassScope->GetListOfEnums(canLoadEnums);
+
+         // Previous incarnation of the code re-enabled the auto parsing,
+         // before executing findEnumInList
          theEnum = findEnumInList(listOfEnums, enName, sa_local);
       }
       // Check if the scope is still a protoclass
@@ -199,7 +204,11 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       // All of this C gymnastic is to avoid allocations on the heap
       const auto enName = lastPos + 1;
       const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 1;
+#ifdef R__WIN32
+      char *scopeName = new char[scopeNameSize + 1];
+#else
       char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
+#endif
       strncpy(scopeName, enumName, scopeNameSize);
       scopeName[scopeNameSize] = '\0';
       // Three levels of search
@@ -218,6 +227,9 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          }
          theEnum = searchEnum(scopeName, enName, kALoadAndInterpLookup);
       }
+#ifdef R__WIN32
+      delete [] scopeName;
+#endif
    } else {
       // We don't have any scope: this is a global enum
       theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kNone);

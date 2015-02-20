@@ -20,13 +20,14 @@
 #include "RooFormula.h"
 #include "RooArgList.h"
 #include "RooListProxy.h"
+#include "RooTrace.h"
 
 class RooArgSet ;
 
 class RooFormulaVar : public RooAbsReal {
 public:
   // Constructors, assignment etc
-  inline RooFormulaVar() : _formula(0), _nset(0) { }
+  inline RooFormulaVar() : _formula(0), _nset(0) {  }
   RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents);
   RooFormulaVar(const char *name, const char *title, const RooArgList& dependents);
   RooFormulaVar(const RooFormulaVar& other, const char* name=0);
@@ -56,6 +57,9 @@ public:
   void dumpFormula() { formula().dump() ; }
 
   virtual Double_t defaultErrorLevel() const ;
+
+  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
 
 protected:
 

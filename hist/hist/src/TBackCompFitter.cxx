@@ -85,7 +85,7 @@ TBackCompFitter::TBackCompFitter( ) :
 }
 
 //______________________________________________________________________________
-TBackCompFitter::TBackCompFitter(std::auto_ptr<ROOT::Fit::Fitter> fitter, std::auto_ptr<ROOT::Fit::FitData>  data) :
+TBackCompFitter::TBackCompFitter(const std::shared_ptr<ROOT::Fit::Fitter> & fitter, const std::shared_ptr<ROOT::Fit::FitData> & data) :
    fFitData(data),
    fFitter(fitter),
    fMinimizer(0),
@@ -99,8 +99,7 @@ TBackCompFitter::TBackCompFitter(std::auto_ptr<ROOT::Fit::Fitter> fitter, std::a
 
 //______________________________________________________________________________
 TBackCompFitter::~TBackCompFitter() {
-   // data are own here
-   //if (fFitData) delete fFitData;
+   // destructor - delete the managed objects
 
    if (fMinimizer) delete fMinimizer;
    if (fObjFunc) delete fObjFunc;

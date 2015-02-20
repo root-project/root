@@ -4,14 +4,11 @@
 #ifndef PYROOT_PYCALLABLE_H
 #define PYROOT_PYCALLABLE_H
 
+// Bindings
+#include "TCallContext.h"
+
 
 namespace PyROOT {
-
-/** Python callable object interface
-      @author  WLAV
-      @date    01/27/2009
-      @version 5.0
- */
 
    class ObjectProxy;
 
@@ -23,18 +20,20 @@ namespace PyROOT {
       virtual PyObject* GetSignature() = 0;
       virtual PyObject* GetPrototype() = 0;
       virtual PyObject* GetDocString() { return GetPrototype(); }
-      virtual Int_t GetPriority() { return 0; }
 
-      virtual Int_t GetMaxArgs() { return 0; }
-      virtual PyObject* GetArgSpec( Int_t /* iarg */ ) { return 0; }
-      virtual PyObject* GetArgDefault( Int_t /* iarg */ ) { return 0; }
-      virtual PyObject* GetScope() { return 0; }
+      virtual Int_t GetPriority() = 0;
+
+      virtual Int_t GetMaxArgs() = 0;
+      virtual PyObject* GetArgSpec( Int_t /* iarg */ ) = 0;
+      virtual PyObject* GetArgDefault( Int_t /* iarg */ )  = 0;
+
+      virtual PyObject* GetScopeProxy()  = 0;
 
       virtual PyCallable* Clone() = 0;
 
    public:
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds,
-                                    Long_t user = 0, Bool_t release_gil = kFALSE ) = 0;
+      virtual PyObject* Call(
+         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 ) = 0;
    };
 
 } // namespace PyROOT

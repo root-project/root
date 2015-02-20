@@ -13,8 +13,8 @@
 #ifndef ROOT_Fit_Chi2FCN
 #define ROOT_Fit_Chi2FCN
 
-#ifndef ROOT_Math_FitMethodFunction
-#include "Math/FitMethodFunction.h"
+#ifndef ROOT_Fit_BasicFCN
+#include "Fit/BasicFCN.h"
 #endif
 
 #ifndef ROOT_Math_IParamFunction
@@ -39,6 +39,8 @@
 #endif
 #endif
 
+#include <memory>
+
 /**
 @defgroup FitMethodFunc Fit Method Classes
 
@@ -61,11 +63,11 @@ namespace ROOT {
    @ingroup  FitMethodFunc
 */
 template<class FunType>
-class Chi2FCN : public ::ROOT::Math::BasicFitMethodFunction<FunType> {
+class Chi2FCN : public BasicFCN<FunType,BinData> {
 
 public:
 
-
+   typedef  BasicFCN<FunType,BinData> BaseFCN; 
 
    typedef  ::ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction;
    typedef typename  BaseObjFunction::BaseFunction BaseFunction;
@@ -77,10 +79,18 @@ public:
    /**
       Constructor from data set (binned ) and model function
    */
-   Chi2FCN (const BinData & data, const IModelFunction & func) :
-      BaseObjFunction(func.NPar(), data.Size() ),
-      fData(data),
-      fFunc(func),
+   Chi2FCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func) :
+      BaseFCN( data, func),
+      fNEffPoints(0),
+      fGrad ( std::vector<double> ( func->NPar() ) )
+   { }
+
+   /**
+      Same Constructor from data set (binned ) and model function but now managed by the user
+      we clone the function but not the data
+   */
+   Chi2FCN ( const BinData & data, const IModelFunction & func) :
+      BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fNEffPoints(0),
       fGrad ( std::vector<double> ( func.NPar() ) )
    { }
@@ -89,29 +99,30 @@ public:
       Destructor (no operations)
    */
    virtual ~Chi2FCN ()  {}
-
-#ifdef LATER
-private:
-
-   // usually copying is non trivial, so we make this unaccessible
-
    /**
       Copy constructor
    */
-   Chi2FCN(const Chi2FCN &);
+   Chi2FCN(const Chi2FCN & f) :
+      BaseFCN(f.DataPtr(), f.ModelFunctionPtr() ),
+      fNEffPoints( f.fNEffPoints ),
+      fGrad( f.fGrad)
+   {  }
 
    /**
       Assignment operator
    */
-   Chi2FCN & operator = (const Chi2FCN & rhs);
+   Chi2FCN & operator = (const Chi2FCN & rhs) {
+      SetData(rhs.DataPtr() );
+      SetModelFunction(rhs.ModelFunctionPtr() );
+      fNEffPoints = rhs.fNEffPoints;
+      fGrad = rhs.fGrad; 
+   }
 
-#endif
-public:
-
+   /* 
+      clone the function
+    */
    virtual BaseFunction * Clone() const {
-      // clone the function
-      Chi2FCN * fcn =  new Chi2FCN(fData,fFunc);
-      return fcn;
+      return new Chi2FCN(*this); 
    }
 
 
@@ -119,39 +130,28 @@ public:
    using BaseObjFunction::operator();
 
 
-   // effective points used in the fit (exclude the rejected one)
-   virtual unsigned int NFitPoints() const { return fNEffPoints; }
-
-
    /// i-th chi-square residual
    virtual double DataElement(const double * x, unsigned int i, double * g) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::EvaluateChi2Residual(fFunc, fData, x, i, g);
+      return FitUtil::EvaluateChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
    // need to be virtual to be instantiated
    virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
-      FitUtil::EvaluateChi2Gradient(fFunc, fData, x, g, fNEffPoints);
+      FitUtil::EvaluateChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
    }
 
    /// get type of fit method function
    virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLeastSquare; }
 
-   /// access to const reference to the data
-   virtual const BinData & Data() const { return fData; }
-
-   /// access to const reference to the model function
-   virtual const IModelFunction & ModelFunction() const { return fFunc; }
-
 
 
 protected:
 
-
-   /// set number of fit points (need to be called in const methods, make it const)
+   /// set number of fit points (need to be called in const methods, make it const)                                                                                                      
    virtual void SetNFitPoints(unsigned int n) const { fNEffPoints = n; }
-
+   
 private:
 
    /**
@@ -160,23 +160,21 @@ private:
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
 #ifdef ROOT_FIT_PARALLEL
-      return FitUtilParallel::EvaluateChi2(fFunc, fData, x, fNEffPoints);
+      return FitUtilParallel::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
 #else
-      if (!fData.HaveCoordErrors() )
-         return FitUtil::EvaluateChi2(fFunc, fData, x, fNEffPoints);
+      if (!BaseFCN::Data().HaveCoordErrors() )
+         return FitUtil::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
       else
-         return FitUtil::EvaluateChi2Effective(fFunc, fData, x, fNEffPoints);
+         return FitUtil::EvaluateChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
 #endif
    }
 
    // for derivatives
    virtual double  DoDerivative(const double * x, unsigned int icoord ) const {
-      Gradient(x, &fGrad[0]);
+      Gradient(x, fGrad.data());
       return fGrad[icoord];
    }
 
-   const BinData & fData;
-   const IModelFunction & fFunc;
 
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit
 

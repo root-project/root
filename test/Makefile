@@ -73,6 +73,10 @@ MINEXAMO      = minexam.$(ObjSuf)
 MINEXAMS      = minexam.$(SrcSuf)
 MINEXAM       = minexam$(ExeSuf)
 
+TFORMULAO      = TFormulaTests.$(ObjSuf)
+TFORMULAS      = TFormulaTests.$(SrcSuf)
+TFORMULA       = TFormulaTests$(ExeSuf)
+
 TSTRINGO      = tstring.$(ObjSuf)
 TSTRINGS      = tstring.$(SrcSuf)
 TSTRING       = tstring$(ExeSuf)
@@ -295,7 +299,7 @@ endif
 
 
 OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) \
-                $(MINEXAMO) \
+                $(MINEXAMO) $(TFORMULAO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
                 $(STRESSSHAPESO) $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) \
@@ -308,7 +312,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) \
                 $(STRESSTMVAO) $(STRESSINTERPO) $(STRESSITERO) \
                 $(STRESSHISTO) $(STRESSGUIO) $(SQLITETESTO) $(IOPLUGINSO)
 
-PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) \
+PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TFORMULA) \
                 $(TSTRING) $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) \
                 $(VLAZY) $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
@@ -409,6 +413,11 @@ $(HSIMPLE):     $(HSIMPLEO)
 		@echo "$@ done"
 
 $(MINEXAM):     $(MINEXAMO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
+		@echo "$@ done"
+
+$(TFORMULA):     $(TFORMULAO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"

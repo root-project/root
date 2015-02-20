@@ -37,6 +37,7 @@
 #include <map>
 #include <string>
 #include <set>
+#include <unordered_set>
 #include <vector>
 
 #include <atomic>
@@ -130,6 +131,40 @@ public:
    };
 
 private:
+
+   class TSpinLockGuard {
+      // Trivial spin lock guard
+   public:
+      TSpinLockGuard(std::atomic_flag& aflag);
+      ~TSpinLockGuard();
+   private:
+      std::atomic_flag& fAFlag;
+   };
+
+   class TDeclNameRegistry {
+      // A class which is used to collect decl names starting from normalised
+      // names (typedef resolution is excluded here, just string manipulation
+      // is performed). At the heart of the implementation, an unordered set.
+   public:
+      TDeclNameRegistry(Int_t verbLevel=0);
+      void AddQualifiedName(const char *name);
+      Bool_t HasDeclName(const char *name) const;
+      ~TDeclNameRegistry();
+   private:
+      Int_t fVerbLevel=0;
+      std::unordered_set<std::string> fClassNamesSet;
+      mutable std::atomic_flag fSpinLock = ATOMIC_FLAG_INIT;
+   };
+
+   class InsertTClassInRegistryRAII {
+      // Trivial RAII used to insert names in the registry
+      TClass::EState& fState;
+      const char* fName;
+      TDeclNameRegistry& fNoInfoOrEmuOrFwdDeclNameRegistry;
+   public:
+      InsertTClassInRegistryRAII(TClass::EState &state, const char *name, TDeclNameRegistry &emuRegistry);
+      ~InsertTClassInRegistryRAII();
+   };
 
    // TClass objects can be created as a result of opening a TFile (in which
    // they are in emulated mode) or as a result of loading the dictionary for
@@ -243,6 +278,9 @@ private:
    static DeclIdMap_t *GetDeclIdMap();  //Map from DeclId_t to TClass pointer
    static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
                                                 //stored in TObject::fUniqueID
+   static TDeclNameRegistry fNoInfoOrEmuOrFwdDeclNameRegistry; // Store the decl names of the forwardd and no info instances
+   static Bool_t HasNoInfoOrEmuOrFwdDeclaredDecl(const char*);
+
    // Internal status bits
    enum { kLoading = BIT(14), kUnloading = BIT(14) };
    // Internal streamer type.
@@ -329,6 +367,8 @@ public:
    Bool_t             HasInterpreterInfoInMemory() const { return 0 != fClassInfo; }
    Bool_t             HasInterpreterInfo() const { return fCanLoadClassInfo || fClassInfo; }
    UInt_t             GetCheckSum(ECheckSum code = kCurrentCheckSum) const;
+   UInt_t             GetCheckSum(Bool_t &isvalid) const;
+   UInt_t             GetCheckSum(ECheckSum code, Bool_t &isvalid) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
    TMethod           *GetClassMethod(const char *name, const char *params, Bool_t objectIsConst = kFALSE);
@@ -342,7 +382,7 @@ public:
    ROOT::DelFunc_t    GetDelete() const;
    ROOT::DesFunc_t    GetDestructor() const;
    ROOT::DelArrFunc_t GetDeleteArray() const;
-   ClassInfo_t       *GetClassInfo() const { if (fCanLoadClassInfo) LoadClassInfo(); return fClassInfo; }
+   ClassInfo_t       *GetClassInfo() const { if (fCanLoadClassInfo && !TestBit(kLoading)) LoadClassInfo(); return fClassInfo; }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
       if (fCurrentInfo.load()) return fCurrentInfo;
@@ -402,6 +442,7 @@ public:
    TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
    Bool_t             HasDictionary();
+   static Bool_t      HasDictionarySelection(const char* clname);
    void               GetMissingDictionaries(THashTable& result, bool recurse = false);
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;

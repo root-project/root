@@ -161,9 +161,10 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    if (fitOption.Bound || fitOption.Like || fitOption.Errors || fitOption.Gradient || fitOption.More || fitOption.User|| fitOption.Integral || fitOption.Minuit)
       linear = kFALSE;
 
-
-   // create the fitter
-   std::auto_ptr<ROOT::Fit::Fitter> fitter(new ROOT::Fit::Fitter() );
+   // create an empty TFitResult
+   std::shared_ptr<TFitResult> tfr(new TFitResult() );
+   // create the fitter from an empty fit result
+   std::shared_ptr<ROOT::Fit::Fitter> fitter(new ROOT::Fit::Fitter(std::static_pointer_cast<ROOT::Fit::FitResult>(tfr) ) );
    ROOT::Fit::FitConfig & fitConfig = fitter->Config();
 
    // create options
@@ -194,7 +195,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 #endif
 
    // fill data
-   std::auto_ptr<ROOT::Fit::BinData> fitdata(new ROOT::Fit::BinData(opt,range) );
+   std::shared_ptr<ROOT::Fit::BinData> fitdata(new ROOT::Fit::BinData(opt,range) );
    ROOT::Fit::FillData(*fitdata, h1, f1);
    if (fitdata->Size() == 0 ) {
       Warning("Fit","Fit data is empty ");
@@ -372,9 +373,11 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       f1->SetNDF(fitResult.Ndf() );
       f1->SetNumberFitPoints(fitdata->Size() );
 
-      f1->SetParameters( &(fitResult.Parameters().front()) );
-      if ( int( fitResult.Errors().size()) >= f1->GetNpar() )
-         f1->SetParErrors( &(fitResult.Errors().front()) );
+      assert((Int_t)fitResult.Parameters().size() >= f1->GetNpar() );
+      f1->SetParameters( const_cast<double*>(&(fitResult.Parameters().front()))); 
+      if ( int( fitResult.Errors().size()) >= f1->GetNpar() ) 
+         f1->SetParErrors( &(fitResult.Errors().front()) ); 
+  
 
    }
 
@@ -402,10 +405,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
       // store result in the backward compatible VirtualFitter
       TVirtualFitter * lastFitter = TVirtualFitter::GetFitter();
-      // pass ownership of Fitter and Fitdata to TBackCompFitter (fitter pointer cannot be used afterwards)
-      // need to get the raw pointer due to the  missing template copy ctor of auto_ptr on solaris
-      // reset fitdata(cannot use anymore , ownership is passed)
-      TBackCompFitter * bcfitter = new TBackCompFitter(fitter, std::auto_ptr<ROOT::Fit::FitData>(fitdata.release()));
+      TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
       bcfitter->SetFitOption(fitOption);
       bcfitter->SetObjectFit(h1);
       bcfitter->SetUserFunc(f1);
@@ -431,14 +431,13 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
       if (fitOption.StoreResult)
       {
-         TFitResult* fr = new TFitResult(fitResult);
          TString name = "TFitResult-";
          name = name + h1->GetName() + "-" + f1->GetName();
          TString title = "TFitResult-";
          title += h1->GetTitle();
-         fr->SetName(name);
-         fr->SetTitle(title);
-         return TFitResultPtr(fr);
+         tfr->SetName(name);
+         tfr->SetTitle(title);
+         return TFitResultPtr(tfr);
       }
       else
          return TFitResultPtr(iret);
@@ -620,7 +619,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
       fnew1->SetRange(xmin,xmax);
       fnew1->Save(xmin,xmax,0,0,0,0);
       if (!drawFunction) fnew1->SetBit(TF1::kNotDraw);
-      fnew1->SetBit(TFormula::kNotGlobal);
+      fnew1->AddToGlobalList(false);
    } else if (ndim < 3) {
       if (!reuseOldFunction) {
          fnew2 = (TF2*)f1->IsA()->New();
@@ -636,7 +635,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
       fnew2->SetParent( h1 );
       fnew2->Save(xmin,xmax,ymin,ymax,0,0);
       if (!drawFunction) fnew2->SetBit(TF1::kNotDraw);
-      fnew2->SetBit(TFormula::kNotGlobal);
+      fnew2->AddToGlobalList(false);
    } else {
       if (!reuseOldFunction) {
          fnew3 = (TF3*)f1->IsA()->New();
@@ -652,7 +651,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
       fnew3->SetParent( h1 );
       fnew3->Save(xmin,xmax,ymin,ymax,zmin,zmax);
       if (!drawFunction) fnew3->SetBit(TF1::kNotDraw);
-      fnew3->SetBit(TFormula::kNotGlobal);
+      fnew3->AddToGlobalList(false);
    }
    if (h1->TestBit(kCanDelete)) return;
    // draw only in case of histograms
@@ -756,9 +755,12 @@ void HFit::CheckGraphFitOptions(Foption_t & foption) {
 
 // implementation of unbin fit function (defined in HFitInterface)
 
-TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t & fitOption , const ROOT::Math::MinimizerOptions & minOption) {
+TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * data, TF1 * fitfunc, Foption_t & fitOption , const ROOT::Math::MinimizerOptions & minOption) {
    // do unbin fit, ownership of fitdata is passed later to the TBackFitter class
 
+   // create a shared pointer to the fit data to managed it 
+   std::shared_ptr<ROOT::Fit::UnBinData> fitdata(data); 
+   
 #ifdef DEBUG
    printf("tree data size is %d \n",fitdata->Size());
    for (unsigned int i = 0; i < fitdata->Size(); ++i) {
@@ -770,8 +772,10 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc,
       return -1;
    }
 
+   // create an empty TFitResult
+   std::shared_ptr<TFitResult> tfr(new TFitResult() );   
    // create the fitter
-   std::auto_ptr<ROOT::Fit::Fitter> fitter(new ROOT::Fit::Fitter() );
+   std::shared_ptr<ROOT::Fit::Fitter> fitter(new ROOT::Fit::Fitter(tfr) );
    ROOT::Fit::FitConfig & fitConfig = fitter->Config();
 
    // dimension is given by data because TF1 pointer can have wrong one
@@ -846,7 +850,7 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc,
    bool extended = (fitOption.Like & 1) == 1;
 
    bool fitok = false;
-   fitok = fitter->Fit(*fitdata, extended);
+   fitok = fitter->LikelihoodFit(fitdata, extended);
    if ( !fitok  && !fitOption.Quiet )
       Warning("UnBinFit","Abnormal termination of minimization.");
 
@@ -858,16 +862,17 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc,
       fitfunc->SetNDF(fitResult.Ndf() );
       fitfunc->SetNumberFitPoints(fitdata->Size() );
 
-      fitfunc->SetParameters( &(fitResult.Parameters().front()) );
-      if ( int( fitResult.Errors().size()) >= fitfunc->GetNpar() )
-         fitfunc->SetParErrors( &(fitResult.Errors().front()) );
-
+      assert(  (Int_t)fitResult.Parameters().size() >= fitfunc->GetNpar() );
+      fitfunc->SetParameters( const_cast<double*>(&(fitResult.Parameters().front())));
+      if ( int( fitResult.Errors().size()) >= fitfunc->GetNpar() ) 
+         fitfunc->SetParErrors( &(fitResult.Errors().front()) ); 
+  
    }
 
    // store result in the backward compatible VirtualFitter
    TVirtualFitter * lastFitter = TVirtualFitter::GetFitter();
    // pass ownership of Fitter and Fitdata to TBackCompFitter (fitter pointer cannot be used afterwards)
-   TBackCompFitter * bcfitter = new TBackCompFitter(fitter, std::auto_ptr<ROOT::Fit::FitData>(fitdata));
+   TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
  // cannot use anymore now fitdata (given away ownership)
    fitdata = 0;
    bcfitter->SetFitOption(fitOption);
@@ -887,14 +892,13 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc,
 
    if (fitOption.StoreResult)
    {
-      TFitResult* fr = new TFitResult(fitResult);
       TString name = "TFitResult-";
       name = name + "UnBinData-" + fitfunc->GetName();
       TString title = "TFitResult-";
       title += name;
-      fr->SetName(name);
-      fr->SetTitle(title);
-      return TFitResultPtr(fr);
+      tfr->SetName(name);
+      tfr->SetTitle(title);
+      return TFitResultPtr(tfr);
    }
    else
       return TFitResultPtr(iret);

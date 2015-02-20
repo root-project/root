@@ -56,7 +56,7 @@ public:
    TBackCompFitter();
 
    //TBackCompFitter(ROOT::Fit::Fitter & fitter, ROOT::Fit::FitData * );
-   TBackCompFitter( std::auto_ptr<ROOT::Fit::Fitter>  fitter, std::auto_ptr<ROOT::Fit::FitData> data  );
+   TBackCompFitter( const std::shared_ptr<ROOT::Fit::Fitter> & fitter, const std::shared_ptr<ROOT::Fit::FitData> & data  );
 
    virtual ~TBackCompFitter();
 
@@ -155,8 +155,8 @@ private:
 
 
    //ROOT::Fit::FitData * fFitData;
-   std::auto_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit (managed by TBackCompFitter)
-   std::auto_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object (managed by TBackCompFitter)
+   std::shared_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit 
+   std::shared_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object 
    ROOT::Math::Minimizer * fMinimizer;
    ROOT::Math::IMultiGenFunction * fObjFunc;
    ROOT::Math::IParamMultiFunction * fModelFunc;

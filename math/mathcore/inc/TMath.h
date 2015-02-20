@@ -526,33 +526,106 @@ inline Double_t TMath::Log10(Double_t x)
    { return log10(x); }
 
 inline Int_t TMath::Finite(Double_t x)
-#if defined(R__HPUX11)
+#if defined(R__FAST_MATH)
+/* Check if it is finite with a mask in order to be consistent in presence of
+ * fast math.
+ * Inspired from the CMSSW FWCore/Utilities package
+ */
+{
+   const unsigned long long mask = 0x7FF0000000000000LL;
+   union { unsigned long long l; double d;} v;
+   v.d =x;
+   return (v.l&mask)!=mask;
+}
+#else
+#  if defined(R__HPUX11)
    { return isfinite(x); }
-#elif defined(R__MACOSX)
-#ifdef isfinite
+#  elif defined(R__MACOSX)
+#  ifdef isfinite
    // from math.h
    { return isfinite(x); }
-#else
+#  else
    // from cmath
    { return std::isfinite(x); }
-#endif
-#else
+#  endif
+#  else
    { return finite(x); }
+#  endif
+#endif
+
+#if defined (R__FAST_MATH)
+/* This namespace provides all the routines necessary for checking if a number
+ * is a NaN also in presence of optimisations affecting the behaviour of the
+ * floating point calculations.
+ * Inspired from the CMSSW FWCore/Utilities package
+ */
+namespace detailsForFastMath {
+// abridged from GNU libc 2.6.1 - in detail from
+//   math/math_private.h
+//   sysdeps/ieee754/ldbl-96/math_ldbl.h
+
+// part of ths file:
+   /*
+    * ====================================================
+    * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+    *
+    * Developed at SunPro, a Sun Microsystems, Inc. business.
+    * Permission to use, copy, modify, and distribute this
+    * software is freely granted, provided that this notice
+    * is preserved.
+    * ====================================================
+    */
+
+   // A union which permits us to convert between a double and two 32 bit ints.
+   typedef union {
+      double value;
+      struct {
+         UInt_t lsw;
+         UInt_t msw;
+      } parts;
+   } ieee_double_shape_type;
+
+#define EXTRACT_WORDS(ix0,ix1,d)                                    \
+   do {                                                             \
+      ieee_double_shape_type ew_u;                                  \
+      ew_u.value = (d);                                             \
+      (ix0) = ew_u.parts.msw;                                       \
+      (ix1) = ew_u.parts.lsw;                                       \
+   } while (0)
+
+   inline int IsNaN(double x)
+   {
+      UInt_t hx, lx;
+      ieee_double_shape_type ew_u;
+      ew_u.value = (x);
+      hx = ew_u.parts.msw;
+      lx = ew_u.parts.lsw;
+
+      EXTRACT_WORDS(hx, lx, x);
+
+      lx |= hx & 0xfffff;
+      hx &= 0x7ff00000;
+      return (hx == 0x7ff00000) && (lx != 0);
+   }
+}
 #endif
 
 inline Int_t TMath::IsNaN(Double_t x)
-#if (defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))) && !defined(_AIX) && !defined(__CUDACC__)
-#if defined(isnan) || defined(R__SOLARIS_CC50) || defined(__INTEL_COMPILER)
-   // from math.h
-  { return ::isnan(x); }
+#if defined(R__FAST_MATH)
+   {return detailsForFastMath::IsNaN(x);}
 #else
-   // from cmath
+#  if (defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))) && !defined(_AIX) && !defined(__CUDACC__)
+#  if defined(isnan) || defined(R__SOLARIS_CC50) || defined(__INTEL_COMPILER)
+      // from math.h
+   { return ::isnan(x); }
+#  else
+      // from cmath
    { return std::isnan(x); }
-#endif
-#else
+#  endif
+#  else
    { return isnan(x); }
+#  endif
 #endif
-
 //--------wrapper to numeric_limits
 //____________________________________________________________________________
 inline Double_t TMath::QuietNaN() {

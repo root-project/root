@@ -499,7 +499,11 @@ ifeq ($(PLATFORM),ios)
    POSTBIN       += staticlib
 endif
 
+ifeq ($(CXXMKDEPFLAGS),)
 MAKEDEP        = $(RMKDEP)
+else
+MAKEDEP        = @\#
+endif
 MAKELIB        = $(ROOT_SRCDIR)/build/unix/makelib.sh $(MKLIBOPTIONS)
 MAKEDIST      := $(ROOT_SRCDIR)/build/unix/makedist.sh
 MAKEDISTSRC   := $(ROOT_SRCDIR)/build/unix/makedistsrc.sh
@@ -612,27 +616,27 @@ build/rmkdepend/%.o: $(ROOT_SRCDIR)/build/rmkdepend/%.c
 define SRCTOOBJ_template
 $(1)/%_tmp.o: $(1)/%_tmp.cxx
 	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CXXFLAGS) -D__cplusplus -- $$<
-	$$(CXX) $$(OPT) $$(CXXFLAGS) $$(CXXOUT)$$@ -c $$<
+	$$(CXX) $$(OPT) $$(CXXFLAGS) $$(CXXMKDEPFLAGS) $$(CXXOUT)$$@ -c $$<
 
 $(1)/src/G__%.o: $(1)/src/G__%.cxx
 	$$(MAKEDEP) -R -f$$(patsubst %.o,%.d,$$@) -Y -w 1000 -- \
 	  $$(CXXFLAGS) -D__cplusplus -- $$<
-	$$(CXX) $$(NOOPT) $$(CXXFLAGS) -I. $$(CXXOUT)$$@ -c $$<
+	$$(CXX) $$(NOOPT) $$(CXXFLAGS) $$(CXXMKDEPFLAGS) -I. $$(CXXOUT)$$@ -c $$<
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.cxx
 	$$(MAKEDIR)
 	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CXXFLAGS) -D__cplusplus -- $$<
-	$$(CXX) $$(OPT) $$(CXXFLAGS) $$(CXXOUT)$$@ -c $$<
+	$$(CXX) $$(OPT) $$(CXXFLAGS) $$(CXXMKDEPFLAGS) $$(CXXOUT)$$@ -c $$<
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.c
 	$$(MAKEDIR)
 	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CFLAGS) -- $$<
-	$$(CC) $$(OPT) $$(CFLAGS) $$(CXXOUT)$$@ -c $$<
+	$$(CC) $$(OPT) $$(CFLAGS) $$(CXXMKDEPFLAGS) $$(CXXOUT)$$@ -c $$<
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.mm
 	$$(MAKEDIR)
 	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CXXFLAGS) -D__cplusplus -- $$<
-	$$(CXX) $$(OPT) $$(CXXFLAGS) -ObjC++ $$(CXXOUT)$$@ -c $$<
+	$$(CXX) $$(OPT) $$(CXXFLAGS) $$(CXXMKDEPFLAGS) -ObjC++ $$(CXXOUT)$$@ -c $$<
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.f
 	$$(MAKEDIR)
@@ -654,20 +658,20 @@ $(foreach module,$(MODULESGENERIC),$(eval $(call SRCTOOBJ_template,$(module))))
 
 %.o: %.cxx
 	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(CXXMKDEPFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.c
 	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CFLAGS) -- $<
-	$(CC) $(OPT) $(CFLAGS) $(CXXOUT)$@ -c $<
+	$(CC) $(OPT) $(CFLAGS) $(CXXMKDEPFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.mm
 	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXFLAGS) -ObjC++ $(CXXOUT)$@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(CXXMKDEPFLAGS) -ObjC++ $(CXXOUT)$@ -c $<
 
 %.o: %.f
 ifeq ($(F77),f2c)
 	f2c -a -A $<
-	$(CC) $(F77OPT) $(CFLAGS) $(CXXOUT)$@ -c $*.c
+	$(CC) $(F77OPT) $(CFLAGS) $(CXXMKDEPFLAGS) $(CXXOUT)$@ -c $*.c
 else
 ifneq ($(findstring gfortran, $(F77)),)
 # Ignore gfortran warnings, our Fortran code is old, won't change and works
@@ -1364,6 +1368,7 @@ runtimedirs:
 		--exclude '*' \
 		$(ROOT_SRCDIR)/geom/gdml/ geom/gdml ; \
 	echo "Rsync'ing $(ROOT_SRCDIR)/tmva/test/*.C, *.gif, *.png..."; \
+   mkdir -p tmva/test; \
 	$(RSYNC) \
 		--include '*.C' \
 		--include '*.gif' \

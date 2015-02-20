@@ -48,18 +48,7 @@
 #include "TSQLServer.h"
 #endif
 
-#if !defined(__CINT__)
-#ifdef R__WIN32
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#endif
 #include <mysql.h>
-#else
-struct MYSQL;
-#endif
-
-
 
 class TMySQLServer : public TSQLServer {
 

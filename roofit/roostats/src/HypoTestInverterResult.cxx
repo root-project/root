@@ -372,7 +372,11 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
       oocoutI(this,Eval) << "HypoTestInverterResult::Add  - new toys/point is " 
                          <<  ((HypoTestResult*) fYObjects.At(0))->GetNullDistribution()->GetSize() 
                          << std::endl;
-      
+
+   // reset cached limit values
+   fLowerLimit = TMath::QuietNaN();
+   fUpperLimit = TMath::QuietNaN();
+   
    return true;
 }
 
@@ -388,6 +392,11 @@ bool HypoTestInverterResult::Add (Double_t x, const HypoTestResult & res)
       if (!r) return false;
       r->Append(&res);
    }
+
+   // reset cached limit values
+   fLowerLimit = TMath::QuietNaN();
+   fUpperLimit = TMath::QuietNaN();
+   
    return true;
 }
 

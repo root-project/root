@@ -79,7 +79,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       if (fNullModel->GetConditionalObservables()) conditionalObs.add(*fNullModel->GetConditionalObservables());
       
       RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams), 
-                                                        RooFit::ConditionalObservables(conditionalObs));
+                                                        RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()) );
       RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
@@ -172,7 +172,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       if (fAltModel->GetConditionalObservables()) conditionalObs.add(*fAltModel->GetConditionalObservables());
             
       RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
-                                                        RooFit::ConditionalObservables(conditionalObs));
+                                                       RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()));
 
       RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values

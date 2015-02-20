@@ -54,7 +54,7 @@ public:
                        kALoadAndInterpLookup = 3
                       };
 
-   TEnum(): fInfo(0) {}
+   TEnum(): fInfo(0), fClass(0) {}
    TEnum(const char *name, void *info, TClass *cls);
    virtual ~TEnum();
 

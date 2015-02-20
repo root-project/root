@@ -12,6 +12,7 @@
 #include "AArch64.h"
 #include "AArch64InstrInfo.h"
 #include "AArch64MachineFunctionInfo.h"
+#include "AArch64Subtarget.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -136,7 +137,7 @@ static bool BBHasFallthrough(MachineBasicBlock *MBB) {
   if (NextBB == MBB->getParent()->end())
     return false;
 
-  for (MachineBasicBlock *S : MBB->successors()) 
+  for (MachineBasicBlock *S : MBB->successors())
     if (S == NextBB)
       return true;
 
@@ -475,7 +476,7 @@ bool AArch64BranchRelaxation::runOnMachineFunction(MachineFunction &mf) {
 
   DEBUG(dbgs() << "***** AArch64BranchRelaxation *****\n");
 
-  TII = (const AArch64InstrInfo *)MF->getTarget().getInstrInfo();
+  TII = (const AArch64InstrInfo *)MF->getSubtarget().getInstrInfo();
 
   // Renumber all of the machine basic blocks in the function, guaranteeing that
   // the numbers agree with the position of the block in the function.

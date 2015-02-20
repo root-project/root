@@ -22,6 +22,8 @@ def err_drv_unknown_stdin_type_clang_cl : Error<
 def err_drv_unknown_language : Error<"language not recognized: '%0'">;
 def err_drv_invalid_arch_name : Error<
   "invalid arch name '%0'">;
+def err_drv_invalid_thread_model_for_target : Error<
+  "invalid thread model '%0' in '%1' for this target">;
 def err_drv_invalid_linker_name : Error<
   "invalid linker name in argument '%0'">;
 def err_drv_invalid_rtlib_name : Error<
@@ -100,10 +102,6 @@ def err_drv_cc_print_options_failure : Error<
     "unable to open CC_PRINT_OPTIONS file: %0">;
 def err_drv_preamble_format : Error<
     "incorrect format for -preamble-bytes=N,END">;
-def err_drv_conflicting_deployment_targets : Error<
-  "conflicting deployment targets, both '%0' and '%1' are present in environment">;
-def err_drv_invalid_arch_for_deployment_target : Error<
-  "invalid architecture '%0' for deployment target '%1'">;
 def err_drv_objc_gc_arr : Error<
   "cannot specify both '-fobjc-arc' and '%0'">;
 def err_arc_unsupported_on_runtime : Error<
@@ -162,12 +160,20 @@ def warn_missing_sysroot : Warning<"no such sysroot directory: '%0'">,
   InGroup<DiagGroup<"missing-sysroot">>;
 def warn_debug_compression_unavailable : Warning<"cannot compress debug sections (zlib not installed)">,
   InGroup<DiagGroup<"debug-compression-unavailable">>;
+def warn_drv_enabling_rtti_with_exceptions : Warning<
+  "implicitly enabling rtti for exception handling">,
+  InGroup<DiagGroup<"rtti-for-exceptions">>;
+def warn_drv_disabling_vptr_no_rtti_default : Warning<
+  "implicitly disabling vptr sanitizer because rtti wasn't enabled">,
+  InGroup<DiagGroup<"auto-disable-vptr-sanitizer">>;
 
 def note_drv_command_failed_diag_msg : Note<
   "diagnostic msg: %0">;
-def note_drv_t_option_is_global :
-  Note<"The last /TC or /TP option takes precedence over earlier instances">;
-  
+def note_drv_t_option_is_global : Note<
+  "The last /TC or /TP option takes precedence over earlier instances">;
+def note_drv_address_sanitizer_debug_runtime : Note<
+  "AddressSanitizer doesn't support linking with debug runtime libraries yet">;
+
 def err_analyzer_config_no_value : Error<
   "analyzer-config option '%0' has a key but no value">;
 def err_analyzer_config_multiple_values : Error<

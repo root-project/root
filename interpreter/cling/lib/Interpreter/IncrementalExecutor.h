@@ -12,6 +12,12 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringRef.h"
+
+#include "IncrementalJIT.h"
+
+#include "cling/Interpreter/Transaction.h"
+#include "cling/Interpreter/Value.h"
 
 #include <vector>
 #include <set>
@@ -23,42 +29,25 @@ namespace clang {
 }
 
 namespace llvm {
-  class ExecutionEngine;
   class GlobalValue;
   class Module;
+  class TargetMachine;
 }
 
 namespace cling {
-  class Transaction;
   class Value;
+  class IncrementalJIT;
 
   class IncrementalExecutor {
   public:
     typedef void* (*LazyFunctionCreatorFunc_t)(const std::string&);
 
   private:
-    ///\brief Set of the symbols that the ExecutionEngine couldn't resolve.
+    ///\brief Our JIT interface.
     ///
-    static std::set<std::string> m_unresolvedSymbols;
+    std::unique_ptr<IncrementalJIT> m_JIT;
 
-    ///\brief Lazy function creator, which is a final callback which the
-    /// ExecutionEngine fires if there is unresolved symbol.
-    ///
-    static std::vector<LazyFunctionCreatorFunc_t> m_lazyFuncCreator;
-
-    ///\brief The llvm ExecutionEngine.
-    ///
-    std::unique_ptr<llvm::ExecutionEngine> m_engine;
-
-    ///\brief Symbols to be replaced by special Interpreter implementations.
-    ///
-    /// Replaces the exectution engine's symbol "first" by second.first, or
-    /// if it is NULL, but the symbol second.second which must exist at the time
-    /// the symbol is replaced. The replacement is tried again until first us
-    /// found.
-    std::map<std::string,std::pair<void*,std::string>> m_SymbolsToRemap;
-
-    ///\breif Helper that manages when the destructor of an object to be called.
+    ///\brief Helper that manages when the destructor of an object to be called.
     ///
     /// The object is registered first as an CXAAtExitElement and then cling
     /// takes the control of it's destruction.
@@ -83,8 +72,8 @@ namespace cling {
       ///                    atexit function.
       ///
       CXAAtExitElement(void (*func) (void*), void* arg,
-                       const Transaction* fromT):
-        m_Func(func), m_Arg(arg), m_FromT(fromT) {}
+                       const llvm::Module* fromM):
+        m_Func(func), m_Arg(arg), m_FromM(fromM) {}
 
       ///\brief The function to be called.
       ///
@@ -94,10 +83,10 @@ namespace cling {
       ///
       void* m_Arg;
 
-      ///\brief Clang's top level declaration, whose unloading will trigger the
-      /// call this atexit function.
+      ///\brief The module whose unloading will trigger the call to this atexit
+      /// function.
       ///
-      const Transaction* m_FromT; //FIXME: Should be bound to the llvm symbol.
+      const llvm::Module* m_FromM;
     };
 
     typedef llvm::SmallVector<CXAAtExitElement, 128> AtExitFunctions;
@@ -106,11 +95,30 @@ namespace cling {
     ///
     AtExitFunctions m_AtExitFuncs;
 
+    ///\brief Module for which registration of static destructors currently
+    /// takes place.
+    llvm::Module* m_CurrentAtExitModule;
+
+    ///\brief Modules to emit upon the next call to the JIT.
+    ///
+    std::vector<llvm::Module*> m_ModulesToJIT;
+
+    ///\brief Lazy function creator, which is a final callback which the
+    /// JIT fires if there is unresolved symbol.
+    ///
+    std::vector<LazyFunctionCreatorFunc_t> m_lazyFuncCreator;
+
+    ///\brief Set of the symbols that the JIT couldn't resolve.
+    ///
+    std::set<std::string> m_unresolvedSymbols;
+
 #if 0 // See FIXME in IncrementalExecutor.cpp
     ///\brief The diagnostics engine, printing out issues coming from the
     /// incremental executor.
     clang::DiagnosticsEngine& m_Diags;
 #endif
+
+    std::unique_ptr<llvm::TargetMachine> CreateHostTargetMachine() const;
 
   public:
     enum ExecutionResult {
@@ -120,12 +128,28 @@ namespace cling {
       kNumExeResults
     };
 
-    IncrementalExecutor(llvm::Module* m, clang::DiagnosticsEngine& diags);
+    IncrementalExecutor(clang::DiagnosticsEngine& diags);
+
     ~IncrementalExecutor();
 
     void installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp);
 
-    ExecutionResult runStaticInitializersOnce(llvm::Module* m);
+    ///\brief Send all collected modules to the JIT, making their symbols
+    /// available to jitting (but not necessarily jitting them all).
+    Transaction::ExeUnloadHandle emitToJIT() {
+      size_t handle = m_JIT->addModules(std::move(m_ModulesToJIT));
+      m_ModulesToJIT.clear();
+      //m_JIT->finalizeMemory();
+      return Transaction::ExeUnloadHandle{(void*)handle};
+    }
+
+    ///\brief Unload a set of JIT symbols.
+    void unloadFromJIT(Transaction::ExeUnloadHandle H) {
+      m_JIT->removeModules((size_t)H.m_Opaque);
+    }
+
+    ///\brief Run the static initializers of all modules collected to far.
+    ExecutionResult runStaticInitializersOnce(const Transaction& T);
 
     ///\brief Runs all destructors bound to the given transaction and removes
     /// them from the list.
@@ -133,8 +157,21 @@ namespace cling {
     ///
     void runAndRemoveStaticDestructors(Transaction* T);
 
-    ExecutionResult executeFunction(llvm::StringRef function,
-                                    Value* returnValue = 0);
+    ///\brief Runs a wrapper function.
+    ExecutionResult executeWrapper(llvm::StringRef function,
+                                   Value* returnValue = 0) {
+      // Set the value to cling::invalid.
+      if (returnValue) {
+        *returnValue = Value();
+      }
+      typedef void (*InitFun_t)(void*);
+      InitFun_t fun;
+      ExecutionResult res = executeInitOrWrapper(function, fun);
+      if (res != kExeSuccess)
+        return res;
+      (*fun)(returnValue);
+      return kExeSuccess;
+    }
 
     ///\brief Adds a symbol (function) to the execution engine.
     ///
@@ -147,6 +184,11 @@ namespace cling {
     /// @returns true if the symbol is successfully registered, false otherwise.
     ///
     bool addSymbol(const char* symbolName,  void* symbolAddress);
+
+    ///\brief Add a llvm::Module to the JIT.
+    ///
+    /// @param[in] module - The module to pass to the execution engine.
+    void addModule(llvm::Module* module) { m_ModulesToJIT.push_back(module); }
 
     ///\brief Tells the execution context that we are shutting down the system.
     ///
@@ -161,45 +203,63 @@ namespace cling {
     /// JIT symbols might not be immediately convertible to e.g. a function
     /// pointer as their call setup is different.
     ///
-    ///\param[in]  m       - the module to use for finging the global
     ///\param[in]  mangledName - the globa's name
     ///\param[out] fromJIT - whether the symbol was JITted.
     ///
-    void* getAddressOfGlobal(llvm::Module* m, llvm::StringRef mangledName,
-                             bool* fromJIT = 0);
+    void* getAddressOfGlobal(llvm::StringRef mangledName, bool* fromJIT = 0);
 
-    ///\brief Return the address of a global from the ExecutionEngine (as
+    ///\brief Return the address of a global from the JIT (as
     /// opposed to dynamic libraries). Forces the emission of the symbol if
     /// it has not happened yet.
     ///
     ///param[in] GV - global value for which the address will be returned.
     void* getPointerToGlobalFromJIT(const llvm::GlobalValue& GV);
 
-    llvm::ExecutionEngine* getExecutionEngine() const {
-      if (!m_engine)
-        return 0;
-      return m_engine.get();
-    }
-
     ///\brief Keep track of the entities whose dtor we need to call.
     ///
-     void AddAtExitFunc(void (*func) (void*), void* arg,
-                        const cling::Transaction* clingT);
+    void AddAtExitFunc(void (*func) (void*), void* arg);
+
+    ///\brief Try to resolve a symbol through our LazyFunctionCreators;
+    /// print an error message if that fails.
+    void* NotifyLazyFunctionCreators(const std::string&);
 
   private:
-    ///\brief Remaps the __cxa_at_exit with a interpreter-controlled one, such
-    /// that the interpreter can call the object destructors at the right time.
-    ///
-    void remapSymbols();
-
     ///\brief Report and empty m_unresolvedSymbols.
     ///\return true if m_unresolvedSymbols was non-empty.
     bool diagnoseUnresolvedSymbols(llvm::StringRef trigger,
                                    llvm::StringRef title = llvm::StringRef());
 
-    static void* HandleMissingFunction(const std::string&);
-    static void* NotifyLazyFunctionCreators(const std::string&);
+    ///\brief Remember that the symbol could not be resolved by the JIT.
+    void* HandleMissingFunction(const std::string& symbol);
 
+    ///\brief Runs an initializer function.
+    ExecutionResult executeInit(llvm::StringRef function) {
+      typedef void (*InitFun_t)();
+      InitFun_t fun;
+      ExecutionResult res = executeInitOrWrapper(function, fun);
+      if (res != kExeSuccess)
+        return res;
+      (*fun)();
+      return kExeSuccess;
+    }
+
+    template <class T>
+    ExecutionResult executeInitOrWrapper(llvm::StringRef funcname, T& fun) {
+      union {
+        T fun;
+        void* address;
+      } p2f;
+      p2f.address = (void*)m_JIT->getSymbolAddress(funcname);
+
+      // check if there is any unresolved symbol in the list
+      if (diagnoseUnresolvedSymbols(funcname, "function") || !p2f.address) {
+        fun = 0;
+        return IncrementalExecutor::kExeUnresolvedSymbols;
+      }
+
+      fun = p2f.fun;
+      return IncrementalExecutor::kExeSuccess;
+    }
   };
 } // end cling
 #endif // CLING_INCREMENTAL_EXECUTOR_H

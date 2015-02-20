@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TApplication.h"
@@ -1320,7 +1321,8 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             // than a canvas already embedded in one of the browser's tab
             obj->DrawClone();
          }
-         else obj->Browse(fBrowser);
+         else if (!obj->InheritsFrom("TFormula"))
+            obj->Browse(fBrowser);
          fDblClick = kFALSE;
          fNKeys = 0;
          fCnt = 0;

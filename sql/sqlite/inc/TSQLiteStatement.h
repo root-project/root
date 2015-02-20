@@ -16,22 +16,7 @@
 #include "TSQLStatement.h"
 #endif
 
-#if !defined(__CINT__)
-
-#ifdef R__WIN32
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#endif
-
 #include <sqlite3.h>
-
-#else
-struct sqlite3;
-struct sqlite3_stmt;
-#endif
-
-
 
 struct SQLite3_Stmt_t {
    sqlite3      *fConn;

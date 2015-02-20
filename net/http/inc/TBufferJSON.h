@@ -198,6 +198,7 @@ public:
    virtual   void     ReadDouble(Double_t   &d);
    virtual   void     ReadCharP(Char_t      *c);
    virtual   void     ReadTString(TString   &s);
+   virtual   void     ReadStdString(std::string &s);
 
    virtual   void     WriteBool(Bool_t       b);
    virtual   void     WriteChar(Char_t       c);
@@ -213,7 +214,8 @@ public:
    virtual   void     WriteFloat(Float_t     f);
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
-   virtual   void     WriteTString(const TString  &s);
+   virtual   void     WriteTString(const TString &s);
+   virtual   void     WriteStdString(const std::string &s);
 
    virtual   Int_t    WriteClones(TClonesArray *a, Int_t nobjects);
 
@@ -407,10 +409,7 @@ protected:
 
    // end redefined protected virtual functions
 
-   TString          JsonWriteAny(const void *obj, const TClass *cl);
-
    TString          JsonWriteMember(const void *ptr, TDataMember *member, TClass *memberClass);
-
 
    TJSONStackObj   *PushStack(Int_t inclevel = 0);
    TJSONStackObj   *PopStack();
@@ -418,6 +417,12 @@ protected:
 
    void             WorkWithClass(TStreamerInfo *info, const TClass *cl = 0);
    void             WorkWithElement(TStreamerElement *elem, Int_t comp_type);
+
+
+   void             JsonDisablePostprocessing();
+   Int_t            JsonSpecialClass(const TClass *cl) const;
+
+   void             JsonStartElement(const TStreamerElement *elem, const TClass *base_class = 0);
 
    void             PerformPostProcessing(TJSONStackObj *stack, const TStreamerElement *elem = 0);
 
@@ -435,15 +440,14 @@ protected:
    void              JsonWriteBasic(ULong_t value);
    void              JsonWriteBasic(ULong64_t value);
 
-   void              JsonWriteObject(const void *obj, const TClass *objClass);
+   void              JsonWriteObject(const void *obj, const TClass *objClass, Bool_t check_map = kTRUE);
 
    void              JsonStreamCollection(TCollection *obj, const TClass *objClass);
 
-   void              JsonStartElement();
-
    void              AppendOutput(const char *line0, const char *line1 = 0);
 
-   TString                   fOutBuffer;    //!  output buffer for json code
+   TString                   fOutBuffer;    //!  main output buffer for json code
+   TString                  *fOutput;       //!  current output buffer for json code
    TString                   fValue;        //!  buffer for current value
    std::map<const void *, unsigned>  fJsonrMap;   //!  map of recorded objects, used in JsonR to restore references
    unsigned                  fJsonrCnt;     //!  counter for all objects and arrays

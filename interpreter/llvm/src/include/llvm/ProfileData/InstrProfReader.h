@@ -12,17 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_PROFILEDATA_INSTRPROF_READER_H_
-#define LLVM_PROFILEDATA_INSTRPROF_READER_H_
+#ifndef LLVM_PROFILEDATA_INSTRPROFREADER_H
+#define LLVM_PROFILEDATA_INSTRPROFREADER_H
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ProfileData/InstrProf.h"
+#include "llvm/Support/EndianStream.h"
+#include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/LineIterator.h"
 #include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/EndianStream.h"
 #include "llvm/Support/OnDiskHashTable.h"
-
 #include <iterator>
 
 namespace llvm {
@@ -94,8 +94,7 @@ public:
 
   /// Factory method to create an appropriately typed reader for the given
   /// instrprof file.
-  static std::error_code create(std::string Path,
-                                std::unique_ptr<InstrProfReader> &Result);
+  static ErrorOr<std::unique_ptr<InstrProfReader>> create(std::string Path);
 };
 
 /// Reader for the simple text based instrprof format.
@@ -120,7 +119,7 @@ private:
     LLVM_DELETED_FUNCTION;
 public:
   TextInstrProfReader(std::unique_ptr<MemoryBuffer> DataBuffer_)
-      : DataBuffer(std::move(DataBuffer_)), Line(*DataBuffer, '#') {}
+      : DataBuffer(std::move(DataBuffer_)), Line(*DataBuffer, true, '#') {}
 
   /// Read the header.
   std::error_code readHeader() override { return success(); }
@@ -302,4 +301,4 @@ public:
 
 } // end namespace llvm
 
-#endif // LLVM_PROFILEDATA_INSTRPROF_READER_H_
+#endif

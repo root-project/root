@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_TARGET_AArch64_ISELLOWERING_H
-#define LLVM_TARGET_AArch64_ISELLOWERING_H
+#ifndef LLVM_LIB_TARGET_AARCH64_AARCH64ISELLOWERING_H
+#define LLVM_LIB_TARGET_AARCH64_AARCH64ISELLOWERING_H
 
 #include "llvm/CodeGen/CallingConvLower.h"
 #include "llvm/CodeGen/SelectionDAG.h"
@@ -162,6 +162,16 @@ enum {
   SITOF,
   UITOF,
 
+  /// Natural vector cast. ISD::BITCAST is not natural in the big-endian
+  /// world w.r.t vectors; which causes additional REV instructions to be
+  /// generated to compensate for the byte-swapping. But sometimes we do
+  /// need to re-interpret the data in SIMD vector registers in big-endian
+  /// mode without emitting such REV instructions.
+  NVCAST,
+
+  SMULL,
+  UMULL,
+
   // NEON Load/Store with post-increment base updates
   LD2post = ISD::FIRST_TARGET_MEMORY_OPCODE,
   LD3post,
@@ -197,10 +207,10 @@ class AArch64TargetLowering : public TargetLowering {
   bool RequireStrictAlign;
 
 public:
-  explicit AArch64TargetLowering(TargetMachine &TM);
+  explicit AArch64TargetLowering(const TargetMachine &TM,
+                                 const AArch64Subtarget &STI);
 
-  /// Selects the correct CCAssignFn for a the given CallingConvention
-  /// value.
+  /// Selects the correct CCAssignFn for a given CallingConvention value.
   CCAssignFn *CCAssignFnForCall(CallingConv::ID CC, bool IsVarArg) const;
 
   /// computeKnownBitsForTargetNode - Determine which of the bits specified in
@@ -213,7 +223,7 @@ public:
   MVT getScalarShiftAmountTy(EVT LHSTy) const override;
 
   /// allowsMisalignedMemoryAccesses - Returns true if the target allows
-  /// unaligned memory accesses. of the specified type.
+  /// unaligned memory accesses of the specified type.
   bool allowsMisalignedMemoryAccesses(EVT VT, unsigned AddrSpace = 0,
                                       unsigned Align = 1,
                                       bool *Fast = nullptr) const override {
@@ -318,12 +328,15 @@ public:
   bool shouldConvertConstantLoadToIntImm(const APInt &Imm,
                                          Type *Ty) const override;
 
+  bool hasLoadLinkedStoreConditional() const override;
   Value *emitLoadLinked(IRBuilder<> &Builder, Value *Addr,
                         AtomicOrdering Ord) const override;
   Value *emitStoreConditional(IRBuilder<> &Builder, Value *Val,
                               Value *Addr, AtomicOrdering Ord) const override;
 
-  bool shouldExpandAtomicInIR(Instruction *Inst) const override;
+  bool shouldExpandAtomicLoadInIR(LoadInst *LI) const override;
+  bool shouldExpandAtomicStoreInIR(StoreInst *SI) const override;
+  bool shouldExpandAtomicRMWInIR(AtomicRMWInst *AI) const override;
 
   bool useLoadStackGuardNode() const override;
   TargetLoweringBase::LegalizeTypeAction
@@ -427,7 +440,8 @@ private:
   SDValue LowerFSINCOS(SDValue Op, SelectionDAG &DAG) const;
 
   SDValue BuildSDIVPow2(SDNode *N, const APInt &Divisor, SelectionDAG &DAG,
-                        std::vector<SDNode *> *Created) const;
+                        std::vector<SDNode *> *Created) const override;
+  bool combineRepeatedFPDivisors(unsigned NumUsers) const override;
 
   ConstraintType
   getConstraintType(const std::string &Constraint) const override;
@@ -460,6 +474,10 @@ private:
 
   void ReplaceNodeResults(SDNode *N, SmallVectorImpl<SDValue> &Results,
                           SelectionDAG &DAG) const override;
+
+  bool functionArgumentNeedsConsecutiveRegisters(Type *Ty,
+                                                 CallingConv::ID CallConv,
+                                                 bool isVarArg) const override;
 };
 
 namespace AArch64 {
@@ -469,4 +487,4 @@ FastISel *createFastISel(FunctionLoweringInfo &funcInfo,
 
 } // end namespace llvm
 
-#endif // LLVM_TARGET_AArch64_ISELLOWERING_H
+#endif

@@ -36,6 +36,13 @@ FunctionPass *createConstantPropagationPass();
 
 //===----------------------------------------------------------------------===//
 //
+// AlignmentFromAssumptions - Use assume intrinsics to set load/store
+// alignments.
+//
+FunctionPass *createAlignmentFromAssumptionsPass();
+
+//===----------------------------------------------------------------------===//
+//
 // SCCP - Sparse conditional constant propagation.
 //
 FunctionPass *createSCCPPass();
@@ -88,6 +95,13 @@ FunctionPass *createScalarReplAggregatesPass(signed Threshold = -1,
                                              signed StructMemberThreshold = -1,
                                              signed ArrayElementThreshold = -1,
                                              signed ScalarLoadThreshold = -1);
+
+//===----------------------------------------------------------------------===//
+//
+// InductiveRangeCheckElimination - Transform loops to elide range checks on
+// linear functions of the induction variable.
+//
+Pass *createInductiveRangeCheckEliminationPass();
 
 //===----------------------------------------------------------------------===//
 //
@@ -199,16 +213,17 @@ FunctionPass *createReassociatePass();
 //===----------------------------------------------------------------------===//
 //
 // JumpThreading - Thread control through mult-pred/multi-succ blocks where some
-// preds always go to some succ.
+// preds always go to some succ. Thresholds other than minus one override the
+// internal BB duplication default threshold.
 //
-FunctionPass *createJumpThreadingPass();
+FunctionPass *createJumpThreadingPass(int Threshold = -1);
 
 //===----------------------------------------------------------------------===//
 //
 // CFGSimplification - Merge basic blocks, eliminate unreachable blocks,
 // simplify terminator instructions, etc...
 //
-FunctionPass *createCFGSimplificationPass();
+FunctionPass *createCFGSimplificationPass(int Threshold = -1);
 
 //===----------------------------------------------------------------------===//
 //
@@ -387,7 +402,9 @@ FunctionPass *createAddDiscriminatorsPass();
 //
 // SeparateConstOffsetFromGEP - Split GEPs for better CSE
 //
-FunctionPass *createSeparateConstOffsetFromGEPPass();
+FunctionPass *
+createSeparateConstOffsetFromGEPPass(const TargetMachine *TM = nullptr,
+                                     bool LowerGEP = false);
 
 //===----------------------------------------------------------------------===//
 //

@@ -74,7 +74,7 @@ END_HTML
 #include <algorithm>
 #include <functional>
 #include <ctype.h>   // need to use c version of toupper defined here
-#
+
 /*
 // for debugging
 #include "RooNLLVar.h"
@@ -259,8 +259,12 @@ bool LikelihoodInterval::CreateMinimizer() {
       }
    }
 
-   // now do binding of NLL with a functor for Minimizer 
-   fFunctor = std::auto_ptr<RooFunctor>(new RooFunctor(nll, RooArgSet(), params )); 
+   // now do binding of NLL with a functor for Minimizer
+   if (RooStats::IsNLLOffset() ) {
+      ccoutI(InputArguments) << "LikelihoodInterval: using nll offset - set all RooAbsReal to hide the offset  " << std::endl;
+      RooAbsReal::setHideOffset(kFALSE); // need to keep this false
+   }
+   fFunctor = std::shared_ptr<RooFunctor>(new RooFunctor(nll, RooArgSet(), params )); 
 
    std::string minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
    std::transform(minimType.begin(), minimType.end(), minimType.begin(), (int(*)(int)) tolower ); 
@@ -273,11 +277,11 @@ bool LikelihoodInterval::CreateMinimizer() {
    // do not use static instance of TMInuit which could interfere with RooFit
    if (minimType == "Minuit")  TMinuitMinimizer::UseStaticMinuit(false);
    // create minimizer class 
-   fMinimizer = std::auto_ptr<ROOT::Math::Minimizer>(ROOT::Math::Factory::CreateMinimizer(minimType, "Migrad"));
+   fMinimizer = std::shared_ptr<ROOT::Math::Minimizer>(ROOT::Math::Factory::CreateMinimizer(minimType, "Migrad"));
 
    if (!fMinimizer.get()) return false;
 
-   fMinFunc = std::auto_ptr<ROOT::Math::IMultiGenFunction>( new ROOT::Math::WrappedMultiFunction<RooFunctor &> (*fFunctor, fFunctor->nPar() ) );  
+   fMinFunc = std::shared_ptr<ROOT::Math::IMultiGenFunction>( new ROOT::Math::WrappedMultiFunction<RooFunctor &> (*fFunctor, fFunctor->nPar() ) );  
    fMinimizer->SetFunction(*fMinFunc); 
 
    // set minimizer parameters 

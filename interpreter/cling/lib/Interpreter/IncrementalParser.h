@@ -33,6 +33,7 @@ namespace clang {
 }
 
 namespace cling {
+  class BackendPasses;
   class CompilationOptions;
   class CIFactory;
   class DeclCollector;
@@ -60,8 +61,11 @@ namespace cling {
     // parser (incremental)
     std::unique_ptr<clang::Parser> m_Parser;
 
+    // optimizer etc passes
+    std::unique_ptr<BackendPasses> m_BackendPasses;
+
     // One buffer for each command line, owner by the source file manager
-    std::deque<llvm::MemoryBuffer*> m_MemoryBuffers;
+    std::deque<std::pair<llvm::MemoryBuffer*, clang::FileID>> m_MemoryBuffers;
 
     // file ID of the memory buffer
     clang::FileID m_VirtualFileID;
@@ -76,6 +80,9 @@ namespace cling {
     /// capacity is exceeded.
     ///
     std::deque<Transaction*> m_Transactions;
+
+    ///\brief Number of created modules.
+    unsigned m_ModuleNo;
 
     ///\brief Code generator
     ///
@@ -171,6 +178,10 @@ namespace cling {
     ///\brief Returns the currently active transaction.
     ///
     const Transaction* getCurrentTransaction() const;
+
+
+    ///\brief Add a user-generated transaction.
+    void addTransaction(Transaction* T);
 
     ///\brief Returns the list of transactions seen by the interpreter.
     /// Intentionally makes a copy - that function is meant to be use for debug

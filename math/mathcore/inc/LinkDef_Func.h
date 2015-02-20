@@ -28,6 +28,7 @@
 #pragma link C++ function ROOT::Math::fdistribution_pdf( double , double, double, double);
 #pragma link C++ function ROOT::Math::gamma_pdf( double , double, double, double);
 #pragma link C++ function ROOT::Math::gaussian_pdf( double , double, double);
+#pragma link C++ function ROOT::Math::bigaussian_pdf( double , double, double,double,double,double,double);
 #pragma link C++ function ROOT::Math::landau_pdf( double , double, double);
 #pragma link C++ function ROOT::Math::lognormal_pdf( double , double, double, double);
 #pragma link C++ function ROOT::Math::normal_pdf( double , double, double);

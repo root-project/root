@@ -264,7 +264,24 @@ namespace Math {
 
   double gaussian_pdf(double x, double sigma = 1, double x0 = 0);
 
+   /**
 
+  Probability density function of the bi-dimensional (Gaussian) distribution.
+
+  \f[ p(x) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-(x^2/\sigma_x^2 + y^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]  
+
+  For detailed description see
+  <A HREF="http://mathworld.wolfram.com/BivariateNormalDistribution.html">
+  Mathworld</A>. It can also be evaluated using #normal_pdf which will
+  call the same implementation.
+  
+ @param rho correlation , must be between -1,1
+
+  @ingroup PdfFunc
+
+  */
+
+   double bigaussian_pdf(double x, double y, double sigmax = 1, double sigmay = 1, double rho = 0, double x0 = 0, double y0 = 0);
 
    /**
 

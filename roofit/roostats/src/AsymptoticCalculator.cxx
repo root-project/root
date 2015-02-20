@@ -54,23 +54,46 @@ ClassImp(RooStats::AsymptoticCalculator);
 
 int AsymptoticCalculator::fgPrintLevel = 1;
 
+
 void AsymptoticCalculator::SetPrintLevel(int level) { 
    // set print level (static function)
    // 0 minimal, 1 normal,  2 debug
    fgPrintLevel = level;
 }
 
+
 AsymptoticCalculator::AsymptoticCalculator(
    RooAbsData &data,
    const ModelConfig &altModel,
    const ModelConfig &nullModel, bool nominalAsimov) :
       HypoTestCalculatorGeneric(data, altModel, nullModel, 0), 
-      fOneSided(false), fOneSidedDiscovery(false), fUseQTilde(-1), 
+      fOneSided(false), fOneSidedDiscovery(false), fNominalAsimov(nominalAsimov),
+      fUseQTilde(-1), 
       fNLLObs(0), fNLLAsimov(0), 
       fAsimovData(0)   
 {
    // constructor for asymptotic calculator from Data set  and ModelConfig
-   // The constructor will perform a global fit of the model to the data 
+   if (!Initialize()) return; 
+
+   int verbose = fgPrintLevel; 
+   // try to guess default configuration
+   // (this part should be only in constructor because the null snapshot might change during HypoTestInversion
+   const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
+   assert(nullSnapshot);
+   RooRealVar * muNull  = dynamic_cast<RooRealVar*>( nullSnapshot->first() );
+   assert(muNull);
+   if (muNull->getVal() == muNull->getMin()) { 
+      fOneSidedDiscovery = true; 
+      if (verbose > 0) 
+         oocoutI((TObject*)0,InputArguments) << "AsymptotiCalculator: Minimum of POI is " << muNull->getMin() << " corresponds to null  snapshot   - default configuration is  one-sided discovery formulae  " << std::endl;
+   }
+
+}
+
+   
+bool AsymptoticCalculator::Initialize() const {
+   // Initialize the calculator 
+   // The initialization will perform a global fit of the model to the data 
    // and build an Asimov data set. 
    // It will then also fit the model to the Asimov data set to find the likelihood value  
    // of the Asimov data set
@@ -78,23 +101,33 @@ AsymptoticCalculator::AsymptoticCalculator(
    // By default the nuisance parameters are fitted to the data  
    // NOTE: If a fit has been done before, one for speeding up could set all the initial prameters 
    // to the fit value and in addition set the null snapshot to the best fit
-   
-
-   RooAbsPdf * nullPdf = GetNullModel()->GetPdf();
-   assert(nullPdf); 
 
    int verbose = fgPrintLevel; 
+   if (verbose >= 0)
+      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::Initialize...." << std::endl;
 
+
+   RooAbsPdf * nullPdf = GetNullModel()->GetPdf();
+   if (!nullPdf) {
+      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - ModelConfig has not a pdf defined" << std::endl;
+      return false;       
+   }
    RooAbsData * obsData = const_cast<RooAbsData *>(GetData() );
-   assert( obsData );
+   if (!obsData ) {
+      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - data set has not been defined" << std::endl;
+      return false;       
+   }
+   RooAbsData & data = *obsData;
+
+   
 
    const RooArgSet * poi = GetNullModel()->GetParametersOfInterest(); 
    if (!poi || poi->getSize() == 0) { 
-      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator: ModelConfig has not POI defined." << endl;
-      return;
+      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize -  ModelConfig has not POI defined." << endl;
+      return false;
    }
    if (poi->getSize() > 1) { 
-      oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator: ModelConfig has more than one POI defined \n\t" 
+      oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - ModelConfig has more than one POI defined \n\t" 
                                           << "The asymptotic calculator works for only one POI - consider as POI only the first parameter" 
                                           << std::endl;
    }
@@ -103,23 +136,31 @@ AsymptoticCalculator::AsymptoticCalculator(
    // This will set the poi value to the null snapshot value in the ModelConfig
    const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
    if(nullSnapshot == NULL || nullSnapshot->getSize() == 0) {
-      oocoutE((TObject*)0,InputArguments) << "Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
-      return;
+      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::Initialize - Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
+      return false;
    }
+   
+   // GetNullModel()->Print();
+   // printf("ASymptotic calc: null snapshot\n");
+   // nullSnapshot->Print("v");
+   // printf("PDF  variables " );
+   // nullPdf->getVariables()->Print("v");
    
    // keep snapshot for the initial parameter values (need for nominal Asimov)
    RooArgSet nominalParams; 
-   RooArgSet * allParams = nullPdf->getParameters(*obsData);
+   RooArgSet * allParams = nullPdf->getParameters(data);
    RemoveConstantParameters(allParams);
-   if (nominalAsimov) { 
+   if (fNominalAsimov) { 
       allParams->snapshot(nominalParams);
    }
-
-
+   fBestFitPoi.removeAll(); 
+   fBestFitParams.removeAll();
+   fAsimovGlobObs.removeAll();
+      
    // evaluate the unconditional nll for the full model on the  observed data 
    if (verbose >= 0)
-      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best unconditional NLL on observed data" << endl;
-   fNLLObs = EvaluateNLL( *nullPdf, *obsData, GetNullModel()->GetConditionalObservables());
+      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::Initialize - Find  best unconditional NLL on observed data" << endl;
+   fNLLObs = EvaluateNLL( *nullPdf, data, GetNullModel()->GetConditionalObservables());
    // fill also snapshot of best poi
    poi->snapshot(fBestFitPoi);
    RooRealVar * muBest = dynamic_cast<RooRealVar*>(fBestFitPoi.first());
@@ -134,7 +175,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    const RooArgSet * altSnapshot = GetAlternateModel()->GetSnapshot();
    if(altSnapshot == NULL || altSnapshot->getSize() == 0) {
       oocoutE((TObject*)0,InputArguments) << "Alt (Background)  model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
-      return;
+      return false;
    }
 
    RooArgSet poiAlt(*altSnapshot);  // this is the poi snapshot of B (i.e. for mu=0)
@@ -160,11 +201,11 @@ AsymptoticCalculator::AsymptoticCalculator(
       }
    }
 
-   if (!nominalAsimov) {
+   if (!fNominalAsimov) {
       if (verbose >= 0) 
          oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimov data will be generated using fitted nuisance parameter values" << endl;
       RooArgSet * tmp = (RooArgSet*) poiAlt.snapshot(); 
-      fAsimovData = MakeAsimovData( data, nullModel, poiAlt, fAsimovGlobObs,tmp);
+      fAsimovData = MakeAsimovData( data, *GetNullModel(), poiAlt, fAsimovGlobObs,tmp);
    }
 
    else {
@@ -172,12 +213,12 @@ AsymptoticCalculator::AsymptoticCalculator(
       if (verbose >= 0) 
          oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << endl;
       nominalParams = poiAlt; // set poi to alt value but keep nuisance at the nominal one
-      fAsimovData = MakeAsimovData( nullModel, nominalParams, fAsimovGlobObs);
+      fAsimovData = MakeAsimovData( *GetNullModel(), nominalParams, fAsimovGlobObs);
    }
 
    if (!fAsimovData) { 
       oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator: Error : Asimov data set could not be generated " << endl;
-      return;
+      return false;
    }
 
    // set global observables to their Asimov values 
@@ -198,7 +239,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    RooRealVar * muAlt = (RooRealVar*) poiAlt.first();
    assert(muAlt);
    if (verbose>=0)
-      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best conditional NLL on ASIMOV data set for given alt POI ( " << 
+      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::Initialize Find  best conditional NLL on ASIMOV data set for given alt POI ( " << 
          muAlt->GetName() << " ) = " << muAlt->getVal() << std::endl;
 
    fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData, GetNullModel()->GetConditionalObservables(), &poiAlt );
@@ -209,19 +250,11 @@ AsymptoticCalculator::AsymptoticCalculator(
    // restore previous value 
    globObs = globObsSnapshot;
 
-   // try to guess default configuration
-   // (this part should be in constructor)
-   RooRealVar * muNull  = dynamic_cast<RooRealVar*>( nullSnapshot->first() );
-   assert (muNull);
-   if (muNull->getVal() == muNull->getMin()) { 
-      fOneSidedDiscovery = true; 
-      if (verbose > 0) 
-         oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muNull->getMin() << " corresponds to null  snapshot   - default configuration is  one-sided discovery formulae  " << std::endl;
-   }
-
    // restore number of bins 
    if (prevBins > 0 && xobs) xobs->setBins(prevBins);
 
+   fIsInitialized = true; 
+   return true; 
 }
 
 //_________________________________________________________________
@@ -242,7 +275,7 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
     if (condObs) conditionalObs.add(*condObs);
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-    RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs));
+    RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()));
 
     RooArgSet* attachedSet = nll->getVariables();
 
@@ -347,8 +380,16 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        if (status%100 == 0) { // ignore errors in Hesse or in Improve
           result = minim.save();
        }
-       if (result){ 
-          val = result->minNll();
+       if (result){
+          if (!RooStats::IsNLLOffset() ) 
+             val = result->minNll();
+          else {
+             bool previous = RooAbsReal::hideOffset();
+             RooAbsReal::setHideOffset(kTRUE) ;
+             val = nll->getVal();
+             if (!previous)  RooAbsReal::setHideOffset(kFALSE) ;
+          }
+             
        }
        else { 
           oocoutE((TObject*)0,Fitting) << "FIT FAILED !- return a NaN NLL " << std::endl;
@@ -399,6 +440,14 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    // first one
 
    int verbose = fgPrintLevel;
+
+   // re-initialized the calculator in case it is needed (pdf or data modifided)
+   if (!fIsInitialized) {
+      if (!Initialize() ) {
+         oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::GetHypoTest - Error initializing Asymptotic calculator - return NULL result " << endl;
+         return 0;
+      }
+   }
 
    if (!fAsimovData) { 
        oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator::GetHypoTest - Asimov data set has not been generated - return NULL result " << endl;
@@ -833,9 +882,9 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
 bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs) 
 {
    // iterate a Prod pdf to find all the Poisson or Gaussian part to set the observed value to expected one
-    std::auto_ptr<TIterator> iter(prod.pdfList().createIterator());
+    RooLinkedListIter  iter(prod.pdfList().iterator());
     bool ret = false;
-    for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
+    for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
         if (!a->dependsOn(obs)) continue;
         RooPoisson *pois = 0;
         RooGaussian * gaus = 0;
@@ -871,8 +920,8 @@ bool AsymptoticCalculator::SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs
    RooRealVar *myobs = 0;
    RooAbsReal *myexp = 0;
    const char * pdfName = pdf.IsA()->GetName();
-   std::auto_ptr<TIterator> iter(pdf.serverIterator());
-   for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
+   RooFIter iter(pdf.serverMIterator());
+   for (RooAbsArg *a =  iter.next(); a != 0; a = iter.next()) {
       if (obs.contains(*a)) {
          if (myobs != 0) { 
             oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two observables ?? " << endl;
@@ -960,7 +1009,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovDataSinglePdf(const RooAbsPdf &
    int printLevel = fgPrintLevel;
 
    // Get observables defined by the pdf associated with this state
-   RooArgSet* obs = pdf.getObservables(allobs) ;
+   std::unique_ptr<RooArgSet> obs(pdf.getObservables(allobs) );
 
 
    // if pdf cannot be extended assume is then a counting experiment
@@ -1025,7 +1074,6 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovDataSinglePdf(const RooAbsPdf &
       asimovData = 0;
     }
 
-    delete obs;
     return asimovData;
 
 }
@@ -1132,9 +1180,9 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
    } else {
       // Do we have free parameters anyway that need fitting?
-      std::auto_ptr<RooArgSet> params(model.GetPdf()->getParameters(realData));
-      std::auto_ptr<TIterator> iter(params->createIterator());
-      for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
+      std::unique_ptr<RooArgSet> params(model.GetPdf()->getParameters(realData));
+      RooLinkedListIter iter(params->iterator());
+      for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
          RooRealVar *rrv = dynamic_cast<RooRealVar *>(a);
          if ( rrv != 0 && rrv->isConstant() == false ) { hasFloatParams = true; break; }
       } 
@@ -1166,7 +1214,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
       model.GetPdf()->fitTo(realData, RooFit::Minimizer(minimizerType.c_str(),minimizerAlgo.c_str()), 
                  RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()),
                  RooFit::PrintLevel(minimPrintLevel-1), RooFit::Hesse(false),
-                            RooFit::Constrain(constrainParams),RooFit::ConditionalObservables(conditionalObs));
+                            RooFit::Constrain(constrainParams),RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()));
       if (verbose>0) { std::cout << "fit time "; tw2.Print();}
       if (verbose > 1) { 
          // after the fit the nuisance parameters will have their best fit value
@@ -1275,7 +1323,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
       }
 
       // part 1: create the nuisance pdf
-      std::auto_ptr<RooAbsPdf> nuispdf(RooStats::MakeNuisancePdf(model,"TempNuisPdf") );
+      std::unique_ptr<RooAbsPdf> nuispdf(RooStats::MakeNuisancePdf(model,"TempNuisPdf") );
       if (nuispdf.get() == 0) { 
          oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: model has nuisance parameters and global obs but no nuisance pdf "
                                          << std::endl;
@@ -1290,16 +1338,16 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          // nothing to unfold - just use the pdf
          pdfList.add(*nuispdf.get());
 
-      std::auto_ptr<TIterator> iter(pdfList.createIterator());
-      for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
+      RooLinkedListIter iter(pdfList.iterator());
+      for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
          RooAbsPdf *cterm = dynamic_cast<RooAbsPdf *>(a); 
          assert(cterm && "AsimovUtils: a factor of the nuisance pdf is not a Pdf!");
          if (!cterm->dependsOn(nuis)) continue; // dummy constraints
          // skip also the case of uniform components
          if (typeid(*cterm) == typeid(RooUniform)) continue;
 
-         std::auto_ptr<RooArgSet> cpars(cterm->getParameters(&gobs));
-         std::auto_ptr<RooArgSet> cgobs(cterm->getObservables(&gobs));
+         std::unique_ptr<RooArgSet> cpars(cterm->getParameters(&gobs));
+         std::unique_ptr<RooArgSet> cgobs(cterm->getObservables(&gobs));
          if (cgobs->getSize() > 1) {
             oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: constraint term  " <<  cterm->GetName() 
                                             << " has multiple global observables -cannot generate - skip it" << std::endl;
@@ -1310,6 +1358,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
                                             << " has no global observables - skip it" << std::endl;
             continue; 
          }
+         // the variable representing the global observable
          RooRealVar &rrv = dynamic_cast<RooRealVar &>(*cgobs->first());
 
          // remove the constant parameters in cpars 
@@ -1320,17 +1369,8 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
             continue;
          }
 
-         // look at server of the constraint term
-         RooAbsArg * arg = cterm->findServer(rrv); 
-         if (!arg) {
-            oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
-                                            << cterm->GetName() << " has no direct dependence on global observable- cannot generate it " << std::endl;
-            continue;
-
-         }
-         std::auto_ptr<TIterator> iter2(cterm->serverIterator() );
          bool foundServer = false;
-         // note : this will work only for thi stype of constraints
+         // note : this will work only for this type of constraints
          // expressed as RooPoisson, RooGaussian, RooLognormal, RooGamma
          TClass * cClass = cterm->IsA();
          if (verbose > 2) std::cout << "Constraint " << cterm->GetName() << " of type " << cClass->GetName() << std::endl;
@@ -1343,14 +1383,50 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
                                             << " is a non-supported type - result might be not correct " << std::endl;
          }
 
-         // in cae of a Poisson constraint make sure the rounding is not set 
+         // in case of a Poisson constraint make sure the rounding is not set 
          if (cClass == RooPoisson::Class() ) { 
             RooPoisson * pois = dynamic_cast<RooPoisson*>(cterm); 
             assert(pois); 
             pois->setNoRounding(true); 
          }
 
-         for (RooAbsArg *a2 = (RooAbsArg *) iter2->Next(); a2 != 0; a2 = (RooAbsArg *) iter2->Next()) {
+         // look at server of the constraint term and check if the global observable is part of the server
+         RooAbsArg * arg = cterm->findServer(rrv); 
+         if (!arg) {
+            // special case is for the Gamma where one might define the global observable n and you have a Gamma(b, n+1, ...._
+            // in this case n+1 is the server and we don;t have a direct dependency, but we want to set n to the b value
+            // so in case of the Gamma ignore this test
+            if ( cClass != RooGamma::Class() ) {
+               oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
+                                               << cterm->GetName() << " has no direct dependence on global observable- cannot generate it " << std::endl;
+               continue;
+            }
+         }
+
+         // loop on the server of the constraint term
+         // neeed to treat the Gamma as a special case
+         // the mode of the Gamma is (k-1)*theta where theta is the inverse of the rate parameter.
+         // we assume that the global observable is defined as ngobs = k-1 and the theta parameter has the name theta otherwise we use other procedure which might be wrong
+         RooAbsReal * thetaGamma = 0;
+         if ( cClass == RooGamma::Class() ) {
+            RooFIter itc(cterm->serverMIterator() );
+            for (RooAbsArg *a2 = itc.next(); a2 != 0; a2 = itc.next()) {
+               if (TString(a2->GetName()).Contains("theta") ) {
+                  thetaGamma = dynamic_cast<RooAbsReal*>(a2);
+                  break;
+               }
+            }
+            if (thetaGamma == 0) {
+               oocoutI((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
+                                               << cterm->GetName() << " is a Gamma distribution and no server named theta is found. Assume that the Gamma scale is  1 " << std::endl;
+            }
+            else {
+               if (verbose>2)
+                  std::cout << "Gamma constraint has a scale " << thetaGamma->GetName() << "  = " << thetaGamma->getVal() << std::endl;
+            }
+         }         
+         RooFIter iter2(cterm->serverMIterator() );
+         for (RooAbsArg *a2 = iter2.next(); a2 != 0; a2 = iter2.next()) {
             RooAbsReal * rrv2 = dynamic_cast<RooAbsReal *>(a2); 
             if (verbose > 2) std::cout << "Loop on constraint server term  " << a2->GetName() << std::endl;
             if (rrv2 && rrv2->dependsOn(nuis) ) { 
@@ -1364,7 +1440,10 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
                   foundServer = false;
                   break;
                }
-               rrv.setVal( rrv2->getVal() );
+               if (thetaGamma && thetaGamma->getVal() > 0)
+                  rrv.setVal( rrv2->getVal() / thetaGamma->getVal() ); 
+               else 
+                  rrv.setVal( rrv2->getVal() );
                foundServer = true;
 
                if (verbose>2) 

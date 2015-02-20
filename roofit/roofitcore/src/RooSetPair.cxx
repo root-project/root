@@ -23,9 +23,8 @@
 
 #include "RooFit.h"
 
+#define ROOSETPAIR_CXX
 #include "RooSetPair.h"
-#include "RooSetPair.h"
-
 
 using namespace std;
 

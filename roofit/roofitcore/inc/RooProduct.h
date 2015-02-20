@@ -56,6 +56,9 @@ public:
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
   virtual Bool_t isBinnedDistribution(const RooArgSet& obs) const ;
 
+  virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
+  virtual void setCacheAndTrackHints(RooArgSet&) ;
+
 protected:
 
   RooListProxy _compRSet ;

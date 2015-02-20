@@ -162,6 +162,8 @@ being aware of:
 * ``std::initializer_list`` (and the constructors and functions that take it as
   an argument) are not always available, so you cannot (for example) initialize
   a ``std::vector`` with a braced initializer list.
+* ``std::equal()`` (and other algorithms) incorrectly assert in MSVC when given
+  ``nullptr`` as an iterator.
 
 Other than these areas you should assume the standard library is available and
 working as expected until some build bot tells you otherwise. If you're in an
@@ -173,6 +175,25 @@ traits header to emulate it.
 
 .. _the libstdc++ manual:
   http://gcc.gnu.org/onlinedocs/gcc-4.7.3/libstdc++/manual/manual/status.html#status.iso.2011
+
+Other Languages
+---------------
+
+Any code written in the Go programming language is not subject to the
+formatting rules below. Instead, we adopt the formatting rules enforced by
+the `gofmt`_ tool.
+
+Go code should strive to be idiomatic. Two good sets of guidelines for what
+this means are `Effective Go`_ and `Go Code Review Comments`_.
+
+.. _gofmt:
+  https://golang.org/cmd/gofmt/
+
+.. _Effective Go:
+  https://golang.org/doc/effective_go.html
+
+.. _Go Code Review Comments:
+  https://code.google.com/p/go-wiki/wiki/CodeReviewComments
 
 Mechanical Source Issues
 ========================
@@ -230,7 +251,8 @@ The next section in the file is a concise note that defines the license that the
 file is released under.  This makes it perfectly clear what terms the source
 code can be distributed under and should not be modified in any way.
 
-The main body is a ``doxygen`` comment describing the purpose of the file.  It
+The main body is a ``doxygen`` comment (identified by the ``///`` comment
+marker instead of the usual ``//``) describing the purpose of the file.  It
 should have a ``\brief`` command that describes the file in one or two
 sentences.  Any additional information should be separated by a blank line.  If
 an algorithm is being implemented or something tricky is going on, a reference
@@ -260,7 +282,8 @@ happens: does the method return null?  Abort?  Format your hard disk?
 Comment Formatting
 ^^^^^^^^^^^^^^^^^^
 
-In general, prefer C++ style (``//``) comments.  They take less space, require
+In general, prefer C++ style comments (``//`` for normal comments, ``///`` for
+``doxygen`` documentation comments).  They take less space, require
 less typing, don't have nesting problems, etc.  There are a few cases when it is
 useful to use C style (``/* */``) comments however:
 

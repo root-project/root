@@ -121,6 +121,7 @@ Double_t TMath::DiLog(Double_t x)
       0.00000000000000093,-0.00000000000000014, 0.00000000000000002};
 
    Double_t t,h,y,s,a,alfa,b1,b2,b0;
+   t=h=y=s=a=alfa=b1=b2=b0=0.;
 
    if (x == 1) {
       h = pi6;
@@ -2252,7 +2253,7 @@ Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta
    //End_Html
 
    if ((x<mu) || (gamma<=0) || (beta <=0)) {
-      Error("TMath::GammaDist", "illegal parameter values");
+      Error("TMath::GammaDist", "illegal parameter values x = %f , gamma = %f beta = %f",x,gamma,beta);
       return 0;
    }
    return ::ROOT::Math::gamma_pdf(x, gamma, beta, mu);

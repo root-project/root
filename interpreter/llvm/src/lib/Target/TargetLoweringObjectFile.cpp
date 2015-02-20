@@ -30,6 +30,7 @@
 #include "llvm/Target/TargetLowering.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetOptions.h"
+#include "llvm/Target/TargetSubtargetInfo.h"
 using namespace llvm;
 
 //===----------------------------------------------------------------------===//
@@ -203,7 +204,8 @@ SectionKind TargetLoweringObjectFile::getKindForGlobal(const GlobalValue *GV,
       case 4:  return SectionKind::getMergeableConst4();
       case 8:  return SectionKind::getMergeableConst8();
       case 16: return SectionKind::getMergeableConst16();
-      default: return SectionKind::getMergeableConst();
+      default:
+        return SectionKind::getReadOnly();
       }
 
     case Constant::LocalRelocation:
@@ -266,31 +268,6 @@ SectionForGlobal(const GlobalValue *GV, SectionKind Kind, Mangler &Mang,
 
   // Use default section depending on the 'type' of global
   return SelectSectionForGlobal(GV, Kind, Mang, TM);
-}
-
-bool TargetLoweringObjectFile::isSectionAtomizableBySymbols(
-    const MCSection &Section) const {
-  return false;
-}
-
-// Lame default implementation. Calculate the section name for global.
-const MCSection *
-TargetLoweringObjectFile::SelectSectionForGlobal(const GlobalValue *GV,
-                                                 SectionKind Kind,
-                                                 Mangler &Mang,
-                                                 const TargetMachine &TM) const{
-  assert(!Kind.isThreadLocal() && "Doesn't support TLS");
-
-  if (Kind.isText())
-    return getTextSection();
-
-  if (Kind.isBSS() && BSSSection != nullptr)
-    return BSSSection;
-
-  if (Kind.isReadOnly() && ReadOnlySection != nullptr)
-    return ReadOnlySection;
-
-  return getDataSection();
 }
 
 /// getSectionForConstant - Given a mergable constant with the

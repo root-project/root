@@ -8,26 +8,42 @@
 #include "Utility.h"
 
 // ROOT
-#include "TObject.h"
 #include "TBufferFile.h"      // for pickling
-#include "TROOT.h"
+#include "TObject.h"          // for gROOT life-check
+#include "TROOT.h"            // id.
 
 // Standard
 #include <algorithm>
 
 
+//______________________________________________________________________________
+//                          Python-side proxy objects
+//                          =========================
+//
+// C++ objects are represented in Python by ObjectProxy's, which encapsulate
+// them using either a pointer (normal), pointer-to-pointer (kIsReference set),
+// or as an owned value (kIsValue set). Objects held as reference are never
+// owned, otherwise the object is owned if kIsOwner is set.
+//
+// In addition to encapsulation, ObjectProxy offers pickling (using TBufferFile
+// with a copy into a Python string); rudimentary comparison operators (based on
+// pointer value and class comparisons); stubs for numeric operators; and a
+// representation that prints the C++ pointer values, rather than the PyObject*
+// ones as is the default.
+
+
 //- data _______________________________________________________________________
 namespace PyROOT {
-   R__EXTERN PyObject* gRootModule;
+   R__EXTERN PyObject* gRootModule;    // needed for pickling
 }
 
 //____________________________________________________________________________
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
 // Destroy the held C++ object, if owned; does not deallocate the proxy.
-   if ( gROOT && !gROOT->TestBit(TObject::kInvalidObject ) ) {
+   if ( gROOT && !gROOT->TestBit( TObject::kInvalidObject ) ) {
       if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
          if ( ! (pyobj->fFlags & ObjectProxy::kIsValue) )
-            pyobj->ObjectIsA()->Destructor( pyobj->fObject );
+            Cppyy::Destruct( pyobj->ObjectIsA(), pyobj->GetObject() );
          else
             delete (TInterpreterValue*)pyobj->fObject;
       } else if ( pyobj->fFlags & ObjectProxy::kIsValue )
@@ -54,6 +70,10 @@ namespace {
 //= PyROOT object explicit destruction =======================================
    PyObject* op_destruct( ObjectProxy* self )
    {
+   // User access to force deletion of the object. Needed in case of a true
+   // garbage collector (like in PyPy), to allow the user control over when
+   // the C++ destructor is called. This method requires that the C++ object
+   // is owned (no-op otherwise).
       op_dealloc_nofree( self );
       Py_INCREF( Py_None );
       return Py_None;
@@ -74,7 +94,7 @@ namespace {
 
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
-      static TClassRef s_bfClass( "TBufferFile" );
+      static Cppyy::TCppType_t s_bfClass = Cppyy::GetScope( "TBufferFile" );
 
       TBufferFile* buff = 0;
       if ( s_bfClass == self->ObjectIsA() ) {
@@ -84,9 +104,10 @@ namespace {
       // so use WriteObjectAny()
          static TBufferFile s_buff( TBuffer::kWrite );
          s_buff.Reset();
-         if ( s_buff.WriteObjectAny( self->GetObject(), self->ObjectIsA() ) != 1 ) {
+         if ( s_buff.WriteObjectAny( self->GetObject(),
+               TClass::GetClass( Cppyy::GetFinalName( self->ObjectIsA() ).c_str() ) ) != 1 ) {
             PyErr_Format( PyExc_IOError,
-               "could not stream object of type %s", self->ObjectIsA()->GetName() );
+               "could not stream object of type %s", Cppyy::GetFinalName( self->ObjectIsA() ).c_str() );
             return 0;
          }
          buff = &s_buff;
@@ -97,7 +118,7 @@ namespace {
    // on reading back in (see RootModule.cxx:TObjectExpand)
       PyObject* res2 = PyTuple_New( 2 );
       PyTuple_SET_ITEM( res2, 0, PyBytes_FromStringAndSize( buff->Buffer(), buff->Length() ) );
-      PyTuple_SET_ITEM( res2, 1, PyBytes_FromString( self->ObjectIsA()->GetName() ) );
+      PyTuple_SET_ITEM( res2, 1, PyBytes_FromString( Cppyy::GetFinalName( self->ObjectIsA() ).c_str() ) );
 
       PyObject* result = PyTuple_New( 2 );
       Py_INCREF( s_expand );
@@ -110,6 +131,8 @@ namespace {
 //= PyROOT object dispatch support ===========================================
    PyObject* op_dispatch( PyObject* self, PyObject* args, PyObject* /* kdws */ )
    {
+   // User-side __dispatch__ method to allow selection of a specific overloaded
+   // method. The actual selection is in the disp() method of MethodProxy.
       PyObject *mname = 0, *sigarg = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!:__dispatch__" ),
               &PyROOT_PyUnicode_Type, &mname, &PyROOT_PyUnicode_Type, &sigarg ) )
@@ -160,7 +183,7 @@ namespace {
 //____________________________________________________________________________
    void op_dealloc( ObjectProxy* pyobj )
    {
-   // Remove memory held by the object proxy.
+   // Remove (Python-side) memory held by the object proxy.
       op_dealloc_nofree( pyobj );
       Py_TYPE(pyobj)->tp_free( (PyObject*)pyobj );
    }
@@ -199,8 +222,8 @@ namespace {
    {
    // Build a representation string of the object proxy that shows the address
    // of the C++ object that is held, as well as its type.
-      TClass* klass = pyobj->ObjectIsA();
-      std::string clName = klass ? klass->GetName() : "<unknown>";
+      Cppyy::TCppType_t klass = pyobj->ObjectIsA();
+      std::string clName = klass ? Cppyy::GetFinalName( klass ) : "<unknown>";
       if ( pyobj->fFlags & ObjectProxy::kIsReference )
          clName.append( "*" );
 

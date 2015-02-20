@@ -140,7 +140,6 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
       // If we are the first TApplication register the atexit)
       atexit(CallEndOfProcessCleanups);
    }
-   gApplication = this;
    gROOT->SetName(appClassName);
 
    // Create the list of applications the first time
@@ -194,6 +193,7 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    }
 
    //Needs to be done last
+   gApplication = this;
    gROOT->SetApplication(this);
 
 }
@@ -1243,18 +1243,23 @@ void TApplication::CreateApplication()
    // Static function used to create a default application environment.
 
    if (!gApplication) {
-      char *a = StrDup("RootApp");
-      char *b = StrDup("-b");
-      char *argv[2];
-      Int_t argc = 2;
-      argv[0] = a;
-      argv[1] = b;
-      new TApplication("RootApp", &argc, argv, 0, 0);
-      if (gDebug > 0)
-         Printf("<TApplication::CreateApplication>: "
-                "created default TApplication");
-      delete [] a; delete [] b;
-      gApplication->SetBit(kDefaultApplication);
+      R__LOCKGUARD2(gROOTMutex);
+
+      // gApplication is set at the end of 'new TApplication.
+      if (!gApplication) {
+         char *a = StrDup("RootApp");
+         char *b = StrDup("-b");
+         char *argv[2];
+         Int_t argc = 2;
+         argv[0] = a;
+         argv[1] = b;
+         new TApplication("RootApp", &argc, argv, 0, 0);
+         if (gDebug > 0)
+            Printf("<TApplication::CreateApplication>: "
+                   "created default TApplication");
+         delete [] a; delete [] b;
+         gApplication->SetBit(kDefaultApplication);
+      }
    }
 }
 

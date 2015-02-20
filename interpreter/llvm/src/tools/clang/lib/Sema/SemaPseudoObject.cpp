@@ -284,7 +284,7 @@ namespace {
     bool tryBuildGetOfReference(Expr *op, ExprResult &result);
     bool findSetter(bool warn=true);
     bool findGetter();
-    bool DiagnoseUnsupportedPropertyUse();
+    void DiagnoseUnsupportedPropertyUse();
 
     Expr *rebuildAndCaptureObject(Expr *syntacticBase) override;
     ExprResult buildGet() override;
@@ -406,6 +406,10 @@ PseudoOpBuilder::buildAssignmentOperation(Scope *Sc, SourceLocation opcLoc,
                                           BinaryOperatorKind opcode,
                                           Expr *LHS, Expr *RHS) {
   assert(BinaryOperator::isAssignmentOp(opcode));
+  
+  // Recover from user error
+  if (isa<UnresolvedLookupExpr>(RHS))
+    return ExprError();
 
   Expr *syntacticLHS = rebuildAndCaptureObject(LHS);
   OpaqueValueExpr *capturedRHS = capture(RHS);
@@ -615,7 +619,7 @@ bool ObjCPropertyOpBuilder::findSetter(bool warn) {
     if (setter->isPropertyAccessor() && warn)
       if (const ObjCInterfaceDecl *IFace =
           dyn_cast<ObjCInterfaceDecl>(setter->getDeclContext())) {
-        const StringRef thisPropertyName(prop->getName());
+        StringRef thisPropertyName = prop->getName();
         // Try flipping the case of the first character.
         char front = thisPropertyName.front();
         front = isLowercase(front) ? toUppercase(front) : toLowercase(front);
@@ -642,7 +646,7 @@ bool ObjCPropertyOpBuilder::findSetter(bool warn) {
   return false;
 }
 
-bool ObjCPropertyOpBuilder::DiagnoseUnsupportedPropertyUse() {
+void ObjCPropertyOpBuilder::DiagnoseUnsupportedPropertyUse() {
   if (S.getCurLexicalContext()->isObjCContainer() &&
       S.getCurLexicalContext()->getDeclKind() != Decl::ObjCCategoryImpl &&
       S.getCurLexicalContext()->getDeclKind() != Decl::ObjCImplementation) {
@@ -650,10 +654,8 @@ bool ObjCPropertyOpBuilder::DiagnoseUnsupportedPropertyUse() {
         S.Diag(RefExpr->getLocation(),
                diag::err_property_function_in_objc_container);
         S.Diag(prop->getLocation(), diag::note_property_declare);
-        return true;
     }
   }
-  return false;
 }
 
 /// Capture the base object of an Objective-C property expression.
@@ -679,10 +681,10 @@ Expr *ObjCPropertyOpBuilder::rebuildAndCaptureObject(Expr *syntacticBase) {
 /// Load from an Objective-C property reference.
 ExprResult ObjCPropertyOpBuilder::buildGet() {
   findGetter();
-  if (!Getter && DiagnoseUnsupportedPropertyUse())
-      return ExprError();
-
-  assert(Getter);
+  if (!Getter) {
+    DiagnoseUnsupportedPropertyUse();
+    return ExprError();
+  }
 
   if (SyntacticRefExpr)
     SyntacticRefExpr->setIsMessagingGetter();
@@ -720,10 +722,10 @@ ExprResult ObjCPropertyOpBuilder::buildGet() {
 ///   value being set as the value of the property operation.
 ExprResult ObjCPropertyOpBuilder::buildSet(Expr *op, SourceLocation opcLoc,
                                            bool captureSetValueAsResult) {
-  bool hasSetter = findSetter(false);
-  if (!hasSetter && DiagnoseUnsupportedPropertyUse())
-      return ExprError();
-  assert(hasSetter); (void) hasSetter;
+  if (!findSetter(false)) {
+    DiagnoseUnsupportedPropertyUse();
+    return ExprError();
+  }
 
   if (SyntacticRefExpr)
     SyntacticRefExpr->setIsMessagingSetter();
@@ -845,7 +847,12 @@ bool ObjCPropertyOpBuilder::tryBuildGetOfReference(Expr *op,
   if (!S.getLangOpts().CPlusPlus) return false;
 
   findGetter();
-  assert(Getter && "property has no setter and no getter!");
+  if (!Getter) {
+    // The property has no setter and no getter! This can happen if the type is
+    // invalid. Error have already been reported.
+    result = ExprError();
+    return true;
+  }
 
   // Only do this if the getter returns an l-value reference type.
   QualType resultType = Getter->getReturnType();
@@ -1019,7 +1026,8 @@ Sema::ObjCSubscriptKind
   // If we don't have a class type in C++, there's no way we can get an
   // expression of integral or enumeration type.
   const RecordType *RecordTy = T->getAs<RecordType>();
-  if (!RecordTy && T->isObjCObjectPointerType())
+  if (!RecordTy &&
+      (T->isObjCObjectPointerType() || T->isVoidPointerType()))
     // All other scalar cases are assumed to be dictionary indexing which
     // caller handles, with diagnostics if needed.
     return OS_Dictionary;

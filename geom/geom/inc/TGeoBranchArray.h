@@ -52,10 +52,16 @@ public:
    TGeoBranchArray(TRootIOCtor*) : TObject(), fLevel(0), fMaxLevel(0), fMatrix(), fArray(0) {}
 
    // The static maker to be use to create an instance of the branch array
-   static TGeoBranchArray *MakeInstance(size_t maxlevel, void *addr=0);
-   
+   static TGeoBranchArray *MakeInstance(size_t maxlevel);
+
+   // The static maker to be use to create an instance of the branch array
+   static TGeoBranchArray *MakeInstanceAt(size_t maxlevel, void *addr);
+
    // The equivalent of the copy constructor
-   static TGeoBranchArray *MakeCopy(const TGeoBranchArray &other, void *addr=0);
+   static TGeoBranchArray *MakeCopy(const TGeoBranchArray &other);
+
+   // The equivalent of the copy constructor
+   static TGeoBranchArray *MakeCopyAt(const TGeoBranchArray &other, void *addr);
 
    // The equivalent of the destructor
    static void             ReleaseInstance(TGeoBranchArray *obj);
@@ -68,6 +74,10 @@ public:
    
    // Equivalent of sizeof function
    static size_t SizeOf(size_t maxlevel)
+      { return (sizeof(TGeoBranchArray)+sizeof(TGeoBranchArray*)*(maxlevel)); }
+
+   // Equivalent of sizeof function
+   static size_t SizeOfInstance(size_t maxlevel)
       { return (sizeof(TGeoBranchArray)+sizeof(TGeoBranchArray*)*(maxlevel)); }
 
    inline size_t SizeOf() const

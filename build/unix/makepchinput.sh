@@ -23,6 +23,36 @@ cppflags=$outdir/allCppflags.txt
 mkdir -p $outdir
 rm -f $allheaders $alllinkdefs
 
+# Here we include the list of c++11 stl headers
+# From http://en.cppreference.com/w/cpp/header
+# regex is removed until ROOT-7004 is fixed
+stlHeaders="cstdlib csignal csetjmp cstdarg typeinfo typeindex type_traits bitset functional utility ctime chrono cstddef initializer_list tuple new memory scoped_allocator climits cfloat cstdint cinttypes limits exception stdexcept cassert system_error cerrno cctype cwctype cstring cwchar cuchar string array vector deque list forward_list set map unordered_set unordered_map stack queue algorithm iterator cmath complex valarray random numeric ratio cfenv iosfwd ios istream ostream iostream fstream sstream iomanip streambuf cstdio locale clocale codecvt atomic thread mutex future condition_variable ciso646 ccomplex ctgmath cstdalign cstdbool"
+
+echo "// STL headers" >> $allheaders
+for stlHeader in $stlHeaders; do
+    echo '#if __has_include("'$stlHeader'")' >> $allheaders
+    echo '#include <'$stlHeader'>' >> $allheaders
+    echo '#endif' >> $allheaders
+done
+
+# Special case for regex
+echo "// treat regex separately" >> $allheaders
+echo '#if __has_include("regex") && !defined __APPLE__' >> $allheaders
+echo '#include <regex>' >> $allheaders
+echo '#endif' >> $allheaders
+
+# treat this deprecated headers in a special way
+stlDeprecatedHeaders="strstream"
+echo "// STL Deprecated headers" >> $allheaders
+echo '#pragma clang diagnostic push' >> $allheaders
+echo '#pragma GCC diagnostic ignored "-Wdeprecated"' >> $allheaders
+for stlHeader in stlDeprecatedHeaders; do
+    echo '#if __has_include("'$stlHeader'")' >> $allheaders
+    echo '#include <'$stlHeader'>' >> $allheaders
+    echo '#endif' >> $allheaders
+done
+echo '#pragma clang diagnostic pop' >> $allheaders
+
 while ! [ "x$1" = "x" ]; do
     echo '#include "'$1'"' >> $allheaders
     shift

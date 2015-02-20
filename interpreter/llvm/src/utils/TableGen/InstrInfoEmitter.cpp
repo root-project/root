@@ -143,7 +143,7 @@ InstrInfoEmitter::GetOperandInfo(const CodeGenInstruction &Inst) {
         Res += "|(1<<MCOI::OptionalDef)";
 
       // Fill in operand type.
-      Res += ", MCOI::";
+      Res += ", ";
       assert(!Op.OperandType.empty() && "Invalid operand type.");
       Res += Op.OperandType;
 
@@ -505,6 +505,9 @@ void InstrInfoEmitter::emitRecord(const CodeGenInstruction &Inst, unsigned Num,
   if (Inst.isAsCheapAsAMove)   OS << "|(1<<MCID::CheapAsAMove)";
   if (Inst.hasExtraSrcRegAllocReq) OS << "|(1<<MCID::ExtraSrcRegAllocReq)";
   if (Inst.hasExtraDefRegAllocReq) OS << "|(1<<MCID::ExtraDefRegAllocReq)";
+  if (Inst.isRegSequence) OS << "|(1<<MCID::RegSequence)";
+  if (Inst.isExtractSubreg) OS << "|(1<<MCID::ExtractSubreg)";
+  if (Inst.isInsertSubreg) OS << "|(1<<MCID::InsertSubreg)";
 
   // Emit all of the target-specific flags...
   BitsInit *TSF = Inst.TheDef->getValueAsBitsInit("TSFlags");
@@ -584,14 +587,16 @@ void InstrInfoEmitter::emitEnums(raw_ostream &OS) {
   for (const CodeGenInstruction *Inst : NumberedInstructions)
     OS << "    " << Inst->TheDef->getName() << "\t= " << Num++ << ",\n";
   OS << "    INSTRUCTION_LIST_END = " << NumberedInstructions.size() << "\n";
-  OS << "  };\n";
+  OS << "  };\n\n";
   OS << "namespace Sched {\n";
   OS << "  enum {\n";
   Num = 0;
   for (const auto &Class : SchedModels.explicit_classes())
     OS << "    " << Class.Name << "\t= " << Num++ << ",\n";
   OS << "    SCHED_LIST_END = " << SchedModels.numInstrSchedClasses() << "\n";
-  OS << "  };\n}\n}\n";
+  OS << "  };\n";
+  OS << "} // End Sched namespace\n";
+  OS << "} // End " << Namespace << " namespace\n";
   OS << "} // End llvm namespace \n";
 
   OS << "#endif // GET_INSTRINFO_ENUM\n\n";

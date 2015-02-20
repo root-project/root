@@ -4,24 +4,24 @@
 #ifndef PYROOT_OBJECTPROXY_H
 #define PYROOT_OBJECTPROXY_H
 
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+// PyROOT::ObjectProxy                                                      //
+//                                                                          //
+// Python-side proxy, encapsulaties a C++ object.                           //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
+
+
 // Bindings
 #include "PyRootType.h"
 
 // ROOT
 #include "DllImport.h"
-#include "TClassRef.h"
 #include "TInterpreterValue.h"
-class TClass;
 
 
 namespace PyROOT {
-
-/** Object proxy object to hold ROOT instance
-      @author  WLAV
-      @date    01/04/2005
-      @date    11/25/2013
-      @version 3.0
- */
 
    class ObjectProxy {
    public:
@@ -46,10 +46,10 @@ namespace PyROOT {
             return const_cast< void* >( fObject );          // may be null
       }
 
-      TClass* ObjectIsA() const
+      Cppyy::TCppType_t ObjectIsA() const
       {
       // Retrieve a pointer to the C++ type; may return NULL.
-         return ((PyRootClass*)Py_TYPE(this))->fClass.GetClass();
+         return Cppyy::GetScope( ((PyRootClass*)Py_TYPE(this))->fClass.GetClass()->GetName() );
       }
 
       void HoldOn() { fFlags |= kIsOwner; }

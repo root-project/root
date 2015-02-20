@@ -15,8 +15,8 @@
 #endif
 #include "MethodProxy.h"
 #include "ObjectProxy.h"
+#include "TCallContext.h"
 #include "TPyException.h"
-#include "Utility.h"
 #include "PyStrings.h"
 
 // Standard
@@ -79,10 +79,10 @@ namespace {
          return 0;              // exception info was already set
 
    // if this method creates new objects, always take ownership
-      if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) {
+      if ( IsCreator( pymeth->fMethodInfo->fFlags ) ) {
 
       // either be a constructor with a fresh object proxy self ...
-         if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsConstructor ) {
+         if ( IsConstructor( pymeth->fMethodInfo->fFlags ) ) {
             if ( pymeth->fSelf )
                pymeth->fSelf->HoldOn();
          }
@@ -95,7 +95,7 @@ namespace {
    // if this new object falls inside self, make sure its lifetime is proper
       if ( ObjectProxy_Check( pymeth->fSelf ) && ObjectProxy_Check( result ) ) {
          Long_t ptrdiff = (Long_t)((ObjectProxy*)result)->GetObject() - (Long_t)pymeth->fSelf->GetObject();
-         if ( 0 <= ptrdiff && ptrdiff < (Long_t)pymeth->fSelf->ObjectIsA()->Size() ) {
+         if ( 0 <= ptrdiff && ptrdiff < (Long_t)Cppyy::SizeOf( pymeth->fSelf->ObjectIsA() ) ) {
             if ( PyObject_SetAttr( result, PyStrings::gLifeLine, (PyObject*)pymeth->fSelf ) == -1 )
                PyErr_Clear();     // ignored
          }
@@ -184,7 +184,7 @@ namespace {
    // Return scoping class; in case of pseudo-function role, pretend that there
    // is no encompassing class (i.e. global scope).
       if ( ! IsPseudoFunc( pymeth ) ) {
-         PyObject* pyclass = pymeth->fMethodInfo->fMethods[0]->GetScope();
+         PyObject* pyclass = pymeth->fMethodInfo->fMethods[0]->GetScopeProxy();
          if ( ! pyclass )
             PyErr_Format( PyExc_AttributeError,
                "function %s has no attribute \'im_class\'", pymeth->fMethodInfo->fName.c_str() );
@@ -319,8 +319,7 @@ namespace {
    PyObject* mp_getcreates( MethodProxy* pymeth, void* )
    {
    // Get '_creates' boolean, which determines ownership of return values.
-      return PyInt_FromLong(
-         (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator) );
+      return PyInt_FromLong( (Bool_t)IsCreator( pymeth->fMethodInfo->fFlags ) );
    }
 
 //____________________________________________________________________________
@@ -328,7 +327,7 @@ namespace {
    {
    // Set '_creates' boolean, which determines ownership of return values.
       if ( ! value ) {        // means that _creates is being deleted
-         pymeth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
+         pymeth->fMethodInfo->fFlags &= ~TCallContext::kIsCreator;
          return 0;
       }
 
@@ -339,9 +338,9 @@ namespace {
       }
 
       if ( iscreator )
-         pymeth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsCreator;
+         pymeth->fMethodInfo->fFlags |= TCallContext::kIsCreator;
       else
-         pymeth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
+         pymeth->fMethodInfo->fFlags &= ~TCallContext::kIsCreator;
 
       return 0;
    }
@@ -350,11 +349,11 @@ namespace {
    PyObject* mp_getmempolicy( MethodProxy* pymeth, void* )
    {
    // Get '_mempolicy' enum, which determines ownership of call arguments.
-      if ( (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsHeuristics ) )
-         return PyInt_FromLong( Utility::kHeuristics );
+      if ( (Bool_t)(pymeth->fMethodInfo->fFlags & TCallContext::kUseHeuristics ) )
+         return PyInt_FromLong( TCallContext::kUseHeuristics );
 
-      if ( (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsStrict ) )
-         return PyInt_FromLong( Utility::kStrict );
+      if ( (Bool_t)(pymeth->fMethodInfo->fFlags & TCallContext::kUseStrict ) )
+         return PyInt_FromLong( TCallContext::kUseStrict );
 
       return PyInt_FromLong( -1 );
    }
@@ -364,12 +363,12 @@ namespace {
    {
    // Set '_mempolicy' enum, which determines ownership of call arguments.
       Long_t mempolicy = PyLong_AsLong( value );
-      if ( mempolicy == Utility::kHeuristics ) {
-         pymeth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsHeuristics;
-         pymeth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsStrict;
-      } else if ( mempolicy == Utility::kStrict ) {
-         pymeth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsStrict;
-         pymeth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsHeuristics;
+      if ( mempolicy == TCallContext::kUseHeuristics ) {
+         pymeth->fMethodInfo->fFlags |= TCallContext::kUseHeuristics;
+         pymeth->fMethodInfo->fFlags &= ~TCallContext::kUseStrict;
+      } else if ( mempolicy == TCallContext::kUseStrict ) {
+         pymeth->fMethodInfo->fFlags |= TCallContext::kUseStrict;
+         pymeth->fMethodInfo->fFlags &= ~TCallContext::kUseHeuristics;
       } else {
          PyErr_SetString( PyExc_ValueError,
             "expected kMemoryStrict or kMemoryHeuristics as value for _mempolicy" );
@@ -384,7 +383,7 @@ namespace {
    {
    // Get '_threaded' boolean, which determines whether the GIL will be released.
       return PyInt_FromLong(
-         (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL) );
+         (Bool_t)(pymeth->fMethodInfo->fFlags & TCallContext::kReleaseGIL) );
    }
 
 //____________________________________________________________________________
@@ -398,9 +397,9 @@ namespace {
       }
 
       if ( isthreaded )
-         pymeth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kReleaseGIL;
+         pymeth->fMethodInfo->fFlags |= TCallContext::kReleaseGIL;
       else
-         pymeth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kReleaseGIL;
+         pymeth->fMethodInfo->fFlags &= ~TCallContext::kReleaseGIL;
 
       return 0;
    }
@@ -445,23 +444,21 @@ namespace {
          pymeth->fSelf = NULL;
 
    // get local handles to proxy internals
-      MethodProxy::Methods_t&     methods     = pymeth->fMethodInfo->fMethods;
-      MethodProxy::DispatchMap_t& dispatchMap = pymeth->fMethodInfo->fDispatchMap;
+      auto& methods     = pymeth->fMethodInfo->fMethods;
+      auto& dispatchMap = pymeth->fMethodInfo->fDispatchMap;
+      auto& mflags      = pymeth->fMethodInfo->fFlags;
 
       Int_t nMethods = methods.size();
 
-      Long_t user = 0;
-      if ( (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsHeuristics ) )
-         user = Utility::kHeuristics;
-      else if ( (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsStrict ) )
-         user = Utility::kStrict;
-      else
-         user = Utility::gMemoryPolicy;
+      TCallContext ctxt = { 0 };
+      ctxt.fFlags |= (mflags & TCallContext::kUseHeuristics);
+      ctxt.fFlags |= (mflags & TCallContext::kUseStrict);
+      if ( ! ctxt.fFlags ) ctxt.fFlags |= TCallContext::sMemoryPolicy;
+      ctxt.fFlags |= (mflags & TCallContext::kReleaseGIL);
 
    // simple case
       if ( nMethods == 1 ) {
-         PyObject* result = (*methods[0])( pymeth->fSelf, args, kwds, user,
-            (pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL) );
+         PyObject* result = methods[0]->Call( pymeth->fSelf, args, kwds, &ctxt );
          return HandleReturn( pymeth, result );
       }
 
@@ -472,15 +469,7 @@ namespace {
       MethodProxy::DispatchMap_t::iterator m = dispatchMap.find( sighash );
       if ( m != dispatchMap.end() ) {
          Int_t index = m->second;
-         PyObject* result = 0;
-
-         if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL ){
-            Py_BEGIN_ALLOW_THREADS
-            result = (*methods[ index ])( pymeth->fSelf, args, kwds, user );
-            Py_END_ALLOW_THREADS
-         } else
-            result = (*methods[ index ])( pymeth->fSelf, args, kwds, user );
-
+         PyObject* result = methods[ index ]->Call( pymeth->fSelf, args, kwds, &ctxt );
          result = HandleReturn( pymeth, result );
 
          if ( result != 0 )
@@ -491,21 +480,14 @@ namespace {
       }
 
    // ... otherwise loop over all methods and find the one that does not fail
-      if ( ! ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsSorted ) ) {
+      if ( ! IsSorted( mflags ) ) {
          std::stable_sort( methods.begin(), methods.end(), PriorityCmp );
-         pymeth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsSorted;
+         mflags |= TCallContext::kIsSorted;
       }
 
       std::vector< PyError_t > errors;
       for ( Int_t i = 0; i < nMethods; ++i ) {
-         PyObject* result = 0;
-
-         if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL ){
-            Py_BEGIN_ALLOW_THREADS
-            result = (*methods[i])( pymeth->fSelf, args, kwds, user );
-            Py_END_ALLOW_THREADS
-         } else
-            result = (*methods[i])( pymeth->fSelf, args, kwds, user );
+         PyObject* result = methods[i]->Call( pymeth->fSelf, args, kwds, &ctxt );
 
          if ( result == (PyObject*)TPyExceptionMagic ) {
             std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
@@ -769,15 +751,16 @@ void PyROOT::MethodProxy::Set( const std::string& name, std::vector< PyCallable*
 // Fill in the data of a freshly created method proxy.
    fMethodInfo->fName = name;
    fMethodInfo->fMethods.swap( methods );
-   fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
+   fMethodInfo->fFlags &= ~TCallContext::kIsSorted;
 
 // special case: all constructors are considered creators by default
    if ( name == "__init__" )
-      fMethodInfo->fFlags |= (MethodInfo_t::kIsCreator | MethodInfo_t::kIsConstructor);
+      fMethodInfo->fFlags |= (TCallContext::kIsCreator | TCallContext::kIsConstructor);
 
 // special case, in heuristics mode also tag *Clone* methods as creators
-   if ( Utility::gMemoryPolicy == Utility::kHeuristics && name.find( "Clone" ) != std::string::npos )
-      fMethodInfo->fFlags |= MethodInfo_t::kIsCreator;
+   if ( TCallContext::sMemoryPolicy == TCallContext::kUseHeuristics && \
+        name.find( "Clone" ) != std::string::npos )
+      fMethodInfo->fFlags |= TCallContext::kIsCreator;
 }
 
 //____________________________________________________________________________
@@ -785,7 +768,7 @@ void PyROOT::MethodProxy::AddMethod( PyCallable* pc )
 {
 // Fill in the data of a freshly created method proxy.
    fMethodInfo->fMethods.push_back( pc );
-   fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
+   fMethodInfo->fFlags &= ~TCallContext::kIsSorted;
 }
 
 //____________________________________________________________________________
@@ -793,31 +776,7 @@ void PyROOT::MethodProxy::AddMethod( MethodProxy* meth )
 {
    fMethodInfo->fMethods.insert( fMethodInfo->fMethods.end(),
       meth->fMethodInfo->fMethods.begin(), meth->fMethodInfo->fMethods.end() );
-   fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
-}
-
-//____________________________________________________________________________
-PyROOT::MethodProxy::MethodInfo_t::MethodInfo_t( const MethodInfo_t& s ) :
-   fName( s.fName ), fDispatchMap( s.fDispatchMap ), fMethods( s.fMethods ), fFlags( s.fFlags )
-{
-   *s.fRefCount += 1;
-   fRefCount = s.fRefCount;
-}
-
-//____________________________________________________________________________
-PyROOT::MethodProxy::MethodInfo_t& PyROOT::MethodProxy::MethodInfo_t::operator=( const MethodInfo_t& s )
-{
-   if ( this != &s ) {
-      *s.fRefCount += 1;
-      fRefCount = s.fRefCount;
-
-      fName        = s.fName;
-      fDispatchMap = s.fDispatchMap;
-      fMethods     = s.fMethods;
-      fFlags       = s.fFlags;
-   }
-
-   return *this;
+   fMethodInfo->fFlags &= ~TCallContext::kIsSorted;
 }
 
 //____________________________________________________________________________

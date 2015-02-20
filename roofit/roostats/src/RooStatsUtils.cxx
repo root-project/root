@@ -34,7 +34,18 @@ using namespace std;
 
 // this file is only for the documentation of RooStats namespace
 
-namespace RooStats { 
+namespace RooStats {
+
+   bool gUseOffset = false;
+   
+   void UseNLLOffset(bool on) { 
+      // use offset in NLL calculations
+      gUseOffset = on;
+   }
+
+   bool IsNLLOffset() {
+      return gUseOffset; 
+   }      
 
    void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
    // utility function to factorize constraint terms from a pdf 

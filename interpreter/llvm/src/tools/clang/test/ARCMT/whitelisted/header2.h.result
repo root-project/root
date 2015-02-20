@@ -1,4 +1,0 @@
-
-@interface I2 : NSObject
-@property (nonatomic) int prop;
-@end

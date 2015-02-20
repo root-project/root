@@ -1052,7 +1052,7 @@ Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
    if (axis1 == 3 && axis2 == 3) {
       return TMath::Abs(sumwz2/sumw - sumwz*sumwz/sumw2);
    }
-   if ((axis1 == 1 && axis2 == 2) || (axis1 == 2 && axis1 == 1)) {
+   if ((axis1 == 1 && axis2 == 2) || (axis1 == 2 && axis2 == 1)) {
       return sumwxy/sumw - sumwx/sumw*sumwy/sumw;
    }
    if ((axis1 == 1 && axis2 == 3) || (axis1 == 3 && axis2 == 1)) {

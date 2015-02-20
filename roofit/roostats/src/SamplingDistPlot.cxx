@@ -89,6 +89,13 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
   SetXRange( min, max );
 }
 
+//_______________________________________________________
+SamplingDistPlot::~SamplingDistPlot() {
+   // destructors - delete objects contained in the list
+   fItems.Delete();
+   fOtherItems.Delete();
+   if (fRooPlot) delete fRooPlot; 
+}
 
 
 //_______________________________________________________
@@ -131,6 +138,7 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    if( !IsNaN(fXMax) ) xup = fXMax;
 
    fHist = new TH1F(samplingDist->GetName(), samplingDist->GetTitle(), fBins, xlow, xup);
+   fHist->SetDirectory(0);  // make the object managed by this class 
 
    if( fVarName.Length() == 0 ) fVarName = samplingDist->GetVarName();
    fHist->GetXaxis()->SetTitle(fVarName.Data());
@@ -181,6 +189,7 @@ Double_t SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribut
    Double_t scaleFactor = AddSamplingDistribution(samplingDist, drawOptions);
 
    TH1F *shaded = (TH1F*)fHist->Clone((string(samplingDist->GetName())+string("_shaded")).c_str());
+   shaded->SetDirectory(0);
    shaded->SetFillStyle(fFillStyle++);
    shaded->SetLineWidth(0);
 
@@ -212,12 +221,15 @@ void SamplingDistPlot::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y
 }
 
 void SamplingDistPlot::AddTH1(TH1* h, Option_t *drawOptions) {
+   // add an histogram (it will be cloned);
    if(fLegend  &&  h->GetTitle()) fLegend->AddEntry(h, h->GetTitle(), "L");
-   addObject(h, drawOptions);
+   TH1 * hcopy = (TH1*) h->Clone();
+   hcopy->SetDirectory(0);
+   addObject(hcopy, drawOptions);
 }
 void SamplingDistPlot::AddTF1(TF1* f, const char* title, Option_t *drawOptions) {
    if(fLegend  &&  title) fLegend->AddEntry(f, title, "L");
-   addOtherObject(f, drawOptions);
+   addOtherObject(f->Clone(), drawOptions);
 }
 
 
@@ -288,9 +300,12 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
 
    //L.M. by drawing many times we create a memory leak ???
    if (fRooPlot) delete fRooPlot;
-   
 
+   bool dirStatus = RooPlot::addDirectoryStatus();
+   // make the RooPlot managed by this class 
+   if (dirStatus) RooPlot::setAddDirectoryStatus(false);
    fRooPlot = xaxis.frame();
+   if (dirStatus) RooPlot::setAddDirectoryStatus(true);   
    if (!fRooPlot) { 
      oocoutE(this,InputArguments) << "invalid variable to plot" << std::endl;
      return;      
@@ -319,7 +334,7 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
          //coutI(InputArguments) << "Setting minimum of TH1 to " << theYMin << endl;
          cloneObj->SetMinimum(theYMin);
       }
-      cloneObj->SetDirectory(0);
+      cloneObj->SetDirectory(0);  // transfer ownership of the object
       fRooPlot->addTH1(cloneObj, fIterator->GetOption());
    }
 

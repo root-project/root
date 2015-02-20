@@ -11,8 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef MIPSISELDAGTODAG_H
-#define MIPSISELDAGTODAG_H
+#ifndef LLVM_LIB_TARGET_MIPS_MIPSISELDAGTODAG_H
+#define LLVM_LIB_TARGET_MIPS_MIPSISELDAGTODAG_H
 
 #include "Mips.h"
 #include "MipsSubtarget.h"
@@ -125,11 +125,6 @@ private:
                                     char ConstraintCode,
                                     std::vector<SDValue> &OutOps) override;
 };
-
-/// createMipsISelDag - This pass converts a legalized DAG into a
-/// MIPS-specific DAG, ready for instruction scheduling.
-FunctionPass *createMipsISelDag(MipsTargetMachine &TM);
-
 }
 
 #endif

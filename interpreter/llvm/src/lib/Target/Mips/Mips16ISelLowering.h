@@ -11,15 +11,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef MIPS16ISELLOWERING_H
-#define MIPS16ISELLOWERING_H
+#ifndef LLVM_LIB_TARGET_MIPS_MIPS16ISELLOWERING_H
+#define LLVM_LIB_TARGET_MIPS_MIPS16ISELLOWERING_H
 
 #include "MipsISelLowering.h"
 
 namespace llvm {
   class Mips16TargetLowering : public MipsTargetLowering  {
   public:
-    explicit Mips16TargetLowering(MipsTargetMachine &TM,
+    explicit Mips16TargetLowering(const MipsTargetMachine &TM,
                                   const MipsSubtarget &STI);
 
     bool allowsMisalignedMemoryAccesses(EVT VT, unsigned AddrSpace,
@@ -31,9 +31,9 @@ namespace llvm {
                                 MachineBasicBlock *MBB) const override;
 
   private:
-    bool isEligibleForTailCallOptimization(const MipsCC &MipsCCInfo,
-                                     unsigned NextStackOffset,
-                                     const MipsFunctionInfo& FI) const override;
+    bool isEligibleForTailCallOptimization(
+        const CCState &CCInfo, unsigned NextStackOffset,
+        const MipsFunctionInfo &FI) const override;
 
     void setMips16HardFloatLibCalls();
 
@@ -47,7 +47,7 @@ namespace llvm {
     getOpndList(SmallVectorImpl<SDValue> &Ops,
                 std::deque< std::pair<unsigned, SDValue> > &RegsToPass,
                 bool IsPICCall, bool GlobalOrExternal, bool InternalLinkage,
-                CallLoweringInfo &CLI, SDValue Callee,
+                bool IsCallReloc, CallLoweringInfo &CLI, SDValue Callee,
                 SDValue Chain) const override;
 
     MachineBasicBlock *emitSel16(unsigned Opc, MachineInstr *MI,
@@ -79,4 +79,4 @@ namespace llvm {
   };
 }
 
-#endif // Mips16ISELLOWERING_H
+#endif

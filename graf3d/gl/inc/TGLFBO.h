@@ -27,7 +27,7 @@ protected:
    UInt_t  fMSFrameBuffer;
    UInt_t  fMSColorBuffer;
 
-   Int_t   fW, fH, fMSSamples, fMSCoverageSamples;
+   Int_t   fW, fH, fReqW, fReqH, fMSSamples, fMSCoverageSamples;
 
    Float_t fWScale, fHScale;
    Bool_t  fIsRescaled;
@@ -55,6 +55,21 @@ public:
    void UnbindTexture();
 
    void SetAsReadBuffer();
+
+   Int_t   GetW()    const { return fW; }
+   Int_t   GetH()    const { return fH; }
+   Int_t   GetReqW() const { return fReqW; }
+   Int_t   GetReqH() const { return fReqH; }
+   Int_t   GetMSSamples()         const { return fMSSamples; }
+   Int_t   GetMSCoverageSamples() const { return fMSCoverageSamples; }
+
+   Float_t GetWScale() const { return fWScale; }
+   Float_t GetHScale() const { return fHScale; }
+
+   Bool_t  GetIsRescaled() const { return fIsRescaled; }
+
+   static  Bool_t GetRescaleToPow2();
+   static  void   SetRescaleToPow2(Bool_t r);
 
    ClassDef(TGLFBO, 0); // Frame-buffer object.
 };

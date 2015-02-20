@@ -38,7 +38,6 @@
 
 class XrdNet;
 class XrdClientID;
-class XrdProofdLauncher;
 class XrdROOT;
 
 class XrdProofdClient {
@@ -86,8 +85,6 @@ class XrdProofdClient {
    void                    SetGroup(const char *g) { fUI.fGroup = g; }
    void                    SetROOT(XrdROOT *r) { fROOT = r; }
 
-   XrdProofdLauncher      *Launcher() { return fLauncher; }
-
    void                    SetValid(bool valid = 1) { fIsValid = valid; }
 
    int                     Size() const { return fClients.size(); }
@@ -109,8 +106,6 @@ class XrdProofdClient {
 
    XrdProofUI              fUI;         // user info
    XrdROOT                *fROOT;        // ROOT vers instance to be used for proofserv
-
-   XrdProofdLauncher      *fLauncher; // Session creator configured for this client
 
    XrdProofdSandbox        fSandbox;     // Clients sandbox
 

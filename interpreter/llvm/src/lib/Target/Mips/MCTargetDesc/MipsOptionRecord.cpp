@@ -8,6 +8,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "MipsOptionRecord.h"
+#include "MipsTargetStreamer.h"
 #include "MipsELFStreamer.h"
 #include "llvm/MC/MCSectionELF.h"
 
@@ -15,8 +16,8 @@ using namespace llvm;
 
 void MipsRegInfoRecord::EmitMipsOptionRecord() {
   MCAssembler &MCA = Streamer->getAssembler();
-  Triple T(STI.getTargetTriple());
-  uint64_t Features = STI.getFeatureBits();
+  MipsTargetStreamer *MTS =
+      static_cast<MipsTargetStreamer *>(Streamer->getTargetStreamer());
 
   Streamer->PushSection();
 
@@ -24,13 +25,12 @@ void MipsRegInfoRecord::EmitMipsOptionRecord() {
   // we don't emit .Mips.options for other ELFs other than N64.
   // Since .reginfo has the same information as .Mips.options (ODK_REGINFO),
   // we can use the same abstraction (MipsRegInfoRecord class) to handle both.
-  if (Features & Mips::FeatureN64) {
+  if (MTS->getABI().IsN64()) {
     // The EntrySize value of 1 seems strange since the records are neither
     // 1-byte long nor fixed length but it matches the value GAS emits.
     const MCSectionELF *Sec =
         Context.getELFSection(".MIPS.options", ELF::SHT_MIPS_OPTIONS,
-                              ELF::SHF_ALLOC | ELF::SHF_MIPS_NOSTRIP,
-                              SectionKind::getMetadata(), 1, "");
+                              ELF::SHF_ALLOC | ELF::SHF_MIPS_NOSTRIP, 1, "");
     MCA.getOrCreateSectionData(*Sec).setAlignment(8);
     Streamer->SwitchSection(Sec);
 
@@ -46,11 +46,10 @@ void MipsRegInfoRecord::EmitMipsOptionRecord() {
     Streamer->EmitIntValue(ri_cprmask[3], 4);
     Streamer->EmitIntValue(ri_gp_value, 8);
   } else {
-    const MCSectionELF *Sec =
-        Context.getELFSection(".reginfo", ELF::SHT_MIPS_REGINFO, ELF::SHF_ALLOC,
-                              SectionKind::getMetadata(), 24, "");
+    const MCSectionELF *Sec = Context.getELFSection(
+        ".reginfo", ELF::SHT_MIPS_REGINFO, ELF::SHF_ALLOC, 24, "");
     MCA.getOrCreateSectionData(*Sec)
-        .setAlignment(Features & Mips::FeatureN32 ? 8 : 4);
+        .setAlignment(MTS->getABI().IsN32() ? 8 : 4);
     Streamer->SwitchSection(Sec);
 
     Streamer->EmitIntValue(ri_gprmask, 4);

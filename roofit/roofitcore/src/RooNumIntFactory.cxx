@@ -189,7 +189,7 @@ const char* RooNumIntFactory::getDepIntegratorName(const char* name)
 
 
 //_____________________________________________________________________________
-RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset) 
+RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset, Bool_t isBinned) 
 {
   // Construct a numeric integrator instance that operates on function 'func' and is configured
   // with 'config'. If ndimPreset is greater than zero that number is taken as the dimensionality
@@ -225,6 +225,11 @@ RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const Roo
   default:
     method = openEnded ? config.methodNDOpen().getLabel() : config.methodND().getLabel() ;
     break ;
+  }
+
+  // If distribution is binned and not open-ended override with bin integrator
+  if (isBinned & !openEnded) {
+    method = "RooBinIntegrator" ;
   }
 
   // Check that a method was defined for this case

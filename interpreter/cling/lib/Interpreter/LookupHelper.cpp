@@ -26,7 +26,7 @@
 
 using namespace clang;
 
-namespace cling {
+namespace clang {
 
   ///\brief Cleanup Parser state after a failed lookup.
   ///
@@ -43,6 +43,10 @@ namespace cling {
     bool OldSuppressAllDiagnostics;
     bool OldSpellChecking;
     DestroyTemplateIdAnnotationsRAIIObj CleanupTemplateIds;
+    SourceLocation OldPrevTokLocation;
+    unsigned short OldParenCount, OldBracketCount, OldBraceCount;
+    unsigned OldTemplateParameterDepth;
+
 
   public:
     ParserStateRAII(Parser& p)
@@ -52,7 +56,10 @@ namespace cling {
         OldSuppressAllDiagnostics(p.getPreprocessor().getDiagnostics()
                                   .getSuppressAllDiagnostics()),
         OldSpellChecking(p.getPreprocessor().getLangOpts().SpellChecking),
-        CleanupTemplateIds(p)
+        CleanupTemplateIds(p), OldPrevTokLocation(p.PrevTokLocation),
+        OldParenCount(p.ParenCount), OldBracketCount(p.BracketCount),
+        OldBraceCount(p.BraceCount),
+        OldTemplateParameterDepth(p.TemplateParameterDepth)
     {
     }
 
@@ -70,9 +77,17 @@ namespace cling {
       PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
       const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking =
          OldSpellChecking;
+
+      P->PrevTokLocation = OldPrevTokLocation;
+      P->ParenCount = OldParenCount;
+      P->BracketCount = OldBracketCount;
+      P->BraceCount = OldBraceCount;
+      P->TemplateParameterDepth = OldTemplateParameterDepth;
     }
   };
+}
 
+namespace cling {
   ///\brief Class to help with the custom allocation of clang::Expr
   ///
   struct ExprAlloc {
@@ -122,11 +137,12 @@ namespace cling {
     //
     //  Create a fake file to parse the type name.
     //
-    llvm::MemoryBuffer* SB
-      = llvm::MemoryBuffer::getMemBufferCopy(code.str() + "\n",
-                                             bufferName.str());
+    std::unique_ptr<llvm::MemoryBuffer>
+      SB = llvm::MemoryBuffer::getMemBufferCopy(code.str() + "\n",
+                                                bufferName.str());
     SourceLocation NewLoc = Interp->getNextAvailableLoc();
-    FileID FID = S.getSourceManager().createFileID(SB, SrcMgr::C_User,
+    FileID FID = S.getSourceManager().createFileID(std::move(SB),
+                                                   SrcMgr::C_User,
                                                    /*LoadedID*/0,
                                                    /*LoadedOffset*/0, NewLoc);
     //
@@ -455,8 +471,7 @@ namespace cling {
                         TheDecl = TD->getDefinition();
                         if (TheDecl->isInvalidDecl()) {
                           // if the decl is invalid try to clean up
-                          TransactionUnloader U(&S, /*CodeGenerator*/0,
-                                                /*ExecutionEngine*/0);
+                          TransactionUnloader U(&S, /*CodeGenerator*/0);
                           U.UnloadDecl(TheDecl);
                           return 0;
                         }
@@ -474,6 +489,9 @@ namespace cling {
                 TheDecl = Context.getTranslationUnitDecl();
               }
               break;
+          case NestedNameSpecifier::Super:
+            // Microsoft's __super::
+            return 0;
           }
           return TheDecl;
         }
@@ -489,11 +507,12 @@ namespace cling {
     //  Setup to reparse as a type.
     //
 
-    llvm::MemoryBuffer* SB =
-      llvm::MemoryBuffer::getMemBufferCopy(className.str() + "\n",
-                                           "lookup.type.file");
+    std::unique_ptr<llvm::MemoryBuffer>
+      SB(llvm::MemoryBuffer::getMemBufferCopy(className.str() + "\n",
+                                              "lookup.type.file"));
     SourceLocation NewLoc = m_Interpreter->getNextAvailableLoc();
-    FileID FID = S.getSourceManager().createFileID(SB, SrcMgr::C_User,
+    FileID FID = S.getSourceManager().createFileID(std::move(SB),
+                                                   SrcMgr::C_User,
                                                    /*LoadedID*/0,
                                                    /*LoadedOffset*/0, NewLoc);
     PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
@@ -591,6 +610,9 @@ namespace cling {
             if (!where) return 0;
             break;
           }
+        case NestedNameSpecifier::Super:
+          // Microsoft's __super::
+          return 0;
         };
       }
     } else if (P.getCurToken().is(clang::tok::identifier)) {
@@ -677,7 +699,7 @@ namespace cling {
     }
     if (scopeDecl->isInvalidDecl()) {
       // if the decl is invalid try to clean up
-      TransactionUnloader U(&S, /*CodeGenerator*/0, /*ExecutionEngine*/0);
+      TransactionUnloader U(&S, /*CodeGenerator*/0);
       U.UnloadDecl(const_cast<Decl*>(scopeDecl));
       return 0;
     }
@@ -846,7 +868,7 @@ namespace cling {
                                             true /*recursive instantiation*/);
           if (TheDecl->isInvalidDecl()) {
             // if the decl is invalid try to clean up
-            TransactionUnloader U(&S, /*CodeGenerator*/0, /*ExecutionEngine*/0);
+            TransactionUnloader U(&S, /*CodeGenerator*/0);
             U.UnloadDecl(const_cast<FunctionDecl*>(TheDecl));
             return 0;
           }
@@ -1000,11 +1022,12 @@ namespace cling {
     {
       PP.getDiagnostics().setSuppressAllDiagnostics(diagOnOff ==
                                                    LookupHelper::NoDiagnostics);
-      llvm::MemoryBuffer* SB
-           = llvm::MemoryBuffer::getMemBufferCopy(funcName.str()
-                                                + "\n", "lookup.funcname.file");
+      std::unique_ptr<llvm::MemoryBuffer>
+        SB(llvm::MemoryBuffer::getMemBufferCopy(funcName.str() + "\n",
+                                                "lookup.funcname.file"));
       SourceLocation NewLoc = Interp->getNextAvailableLoc();
-      FileID FID = S.getSourceManager().createFileID(SB, SrcMgr::C_User,
+      FileID FID = S.getSourceManager().createFileID(std::move(SB),
+                                                     SrcMgr::C_User,
                                                      /*LoadedID*/0,
                                                      /*LoadedOffset*/0, NewLoc);
       PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
@@ -1397,7 +1420,7 @@ namespace cling {
                                             true /*recursive instantiation*/);
           if (fdecl->isInvalidDecl()) {
             // if the decl is invalid try to clean up
-            TransactionUnloader U(&S, /*CodeGenerator*/0, /*ExecutionEngine*/0);
+            TransactionUnloader U(&S, /*CodeGenerator*/0);
             U.UnloadDecl(fdecl);
             return 0;
           }
@@ -1511,6 +1534,7 @@ namespace cling {
       //  Parse the arguments now.
       //
 
+      Interpreter::PushTransactionRAII TforDeser(Interp);
       ParserStateRAII ResetParserState(P);
       prepareForParsing(P,Interp,
                         funcArgs, llvm::StringRef("func.args.file"), diagOnOff);

@@ -28,7 +28,8 @@ namespace PyROOT {
       return object && Py_TYPE(object) == &TTupleOfInstances_Type;
    }
 
-   PyObject* TTupleOfInstances_New( void* address, TClass* klass, Py_ssize_t size );
+   PyObject* TTupleOfInstances_New(
+      Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Py_ssize_t nelems );
 
 } // namespace PyROOT
 
