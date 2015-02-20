@@ -574,7 +574,7 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		$(MT_EXE)
 		@echo "$@ done"
 
-$(IOPLUGINS):   $(IOPLUGINSO) $(EVENTO)
+$(IOPLUGINS):   $(IOPLUGINSO) $(EVENT)
 		$(LD) $(LDFLAGS) $(IOPLUGINSO) $(EVENTO) $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
