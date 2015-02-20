@@ -222,14 +222,13 @@ function BuildSimpleGUI() {
          hpainter.SetDisplay(hpainter.h._layout, drawDivId);
       }
 
-      if ('_loadfile' in hpainter.h) {
-         filesarr = filesarr.concat(JSROOT.ParseAsArray(hpainter.h._loadfile));
+      if (('_loadfile' in hpainter.h) && (filesarr.length==0)) {
+         filesarr = JSROOT.ParseAsArray(hpainter.h._loadfile);
       }
 
-      if ('_drawitem' in hpainter.h) {
-         itemsarr = itemsarr.concat(JSROOT.ParseAsArray(hpainter.h._drawitem));
-         if ('_drawopt' in hpainter.h)
-            optionsarr = optionsarr.concat(JSROOT.ParseAsArray(hpainter.h._drawopt));
+      if (('_drawitem' in hpainter.h) && (itemsarr.length==0)) {
+         itemsarr = JSROOT.ParseAsArray(hpainter.h._drawitem);
+         optionsarr = JSROOT.ParseAsArray(hpainter.h['_drawopt']);
       }
 
       OpenAllFiles();

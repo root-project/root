@@ -2188,26 +2188,12 @@ void TBufferJSON::WriteFastArray(const Char_t *c, Int_t n)
    // If array does not include any special characters,
    // it will be reproduced as CharStar node with string as attribute
 
-   Bool_t usedefault = fExpectedChain;
-   const Char_t *buf = c;
-   if (!usedefault)
-      for (int i = 0; i < n; i++) {
-         if (*buf < 27) {
-            usedefault = kTRUE;
-            break;
-         }
-         buf++;
-      }
-   if (usedefault) {
-      // TODO - write as array of characters
+   if (fExpectedChain) {
       TBufferJSON_WriteFastArray(c);
    } else {
       TJSONPushValue();
 
-      // special case - not a zero-reminated string
-      fValue.Append("\"");
-      if ((c != 0) && (n > 0)) fValue.Append(c, n);
-      fValue.Append("\"");
+      JsonWriteConstChar(c, n);
    }
 }
 
@@ -2684,9 +2670,7 @@ void TBufferJSON::WriteCharP(const Char_t *c)
 
    TJSONPushValue();
 
-   fValue.Append("\"");
-   fValue.Append(c);
-   fValue.Append("\"");
+   JsonWriteConstChar(c);
 }
 
 //______________________________________________________________________________
@@ -2696,9 +2680,7 @@ void TBufferJSON::WriteTString(const TString &s)
 
    TJSONPushValue();
 
-   fValue.Append("\"");
-   fValue.Append(s);
-   fValue.Append("\"");
+   JsonWriteConstChar(s.Data(), s.Length());
 }
 
 //______________________________________________________________________________
@@ -2708,9 +2690,7 @@ void TBufferJSON::WriteStdString(const std::string &s)
 
    TJSONPushValue();
 
-   fValue.Append("\"");
-   fValue.Append(s);
-   fValue.Append("\"");
+   JsonWriteConstChar(s.c_str(), s.length());
 }
 
 //______________________________________________________________________________
@@ -2840,6 +2820,56 @@ void TBufferJSON::JsonWriteBasic(ULong64_t value)
    snprintf(buf, sizeof(buf), FULong64, value);
    fValue.Append(buf);
 }
+
+//______________________________________________________________________________
+void TBufferJSON::JsonWriteConstChar(const char* value, Int_t len)
+{
+   // writes string value, processing all kind of special characters
+
+   fValue.Append("\"");
+
+   if (value!=0) {
+      if (len<0) len = strlen(value);
+
+      for (Int_t n=0;n<len;n++) {
+         char c = value[n];
+         switch(c) {
+            case '\n':
+               fValue.Append("\\n");
+               break;
+            case '\t':
+               fValue.Append("\\t");
+               break;
+            case '\"':
+               fValue.Append("\\\"");
+               break;
+            case '\\':
+               fValue.Append("\\\\");
+               break;
+            case '\b':
+               fValue.Append("\\b");
+               break;
+            case '\f':
+               fValue.Append("\\f");
+               break;
+            case '\r':
+               fValue.Append("\\r");
+               break;
+            case '/':
+               fValue.Append("\\/");
+               break;
+            default:
+               if ((c > 31) && (c < 127))
+                  fValue.Append(c);
+               else
+                  fValue.Append(TString::Format("\\u%04x", (unsigned) c));
+         }
+      }
+   }
+
+   fValue.Append("\"");
+}
+
 
 //______________________________________________________________________________
 void TBufferJSON::SetFloatFormat(const char *fmt)
