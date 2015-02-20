@@ -6757,14 +6757,7 @@
       var mathjax = 'mathjax' in this.txt;
 
       if (!mathjax && !('as_is' in this.txt)) {
-         var arr = [];
-         while (txt.length > 0) {
-            var pos = txt.indexOf("\\n");
-            if (pos<0) break;
-            arr.push(txt.substr(0,pos));
-            txt = txt.substr(pos+2);
-         }
-         arr.push(txt); txt = "";
+         var arr = txt.split("\n"); txt = "";
          for (var i in arr)
             txt += "<pre>" + arr[i] + "</pre>";
       }
