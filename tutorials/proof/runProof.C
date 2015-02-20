@@ -298,6 +298,15 @@
 //
 //   will disable 2 workers and use the other 2.
 //
+//   Finally, it is possible to pass as 4th argument a list of objects to be added
+//   to the input list to further control the PROOF behaviour:
+//
+//   root [] TList *ins = new TList
+//   root [] ins->Add(new TParameter<Int_t>("MyParm", 3))
+//   root [] runProof("simple",0,4,ins)
+//
+//   the content of 'ins' will then be copied to the input list before processing.
+//
 
 
 #include "TCanvas.h"
@@ -326,7 +335,7 @@ const char *pythia8data = 0;
 
 void runProof(const char *what = "simple",
               const char *masterurl = "proof://localhost:40000",
-              Int_t nwrks = -1)
+              Int_t nwrks = -1, TList *ins = 0)
 {
 #ifdef __CINT__
    Printf("runProof: this script can only be executed via ACliC:");
@@ -682,6 +691,15 @@ void runProof(const char *what = "simple",
       proof->SetParameter("PROOF_StatsTrace", "");
       proof->SetParameter("PROOF_SlaveStatsTrace", "");
    }
+
+   // Additional inputs from the argument 'ins'
+   if (ins && ins->GetSize() > 0) {
+      TObject *oin = 0;
+      TIter nxo(ins);
+      while ((oin = nxo())) { proof->AddInput(oin); }
+   }
+
+   // Full lits of inputs so far
    proof->GetInputList()->Print();
 
    // Action
