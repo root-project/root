@@ -203,8 +203,29 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    fInputData      = 0;
    ResetBit(TProof::kNewInputData);
 
+   fEnabledPackagesOnCluster = new TList;
+   fEnabledPackagesOnCluster->SetOwner();
+
    // Timeout for some collect actions
    fCollectTimeout = gEnv->GetValue("Proof.CollectTimeout", -1);
+
+   // Should the workers be started dynamically; default: no
+   fDynamicStartup = kFALSE;
+   fDynamicStartupStep = -1;
+   fDynamicStartupNMax = -1;
+   TString dynconf = gEnv->GetValue("Proof.SimulateDynamicStartup", "");
+   if (dynconf.Length() > 0) {
+      fDynamicStartup = kTRUE;
+      fLastPollWorkers_s = time(0);
+      // Extract parameters
+      Int_t from = 0;
+      TString p;
+      if (dynconf.Tokenize(p, from, ":"))
+         if (p.IsDigit()) fDynamicStartupStep = p.Atoi();
+      if (dynconf.Tokenize(p, from, ":"))
+         if (p.IsDigit()) fDynamicStartupNMax = p.Atoi();
+   }
+
 
    fProgressDialog        = 0;
    fProgressDialogStarted = kFALSE;
@@ -1124,7 +1145,7 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    // Make sure that all enabled workers get some work, unless stated
    // differently
    if (!fPlayer->GetInputList()->FindObject("PROOF_MaxSlavesPerNode"))
-      SetParameter("PROOF_MaxSlavesPerNode", (Long_t)fNWorkers);
+      SetParameter("PROOF_MaxSlavesPerNode", (Long_t)0);
 
    Bool_t hasNoData = (!dset || (dset && dset->TestBit(TDSet::kEmpty))) ? kTRUE : kFALSE;
 
@@ -1398,13 +1419,14 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 }
 
 //______________________________________________________________________________
-Int_t TProofLite::CreateSymLinks(TList *files)
+Int_t TProofLite::CreateSymLinks(TList *files, TList *wrks)
 {
    // Create in each worker sandbox symlinks to the files in the list
-   // Used to make the caceh information available to workers.
+   // Used to make the cache information available to workers.
 
    Int_t rc = 0;
    if (files) {
+      TList *wls = (wrks) ? wrks : fActiveSlaves;
       TIter nxf(files);
       TObjString *os = 0;
       while ((os = (TObjString *) nxf())) {
@@ -1412,7 +1434,7 @@ Int_t TProofLite::CreateSymLinks(TList *files)
          TString tgt(os->GetName());
          gSystem->ExpandPathName(tgt);
          // Loop over active workers
-         TIter nxw(fActiveSlaves);
+         TIter nxw(wls);
          TSlave *wrk = 0;
          while ((wrk = (TSlave *) nxw())) {
             // Link name
@@ -1421,6 +1443,9 @@ Int_t TProofLite::CreateSymLinks(TList *files)
             if (gSystem->Symlink(tgt, lnk) != 0) {
                rc++;
                Warning("CreateSymLinks", "problems creating sym link: %s", lnk.Data());
+            } else {
+               PDB(kGlobal,1)
+                  Info("CreateSymLinks", "created sym link: %s", lnk.Data());
             }
          }
       }
@@ -1575,7 +1600,30 @@ Int_t TProofLite::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueOnly,
    TString macs(macro), mac;
    Int_t from = 0;
    while (macs.Tokenize(mac, from, ",")) {
-      if (CopyMacroToCache(mac) < 0) return -1;
+      if (IsIdle()) {
+         if (CopyMacroToCache(mac) < 0) return -1;
+      } else {
+         // The name
+         TString macn = gSystem->BaseName(mac);
+         macn.Remove(macn.Last('.'));
+         // Relevant pointers
+         TList cachedFiles;
+         TString cacheDir = fCacheDir;
+         gSystem->ExpandPathName(cacheDir);
+         void * dirp = gSystem->OpenDirectory(cacheDir);
+         if (dirp) {
+            const char *e = 0;
+            while ((e = gSystem->GetDirEntry(dirp))) {
+               if (!strncmp(e, macn.Data(), macn.Length())) {
+                  TString fncache = Form("%s/%s", cacheDir.Data(), e);
+                  cachedFiles.Add(new TObjString(fncache.Data()));
+               }
+            }
+            gSystem->FreeDirectory(dirp);
+         }
+         // Create the relevant symlinks
+         CreateSymLinks(&cachedFiles, wrks);
+      }
    }
 
    return TProof::Load(macro, notOnClient, uniqueOnly, wrks);
@@ -1583,7 +1631,7 @@ Int_t TProofLite::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueOnly,
 
 //______________________________________________________________________________
 Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
-                                   TSelector **selector, Int_t opt)
+                                   TSelector **selector, Int_t opt, TList *wrks)
 {
    // Copy a macro, and its possible associated .h[h] file,
    // to the cache directory, from where the workers can get the file.
@@ -1626,7 +1674,7 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
          Int_t ip = (mp.BeginsWith(".:")) ? 2 : 0;
          mp.Insert(ip, np);
          TROOT::SetMacroPath(mp);
-         if (gDebug > 0)
+         PDB(kGlobal,1)
             Info("CopyMacroToCache", "macro path set to '%s'", TROOT::GetMacroPath());
       }
    }
@@ -1817,7 +1865,7 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
 
    // Create symlinks
    if (opt & (kCp | kCpBin))
-      CreateSymLinks(cachedFiles);
+      CreateSymLinks(cachedFiles, wrks);
 
    cachedFiles->SetOwner();
    delete cachedFiles;
@@ -2526,4 +2574,180 @@ void TProofLite::ShowDataDir(const char *dirname)
    }
    // Done
    return;
+}
+
+//______________________________________________________________________________
+Int_t TProofLite::PollForNewWorkers()
+{
+   // Simulate dynamic addition, for test purposes.
+   // Here we decide how many workers to add, we create them and set the
+   // environment.
+   // This call is called regularly by Collect if the opton is enabled.
+   // Returns the number of new workers added, or <0 on errors.
+
+   // Max workers
+   if (fDynamicStartupNMax <= 0) {
+      SysInfo_t si;
+      if (gSystem->GetSysInfo(&si) == 0 && si.fCpus > 2) {
+         fDynamicStartupNMax = si.fCpus;
+      } else {
+         fDynamicStartupNMax = 2;
+      }
+   }
+   if (fNWorkers >= fDynamicStartupNMax) {
+      // Max reached: disable
+      Info("PollForNewWorkers", "max reached: %d workers started", fNWorkers);
+      fDynamicStartup =  kFALSE;
+      return 0;
+   }
+
+   // Number of new workers
+   Int_t nAdd = (fDynamicStartupStep > 0) ? fDynamicStartupStep : 1;
+
+   // Create a monitor and add the socket to it
+   TMonitor *mon = new TMonitor;
+   mon->Add(fServSock);
+
+   TList started;
+   TSlave *wrk = 0;
+   Int_t nWrksDone = 0, nWrksTot = -1;
+   TString fullord;
+
+   nWrksTot = fNWorkers + nAdd;
+   // Now we create the worker applications which will call us back to finalize
+   // the setup
+   Int_t ord = fNWorkers;
+   for (; ord < nWrksTot; ord++) {
+
+      // Ordinal for this worker server
+      fullord = Form("0.%d", ord);
+
+      // Create environment files
+      SetProofServEnv(fullord);
+
+      // Create worker server and add to the list
+      if ((wrk = CreateSlave("lite", fullord, 100, fImage, fWorkDir)))
+         started.Add(wrk);
+
+      PDB(kGlobal, 3)
+         Info("PollForNewWorkers", "additional worker '%s' started", fullord.Data());
+
+      // Notify
+      NotifyStartUp("Opening connections to workers", ++nWrksDone, nWrksTot);
+
+   } //end of worker loop
+   fNWorkers = nWrksTot;
+
+   // A list of TSlave objects for workers that are being added
+   TList *addedWorkers = new TList();
+   addedWorkers->SetOwner(kFALSE);
+
+   // Wait for call backs
+   nWrksDone = 0;
+   nWrksTot = started.GetSize();
+   Int_t nSelects = 0;
+   Int_t to = gEnv->GetValue("ProofLite.StartupTimeOut", 5) * 1000;
+   while (started.GetSize() > 0 && nSelects < nWrksTot) {
+
+      // Wait for activity on the socket for max 5 secs
+      TSocket *xs = mon->Select(to);
+
+      // Count attempts and check
+      nSelects++;
+      if (xs == (TSocket *) -1) continue;
+
+      // Get the connection
+      TSocket *s = fServSock->Accept();
+      if (s && s->IsValid()) {
+         // Receive ordinal
+         TMessage *msg = 0;
+         if (s->Recv(msg) < 0) {
+            Warning("PollForNewWorkers", "problems receiving message from accepted socket!");
+         } else {
+            if (msg) {
+               *msg >> fullord;
+               // Find who is calling back
+               if ((wrk = (TSlave *) started.FindObject(fullord))) {
+                  // Remove it from the started list
+                  started.Remove(wrk);
+
+                  // Assign tis socket the selected worker
+                  wrk->SetSocket(s);
+                  // Remove socket from global TROOT socket list. Only the TProof object,
+                  // representing all worker sockets, will be added to this list. This will
+                  // ensure the correct termination of all proof servers in case the
+                  // root session terminates.
+                  {  R__LOCKGUARD2(gROOTMutex);
+                     gROOT->GetListOfSockets()->Remove(s);
+                  }
+                  if (wrk->IsValid()) {
+                     // Set the input handler
+                     wrk->SetInputHandler(new TProofInputHandler(this, wrk->GetSocket()));
+                     // Set fParallel to 1 for workers since they do not
+                     // report their fParallel with a LOG_DONE message
+                     wrk->fParallel = 1;
+                     // Finalize setup of the server
+                     wrk->SetupServ(TSlave::kSlave, 0);
+                  }
+
+                  // Monitor good workers
+                  fSlaves->Add(wrk);
+                  if (wrk->IsValid()) {
+                     fActiveSlaves->Add(wrk);             // Is this required? Check!
+                     fAllMonitor->Add(wrk->GetSocket());
+                     // Record also in the list for termination
+                     if (addedWorkers) addedWorkers->Add(wrk);
+                     // Notify startup operations
+                     NotifyStartUp("Setting up added worker servers", ++nWrksDone, nWrksTot);
+                  } else {
+                     // Flag as bad
+                     fBadSlaves->Add(wrk);
+                  }
+               }
+            } else {
+               Warning("PollForNewWorkers", "received empty message from accepted socket!");
+            }
+         }
+      }
+   }
+
+   // Cleanup the monitor and the server socket
+   mon->DeActivateAll();
+   delete mon;
+
+   Broadcast(kPROOF_GETSTATS, addedWorkers);
+   Collect(addedWorkers, fCollectTimeout);
+
+   // Update group view
+   // SendGroupView();
+
+   // By default go into parallel mode
+   // SetParallel(-1, 0);
+   SendCurrentState(addedWorkers);
+
+   // Set worker processing environment
+   SetupWorkersEnv(addedWorkers, kTRUE);
+
+   // We are adding workers dynamically to an existing process, we
+   // should invoke a special player's Process() to set only added workers
+   // to the proper state
+   if (fPlayer) {
+      PDB(kGlobal, 3)
+         Info("PollForNewWorkers", "Will send the PROCESS message to selected workers");
+      fPlayer->JoinProcess(addedWorkers);
+   }
+
+   // Cleanup fwhat remained from startup
+   Collect(addedWorkers);
+
+   // Activate
+   TIter naw(addedWorkers);
+   while ((wrk = (TSlave *)naw())) {
+      fActiveMonitor->Add(wrk->GetSocket());
+   }
+   // Cleanup
+   delete addedWorkers;
+
+   // Done
+   return nWrksDone;
 }

@@ -569,6 +569,7 @@ private:
    THashList      *fGlobalPackageDirList;//list of directories containing global packages libs
    TProofLockPath *fPackageLock;     //package lock
    TList          *fEnabledPackagesOnClient; //list of packages enabled on client
+   TList          *fEnabledPackagesOnCluster;  //list of enabled packages
 
    TList          *fInputData;       //Input data objects sent over via file
    TString         fInputDataFile;   //File with input data objects
@@ -639,6 +640,7 @@ private:
    Int_t    Exec(const char *cmd, ESlaves list, Bool_t plusMaster);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
+   Int_t    SendCurrentState(TList *list);
    Bool_t   CheckFile(const char *file, TSlave *sl, Long_t modtime, Int_t cpopt = (kCp | kCpBin));
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
    Int_t    SendGroupView();
@@ -653,7 +655,7 @@ private:
    Int_t    SetParallelSilent(Int_t nodes, Bool_t random = kFALSE);
    void     RecvLogFile(TSocket *s, Int_t size);
    void     NotifyLogMsg(const char *msg, const char *sfx = "\n");
-   Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll, Int_t chkveropt = 2);
+   Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll, Int_t chkveropt = 2, TList *workers = 0);
    Int_t    BuildPackageOnClient(const char *package, Int_t opt = 0, TString *path = 0, Int_t chkveropt = 2);
    Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE, TList *loadopts = 0, TList *workers = 0);
    Int_t    LoadPackageOnClient(const char *package, TList *loadopts = 0);
@@ -686,7 +688,6 @@ private:
    Int_t    HandleInputMessage(TSlave *wrk, TMessage *m, Bool_t deactonfail = kFALSE);
    void     HandleSubmerger(TMessage *mess, TSlave *sl);
    void     SetMonitor(TMonitor *mon = 0, Bool_t on = kTRUE);
-   Int_t    PollForNewWorkers();
 
    void     ReleaseMonitor(TMonitor *mon);
 
@@ -751,6 +752,7 @@ protected:
    virtual Bool_t  StartSlaves(Bool_t attach = kFALSE);
    Int_t AddWorkers(TList *wrks);
    Int_t RemoveWorkers(TList *wrks);
+   void  SetupWorkersEnv(TList *wrks, Bool_t increasingpool = kFALSE);
 
    void                         SetPlayer(TVirtualProofPlayer *player);
    TVirtualProofPlayer         *GetPlayer() const { return fPlayer; }
@@ -766,10 +768,13 @@ protected:
    TSlave *CreateSubmaster(const char *url, const char *ord,
                            const char *image, const char *msd);
 
+   virtual Int_t PollForNewWorkers();
    virtual void SaveWorkerInfo();
 
    Int_t    Collect(ESlaves list = kActive, Long_t timeout = -1, Int_t endtype = -1, Bool_t deactonfail = kFALSE);
    Int_t    Collect(TList *slaves, Long_t timeout = -1, Int_t endtype = -1, Bool_t deactonfail = kFALSE);
+
+   TList   *GetEnabledPackages() const { return fEnabledPackagesOnCluster; }
 
    void         SetDSet(TDSet *dset) { fDSet = dset; }
    virtual void ValidateDSet(TDSet *dset);
