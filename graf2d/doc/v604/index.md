@@ -58,3 +58,7 @@
   because the `GetTextExtend` method behaved differently in batch mode and "screen"
   mode. This is now fixed. See http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=18883
 - Improve the square-root drawing in case it is small.
+
+### TMathText
+
+- `\mu` is now working for Postscript output.
