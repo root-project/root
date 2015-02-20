@@ -25,6 +25,7 @@
 - Text color was ignored. It was always black.
 - The underscore `_` produced an error outside the TeX math context.
 - Fix an issue with transparent pads.
+- Implement transparent colors using TiKZ "opacity".
 
 ### TPostScript
 
