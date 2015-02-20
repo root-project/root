@@ -133,10 +133,31 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    Bool_t isMaster = ((proof && proof->TestBit(TProof::kIsMaster)) ||
                       (gProofServ && gProofServ->IsMaster())) ? kTRUE : kFALSE;
 
-   TList *l = proof ? proof->GetListOfSlaveInfos() : 0 ;
+   TList *l = 0;
+   Bool_t deletel = kFALSE;
+   TParameter<Int_t> *dyns = (TParameter<Int_t> *) input->FindObject("PROOF_DynamicStartup");
+   if (dyns) {
+      // When starring up dynamically the number of slots needs to be guessed from the 
+      // maximum workers request. There is no way to change this later on.
+      Int_t nwrks = dyns->GetVal();
+      if (nwrks > 0) {
+         l = new TList;
+         for (Int_t i = 0; i < nwrks; i++) {
+            TSlaveInfo *wi = new TSlaveInfo(TString::Format("0.%d", i));
+            wi->SetStatus(TSlaveInfo::kActive);
+            l->Add(wi);
+         }
+         l->SetOwner(kTRUE);
+         deletel = kTRUE;
+      }
+   }
+   if (!l) l = proof ? proof->GetListOfSlaveInfos() : 0 ;
+
    TIter nextslaveinfo(l);
    while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(nextslaveinfo()))
       if (si->fStatus == TSlaveInfo::kActive) fSlaves++;
+
+   fSlaves = 8;
 
    PDB(kMonitoring,1) Info("TPerfStats", "Statistics for %d slave(s)", fSlaves);
    
@@ -295,6 +316,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
          }
       }
    }
+   // Cleanup
+   if (deletel) delete(l);
 
    if (isMaster) {
 
