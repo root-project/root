@@ -3074,7 +3074,7 @@
          Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0,
          Spec: 0, Pie: 0, List: 0, Zscale: 0, FrontBox: 1, BackBox: 1,
          System: JSROOT.Painter.Coord.kCARTESIAN,
-         AutoColor : 0, NoStat : 0,
+         AutoColor : 0, NoStat : 0, AutoZoom : false,
          HighRes: 0, Zero: 0, Logx: 0, Logy: 0, Logz: 0, Gridx: 0, Gridy: 0
       };
       // check for graphical cuts
@@ -3088,6 +3088,11 @@
          option.AutoColor = 1;
          option.Hist = 1;
          chopt = chopt.replace('AUTOCOL', '');
+      }
+      if (chopt.indexOf('AUTOZOOM') != -1) {
+         option.AutoZoom = 1;
+         option.Hist = 1;
+         chopt = chopt.replace('AUTOZOOM', '');
       }
       if (chopt.indexOf('NOSTAT') != -1) {
          option.NoStat = 1;
@@ -5272,6 +5277,8 @@
 
       painter.AddInteractive();
 
+      if (painter.options.AutoZoom) painter.AutoZoom();
+
       return painter;
    }
 
@@ -5956,6 +5963,8 @@
       this.DrawFunctions();
 
       this.AddInteractive();
+
+      if (this.options.AutoZoom) this.AutoZoom();
 
       this['done2d'] = true; // indicate that 2d drawing was once done
    }
@@ -6723,8 +6732,64 @@
       return painter;
    }
 
-   // ===========================================================
+   // ================= painer of raw text ========================================
 
+   JSROOT.RawTextPainter = function(txt) {
+      JSROOT.TBasePainter.call(this);
+      this.txt = txt;
+      return this;
+   }
+
+   JSROOT.RawTextPainter.prototype = Object.create( JSROOT.TBasePainter.prototype );
+
+   JSROOT.RawTextPainter.prototype.RedrawObject = function(obj) {
+      this.txt = obj;
+      this.Draw();
+      return true;
+   }
+
+   JSROOT.RawTextPainter.prototype.Draw = function() {
+      var frame = $("#" + this.divid);
+
+      var txt = this.txt.value;
+      if (txt==null) txt = "<undefined>";
+
+      var mathjax = 'mathjax' in this.txt;
+
+      if (!mathjax && !('as_is' in this.txt)) {
+         var arr = [];
+         while (txt.length > 0) {
+            var pos = txt.indexOf("\\n");
+            if (pos<0) break;
+            arr.push(txt.substr(0,pos));
+            txt = txt.substr(pos+2);
+         }
+         arr.push(txt); txt = "";
+         for (var i in arr)
+            txt += "<pre>" + arr[i] + "</pre>";
+      }
+
+      frame.html("<div style='overflow:hidden'>" + txt + "</div>");
+
+      // (re) set painter to first child element
+      this.SetDivId(this.divid);
+
+      if (mathjax)
+         JSROOT.AssertPrerequisites('mathjax', function() {
+            if (typeof MathJax == 'object') {
+               MathJax.Hub.Queue(["Typeset", MathJax.Hub, frame.get()]);
+            }
+         });
+   }
+
+   JSROOT.Painter.drawRawText = function(divid, txt, opt) {
+      var painter = new JSROOT.RawTextPainter(txt);
+      painter.SetDivId(divid);
+      painter.Draw();
+      return painter;
+   }
+
+   // ========== performs tree drawing on server ==================
 
    JSROOT.TTreePlayer = function(itemname) {
       JSROOT.TBasePainter.call(this);
@@ -7184,6 +7249,10 @@
          cando.ctxt = true;
          cando.execute = true;
          cando.img1 = "img_execute";
+      } else if (kind=="Text") {
+         cando.ctxt = true;
+         cando.display = true;
+         cando.img1 = "img_text";
       } else if (kind.match(/^ROOT.TH1/)) {
          cando.img1 = "img_histo1d";
          cando.scan = false;
@@ -7228,6 +7297,11 @@
       } else
       if ((cando.typename != "") && JSROOT.canDraw(cando.typename)) {
          cando.img1 = "img_histo1d";
+         cando.scan = false;
+         cando.display = true;
+      } else
+      if (JSROOT.canDraw('kind:' + kind)) {
+         cando.img1 = "img_leaf";
          cando.scan = false;
          cando.display = true;
       }
@@ -7703,7 +7777,7 @@
                         if (dropname==null) return false;
                         return h.dropitem(dropname, frame.attr("id"));
                      }
-                  });
+                  }).removeClass('ui-state-default');
             }
          }
 
@@ -7788,6 +7862,11 @@
                   dropitems[i][j] = dropitems[i][j].substr(0,pos) + items[i].substr(pos);
             }
          }
+
+         // also check if subsequent items has _same_, than use name from first item
+         var pos = items[i].indexOf("_same_");
+         if ((pos>0) && !this.Find(items[i]) && (i>0))
+            items[i] = items[i].substr(0,pos) + items[0].substr(pos);
       }
 
       // Than create empty frames for each item
@@ -7942,17 +8021,22 @@
    JSROOT.HierarchyPainter.prototype.GetOnlineItem = function(item, itemname, callback) {
       // method used to request object from the http server
 
-      var url = itemname, h_get = false;
+      var url = itemname, h_get = false, req = 'root.json.gz?compact=3';
 
       if (item != null) {
          var top = item;
          while ((top!=null) && (!('_online' in top))) top = top._parent;
          url = this.itemFullName(item, top);
-         h_get = ('_doing_expand' in item);
+         if ('_doing_expand' in item) {
+            h_get = true;
+            req  = 'h.json?compact=3';
+         } else
+         if (item._kind.indexOf("ROOT.")!=0)
+            req = 'get.json?compact=3';
       }
 
       if (url.length > 0) url += "/";
-      url += h_get ? 'h.json?compact=3' : 'root.json.gz?compact=3';
+      url += req;
 
       var itemreq = JSROOT.NewHttpRequest(url, 'object', function(obj) {
 
@@ -8082,18 +8166,21 @@
       this.RefreshHtml();
    }
 
+   JSROOT.HierarchyPainter.prototype.SetMonitoring = function(val) {
+      this['_monitoring_on'] = false;
+      this['_monitoring_interval'] = 3000;
+
+      if ((val!=null) && (val!='0')) {
+         this['_monitoring_on'] = true;
+         this['_monitoring_interval'] = parseInt(val);
+         if ((this['_monitoring_interval'] == NaN) || (this['_monitoring_interval']<100))
+            this['_monitoring_interval'] = 3000;
+      }
+   }
+
    JSROOT.HierarchyPainter.prototype.MonitoringInterval = function(val) {
       // returns interval
-      if (val!=null) this['_monitoring_interval'] = val;
-      var monitor = this['_monitoring_interval'];
-      if (monitor == null) {
-         monitor = JSROOT.GetUrlOption("monitoring");
-         if ((monitor == "") || (monitor==null)) monitor = 3000;
-                                            else monitor = parseInt(monitor);
-         if ((monitor == NaN) || (monitor<=0)) monitor = 3000;
-         this['_monitoring_interval'] = monitor;
-      }
-      return monitor;
+      return ('_monitoring_interval' in this) ? this['_monitoring_interval'] : 3000;
    }
 
    JSROOT.HierarchyPainter.prototype.EnableMonitoring = function(on) {
@@ -8729,6 +8816,7 @@
    JSROOT.addDrawFunc(/^RooCurve/, JSROOT.Painter.drawGraph,";L;P");
    JSROOT.addDrawFunc("TMultiGraph", JSROOT.Painter.drawMultiGraph);
    JSROOT.addDrawFunc("TStreamerInfoList", JSROOT.Painter.drawStreamerInfo);
+   JSROOT.addDrawFunc("kind:Text", JSROOT.Painter.drawRawText);
 
    JSROOT.getDrawFunc = function(classname, drawopt) {
       if (typeof classname != 'string') return null;
@@ -8796,9 +8884,11 @@
     * Draw object in specified HTML element with given draw options  */
 
    JSROOT.draw = function(divid, obj, opt) {
-      if ((typeof obj != 'object') || (!('_typename' in obj))) return null;
+      if (typeof obj != 'object') return null;
 
-      var draw_func = JSROOT.getDrawFunc(obj['_typename'], opt);
+      var draw_func = null;
+      if ('_typename' in obj) draw_func = JSROOT.getDrawFunc(obj['_typename'], opt);
+      else if ('_kind' in obj) draw_func = JSROOT.getDrawFunc('kind:' + obj['_kind'], opt);
 
       if (draw_func==null) return null;
 

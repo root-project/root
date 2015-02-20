@@ -31,7 +31,6 @@ function setGuiLayout(value) {
    }
 }
 
-
 function ReadFile() {
    var navigator_version = navigator.appVersion;
    if (typeof ActiveXObject == "function") { // Windows
@@ -155,8 +154,9 @@ function BuildSimpleGUI() {
 
    var monitor = JSROOT.GetUrlOption("monitoring");
 
-   var layout = JSROOT.GetUrlOption("layout");
-   if (layout=="") layout = null;
+   var ilayout = JSROOT.GetUrlOption("layout");
+   if (ilayout=="") ilayout = null;
+   var layout = ilayout;
 
    hpainter = new JSROOT.HierarchyPainter('root', nobrowser ? null : 'browser');
 
@@ -183,14 +183,14 @@ function BuildSimpleGUI() {
 
    hpainter.SetDisplay(layout, drawDivId);
 
-   hpainter.EnableMonitoring(monitor!=null);
+   hpainter.SetMonitoring(monitor);
 
    var h0 = null;
 
    if (online) {
       if (!nobrowser)
          $("#monitoring")
-          .prop('checked', monitor!=null)
+          .prop('checked', hpainter.IsMonitoring())
           .click(function() {
              hpainter.EnableMonitoring(this.checked);
              if (this.checked) hpainter.updateAll();
@@ -212,23 +212,24 @@ function BuildSimpleGUI() {
 
    function AfterOnlineOpened() {
       // check if server enables monitoring
-      if ('_monitoring' in hpainter.h) {
-         var v = parseInt(hpainter.h._monitoring);
-         if ((v == NaN) || (hpainter.h._monitoring == 'false')) {
-            hpainter.EnableMonitoring(false);
-         } else {
-            hpainter.EnableMonitoring(true);
-            hpainter.MonitoringInterval(v);
-         }
+      if (('_monitoring' in hpainter.h) && (monitor==null)) {
+         hpainter.SetMonitoring(hpainter.h._monitoring);
          if (!nobrowser) $("#monitoring").prop('checked', hpainter.IsMonitoring());
       }
 
-      if ('_loadfile' in hpainter.h)
-         filesarr.push(hpainter.h._loadfile);
+      if (('_layout' in hpainter.h) && (ilayout==null)) {
+         setGuiLayout(hpainter.h._layout);
+         hpainter.SetDisplay(hpainter.h._layout, drawDivId);
+      }
+
+      if ('_loadfile' in hpainter.h) {
+         filesarr = filesarr.concat(JSROOT.ParseAsArray(hpainter.h._loadfile));
+      }
 
       if ('_drawitem' in hpainter.h) {
-         itemsarr.push(hpainter.h._drawitem);
-         optionsarr.push('_drawopt' in hpainter.h ? hpainter.h._drawopt : "");
+         itemsarr = itemsarr.concat(JSROOT.ParseAsArray(hpainter.h._drawitem));
+         if ('_drawopt' in hpainter.h)
+            optionsarr = optionsarr.concat(JSROOT.ParseAsArray(hpainter.h._drawopt));
       }
 
       OpenAllFiles();

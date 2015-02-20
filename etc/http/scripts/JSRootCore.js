@@ -14,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.3 dev 18/02/2015";
+   JSROOT.version = "3.3 dev 20/02/2015";
 
    JSROOT.source_dir = "";
 
@@ -153,6 +153,35 @@
       return dflt;
    }
 
+   JSROOT.ParseAsArray = function(val) {
+      // parse string value as array.
+      // It could be just simple string:  "value"
+      //  or array with or without string quotes:  [element], ['eleme1',elem2]
+
+      var res = [];
+
+      if (typeof val != 'string') return res;
+
+      val = val.trim();
+      if (val=="") return res;
+
+      // return as array with single element
+      if ((val.length<2) || (val[0]!='[') || (val[val.length-1]!=']')) {
+         res.push(val); return res;
+      }
+
+      // try to parse ourself
+      var arr = val.substr(1, val.length-2).split(","); // remove brackets
+
+      for (var i in arr) {
+         var sub = arr[i].trim();
+         if ((sub.length>1) && (sub[0]==sub[sub.length-1]) && ((sub[0]=='"') || (sub[0]=="'")))
+            sub = sub.substr(1, sub.length-2);
+         res.push(sub);
+      }
+      return res;
+   }
+
    JSROOT.GetUrlOptionAsArray = function(opt, url) {
       // special handling of URL options to produce array
       // if normal option is specified ...?opt=abc, than array with single element will be created
@@ -169,24 +198,7 @@
          if (separ>0) opt = opt.substr(separ+1); else opt = "";
 
          var val = this.GetUrlOption(part, url, null);
-         if (val==null) continue;
-         val = val.trim();
-         if (val=="") continue;
-
-         // return as array with single element
-         if ((val[0]!='[') && (val[val.length-1]!=']')) {
-            res.push(val); continue;
-         }
-
-         // try to parse ourself
-         var arr = val.substr(1, val.length-2).split(","); // remove brackets
-
-         for (var i in arr) {
-            var sub = arr[i].trim();
-            if ((sub.length>1) && (sub[0]==sub[sub.length-1]) && ((sub[0]=='"') || (sub[0]=="'")))
-               sub = sub.substr(1, sub.length-2);
-            res.push(sub);
-         }
+         res = res.concat(JSROOT.ParseAsArray(val));
       }
       return res;
    }
@@ -208,10 +220,12 @@
 
       if (func==null) return;
 
-      if (typeof func=='function') return func(arg1,arg2);
+      if (typeof func == 'string') func = JSROOT.findFunction(func);
 
-      if (typeof func=='obj' && typeof func.obj == 'object' &&
-         typeof func.fun == 'string' && typeof func.obj[func.func] == 'function') return func.obj[func.func](arg1, arg2);
+      if (typeof func == 'function') return func(arg1,arg2);
+
+      if (typeof func == 'object' && typeof func.obj == 'object' &&
+         typeof func.func == 'string' && typeof func.obj[func.func] == 'function') return func.obj[func.func](arg1, arg2);
    }
 
    JSROOT.NewHttpRequest = function(url, kind, user_call_back) {
@@ -349,9 +363,7 @@
          if (debugout)
             document.getElementById(debugout).innerHTML = "";
 
-         if (typeof callback == 'string') callback = JSROOT.findFunction(callback);
-
-         if (typeof callback == 'function') callback();
+         JSROOT.CallBack(callback);
       }
 
       if ((urllist==null) || (urllist.length==0))
@@ -474,6 +486,9 @@
                      ";$$$scripts/helvetiker_regular.typeface.js" +
                      ";$$$scripts/helvetiker_bold.typeface.js" +
                      ";$$$scripts/JSRoot3DPainter.js";
+
+      if (kind.indexOf("mathjax;")>=0)
+         allfiles += ";https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
 
       if (kind.indexOf("simple;")>=0)
          allfiles += ';$$$scripts/JSRootInterface.js' +

@@ -16,7 +16,7 @@ void httpcontrol()
 //  After macro started, open in browser with url
 //      http://localhost:8080
 //
-//  Histogram hpxpy will be automatically displayed and
+//  Histograms will be automatically displayed and
 //  monitoring with interval 2000 ms started
 
    // create histograms
@@ -38,9 +38,10 @@ void httpcontrol()
    serv->Register("/", hpxpy);
 
    // enable monitoring and
-   // specify item to draw when page is opened
+   // specify items to draw when page is opened
    serv->SetItemField("/","_monitoring","2000");
-   serv->SetItemField("/","_drawitem","hpxpy");
+   serv->SetItemField("/","_layout","grid2x2");
+   serv->SetItemField("/","_drawitem","[hpxpy,hpx,Debug]");
    serv->SetItemField("/","_drawopt","col");
 
    // register simple start/stop commands
@@ -52,14 +53,15 @@ void httpcontrol()
    serv->Hide("/Stop");
 
    // register commands, invoking object methods
-   // one could set command properties directly
-   serv->RegisterCommand("/ResetHPX","/hpx/->Reset()");
-   serv->SetIcon("/ResetHPX", "/rootsys/icons/ed_delete.png");
-   serv->SetItemField("/ResetHPX","_fastcmd", "true");
+   serv->RegisterCommand("/ResetHPX","/hpx/->Reset()", "button;/rootsys/icons/ed_delete.png");
+   serv->RegisterCommand("/ResetHPXPY","/hpxpy/->Reset()", "button;/rootsys/icons/bld_delete.png");
 
-   serv->RegisterCommand("/ResetHPXPY","/hpxpy/->Reset()");
-   serv->SetIcon("/ResetHPXPY", "/rootsys/icons/bld_delete.png");
-   serv->SetItemField("/ResetHPXPY", "_fastcmd", "true");
+
+   // create debug text element, use MathJax - works only on Firefox
+   serv->CreateItem("/Debug","debug output");
+   serv->SetItemField("/Debug", "_kind", "Text");
+   serv->SetItemField("/Debug", "value","\\(\\displaystyle{x+1\\over y-1}\\)");
+   serv->SetItemField("/Debug", "mathjax", "true");
 
    // Fill histograms randomly
    TRandom3 random;
@@ -79,6 +81,9 @@ void httpcontrol()
       if ((cnt % kUPDATE==0) || !bFillHist) {
          // IMPORTANT: one should regularly call ProcessEvents
          // to let http server process requests
+
+         serv->SetItemField("/Debug", "value", Form("\\(\\displaystyle{x+1\\over y-1}\\) Loop:%d", cnt/kUPDATE));
+
          if (gSystem->ProcessEvents()) break;
       }
    }
