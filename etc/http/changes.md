@@ -1,9 +1,9 @@
-JSROOT project
+# JSROOT changelog {#jsroot_changes}
 
 This is further development of JSRootIO project of Bertrand Bellenot. 
 Many old problems and errors are fixed, new functions are provided.  
 
-Changes in 3.3
+## Changes in v 3.3
 1. Use d3.time.scale for display of time scales
 2. Within JSRootCore.js script URL one could specify JSROOT
    functionality to be loaded: '2d', '3d', 'io', 'load', 'onload'.
@@ -17,13 +17,20 @@ Changes in 3.3
 8. Implement 'autocol' draw option  - when superimposing histograms,
    their line colors will be automatically assigned
 9. Implement 'nostat' draw option - disabled stat drawing
-10.Using '_same_' identifier in item name, one can easily superimpose
-   same items from different files. Could be used in URL like:
-      &files=[file1.root,file2.root]&item=file1.root/hpx+file2.root/_same_
-   Main limitation - file names should have similar length.   
+10. Using '_same_' identifier in item name, one can easily draw or superimpose
+    similar items from different files. Could be used in URL like:
+      `...&files=[file1.root,file2.root]&items=[file1.root/hpx, file2.root/_same_]`
+      `...&files=[file1.root,file2.root]&item=file1.root/hpx+file2.root/_same_`
+    Main limitation - file names should have similar length.   
+11. When 'autozoom' specified in draw options, histogram zoomed into
+    non-empty content. Same command available via context menu. 
+12. Item of 'Text' kind can be created. It is displayed as 
+    plain text in the browser. If property 'mathjax' specified,
+    MathJax.js library will be loaded and used for rendering.
+    See httpcontrol.C macro for example.
+   
 
-
-Changes in 3.2
+## Changes in 3.2
 1. Support JSON objects embedding in html pages, produced by THttpServer
 2. For small resize of canvas use autoscale functionality of SVG. Only when
    relative changes too large, redraw complete canvas again.
@@ -36,7 +43,7 @@ Changes in 3.2
 8. 3D graphic (three.js) works only with IE11
 
 
-Changes in 3.1
+## Changes in 3.1
 1. Correctly show tooltips in case of overlapped objects
 2. Implement JSROOT.Create() method to create supported
    in JavaScript ROOT classes like TH1 or TGraph
@@ -49,12 +56,12 @@ Changes in 3.1
 8. Implement dragging objects from hierarchy browser into existing canvas 
    to superimpose several objects 
 9. Implement col2 and col3 draw options, using html5 canvas
-10.Support 'p' and 'p0' draw options for TH1 class
+10. Support 'p' and 'p0' draw options for TH1 class
 
 
-Development of version 3.0
+## Development of version 3.0
 
-November 2014:
+### November 2014
 1. Better font size and position in pave stats
 2. Resize/move of element only inside correspondent pad
 3. Adjust of frame size when Y-axis exceed pad limits
@@ -63,33 +70,32 @@ November 2014:
 6. Drawing of canvas without TFrame object
 7. Many other small bug fixes and improvements, thanks to Maximilian Dietrich
 
-October 2014:
-1. Add "shortcut icon"
-2. Add demo of online THttpServer - shell script copies data from
-   running httpserver.C macro on Apache webserver
-3. Evaluate 'monitoring' parameter for online server like:
-      http://localhost:8080/?monitoring=1000.
-   Parameter defines how often displayed objects should be updated.
-4. Implement 'opt' and 'opts' URL parameters for main page.
-5. Show progress with scripts loading in the browser window
-6. When one appends "+" to the filename, its content read completely with first I/O operation.
-7. Implement JS custom streamer for TCanvas, restore aspect ratio when drawing
-8. Major redesign of drawing classes. Resize and update of TCanvas are implemented.
-   All major draw functions working with HTML element id as first argument.
-9. Extract 3D drawings into separate JSRoot3DPainter.js script
-10.Use newest three.min.js (r68) for 3D drawings, solves problem with Firefox.
-11.Introduce generic list of draw functions for all supported classes.
-12.Add possibility to 'expand' normal objects in the hierarchy browser.
-   For instance, this gives access to single elements of canvas,
-   when whole canvas cannot be drawn.
-13.Correct usage of colors map, provided with TCanvas.
-14.Introduce JSROOT.redraw() function which is capable to create or update object drawing.
-15.In main index.htm page browser can be disabled (nobrowser parameter) and
-   page can be used to display only specified items from the file
-16.Add support of TPolyMarker3D in binary I/O
+### October 2014
+1.  Add "shortcut icon"
+2.  Add demo of online THttpServer - shell script copies data from
+    running httpserver.C macro on Apache webserver
+3.  Evaluate 'monitoring' parameter for online server like:
+      <http://localhost:8080/?monitoring=1000>
+    Parameter defines how often displayed objects should be updated.
+4.  Implement 'opt' and 'opts' URL parameters for main page.
+5.  Show progress with scripts loading in the browser window
+6.  When one appends "+" to the filename, its content read completely with first I/O operation.
+7.  Implement JS custom streamer for TCanvas, restore aspect ratio when drawing
+8.  Major redesign of drawing classes. Resize and update of TCanvas are implemented.
+    All major draw functions working with HTML element id as first argument.
+9.  Extract 3D drawings into separate JSRoot3DPainter.js script
+10. Use newest three.min.js (r68) for 3D drawings, solves problem with Firefox.
+11. Introduce generic list of draw functions for all supported classes.
+12. Add possibility to 'expand' normal objects in the hierarchy browser.
+    For instance, this gives access to single elements of canvas,
+    when whole canvas cannot be drawn.
+13. Correct usage of colors map, provided with TCanvas.
+14. Introduce JSROOT.redraw() function which is capable to create or update object drawing.
+15. In main index.htm page browser can be disabled (nobrowser parameter) and
+    page can be used to display only specified items from the file
+16. Add support of TPolyMarker3D in binary I/O
 
-
-September 2014:
+### September 2014
 1. First try to handle resize of the browser,
    for the moment works only with collapsible layout
 2. Also first try to interactively move separation line between
@@ -104,22 +110,21 @@ September 2014:
 8. Implement 'grid' display, one could specify any number of devision like
    'grid 3x3' or 'grid 4x2'.
 9. MDI display object created at the moment when first draw is performed.
-10.Introduce painter class for TCanvas, support resize and update of canvas drawing
-11.Resize almost works for all layouts and all objects kinds.
-12.Implement JSROOT.GetUrlOption to extract options from document URL.
-13.Provide example fileitem.htm how read and display item from ROOT file.
-14.In default index.htm page one could specify 'file', 'layout',
-   'item' and 'items' parameters like:
-      http://root.cern.ch/js/3.0/index.htm?file=files/hsimple.root&layout=grid5x5&item=hpx;1
-15.Support direct reading of objects from sub-sub-directories.
-16.Introduce demo.htm, which demonstrates online usage of JSROOT.
-17.One could use demo.htm directly with THttpServer providing address like:
-     http://localhost:8080/jsrootsys/demo/demo.htm?addr=../../Files/job1.root/hpx/root.json.gz&layout=3x3
-18.Also for online server process url options like 'item', 'items', 'layout'
-19.Possibility to generate URL, which reproduces opened page with layout and drawn items
+10. Introduce painter class for TCanvas, support resize and update of canvas drawing
+11. Resize almost works for all layouts and all objects kinds.
+12. Implement JSROOT.GetUrlOption to extract options from document URL.
+13. Provide example fileitem.htm how read and display item from ROOT file.
+14. In default index.htm page one could specify 'file', 'layout',
+    'item' and 'items' parameters like:
+      <http://root.cern.ch/js/3.0/index.htm?file=../files/hsimple.root&layout=grid3x2&item=hpx;1>
+15. Support direct reading of objects from sub-sub-directories.
+16. Introduce demo.htm, which demonstrates online usage of JSROOT.
+17. One could use demo.htm directly with THttpServer providing address like:
+     <http://localhost:8080/jsrootsys/demo/demo.htm?addr=../../Files/job1.root/hpx/root.json.gz&layout=3x3>
+18. Also for online server process url options like 'item', 'items', 'layout'
+19. Possibility to generate URL, which reproduces opened page with layout and drawn items
 
-
-August 2014:
+### August 2014
 1. All communication between server and browser done with JSON format.
 2. Fix small error in dtree.js - one should always set
    last sibling (_ls) property while tree can be dynamically changed.
@@ -137,43 +142,40 @@ August 2014:
 8. In example.htm also use AssertPrerequisites to load necessary scripts.
    This helps to keep code up-to-date even by big changes in JavaScript code.
 9. Provide monitoring of online THttpServer with similar interface as for ROOT files.
-10.Fix several errors in TKey Streamer, use member names as in ROOT itself.
-11.Keep the only version identifier JSROOT.version for JS code
-12.One can specify in JSROOT.AssertPrerequisites functionality which is required.
-   One could specify '2d', 'io' (default) or '3d'.
-13.Use new AssertPrerequisites functionality to load only required functionality.
-14.When displaying single element, one could specify draw options and monitor property like:
-       http://localhost:8080/Files/job1.root/hpxpy/draw.htm?opt=col&monitor=2000
-   Such link is best possibility to integrate display into different HTML pages,
-   using <iframe/> tag like:
-      <iframe src="http://localhost:8080/Files/job1.root/hpx/draw.htm"
-             style="width: 800px; height:600px"></iframe>
-15.Remove 'JSROOTIO.' prefix from _typename. Now real class name is used.
-16.Use in all scripts JSROOT as central 'namespace'
-17.Introduce context menu in 3D, use it for switch between 2D/3D modes
-18.Use own code to generate hierarchical structure in HTML, replace dtree.js which is
-   extremely slow for complex hierarchies. Dramatically improve performance for
-   structures with large (~1000) number of items.
-19.Deliver to the server title of the objects, display it as hint in the browser.
-20.Better handling of special characters in the hierarchies - allows to display
-   symbols like ' or " in the file structure.
+10. Fix several errors in TKey Streamer, use member names as in ROOT itself.
+11. Keep the only version identifier JSROOT.version for JS code
+12. One can specify in JSROOT.AssertPrerequisites functionality which is required.
+    One could specify '2d', 'io' (default) or '3d'.
+13. Use new AssertPrerequisites functionality to load only required functionality.
+14. When displaying single element, one could specify draw options and monitor property like:
+        <http://localhost:8080/Files/job1.root/hpxpy/draw.htm?opt=col&monitor=2000>
+     Such link is best possibility to integrate display into different HTML pages,
+     using `<iframe/>` tag like:
+        `<iframe src="http://localhost:8080/Files/job1.root/hpx/draw.htm"` 
+          `style="width: 800px; height:600px"></iframe>`
+15. Remove 'JSROOTIO.' prefix from _typename. Now real class name is used.
+16. Use in all scripts JSROOT as central 'namespace'
+17. Introduce context menu in 3D, use it for switch between 2D/3D modes
+18. Use own code to generate hierarchical structure in HTML, replace dtree.js which is
+    extremely slow for complex hierarchies. Dramatically improve performance for
+    structures with large (~1000) number of items.
+19. Deliver to the server title of the objects, display it as hint in the browser.
+20. Better handling of special characters in the hierarchies - allows to display
+    symbols like ' or " in the file structure.
 
-
-July 2014:
+### July 2014
 1. Migration to d3.v3.js and jQuery v2.1.1
 2. Fix errors in filling of histogram statbox
 3. Possibility of move and resize of statbox, title, color palete
 4. Remove many (not all) global variables
 5. Example with direct usage of JSRootIO graphics
-6. Example of inserting ROOT graphics from THttpServer into <iframe></iframe>
+6. Example of inserting ROOT graphics from THttpServer into `<iframe></iframe>`
 
-
-May 2014:
+### May 2014
 1. This JSRootIO code together with THttpServer class included
    in ROOT repository
 
-
-March 2014:
+### March 2014
 1. Introduce JSROOT.TBuffer class, which plays similar role
    as TBuffer in native ROOT I/O. Simplifies I/O logic,
    reduce duplication of code in many places, fix errors.
