@@ -161,7 +161,7 @@ endif
 
 $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
 	$(CMDECHO) unset DISPLAY; \
-	   $(CALLSTRESSEXE) test/$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<
+	   $(CALLSTRESSEXE) cd test; ./$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<
 
 # To run an interpreted test we need the source + includes. We don't know
 # the exact dependencies, to we trust the binary: if we have it we have
@@ -172,7 +172,7 @@ $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
 # another's feet (e.g. by both interpreted and compiled version
 # opening the same file)
 $(addsuffix .log,$(STRESSTESTSINTERP)): %-itest.log: test/%$(ExeSuf) $(find %-ctest, $(STRESSTESTSCOMP))
-	$(CMDECHO) $(CALLROOTEXE) -l -b -q test/$*.cxx$(STRESSFLAGS) > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<
+	$(CMDECHO) cd test; $(CALLROOTEXE) -l -b -q $*.cxx$(STRESSFLAGS) > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<
 
 # If we need a file in test/ we just copy all files from $(ROOT_LOC)/test.
 # Once we have them in test/, we run make in there.
@@ -208,7 +208,7 @@ earth.dat: $(ROOT_LOC)/tutorials/graphics/earth.dat
 #### Extra parameters for some tests ####
 
 ifneq ($(ClingWorkAroundMissingDynamicScope),)
-stress-itest.log: CALLROOTEXE += -e 'gSystem->Load("test/libEvent")'
+stress-itest.log: CALLROOTEXE += -e 'gSystem->Load("libEvent")'
 stressGraphics-itest.log: CALLROOTEXE += -e 'gSystem->Load("libGpad"); gSystem->Load("libTreeViewer");'
 stressGUI-itest.log: CALLROOTEXE += -e 'gSystem->Load("libGpad"); gSystem->Load("libGui");'
 endif
@@ -235,6 +235,10 @@ endif
 
 #### Extra dependencies for some tests ####
 
-test/stress$(ExeSuf): test/libEvent.$(DllSuf)
+# In principle, binaries' dependency on libEvent are handled by test/Makefile.
+# But we have several "smart" stress tests (e.g. stress) that invoke make themselves
+# to generate libEvent, causing make stepping on its own feet. Instead, make sure
+# libEvent exists before running *any* test.
+$(STRESSEXE): test/libEvent.$(DllSuf)
 test/stressMathCore$(ExeSuf): test/libTrackMathCoreDict.$(DllSuf)
 stressGraphics-itest.log stressGraphics-ctest.log: hsimple.root stressGraphics.ref earth.dat
