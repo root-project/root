@@ -6048,64 +6048,64 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char * /*info*/)
 }
 
 //______________________________________________________________________________
-void TClass::StreamerExternal(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerExternal(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class) 
 {
    //There is special streamer for the class
 
    //      case kExternal:
    //      case kExternal|kEmulatedStreamer:
 
-   TClassStreamer *streamer = gThreadTsd ? GetStreamer() : fStreamer;
+   TClassStreamer *streamer = gThreadTsd ? ths->GetStreamer() : ths->fStreamer;
    streamer->Stream(b,object,onfile_class);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerTObject(void *object, TBuffer &b, const TClass * /* onfile_class */) const
+void TClass::StreamerTObject(const TClass* ths, void *object, TBuffer &b, const TClass * /* onfile_class */)
 {
    // Case of TObjects
 
    // case kTObject:
 
-   if (!fIsOffsetStreamerSet) {
-      CalculateStreamerOffset();
+   if (!ths->fIsOffsetStreamerSet) {
+      ths->CalculateStreamerOffset();
    }
-   TObject *tobj = (TObject*)((Long_t)object + fOffsetStreamer);
+   TObject *tobj = (TObject*)((Long_t)object + ths->fOffsetStreamer);
    tobj->Streamer(b);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerTObjectInitialized(void *object, TBuffer &b, const TClass * /* onfile_class */) const
+void TClass::StreamerTObjectInitialized(const TClass* ths, void *object, TBuffer &b, const TClass * /* onfile_class */)
 {
    // Case of TObjects when fIsOffsetStreamerSet is known to have been set.
 
-   TObject *tobj = (TObject*)((Long_t)object + fOffsetStreamer);
+   TObject *tobj = (TObject*)((Long_t)object + ths->fOffsetStreamer);
    tobj->Streamer(b);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerTObjectEmulated(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerTObjectEmulated(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class)
 {
    // Case of TObjects when we do not have the library defining the class.
 
    // case kTObject|kEmulatedStreamer :
    if (b.IsReading()) {
-      b.ReadClassEmulated(this, object, onfile_class);
+      b.ReadClassEmulated(ths, object, onfile_class);
    } else {
-      b.WriteClassBuffer(this, object);
+      b.WriteClassBuffer(ths, object);
    }
 }
 
 //______________________________________________________________________________
-void TClass::StreamerInstrumented(void *object, TBuffer &b, const TClass * /* onfile_class */) const
+void TClass::StreamerInstrumented(const TClass* ths, void *object, TBuffer &b, const TClass * /* onfile_class */)
 {
    // Case of instrumented class with a library
 
    // case kInstrumented:
-   fStreamerFunc(b,object);
+   ths->fStreamerFunc(b,object);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerStreamerInfo(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class)
 {
    // Case of where we should directly use the StreamerInfo.
    //    case kForeign:
@@ -6114,29 +6114,32 @@ void TClass::StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile
    //    case kEmulatedStreamer:
 
    if (b.IsReading()) {
-      b.ReadClassBuffer(this, object, onfile_class);
+      b.ReadClassBuffer(ths, object, onfile_class);
       //ReadBuffer (b, object);
    } else {
       //WriteBuffer(b, object);
-      b.WriteClassBuffer(this, object);
+      b.WriteClassBuffer(ths, object);
    }
 }
 
 //______________________________________________________________________________
-void TClass::StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerDefault(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class)
 {
    // Default streaming in cases where either we have no way to know what to do
    // or if Property() has not yet been called.
 
-   if (fProperty==(-1)) {
-      Property();
-      if (fStreamerImpl == &TClass::StreamerDefault) {
-         Fatal("StreamerDefault", "fStreamerImpl not properly initialized (%d)", fStreamerType);
-      } else {
-         (this->*fStreamerImpl)(object,b,onfile_class);
-      }
+   if (ths->fProperty==(-1)) {
+      ths->Property();
+   }
+
+   // We could get here because after this thread started StreamerDefault
+   // *and* before check fProperty, another thread might have call Property
+   // and this fProperty when we read it, is not -1 and fStreamerImpl is
+   // supposed to be set properly (no longer pointing to the default).
+   if (ths->fStreamerImpl == &TClass::StreamerDefault) {
+     ths->Fatal("StreamerDefault", "fStreamerImpl not properly initialized (%d)", ths->fStreamerType);
    } else {
-      Fatal("StreamerDefault", "fStreamerType not properly initialized (%d)", fStreamerType);
+     (*ths->fStreamerImpl)(ths,object,b,onfile_class);
    }
 }
 
@@ -6174,6 +6177,7 @@ void TClass::SetStreamerFunc(ClassStreamerFunc_t strm)
 {
    // Set a wrapper/accessor function around this class custom streamer.
 
+   R__LOCKGUARD(gInterpreterMutex);
    if (fProperty != -1 &&
        ( (fStreamerFunc == 0 && strm != 0) || (fStreamerFunc != 0 && strm == 0) ) )
    {
