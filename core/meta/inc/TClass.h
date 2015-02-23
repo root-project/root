@@ -241,8 +241,8 @@ private:
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
 
-   typedef void (TClass::*StreamerImpl_t)(void *obj, TBuffer &b, const TClass *onfile_class) const;
-   mutable StreamerImpl_t fStreamerImpl;//! Pointer to the function implementing the right streaming behavior for the class represented by this object.
+   typedef void (*StreamerImpl_t)(const TClass* ths, void *obj, TBuffer &b, const TClass *onfile_class);
+   mutable std::atomic<StreamerImpl_t> fStreamerImpl;//! Pointer to the function implementing the right streaming behavior for the class represented by this object.
 
    TListOfFunctions  *GetMethodList();
    TMethod           *GetClassMethod(Long_t faddr);
@@ -267,13 +267,13 @@ private:
    void SetStreamerImpl();
 
    // Various implementation for TClass::Stramer
-   void StreamerExternal(void *object, TBuffer &b, const TClass *onfile_class) const;
-   void StreamerTObject(void *object, TBuffer &b, const TClass *onfile_class) const;
-   void StreamerTObjectInitialized(void *object, TBuffer &b, const TClass *onfile_class) const;
-   void StreamerTObjectEmulated(void *object, TBuffer &b, const TClass *onfile_class) const;
-   void StreamerInstrumented(void *object, TBuffer &b, const TClass *onfile_class) const;
-   void StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile_class) const;
-   void StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const;
+   static void StreamerExternal(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class);
+   static void StreamerTObject(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class);
+   static void StreamerTObjectInitialized(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class);
+   static void StreamerTObjectEmulated(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class);
+   static void StreamerInstrumented(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class);
+   static void StreamerStreamerInfo(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class);
+   static void StreamerDefault(const TClass* ths, void *object, TBuffer &b, const TClass *onfile_class);
 
    static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
    static DeclIdMap_t *GetDeclIdMap();  //Map from DeclId_t to TClass pointer
@@ -532,7 +532,8 @@ public:
    inline void        Streamer(void *obj, TBuffer &b, const TClass *onfile_class = 0) const
    {
       // Inline for performance, skipping one function call.
-      (this->*fStreamerImpl)(obj,b,onfile_class);
+      auto t = fStreamerImpl.load();
+      t(this,obj,b,onfile_class);
    }
 
    ClassDef(TClass,0)  //Dictionary containing class information
