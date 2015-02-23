@@ -1669,7 +1669,7 @@ enable/disable options, prefix with either --enable- or --disable-
   pgsql              PostgreSQL support, requires libpq
   pythia6            Pythia6 EG support, requires libPythia6
   pythia8            Pythia8 EG support, requires libPythia8 >= 8180
-  python             Python ROOT bindings, requires python >= 2.5
+  python             Python ROOT bindings, requires python >= 2.7
   qt                 Qt graphics backend, requires libqt >= 4.8
   qtgsi              GSI's Qt integration, requires libqt >= 4.8
   rfio               RFIO support, requires libshift from CASTOR >= 1.5.2
@@ -2712,7 +2712,7 @@ fi
 #
 ### echo %%% Check for Python version (required by LLVM/Clang)
 #
-message "Checking for Python version >= 2.5"
+message "Checking for Python version >= 2.7"
 
 if test "x$pythonexe" = "x"; then
   pythonexe=`$cwhich python 2> /dev/null`
@@ -2729,11 +2729,11 @@ pythonvers_minor=`echo $pythonvers | cut -d'.' -f2`
 
 if test  "$pythonvers_major" -gt "2" || \
    (test "$pythonvers_major" -eq "2" && \
-   test "$pythonvers_minor" -ge "5") ; then
+   test "$pythonvers_minor" -ge "7") ; then
   result yes
 else
   result "no"
-  result "`basename $0`: Python >= 2.5 MUST be installed"
+  result "`basename $0`: Python >= 2.7 MUST be installed"
   result "See http://root.cern.ch/drupal/content/build-prerequisites"
   exit 1
 fi
