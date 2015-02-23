@@ -990,34 +990,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc)
 
    // tests
    if (tc == 0 || tc == this || tc->GetEntriesFast() == 0) return;
-   if (fClass != tc->fClass) {
-      Error("AbsorbObjects", "cannot absorb objects when classes are different");
-      return;
-   }
-
-   // cache the sorted status
-   Bool_t wasSorted = IsSorted() && tc->IsSorted() &&
-                      (Last() == 0 || Last()->Compare(tc->First()) == -1);
-
-   // expand this
-   Int_t oldSize = GetEntriesFast();
-   Int_t newSize = oldSize + tc->GetEntriesFast();
-   if(newSize > fSize)
-      Expand(newSize);
-
-   // move
-   for (Int_t i = 0; i < tc->GetEntriesFast(); ++i) {
-      fCont[oldSize+i] = tc->fCont[i];
-      (*fKeep)[oldSize+i] = (*(tc->fKeep))[i];
-      tc->fCont[i] = 0;
-      (*(tc->fKeep))[i] = 0;
-   }
-
-   // cleanup
-   fLast = newSize-1;
-   tc->fLast = -1;
-   if (!wasSorted)
-      Changed();
+   AbsorbObjects(tc, 0, tc->GetEntriesFast() - 1);
 }
 
 //______________________________________________________________________________
@@ -1026,7 +999,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
    // Directly move the range of object pointers from tc without cloning
    // (copying).
    // This TClonesArray takes over ownership of all of tc's object pointers
-   // from idx1 to idx2. The tc array is re-arranged by return.
+   // from idx1 to idx2 (inclusive). The tc array is re-arranged by return.
 
    // tests
    if (tc == 0 || tc == this || tc->GetEntriesFast() == 0) return;
@@ -1037,6 +1010,10 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
 
    if (idx1 > idx2) {
       Error("AbsorbObjects", "range is not valid: idx1>idx2");
+      return;
+   }
+   if (idx2 >= tc->GetEntriesFast()) {
+      Error("AbsorbObjects", "range is not valid: idx2 out of bounds");
       return;
    }
 
