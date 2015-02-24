@@ -1530,7 +1530,7 @@ void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
    dyn.ReplaceAll("\"", " ");
    PDB(kGlobal, 3)
       Info("SetupWorkersEnv", "will invoke AddDynamicPath() on selected workers");
-   AddDynamicPath(dyn, kFALSE, addedWorkers, !fDynamicStartup); // Do not Collect
+   AddDynamicPath(dyn, kFALSE, addedWorkers, kFALSE); // Do not Collect
 
    // Include path
    TString inc = gSystem->GetIncludePath();
@@ -1538,7 +1538,7 @@ void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
    inc.ReplaceAll("\"", " ");
    PDB(kGlobal, 3)
       Info("SetupWorkersEnv", "will invoke AddIncludePath() on selected workers");
-   AddIncludePath(inc, kFALSE, addedWorkers, !fDynamicStartup);  // Do not Collect
+   AddIncludePath(inc, kFALSE, addedWorkers, kFALSE);  // Do not Collect
 
    // Done
    return;
@@ -9347,10 +9347,11 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks,
    m << TString("lib") << (Bool_t)kTRUE;
 
    // Add paths
-   if (libpath && strlen(libpath))
+   if (libpath && strlen(libpath)) {
       m << TString(libpath);
-   else
+   } else {
       m << TString("-");
+   }
 
    // Tell the server to send back or not
    m << (Int_t)doCollect;
@@ -9360,8 +9361,7 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks,
       Broadcast(m, wrks);
       if (doCollect)
          Collect(wrks, fCollectTimeout);
-   }
-   else {
+   } else {
       Broadcast(m);
       Collect(kActive, fCollectTimeout);
    }
@@ -9392,10 +9392,11 @@ Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks,
    m << TString("inc") << (Bool_t)kTRUE;
 
    // Add paths
-   if (incpath && strlen(incpath))
+   if (incpath && strlen(incpath)) {
       m << TString(incpath);
-   else
+   } else {
       m << TString("-");
+   }
 
    // Tell the server to send back or not
    m << (Int_t)doCollect;
@@ -9405,8 +9406,7 @@ Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks,
       Broadcast(m, wrks);
       if (doCollect)
          Collect(wrks, fCollectTimeout);
-   }
-   else {
+   } else {
       Broadcast(m);
       Collect(kActive, fCollectTimeout);
    }
