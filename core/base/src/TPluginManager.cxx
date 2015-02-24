@@ -141,7 +141,7 @@ TPluginHandler::TPluginHandler(const char *base, const char *regexp,
    if (validMacro && gROOT->LoadMacro(fPlugin, 0, kTRUE) == 0)
       fIsMacro = kTRUE;
 
-   if (fCtor.Contains("::")) {
+   if (fCtor.BeginsWith("::")) {
       fIsGlobal = kTRUE;
       fCtor = fCtor.Strip(TString::kLeading, ':');
    }
