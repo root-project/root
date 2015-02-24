@@ -486,7 +486,7 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
    Int_t binx, biny, bin, i;
    ntimes *= stride;
    Int_t ifirst = 0;
-   
+
    //If a buffer is activated, fill buffer
    // (note that this function must not be called from TH2::BufferEmpty)
    if (fBuffer) {
@@ -495,13 +495,13 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
          if (w) BufferFill(x[i],y[i],w[i]);
          else BufferFill(x[i], y[i], 1.);
       }
-      // fill the remaining entries if the buffer has been deleted 
-      if (i < ntimes && fBuffer==0) 
+      // fill the remaining entries if the buffer has been deleted
+      if (i < ntimes && fBuffer==0)
          ifirst = i;
       else
          return;
    }
-   
+
    Double_t ww = 1;
    for (i=ifirst;i<ntimes;i+=stride) {
       fEntries++;
@@ -2006,6 +2006,13 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const
 {
    TString opt = option;
+   // extract cut infor
+   TString cut;
+   Int_t i1 = opt.Index("[");
+   if (i1>=0) {
+      Int_t i2 = opt.Index("]");
+      cut = opt(i1,i2-i1+1);
+   }
    opt.ToLower();
    bool originalRange = opt.Contains("o");
 
@@ -2076,9 +2083,8 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    Int_t ncuts = 0;
    if (opt.Contains("[")) {
       ((TH2 *)this)->GetPainter();
-      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
+      if (fPainter) ncuts = fPainter->MakeCuts((char*)cut.Data());
    }
-   opt.ToLower();  //must be called after MakeCuts
 
    if (!h1) {
       const TArrayD *bins = outAxis.GetXbins();
@@ -2277,9 +2283,14 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    TAxis* outAxis;
    TAxis* inAxis;
 
-
    TString opt = option;
-   opt.ToLower();  //must be called after MakeCuts
+   TString cut;
+   Int_t i1 = opt.Index("[");
+   if (i1>=0) {
+      Int_t i2 = opt.Index("]");
+      cut = opt(i1,i2-i1+1);
+   }
+   opt.ToLower();  //must be called after having parsed the cut name
    bool originalRange = opt.Contains("o");
 
    if ( onX )
@@ -2302,7 +2313,6 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    if (firstOutBin == 0 && lastOutBin == 0) {
       firstOutBin = 1; lastOutBin = outAxis->GetNbins();
    }
-
 
    if ( lastbin < firstbin && inAxis->TestBit(TAxis::kAxisRange) ) {
       firstbin = inAxis->GetFirst();
@@ -2360,7 +2370,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    Int_t ncuts = 0;
    if (opt.Contains("[")) {
       ((TH2 *)this)->GetPainter();
-      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
+      if (fPainter) ncuts = fPainter->MakeCuts((char*)cut.Data());
    }
 
    if (!h1) {
