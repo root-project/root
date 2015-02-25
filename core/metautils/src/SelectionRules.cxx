@@ -305,7 +305,7 @@ const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::NamespaceDecl *D
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) const
-{  
+{
    // Currently rootcling does not need any information on enums, except
    // for the PCM / proto classes that register them to build TEnums without
    // parsing. This can be removed once (real) PCMs are available.
@@ -866,7 +866,9 @@ const BaseSelectionRule *SelectionRules::IsVarSelected(clang::VarDecl* D, const 
 
 const BaseSelectionRule *SelectionRules::IsFunSelected(clang::FunctionDecl *D, const std::string &qual_name) const
 {
+
    if (fFunctionSelectionRules.size() == 0 ||
+       D->getPrimaryTemplate() != nullptr ||
        llvm::isa<clang::CXXMethodDecl>(D)) return nullptr;
 
    std::string prototype;
@@ -974,6 +976,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDec
 {
 
    if (fFunctionSelectionRules.size() == 0 ||
+       D->getPrimaryTemplate() != nullptr ||
        llvm::isa<clang::CXXMethodDecl>(D)) return nullptr;
 
    std::string prototype;
