@@ -293,7 +293,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fDefMaxWrkNode = kTRUE;
 
    if (!fProgressStatus) {
-      Error("TPacketizerAdaptive", "No progress status");
+      Error("TPacketizer", "No progress status");
       return;
    }
 
@@ -394,7 +394,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    Bool_t byfile = (gprc == 0 && validateMode > 0 && num > -1) ? kTRUE : kFALSE;
    if (num > -1)
       PDB(kPacketizer,2)
-         Info("TPacketizerAdaptive",
+         Info("TPacketizer",
               "processing subset of entries: validating by file? %s", byfile ? "yes": "no");
    ValidateFiles(dset, slaves, num, byfile);
 

@@ -2211,8 +2211,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (dset->TestBit(TDSet::kEmpty))
          set->SetBit(TDSet::kEmpty);
 
-      const char *datapack = (fProof->IsLite()) ? "TPacketizer" : "TPacketizerAdaptive";
-      if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", datapack) != 0) {
+      if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", "TPacketizer") != 0) {
          Error("Process", "cannot init the packetizer");
          fExitStatus = kAborted;
          return -1;
