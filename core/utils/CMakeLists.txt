@@ -36,13 +36,13 @@ add_dependencies(rootcling CLING LLVMRES)
 
 if(WIN32)
   add_custom_command(TARGET rootcling POST_BUILD
-                     COMMAND ln -f rootcling rootcint
-                     COMMAND ln -f rootcling genreflex
+                     COMMAND copy /y rootcling rootcint
+                     COMMAND copy /y rootcling genreflex
                      WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 else()
   add_custom_command(TARGET rootcling POST_BUILD
-                     COMMAND copy /y rootcling rootcint
-                     COMMAND copy /y rootcling genreflex
+                     COMMAND ln -f rootcling rootcint
+                     COMMAND ln -f rootcling genreflex
                      WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 endif()
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
