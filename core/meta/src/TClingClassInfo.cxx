@@ -1283,7 +1283,11 @@ const char *TClingClassInfo::Name() const
       return 0;
    }
    // Note: This *must* be static/thread_local because we are returning a pointer inside it!
+#ifdef R__WIN32
+   static std::string buf;
+#else
    thread_local std::string buf;
+#endif
    buf.clear();
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
       PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
@@ -1342,7 +1346,11 @@ const char *TClingClassInfo::TmpltName() const
    R__LOCKGUARD(gInterpreterMutex);
 
    // Note: This *must* be static/thread_local because we are returning a pointer inside it!
+#ifdef R__WIN32
+   static std::string buf;
+#else
    thread_local std::string buf;
+#endif
    buf.clear();
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
       // Note: This does *not* include the template arguments!
