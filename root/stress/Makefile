@@ -160,8 +160,8 @@ endif
 endif
 
 $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
-	$(CMDECHO) unset DISPLAY; \
-	   $(CALLSTRESSEXE) cd test; ./$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<
+	$(CMDECHO) ( unset DISPLAY; \
+	   cd test; $(CALLSTRESSEXE) ./$*$(ExeSuf) $(STRESSFLAGS) ) > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<
 
 # To run an interpreted test we need the source + includes. We don't know
 # the exact dependencies, to we trust the binary: if we have it we have
@@ -172,7 +172,7 @@ $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
 # another's feet (e.g. by both interpreted and compiled version
 # opening the same file)
 $(addsuffix .log,$(STRESSTESTSINTERP)): %-itest.log: test/%$(ExeSuf) $(find %-ctest, $(STRESSTESTSCOMP))
-	$(CMDECHO) cd test; $(CALLROOTEXE) -l -b -q $*.cxx$(STRESSFLAGS) > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<
+	$(CMDECHO) ( cd test; $(CALLROOTEXE) -l -b -q $*.cxx$(STRESSFLAGS) ) > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<
 
 # If we need a file in test/ we just copy all files from $(ROOT_LOC)/test.
 # Once we have them in test/, we run make in there.
@@ -202,7 +202,7 @@ hsimple.root: test/hsimple.C
 	$(CMDECHO) $(CALLROOTEXE) -l -b -q $< || true > /dev/null 2>&1
 stressGraphics.ref: test/stressGraphics.ref
 	$(CMDECHO) cp -f $< $@
-earth.dat: $(ROOT_LOC)/tutorials/graphics/earth.dat
+test/earth.dat: $(ROOT_LOC)/tutorials/graphics/earth.dat
 	$(CMDECHO) cp -f $< $@
 
 #### Extra parameters for some tests ####
@@ -241,4 +241,4 @@ endif
 # libEvent exists before running *any* test.
 $(STRESSEXE): test/libEvent.$(DllSuf)
 test/stressMathCore$(ExeSuf): test/libTrackMathCoreDict.$(DllSuf)
-stressGraphics-itest.log stressGraphics-ctest.log: hsimple.root stressGraphics.ref earth.dat
+stressGraphics-itest.log stressGraphics-ctest.log: hsimple.root stressGraphics.ref test/earth.dat
