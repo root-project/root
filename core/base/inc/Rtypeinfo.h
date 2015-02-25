@@ -27,6 +27,14 @@ using std::type_info;
 
 #include <typeinfo>
 
+#elif defined(R__WIN32)
+
+// only has ::type_info without _HAS_EXCEPTIONS!
+#include <typeinfo>
+#if ! _HAS_EXCEPTIONS
+namespace std { using ::type_info; }
+#endif
+
 #else
 
 #include <typeinfo>

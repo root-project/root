@@ -178,6 +178,7 @@ char *dlerror() {
                  sizeof(Msg), NULL);
    return Msg;
 }
+#define thread_local static __declspec(thread)
 #endif
 #endif
 
@@ -4774,7 +4775,7 @@ TClass *TCling::GetClass(const std::type_info& typeinfo, Bool_t load) const
 }
 
 //______________________________________________________________________________
-Int_t TCling::AutoLoad(const type_info& typeinfo, Bool_t knowDictNotLoaded /* = kFALSE */)
+Int_t TCling::AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded /* = kFALSE */)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.

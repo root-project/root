@@ -30,7 +30,10 @@
 #include "TVirtualMutex.h"
 #endif
 
-#include <typeinfo>
+#ifndef ROOT_Rtypeinfo
+#include "Rtypeinfo.h"
+#endif
+
 #include <vector>
 
 class TClass;
