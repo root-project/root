@@ -10,7 +10,7 @@
 
    <script type='text/javascript'>
 
-      function GetCashedObject() { return "$$$root.json$$$"; }
+      function GetCachedObject() { return "$$$root.json$$$"; }
 
       function CreateDrawGui() {
          // analyze URL options
@@ -21,6 +21,7 @@
          if (monitor != null) monitor = parseInt(monitor);
 
          var objpainter = null;
+         var req_url = 'root.json.gz?compact=3';
 
          function draw_function(obj) {
             if (!obj) {
@@ -33,18 +34,23 @@
          }
 
          function get_function() {
-            var req = JSROOT.NewHttpRequest("root.json.gz?compact=3", 'object', draw_function);
+            var req = JSROOT.NewHttpRequest(req_url, 'object', draw_function);
             // submit request
             req.send(null);
          }
 
-         var obj = GetCashedObject();
+         var obj = GetCachedObject();
 
-         if (typeof obj =='object') {
+         if (typeof obj != 'object') {
+            get_function();
+         } else
+         if (obj['_typename'] == 'TFolder') {
+            // special case - seems to be it is item in the sniffer
+            req_url = 'get.json.gz?compact=3';
+            get_function();
+         } else {
             obj = JSROOT.JSONR_unref(obj);
             draw_function(obj);
-         } else { 
-            get_function();
          }
 
          if (monitor!=null)

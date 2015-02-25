@@ -46,7 +46,8 @@
       StatFill : { fFillColor: 0, fFillStyle: 1001 },
       TimeOffset : 788918400000, // UTC time at 01/01/95
       StatFormat : function(v) { return (Math.abs(v) < 1e5) ? v.toFixed(5) : v.toExponential(7); },
-      StatEntriesFormat : function(v) { return (Math.abs(v) < 1e7) ? v.toFixed(0) : v.toExponential(7); }
+      StatEntriesFormat : function(v) { return (Math.abs(v) < 1e7) ? v.toFixed(0) : v.toExponential(7); },
+      MathJax : 0,  // 0 - never, 1 - only for complex cases, 2 - always
    };
 
    /**
@@ -77,6 +78,13 @@
       if (col!=null) {
          col = parseInt(col);
          if ((col!=NaN) && (col>0) && (col<4)) JSROOT.gStyle.DefaultCol = col;
+      }
+
+      var mathjax = JSROOT.GetUrlOption("mathjax", url);
+      if (mathjax == "") JSROOT.gStyle.MathJax = 1; else
+      if (mathjax != null) {
+         JSROOT.gStyle.MathJax = parseInt(mathjax);
+         if (JSROOT.gStyle.MathJax == NaN) JSROOT.gStyle.MathJax = 1;
       }
    }
 
@@ -432,6 +440,11 @@
             selection.attr("font-weight", this.weight);
          if (this.style!=null)
             selection.attr("font-style", this.style);
+      }
+
+      res.asStyle = function(sz) {
+         // return font name, which could be applied with d3.select().style('font')
+         return ((sz!=null) ? sz : this.size) + "px " + this.name;
       }
 
       res.stringWidth = function(svg, line) {
@@ -1046,6 +1059,28 @@
          // when this is first main painter in the pad
          svg_p['mainpainter'] = this;
    }
+
+   JSROOT.TObjectPainter.prototype.SetForeignObjectPosition = function(fo, x, y) {
+      // method used to set absolute coordinates for foreignObject
+      // it is known problem of WebKit http://bit.ly/1wjqCQ9
+
+      var sel = fo;
+
+      if (JSROOT.browser.isWebKit) {
+         // force canvas redraw when foreign object used - it is not correctly scaled
+         this.svg_canvas(true).property('redraw_by_resize', true);
+         while (sel && sel.attr('class') != 'root_canvas') {
+            if ((sel.attr('class') == 'root_frame') || (sel.attr('class') == 'root_pad')) {
+              x += parseInt(sel.attr("x"));
+              y += parseInt(sel.attr("y"));
+            }
+            sel = d3.select(sel.node().parentNode);
+         }
+      }
+
+      fo.attr("x",x).attr("y",y);
+   }
+
 
    JSROOT.TObjectPainter.prototype.createAttFill = function(attfill, pattern, color) {
 
@@ -2662,7 +2697,7 @@
          var oldh = svg.property('last_height');
 
          if (check_resize == 1) {
-            if ((svg.attr('width')==w) && (svg.attr('height')==h)) return false;
+            if ((svg.attr('width') == w) && (svg.attr('height') == h)) return false;
             if ((oldw == w) && (oldh == h)) return false;
          }
 
@@ -2674,12 +2709,12 @@
             render_to.height(h);
          }
 
-         if ((check_resize==1) && (oldw>0) && (oldh>0))
+         if ((check_resize==1) && (oldw>0) && (oldh>0) && !svg.property('redraw_by_resize'))
             if ((w/oldw>0.5) && (w/oldw<2) && (h/oldh>0.5) && (h/oldh<2)) {
-              // change view port without changing view box
-              // let SVG scale drawing itself
-              svg.attr("width", w).attr("height", h);
-              return false;
+               // change view port without changing view box
+               // let SVG scale drawing itself
+               svg.attr("width", w).attr("height", h);
+               return false;
             }
 
       } else {
@@ -2728,7 +2763,8 @@
          .attr("preserveAspectRatio", "none")  // we do not keep relative ratio
          .property('height_factor', factor)
          .property('last_width', w)
-         .property('last_height', h);
+         .property('last_height', h)
+         .property('redraw_by_resize', false);
 
       return true;
    }
@@ -5791,14 +5827,12 @@
 
       var dx = i2-i1, dy = j2-j1;
 
-      var canvas =
-         this.draw_g.append("foreignObject")
-                 .attr("width", w)
-                 .attr("height", h)
-                 .append("xhtml:canvas")
-                 .attr("width", dx)
-                 .attr("height", dy)
-                 .attr("style", "width: " + w + "px; height: "+ h + "px");
+      var fo = this.draw_g.append("foreignObject").attr("width", w).attr("height", h);
+      this.SetForeignObjectPosition(fo, 0, 0);
+
+      var canvas = fo.append("xhtml:canvas")
+                     .attr("width", dx).attr("height", dy)
+                     .attr("style", "width: " + w + "px; height: "+ h + "px");
 
       var context = canvas.node().getContext("2d");
       var image = context.createImageData(dx, dy);
@@ -5824,32 +5858,13 @@
 
       var local_bins = this.CreateDrawBins(w, h, 0, 0);
 
-      var foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject' );
-      // var body = document.createElement( 'body' );
+      var fo = this.draw_g.append("foreignObject").attr("width", w).attr("height", h);
+      this.SetForeignObjectPosition(fo, 0, 0);
 
-      var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      var canvas = fo.append("xhtml:canvas").attr("width", w).attr("height", h);
 
-      $(canvas).attr('width', w).attr('height',h)
-
-//      $(body).append(canvas);
-
-      $(foreignObject).attr("width", w).attr("height", h).append(canvas);
-
-      $(this.draw_g.node()).append(foreignObject);
-
-      var ctx = canvas.getContext("2d");
-
-/*
-      var canvas =
-         this.draw_g.append("foreignObject")
-                 .attr("width", w)
-                 .attr("height", h)
-                 .append("xhtml:canvas")
-                 .attr("width", w)
-                 .attr("height", h)
-                 .attr("style", "width: " + w + "px; height: "+ h + "px");
       var ctx = canvas.node().getContext("2d");
-*/
+
       for (var i in local_bins) {
          var bin = local_bins[i];
          ctx.fillStyle = bin.fill;
@@ -5867,12 +5882,11 @@
       var w = Number(this.svg_frame(true).attr("width")),
           h = Number(this.svg_frame(true).attr("height"));
 
-      if (this.options.Color==2)
+      if ((this.options.Color==2) && !JSROOT.browser.isIE)
          return this.DrawSimpleCanvas(w,h);
 
-      if (this.options.Color==3)
+      if ((this.options.Color==3) && !JSROOT.browser.isIE)
          return this.DrawNormalCanvas(w,h);
-
 
       // this.options.Scat =1;
       // this.histo['fMarkerStyle'] = 2;
@@ -6227,41 +6241,35 @@
            .style("stroke", lcolor.color);
 
       var tcolor = JSROOT.Painter.root_colors[pave['fTextColor']];
-      var tpos_x = pave['fMargin'] * w;
+      var tpos_x = Math.round(pave['fMargin'] * w);
+      var padding_x = Math.round(0.03 * w);
+      var padding_y = Math.round(0.03 * h);
       var nlines = pave.fPrimitives.arr.length;
       var font = JSROOT.Painter.getFontDetails(pave['fTextFont'], h / (nlines * 1.5));
 
-      var max_len = 0, mul = 1.4;
+      var min_fact = 1.;
       for (var j = 0; j < nlines; ++j) {
-         var line = JSROOT.Painter.translateLaTeX(pave.fPrimitives.arr[j]['fLabel']);
-         var lw = tpos_x  + font.stringWidth(svg, line);
-         if (lw > max_len) max_len = lw;
+         var leg = pave.fPrimitives.arr[j];
+         var lopt = leg['fOption'].toLowerCase();
+         var label = JSROOT.Painter.translateLaTeX(leg['fLabel']);
+         var lw = font.stringWidth(svg, label);
+         var allowed = w - 2*padding_x;
+         if ((lopt.indexOf("h")<0) && (lopt.length>0)) allowed = w - tpos_x - padding_x;
+         var fact = lw > 5 ? allowed / lw : 1.;
+         if (fact < min_fact) min_fact = fact;
       }
-      if (max_len > w) {
-         font.size = Math.floor(font.size * 0.95 * (w / max_len));
-         mul *= 0.95 * (max_len / w);
-      }
-      var x1 = pave['fX1NDC'];
-      var x2 = pave['fX2NDC'];
-      var y1 = pave['fY1NDC'];
-      var y2 = pave['fY2NDC'];
-      var margin = pave['fMargin'] * (x2 - x1) / pave['fNColumns'];
-      var yspace = (y2 - y1) / nlines;
-      var ytext = y2 + 0.5 * yspace; // y-location of 0th entry
-      var boxw = margin * 0.35;
+
+      if (min_fact<1) font.size = Math.floor(font.size * min_fact);
+
+      var step_y = (h - 2*padding_y)/nlines;
 
       for (var i = 0; i < nlines; ++i) {
          var leg = pave.fPrimitives.arr[i];
          var lopt = leg['fOption'].toLowerCase();
 
-         var string = leg['fLabel'];
+         var label = JSROOT.Painter.translateLaTeX(leg['fLabel']);
 
-         var pos_y = ((i + 1) * (font.size * mul)) - (font.size / 3);
-         var tpos_y = (i + 1) * (font.size * mul);
-         if (nlines == 1) {
-            var pos_y = (h * 0.75) - (font.size / 3);
-            var tpos_y = h * 0.75;
-         }
+         var pos_y = padding_y + (i+0.5)*step_y; // middle of each line
 
          var attfill = leg;
          var attmarker = leg;
@@ -6278,57 +6286,24 @@
          var fill = this.createAttFill(attfill);
          var llll = JSROOT.Painter.createAttLine(attline);
 
-         p.append("text")
-              .attr("class", "text")
-              .attr("text-anchor", "start")
-              .attr("x", tpos_x)
-              .attr("y", tpos_y)
-              .call(font.func)
-              .attr("fill", tcolor)
-              .text(string);
-
          // Draw fill pattern (in a box)
          if (lopt.indexOf('f') != -1) {
             // box total height is yspace*0.7
             // define x,y as the center of the symbol for this entry
-            var xsym = margin / 2;
-            var ysym = ytext;
-            var xf = new Array(4), yf = new Array(4);
-            xf[0] = xsym - boxw;
-            yf[0] = ysym - yspace * 0.35;
-            xf[1] = xsym + boxw;
-            yf[1] = yf[0];
-            xf[2] = xf[1];
-            yf[2] = ysym + yspace * 0.35;
-            xf[3] = xf[0];
-            yf[3] = yf[2];
-            for (var j = 0; j < 4; j++) {
-               xf[j] = xf[j] * Number(svg.attr("width"));
-               yf[j] = yf[j] * Number(svg.attr("height"));
-            }
-            var ww = xf[1] - xf[0];
-            var hh = yf[2] - yf[0];
-            pos_y = pos_y - (hh / 2);
-            var pos_x = (tpos_x / 2) - (ww / 2);
-
             p.append("svg:rect")
-                   .attr("x", pos_x)
-                   .attr("y", pos_y)
-                   .attr("width", ww)
-                   .attr("height", hh)
+                   .attr("x", padding_x)
+                   .attr("y", pos_y-step_y/3)
+                   .attr("width", tpos_x - 2*padding_x)
+                   .attr("height", 2*step_y/3)
                    .call(llll.func)
                    .call(fill.func);
          }
          // Draw line
          if (lopt.indexOf('l') != -1) {
-
-            // line total length (in x) is margin*0.8
-            var line_length = (0.7 * pave['fMargin']) * w;
-            var pos_x = (tpos_x - line_length) / 2;
             p.append("svg:line")
-               .attr("x1", pos_x)
+               .attr("x1", padding_x)
                .attr("y1", pos_y)
-               .attr("x2", pos_x + line_length)
+               .attr("x2", tpos_x - padding_x)
                .attr("y2", pos_y)
                .call(llll.func);
          }
@@ -6337,15 +6312,65 @@
          }
          // Draw Polymarker
          if (lopt.indexOf('p') != -1) {
-
-            var line_length = (0.7 * pave['fMargin']) * w;
-            var pos_x = tpos_x / 2;
-
             var marker = JSROOT.Painter.createAttMarker(attmarker);
             p.append("svg:path")
-                .attr("transform", function(d) { return "translate(" + pos_x + "," + pos_y + ")"; })
+                .attr("transform", function(d) { return "translate(" + tpos_x/2 + "," + pos_y + ")"; })
                 .call(marker.func);
          }
+
+         var pos_x = tpos_x;
+         if ((lopt.indexOf('h')>=0) || (lopt.length==0)) pos_x = padding_x;
+
+         if ((JSROOT.gStyle.MathJax < 1) || (label.indexOf("#frac")<0)) {
+           p.append("text")
+              .attr("class", "text")
+              .attr("text-anchor", "start")
+              .attr("dominant-baseline", "central")
+              .attr("x", pos_x)
+              .attr("y", pos_y /*+ font.size*0.3*/)
+              .call(font.func)
+              .attr("fill", tcolor)
+              .text(label);
+         } else {
+
+            var fo_x = Math.round(pos_x);
+            var fo_y = Math.round(pos_y - 0.5*step_y);
+            var fo_w = Math.round(w - padding_x - pos_x);
+            var fo_h = Math.round(step_y);
+
+            var fo = this.draw_g.append("foreignObject").attr("width", fo_w).attr("height", fo_h);
+            this.SetForeignObjectPosition(fo, fo_x, fo_y);
+
+            // this is just workaround, one need real parser to find all #frac and so on
+            label = label.replace("#frac","\\(\\frac") + "\\)";
+
+            var body = fo.append("xhtml:body")
+                         .style("display", "table")
+                         .append("xhtml:div")
+                         .style("display", "table-cell")
+                         .style('vertical-align', 'middle') // force to align in the center
+                         .style("font", font.asStyle())
+                         .html(label);
+
+            JSROOT.AssertPrerequisites('mathjax', function() {
+               if (typeof MathJax != 'object') return;
+
+               // MathJax.Hub.Queue(["Typeset", MathJax.Hub, body.node()]);
+
+               MathJax.Hub.Queue(function() {
+                  MathJax.Hub.Typeset(body.node());
+                  // rescale one again
+                  var rect = body.node().getBoundingClientRect();
+                  var fact_x = parseInt(rect.right - rect.left) / fo_w;
+                  var fact_y = parseInt(rect.bottom - rect.top) / fo_h;
+                  if (Math.max(fact_x, fact_y) > 1)
+                     body.style("font", font.asStyle(Math.round(font.size/Math.max(fact_x, fact_y))));
+               });
+            });
+
+
+         }
+
       }
       if (lwidth && lwidth > 1) {
          p.append("svg:line")
@@ -6756,13 +6781,17 @@
 
       var mathjax = 'mathjax' in this.txt;
 
-      if (!mathjax && !('as_is' in this.txt)) {
-         var arr = txt.split("\n"); txt = "";
-         for (var i in arr)
-            txt += "<pre>" + arr[i] + "</pre>";
+      if ('load' in this.txt) {
+         frame.html("<div style='overflow:hidden'></div>");
+         frame.find('div').load(this.txt.load);
+      } else {
+         if (!mathjax && !('as_is' in this.txt)) {
+            var arr = txt.split("\n"); txt = "";
+            for (var i in arr)
+               txt += "<pre>" + arr[i] + "</pre>";
+         }
+         frame.html("<div style='overflow:hidden'>" + txt + "</div>");
       }
-
-      frame.html("<div style='overflow:hidden'>" + txt + "</div>");
 
       // (re) set painter to first child element
       this.SetDivId(this.divid);
