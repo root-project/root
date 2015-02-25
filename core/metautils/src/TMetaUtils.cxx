@@ -4325,7 +4325,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
    // In case of Int_t* we need to strip the pointer first, ReSubst and attach
    // the pointer once again.
-   if (isa<PointerType>(QT.getTypePtr())) {
+   if (isa<clang::PointerType>(QT.getTypePtr())) {
       // Get the qualifiers.
       Qualifiers quals = QT.getQualifiers();
       QualType nQT;
@@ -4360,7 +4360,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
    // In case of Int_t[2] we need to strip the array first, ReSubst and attach
    // the array once again.
-   if (isa<ArrayType>(QT.getTypePtr())) {
+   if (isa<clang::ArrayType>(QT.getTypePtr())) {
       // Get the qualifiers.
       Qualifiers quals = QT.getQualifiers();
 
