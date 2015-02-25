@@ -277,8 +277,8 @@ TVirtualPacketizer *TPacketizerMulti::CreatePacketizer(TDSet *dset, TList *wrks,
    }
 
    if (TProof::GetParameter(input, "PROOF_Packetizer", packetizername) != 0) {
-      // Using standard packetizer TAdaptivePacketizer
-      packetizername = "TPacketizerAdaptive";
+      // Using standard packetizer TPacketizer
+      packetizername = "TPacketizer";
    } else {
       Info("CreatePacketizer", "using alternate packetizer: %s", packetizername.Data());
    }
