@@ -28,6 +28,8 @@ Many old problems and errors are fixed, new functions are provided.
     plain text in the browser. If property 'mathjax' specified,
     MathJax.js library will be loaded and used for rendering.
     See httpcontrol.C macro for example.
+13. When using foreignObject, provide workaround for absolute positioning 
+    problem in Chrome/Safari, see <http://bit.ly/1wjqCQ9>
    
 
 ## Changes in 3.2
