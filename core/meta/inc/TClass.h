@@ -153,7 +153,7 @@ private:
    private:
       Int_t fVerbLevel=0;
       std::unordered_set<std::string> fClassNamesSet;
-      mutable std::atomic_flag fSpinLock = ATOMIC_FLAG_INIT;
+      mutable std::atomic_flag fSpinLock; // MSVC doesn't support = ATOMIC_FLAG_INIT;
    };
 
    class InsertTClassInRegistryRAII {

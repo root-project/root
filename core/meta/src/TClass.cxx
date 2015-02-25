@@ -108,7 +108,13 @@ std::atomic<Int_t> TClass::fgClassCount;
 // Implementation of the TDeclNameRegistry
 
 //______________________________________________________________________________
-TClass::TDeclNameRegistry::TDeclNameRegistry(Int_t verbLevel): fVerbLevel(verbLevel){}
+TClass::TDeclNameRegistry::TDeclNameRegistry(Int_t verbLevel): fVerbLevel(verbLevel)
+{
+   // TDeclNameRegistry class constructor.
+
+   // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
+   std::atomic_flag_clear( &fSpinLock );
+}
 
 //______________________________________________________________________________
 void TClass::TDeclNameRegistry::AddQualifiedName(const char *name)
