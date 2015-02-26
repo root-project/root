@@ -1778,8 +1778,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    if (idx != kNPOS) {
       l.Remove(idx+1);
    }
-   idx = libs.Index(l);
-   if (idx != kNPOS) {
+   for (idx = libs.Index(l); idx != kNPOS; idx = libs.Index(l,idx+1)) {
       // The libs contains the sub-string 'l', let's make sure it is
       // not just part of a larger name.
       if (idx == 0 || libs[idx-1] == '/' || libs[idx-1] == '\\') {
@@ -1808,11 +1807,11 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    }
    if (l.BeginsWith("lib")) {
       l.Replace(0, 3, "-l");
-      idx = libs.Index(l);
-      if (idx != kNPOS &&
-          (idx == 0 || libs[idx-1] == ' ') &&
-          (libs[idx+l.Length()] == ' ' || libs[idx+l.Length()] == 0)) {
-         return 1;
+      for(idx = libs.Index(l); idx != kNPOS; idx = libs.Index(l,idx+1)) {
+         if ((idx == 0 || libs[idx-1] == ' ') &&
+             (libs[idx+l.Length()] == ' ' || libs[idx+l.Length()] == 0)) {
+            return 1;
+         }
       }
    }
 
