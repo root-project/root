@@ -103,6 +103,8 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
    : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
      fTemplateSpecIter(0), fSingleDecl(0)
 {
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (!ci || !ci->IsValid()) {
       return;
    }
