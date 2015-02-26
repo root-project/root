@@ -301,6 +301,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname) const
       return tmi;
    }
 
+   R__LOCKGUARD(gInterpreterMutex);
    if (fType) {
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
@@ -349,6 +350,8 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       TClingMethodInfo tmi(fInterp);
       return tmi;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
    if (fType) {
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
@@ -440,6 +443,9 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       TClingMethodInfo tmi(fInterp);
       return tmi;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (fType) {
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
@@ -503,6 +509,9 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       long *poffset, EFunctionMatchMode /*mode = kConversionMatch*/,
       EInheritanceMode /* imode = kWithInheritance*/) const
 {
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (fType) {
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
@@ -686,6 +695,7 @@ bool TClingClassInfo::HasDefaultConstructor() const
 
 bool TClingClassInfo::HasMethod(const char *name) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    if (IsLoaded() && !llvm::isa<EnumDecl>(fDecl)) {
       return fInterp->getLookupHelper()
          .hasFunction(fDecl, name,
@@ -961,17 +971,20 @@ void *TClingClassInfo::New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) co
             FullyQualifiedName(fDecl).c_str());
       return 0;
    }
-   const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
-   if (!RD) {
-      Error("TClingClassInfo::New()", "This is a namespace!: %s",
-            FullyQualifiedName(fDecl).c_str());
-      return 0;
-   }
-   if (!HasDefaultConstructor()) {
-      // FIXME: We fail roottest root/io/newdelete if we issue this message!
-      //Error("TClingClassInfo::New()", "Class has no default constructor: %s",
-      //      FullyQualifiedName(fDecl).c_str());
-      return 0;
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+      const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
+      if (!RD) {
+         Error("TClingClassInfo::New()", "This is a namespace!: %s",
+               FullyQualifiedName(fDecl).c_str());
+         return 0;
+      }
+      if (!HasDefaultConstructor()) {
+         // FIXME: We fail roottest root/io/newdelete if we issue this message!
+         //Error("TClingClassInfo::New()", "Class has no default constructor: %s",
+         //      FullyQualifiedName(fDecl).c_str());
+         return 0;
+      }
    }
    void* obj = 0;
    TClingCallFunc cf(fInterp,normCtxt);
@@ -999,18 +1012,21 @@ void *TClingClassInfo::New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normC
             FullyQualifiedName(fDecl).c_str());
       return 0;
    }
-   const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
-   if (!RD) {
-      Error("TClingClassInfo::New(n)", "This is a namespace!: %s",
-            FullyQualifiedName(fDecl).c_str());
-      return 0;
-   }
-   if (!HasDefaultConstructor()) {
-      // FIXME: We fail roottest root/io/newdelete if we issue this message!
-      //Error("TClingClassInfo::New(n)",
-      //      "Class has no default constructor: %s",
-      //      FullyQualifiedName(fDecl).c_str());
-      return 0;
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+      const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
+      if (!RD) {
+         Error("TClingClassInfo::New(n)", "This is a namespace!: %s",
+               FullyQualifiedName(fDecl).c_str());
+         return 0;
+      }
+      if (!HasDefaultConstructor()) {
+         // FIXME: We fail roottest root/io/newdelete if we issue this message!
+         //Error("TClingClassInfo::New(n)",
+         //      "Class has no default constructor: %s",
+         //      FullyQualifiedName(fDecl).c_str());
+         return 0;
+      }
    }
    void* obj = 0;
    TClingCallFunc cf(fInterp,normCtxt);
@@ -1040,18 +1056,22 @@ void *TClingClassInfo::New(int n, void *arena, const ROOT::TMetaUtils::TNormaliz
             FullyQualifiedName(fDecl).c_str());
       return 0;
    }
-   const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
-   if (!RD) {
-      Error("TClingClassInfo::New(n, arena)", "This is a namespace!: %s",
-            FullyQualifiedName(fDecl).c_str());
-      return 0;
-   }
-   if (!HasDefaultConstructor()) {
-      // FIXME: We fail roottest root/io/newdelete if we issue this message!
-      //Error("TClingClassInfo::New(n, arena)",
-      //      "Class has no default constructor: %s",
-      //      FullyQualifiedName(fDecl).c_str());
-      return 0;
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+
+      const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
+      if (!RD) {
+         Error("TClingClassInfo::New(n, arena)", "This is a namespace!: %s",
+               FullyQualifiedName(fDecl).c_str());
+         return 0;
+      }
+      if (!HasDefaultConstructor()) {
+         // FIXME: We fail roottest root/io/newdelete if we issue this message!
+         //Error("TClingClassInfo::New(n, arena)",
+         //      "Class has no default constructor: %s",
+         //      FullyQualifiedName(fDecl).c_str());
+         return 0;
+      }
    }
    void* obj = 0;
    TClingCallFunc cf(fInterp,normCtxt);
@@ -1075,18 +1095,21 @@ void *TClingClassInfo::New(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt 
             FullyQualifiedName(fDecl).c_str());
       return 0;
    }
-   const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
-   if (!RD) {
-      Error("TClingClassInfo::New(arena)", "This is a namespace!: %s",
-            FullyQualifiedName(fDecl).c_str());
-      return 0;
-   }
-   if (!HasDefaultConstructor()) {
-      // FIXME: We fail roottest root/io/newdelete if we issue this message!
-      //Error("TClingClassInfo::New(arena)",
-      //      "Class has no default constructor: %s",
-      //      FullyQualifiedName(fDecl).c_str());
-      return 0;
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+      const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
+      if (!RD) {
+         Error("TClingClassInfo::New(arena)", "This is a namespace!: %s",
+               FullyQualifiedName(fDecl).c_str());
+         return 0;
+      }
+      if (!HasDefaultConstructor()) {
+         // FIXME: We fail roottest root/io/newdelete if we issue this message!
+         //Error("TClingClassInfo::New(arena)",
+         //      "Class has no default constructor: %s",
+         //      FullyQualifiedName(fDecl).c_str());
+         return 0;
+      }
    }
    void* obj = 0;
    TClingCallFunc cf(fInterp,normCtxt);
