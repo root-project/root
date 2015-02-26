@@ -87,9 +87,14 @@ TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
    fContextIdx(rhs.fContextIdx),
    fIter(rhs.fIter),
    fTitle(rhs.fTitle),
-   fTemplateSpecIter(rhs.fTemplateSpecIter ? new SpecIterator(*rhs.fTemplateSpecIter) : 0),
+   fTemplateSpecIter(nulltpr),
    fSingleDecl(rhs.fSingleDecl)
 {
+   if (rhs.fTemplateSpecIter) {
+      // The SpecIterator query the decl.
+      R__LOCKGUARD(gInterpreterMutex);
+      fTemplateSpecIter = new SpecIterator(*rhs.fTemplateSpecIter);
+   }
 }
 
 
