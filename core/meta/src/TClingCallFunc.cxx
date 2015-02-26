@@ -2267,14 +2267,16 @@ void *TClingCallFunc::InterfaceMethod()
    if (!IsValid()) {
       return 0;
    }
-   const FunctionDecl *decl = fMethod->GetMethodDecl();
+   if (!fWrapper) {
+      const FunctionDecl *decl = fMethod->GetMethodDecl();
 
-   R__LOCKGUARD(gInterpreterMutex);
-   map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
-   if (I != gWrapperStore.end()) {
-      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
-   } else {
-      fWrapper = make_wrapper();
+      R__LOCKGUARD(gInterpreterMutex);
+      map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
+      if (I != gWrapperStore.end()) {
+         fWrapper = (tcling_callfunc_Wrapper_t) I->second;
+      } else {
+         fWrapper = make_wrapper();
+      }
    }
    return (void *)fWrapper;
 }
@@ -2294,15 +2296,17 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
             "Attempt to get interface while invalid.");
       return TInterpreter::CallFuncIFacePtr_t();
    }
-   const FunctionDecl *decl = fMethod->GetMethodDecl();
+   if (!fWrapper) {
+      const FunctionDecl *decl = fMethod->GetMethodDecl();
 
-   R__LOCKGUARD(gInterpreterMutex);
-   map<const FunctionDecl *, void *>::iterator I =
+      R__LOCKGUARD(gInterpreterMutex);
+      map<const FunctionDecl *, void *>::iterator I =
       gWrapperStore.find(decl);
-   if (I != gWrapperStore.end()) {
-      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
-   } else {
-      fWrapper = make_wrapper();
+      if (I != gWrapperStore.end()) {
+         fWrapper = (tcling_callfunc_Wrapper_t) I->second;
+      } else {
+         fWrapper = make_wrapper();
+      }
    }
    return TInterpreter::CallFuncIFacePtr_t(fWrapper);
 }
