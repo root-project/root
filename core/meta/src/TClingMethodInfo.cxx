@@ -87,7 +87,7 @@ TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
    fContextIdx(rhs.fContextIdx),
    fIter(rhs.fIter),
    fTitle(rhs.fTitle),
-   fTemplateSpecIter(nulltpr),
+   fTemplateSpecIter(nullptr),
    fSingleDecl(rhs.fSingleDecl)
 {
    if (rhs.fTemplateSpecIter) {
