@@ -8,5 +8,5 @@ Name[de]=ROOT
 Comment=An object-oriented data analysis framework
 Comment[de]=Ein objektorientiertes Framework zur Datenanalyse
 StartupNotify=true
-MimeType=application/x-root;text/x-c++src
-Categories=Science;Development;Application;
+MimeType=application/x-root;text/x-c++src;
+Categories=Science;Development;
