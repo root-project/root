@@ -281,9 +281,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    PDB(kPacketizer,1) Info("TPacketizer", "Enter (first %lld, num %lld)", first, num);
 
    // Init pointer members
-   fSlaveStats = 0;
    fPackets = 0;
-   fSlaveStats = 0;
    fUnAllocated = 0;
    fActive = 0;
    fFileNodes = 0;

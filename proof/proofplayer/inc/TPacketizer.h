@@ -51,7 +51,6 @@ private:
    TList    *fFileNodes;    // nodes with files
    TList    *fUnAllocated;  // nodes with unallocated files
    TList    *fActive;       // nodes with unfinished files
-   TMap     *fSlaveStats;   // slave status, keyed by correspondig TSlave
 
    Long64_t  fPacketSize;   // global base packet size
                                  // It can be set with PROOF_PacketSize
