@@ -4098,7 +4098,7 @@ void TCling::ExecuteWithArgsAndReturn(TMethod* method, void* address,
       Error("ExecuteWithArgsAndReturn", "No method was defined");
       return;
    }
-   R__LOCKGUARD2(gInterpreterMutex);
+
    TClingMethodInfo* minfo = (TClingMethodInfo*) method->fInfo;
    TClingCallFunc func(*minfo,*fNormalizedCtxt);
    func.ExecWithArgsAndReturn(address, args, nargs, ret);
