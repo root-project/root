@@ -782,8 +782,19 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
       }
    }
    // Send request to the coordinator
-   TObjString *os =
-      ((TXSocket *)fSocket)->SendCoordinator(kGetWorkers, seqnum.Data());
+   TObjString *os = 0;
+   if (dynamicStartup) {
+      // We wait dynto seconds for the first worker to come; -1 means forever
+      Int_t dynto = gEnv->GetValue("Proof.DynamicStartupTimeout", -1);
+      Bool_t doto = (dynto > 0) ? kTRUE : kFALSE;
+      while (!(os = ((TXSocket *)fSocket)->SendCoordinator(kGetWorkers, seqnum.Data()))) {
+         if (doto > 0 && --dynto < 0) break;
+         // Another second
+         gSystem->Sleep(1000);
+      }
+   } else {
+      os = ((TXSocket *)fSocket)->SendCoordinator(kGetWorkers, seqnum.Data());
+   }
 
    // The reply contains some information about the master (image, workdir)
    // followed by the information about the workers; the tokens for each node
