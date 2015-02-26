@@ -5970,6 +5970,7 @@ void TCling::RegisterTemporary(const cling::Value& value)
    // value; only pointers / references / objects need to be stored.
 
    if (value.isValid() && value.needsManagedAllocation()) {
+      R__LOCKGUARD(gInterpreterMutex);
       fTemporaries->push_back(value);
    }
 }
