@@ -2193,12 +2193,15 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info, void *
    //         info->Name());
    //   return 0;
    //}
-   map<const Decl *, void *>::iterator I = gCtorWrapperStore.find(D);
    tcling_callfunc_ctor_Wrapper_t wrapper = 0;
-   if (I != gCtorWrapperStore.end()) {
-      wrapper = (tcling_callfunc_ctor_Wrapper_t) I->second;
-   } else {
-      wrapper = make_ctor_wrapper(info);
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+      map<const Decl *, void *>::iterator I = gCtorWrapperStore.find(D);
+      if (I != gCtorWrapperStore.end()) {
+         wrapper = (tcling_callfunc_ctor_Wrapper_t) I->second;
+      } else {
+         wrapper = make_ctor_wrapper(info);
+      }
    }
    if (!wrapper) {
       Error("TClingCallFunc::ExecDefaultConstructor",
@@ -2217,13 +2220,17 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
       Error("TClingCallFunc::ExecDestructor", "Invalid class info!");
       return;
    }
-   const Decl *D = info->GetDecl();
-   map<const Decl *, void *>::iterator I = gDtorWrapperStore.find(D);
+
    tcling_callfunc_dtor_Wrapper_t wrapper = 0;
-   if (I != gDtorWrapperStore.end()) {
-      wrapper = (tcling_callfunc_dtor_Wrapper_t) I->second;
-   } else {
-      wrapper = make_dtor_wrapper(info);
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+      const Decl *D = info->GetDecl();
+      map<const Decl *, void *>::iterator I = gDtorWrapperStore.find(D);
+      if (I != gDtorWrapperStore.end()) {
+         wrapper = (tcling_callfunc_dtor_Wrapper_t) I->second;
+      } else {
+         wrapper = make_dtor_wrapper(info);
+      }
    }
    if (!wrapper) {
       Error("TClingCallFunc::ExecDestructor",
@@ -2261,6 +2268,8 @@ void *TClingCallFunc::InterfaceMethod()
       return 0;
    }
    const FunctionDecl *decl = fMethod->GetMethodDecl();
+
+   R__LOCKGUARD(gInterpreterMutex);
    map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
    if (I != gWrapperStore.end()) {
       fWrapper = (tcling_callfunc_Wrapper_t) I->second;
@@ -2286,6 +2295,8 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
       return TInterpreter::CallFuncIFacePtr_t();
    }
    const FunctionDecl *decl = fMethod->GetMethodDecl();
+
+   R__LOCKGUARD(gInterpreterMutex);
    map<const FunctionDecl *, void *>::iterator I =
       gWrapperStore.find(decl);
    if (I != gWrapperStore.end()) {
