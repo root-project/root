@@ -134,6 +134,12 @@ public:
       fMethod = new TClingMethodInfo(interp);
    }
 
+   explicit TClingCallFunc(TClingMethodInfo &minfo, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+   : fInterp(minfo.GetInterpreter()), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false)
+   {
+      fMethod = new TClingMethodInfo(minfo);
+   }
+
    TClingCallFunc(const TClingCallFunc &rhs)
       : fInterp(rhs.fInterp), fNormCtxt(rhs.fNormCtxt), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals),
         fIgnoreExtraArgs(rhs.fIgnoreExtraArgs)
