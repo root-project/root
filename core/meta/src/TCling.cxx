@@ -4099,9 +4099,8 @@ void TCling::ExecuteWithArgsAndReturn(TMethod* method, void* address,
       return;
    }
    R__LOCKGUARD2(gInterpreterMutex);
-   TClingCallFunc func(fInterpreter,*fNormalizedCtxt);
    TClingMethodInfo* minfo = (TClingMethodInfo*) method->fInfo;
-   func.Init(minfo);
+   TClingCallFunc func(*minfo,*fNormalizedCtxt);
    func.ExecWithArgsAndReturn(address, args, nargs, ret);
 }
 
