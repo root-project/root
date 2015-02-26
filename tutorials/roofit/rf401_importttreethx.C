@@ -25,6 +25,7 @@
 #include "TH1.h"
 #include "TTree.h"
 #include "TRandom.h"
+#include <map>
 
 using namespace RooFit ;
 
