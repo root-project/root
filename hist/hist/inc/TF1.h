@@ -61,7 +61,7 @@ public:
       fParNames(std::vector<std::string>(npar) )
    {
       for (int i = 0; i < npar; ++i ){
-         fParNames[i] = std::string(TString::Format("p%d",i).Data() ); 
+         fParNames[i] = std::string(TString::Format("p%d",i).Data() );
       }
    }
    // copy constructor
@@ -77,13 +77,13 @@ public:
       return *this;
    }
    virtual ~TF1Parameters() {}
-   
+
    // getter methods
    Double_t GetParameter(Int_t iparam) const {
-      return (CheckIndex(iparam)) ? fParameters[iparam] : 0; 
+      return (CheckIndex(iparam)) ? fParameters[iparam] : 0;
    }
    Double_t GetParameter(const char * name) const {
-      return GetParameter(GetParNumber(name) ); 
+      return GetParameter(GetParNumber(name) );
    }
    const Double_t *GetParameters() const {
       return fParameters.data();
@@ -91,14 +91,14 @@ public:
    Int_t GetParNumber(const char * name) const;
 
    const char *GetParName(Int_t iparam) const {
-      return (CheckIndex(iparam)) ? fParNames[iparam].c_str() : ""; 
+      return (CheckIndex(iparam)) ? fParNames[iparam].c_str() : "";
    }
-   
-   
-   // setter methods 
+
+
+   // setter methods
    void   SetParameter(Int_t iparam, Double_t value) {
       if (!CheckIndex(iparam)) return;
-      fParameters[iparam] = value; 
+      fParameters[iparam] = value;
    }
    void  SetParameters(const Double_t *params) {
       std::copy(params, params + fParameters.size(), fParameters.begin() );
@@ -106,30 +106,30 @@ public:
    void  SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0,
                                Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,
                                Double_t p9=0,Double_t p10=0);
-   
+
    void   SetParameter(const char *name, Double_t value) {
       SetParameter(GetParNumber(name),value);
    }
    void   SetParName(Int_t iparam, const char * name) {
       if (!CheckIndex(iparam)) return;
-      fParNames[iparam] = std::string(name); 
-   } 
+      fParNames[iparam] = std::string(name);
+   }
    void   SetParNames(const char *name0="p0",const char *name1="p1",const char *name2="p2",
                       const char *name3="p3",const char*name4="p4", const char *name5="p5",
                       const char *name6="p6",const char *name7="p7",const char *name8="p8",
-                      const char *name9="p9",const char *name10="p10"); 
+                      const char *name9="p9",const char *name10="p10");
 
 
-   
-   ClassDef(TF1Parameters,1)   // The Parameters of a parameteric function   
+
+   ClassDef(TF1Parameters,1)   // The Parameters of a parameteric function
 private:
 
    bool CheckIndex(Int_t i) const {
       return (i >= 0 && i < int(fParameters.size()) );
    }
-   
+
    std::vector<Double_t> fParameters;    // parameter values
-   std::vector<std::string> fParNames;   // parameter names 
+   std::vector<std::string> fParNames;   // parameter names
 };
 
 
@@ -166,7 +166,7 @@ protected:
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
    static Bool_t fgAddToGlobList; //True if we want to register the function in the global list
    static TF1   *fgCurrent;   //pointer to current function being processed
-   
+
 
    //void CreateFromFunctor(const char *name, Int_t npar, Int_t ndim = 1);
    void DoInitialize();
@@ -178,7 +178,7 @@ protected:
    enum {
        kNotGlobal   = BIT(10)  // don't register in global list of functions
    };
-   
+
 public:
     // TF1 status bits
     enum {
@@ -207,29 +207,29 @@ public:
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1 ) :
       TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
-      fXmin(xmin), fXmax(xmax), 
+      fXmin(xmin), fXmax(xmax),
       fNpar(npar), fNdim(ndim),
       fNpx(100), fType(1),
-      fNpfits(0), fNDF(0), fChisquare(0),   
+      fNpfits(0), fNDF(0), fChisquare(0),
       fMinimum(-1111), fMaximum(-1111),
-      fParErrors(std::vector<Double_t>(npar)), 
-      fParMin(std::vector<Double_t>(npar)), 
-      fParMax(std::vector<Double_t>(npar)), 
+      fParErrors(std::vector<Double_t>(npar)),
+      fParMin(std::vector<Double_t>(npar)),
+      fParMax(std::vector<Double_t>(npar)),
       fParent(0), fHistogram(0),
       fMethodCall(0),
       fFunctor(ROOT::Math::ParamFunctor(f)),
       fFormula(0),
       fParams(new TF1Parameters(npar) )
    {
-      DoInitialize(); 
+      DoInitialize();
    }
    // backward compatible interface
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *   ) {
       TF1 tmp(name,f,xmin,xmax,npar,1);
-      *this = tmp; 
+      *this = tmp;
    }
-   
+
 
    // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
    // MemFn.
@@ -242,37 +242,37 @@ public:
    template <class PtrObj, typename MemFn>
    TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim = 1) :
       TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
-      fXmin(xmin), fXmax(xmax), 
+      fXmin(xmin), fXmax(xmax),
       fNpar(npar), fNdim(ndim),
       fNpx(100), fType(1),
-      fNpfits(0), fNDF(0), fChisquare(0),   
+      fNpfits(0), fNDF(0), fChisquare(0),
       fMinimum(-1111), fMaximum(-1111),
-      fParErrors(std::vector<Double_t>(npar)), 
-      fParMin(std::vector<Double_t>(npar)), 
-      fParMax(std::vector<Double_t>(npar)), 
+      fParErrors(std::vector<Double_t>(npar)),
+      fParMin(std::vector<Double_t>(npar)),
+      fParMax(std::vector<Double_t>(npar)),
       fParent(0), fHistogram(0),
       fMethodCall(0),
-      fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) ), 
+      fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) ),
       fFormula(0),
       fParams(new TF1Parameters(npar) )
    {
-      DoInitialize(); 
+      DoInitialize();
    }
    // backward compatible interface
    template <class PtrObj, typename MemFn>
    TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,const char * , const char * ) {
       TF1 tmp(name,p, memFn,xmin,xmax,npar,1);
-      *this = tmp; 
+      *this = tmp;
    }
 
    TF1(const TF1 &f1);
    TF1& operator=(const TF1 &rhs);
    virtual   ~TF1();
    virtual void     AddParameter(const TString &name, Double_t value) { if (fFormula) fFormula->AddParameter(name,value); }
-   //virtual void     AddParameters(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddParameters(pairs,size); } 
+   //virtual void     AddParameters(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddParameters(pairs,size); }
    virtual void     AddVariable(const TString &name, Double_t value) { if (fFormula) fFormula->AddVariable(name,value); }
-   virtual void     AddVariables(const pair<TString,Double_t> *pairs, Int_t size) { if (fFormula) fFormula->AddVariables(pairs,size); }
-   virtual Bool_t   AddToGlobalList(Bool_t on = kTRUE); 
+   virtual void     AddVariables(const std::pair<TString,Double_t> *pairs, Int_t size) { if (fFormula) fFormula->AddVariables(pairs,size); }
+   virtual Bool_t   AddToGlobalList(Bool_t on = kTRUE);
    virtual void     Browse(TBrowser *b);
    virtual void     Copy(TObject &f1) const;
    virtual Double_t Derivative (Double_t x, Double_t *params=0, Double_t epsilon=0.001) const;
@@ -362,7 +362,7 @@ public:
    }
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsrel, Double_t &relerr);
    /// return kTRUE if the point is inside the function range
-   virtual Bool_t   IsInside(const Double_t *x) const { return !(  ( x[0] < fXmin) || ( x[0] > fXmax ) ); }  
+   virtual Bool_t   IsInside(const Double_t *x) const { return !(  ( x[0] < fXmin) || ( x[0] > fXmax ) ); }
    virtual Bool_t   IsLinear() const { return (fFormula) ? fFormula->IsLinear() : false;}
    virtual Bool_t   IsValid() const;
    virtual void     Print(Option_t *option="") const;
@@ -388,7 +388,7 @@ public:
       (fFormula) ? fFormula->SetParameter(name,value) : fParams->SetParameter(name,value);
    }
    virtual void     SetParameters(const Double_t *params) {
-      (fFormula) ? fFormula->SetParameters(params) : fParams->SetParameters(params); 
+      (fFormula) ? fFormula->SetParameters(params) : fParams->SetParameters(params);
    }
    virtual void     SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0,
                                      Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,
@@ -396,7 +396,7 @@ public:
       if (fFormula) fFormula->SetParameters(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10);
       else          fParams->SetParameters(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10);
    } // *MENU*
-   virtual void     SetParName(Int_t ipar, const char *name); 
+   virtual void     SetParName(Int_t ipar, const char *name);
    virtual void     SetParNames(const char *name0="p0",const char *name1="p1",const char *name2="p2",
                                 const char *name3="p3",const char *name4="p4", const char *name5="p5",
                                 const char *name6="p6",const char *name7="p7",const char *name8="p8",
@@ -435,10 +435,10 @@ public:
 inline Double_t TF1::operator()(Double_t x, Double_t y, Double_t z, Double_t t) const
    { return Eval(x,y,z,t); }
 inline Double_t TF1::operator()(const Double_t *x, const Double_t *params)
-   { 
+   {
 
       if (fMethodCall) InitArgs(x,params);
-      return EvalPar(x,params);  
+      return EvalPar(x,params);
    }
 
 
