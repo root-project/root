@@ -53,6 +53,11 @@
 - In `Pad::Print()`, make sure the file format is "pdf" when the option "Title:"
   is present.
 
+### TCanvas
+
+- Make sure that "/" and "." are not part of the method name when a canvas is
+ saved as a .C file.
+
 ### TLatex
 
 - With the Cocoa backend the PDF and PS output produced miss-aligned exponents
