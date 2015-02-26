@@ -2132,8 +2132,8 @@ T TClingCallFunc::ExecT(void *address)
       // Sometimes we are called on a function returning void!
       return 0;
    }
-   const FunctionDecl *decl = fMethod->GetMethodDecl();
-   if (decl->getReturnType().getCanonicalType()->isRecordType())
+
+   if (fReturnIsRecordType)
       ((TCling *)gCling)->RegisterTemporary(ret);
    return sv_to<T>(ret);
 }
@@ -2306,6 +2306,8 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
       } else {
          fWrapper = make_wrapper();
       }
+
+      fReturnIsRecordType = decl->getReturnType().getCanonicalType()->isRecordType();
    }
    return TInterpreter::CallFuncIFacePtr_t(fWrapper);
 }
