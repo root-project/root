@@ -83,9 +83,9 @@ using namespace std;
 static unsigned long long wrapper_serial = 0LL;
 static const string indent_string("   ");
 
-static map<const FunctionDecl *, void *> wrapper_store;
-static map<const Decl *, void *> ctor_wrapper_store;
-static map<const Decl *, void *> dtor_wrapper_store;
+static map<const FunctionDecl *, void *> gWrapperStore;
+static map<const Decl *, void *> gCtorWrapperStore;
+static map<const Decl *, void *> gDtorWrapperStore;
 
 static
 inline
@@ -1062,7 +1062,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    //
    void *F = compile_wrapper(wrapper_name, wrapper);
    if (F) {
-      wrapper_store.insert(make_pair(FD, F));
+      gWrapperStore.insert(make_pair(FD, F));
    } else {
       Error("TClingCallFunc::make_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -1227,7 +1227,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
-      ctor_wrapper_store.insert(make_pair(info->GetDecl(), F));
+      gCtorWrapperStore.insert(make_pair(info->GetDecl(), F));
    } else {
       Error("TClingCallFunc::make_ctor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -1391,7 +1391,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
-      dtor_wrapper_store.insert(make_pair(info->GetDecl(), F));
+      gDtorWrapperStore.insert(make_pair(info->GetDecl(), F));
    } else {
       Error("TClingCallFunc::make_dtor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -2192,9 +2192,9 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info, void *
    //         info->Name());
    //   return 0;
    //}
-   map<const Decl *, void *>::iterator I = ctor_wrapper_store.find(D);
+   map<const Decl *, void *>::iterator I = gCtorWrapperStore.find(D);
    tcling_callfunc_ctor_Wrapper_t wrapper = 0;
-   if (I != ctor_wrapper_store.end()) {
+   if (I != gCtorWrapperStore.end()) {
       wrapper = (tcling_callfunc_ctor_Wrapper_t) I->second;
    } else {
       wrapper = make_ctor_wrapper(info);
@@ -2217,9 +2217,9 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
       return;
    }
    const Decl *D = info->GetDecl();
-   map<const Decl *, void *>::iterator I = dtor_wrapper_store.find(D);
+   map<const Decl *, void *>::iterator I = gDtorWrapperStore.find(D);
    tcling_callfunc_dtor_Wrapper_t wrapper = 0;
-   if (I != dtor_wrapper_store.end()) {
+   if (I != gDtorWrapperStore.end()) {
       wrapper = (tcling_callfunc_dtor_Wrapper_t) I->second;
    } else {
       wrapper = make_dtor_wrapper(info);
@@ -2260,8 +2260,8 @@ void *TClingCallFunc::InterfaceMethod()
       return 0;
    }
    const FunctionDecl *decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl *, void *>::iterator I = wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
+   map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
+   if (I != gWrapperStore.end()) {
       fWrapper = (tcling_callfunc_Wrapper_t) I->second;
    } else {
       fWrapper = make_wrapper();
@@ -2286,8 +2286,8 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
    }
    const FunctionDecl *decl = fMethod->GetMethodDecl();
    map<const FunctionDecl *, void *>::iterator I =
-      wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
+      gWrapperStore.find(decl);
+   if (I != gWrapperStore.end()) {
       fWrapper = (tcling_callfunc_Wrapper_t) I->second;
    } else {
       fWrapper = make_wrapper();
