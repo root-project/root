@@ -171,13 +171,6 @@ extern "C" {
 #define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
 #define dlopen(library_name, flags) ::LoadLibraryEx(library_name, NULL, DONT_RESOLVE_DLL_REFERENCES)
 #define dlclose(library) ::FreeLibrary((HMODULE)library)
-char *dlerror() {
-   static char Msg[1000];
-   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
-                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
-                 sizeof(Msg), NULL);
-   return Msg;
-}
 #define thread_local static __declspec(thread)
 #endif
 #endif
@@ -1463,8 +1456,16 @@ void TCling::RegisterModule(const char* modulename,
    if (dyLibName) {
       // We were able to determine the library name.
       void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
+#ifdef R__WIN32
+      if (!dyLibHandle) {
+         char dyLibError[1000];
+         FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), dyLibError,
+                       sizeof(dyLibError), NULL);
+#else
       const char* dyLibError = dlerror();
       if (dyLibError) {
+#endif
          if (gDebug > 0) {
             ::Info("TCling::RegisterModule",
                    "Cannot open shared library %s for dictionary %s:\n  %s",
