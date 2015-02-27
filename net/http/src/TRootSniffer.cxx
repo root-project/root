@@ -480,7 +480,10 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
       TDirectory *dir = (TDirectory *) obj;
       ScanCollection(rec, dir->GetList(), 0, dir->GetListOfKeys());
    } else if (obj->InheritsFrom(TTree::Class())) {
-      if (!fReadOnly) rec.SetField("_player", "JSROOT.drawTreePlayer");
+      if (!fReadOnly) {
+         rec.SetField("_player", "JSROOT.drawTreePlayer");
+         rec.SetField("_prereq", "jq2d");
+      }
       ScanCollection(rec, ((TTree *) obj)->GetListOfLeaves());
    } else if (obj->InheritsFrom(TBranch::Class())) {
       ScanCollection(rec, ((TBranch *) obj)->GetListOfLeaves());
