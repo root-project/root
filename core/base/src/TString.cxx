@@ -613,7 +613,7 @@ namespace {
 
    // From MurmurHash.h:
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER < 1800)
    // Microsoft Visual Studio
    typedef unsigned char uint8_t;
    typedef unsigned long uint32_t;
