@@ -1991,7 +1991,11 @@ TString &TSystem::GetLastErrorString()
 {
    // Return the thread local storage for the custom last error message
 
+#ifdef R__WIN32
+   static TString gLastErrorString;
+#else
    thread_local TString gLastErrorString;
+#endif
 
    return gLastErrorString;
 }
