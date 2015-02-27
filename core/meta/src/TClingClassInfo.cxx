@@ -1288,9 +1288,11 @@ const char *TClingClassInfo::Name() const
    }
    // Note: This *must* be static/thread_local because we are returning a pointer inside it!
 #ifdef R__WIN32
-   static std::string buf;
+   thread_local std::string *pbuf = 0;
+   if (!pbuf) pbuf = new std::string();
+   std::string &buf = *pbuf;
 #else
-    thread_local std::string buf;
+   thread_local std::string buf;
 #endif
    buf.clear();
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
@@ -1351,9 +1353,11 @@ const char *TClingClassInfo::TmpltName() const
 
    // Note: This *must* be static/thread_local because we are returning a pointer inside it!
 #ifdef R__WIN32
-   static std::string buf;
+   thread_local std::string *pbuf = 0;
+   if (!pbuf) pbuf = new std::string();
+   std::string &buf = *pbuf;
 #else
-    thread_local std::string buf;
+   thread_local std::string buf;
 #endif
    buf.clear();
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
