@@ -87,9 +87,14 @@ TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
    fContextIdx(rhs.fContextIdx),
    fIter(rhs.fIter),
    fTitle(rhs.fTitle),
-   fTemplateSpecIter(rhs.fTemplateSpecIter ? new SpecIterator(*rhs.fTemplateSpecIter) : 0),
+   fTemplateSpecIter(nullptr),
    fSingleDecl(rhs.fSingleDecl)
 {
+   if (rhs.fTemplateSpecIter) {
+      // The SpecIterator query the decl.
+      R__LOCKGUARD(gInterpreterMutex);
+      fTemplateSpecIter = new SpecIterator(*rhs.fTemplateSpecIter);
+   }
 }
 
 
@@ -98,6 +103,8 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
    : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
      fTemplateSpecIter(0), fSingleDecl(0)
 {
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (!ci || !ci->IsValid()) {
       return;
    }
