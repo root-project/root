@@ -26,18 +26,19 @@
 namespace ROOT {
 
    enum ESTLType {
-      kNotSTL      = 0,
-      kSTLvector   = 1,
-      kSTLlist     = 2,
-      kSTLdeque    = 3,
-      kSTLmap      = 4,
-      kSTLmultimap = 5,
-      kSTLset      = 6,
-      kSTLmultiset = 7,
-      kSTLbitset   = 8,
-      kSTLend      = 9,
-      kSTLany      = 300 /* TVirtualStreamerInfo::kSTL */,
-      kSTLstring   = 365 /* TVirtualStreamerInfo::kSTLstring */
+      kNotSTL         = 0,
+      kSTLvector      = 1,
+      kSTLlist        = 2,
+      kSTLforwardlist = 3,
+      kSTLdeque       = 4,
+      kSTLmap         = 5,
+      kSTLmultimap    = 6,
+      kSTLset         = 7,
+      kSTLmultiset    = 8,
+      kSTLbitset      = 9,
+      kSTLend         = 10,
+      kSTLany         = 300 /* TVirtualStreamerInfo::kSTL */,
+      kSTLstring      = 365 /* TVirtualStreamerInfo::kSTLstring */
    };
 
 }

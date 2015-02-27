@@ -463,6 +463,9 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                      case ROOT::kSTLlist:
                         what = "list";
                         break;
+                     case ROOT::kSTLforwardlist:
+                        what = "forward_list";
+                        break;
                      case ROOT::kSTLdeque:
                         what = "deque";
                         break;
@@ -638,6 +641,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       switch (stlkind) {
          case ROOT::kSTLvector:
          case ROOT::kSTLlist:
+         case ROOT::kSTLforwardlist:
          case ROOT::kSTLdeque:
             if (narg>2 && strncmp(inside[2].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
                --narg;

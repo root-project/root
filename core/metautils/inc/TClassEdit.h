@@ -88,16 +88,17 @@ namespace TClassEdit {
    };
 
    enum ESTLType {
-      kNotSTL   = ROOT::kNotSTL,
-      kVector   = ROOT::kSTLvector,
-      kList     = ROOT::kSTLlist,
-      kDeque    = ROOT::kSTLdeque,
-      kMap      = ROOT::kSTLmap,
-      kMultiMap = ROOT::kSTLmultimap,
-      kSet      = ROOT::kSTLset,
-      kMultiSet = ROOT::kSTLmultiset,
-      kBitSet   = ROOT::kSTLbitset,
-      kEnd      = ROOT::kSTLend
+      kNotSTL     = ROOT::kNotSTL,
+      kVector     = ROOT::kSTLvector,
+      kList       = ROOT::kSTLlist,
+      kForwardist = ROOT::kSTLforwardlist,
+      kDeque      = ROOT::kSTLdeque,
+      kMap        = ROOT::kSTLmap,
+      kMultiMap   = ROOT::kSTLmultimap,
+      kSet        = ROOT::kSTLset,
+      kMultiSet   = ROOT::kSTLmultiset,
+      kBitSet     = ROOT::kSTLbitset,
+      kEnd        = ROOT::kSTLend
    };
 
    class TInterpreterLookupHelper {

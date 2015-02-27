@@ -414,6 +414,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
          // No contiguous memory, but resize is possible
          // Hence accessing objects using At(i) should be not too much an overhead
       case ROOT::kSTLlist:
+      case ROOT::kSTLforwardlist:
       case ROOT::kSTLdeque:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
          fResize(fEnv->fObject,fEnv->fSize);
@@ -523,6 +524,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
          // No contiguous memory, but resize is possible
          // Hence accessing objects using At(i) should be not too much an overhead
       case ROOT::kSTLlist:
+      case ROOT::kSTLforwardlist:
       case ROOT::kSTLdeque:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
          fResize(fEnv->fObject,fEnv->fSize);
@@ -1016,6 +1018,7 @@ void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)
          // No contiguous memory, but resize is possible
          // Hence accessing objects using At(i) should be not too much an overhead
       case ROOT::kSTLlist:
+      case ROOT::kSTLforwardlist:
       case ROOT::kSTLdeque:
       case ROOT::kSTLmultiset:
       case ROOT::kSTLset:
@@ -1368,6 +1371,7 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj, const TCla
             }
             break;
          case ROOT::kSTLlist:
+         case ROOT::kSTLforwardlist:
          case ROOT::kSTLdeque:
          case ROOT::kSTLmultiset:
          case ROOT::kSTLset:
@@ -1448,6 +1452,7 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
                return;
             case ROOT::kSTLvector:
             case ROOT::kSTLlist:
+            case ROOT::kSTLforwardlist:
             case ROOT::kSTLdeque:
             case ROOT::kSTLmultiset:
             case ROOT::kSTLset:
@@ -1487,6 +1492,7 @@ void TGenCollectionStreamer::StreamerAsMap(TBuffer &b)
                break;
             case ROOT::kSTLvector:
             case ROOT::kSTLlist:
+            case ROOT::kSTLforwardlist:
             case ROOT::kSTLdeque:
             case ROOT::kSTLmultiset:
             case ROOT::kSTLset: {

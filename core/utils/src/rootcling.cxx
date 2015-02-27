@@ -1200,7 +1200,9 @@ int STLContainerStreamer(const clang::FieldDecl &m,
          case kSTLdeque:
             dictStream << "            R__stl.push_back(R__t);" << std::endl;
             break;
-
+         case kSTLforwardlist:
+            dictStream << "            R__stl.push_front(R__t);" << std::endl;
+            break;
          default:
             assert(0);
       }

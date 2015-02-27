@@ -1214,7 +1214,7 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TDirectory::TContext ctxt(0);
-      
+
       TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
 
       auto listOfKeys = pcmFile->GetListOfKeys();
@@ -1227,9 +1227,9 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TObjArray *protoClasses;
-      if (gDebug > 1) 
+      if (gDebug > 1)
             ::Info("TCling::LoadPCM","reading protoclasses for %s \n",pcmFileName.Data());
-      
+
       pcmFile->GetObject("__ProtoClasses", protoClasses);
 
       if (protoClasses) {
@@ -1607,7 +1607,8 @@ void TCling::RegisterModule(const char* modulename,
    if (strcmp(modulename,"libCore")!=0 && strcmp(modulename,"libRint")!=0
        && strcmp(modulename,"libThread")!=0 && strcmp(modulename,"libRIO")!=0
        && strcmp(modulename,"libcomplexDict")!=0 && strcmp(modulename,"libdequeDict")!=0
-       && strcmp(modulename,"liblistDict")!=0 && strcmp(modulename,"libvectorDict")!=0
+       && strcmp(modulename,"liblistDict")!=0 && strcmp(modulename,"libforward_listDict")!=0
+       && strcmp(modulename,"libvectorDict")!=0
        && strcmp(modulename,"libmapDict")!=0 && strcmp(modulename,"libmultimap2Dict")!=0
        && strcmp(modulename,"libmap2Dict")!=0 && strcmp(modulename,"libmultimapDict")!=0
        && strcmp(modulename,"libsetDict")!=0 && strcmp(modulename,"libmultisetDict")!=0

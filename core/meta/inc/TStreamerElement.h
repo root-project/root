@@ -59,16 +59,17 @@ protected:
 public:
 
    enum ESTLtype {
-      kSTL         = ROOT::kSTLany,
-      kSTLstring   = ROOT::kSTLstring,
-      kSTLvector   = ROOT::kSTLvector,
-      kSTLlist     = ROOT::kSTLlist,
-      kSTLdeque    = ROOT::kSTLdeque,
-      kSTLmap      = ROOT::kSTLmap,
-      kSTLmultimap = ROOT::kSTLmultimap,
-      kSTLset      = ROOT::kSTLset,
-      kSTLmultiset = ROOT::kSTLmultiset,
-      kSTLbitset   = ROOT::kSTLbitset
+      kSTL            = ROOT::kSTLany,
+      kSTLstring      = ROOT::kSTLstring,
+      kSTLvector      = ROOT::kSTLvector,
+      kSTLlist        = ROOT::kSTLlist,
+      kSTLforwardlist = ROOT::kSTLforwardlist,
+      kSTLdeque       = ROOT::kSTLdeque,
+      kSTLmap         = ROOT::kSTLmap,
+      kSTLmultimap    = ROOT::kSTLmultimap,
+      kSTLset         = ROOT::kSTLset,
+      kSTLmultiset    = ROOT::kSTLmultiset,
+      kSTLbitset      = ROOT::kSTLbitset
    };
    // TStreamerElement status bits
    enum {

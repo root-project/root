@@ -747,6 +747,7 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
          }
       }
       case ROOT::kSTLlist:
+      case ROOT::kSTLforwardlist:
          return new TGenListProxy(*this);
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:
@@ -1117,6 +1118,7 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
          }
          case ROOT::kSTLvector:
          case ROOT::kSTLlist:
+         case ROOT::kSTLforwardlist:
          case ROOT::kSTLdeque:
             if( (fProperties & kNeedDelete) ) {
                Clear("force");

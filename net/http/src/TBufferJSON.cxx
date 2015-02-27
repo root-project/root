@@ -489,7 +489,9 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member,
       fValue.Append("\"");
       if (str != 0) fValue.Append(*str);
       fValue.Append("\"");
-   } else if ((member->IsSTLContainer() == ROOT::kSTLvector) || (member->IsSTLContainer() == ROOT::kSTLlist)) {
+   } else if ((member->IsSTLContainer() == ROOT::kSTLvector) ||
+              (member->IsSTLContainer() == ROOT::kSTLlist) ||
+              (member->IsSTLContainer() == ROOT::kSTLforwardlist)) {
 
       if (memberClass)
          ((TClass *)memberClass)->Streamer((void *)ptr, *this);

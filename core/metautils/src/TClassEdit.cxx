@@ -138,7 +138,7 @@ int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
 
    int kind = STLKind(fElements[0].c_str());
 
-   if (kind==ROOT::kSTLvector || kind==ROOT::kSTLlist ) {
+   if (kind==ROOT::kSTLvector || kind==ROOT::kSTLlist || kind==ROOT::kSTLforwardlist) {
 
       int nargs = STLArgs(kind);
       if (testAlloc && (numb-1 > nargs) && !IsDefAlloc(fElements[numb-1].c_str(),fElements[1].c_str())) {
@@ -244,6 +244,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
                switch (kind) {
                   case ROOT::kSTLvector:
                   case ROOT::kSTLlist:
+                  case ROOT::kSTLforwardlist:
                   case ROOT::kSTLdeque:
                   case ROOT::kSTLset:
                   case ROOT::kSTLmultiset:
@@ -277,6 +278,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          switch (kind) {
             case ROOT::kSTLvector:
             case ROOT::kSTLlist:
+            case ROOT::kSTLforwardlist:
             case ROOT::kSTLdeque:
                break;
             case ROOT::kSTLset:
@@ -410,12 +412,13 @@ ROOT::ESTLType TClassEdit::STLKind(const char *type, size_t len)
 
    //container names
    static const char *stls[] =
-      { "any", "vector", "list", "deque", "map", "multimap", "set", "multiset", "bitset", 0};
+      { "any", "vector", "list", "forward_list", "deque", "map", "multimap", "set", "multiset", "bitset", 0};
    static const size_t stllen[] =
-      { 3, 6, 4, 5, 3, 8, 3, 8, 6, 0};
+      { 3, 6, 4, 12, 5, 3, 8, 3, 8, 6, 0};
    static const ROOT::ESTLType values[] =
       {  ROOT::kNotSTL, ROOT::kSTLvector,
-         ROOT::kSTLlist, ROOT::kSTLdeque,
+         ROOT::kSTLlist, ROOT::kSTLforwardlist,
+         ROOT::kSTLdeque,
          ROOT::kSTLmap, ROOT::kSTLmultimap,
          ROOT::kSTLset, ROOT::kSTLmultiset,
          ROOT::kSTLbitset, ROOT::kNotSTL

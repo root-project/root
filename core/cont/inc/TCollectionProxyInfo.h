@@ -23,6 +23,7 @@
 #include "TError.h"
 #endif
 #include <vector>
+#include <forward_list>
 
 #if defined(_WIN32)
    #if _MSC_VER<1300
@@ -250,6 +251,19 @@ namespace ROOT {
       }
    };
 
+   struct SfinaeHelper {
+      // Use SFINAE to get the size of the container
+
+      // In general we get the size of the container with the size method
+      template <class T>
+      static size_t GetContainerSize(const T& c) {return c.size();}
+
+      // Since forward_list does not provide a size operator, we have to
+      // use an alternative. This has a cost of course.
+      template <class T, class ALLOCATOR>
+      static size_t GetContainerSize(const std::forward_list<T,ALLOCATOR>& c) {return std::distance(c.begin(),c.end());}
+   };
+
    /** @class TCollectionProxyInfo::Type TCollectionProxyInfo.h TCollectionProxyInfo.h
     *
     * Small helper to encapsulate basic data accesses for
@@ -277,7 +291,7 @@ namespace ROOT {
       }
       static void* size(void* env)  {
          PEnv_t  e = PEnv_t(env);
-         e->fSize   = PCont_t(e->fObject)->size();
+         e->fSize   = SfinaeHelper::GetContainerSize(*PCont_t(e->fObject));
          return &e->fSize;
       }
       static void* clear(void* env)  {
@@ -292,7 +306,7 @@ namespace ROOT {
          ::new(e->buff) Iter_t(c->begin());
 #endif
          e->fIterator = c->begin();
-         e->fSize  = c->size();
+         e->fSize  = SfinaeHelper::GetContainerSize(*c);
          if ( 0 == e->fSize ) return e->fStart = 0;
          TYPENAME T::const_reference ref = *(e->iter());
          return e->fStart = Type<T>::address(ref);
@@ -356,6 +370,42 @@ namespace ROOT {
          PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->push_back(*m);
+         return 0;
+      }
+      static int value_offset()  {
+         return 0;
+      }
+   };
+
+   /** @class TCollectionProxyInfo::Pushfront TCollectionProxyInfo.h TCollectionProxyInfo.h
+    *
+    * Small helper to encapsulate all necessary data accesses for
+    * containers like forward_list
+    *
+    * @author  D.Piparo
+    * @version 1.0
+    * @date    26/02/2015
+    */
+   template <class T> struct Pushfront : public Type<T> {
+      typedef T                      Cont_t;
+      typedef typename T::iterator   Iter_t;
+      typedef typename T::value_type Value_t;
+      typedef Environ<Iter_t>        Env_t;
+      typedef Env_t                 *PEnv_t;
+      typedef Cont_t                *PCont_t;
+      typedef Value_t               *PValue_t;
+      static void resize(void* obj, size_t n) {
+         PCont_t c = PCont_t(obj);
+         c->resize(n);
+      }
+      static void* feed(void *from, void *to, size_t size)  {
+         PCont_t  c = PCont_t(to);
+         if (size==0) return 0;
+         PValue_t m = &(PValue_t(from)[size-1]); // Take the last item
+         // Iterate backwards not to revert ordering
+         for (size_t i=0; i<size; ++i, --m){
+            c->push_front(*m);
+         }
          return 0;
       }
       static int value_offset()  {
