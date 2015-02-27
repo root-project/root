@@ -71,6 +71,19 @@
 #include <stdlib.h>
 #ifdef WIN32
 #include <io.h>
+#include "Windows4Root.h"
+#include <Psapi.h>
+#define RTLD_DEFAULT ((void *) -2)
+#define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
+#define dlopen(library_name, flags) ::LoadLibraryEx(library_name, NULL, DONT_RESOLVE_DLL_REFERENCES)
+#define dlclose(library) ::FreeLibrary((HMODULE)library)
+char *dlerror() {
+   static char Msg[1000];
+   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
+                 sizeof(Msg), NULL);
+   return Msg;
+}
 #else
 #include <dlfcn.h>
 #endif
@@ -1481,7 +1494,7 @@ void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
 {
    // Execute command when system has been idle for idleTimeInSec seconds.
 
-   if (!fApplication)
+   if (!fApplication.load())
       TApplication::CreateApplication();
 
    if (idleTimeInSec <= 0)
@@ -1966,7 +1979,7 @@ Long_t TROOT::ProcessLine(const char *line, Int_t *error)
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
 
-   if (!fApplication)
+   if (!fApplication.load())
       TApplication::CreateApplication();
 
    return (*fApplication).ProcessLine(sline, kFALSE, error);
@@ -1986,7 +1999,7 @@ Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
 
-   if (!fApplication)
+   if (!fApplication.load())
       TApplication::CreateApplication();
 
    return (*fApplication).ProcessLine(sline, kTRUE, error);
@@ -2003,7 +2016,7 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
    TString sline = line;
    sline = sline.Strip(TString::kBoth);
 
-   if (!fApplication)
+   if (!fApplication.load())
       TApplication::CreateApplication();
 
    Long_t result = 0;

@@ -1557,7 +1557,7 @@ TClass::~TClass()
       fFuncTemplate->Delete();
    delete fFuncTemplate; fFuncTemplate = 0;
 
-   if (fMethod)
+   if (fMethod.load())
       (*fMethod).Delete();
    delete fMethod.load();   fMethod=0;
 
@@ -3391,7 +3391,7 @@ TList *TClass::GetListOfMethods(Bool_t load /* = kTRUE */)
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   if (!fMethod) GetMethodList();
+   if (!fMethod.load()) GetMethodList();
    if (load) {
       if (gDebug>0) Info("GetListOfMethods","Header Parsing - Asking for all the methods of class %s: this can involve parsing.",GetName());
       (*fMethod).Load();
@@ -3756,7 +3756,7 @@ void TClass::ResetCaches()
       fData->Unload();
    if (fEnums)
       fEnums->Unload();
-   if (fMethod)
+   if (fMethod.load())
       (*fMethod).Unload();
 
    delete fAllPubData; fAllPubData = 0;
@@ -3886,7 +3886,7 @@ TListOfFunctions *TClass::GetMethodList()
    // the internal type of fMethod and thus can not be made public.
    // It also never 'loads' the content of the list.
 
-   if (!fMethod) {
+   if (!fMethod.load()) {
       std::unique_ptr<TListOfFunctions> temp{ new TListOfFunctions(this) };
       TListOfFunctions* expected = nullptr;
       if(fMethod.compare_exchange_strong(expected, temp.get()) ) {
@@ -5637,7 +5637,7 @@ void TClass::SetUnloaded()
    fImplFileLine = 0;
    fTypeInfo     = 0;
 
-   if (fMethod) {
+   if (fMethod.load()) {
       (*fMethod).Unload();
    }
    if (fData) {
