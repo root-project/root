@@ -4492,7 +4492,6 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
       TClass__GetCallingNew() = defConstructor;
-      R__LOCKGUARD2(gInterpreterMutex);
       p = gCling->ClassInfo_New(GetClassInfo());
       TClass__GetCallingNew() = kRealNew;
       if (!p && !quiet) {
@@ -4587,7 +4586,6 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
       TClass__GetCallingNew() = defConstructor;
-      R__LOCKGUARD2(gInterpreterMutex);
       p = gCling->ClassInfo_New(GetClassInfo(),arena);
       TClass__GetCallingNew() = kRealNew;
       if (!p) {
@@ -4675,7 +4673,6 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
       TClass__GetCallingNew() = defConstructor;
-      R__LOCKGUARD2(gInterpreterMutex);
       p = gCling->ClassInfo_New(GetClassInfo(),nElements);
       TClass__GetCallingNew() = kRealNew;
       if (!p) {
@@ -4762,7 +4759,6 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       // constructor that way, or no default constructor is available and
       // we fail.
       TClass__GetCallingNew() = defConstructor;
-      R__LOCKGUARD2(gInterpreterMutex);
       p = gCling->ClassInfo_New(GetClassInfo(),nElements, arena);
       TClass__GetCallingNew() = kRealNew;
       if (!p) {
@@ -4850,10 +4846,8 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // or it will be interpreted, otherwise we fail
       // because there is no destructor code at all.
       if (dtorOnly) {
-         R__LOCKGUARD2(gInterpreterMutex);
          gCling->ClassInfo_Destruct(fClassInfo,p);
       } else {
-         R__LOCKGUARD2(gInterpreterMutex);
          gCling->ClassInfo_Delete(fClassInfo,p);
       }
    } else if (!HasInterpreterInfo() && fCollectionProxy) {
@@ -4969,7 +4963,6 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // call the array delete operator, hopefully
       // the class library is loaded and there will be
       // a destructor we can call.
-      R__LOCKGUARD2(gInterpreterMutex);
       gCling->ClassInfo_DeleteArray(GetClassInfo(),ary, dtorOnly);
    } else if (!HasInterpreterInfo() && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
