@@ -224,38 +224,37 @@
       });
 
       $(renderer.domElement).on('contextmenu', function(e) {
-
          e.preventDefault();
 
          if (JSROOT.gStyle.Tooltip) tooltip.hide();
 
-         var menu = JSROOT.createMenu();
+         JSROOT.Painter.createMenu(function(menu) {
+            if (painter)
+               menu.add("header:"+ painter.histo['fName']);
 
-         if (painter)
-            menu.add("header:"+ painter.histo['fName']);
-
-         menu.add(JSROOT.gStyle.Tooltip ? "Disable tooltip" : "Enable tooltip", function() {
-            JSROOT.gStyle.Tooltip = !JSROOT.gStyle.Tooltip;
-            tooltip.hide();
-         });
-
-         if (painter)
-            menu.add("Switch to 2D", function() {
-               $(painter.svg_pad()).show().parent().find(renderer.domElement).remove();
+            menu.add(JSROOT.gStyle.Tooltip ? "Disable tooltip" : "Enable tooltip", function() {
+               JSROOT.gStyle.Tooltip = !JSROOT.gStyle.Tooltip;
                tooltip.hide();
-               painter.Draw2D();
             });
-         menu.add("Close");
 
-         menu.show(e.originalEvent);
+            if (painter)
+               menu.add("Switch to 2D", function() {
+                  $(painter.svg_pad().node()).show().parent().find(renderer.domElement).remove();
+                  tooltip.hide();
+                  painter.Draw2D();
+               });
+            menu.add("Close");
+
+            menu.show(e.originalEvent);
+         });
 
       });
    }
 
    JSROOT.Painter.real_drawHistogram2D = function(painter) {
 
-      var w = Number(painter.svg_pad(true).attr("width")),
-          h = Number(painter.svg_pad(true).attr("height")), size = 100;
+      var w = Number(painter.svg_pad().attr("width")),
+          h = Number(painter.svg_pad().attr("height")), size = 100;
 
       var xmin = painter.xmin, xmax = painter.xmax;
       if (painter.zoom_xmin != painter.zoom_xmax) {
@@ -508,7 +507,7 @@
                                       new THREE.CanvasRenderer({ antialias : true });
       renderer.setClearColor(0xffffff, 1);
       renderer.setSize(w, h);
-      $(painter.svg_pad()).hide().parent().append(renderer.domElement);
+      $(painter.svg_pad().node()).hide().parent().append(renderer.domElement);
       renderer.render(scene, camera);
 
       JSROOT.Painter.add3DInteraction(renderer, scene, camera, toplevel, painter);
@@ -523,8 +522,8 @@
       var pad = painter.root_pad();
 
       var render_to;
-      if (painter.svg_pad())
-         render_to = $(painter.svg_pad()).hide().parent();
+      if (!painter.svg_pad().empty())
+         render_to = $(painter.svg_pad().node()).hide().parent();
       else
          render_to = $("#" + divid);
 

@@ -5,14 +5,14 @@
       <title>Draw of single element</title>
       <!--  this file used by THttpServer to display single element -->
       <meta http-equiv="X-UA-Compatible" content="IE=Edge; text/html">
-      <script type="text/javascript" src="/jsrootsys/scripts/JSRootCore.js?2d"></script>
+      <script type="text/javascript" src="/jsrootsys/scripts/JSRootCore.js?2d&jq2d&onload=CreateGui"></script>
    </head>
 
    <script type='text/javascript'>
 
       function GetCachedObject() { return "$$$root.json$$$"; }
 
-      function CreateDrawGui() {
+      function CreateGui() {
          // analyze URL options
          var drawopt = JSROOT.GetUrlOption("opt");
 
@@ -56,12 +56,12 @@
          if (monitor!=null)
             setInterval(get_function, monitor);
 
-         JSROOT.RegisterForResize(function() { if (objpainter) objpainter.CheckResize(); });
+         JSROOT.RegisterForResize('drawing');
       }
 
    </script>
 
-   <body onload="CreateDrawGui()">
+   <body>
       <div id="drawing" style="position:absolute; left:1px; top:1px; bottom:1px; right:1px">
          loading scripts...
       </div>

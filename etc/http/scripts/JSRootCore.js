@@ -14,14 +14,10 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.3 25/02/2015";
+   JSROOT.version = "3.4 dev 26/02/2015";
 
    JSROOT.source_dir = "";
-
-   // TODO: all jQuery-related functions should go into extra script
-   JSROOT.clone = function(obj) {
-      return jQuery.extend(true, {}, obj);
-   }
+   JSROOT.source_min = false;
 
    JSROOT.id_counter = 0;
 
@@ -119,6 +115,52 @@
       }
 
       return value;
+   }
+
+   // This should be similar to the jQuery.extend method
+   // Major complication - when same object appears N times in the source,
+   // it should be cloned once and inserted N times in the target and not cloned N times
+   JSROOT.extend = function(tgt, src, map) {
+      if (!map) map = { obj:[], clones:[] };
+
+      if (typeof src != 'object') return src;
+
+      if (src == null) return null;
+
+      var i = map.obj.indexOf(src);
+      if (i>=0) return map.clones[i];
+
+      // process array
+      if (Object.prototype.toString.apply(src) === '[object Array]') {
+         if ((tgt==null) || (Object.prototype.toString.apply(tgt) != '[object Array]')) {
+            tgt = [];
+            map.obj.push(src);
+            map.clones.push(tgt);
+         }
+
+         for (i = 0; i < src.length; i++)
+            tgt.push(JSROOT.extend(null, src[i], map));
+
+         return tgt;
+      }
+
+      if ((tgt==null) || (typeof tgt != 'object')) {
+         tgt = {};
+         map.obj.push(src);
+         map.clones.push(tgt);
+      }
+
+      var k, ks = Object.keys(src);
+      for (i = 0; i < ks.length; i++) {
+         k = ks[i];
+         tgt[k] = JSROOT.extend(tgt[k], src[k], map);
+      }
+      return tgt;
+   }
+
+   // Instead of jquery use JSROOT.extend function
+   JSROOT.clone = function(obj) {
+      return JSROOT.extend(null, obj);
    }
 
    JSROOT.parse = function(arg) {
@@ -249,11 +291,13 @@
       // Result will be returned to the callback functions
       // If failed, request returns null
 
+      var xhr = new XMLHttpRequest();
+
       function callback(res) {
-         if (typeof user_call_back == 'function') user_call_back(res);
+         // we set pointer on request when calling callback
+         if (typeof user_call_back == 'function') user_call_back.call(xhr, res);
       }
 
-      var xhr = new XMLHttpRequest();
 
 //      if (typeof ActiveXObject == "function") {
       if (window.ActiveXObject) {
@@ -469,43 +513,62 @@
 
       if (typeof kind == 'function') { andThan = kind; kind = null; }
 
-      if (typeof kind != 'string') kind = "2d";
+      if ((typeof kind != 'string') || (kind == ''))
+         return JSROOT.CallBack(andThan);
+
       if (kind.charAt(kind.length-1)!=";") kind+=";";
+      var ext = JSROOT.source_min ? ".min" : "";
+
+      var need_jquery = false;
 
       // file names should be separated with ';'
-      var allfiles = '$$$scripts/jquery.min.js';
+      var allfiles = '';
 
       if (kind.indexOf('io;')>=0)
-         allfiles += ";$$$scripts/rawinflate.js" +
-                     ";$$$scripts/JSRootIOEvolution.js";
+         allfiles += "$$$scripts/rawinflate" + ext + ".js;" +
+                     "$$$scripts/JSRootIOEvolution" + ext + ".js;";
 
       if (kind.indexOf('2d;')>=0) {
-         allfiles += ';$$$style/jquery-ui.css' +
-                     ';$$$scripts/jquery-ui.min.js' +
-                     ';$$$scripts/d3.v3.min.js' +
-                     ';$$$scripts/JSRootPainter.js' +
-                     ';$$$style/JSRootPainter.css';
-         if (JSROOT.touches)
-            allfiles += ';$$$scripts/touch-punch.min.js';
+         allfiles += '$$$scripts/d3.v3.min.js;' +
+                     '$$$scripts/JSRootPainter' + ext + ".js;" +
+                     '$$$style/JSRootPainter' + ext + ".css;";
       }
 
-      if (kind.indexOf("3d;")>=0)
-         allfiles += ";$$$scripts/jquery.mousewheel.js" +
-                     ";$$$scripts/three.min.js" +
-                     ";$$$scripts/helvetiker_regular.typeface.js" +
-                     ";$$$scripts/helvetiker_bold.typeface.js" +
-                     ";$$$scripts/JSRoot3DPainter.js";
+      if (kind.indexOf('jq2d;')>=0) {
+         allfiles += '$$$scripts/JSRootPainter.jquery' + ext + ".js;";
+         need_jquery = true;
+      }
+
+      if (kind.indexOf("3d;")>=0) {
+         need_jquery = true;
+         allfiles += "$$$scripts/jquery.mousewheel" + ext + ".js;" +
+                     "$$$scripts/three.min.js;" +
+                     "$$$scripts/helvetiker_regular.typeface.js;" +
+                     "$$$scripts/helvetiker_bold.typeface.js;" +
+                     "$$$scripts/JSRoot3DPainter" + ext + ".js;";
+      }
 
       if (kind.indexOf("mathjax;")>=0)
-        allfiles += ";https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+        allfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML;";
 
-      if (kind.indexOf("simple;")>=0)
-         allfiles += ';$$$scripts/JSRootInterface.js' +
-                     ';$$$style/JSRootInterface.css';
+      if (kind.indexOf("simple;")>=0) {
+         need_jquery = true;
+         allfiles += '$$$scripts/JSRootInterface' + ext + ".js;" +
+                     '$$$style/JSRootInterface' + ext + ".css;";
+      }
+
+      if (need_jquery) {
+         allfiles = '$$$scripts/jquery.min.js;' +
+                    '$$$style/jquery-ui.css;' +
+                    '$$$scripts/jquery-ui.min.js;' +
+                    allfiles;
+         if (JSROOT.touches)
+            allfiles += '$$$scripts/touch-punch.min.js;';
+      }
 
       var pos = kind.indexOf("user:");
       if (pos<0) pos = kind.indexOf("load:");
-      if (pos>=0) allfiles += ";" + kind.slice(pos+5);
+      if (pos>=0) allfiles += kind.slice(pos+5);
 
       JSROOT.loadScript(allfiles, andThan, debugout);
    }
@@ -517,11 +580,12 @@
       }
 
       var debugout = null;
+      var nobrowser = JSROOT.GetUrlOption('nobrowser')!=null;
+      var requirements = "io;2d;";
 
-      var requirements = "2d;io;simple;";
-
-      if (document.getElementById('simpleGUI')) debugout = 'simpleGUI'; else
-      if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;simple;"; }
+      if (document.getElementById('simpleGUI')) { debugout = 'simpleGUI'; requirements = "io;2d;" } else
+      if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;"; }
+      if (!nobrowser) requirements+='jq2d;simple;';
 
       if (user_scripts == null) user_scripts = JSROOT.GetUrlOption("autoload");
       if (user_scripts == null) user_scripts = JSROOT.GetUrlOption("load");
@@ -530,8 +594,9 @@
          requirements += "load:" + user_scripts + ";";
 
       JSROOT.AssertPrerequisites(requirements, function() {
-         if (typeof BuildSimpleGUI == 'function') BuildSimpleGUI();
-         if (typeof andThen == 'function') andThen();
+         var func = JSROOT.findFunction(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'BuildSimpleGUI');
+         JSROOT.CallBack(func);
+         JSROOT.CallBack(andThen);
       }, debugout);
    }
 
@@ -557,57 +622,57 @@
          obj = { _typename: typename };
 
       if (typename == 'TObject')
-         jQuery.extend(obj, { fUniqueID: 0, fBits: 0x3000008 });
+         JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008 });
       else
       if (typename == 'TNamed')
-         jQuery.extend(obj, { fUniqueID: 0, fBits: 0x3000008, fName: "", fTitle: "" });
+         JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008, fName: "", fTitle: "" });
       else
       if (typename == 'TList')
-         jQuery.extend(obj, { name: "TList", arr : [], opt : [] });
+         JSROOT.extend(obj, { name: "TList", arr : [], opt : [] });
       else
       if (typename == 'TAttAxis') {
-         jQuery.extend(obj, { fNdivisions: 510, fAxisColor: 1,
+         JSROOT.extend(obj, { fNdivisions: 510, fAxisColor: 1,
             fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.05, fLabelSize: 0.035, fTickLength: 0.03,
             fTitleOffset: 1, fTitleSize: 0.035, fTitleColor: 1, fTitleFont : 42 });
       } else
       if (typename == 'TAxis') {
          JSROOT.Create("TNamed", obj);
          JSROOT.Create("TAttAxis", obj);
-         jQuery.extend(obj, { fNbins: 0, fXmin: 0, fXmax: 0, fXbins : [], fFirst: 0, fLast: 0,
+         JSROOT.extend(obj, { fNbins: 0, fXmin: 0, fXmax: 0, fXbins : [], fFirst: 0, fLast: 0,
                               fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null });
       } else
       if (typename == 'TAttLine') {
-         jQuery.extend(obj, { fLineColor: 1, fLineStyle : 1, fLineWidth : 1 });
+         JSROOT.extend(obj, { fLineColor: 1, fLineStyle : 1, fLineWidth : 1 });
       } else
       if (typename == 'TAttFill') {
-         jQuery.extend(obj, { fFillColor: 0, fFillStyle : 0 } );
+         JSROOT.extend(obj, { fFillColor: 0, fFillStyle : 0 } );
       } else
       if (typename == 'TAttMarker') {
-         jQuery.extend(obj, { fMarkerColor: 1, fMarkerStyle : 1, fMarkerSize : 1. });
+         JSROOT.extend(obj, { fMarkerColor: 1, fMarkerStyle : 1, fMarkerSize : 1. });
       } else
       if (typename == 'TBox') {
          JSROOT.Create("TObject", obj);
          JSROOT.Create("TAttLine", obj);
          JSROOT.Create("TAttFill", obj);
-         jQuery.extend(obj, { fX1: 0, fY1: 0, fX2: 1, fY2: 1 });
+         JSROOT.extend(obj, { fX1: 0, fY1: 0, fX2: 1, fY2: 1 });
       } else
       if (typename == 'TPave') {
          JSROOT.Create("TBox", obj);
-         jQuery.extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
+         JSROOT.extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
                               fBorderSize: 0, fInit: 1, fShadowColor: 1,
                               fCornerRadius: 0, fOption: "blNDC", fName: "title" });
       } else
       if (typename == 'TAttText') {
-         jQuery.extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
+         JSROOT.extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
       } else
       if (typename == 'TPaveText') {
          JSROOT.Create("TPave", obj);
          JSROOT.Create("TAttText", obj);
-         jQuery.extend(obj, { fLabel: "", fLongest: 27, fMargin: 0.05, fLines: JSROOT.Create("TList") });
+         JSROOT.extend(obj, { fLabel: "", fLongest: 27, fMargin: 0.05, fLines: JSROOT.Create("TList") });
       } else
       if (typename == 'TPaveStats') {
          JSROOT.Create("TPaveText", obj);
-         jQuery.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
+         JSROOT.extend(obj, { fOptFit: 0, fOptStat: 0, fFitFormat: "", fStatFormat: "", fParent: null });
       } else
       if (typename == 'TH1') {
          JSROOT.Create("TNamed", obj);
@@ -615,7 +680,7 @@
          JSROOT.Create("TAttFill", obj);
          JSROOT.Create("TAttMarker", obj);
 
-         jQuery.extend(obj, {
+         JSROOT.extend(obj, {
             fNcells : 0,
             fXaxis: JSROOT.Create("TAxis"),
             fYaxis: JSROOT.Create("TAxis"),
@@ -629,22 +694,22 @@
       } else
       if (typename == 'TH1I' || typename == 'TH1F' || typename == 'TH1D' || typename == 'TH1S' || typename == 'TH1C') {
          JSROOT.Create("TH1", obj);
-         jQuery.extend(obj, { fArray: [] });
+         JSROOT.extend(obj, { fArray: [] });
       } else
       if (typename == 'TH2') {
          JSROOT.Create("TH1", obj);
-         jQuery.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy : 0});
+         JSROOT.extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy : 0});
       } else
       if (typename == 'TH2I' || typename == 'TH2F' || typename == 'TH2D' || typename == 'TH2S' || typename == 'TH2C') {
          JSROOT.Create("TH2", obj);
-         jQuery.extend(obj, { fArray: [] });
+         JSROOT.extend(obj, { fArray: [] });
       } else
       if (typename == 'TGraph') {
          JSROOT.Create("TNamed", obj);
          JSROOT.Create("TAttLine", obj);
          JSROOT.Create("TAttFill", obj);
          JSROOT.Create("TAttMarker", obj);
-         jQuery.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: JSROOT.CreateTH1(),
+         JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: JSROOT.CreateTH1(),
                               fMaxSize: 0, fMaximum:0, fMinimum:0, fNpoints: 0, fX: [], fY: [] });
       }
 
@@ -658,32 +723,32 @@
 
    JSROOT.CreateTH1 = function(nbinsx) {
       var histo = JSROOT.Create("TH1I");
-      jQuery.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
+      JSROOT.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
       if (nbinsx!=null) {
          histo['fNcells'] = nbinsx+2;
          for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
-         jQuery.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0,  fXmax: nbinsx });
+         JSROOT.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0,  fXmax: nbinsx });
       }
       return histo;
    }
 
    JSROOT.CreateTH2 = function(nbinsx, nbinsy) {
       var histo = JSROOT.Create("TH2I");
-      jQuery.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
+      JSROOT.extend(histo, { fName: "dummy_histo_" + this.id_counter++, fTitle: "dummytitle" });
 
       if ((nbinsx!=null) && (nbinsy!=null)) {
          histo['fNcells'] = (nbinsx+2) * (nbinsy+2);
          for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
-         jQuery.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
-         jQuery.extend(histo['fYaxis'], { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
+         JSROOT.extend(histo['fXaxis'], { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
+         JSROOT.extend(histo['fYaxis'], { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
       }
       return histo;
    }
 
    JSROOT.CreateTGraph = function(npoints) {
       var graph = JSROOT.Create("TGraph");
-      jQuery.extend(graph, { fBits: 0x3000408, fName: "dummy_graph_" + this.id_counter++, fTitle: "dummytitle" });
+      JSROOT.extend(graph, { fBits: 0x3000408, fName: "dummy_graph_" + this.id_counter++, fTitle: "dummytitle" });
 
       if (npoints>0) {
          graph['fMaxSize'] = graph['fNpoints'] = npoints;
@@ -2115,26 +2180,35 @@
          var src = scripts[n]['src'];
          if ((src == null) || (src.length == 0)) continue;
 
-         var pos = src.indexOf("scripts/JSRootCore.js");
+         var pos = src.indexOf("scripts/JSRootCore.");
          if (pos<0) continue;
 
          JSROOT.source_dir = src.substr(0, pos);
+         JSROOT.source_min = src.indexOf("scripts/JSRootCore.min.js")>=0;
 
          console.log("Set JSROOT.source_dir to " + JSROOT.source_dir);
 
-         if (JSROOT.GetUrlOption('gui', src)!=null) return JSROOT.BuildSimpleGUI();
+         if (JSROOT.GetUrlOption('gui', src)!=null) {
+            window.onload = function() { JSROOT.BuildSimpleGUI(); }
+            return;
+         }
 
          var prereq = "";
          if (JSROOT.GetUrlOption('io', src)!=null) prereq += "io;";
          if (JSROOT.GetUrlOption('2d', src)!=null) prereq += "2d;";
+         if (JSROOT.GetUrlOption('jq2d', src)!=null) prereq += "jq2d;";
          if (JSROOT.GetUrlOption('3d', src)!=null) prereq += "3d;";
          var user = JSROOT.GetUrlOption('load', src);
          if ((user!=null) && (user.length>0)) prereq += "load:" + user;
          var onload = JSROOT.GetUrlOption('onload', src);
-         if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, onload); else
-         if (onload!=null) {
-            onload = JSROOT.findFunction(onload);
-            if (typeof onload == 'function') onload();
+
+         if ((prereq.length>0) || (onload!=null))
+            window.onload = function() {
+              if (prereq.length>0) JSROOT.AssertPrerequisites(prereq, onload); else
+              if (onload!=null) {
+                 onload = JSROOT.findFunction(onload);
+                 if (typeof onload == 'function') onload();
+              }
          }
 
          return;
