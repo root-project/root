@@ -28,7 +28,10 @@
    // one could specify supported options list, separated with ';'
    // One could specify several draw functions for different draw options
    JSROOT.addDrawFunc = function(_name, _func, _opt) {
-      JSROOT.fDrawFunc.push({ name:_name, func:_func, opt:_opt });
+      if ((arguments.length == 1) && (typeof arguments[0] == 'object'))
+         JSROOT.fDrawFunc.push(arguments[0]);
+      else
+         JSROOT.fDrawFunc.push({ name:_name, func:_func, opt:_opt });
    }
 
    JSROOT.gStyle = {
@@ -54,6 +57,20 @@
     * @class JSROOT.Painter Holder of different functions and classes for drawing
     */
    JSROOT.Painter = {};
+
+
+   JSROOT.Painter.createMenu = function(maincallback, menuname) {
+      // dummy functions, forward call to the jquery function
+      JSROOT.AssertPrerequisites('jq2d', function() {
+         JSROOT.Painter.createMenu(maincallback, menuname);
+      });
+   }
+
+   JSROOT.Painter.closeMenu = function(menuname) {
+      if (!menuname) menuname = 'root_ctx_menu';
+      var x = document.getElementById(menuname);
+      if (x) x.parentNode.removeChild(x);
+   }
 
    JSROOT.Painter.readStyleFromURL = function(url) {
       var optimize = JSROOT.GetUrlOption("optimize", url);
@@ -86,75 +103,6 @@
          JSROOT.gStyle.MathJax = parseInt(mathjax);
          if (JSROOT.gStyle.MathJax == NaN) JSROOT.gStyle.MathJax = 1;
       }
-   }
-
-   JSROOT.createMenu = function(menuname) {
-      if (!menuname) menuname = "root_ctx_menu";
-
-      var menu = { divid: menuname, code:"", cnt: 1, funcs : {} };
-
-      menu.add = function(name, arg, func) {
-         if (name.indexOf("header:")==0) {
-            this.code += "<li class='ui-widget-header'>"+name.substr(7)+"</li>";
-            return;
-         }
-
-         if (name=="endsub:") { this.code += "</ul></li>"; return; }
-         var close_tag = "</li>";
-         if (name.indexOf("sub:")==0) { name = name.substr(4); close_tag="<ul>"; }
-
-         if (typeof arg == 'function') { func = arg; arg = name; }
-
-         if ((arg==null) || (typeof arg != 'string')) arg = name;
-         this.code += "<li cnt='" + this.cnt + "' arg='" + arg + "'>" + name + close_tag;
-         if (typeof func == 'function') this.funcs[this.cnt] = func; // keep call-back function
-
-         this.cnt++;
-      }
-
-      menu.size = function() { return this.cnt-1; }
-
-      menu.addDrawMenu = function(menu_name, opts, call_back) {
-         if (opts==null) opts = new Array;
-         if (opts.length==0) opts.push("");
-
-         this.add((opts.length > 1) ? ("sub:" + menu_name) : menu_name, opts[0], call_back);
-         if (opts.length<2) return;
-
-         for (var i=0;i<opts.length;i++) {
-            var name = opts[i];
-            if (name=="") name = '&lt;dflt&gt;';
-            this.add(name, opts[i], call_back);
-         }
-         this.add("endsub:");
-      }
-
-      menu.remove = function() { $("#"+menuname).remove(); }
-
-      menu.show = function(event) {
-         menu.remove();
-
-         document.body.onclick = function(e) { menu.remove(); }
-
-         $(document.body).append('<ul id="' + menuname + '">' + this.code + '</ul>');
-
-         $("#" + menuname)
-            .css('left', event.clientX + window.pageXOffset)
-            .css('top', event.clientY + window.pageYOffset)
-            .attr('class', 'ctxmenu')
-            .menu({
-               items: "> :not(.ui-widget-header)",
-               select: function( event, ui ) {
-                  var arg = ui.item.attr('arg');
-                  var cnt = ui.item.attr('cnt');
-                  var func = cnt ? menu.funcs[cnt] : null;
-                  menu.remove();
-                  if (typeof func == 'function') func(arg);
-              }
-         });
-      }
-
-      return menu;
    }
 
    JSROOT.Painter.Coord = {
@@ -893,7 +841,9 @@
 
       this['divid'] = divid;
 
-      $("#" + divid).children().eq(0).prop('painter', this);
+      var main = d3.select("#" + divid);
+      if (main.node() && main.node().firstChild)
+         main.node().firstChild['painter'] = this;
    }
 
    JSROOT.TBasePainter.prototype.SetItemName = function(name) {
@@ -924,7 +874,7 @@
       // no canvas - no resize
       var can = this.svg_canvas();
 
-      var pad_painter = can ? can['pad_painter'] : null;
+      var pad_painter = can.empty() ? null : can.property('pad_painter');
 
       if (pad_painter) pad_painter.CheckCanvasResize();
    }
@@ -948,9 +898,9 @@
       if (take_pad) {
          if (layer==null) layer = ".text_layer"
          if (!this.draw_g)
-            this.draw_g = this.svg_pad(true).select(layer).append("svg:g");
+            this.draw_g = this.svg_pad().select(layer).append("svg:g");
       } else {
-         var frame = this.svg_frame(true);
+         var frame = this.svg_frame();
 
          var w = frame.attr("width");
          var h = frame.attr("height");
@@ -970,36 +920,34 @@
    }
 
    /** This is main graphical SVG element, where all Canvas drawing are performed */
-   JSROOT.TObjectPainter.prototype.svg_canvas = function(asselect) {
-      var res = d3.select("#" + this.divid + " .root_canvas");
-      return asselect ? res : res.node();
+   JSROOT.TObjectPainter.prototype.svg_canvas = function() {
+      return d3.select("#" + this.divid + " .root_canvas");
    }
 
    /** This is SVG element, correspondent to current pad */
-   JSROOT.TObjectPainter.prototype.svg_pad = function(asselect) {
-      var c = this.svg_canvas(true);
-      if (this.pad_name != '')
+   JSROOT.TObjectPainter.prototype.svg_pad = function() {
+      var c = this.svg_canvas();
+      if ((this.pad_name != '') && !c.empty())
          c = c.select("[pad=" + this.pad_name + ']');
-      return asselect ? c : c.node();
+      return c;
    }
 
    JSROOT.TObjectPainter.prototype.root_pad = function() {
       var p = this.svg_pad();
-      var pad_painter = p ? p['pad_painter'] : null;
+      var pad_painter = p.empty() ? null : p.property('pad_painter');
       return pad_painter ? pad_painter.pad : null;
    }
 
    /** This is SVG element with current frame */
-   JSROOT.TObjectPainter.prototype.svg_frame = function(asselect) {
-      var f = this.svg_pad(true).select(".root_frame");
-      return asselect ? f : f.node();
+   JSROOT.TObjectPainter.prototype.svg_frame = function() {
+      return this.svg_pad().select(".root_frame");
    }
 
    /** Returns main pad painter - normally TH1/TH2 painter, which draws all axis */
    JSROOT.TObjectPainter.prototype.main_painter = function() {
       if (!this.main) {
          var svg_p = this.svg_pad();
-         if (svg_p) this.main = svg_p['mainpainter'];
+         if (!svg_p.empty()) this.main = svg_p.property('mainpainter');
       }
       return this.main;
    }
@@ -1025,39 +973,43 @@
       // SVG element where canvas is drawn
       var svg_c = this.svg_canvas();
 
-      if ((svg_c==null) && (is_main>0)) {
+      if (svg_c.empty() && (is_main>0)) {
          JSROOT.Painter.drawCanvas(divid, null);
          svg_c = this.svg_canvas();
          this['create_canvas'] = true;
       }
 
-      if (svg_c == null) {
+      if (svg_c.empty()) {
          if ((is_main < 0) || (this.obj_typename=="TCanvas")) return;
 
          console.log("Special case for " + this.obj_typename + " assign painter to first DOM element");
-         $("#" + divid).children().eq(0).prop('painter', this);
+         var main = d3.select("#" + divid);
+         if (main.node() && main.node().firstChild)
+            main.node().firstChild['painter'] = this;
          return;
       }
 
       // SVG element where current pad is drawn (can be canvas itself)
-      this.pad_name = svg_c['current_pad'];
+      this.pad_name = svg_c.property('current_pad');
 
       if (is_main < 0) return;
 
       // create TFrame element if not exists when
-      if ((is_main > 0) && (this.svg_frame()==null)) {
+      if ((is_main > 0) && this.svg_frame().empty()) {
          JSROOT.Painter.drawFrame(divid, null);
-         if (this.svg_frame()==null) return alert("Fail to draw dummy TFrame");
+         if (this.svg_frame().empty()) return alert("Fail to draw dummy TFrame");
          this['create_canvas'] = true;
       }
 
       var svg_p = this.svg_pad();
-      if (svg_p['pad_painter'] != this)
-         svg_p['pad_painter'].painters.push(this);
+      if (svg_p.empty()) return;
 
-      if ((is_main > 0) && (svg_p['mainpainter']==null))
+      if (svg_p.property('pad_painter') != this)
+         svg_p.property('pad_painter').painters.push(this);
+
+      if ((is_main > 0) && (svg_p.property('mainpainter')==null))
          // when this is first main painter in the pad
-         svg_p['mainpainter'] = this;
+         svg_p.property('mainpainter', this);
    }
 
    JSROOT.TObjectPainter.prototype.SetForeignObjectPosition = function(fo, x, y) {
@@ -1068,7 +1020,7 @@
 
       if (JSROOT.browser.isWebKit) {
          // force canvas redraw when foreign object used - it is not correctly scaled
-         this.svg_canvas(true).property('redraw_by_resize', true);
+         this.svg_canvas().property('redraw_by_resize', true);
          while (sel && sel.attr('class') != 'root_canvas') {
             if ((sel.attr('class') == 'root_frame') || (sel.attr('class') == 'root_pad')) {
               x += parseInt(sel.attr("x"));
@@ -1105,7 +1057,7 @@
       fill.color = JSROOT.Painter.root_colors[color];
       if (typeof fill.color != 'string') fill.color = "none";
 
-      var svg = this.svg_canvas(true);
+      var svg = this.svg_canvas();
 
       if ((pattern < 3000) || (pattern>3025) || svg.empty()) return fill;
 
@@ -1197,20 +1149,21 @@
    JSROOT.TObjectPainter.prototype.ForEachPainter = function(userfunc) {
       // Iterate over all known painters
 
-      var painter = $("#" + this.divid).children().eq(0).prop('painter');
+      var main = d3.select("#" + this.divid);
+      var painter = (main.node() && main.node().firstChild) ? main.node().firstChild['painter'] : null;
       if (painter!=null) { userfunc(painter); return; }
 
       var svg_c = this.svg_canvas();
-      if (svg_c==null) return;
+      if (svg_c.empty()) return;
 
-      userfunc(svg_c['pad_painter']);
-      var painters = svg_c['pad_painter'].painters;
+      userfunc(svg_c.property('pad_painter'));
+      var painters = svg_c.property('pad_painter').painters;
       for (var k in painters) userfunc(painters[k]);
    }
 
    JSROOT.TObjectPainter.prototype.Cleanup = function() {
       // generic method to cleanup painters
-      $("#" + this.divid).empty();
+      d3.select("#" + this.divid).html("");
    }
 
    JSROOT.TObjectPainter.prototype.RedrawPad = function() {
@@ -1219,7 +1172,7 @@
 
       var pad = this.svg_pad();
 
-      var pad_painter = pad ? pad['pad_painter'] : null;
+      var pad_painter = pad.empty() ? null : pad.property('pad_painter');
 
       if (pad_painter) pad_painter.Redraw();
    }
@@ -1255,11 +1208,11 @@
             d3.event.sourceEvent.preventDefault();
 
             acc_x = 0; acc_y = 0;
-            pad_w = Number(pthis.svg_pad(true).attr("width")) - rect_width();
-            pad_h = Number(pthis.svg_pad(true).attr("height")) - rect_height();
+            pad_w = Number(pthis.svg_pad().attr("width")) - rect_width();
+            pad_h = Number(pthis.svg_pad().attr("height")) - rect_height();
 
             pthis[drag_rect_name] =
-               pthis.svg_pad(true)
+               pthis.svg_pad()
                  .append("rect")
                  .attr("class", "zoom")
                  .attr("id", drag_rect_name)
@@ -1316,10 +1269,10 @@
            d3.event.sourceEvent.preventDefault();
 
            acc_x = 0; acc_y = 0;
-           pad_w = Number(pthis.svg_pad(true).attr("width")) - Number(draw_g.attr("x"));
-           pad_h = Number(pthis.svg_pad(true).attr("height")) - Number(draw_g.attr("y"));
+           pad_w = Number(pthis.svg_pad().attr("width")) - Number(draw_g.attr("x"));
+           pad_h = Number(pthis.svg_pad().attr("height")) - Number(draw_g.attr("y"));
            pthis[drag_rect_name] =
-              pthis.svg_pad(true)
+              pthis.svg_pad()
                 .append("rect")
                 .attr("class", "zoom")
                 .attr("id", drag_rect_name)
@@ -1383,7 +1336,8 @@
       // can be used to find painter for some special objects, registered as
       // histogram functions
 
-      var painters = this.svg_pad() ? this.svg_pad().pad_painter.painters : null;
+      var ppp = this.svg_pad();
+      var painters = ppp.empty() ? null : ppp.property('pad_painter').painters;
       if (painters == null) return null;
 
       for (var n in painters) {
@@ -1418,7 +1372,7 @@
    }
 
    JSROOT.TFramePainter.prototype.Shrink = function(shrink_left, shrink_right) {
-      var ndc = this.svg_frame() ? this.svg_frame()['NDC'] : null;
+      var ndc = this.svg_frame().property('NDC');
       if (ndc) {
          ndc.x1 += shrink_left;
          ndc.x2 -= shrink_right;
@@ -1426,11 +1380,11 @@
    }
 
    JSROOT.TFramePainter.prototype.DrawFrameSvg = function() {
-      var width = Number(this.svg_pad(true).attr("width")),
-          height = Number(this.svg_pad(true).attr("height"));
+      var width = Number(this.svg_pad().attr("width")),
+          height = Number(this.svg_pad().attr("height"));
       var w = width, h = height;
 
-      var ndc = this.svg_frame() ? this.svg_frame()['NDC'] : null;
+      var ndc = this.svg_frame().empty() ? null : this.svg_frame().property('NDC');
       if (ndc == null) ndc = { x1 : 0.07, y1 : 0.12, x2 : 0.95, y2 : 0.88 };
 
       var root_pad = this.root_pad();
@@ -1487,12 +1441,12 @@
       if (framecolor.color == 'none') framecolor.color = 'white';
 
       // this is svg:g object - container for every other items belonging to frame
-      var frame_g = this.svg_pad(true).select(".root_frame");
+      var frame_g = this.svg_pad().select(".root_frame");
 
       var top_rect = null;
 
       if (frame_g.empty()) {
-         frame_g = this.svg_pad(true).select(".frame_layer").append("svg:g").attr("class", "root_frame");
+         frame_g = this.svg_pad().select(".frame_layer").append("svg:g").attr("class", "root_frame");
 
          top_rect = frame_g.append("svg:rect");
 
@@ -1505,15 +1459,15 @@
       }
 
       // calculate actual NDC coordinates, use them to properly locate PALETTE
-      frame_g.node()['NDC'] = {
+      frame_g.property('NDC', {
          x1 : lm / width,
          x2 : (lm + w) / width,
          y1 : tm / height,
          y2 : (tm + h) / height
-      };
+      });
 
       // simple workaround to access painter via frame container
-      frame_g.node()['frame_painter'] = this;
+      frame_g.property('frame_painter', this);
 
       lm = Math.round(lm); tm = Math.round(tm);
       w = Math.round(w); h = Math.round(h);
@@ -1672,8 +1626,8 @@
    }
 
    JSROOT.TF1Painter.prototype.DrawBins = function() {
-      var w = Number(this.svg_frame(true).attr("width")),
-          h = Number(this.svg_frame(true).attr("height"));
+      var w = Number(this.svg_frame().attr("width")),
+          h = Number(this.svg_frame().attr("height"));
 
       this.RecreateDrawG();
 
@@ -1921,8 +1875,8 @@
       this.lineatt.width = this.lineatt.width % 100; // line width
       if (this.lineatt.width > 0) this.optionLine = 1;
 
-      var w = Number(this.svg_frame(true).attr("width")),
-          h = Number(this.svg_frame(true).attr("height"));
+      var w = Number(this.svg_frame().attr("width")),
+          h = Number(this.svg_frame().attr("height"));
 
       var ratio = w / h;
 
@@ -2135,8 +2089,8 @@
 
    JSROOT.TGraphPainter.prototype.DrawBins = function() {
 
-      var w = Number(this.svg_frame(true).attr("width")),
-          h = Number(this.svg_frame(true).attr("height"));
+      var w = Number(this.svg_frame().attr("width")),
+          h = Number(this.svg_frame().attr("height"));
 
       this.RecreateDrawG();
 
@@ -2390,8 +2344,8 @@
    JSROOT.TPavePainter.prototype.DrawPaveText = function() {
       var pavetext = this.pavetext;
 
-      var w = Number(this.svg_pad(true).attr("width")),
-          h = Number(this.svg_pad(true).attr("height"));
+      var w = Number(this.svg_pad().attr("width")),
+          h = Number(this.svg_pad().attr("height"));
 
       var pos_x = Math.round(pavetext['fX1NDC'] * w);
 
@@ -2431,7 +2385,7 @@
       for (var j = 0; j < nlines; ++j) {
          var line = JSROOT.Painter.translateLaTeX(pavetext['fLines'].arr[j]['fTitle']);
          lines.push(line);
-         var lw = h_margin + font.stringWidth(this.svg_pad(true), line) + h_margin;
+         var lw = h_margin + font.stringWidth(this.svg_pad(), line) + h_margin;
          if (lw > maxlw) maxlw = lw;
          if ((j == 0) || (line.indexOf('|') < 0)) continue;
          if (first_stat === 0) first_stat = j;
@@ -2591,14 +2545,14 @@
          move : function(x, y, dx, dy) {
             pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
 
-            pthis.pavetext['fX1NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
-            pthis.pavetext['fX2NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
-            pthis.pavetext['fY1NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
-            pthis.pavetext['fY2NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
+            pthis.pavetext['fX1NDC'] += dx / Number(pthis.svg_pad().attr("width"));
+            pthis.pavetext['fX2NDC'] += dx / Number(pthis.svg_pad().attr("width"));
+            pthis.pavetext['fY1NDC'] -= dy / Number(pthis.svg_pad().attr("height"));
+            pthis.pavetext['fY2NDC'] -= dy / Number(pthis.svg_pad().attr("height"));
          },
          resize : function(width, height) {
-            pthis.pavetext['fX2NDC'] = pthis.pavetext['fX1NDC'] + width  / Number(pthis.svg_pad(true).attr("width"));
-            pthis.pavetext['fY1NDC'] = pthis.pavetext['fY2NDC'] - height / Number(pthis.svg_pad(true).attr("height"));
+            pthis.pavetext['fX2NDC'] = pthis.pavetext['fX1NDC'] + width  / Number(pthis.svg_pad().attr("width"));
+            pthis.pavetext['fY1NDC'] = pthis.pavetext['fY2NDC'] - height / Number(pthis.svg_pad().attr("height"));
 
             pthis.DrawPaveText();
          }
@@ -2684,14 +2638,15 @@
 
    JSROOT.TPadPainter.prototype.CreateCanvasSvg = function(check_resize) {
 
-      var render_to = $("#" + this.divid);
+      var render_to = d3.select("#" + this.divid);
 
-      var w = render_to.width(), h = render_to.height(), factor = null;
+      var rect = render_to.node().getBoundingClientRect();
+      var w = rect.width, h = rect.height, factor = null;
 
       var svg = null;
 
       if (check_resize > 0) {
-         svg = this.svg_canvas(true);
+         svg = this.svg_canvas();
 
          var oldw = svg.property('last_width');
          var oldh = svg.property('last_height');
@@ -2706,7 +2661,7 @@
          if (factor!=null) {
             // if canvas was resize when created, resize height also now
             h = Math.round(w * factor);
-            render_to.height(h);
+            render_to.style('height', h+'px');
          }
 
          if ((check_resize==1) && (oldw>0) && (oldh>0) && !svg.property('redraw_by_resize'))
@@ -2733,7 +2688,7 @@
 
             h = Math.round(w * factor);
 
-            render_to.height(h);
+            render_to.style('height', h+'px');
          }
 
          var fill = null;
@@ -2743,7 +2698,7 @@
          else
             fill = this.createAttFill('white');
 
-         render_to.css("background-color", fill.color);
+         render_to.style("background-color", fill.color);
 
          svg = d3.select("#" + this.divid)
              .append("svg")
@@ -2771,8 +2726,8 @@
 
 
    JSROOT.TPadPainter.prototype.CreatePadSvg = function(only_resize) {
-      var width = Number(this.svg_canvas(true).attr("width")),
-          height = Number(this.svg_canvas(true).attr("height"));
+      var width = Number(this.svg_canvas().attr("width")),
+          height = Number(this.svg_canvas().attr("height"));
       var x = Math.round(this.pad['fAbsXlowNDC'] * width);
       var y = Math.round(height - this.pad['fAbsYlowNDC'] * height);
       var w = Math.round(this.pad['fAbsWNDC'] * width);
@@ -2786,10 +2741,10 @@
       var svg_pad = null, svg_rect = null;
 
       if (only_resize) {
-         svg_pad = this.svg_pad(true);
+         svg_pad = this.svg_pad();
          svg_rect = svg_pad.select(".root_pad_border");
       } else {
-         svg_pad = this.svg_canvas(true).append("g")
+         svg_pad = this.svg_canvas().append("g")
              .attr("class", "root_pad")
              .attr("pad", this.pad['fName']) // set extra attribute  to mark pad name
              .property('pad_painter', this) // this is custom property
@@ -2908,13 +2863,13 @@
       painter.pad_name = pad['fName'];
 
       // we select current pad, where all drawing is performed
-      var prev_name = painter.svg_canvas()['current_pad'];
-      painter.svg_canvas()['current_pad'] = pad['fName'];
+      var prev_name = painter.svg_canvas().property('current_pad');
+      painter.svg_canvas().property('current_pad', pad['fName']);
 
       painter.DrawPrimitives();
 
       // we restore previous pad name
-      painter.svg_canvas()['current_pad'] = prev_name;
+      painter.svg_canvas().property('current_pad', prev_name);
 
       return painter;
    }
@@ -2941,8 +2896,8 @@
       var nbr1 = axis['fNdiv'] % 100;
       if (nbr1<=0) nbr1 = 8;
 
-      var width = Number(this.svg_pad(true).attr("width")),
-          height = Number(this.svg_pad(true).attr("height"));
+      var width = Number(this.svg_pad().attr("width")),
+          height = Number(this.svg_pad().attr("height"));
 
       var s_height = Math.round(Math.abs(palette['fY2NDC'] - palette['fY1NDC']) * height);
 
@@ -3024,14 +2979,14 @@
 
             pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
 
-            pthis.palette['fX1NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
-            pthis.palette['fX2NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
-            pthis.palette['fY1NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
-            pthis.palette['fY2NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
+            pthis.palette['fX1NDC'] += dx / Number(pthis.svg_pad().attr("width"));
+            pthis.palette['fX2NDC'] += dx / Number(pthis.svg_pad().attr("width"));
+            pthis.palette['fY1NDC'] -= dy / Number(pthis.svg_pad().attr("height"));
+            pthis.palette['fY2NDC'] -= dy / Number(pthis.svg_pad().attr("height"));
          },
          resize : function(width, height) {
-            pthis.palette['fX2NDC'] = pthis.palette['fX1NDC'] + width / Number(pthis.svg_pad(true).attr("width"));
-            pthis.palette['fY1NDC'] = pthis.palette['fY2NDC'] - height / Number(pthis.svg_pad(true).attr("height"));
+            pthis.palette['fX2NDC'] = pthis.palette['fX1NDC'] + width / Number(pthis.svg_pad().attr("width"));
+            pthis.palette['fY1NDC'] = pthis.palette['fY2NDC'] - height / Number(pthis.svg_pad().attr("height"));
 
             pthis.RemoveDrawG();
             pthis.DrawPalette();
@@ -3704,8 +3659,8 @@
          return;
       }
 
-      var w = Number(this.svg_frame(true).attr("width")),
-          h = Number(this.svg_frame(true).attr("height"));
+      var w = Number(this.svg_frame().attr("width")),
+          h = Number(this.svg_frame().attr("height"));
 
       if (this.histo['fXaxis']['fTimeDisplay']) {
          this.x_time = true;
@@ -3824,7 +3779,7 @@
       // grid can only be drawn by first painter
       if (!this.is_main_painter()) return;
 
-      var layer = this.svg_frame(true).select(".grid_layer");
+      var layer = this.svg_frame().select(".grid_layer");
 
       layer.selectAll(".xgrid").remove();
       layer.selectAll(".ygrid").remove();
@@ -3833,7 +3788,7 @@
       // add a grid on x axis, if the option is set
       if (this.options.Gridx) {
 
-         var h = Number(this.svg_frame(true).attr("height"));
+         var h = Number(this.svg_frame().attr("height"));
 
          var xticks = this.x.ticks(this.x_nticks);
 
@@ -3852,7 +3807,7 @@
 
       // add a grid on y axis, if the option is set
       if (this.options.Gridy) {
-         var w = Number(this.svg_frame(true).attr("width"));
+         var w = Number(this.svg_frame().attr("width"));
 
          var yticks = this.y.ticks(this.y_nticks);
 
@@ -3906,18 +3861,18 @@
 
       if (!this.is_main_painter()) return;
 
-      var w = Number(this.svg_frame(true).attr("width")),
-          h = Number(this.svg_frame(true).attr("height"));
+      var w = Number(this.svg_frame().attr("width")),
+          h = Number(this.svg_frame().attr("height"));
 
-      var xax_g = this.svg_frame(true).selectAll(".xaxis_container");
+      var xax_g = this.svg_frame().selectAll(".xaxis_container");
       if (xax_g.empty())
-         xax_g = this.svg_frame(true).select(".axis_layer").append("svg:g").attr("class","xaxis_container");
+         xax_g = this.svg_frame().select(".axis_layer").append("svg:g").attr("class","xaxis_container");
 
       xax_g.selectAll("*").remove();
       xax_g.attr("transform", "translate(0," + h + ")");
 
-      var yax_g = this.svg_frame(true).selectAll(".yaxis_container");
-      if (yax_g.empty()) yax_g = this.svg_frame(true).select(".axis_layer").append("svg:g").attr("class", "yaxis_container");
+      var yax_g = this.svg_frame().selectAll(".yaxis_container");
+      if (yax_g.empty()) yax_g = this.svg_frame().select(".axis_layer").append("svg:g").attr("class", "yaxis_container");
       yax_g.selectAll("*").remove();
 
       var ndivx = this.histo['fXaxis']['fNdivisions'];
@@ -4144,7 +4099,7 @@
       if ((shrink_forbidden==null) && typeof yax_g.node()['getBoundingClientRect'] == 'function') {
 
          var rect1 = yax_g.node().getBoundingClientRect();
-         var rect2 = this.svg_pad().getBoundingClientRect();
+         var rect2 = this.svg_pad().node().getBoundingClientRect();
          var position = rect1.left - rect2.left;
 
          var shrink = 0.;
@@ -4159,8 +4114,8 @@
          }
 
          if (shrink != 0) {
-            this.svg_frame()['frame_painter'].Shrink(shrink, 0);
-            this.svg_frame()['frame_painter'].Redraw();
+            this.svg_frame().property('frame_painter').Shrink(shrink, 0);
+            this.svg_frame().property('frame_painter').Redraw();
             this.CreateXY();
             this.DrawAxes(true);
          }
@@ -4178,7 +4133,7 @@
 
          var pavetext = JSROOT.Create("TPaveText");
 
-         jQuery.extend(pavetext, { fName: "title",
+         JSROOT.extend(pavetext, { fName: "title",
                                    fX1NDC: 0.2809483, fY1NDC: 0.9339831,
                                    fX2NDC: 0.7190517, fY2NDC: 0.995});
          pavetext.AddText(this.histo['fTitle']);
@@ -4276,13 +4231,13 @@
       if (this.FindStat() != null) return null;
 
       var stats = JSROOT.Create('TPaveStats');
-      jQuery.extend(stats, { _AutoCreated: true,
+      JSROOT.extend(stats, { _AutoCreated: true,
                              fName : 'stats',
                              fOptStat: JSROOT.gStyle.OptStat,
                              fBorderSize : 1} );
-      jQuery.extend(stats, JSROOT.gStyle.StatNDC);
-      jQuery.extend(stats, JSROOT.gStyle.StatText);
-      jQuery.extend(stats, JSROOT.gStyle.StatFill);
+      JSROOT.extend(stats, JSROOT.gStyle.StatNDC);
+      JSROOT.extend(stats, JSROOT.gStyle.StatText);
+      JSROOT.extend(stats, JSROOT.gStyle.StatFill);
 
       if (this.histo['_typename'] && (this.histo['_typename'].match(/^TProfile/) || this.histo['_typename'].match(/^TH2/)))
          stats['fY1NDC'] = 0.67;
@@ -4407,8 +4362,8 @@
 
       // if (!this.draw_content) return;
 
-      var width = Number(this.svg_frame(true).attr("width")),
-          height = Number(this.svg_frame(true).attr("height"));
+      var width = Number(this.svg_frame().attr("width")),
+          height = Number(this.svg_frame().attr("height"));
       var e, origin, curr = null, rect = null;
       var lasttouch = new Date(0);
 
@@ -4421,8 +4376,7 @@
       var pthis = this;
 
       function closeAllExtras() {
-         var x = document.getElementById('root_ctx_menu');
-         if (x) x.parentNode.removeChild(x);
+         JSROOT.Painter.closeMenu();
          if (rect != null) { rect.remove(); rect = null; }
          zoom_kind = 0;
          if (disable_tooltip) {
@@ -4438,18 +4392,19 @@
          // ignore context menu when touches zooming is ongoing
          if (zoom_kind > 100) return;
 
+         // one need to copy event, while after call back event may be changed
+         var evnt = d3.event;
+
          // suppress any running zomming
          closeAllExtras();
 
-         var menu = JSROOT.createMenu();
+         JSROOT.Painter.createMenu(function(menu) {
+            menu['painter'] = pthis;
+            menu.add("header:"+ pthis.histo['fName']);
+            pthis.FillContextMenu(menu);
+            menu.show(evnt);
+         });
 
-         menu['painter'] = pthis;
-
-         menu.add("header:"+ pthis.histo['fName']);
-
-         pthis.FillContextMenu(menu);
-
-         menu.show(d3.event)
       }
 
       function startTouchSel() {
@@ -4462,8 +4417,8 @@
          }
 
          // update frame dimensions while frame could be resized
-         width = Number(pthis.svg_frame(true).attr("width"));
-         height = Number(pthis.svg_frame(true).attr("height"));
+         width = Number(pthis.svg_frame().attr("width"));
+         height = Number(pthis.svg_frame().attr("height"));
 
          e = this;
          // var t = d3.event.changedTouches;
@@ -4522,7 +4477,7 @@
          // d3.select("body").classed("noselect", true);
          // d3.select("body").style("-webkit-user-select", "none");
 
-         rect = pthis.svg_frame(true).append("rect")
+         rect = pthis.svg_frame().append("rect")
                .attr("class", "zoom")
                .attr("id", "zoomRect")
                .attr("x", curr[0])
@@ -4530,7 +4485,7 @@
                .attr("width", origin[0] - curr[0])
                .attr("height", origin[1] - curr[1]);
 
-         // pthis.svg_frame(true).on("dblclick", unZoom);
+         // pthis.svg_frame().on("dblclick", unZoom);
 
          d3.select(window).on("touchmove.zoomRect", moveTouchSel)
                           .on("touchcancel.zoomRect", endTouchSel)
@@ -4634,8 +4589,8 @@
          d3.event.preventDefault();
 
          // update frame dimensions while frame could be resized
-         width = Number(pthis.svg_frame(true).attr("width"));
-         height = Number(pthis.svg_frame(true).attr("height"));
+         width = Number(pthis.svg_frame().attr("width"));
+         height = Number(pthis.svg_frame().attr("height"));
 
          closeAllExtras();
 
@@ -4667,12 +4622,12 @@
          // d3.select("body").classed("noselect", true);
          // d3.select("body").style("-webkit-user-select", "none");
 
-         rect = pthis.svg_frame(true)
+         rect = pthis.svg_frame()
                 .append("rect")
                 .attr("class", "zoom")
                 .attr("id", "zoomRect");
 
-         pthis.svg_frame(true).on("dblclick", unZoom);
+         pthis.svg_frame().on("dblclick", unZoom);
 
          d3.select(window).on("mousemove.zoomRect", moveRectSel)
                           .on("mouseup.zoomRect", endRectSel, true);
@@ -4687,7 +4642,7 @@
          if (m[0] < 0) pthis.Unzoom(false, true); else
          if (m[1] > height) pthis.Unzoom(true, false); else {
             pthis.Unzoom(true, true);
-            pthis.svg_frame(true).on("dblclick", null);
+            pthis.svg_frame().on("dblclick", null);
          }
       }
 
@@ -4769,9 +4724,9 @@
          if (isany) pthis.Zoom(xmin, xmax, ymin, ymax);
       }
 
-      this.svg_frame(true).on("mousedown", startRectSel);
-      this.svg_frame(true).on("touchstart", startTouchSel);
-      this.svg_frame(true).on("contextmenu", showContextMenu);
+      this.svg_frame().on("mousedown", startRectSel);
+      this.svg_frame().on("touchstart", startTouchSel);
+      this.svg_frame().on("contextmenu", showContextMenu);
 
    }
 
@@ -5106,7 +5061,7 @@
 
       // if we need to draw line or area, we need extra point for correct drawing
       if ((right == this.nbinsx) && (this.options.Error == 0) && (point!=null)) {
-         var extrapoint = jQuery.extend(true, {}, point);
+         var extrapoint = JSROOT.extend({}, point);
          extrapoint.x = grx2;
          draw_bins.push(extrapoint);
       }
@@ -5189,8 +5144,8 @@
 
    JSROOT.TH1Painter.prototype.DrawBins = function() {
 
-      var width = Number(this.svg_frame(true).attr("width")),
-          height = Number(this.svg_frame(true).attr("height"));
+      var width = Number(this.svg_frame().attr("width")),
+          height = Number(this.svg_frame().attr("height"));
 
       if (!this.draw_content || (width<=0) || (height<=0)) {
          this.RemoveDrawG();
@@ -5286,6 +5241,7 @@
 
       // create painter and add it to canvas
       var painter = new JSROOT.TH1Painter(histo);
+
       painter.SetDivId(divid, 1);
 
       // here we deciding how histogram will look like and how will be shown
@@ -5363,7 +5319,7 @@
    JSROOT.TH2Painter.prototype.ToggleColz = function() {
       if (this.FindPalette() == null) {
          var shrink = this.CreatePalette(0.04);
-         this.svg_frame()['frame_painter'].Shrink(0, shrink);
+         this.svg_frame().property('frame_painter').Shrink(0, shrink);
          this.options.Zscale = 1;
          // one should draw palette
          JSROOT.Painter.drawPaletteAxis(this.divid, this.FindPalette());
@@ -5430,10 +5386,12 @@
 
       pal['_AutoCreated'] = true;
 
-      pal['fX1NDC'] = this.svg_frame()['NDC'].x2 - rel_width;
-      pal['fY1NDC'] = this.svg_frame()['NDC'].y1;
-      pal['fX2NDC'] = this.svg_frame()['NDC'].x2;
-      pal['fY2NDC'] = this.svg_frame()['NDC'].y2;
+      var ndc = this.svg_frame().property('NDC');
+
+      pal['fX1NDC'] = ndc.x2 - rel_width;
+      pal['fY1NDC'] = ndc.y1;
+      pal['fX2NDC'] = ndc.x2;
+      pal['fY2NDC'] = ndc.y2;
       pal['fInit'] = 1;
       pal['fShadowColor'] = 1;
       pal['fCorenerRadius'] = 0;
@@ -5485,8 +5443,8 @@
       // and at the end try to check how much place will be used by the labels
       // in the palette
 
-      var width = Number(this.svg_frame(true).attr("width")),
-          height = Number(this.svg_frame(true).attr("height"));
+      var width = Number(this.svg_frame().attr("width")),
+          height = Number(this.svg_frame().attr("height"));
 
       var axisOffset = Math.round(axis['fLabelOffset'] * width);
       var tickSize = Math.round(axis['fTickSize'] * width);
@@ -5498,7 +5456,7 @@
 
       var maxlen = 0;
       for (var i in ticks) {
-         var len = axisfont.stringWidth(this.svg_frame(true), ticks[i]);
+         var len = axisfont.stringWidth(this.svg_frame(), ticks[i]);
          if (len > maxlen) maxlen = len;
       }
 
@@ -5879,8 +5837,8 @@
 
       this.RecreateDrawG();
 
-      var w = Number(this.svg_frame(true).attr("width")),
-          h = Number(this.svg_frame(true).attr("height"));
+      var w = Number(this.svg_frame().attr("width")),
+          h = Number(this.svg_frame().attr("height"));
 
       if ((this.options.Color==2) && !JSROOT.browser.isIE)
          return this.DrawSimpleCanvas(w,h);
@@ -5954,8 +5912,8 @@
       if ((this.FindPalette() == null) && this.create_canvas && (this.options.Zscale > 0)) {
          // create pallette
          var shrink = this.CreatePalette(0.04);
-         this.svg_frame()['frame_painter'].Shrink(0, shrink);
-         this.svg_frame()['frame_painter'].Redraw();
+         this.svg_frame().property('frame_painter').Shrink(0, shrink);
+         this.svg_frame().property('frame_painter').Redraw();
          this.CreateXY();
       } else if (this.options.Zscale == 0) {
          // delete palette - it may appear there due to previous draw options
@@ -6202,7 +6160,7 @@
    JSROOT.TLegendPainter.prototype.drawLegend = function() {
       this.RecreateDrawG(true, ".text_layer");
 
-      var svg = this.svg_pad(true);
+      var svg = this.svg_pad();
       var pave = this.legend;
 
       var x = 0, y = 0, w = 0, h = 0;
@@ -6355,8 +6313,6 @@
             JSROOT.AssertPrerequisites('mathjax', function() {
                if (typeof MathJax != 'object') return;
 
-               // MathJax.Hub.Queue(["Typeset", MathJax.Hub, body.node()]);
-
                MathJax.Hub.Queue(function() {
                   MathJax.Hub.Typeset(body.node());
                   // rescale one again
@@ -6393,14 +6349,14 @@
          move : function(x, y, dx, dy) {
             pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
 
-            pave['fX1NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
-            pave['fX2NDC'] += dx / Number(pthis.svg_pad(true).attr("width"));
-            pave['fY1NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
-            pave['fY2NDC'] -= dy / Number(pthis.svg_pad(true).attr("height"));
+            pave['fX1NDC'] += dx / Number(pthis.svg_pad().attr("width"));
+            pave['fX2NDC'] += dx / Number(pthis.svg_pad().attr("width"));
+            pave['fY1NDC'] -= dy / Number(pthis.svg_pad().attr("height"));
+            pave['fY2NDC'] -= dy / Number(pthis.svg_pad().attr("height"));
          },
          resize : function(width, height) {
-            pave['fX2NDC'] = pave['fX1NDC'] + width  / Number(pthis.svg_pad(true).attr("width"));
-            pave['fY1NDC'] = pave['fY2NDC'] - height / Number(pthis.svg_pad(true).attr("height"));
+            pave['fX2NDC'] = pave['fX1NDC'] + width  / Number(pthis.svg_pad().attr("width"));
+            pave['fY1NDC'] = pave['fY2NDC'] - height / Number(pthis.svg_pad().attr("height"));
 
             pthis.drawLegend();
          }
@@ -6583,8 +6539,8 @@
 
       var pavelabel = this.text;
 
-      var w = Number(this.svg_pad(true).attr("width")),
-          h = Number(this.svg_pad(true).attr("height"));
+      var w = Number(this.svg_pad().attr("width")),
+          h = Number(this.svg_pad().attr("height"));
 
       var pos_x = pavelabel['fX1NDC'] * w;
       var pos_y = (1.0 - pavelabel['fY1NDC']) * h;
@@ -6633,7 +6589,7 @@
 
       var line = JSROOT.Painter.translateLaTeX(pavelabel['fLabel']);
 
-      var lw = font.stringWidth(this.svg_pad(true), line);
+      var lw = font.stringWidth(this.svg_pad(), line);
       if (lw > width) font.size = Math.floor(font.size * (width / lw));
 
       pave.append("text")
@@ -6666,8 +6622,8 @@
 
       var kTextNDC = JSROOT.BIT(14);
 
-      var w = Number(this.svg_pad(true).attr("width")),
-          h = Number(this.svg_pad(true).attr("height"));
+      var w = Number(this.svg_pad().attr("width")),
+          h = Number(this.svg_pad().attr("height"));
       var align = 'start', halign = Math.round(this.text['fTextAlign'] / 10);
       var baseline = 'bottom', valign = this.text['fTextAlign'] % 10;
       if (halign == 1) align = 'start';
@@ -6751,7 +6707,7 @@
    }
 
    JSROOT.Painter.drawStreamerInfo = function(divid, obj) {
-      $("#" + divid).css({ overflow : 'auto' });
+      d3.select("#" + divid).style( 'overflow' , 'auto' );
       var painter = new JSROOT.HierarchyPainter('sinfo', divid);
       painter.ShowStreamerInfo(obj);
       return painter;
@@ -6774,34 +6730,34 @@
    }
 
    JSROOT.RawTextPainter.prototype.Draw = function() {
-      var frame = $("#" + this.divid);
+      var frame = d3.select("#" + this.divid);
 
       var txt = this.txt.value;
       if (txt==null) txt = "<undefined>";
 
       var mathjax = 'mathjax' in this.txt;
 
-      if ('load' in this.txt) {
-         frame.html("<div style='overflow:hidden'></div>");
-         frame.find('div').load(this.txt.load);
-      } else {
-         if (!mathjax && !('as_is' in this.txt)) {
-            var arr = txt.split("\n"); txt = "";
-            for (var i in arr)
-               txt += "<pre>" + arr[i] + "</pre>";
-         }
-         frame.html("<div style='overflow:hidden'>" + txt + "</div>");
+      if (!mathjax && !('as_is' in this.txt)) {
+         var arr = txt.split("\n"); txt = "";
+         for (var i in arr)
+            txt += "<pre>" + arr[i] + "</pre>";
       }
+      frame.html("<div style='overflow:hidden'>" + txt + "</div>");
 
       // (re) set painter to first child element
       this.SetDivId(this.divid);
 
-      if (mathjax)
+      if (mathjax) {
+         if (this['loading_mathjax']) return;
+         this['loading_mathjax'] = true;
+         var painter = this;
          JSROOT.AssertPrerequisites('mathjax', function() {
+            painter['loading_mathjax'] = false;
             if (typeof MathJax == 'object') {
-               MathJax.Hub.Queue(["Typeset", MathJax.Hub, frame.get()]);
+               MathJax.Hub.Queue(["Typeset", MathJax.Hub, frame.node()]);
             }
          });
+      }
    }
 
    JSROOT.Painter.drawRawText = function(divid, txt, opt) {
@@ -6809,127 +6765,6 @@
       painter.SetDivId(divid);
       painter.Draw();
       return painter;
-   }
-
-   // ========== performs tree drawing on server ==================
-
-   JSROOT.TTreePlayer = function(itemname) {
-      JSROOT.TBasePainter.call(this);
-      this.SetItemName(itemname);
-      this.hpainter = null;
-      return this;
-   }
-
-   JSROOT.TTreePlayer.prototype = Object.create( JSROOT.TBasePainter.prototype );
-
-   JSROOT.TTreePlayer.prototype.Show = function(divid) {
-      this.drawid = divid + "_draw";
-
-      $("#" + divid)
-        .html("<div class='treedraw_buttons' style='padding-left:0.5em'>" +
-            "<button class='treedraw_exe'>Draw</button>" +
-            " Expr:<input class='treedraw_varexp' style='width:12em'></input> " +
-            "<button class='treedraw_more'>More</button>" +
-            "</div>" +
-            "<div id='" + this.drawid + "' style='width:100%'></div>");
-
-      var player = this;
-
-      $("#" + divid).find('.treedraw_exe').click(function() { player.PerformDraw(); });
-      $("#" + divid).find('.treedraw_varexp')
-           .val("px:py")
-           .keyup(function(e){
-               if(e.keyCode == 13) player.PerformDraw();
-            });
-
-      $("#" + divid).find('.treedraw_more').click(function() {
-         $(this).remove();
-         $("#" + divid).find(".treedraw_buttons")
-         .append(" Cut:<input class='treedraw_cut' style='width:8em'></input>"+
-                 " Opt:<input class='treedraw_opt' style='width:5em'></input>"+
-                 " Num:<input class='treedraw_number' style='width:7em'></input>" +
-                 " First:<input class='treedraw_first' style='width:7em'></input>");
-
-         $("#" + divid +" .treedraw_opt").val("");
-         $("#" + divid +" .treedraw_number").val("").spinner({ numberFormat: "n", min: 0, page: 1000});
-         $("#" + divid +" .treedraw_first").val("").spinner({ numberFormat: "n", min: 0, page: 1000});
-      });
-
-      this.CheckResize();
-
-      this.SetDivId(divid);
-   }
-
-   JSROOT.TTreePlayer.prototype.PerformDraw = function() {
-
-      var frame = $("#" + this.divid);
-
-      var url = this.GetItemName() + '/exe.json.gz?compact=3&method=Draw';
-      var expr = frame.find('.treedraw_varexp').val();
-      var hname = "h_tree_draw";
-
-      var pos = expr.indexOf(">>");
-      if (pos<0) {
-         expr += ">>" + hname;
-      } else {
-         hname = expr.substr(pos+2);
-         if (hname[0]=='+') hname = hname.substr(1);
-         var pos2 = hname.indexOf("(");
-         if (pos2>0) hname = hname.substr(0, pos2);
-      }
-
-      if (frame.find('.treedraw_more').length==0) {
-         var cut = frame.find('.treedraw_cut').val();
-         var option = frame.find('.treedraw_opt').val();
-         var nentries = frame.find('.treedraw_number').val();
-         var firstentry = frame.find('.treedraw_first').val();
-
-         url += '&prototype="const char*,const char*,Option_t*,Long64_t,Long64_t"&varexp="' + expr + '"&selection="' + cut + '"';
-
-         // if any of optional arguments specified, specify all of them
-         if ((option!="") || (nentries!="") || (firstentry!="")) {
-            if (nentries=="") nentries = "1000000000";
-            if (firstentry=="") firstentry = "0";
-            url += '&option="' + option + '"&nentries=' + nentries + '&firstentry=' + firstentry;
-         }
-      } else {
-         url += '&prototype="Option_t*"&opt="' + expr + '"';
-      }
-      url += '&_ret_object_=' + hname;
-
-      var player = this;
-
-      var req = JSROOT.NewHttpRequest(url, 'object', function(res) {
-         if (res==0) return;
-         $("#"+player.drawid).empty();
-         player.hpainter = JSROOT.draw(player.drawid, res)
-      });
-      req.send();
-   }
-
-   JSROOT.TTreePlayer.prototype.CheckResize = function(force) {
-      $("#" + this.drawid).width($("#" + this.divid).width());
-      var h = $("#" + this.divid).height();
-      var h0 = $("#" + this.divid +" .treedraw_buttons").height();
-      if (h>h0+30) $("#" + this.drawid).height(h - 1 - h0);
-
-      if (this.hpainter) {
-         this.hpainter.CheckResize(force);
-      }
-   }
-
-   JSROOT.drawTreePlayer = function(hpainter, itemname) {
-      var mdi = hpainter.CreateDisplay();
-      if (mdi == null) return null;
-
-      var frame = mdi.FindFrame(itemname, true);
-      if (frame==null) return null;
-
-      var divid = frame.attr('id');
-
-      var player = new JSROOT.TTreePlayer(itemname);
-      player.Show(divid);
-      return player;
    }
 
    // =========== painter of hierarchical structures =================================
@@ -7365,288 +7200,12 @@
       req.send();
    }
 
-   JSROOT.HierarchyPainter.prototype.RefreshHtml = function(force) {
-      if (this.frameid == null) return;
-      var elem = $("#" + this.frameid);
-      if (elem.length == 0) return;
-
-      if (this.h == null) return elem.html("<h2>null</h2>");
-
-      var factcmds = this.FindFastCommands();
-
-      this['html'] = "";
-      if (factcmds) {
-         for (var n in factcmds)
-            this['html'] += "<button class='fast_command'> </button>";
-      }
-      this['html'] += "<p>";
-      this['html'] += "<a href='#open_all'>open all</a>";
-      this['html'] += "| <a href='#close_all'>close all</a>";
-      if ('_online' in this.h)
-         this['html'] += "| <a href='#reload'>reload</a>";
-      else
-         this['html'] += "<a/>";
-
-      if ('disp_kind' in this)
-         this['html'] += "| <a href='#clear'>clear</a>";
-      else
-         this['html'] += "<a/>";
-
-      this['html'] += "</p>";
-
-      this['html'] += '<div class="h_tree">';
-      this.addItemHtml(this.h, null);
-      this['html'] += '</div>';
-
-      var h = this;
-
-      var items = elem.html(this['html'])
-          .find(".h_item")
-          .click(function() { h.tree_click($(this)); });
-
-      if ('disp_kind' in h) {
-         if (JSROOT.gStyle.DragAndDrop)
-            items.draggable({ revert: "invalid", appendTo: "body", helper: "clone" });
-
-         if (JSROOT.gStyle.ContextMenu)
-            items.on('contextmenu', function(e) { h.tree_contextmenu($(this), e); });
-      }
-
-      elem.find(".plus_minus").click(function() { h.tree_click($(this),true); });
-
-      elem.find("a").first().click(function() { h.toggle(true); return false; })
-                    .next().click(function() { h.toggle(false); return false; })
-                    .next().click(function() { h.reload(); return false; })
-                    .next().click(function() { h.clear(false); return false; });
-
-      if (factcmds)
-         elem.find('.fast_command').each(function(index) {
-            if ('_icon' in factcmds[index])
-               $(this).text("").append('<img src="' + factcmds[index]['_icon'] + '"/>');
-            $(this).button()
-                   .attr("item", h.itemFullName(factcmds[index]))
-                   .attr("title", factcmds[index]._title)
-                   .click(function() { h.ExecuteCommand($(this).attr("item"), $(this)); });
-         });
-   }
-
-   JSROOT.HierarchyPainter.prototype.isLastSibling = function(hitem) {
-      if (!hitem || !hitem._parent || !hitem._parent._childs) return false;
-      var chlds = hitem._parent._childs;
-      var indx = chlds.indexOf(hitem);
-      if (indx<0) return false;
-      while (++indx < chlds.length)
-         if (!('_hidden' in chlds[indx])) return false;
-      return true;
-   }
-
-   JSROOT.HierarchyPainter.prototype.addItemHtml = function(hitem, parent) {
-      var isroot = (parent == null);
-      var has_childs = '_childs' in hitem;
-
-      if ('_hidden' in hitem) return;
-
-      var cando = this.CheckCanDo(hitem);
-
-      if (!isroot) hitem._parent = parent;
-
-      var can_click = false;
-
-      if (!has_childs || !cando.scan) {
-         if (cando.expand) {
-            can_click = true;
-            if (cando.img1.length == 0) {
-               cando.img1 = 'img_folder';
-               cando.img2 = 'img_folderopen';
-            }
-         } else
-         if (cando.display || cando.execute) {
-            can_click = true;
-         } else
-         if (cando.html.length > 0) can_click = true;
-      }
-
-      hitem['_img1'] = cando.img1;
-      hitem['_img2'] = cando.img2;
-      if (hitem['_img2']=="") hitem['_img2'] = hitem['_img1'];
-
-      // assign root icon
-      if (isroot && (hitem['_img1'].length==0))
-         hitem['_img1'] = hitem['_img2'] = "img_base";
-
-      // assign node icons
-
-      if (hitem['_img1'].length==0)
-         hitem['_img1'] = has_childs ? "img_folder" : "img_page";
-
-      if (hitem['_img2'].length==0)
-         hitem['_img2'] = has_childs ? "img_folderopen" : "img_page";
-
-      var itemname = this.itemFullName(hitem);
-
-      this['html'] += '<div item="' + itemname + '">';
-
-      // build indent
-      var sindent = "";
-      var prnt = isroot ? null : hitem._parent;
-      while ((prnt != null) && (prnt != this.h)) {
-         sindent = '<div class="' + (this.isLastSibling(prnt) ? "img_empty" : "img_line") + '"/>' + sindent;
-         prnt = prnt._parent;
-      }
-      this['html'] += sindent;
-
-      var icon_class = "", plusminus = false;
-
-      if (isroot) {
-         // for root node no extra code
-      } else
-      if (has_childs) {
-         icon_class = hitem._isopen ? "img_minus" : "img_plus";
-         plusminus = true;
-      } else {
-         icon_class = "img_join";
-      }
-
-      if (icon_class.length > 0) {
-         this['html'] += '<div class="' + icon_class;
-         if (this.isLastSibling(hitem)) this['html'] += "bottom";
-         if (plusminus) this['html'] += ' plus_minus" style="cursor:pointer';
-         this['html'] += '"/>';
-      }
-
-      // make node icons
-
-      var icon_name = hitem._isopen ? hitem._img2 : hitem._img1;
-
-      if (icon_name.indexOf("img_")==0)
-         this['html'] += '<div class="' + icon_name + '"/>';
-      else
-         this['html'] += '<img src="' + icon_name + '" alt="" style="vertical-align:top"/>';
-
-      this['html'] += '<a';
-      if (can_click || has_childs) this['html'] +=' class="h_item"';
-
-      var element_name = hitem._name;
-
-      if ('_realname' in hitem)
-         element_name = hitem._realname;
-
-      var element_title = "";
-      if ('_title' in hitem) element_title = hitem._title;
-
-      if ('_fullname' in hitem)
-         element_title += "  fullname: " + hitem['_fullname'];
-
-      if (element_title.length == 0) element_title = element_name;
-
-      this['html'] += ' title="' + element_title + '"';
-      this['html'] += '>' + element_name + '</a>';
-
-      if (has_childs && (isroot || hitem._isopen)) {
-         this['html'] += '<div class="h_childs">';
-         for (var i in hitem._childs)
-            this.addItemHtml(hitem._childs[i], hitem);
-         this['html'] += '</div>';
-      }
-
-      this['html'] += '</div>';
-   }
-
-   JSROOT.HierarchyPainter.prototype.tree_click = function(node, plusminus) {
-
-      var itemname = node.parent().attr('item');
-
-      if (itemname==null) return;
-
-      var hitem = this.Find(itemname);
-      if (hitem==null) return;
-
-      if (!plusminus) {
-         var cando = this.CheckCanDo(hitem);
-
-         if (cando.open && (cando.html.length>0))
-            return window.open(cando.html);
-
-         if (cando.expand && (hitem['_childs'] == null))
-            return this.expand(itemname, hitem, node.parent());
-
-         if (cando.display)
-            return this.display(itemname);
-
-         if (cando.execute)
-            return this.ExecuteCommand(itemname, node);
-
-         if (!('_childs' in hitem) || (hitem === this.h)) return;
-      }
-
-      if (hitem._isopen)
-         delete hitem._isopen;
-      else
-         hitem._isopen = true;
-
-      this.UpdateTreeNode(node.parent(), hitem);
-   }
-
-   JSROOT.HierarchyPainter.prototype.open = function(itemname) {
-      console.log("open() no longer available");
-   }
-
-   JSROOT.HierarchyPainter.prototype.UpdateTreeNode = function(node, hitem) {
-      var has_childs = '_childs' in hitem;
-
-      var newname = hitem._isopen ? hitem._img2 : hitem._img1;
-      var oldname = hitem._isopen ? hitem._img1 : hitem._img2;
-
-      var img = node.find("a").first().prev();
-
-      if (newname.indexOf("img_")<0) {
-         img.attr("src", newname);
-      } else {
-         if (newname!=oldname)
-            img.switchClass(oldname, newname);
-      }
-
-      img = img.prev();
-
-      var h = this;
-
-      var new_class = hitem._isopen ? "img_minus" : "img_plus";
-      if (this.isLastSibling(hitem)) new_class += "bottom";
-
-      if (img.hasClass("plus_minus")) {
-         img.attr('class', new_class + " plus_minus");
-      } else
-      if (has_childs) {
-         img.attr('class', new_class + " plus_minus");
-         img.css('cursor', 'pointer');
-         img.click(function() { h.tree_click($(this), true); });
-      }
-
-      var childs = node.children().last();
-      if (childs.hasClass("h_childs")) childs.remove();
-
-      var display_childs = has_childs && hitem._isopen;
-      if (!display_childs) return;
-
-      this['html'] = '<div class="h_childs">';
-      for (var i in hitem._childs)
-         this.addItemHtml(hitem._childs[i], hitem);
-      this['html'] += '</div>';
-      node.append(this['html']);
-      childs = node.children().last();
-
-      var items = childs.find(".h_item")
-                   .click(function() { h.tree_click($(this)); });
-
-      if ('disp_kind' in h) {
-         if (JSROOT.gStyle.DragAndDrop)
-            items.draggable({ revert: "invalid", appendTo: "body", helper: "clone" });
-
-         if (JSROOT.gStyle.ContextMenu)
-            items.on('contextmenu', function(e) { h.tree_contextmenu($(this), e); })
-      }
-
-      childs.find(".plus_minus").click(function() { h.tree_click($(this), true); });
+   JSROOT.HierarchyPainter.prototype.RefreshHtml = function(callback) {
+      if (this.frameid == null) return JSROOT.CallBack(callback);
+      var hpainter = this;
+      JSROOT.AssertPrerequisites('jq2d', function() {
+         hpainter.RefreshHtml(callback);
+      });
    }
 
    JSROOT.HierarchyPainter.prototype.toggle = function(status) {
@@ -7718,95 +7277,86 @@
    JSROOT.HierarchyPainter.prototype.player = function(itemname, option, call_back) {
       var item = this.Find(itemname);
 
-      var player_func = (item && ('_player' in item)) ?  JSROOT.findFunction(item._player) : null;
+      if (!item || !('_player' in item)) return JSROOT.CallBack(call_back, null);
 
-      var res = null;
+      var hpainter = this;
 
-      if (player_func && this.CreateDisplay())
-         res = player_func(this, itemname, option);
+      var prereq = ('_prereq' in item) ? item['_prereq'] : '';
 
-      JSROOT.CallBack(call_back, res);
+      JSROOT.AssertPrerequisites(prereq, function() {
+
+         var player_func = JSROOT.findFunction(item._player);
+         if (player_func == null) return JSROOT.CallBack(call_back, null);
+
+         hpainter.CreateDisplay(function(mdi) {
+            var res = null;
+            if (mdi) res = player_func(hpainter, itemname, option);
+            JSROOT.CallBack(call_back, res);
+         });
+      });
    }
 
    JSROOT.HierarchyPainter.prototype.display = function(itemname, drawopt, call_back) {
-
-      if (!this.CreateDisplay()) return JSROOT.CallBack(call_back, null, itemname);
-
       var h = this;
 
-      var mdi = h['disp'];
+      h.CreateDisplay(function(mdi) {
+         if (!mdi) return JSROOT.CallBack(call_back, null, itemname);
 
-      var updating = drawopt=="update";
+         var updating = (drawopt=="update");
 
-      var item = h.Find(itemname);
+         var item = h.Find(itemname);
 
-      if (item!=null) {
-         var cando = this.CheckCanDo(item);
-         if (!cando.display || ('_player' in item))
-            return this.player(itemname, drawopt, function() { JSROOT.CallBack(call_back, null, itemname); });
-      }
-
-      if (updating) {
-         if ((item==null) || ('_doing_update' in item)) return JSROOT.CallBack(call_back, null, itemname);
-         item['_doing_update'] = true;
-      }
-
-      h.get(itemname, function(item, obj) {
-
-         if (updating && item) delete item['_doing_update'];
-         if (obj==null) return JSROOT.CallBack(call_back, null, itemname);
-
-         var painter = null;
-
-         var pos = drawopt ? drawopt.indexOf("divid:") : -1;
-         if (pos>=0) {
-            var divid = drawopt.slice(pos+6);
-            drawopt = drawopt.slice(0, pos);
-            painter = h.draw(divid, obj, drawopt);
-         } else
-         mdi.ForEachPainter(function(p, frame) {
-            if (p.GetItemName() != itemname) return;
-            painter = p;
-            mdi.ActivateFrame(frame);
-            painter.RedrawObject(obj);
-         });
-
-         if (painter==null) {
-            if (updating) {
-               console.log("something went wrong - did not found painter when doing update of " + itemname);
-            } else {
-               var frame = mdi.FindFrame(itemname, true);
-               if (JSROOT.gStyle.DragAndDrop)
-                  frame.addClass("ui-state-default");
-               painter = h.draw(frame.attr("id"), obj, drawopt);
-
-               mdi.ActivateFrame(frame);
-
-               if (JSROOT.gStyle.DragAndDrop)
-                  frame.droppable({
-                     hoverClass : "ui-state-active",
-                     accept: function(ui) {
-                        var dropname = ui.parent().attr('item');
-                        if ((dropname == itemname) || (dropname==null)) return false;
-
-                        var ditem = h.Find(dropname);
-                        if ((ditem==null) || (!('_kind' in ditem))) return false;
-
-                        return ditem._kind.indexOf("ROOT.")==0;
-                     },
-                     drop: function(event, ui) {
-                        var dropname = ui.draggable.parent().attr('item');
-                        if (dropname==null) return false;
-                        return h.dropitem(dropname, frame.attr("id"));
-                     }
-                  }).removeClass('ui-state-default');
-            }
+         if (item!=null) {
+            var cando = h.CheckCanDo(item);
+            if (!cando.display || ('_player' in item))
+               return h.player(itemname, drawopt, function() { JSROOT.CallBack(call_back, null, itemname); });
          }
 
-         if (painter) painter.SetItemName(itemname); // mark painter as created from hierarchy
+         if (updating) {
+            if ((item==null) || ('_doing_update' in item)) return JSROOT.CallBack(call_back, null, itemname);
+            item['_doing_update'] = true;
+         }
 
-         JSROOT.CallBack(call_back, painter, itemname);
+         h.get(itemname, function(item, obj) {
+            if (updating && item) delete item['_doing_update'];
+            if (obj==null) return JSROOT.CallBack(call_back, null, itemname);
+
+            var painter = null;
+
+            var pos = drawopt ? drawopt.indexOf("divid:") : -1;
+            if (pos>=0) {
+               var divid = drawopt.slice(pos+6);
+               drawopt = drawopt.slice(0, pos);
+               painter = h.draw(divid, obj, drawopt);
+            } else {
+               mdi.ForEachPainter(function(p, frame) {
+                  if (p.GetItemName() != itemname) return;
+                  painter = p;
+                  mdi.ActivateFrame(frame);
+                  painter.RedrawObject(obj);
+               });
+            }
+
+            if (painter==null) {
+               if (updating) {
+                  console.log("something went wrong - did not found painter when doing update of " + itemname);
+               } else {
+                  var frame = mdi.FindFrame(itemname, true);
+                  painter = h.draw(d3.select(frame).attr("id"), obj, drawopt);
+                  mdi.ActivateFrame(frame);
+                  h.enable_dropping(frame, itemname);
+               }
+            }
+
+            if (painter) painter.SetItemName(itemname); // mark painter as created from hierarchy
+
+            JSROOT.CallBack(call_back, painter, itemname);
+         });
       });
+   }
+
+   JSROOT.HierarchyPainter.prototype.enable_dropping = function(frame, itemname) {
+      // here is not used - implemented with jquery
    }
 
    JSROOT.HierarchyPainter.prototype.dropitem = function(itemname, divid, call_back) {
@@ -7824,7 +7374,6 @@
 
       return true;
    }
-
 
    JSROOT.HierarchyPainter.prototype.updateAll = function() {
       // method can be used to fetch new objects and update all existing drawings
@@ -7856,71 +7405,72 @@
 
    JSROOT.HierarchyPainter.prototype.displayAll = function(items, options, call_back) {
 
-      if ((items == null) || (items.length == 0) ||!this.CreateDisplay())
-         return JSROOT.CallBack(call_back);
-
-      if (options == null) options = [];
-      while (options.length < items.length)
-         options.push("");
-
-      var mdi = this['disp'];
-
-      var dropitems = new Array(items.length);
-
-      // First of all check that items are exists, look for cycle extension
-      for (var i in items) {
-         dropitems[i] = null;
-         if (this.Find(items[i])) continue;
-         if (this.Find(items[i] + ";1")) { items[i] += ";1"; continue; }
-
-         var pos = items[i].indexOf("+");
-         if (pos>0) {
-            dropitems[i] = items[i].split("+");
-            items[i] = dropitems[i].shift();
-            // allow to specify _same_ item in different file
-            for (var j in dropitems[i]) {
-               var pos = dropitems[i][j].indexOf("_same_");
-               if ((pos>0) && (this.Find(dropitems[i][j])==null))
-                  dropitems[i][j] = dropitems[i][j].substr(0,pos) + items[i].substr(pos);
-            }
-         }
-
-         // also check if subsequent items has _same_, than use name from first item
-         var pos = items[i].indexOf("_same_");
-         if ((pos>0) && !this.Find(items[i]) && (i>0))
-            items[i] = items[i].substr(0,pos) + items[0].substr(pos);
-      }
-
-      // Than create empty frames for each item
-      for (var i in items)
-         if (options[i]!='update')
-            mdi.CreateFrame(items[i]);
+      if ((items == null) || (items.length == 0)) return JSROOT.CallBack(call_back);
 
       var h = this;
 
-      // We start display of all items parallel
-      for (var i in items)
-         this.display(items[i], options[i], function(painter, itemname) {
-            // one cannot use index i in callback - it is asynchron
-            var indx = items.indexOf(itemname);
-            if (indx<0) return console.log('did not found item ' + itemname);
+      h.CreateDisplay(function(mdi) {
+         if (!mdi) return JSROOT.CallBack(call_back);
 
-            items[indx] = "---"; // mark item as ready
+         if (options == null) options = [];
+         while (options.length < items.length)
+            options.push("");
 
-            function DropNextItem() {
-               if ((painter!=null) && (dropitems[indx]!=null) && (dropitems[indx].length>0))
-                  return h.dropitem(dropitems[indx].shift(), painter.divid, DropNextItem);
+         var dropitems = new Array(items.length);
 
-               var isany = false;
-               for (var cnt in items)
-                  if (items[cnt]!='---') isany = true;
+         // First of all check that items are exists, look for cycle extension
+         for (var i in items) {
+            dropitems[i] = null;
+            if (h.Find(items[i])) continue;
+            if (h.Find(items[i] + ";1")) { items[i] += ";1"; continue; }
 
-               // only when items drawn and all sub-items dropped, one could perform call-back
-               if (!isany) JSROOT.CallBack(call_back);
+            var pos = items[i].indexOf("+");
+            if (pos>0) {
+               dropitems[i] = items[i].split("+");
+               items[i] = dropitems[i].shift();
+               // allow to specify _same_ item in different file
+               for (var j in dropitems[i]) {
+                  var pos = dropitems[i][j].indexOf("_same_");
+                  if ((pos>0) && (h.Find(dropitems[i][j])==null))
+                     dropitems[i][j] = dropitems[i][j].substr(0,pos) + items[i].substr(pos);
+               }
             }
 
-            DropNextItem();
-         });
+            // also check if subsequent items has _same_, than use name from first item
+            var pos = items[i].indexOf("_same_");
+            if ((pos>0) && !h.Find(items[i]) && (i>0))
+               items[i] = items[i].substr(0,pos) + items[0].substr(pos);
+         }
+
+         // Than create empty frames for each item
+         for (var i in items)
+            if (options[i]!='update')
+               mdi.CreateFrame(items[i]);
+
+         // We start display of all items parallel
+         for (var i in items)
+            h.display(items[i], options[i], function(painter, itemname) {
+               // one cannot use index i in callback - it is asynchron
+               var indx = items.indexOf(itemname);
+               if (indx<0) return console.log('did not found item ' + itemname);
+
+               items[indx] = "---"; // mark item as ready
+
+               function DropNextItem() {
+                  if ((painter!=null) && (dropitems[indx]!=null) && (dropitems[indx].length>0))
+                     return h.dropitem(dropitems[indx].shift(), painter.divid, DropNextItem);
+
+                  var isany = false;
+                  for (var cnt in items)
+                     if (items[cnt]!='---') isany = true;
+
+                  // only when items drawn and all sub-items dropped, one could perform call-back
+                  if (!isany) JSROOT.CallBack(call_back);
+               }
+
+               DropNextItem();
+            });
+      });
    }
 
    JSROOT.HierarchyPainter.prototype.reload = function() {
@@ -7928,38 +7478,8 @@
          this.OpenOnline(this.h['_online']);
    }
 
-   JSROOT.HierarchyPainter.prototype.expand = function(itemname, item0, node) {
-      var painter = this;
-
-      if (node==null)
-         node = $("#" + this.frameid).find("[item='" + itemname + "']");
-
-      if (node.length==0)
-         return console.log("Did not found node with item = " + itemname);
-
-      if (item0==null) item0 = this.Find(itemname);
-      if (item0==null) return;
-      item0['_doing_expand'] = true;
-
-      this.get(itemname, function(item, obj) {
-         delete item0['_doing_expand'];
-         if ((item == null) || (obj == null)) return;
-
-         var curr = item;
-         while (curr != null) {
-            if (('_expand' in curr) && (typeof (curr['_expand']) == 'function')) {
-                if (curr['_expand'](item, obj)) {
-                   var itemname = painter.itemFullName(item);
-                   node.attr('item', itemname);
-                   node.find("a").text(item._name);
-                   item._isopen = true;
-                   painter.UpdateTreeNode(node, item);
-                }
-                return;
-            }
-            curr = ('_parent' in curr) ? curr['_parent'] : null;
-         }
-      });
+   JSROOT.HierarchyPainter.prototype.expand = function(itemname) {
+      alert('expand ' + itemname + ' can be used only jquery part loaded');
    }
 
    JSROOT.HierarchyPainter.prototype.GetTopOnlineItem = function() {
@@ -8006,9 +7526,7 @@
                pthis.h = { _name: topname, _kind: 'JSROOT.TopFolder', _childs : [h0, h1] };
             }
 
-            pthis.RefreshHtml();
-
-            JSROOT.CallBack(call_back);
+            pthis.RefreshHtml(call_back);
          });
       });
    }
@@ -8054,7 +7572,7 @@
             req  = 'h.json?compact=3';
          } else
          if (item._kind.indexOf("ROOT.")!=0)
-            req = 'get.json?compact=3';
+            req = 'get.json.gz?compact=3';
       }
 
       if (url.length > 0) url += "/";
@@ -8100,10 +7618,9 @@
          }
 
          painter.CompleteOnline(function() {
-            if (painter.h != null)
-               painter.RefreshHtml(true);
-
-            JSROOT.CallBack(user_callback, painter);
+            painter.RefreshHtml(function() {
+               JSROOT.CallBack(user_callback, painter);
+            });
          });
       }
 
@@ -8213,143 +7730,152 @@
       return this['_monitoring_on'];
    }
 
-   JSROOT.HierarchyPainter.prototype.tree_contextmenu = function(node, event) {
-      event.preventDefault();
-
-      var itemname = node.parent().attr('item');
-
-      var hitem = this.Find(itemname);
-      if (hitem==null) return;
-
-      var cando = this.CheckCanDo(hitem);
-
-      // if (!cando.display && !cando.ctxt && (itemname!="")) return;
-
-      var onlineprop = this.GetOnlineProp(itemname);
-      var fileprop = this.GetFileProp(itemname);
-
-      var menu = JSROOT.createMenu();
-
-      function qualifyURL(url) {
-         function escapeHTML(s) {
-            return s.split('&').join('&amp;').split('<').join('&lt;').split('"').join('&quot;');
-         }
-         var el = document.createElement('div');
-         el.innerHTML = '<a href="' + escapeHTML(url) + '">x</a>';
-         return el.firstChild.href;
-      }
-
-      var painter = this;
-
-      if (itemname == "") {
-         var addr = "", cnt = 0;
-         function separ() { return cnt++ > 0 ? "&" : "?"; }
-
-         var files = [];
-         this.ForEachRootFile(function(item) { files.push(item._file.fFullURL); });
-
-         if (this.GetTopOnlineItem()==null)
-            addr = JSROOT.source_dir + "index.htm";
-
-         if (this.IsMonitoring())
-            addr += separ() + "monitoring=" + this.MonitoringInterval();
-
-         if (files.length==1)
-            addr += separ() + "file=" + files[0];
-         else
-         if (files.length>1)
-            addr += separ() + "files=" + JSON.stringify(files);
-
-         if (this['disp_kind'])
-            addr += separ() + "layout=" + this['disp_kind'].replace(/ /g, "");
-
-         var items = [];
-
-         if (this['disp'] != null)
-            this['disp'].ForEachPainter(function(painter) {
-               if (painter.GetItemName()!=null)
-                  items.push(painter.GetItemName());
-            });
-
-         if (items.length == 1) {
-            addr += separ() + "item=" + items[0];
-         } else if (items.length > 1) {
-            addr += separ() + "items=" + JSON.stringify(items);
-         }
-
-         menu.add("Direct link", function() { window.open(addr); });
-         menu.add("Only items", function() { window.open(addr + "&nobrowser"); });
-      } else
-      if (onlineprop != null) {
-         this.FillOnlineMenu(menu, onlineprop, itemname);
-      } else
-      if (fileprop != null) {
-
-         var opts = JSROOT.getDrawOptions(cando.typename, 'nosame');
-
-         menu.addDrawMenu("Draw", opts, function(arg) { painter.display(itemname, arg); });
-
-         var filepath = qualifyURL(fileprop.fileurl);
-         if (filepath.indexOf(JSROOT.source_dir) == 0)
-            filepath = filepath.slice(JSROOT.source_dir.length);
-
-         menu.addDrawMenu("Draw in new window", opts, function(arg) {
-            window.open(JSROOT.source_dir + "index.htm?nobrowser&file=" + filepath + "&item=" + fileprop.itemname+"&opt="+arg);
-         });
-      }
-
-      if (menu.size()>0) {
-         menu['tree_node'] = node;
-         menu.add("Close");
-         menu.show(event);
-      }
-
-      return false;
-   }
-
    JSROOT.HierarchyPainter.prototype.SetDisplay = function(kind, frameid) {
       this['disp_kind'] = kind;
       this['disp_frameid'] = frameid;
    }
 
    JSROOT.HierarchyPainter.prototype.clear = function(withbrowser) {
-      if ('disp' in this)
+      if ('disp' in this) {
          this['disp'].Reset();
+         delete this['disp'];
+      }
 
       if (withbrowser) {
-         delete this['disp'];
-         $("#" + this.frameid).empty();
+         d3.select("#" + this.frameid).html("");
          delete this.h;
       }
    }
 
-   JSROOT.HierarchyPainter.prototype.CreateDisplay = function(force) {
+   JSROOT.HierarchyPainter.prototype.GetDisplay = function() {
+      return ('disp' in this) ? this['disp'] : null;
+   }
+
+   JSROOT.HierarchyPainter.prototype.CreateDisplay = function(callback) {
+
+      var h = this;
+
       if ('disp' in this) {
-         if (!force && this['disp'].NumDraw() > 0) return this['disp'];
-         this['disp'].Reset();
-         delete this['disp'];
+         if (h['disp'].NumDraw() > 0) return JSROOT.CallBack(callback, h['disp']);
+         h['disp'].Reset();
+         delete h['disp'];
       }
 
       // check that we can found frame where drawing should be done
-      if (document.getElementById(this['disp_frameid']) == null) return null;
+      if (document.getElementById(this['disp_frameid']) == null)
+         return JSROOT.CallBack(callback, null);
 
-      if (this['disp_kind'] == "tabs")
-         this['disp'] = new JSROOT.TabsDisplay(this['disp_frameid']);
+      if (h['disp_kind'] == "simple")
+         h['disp'] = new JSROOT.SimpleDisplay(h['disp_frameid']);
       else
-      if (this['disp_kind'].search("grid") == 0)
-         this['disp'] = new JSROOT.GridDisplay(this['disp_frameid'], this['disp_kind']);
-      else
-      if (this['disp_kind'] == "simple")
-         this['disp'] = new JSROOT.SimpleDisplay(this['disp_frameid']);
-      else
-         this['disp'] = new JSROOT.CollapsibleDisplay(this['disp_frameid']);
+      if (h['disp_kind'].search("grid") == 0)
+         h['disp'] = new JSROOT.GridDisplay(h['disp_frameid'], h['disp_kind']);
 
-      return this['disp'];
+      if (h['disp'] != null)
+         JSROOT.CallBack(callback, h['disp']);
+      else
+         JSROOT.AssertPrerequisites('jq2d', function() {
+            h.CreateDisplay(callback);
+         });
    }
 
    JSROOT.HierarchyPainter.prototype.CheckResize = function(force) {
       if ('disp' in this)
          this['disp'].CheckResize();
+   }
+
+   JSROOT.HierarchyPainter.prototype.StartGUI = function(h0, call_back) {
+      var hpainter = this;
+      var filesarr = JSROOT.GetUrlOptionAsArray("file;files");
+      var filesdir = JSROOT.GetUrlOption("path");
+      if (filesdir!=null)
+         for (var i in filesarr) filesarr[i] = filesdir + filesarr[i];
+
+      var itemsarr = JSROOT.GetUrlOptionAsArray("item;items");
+
+      var optionsarr = JSROOT.GetUrlOptionAsArray("opt;opts");
+
+      var monitor = JSROOT.GetUrlOption("monitoring");
+
+      var layout = JSROOT.GetUrlOption("layout");
+      if (!this['disp_kind'] || (layout!=null))
+         this['disp_kind'] = (layout && layout.length>0) ? layout : 'simple';
+
+      if (JSROOT.GetUrlOption('files_monitoring')!=null) this.files_monitoring = true;
+
+      JSROOT.RegisterForResize(this);
+
+      this.SetMonitoring(monitor);
+
+      function OpenAllFiles() {
+         if (filesarr.length>0)
+            hpainter.OpenRootFile(filesarr.shift(), OpenAllFiles);
+         else
+            hpainter.displayAll(itemsarr, optionsarr, function() {
+               hpainter.RefreshHtml();
+
+               JSROOT.RegisterForResize(hpainter);
+
+               setInterval(function() { if (hpainter.IsMonitoring()) hpainter.updateAll(); }, hpainter.MonitoringInterval());
+
+               JSROOT.CallBack(call_back);
+            });
+      }
+
+      function AfterOnlineOpened() {
+         // check if server enables monitoring
+         if (('_monitoring' in hpainter.h) && (monitor==null)) {
+            hpainter.SetMonitoring(hpainter.h._monitoring);
+         }
+
+         if (('_layout' in hpainter.h) && (layout==null)) {
+            hpainter['disp_kind'] = hpainter.h._layout;
+         }
+
+         if (('_loadfile' in hpainter.h) && (filesarr.length==0)) {
+            filesarr = JSROOT.ParseAsArray(hpainter.h._loadfile);
+         }
+
+         if (('_drawitem' in hpainter.h) && (itemsarr.length==0)) {
+            itemsarr = JSROOT.ParseAsArray(hpainter.h._drawitem);
+            optionsarr = JSROOT.ParseAsArray(hpainter.h['_drawopt']);
+         }
+
+         OpenAllFiles();
+      }
+
+      if (h0!=null) hpainter.OpenOnline(h0, AfterOnlineOpened);
+               else OpenAllFiles();
+   }
+
+   JSROOT.BuildNobrowserGUI = function() {
+      var myDiv = d3.select('#simpleGUI');
+      var online = false;
+
+      if (myDiv.empty()) {
+         myDiv = d3.select('#onlineGUI');
+         if (myDiv.empty()) return alert('no div for simple nobrowser gui found');
+         online = true;
+      }
+
+      JSROOT.Painter.readStyleFromURL();
+
+      d3.select('html').style('height','100%');
+      d3.select('body').style({ 'min-height':'100%', 'margin':'0px', "overflow": "hidden"});
+
+      myDiv.style({"position":"absolute", "left":"1px", "top" :"1px", "bottom" :"1px", "right": "1px"});
+
+      var hpainter = new JSROOT.HierarchyPainter('root', null);
+      hpainter.SetDisplay('simple', myDiv.attr('id'));
+
+      var h0 = null;
+      if (online) {
+         var func = JSROOT.findFunction('GetCachedHierarchy');
+         if (typeof func == 'function') h0 = func();
+         if (typeof h0 != 'object') h0 = "";
+      }
+
+      hpainter.StartGUI(h0, function() {});
    }
 
    // ================================================================
@@ -8358,10 +7884,11 @@
 
    JSROOT.MDIDisplay = function(frameid) {
       this.frameid = frameid;
+      d3.select("#"+this.frameid).property('mdi', this);
    }
 
    JSROOT.MDIDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
-      // method dedicated to iterate over existing panles
+      // method dedicated to iterate over existing panels
       // provided userfunc is called with arguemnts (frame)
 
       alert("ForEachFrame not implemented");
@@ -8373,7 +7900,7 @@
 
       this.ForEachFrame(function(frame) {
          var dummy = new JSROOT.TObjectPainter();
-         dummy.SetDivId($(frame).attr('id'), -1);
+         dummy.SetDivId(d3.select(frame).attr('id'), -1);
          dummy.ForEachPainter(function(painter) { userfunc(painter, frame); });
       }, only_visible);
    }
@@ -8388,7 +7915,7 @@
       var found_frame = null;
 
       this.ForEachFrame(function(frame) {
-         if (frame.prop('title') == searchtitle)
+         if (d3.select(frame).attr('title') == searchtitle)
             found_frame = frame;
       });
 
@@ -8422,23 +7949,20 @@
             painter.Clenaup();
       });
 
-      document.getElementById(this.frameid).innerHTML = '';
+      d3.select("#"+this.frameid).html('').property('mdi', null);
    }
 
    JSROOT.MDIDisplay.prototype.Draw = function(title, obj, drawopt) {
       // draw object with specified options
       if (!obj) return;
 
-      var frame = this.FindFrame(title);
-
       if (!JSROOT.canDraw(obj['_typename'], drawopt)) return;
 
-      if (frame == null)
-         frame = this.CreateFrame(title);
+      var frame = this.FindFrame(title, true);
 
       this.ActivateFrame(frame);
 
-      return JSROOT.redraw($(frame).attr("id"), obj, drawopt);
+      return JSROOT.redraw(d3.select(frame).attr("id"), obj, drawopt);
    }
 
 
@@ -8451,169 +7975,22 @@
    JSROOT.SimpleDisplay.prototype = Object.create(JSROOT.MDIDisplay.prototype);
 
    JSROOT.SimpleDisplay.prototype.ForEachFrame = function(userfunc,  only_visible) {
-      if (typeof userfunc != 'function') return;
-      if ($("#"+this.frameid).prop('title')!='')
-         userfunc($("#"+this.frameid));
+      var node = d3.select("#"+this.frameid);
+      if (!node.empty() && node.property('title') != '')
+         JSROOT.CallBack(userfunc, node.node());
    }
 
    JSROOT.SimpleDisplay.prototype.CreateFrame = function(title) {
-      return $("#"+this.frameid).empty().prop('title', title);
+      return d3.select("#"+this.frameid).html("").property('title', title).node();
    }
 
    JSROOT.SimpleDisplay.prototype.Reset = function() {
       JSROOT.MDIDisplay.prototype.Reset.call(this);
       // try to remove different properties from the div
-      $("#"+this.frameid).prop('title','').css('background','')
-                         .removeClass('ui-droppable ui-state-default');
-   }
-
-   // ==================================================
-
-   JSROOT.CollapsibleDisplay = function(frameid) {
-      JSROOT.MDIDisplay.call(this, frameid);
-      this.cnt = 0; // use to count newly created frames
-   }
-
-   JSROOT.CollapsibleDisplay.prototype = Object.create(JSROOT.MDIDisplay.prototype);
-
-   JSROOT.CollapsibleDisplay.prototype.ForEachFrame = function(userfunc,  only_visible) {
-      var topid = this.frameid + '_collapsible';
-
-      if (document.getElementById(topid) == null) return;
-
-      if (typeof userfunc != 'function') return;
-
-      $('#' + topid + ' .collapsible_draw').each(function() {
-
-         // check if only visible specified
-         if (only_visible && $(this).is(":hidden")) return;
-
-         userfunc($(this));
-      });
-   }
-
-   JSROOT.CollapsibleDisplay.prototype.ActivateFrame = function(frame) {
-      if ($(frame).is(":hidden")) {
-         $(frame).prev().toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
-                 .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end()
-                 .next().toggleClass("ui-accordion-content-active").slideDown(0);
-      }
-      $(frame).prev()[0].scrollIntoView();
-   }
-
-   JSROOT.CollapsibleDisplay.prototype.CreateFrame = function(title) {
-
-      var topid = this.frameid + '_collapsible';
-
-      if (document.getElementById(topid) == null)
-         $("#right-div").append('<div id="'+ topid  + '" class="ui-accordion ui-accordion-icons ui-widget ui-helper-reset" style="overflow:auto; overflow-y:scroll; height:100%; padding-left: 2px; padding-right: 2px"></div>');
-
-      var hid = topid + "_sub" + this.cnt++;
-      var uid = hid + "h";
-
-      var entryInfo = "<h5 id=\"" + uid + "\"><a> " + title + "</a>&nbsp; </h5>\n";
-      entryInfo += "<div class='collapsible_draw' id='" + hid + "'></div>\n";
-      $("#" + topid).append(entryInfo);
-
-      $('#' + uid)
-            .addClass("ui-accordion-header ui-helper-reset ui-state-default ui-corner-top ui-corner-bottom")
-            .hover(function() { $(this).toggleClass("ui-state-hover"); })
-            .prepend('<span class="ui-icon ui-icon-triangle-1-e"></span>')
-            .append('<button type="button" class="closeButton" title="close canvas" '+
-                    'onclick="javascript: $(this).parent().next().andSelf().remove();">'+
-                    '<img class="img_remove" src="" alt=""/></button>')
-            .click( function() {
-                     $(this).toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
-                           .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s")
-                           .end().next().toggleClass("ui-accordion-content-active").slideToggle(0);
-                     return false;
-                  })
-            .next()
-            .addClass("ui-accordion-content  ui-helper-reset ui-widget-content ui-corner-bottom")
-            .hide();
-
-      $('#' + uid)
-            .toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
-            .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end().next()
-            .toggleClass("ui-accordion-content-active").slideToggle(0);
-
-      // $('#'+uid)[0].scrollIntoView();
-
-      $("#" + hid).prop('title', title);
-
-      return $("#" + hid);
-   }
-
-   // ================================================
-
-   JSROOT.TabsDisplay = function(frameid) {
-      JSROOT.MDIDisplay.call(this, frameid);
-      this.cnt = 0;
-   }
-
-   JSROOT.TabsDisplay.prototype = Object.create(JSROOT.MDIDisplay.prototype);
-
-   JSROOT.TabsDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
-      var topid = this.frameid + '_tabs';
-
-      if (document.getElementById(topid) == null) return;
-
-      if (typeof userfunc != 'function') return;
-
-      var cnt = -1;
-      var active = $('#' + topid).tabs("option", "active");
-
-      $('#' + topid + ' .tabs_draw').each(function() {
-         // check if only_visible specified
-         if (only_visible && (cnt++ != active)) return;
-
-         userfunc($(this));
-      });
-   }
-
-   JSROOT.TabsDisplay.prototype.ActivateFrame = function(frame) {
-      var cnt = 0, id = -1;
-      this.ForEachFrame(function(fr) {
-         if ($(fr).attr('id') == frame.attr('id'))  id = cnt;
-         cnt++;
-      });
-
-      $('#' + this.frameid + "_tabs").tabs("option", "active", id);
-   }
-
-   JSROOT.TabsDisplay.prototype.CreateFrame = function(title) {
-      var topid = this.frameid + '_tabs';
-
-      var hid = topid + "_sub" + this.cnt++;
-
-      var li = '<li><a href="#' + hid + '">' + title
-            + '</a><span class="ui-icon ui-icon-close" role="presentation">Remove Tab</span></li>';
-      var cont = '<div class="tabs_draw" id="' + hid + '"></div>';
-
-      if (document.getElementById(topid) == null) {
-         $("#" + this.frameid).append('<div id="' + topid + '">' + ' <ul>' + li + ' </ul>' + cont + '</div>');
-
-         var tabs = $("#" + topid)
-                       .css('overflow','hidden')
-                       .tabs({ heightStyle : "fill" });
-
-         tabs.delegate("span.ui-icon-close", "click", function() {
-            var panelId = $(this).closest("li").remove().attr("aria-controls");
-            $("#" + panelId).remove();
-            tabs.tabs("refresh");
-         });
-      } else {
-
-         // var tabs = $("#tabs").tabs();
-
-         $("#" + topid).find(".ui-tabs-nav").append(li);
-         $("#" + topid).append(cont);
-         $("#" + topid).tabs("refresh");
-         $("#" + topid).tabs("option", "active", -1);
-      }
-      $('#' + hid).empty();
-      $('#' + hid).prop('title', title);
-      return $('#' + hid);
+      d3.select("#"+this.frameid)
+              .property('title','')
+              .style('background','')
+              .classed({'ui-droppable':false, 'ui-state-default':false});
    }
 
    // ================================================
@@ -8641,16 +8018,12 @@
             sizey = sizex;
          }
 
-         if (sizex == NaN)
-            sizex = 3;
-         if (sizey == NaN)
-            sizey = 3;
+         if (sizex == NaN) sizex = 3;
+         if (sizey == NaN) sizey = 3;
       }
 
-      if (!sizex)
-         sizex = 3;
-      if (!sizey)
-         sizey = sizex;
+      if (!sizex) sizex = 3;
+      if (!sizey) sizey = sizex;
       this.sizex = sizex;
       this.sizey = sizey;
    }
@@ -8658,44 +8031,29 @@
    JSROOT.GridDisplay.prototype = Object.create(JSROOT.MDIDisplay.prototype);
 
    JSROOT.GridDisplay.prototype.IsSingle = function() {
-      return (this.sizex <= 1) && (this.sizey <= 1);
+      return (this.sizex == 1) && (this.sizey == 1);
    }
 
    JSROOT.GridDisplay.prototype.ForEachFrame = function(userfunc, only_visible) {
-      if (typeof userfunc != 'function') return;
-
-      if (this.IsSingle()) {
-         var elem = $("#"+this.frameid);
-         if (elem.prop('title')!=null)
-            userfunc(elem);
-         return;
-      }
-
-      var topid = this.frameid + '_grid';
-
-      if (document.getElementById(topid) == null) return;
-
       for (var cnt = 0; cnt < this.sizex * this.sizey; cnt++) {
+         var elem = this.IsSingle() ? d3.select("#"+this.frameid) : d3.select("#" + this.frameid + "_grid_" + cnt);
 
-         var elem = $( "#" + topid + "_" + cnt);
-
-         if (elem.prop('title')!="")
-            userfunc(elem);
+         if (!elem.empty() && elem.property('title') != '')
+            JSROOT.CallBack(userfunc, elem.node());
       }
    }
 
    JSROOT.GridDisplay.prototype.CreateFrame = function(title) {
 
-      var hid = this.frameid;
+      var main = d3.select("#" + this.frameid);
+      if (main.empty()) return null;
 
       if (!this.IsSingle()) {
          var topid = this.frameid + '_grid';
-         if (document.getElementById(topid) == null) {
-
-            var main = $("#" + this.frameid);
-
-            var h = Math.floor(main.height() / this.sizey) - 1;
-            var w = Math.floor(main.width() / this.sizex) - 1;
+         if (d3.select("#" + topid).empty()) {
+            var rect = main.node().getBoundingClientRect();
+            var h = Math.floor(rect.height / this.sizey) - 1;
+            var w = Math.floor(rect.width / this.sizex) - 1;
 
             var content = "<div style='width:100%; height:100%; margin:0; padding:0; border:0; overflow:hidden'>";
                content += "<table id='" + topid + "' style='width:100%; height:100%; table-layout:fixed; border-collapse: collapse;'>";
@@ -8703,78 +8061,43 @@
             for (var i = 0; i < this.sizey; i++) {
                content += "<tr>";
                for (var j = 0; j < this.sizex; j++)
-                  content += "<td><div id='" + topid + "_" + cnt++ + "'></div></td>";
+                  content += "<td><div id='" + topid + "_" + cnt++ + "' class='grid_cell'></div></td>";
                content += "</tr>";
             }
             content += "</table></div>";
 
-            main.empty();
-            main.append(content);
-
-            main.find("[id^=" + this.frameid + "_grid_]").width(w).height(h);
-//              .droppable({ accepted: ".h_item", drop: function(event, ui) { console.log("drop!"); } });
+            main.html(content);
+            main.selectAll('.grid_cell').style({ 'width':  w + 'px', 'height': h + 'px'});
          }
 
-         hid = topid + "_" + this.cnt;
+         main = d3.select( "#" + topid + "_" + this.cnt);
          if (++this.cnt >= this.sizex * this.sizey) this.cnt = 0;
       }
 
-      $("#" + hid).empty();
-      $("#" + hid).prop('title', title);
-
-      return $('#' + hid);
+      return main.html("").property('title', title).node();
    }
 
    JSROOT.GridDisplay.prototype.Reset = function() {
       JSROOT.MDIDisplay.prototype.Reset.call(this);
       if (this.IsSingle())
-         $("#" + this.frameid).prop('title', null);
+         d3.select("#" + this.frameid).property('title', null);
       this.cnt = 0;
    }
 
    JSROOT.GridDisplay.prototype.CheckResize = function() {
 
-      var main = $("#" + this.frameid);
-
-      var h = Math.floor(main.height() / this.sizey) - 1;
-      var w = Math.floor(main.width() / this.sizex) - 1;
-
-      main.find("[id^=" + this.frameid + "_grid_]").height(h).width(w);
+      if (!this.IsSingle()) {
+         var main = d3.select("#" + this.frameid);
+         var rect = main.node().getBoundingClientRect();
+         var h = Math.floor(rect.height / this.sizey) - 1;
+         var w = Math.floor(rect.width / this.sizex) - 1;
+         main.selectAll('.grid_cell').style({ 'width':  w + 'px', 'height': h + 'px'});
+      }
 
       JSROOT.MDIDisplay.prototype.CheckResize.call(this);
    }
 
    // =========================================================================
-
-   JSROOT.ConfigureVSeparator = function(handle, leftdiv, separdiv, rightdiv) {
-      if (!leftdiv) leftdiv = "left-div";
-      if (!separdiv) separdiv = "separator-div";
-      if (!rightdiv) rightdiv = "right-div";
-
-      function adjustSize(left, firsttime) {
-         var diff = $("#"+leftdiv).outerWidth() - $("#"+leftdiv).width();
-         var w = JSROOT.touches ? 10 : 4;
-
-         $("#"+separdiv).css('left', left.toString() + "px").width(w);
-         $("#"+leftdiv).width(left-diff-1);
-         $("#"+rightdiv).css('left',(left+w).toString() + "px");
-         if (firsttime || (handle==null)) return;
-
-         if (typeof handle == 'function') handle(); else
-         if ((typeof handle == 'object') && (typeof handle['CheckResize'] == 'function')) handle.CheckResize();
-      }
-
-      $("#"+separdiv).draggable({
-         axis: "x" , zIndex: 100, cursor: "ew-resize",
-         helper : function() { return $("#"+separdiv).clone().css('background-color','grey'); },
-         stop: function(event,ui) { event.stopPropagation(); adjustSize(ui.position.left, false); }
-      });
-
-      var w0 = Math.round($(window).width() * 0.2);
-      if (w0<300) w0 = Math.min(300, Math.round($(window).width() * 0.5));
-
-      adjustSize(w0, true);
-   }
 
    JSROOT.RegisterForResize = function(handle, delay) {
       // function used to react on browser window resize event
@@ -8803,7 +8126,26 @@
 
          document.body.style.cursor = 'wait';
          if (typeof handle == 'function') handle(); else
-         if ((typeof handle == 'object') && (typeof handle['CheckResize'] == 'function')) handle.CheckResize();
+         if ((typeof handle == 'object') && (typeof handle['CheckResize'] == 'function')) handle.CheckResize(); else
+         if (typeof handle == 'string') {
+            var node = d3.select('#'+handle);
+            if (!node.empty()) {
+               var mdi = node.property('mdi');
+               if (mdi) {
+                  mdi.CheckResize();
+               } else {
+                  var dummy = new JSROOT.TObjectPainter();
+                  var first = true;
+                  dummy.SetDivId(handle, -1);
+                  dummy.ForEachPainter(function(painter) {
+                     if (first && (typeof painter['CheckResize'] == 'function')) {
+                        first = false;
+                        painter.CheckResize();
+                     }
+                  });
+               }
+            }
+         }
          document.body.style.cursor = 'auto';
       }
 
@@ -8926,7 +8268,7 @@
       if (obj==null) return;
 
       var can = d3.select("#" + divid + " .root_canvas");
-      var can_painter = can.node() ? can.node()['pad_painter'] : null;
+      var can_painter = can.empty() ? null : can.property('pad_painter');
 
       if (can_painter != null) {
          if (obj._typename=="TCanvas") {
@@ -8948,7 +8290,7 @@
       if (can_painter)
           console.log("Cannot find painter to update object of type " + obj._typename);
 
-      $("#"+divid).empty();
+      d3.select("#"+divid).html("");
       return JSROOT.draw(divid, obj, opt);
    }
 

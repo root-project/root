@@ -1,7 +1,16 @@
 # JSROOT changelog {#jsroot_changes}
 
-This is further development of JSRootIO project of Bertrand Bellenot. 
-Many old problems and errors are fixed, new functions are provided.  
+This is further development of JSRootIO project of Bertrand Bellenot.
+Many old problems and errors are fixed, new functions are provided.
+
+## Changes in v 3.4
+1. Support usage of minimized versions of .js and .css files.
+   Minimized scripts used by default on web servers.
+2. Implement JSROOT.extend instead of jQuery.extend, reduce
+   usage of jquery.js in core JSROOT classes
+3. Implement main graphics without jquery at all,
+   such mode used in `nobrowser` mode.
+
 
 ## Changes in v 3.3
 1. Use d3.time.scale for display of time scales
@@ -21,16 +30,16 @@ Many old problems and errors are fixed, new functions are provided.
     similar items from different files. Could be used in URL like:
       `...&files=[file1.root,file2.root]&items=[file1.root/hpx, file2.root/_same_]`
       `...&files=[file1.root,file2.root]&item=file1.root/hpx+file2.root/_same_`
-    Main limitation - file names should have similar length.   
+    Main limitation - file names should have similar length.
 11. When 'autozoom' specified in draw options, histogram zoomed into
-    non-empty content. Same command available via context menu. 
-12. Item of 'Text' kind can be created. It is displayed as 
+    non-empty content. Same command available via context menu.
+12. Item of 'Text' kind can be created. It is displayed as
     plain text in the browser. If property 'mathjax' specified,
     MathJax.js library will be loaded and used for rendering.
     See httpcontrol.C macro for example.
-13. When using foreignObject, provide workaround for absolute positioning 
+13. When using foreignObject, provide workaround for absolute positioning
     problem in Chrome/Safari, see <http://bit.ly/1wjqCQ9>
-   
+
 
 ## Changes in 3.2
 1. Support JSON objects embedding in html pages, produced by THttpServer
@@ -50,13 +59,13 @@ Many old problems and errors are fixed, new functions are provided.
 2. Implement JSROOT.Create() method to create supported
    in JavaScript ROOT classes like TH1 or TGraph
 3. Fix problem with JSROOT.draw in HTML element with zero width (display:none)
-4. Provide possibility to load user scripts with JSROOT.BuildSimpleGUI 
+4. Provide possibility to load user scripts with JSROOT.BuildSimpleGUI
    and JSROOT.AssertPrerequisites, also with main index.htm
 5. Support of TCutG drawing
 6. Implement hierarchy display (former dtree) with jQuery
 7. Fix several problems in drawing optimization
-8. Implement dragging objects from hierarchy browser into existing canvas 
-   to superimpose several objects 
+8. Implement dragging objects from hierarchy browser into existing canvas
+   to superimpose several objects
 9. Implement col2 and col3 draw options, using html5 canvas
 10. Support 'p' and 'p0' draw options for TH1 class
 
