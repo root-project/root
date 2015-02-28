@@ -157,8 +157,6 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(nextslaveinfo()))
       if (si->fStatus == TSlaveInfo::kActive) fSlaves++;
 
-   fSlaves = 8;
-
    PDB(kMonitoring,1) Info("TPerfStats", "Statistics for %d slave(s)", fSlaves);
    
    fDoHist = (input->FindObject("PROOF_StatsHist") != 0);
