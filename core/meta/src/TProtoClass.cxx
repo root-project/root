@@ -258,9 +258,12 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
 
    // We need to fill enums one by one to initialise the internal map which is
    // transient
-   cl->fEnums = new TListOfEnums();
-   for (TObject* enumAsTObj : *fEnums){
-      cl->fEnums->Add((TEnum*) enumAsTObj);
+   {
+      auto temp = new TListOfEnums();
+      for (TObject* enumAsTObj : *fEnums){
+         temp->Add((TEnum*) enumAsTObj);
+      }
+      cl->fEnums = temp;
    }
   
    cl->fSizeof = fSizeof;

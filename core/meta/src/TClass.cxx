@@ -1544,8 +1544,8 @@ TClass::~TClass()
    delete fData;   fData = 0;
 
    if (fEnums)
-      fEnums->Delete();
-   delete fEnums; fEnums = 0;
+      (*fEnums).Delete();
+   delete fEnums.load(); fEnums = 0;
 
    if (fFuncTemplate)
       fFuncTemplate->Delete();
@@ -3321,12 +3321,25 @@ TList *TClass::GetListOfBases()
 TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
 {
    // Return list containing the TEnums of a class.
+   auto temp = fEnums.load();
+   if(temp) {
+      return temp;
+   }
+
+   if(not load) {
+      //no one is supposed to modify the returned results
+      static TList s_list;
+      return &s_list;
+   }
 
    R__LOCKGUARD(gInterpreterMutex);
-
-   if (!fEnums) fEnums = new TListOfEnums(this);
-   if (load) fEnums->Load();
-   return fEnums;
+   if(fEnums) {
+      return fEnums.load();
+   }
+   temp = new TListOfEnums(this);
+   temp->Load();
+   fEnums = temp;
+   return temp;
 }
 
 //______________________________________________________________________________
@@ -3749,7 +3762,7 @@ void TClass::ResetCaches()
    if (fData)
       fData->Unload();
    if (fEnums)
-      fEnums->Unload();
+      (*fEnums).Unload();
    if (fMethod)
       (*fMethod).Unload();
 
@@ -5631,7 +5644,7 @@ void TClass::SetUnloaded()
       fData->Unload();
    }
    if (fEnums) {
-      fEnums->Unload();
+      (*fEnums).Unload();
    }
 
    if (fState <= kForwardDeclared && fStreamerInfo->GetEntries() != 0) {
