@@ -128,7 +128,7 @@ const char *TClingMethodArgInfo::DefaultValue() const
    }
    clang::ASTContext &context = pvd->getASTContext();
    clang::PrintingPolicy policy(context.getPrintingPolicy());
-   static std::string buf;
+   thread_local std::string buf;
    buf.clear();
    llvm::raw_string_ostream out(buf);
    if (!expr) {
@@ -165,7 +165,7 @@ const char *TClingMethodArgInfo::Name() const
    }
    const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
    const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
-   static std::string buf;
+   thread_local std::string buf;
    buf.clear();
    clang::PrintingPolicy policy(pvd->getASTContext().getPrintingPolicy());
    llvm::raw_string_ostream stream(buf);
@@ -176,7 +176,7 @@ const char *TClingMethodArgInfo::Name() const
 
 const TClingTypeInfo *TClingMethodArgInfo::Type() const
 {
-   static TClingTypeInfo ti(fInterp);
+   thread_local TClingTypeInfo ti(fInterp);
    if (!IsValid()) {
       return &ti;
    }
