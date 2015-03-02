@@ -2567,11 +2567,12 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
 
       reusebasket = basket;
       reusebasket->Reset();
+
+      fZipBytes += nout;
+      fTotBytes += addbytes;
+      fTree->AddTotBytes(addbytes);
+      fTree->AddZipBytes(nout);
    }
-   fZipBytes += nout;
-   fTotBytes += addbytes;
-   fTree->AddTotBytes(addbytes);
-   fTree->AddZipBytes(nout);
 
    if (where==fWriteBasket) {
       ++fWriteBasket;
