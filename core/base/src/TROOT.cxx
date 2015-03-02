@@ -111,7 +111,7 @@
 #include "TInterpreter.h"
 #include "TListOfTypes.h"
 #include "TListOfDataMembers.h"
-#include "TListOfEnums.h"
+#include "TListOfEnumsWithLock.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TFunctionTemplate.h"
@@ -1367,8 +1367,9 @@ TObject *TROOT::GetGeometry(const char *name) const
 //______________________________________________________________________________
 TCollection *TROOT::GetListOfEnums()
 {
+   R__LOCKGUARD2(gROOTMutex);
    if(!fEnums) {
-      fEnums = new TListOfEnums(0);
+      fEnums = new TListOfEnumsWithLock(0);
    }
    return fEnums;
 }
