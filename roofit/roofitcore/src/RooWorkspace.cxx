@@ -356,6 +356,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   RooCmdConfig pc(Form("RooWorkspace::import(%s)",GetName())) ;
 
   pc.defineString("conflictSuffix","RenameConflictNodes",0) ;
+  pc.defineInt("renameConflictOrig","RenameConflictNodes",0,0) ;
   pc.defineString("allSuffix","RenameAllNodes",0) ;
   pc.defineString("allVarsSuffix","RenameAllVariables",0) ;
   pc.defineString("allVarsExcept","RenameAllVariables",1) ;
@@ -364,6 +365,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   pc.defineString("factoryTag","FactoryTag",0) ;
   pc.defineInt("useExistingNodes","RecycleConflictNodes",0,0) ;
   pc.defineInt("silence","Silence",0,0) ;
+  pc.defineInt("noRecursion","NoRecursion",0,0) ;
   pc.defineMutex("RenameConflictNodes","RenameAllNodes") ;
   pc.defineMutex("RenameConflictNodes","RecycleConflictNodes") ;
   pc.defineMutex("RenameAllNodes","RecycleConflictNodes") ;
@@ -382,8 +384,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   const char* exceptVars = pc.getString("allVarsExcept") ;
   const char* varChangeIn = pc.getString("varChangeIn") ;
   const char* varChangeOut = pc.getString("varChangeOut") ;
+  Bool_t renameConflictOrig = pc.getInt("renameConflictOrig") ;
   Int_t useExistingNodes = pc.getInt("useExistingNodes") ;
   Int_t silence = pc.getInt("silence") ;
+  Int_t noRecursion = pc.getInt("noRecursion") ;
+
 
   // Turn zero length strings into null pointers 
   if (suffixC && strlen(suffixC)==0) suffixC = 0 ;
@@ -475,7 +480,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   // Make list of conflicting nodes
   RooArgSet conflictNodes ;
   RooArgSet branchSet ;
-  inArg.branchNodeServerList(&branchSet) ;
+  if (noRecursion) {
+    branchSet.add(inArg) ;
+  } else {
+    inArg.branchNodeServerList(&branchSet) ;
+  }
   TIterator* iter = branchSet.createIterator() ;
   RooAbsArg* branch ;
   while ((branch=(RooAbsArg*)iter->Next())) {
@@ -494,8 +503,8 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
     
   // Now create a working copy of the incoming object tree
-  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(inArg).snapshot(kTRUE) ;
-  RooAbsArg* cloneTop = cloneSet->find(inArg.GetName()) ;
+  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(inArg).snapshot(noRecursion==kFALSE) ;
+  RooAbsArg* cloneTop = cloneSet->find(inArg.GetName()) ;  
 
   // Mark all nodes for renaming if we are not in conflictOnly mode
   if (!conflictOnly) {
@@ -504,35 +513,87 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Mark nodes that are to be renamed with special attribute
-  TIterator* citer = conflictNodes.createIterator() ;
   string topName2 = cloneTop->GetName() ;
-  RooAbsArg* cnode ;
-  while ((cnode=(RooAbsArg*)citer->Next())) {
-    RooAbsArg* cnode2 = cloneSet->find(cnode->GetName()) ;
-    string origName = cnode2->GetName() ;
-    cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
-    cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
-    string tag = Form("ORIGNAME:%s",origName.c_str()) ;
-    cnode2->setAttribute(tag.c_str()) ;
+  if (!renameConflictOrig) {
+    // Mark all nodes to be imported for renaming following conflict resolution protocol
+    TIterator* citer = conflictNodes.createIterator() ;
+    RooAbsArg* cnode ;
+    while ((cnode=(RooAbsArg*)citer->Next())) {
+      RooAbsArg* cnode2 = cloneSet->find(cnode->GetName()) ;
+      string origName = cnode2->GetName() ;
+      cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
+      cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
+      string tag = Form("ORIGNAME:%s",origName.c_str()) ;
+      cnode2->setAttribute(tag.c_str()) ;
+      if (!cnode2->getStringAttribute("origName")) {
+	string tag2 = Form("%s",origName.c_str()) ;
+	cnode2->setStringAttribute("origName",tag2.c_str()) ;
+      }
+      
+      // Save name of new top level node for later use
+      if (cnode2==cloneTop) {
+	topName2 = cnode2->GetName() ;      
+      }
+      
+      if (!silence) {
+	coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() 
+			      << ") Resolving name conflict in workspace by changing name of imported node  " 
+			      << origName << " to " << cnode2->GetName() << endl ;
+      }
+    }  
+    delete citer ;
+  } else {
 
-    // Save name of new top level node for later use
-    if (cnode2==cloneTop) {
-      topName2 = cnode2->GetName() ;      
-    }
+    // Rename all nodes already in the workspace to 'clear the way' for the imported nodes
+    TIterator* citer = conflictNodes.createIterator() ;
+    RooAbsArg* cnode ;
+    while ((cnode=(RooAbsArg*)citer->Next())) {
 
-    if (!silence) {
-      coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() 
-			    << ") Resolving name conflict in workspace by changing name of imported node  " 
-			    << origName << " to " << cnode2->GetName() << endl ;
-    }
-  }  
-  delete citer ;
+      string origName = cnode->GetName() ;
+      RooAbsArg* wsnode = _allOwnedNodes.find(origName.c_str()) ;      
+      if (wsnode) {	
+	
+	if (!wsnode->getStringAttribute("origName")) {
+	  wsnode->setStringAttribute("origName",wsnode->GetName()) ;
+	}
+	
+	if (!_allOwnedNodes.find(Form("%s_%s",cnode->GetName(),suffix))) {
+	  wsnode->SetName(Form("%s_%s",cnode->GetName(),suffix)) ;
+	  wsnode->SetTitle(Form("%s (%s)",cnode->GetTitle(),suffix)) ;
+	} else {	  
+	  // Name with suffix already taken, add additional suffix
+	  Int_t n=1 ;
+	  while (true) {
+	    string newname = Form("%s_%s_%d",cnode->GetName(),suffix,n) ;
+	    if (!_allOwnedNodes.find(newname.c_str())) {
+	      wsnode->SetName(newname.c_str()) ;
+	      wsnode->SetTitle(Form("%s (%s %d)",cnode->GetTitle(),suffix,n)) ;
+	      break ;
+	    }
+	    n++ ;
+	  }
+	}
+	if (!silence) {
+	  coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() 
+				<< ") Resolving name conflict in workspace by changing name of original node " 
+				<< origName << " to " << wsnode->GetName() << endl ;
+	}
+      } else {
+	coutW(ObjectHandling) << "RooWorkspce::import(" << GetName() << ") Internal error: expected to find existing node " 
+			      << origName << " to be renamed, but didn't find it..." << endl ;
+      }
+      
+    }  
+    delete citer ;
+
+  }
 
   // Process any change in variable names 
   if (strlen(varChangeIn)>0 || (suffixV && strlen(suffixV)>0)) {
     
     // Process all changes in variable names
     TIterator* cliter = cloneSet->createIterator() ;
+    RooAbsArg* cnode ;
     while ((cnode=(RooAbsArg*)cliter->Next())) {
       
       if (varMap.find(cnode->GetName())!=varMap.end()) { 	
@@ -540,6 +601,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 	cnode->SetName(varMap[cnode->GetName()].c_str()) ;
 	string tag = Form("ORIGNAME:%s",origName.c_str()) ;
 	cnode->setAttribute(tag.c_str()) ;
+	if (!cnode->getStringAttribute("origName")) {
+	  string tag2 = Form("%s",origName.c_str()) ;
+	  cnode->setStringAttribute("origName",tag2.c_str()) ;
+	}
+
 	if (!silence) {
 	  coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") Changing name of variable " 
 				<< origName << " to " << cnode->GetName() << " on request" << endl ;
@@ -555,13 +621,13 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
   
   // Now clone again with renaming effective
-  RooArgSet* cloneSet2 = (RooArgSet*) RooArgSet(*cloneTop).snapshot(kTRUE) ;
+  RooArgSet* cloneSet2 = (RooArgSet*) RooArgSet(*cloneTop).snapshot(noRecursion==kFALSE) ;
   RooAbsArg* cloneTop2 = cloneSet2->find(topName2.c_str()) ;
 
   // Make final check list of conflicting nodes
   RooArgSet conflictNodes2 ;
   RooArgSet branchSet2 ;
-  inArg.branchNodeServerList(&branchSet) ;
+  //inArg.branchNodeServerList(&branchSet) ; // WVE not needed
   TIterator* iter2 = branchSet2.createIterator() ;
   RooAbsArg* branch2 ;
   while ((branch2=(RooAbsArg*)iter2->Next())) {
@@ -767,16 +833,18 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
     }
   }
 
-  // Now import the dataset observables
-  TIterator* iter = clone->get()->createIterator() ;
+  // Now import the dataset observables, unless dataset is embedded
   RooAbsArg* carg ;
-  while((carg=(RooAbsArg*)iter->Next())) {
-    if (!arg(carg->GetName())) {
-      import(*carg) ;
+  if (!embedded) {
+    TIterator* iter = clone->get()->createIterator() ;
+    while((carg=(RooAbsArg*)iter->Next())) {
+      if (!arg(carg->GetName())) {
+	import(*carg) ;
+      }
     }
+    delete iter ;
   }
-  delete iter ;
-    
+
   dataList.Add(clone) ;
   if (_dir) {	
     _dir->InternalAppend(clone) ;

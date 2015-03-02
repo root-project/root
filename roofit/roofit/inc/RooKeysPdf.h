@@ -32,6 +32,9 @@ public:
   RooKeysPdf(const char *name, const char *title,
              RooAbsReal& x, RooDataSet& data, Mirror mirror= NoMirror,
 	     Double_t rho=1);
+  RooKeysPdf(const char *name, const char *title,
+             RooAbsReal& x, RooRealVar& xdata, RooDataSet& data, Mirror mirror= NoMirror,
+	     Double_t rho=1);
   RooKeysPdf(const RooKeysPdf& other, const char* name=0);
   virtual TObject* clone(const char* newname) const {return new RooKeysPdf(*this,newname); }
   virtual ~RooKeysPdf();

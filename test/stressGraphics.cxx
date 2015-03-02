@@ -40,7 +40,9 @@
 #include "TF2.h"
 #include <TF3.h>
 #include <TH2.h>
+#include <TH2Poly.h>
 #include <TNtuple.h>
+#include <TKey.h>
 #include <TProfile.h>
 #include "TString.h"
 
@@ -116,6 +118,7 @@ void     tgraph2d1      ();
 void     tgraph2d2      ();
 void     tgraph2d3      ();
 void     tgraph3        ();
+void     th2poly        ();
 void     timage         ();
 void     tlatex1        ();
 void     tlatex2        ();
@@ -264,6 +267,10 @@ void stressGraphics(Int_t verbose = 0)
 
    // Read the reference file "stressGraphics.ref"
    FILE *sg = fopen("stressGraphics.ref","r");
+   if (!sg) {
+      printf("Could not open stressGraphics.ref\n");
+      return;
+   }
    char line[160];
    Int_t i = -1;
    while (fgets(line,160,sg)) {
@@ -367,6 +374,7 @@ void stressGraphics(Int_t verbose = 0)
    parallelcoord ();
    clonepad      ();
    hbars         ();
+   th2poly       ();
    if (!gOptionR) {
       std::cout << "**********************************************************************" <<std::endl;
       if (!gTestsFailed) {
@@ -1898,6 +1906,74 @@ void tgraph3()
    TestReport2();
 }
 
+//______________________________________________________________________________
+void th2poly()
+{
+   // TH2Poly test.
+
+   TCanvas *C = StartTest(800,400);
+
+   Int_t i;
+   const Int_t nx = 48;
+   const char *states [nx] = {
+      "alabama",      "arizona",        "arkansas",       "california",
+      "colorado",     "connecticut",    "delaware",       "florida",
+      "georgia",      "idaho",          "illinois",       "indiana",
+      "iowa",         "kansas",         "kentucky",       "louisiana",
+      "maine",        "maryland",       "massachusetts",  "michigan",
+      "minnesota",    "mississippi",    "missouri",       "montana",
+      "nebraska",     "nevada",         "new_hampshire",  "new_jersey",
+      "new_mexico",   "new_york",       "north_carolina", "north_dakota",
+      "ohio",         "oklahoma",       "oregon",         "pennsylvania",
+      "rhode_island", "south_carolina", "south_dakota",   "tennessee",
+      "texas",        "utah",           "vermont",        "virginia",
+      "washington",   "west_virginia",  "wisconsin",      "wyoming"
+   };
+   Double_t pop[nx] = {
+    4708708, 6595778,  2889450, 36961664, 5024748,  3518288,  885122, 18537969,
+    9829211, 1545801, 12910409,  6423113, 3007856,  2818747, 4314113,  4492076,
+    1318301, 5699478,  6593587,  9969727, 5266214,  2951996, 5987580,   974989,
+    1796619, 2643085,  1324575,  8707739, 2009671, 19541453, 9380884,   646844,
+   11542645, 3687050,  3825657, 12604767, 1053209,  4561242,  812383,  6296254,
+   24782302, 2784572,   621760,  7882590, 6664195,  1819777, 5654774,   544270
+   };
+
+   Double_t lon1 = -130;
+   Double_t lon2 = -65;
+   Double_t lat1 = 24;
+   Double_t lat2 = 50;
+   TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
+
+   TFile *f = TFile::Open("http://root.cern.ch/files/usa.root");
+
+   if (!f) {
+      printf("Cannot access usa.root. Is internet working ?\n");
+      return;
+   }
+
+   // Define the TH2Poly bins.
+   TMultiGraph *mg;
+   TKey *key;
+   TIter nextkey(gDirectory->GetListOfKeys());
+   while ((key = (TKey*)nextkey())) {
+      TObject *obj = key->ReadObj();
+      if (obj->InheritsFrom("TMultiGraph")) {
+         mg = (TMultiGraph*)obj;
+         p->AddBin(mg);
+      }
+   }
+
+   // Fill TH2Poly.
+   for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
+
+   gStyle->SetOptStat(11);
+   gStyle->SetPalette(1);
+   p->DrawClone("COL");
+
+   TestReport1(C, "TH2Poly.(DrawClone() and remote file access)");
+   DoCcode(C);
+   TestReport2();
+}
 
 //______________________________________________________________________________
 void tmultigraph1()

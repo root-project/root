@@ -87,13 +87,7 @@
 #include "Math/SMatrix.h"
 
 #include "TrackMathCore.h"
-
-
-//#define USE_REFLEX
-#ifdef USE_REFLEX
-#include "Cintex/Cintex.h"
-#include "Reflex/Reflex.h"
-#endif
+#include "Math/GenVector/RotationZ.h" // Workaround to autoload libGenVector ROOT-7056
 
 using namespace ROOT::Math;
 
@@ -1493,10 +1487,10 @@ int testCompositeObj(int ngen) {
    int iret = -1;
    if (dynPath)
       iret = gSystem->Load("../test/libTrackMathCoreDict");
-   if (iret != 0) {
+   if (iret < 0) {
       // if not assume running from top ROOT dir (case of roottest)
       iret = gSystem->Load("test/libTrackMathCoreDict");
-      if (iret !=0) {
+      if (iret < 0) {
          std::cerr <<"Error Loading libTrackMathCoreDict" << std::endl;
          return iret;
       }
@@ -1511,24 +1505,24 @@ int testCompositeObj(int ngen) {
    ROOT::Cintex::Cintex::Enable();
 
    iret = gSystem->Load("../test/libTrackMathCoreRflx");
-   if (iret !=0) {
+   if (iret < 0) {
       // if not assume running from top ROOT dir (case of roottest)
       iret = gSystem->Load("test/libTrackMathCoreRflx");
-      if (iret !=0) {
+      if (iret < 0) {
          std::cerr <<"Error Loading libTrackMathCoreRflx" << std::endl;
          return iret;
       }
    }
 
 #endif
+   iret = 0;
 
-
-    iret |= testTrack<TrackD>(ngen);
-    iret |= testTrack<TrackD32>(ngen);
-    iret |= testTrack<TrackErrD>(ngen);
-    iret |= testTrack<TrackErrD32>(ngen);
-    iret |= testTrack<VecTrack<TrackD> >(ngen);
-    iret |= testTrack<VecTrack<TrackErrD> >(ngen);
+   iret |= testTrack<TrackD>(ngen);
+   iret |= testTrack<TrackD32>(ngen);
+   iret |= testTrack<TrackErrD>(ngen);
+   iret |= testTrack<TrackErrD32>(ngen);
+   iret |= testTrack<VecTrack<TrackD> >(ngen);
+   iret |= testTrack<VecTrack<TrackErrD> >(ngen);
 
 
 
@@ -1568,12 +1562,11 @@ int stressMathCore(double nscale = 1) {
 
    bool io = true;
 
-   iret |= gSystem->Load("libSmatrix");
-   if (iret !=0) {
+   iret |= ( gSystem->Load("libSmatrix") < 0 );   // iret = 0 or = 1 is fine
+   if (iret != 0) {
      std::cerr <<"Error Loading libSmatrix" << std::endl;
      io = false;
    }
-
 
    iret |= testGenVectors(n,io);
 

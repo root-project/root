@@ -609,11 +609,12 @@ RooAbsArg* RooLinkedList::findArg(const RooAbsArg* arg) const
 {
   // Return pointer to object with given name in collection.
   // If no such object is found, return null pointer.
-
-  if (_htableName) {
-    return (RooAbsArg*) _htableName->findArg(arg) ;
-  }
-
+  
+  // WVE this will find the wrong entry if the name changed!
+  // if (_htableLink) {
+  //   return (RooAbsArg*) _htableLink->find(arg) ;
+  // }
+  
   RooLinkedListElem* ptr = _first ;
   while(ptr) {
     if (((RooAbsArg*)(ptr->_arg))->namePtr() == arg->namePtr()) {

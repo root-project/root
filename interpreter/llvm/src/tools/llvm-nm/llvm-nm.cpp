@@ -36,8 +36,8 @@
 #include "llvm/Support/PrettyStackTrace.h"
 #include "llvm/Support/Program.h"
 #include "llvm/Support/Signals.h"
-#include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <cctype>
 #include <cerrno>
@@ -148,6 +148,9 @@ cl::list<std::string> SegSect("s", cl::Positional, cl::ZeroOrMore,
 
 cl::opt<bool> FormatMachOasHex("x", cl::desc("Print symbol entry in hex, "
                                              "Mach-O only"));
+
+cl::opt<bool> NoLLVMBitcode("no-llvm-bc",
+                            cl::desc("Disable LLVM bitcode reader"));
 
 bool PrintAddress = true;
 
@@ -686,7 +689,7 @@ static char getSymbolNMTypeChar(ELFObjectFile<ELFT> &Obj,
 }
 
 static char getSymbolNMTypeChar(COFFObjectFile &Obj, symbol_iterator I) {
-  const coff_symbol *Symb = Obj.getCOFFSymbol(*I);
+  COFFSymbolRef Symb = Obj.getCOFFSymbol(*I);
   // OK, this is COFF.
   symbol_iterator SymI(I);
 
@@ -703,7 +706,7 @@ static char getSymbolNMTypeChar(COFFObjectFile &Obj, symbol_iterator I) {
     return Ret;
 
   uint32_t Characteristics = 0;
-  if (!COFF::isReservedSectionNumber(Symb->SectionNumber)) {
+  if (!COFF::isReservedSectionNumber(Symb.getSectionNumber())) {
     section_iterator SecI = Obj.section_end();
     if (error(SymI->getSection(SecI)))
       return '?';
@@ -711,25 +714,21 @@ static char getSymbolNMTypeChar(COFFObjectFile &Obj, symbol_iterator I) {
     Characteristics = Section->Characteristics;
   }
 
-  switch (Symb->SectionNumber) {
+  switch (Symb.getSectionNumber()) {
   case COFF::IMAGE_SYM_DEBUG:
     return 'n';
   default:
     // Check section type.
     if (Characteristics & COFF::IMAGE_SCN_CNT_CODE)
       return 't';
-    else if (Characteristics & COFF::IMAGE_SCN_MEM_READ &&
-             ~Characteristics & COFF::IMAGE_SCN_MEM_WRITE) // Read only.
-      return 'r';
-    else if (Characteristics & COFF::IMAGE_SCN_CNT_INITIALIZED_DATA)
-      return 'd';
-    else if (Characteristics & COFF::IMAGE_SCN_CNT_UNINITIALIZED_DATA)
+    if (Characteristics & COFF::IMAGE_SCN_CNT_INITIALIZED_DATA)
+      return Characteristics & COFF::IMAGE_SCN_MEM_WRITE ? 'd' : 'r';
+    if (Characteristics & COFF::IMAGE_SCN_CNT_UNINITIALIZED_DATA)
       return 'b';
-    else if (Characteristics & COFF::IMAGE_SCN_LNK_INFO)
+    if (Characteristics & COFF::IMAGE_SCN_LNK_INFO)
       return 'i';
-
     // Check for section symbol.
-    else if (Symb->isSectionDefinition())
+    if (Symb.isSectionDefinition())
       return 's';
   }
 
@@ -1009,8 +1008,8 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
     return;
 
   LLVMContext &Context = getGlobalContext();
-  ErrorOr<std::unique_ptr<Binary>> BinaryOrErr =
-      createBinary(std::move(*BufferOrErr), &Context);
+  ErrorOr<std::unique_ptr<Binary>> BinaryOrErr = createBinary(
+      BufferOrErr.get()->getMemBufferRef(), NoLLVMBitcode ? nullptr : &Context);
   if (error(BinaryOrErr.getError(), Filename))
     return;
   Binary &Bin = *BinaryOrErr.get();
@@ -1070,7 +1069,6 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
             ArchFound = true;
             ErrorOr<std::unique_ptr<ObjectFile>> ObjOrErr =
                 I->getAsObjectFile();
-            std::unique_ptr<Archive> A;
             std::string ArchiveName;
             std::string ArchitectureName;
             ArchiveName.clear();
@@ -1087,7 +1085,9 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
               }
               dumpSymbolNamesFromObject(Obj, false, ArchiveName,
                                         ArchitectureName);
-            } else if (!I->getAsArchive(A)) {
+            } else if (ErrorOr<std::unique_ptr<Archive>> AOrErr =
+                           I->getAsArchive()) {
+              std::unique_ptr<Archive> &A = *AOrErr;
               for (Archive::child_iterator AI = A->child_begin(),
                                            AE = A->child_end();
                    AI != AE; ++AI) {
@@ -1134,13 +1134,14 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
            I != E; ++I) {
         if (HostArchName == I->getArchTypeName()) {
           ErrorOr<std::unique_ptr<ObjectFile>> ObjOrErr = I->getAsObjectFile();
-          std::unique_ptr<Archive> A;
           std::string ArchiveName;
           ArchiveName.clear();
           if (ObjOrErr) {
             ObjectFile &Obj = *ObjOrErr.get();
             dumpSymbolNamesFromObject(Obj, false);
-          } else if (!I->getAsArchive(A)) {
+          } else if (ErrorOr<std::unique_ptr<Archive>> AOrErr =
+                         I->getAsArchive()) {
+            std::unique_ptr<Archive> &A = *AOrErr;
             for (Archive::child_iterator AI = A->child_begin(),
                                          AE = A->child_end();
                  AI != AE; ++AI) {
@@ -1171,7 +1172,6 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
                                                E = UB->end_objects();
          I != E; ++I) {
       ErrorOr<std::unique_ptr<ObjectFile>> ObjOrErr = I->getAsObjectFile();
-      std::unique_ptr<Archive> A;
       std::string ArchiveName;
       std::string ArchitectureName;
       ArchiveName.clear();
@@ -1190,7 +1190,8 @@ static void dumpSymbolNamesFromFile(std::string &Filename) {
           outs() << ":\n";
         }
         dumpSymbolNamesFromObject(Obj, false, ArchiveName, ArchitectureName);
-      } else if (!I->getAsArchive(A)) {
+      } else if (ErrorOr<std::unique_ptr<Archive>> AOrErr = I->getAsArchive()) {
+        std::unique_ptr<Archive> &A = *AOrErr;
         for (Archive::child_iterator AI = A->child_begin(), AE = A->child_end();
              AI != AE; ++AI) {
           ErrorOr<std::unique_ptr<Binary>> ChildOrErr =
@@ -1275,8 +1276,7 @@ int main(int argc, char **argv) {
     if (ArchFlags[i] == "all") {
       ArchAll = true;
     } else {
-      Triple T = MachOObjectFile::getArch(ArchFlags[i]);
-      if (T.getArch() == Triple::UnknownArch)
+      if (!MachOObjectFile::isValidArch(ArchFlags[i]))
         error("Unknown architecture named '" + ArchFlags[i] + "'",
               "for the -arch option");
     }

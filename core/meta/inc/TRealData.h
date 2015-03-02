@@ -61,6 +61,8 @@ public:
    void                SetIsObject(Bool_t isObject) {fIsObject=isObject;}
    void                WriteRealData(void *pointer, char *&buffer);
 
+   static void         GetName(TString &output, TDataMember *dm);
+
    ClassDef(TRealData,0)  //Description of persistent data members
 };
 

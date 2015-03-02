@@ -100,7 +100,7 @@ void THnBase::Init(const char* name, const char* title,
    Int_t pos = 0;
    Int_t *nbins = new Int_t[axes->GetEntriesFast()];
    while ((axis = (TAxis*)iAxis())) {
-      TAxis* reqaxis = (TAxis*)axis->Clone();
+      TAxis* reqaxis = new TAxis(*axis);
       if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
          Int_t binFirst = axis->GetFirst();
          // The lowest egde of the underflow is meaningless.
@@ -122,7 +122,7 @@ void THnBase::Init(const char* name, const char* title,
       }
 
       nbins[pos] = reqaxis->GetNbins();
-      fAxes.AddAtAndExpand(reqaxis->Clone(), pos++);
+      fAxes.AddAtAndExpand(new TAxis(*reqaxis), pos++);
    }
    fAxes.SetOwner();
 
@@ -1086,7 +1086,7 @@ THnBase* THnBase::RebinBase(const Int_t* group) const
    TObjArray newaxes(ndim);
    newaxes.SetOwner();
    for (Int_t d = 0; d < ndim; ++d) {
-      newaxes.AddAt(GetAxis(d)->Clone(),d);
+      newaxes.AddAt(new TAxis(*GetAxis(d) ),d);
       if (group[d] > 1) {
          TAxis* newaxis = (TAxis*) newaxes.At(d);
          Int_t newbins = (newaxis->GetNbins() + group[d] - 1) / group[d];

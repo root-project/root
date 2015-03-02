@@ -40,7 +40,6 @@ class TFunction;
 class TListOfFunctions : public THashList
 {
 private:
-   typedef TDictionary::DeclId_t DeclId_t;
    TClass    *fClass; // Context of this list.  Not owned.
 
    TExMap    *fIds;      // Map from DeclId_t to TFunction*
@@ -56,6 +55,7 @@ private:
    void       UnmapObject(TObject *obj);
 
 public:
+   typedef TDictionary::DeclId_t DeclId_t;
 
    TListOfFunctions(TClass *cl);
    ~TListOfFunctions();
@@ -68,6 +68,7 @@ public:
    virtual TList     *GetListForObject(const char* name) const;
    virtual TList     *GetListForObject(const TObject* obj) const;
 
+   TFunction *Find(DeclId_t id) const;
    TFunction *Get(DeclId_t id);
 
    void       AddFirst(TObject *obj);

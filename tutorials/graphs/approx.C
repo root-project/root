@@ -1,6 +1,26 @@
 TCanvas *vC1;
 TGraph *grxy, *grin, *grout;
 
+void DrawSmooth(Int_t pad, const char *title, const char *xt,
+                const char *yt)
+{
+  vC1->cd(pad);
+  TH1F *vFrame = gPad->DrawFrame(0,0,15,150);
+  vFrame->SetTitle(title);
+  vFrame->SetTitleSize(0.2);
+  vFrame->SetXTitle(xt);
+  vFrame->SetYTitle(yt);
+  grxy->SetMarkerColor(kBlue);
+  grxy->SetMarkerStyle(21);
+  grxy->SetMarkerSize(0.5);
+  grxy->Draw("P");
+  grin->SetMarkerColor(kRed);
+  grin->SetMarkerStyle(5);
+  grin->SetMarkerSize(0.7);
+  grin->Draw("P");
+  grout->DrawClone("LP");
+}
+
 void approx()
 {
 //**********************************************
@@ -63,25 +83,5 @@ void approx()
 
 // cleanup
    delete gs;
-}
-
-void DrawSmooth(Int_t pad, const char *title, const char *xt,
-   const char *yt)
-{
-   vC1->cd(pad);
-   TH1F *vFrame = gPad->DrawFrame(0,0,15,150);
-   vFrame->SetTitle(title);
-   vFrame->SetTitleSize(0.2);
-   vFrame->SetXTitle(xt);
-   vFrame->SetYTitle(yt);
-   grxy->SetMarkerColor(kBlue);
-   grxy->SetMarkerStyle(21);
-   grxy->SetMarkerSize(0.5);
-   grxy->Draw("P");
-   grin->SetMarkerColor(kRed);
-   grin->SetMarkerStyle(5);
-   grin->SetMarkerSize(0.7);
-   grin->Draw("P");
-   grout->DrawClone("LP");
 }
 

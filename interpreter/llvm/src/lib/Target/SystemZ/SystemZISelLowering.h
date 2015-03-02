@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_TARGET_SystemZ_ISELLOWERING_H
-#define LLVM_TARGET_SystemZ_ISELLOWERING_H
+#ifndef LLVM_LIB_TARGET_SYSTEMZ_SYSTEMZISELLOWERING_H
+#define LLVM_LIB_TARGET_SYSTEMZ_SYSTEMZISELLOWERING_H
 
 #include "SystemZ.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
@@ -198,7 +198,8 @@ class SystemZTargetMachine;
 
 class SystemZTargetLowering : public TargetLowering {
 public:
-  explicit SystemZTargetLowering(const TargetMachine &TM);
+  explicit SystemZTargetLowering(const TargetMachine &TM,
+                                 const SystemZSubtarget &STI);
 
   // Override TargetLowering.
   MVT getScalarShiftAmountTy(EVT LHSTy) const override {
@@ -322,4 +323,4 @@ private:
 };
 } // end namespace llvm
 
-#endif // LLVM_TARGET_SystemZ_ISELLOWERING_H
+#endif

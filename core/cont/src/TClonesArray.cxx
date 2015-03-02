@@ -113,6 +113,11 @@
 //      empty contained in TObject). This method must be overridden in
 //      the relevant TClonesArray object class, implementing the reset
 //      procedure for pointer objects.
+//    * If the objects are added using the placement new then the Clear must
+//      deallocate the memory.
+//    * If the objects are added using TClonesArray::ConstructedAt then the
+//      heap-based memory can stay allocated and reused as the constructor is
+//      not called for already constructed/added object.
 //    * To reduce memory fragmentation, please make sure that the
 //      TClonesArrays are not destroyed and created on every event. They
 //      must only be constructed/destructed at the beginning/end of the
@@ -542,12 +547,13 @@ void TClonesArray::ExpandCreateFast(Int_t n)
    // "new (arr[i]) MyObj()" (i.e. the vtbl is already set correctly).
    // This is a simplified version of ExpandCreate used in the TTree mechanism.
 
+   Int_t oldSize = fKeep->GetSize();
    if (n > fSize)
       Expand(TMath::Max(n, GrowBy(fSize)));
 
    Int_t i;
    for (i = 0; i < n; i++) {
-      if (!fKeep->fCont[i]) {
+      if (i >= oldSize || !fKeep->fCont[i]) {
          fKeep->fCont[i] = (TObject*)fClass->New();
       } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
          // The object has been deleted (or never initialized)

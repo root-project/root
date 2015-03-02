@@ -16,83 +16,91 @@
 #ifndef ROO_NORMSET_CACHE
 #define ROO_NORMSET_CACHE
 
-#include "Riosfwd.h"
-#include <assert.h>
-#include "Rtypes.h"
-#include "RooNameSet.h"
-#include "RooSetPair.h"
-#include "RooHashTable.h"
+#include <utility>
+#include <vector>
+#include <map>
 
-class RooArgSet ;
-class RooSetPair ;
+#include "Rtypes.h"
+#include "Riosfwd.h"
+#include "RooNameSet.h"
+
+class RooAbsArg;
+class RooArgSet;
 
 typedef RooArgSet* pRooArgSet ;
 
 class RooNormSetCache {
+protected:
+  typedef std::pair<const RooArgSet*, const RooArgSet*> Pair;
+  struct PairCmp {
+      inline bool operator()(const Pair& a, const Pair& b) const
+      {
+	  if (a.first < b.first) return true;
+	  if (b.first < a.first) return false;
+	  return a.second < b.second;
+      }
+  };
+  typedef std::vector<Pair> PairVectType;
+  typedef std::map<Pair, ULong_t> PairIdxMapType;
 
 public:
-  RooNormSetCache(Int_t regSize=32) ;
-  RooNormSetCache(const RooNormSetCache& other) ;
-  virtual ~RooNormSetCache() ;
+  RooNormSetCache(ULong_t max = 32);
+  virtual ~RooNormSetCache();
 
-  void add(const RooArgSet* set1, const RooArgSet* set2=0) ;
+  void add(const RooArgSet* set1, const RooArgSet* set2 = 0);
 
-  inline Int_t index(const RooArgSet* set1, const RooArgSet* set2=0, const TNamed* set2RangeName=0) {
-
+  inline Int_t index(const RooArgSet* set1, const RooArgSet* set2 = 0,
+      const TNamed* set2RangeName = 0)
+  {
     // Match range name first
-    if (set2RangeName != _set2RangeName) return -1 ;
+    if (set2RangeName != _set2RangeName) return -1;
+    const Pair pair(set1, set2);
+    PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
+    if (_pairToIdx.end() != it &&
+	!PairCmp()(it->first, pair) && !PairCmp()(pair, it->first))
+      return it->second;
+    return -1;
+  }
 
-    // Match pointer of sets
-    Int_t i ;
-    for (i=0 ; i<_nreg ; i++) {
-      if (_asArr[i]._set1 == set1 && 
-	  _asArr[i]._set2 == set2 
-	  ) return i ;
-    }    
+  inline Bool_t contains(const RooArgSet* set1, const RooArgSet* set2 = 0,
+      const TNamed* set2RangeName = 0)
+  { return (index(set1,set2,set2RangeName) >= 0); }
+
+  inline Bool_t containsSet1(const RooArgSet* set1)
+  {
+    const Pair pair(set1, (const RooArgSet*)0);
+    PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
+    if (_pairToIdx.end() != it && it->first.first == set1)
+      return kTRUE;
+    return kFALSE;
+  }
+
+  const RooArgSet* lastSet1() const { return _pairs.empty()?0:_pairs.back().first; }
+  const RooArgSet* lastSet2() const { return _pairs.empty()?0:_pairs.back().second; }
+  const RooNameSet& nameSet1() const { return _name1; }
+  const RooNameSet& nameSet2() const { return _name2; }
+
+  Bool_t autoCache(const RooAbsArg* self, const RooArgSet* set1,
+      const RooArgSet* set2 = 0, const TNamed* set2RangeName = 0,
+      Bool_t autoRefill = kTRUE);
     
-    return -1 ;
-  }
+  void clear();
+  Int_t entries() const { return _pairs.size(); }
 
-  inline Bool_t contains(const RooArgSet* set1, const RooArgSet* set2=0, const TNamed* set2RangeName=0) {
-    if (set2RangeName!=_set2RangeName) return kFALSE ;
-    if (_htable) return (_htable->findSetPair(set1,set2)) ;
-    return (index(set1,set2,set2RangeName)>=0) ;
-  }
-
-  inline Bool_t containsSet1(const RooArgSet* set1) {
-    Int_t i ;
-    for (i=0 ; i<_nreg ; i++) {
-      if (_asArr[i]._set1 == set1) return kTRUE ;
-    }
-    return kFALSE ;
-  }
-
-  const RooArgSet* lastSet1() const { return _nreg>0?_asArr[_nreg-1]._set1:0 ; }
-  const RooArgSet* lastSet2() const { return _nreg>0?_asArr[_nreg-1]._set2:0 ; }
-  const RooNameSet& nameSet1() const { return _name1 ; }
-  const RooNameSet& nameSet2() const { return _name2 ; }
-
-  Bool_t autoCache(const RooAbsArg* self, const RooArgSet* set1, const RooArgSet* set2=0, const TNamed* set2RangeName=0, Bool_t autoRefill=kTRUE) ;
-    
-  void clear() ;
-  Int_t entries() const { return _nreg ; }
-
-  void initialize(const RooNormSetCache& other) ;
+  void initialize(const RooNormSetCache& other) { clear(); *this = other; }
 
 protected:
 
-  void expand() ;
+  PairVectType _pairs; //!
+  PairIdxMapType _pairToIdx; //!
+  ULong_t _max; //!
+  ULong_t _next; //!
 
-  RooHashTable* _htable ; //! do not persist
-  Int_t _regSize ;
-  Int_t _nreg ;
-  RooSetPair* _asArr ;  //! do not persist
+  RooNameSet _name1;   //!
+  RooNameSet _name2;   //!
+  TNamed*    _set2RangeName; //!
 
-  RooNameSet _name1 ;   //!
-  RooNameSet _name2 ;   //!
-  TNamed*    _set2RangeName ; //!
-
-  ClassDef(RooNormSetCache,1) // Management tool for tracking sets of similar integration/normalization sets
-} ;
+  ClassDef(RooNormSetCache, 0) // Management tool for tracking sets of similar integration/normalization sets
+};
 
 #endif 

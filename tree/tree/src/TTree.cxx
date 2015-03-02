@@ -1224,6 +1224,13 @@ Long64_t TTree::AutoSave(Option_t* option)
    return nbytes;
 }
 
+namespace {
+   // This error message is repeated several times in the code. We write it once.
+   const char* writeStlWithoutProxyMsg = "The class requested (%s) for the branch \"%s\""
+                                      " is an instance of an stl collection and does not have a compiled CollectionProxy."
+                                      " Please generate the dictionary for this collection (%s) to avoid to write corrupted data.";
+}
+
 //______________________________________________________________________________
 TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -1235,8 +1242,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
    TClass* claim = TClass::GetClass(classname);
    if (!ptrClass) {
       if (claim && claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
-         Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
-               "Please generate the dictionary for this class (%s)",
+         Error("Branch", writeStlWithoutProxyMsg,
                claim->GetName(), branchname, claim->GetName());
          return 0;
       }
@@ -1268,8 +1274,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
       }
    }
    if (claim && claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
-      Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
-            "Please generate the dictionary for this class (%s)",
+      Error("Branch", writeStlWithoutProxyMsg,
             claim->GetName(), branchname, claim->GetName());
       return 0;
    }
@@ -1302,8 +1307,7 @@ TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj
       actualClass = ptrClass;
    }
    if (actualClass && actualClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(actualClass->GetCollectionProxy())) {
-      Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
-            "Please generate the dictionary for this class (%s)",
+      Error("Branch", writeStlWithoutProxyMsg,
             actualClass->GetName(), branchname, actualClass->GetName());
       return 0;
    }
@@ -1319,8 +1323,7 @@ TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TCla
    TClass* claim = TClass::GetClass(classname);
    if (!ptrClass) {
       if (claim && claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
-         Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
-               "Please generate the dictionary for this class (%s)",
+         Error("Branch", writeStlWithoutProxyMsg,
                claim->GetName(), branchname, claim->GetName());
          return 0;
       } else if (claim == 0) {
@@ -1364,8 +1367,7 @@ TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TCla
       return 0;
    }
    if (actualClass && actualClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(actualClass->GetCollectionProxy())) {
-      Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
-            "Please generate the dictionary for this class (%s)",
+      Error("Branch", writeStlWithoutProxyMsg,
             actualClass->GetName(), branchname, actualClass->GetName());
       return 0;
    }
@@ -1402,8 +1404,7 @@ TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType
       return 0;
    }
    if (actualClass && actualClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(actualClass->GetCollectionProxy())) {
-      Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
-            "Please generate the dictionary for this class (%s)",
+      Error("Branch", writeStlWithoutProxyMsg,
             actualClass->GetName(), branchname, actualClass->GetName());
       return 0;
    }
@@ -2737,8 +2738,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       return kMismatch;
    }
    if (expectedClass && expectedClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(expectedClass->GetCollectionProxy())) {
-      Error("SetBranchAddress", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
-            "Please generate the dictionary for this class (%s)",
+      Error("SetBranchAddress", writeStlWithoutProxyMsg,
             expectedClass->GetName(), branch->GetName(), expectedClass->GetName());
       if (branch->InheritsFrom( TBranchElement::Class() )) {
          TBranchElement* bEl = (TBranchElement*)branch;
@@ -4737,7 +4737,7 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
    const char *stcs;
    Double_t cacheFactor = 0.0;
    if (!(stcs = gSystem->Getenv("ROOT_TTREECACHE_SIZE")) || !*stcs) {
-      cacheFactor = gEnv->GetValue("TTreeCache.Size", 0.0);
+      cacheFactor = gEnv->GetValue("TTreeCache.Size", 1.0);
    } else {
       cacheFactor = TString(stcs).Atof();
    }
@@ -6127,6 +6127,8 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
    UInt_t bmax = 256000;
    Double_t memFactor = 1;
    Int_t i, oldMemsize,newMemsize,oldBaskets,newBaskets;
+   i = oldMemsize = newMemsize = oldBaskets = newBaskets = 0;
+
    //we make two passes
    //one pass to compute the relative branch buffer sizes
    //a second pass to compute the absolute values

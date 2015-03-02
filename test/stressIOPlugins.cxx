@@ -66,6 +66,8 @@
 #include <Compression.h>
 #include "Event.h"
 
+R__LOAD_LIBRARY( libEvent )
+
 void stressIOPlugins();
 void stressIOPluginsForProto(const char *protoName = 0);
 void stressIOPlugins1();
@@ -87,35 +89,6 @@ int main(int argc, char **argv)
 
 class TH1;
 class TTree;
-
-#if defined(__CINT__) || defined(__CLING__)
-struct ensureEventLoaded {
-   public:
-   ensureEventLoaded() {
-     // if needed load the Event shard library, making sure it exists
-     // This test dynamic linking when running in interpreted mode
-     if (!TClassTable::GetDict("Event")) {
-        Int_t st1 = -1;
-        if (gSystem->DynamicPathName("$ROOTSYS/test/libEvent",kTRUE)) {
-           st1 = gSystem->Load("$(ROOTSYS)/test/libEvent");
-        }
-        if (st1 == -1) {
-           if (gSystem->DynamicPathName("test/libEvent",kTRUE)) {
-              st1 = gSystem->Load("test/libEvent");
-           }
-           if (st1 == -1) {
-              printf("===>stress8 will try to build the libEvent library\n");
-              Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
-              if (UNIX) gSystem->Exec("(cd $ROOTSYS/test; make Event)");
-              else      gSystem->Exec("(cd %ROOTSYS%\\test && nmake libEvent.dll)");
-              st1 = gSystem->Load("$(ROOTSYS)/test/libEvent");
-           }
-        }
-     }
-   }
-   ~ensureEventLoaded() { }
-} myStaticObject;
-#endif
 
 //_______________________ common part_________________________
 
@@ -268,7 +241,8 @@ void stressIOPlugins2()
 
    TCanvas *c1 = new TCanvas("c1","stress canvas",800,600);
    gROOT->LoadClass("TPostScript","Postscript");
-   TPostScript ps("stressIOPlugins.ps",112);
+   TString psfname = TString::Format("stressIOPlugins-%d.ps", gSystem->GetPid());
+   TPostScript ps(psfname,112);
 
    //Get objects generated in previous test
    TFile *f = openTestFile("stress_5.root",title);
@@ -297,7 +271,14 @@ void stressIOPlugins2()
    ps.Close();
 
    //count number of lines in ps file
-   FILE *fp = fopen("stressIOPlugins.ps","r");
+   FILE *fp = fopen(psfname,"r");
+   if (!fp) {
+      printf("FAILED\n");
+      printf("%-8s could not open %s\n"," ",psfname.Data());
+      delete c1;
+      delete f;
+      return;
+   }
    char line[260];
    Int_t nlines = 0;
    Int_t nlinesGood = 632;
@@ -312,7 +293,7 @@ void stressIOPlugins2()
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
-      printf("%-8s nlines in stressIOPlugins.ps file = %d\n"," ",nlines);
+      printf("%-8s nlines in %s file = %d\n"," ",psfname.Data(),nlines);
    }
    delete c1;
    delete f;
@@ -379,5 +360,6 @@ void stressIOPlugins3()
 
 void cleanup()
 {
-   gSystem->Unlink("stressIOPlugins.ps");
+   TString psfname = TString::Format("stressIOPlugins-%d.ps", gSystem->GetPid());
+   gSystem->Unlink(psfname);
 }

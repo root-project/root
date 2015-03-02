@@ -39,18 +39,17 @@
 using namespace ROOT;
 using namespace clang;
 
+//______________________________________________________________________________
 TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
+                                   bool inlineInputHeaders,
                                    const std::string &shLibFileName):
    fCI(CI),
    fIsPCH(shLibFileName == "allDict.cxx"),
+   fInlineInputHeaders(inlineInputHeaders),
    fDictionaryName(llvm::sys::path::stem(shLibFileName)),
+   fDemangledDictionaryName(llvm::sys::path::stem(shLibFileName)),
    fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
 {
-
-   // Clean the dictionary name from characters which are not accepted in C++
-   std::string tmpName = fDictionaryName;
-   fDictionaryName.clear();
-   ROOT::TMetaUtils::GetCppName(fDictionaryName, tmpName.c_str());
 
    // Need to resolve _where_ to create the pcm
    // We default in the lib subdirectory
@@ -63,6 +62,12 @@ TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
 
    fModuleFileName = fModuleDirName
                      + ROOT::TMetaUtils::GetModuleFileName(fDictionaryName.c_str());
+
+   // Clean the dictionary name from characters which are not accepted in C++
+   std::string tmpName = fDictionaryName;
+   fDictionaryName.clear();
+   ROOT::TMetaUtils::GetCppName(fDictionaryName, tmpName.c_str());
+
    // .pcm -> .pch
    if (IsPCH()) fModuleFileName[fModuleFileName.length() - 1] = 'h';
 
@@ -99,7 +104,8 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
       const clang::FileEntry *hdrFileEntry
          =  HdrSearch.LookupFile(filename, clang::SourceLocation(),
                                  true /*isAngled*/, 0 /*FromDir*/, CurDir,
-                                 clang::ArrayRef<const clang::FileEntry *>(),
+                                 clang::ArrayRef<std::pair<const clang::FileEntry*,
+                                                           const clang::DirectoryEntry*>>(),
                                  0 /*SearchPath*/, 0 /*RelativePath*/,
                                  0 /*SuggestedModule*/);
       if (hdrFileEntry) {
@@ -151,13 +157,16 @@ static
 std::pair<std::string, std::string> SplitPPDefine(const std::string &in)
 {
    std::string::size_type posEq = in.find('=');
+   // No equal found: define to 1
    if (posEq == std::string::npos)
-      return std::make_pair(in, "");
+      return std::make_pair(in, "1");
+
+   // Equal found
    return std::pair<std::string, std::string>
           (in.substr(0, posEq), in.substr(posEq + 1, std::string::npos));
 }
 
-
+//______________________________________________________________________________
 void TModuleGenerator::ParseArgs(const std::vector<std::string> &args)
 {
    // Parse -I -D -U headers.h SomethingLinkdef.h.
@@ -188,6 +197,7 @@ void TModuleGenerator::ParseArgs(const std::vector<std::string> &args)
    }
 }
 
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WritePPDefines(std::ostream &out) const
 {
    // Write
@@ -200,11 +210,7 @@ std::ostream &TModuleGenerator::WritePPDefines(std::ostream &out) const
       if (pos != std::string::npos) cppname.erase(pos);
       out << "#ifndef " << cppname << "\n"
           "  #define " << strPair.first;
-      if (!strPair.second.empty()) {
-         out << " " << strPair.second;
-      } else {
-         out << " 1";
-      }
+      out << " " << strPair.second;
       out << "\n"
           "#endif\n";
    }
@@ -212,6 +218,7 @@ std::ostream &TModuleGenerator::WritePPDefines(std::ostream &out) const
    return out;
 }
 
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WritePPUndefines(std::ostream &out) const
 {
    // Write
@@ -227,18 +234,34 @@ std::ostream &TModuleGenerator::WritePPUndefines(std::ostream &out) const
    return out;
 }
 
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WritePPIncludes(std::ostream &out) const
 {
    // Write
    // #include "header1.h"
    // #include "header2.h"
+   // or, if inlining of headers is requested, dump the content of the files.
+   std::string fullHeaderPath;
    for (auto const & incl : fHeaders) {
-      out << "#include \"" << incl << "\"\n";
+      if (fInlineInputHeaders){
+         bool headerFound = FindHeader(incl,fullHeaderPath);
+         if (!headerFound){
+            ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", fullHeaderPath.c_str());
+            continue;
+         }
+         std::ifstream buffer(fullHeaderPath);
+         std::string bufferContent((std::istreambuf_iterator<char>(buffer)),
+                                    std::istreambuf_iterator<char>());
+         out << bufferContent << std::endl;
+      } else {
+         out << "#include \"" << incl << "\"\n";
+      }
    }
    out << std::endl;
    return out;
 }
 
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WriteStringVec(const std::vector<std::string> &vec,
       std::ostream &out) const
 {
@@ -249,6 +272,7 @@ std::ostream &TModuleGenerator::WriteStringVec(const std::vector<std::string> &v
    return out;
 }
 
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WriteStringPairVec(const StringPairVec_t &vec,
       std::ostream &out) const
 {
@@ -273,7 +297,6 @@ std::ostream &TModuleGenerator::WriteStringPairVec(const StringPairVec_t &vec,
 
 //______________________________________________________________________________
 void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
-      bool inlineHeaders,
       const std::string &fwdDeclnArgsToKeepString,
       const std::string &headersClassesMapString,
       const std::string &fwdDeclString) const
@@ -298,22 +321,10 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
 
    // If necessary, inline the headers
    std::string inlinedHeaders;
-   if (inlineHeaders) {
+   if (fInlineInputHeaders) {
       std::string hdrFullPath;
       for (auto const & hdrName : fHeaders) {
-         hdrFullPath = hdrName;
-         bool headerFound = false;
-         if (!llvm::sys::fs::exists(hdrFullPath)) {
-            for (auto const & incDir : fCompI) {
-               hdrFullPath = incDir + ROOT::TMetaUtils::GetPathSeparator() + hdrName;
-               if (llvm::sys::fs::exists(hdrFullPath)) {
-                  headerFound = true;
-                  break;
-               }
-            }
-         } else {
-            headerFound = true;
-         }
+         bool headerFound = FindHeader(hdrName,hdrFullPath);
          if (!headerFound) {
             ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", hdrName.c_str());
          } else {
@@ -347,7 +358,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
        "  void TriggerDictionaryInitialization_"
        << GetDictionaryName() << "_Impl() {\n"
        "    static const char* headers[] = {\n";
-   if (inlineHeaders) {
+   if (fInlineInputHeaders) {
       out << 0 ;
    } else {
       WriteHeaderArray(out);
@@ -361,7 +372,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
                               "    " << headersClassesMapString << "\n"
                               "    static bool isInitialized = false;\n"
                               "    if (!isInitialized) {\n"
-                              "      TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
+                              "      TROOT::RegisterModule(\"" << GetDemangledDictionaryName() << "\",\n"
                               "        headers, includePaths, payloadCode, fwdDeclCode,\n"
                               "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << ", classesHeaders);\n"
                               "      isInitialized = true;\n"
@@ -403,6 +414,27 @@ void TModuleGenerator::WriteContentHeader(std::ostream &out) const
       WriteUndefinesArray(out) << "};\n";*/
 
    out << "} } }" << std::endl;
+}
+
+//______________________________________________________________________________
+bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFullPath) const
+{
+   // Return true if the header is found in the include paths
+   // in this case also fill the full path variable with the full path.
+   hdrFullPath = hdrName;
+   bool headerFound = false;
+   if (llvm::sys::fs::exists(hdrFullPath)) {
+      return true;
+   } else {
+      for (auto const & incDir : fCompI) {
+         hdrFullPath = incDir + ROOT::TMetaUtils::GetPathSeparator() + hdrName;
+         if (llvm::sys::fs::exists(hdrFullPath)) {
+            headerFound = true;
+            break;
+         }
+      }
+   }
+   return headerFound;
 }
 
 //______________________________________________________________________________

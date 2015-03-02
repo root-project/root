@@ -1197,9 +1197,16 @@ void TEntryList::SetTree(const TTree *tree)
    //where the filename is taken "as is".
 
    if (!tree) return;
-   if (!tree->GetTree()) return;
+   auto thisTree = tree->GetTree();
+   if (!thisTree) return;
 
-   TString treename = tree->GetTree()->GetName();
+   TString treename;
+   if (TFile::Class() == tree->GetDirectory()->IsA())
+      treename = thisTree->GetName();
+   else {
+      treename = TString::Format("%s/%s",tree->GetDirectory()->GetName(),thisTree->GetName());
+   }
+
    TString filename;
    if (tree->GetTree()->GetCurrentFile()){
       filename = tree->GetTree()->GetCurrentFile()->GetName();

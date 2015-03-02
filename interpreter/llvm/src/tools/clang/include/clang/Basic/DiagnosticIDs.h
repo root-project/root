@@ -12,8 +12,8 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CLANG_DIAGNOSTICIDS_H
-#define LLVM_CLANG_DIAGNOSTICIDS_H
+#ifndef LLVM_CLANG_BASIC_DIAGNOSTICIDS_H
+#define LLVM_CLANG_BASIC_DIAGNOSTICIDS_H
 
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
@@ -33,7 +33,7 @@ namespace clang {
       DIAG_START_SERIALIZATION = DIAG_START_FRONTEND        +  100,
       DIAG_START_LEX           = DIAG_START_SERIALIZATION   +  120,
       DIAG_START_PARSE         = DIAG_START_LEX             +  300,
-      DIAG_START_AST           = DIAG_START_PARSE           +  400,
+      DIAG_START_AST           = DIAG_START_PARSE           +  500,
       DIAG_START_COMMENT       = DIAG_START_AST             +  100,
       DIAG_START_SEMA          = DIAG_START_COMMENT         +  100,
       DIAG_START_ANALYSIS      = DIAG_START_SEMA            + 3000,
@@ -66,6 +66,15 @@ namespace clang {
       Warning = 3, ///< Present this diagnostic as a warning.
       Error = 4,   ///< Present this diagnostic as an error.
       Fatal = 5    ///< Present this diagnostic as a fatal error.
+    };
+
+    /// Flavors of diagnostics we can emit. Used to filter for a particular
+    /// kind of diagnostic (for instance, for -W/-R flags).
+    enum class Flavor {
+      WarningOrError, ///< A diagnostic that indicates a problem or potential
+                      ///< problem. Can be made fatal by -Werror.
+      Remark          ///< A diagnostic that indicates normal progress through
+                      ///< compilation.
     };
   }
 
@@ -228,15 +237,16 @@ public:
   ///
   /// \param[out] Diags - On return, the diagnostics in the group.
   /// \returns \c true if the given group is unknown, \c false otherwise.
-  bool getDiagnosticsInGroup(StringRef Group,
+  bool getDiagnosticsInGroup(diag::Flavor Flavor, StringRef Group,
                              SmallVectorImpl<diag::kind> &Diags) const;
 
   /// \brief Get the set of all diagnostic IDs.
-  void getAllDiagnostics(SmallVectorImpl<diag::kind> &Diags) const;
+  void getAllDiagnostics(diag::Flavor Flavor,
+                         SmallVectorImpl<diag::kind> &Diags) const;
 
-  /// \brief Get the warning option with the closest edit distance to the given
-  /// group name.
-  static StringRef getNearestWarningOption(StringRef Group);
+  /// \brief Get the diagnostic option with the closest edit distance to the
+  /// given group name.
+  static StringRef getNearestOption(diag::Flavor Flavor, StringRef Group);
 
 private:
   /// \brief Classify the specified diagnostic ID into a Level, consumable by

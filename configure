@@ -1364,6 +1364,7 @@ guess_architecture() {
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
         linux:x32:*)           arch=linuxx32gcc     ;;
         linux:arm*:*)          arch=linuxarm        ;;
+        linux:aarch64:*)       arch=linuxarm64      ;;
         linux:hppa*:*)         arch=linux           ;;
         linux:sparc*:*)        arch=linux           ;;
         linux:parisc*:*)       arch=linuxhppa       ;;
@@ -1804,6 +1805,7 @@ with options, prefix with --with-, enables corresponding support
   xml-incdir         XML support, location of libxml/tree.h
   xml-libdir         XML support, location of libxml2
   x11-libdir         X11 support, path to libX11
+  xpm-incdir         XPM support, path to X11/Xpm.h
   xpm-libdir         XPM support, path to libXpm
   xft-libdir         Xft support, path to libXft
   xext-libdir        Xext support, path to libXext
@@ -1907,6 +1909,10 @@ linuxx8664k1om*)
    enable_tmva="no"
    ;;
 linuxx8664*)
+   logmsg "Will check 64bit libraries"
+   checklinux64="yes"
+   checklib64="yes" ;;
+linuxarm64)
    logmsg "Will check 64bit libraries"
    checklinux64="yes"
    checklib64="yes" ;;
@@ -2186,6 +2192,7 @@ if test $# -gt 0 ; then
       --with-xml-incdir=*)     xmlincdir=$optarg     ; enable_xml="yes"     ;;
       --with-xml-libdir=*)     xmllibdir=$optarg     ; enable_xml="yes"     ;;
       --with-x11-libdir=*)     x11libdir=$optarg     ;;
+      --with-xpm-incdir=*)     xpmincdir=$optarg     ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
       --with-xft-libdir=*)     xftlibdir=$optarg     ;;
       --with-xext-libdir=*)    xextlibdir=$optarg    ;;
@@ -2546,6 +2553,22 @@ fi
 
 ######################################################################
 #
+### echo %%% Use compiler to generate dependency files.
+#
+if test ! "x$arch" = "win32"; then
+    message "Checking whether compiler can generate dependencies"
+    check_cxxopt "-MMD -MP"
+    if test $cxxopt_result -eq 0 ; then
+        cxxmkdepflags=""
+        result "no"
+    else
+        cxxmkdepflags="-MMD -MP"
+        result "yes"
+    fi
+fi
+
+######################################################################
+#
 ### echo %%% C++11 - compile using c++11 compatible option
 #
 # needs gcc > 4.7.x or clang
@@ -2799,7 +2822,7 @@ if test ! "x$enable_x11" = "xno" ; then
         exit 1
     fi
 
-    check_header "X11/xpm.h" "" \
+    check_header "X11/xpm.h" "" "$xpmincdir" \
         $XPM ${XPM:+$XPM/include} \
         ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
@@ -3771,8 +3794,10 @@ if test ! "x$enable_rfio" = "xno" ; then
         $RFIO ${RFIO:+$RFIO/include} \
         ${RFIO:+$RFIO/include/shift} ${RFIO:+$RFIO/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
-        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
-        /usr/local/include/shift /usr/include /usr/local/include
+        /opt/shift/include /usr/local/shift/include \
+        /usr/include/shift /usr/local/include/shift \
+        /usr/include/dpm /usr/local/include/dpm \
+        /usr/include /usr/local/include
     shiftinc=$found_hdr
     shiftincdir=$found_dir
 
@@ -3846,7 +3871,7 @@ if test ! "x$enable_castor" = "xno" ; then
         $CASTOR ${CASTOR:+$CASTOR/include} \
         ${CASTOR:+$CASTOR/include/shift} ${CASTOR:+$CASTOR/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
-        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+        /opt/shift/include /usr/local/shift/include /usr/include/shift \
         /usr/local/include/shift /usr/include /usr/local/include
     castorinc=$found_hdr
     castorincdir=$found_dir
@@ -3868,7 +3893,7 @@ if test ! "x$enable_castor" = "xno" ; then
         $CASTOR ${CASTOR:+$CASTOR/include} \
         ${CASTOR:+$CASTOR/include/shift} ${CASTOR:+$CASTOR/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
-        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+        /opt/shift/include /usr/local/shift/include /usr/include/shift \
         /usr/local/include/shift /usr/include /usr/local/include
     stagerinc=$found_hdr
 
@@ -3939,6 +3964,7 @@ if test ! "x$enable_gfal" = "xno"; then
     # Check for GFAL include and library
     check_header "gfal_api.h" "$gfalincdir" \
         $GFAL ${GFAL:+$GFAL/include} \
+        /usr/include/gfal2 /usr/include \
         /opt/lcg/include /opt/gfal/include /usr/local/lcg/include \
         /usr/local/gfal/include
     gfalinc=$found_hdr
@@ -3947,11 +3973,13 @@ if test ! "x$enable_gfal" = "xno"; then
     if test ! "x$gfalincdir" = "x" && grep GFAL2 $gfalincdir/gfal_api.h > /dev/null 2>&1 ; then
         check_library "libgfal2" "$enable_shared" "$gfallibdir" \
             $GFAL ${GFAL:+$GFAL/lib} \
+            /usr/lib \
             /opt/lcg/lib /opt/gfal2/lib /usr/local/lcg/lib \
             /usr/local/gfal2/lib
     else
         check_library "libgfal" "$enable_shared" "$gfallibdir" \
             $GFAL ${GFAL:+$GFAL/lib} \
+            /usr/lib \
             /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
             /usr/local/gfal/lib
     fi
@@ -4387,7 +4415,7 @@ if test ! "x$enable_hdfs" = "xno" ; then
     check_header "hdfs.h" "$hdfsincdir" \
         $HDFS ${HDFS:+$HDFS/include} ${HDFS:+$HDFS/src/c++/libhdfs} \
         $HADOOP_HOME ${HADOOP_HOME:+$HADOOP_HOME/src/c++/libhdfs} \
-        /usr/include /usr/local/include
+        /usr/include /usr/include/hadoop /usr/local/include
     hdfsinc=$found_hdr
     hdfsincdir=$found_dir
 
@@ -5222,6 +5250,8 @@ if test "x$enable_xrootd" = "xyes" ; then
    if test "x$enable_xrootd" = "xyes"; then
       if test -d "$xrdincdir/private"; then
          xrdincprivate="yes"
+      elif test -d "${ac_srcdir}/proof/xrdinc"; then
+         xrdincprivate="proof"
       fi
    fi
 
@@ -7588,6 +7618,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@c++14@|$enable_cxx14|"               \
     -e "s|@libc++@|$enable_libcxx|"             \
     -e "s|@werror@|$enable_werror|"             \
+    -e "s|@cxxmkdepflags@|$cxxmkdepflags|"      \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 

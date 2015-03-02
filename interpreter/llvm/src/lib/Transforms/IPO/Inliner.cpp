@@ -16,6 +16,8 @@
 #include "llvm/Transforms/IPO/InlinerPass.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/Analysis/AliasAnalysis.h"
+#include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/InlineCost.h"
 #include "llvm/IR/CallSite.h"
@@ -27,7 +29,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Target/TargetLibraryInfo.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/Local.h"
 using namespace llvm;
@@ -74,6 +76,8 @@ Inliner::Inliner(char &ID, int Threshold, bool InsertLifetime)
 /// the call graph.  If the derived class implements this method, it should
 /// always explicitly call the implementation here.
 void Inliner::getAnalysisUsage(AnalysisUsage &AU) const {
+  AU.addRequired<AliasAnalysis>();
+  AU.addRequired<AssumptionCacheTracker>();
   CallGraphSCCPass::getAnalysisUsage(AU);
 }
 
@@ -215,7 +219,7 @@ static bool InlineCallIfPossible(CallSite CS, InlineFunctionInfo &IFI,
       
       // If the inlined function already uses this alloca then we can't reuse
       // it.
-      if (!UsedAllocas.insert(AvailableAlloca))
+      if (!UsedAllocas.insert(AvailableAlloca).second)
         continue;
       
       // Otherwise, we *can* reuse it, RAUW AI into AvailableAlloca and declare
@@ -439,9 +443,12 @@ static bool InlineHistoryIncludes(Function *F, int InlineHistoryID,
 
 bool Inliner::runOnSCC(CallGraphSCC &SCC) {
   CallGraph &CG = getAnalysis<CallGraphWrapperPass>().getCallGraph();
+  AssumptionCacheTracker *ACT = &getAnalysis<AssumptionCacheTracker>();
   DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
   const DataLayout *DL = DLP ? &DLP->getDataLayout() : nullptr;
-  const TargetLibraryInfo *TLI = getAnalysisIfAvailable<TargetLibraryInfo>();
+  auto *TLIP = getAnalysisIfAvailable<TargetLibraryInfoWrapperPass>();
+  const TargetLibraryInfo *TLI = TLIP ? &TLIP->getTLI() : nullptr;
+  AliasAnalysis *AA = &getAnalysis<AliasAnalysis>();
 
   SmallPtrSet<Function*, 8> SCCFunctions;
   DEBUG(dbgs() << "Inliner visiting SCC:");
@@ -500,8 +507,8 @@ bool Inliner::runOnSCC(CallGraphSCC &SCC) {
 
   
   InlinedArrayAllocasTy InlinedArrayAllocas;
-  InlineFunctionInfo InlineInfo(&CG, DL);
-  
+  InlineFunctionInfo InlineInfo(&CG, DL, AA, ACT);
+
   // Now that we have all of the call sites, loop over them and inline them if
   // it looks profitable to do so.
   bool Changed = false;
@@ -662,6 +669,13 @@ bool Inliner::removeDeadFunctions(CallGraph &CG, bool AlwaysInlineOnly) {
     F->removeDeadConstantUsers();
 
     if (!F->isDefTriviallyDead())
+      continue;
+
+    // It is unsafe to drop a function with discardable linkage from a COMDAT
+    // without also dropping the other members of the COMDAT.
+    // The inliner doesn't visit non-function entities which are in COMDAT
+    // groups so it is unsafe to do so *unless* the linkage is local.
+    if (!F->hasLocalLinkage() && F->hasComdat())
       continue;
     
     // Remove any call graph edges from the function to its callees.

@@ -20,30 +20,23 @@ class TGlobal;
 
 namespace PyROOT {
 
-/** Proxy to ROOT data presented as python property
-      @author  WLAV
-      @date    02/12/2005
-      @version 2.0
- */
-
    class ObjectProxy;
 
    class PropertyProxy {
    public:
-      void Set( TDataMember* );
-      void Set( TEnumConstant* );
-      void Set( TGlobal* );
+      void Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata );
+      void Set( Cppyy::TCppScope_t scope, const std::string& name, void* address );
 
       std::string GetName() { return fName; }
-      Long_t GetAddress( ObjectProxy* pyobj /* owner */ );
+      void* GetAddress( ObjectProxy* pyobj /* owner */ );
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
-      Long_t       fOffset;
-      Long_t       fProperty;
-      TConverter*  fConverter;
-      ClassInfo_t* fEnclosingScope;
-      std::string  fName;
+      ptrdiff_t          fOffset;
+      Long_t             fProperty;
+      TConverter*        fConverter;
+      Cppyy::TCppScope_t fEnclosingScope;
+      std::string        fName;
 
    private:              // private, as the python C-API will handle creation
       PropertyProxy() {}
@@ -66,13 +59,23 @@ namespace PyROOT {
    }
 
 //- creation -----------------------------------------------------------------
-   template< class T >
-   inline PropertyProxy* PropertyProxy_New( const T& dmi )
+   inline PropertyProxy* PropertyProxy_New(
+      Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata )
    {
    // Create an initialize a new property descriptor, given the C++ datum.
       PropertyProxy* pyprop =
          (PropertyProxy*)PropertyProxy_Type.tp_new( &PropertyProxy_Type, 0, 0 );
-      pyprop->Set( dmi );
+      pyprop->Set( scope, idata );
+      return pyprop;
+   }
+
+   inline PropertyProxy* PropertyProxy_NewConstant(
+      Cppyy::TCppScope_t scope, const std::string& name, void* address )
+   {
+   // Create an initialize a new property descriptor, given the C++ datum.
+      PropertyProxy* pyprop =
+         (PropertyProxy*)PropertyProxy_Type.tp_new( &PropertyProxy_Type, 0, 0 );
+      pyprop->Set( scope, name, address );
       return pyprop;
    }
 

@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef Hexagon_ISELLOWERING_H
-#define Hexagon_ISELLOWERING_H
+#ifndef LLVM_LIB_TARGET_HEXAGON_HEXAGONISELLOWERING_H
+#define LLVM_LIB_TARGET_HEXAGON_HEXAGONISELLOWERING_H
 
 #include "Hexagon.h"
 #include "llvm/CodeGen/CallingConvLower.h"
@@ -21,6 +21,10 @@
 #include "llvm/Target/TargetLowering.h"
 
 namespace llvm {
+
+// Return true when the given node fits in a positive half word.
+bool isPositiveHalfWord(SDNode *N);
+
   namespace HexagonISD {
     enum {
       FIRST_NUMBER = ISD::BUILTIN_OP_END,
@@ -45,10 +49,15 @@ namespace llvm {
       FTOI,        // FP to Int within a FP register.
       ITOF,        // Int to FP within a FP register.
 
-      CALL,        // A call instruction.
+      CALLv3,      // A V3+ call instruction.
+      CALLv3nr,    // A V3+ call instruction that doesn't return.
+      CALLR,
+
       RET_FLAG,    // Return with a flag operand.
       BR_JT,       // Jump table.
-      BARRIER,     // Memory barrier.
+      BARRIER,     // Memory barrier
+      POPCOUNT,
+      COMBINE,
       WrapperJT,
       WrapperCP,
       WrapperCombineII,
@@ -63,7 +72,8 @@ namespace llvm {
       WrapperShuffOB,
       WrapperShuffOH,
       TC_RETURN,
-      EH_RETURN
+      EH_RETURN,
+      DCFETCH
     };
   }
 

@@ -105,6 +105,94 @@ namespace {
 
 std::atomic<Int_t> TClass::fgClassCount;
 
+// Implementation of the TDeclNameRegistry
+
+//______________________________________________________________________________
+TClass::TDeclNameRegistry::TDeclNameRegistry(Int_t verbLevel): fVerbLevel(verbLevel){}
+
+//______________________________________________________________________________
+void TClass::TDeclNameRegistry::AddQualifiedName(const char *name)
+{
+   // Extract this part of the name
+   // 1) Templates ns::ns2::,,,::THISPART<...
+   // 2) Namespaces,classes ns::ns2::,,,::THISPART
+
+   // Sanity check
+   auto strLen = strlen(name);
+   if (strLen == 0) return;
+   // find <. If none, put end of string
+   const char* endCharPtr = strchr(name, '<');
+   endCharPtr = !endCharPtr ? &name[strLen] : endCharPtr;
+   // find last : before the <. If not found, put begin of string
+   const char* beginCharPtr = endCharPtr;
+   while (beginCharPtr!=name){
+      if (*beginCharPtr==':'){
+         beginCharPtr++;
+         break;
+      }
+      beginCharPtr--;
+   }
+   beginCharPtr = beginCharPtr!=endCharPtr ? beginCharPtr : name;
+   std::string s(beginCharPtr, endCharPtr);
+   if (fVerbLevel>1)
+      printf("TDeclNameRegistry::AddQualifiedName Adding key %s for class/namespace %s\n", s.c_str(), name);
+   TClass::TSpinLockGuard slg(fSpinLock);
+   fClassNamesSet.insert(s);
+}
+
+//______________________________________________________________________________
+Bool_t TClass::TDeclNameRegistry::HasDeclName(const char *name) const
+{
+   Bool_t found = false;
+   {
+      TClass::TSpinLockGuard slg(fSpinLock);
+      found = fClassNamesSet.find(name) != fClassNamesSet.end();
+   }
+   return found;
+}
+
+//______________________________________________________________________________
+TClass::TDeclNameRegistry::~TDeclNameRegistry()
+{
+   if (fVerbLevel>1){
+      printf("TDeclNameRegistry Destructor. List of %lu names:\n",fClassNamesSet.size());
+      for(auto const & key:fClassNamesSet){
+         printf(" - %s\n",key.c_str());
+      }
+   }
+}
+
+// Implementation of the spinlock guard in the registry
+
+//______________________________________________________________________________
+TClass::TSpinLockGuard::TSpinLockGuard(std::atomic_flag& aflag):fAFlag(aflag)
+{
+   while (fAFlag.test_and_set(std::memory_order_acquire));
+}
+
+//______________________________________________________________________________
+TClass::TSpinLockGuard::~TSpinLockGuard()
+{
+   fAFlag.clear(std::memory_order_release);
+}
+
+//______________________________________________________________________________
+TClass::InsertTClassInRegistryRAII::InsertTClassInRegistryRAII(TClass::EState &state,
+                                   const char *name,
+                                   TDeclNameRegistry &emuRegistry): fState(state),fName(name), fNoInfoOrEmuOrFwdDeclNameRegistry(emuRegistry) {}
+
+//______________________________________________________________________________
+TClass::InsertTClassInRegistryRAII::~InsertTClassInRegistryRAII() {
+   if (fState == TClass::kNoInfo ||
+       fState == TClass::kEmulated ||
+       fState == TClass::kForwardDeclared){
+      fNoInfoOrEmuOrFwdDeclNameRegistry.AddQualifiedName(fName);
+      }
+   }
+
+// In itialise the global member of TClass
+TClass::TDeclNameRegistry TClass::fNoInfoOrEmuOrFwdDeclNameRegistry;
+
 //Intent of why/how TClass::New() is called
 //[Not a static datamember because MacOS does not support static thread local data member ... who knows why]
 TClass::ENewType &TClass__GetCallingNew() {
@@ -1200,6 +1288,8 @@ void TClass::Init(const char *name, Version_t cversion,
 
    TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(fName.Data());
 
+   InsertTClassInRegistryRAII insertRAII(fState,fName,fNoInfoOrEmuOrFwdDeclNameRegistry);
+
    if (oldcl && oldcl->TestBit(kLoading)) {
       // Do not recreate a class while it is already being created!
 
@@ -1947,7 +2037,7 @@ void TClass::CalculateStreamerOffset() const
 
       TMmallocDescTemp setreset;
       fIsOffsetStreamerSet = kTRUE;
-      fOffsetStreamer = const_cast<TClass*>(this)->GetBaseClassOffset(TObject::Class());
+      fOffsetStreamer = const_cast<TClass*>(this)->GetBaseClassOffsetRecurse(TObject::Class());
       if (fStreamerType == kTObject) {
          fStreamerImpl = &TClass::StreamerTObjectInitialized;
       }
@@ -2322,7 +2412,7 @@ TClass *TClass::GetActualClass(const void *object) const
       //      object->IsA(brd, parent);
       //will not work if the class derives from TObject but not as primary
       //inheritance.
-      if (fIsAMethod==0) {
+      if (fIsAMethod.load()==0) {
          TMethodCall* temp = new TMethodCall((TClass*)this, "IsA", "");
 
          if (!temp->GetMethod()) {
@@ -2334,7 +2424,7 @@ TClass *TClass::GetActualClass(const void *object) const
          temp->ReturnType();
 
          TMethodCall* expected = nullptr;
-         if( not fIsAMethod.compare_exchange_strong(expected,temp) ) {
+         if( !fIsAMethod.compare_exchange_strong(expected,temp) ) {
             //another thread beat us to it
             delete temp;
          }
@@ -2921,6 +3011,11 @@ TClass *TClass::GetClass(ClassInfo_t *info, Bool_t load, Bool_t silent)
 }
 
 //______________________________________________________________________________
+Bool_t TClass::HasNoInfoOrEmuOrFwdDeclaredDecl(const char* name){
+   return fNoInfoOrEmuOrFwdDeclNameRegistry.HasDeclName(name);
+}
+
+//______________________________________________________________________________
 Bool_t TClass::GetClass(DeclId_t id, std::vector<TClass*> &classes)
 {
 
@@ -3369,6 +3464,19 @@ Bool_t TClass::HasDictionary()
 }
 
 //______________________________________________________________________________
+Bool_t TClass::HasDictionarySelection(const char* clname)
+{
+   // Check whether a class has a dictionary or ROOT can load one.
+   // This is equivalent to ask HasDictionary() or whether a library is known
+   // where it can be loaded from, or whether a Dictionary function is
+   // available because the class's dictionary library was already loaded.
+
+   if (TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(clname))
+      return cl->IsLoaded();
+   return  gClassTable->GetDict(clname) || gInterpreter->GetClassSharedLibs(clname);
+}
+
+//______________________________________________________________________________
 void TClass::GetMissingDictionariesForBaseClasses(TCollection& result, TCollection& visited, bool recurse)
 {
    // Verify the base classes always.
@@ -3585,6 +3693,8 @@ void TClass::ResetClassInfo()
 {
    // Make sure that the current ClassInfo is up to date.
    R__LOCKGUARD2(gInterpreterMutex);
+
+   InsertTClassInRegistryRAII insertRAII(fState,fName,fNoInfoOrEmuOrFwdDeclNameRegistry);
 
    if (fClassInfo) {
       TClass::RemoveClassDeclId(gInterpreter->GetDeclId(fClassInfo));
@@ -4285,7 +4395,7 @@ void *TClass::DynamicCast(const TClass *cl, void *obj, Bool_t up)
    if (!HasDataMemberInfo()) return 0;
 
    Int_t off;
-   if ((off = GetBaseClassOffset(cl)) != -1) {
+   if ((off = GetBaseClassOffset(cl, obj)) != -1) {
       if (up)
          return (void*)((Long_t)obj+off);
       else
@@ -5108,10 +5218,14 @@ void TClass::LoadClassInfo() const
 
    gInterpreter->AutoParse(GetName());
    if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
-   if (!fClassInfo) {
-      ::Error("TClass::LoadClassInfo", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
+   if (!gInterpreter->IsAutoParsingSuspended()) {
+      if (!fClassInfo) {
+	 ::Error("TClass::LoadClassInfo",
+		 "no interpreter information for class %s is available eventhough it has a TClass initialization routine.",
+		 fName.Data());
+      }
+      fCanLoadClassInfo = kFALSE;
    }
-   fCanLoadClassInfo = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -5309,7 +5423,7 @@ Long_t TClass::Property() const
       kl->SetBit(kIsTObject);
 
       // Is it DIRECT inheritance from TObject?
-      Int_t delta = kl->GetBaseClassOffset(TObject::Class());
+      Int_t delta = kl->GetBaseClassOffsetRecurse(TObject::Class());
       if (delta==0) kl->SetBit(kStartWithTObject);
 
       kl->fStreamerType  = kTObject;
@@ -5477,11 +5591,14 @@ void TClass::SetUnloaded()
    delete fIsA; fIsA = 0;
    // Disable the autoloader while calling SetClassInfo, to prevent
    // the library from being reloaded!
-   int autoload_old = gCling->SetClassAutoloading(0);
-   int autoparse_old = gCling->SetClassAutoparsing(0);
-   gInterpreter->SetClassInfo(this,kTRUE);
-   gCling->SetClassAutoparsing(autoparse_old);
-   gCling->SetClassAutoloading(autoload_old);
+   {
+      int autoload_old = gCling->SetClassAutoloading(0);
+      TInterpreter::SuspendAutoParsing autoParseRaii(gCling);
+
+      gInterpreter->SetClassInfo(this,kTRUE);
+
+      gCling->SetClassAutoloading(autoload_old);
+   }
    fDeclFileName = 0;
    fDeclFileLine = 0;
    fImplFileName = 0;
@@ -5648,14 +5765,35 @@ Bool_t TClass::MatchLegacyCheckSum(UInt_t checksum) const
 //______________________________________________________________________________
 UInt_t TClass::GetCheckSum(ECheckSum code) const
 {
+   // Call GetCheckSum with validity check.
+
+   bool isvalid;
+   return GetCheckSum(code,isvalid);
+}
+
+//______________________________________________________________________________
+UInt_t TClass::GetCheckSum(Bool_t &isvalid) const
+{
+   // Return GetCheckSum(kCurrentCheckSum,isvalid);
+
+   return GetCheckSum(kCurrentCheckSum,isvalid);
+}
+
+//______________________________________________________________________________
+UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
+{
    // Compute and/or return the class check sum.
+   //
+   // isvalid is set to false, if the function is unable to calculate the
+   // checksum.
+   //
    // The class ckecksum is used by the automatic schema evolution algorithm
    // to uniquely identify a class version.
    // The check sum is built from the names/types of base classes and
    // data members.
    // Original algorithm from Victor Perevovchikov (perev@bnl.gov).
    //
-   // The valid range of code is determined by ECheckSum
+   // The valid range of code is determined by ECheckSum.
    //
    // kNoEnum:  data members of type enum are not counted in the checksum
    // kNoRange: return the checksum of data members and base classes, not including the ranges and array size found in comments.
@@ -5669,6 +5807,8 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
    // from TClass::GetListOfBases and TClass::GetListOfDataMembers.
 
    R__LOCKGUARD(gInterpreterMutex);
+
+   isvalid = kTRUE;
 
    if (fCheckSum && code == kCurrentCheckSum) return fCheckSum;
 
@@ -5699,10 +5839,12 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
          il = name.Length();
          for (int i=0; i<il; i++) id = id*3+name[i];
          if (code > kNoBaseCheckSum && !isSTL) {
-            if (tbc->GetClassPointer() == 0)
+            if (tbc->GetClassPointer() == 0) {
                Error("GetCheckSum","Calculating the checksum for (%s) requires the base class (%s) meta information to be available!",
                      GetName(),tbc->GetName());
-            else
+               isvalid = kFALSE;
+               return 0;
+            } else
                id = id*3 + tbc->GetClassPointer()->GetCheckSum();
          }
       }/*EndBaseLoop*/

@@ -805,7 +805,28 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
       // Insert in the selected classes if not already there
       // We need this check since the same class can be selected through its name or typedef
-      bool rcrdDeclNotAlreadySelected = fselectedRecordDecls.insert(recordDecl).second;
+      bool rcrdDeclNotAlreadySelected = fselectedRecordDecls.insert((RecordDecl*)recordDecl->getCanonicalDecl()).second;
+
+      // Prompt a warning in case the class was selected twice
+      if (!fFirstPass &&
+          !rcrdDeclNotAlreadySelected &&
+          selected->HasAttributeName()){
+         const std::string& name_value = selected->GetAttributeName();
+         std::string normName;
+         TMetaUtils::GetNormalizedName(normName,
+                                       recordDecl->getASTContext().getTypeDeclType(recordDecl),
+                                       fInterpreter,
+                                       fNormCtxt);
+         std::stringstream message;
+         message << "Attempt to select with a named selection rule an already selected class. The name used in the selection is \""
+                 << name_value << "\" while the class is \"" << normName << "\".";
+         if (selected->GetAttributes().size() > 1){
+            message << " The attributes specified will not be propagated to the typesystem of ROOT.";
+         }
+         ROOT::TMetaUtils::Warning(0,"%s\n", message.str().c_str());
+      }
+
+      fDeclSelRuleMap[recordDecl->getCanonicalDecl()]=selected;
 
       if(rcrdDeclNotAlreadySelected &&
          !fFirstPass){

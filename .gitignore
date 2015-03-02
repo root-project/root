@@ -45,6 +45,7 @@ etc/allDict.h
 /buildtools
 /roottest
 /*.mk
+/.project
 
 # /README/
 /README/ChangeLog
@@ -128,6 +129,7 @@ core/base/src/RGitCommit.h
 /etc/cling
 /etc/allDict.cxx.pch
 /etc/allDict.cxx.h
+/etc/dictpch
 
 # /etc/daemons/
 /etc/daemons/rootd.rc.d

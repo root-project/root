@@ -497,7 +497,7 @@ void AnnotateFieldDecl(clang::FieldDecl &decl,
 
 //______________________________________________________________________________
 void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
-                  SelectionRules &selectionRules,
+                  const RScanner::DeclsSelRulesMap_t &declSelRulesMap,
                   cling::Interpreter &interpreter,
                   bool isGenreflex)
 {
@@ -516,27 +516,28 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
    SourceRange commentRange;
 
-   std::string declName;
-   const std::string thisClassName(CXXRD.getName());
-
 //    if (genreflex::verbose)
 //       std::cout << "\nInspecting class declaration " << thisClassName << " for annotations\n";
 
    // Fetch the selection rule associated to this class
    clang::Decl *declBaseClassPtr = static_cast<clang::Decl *>(&CXXRD);
-   const BaseSelectionRule *thisClassBaseSelectionRule(selectionRules.IsDeclSelected(declBaseClassPtr));
-   BaseSelectionRule::AttributesMap_t attrMap;
+   auto declSelRulePair = declSelRulesMap.find(declBaseClassPtr->getCanonicalDecl());
+   if (declSelRulePair == declSelRulesMap.end()){
+      const std::string thisClassName(CXXRD.getName());
+      ROOT::TMetaUtils::Error("AnnotateDecl","Cannot find class %s in the list of selected classes.\n",thisClassName.c_str());
+      return;
+   }
+   const BaseSelectionRule *thisClassBaseSelectionRule = declSelRulePair->second;
    // If the rule is there
    if (thisClassBaseSelectionRule) {
       // Fetch and loop over Class attributes
       // if the name of the attribute is not "name", add attr to the ast.
-      attrMap = thisClassBaseSelectionRule->GetAttributes();
       BaseSelectionRule::AttributesMap_t::iterator iter;
       std::string userDefinedProperty;
-      for (iter = attrMap.begin(); iter != attrMap.end(); iter++) {
-         const std::string &name = iter->first;
+      for (auto const & attr : thisClassBaseSelectionRule->GetAttributes()) {
+         const std::string &name = attr.first;
          if (name == ROOT::TMetaUtils::propNames::name) continue;
-         const std::string &value = iter->second;
+         const std::string &value = attr.second;
          userDefinedProperty = name + ROOT::TMetaUtils::propNames::separator + value;
          if (genreflex::verbose) std::cout << " * " << userDefinedProperty << std::endl;
          CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, userDefinedProperty, 0));
@@ -572,7 +573,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
             // The ClassDef annotation is for the class itself
             if (isClassDefMacro) {
                CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, comment.str(), 0));
-            } else if (!selectionRules.IsSelectionXMLFile()) {
+            } else if (!isGenreflex) {
                // Here we check if we are in presence of a selction file so that
                // the comment does not ends up as a decoration in the AST,
                // Nevertheless, w/o PCMS this has no effect, since the headers
@@ -583,7 +584,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          }
          // Match decls with sel rules if we are in presence of a selection file
          // and the cast was successful
-         if (selectionRules.IsSelectionXMLFile() && thisClassSelectionRule != 0) {
+         if (isGenreflex && thisClassSelectionRule != 0) {
             const std::list<VariableSelectionRule> &fieldSelRules = thisClassSelectionRule->GetFieldSelectionRules();
 
             // This check is here to avoid asserts in debug mode (LLVMDEV env variable set)
@@ -2212,7 +2213,6 @@ int GenerateModule(TModuleGenerator &modGen,
 
 
    modGen.WriteRegistrationSource(dictStream,
-                                  inlineInputHeader,
                                   fwdDeclnArgsToKeepString,
                                   headersClassesMapString,
                                   fwdDeclString);
@@ -2695,17 +2695,18 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
    // This is done to avoid duplications of keys with typedefs
    std::unordered_set<std::string> classesKeys;
 
-   // Add the template definitions
-   if (!classesDefsList.empty()) {
-      rootmapFile << "{ decls }\n";
-      for (auto & classDef : classesDefsList) {
-         rootmapFile << classDef << std::endl;
-      }
-      rootmapFile << "\n";
-   }
 
    // Add the "section"
-   if (!nsNames.empty() || !classesNames.empty() || !tdNames.empty() || !enNames.empty()) {
+   if (!classesNames.empty() || !nsNames.empty() || !tdNames.empty() || !enNames.empty()) {
+
+      // Add the template definitions
+      if (!classesDefsList.empty()) {
+         rootmapFile << "{ decls }\n";
+         for (auto & classDef : classesDefsList) {
+            rootmapFile << classDef << std::endl;
+         }
+         rootmapFile << "\n";
+      }
       rootmapFile << "[" << rootmapLibName << " ]\n";
 
       // Loop on selected classes and insert them in the rootmap
@@ -2762,14 +2763,80 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
 
 }
 
-//______________________________________________________________________________
-template <class T>
-bool AppendIfNotThere(const T &el, std::list<T> &el_list)
+std::pair<std::string,std::string> GetExternalNamespaceAndContainedEntities(const std::string line)
 {
-   if (std::find(el_list.begin(), el_list.end(), el) == el_list.end()) {
-      el_list.push_back(el);
-      return true;
+   // Performance is not critical here.
+
+   auto nsPattern = '{'; auto nsPatternLength = 1;
+   auto foundNsPos = line.find_last_of(nsPattern);
+   if (foundNsPos == std::string::npos) return {"",""};
+   foundNsPos+=nsPatternLength;
+   auto extNs = line.substr(0,foundNsPos);
+
+   auto nsEndPattern = '}';
+   auto foundEndNsPos = line.find(nsEndPattern);
+   auto contained = line.substr(foundNsPos, foundEndNsPos-foundNsPos);
+
+   return {extNs, contained};
+
+
+}
+
+//______________________________________________________________________________
+std::list<std::string> CollapseIdenticalNamespaces(const std::list<std::string>& fwdDeclarationsList)
+{
+   // If two identical namespaces are there, just declare one only
+   // Example:
+   // namespace A { namespace B { fwd1; }}
+   // namespace A { namespace B { fwd2; }}
+   // get a namespace A { namespace B { fwd1; fwd2; }} line
+
+   // Temp data structure holding the namespaces and the entities therewith
+   // contained
+   std::map<std::string, std::string> nsEntitiesMap;
+   std::list<std::string> optFwdDeclList;
+   for (auto const & fwdDecl : fwdDeclarationsList){
+      // Check if the decl(s) are contained in a ns and which one
+      auto extNsAndEntities = GetExternalNamespaceAndContainedEntities(fwdDecl);
+      if (extNsAndEntities.first.empty()) {
+         // no namespace found. Just put this on top
+         optFwdDeclList.push_front(fwdDecl);
+      };
+      auto currentVal = nsEntitiesMap[extNsAndEntities.first];
+      nsEntitiesMap[extNsAndEntities.first] = currentVal +=extNsAndEntities.second;
    }
+
+   // Now fill the new, optimised list
+   std::string optFwdDecl;
+   for (auto const & extNsAndEntities : nsEntitiesMap) {
+      optFwdDecl = extNsAndEntities.first;
+      optFwdDecl += extNsAndEntities.second;
+      for (int i = 0; i < std::count(optFwdDecl.begin(), optFwdDecl.end(), '{'); ++i ){
+         optFwdDecl += " }";
+      }
+      optFwdDeclList.push_front(optFwdDecl);
+   }
+
+   return optFwdDeclList;
+
+}
+
+//______________________________________________________________________________
+bool ProcessAndAppendIfNotThere(const std::string &el,
+                                std::list<std::string> &el_list,
+                                std::unordered_set<std::string> &el_set)
+{
+   // Separate multiline strings
+   std::stringstream elStream(el);
+   std::string tmp;
+   while (getline(elStream, tmp, '\n')) {
+      // Add if not there
+      if (el_set.insert(tmp).second && !tmp.empty()) {
+         el_list.push_back(tmp);
+         return true;
+      }
+   }
+
    return false;
 }
 
@@ -2792,6 +2859,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
 
    std::string attrName, attrValue;
    bool isClassSelected;
+   std::unordered_set<std::string> availableFwdDecls;
    // Loop on selected classes and put them in a list
    for (auto const & selClass : scan.fSelectedClasses) {
       isClassSelected = true;
@@ -2816,14 +2884,13 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
       // Get always the containing namespace, put it in the list if not there
       std::string fwdDeclaration;
       int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*rDecl, fwdDeclaration);
-      if (retCode == 0) AppendIfNotThere(fwdDeclaration, fwdDeclarationsList);
+      if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
 
       // Get template definition and put it in if not there
       if (llvm::isa<clang::ClassTemplateSpecializationDecl>(rDecl)) {
          fwdDeclaration = "";
          retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(*rDecl, interpreter, fwdDeclaration);
-         // Linear search. Probably optimisable
-         if (retCode == 0) AppendIfNotThere(fwdDeclaration, fwdDeclarationsList);
+         if (retCode == 0) ProcessAndAppendIfNotThere(fwdDeclaration, fwdDeclarationsList, availableFwdDecls);
       }
 
 
@@ -2839,11 +2906,26 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
       }
       if (isClassSelected) {
          // Now, check if this is an internal class. If yes, we check the name of the outermost one
+         // This is because of ROOT-6517. On the other hand, we exclude from this treatment
+         // classes which are template instances which are nested in classes. For example:
+         // class A{
+         //   class B{};
+         // };
+         // selection: <class name="A::B" />
+         // Will result in a rootmap entry like "class A"
+         // On the other hand, taking
+         // class A{
+         //    public:
+         //     template <class T> class B{};
+         //  };
+         // selection: <class name="A::B<int>" />
+         // Would result in an entry like "class A::B<int>"
          std::string outerMostClassName;
          GetMostExternalEnclosingClassName(*rDecl, outerMostClassName, interpreter);
          if (!outerMostClassName.empty() &&
-               classesSet.insert(outerMostClassName).second &&
-               outerMostClassesSet.insert(outerMostClassName).second) {
+             !llvm::isa<clang::ClassTemplateSpecializationDecl>(rDecl) &&
+             classesSet.insert(outerMostClassName).second &&
+             outerMostClassesSet.insert(outerMostClassName).second) {
             classesListForRootmap.push_back(outerMostClassName);
          } else {
             classesListForRootmap.push_back(normalizedName);
@@ -2854,6 +2936,10 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner &scan,
       }
    }
    classesListForRootmap.sort();
+
+   // Disable for the moment
+   // fwdDeclarationsList = CollapseIdenticalNamespaces(fwdDeclarationsList);
+
    return 0;
 }
 
@@ -2869,15 +2955,15 @@ void ExtractSelectedNamespaces(RScanner &scan, std::list<std::string> &nsList)
 
 //_____________________________________________________________________________
 void AnnotateAllDeclsForPCH(cling::Interpreter &interp,
-                            RScanner &scan,
-                            SelectionRules &selectionRules)
+                            RScanner &scan)
 {
    // We need annotations even in the PCH: // !, // || etc.
+   auto const & declSelRulesMap = scan.GetDeclsSelRulesMap();
    for (auto const & selClass : scan.fSelectedClasses) {
       // Very important: here we decide if we want to attach attributes to the decl.
       if (clang::CXXRecordDecl *CXXRD =
                llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl *>(selClass.GetRecordDecl()))) {
-         AnnotateDecl(*CXXRD, selectionRules, interp, false);
+         AnnotateDecl(*CXXRD, declSelRulesMap, interp, false);
       }
    }
 }
@@ -2932,7 +3018,6 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
 int GenerateFullDict(std::ostream &dictStream,
                      cling::Interpreter &interp,
                      RScanner &scan,
-                     SelectionRules &selectionRules,
                      const ROOT::TMetaUtils::RConstructorTypes &ctorTypes,
                      bool isSplit,
                      bool isGenreflex,
@@ -2981,7 +3066,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
       if (clang::CXXRecordDecl *CXXRD =
                llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl *>(selClass.GetRecordDecl()))) {
-         AnnotateDecl(*CXXRD, selectionRules, interp, isGenreflex);
+         AnnotateDecl(*CXXRD, scan.GetDeclsSelRulesMap() , interp, isGenreflex);
       }
 
       const clang::CXXRecordDecl *CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
@@ -3409,10 +3494,15 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t &annotatedRcds,
          if (autoParseKey.empty()) autoParseKey = annotatedRcd.GetNormalizedName();
          headersDeclsMap[autoParseKey] = headers;
          headersDeclsMap[annotatedRcd.GetRequestedName()] = headers;
+
+         // Propagate to the classes map only if this is not a template.
+         // The header is then used as autoload key and we want to avoid duplicates.
+         if (!llvm::isa<clang::ClassTemplateSpecializationDecl>(cxxRcd)){
+            headersClassesMap[autoParseKey] = headersDeclsMap[autoParseKey];
+            headersClassesMap[annotatedRcd.GetRequestedName()] = headersDeclsMap[annotatedRcd.GetRequestedName()];
+         }
       }
    }
-
-   headersClassesMap = headersDeclsMap;
 
    // The same for the typedefs:
    for (auto & tDef : tDefDecls) {
@@ -3431,6 +3521,7 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t &annotatedRcds,
          headersDeclsMap[autoParseKey] = headers;
       }
    }
+
    // The same for the functions:
    for (auto & func : funcDecls) {
       std::list<std::string> headers = {ROOT::TMetaUtils::GetFileName(*func, interp)};
@@ -3554,6 +3645,14 @@ bool IsImplementationName(const std::string &filename)
    return !IsHeaderName(filename);
 }
 
+//______________________________________________________________________________
+bool IsCorrectClingArgument(const std::string argument)
+{
+   // Check if the argument is a sane cling argument. Performing the following checks:
+   // 1) It does not start with "--".
+   if (ROOT::TMetaUtils::BeginsWith(argument,"--")) return false;
+   return true;
+}
 
 //______________________________________________________________________________
 int RootCling(int argc,
@@ -3759,13 +3858,14 @@ int RootCling(int argc,
    bool dictSelection = true;
    bool multiDict = false;
    bool writeEmptyRootPCM = false;
+   bool selSyntaxOnly = false;
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = true;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
-   std::list<std::string> diagnosticPragmas;
+   std::list<std::string> diagnosticPragmas = {"#pragma clang diagnostic ignored \"-Wdeprecated-declarations\""};
 
    int nextStart = 0;
    while (ic < argc) {
@@ -3863,6 +3963,12 @@ int RootCling(int argc,
             continue;
          }
 
+         if (strcmp("-selSyntaxOnly", argv[ic]) == 0) {
+            // validate the selection grammar w/o creating the dictionary
+            selSyntaxOnly = true;
+            ic += 1;
+            continue;
+         }
 
          if (strcmp("-pipe", argv[ic]) != 0 && strcmp("-pthread", argv[ic]) != 0) {
             // filter out undesirable options
@@ -3904,10 +4010,15 @@ int RootCling(int argc,
 
    ROOT::TMetaUtils::SetPathsForRelocatability(clingArgs);
 
+   // Convert arguments to a C array and check if they are sane
    std::vector<const char *> clingArgsC;
-   for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
-         iclingArgs < nclingArgs; ++iclingArgs) {
-      clingArgsC.push_back(clingArgs[iclingArgs].c_str());
+   for (auto const & clingArg : clingArgs) {
+      if (!IsCorrectClingArgument(clingArg)){
+         std::cerr << "Argument \""<< clingArg << "\" is not a supported cling argument. "
+                   << "This could be mistyped rootcling argument. Please check the commandline.\n";
+         return 1;
+      }
+      clingArgsC.push_back(clingArg.c_str());
    }
 
    std::string resourceDir;
@@ -4022,9 +4133,6 @@ int RootCling(int argc,
 
             bool isSelectionFile = IsSelectionFile(argv[i]);
 
-            string argkeep;
-            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-            if (!isSelectionFile) StrcpyArg(argkeep, argv[i]);
             std::string header(isSelectionFile ? argv[i] : GetRelocatableHeaderName(argv[i], currentDirectory));
             // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
             // use directly argv.
@@ -4032,12 +4140,6 @@ int RootCling(int argc,
                header.erase(header.length() - 1);
             }
 
-            // We are 'normalizing' the file in two different way.  StrcpyArg (from rootcling)
-            // strip just the ROOTBUILD part (i.e. $PWD/package/module/inc) while
-            // GetRelocatableHeaderName also $PWD.
-            // GetRelocatableHeaderName is likely to be too aggressive and the
-            // ROOTBUILD part should really be removed by changing the ROOT makefile
-            // to pass -I and path relative to the include path.
             interpPragmaSource += std::string("#include \"") + header + "\"\n";
             if (!isSelectionFile) {
                includeForSource += std::string("#include \"") + header + "\"\n";
@@ -4085,15 +4187,19 @@ int RootCling(int argc,
    pcmArgs.push_back(incCurDir);
 
    TModuleGenerator modGen(interp.getCI(),
+                           inlineInputHeader,
                            sharedLibraryPathName);
 
-   interp.declare("#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"");
-
    // Add the diagnostic pragmas distilled from the -Wno-xyz
-   for (std::list<std::string>::iterator dPrIt = diagnosticPragmas.begin();
-         dPrIt != diagnosticPragmas.end(); dPrIt++) {
-      interp.declare(*dPrIt);
+   {
+      std::stringstream res;
+      const char* delim="\n";
+      std::copy(diagnosticPragmas.begin(),
+                diagnosticPragmas.end(),
+                std::ostream_iterator<std::string>(res, delim));
+      interp.declare(res.str());
    }
+
    modGen.ParseArgs(pcmArgs);
 #ifndef ROOT_STAGE1_BUILD
    // Forward the -I, -D, -U
@@ -4103,10 +4209,12 @@ int RootCling(int argc,
    std::stringstream definesUndefinesStr;
    modGen.WritePPDefines(definesUndefinesStr);
    modGen.WritePPUndefines(definesUndefinesStr);
-   interp.declare(definesUndefinesStr.str());
+   if (!definesUndefinesStr.str().empty())
+      interp.declare(definesUndefinesStr.str());
 #endif
 
-   if (interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {
+   if (!interpreterDeclarations.empty() &&
+       interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {
       ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
       return 1;
    }
@@ -4269,6 +4377,11 @@ int RootCling(int argc,
 
    }
 
+   // If we want to validate the selection only, we just quit.
+   if (selSyntaxOnly)
+      return 0;
+
+
    //---------------------------------------------------------------------------
    // Write schema evolution related headers and declarations
    //---------------------------------------------------------------------------
@@ -4377,7 +4490,7 @@ int RootCling(int argc,
    int retCode(0);
 
    if (onepcm) {
-      AnnotateAllDeclsForPCH(interp, scan, selectionRules);
+      AnnotateAllDeclsForPCH(interp, scan);
    } else if (interpreteronly) {
       retCode = CheckClassesForInterpreterOnlyDicts(interp, scan);
       // generate an empty pcm nevertheless for consistency
@@ -4389,7 +4502,6 @@ int RootCling(int argc,
       retCode = GenerateFullDict(splitDictStream,
                                  interp,
                                  scan,
-                                 selectionRules,
                                  constructorTypes,
                                  doSplit,
                                  isGenreflex,
@@ -4572,26 +4684,6 @@ int RootCling(int argc,
 namespace genreflex {
 
 //______________________________________________________________________________
-   bool endsWith(const std::string &theString, const std::string &theSubstring)
-   {
-      if (theString.size() < theSubstring.size()) return false;
-      const unsigned int theSubstringSize = theSubstring.size();
-      return 0 == theString.compare(theString.size() - theSubstringSize,
-                                    theSubstringSize,
-                                    theSubstring);
-   }
-
-//______________________________________________________________________________
-   bool beginsWith(const std::string &theString, const std::string &theSubstring)
-   {
-      if (theString.size() < theSubstring.size()) return false;
-      const unsigned int theSubstringSize = theSubstring.size();
-      return 0 == theString.compare(0,
-                                    theSubstringSize,
-                                    theSubstring);
-   }
-
-//______________________________________________________________________________
    unsigned int checkHeadersNames(std::vector<std::string> &headersNames)
    {
       // Loop on arguments: stop at the first which starts with -
@@ -4618,8 +4710,8 @@ namespace genreflex {
       // loop on argv, spot strings which are not preceeded by something
       unsigned int argvCounter = 0;
       for (int i = 1; i < argc; ++i) {
-         if (!beginsWith(argv[i - 1], "-") && // so, if preceeding element starts with -, this is a value for an option
-               !beginsWith(argv[i], "-")) { // and the element itself is not an option
+         if (!ROOT::TMetaUtils::BeginsWith(argv[i - 1], "-") && // so, if preceeding element starts with -, this is a value for an option
+               !ROOT::TMetaUtils::BeginsWith(argv[i], "-")) { // and the element itself is not an option
             args.push_back(argv[i]);
             argvCounter++;
          } else  if (argvCounter) {
@@ -4730,6 +4822,7 @@ namespace genreflex {
                        bool doSplit,
                        bool isDeep,
                        bool writeEmptyRootPCM,
+                       bool selSyntaxOnly,
                        const std::vector<std::string> &headersNames,
                        const std::string &ofilename)
    {
@@ -4824,6 +4917,10 @@ namespace genreflex {
       if (writeEmptyRootPCM)
          argvVector.push_back(string2charptr("-writeEmptyRootPCM"));
 
+      // Just test the syntax of the selection file
+      if (selSyntaxOnly)
+         argvVector.push_back(string2charptr("-selSyntaxOnly"));
+
       // Clingargs
       AddToArgVector(argvVector, includes, "-I");
       AddToArgVector(argvVector, preprocDefines, "-D");
@@ -4876,6 +4973,7 @@ namespace genreflex {
                            bool doSplit,
                            bool isDeep,
                            bool writeEmptyRootPCM,
+                           bool selSyntaxOnly,
                            const std::vector<std::string> &headersNames,
                            const std::string &outputDirName_const = "")
    {
@@ -4887,7 +4985,7 @@ namespace genreflex {
       std::vector<std::string> ofilesNames;
       headers2outputsNames(headersNames, ofilesNames);
 
-      if (!outputDirName.empty() && !endsWith(outputDirName, gPathSeparator)) {
+      if (!outputDirName.empty() && !ROOT::TMetaUtils::EndsWith(outputDirName, gPathSeparator)) {
          outputDirName += gPathSeparator;
       }
 
@@ -4914,6 +5012,7 @@ namespace genreflex {
                                           doSplit,
                                           isDeep,
                                           writeEmptyRootPCM,
+                                          selSyntaxOnly,
                                           namesSingleton,
                                           ofilenameFullPath);
          if (returnCode != 0)
@@ -5019,6 +5118,7 @@ int GenReflex(int argc, char **argv)
                        WRITEEMPTYROOTPCM,
                        HELP,
                        CAPABILITIESFILENAME,
+                       SELSYNTAXONLY,
                        INTERPRETERONLY,
                        SPLIT,
                        NOMEMBERTYPEDEFS,
@@ -5259,6 +5359,14 @@ int GenReflex(int argc, char **argv)
          "--help\tPrint usage and exit.\n"
       },
 
+      {
+         SELSYNTAXONLY,
+         NOTYPE,
+         "", "selSyntaxOnly",
+         ROOT::option::Arg::None,
+         "--selSyntaxOnly\tValidate selection file w/o generating the dictionary.\n"
+      },
+
       // Left intentionally empty not to be shown in the help, like in the first genreflex
       {
          INCLUDE,
@@ -5368,7 +5476,7 @@ int GenReflex(int argc, char **argv)
    std::string selectionFileName;
    if (options[SELECTIONFILENAME]) {
       selectionFileName = options[SELECTIONFILENAME].arg;
-      if (!endsWith(selectionFileName, ".xml")) {
+      if (!ROOT::TMetaUtils::EndsWith(selectionFileName, ".xml")) {
          ROOT::TMetaUtils::Error(0,
                                  "Invalid selection file extension: filename is %s and extension .xml is expected!\n",
                                  selectionFileName.c_str());
@@ -5393,7 +5501,7 @@ int GenReflex(int argc, char **argv)
    std::string targetLibName;
    if (options[TARGETLIB]) {
       targetLibName = options[TARGETLIB].arg;
-      if (!endsWith(targetLibName, gLibraryExtension)) {
+      if (!ROOT::TMetaUtils::EndsWith(targetLibName, gLibraryExtension)) {
          ROOT::TMetaUtils::Error("",
                                  "Invalid target library extension: filename is %s and extension %s is expected!\n",
                                  gLibraryExtension.c_str(),
@@ -5430,8 +5538,13 @@ int GenReflex(int argc, char **argv)
    if (options[WRITEEMPTYROOTPCM])
       writeEmptyRootPCM = true;
 
+   bool selSyntaxOnly = false;
+   if (options[SELSYNTAXONLY]) {
+      selSyntaxOnly = true;
+   }
+
    // Add the .so extension to the rootmap lib if not there
-   if (!rootmapLibName.empty() && !endsWith(rootmapLibName, gLibraryExtension)) {
+   if (!rootmapLibName.empty() && !ROOT::TMetaUtils::EndsWith(rootmapLibName, gLibraryExtension)) {
       rootmapLibName += gLibraryExtension;
    }
 
@@ -5492,6 +5605,7 @@ int GenReflex(int argc, char **argv)
                                     doSplit,
                                     isDeep,
                                     writeEmptyRootPCM,
+                                    selSyntaxOnly,
                                     headersNames,
                                     ofileName);
    } else {
@@ -5513,6 +5627,7 @@ int GenReflex(int argc, char **argv)
                                         doSplit,
                                         isDeep,
                                         writeEmptyRootPCM,
+                                        selSyntaxOnly,
                                         headersNames,
                                         ofileName);
    }

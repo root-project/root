@@ -11,7 +11,6 @@
 #include "TCustomPyTypes.h"
 #include "RootWrapper.h"
 #include "PyCallable.h"
-#include "Adapters.h"
 
 // ROOT
 #include "TApplication.h"
@@ -42,11 +41,6 @@
 //- data _____________________________________________________________________
 dict_lookup_func PyROOT::gDictLookupOrg = 0;
 Bool_t PyROOT::gDictLookupActive = kFALSE;
-
-PyROOT::Utility::EMemoryPolicy PyROOT::Utility::gMemoryPolicy = PyROOT::Utility::kHeuristics;
-
-// this is just a data holder for linking; actual value is set in RootModule.cxx
-PyROOT::Utility::ESignalPolicy PyROOT::Utility::gSignalPolicy = PyROOT::Utility::kSafe;
 
 typedef std::map< std::string, std::string > TC2POperatorMapping_t;
 static TC2POperatorMapping_t gC2POperatorMapping;
@@ -181,30 +175,6 @@ ULong64_t PyROOT::PyLongOrInt_AsULong64( PyObject* pyobject )
    }
 
    return ull;
-}
-
-//____________________________________________________________________________
-Bool_t PyROOT::Utility::SetMemoryPolicy( EMemoryPolicy e )
-{
-// Set the global memory policy, which affects object ownership when objects
-// are passed as function arguments.
-   if ( kHeuristics <= e && e <= kStrict ) {
-      gMemoryPolicy = e;
-      return kTRUE;
-   }
-   return kFALSE;
-}
-
-//____________________________________________________________________________
-Bool_t PyROOT::Utility::SetSignalPolicy( ESignalPolicy e )
-{
-// Set the global signal policy, which determines whether a jmp address
-// should be saved to return to after a C++ segfault.
-   if ( kFast <= e && e <= kSafe ) {
-      gSignalPolicy = e;
-      return kTRUE;
-   }
-   return kFALSE;
 }
 
 //____________________________________________________________________________
@@ -360,14 +330,14 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
 {
 // Install binary operator op in pyclass, working on two instances of pyclass.
    PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
-   std::string cname = ResolveTypedef( PyROOT_PyUnicode_AsString( pyname ) );
+   std::string cname = Cppyy::ResolveName( PyROOT_PyUnicode_AsString( pyname ) );
    Py_DECREF( pyname ); pyname = 0;
 
    return AddBinaryOperator( pyclass, cname, cname, op, label, alt );
 }
 
 //____________________________________________________________________________
-static inline TFunction* FindAndAddOperator( const std::string& lcname, const std::string& rcname,
+static inline Cppyy::TCppMethod_t FindAndAddOperator( const std::string& lcname, const std::string& rcname,
      const char* op, TClass* klass = 0 ) {
 // Helper to find a function with matching signature in 'funcs'.
    std::string opname = "operator";
@@ -376,10 +346,10 @@ static inline TFunction* FindAndAddOperator( const std::string& lcname, const st
 
 // case of global namespace
    if ( ! klass )
-      return gROOT->GetGlobalFunctionWithPrototype( opname.c_str(), proto.c_str() );
+      return (Cppyy::TCppMethod_t)gROOT->GetGlobalFunctionWithPrototype( opname.c_str(), proto.c_str() );
 
 // case of specific namespace
-   return klass->GetMethodWithPrototype( opname.c_str(), proto.c_str() );
+   return (Cppyy::TCppMethod_t)klass->GetMethodWithPrototype( opname.c_str(), proto.c_str() );
 }
 
 Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string& lcname,
@@ -411,18 +381,18 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 
    PyCallable* pyfunc = 0;
    if ( gnucxx.GetClass() ) {
-      TFunction* func = FindAndAddOperator( lcname, rcname, op, gnucxx.GetClass() );
-      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "__gnu_cxx" ), func );
+      Cppyy::TCppMethod_t func = FindAndAddOperator( lcname, rcname, op, gnucxx.GetClass() );
+      if ( func ) pyfunc = new TFunctionHolder( Cppyy::GetScope( "__gnu_cxx" ), func );
    }
 
    if ( ! pyfunc && std__1.GetClass() ) {
-      TFunction* func = FindAndAddOperator( lcname, rcname, op, std__1.GetClass() );
-      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "std::__1" ), func );
+      Cppyy::TCppMethod_t func = FindAndAddOperator( lcname, rcname, op, std__1.GetClass() );
+      if ( func ) pyfunc = new TFunctionHolder( Cppyy::GetScope( "std::__1" ), func );
    }
 
    if ( ! pyfunc ) {
-      TFunction* func = FindAndAddOperator( lcname, rcname, op );
-      if ( func ) pyfunc = new TFunctionHolder( func );
+      Cppyy::TCppMethod_t func = FindAndAddOperator( lcname, rcname, op );
+      if ( func ) pyfunc = new TFunctionHolder( Cppyy::gGlobalScope, func );
    }
 
    if ( ! pyfunc && _pr_int.GetClass() &&
@@ -436,8 +406,8 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
       else if ( strncmp( op, "!=", 2 ) == 0 ) { fname << "is_not_equal<"; }
       else { fname << "not_implemented<"; }
       fname  << lcname << ", " << rcname << ">";
-      TFunction* func = _pr_int->GetMethodAny( fname.str().c_str() );
-      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "_pyroot_internal" ), func );
+      Cppyy::TCppMethod_t func = (Cppyy::TCppMethod_t)_pr_int->GetMethodAny( fname.str().c_str() );
+      if ( func ) pyfunc = new TFunctionHolder( Cppyy::GetScope( "_pyroot_internal" ), func );
    }
 
    if ( pyfunc ) {  // found a matching overload; add to class
@@ -704,101 +674,6 @@ const std::string PyROOT::Utility::ClassName( PyObject* pyobj )
       PyErr_Clear();
 
    return clname;
-}
-
-//____________________________________________________________________________
-const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
-    TClass* containing_scope /* CLING WORKAROUND */ )
-{
-// Helper; captures common code needed to find the real class name underlying
-// a typedef (if any).
-   std::string tclean = TClassEdit::CleanType( tname.c_str() );
-
-   TDataType* dt = gROOT->GetType( tclean.c_str() );
-   if ( dt ) return dt->GetFullTypeName();
-
-// CLING WORKAROUND -- see: #100392; this does NOT attempt to cover all cases,
-//   as hopefully the bug will be resolved one way or another
-
-   if ( 5 < tclean.size() ) { // can't rely on finding std:: as it gets
-                              // stripped in many cases (for CINT history?)
-
-   // size_type is guessed to be an integer unsigned type
-      std::string::size_type pos = tclean.rfind( "::size_type" );
-      if ( pos != std::string::npos )
-         return containing_scope ? (std::string(containing_scope->GetName()) + "::size_type") : "unsigned long";
-
-   // determine any of the types that require extraction of the template
-   // parameter type names, and whether a const is needed (const can come
-   // in "implicitly" from the typedef, or explicitly from tname)
-      bool isConst = false, isReference = false;
-      if ( (pos = tclean.rfind( "::const_reference" )) != std::string::npos ) {
-         isConst = true;
-         isReference = true;
-      } else {
-         isConst = tclean.substr(0, 5) == "const";
-         if ( (pos = tclean.rfind( "::value_type" )) == std::string::npos ) {
-            pos = tclean.rfind( "::reference" );
-            if ( pos != std::string::npos ) isReference = true;
-         }
-      }
-
-      if ( pos != std::string::npos ) {
-      // extract the internals of the template name; take care of the extra
-      // default parameters for e.g. std::vector
-         std::string clName = containing_scope ? containing_scope->GetName() : tclean;
-         std::string::size_type pos1 = clName.find( '<' );
-         std::string::size_type pos2 = clName.find( ",allocator" );
-         if ( pos2 == std::string::npos ) pos2 = clName.rfind( '>' );
-         if ( pos1 != std::string::npos ) {
-            tclean = (isConst ? "const " : "") +
-                     clName.substr( pos1+1, pos2-pos1-1 ) +
-                     (isReference ? "&" : Compound( clName ));
-         }
-      }
-
-   // for std::map, extract the key_type, or iterator for either map or list
-      else {
-         pos = tclean.rfind( "::key_type" );
-         if ( pos != std::string::npos ) {
-            std::string clName = containing_scope ? containing_scope->GetName() : tclean;
-            std::string::size_type pos1 = clName.find( '<' );
-         // TODO: this is wrong for templates, but this code is a (temp?) workaround only
-            std::string::size_type pos2 = clName.find( ',' );
-            if ( pos1 != std::string::npos ) {
-               tclean = (isConst ? "const " : "") +
-                        clName.substr( pos1+1, pos2-pos1-1 ) +
-                        (isReference ? "&" : Compound( clName ));
-                        }
-         } else if ( tclean.rfind( "::_Self" ) != std::string::npos ) {
-            tclean = containing_scope ? containing_scope->GetName() : tclean;
-         }
-      }
-   }
-
-// -- END CLING WORKAROUND
-
-   return TClassEdit::ResolveTypedef( tclean.c_str(), true );
-}
-
-//____________________________________________________________________________
-Long_t PyROOT::Utility::UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj, bool derivedObj ) {
-// Forwards to TInterpreter->ClassInfo_GetBaseOffset(), just adds caching
-   if ( clBase == clDerived || !(clBase && clDerived) )
-      return 0;
-
-   Long_t offset = gInterpreter->ClassInfo_GetBaseOffset( clDerived, clBase, obj, derivedObj );
-   if ( offset == -1 ) {
-   // warn to allow diagnostics, but 0 offset is often good, so use that and continue
-      std::string bName = gInterpreter->ClassInfo_FullName( clBase );    // collect first b/c
-      std::string dName = gInterpreter->ClassInfo_FullName( clDerived ); //  of static buffer
-      std::ostringstream msg;
-      msg << "failed offset calculation between " << bName << " and " << dName << std::endl;
-      PyErr_Warn( PyExc_RuntimeWarning, const_cast<char*>( msg.str().c_str() ) );
-      return 0;
-   }
-
-   return offset;
 }
 
 //____________________________________________________________________________

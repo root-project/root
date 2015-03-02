@@ -65,6 +65,7 @@ RooArgList::RooArgList() :
   RooAbsCollection()
 {
   // Default constructor
+  TRACE_CREATE
 }
 
 
@@ -76,6 +77,7 @@ RooArgList::RooArgList(const RooArgSet& set) :
   // Constructor from a RooArgSet. 
 
   add(set) ;
+  TRACE_CREATE
 }
 
 
@@ -85,6 +87,7 @@ RooArgList::RooArgList(const char *name) :
   RooAbsCollection(name)
 {
   // Empty list constructor
+  TRACE_CREATE
 }
 
 
@@ -97,6 +100,7 @@ RooArgList::RooArgList(const RooAbsArg& var1,
   // Constructor for list containing 1 initial object
 
   add(var1);
+  TRACE_CREATE
 }
 
 
@@ -109,6 +113,7 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 2 initial objects
 
   add(var1); add(var2);
+  TRACE_CREATE
 }
 
 
@@ -122,6 +127,7 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 3 initial objects
 
   add(var1); add(var2); add(var3);
+  TRACE_CREATE
 }
 
 
@@ -135,6 +141,7 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 4 initial objects
 
   add(var1); add(var2); add(var3); add(var4);
+  TRACE_CREATE
 }
 
 
@@ -149,6 +156,7 @@ RooArgList::RooArgList(const RooAbsArg& var1,
   // Constructor for set containing 5 initial objects
 
   add(var1); add(var2); add(var3); add(var4); add(var5);
+  TRACE_CREATE
 }
 
 
@@ -163,6 +171,7 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 6 initial objects
 
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
+  TRACE_CREATE
 }
 
 
@@ -178,6 +187,7 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 7 initial objects
 
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
+  TRACE_CREATE
 }
 
 
@@ -193,6 +203,7 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 8 initial objects
 
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
+  TRACE_CREATE
 }
 
 
@@ -208,6 +219,7 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 9 initial objects
 
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7); add(var8); add(var9);
+  TRACE_CREATE
 }
 
 
@@ -231,6 +243,7 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
     add(*(RooAbsArg*)obj) ;
   }
   delete iter ;
+  TRACE_CREATE
 }
 
 
@@ -242,6 +255,7 @@ RooArgList::RooArgList(const RooArgList& other, const char *name)
   // Copy constructor. Note that a copy of a list is always non-owning,
   // even the source list is owning. To create an owning copy of
   // a list (owning or not), use the snaphot() method.
+  TRACE_CREATE
 }
 
 
@@ -250,6 +264,7 @@ RooArgList::RooArgList(const RooArgList& other, const char *name)
 RooArgList::~RooArgList() 
 {
   // Destructor
+  TRACE_DESTROY
 }
 
 

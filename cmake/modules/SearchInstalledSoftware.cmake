@@ -174,6 +174,12 @@ endif()
 
 #---Check for all kind of graphics includes needed by libAfterImage--------------------
 if(asimage)
+  if(NOT x11 AND NOT cocoa)
+    message(STATUS "Switching off 'asimage' because neither 'x11' nor 'cocoa' are enabled")
+    set(asimage OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+if(asimage)
   set(ASEXTRA_LIBRARIES)
   find_Package(GIF)
   if(GIF_FOUND)
@@ -279,11 +285,11 @@ if(opengl)
   else()
     find_package(OpenGL)
   endif()
-  if(NOT OPENGL_FOUND)
+  if(NOT OPENGL_FOUND OR NOT OPENGL_GLU_FOUND)
     if(fail-on-missing)
-      message(FATAL_ERROR "OpenGL package not found and opengl option required")
+      message(FATAL_ERROR "OpenGL package (with GLU) not found and opengl option required")
     else()
-      message(STATUS "OpenGL not found. Switching off opengl option")
+      message(STATUS "OpenGL (with GLU) not found. Switching off opengl option")
       set(opengl OFF CACHE BOOL "" FORCE)
     endif()
   endif()
@@ -485,11 +491,12 @@ if(libcmaes)
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       )
     ExternalProject_Add(
-      local_libcmaes
-      URL https://github.com/beniz/libcmaes/archive/master.tar.gz
-      PREFIX local_libcmaes
+      cma
+      DEPENDS eigen3
+      PREFIX cma
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=<INSTALL_DIR> --with-eigen3-include=${CMAKE_BINARY_DIR}/include/eigen3
+      URL https://github.com/beniz/libcmaes/archive/master.tar.gz
+      CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=<INSTALL_DIR> --with-eigen3-include=${CMAKE_BINARY_DIR}/include/eigen3 --enable-onlylib
       BUILD_IN_SOURCE 1
       )
     set(LIBCMAES_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/libcmaes ${CMAKE_BINARY_DIR}/include/eigen3)
@@ -872,6 +879,29 @@ if(vc)
       message(STATUS "VC requires MSVC version >= 2011; switching OFF 'vc' option")
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
+  endif()
+endif()
+
+#---Check for TCMalloc---------------------------------------------------------------
+
+if (tcmalloc)
+  message(STATUS "Looking for tcmalloc")
+  find_package(tcmalloc)
+  if(NOT TCMALLOC_FOUND)
+    message(STATUS "TCMalloc not found.")
+  endif()
+endif()
+
+#---Check for JEMalloc---------------------------------------------------------------
+
+if (jemalloc)
+  if (tcmalloc)
+   message(FATAL_ERROR "Both tcmalloc and jemalloc were selected: this is an inconsistent setup.")
+  endif()
+  message(STATUS "Looking for jemalloc")
+  find_package(jemalloc)
+  if(NOT JEMALLOC_FOUND)
+    message(STATUS "JEMalloc not found.")
   endif()
 endif()
 

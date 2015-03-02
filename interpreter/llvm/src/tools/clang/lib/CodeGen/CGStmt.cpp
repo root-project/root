@@ -185,6 +185,9 @@ void CodeGenFunction::EmitStmt(const Stmt *S) {
   case Stmt::OMPForDirectiveClass:
     EmitOMPForDirective(cast<OMPForDirective>(*S));
     break;
+  case Stmt::OMPForSimdDirectiveClass:
+    EmitOMPForSimdDirective(cast<OMPForSimdDirective>(*S));
+    break;
   case Stmt::OMPSectionsDirectiveClass:
     EmitOMPSectionsDirective(cast<OMPSectionsDirective>(*S));
     break;
@@ -202,6 +205,9 @@ void CodeGenFunction::EmitStmt(const Stmt *S) {
     break;
   case Stmt::OMPParallelForDirectiveClass:
     EmitOMPParallelForDirective(cast<OMPParallelForDirective>(*S));
+    break;
+  case Stmt::OMPParallelForSimdDirectiveClass:
+    EmitOMPParallelForSimdDirective(cast<OMPParallelForSimdDirective>(*S));
     break;
   case Stmt::OMPParallelSectionsDirectiveClass:
     EmitOMPParallelSectionsDirective(cast<OMPParallelSectionsDirective>(*S));
@@ -226,6 +232,12 @@ void CodeGenFunction::EmitStmt(const Stmt *S) {
     break;
   case Stmt::OMPAtomicDirectiveClass:
     EmitOMPAtomicDirective(cast<OMPAtomicDirective>(*S));
+    break;
+  case Stmt::OMPTargetDirectiveClass:
+    EmitOMPTargetDirective(cast<OMPTargetDirective>(*S));
+    break;
+  case Stmt::OMPTeamsDirectiveClass:
+    EmitOMPTeamsDirective(cast<OMPTeamsDirective>(*S));
     break;
   }
 }
@@ -553,7 +565,7 @@ void CodeGenFunction::EmitIfStmt(const IfStmt &S) {
   if (const Stmt *Else = S.getElse()) {
     {
       // There is no need to emit line number for unconditional branch.
-      SuppressDebugLocation S(Builder);
+      ApplyDebugLocation DL(*this);
       EmitBlock(ElseBlock);
     }
     {
@@ -562,7 +574,7 @@ void CodeGenFunction::EmitIfStmt(const IfStmt &S) {
     }
     {
       // There is no need to emit line number for unconditional branch.
-      SuppressDebugLocation S(Builder);
+      ApplyDebugLocation DL(*this);
       EmitBranch(ContBlock);
     }
   }
@@ -573,13 +585,15 @@ void CodeGenFunction::EmitIfStmt(const IfStmt &S) {
 
 void CodeGenFunction::EmitCondBrHints(llvm::LLVMContext &Context,
                                       llvm::BranchInst *CondBr,
-                                      const ArrayRef<const Attr *> &Attrs) {
+                                      ArrayRef<const Attr *> Attrs) {
   // Return if there are no hints.
   if (Attrs.empty())
     return;
 
   // Add vectorize and unroll hints to the metadata on the conditional branch.
-  SmallVector<llvm::Value *, 2> Metadata(1);
+  //
+  // FIXME: Should this really start with a size of 1?
+  SmallVector<llvm::Metadata *, 2> Metadata(1);
   for (const auto *Attr : Attrs) {
     const LoopHintAttr *LH = dyn_cast<LoopHintAttr>(Attr);
 
@@ -589,8 +603,6 @@ void CodeGenFunction::EmitCondBrHints(llvm::LLVMContext &Context,
 
     LoopHintAttr::OptionType Option = LH->getOption();
     LoopHintAttr::LoopHintState State = LH->getState();
-    int ValueInt = LH->getValue();
-
     const char *MetadataName;
     switch (Option) {
     case LoopHintAttr::Vectorize:
@@ -610,7 +622,16 @@ void CodeGenFunction::EmitCondBrHints(llvm::LLVMContext &Context,
       MetadataName = "llvm.loop.unroll.count";
       break;
     }
-    llvm::Value *Value;
+
+    Expr *ValueExpr = LH->getValue();
+    int ValueInt = 1;
+    if (ValueExpr) {
+      llvm::APSInt ValueAPS =
+          ValueExpr->EvaluateKnownConstInt(CGM.getContext());
+      ValueInt = static_cast<int>(ValueAPS.getSExtValue());
+    }
+
+    llvm::Constant *Value;
     llvm::MDString *Name;
     switch (Option) {
     case LoopHintAttr::Vectorize:
@@ -637,15 +658,16 @@ void CodeGenFunction::EmitCondBrHints(llvm::LLVMContext &Context,
       break;
     }
 
-    SmallVector<llvm::Value *, 2> OpValues;
+    SmallVector<llvm::Metadata *, 2> OpValues;
     OpValues.push_back(Name);
     if (Value)
-      OpValues.push_back(Value);
+      OpValues.push_back(llvm::ConstantAsMetadata::get(Value));
 
     // Set or overwrite metadata indicated by Name.
     Metadata.push_back(llvm::MDNode::get(Context, OpValues));
   }
 
+  // FIXME: This condition is never false.  Should it be an assert?
   if (!Metadata.empty()) {
     // Add llvm.loop MDNode to CondBr.
     llvm::MDNode *LoopID = llvm::MDNode::get(Context, Metadata);
@@ -656,7 +678,7 @@ void CodeGenFunction::EmitCondBrHints(llvm::LLVMContext &Context,
 }
 
 void CodeGenFunction::EmitWhileStmt(const WhileStmt &S,
-                                    const ArrayRef<const Attr *> &WhileAttrs) {
+                                    ArrayRef<const Attr *> WhileAttrs) {
   RegionCounter Cnt = getPGORegionCounter(&S);
 
   // Emit the header for the loop, which will also become
@@ -730,6 +752,7 @@ void CodeGenFunction::EmitWhileStmt(const WhileStmt &S,
   // Immediately force cleanup.
   ConditionScope.ForceCleanup();
 
+  EmitStopPoint(&S);
   // Branch to the loop header again.
   EmitBranch(LoopHeader.getBlock());
 
@@ -745,7 +768,7 @@ void CodeGenFunction::EmitWhileStmt(const WhileStmt &S,
 }
 
 void CodeGenFunction::EmitDoStmt(const DoStmt &S,
-                                 const ArrayRef<const Attr *> &DoAttrs) {
+                                 ArrayRef<const Attr *> DoAttrs) {
   JumpDest LoopExit = getJumpDestInCurrentScope("do.end");
   JumpDest LoopCond = getJumpDestInCurrentScope("do.cond");
 
@@ -806,14 +829,10 @@ void CodeGenFunction::EmitDoStmt(const DoStmt &S,
 }
 
 void CodeGenFunction::EmitForStmt(const ForStmt &S,
-                                  const ArrayRef<const Attr *> &ForAttrs) {
+                                  ArrayRef<const Attr *> ForAttrs) {
   JumpDest LoopExit = getJumpDestInCurrentScope("for.end");
 
-  RunCleanupsScope ForScope(*this);
-
-  CGDebugInfo *DI = getDebugInfo();
-  if (DI)
-    DI->EmitLexicalBlockStart(Builder, S.getSourceRange().getBegin());
+  LexicalScope ForScope(*this, S.getSourceRange());
 
   // Evaluate the first part before the loop.
   if (S.getInit())
@@ -841,7 +860,7 @@ void CodeGenFunction::EmitForStmt(const ForStmt &S,
   BreakContinueStack.push_back(BreakContinue(LoopExit, Continue));
 
   // Create a cleanup scope for the condition variable cleanups.
-  RunCleanupsScope ConditionScope(*this);
+  LexicalScope ConditionScope(*this, S.getSourceRange());
 
   if (S.getCond()) {
     // If the for statement has a condition scope, emit the local variable
@@ -897,12 +916,11 @@ void CodeGenFunction::EmitForStmt(const ForStmt &S,
   BreakContinueStack.pop_back();
 
   ConditionScope.ForceCleanup();
+
+  EmitStopPoint(&S);
   EmitBranch(CondBlock);
 
   ForScope.ForceCleanup();
-
-  if (DI)
-    DI->EmitLexicalBlockEnd(Builder, S.getSourceRange().getEnd());
 
   LoopStack.pop();
 
@@ -912,14 +930,10 @@ void CodeGenFunction::EmitForStmt(const ForStmt &S,
 
 void
 CodeGenFunction::EmitCXXForRangeStmt(const CXXForRangeStmt &S,
-                                     const ArrayRef<const Attr *> &ForAttrs) {
+                                     ArrayRef<const Attr *> ForAttrs) {
   JumpDest LoopExit = getJumpDestInCurrentScope("for.end");
 
-  RunCleanupsScope ForScope(*this);
-
-  CGDebugInfo *DI = getDebugInfo();
-  if (DI)
-    DI->EmitLexicalBlockStart(Builder, S.getSourceRange().getBegin());
+  LexicalScope ForScope(*this, S.getSourceRange());
 
   // Evaluate the first pieces before the loop.
   EmitStmt(S.getRangeStmt());
@@ -969,11 +983,12 @@ CodeGenFunction::EmitCXXForRangeStmt(const CXXForRangeStmt &S,
 
   {
     // Create a separate cleanup scope for the loop variable and body.
-    RunCleanupsScope BodyScope(*this);
+    LexicalScope BodyScope(*this, S.getSourceRange());
     EmitStmt(S.getLoopVarStmt());
     EmitStmt(S.getBody());
   }
 
+  EmitStopPoint(&S);
   // If there is an increment, emit it next.
   EmitBlock(Continue.getBlock());
   EmitStmt(S.getInc());
@@ -983,9 +998,6 @@ CodeGenFunction::EmitCXXForRangeStmt(const CXXForRangeStmt &S,
   EmitBranch(CondBlock);
 
   ForScope.ForceCleanup();
-
-  if (DI)
-    DI->EmitLexicalBlockEnd(Builder, S.getSourceRange().getEnd());
 
   LoopStack.pop();
 
@@ -1647,6 +1659,12 @@ SimplifyConstraint(const char *Constraint, const TargetInfo &Target,
       while (Constraint[1] && Constraint[1] != ',')
         Constraint++;
       break;
+    case '&':
+    case '%':
+      Result += *Constraint;
+      while (Constraint[1] && Constraint[1] == *Constraint)
+        Constraint++;
+      break;
     case ',':
       Result += "|";
       break;
@@ -1757,10 +1775,10 @@ llvm::Value* CodeGenFunction::EmitAsmInput(
 /// asm.
 static llvm::MDNode *getAsmSrcLocInfo(const StringLiteral *Str,
                                       CodeGenFunction &CGF) {
-  SmallVector<llvm::Value *, 8> Locs;
+  SmallVector<llvm::Metadata *, 8> Locs;
   // Add the location of the first line to the MDNode.
-  Locs.push_back(llvm::ConstantInt::get(CGF.Int32Ty,
-                                        Str->getLocStart().getRawEncoding()));
+  Locs.push_back(llvm::ConstantAsMetadata::get(llvm::ConstantInt::get(
+      CGF.Int32Ty, Str->getLocStart().getRawEncoding())));
   StringRef StrVal = Str->getString();
   if (!StrVal.empty()) {
     const SourceManager &SM = CGF.CGM.getContext().getSourceManager();
@@ -1772,8 +1790,8 @@ static llvm::MDNode *getAsmSrcLocInfo(const StringLiteral *Str,
       if (StrVal[i] != '\n') continue;
       SourceLocation LineLoc = Str->getLocationOfByte(i+1, SM, LangOpts,
                                                       CGF.getTarget());
-      Locs.push_back(llvm::ConstantInt::get(CGF.Int32Ty,
-                                            LineLoc.getRawEncoding()));
+      Locs.push_back(llvm::ConstantAsMetadata::get(
+          llvm::ConstantInt::get(CGF.Int32Ty, LineLoc.getRawEncoding())));
     }
   }
 
@@ -1911,7 +1929,19 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
     }
   }
 
-  unsigned NumConstraints = S.getNumOutputs() + S.getNumInputs();
+  // If this is a Microsoft-style asm blob, store the return registers (EAX:EDX)
+  // to the return value slot. Only do this when returning in registers.
+  if (isa<MSAsmStmt>(&S)) {
+    const ABIArgInfo &RetAI = CurFnInfo->getReturnInfo();
+    if (RetAI.isDirect() || RetAI.isExtend()) {
+      // Make a fake lvalue for the return value slot.
+      LValue ReturnSlot = MakeAddrLValue(ReturnValue, FnRetTy);
+      CGM.getTargetCodeGenInfo().addReturnRegisterOutputs(
+          *this, ReturnSlot, Constraints, ResultRegTypes, ResultTruncRegTypes,
+          ResultRegDests, AsmString, S.getNumOutputs());
+      SawAsmBlock = true;
+    }
+  }
 
   for (unsigned i = 0, e = S.getNumInputs(); i != e; i++) {
     const Expr *InputExpr = S.getInputExpr(i);
@@ -1984,9 +2014,9 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
     StringRef Clobber = S.getClobber(i);
 
     if (Clobber != "memory" && Clobber != "cc")
-    Clobber = getTarget().getNormalizedGCCRegisterName(Clobber);
+      Clobber = getTarget().getNormalizedGCCRegisterName(Clobber);
 
-    if (i != 0 || NumConstraints != 0)
+    if (!Constraints.empty())
       Constraints += ',';
 
     Constraints += "~{";
@@ -2031,7 +2061,9 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
   } else {
     // At least put the line number on MS inline asm blobs.
     auto Loc = llvm::ConstantInt::get(Int32Ty, S.getAsmLoc().getRawEncoding());
-    Result->setMetadata("srcloc", llvm::MDNode::get(getLLVMContext(), Loc));
+    Result->setMetadata("srcloc",
+                        llvm::MDNode::get(getLLVMContext(),
+                                          llvm::ConstantAsMetadata::get(Loc)));
   }
 
   // Extract all of the register value results from the asm.
@@ -2045,6 +2077,9 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
     }
   }
 
+  assert(RegResults.size() == ResultRegTypes.size());
+  assert(RegResults.size() == ResultTruncRegTypes.size());
+  assert(RegResults.size() == ResultRegDests.size());
   for (unsigned i = 0, e = RegResults.size(); i != e; ++i) {
     llvm::Value *Tmp = RegResults[i];
 
@@ -2078,46 +2113,35 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
   }
 }
 
-static LValue InitCapturedStruct(CodeGenFunction &CGF, const CapturedStmt &S) {
+LValue CodeGenFunction::InitCapturedStruct(const CapturedStmt &S) {
   const RecordDecl *RD = S.getCapturedRecordDecl();
-  QualType RecordTy = CGF.getContext().getRecordType(RD);
+  QualType RecordTy = getContext().getRecordType(RD);
 
   // Initialize the captured struct.
-  LValue SlotLV = CGF.MakeNaturalAlignAddrLValue(
-                    CGF.CreateMemTemp(RecordTy, "agg.captured"), RecordTy);
+  LValue SlotLV = MakeNaturalAlignAddrLValue(
+      CreateMemTemp(RecordTy, "agg.captured"), RecordTy);
 
   RecordDecl::field_iterator CurField = RD->field_begin();
   for (CapturedStmt::capture_init_iterator I = S.capture_init_begin(),
                                            E = S.capture_init_end();
        I != E; ++I, ++CurField) {
-    LValue LV = CGF.EmitLValueForFieldInitialization(SlotLV, *CurField);
-    CGF.EmitInitializerForField(*CurField, LV, *I, ArrayRef<VarDecl *>());
+    LValue LV = EmitLValueForFieldInitialization(SlotLV, *CurField);
+    if (CurField->hasCapturedVLAType()) {
+      auto VAT = CurField->getCapturedVLAType();
+      EmitStoreThroughLValue(RValue::get(VLASizeMap[VAT->getSizeExpr()]), LV);
+    } else {
+      EmitInitializerForField(*CurField, LV, *I, None);
+    }
   }
 
   return SlotLV;
-}
-
-static void InitVLACaptures(CodeGenFunction &CGF, const CapturedStmt &S) {
-  for (auto &C : S.captures()) {
-    if (C.capturesVariable()) {
-      QualType QTy;
-      auto VD = C.getCapturedVar();
-      if (const ParmVarDecl *PVD = dyn_cast<ParmVarDecl>(VD))
-        QTy = PVD->getOriginalType();
-      else
-        QTy = VD->getType();
-      if (QTy->isVariablyModifiedType()) {
-        CGF.EmitVariablyModifiedType(QTy);
-      }
-    }
-  }
 }
 
 /// Generate an outlined function for the body of a CapturedStmt, store any
 /// captured variables into the captured struct, and call the outlined function.
 llvm::Function *
 CodeGenFunction::EmitCapturedStmt(const CapturedStmt &S, CapturedRegionKind K) {
-  LValue CapStruct = InitCapturedStruct(*this, S);
+  LValue CapStruct = InitCapturedStruct(S);
 
   // Emit the CapturedDecl
   CodeGenFunction CGF(CGM, true);
@@ -2133,7 +2157,7 @@ CodeGenFunction::EmitCapturedStmt(const CapturedStmt &S, CapturedRegionKind K) {
 
 llvm::Value *
 CodeGenFunction::GenerateCapturedStmtArgument(const CapturedStmt &S) {
-  LValue CapStruct = InitCapturedStruct(*this, S);
+  LValue CapStruct = InitCapturedStruct(S);
   return CapStruct.getAddress();
 }
 
@@ -2174,22 +2198,27 @@ CodeGenFunction::GenerateCapturedStmtFunction(const CapturedStmt &S) {
   CapturedStmtInfo->setContextValue(Builder.CreateLoad(DeclPtr));
 
   // Initialize variable-length arrays.
-  InitVLACaptures(*this, S);
+  LValue Base = MakeNaturalAlignAddrLValue(CapturedStmtInfo->getContextValue(),
+                                           Ctx.getTagDeclType(RD));
+  for (auto *FD : RD->fields()) {
+    if (FD->hasCapturedVLAType()) {
+      auto *ExprArg = EmitLoadOfLValue(EmitLValueForField(Base, FD),
+                                       S.getLocStart()).getScalarVal();
+      auto VAT = FD->getCapturedVLAType();
+      VLASizeMap[VAT->getSizeExpr()] = ExprArg;
+    }
+  }
 
   // If 'this' is captured, load it into CXXThisValue.
   if (CapturedStmtInfo->isCXXThisExprCaptured()) {
     FieldDecl *FD = CapturedStmtInfo->getThisFieldDecl();
-    LValue LV = MakeNaturalAlignAddrLValue(CapturedStmtInfo->getContextValue(),
-                                           Ctx.getTagDeclType(RD));
-    LValue ThisLValue = EmitLValueForField(LV, FD);
+    LValue ThisLValue = EmitLValueForField(Base, FD);
     CXXThisValue = EmitLoadOfLValue(ThisLValue, Loc).getScalarVal();
   }
 
   PGO.assignRegionCounters(CD, F);
   CapturedStmtInfo->EmitBody(*this, CD->getBody());
   FinishFunction(CD->getBodyRBrace());
-  PGO.emitInstrumentationData();
-  PGO.destroyRegionCounters();
 
   return F;
 }

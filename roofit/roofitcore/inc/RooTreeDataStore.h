@@ -103,7 +103,7 @@ public:
   void	Draw(Option_t* option = "") ;
 
   // Constant term  optimizer interface
-  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0) ;
+  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) ;
   virtual const RooAbsArg* cacheOwner() { return _cacheOwner ; }
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
   virtual void resetCache() ;

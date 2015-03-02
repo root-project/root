@@ -7,8 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef X86ASMPRINTER_H
-#define X86ASMPRINTER_H
+#ifndef LLVM_LIB_TARGET_X86_X86ASMPRINTER_H
+#define LLVM_LIB_TARGET_X86_X86ASMPRINTER_H
 
 #include "X86Subtarget.h"
 #include "llvm/CodeGen/AsmPrinter.h"
@@ -85,8 +85,9 @@ class LLVM_LIBRARY_VISIBILITY X86AsmPrinter : public AsmPrinter {
   void LowerTlsAddr(X86MCInstLower &MCInstLowering, const MachineInstr &MI);
 
  public:
-  explicit X86AsmPrinter(TargetMachine &TM, MCStreamer &Streamer)
-    : AsmPrinter(TM, Streamer), SM(*this), SMShadowTracker(TM) {
+   explicit X86AsmPrinter(TargetMachine &TM,
+                          std::unique_ptr<MCStreamer> Streamer)
+       : AsmPrinter(TM, std::move(Streamer)), SM(*this), SMShadowTracker(TM) {
     Subtarget = &TM.getSubtarget<X86Subtarget>();
   }
 
@@ -115,6 +116,12 @@ class LLVM_LIBRARY_VISIBILITY X86AsmPrinter : public AsmPrinter {
 
   /// \brief Return the symbol for the specified constant pool entry.
   MCSymbol *GetCPISymbol(unsigned CPID) const override;
+
+  bool doInitialization(Module &M) override {
+    SMShadowTracker.reset(0);
+    SM.reset();
+    return AsmPrinter::doInitialization(M);
+  }
 
   bool runOnMachineFunction(MachineFunction &F) override;
 };

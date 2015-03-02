@@ -240,7 +240,7 @@ TH1D* TMVA::ROCCalc::GetROC(){
    // search for overlap point where, when cutting on it,
    // one would obtain: eff_S = rej_B = 1 - eff_B
 
-   Double_t effS, rejB, effS_ = 0, rejB_ = 0;
+   Double_t effS = 0., rejB = 0., effS_ = 0., rejB_ = 0.;
    Int_t    nbins = 5000;
    for (Int_t bini=1; bini<=nbins; bini++) {
      
@@ -288,7 +288,7 @@ Double_t TMVA::ROCCalc::GetEffSForEffBof(Double_t effBref, Double_t &effSerr){
    // the efficiency-vs-bkg plot which is done anyway.
   
    // find precise efficiency value
-   Double_t effS, effB, effSOld=1, effBOld=0;
+   Double_t effS=0., effB, effSOld=1., effBOld=0.;
    Int_t    nbins = 1000;
    if (fSpleffBvsS == 0) this->GetROC(); // that will make the ROC calculation if not done yet
 

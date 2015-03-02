@@ -223,6 +223,10 @@ RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none
 RooCmdArg AxisLabel(const char* name) ;
 RooCmdArg Scaling(Bool_t flag) ; 
 
+
+// RooAbsReal::createHistogram arguments
+RooCmdArg IntrinsicBinning(Bool_t flag=kTRUE) ;
+
 // RooAbsReal::createIntegral arguments
 RooCmdArg NormSet(const RooArgSet& nset) ;
 RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
@@ -262,7 +266,7 @@ RooCmdArg Prefix(Bool_t flag) ;
 RooCmdArg Color(Color_t color) ;
 
 // RooWorkspace::import() arguments
-RooCmdArg RenameConflictNodes(const char* suffix) ;
+RooCmdArg RenameConflictNodes(const char* suffix, Bool_t renameOrigNodes=kFALSE) ;
 RooCmdArg RenameAllNodes(const char* suffix) ; 
 RooCmdArg RenameAllVariables(const char* suffix) ; 
 RooCmdArg RenameAllVariablesExcept(const char* suffix,const char* exceptionList) ; 
@@ -270,6 +274,7 @@ RooCmdArg RenameVariable(const char* inputName, const char* outputName) ;
 RooCmdArg Rename(const char* suffix) ;
 RooCmdArg RecycleConflictNodes(Bool_t flag=kTRUE) ;
 RooCmdArg Embedded(Bool_t flag=kTRUE) ;
+RooCmdArg NoRecursion(Bool_t flag=kTRUE) ;
 
 // RooSimCloneTool::build() arguments
 RooCmdArg SplitParam(const char* varname, const char* catname) ;

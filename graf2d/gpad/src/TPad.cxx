@@ -5082,8 +5082,10 @@ void TPad::ResizePad(Option_t *option)
          //without this protection, the OpenPixmap or ResizePixmap crashes with
          //the message "Error in <RootX11ErrorHandler>: BadValue (integer parameter out of range for operation)"
          //resulting in a frozen xterm
-         if (!(TMath::Finite(fX1)) || !(TMath::Finite(fX2))
-             || !(TMath::Finite(fY1)) || !(TMath::Finite(fY2)))
+         if (   !(TMath::Finite(fX1)) || !(TMath::Finite(fX2))
+             || !(TMath::Finite(fY1)) || !(TMath::Finite(fY2))
+             || (TMath::IsNaN(fX1))  || (TMath::IsNaN(fX2))
+             || (TMath::IsNaN(fY1))  || (TMath::IsNaN(fY2)))
             Warning("ResizePad", "Inf/NaN propagated to the pad. Check drawn objects.");
          if (w <= 0 || w > 10000) {
             Warning("ResizePad", "%s width changed from %d to %d\n",GetName(),w,10);
@@ -5740,7 +5742,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
 
    // Get Primitives
    prims = gPad->GetListOfPrimitives();
-   n     = prims->GetSize();
+   n     = TMath::Min(15,prims->GetSize());
    Int_t lineColor = TColor::GetColor(239, 202, 0);
 
    TAttBBox2D *cur = dynamic_cast<TAttBBox2D *>( object );

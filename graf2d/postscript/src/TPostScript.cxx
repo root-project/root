@@ -257,6 +257,9 @@
 // to scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
 
+// Array defining if a font must be embedded or not.
+static Bool_t MustEmbed[32];
+
 Int_t TPostScript::fgLineJoin = 0;
 
 ClassImp(TPostScript)
@@ -325,7 +328,9 @@ TPostScript::TPostScript() : TVirtualPS()
    fZone            = kFALSE;
    fFileName        = "";
    fFontEmbed       = kFALSE;
-   for (Int_t i=0; i<32; i++) fPatterns[i]=0;
+   Int_t i;
+   for (i=0; i<32; i++) fPatterns[i] = 0;
+   for (i=0; i<32; i++) MustEmbed[i] = kFALSE;
    SetTitle("PS");
 }
 
@@ -460,6 +465,47 @@ void TPostScript::Close(Option_t *)
    }
    PrintStr("@");
    PrintStr("%%EOF@");
+
+   // Embed the fonts previously used by TMathText
+   if (!fFontEmbed) {
+      // Close the file fFileName
+      if (fStream) {
+         PrintStr("@");
+         fStream->close(); delete fStream; fStream = 0;
+      }
+
+      // Rename the file fFileName
+      TString tmpname = Form("%s_tmp_%d",fFileName.Data(),gSystem->GetPid());
+      if (gSystem->Rename( fFileName.Data() , tmpname.Data())) {
+         Error("Text", "Cannot open temporary file: %s\n", tmpname.Data());
+         return;
+      }
+
+      // Reopen the file fFileName
+      fStream = new std::ofstream(fFileName.Data(),std::ios::out);
+      if (fStream == 0 || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
+         Error("Text", "Cannot open file: %s\n", fFileName.Data());
+         return;
+      }
+
+      // Embed the fonts at the right place
+      FILE *sg = fopen(tmpname.Data(),"r");
+      if (sg == 0) {
+         Error("Text", "Cannot open file: %s\n", tmpname.Data());
+         return;
+      }
+      char line[255];
+      while (fgets(line,255,sg)) {
+         if (strstr(line,"EndComments")) PrintStr("%%DocumentNeededResources: ProcSet (FontSetInit)@");
+         fStream->write(line,strlen(line));
+         if (!fFontEmbed && strstr(line,"m5")) {
+            FontEmbed();
+            PrintStr("@");
+         }
+      }
+      fclose(sg);
+      if (gSystem->Unlink(tmpname.Data())) return;
+   }
 
    fFontEmbed = kFALSE;
 
@@ -1452,13 +1498,11 @@ Bool_t TPostScript::FontEmbedType2(const char *filename)
 
    std::vector<unsigned char> font_data(font_file_length, '\0');
 
-   font_file.read(reinterpret_cast<char *>(&font_data[0]),
-                  font_file_length);
+   font_file.read(reinterpret_cast<char *>(&font_data[0]), font_file_length);
 
    std::string font_name;
    std::string postscript_string =
-   mathtext::font_embed_postscript_t::font_embed_type_2(
-                                                        font_name, font_data);
+   mathtext::font_embed_postscript_t::font_embed_type_2(font_name, font_data);
 
    if (!postscript_string.empty()) {
       PrintRaw(postscript_string.size(), postscript_string.data());
@@ -1476,8 +1520,8 @@ Bool_t TPostScript::FontEmbedType42(const char *filename)
 {
    std::ifstream font_file(filename, std::ios::binary);
 
-   // We cannot read directly using iostream iterators due to
-   // signedness
+    // We cannot read directly using iostream iterators due to signedness
+
    font_file.seekg(0, std::ios::end);
 
    const size_t font_file_length = font_file.tellg();
@@ -1486,13 +1530,11 @@ Bool_t TPostScript::FontEmbedType42(const char *filename)
 
    std::vector<unsigned char> font_data(font_file_length, '\0');
 
-   font_file.read(reinterpret_cast<char *>(&font_data[0]),
-                  font_file_length);
+   font_file.read(reinterpret_cast<char *>(&font_data[0]), font_file_length);
 
    std::string font_name;
    std::string postscript_string =
-   mathtext::font_embed_postscript_t::font_embed_type_42(
-                                                         font_name, font_data);
+   mathtext::font_embed_postscript_t::font_embed_type_42(font_name, font_data);
 
    if (!postscript_string.empty()) {
       PrintRaw(postscript_string.size(), postscript_string.data());
@@ -1558,13 +1600,11 @@ void TPostScript::FontEmbed(void)
                                        );
 
    for (Int_t fontid = 1; fontid < 30; fontid++) {
-      if (fontid != 15) {
+      if (fontid != 15 && MustEmbed[fontid-1]) {
          const char *filename = gEnv->GetValue(
                                                fonttable[fontid][0], fonttable[fontid][1]);
-         char *ttfont = gSystem->Which(ttpath, filename,
-                                       kReadPermission);
-
-         if(!ttfont) {
+         char *ttfont = gSystem->Which(ttpath, filename, kReadPermission);
+         if (!ttfont) {
             Error("TPostScript::FontEmbed",
                   "font %d (filename `%s') not found in path",
                   fontid, filename);
@@ -1606,7 +1646,7 @@ void TPostScript::FontEmbed(void)
 //______________________________________________________________________________
 void TPostScript::FontEncode()
 {
-   // Font Reencoding
+   // Font Re-encoding
 
    PrintStr("/reEncode ");
    PrintStr("{exch findfont");
@@ -1776,7 +1816,7 @@ void TPostScript::Initialize()
 
    if( fMode == 3)PrintStr("80 dict begin@");
 
-   // Initialization of PostScript procedures
+   // Initialisation of PostScript procedures
    PrintStr("/s {stroke} def /l {lineto} def /m {moveto} def /t {translate} def@");
    PrintStr("/r {rotate} def /rl {roll}  def /R {repeat} def@");
    PrintStr("/d {rlineto} def /rm {rmoveto} def /gr {grestore} def /f {eofill} def@");
@@ -2129,7 +2169,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
       PrintStr(" << /PatternType 1 /PaintType 2 /TilingType 1");
       switch (ipat) {
          case 1 :
-            PrintStr(" /BBox [ 0 0 100 100 ]");
+            PrintStr(" /BBox [ 0 0 98 4 ]");
             PrintStr(" /XStep 98 /YStep 4");
             PrintStr(" /PaintProc { begin gsave");
             PrintStr(" [1] 0 sd 2 4 m 99 4 l s 1 3 m 98 3 l s");
@@ -2137,7 +2177,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
             PrintStr(" gr end } >> [ 4.0 0 0 4.0 0 0 ]");
             break;
          case 2 :
-            PrintStr(" /BBox [ 0 0 100 100 ]");
+            PrintStr(" /BBox [ 0 0 96 4 ]");
             PrintStr(" /XStep 96 /YStep 4");
             PrintStr(" /PaintProc { begin gsave");
             PrintStr(" [1 3] 0 sd 2 4 m 98 4 l s 0 3 m 96 3 l s");
@@ -2145,7 +2185,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
             PrintStr(" gr end } >> [ 3.0 0 0 3.0 0 0 ]");
             break;
          case 3 :
-            PrintStr(" /BBox [ 0 0 100 100 ]");
+            PrintStr(" /BBox [ 0 0 96 16 ]");
             PrintStr(" /XStep 96 /YStep 16");
             PrintStr(" /PaintProc { begin gsave");
             PrintStr(" [1 3] 0 sd 2 13 m 98 13 l s 0 9 m 96 9 l s");
@@ -2811,46 +2851,6 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    Double_t y = yy;
    if (!gPad) return;
 
-   if (!fFontEmbed) {
-      // Close the the file fFileName
-      if (fStream) {
-         PrintStr("@");
-         fStream->close(); delete fStream; fStream = 0;
-      }
-
-      // Rename the file fFileName
-      TString tmpname = Form("%s_tmp_%d",fFileName.Data(),gSystem->GetPid());
-      if (gSystem->Rename( fFileName.Data() , tmpname.Data())) {
-         Error("Text", "Cannot open temporary file: %s\n", tmpname.Data());
-         return;
-      }
-
-      // Reopen the file fFileName
-      fStream = new std::ofstream(fFileName.Data(),std::ios::out);
-      if (fStream == 0 || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
-         Error("Text", "Cannot open file: %s\n", fFileName.Data());
-         return;
-      }
-
-      // Embed the fonts at the right place
-      FILE *sg = fopen(tmpname.Data(),"r");
-      if (sg == 0) {
-         Error("Text", "Cannot open file: %s\n", tmpname.Data());
-         return;
-      }
-      char line[255];
-      while (fgets(line,255,sg)) {
-         if (strstr(line,"EndComments")) PrintStr("%%DocumentNeededResources: ProcSet (FontSetInit)@");
-         fStream->write(line,strlen(line));
-         if (!fFontEmbed && strstr(line,"m5")) {
-            FontEmbed();
-            PrintStr("@");
-         }
-      }
-      fclose(sg);
-      if (gSystem->Unlink(tmpname.Data())) return;
-   }
-
    // Compute the font size. Exit if it is 0
    // The font size is computed from the TTF size to get exactly the same
    // size on the screen and in the PostScript file.
@@ -2924,9 +2924,9 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    PrintStr(Form(" t %d r ", psangle));
    if(txalh == 2) PrintStr(Form(" %d 0 t ", -psCharsLength/2));
    if(txalh == 3) PrintStr(Form(" %d 0 t ", -psCharsLength));
+   MustEmbed[font-1] = kTRUE; // This font will be embedded in the file at EOF time.
    PrintStr(gEnv->GetValue(psfont[font-1][0], psfont[font-1][1]));
    PrintStr(Form(" findfont %g sf 0 0 m ",fontsize));
-   PrintStr("@");
 
    // Output text.
    if (len > 1) PrintStr(Form("%d ", len));

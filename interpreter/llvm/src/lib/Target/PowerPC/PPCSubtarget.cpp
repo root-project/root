@@ -14,11 +14,13 @@
 #include "PPCSubtarget.h"
 #include "PPC.h"
 #include "PPCRegisterInfo.h"
+#include "PPCTargetMachine.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineScheduler.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalValue.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Target/TargetMachine.h"
@@ -32,84 +34,24 @@ using namespace llvm;
 #define GET_SUBTARGETINFO_CTOR
 #include "PPCGenSubtargetInfo.inc"
 
-/// Return the datalayout string of a subtarget.
-static std::string getDataLayoutString(const PPCSubtarget &ST) {
-  const Triple &T = ST.getTargetTriple();
-
-  std::string Ret;
-
-  // Most PPC* platforms are big endian, PPC64LE is little endian.
-  if (ST.isLittleEndian())
-    Ret = "e";
-  else
-    Ret = "E";
-
-  Ret += DataLayout::getManglingComponent(T);
-
-  // PPC32 has 32 bit pointers. The PS3 (OS Lv2) is a PPC64 machine with 32 bit
-  // pointers.
-  if (!ST.isPPC64() || T.getOS() == Triple::Lv2)
-    Ret += "-p:32:32";
-
-  // Note, the alignment values for f64 and i64 on ppc64 in Darwin
-  // documentation are wrong; these are correct (i.e. "what gcc does").
-  if (ST.isPPC64() || ST.isSVR4ABI())
-    Ret += "-i64:64";
-  else
-    Ret += "-f64:32:64";
-
-  // PPC64 has 32 and 64 bit registers, PPC32 has only 32 bit ones.
-  if (ST.isPPC64())
-    Ret += "-n32:64";
-  else
-    Ret += "-n32";
-
-  return Ret;
-}
+static cl::opt<bool> UseSubRegLiveness("ppc-track-subreg-liveness",
+cl::desc("Enable subregister liveness tracking for PPC"), cl::Hidden);
 
 PPCSubtarget &PPCSubtarget::initializeSubtargetDependencies(StringRef CPU,
                                                             StringRef FS) {
   initializeEnvironment();
-  resetSubtargetFeatures(CPU, FS);
+  initSubtargetFeatures(CPU, FS);
   return *this;
 }
 
 PPCSubtarget::PPCSubtarget(const std::string &TT, const std::string &CPU,
-                           const std::string &FS, PPCTargetMachine &TM,
-                           bool is64Bit, CodeGenOpt::Level OptLevel)
-    : PPCGenSubtargetInfo(TT, CPU, FS), IsPPC64(is64Bit), TargetTriple(TT),
-      OptLevel(OptLevel), TargetABI(PPC_ABI_UNKNOWN),
-      FrameLowering(initializeSubtargetDependencies(CPU, FS)),
-      DL(getDataLayoutString(*this)), InstrInfo(*this), JITInfo(*this),
-      TLInfo(TM), TSInfo(&DL) {}
-
-/// SetJITMode - This is called to inform the subtarget info that we are
-/// producing code for the JIT.
-void PPCSubtarget::SetJITMode() {
-  // JIT mode doesn't want lazy resolver stubs, it knows exactly where
-  // everything is.  This matters for PPC64, which codegens in PIC mode without
-  // stubs.
-  HasLazyResolverStubs = false;
-
-  // Calls to external functions need to use indirect calls
-  IsJITCodeModel = true;
-}
-
-void PPCSubtarget::resetSubtargetFeatures(const MachineFunction *MF) {
-  AttributeSet FnAttrs = MF->getFunction()->getAttributes();
-  Attribute CPUAttr = FnAttrs.getAttribute(AttributeSet::FunctionIndex,
-                                           "target-cpu");
-  Attribute FSAttr = FnAttrs.getAttribute(AttributeSet::FunctionIndex,
-                                          "target-features");
-  std::string CPU =
-    !CPUAttr.hasAttribute(Attribute::None) ? CPUAttr.getValueAsString() : "";
-  std::string FS =
-    !FSAttr.hasAttribute(Attribute::None) ? FSAttr.getValueAsString() : "";
-  if (!FS.empty()) {
-    initializeEnvironment();
-    resetSubtargetFeatures(CPU, FS);
-  }
-}
+                           const std::string &FS, const PPCTargetMachine &TM)
+    : PPCGenSubtargetInfo(TT, CPU, FS), TargetTriple(TT),
+      IsPPC64(TargetTriple.getArch() == Triple::ppc64 ||
+              TargetTriple.getArch() == Triple::ppc64le),
+      TargetABI(PPC_ABI_UNKNOWN),
+      FrameLowering(initializeSubtargetDependencies(CPU, FS)), InstrInfo(*this),
+      TLInfo(TM, *this), TSInfo(TM.getDataLayout()) {}
 
 void PPCSubtarget::initializeEnvironment() {
   StackAlignment = 16;
@@ -119,8 +61,10 @@ void PPCSubtarget::initializeEnvironment() {
   Use64BitRegs = false;
   UseCRBits = false;
   HasAltivec = false;
+  HasSPE = false;
   HasQPX = false;
   HasVSX = false;
+  HasP8Vector = false;
   HasFCPSGN = false;
   HasFSQRT = false;
   HasFRE = false;
@@ -134,19 +78,30 @@ void PPCSubtarget::initializeEnvironment() {
   HasFPCVT = false;
   HasISEL = false;
   HasPOPCNTD = false;
+  HasCMPB = false;
   HasLDBRX = false;
   IsBookE = false;
+  HasOnlyMSYNC = false;
+  IsPPC4xx = false;
+  IsPPC6xx = false;
+  IsE500 = false;
   DeprecatedMFTB = false;
   DeprecatedDST = false;
   HasLazyResolverStubs = false;
-  IsJITCodeModel = false;
+  HasICBT = false;
+  HasInvariantFunctionDescriptors = false;
 }
 
-void PPCSubtarget::resetSubtargetFeatures(StringRef CPU, StringRef FS) {
+void PPCSubtarget::initSubtargetFeatures(StringRef CPU, StringRef FS) {
   // Determine default and user specified characteristics
   std::string CPUName = CPU;
-  if (CPUName.empty())
-    CPUName = "generic";
+  if (CPUName.empty()) {
+    // If cross-compiling with -march=ppc64le without -mcpu
+    if (TargetTriple.getArch() == Triple::ppc64le)
+      CPUName = "ppc64le";
+    else
+      CPUName = "generic";
+  }
 #if (defined(__APPLE__) || defined(__linux__)) && \
     (defined(__ppc__) || defined(__powerpc__))
   if (CPUName == "generic")
@@ -156,35 +111,13 @@ void PPCSubtarget::resetSubtargetFeatures(StringRef CPU, StringRef FS) {
   // Initialize scheduling itinerary for the specified CPU.
   InstrItins = getInstrItineraryForCPU(CPUName);
 
-  // Make sure 64-bit features are available when CPUname is generic
-  std::string FullFS = FS;
-
-  // If we are generating code for ppc64, verify that options make sense.
-  if (IsPPC64) {
-    Has64BitSupport = true;
-    // Silently force 64-bit register use on ppc64.
-    Use64BitRegs = true;
-    if (!FullFS.empty())
-      FullFS = "+64bit," + FullFS;
-    else
-      FullFS = "+64bit";
-  }
-
-  // At -O2 and above, track CR bits as individual registers.
-  if (OptLevel >= CodeGenOpt::Default) {
-    if (!FullFS.empty())
-      FullFS = "+crbits," + FullFS;
-    else
-      FullFS = "+crbits";
-  }
-
   // Parse features string.
-  ParseSubtargetFeatures(CPUName, FullFS);
+  ParseSubtargetFeatures(CPUName, FS);
 
   // If the user requested use of 64-bit regs, but the cpu selected doesn't
   // support it, ignore.
-  if (use64BitRegs() && !has64BitSupport())
-    Use64BitRegs = false;
+  if (IsPPC64 && has64BitSupport())
+    Use64BitRegs = true;
 
   // Set up darwin-specific properties.
   if (isDarwin())
@@ -198,11 +131,6 @@ void PPCSubtarget::resetSubtargetFeatures(StringRef CPU, StringRef FS) {
 
   // Determine endianness.
   IsLittleEndian = (TargetTriple.getArch() == Triple::ppc64le);
-
-  // FIXME: For now, we disable VSX in little-endian mode until endian
-  // issues in those instructions can be addressed.
-  if (IsLittleEndian)
-    HasVSX = false;
 
   // Determine default ABI.
   if (TargetABI == PPC_ABI_UNKNOWN) {
@@ -223,9 +151,7 @@ bool PPCSubtarget::hasLazyResolverStub(const GlobalValue *GV,
   // We never have stubs if HasLazyResolverStubs=false or if in static mode.
   if (!HasLazyResolverStubs || TM.getRelocationModel() == Reloc::Static)
     return false;
-  // If symbol visibility is hidden, the extra load is not needed if
-  // the symbol is definitely defined in the current translation unit.
-  bool isDecl = GV->isDeclaration() && !GV->isMaterializable();
+  bool isDecl = GV->isDeclaration();
   if (GV->hasHiddenVisibility() && !isDecl && !GV->hasCommonLinkage())
     return false;
   return GV->hasWeakLinkage() || GV->hasLinkOnceLinkage() ||
@@ -283,5 +209,9 @@ void PPCSubtarget::overrideSchedPolicy(MachineSchedPolicy &Policy,
 bool PPCSubtarget::useAA() const {
   // Use AA during code generation for the embedded cores.
   return needsAggressiveScheduling(DarwinDirective);
+}
+
+bool PPCSubtarget::enableSubRegLiveness() const {
+  return UseSubRegLiveness;
 }
 

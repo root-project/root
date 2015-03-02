@@ -2230,23 +2230,35 @@ void TBufferSQL2::ReadCharP(Char_t    *c)
 }
 
 //________________________________________________________________________
-void TBufferSQL2::ReadTString(TString   &)
+void TBufferSQL2::ReadTString(TString   &s)
 {
-   // Operator>>
-
-   //strcpy(str,(*fRowPtr)->GetField(*fIter));
-   //if (fIter != fColumnVec->end()) ++fIter;
-   printf("ERROR NOT IMPLEMENTED\n");
+   // Read a TString
+  
+   TBufferFile::ReadTString(s);
 }
 
 //________________________________________________________________________
-void TBufferSQL2::WriteTString(const TString   &)
+void TBufferSQL2::WriteTString(const TString  &s)
 {
-   // Operator>>
+   // Write a TString
 
-   //strcpy(str,(*fRowPtr)->GetField(*fIter));
-   //if (fIter != fColumnVec->end()) ++fIter;
-   printf("ERROR NOT IMPLEMENTED\n");
+   TBufferFile::WriteTString(s);
+}
+
+//________________________________________________________________________
+void TBufferSQL2::ReadStdString(std::string &s)
+{
+   // Read a std::string
+  
+   TBufferFile::ReadStdString(s);
+}
+
+//________________________________________________________________________
+void TBufferSQL2::WriteStdString(const std::string &s)
+{
+   // Write a std::string
+
+   TBufferFile::WriteStdString(s);
 }
 
 // macro for right shift operator for basic types

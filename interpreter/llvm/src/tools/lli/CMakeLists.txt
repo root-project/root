@@ -7,10 +7,10 @@ set(LLVM_LINK_COMPONENTS
   IRReader
   Instrumentation
   Interpreter
-  JIT
   MC
   MCJIT
   Object
+  OrcJIT
   SelectionDAG
   Support
   native
@@ -26,7 +26,7 @@ endif( LLVM_USE_OPROFILE )
 if( LLVM_USE_INTEL_JITEVENTS )
   set(LLVM_LINK_COMPONENTS
     ${LLVM_LINK_COMPONENTS}
-    DebugInfo
+    DebugInfoDWARF
     IntelJITEvents
     Object
     )

@@ -562,7 +562,7 @@ int testNewMinimizer( const ROOT::Math::IMultiGenFunction & func, const double *
    std::cout << "\tMinimizer is " << minimizer << "  " << algoType << std::endl;
 
    int iret = 0;
-   double minval,edm = 0;
+   double minval = 0.,edm = 0.;
    std::vector<double> xmin(func.NDim() );
 
    TStopwatch w;
@@ -614,7 +614,7 @@ int testOldMinimizer( FCN  func, const std::string & fitter, int n=25) {
    std::cout << "\tFitter is " << fitter << std::endl;
 
    int iret = 0;
-   double minval,edm = 0;
+   double minval = 0.,edm = 0.;
 
    TStopwatch w;
    w.Start();

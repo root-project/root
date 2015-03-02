@@ -113,7 +113,7 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
    // If orientation = "X", the horizontal axis of the pad will be used for ref.
    // If orientation = "Y", the vertical axis of the pad will be used for ref.
 
-   const char *formatstr;
+   const char *formatstr = nullptr;
    Int_t reasformat = 0;
    Int_t ndiv,nx1,nx2,n;
    Double_t awidth;
@@ -261,21 +261,24 @@ Int_t TAxis::FindBin(Double_t x)
 {
    // Find bin number corresponding to abscissa x. NOTE: this method does not work with alphanumeric bins !!!
    //
-   // If x is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true. Otherwise, return 0 or fNbins+1.
+   // If x is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true.
+   // Otherwise, return 0 or fNbins+1.
 
    Int_t bin;
-   // NOTE: This should not be allowed for Alphanumeric histograms, but it is heavily used (legacy) in the TTreePlayer to fill alphanumeric histograms.
+   // NOTE: This should not be allowed for Alphanumeric histograms,
+   // but it is heavily used (legacy) in the TTreePlayer to fill alphanumeric histograms.
+   // but in case of alphanumeric do-not extend the axis. It makes no sense 
    if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
       if (fParent == 0) return bin;
-      if (!CanExtend()) return bin;
+      if (!CanExtend() || IsAlphanumeric() ) return bin;   
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
       bin = fNbins+1;
       if (fParent == 0) return bin;
-      if (!CanExtend()) return bin;
+      if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else {
@@ -293,7 +296,8 @@ Int_t TAxis::FindBin(Double_t x)
 Int_t TAxis::FindBin(const char *label)
 {
    // Find bin number with label.
-   // If the List of labels does not exist create it
+   // If the List of labels does not exist create it and make the axis alphanumeric
+   // If one wants just to add a single label- just call TAxis::SetBinLabel
    // If label is not in the list of labels do the following depending on the
    // bit TAxis::kCanExtend; of the axis.
    //   - if the bit is set add the new label and if the number of labels exceeds
@@ -308,13 +312,18 @@ Int_t TAxis::FindBin(const char *label)
    //create list of labels if it does not exist yet
    if (!fLabels) {
       if (!fParent) return -1;
-      fLabels = new THashList(1,1);
-      SetCanExtend(kTRUE);
-      SetAlphanumeric(kTRUE);
-      if (fXmax <= fXmin) {
-         //L.M. Dec 2010 in case of no min and max specified use 0 ->NBINS
-         fXmin = 0;
-         fXmax = fNbins;
+      fLabels = new THashList(fNbins,3);
+      // we set the axis alphanumeric
+      // when list of labels does not exist
+      // do we want to do this also when histogram is not empty ?????
+      if (CanBeAlphanumeric() ) { 
+         SetCanExtend(kTRUE);
+         SetAlphanumeric(kTRUE);
+         if (fXmax <= fXmin) {
+            //L.M. Dec 2010 in case of no min and max specified use 0 ->NBINS
+            fXmin = 0;
+            fXmax = fNbins;
+         }
       }
    }
 
@@ -324,12 +333,13 @@ Int_t TAxis::FindBin(const char *label)
 
    // if labels is not in the list and we have already labels
    if (!IsAlphanumeric()) {
-      if (HasBinWithoutLabel()) {
-         Warning("FindBin","Label %s is not in the list and the axis is not alphanumeric - ignore it",label);
+      // if bins without labels exist or if the axis cannot be set to alphanumeric
+      if (HasBinWithoutLabel() || !CanBeAlphanumeric() ) {         
+         Info("FindBin","Label %s is not in the list and the axis is not alphanumeric - ignore it",label);
          return -1;
       }
       else {
-         Info("FindBin","Label %s not in the list will be added to the histogram",label);
+         Info("FindBin","Label %s not in the list. It will be added to the histogram",label);
          SetCanExtend(kTRUE);
          SetAlphanumeric(kTRUE);
       }
@@ -355,6 +365,21 @@ Int_t TAxis::FindBin(const char *label)
    return n+1;
 }
 
+//______________________________________________________________________________
+Int_t TAxis::FindFixBin(const char *label) const
+{
+   // Find bin number with label.
+   // If the List of labels does not exist or the label doe not exist just return -1 .
+   // Do not attempt to modify the axis. This is different than FindBin
+
+   //create list of labels if it does not exist yet
+   if (!fLabels) return -1; 
+ 
+   // search for label in the existing list and return it if it exists
+   TObjString *obj = (TObjString*)fLabels->FindObject(label);
+   if (obj) return (Int_t)obj->GetUniqueID();
+   return -1;
+}   
 
 
 //______________________________________________________________________________
@@ -725,8 +750,17 @@ void TAxis::SetAlphanumeric(Bool_t alphanumeric)
 
    // clear underflow and overflow (in an alphanumeric situation they do not make sense)
    // NOTE: using AddBinContent instead of SetBinContent in order to not change
-   //   the number of entries
-   ((TH1 *)fParent)->ClearUnderflowAndOverflow();
+   //  the number of entries
+   //((TH1 *)fParent)->ClearUnderflowAndOverflow();
+   // L.M. 26.1.15 Keep underflow and overflows (see ROOT-7034)
+   if (gDebug && fParent) {
+      TH1 * h = dynamic_cast<TH1*>( fParent);
+      if (!h) return;
+      double s[TH1::kNstat];
+      h->GetStats(s);
+      if (s[0] != 0. && gDebug > 0)
+         Info("SetAlphanumeric","Histogram %s is set alphanumeric but has non-zero content",GetName());
+   }
 }
 
 
@@ -780,7 +814,7 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
    obj->SetUniqueID((UInt_t)bin);
 
    // check for Alphanumeric case (labels for each bin)
-   if (fLabels->GetSize() == fNbins) {
+   if (CanBeAlphanumeric() && fLabels->GetSize() == fNbins) {      
       SetAlphanumeric(kTRUE);
       SetCanExtend(kTRUE);
    }

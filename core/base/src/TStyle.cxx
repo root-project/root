@@ -151,11 +151,12 @@ TStyle::TStyle(const char *name, const char *title)
       SetLegendBorderSize(1);
       SetLegendFillColor(0);
       SetLegendFont(42);
+      SetLegendTextSize(0.);
       SetFuncWidth(2);
       SetFuncColor(2);
    }
    if (strcmp(style_name,"Plain") == 0) {
-      // May be a standard style to be initialized
+      // May be a standard style to be initialised
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
       SetCanvasBorderMode(0);
@@ -321,98 +322,99 @@ void TStyle::Copy(TObject &obj) const
    fYaxis.Copy(((TStyle&)obj).fYaxis);
    fZaxis.Copy(((TStyle&)obj).fZaxis);
    fAttDate.Copy(((TStyle&)obj).fAttDate);
-   ((TStyle&)obj).fIsReading      = fIsReading;
-   ((TStyle&)obj).fScreenFactor   = fScreenFactor;
-   ((TStyle&)obj).fCanvasPreferGL = fCanvasPreferGL;
-   ((TStyle&)obj).fCanvasColor    = fCanvasColor;
-   ((TStyle&)obj).fCanvasBorderSize= fCanvasBorderSize;
-   ((TStyle&)obj).fCanvasBorderMode= fCanvasBorderMode;
-   ((TStyle&)obj).fCanvasDefH     = fCanvasDefH;
-   ((TStyle&)obj).fCanvasDefW     = fCanvasDefW;
-   ((TStyle&)obj).fCanvasDefX     = fCanvasDefX;
-   ((TStyle&)obj).fCanvasDefY     = fCanvasDefY;
-   ((TStyle&)obj).fPadColor       = fPadColor;
-   ((TStyle&)obj).fPadBorderSize  = fPadBorderSize;
-   ((TStyle&)obj).fPadBorderMode  = fPadBorderMode;
-   ((TStyle&)obj).fPadBottomMargin= fPadBottomMargin;
-   ((TStyle&)obj).fPadTopMargin   = fPadTopMargin;
-   ((TStyle&)obj).fPadLeftMargin  = fPadLeftMargin;
-   ((TStyle&)obj).fPadRightMargin = fPadRightMargin;
-   ((TStyle&)obj).fPadGridX       = fPadGridX;
-   ((TStyle&)obj).fPadGridY       = fPadGridY;
-   ((TStyle&)obj).fPadTickX       = fPadTickX;
-   ((TStyle&)obj).fPadTickY       = fPadTickY;
-   ((TStyle&)obj).fPaperSizeX     = fPaperSizeX;
-   ((TStyle&)obj).fPaperSizeY     = fPaperSizeY;
-   ((TStyle&)obj).fFuncColor      = fFuncColor;
-   ((TStyle&)obj).fFuncStyle      = fFuncStyle;
-   ((TStyle&)obj).fFuncWidth      = fFuncWidth;
-   ((TStyle&)obj).fGridColor      = fGridColor;
-   ((TStyle&)obj).fGridStyle      = fGridStyle;
-   ((TStyle&)obj).fGridWidth      = fGridWidth;
-   ((TStyle&)obj).fHatchesSpacing = fHatchesSpacing;
-   ((TStyle&)obj).fHatchesLineWidth= fHatchesLineWidth;
-   ((TStyle&)obj).fFrameFillColor = fFrameFillColor;
-   ((TStyle&)obj).fFrameFillStyle = fFrameFillStyle;
-   ((TStyle&)obj).fFrameLineColor = fFrameLineColor;
-   ((TStyle&)obj).fFrameLineStyle = fFrameLineStyle;
-   ((TStyle&)obj).fFrameLineWidth = fFrameLineWidth;
-   ((TStyle&)obj).fFrameBorderSize= fFrameBorderSize;
-   ((TStyle&)obj).fFrameBorderMode= fFrameBorderMode;
-   ((TStyle&)obj).fHistFillColor  = fHistFillColor;
-   ((TStyle&)obj).fHistFillStyle  = fHistFillStyle;
-   ((TStyle&)obj).fHistLineColor  = fHistLineColor;
-   ((TStyle&)obj).fHistLineStyle  = fHistLineStyle;
-   ((TStyle&)obj).fHistLineWidth  = fHistLineWidth;
-   ((TStyle&)obj).fHistMinimumZero= fHistMinimumZero;
-   ((TStyle&)obj).fHistTopMargin  = fHistTopMargin;
-   ((TStyle&)obj).fBarWidth       = fBarWidth;
-   ((TStyle&)obj).fBarOffset      = fBarOffset;
-   ((TStyle&)obj).fDrawBorder     = fDrawBorder;
-   ((TStyle&)obj).fOptLogx        = fOptLogx;
-   ((TStyle&)obj).fOptLogy        = fOptLogy;
-   ((TStyle&)obj).fOptLogz        = fOptLogz;
-   ((TStyle&)obj).fOptDate        = fOptDate;
-   ((TStyle&)obj).fOptFit         = fOptFit;
-   ((TStyle&)obj).fOptStat        = fOptStat;
-   ((TStyle&)obj).fOptTitle       = fOptTitle;
-   ((TStyle&)obj).fEndErrorSize   = fEndErrorSize;
-   ((TStyle&)obj).fErrorX         = fErrorX;
-   ((TStyle&)obj).fStatColor      = fStatColor;
-   ((TStyle&)obj).fStatTextColor  = fStatTextColor;
-   ((TStyle&)obj).fStatBorderSize = fStatBorderSize;
-   ((TStyle&)obj).fStatFont       = fStatFont;
-   ((TStyle&)obj).fStatFontSize   = fStatFontSize;
-   ((TStyle&)obj).fStatStyle      = fStatStyle;
-   ((TStyle&)obj).fStatFormat     = fStatFormat;
-   ((TStyle&)obj).fStatW          = fStatW;
-   ((TStyle&)obj).fStatH          = fStatH ;
-   ((TStyle&)obj).fStatX          = fStatX;
-   ((TStyle&)obj).fStatY          = fStatY;
-   ((TStyle&)obj).fTitleAlign     = fTitleAlign;
-   ((TStyle&)obj).fTitleColor     = fTitleColor;
-   ((TStyle&)obj).fTitleTextColor = fTitleTextColor;
-   ((TStyle&)obj).fTitleFont      = fTitleFont;
-   ((TStyle&)obj).fTitleFontSize  = fTitleFontSize;
-   ((TStyle&)obj).fTitleStyle     = fTitleStyle;
-   ((TStyle&)obj).fTitleBorderSize= fTitleBorderSize;
-   ((TStyle&)obj).fTitleW         = fTitleW;
-   ((TStyle&)obj).fTitleH         = fTitleH;
-   ((TStyle&)obj).fTitleX         = fTitleX;
-   ((TStyle&)obj).fTitleY         = fTitleY;
-   ((TStyle&)obj).fDateX          = fDateX;
-   ((TStyle&)obj).fDateY          = fDateY;
-   ((TStyle&)obj).fFitFormat      = fFitFormat;
-   ((TStyle&)obj).fPaintTextFormat= fPaintTextFormat;
-   ((TStyle&)obj).fShowEventStatus= fShowEventStatus;
-   ((TStyle&)obj).fShowEditor     = fShowEditor;
-   ((TStyle&)obj).fShowToolBar    = fShowToolBar;
-   ((TStyle&)obj).fLegoInnerR     = fLegoInnerR;
-   ((TStyle&)obj).fStripDecimals  = fStripDecimals;
-   ((TStyle&)obj).fNumberContours = fNumberContours;
+   ((TStyle&)obj).fIsReading        = fIsReading;
+   ((TStyle&)obj).fScreenFactor     = fScreenFactor;
+   ((TStyle&)obj).fCanvasPreferGL   = fCanvasPreferGL;
+   ((TStyle&)obj).fCanvasColor      = fCanvasColor;
+   ((TStyle&)obj).fCanvasBorderSize = fCanvasBorderSize;
+   ((TStyle&)obj).fCanvasBorderMode = fCanvasBorderMode;
+   ((TStyle&)obj).fCanvasDefH       = fCanvasDefH;
+   ((TStyle&)obj).fCanvasDefW       = fCanvasDefW;
+   ((TStyle&)obj).fCanvasDefX       = fCanvasDefX;
+   ((TStyle&)obj).fCanvasDefY       = fCanvasDefY;
+   ((TStyle&)obj).fPadColor         = fPadColor;
+   ((TStyle&)obj).fPadBorderSize    = fPadBorderSize;
+   ((TStyle&)obj).fPadBorderMode    = fPadBorderMode;
+   ((TStyle&)obj).fPadBottomMargin  = fPadBottomMargin;
+   ((TStyle&)obj).fPadTopMargin     = fPadTopMargin;
+   ((TStyle&)obj).fPadLeftMargin    = fPadLeftMargin;
+   ((TStyle&)obj).fPadRightMargin   = fPadRightMargin;
+   ((TStyle&)obj).fPadGridX         = fPadGridX;
+   ((TStyle&)obj).fPadGridY         = fPadGridY;
+   ((TStyle&)obj).fPadTickX         = fPadTickX;
+   ((TStyle&)obj).fPadTickY         = fPadTickY;
+   ((TStyle&)obj).fPaperSizeX       = fPaperSizeX;
+   ((TStyle&)obj).fPaperSizeY       = fPaperSizeY;
+   ((TStyle&)obj).fFuncColor        = fFuncColor;
+   ((TStyle&)obj).fFuncStyle        = fFuncStyle;
+   ((TStyle&)obj).fFuncWidth        = fFuncWidth;
+   ((TStyle&)obj).fGridColor        = fGridColor;
+   ((TStyle&)obj).fGridStyle        = fGridStyle;
+   ((TStyle&)obj).fGridWidth        = fGridWidth;
+   ((TStyle&)obj).fHatchesSpacing   = fHatchesSpacing;
+   ((TStyle&)obj).fHatchesLineWidth = fHatchesLineWidth;
+   ((TStyle&)obj).fFrameFillColor   = fFrameFillColor;
+   ((TStyle&)obj).fFrameFillStyle   = fFrameFillStyle;
+   ((TStyle&)obj).fFrameLineColor   = fFrameLineColor;
+   ((TStyle&)obj).fFrameLineStyle   = fFrameLineStyle;
+   ((TStyle&)obj).fFrameLineWidth   = fFrameLineWidth;
+   ((TStyle&)obj).fFrameBorderSize  = fFrameBorderSize;
+   ((TStyle&)obj).fFrameBorderMode  = fFrameBorderMode;
+   ((TStyle&)obj).fHistFillColor    = fHistFillColor;
+   ((TStyle&)obj).fHistFillStyle    = fHistFillStyle;
+   ((TStyle&)obj).fHistLineColor    = fHistLineColor;
+   ((TStyle&)obj).fHistLineStyle    = fHistLineStyle;
+   ((TStyle&)obj).fHistLineWidth    = fHistLineWidth;
+   ((TStyle&)obj).fHistMinimumZero  = fHistMinimumZero;
+   ((TStyle&)obj).fHistTopMargin    = fHistTopMargin;
+   ((TStyle&)obj).fBarWidth         = fBarWidth;
+   ((TStyle&)obj).fBarOffset        = fBarOffset;
+   ((TStyle&)obj).fDrawBorder       = fDrawBorder;
+   ((TStyle&)obj).fOptLogx          = fOptLogx;
+   ((TStyle&)obj).fOptLogy          = fOptLogy;
+   ((TStyle&)obj).fOptLogz          = fOptLogz;
+   ((TStyle&)obj).fOptDate          = fOptDate;
+   ((TStyle&)obj).fOptFit           = fOptFit;
+   ((TStyle&)obj).fOptStat          = fOptStat;
+   ((TStyle&)obj).fOptTitle         = fOptTitle;
+   ((TStyle&)obj).fEndErrorSize     = fEndErrorSize;
+   ((TStyle&)obj).fErrorX           = fErrorX;
+   ((TStyle&)obj).fStatColor        = fStatColor;
+   ((TStyle&)obj).fStatTextColor    = fStatTextColor;
+   ((TStyle&)obj).fStatBorderSize   = fStatBorderSize;
+   ((TStyle&)obj).fStatFont         = fStatFont;
+   ((TStyle&)obj).fStatFontSize     = fStatFontSize;
+   ((TStyle&)obj).fStatStyle        = fStatStyle;
+   ((TStyle&)obj).fStatFormat       = fStatFormat;
+   ((TStyle&)obj).fStatW            = fStatW;
+   ((TStyle&)obj).fStatH            = fStatH ;
+   ((TStyle&)obj).fStatX            = fStatX;
+   ((TStyle&)obj).fStatY            = fStatY;
+   ((TStyle&)obj).fTitleAlign       = fTitleAlign;
+   ((TStyle&)obj).fTitleColor       = fTitleColor;
+   ((TStyle&)obj).fTitleTextColor   = fTitleTextColor;
+   ((TStyle&)obj).fTitleFont        = fTitleFont;
+   ((TStyle&)obj).fTitleFontSize    = fTitleFontSize;
+   ((TStyle&)obj).fTitleStyle       = fTitleStyle;
+   ((TStyle&)obj).fTitleBorderSize  = fTitleBorderSize;
+   ((TStyle&)obj).fTitleW           = fTitleW;
+   ((TStyle&)obj).fTitleH           = fTitleH;
+   ((TStyle&)obj).fTitleX           = fTitleX;
+   ((TStyle&)obj).fTitleY           = fTitleY;
+   ((TStyle&)obj).fDateX            = fDateX;
+   ((TStyle&)obj).fDateY            = fDateY;
+   ((TStyle&)obj).fFitFormat        = fFitFormat;
+   ((TStyle&)obj).fPaintTextFormat  = fPaintTextFormat;
+   ((TStyle&)obj).fShowEventStatus  = fShowEventStatus;
+   ((TStyle&)obj).fShowEditor       = fShowEditor;
+   ((TStyle&)obj).fShowToolBar      = fShowToolBar;
+   ((TStyle&)obj).fLegoInnerR       = fLegoInnerR;
+   ((TStyle&)obj).fStripDecimals    = fStripDecimals;
+   ((TStyle&)obj).fNumberContours   = fNumberContours;
    ((TStyle&)obj).fLegendBorderSize = fLegendBorderSize;
    ((TStyle&)obj).fLegendFillColor  = fLegendFillColor;
    ((TStyle&)obj).fLegendFont       = fLegendFont;
+   ((TStyle&)obj).fLegendTextSize   = fLegendTextSize;
 
    Int_t i;
    for (i=0;i<30;i++) {
@@ -542,6 +544,7 @@ void TStyle::Reset(Option_t *opt)
    fNumberContours = 20;
    fLegendBorderSize= 4;
    fLegendFont      = 62;
+   fLegendTextSize  = 0.,
    fLegendFillColor = 0;
 
    SetDateX();
@@ -606,6 +609,7 @@ void TStyle::Reset(Option_t *opt)
       SetLegendBorderSize(1);
       SetLegendFillColor(0);
       SetLegendFont(42);
+      SetLegendTextSize(0.);
       SetFuncWidth(2);
       SetFuncColor(2);
    }
@@ -990,7 +994,7 @@ void TStyle::SetHeaderPS(const char *header)
 {
    // Define a string to be inserted in the Postscript header
    // The string in header will be added to the Postscript file
-   // immediatly following the %%Page line
+   // immediately following the %%Page line
    // For example, this string may contain special Postscript instructions like
    //      200 200 translate
    // the following header string will print the string "my annotation" at the
@@ -1219,7 +1223,7 @@ void TStyle::SetOptFit(Int_t mode)
    // statistics box can be selected via the parameter mode.
    //  The parameter mode can be = pcev  (default = 0111)
    //    p = 1;  print Probability
-   //    c = 1;  print Chisquare/Number of degress of freedom
+   //    c = 1;  print Chisquare/Number of degrees of freedom
    //    e = 1;  print errors (if e=1, v must be 1)
    //    v = 1;  print name/values of parameters
    //  Example: gStyle->SetOptFit(1011);
@@ -1484,7 +1488,7 @@ void TStyle::SetTimeOffset(Double_t toffset)
    // Times are expressed in seconds. The corresponding numbers usually have 9
    // digits (or more if one takes into account fractions of seconds).
    // Thus, since it is very inconvenient to plot very large numbers on a scale,
-   // one has to set an offset time that will be added to the axis begining,
+   // one has to set an offset time that will be added to the axis beginning,
    // in order to plot times correctly and conveniently. A convenient way to
    // set the time offset is to use TDatime::Convert().
    //
@@ -1653,6 +1657,7 @@ void TStyle::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   "<<"tmpStyle->SetLegendBorderSize("<<GetLegendBorderSize()<<");"<<std::endl;
    out<<"   "<<"tmpStyle->SetLegendFillColor(" <<GetLegendFillColor() <<");"<<std::endl;
    out<<"   "<<"tmpStyle->SetLegendFont("      <<GetLegendFont()      <<");"<<std::endl;
+   out<<"   "<<"tmpStyle->SetLegendTextSize("  <<GetLegendTextSize()  <<");"<<std::endl;
    out<<"   "<<"tmpStyle->SetHatchesLineWidth("<<GetHatchesLineWidth()<<");"<<std::endl;
    out<<"   "<<"tmpStyle->SetHatchesSpacing("  <<GetHatchesSpacing()  <<");"<<std::endl;
    out<<"   "<<"tmpStyle->SetFrameFillColor("  <<GetFrameFillColor()  <<");"<<std::endl;

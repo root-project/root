@@ -1005,7 +1005,7 @@ Begin_Macro(source)
 {
    int i;
    const Int_t nx = 8;
-   char *os_X[nx]   = {"8","32","128","512","2048","8192","32768","131072"};
+   string os_X[nx]   = {"8","32","128","512","2048","8192","32768","131072"};
    float d_35_0[nx] = {0.75, -3.30, -0.92, 0.10, 0.08, -1.69, -1.29, -2.37};
    float d_35_1[nx] = {1.01, -3.02, -0.65, 0.37, 0.34, -1.42, -1.02, -2.10};
 
@@ -1023,8 +1023,8 @@ Begin_Macro(source)
    h1b->SetMaximum(5);
 
    for (i=1; i<=nx; i++) {
-      h1b->Fill(os_X[i-1], d_35_0[i-1]);
-      h1b->GetXaxis()->SetBinLabel(i,os_X[i-1]);
+      h1b->SetBinContent(i, d_35_0[i-1]);
+      h1b->GetXaxis()->SetBinLabel(i,os_X[i-1].c_str());
    }
 
    h1b->Draw("b");
@@ -1034,7 +1034,7 @@ Begin_Macro(source)
    h2b->SetBarWidth(0.4);
    h2b->SetBarOffset(0.5);
    h2b->SetStats(0);
-   for (i=1;i<=nx;i++) h2b->Fill(os_X[i-1], d_35_1[i-1]);
+   for (i=1;i<=nx;i++) h2b->SetBinContent(i, d_35_1[i-1]);
 
    h2b->Draw("b same");
 
@@ -1301,14 +1301,48 @@ Begin_Macro(source)
 }
 End_Macro
 Begin_Html
-
+<p>
+When the maximum of the histogram is set to a smaller value than the real maximum,
+ the bins having a content between the new maximum and the real maximum are
+painted with the color corresponding to the new maximum.
+<p>
+When the minimum of the histogram is set to a greater value than the real minimum,
+ the bins having a value between the real minimum and the new minimum are not drawn
+ unless the option <tt>0</tt> is set.
+<p>
+The following example illustrates the option <tt>0</tt> combined with the option
+ <tt>COL</tt>.
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c1 = new TCanvas("c1","c1",600,600);
+   c1->Divide(1,2);
+   TH2F *hcol21 = new TH2F("hcol21","Option COLZ",40,-4,4,40,-20,20);
+   TH2F *hcol22 = new TH2F("hcol22","Option COLZ0",40,-4,4,40,-20,20);
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      gRandom->Rannor(px,py);
+      hcol21->Fill(px,5*py);
+      hcol22->Fill(px,5*py);
+   }
+   hcol21->SetBit(TH1::kNoStats);
+   hcol22->SetBit(TH1::kNoStats);
+   gStyle->SetPalette(1);
+   c1->cd(1); hcol21->Draw("COLZ");
+   c1->cd(2); hcol22->Draw("COLZ0");
+   hcol22->SetMaximum(100);
+   hcol22->SetMinimum(40);
+   return c1;
+}
+End_Macro
+Begin_Html
 
 <a name="HP140"></a><h3>The CANDLE option</h3>
 
 
 <a href="http://en.wikipedia.org/wiki/Box_plot">A Candle plot</a> (also known as
 a "box-and whisker plot" or simply "box plot") is a convenient way to describe
-graphically a data distribution (D) with only the five numbers. It was invented
+graphically a data distribution (D) with only five numbers. It was invented
 in 1977 by John Tukey.
 <p>
 With the option CANDLEX five numbers are:
@@ -1437,7 +1471,7 @@ Begin_Macro(source)
    htext2->Draw("TEXT45");
    c01->cd(2);
    htext1->Draw();
-   htext1->Draw("TEXT0 SAME");
+   htext1->Draw("HIST TEXT0 SAME");
    return c01;
 }
 End_Macro
@@ -2198,7 +2232,7 @@ Begin_Macro(source)
 {
    int i;
    const Int_t nx = 8;
-   char *os_X[nx]   = {"8","32","128","512","2048","8192","32768","131072"};
+   string os_X[nx]   = {"8","32","128","512","2048","8192","32768","131072"};
    float d_35_0[nx] = {0.75, -3.30, -0.92, 0.10, 0.08, -1.69, -1.29, -2.37};
    float d_35_1[nx] = {1.01, -3.02, -0.65, 0.37, 0.34, -1.42, -1.02, -2.10};
 
@@ -2216,8 +2250,8 @@ Begin_Macro(source)
    h1bh->SetMaximum(5);
 
    for (i=1; i<=nx; i++) {
-      h1bh->Fill(os_X[i-1], d_35_0[i-1]);
-      h1bh->GetXaxis()->SetBinLabel(i,os_X[i-1]);
+      h1bh->Fill(os_X[i-1].c_str(), d_35_0[i-1]);
+      h1bh->GetXaxis()->SetBinLabel(i,os_X[i-1].c_str());
    }
 
    h1bh->Draw("hbar");
@@ -2227,7 +2261,7 @@ Begin_Macro(source)
    h2bh->SetBarWidth(0.4);
    h2bh->SetBarOffset(0.5);
    h2bh->SetStats(0);
-   for (i=1;i<=nx;i++) h2bh->Fill(os_X[i-1], d_35_1[i-1]);
+   for (i=1;i<=nx;i++) h2bh->Fill(os_X[i-1].c_str(), d_35_1[i-1]);
 
    h2bh->Draw("hbar same");
 
@@ -3870,6 +3904,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          Hoption.Color  = 2;
          Hoption.Scat   = 0;
          Hoption.Zscale = 1;
+         l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
       } else {
          Hoption.Hist = 1;
       }
@@ -3880,6 +3915,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (hdim>1) {
          Hoption.Color = 1;
          Hoption.Scat  = 0;
+         l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
       } else {
          Hoption.Hist = 1;
       }
@@ -5231,7 +5267,7 @@ void THistPainter::PaintColorLevels(Option_t *)
             if (z > 0) z = TMath::Log10(z);
             else       z = zmin;
          }
-         if (z < zmin) continue;
+         if (z < zmin && !Hoption.Zero) continue;
          xup  = xk + xstep;
          xlow = xk;
          if (Hoption.Logx) {
@@ -5991,7 +6027,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    fXbuf[1] = Hparam.ymin;
    fYbuf[1] = Hparam.ymax;
    fXbuf[2] = Hparam.zmin;
-   fYbuf[2] = Hparam.zmax;
+   fYbuf[2] = Hparam.zmax*(1. + gStyle->GetHistTopMargin());
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
    TView *view = gPad->GetView();
    if (!view) {
@@ -6533,6 +6569,7 @@ Int_t THistPainter::PaintInit()
                f1 = (TF1*)f;
                if (xv[0] < f1->GetXmin() || xv[0] > f1->GetXmax()) continue;
                fval = f1->Eval(xv[0],0,0);
+               if (f1->GetMaximumStored() != -1111) fval = TMath::Min(f1->GetMaximumStored(), fval);
                ymax = TMath::Max(ymax,fval);
                if (Hoption.Logy) {
                   if (c1 > 0 && fval > 0.3*c1) ymin = TMath::Min(ymin,fval);

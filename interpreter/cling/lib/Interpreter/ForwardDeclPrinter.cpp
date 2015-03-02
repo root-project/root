@@ -150,6 +150,7 @@ namespace cling {
   }
 
   void ForwardDeclPrinter::prettyPrintAttributes(Decl *D, std::string extra) {
+
     if (D->getSourceRange().isInvalid())
       return;
 
@@ -177,6 +178,9 @@ namespace cling {
       PLocs.push_back(PLoc);
       PLoc = m_SMgr.getPresumedLoc(PLoc.getIncludeLoc());
     }
+
+    if (PLocs.empty() /* declared in dictionary payload*/)
+       return;
 
     clang::SourceLocation includeLoc = m_SMgr.getSpellingLoc(PLocs[PLocs.size() - 1].getIncludeLoc());
     bool invalid = true;
@@ -854,10 +858,18 @@ namespace cling {
               skipDecl(0, "expression template param default failed");
               return;
             }
+          } else if (isa<IntegerLiteral>(DefArg)
+                     || isa<CharacterLiteral>(DefArg)
+                     || isa<CXXBoolLiteralExpr>(DefArg)
+                     || isa<CXXNullPtrLiteralExpr>(DefArg)
+                     || isa<FloatingLiteral>(DefArg)
+                     || isa<StringLiteral>(DefArg)) {
+            Stream << " = ";
+            DefArg->printPretty(Stream, 0, m_Policy, m_Indentation);
+          } else {
+            skipDecl(0, "expression template param default not a literal");
+            return;
           }
-
-          Stream << " = ";
-          DefArg->printPretty(Stream, 0, m_Policy, m_Indentation);
         }
       }
       else if (TemplateTemplateParmDecl *TTPD =

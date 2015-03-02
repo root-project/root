@@ -46,6 +46,7 @@
 #include "TStreamerElement.h"
 #include "TProcessUUID.h"
 #include "TVirtualMutex.h"
+#include "TEmulatedCollectionProxy.h"
 
 const UInt_t kIsBigFile = BIT(16);
 const Int_t  kMaxLen = 2048;
@@ -61,6 +62,7 @@ TDirectoryFile::TDirectoryFile() : TDirectory()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Directory default constructor-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =============================
+
 }
 
 //______________________________________________________________________________
@@ -865,7 +867,7 @@ TObject *TDirectoryFile::Get(const char *namecycle)
 
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
-   TObject *idcur = fList->FindObject(namobj);
+   TObject *idcur = fList ? fList->FindObject(namobj) : nullptr;
    if (idcur) {
       if (idcur==this && strlen(namobj)!=0) {
          // The object has the same name has the directory and
@@ -970,7 +972,7 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
    if (expectedClass==0 || expectedClass->IsTObject()) {
-      TObject *objcur = fList->FindObject(namobj);
+      TObject *objcur = fList ? fList->FindObject(namobj) : 0;
       if (objcur) {
          if (objcur==this && strlen(namobj)!=0) {
             // The object has the same name has the directory and
@@ -1907,18 +1909,29 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    }
 
    if (!obj) return 0;
+
+   const char *className = cl->GetName();
+   const char *oname;
+   if (name && *name)
+      oname = name;
+   else
+      oname = className;
+
+   if (cl && cl->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(cl->GetCollectionProxy())) {
+      Error("WriteObjectAny",
+            "The class requested (%s) for the key name \"%s\""
+            " is an instance of an stl collection and does not have a compiled CollectionProxy."
+            " Please generate the dictionary for this collection (%s). No data will be written.",
+            className, oname, className);
+      return 0;
+   }
+
    TKey *key, *oldkey=0;
    Int_t bsize = GetBufferSize();
    if (bufsize > 0) bsize = bufsize;
 
    TString opt = option;
    opt.ToLower();
-
-   const char *oname;
-   if (name && *name)
-      oname = name;
-   else
-      oname = cl->GetName();
 
    // Remove trailing blanks in object name
    Int_t nch = strlen(oname);

@@ -56,7 +56,9 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title, const 
 	allVars.add(*var) ;
 	_nominal.add(*var) ;
 	RooRealVar* gam = (RooRealVar*) phf->_p.at(i) ;
-	gam->setConstant(kFALSE) ;
+	if (var->getVal()>0) {
+	  gam->setConstant(kFALSE) ;
+	}
 	_gamma.add(*gam) ;
       }
     }

@@ -19,6 +19,7 @@
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Target/TargetSubtargetInfo.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "aarch64-dead-defs"
@@ -36,11 +37,11 @@ public:
   static char ID; // Pass identification, replacement for typeid.
   explicit AArch64DeadRegisterDefinitions() : MachineFunctionPass(ID) {}
 
-  virtual bool runOnMachineFunction(MachineFunction &F) override;
+  bool runOnMachineFunction(MachineFunction &F) override;
 
   const char *getPassName() const override { return "Dead register definitions"; }
 
-  virtual void getAnalysisUsage(AnalysisUsage &AU) const override {
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesCFG();
     MachineFunctionPass::getAnalysisUsage(AU);
   }
@@ -119,7 +120,7 @@ bool AArch64DeadRegisterDefinitions::processMachineBasicBlock(
 // Scan the function for instructions that have a dead definition of a
 // register. Replace that register with the zero register when possible.
 bool AArch64DeadRegisterDefinitions::runOnMachineFunction(MachineFunction &MF) {
-  TRI = MF.getTarget().getRegisterInfo();
+  TRI = MF.getSubtarget().getRegisterInfo();
   bool Changed = false;
   DEBUG(dbgs() << "***** AArch64DeadRegisterDefinitions *****\n");
 

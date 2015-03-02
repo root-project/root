@@ -880,7 +880,7 @@ void TMVA::RuleFitParams::CalcFStar()
       fstarVal = fRuleEnsemble->FStar(e);
       fFstar.push_back(fstarVal);
       fstarSorted.push_back(fstarVal);
-      if (isnan(fstarVal)) Log() << kFATAL << "F* is NAN!" << Endl;
+      if (TMath::IsNaN(fstarVal)) Log() << kFATAL << "F* is NAN!" << Endl;
    }
    // sort F* and find median
    std::sort( fstarSorted.begin(), fstarSorted.end() );

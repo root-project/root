@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include <typeinfo>
+#include <string>
 
 #include "TFile.h"
 #include "TBufferFile.h"
@@ -247,17 +248,93 @@ void TBufferFile::ReadLong(Long_t &l)
 //_______________________________________________________________________
 void TBufferFile::ReadTString(TString &s)
 {
-   // Read string from TBuffer.
+   // Read TString from TBuffer.
 
-   s.Streamer(*this);
+   Int_t   nbig;
+   UChar_t nwh;
+   *this >> nwh;
+   if (nwh == 0) {
+      s.UnLink();
+      s.Zero();
+   } else {
+      if (nwh == 255)
+         *this >> nbig;
+      else
+         nbig = nwh;
+
+      s.Clobber(nbig);
+      char *data = s.GetPointer();
+      data[nbig] = 0;
+      s.SetSize(nbig);
+      ReadFastArray(data, nbig);
+   }
 }
 
 //_______________________________________________________________________
 void TBufferFile::WriteTString(const TString &s)
 {
-   // Write string to TBuffer.
+   // Write TString to TBuffer.
 
-   ((TString&)s).Streamer(*this);
+   Int_t nbig = s.Length();
+   UChar_t nwh;
+   if (nbig > 254) {
+      nwh = 255;
+      *this << nwh;
+      *this << nbig;
+   } else {
+      nwh = UChar_t(nbig);
+      *this << nwh;
+   }
+   const char *data = s.GetPointer();
+   WriteFastArray(data, nbig);
+}
+
+//_______________________________________________________________________
+void TBufferFile::ReadStdString(std::string &s)
+{
+   // Read std::string from TBuffer.
+
+   std::string *obj = &s;
+   Int_t   nbig;
+   UChar_t nwh;
+   *this >> nwh;
+   if (nwh == 0)  {
+       obj->clear();
+   } else {
+      if( obj->size() ) {
+         // Insure that the underlying data storage is not shared
+         (*obj)[0] = '\0';
+      }
+      if (nwh == 255)  {
+         *this >> nbig;
+         obj->resize(nbig,'\0');
+         ReadFastArray((char*)obj->data(),nbig);
+      }
+      else  {
+         obj->resize(nwh,'\0');
+         ReadFastArray((char*)obj->data(),nwh);
+      }
+   }
+}
+
+//_______________________________________________________________________
+void TBufferFile::WriteStdString(const std::string &s)
+{
+   // Write std::string to TBuffer.
+
+   if (s==0) return;
+   const std::string *obj = &s;
+   UChar_t nwh;
+   Int_t nbig = obj->length();
+   if (nbig > 254) {
+      nwh = 255;
+      *this << nwh;
+      *this << nbig;
+   } else {
+      nwh = UChar_t(nbig);
+      *this << nwh;
+   }
+   WriteFastArray(obj->data(),nbig);
 }
 
 //______________________________________________________________________________

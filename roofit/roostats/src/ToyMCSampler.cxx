@@ -307,7 +307,12 @@ RooDataSet* ToyMCSampler::GetSamplingDistributions(RooArgSet& paramPointIn)
 
 
    // ======= P A R A L L E L   R U N =======
-   CheckConfig();
+   if (!CheckConfig()){
+      oocoutE((TObject*)NULL, InputArguments)
+         << "Bad COnfiguration in ToyMCSampler "
+         << endl;
+      return nullptr;
+   }
 
    // turn adaptive sampling off if given
    if(fToysInTails) {
@@ -355,7 +360,13 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
    // used with the Neyman Construction)
    ClearCache();
 
-   CheckConfig();
+   if (!CheckConfig()){
+      oocoutE((TObject*)NULL, InputArguments)
+         << "Bad COnfiguration in ToyMCSampler "
+         << endl;
+      return nullptr;
+   }
+
 
    // important to cache the paramPoint b/c test statistic might 
    // modify it from event to event
@@ -428,6 +439,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
 
 void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
 
+   
    if(!fGlobalObservables  ||  fGlobalObservables->getSize()==0) {
       ooccoutE((TObject*)NULL,InputArguments) << "Global Observables not set." << endl;
       return;

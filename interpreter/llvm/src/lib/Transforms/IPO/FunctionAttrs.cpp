@@ -31,7 +31,7 @@
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/LLVMContext.h"
-#include "llvm/Target/TargetLibraryInfo.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "functionattrs"
@@ -124,7 +124,7 @@ namespace {
     void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesCFG();
       AU.addRequired<AliasAnalysis>();
-      AU.addRequired<TargetLibraryInfo>();
+      AU.addRequired<TargetLibraryInfoWrapperPass>();
       CallGraphSCCPass::getAnalysisUsage(AU);
     }
 
@@ -139,7 +139,7 @@ INITIALIZE_PASS_BEGIN(FunctionAttrs, "functionattrs",
                 "Deduce function attributes", false, false)
 INITIALIZE_AG_DEPENDENCY(AliasAnalysis)
 INITIALIZE_PASS_DEPENDENCY(CallGraphWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfo)
+INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
 INITIALIZE_PASS_END(FunctionAttrs, "functionattrs",
                 "Deduce function attributes", false, false)
 
@@ -161,8 +161,9 @@ bool FunctionAttrs::AddReadAttrs(const CallGraphSCC &SCC) {
   for (CallGraphSCC::iterator I = SCC.begin(), E = SCC.end(); I != E; ++I) {
     Function *F = (*I)->getFunction();
 
-    if (!F)
-      // External node - may write memory.  Just give up.
+    if (!F || F->hasFnAttribute(Attribute::OptimizeNone))
+      // External node or node we don't want to optimize - assume it may write
+      // memory and give up.
       return false;
 
     AliasAnalysis::ModRefBehavior MRB = AA->getModRefBehavior(F);
@@ -445,7 +446,7 @@ determinePointerReadAttrs(Argument *A,
     case Instruction::AddrSpaceCast:
       // The original value is not read/written via this if the new value isn't.
       for (Use &UU : I->uses())
-        if (Visited.insert(&UU))
+        if (Visited.insert(&UU).second)
           Worklist.push_back(&UU);
       break;
 
@@ -459,7 +460,7 @@ determinePointerReadAttrs(Argument *A,
       auto AddUsersToWorklistIfCapturing = [&] {
         if (Captures)
           for (Use &UU : I->uses())
-            if (Visited.insert(&UU))
+            if (Visited.insert(&UU).second)
               Worklist.push_back(&UU);
       };
 
@@ -527,7 +528,8 @@ bool FunctionAttrs::AddArgumentAttrs(const CallGraphSCC &SCC) {
   // looking up whether a given CallGraphNode is in this SCC.
   for (CallGraphSCC::iterator I = SCC.begin(), E = SCC.end(); I != E; ++I) {
     Function *F = (*I)->getFunction();
-    if (F && !F->isDeclaration() && !F->mayBeOverridden())
+    if (F && !F->isDeclaration() && !F->mayBeOverridden() &&
+        !F->hasFnAttribute(Attribute::OptimizeNone))
       SCCNodes.insert(F);
   }
 
@@ -541,8 +543,9 @@ bool FunctionAttrs::AddArgumentAttrs(const CallGraphSCC &SCC) {
   for (CallGraphSCC::iterator I = SCC.begin(), E = SCC.end(); I != E; ++I) {
     Function *F = (*I)->getFunction();
 
-    if (!F)
-      // External node - only a problem for arguments that we pass to it.
+    if (!F || F->hasFnAttribute(Attribute::OptimizeNone))
+      // External node or function we're trying not to optimize - only a problem
+      // for arguments that we pass to it.
       continue;
 
     // Definitions with weak linkage may be overridden at linktime with
@@ -794,8 +797,8 @@ bool FunctionAttrs::AddNoAliasAttrs(const CallGraphSCC &SCC) {
   for (CallGraphSCC::iterator I = SCC.begin(), E = SCC.end(); I != E; ++I) {
     Function *F = (*I)->getFunction();
 
-    if (!F)
-      // External node - skip it;
+    if (!F || F->hasFnAttribute(Attribute::OptimizeNone))
+      // External node or node we don't want to optimize - skip it;
       return false;
 
     // Already noalias.
@@ -834,6 +837,9 @@ bool FunctionAttrs::AddNoAliasAttrs(const CallGraphSCC &SCC) {
 /// given function and set any applicable attributes.  Returns true
 /// if any attributes were set and false otherwise.
 bool FunctionAttrs::inferPrototypeAttributes(Function &F) {
+  if (F.hasFnAttribute(Attribute::OptimizeNone))
+    return false;
+
   FunctionType *FTy = F.getFunctionType();
   LibFunc::Func TheLibFunc;
   if (!(TLI->getLibFunc(F.getName(), TheLibFunc) && TLI->has(TheLibFunc)))
@@ -1696,7 +1702,7 @@ bool FunctionAttrs::annotateLibraryCalls(const CallGraphSCC &SCC) {
 
 bool FunctionAttrs::runOnSCC(CallGraphSCC &SCC) {
   AA = &getAnalysis<AliasAnalysis>();
-  TLI = &getAnalysis<TargetLibraryInfo>();
+  TLI = &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
 
   bool Changed = annotateLibraryCalls(SCC);
   Changed |= AddReadAttrs(SCC);

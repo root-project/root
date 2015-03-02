@@ -49,6 +49,7 @@ extern "C" {
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
    int TCling__AutoParseCallback(const char* className);
+   const char* TCling__GetClassSharedLibs(const char* className);
 //    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    int TCling__IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* name);
    int TCling__CompileMacro(const char *fileName, const char *options);
@@ -78,7 +79,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          llvm::StringRef FileName,
                                          bool /*IsAngled*/,
                                          clang::CharSourceRange /*FilenameRange*/,
-                                         const clang::FileEntry */*File*/,
+                                         const clang::FileEntry *FE,
                                          llvm::StringRef /*SearchPath*/,
                                          llvm::StringRef /*RelativePath*/,
                                          const clang::Module */*Imported*/) {
@@ -101,19 +102,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
    DeclarationName Name = &SemaR.getASTContext().Idents.get(localString.c_str());
    LookupResult RHeader(SemaR, Name, sLoc, Sema::LookupOrdinaryName);
 
-   bool success = tryAutoParseInternal(localString, RHeader, SemaR.getCurScope(),true);
-
-   if (success || !FileName.startswith("T")) return;
-
-   // Old implementation, revisited. We leave in place the old heuristics, for cases
-   // like #include "TH1F.h"
-   // Try to recover the class name
-   localString.resize(localString.size()-2); // 2 chars: '.','h'
-   Name = &SemaR.getASTContext().Idents.get(localString.c_str());
-   LookupResult RReconnstructedClassName(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
-   tryAutoParseInternal(localString, RReconnstructedClassName, SemaR.getCurScope());
-
-
+   tryAutoParseInternal(localString, RHeader, SemaR.getCurScope(), FE);
 }
 
 // Preprocessor callbacks used to handle special cases like for example:
@@ -232,6 +221,11 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
 bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) {
    if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
+
+   if (Name.getNameKind() != DeclarationName::Identifier) return false;
+
+
+
    // Get the 'lookup' decl context.
    // We need to cast away the constness because we will lookup items of this
    // namespace/DeclContext
@@ -318,9 +312,11 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 // try to autoload it first and do secondary lookup to try to find it.
 //
 // returns true when a declaration is found and no error should be emitted.
+// If FileEntry, this is a reacting on a #include and Name is the included
+// filename.
 //
 bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R,
-                                          Scope *S, bool noLookup) {
+                                           Scope *S, const FileEntry* FE /*=0*/) {
    Sema &SemaR = m_Interpreter->getSema();
 
    // Try to autoload first if autoloading is enabled
@@ -340,8 +336,8 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
 
      bool lookupSuccess = false;
      if (getenv("ROOT_MODULES")) {
-        if (TCling__AutoParseCallback(Name.data())) {
-           lookupSuccess = noLookup || SemaR.LookupName(R, S);
+        if (TCling__AutoParseCallback(Name.str().c_str())) {
+           lookupSuccess = FE || SemaR.LookupName(R, S);
         }
      }
      else {
@@ -362,10 +358,38 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
         // wrapper function so the parent context must be the global.
         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                                SemaR.TUScope);
-        if (TCling__AutoParseCallback(Name.data())) {
+
+        // First see whether we have a fwd decl of this name.
+        // We shall only do that if lookup makes sense for it (!FE).
+        if (!FE) {
+           lookupSuccess = SemaR.LookupName(R, S);
+           if (lookupSuccess) {
+              if (R.isSingleResult()) {
+                 if (isa<clang::RecordDecl>(R.getFoundDecl())) {
+                    // Good enough; RequireCompleteType() will tell us if we
+                    // need to auto parse.
+                    // But we might need to auto-load.
+                    TCling__AutoLoadCallback(Name.data());
+                    fIsAutoloadingRecursively = false;
+                    return true;
+                 }
+              }
+           }
+        }
+
+        if (TCling__AutoParseCallback(Name.str().c_str())) {
            pushedDCAndS.pop();
            cleanupRAII.pop();
-           lookupSuccess = noLookup || SemaR.LookupName(R, S);
+           lookupSuccess = FE || SemaR.LookupName(R, S);
+        } else if (FE && TCling__GetClassSharedLibs(Name.str().c_str())) {
+           // We are "autoparsing" a header, and the header was not parsed.
+           // But its library is known - so we do know about that header.
+           // Do the parsing explicitly here, while recursive autoloading is
+           // disabled.
+           std::string incl = "#include \"";
+           incl += FE->getName();
+           incl += '"';
+           m_Interpreter->declare(incl);
         }
      }
 
@@ -481,13 +505,11 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          CO.Debug = 0;
          CO.CodeGeneration = 1;
 
-         cling::Transaction T(CO, SemaR);
-         T.append(VD);
-         T.setState(cling::Transaction::kCompleted);
+         cling::Transaction* T = new cling::Transaction(CO, SemaR);
+         T->append(VD);
+         T->setState(cling::Transaction::kCompleted);
 
-         m_Interpreter->emitAllDecls(&T);
-         assert(T.getState() == Transaction::kCommitted
-                && "Compilation should never fail!");
+         m_Interpreter->emitAllDecls(T);
       }
       assert(VD && "Cannot be null!");
       R.addDecl(VD);

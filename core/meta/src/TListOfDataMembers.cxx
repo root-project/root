@@ -29,7 +29,7 @@
 #include "TError.h"
 #include "TEnumConstant.h"
 
-constexpr unsigned int idsSize=19;
+const unsigned int idsSize=19;
 
 ClassImp(TListOfDataMembers)
 
@@ -205,6 +205,17 @@ TObject *TListOfDataMembers::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
+TDictionary *TListOfDataMembers::Find(DeclId_t id) const
+{
+   // Return (after creating it if necessary) the TDataMember
+   // describing the data member corresponding to the Decl 'id'.
+
+   if (!id) return 0;
+
+   return fIds ? (TDataMember*)fIds->GetValue((Long64_t)id) : 0;
+}
+
+//______________________________________________________________________________
 TDictionary *TListOfDataMembers::Get(DeclId_t id)
 {
    // Return (after creating it if necessary) the TDataMember
@@ -212,48 +223,49 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
 
    if (!id) return 0;
 
-   TDictionary *dm = fIds ? (TDataMember*)fIds->GetValue((Long64_t)id) : 0;
-   if (!dm) {
-      if (fClass) {
-         if (!fClass->HasInterpreterInfoInMemory()) {
-            // The interpreter does not know about this class yet (or a problem
-            // occurred that prevented the proper updating of fClassInfo).
-            // So this decl can not possibly be part of this class.
-            // [In addition calling GetClassInfo would trigger a late parsing
-            //  of the header which we want to avoid].
-            return 0;
-         }
-         if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
-      } else {
-         if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
+   TDictionary *dm = Find(id);
+   if (dm) return dm;
+
+   if (fClass) {
+      if (!fClass->HasInterpreterInfoInMemory()) {
+         // The interpreter does not know about this class yet (or a problem
+         // occurred that prevented the proper updating of fClassInfo).
+         // So this decl can not possibly be part of this class.
+         // [In addition calling GetClassInfo would trigger a late parsing
+         //  of the header which we want to avoid].
+         return 0;
       }
-
-      R__LOCKGUARD(gInterpreterMutex);
-
-      DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(id,fClass ? fClass->GetClassInfo() : 0);
-
-      // Let's see if this is a reload ...
-      const char *name = gInterpreter->DataMemberInfo_Name(info);
-
-      TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(name) : 0;
-      if (update) {
-         if (fClass) {
-            ((TDataMember*)update)->Update(info);
-         } else {
-            ((TGlobal*)update)->Update(info);
-         }
-         dm = update;
-      }
-      if (!dm) {
-         if (fClass) dm = new TDataMember(info, fClass);
-         else dm = new TGlobal(info);
-      }
-      // Calling 'just' THahList::Add would turn around and call
-      // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
-      THashList::AddLast(dm);
-      if (!fIds) fIds = new TExMap(idsSize);
-      fIds->Add((Long64_t)id,(Long64_t)dm);
+      if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
+   } else {
+      if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(id,fClass ? fClass->GetClassInfo() : 0);
+
+   // Let's see if this is a reload ...
+   const char *name = gInterpreter->DataMemberInfo_Name(info);
+
+   TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(name) : 0;
+   if (update) {
+      if (fClass) {
+         ((TDataMember*)update)->Update(info);
+      } else {
+         ((TGlobal*)update)->Update(info);
+      }
+      dm = update;
+   }
+   if (!dm) {
+      if (fClass) dm = new TDataMember(info, fClass);
+      else dm = new TGlobal(info);
+   }
+   // Calling 'just' THahList::Add would turn around and call
+   // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
+   THashList::AddLast(dm);
+   if (!fIds) fIds = new TExMap(idsSize);
+   fIds->Add((Long64_t)id,(Long64_t)dm);
+
    return dm;
 }
 

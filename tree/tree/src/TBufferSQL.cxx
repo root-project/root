@@ -297,23 +297,35 @@ void TBufferSQL::ReadCharP(Char_t *str)
 }
 
 //________________________________________________________________________
-void TBufferSQL::ReadTString(TString   &)
+void TBufferSQL::ReadTString(TString   &s)
 {
-   // Operator>>
+   // Read a TString
 
-   //strcpy(str,(*fRowPtr)->GetField(*fIter));
-   //if (fIter != fColumnVec->end()) ++fIter;
-   printf("ERROR NOT IMPLEMENTED\n");
+   TBufferFile::ReadTString(s);
 }
 
 //________________________________________________________________________
-void TBufferSQL::WriteTString(const TString   &)
+void TBufferSQL::WriteTString(const TString   &s)
 {
-   // Operator>>
+   // Write a TString
 
-   //strcpy(str,(*fRowPtr)->GetField(*fIter));
-   //if (fIter != fColumnVec->end()) ++fIter;
-   printf("ERROR NOT IMPLEMENTED\n");
+   TBufferFile::WriteTString(s);
+}
+
+//________________________________________________________________________
+void TBufferSQL::ReadStdString(std::string &s)
+{
+   // Read a std::string
+
+   TBufferFile::ReadStdString(s);
+}
+
+//________________________________________________________________________
+void TBufferSQL::WriteStdString(const std::string &s)
+{
+   // Write a std::string
+
+   TBufferFile::WriteStdString(s);
 }
 
 // Method to send to database.

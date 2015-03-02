@@ -33,6 +33,7 @@
 #include "TROOT.h"
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
+#include "RooTrace.h"
 #include "RooCategory.h"
 #include <iomanip>
 using namespace std ;
@@ -44,6 +45,7 @@ ClassImp(RooCompositeDataStore)
 //_____________________________________________________________________________
 RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _curIndex(0), _ownComps(kFALSE)
 {
+  TRACE_CREATE
 }
 
 
@@ -56,6 +58,7 @@ RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title
   for (map<string,RooAbsDataStore*>::iterator iter=inputData.begin() ; iter!=inputData.end() ; ++iter) {
     _dataMap[indexCat.lookupType(iter->first.c_str())->getVal()] = iter->second ;
   }
+  TRACE_CREATE
 }
 
 
@@ -70,6 +73,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
     RooAbsDataStore* clonedata = iter->second->clone() ;
     _dataMap[iter->first] = clonedata ;
   }
+  TRACE_CREATE
 }
 
 
@@ -88,6 +92,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
     RooAbsDataStore* clonedata = iter->second->clone(vars) ;
     _dataMap[iter->first] = clonedata ;
   }  
+  TRACE_CREATE
 }
 
 
@@ -103,6 +108,7 @@ RooCompositeDataStore::~RooCompositeDataStore()
       delete iter->second ;
     }
   }
+  TRACE_DESTROY
 }
 
 
@@ -118,12 +124,34 @@ Bool_t RooCompositeDataStore::valid() const
 
 
 //_____________________________________________________________________________
-void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstEvent, Int_t lastEvent, Int_t stepSize) 
+void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, Bool_t skipZeroWeights) 
 {
   // Forward recalculate request to all subsets
   map<int,RooAbsDataStore*>::const_iterator iter ;
   for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
-    iter->second->recalculateCache(proj,firstEvent,lastEvent,stepSize) ;
+    iter->second->recalculateCache(proj,firstEvent,lastEvent,stepSize,skipZeroWeights) ;
+  }
+}
+
+
+//_____________________________________________________________________________
+Bool_t RooCompositeDataStore::hasFilledCache() const
+{
+  Bool_t ret(kFALSE) ;
+  map<int,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    ret |= iter->second->hasFilledCache() ;
+  }
+  return ret ;
+}
+
+
+//_____________________________________________________________________________
+void RooCompositeDataStore::forceCacheUpdate()
+{
+  map<int,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    iter->second->forceCacheUpdate() ;
   }
 }
 
@@ -360,11 +388,11 @@ void RooCompositeDataStore::reset()
 
 
 //_____________________________________________________________________________
-void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset) 
+void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, Bool_t skipZeroWeights) 
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
   for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
-    iter->second->cacheArgs(owner,newVarSet,nset) ;
+    iter->second->cacheArgs(owner,newVarSet,nset,skipZeroWeights) ;
   }
 }
 

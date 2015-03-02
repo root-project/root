@@ -363,12 +363,15 @@ public:
       return -1;
    }
 
+#define GoodStartSymbol(symb) \
+   (((symb>='a') && (symb<='z')) || ((symb>='A') && (symb<='Z')) || (symb=='_') || \
+    ((symb>=0xc0) && (symb<=0xd6)) || ((symb>=0xd8) && (symb<=0xf6)) || (symb>0xf8))
+
    Int_t LocateIdentifier()
    {
-      char symb = *fCurrent;
-      Bool_t ok = (((symb>='a') && (symb<='z')) ||
-                  ((symb>='A') && (symb<='Z')) ||
-                  (symb=='_'));
+      unsigned char symb = (unsigned char) *fCurrent;
+
+      Bool_t ok = GoodStartSymbol(symb);
       if (!ok) return 0;
 
       char* curr = fCurrent;
@@ -377,11 +380,9 @@ public:
          curr++;
          if (curr>=fMaxAddr)
             if (!ExpandStream()) return 0;
-         symb = *curr;
-         ok = ((symb>='a') && (symb<='z')) ||
-               ((symb>='A') && (symb<='Z')) ||
-               ((symb>='0') && (symb<='9')) ||
-               (symb==':') || (symb=='_') || (symb=='-');
+         symb = (unsigned char) *curr;
+         ok = GoodStartSymbol(symb) ||
+              ((symb>='0') && (symb<='9')) || (symb==':')  || (symb=='-') || (symb=='.') || (symb==0xb7);
          if (!ok) return curr-fCurrent;
       } while (curr<fMaxAddr);
       return 0;
@@ -1889,7 +1890,7 @@ void TXMLEngine::DisplayError(Int_t error, Int_t linenumber)
 {
    // Displays xml parsing error
    switch(error) {
-      case -14: Error("ParseFile", "Error inlcude external XML file at line %d", linenumber); break;
+      case -14: Error("ParseFile", "Error include external XML file at line %d", linenumber); break;
       case -13: Error("ParseFile", "Error processing DTD part of XML file at line %d", linenumber); break;
       case -12: Error("ParseFile", "DOCTYPE missing after <! at line %d", linenumber); break;
       case -11: Error("ParseFile", "Node cannot be closed with > symbol at line %d, for instance <?xml ... ?> node", linenumber); break;

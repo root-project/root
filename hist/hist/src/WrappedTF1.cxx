@@ -121,7 +121,7 @@ double WrappedTF1::DoParameterDerivative(double x, const double * p, unsigned in
       assert(df != 0);
       fX[0] = x;
       // hack since TFormula::EvalPar is not const
-      return (const_cast<TFormula*> ( df) )->EvalPar( fX ) ; // derivatives should not depend on parameters since func is linear
+      return (const_cast<TFormula*> ( df) )->Eval( x ) ; // derivatives should not depend on parameters since func is linear 
    }
 }
 
@@ -229,13 +229,13 @@ double WrappedMultiTF1::DoParameterDerivative(const double * x, const double * p
    if (fPolynomial) {
       // case of polynomial function (no parameter dependency)  (case for dim = 1)
       assert (fDim == 1);
-      return std::pow(x[0], static_cast<int>(ipar) );
+      if (ipar == 0) return 1.0;
+      return std::pow(x[0], static_cast<int>(ipar) );  
    }
    else {
       // case of general linear function (built in TFormula with ++ )
       const TFormula * df = dynamic_cast<const TFormula*>( fFunc->GetLinearPart(ipar) );
       assert(df != 0);
-      // hack since TFormula::EvalPar is not const
       return (const_cast<TFormula*> ( df) )->EvalPar( x ) ; // derivatives should not depend on parameters since
                                                             // function  is linear
    }

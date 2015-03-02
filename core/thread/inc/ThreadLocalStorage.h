@@ -65,18 +65,37 @@
 #  define R__HAS_DECLSPEC_THREAD
 #endif
 
+#if __cplusplus >= 201103L
+
+// Note: it would be tempting to use __has_feature(cxx_thread_local) but despite
+// documentation claims it support for it ... it is in fact ineffective (return
+// a false negative).
+// Clang 3.4 also support SD-6 (feature test macros __cpp_*), but no thread local macro
+#  if defined(__clang__) && (__clang_major__ >= 3 && __clang_minor__ >= 3)
+     // thread_local was added in Clang 3.3
+     // Still requires libstdc++ from GCC 4.8
+     // For that __GLIBCXX__ isn't good enough
+#    define R__HAS_THREAD_LOCAL
+
+#  elif defined(__GNUG__) && (__GNUC__ <= 4 && __GNUC_MINOR__ < 80)
+    // The C++11 thread_local keyword is supported in GCC only since 4.8
+#    define R__HAS___THREAD
+#  else
+#    define R__HAS_THREAD_LOCAL
+#  endif
+
+#endif
+
+
 #ifdef __cplusplus
+
+// Note that the order is relevant, more than one of the flag might be
+// on at the same time and we want to use 'best' option available.
 
 #ifdef __CINT__
 
 #  define TTHREAD_TLS(type) static type
 #  define TTHREAD_TLS_ARRAY(type,size,name) static type name[size];
-#  define TTHREAD_TLS_PTR(name) &name
-
-#elif __cplusplus >= 201103L
-
-#  define TTHREAD_TLS(type) thread_local type
-#  define TTHREAD_TLS_ARRAY(type,size,name) thread_local type name[size];
 #  define TTHREAD_TLS_PTR(name) &name
 
 #elif defined(R__HAS_THREAD_LOCAL)
@@ -202,6 +221,40 @@ public:
 #error "No Thread Local Storage (TLS) technology for this platform specified."
 
 #endif
+
+// Available on all platforms
+template <int marker, typename T>
+T &TTHREAD_TLS_INIT() {
+   TTHREAD_TLS(T*) ptr = NULL;
+   TTHREAD_TLS(Bool_t) isInit(kFALSE);
+   if (!isInit) {
+      ptr = new T;
+      isInit = kTRUE;
+   }
+   return *ptr;
+}
+
+template <int marker, typename Array, typename T>
+Array &TTHREAD_TLS_INIT_ARRAY() {
+   TTHREAD_TLS(Array*) ptr = NULL;
+   TTHREAD_TLS(Bool_t) isInit(kFALSE);
+   if (!isInit) {
+      ptr = new Array[sizeof(Array)/sizeof(T)];
+      isInit = kTRUE;
+   }
+   return *ptr;
+}
+
+template <int marker, typename T, typename ArgType>
+T &TTHREAD_TLS_INIT(ArgType arg) {
+   TTHREAD_TLS(T*) ptr = NULL;
+   TTHREAD_TLS(Bool_t) isInit(kFALSE);
+   if (!isInit) {
+      ptr = new T(arg);
+      isInit = kTRUE;
+   }
+   return *ptr;
+}
 
 #else // __cplusplus
 

@@ -30,6 +30,13 @@
 #include "TDataType.h"
 #include "TVirtualMutex.h"
 
+#include "TEnum.h"
+#include "TClassTable.h"
+#include "TROOT.h"
+#include "TClass.h"
+#include "TProtoClass.h"
+#include "TListOfEnums.h"
+
 TListOfTypes::TListOfTypes() : THashTable(100, 3)
 {
    // Constructor
@@ -44,6 +51,45 @@ TObject *TListOfTypes::FindObject(const char *name) const
    return FindType(name);
 }
 
+static bool NameExistsElsewhere(const char* name){
+
+   // Is this a scope?
+   // We look into the list of classes available,
+   // the ones in the dictionaries and the protoclasses.
+   if (gROOT->GetListOfClasses()->FindObject(name) ||
+       TClassTable::GetDictNorm(name) ||
+       TClassTable::GetProtoNorm(name)) return true;
+
+   // Is this an enum?
+   TObject* theEnum = nullptr;
+   const auto lastPos = strrchr(name, ':');
+   if (lastPos != nullptr) {
+      // We have a scope
+      const auto enName = lastPos + 1;
+      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)name) / sizeof(decltype(*lastPos)) - 1;
+      char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
+      strncpy(scopeName, name, scopeNameSize);
+      scopeName[scopeNameSize] = '\0';
+      // We have now an enum name and a scope name
+      // We look first in the classes
+      if(auto scope = dynamic_cast<TClass*>(gROOT->GetListOfClasses()->FindObject(scopeName))){
+         theEnum = ((TListOfEnums*)scope->GetListOfEnums(false))->THashList::FindObject(enName);
+      }
+      // And then if not found in the protoclasses
+      if (!theEnum){
+         if (auto scope = TClassTable::GetProtoNorm(scopeName)){
+            if (auto listOfEnums = (TListOfEnums*)scope->GetListOfEnums())
+               theEnum = listOfEnums->THashList::FindObject(enName);
+         }
+      }
+   } else { // Here we look in the global scope
+      theEnum = ((TListOfEnums*)gROOT->GetListOfEnums())->THashList::FindObject(name);
+   }
+
+  return nullptr != theEnum;
+
+}
+
 TDataType *TListOfTypes::FindType(const char *name) const
 {
    // Look for a type, first in the hast table
@@ -51,6 +97,13 @@ TDataType *TListOfTypes::FindType(const char *name) const
 
    TDataType *result = static_cast<TDataType*>(THashTable::FindObject(name));
    if (!result) {
+
+      if (NameExistsElsewhere(name)) {
+         return nullptr;
+      }
+
+      // We perform now a lookup
+
       R__LOCKGUARD2(gInterpreterMutex);
 
       TypedefInfo_t  *info = gInterpreter->TypedefInfo_Factory(name);

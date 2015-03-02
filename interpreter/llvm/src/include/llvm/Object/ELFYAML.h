@@ -40,11 +40,13 @@ LLVM_YAML_STRONG_TYPEDEF(uint8_t, ELF_ELFOSABI)
 // Just use 64, since it can hold 32-bit values too.
 LLVM_YAML_STRONG_TYPEDEF(uint64_t, ELF_EF)
 LLVM_YAML_STRONG_TYPEDEF(uint32_t, ELF_SHT)
-LLVM_YAML_STRONG_TYPEDEF(uint8_t, ELF_REL)
+LLVM_YAML_STRONG_TYPEDEF(uint32_t, ELF_REL)
+LLVM_YAML_STRONG_TYPEDEF(uint8_t, ELF_RSS)
 // Just use 64, since it can hold 32-bit values too.
 LLVM_YAML_STRONG_TYPEDEF(uint64_t, ELF_SHF)
 LLVM_YAML_STRONG_TYPEDEF(uint8_t, ELF_STT)
 LLVM_YAML_STRONG_TYPEDEF(uint8_t, ELF_STV)
+LLVM_YAML_STRONG_TYPEDEF(uint8_t, ELF_STO)
 
 // For now, hardcode 64 bits everywhere that 32 or 64 would be needed
 // since 64-bit can hold 32-bit values too.
@@ -63,7 +65,7 @@ struct Symbol {
   StringRef Section;
   llvm::yaml::Hex64 Value;
   llvm::yaml::Hex64 Size;
-  ELF_STV Visibility;
+  uint8_t Other;
 };
 struct LocalGlobalWeakSymbols {
   std::vector<Symbol> Local;
@@ -175,8 +177,18 @@ struct ScalarEnumerationTraits<ELFYAML::ELF_STV> {
 };
 
 template <>
+struct ScalarBitSetTraits<ELFYAML::ELF_STO> {
+  static void bitset(IO &IO, ELFYAML::ELF_STO &Value);
+};
+
+template <>
 struct ScalarEnumerationTraits<ELFYAML::ELF_REL> {
   static void enumeration(IO &IO, ELFYAML::ELF_REL &Value);
+};
+
+template <>
+struct ScalarEnumerationTraits<ELFYAML::ELF_RSS> {
+  static void enumeration(IO &IO, ELFYAML::ELF_RSS &Value);
 };
 
 template <>

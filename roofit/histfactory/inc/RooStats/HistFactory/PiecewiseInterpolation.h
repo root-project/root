@@ -43,7 +43,7 @@ public:
   const RooArgList& highList() const { return _highSet ; }
   const RooArgList& paramList() const { return _paramSet ; }
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
+  //virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
   Bool_t setBinIntegrator(RooArgSet& allVars) ;
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const ;

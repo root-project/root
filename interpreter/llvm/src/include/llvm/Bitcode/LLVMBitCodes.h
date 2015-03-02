@@ -137,14 +137,14 @@ namespace bitc {
 
   enum MetadataCodes {
     METADATA_STRING        = 1,   // MDSTRING:      [values]
-    // 2 is unused.
-    // 3 is unused.
+    METADATA_VALUE         = 2,   // VALUE:         [type num, value num]
+    METADATA_NODE          = 3,   // NODE:          [n x md num]
     METADATA_NAME          = 4,   // STRING:        [values]
-    // 5 is unused.
+    METADATA_DISTINCT_NODE = 5,   // DISTINCT_NODE: [n x md num]
     METADATA_KIND          = 6,   // [n x [id, name]]
-    // 7 is unused.
-    METADATA_NODE          = 8,   // NODE:          [n x (type num, value num)]
-    METADATA_FN_NODE       = 9,   // FN_NODE:       [n x (type num, value num)]
+    METADATA_LOCATION      = 7,   // [distinct, line, col, scope, inlined-at?]
+    METADATA_OLD_NODE      = 8,   // OLD_NODE:      [n x (type num, value num)]
+    METADATA_OLD_FN_NODE   = 9,   // OLD_FN_NODE:   [n x (type num, value num)]
     METADATA_NAMED_NODE    = 10,  // NAMED_NODE:    [n x mdnodes]
     METADATA_ATTACHMENT    = 11   // [m x [value, [n x [id, mdnode]]]
   };

@@ -52,7 +52,7 @@ public:
    Handle_t  GetId() const { return fId; }
    TGClient *GetClient() const { return fClient; }
    ULong_t   Hash() const { return (ULong_t) fId >> 0; }
-   Bool_t    IsEqual(const TObject *obj) const { return fId == ((const TGObject *) obj)->fId; }
+   Bool_t    IsEqual(const TObject *obj) const;
    virtual void SaveAs(const char* filename = "", Option_t* option = "") const;
 
    ClassDef(TGObject,0)  //ROOT GUI base class

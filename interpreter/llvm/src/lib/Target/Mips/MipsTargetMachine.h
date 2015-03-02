@@ -11,76 +11,63 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef MIPSTARGETMACHINE_H
-#define MIPSTARGETMACHINE_H
+#ifndef LLVM_LIB_TARGET_MIPS_MIPSTARGETMACHINE_H
+#define LLVM_LIB_TARGET_MIPS_MIPSTARGETMACHINE_H
 
 #include "MipsSubtarget.h"
+#include "llvm/CodeGen/BasicTTIImpl.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/SelectionDAGISel.h"
 #include "llvm/Target/TargetFrameLowering.h"
 #include "llvm/Target/TargetMachine.h"
+#include "MCTargetDesc/MipsABIInfo.h"
 
 namespace llvm {
 class formatted_raw_ostream;
 class MipsRegisterInfo;
 
 class MipsTargetMachine : public LLVMTargetMachine {
+  bool isLittle;
+  std::unique_ptr<TargetLoweringObjectFile> TLOF;
+  // Selected ABI
+  MipsABIInfo ABI;
+  const DataLayout DL; // Calculates type size & alignment
   MipsSubtarget *Subtarget;
   MipsSubtarget DefaultSubtarget;
   MipsSubtarget NoMips16Subtarget;
   MipsSubtarget Mips16Subtarget;
 
+  mutable StringMap<std::unique_ptr<MipsSubtarget>> SubtargetMap;
+
 public:
   MipsTargetMachine(const Target &T, StringRef TT, StringRef CPU, StringRef FS,
                     const TargetOptions &Options, Reloc::Model RM,
                     CodeModel::Model CM, CodeGenOpt::Level OL, bool isLittle);
+  ~MipsTargetMachine() override;
 
-  virtual ~MipsTargetMachine() {}
+  TargetIRAnalysis getTargetIRAnalysis() override;
 
-  void addAnalysisPasses(PassManagerBase &PM) override;
-
-  const MipsInstrInfo *getInstrInfo() const override {
-    return getSubtargetImpl()->getInstrInfo();
-  }
-  const TargetFrameLowering *getFrameLowering() const override {
-    return getSubtargetImpl()->getFrameLowering();
-  }
+  const DataLayout *getDataLayout() const override { return &DL; }
   const MipsSubtarget *getSubtargetImpl() const override {
     if (Subtarget)
       return Subtarget;
     return &DefaultSubtarget;
   }
-  MipsSubtarget *getSubtargetImpl() override {
-    if (Subtarget)
-      return Subtarget;
-    return &DefaultSubtarget;
-  }
-  const InstrItineraryData *getInstrItineraryData() const override {
-    return Subtarget->inMips16Mode()
-               ? nullptr
-               : &getSubtargetImpl()->getInstrItineraryData();
-  }
-  MipsJITInfo *getJITInfo() override {
-    return getSubtargetImpl()->getJITInfo();
-  }
-  const MipsRegisterInfo *getRegisterInfo()  const override {
-    return getSubtargetImpl()->getRegisterInfo();
-  }
-  const MipsTargetLowering *getTargetLowering() const override {
-    return getSubtargetImpl()->getTargetLowering();
-  }
-  const DataLayout *getDataLayout() const override {
-    return getSubtargetImpl()->getDataLayout();
-  }
-  const MipsSelectionDAGInfo* getSelectionDAGInfo() const override {
-    return getSubtargetImpl()->getSelectionDAGInfo();
-  }
+
+  const MipsSubtarget *getSubtargetImpl(const Function &F) const override;
+
   /// \brief Reset the subtarget for the Mips target.
   void resetSubtarget(MachineFunction *MF);
 
   // Pass Pipeline Configuration
   TargetPassConfig *createPassConfig(PassManagerBase &PM) override;
-  bool addCodeEmitter(PassManagerBase &PM, JITCodeEmitter &JCE) override;
+
+  TargetLoweringObjectFile *getObjFileLowering() const override {
+    return TLOF.get();
+  }
+
+  bool isLittleEndian() const { return isLittle; }
+  const MipsABIInfo &getABI() const { return ABI; }
 };
 
 /// MipsebTargetMachine - Mips32/64 big endian target machine.

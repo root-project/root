@@ -11,12 +11,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef Hexagon_SUBTARGET_H
-#define Hexagon_SUBTARGET_H
+#ifndef LLVM_LIB_TARGET_HEXAGON_HEXAGONSUBTARGET_H
+#define LLVM_LIB_TARGET_HEXAGON_HEXAGONSUBTARGET_H
 
 #include "HexagonFrameLowering.h"
-#include "HexagonInstrInfo.h"
 #include "HexagonISelLowering.h"
+#include "HexagonInstrInfo.h"
 #include "HexagonSelectionDAGInfo.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/Target/TargetMachine.h"
@@ -45,7 +45,6 @@ public:
   HexagonArchEnum HexagonArchVersion;
 private:
   std::string CPUString;
-  const DataLayout DL;       // Calculates type size & alignment.
   HexagonInstrInfo InstrInfo;
   HexagonTargetLowering TLInfo;
   HexagonSelectionDAGInfo TSInfo;
@@ -56,19 +55,24 @@ public:
   HexagonSubtarget(StringRef TT, StringRef CPU, StringRef FS,
                    const TargetMachine &TM);
 
-  /// getInstrItins - Return the instruction itineraies based on subtarget
+  /// getInstrItins - Return the instruction itineraries based on subtarget
   /// selection.
-  const InstrItineraryData &getInstrItineraryData() const { return InstrItins; }
-  const HexagonInstrInfo *getInstrInfo() const { return &InstrInfo; }
-  const HexagonRegisterInfo *getRegisterInfo() const {
+  const InstrItineraryData *getInstrItineraryData() const override {
+    return &InstrItins;
+  }
+  const HexagonInstrInfo *getInstrInfo() const override { return &InstrInfo; }
+  const HexagonRegisterInfo *getRegisterInfo() const override {
     return &InstrInfo.getRegisterInfo();
   }
-  const HexagonTargetLowering *getTargetLowering() const { return &TLInfo; }
-  const HexagonFrameLowering *getFrameLowering() const {
+  const HexagonTargetLowering *getTargetLowering() const override {
+    return &TLInfo;
+  }
+  const HexagonFrameLowering *getFrameLowering() const override {
     return &FrameLowering;
   }
-  const HexagonSelectionDAGInfo *getSelectionDAGInfo() const { return &TSInfo; }
-  const DataLayout *getDataLayout() const { return &DL; }
+  const HexagonSelectionDAGInfo *getSelectionDAGInfo() const override {
+    return &TSInfo;
+  }
 
   HexagonSubtarget &initializeSubtargetDependencies(StringRef CPU,
                                                     StringRef FS);

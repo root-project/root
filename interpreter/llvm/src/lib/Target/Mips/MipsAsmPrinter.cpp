@@ -19,6 +19,7 @@
 #include "MipsAsmPrinter.h"
 #include "MipsInstrInfo.h"
 #include "MipsMCInstLower.h"
+#include "MipsTargetMachine.h"
 #include "MipsTargetStreamer.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringExtras.h"
@@ -53,7 +54,7 @@ using namespace llvm;
 
 #define DEBUG_TYPE "mips-asm-printer"
 
-MipsTargetStreamer &MipsAsmPrinter::getTargetStreamer() {
+MipsTargetStreamer &MipsAsmPrinter::getTargetStreamer() const {
   return static_cast<MipsTargetStreamer &>(*OutStreamer.getTargetStreamer());
 }
 
@@ -131,7 +132,7 @@ void MipsAsmPrinter::emitPseudoIndirectBranch(MCStreamer &OutStreamer,
 
 void MipsAsmPrinter::EmitInstruction(const MachineInstr *MI) {
   MipsTargetStreamer &TS = getTargetStreamer();
-  TS.setCanHaveModuleDir(false);
+  TS.forbidModuleDirective();
 
   if (MI->isDebugValue()) {
     SmallString<128> Str;
@@ -266,7 +267,8 @@ void MipsAsmPrinter::printSavedRegsBitmask() {
     if (Mips::GPR32RegClass.contains(Reg))
       break;
 
-    unsigned RegNum = TM.getRegisterInfo()->getEncodingValue(Reg);
+    unsigned RegNum =
+        TM.getSubtargetImpl()->getRegisterInfo()->getEncodingValue(Reg);
     if (Mips::AFGR64RegClass.contains(Reg)) {
       FPUBitmask |= (3 << RegNum);
       CSFPRegsSize += AFGR64RegSize;
@@ -281,7 +283,8 @@ void MipsAsmPrinter::printSavedRegsBitmask() {
   // Set CPU Bitmask.
   for (; i != e; ++i) {
     unsigned Reg = CSI[i].getReg();
-    unsigned RegNum = TM.getRegisterInfo()->getEncodingValue(Reg);
+    unsigned RegNum =
+        TM.getSubtargetImpl()->getRegisterInfo()->getEncodingValue(Reg);
     CPUBitmask |= (1 << RegNum);
   }
 
@@ -306,7 +309,7 @@ void MipsAsmPrinter::printSavedRegsBitmask() {
 
 /// Frame Directive
 void MipsAsmPrinter::emitFrameDirective() {
-  const TargetRegisterInfo &RI = *TM.getRegisterInfo();
+  const TargetRegisterInfo &RI = *TM.getSubtargetImpl()->getRegisterInfo();
 
   unsigned stackReg  = RI.getFrameRegister(*MF);
   unsigned returnReg = RI.getRARegister();
@@ -317,11 +320,11 @@ void MipsAsmPrinter::emitFrameDirective() {
 
 /// Emit Set directives.
 const char *MipsAsmPrinter::getCurrentABIString() const {
-  switch (Subtarget->getTargetABI()) {
-  case MipsSubtarget::O32:  return "abi32";
-  case MipsSubtarget::N32:  return "abiN32";
-  case MipsSubtarget::N64:  return "abi64";
-  case MipsSubtarget::EABI: return "eabi32"; // TODO: handle eabi64
+  switch (static_cast<MipsTargetMachine &>(TM).getABI().GetEnumValue()) {
+  case MipsABIInfo::ABI::O32:  return "abi32";
+  case MipsABIInfo::ABI::N32:  return "abiN32";
+  case MipsABIInfo::ABI::N64:  return "abi64";
+  case MipsABIInfo::ABI::EABI: return "eabi32"; // TODO: handle eabi64
   default: llvm_unreachable("Unknown Mips ABI");
   }
 }
@@ -471,14 +474,12 @@ bool MipsAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNum,
       return false;
     case 'z': {
       // $0 if zero, regular printing otherwise
-      if (MO.getType() != MachineOperand::MO_Immediate)
-        return true;
-      int64_t Val = MO.getImm();
-      if (Val)
-        O << Val;
-      else
+      if (MO.getType() == MachineOperand::MO_Immediate && MO.getImm() == 0) {
         O << "$0";
-      return false;
+        return false;
+      }
+      // If not, call printOperand as normal.
+      break;
     }
     case 'D': // Second part of a double word register operand
     case 'L': // Low order register of a double word register operand
@@ -645,6 +646,18 @@ printMemOperand(const MachineInstr *MI, int opNum, raw_ostream &O) {
   // Load/Store memory operands -- imm($reg)
   // If PIC target the target is loaded as the
   // pattern lw $25,%call16($28)
+
+  // opNum can be invalid if instruction has reglist as operand.
+  // MemOperand is always last operand of instruction (base + offset).
+  switch (MI->getOpcode()) {
+  default:
+    break;
+  case Mips::SWM32_MM:
+  case Mips::LWM32_MM:
+    opNum = MI->getNumOperands() - 2;
+    break;
+  }
+
   printOperand(MI, opNum+1, O);
   O << "(";
   printOperand(MI, opNum, O);
@@ -668,10 +681,17 @@ printFCCOperand(const MachineInstr *MI, int opNum, raw_ostream &O,
   O << Mips::MipsFCCToString((Mips::CondCode)MO.getImm());
 }
 
+void MipsAsmPrinter::
+printRegisterList(const MachineInstr *MI, int opNum, raw_ostream &O) {
+  for (int i = opNum, e = MI->getNumOperands(); i != e; ++i) {
+    if (i != opNum) O << ", ";
+    printOperand(MI, i, O);
+  }
+}
+
 void MipsAsmPrinter::EmitStartOfAsmFile(Module &M) {
-  // TODO: Need to add -mabicalls and -mno-abicalls flags.
-  // Currently we assume that -mabicalls is the default.
-  bool IsABICalls = true;
+  bool IsABICalls = Subtarget->isABICalls();
+  const MipsABIInfo &ABI = static_cast<const MipsTargetMachine &>(TM).getABI();
   if (IsABICalls) {
     getTargetStreamer().emitDirectiveAbiCalls();
     Reloc::Model RM = TM.getRelocationModel();
@@ -679,14 +699,14 @@ void MipsAsmPrinter::EmitStartOfAsmFile(Module &M) {
     //        Ideally it should test for properties of the ABI and not the ABI
     //        itself.
     //        For the moment, I'm only correcting enough to make MIPS-IV work.
-    if (RM == Reloc::Static && !Subtarget->isABI_N64())
+    if (RM == Reloc::Static && !ABI.IsN64())
       getTargetStreamer().emitDirectiveOptionPic0();
   }
 
   // Tell the assembler which ABI we are using
   std::string SectionName = std::string(".mdebug.") + getCurrentABIString();
-  OutStreamer.SwitchSection(OutContext.getELFSection(
-      SectionName, ELF::SHT_PROGBITS, 0, SectionKind::getDataRel()));
+  OutStreamer.SwitchSection(
+      OutContext.getELFSection(SectionName, ELF::SHT_PROGBITS, 0));
 
   // NaN: At the moment we only support:
   // 1. .nan legacy (default)
@@ -696,15 +716,13 @@ void MipsAsmPrinter::EmitStartOfAsmFile(Module &M) {
 
   // TODO: handle O64 ABI
 
-  if (Subtarget->isABI_EABI()) {
+  if (ABI.IsEABI()) {
     if (Subtarget->isGP32bit())
-      OutStreamer.SwitchSection(
-          OutContext.getELFSection(".gcc_compiled_long32", ELF::SHT_PROGBITS, 0,
-                                   SectionKind::getDataRel()));
+      OutStreamer.SwitchSection(OutContext.getELFSection(".gcc_compiled_long32",
+                                                         ELF::SHT_PROGBITS, 0));
     else
-      OutStreamer.SwitchSection(
-          OutContext.getELFSection(".gcc_compiled_long64", ELF::SHT_PROGBITS, 0,
-                                   SectionKind::getDataRel()));
+      OutStreamer.SwitchSection(OutContext.getELFSection(".gcc_compiled_long64",
+                                                         ELF::SHT_PROGBITS, 0));
   }
 
   getTargetStreamer().updateABIInfo(*Subtarget);
@@ -712,17 +730,38 @@ void MipsAsmPrinter::EmitStartOfAsmFile(Module &M) {
   // We should always emit a '.module fp=...' but binutils 2.24 does not accept
   // it. We therefore emit it when it contradicts the ABI defaults (-mfpxx or
   // -mfp64) and omit it otherwise.
-  if (Subtarget->isABI_O32() && (Subtarget->isABI_FPXX() ||
-                                 Subtarget->isFP64bit()))
+  if (ABI.IsO32() && (Subtarget->isABI_FPXX() || Subtarget->isFP64bit()))
     getTargetStreamer().emitDirectiveModuleFP();
 
   // We should always emit a '.module [no]oddspreg' but binutils 2.24 does not
   // accept it. We therefore emit it when it contradicts the default or an
   // option has changed the default (i.e. FPXX) and omit it otherwise.
-  if (Subtarget->isABI_O32() && (!Subtarget->useOddSPReg() ||
-                                 Subtarget->isABI_FPXX()))
+  if (ABI.IsO32() && (!Subtarget->useOddSPReg() || Subtarget->isABI_FPXX()))
     getTargetStreamer().emitDirectiveModuleOddSPReg(Subtarget->useOddSPReg(),
-                                                    Subtarget->isABI_O32());
+                                                    ABI.IsO32());
+}
+
+void MipsAsmPrinter::emitInlineAsmStart(
+    const MCSubtargetInfo &StartInfo) const {
+  MipsTargetStreamer &TS = getTargetStreamer();
+
+  // GCC's choice of assembler options for inline assembly code ('at', 'macro'
+  // and 'reorder') is different from LLVM's choice for generated code ('noat',
+  // 'nomacro' and 'noreorder').
+  // In order to maintain compatibility with inline assembly code which depends
+  // on GCC's assembler options being used, we have to switch to those options
+  // for the duration of the inline assembly block and then switch back.
+  TS.emitDirectiveSetPush();
+  TS.emitDirectiveSetAt();
+  TS.emitDirectiveSetMacro();
+  TS.emitDirectiveSetReorder();
+  OutStreamer.AddBlankLine();
+}
+
+void MipsAsmPrinter::emitInlineAsmEnd(const MCSubtargetInfo &StartInfo,
+                                      const MCSubtargetInfo *EndInfo) const {
+  OutStreamer.AddBlankLine();
+  getTargetStreamer().emitDirectiveSetPop();
 }
 
 void MipsAsmPrinter::EmitJal(MCSymbol *Symbol) {
@@ -903,7 +942,7 @@ void MipsAsmPrinter::EmitFPCallStub(
   //
   const MCSectionELF *M = OutContext.getELFSection(
       ".mips16.call.fp." + std::string(Symbol), ELF::SHT_PROGBITS,
-      ELF::SHF_ALLOC | ELF::SHF_EXECINSTR, SectionKind::getText());
+      ELF::SHF_ALLOC | ELF::SHF_EXECINSTR);
   OutStreamer.SwitchSection(M, nullptr);
   //
   // .align 2
@@ -933,7 +972,7 @@ void MipsAsmPrinter::EmitFPCallStub(
   // called otherwise. when the full stub generation is moved here
   // we need to deal with pic.
   //
-  if (Subtarget->getRelocationModel() == Reloc::PIC_)
+  if (TM.getRelocationModel() == Reloc::PIC_)
     llvm_unreachable("should not be here if we are compiling pic");
   TS.emitDirectiveSetReorder();
   //

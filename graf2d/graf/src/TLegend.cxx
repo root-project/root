@@ -41,14 +41,14 @@ displayed.
 The following example shows how to create a legend. In this example the legend
 contains a histogram, a function and a graph. The histogram is put in the legend
 using its reference pointer whereas the graph and the function are added
-using their names. Note that, because <tt>TGraph</tt> contructors do not have the
+using their names. Note that, because <tt>TGraph</tt> constructors do not have the
 <tt>TGraph</tt> name as parameter, the graph name should be specified using the
 <tt>SetName</tt> method.
 <p>
 When an object is added by name, a scan is performed on the list of objects
 contained in the current pad (<tt>gPad</tt>) and also in the possible
 <tt>TMultiGraph</tt> and <tt>THStack</tt> present in the pad. If a matching
-name is found, the coresponding object is added in the legend using its pointer.
+name is found, the corresponding object is added in the legend using its pointer.
 
 End_Html
 Begin_Macro(source)
@@ -98,10 +98,10 @@ End_Macro
 Begin_Html
 <br>
 <tt>TLegend</tt> inherits from <tt>TAttText</tt> therefore changing any
-text attributes (text alignmemt, font, color...) on a legend will changed the
+text attributes (text alignment, font, color...) on a legend will changed the
 text attributes on each line.
 <br>
-In particular it can be interessting to change the text alignement that way. In
+In particular it can be interesting to change the text alignement that way. In
 order to have a base-line vertical alignment instead of a centered one simply do:
 <pre>
    leg->SetTextAlign(13);
@@ -110,6 +110,16 @@ or
 <pre>
    leg->SetTextAlign(11);
 </pre
+The default value of some <tt>TLegend</tt> attributes can be changed using
+<tt>gStyle</tt>. The default settings are:
+<pre>
+   SetLegendBorderSize(1);
+   SetLegendFillColor(0);
+   SetLegendFont(42);
+   SetLegendTextSize(0.);
+<pre>
+The global attributes change the default values for the next created legends.
+<p>
 Text attributes can be also changed individually on each legend entry:
 <pre>
    TLegendEntry *le = leg->AddEntry(h1,"Histogram filled with random numbers","f");
@@ -198,11 +208,11 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
         :TPave(x1,y1,x2,y2,4,option), TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
    /* Begin_Html
-   Normal Contructor.
+   Normal constructor.
    <p>
    A TLegend is a Pave with several TLegendEntry(s).
    x1,y1,x2,y2 are the coordinates of the Legend in the current pad
-   (in normalized coordinates by default)
+   (in normalised coordinates by default)
    "header" is the title that will be displayed at the top of the legend
    it is treated like a regular entry and supports TLatex. The default
    is no header (header = 0).
@@ -230,7 +240,7 @@ TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend),
                                             fPrimitives(0)
 {
    /* Begin_Html
-   Copy constuctor.
+   Copy constructor.
    End_Html */
 
   if (legend.fPrimitives) {
@@ -631,8 +641,12 @@ void TLegend::PaintPrimitives()
    Double_t yspace = (y2-y1)/nRows;
    Double_t yspace2 = yspace/2.;
    Double_t textsize = GetTextSize();
-   Bool_t autosize = kFALSE;
    Double_t save_textsize = textsize;
+   if (textsize==0.) {
+      SetTextSize(gStyle->GetLegendTextSize());
+      textsize = GetTextSize();
+   }
+   Bool_t autosize = kFALSE;
    Double_t* columnWidths = new Double_t[fNColumns];
    memset(columnWidths, 0, fNColumns*sizeof(Double_t));
 
@@ -684,7 +698,7 @@ void TLegend::PaintPrimitives()
 
    // Update column widths, put into NDC units
    // block off this section of code to make sure all variables are local:
-   // don't want to ruin initialization of these variables later on
+   // don't want to ruin initialisation of these variables later on
    {
       TIter next(fPrimitives);
       TLegendEntry *entry;

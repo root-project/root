@@ -17,7 +17,6 @@
 // 02110-1301 USA
 
 #include <math.h>
-#include <algorithm>
 #include "../inc/mathrender.h"
 
 /////////////////////////////////////////////////////////////////////

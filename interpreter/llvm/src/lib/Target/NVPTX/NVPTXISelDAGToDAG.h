@@ -11,6 +11,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+#ifndef LLVM_LIB_TARGET_NVPTX_NVPTXISELDAGTODAG_H
+#define LLVM_LIB_TARGET_NVPTX_NVPTXISELDAGTODAG_H
+
 #include "NVPTX.h"
 #include "NVPTXISelLowering.h"
 #include "NVPTXRegisterInfo.h"
@@ -40,8 +43,8 @@ public:
   const char *getPassName() const override {
     return "NVPTX DAG->DAG Pattern Instruction Selection";
   }
-
-  const NVPTXSubtarget &Subtarget;
+  bool runOnMachineFunction(MachineFunction &MF) override;
+  const NVPTXSubtarget *Subtarget;
 
   bool SelectInlineAsmMemoryOperand(const SDValue &Op,
                                     char ConstraintCode,
@@ -92,3 +95,5 @@ private:
 
 };
 }
+
+#endif

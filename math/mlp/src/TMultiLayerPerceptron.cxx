@@ -1197,8 +1197,8 @@ void TMultiLayerPerceptron::AttachData()
 
    // Set the size of the internal array of parameters of the formula
    Int_t maxop, maxpar, maxconst;
-   TFormula::GetMaxima(maxop, maxpar, maxconst);
-   TFormula::SetMaxima(10, 10, 10);
+   TFormulaOld::GetMaxima(maxop, maxpar, maxconst);
+   TFormulaOld::SetMaxima(10, 10, 10);
    
    //first layer
    const TString input = TString(fStructure(0, fStructure.First(':')));
@@ -1240,7 +1240,7 @@ void TMultiLayerPerceptron::AttachData()
    //fManager->Sync();
 
    // Set the old values
-   TFormula::SetMaxima(maxop, maxpar, maxconst);
+   TFormulaOld::SetMaxima(maxop, maxpar, maxconst);
 }
 
 //______________________________________________________________________________
@@ -1256,13 +1256,12 @@ void TMultiLayerPerceptron::ExpandStructure()
                     fStructure.Length() - fStructure.First(':')));
    TString newInput;
    Int_t i = 0;
-   TTreeFormula* f = 0;
    // loop on input neurons
    for (i = 0; i<nneurons; i++) {
       const TString name = ((TObjString *)inpL->At(i))->GetString();
-      f = new TTreeFormula("sizeTestFormula",name,fData);
+      TTreeFormula f("sizeTestFormula",name,fData);
       // Variable size arrays are unrelialable
-      if(f->GetMultiplicity()==1 && f->GetNdata()>1) {
+      if(f.GetMultiplicity()==1 && f.GetNdata()>1) {
          Warning("TMultiLayerPerceptron::ExpandStructure()","Variable size arrays cannot be used to build implicitely an input layer. The index 0 will be assumed.");
       }
       // Check if we are coping with an array... then expand
@@ -1270,8 +1269,8 @@ void TMultiLayerPerceptron::ExpandStructure()
       // passed directly as instance index of the TTreeFormula,
       // so that complex compounds made of arrays can be used without
       // parsing the details.
-      else if(f->GetNdata()>1) {
-         for(Int_t j=0; j<f->GetNdata(); j++) {
+      else if(f.GetNdata()>1) {
+         for(Int_t j=0; j<f.GetNdata(); j++) {
             if(i||j) newInput += ",";
             newInput += name;
             newInput += "{";

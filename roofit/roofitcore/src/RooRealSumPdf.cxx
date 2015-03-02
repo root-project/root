@@ -129,7 +129,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   if (!(inFuncList.getSize()==inCoefList.getSize()+1 || inFuncList.getSize()==inCoefList.getSize())) {
     coutE(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() 
 			  << ") number of pdfs and coefficients inconsistent, must have Nfunc=Ncoef or Nfunc=Ncoef+1" << endl ;
-    R__ASSERT(0) ;
+    assert(0) ;
   }
 
   _funcIter  = _funcList.createIterator() ;
@@ -160,7 +160,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   if (func) {
     if (!dynamic_cast<RooAbsReal*>(func)) {
       coutE(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") last func " << coef->GetName() << " is not of type RooAbsReal, fatal error" << endl ;
-      R__ASSERT(0) ;
+      assert(0) ;
     }
     _funcList.add(*func) ;  
   } else {
@@ -261,7 +261,7 @@ Double_t RooRealSumPdf::evaluate() const
   if (value<0 && (_doFloor || _doFloorGlobal)) {
     value = 0 ;
   }
-
+  
   return value ;
 }
 
@@ -395,9 +395,9 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     func    = (RooAbsReal*)funcIter.next() ;
     Double_t coefVal = coef->getVal(normSet2) ;
     if (coefVal) {
-      R__ASSERT(func);
-      if (func->isSelectedComp()) {
-    R__ASSERT(funcInt);
+      assert(func);
+      if (normSet2 ==0 || func->isSelectedComp()) {
+	assert(funcInt);
 	value += funcInt->getVal()*coefVal ;
       }
       lastCoef -= coef->getVal(normSet2) ;
@@ -407,8 +407,8 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   if (!_haveLastCoef) {
     // Add last func with correct coefficient
     funcInt = (RooAbsReal*) funcIntIter.next() ;
-    if (func->isSelectedComp()) {
-      R__ASSERT(funcInt);
+    if (normSet2 ==0 || func->isSelectedComp()) {
+      assert(funcInt);
       value += funcInt->getVal()*lastCoef ;
     }
     
@@ -432,7 +432,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
       funcNorm = (RooAbsReal*)funcNormIter.next() ;
       Double_t coefVal = coef->getVal(normSet2) ;
       if (coefVal) {
-	R__ASSERT(funcNorm);
+	assert(funcNorm);
 	normVal += funcNorm->getVal()*coefVal ;
       }
     }
@@ -440,7 +440,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     // Add last func with correct coefficient
     if (!_haveLastCoef) {
       funcNorm = (RooAbsReal*) funcNormIter.next() ;
-      R__ASSERT(funcNorm);
+      assert(funcNorm);
       normVal += funcNorm->getVal()*lastCoef ;
     }      
   }
@@ -452,7 +452,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 //_____________________________________________________________________________
 Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const
 {
-  //  return getNorm(nset) ;
+
   Double_t n = getNorm(nset) ;  
   if (n<0) {
     logEvalError("Expected number of events is negative") ;
@@ -464,7 +464,6 @@ Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const
 //_____________________________________________________________________________
 std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-
   list<Double_t>* sumBinB = 0 ;
   Bool_t needClean(kFALSE) ;
   
@@ -571,6 +570,22 @@ std::list<Double_t>* RooRealSumPdf::plotSamplingHint(RooAbsRealLValue& obs, Doub
   return sumHint ;
 }
 
+
+
+
+//_____________________________________________________________________________
+void RooRealSumPdf::setCacheAndTrackHints(RooArgSet& trackNodes) 
+{
+  // Label OK'ed components of a RooRealSumPdf with cache-and-track
+  RooFIter siter = funcList().fwdIterator() ;
+  RooAbsArg* sarg ;
+  while ((sarg=siter.next())) {
+    if (sarg->canNodeBeCached()==Always) {
+      trackNodes.add(*sarg) ;
+      //cout << "tracking node RealSumPdf component " << sarg->IsA()->GetName() << "::" << sarg->GetName() << endl ;
+    }
+  }
+}
 
 
 

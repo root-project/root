@@ -505,7 +505,7 @@ bool X86AsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI,
 }
 
 void X86AsmPrinter::EmitStartOfAsmFile(Module &M) {
-  if (Subtarget->isTargetMacho())
+  if (Subtarget->isTargetMachO())
     OutStreamer.SwitchSection(getObjFileLowering().getTextSection());
 
   if (Subtarget->isTargetCOFF()) {
@@ -560,12 +560,13 @@ MCSymbol *X86AsmPrinter::GetCPISymbol(unsigned CPID) const {
     if (!CPE.isMachineConstantPoolEntry()) {
       SectionKind Kind = CPE.getSectionKind(TM.getDataLayout());
       const Constant *C = CPE.Val.ConstVal;
-      const MCSectionCOFF *S = cast<MCSectionCOFF>(
-          getObjFileLowering().getSectionForConstant(Kind, C));
-      if (MCSymbol *Sym = S->getCOMDATSymbol()) {
-        if (Sym->isUndefined())
-          OutStreamer.EmitSymbolAttribute(Sym, MCSA_Global);
-        return Sym;
+      if (const MCSectionCOFF *S = dyn_cast<MCSectionCOFF>(
+            getObjFileLowering().getSectionForConstant(Kind, C))) {
+        if (MCSymbol *Sym = S->getCOMDATSymbol()) {
+          if (Sym->isUndefined())
+            OutStreamer.EmitSymbolAttribute(Sym, MCSA_Global);
+          return Sym;
+        }
       }
     }
   }
@@ -601,10 +602,10 @@ void X86AsmPrinter::GenerateExportDirective(const MCSymbol *Sym, bool IsData) {
 }
 
 void X86AsmPrinter::EmitEndOfAsmFile(Module &M) {
-  if (Subtarget->isTargetMacho()) {
+  if (Subtarget->isTargetMachO()) {
     // All darwin targets use mach-o.
     MachineModuleInfoMachO &MMIMacho =
-      MMI->getObjFileInfo<MachineModuleInfoMachO>();
+        MMI->getObjFileInfo<MachineModuleInfoMachO>();
 
     // Output stubs for dynamically-linked functions.
     MachineModuleInfoMachO::SymbolListTy Stubs;

@@ -582,7 +582,7 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
    Int_t nevod, layer, ktest, i1, nrest;
    Int_t ievent(0);
    Int_t kkk;
-   Double_t xxx, yyy;
+   Double_t xxx = 0.0, yyy = 0.0;
 
    Leclearn(&ktest, tout2, tin2);
    Lecev2(&ktest, tout2, tin2);

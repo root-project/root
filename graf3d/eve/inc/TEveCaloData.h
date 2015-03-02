@@ -15,6 +15,8 @@
 #include <vector>
 #include "TEveElement.h"
 
+#include "TMath.h"
+
 class TGLSelectRecord;
 
 class TH2F;
@@ -99,6 +101,12 @@ public:
       Float_t ThetaMax() const { return fThetaMax; }
       Float_t Theta() const { return (fThetaMax+fThetaMin)*0.5f; }
       Float_t ThetaDelta() const { return fThetaMax-fThetaMin; }
+
+      Bool_t  IsUpperRho() const
+      {
+         const Float_t phi = Phi();
+         return ((phi > 0 && phi <= TMath::Pi()) || phi < - TMath::Pi());
+      }
 
       virtual void  Dump() const;
    };

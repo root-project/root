@@ -42,7 +42,8 @@ LLVMGOODO    := $(LLVMDIRO)/$(notdir $(LLVMGOODS))
 LLVMVERSION  := $(shell echo $(subst rc,,$(subst svn,,$(subst PACKAGE_VERSION=,,\
 	$(shell grep 'PACKAGE_VERSION=' $(LLVMDIRS)/configure)))))
 LLVMRES      := etc/cling/lib/clang/$(LLVMVERSION)/include/stddef.h
-LLVMDEP      := $(LLVMLIB) $(LLVMRES)
+LLVMRESEXTRA := etc/cling/lib/clang/$(LLVMVERSION)/include/assert.h
+LLVMDEP      := $(LLVMLIB) $(LLVMRES) $(LLVMRESEXTRA)
 
 ROOT_NOCLANG := "ROOT_NOCLANG=yes"
 ifeq ($(LLVMDEV),)
@@ -81,8 +82,12 @@ $(LLVMCONFIG): $(LLVMLIB)
 endif
 
 $(LLVMRES): $(LLVMLIB)
-		mkdir -p $(dir $(LLVMRES))
-		cp $(LLVMDIRI)/lib/clang/$(LLVMVERSION)/include/* $(dir $(LLVMRES))
+		@mkdir -p $(dir $(LLVMRES))
+		@cp $(LLVMDIRI)/lib/clang/$(LLVMVERSION)/include/* $(dir $(LLVMRES))
+
+$(LLVMRESEXTRA): $(dir $(firstword $(LLVMRESEXTRA)))%: $(MODDIR)/ROOT/%
+		@mkdir -p $(dir $@)
+		@cp $< $@
 
 $(LLVMLIB): $(LLVMDEPO) $(FORCELLVMTARGET)
 		@(echo "*** Building $@..."; \

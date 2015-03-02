@@ -4,7 +4,6 @@
 // Bindings
 #include "PyROOT.h"
 #include "PyRootType.h"
-#include "Adapters.h"
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
 #include "RootWrapper.h"
@@ -12,9 +11,8 @@
 #include "TemplateProxy.h"
 
 // ROOT
-#include "TDataMember.h"
-#include "TInterpreter.h"
-#include "TList.h"
+#include "TClass.h"     // for method and enum finding
+#include "TList.h"      // id.
 
 // Standard
 #include <string.h>
@@ -30,10 +28,7 @@ namespace {
    PyObject* meta_alloc( PyTypeObject* metatype, Py_ssize_t nitems )
    {
    // specialized allocator, fitting in a few extra bytes for a TClassRef
-      int basicsize = metatype->tp_basicsize;
-      metatype->tp_basicsize = sizeof(PyRootClass);
       PyObject* pyclass = PyType_Type.tp_alloc( metatype, nitems );
-      metatype->tp_basicsize = basicsize;
 
       return pyclass;
    }
@@ -96,25 +91,27 @@ namespace {
          std::string name = PyROOT_PyUnicode_AsString( pyname );
          if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
 
-            attr = MakeRootClassFromString( name, pyclass );
+            attr = CreateScopeProxy( name, pyclass );
 
          // namespaces may have seen updates in their list of global functions, which
          // are available as "methods" even though they're not really that
             if ( ! attr && ! PyRootType_CheckExact( pyclass ) && PyType_Check( pyclass ) ) {
                PyErr_Clear();
 
-               TScopeAdapter klass = TScopeAdapter::ByName( ((PyTypeObject*)pyclass)->tp_name );
-               if ( klass.IsNamespace() ) {
+	       Cppyy::TCppScope_t scope = Cppyy::GetScope( ((PyTypeObject*)pyclass)->tp_name );
+               TClass* klass = TClass::GetClass( ((PyTypeObject*)pyclass)->tp_name );
+               if ( Cppyy::IsNamespace( scope ) ) {
 
                // tickle lazy lookup of functions
                   if ( ! attr ) {
-                     if ( ((TClass*)klass.Id())->GetListOfMethods()->FindObject( name.c_str() ) ) {
+                     if ( klass->GetListOfMethods()->FindObject( name.c_str() ) ) {
                      // function exists, now collect overloads
                         std::vector< PyCallable* > overloads;
-                        for ( size_t i = 0; i < klass.FunctionMemberSize(); ++i ) {
-                           TMemberAdapter m = klass.FunctionMemberAt( i );
-                           if ( m.Name() == name )
-                              overloads.push_back( new TClassMethodHolder( klass, m ) );
+                        const size_t nmeth = Cppyy::GetNumMethods( scope );
+                        for ( size_t imeth = 0; imeth < nmeth; ++imeth ) {
+			   Cppyy::TCppMethod_t method = Cppyy::GetMethod( scope, imeth );
+                           if ( Cppyy::GetMethodName( method ) == name )
+                              overloads.push_back( new TClassMethodHolder( scope, method ) );
                         }
 
                      // Note: can't re-use Utility::AddClass here, as there's the risk of
@@ -126,22 +123,20 @@ namespace {
 
                // tickle lazy lookup of data members
                   if ( ! attr ) {
-                     TDataMember* dm =
-                        (TDataMember*)((TClass*)klass.Id())->GetListOfDataMembers()->FindObject( name.c_str() );
-                     if ( dm ) attr = (PyObject*)PropertyProxy_New( dm );
+                      Cppyy::TCppIndex_t dmi = Cppyy::GetDatamemberIndex( scope, name );
+                      if ( 0 <= dmi ) attr = (PyObject*)PropertyProxy_New( scope, dmi );
                   }
                }
 
             // function templates that have not been instantiated
                if ( ! attr && klass ) {
-                  TFunctionTemplate* tmpl = ((TClass*)klass.Id())->GetFunctionTemplate( name.c_str() );
+                  TFunctionTemplate* tmpl = klass->GetFunctionTemplate( name.c_str() );
                   if ( tmpl )
                      attr = (PyObject*)TemplateProxy_New( name, pyclass );
                }
 
             // enums types requested as type (rather than the constants)
-               if ( ! attr && klass &&
-                    ((TClass*)klass.Id())->GetListOfEnums()->FindObject( name.c_str() ) ) {
+               if ( ! attr && klass && klass->GetListOfEnums()->FindObject( name.c_str() ) ) {
                // special case; enum types; for now, pretend int
                // TODO: although fine for C++98, this isn't correct in C++11
                   Py_INCREF( &PyInt_Type );
@@ -158,7 +153,7 @@ namespace {
             if ( ! attr && ! PyRootType_Check( pyclass ) /* at global or module-level only */ ) {
                PyErr_Clear();
             // get class name to look up CINT tag info ...
-               attr = GetRootGlobalFromString( name /*, tag */ );
+               attr = GetCppGlobal( name /*, tag */ );
                if ( PropertyProxy_Check( attr ) ) {
                   PyObject_SetAttr( (PyObject*)Py_TYPE(pyclass), pyname, attr );
                   Py_DECREF( attr );
@@ -186,7 +181,7 @@ namespace {
 PyTypeObject PyRootType_Type = {
    PyVarObject_HEAD_INIT( &PyType_Type, 0 )
    (char*)"ROOT.PyRootType",  // tp_name
-   0,                         // tp_basicsize
+   sizeof(PyROOT::PyRootClass),// tp_basicsize
    0,                         // tp_itemsize
    0,                         // tp_dealloc
    0,                         // tp_print

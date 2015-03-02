@@ -40,7 +40,7 @@ namespace RooStats {
 //    SamplingDistPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax);
 
     // Destructor of SamplingDistribution
-    virtual ~SamplingDistPlot() {}
+    virtual ~SamplingDistPlot();
 
     // adds the sampling distribution and returns the scale factor
     Double_t AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions="NORMALIZE HIST");
@@ -81,7 +81,13 @@ namespace RooStats {
     // Returns the TH1F associated with the give SamplingDistribution.
     // Intended use: Access to member functions of TH1F like GetMean(),
     // GetRMS() etc.
+    // The return objects is managed by  SamplingDistPlot
     TH1F* GetTH1F(const SamplingDistribution *samplDist = NULL);
+    TH1 * GetHistogram(const SamplingDistribution *samplDist = NULL) { return GetTH1F(samplDist); }
+
+    // return plotter class used to draw the sampling distribution histograms
+    // object is managed by SamplingDistPlot
+    RooPlot * GetPlot() { return fRooPlot; }
 
     // changes plot to log scale on x axis
     void SetLogXaxis(Bool_t lx) { fLogXaxis = lx; }

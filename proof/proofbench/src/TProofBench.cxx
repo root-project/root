@@ -46,6 +46,9 @@
 #include "TProfile.h"
 #include "TStyle.h"
 #include "TLegend.h"
+#ifdef WIN32
+#include <io.h>
+#endif
 
 ClassImp(TProofBench)
 

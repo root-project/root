@@ -9,24 +9,17 @@
 
 namespace PyROOT {
 
-/** Special holder to allow byref return as extra argument
-      @author  WLAV
-      @date    15/03/2013
-      @version 3.0
- */
-
    class TExecutor;
    class TMemberAdapter;
    class TScopeAdapter;
 
    class TSetItemHolder : public TMethodHolder {
    public:
-      TSetItemHolder( const TScopeAdapter& klass, const TMemberAdapter& method );
+      using TMethodHolder::TMethodHolder;
 
    public:
       virtual PyCallable* Clone() { return new TSetItemHolder( *this ); }
-
-      virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
+      virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
 
    protected:
       virtual Bool_t InitExecutor_( TExecutor*& );

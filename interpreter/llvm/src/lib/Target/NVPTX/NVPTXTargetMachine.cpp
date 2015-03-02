@@ -16,6 +16,8 @@
 #include "NVPTX.h"
 #include "NVPTXAllocaHoisting.h"
 #include "NVPTXLowerAggrCopies.h"
+#include "NVPTXTargetObjectFile.h"
+#include "NVPTXTargetTransformInfo.h"
 #include "llvm/Analysis/Passes.h"
 #include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/MachineFunctionAnalysis.h"
@@ -50,6 +52,7 @@ void initializeNVVMReflectPass(PassRegistry&);
 void initializeGenericToNVVMPass(PassRegistry&);
 void initializeNVPTXAssignValidGlobalNamesPass(PassRegistry&);
 void initializeNVPTXFavorNonGenericAddrSpacesPass(PassRegistry &);
+void initializeNVPTXLowerStructArgsPass(PassRegistry &);
 }
 
 extern "C" void LLVMInitializeNVPTXTarget() {
@@ -64,6 +67,18 @@ extern "C" void LLVMInitializeNVPTXTarget() {
   initializeNVPTXAssignValidGlobalNamesPass(*PassRegistry::getPassRegistry());
   initializeNVPTXFavorNonGenericAddrSpacesPass(
     *PassRegistry::getPassRegistry());
+  initializeNVPTXLowerStructArgsPass(*PassRegistry::getPassRegistry());
+}
+
+static std::string computeDataLayout(bool is64Bit) {
+  std::string Ret = "e";
+
+  if (!is64Bit)
+    Ret += "-p:32:32";
+
+  Ret += "-i64:64-v16:16-v32:32-n16:32:64";
+
+  return Ret;
 }
 
 NVPTXTargetMachine::NVPTXTargetMachine(const Target &T, StringRef TT,
@@ -72,9 +87,13 @@ NVPTXTargetMachine::NVPTXTargetMachine(const Target &T, StringRef TT,
                                        Reloc::Model RM, CodeModel::Model CM,
                                        CodeGenOpt::Level OL, bool is64bit)
     : LLVMTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL),
+      TLOF(make_unique<NVPTXTargetObjectFile>()),
+      DL(computeDataLayout(is64bit)),
       Subtarget(TT, CPU, FS, *this, is64bit) {
   initAsmInfo();
 }
+
+NVPTXTargetMachine::~NVPTXTargetMachine() {}
 
 void NVPTXTargetMachine32::anchor() {}
 
@@ -104,8 +123,7 @@ public:
 
   void addIRPasses() override;
   bool addInstSelector() override;
-  bool addPreRegAlloc() override;
-  bool addPostRegAlloc() override;
+  void addPostRegAlloc() override;
   void addMachineSSAOptimization() override;
 
   FunctionPass *createTargetRegisterAllocator(bool) override;
@@ -117,6 +135,11 @@ public:
 TargetPassConfig *NVPTXTargetMachine::createPassConfig(PassManagerBase &PM) {
   NVPTXPassConfig *PassConfig = new NVPTXPassConfig(this, PM);
   return PassConfig;
+}
+
+TargetIRAnalysis NVPTXTargetMachine::getTargetIRAnalysis() {
+  return TargetIRAnalysis(
+      [this](Function &) { return TargetTransformInfo(NVPTXTTIImpl(this)); });
 }
 
 void NVPTXPassConfig::addIRPasses() {
@@ -169,10 +192,8 @@ bool NVPTXPassConfig::addInstSelector() {
   return false;
 }
 
-bool NVPTXPassConfig::addPreRegAlloc() { return false; }
-bool NVPTXPassConfig::addPostRegAlloc() {
-  addPass(createNVPTXPrologEpilogPass());
-  return false;
+void NVPTXPassConfig::addPostRegAlloc() {
+  addPass(createNVPTXPrologEpilogPass(), false);
 }
 
 FunctionPass *NVPTXPassConfig::createTargetRegisterAllocator(bool) {
