@@ -83,6 +83,7 @@
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TListOfEnums.h"
+#include "TListOfEnumsWithLock.h"
 #include "TViewPubDataMembers.h"
 #include "TViewPubFunctions.h"
 
@@ -3333,8 +3334,17 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
    }
 
    if(not load) {
+     if(! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
+         R__LOCKGUARD(gInterpreterMutex);
+         if(fEnums) {
+            return fEnums.load();
+         }
+         //namespaces can have enums added to them
+         fEnums = new TListOfEnumsWithLock(this);
+         return fEnums;
+      }
       //no one is supposed to modify the returned results
-      static TList s_list;
+      static TListOfEnums s_list;
       return &s_list;
    }
 
@@ -3342,7 +3352,13 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
    if(fEnums) {
       return fEnums.load();
    }
-   temp = new TListOfEnums(this);
+   if( (kIsClass | kIsStruct | kIsUnion) & fProperty) {
+      // For this case, the list will be immutable
+      temp = new TListOfEnums(this);
+   } else {
+      //namespaces can have enums added to them
+      temp = new TListOfEnumsWithLock(this);
+   }
    temp->Load();
    fEnums = temp;
    return temp;
