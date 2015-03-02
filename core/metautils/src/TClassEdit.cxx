@@ -412,16 +412,16 @@ ROOT::ESTLType TClassEdit::STLKind(const char *type, size_t len)
 
    //container names
    static const char *stls[] =
-      { "any", "vector", "list", "forward_list", "deque", "map", "multimap", "set", "multiset", "bitset", 0};
+      { "any", "vector", "list", "deque", "map", "multimap", "set", "multiset", "bitset", "forward_list", 0};
    static const size_t stllen[] =
-      { 3, 6, 4, 12, 5, 3, 8, 3, 8, 6, 0};
+      { 3, 6, 4, 5, 3, 8, 3, 8, 6, 12, 0};
    static const ROOT::ESTLType values[] =
       {  ROOT::kNotSTL, ROOT::kSTLvector,
-         ROOT::kSTLlist, ROOT::kSTLforwardlist,
-         ROOT::kSTLdeque,
+         ROOT::kSTLlist, ROOT::kSTLdeque,
          ROOT::kSTLmap, ROOT::kSTLmultimap,
          ROOT::kSTLset, ROOT::kSTLmultiset,
-         ROOT::kSTLbitset, ROOT::kNotSTL
+         ROOT::kSTLbitset, ROOT::kSTLforwardlist,
+         ROOT::kNotSTL
       };
 
    // kind of stl container
@@ -444,8 +444,8 @@ int   TClassEdit::STLArgs(int kind)
 //      Return number of arguments for STL container before allocator
 
    static const char  stln[] =// min number of container arguments
-      //     vector, list, deque, map, multimap, set, multiset, bitset
-      {    1,     1,    1,     1,   3,        3,   2,        2,      1 };
+      //     vector, list, deque, map, multimap, set, multiset, bitset, forward_list
+      {    1,     1,    1,     1,   3,        3,   2,        2,      1,            1};
 
    return stln[kind];
 }
@@ -1135,6 +1135,7 @@ bool TClassEdit::IsStdClass(const char *classname)
 
    if ( strncmp(classname,"vector<",strlen("vector<"))==0) return true;
    if ( strncmp(classname,"list<",strlen("list<"))==0) return true;
+   if ( strncmp(classname,"forward_list<",strlen("forward_list<"))==0) return true;
    if ( strncmp(classname,"deque<",strlen("deque<"))==0) return true;
    if ( strncmp(classname,"map<",strlen("map<"))==0) return true;
    if ( strncmp(classname,"multimap<",strlen("multimap<"))==0) return true;
@@ -1493,6 +1494,7 @@ string TClassEdit::InsertStd(const char *tname)
       "domain_error",
       "equal_to",
       "exception",
+      "forward_list",
       "fpos",
       "greater_equal",
       "greater",
