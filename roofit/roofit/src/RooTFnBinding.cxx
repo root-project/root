@@ -17,31 +17,31 @@ using namespace std;
 
 ClassImp(RooTFnBinding) 
 
-RooTFnBinding::RooTFnBinding(const char *name, const char *title, TF1* _func, const RooArgList& _list) :
+RooTFnBinding::RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list) :
   RooAbsReal(name,title), 
-  olist("obs","obs",this),
-  func(_func)
+  _olist("obs","obs",this),
+  _func(func)
 { 
-  olist.add(_list) ;
+  _olist.add(list) ;
 } 
 
 
-RooTFnBinding::RooTFnBinding(const char *name, const char *title, TF1* _func, const RooArgList& _obsList, const RooArgList& paramList) :
+RooTFnBinding::RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& obsList, const RooArgList& paramList) :
   RooAbsReal(name,title), 
-  olist("obs","obs",this),
-  plist("params","params",this),
-  func(_func)
+  _olist("obs","obs",this),
+  _plist("params","params",this),
+  _func(func)
 { 
-  olist.add(_obsList) ;
-  plist.add(paramList) ;
+  _olist.add(obsList) ;
+  _plist.add(paramList) ;
 } 
 
 
 RooTFnBinding::RooTFnBinding(const RooTFnBinding& other, const char* name) :  
   RooAbsReal(other,name), 
-  olist("obs",this,other.olist),
-  plist("params",this,other.plist),
-  func(other.func)
+  _olist("obs",this,other._olist),
+  _plist("params",this,other._plist),
+  _func(other._func)
 { 
 } 
 
@@ -49,13 +49,13 @@ RooTFnBinding::RooTFnBinding(const RooTFnBinding& other, const char* name) :
 
 Double_t RooTFnBinding::evaluate() const 
 { 
-  Double_t x = olist.at(0) ? ((RooAbsReal*)olist.at(0))->getVal() : 0 ;
-  Double_t y = olist.at(1) ? ((RooAbsReal*)olist.at(1))->getVal() : 0 ;
-  Double_t z = olist.at(2) ? ((RooAbsReal*)olist.at(2))->getVal() : 0 ;
-  for (Int_t i=0 ; i<func->GetNpar() ; i++) {
-    func->SetParameter(i,plist.at(i)?((RooAbsReal*)plist.at(i))->getVal() : 0) ;
+  Double_t x = _olist.at(0) ? ((RooAbsReal*)_olist.at(0))->getVal() : 0 ;
+  Double_t y = _olist.at(1) ? ((RooAbsReal*)_olist.at(1))->getVal() : 0 ;
+  Double_t z = _olist.at(2) ? ((RooAbsReal*)_olist.at(2))->getVal() : 0 ;
+  for (Int_t i=0 ; i<_func->GetNpar() ; i++) {
+    _func->SetParameter(i,_plist.at(i)?((RooAbsReal*)_plist.at(i))->getVal() : 0) ;
   }
-  return func->Eval(x,y,z) ;
+  return _func->Eval(x,y,z) ;
 } 
 
 
@@ -63,7 +63,7 @@ Double_t RooTFnBinding::evaluate() const
 void RooTFnBinding::printArgs(ostream& os) const 
 {
   // Print object arguments and name/address of function pointer
-  os << "[ TFn={" << func->GetName() << "=" << func->GetTitle() << "} " ;    
+  os << "[ TFn={" << _func->GetName() << "=" << _func->GetTitle() << "} " ;    
   for (Int_t i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* p = getProxy(i) ;
     if (!TString(p->name()).BeginsWith("!")) {
