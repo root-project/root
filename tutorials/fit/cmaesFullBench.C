@@ -964,14 +964,14 @@ void cmaesFullBench(const int &n=100,
   std::vector<expstats> acmaes_stats;
   std::vector<expstats> minuit2_stats;
   std::map<std::string,experiment*> mexperiments;
-  //mexperiments.insert(std::pair<std::string,experiment*>(ggauss_fit._name,&ggauss_fit));
+  mexperiments.insert(std::pair<std::string,experiment*>(ggauss_fit._name,&ggauss_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(glorentz_fit._name,&glorentz_fit));
-  /*mexperiments.insert(std::pair<std::string,experiment*>(gfit2._name,&gfit2));
+  mexperiments.insert(std::pair<std::string,experiment*>(gfit2._name,&gfit2));
   mexperiments.insert(std::pair<std::string,experiment*>(ggauss2D_fit._name,&ggauss2D_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2a._name,&gfit2a));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2dhist._name,&gfit2dhist));
   mexperiments.insert(std::pair<std::string,experiment*>(gcombined_fit._name,&gcombined_fit));
-  mexperiments.insert(std::pair<std::string,experiment*>(gex3d._name,&gex3d));*/
+  mexperiments.insert(std::pair<std::string,experiment*>(gex3d._name,&gex3d));
   int nexp = mexperiments.size();
   int cn = 0;
   std::map<std::string,experiment*>::iterator mit = mexperiments.begin();
