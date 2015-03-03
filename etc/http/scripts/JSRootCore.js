@@ -14,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.4 dev 26/02/2015";
+   JSROOT.version = "3.4 dev 3/03/2015";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -33,6 +33,8 @@
    JSROOT.browser.isWebKit = JSROOT.browser.isChrome || JSROOT.browser.isSafari;
 
    JSROOT.function_list = []; // do we really need it here?
+
+   JSROOT.MathJax = 0; // indicate usage of mathjax 0 - off, 1 - on
 
    JSROOT.BIT = function(n) { return 1 << (n); }
 
@@ -181,7 +183,7 @@
       if (!url) url = document.URL;
 
       var pos = url.indexOf("?");
-      if (pos<0) return null;
+      if (pos<0) return dflt;
       url = url.slice(pos+1);
 
       while (url.length>0) {
@@ -266,17 +268,24 @@
    JSROOT.CallBack = function(func, arg1, arg2) {
       // generic method to invoke callback function
       // func either normal function or container like
-      // { obj: _ object_pointer_, func: name of method to call }
+      // { obj: object_pointer, func: name of method to call }
+      // { _this: object pointer, func: function to call }
       // arg1, arg2 are optional arguments of the callback
 
-      if (func==null) return;
+      if (func == null) return;
 
       if (typeof func == 'string') func = JSROOT.findFunction(func);
 
       if (typeof func == 'function') return func(arg1,arg2);
 
-      if (typeof func == 'object' && typeof func.obj == 'object' &&
-         typeof func.func == 'string' && typeof func.obj[func.func] == 'function') return func.obj[func.func](arg1, arg2);
+      if (typeof func != 'object') return;
+
+      if (('obj' in func) && ('func' in func) &&
+         (typeof func.obj == 'object') && (typeof func.func == 'string') &&
+         (typeof func.obj[func.func] == 'function')) return func.obj[func.func](arg1, arg2);
+
+      if (('_this' in func) && ('func' in func) &&
+         (typeof func.func == 'function')) return func.func.call(func._this, arg1, arg2);
    }
 
    JSROOT.NewHttpRequest = function(url, kind, user_call_back) {
@@ -289,6 +298,7 @@
       //  "xml" - returns res.responseXML
       //  "head" - returns request itself, uses "HEAD" method
       // Result will be returned to the callback functions
+      // Request will be set as this pointer in the callback
       // If failed, request returns null
 
       var xhr = new XMLHttpRequest();
@@ -298,10 +308,7 @@
          if (typeof user_call_back == 'function') user_call_back.call(xhr, res);
       }
 
-
-//      if (typeof ActiveXObject == "function") {
       if (window.ActiveXObject) {
-         // console.log(" Create IE request");
 
          xhr.onreadystatechange = function() {
             // console.log(" Ready IE request");
@@ -446,10 +453,7 @@
             var href = styles[n]['href'];
             if ((href == null) || (href.length == 0)) continue;
 
-            if (href.indexOf(filename)>=0) {
-               console.log("style "+  filename + " already loaded");
-               return completeLoad();
-            }
+            if (href.indexOf(filename)>=0) return completeLoad();
          }
 
       } else {
@@ -463,7 +467,6 @@
 
             if ((src.indexOf(filename)>=0) && (src.indexOf("load=")<0)) {
                // avoid wrong decision when script name is specified as more argument
-               // debug("script "+  filename + " already loaded src = " + src);
                return completeLoad();
             }
          }
@@ -503,7 +506,9 @@
       document.getElementsByTagName("head")[0].appendChild(element);
    }
 
-   JSROOT.AssertPrerequisites = function(kind, andThan, debugout) {
+   JSROOT.doing_assert = null; // array where all requests are collected
+
+   JSROOT.AssertPrerequisites = function(kind, callback, debugout) {
       // one could specify kind of requirements
       // 'io' for I/O functionality (default)
       // '2d' for 2d graphic
@@ -511,12 +516,24 @@
       // 'simple' for basic user interface
       // 'load:' list of user-specific scripts at the end of kind string
 
-      if (typeof kind == 'function') { andThan = kind; kind = null; }
-
       if ((typeof kind != 'string') || (kind == ''))
-         return JSROOT.CallBack(andThan);
+         return JSROOT.CallBack(callback);
+
+      if (kind=='shift') {
+         var req = JSROOT.doing_assert.shift();
+         kind = req._kind;
+         callback = req._callback;
+         debugout = req._debug;
+      } else
+      if (JSROOT.doing_assert != null) {
+         // if function already called, store request
+         return JSROOT.doing_assert.push({_kind:kind, _callback:callback, _debug: debugout});
+      } else {
+         JSROOT.doing_assert = [];
+      }
 
       if (kind.charAt(kind.length-1)!=";") kind+=";";
+
       var ext = JSROOT.source_min ? ".min" : "";
 
       var need_jquery = false;
@@ -548,8 +565,10 @@
                      "$$$scripts/JSRoot3DPainter" + ext + ".js;";
       }
 
-      if (kind.indexOf("mathjax;")>=0)
-        allfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML;";
+      if (kind.indexOf("mathjax;")>=0) {
+         allfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML;";
+         if (JSROOT.MathJax == 0) JSROOT.MathJax = 1;
+      }
 
       if (kind.indexOf("simple;")>=0) {
          need_jquery = true;
@@ -570,7 +589,12 @@
       if (pos<0) pos = kind.indexOf("load:");
       if (pos>=0) allfiles += kind.slice(pos+5);
 
-      JSROOT.loadScript(allfiles, andThan, debugout);
+      JSROOT.loadScript(allfiles, function() {
+         if (JSROOT.doing_assert.length==0) JSROOT.doing_assert = null;
+         JSROOT.CallBack(callback);
+         if (JSROOT.doing_assert!=null)
+            JSROOT.AssertPrerequisites('shift');
+      }, debugout);
    }
 
    JSROOT.BuildSimpleGUI = function(user_scripts, andThen) {
@@ -1042,7 +1066,7 @@
             // - Loop on bins (including underflows/overflows)
             var bin, binx, biny, binz;
             var cu, factor = 1;
-            if (Math.abs(h1['fNormFactor']) > 2e-308) factor = h1['fNormFactor'] / h1.getSumOfWeights();
+            if (Math.abs(h1['fNormFactor']) > Number.MIN_VALUE) factor = h1['fNormFactor'] / h1.getSumOfWeights();
             for (binz=0;binz<=nbinsz+1;binz++) {
                for (biny=0;biny<=nbinsy+1;biny++) {
                   for (binx=0;binx<=nbinsx+1;binx++) {
@@ -2198,6 +2222,7 @@
          if (JSROOT.GetUrlOption('2d', src)!=null) prereq += "2d;";
          if (JSROOT.GetUrlOption('jq2d', src)!=null) prereq += "jq2d;";
          if (JSROOT.GetUrlOption('3d', src)!=null) prereq += "3d;";
+         if (JSROOT.GetUrlOption('mathjax', src)!=null) prereq += "mathjax;";
          var user = JSROOT.GetUrlOption('load', src);
          if ((user!=null) && (user.length>0)) prereq += "load:" + user;
          var onload = JSROOT.GetUrlOption('onload', src);

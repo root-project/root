@@ -253,8 +253,7 @@
 
    JSROOT.Painter.real_drawHistogram2D = function(painter) {
 
-      var w = Number(painter.svg_pad().attr("width")),
-          h = Number(painter.svg_pad().attr("height")), size = 100;
+      var w = painter.pad_width(), h = painter.pad_height(), size = 100;
 
       var xmin = painter.xmin, xmax = painter.xmax;
       if (painter.zoom_xmin != painter.zoom_xmax) {

@@ -27,6 +27,7 @@ The following parameters can be specified in the URL string:
 - optimize - drawing optimization 0:off, 1:only large histograms (default), 2:always
 - interactive - enable/disable interactive functions 0-disable all, 1-enable all
 - noselect - hide file-selection part in the browser (only when file name is specified)
+- mathjax - use MathJax for latex output
 
 When specifying `file`, `item` or `opt` parameters, one could provide array like `file=['file1.root','file2.root']`.
 One could skip quotes when specifying elements names `item=[file1.root/hpx,file2.root/hpy]` or `opt=['',colz]`.
@@ -44,7 +45,7 @@ One can very easy integrate JSROOT graphic into other HTML pages using a __ifram
 
 In principle, one could open any ROOT file placed in the web, providing the full URL to it like:
 
-<https://web-docs.gsi.de/~linev/js/3.3/?file=http://root.cern.ch/js/files/hsimple.root&item=hpx>
+<https://web-docs.gsi.de/~linev/js/3.3/?file=https://root.cern.ch/js/files/hsimple.root&item=hpx>
 
 But one should be aware of [Cross-Origin Request blocking](https://developer.mozilla.org/en/http_access_control),
 when the browser blocks requests to files from domains other than current web page.
@@ -91,7 +92,7 @@ One could also specify similar URL parameters to configure the displayed items a
 
 It is also possible to display one single item from the THttpServer server like:
 
-<https://root.cern.ch/js/3.3/demo/Files/job1.root/hpxpy/draw.htm?opt=colz>
+<https://root.cern.ch/js/3.3/httpserver.C/Files/job1.root/hpxpy/draw.htm?opt=colz>
 
 
 ##  Data monitoring with JSROOT
@@ -104,7 +105,7 @@ changes and request only the items currently displayed in the browser.
 To enable monitoring, one should activate the appropriate checkbox or
 provide __monitoring__ parameter in the URL string like:
 
-<https://root.cern.ch/js/3.3/demo/Files/job1.root/hprof/draw.htm?monitoring=1000>
+<https://root.cern.ch/js/3.3/httpserver.C/Files/job1.root/hprof/draw.htm?monitoring=1000>
 
 The parameter value is the update interval in milliseconds.
 
@@ -186,6 +187,7 @@ In URL string with JSRootCore.js script one should specify which JSROOT function
     + '2d' normal drawing for 1D/2D objects
     + '3d' 3D drawing for 2D/3D histograms
     + 'io' binary file I/O
+    + 'mathjax' loads MathJax and uses for latex output
     + 'gui' default gui for offline/online applications
     + 'load' name of user script(s) to load
     + 'onload' name of function to call when scripts loading completed
