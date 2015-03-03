@@ -31,8 +31,6 @@
 
 #include <iostream>
 
-bool libloaded = false;
-
 double gauss2D(double *x, double *par) {
    double z1 = double((x[0]-par[1])/par[2]);
    double z2 = double((x[1]-par[3])/par[4]);
@@ -127,13 +125,6 @@ void FillHisto(TH2D * h, int n, double * p) {
 
 int fit2dHist(int option=1) { 
 
-  if (!libloaded)
-    {
-      gSystem->Load("/usr/lib/x86_64-linux-gnu/libglog.so");
-      gSystem->Load("/usr/lib/x86_64-linux-gnu/libgflags.so");
-      libloaded = true;
-    }
-  
   // create two histograms 
 
   int nbx1 = 50;
