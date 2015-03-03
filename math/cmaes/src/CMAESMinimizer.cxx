@@ -647,7 +647,7 @@ namespace ROOT
 	{
 	  if (!fWithBounds)
 	    {
-	      le = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams_l,fCMAsols,i,false,samplesize,ErrorDef());
+	      le = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams_l,fCMAsols,i,false,samplesize,ErrorDef(),100);
 	    }
 	  else
 	    {
