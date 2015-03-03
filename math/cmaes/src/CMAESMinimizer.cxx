@@ -37,9 +37,6 @@ using namespace libcmaes;
 
 namespace ROOT
 {
-  // registers a default empty set of extra options.
-  //ROOT::Math::IOptions &defIOptions = ROOT::Math::MinimizerOptions::Default("cmaes");
-  
   namespace cmaes
   {
 
@@ -476,12 +473,6 @@ namespace ROOT
 	  if (fWithBounds)
 	    {
 	      Info("CMAESMinimizer","Minimizing with bounds and linear scaling");
-	      /*ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>>,CMASolutions> pfunc = [](const CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> &cmaparams, const CMASolutions &cmasols)
-		{
-		  std::cout << "iter=" << cmasols.niter() << " / evals=" << cmasols.nevals() << " / f-value=" << cmasols.best_candidate().get_fvalue() <<  " / sigma=" << cmasols.sigma() << std::endl;
-		  std::cout << "best x=" << cmaparams.get_gp().pheno(cmasols.best_candidate().get_x_dvec()).transpose() << std::endl;
-		  return 0;
-		  };*/
 	      GenoPheno<pwqBoundStrategy,linScalingStrategy> gp(vscaling,vshift,&fLBounds.front(),&fUBounds.front());
 	      CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,seed,gp);
 	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet);
@@ -490,7 +481,6 @@ namespace ROOT
 	    }
 	  else
 	    {
-	      //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
 	      Info("CMAESMinimizer","Minimizing with linear scaling");
 	      GenoPheno<NoBoundStrategy,linScalingStrategy> gp(vscaling,vshift);
 	      CMAParameters<GenoPheno<NoBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,seed,gp);
@@ -569,7 +559,6 @@ namespace ROOT
     const double* TCMAESMinimizer::Errors() const
     {
       fErrors.clear();
-      //const double* diag = fCMAsols._cov.diagonal().data();
       dVec vgdiag;
       if (fWithLinearScaling)
 	{
