@@ -425,6 +425,7 @@ set(haslzmacompression ${has${lzma}})
 set(hascocoa ${has${cocoa}})
 set(hasvc ${has${vc}})
 set(usec++11 ${has${cxx11}})
+set(usec++14 ${has${cxx14}})
 set(uselibc++ ${has${libcxx}})
 
 
