@@ -86,8 +86,6 @@ void testGausFit( std::string type = "cmaes", int n = 1000) {
 void cmaesGausFit() {
   if (!libloaded)
     {
-      gSystem->Load("/usr/lib/x86_64-linux-gnu/libglog.so");
-      gSystem->Load("/usr/lib/x86_64-linux-gnu/libgflags.so");
       libloaded = true;
     }
   int n = 1000; 

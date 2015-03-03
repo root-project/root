@@ -23,8 +23,6 @@
 TF2 *fitFcn;
 TH2D *histo;
 
-bool libloaded = false;
-
 // Quadratic background function
 Double_t gaus2D(Double_t *x, Double_t *par) {
    double t1 =   x[0] - par[1];
@@ -67,12 +65,6 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
 }
 
 void cmaesFitBench2D(int n = 100000) {
-  if (!libloaded)
-    {
-      gSystem->Load("/usr/lib/x86_64-linux-gnu/libglog.so");
-      gSystem->Load("/usr/lib/x86_64-linux-gnu/libgflags.so");
-      libloaded = true;
-    }
    TH1::AddDirectory(kFALSE);
    TCanvas *c1 = new TCanvas("c1","Fitting Demo",10,10,900,900);
    c1->Divide(2,2);

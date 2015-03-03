@@ -39,15 +39,12 @@ Double_t fun2(Double_t *x, Double_t *par) {
 TCanvas *fit2a(const char *fitter="cmaes") {
   if (!libloaded)
     {
-      gSystem->Load("/usr/lib/x86_64-linux-gnu/libglog.so");
-      gSystem->Load("/usr/lib/x86_64-linux-gnu/libgflags.so");
       libloaded = true;
     }
 
   TVirtualFitter::SetDefaultFitter(fitter);
 
   ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default(fitter);
-  //ROOT::Math::IOptions *opts = ROOT::Math::MinimizerOptions::FindDefault(fitter);
   //opts.SetIntValue("lambda",100);
   opts.SetNamedValue("fplot","fit2a.dat");
   
