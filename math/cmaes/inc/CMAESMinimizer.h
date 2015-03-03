@@ -125,7 +125,9 @@ namespace ROOT
 			    const std::string &fplot,
 			    const bool &withnumgradient,
 			    const bool &mtfeval,
-			    const bool &quiet);
+			    const bool &quiet,
+			    const int &elitist, // 0: off (default), then 1, 2 or 3
+			    const bool &uh);
       
       /** 
 	  method to perform the minimization. 
