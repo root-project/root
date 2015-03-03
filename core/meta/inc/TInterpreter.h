@@ -40,6 +40,7 @@ class TInterpreterValue;
 class TMethod;
 class TObjArray;
 class TEnum;
+class TListOfEnums;
 
 R__EXTERN TVirtualMutex *gInterpreterMutex;
 
@@ -245,7 +246,7 @@ public:
    virtual DeclId_t GetEnum(TClass *cl, const char *name) const = 0;
    virtual TEnum*   CreateEnum(void *VD, TClass *cl) const = 0;
    virtual void     UpdateEnumConstants(TEnum* enumObj, TClass* cl) const = 0;
-   virtual void     LoadEnums(TClass* cl) const = 0;
+   virtual void     LoadEnums(TListOfEnums& cl) const = 0;
    virtual DeclId_t GetFunction(ClassInfo_t *cl, const char *funcname) = 0;
    virtual DeclId_t GetFunctionWithPrototype(ClassInfo_t *cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) = 0;
    virtual DeclId_t GetFunctionWithValues(ClassInfo_t *cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE) = 0;

@@ -357,7 +357,7 @@ void TListOfEnums::Load()
    // We cannot clear the whole unloaded list. It is too much.
 //   fUnloaded->Clear();
 
-   gInterpreter->LoadEnums(fClass);
+   gInterpreter->LoadEnums(*this);
 }
 
 //______________________________________________________________________________

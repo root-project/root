@@ -3328,7 +3328,7 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
    }
 
    if(not load) {
-     if(! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
+      if(! ((kIsClass | kIsStruct | kIsUnion) & Property()) ) {
          R__LOCKGUARD(gInterpreterMutex);
          if(fEnums) {
             return fEnums.load();
@@ -3346,7 +3346,7 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
    if(fEnums) {
       return fEnums.load();
    }
-   if( (kIsClass | kIsStruct | kIsUnion) & fProperty) {
+   if( (kIsClass | kIsStruct | kIsUnion) & Property()) {
       // For this case, the list will be immutable
       temp = new TListOfEnums(this);
    } else {
