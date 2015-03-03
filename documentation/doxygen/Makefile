@@ -1,17 +1,14 @@
 
-.PHONY: filter doxygen images clean
+.PHONY: filter doxygen clean
 
 docdir="$(shell ./makedocdir.sh)"
 imgdir="$(shell ./makeimgdir.sh)"
 macdir="$(shell ./makemacrodir.sh)"
 
-all: filter images doxygen
+all: filter doxygen
 
 filter:
 	`root-config --cxx` -o filter filter.cxx `root-config --libs --glibs --cflags`
-
-images:
-	./makeallimages.sh $(imgdir) $(macdir)
 
 doxygen:
 	doxygen

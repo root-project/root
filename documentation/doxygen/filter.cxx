@@ -56,37 +56,119 @@
 #include <TMath.h>
 #include <TSystem.h>
 
+// Auxiliary functions
+void GetClassName();
+
+// Global variables.
+char    gLine[255];
+TString gFileName;
+TString gLineString;
+TString gClassName;
+Bool_t  gHeader;
+Bool_t  gSource;
+Bool_t  gInClassDef;
+
 
 //______________________________________________________________________________
 int main(int argc, char *argv[])
 {
-   // prototype of filter... does nothing right now.
+   // Filter ROOT files for Doxygen.
 
-   FILE *fin;
-   int ch;
+   // Initialisation
+   gFileName   = argv[1];
+   gHeader     = kFALSE;
+   gSource     = kFALSE;
+   gInClassDef = kFALSE;
+   if (gFileName.EndsWith(".cxx")) gSource = kTRUE;
+   if (gFileName.EndsWith(".h"))   gHeader = kTRUE;
+   GetClassName();
 
-   switch (argc) {
-      case 2:
-         if ((fin = fopen(argv[1], "r")) == NULL) {
-            // First string (%s) is program name (argv[0]).
-            // Second string (%s) is name of file that could
-            // not be opened (argv[1]).
-            (void)fprintf(stderr, "%s: Cannot open input file %s\n", argv[0], argv[1]);
-            return(2);
+   // Loop on file.
+   FILE *f = fopen(gFileName.Data(),"r");
+
+   // File header.
+   if (gHeader) {
+      while (fgets(gLine,255,f)) {
+         gLineString = gLine;
+
+         if (gLineString.BeginsWith("class"))    gInClassDef = kTRUE;
+         if (gLineString.Index("ClassDef") >= 0) gInClassDef = kFALSE;
+
+         if (gInClassDef && gLineString.Index("//") >= 0) {
+            gLineString.ReplaceAll("//","///<");
          }
-         break;
 
-      case 1:
-         fin = stdin;
-         break;
-
-      default:
-         (void)fprintf(stderr, "Usage: %s [file]\n", argv[0]);
-         return(2);
+         printf("%s",gLineString.Data());
+      }
    }
 
-   while ((ch = getc(fin)) != EOF) (void)putchar(ch);
+   // Source file.
+   if (gSource) {
+      while (fgets(gLine,255,f)) {
+         gLineString = gLine;
 
-   fclose(fin);
-   return (0);
+         if (gLineString.Index("Begin_Html") >= 0) {
+            gLineString = TString::Format("/*! \\class %s\n",gClassName.Data());
+         }
+
+         if (gLineString.Index("Begin_Macro") >= 0) {
+         }
+
+         if (gLineString.Index("End_Macro") >= 0) {
+         }
+
+         printf("%s",gLineString.Data());
+      }
+   }
+
+   TString opt1,opt0;
+   opt0 = argv[0];
+   opt1 = argv[1];
+   printf("DEBUG %d : %s - %s %d %d - %s\n",argc,opt0.Data(),opt1.Data(),gSource,gHeader,gClassName.Data());
+   fclose(f);
+
+   return 1;
+}
+
+
+//______________________________________________________________________________
+void GetClassName()
+{
+   // Retrieve the class name.
+
+   Int_t i1 = 0;
+   Int_t i2 = 0;
+
+   FILE *f = fopen(gFileName.Data(),"r");
+
+   // File header.
+   if (gHeader) {
+      while (fgets(gLine,255,f)) {
+         gLineString = gLine;
+         if (gLineString.Index("ClassDef") >= 0) {
+            i1 = gLineString.Index("(")+1;
+            i2 = gLineString.Index(",")-1;
+            gClassName = gLineString(i1,i2-i1+1);
+            fclose(f);
+            return;
+         }
+      }
+   }
+
+   // Source file.
+   if (gSource) {
+      while (fgets(gLine,255,f)) {
+         gLineString = gLine;
+         if (gLineString.Index("ClassImp") >= 0) {
+            i1 = gLineString.Index("(")+1;
+            i2 = gLineString.Index(")")-1;
+            gClassName = gLineString(i1,i2-i1+1);
+            fclose(f);
+            return;
+         }
+      }
+   }
+
+   fclose(f);
+   return;
 }
