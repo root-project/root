@@ -3167,20 +3167,18 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
 }
 
 //______________________________________________________________________________
-void TCling::LoadEnums(TClass* cl) const
+void TCling::LoadEnums(TListOfEnums& enumList) const
 {
    // Create list of pointers to enums for TClass cl.
    R__LOCKGUARD2(gInterpreterMutex);
 
    const Decl * D;
-   TListOfEnums* enumList;
+   TClass* cl = enumList.GetClass();
    if (cl) {
       D = ((TClingClassInfo*)cl->GetClassInfo())->GetDecl();
-      enumList = (TListOfEnums*)cl->GetListOfEnums(false);
    }
    else {
       D = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
-      enumList = (TListOfEnums*)gROOT->GetListOfEnums();
    }
    // Iterate on the decl of the class and get the enums.
    if (const clang::DeclContext* DC = dyn_cast<clang::DeclContext>(D)) {
@@ -3204,7 +3202,7 @@ void TCling::LoadEnums(TClass* cl) const
                if (!buf.empty()) {
                   const char* name = buf.c_str();
                   // Add the enum to the list of loaded enums.
-                  enumList->Get(ED, name);
+                  enumList.Get(ED, name);
                }
             }
          }
