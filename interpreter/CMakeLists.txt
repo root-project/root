@@ -5,6 +5,10 @@ set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF)
 set(LLVM_BUILD_TOOLS OFF)
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
+# We only use llvm/clang through TCling which is (with the help of core/meta) already taking a lock
+# to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
+# mechanism.
+set(LLVM_ENABLE_THREADS OFF)
 
 if(ROOT_ARCHITECTURE MATCHES linuxarm64)
   set(ROOT_CLING_TARGET "AArch64")
