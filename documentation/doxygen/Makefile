@@ -1,7 +1,8 @@
 
 .PHONY: filter doxygen clean
 
-docdir="$(shell ./makedocdir.sh)"
+docdir="$(shell . ./makedocdir.sh)"
+export OUTPUT_DIRECTORY=$(docdir)
 
 all: filter doxygen
 
@@ -15,5 +16,4 @@ clean:
 	rm -r $(docdir)
 	rm filter
 	rm c1*
-	rm *.png
 	rm stdout.dat

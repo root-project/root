@@ -56,10 +56,13 @@
 #include <TMath.h>
 #include <TSystem.h>
 
+
 // Auxiliary functions
-void GetClassName();
-void StandardizeKeywords();
-void ExecuteMacro();
+void    GetClassName();
+void    StandardizeKeywords();
+void    ExecuteMacro();
+void    ExecuteCommand(TString);
+
 
 // Global variables.
 char    gLine[255];
@@ -202,6 +205,8 @@ void GetClassName()
 //______________________________________________________________________________
 void StandardizeKeywords()
 {
+   // Standardize the THTML keywords to ease the parsing.
+
    gLineString.ReplaceAll("End_Html","end_html");
    gLineString.ReplaceAll("End_html","end_html");
    gLineString.ReplaceAll("end_html ","end_html");
@@ -215,18 +220,32 @@ void StandardizeKeywords()
 //______________________________________________________________________________
 void ExecuteMacro()
 {
+   // Execute the macro in gLineString and produce the corresponding picture
+
    // Name of the next Image to be generated
-   gImageName = TString::Format("%s_%3.3d.png",gClassName.Data(),gImageID++);
+   gImageName = TString::Format("%s_%3.3d.png", gClassName.Data()
+                                              , gImageID++);
 
    // Build the ROOT command to be executed.
    gLineString.ReplaceAll("../../..","root -l -b -q \"makeimage.C(\\\"../..");
    Int_t l = gLineString.Length();
-   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s\\\")\"",gImageName.Data()));
+   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s/html/%s\\\")\"", gSystem->Getenv("OUTPUT_DIRECTORY")
+                                                                          , gImageName.Data()));
 
-   // Execute the ROOT command making sure stdout will not go in the doxygen file.
+   ExecuteCommand(gLineString);
+
+   gLineString = TString::Format("\\image html %s\n",gImageName.Data());
+}
+
+
+//______________________________________________________________________________
+void ExecuteCommand(TString command)
+{
+   // Execute a command making sure stdout will not go in the doxygen file.
+
    int o = dup(fileno(stdout));
    freopen("stdout.dat","a",stdout);
-   gSystem->Exec(gLineString.Data());
+   gSystem->Exec(command.Data());
    dup2(o,fileno(stdout));
    close(o);
 }
