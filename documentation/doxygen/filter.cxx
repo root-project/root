@@ -66,6 +66,7 @@ char    gLine[255];
 TString gFileName;
 TString gLineString;
 TString gClassName;
+TString gImageName;
 Bool_t  gHeader;
 Bool_t  gSource;
 Bool_t  gInClassDef;
@@ -143,19 +144,13 @@ int main(int argc, char *argv[])
          }
 
          if (gLineString.Index("End_Macro") >= 0) {
-            gLineString = "</pre>\n";
+            gLineString.ReplaceAll("End_Macro","</pre>\n");
             gInMacro = 0;
          }
 
          printf("%s",gLineString.Data());
       }
    }
-
-   TString opt1,opt0;
-   opt0 = argv[0];
-   opt1 = argv[1];
-   //printf("DEBUG %d : %s - %s %d %d - %s\n",argc,opt0.Data(),opt1.Data(),gSource,gHeader,gClassName.Data());
-   fclose(f);
 
    return 1;
 }
@@ -220,9 +215,13 @@ void StandardizeKeywords()
 //______________________________________________________________________________
 void ExecuteMacro()
 {
+   // Name of the next Image to be generated
+   gImageName = TString::Format("%s_%3.3d.png",gClassName.Data(),gImageID++);
+
+   // Build the ROOT command to be executed.
    gLineString.ReplaceAll("../../..","root -l -b -q \"makeimage.C(\\\"../..");
    Int_t l = gLineString.Length();
-   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s\\\",%d)\"",gClassName.Data(),gImageID++));
+   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s\\\")\"",gImageName.Data()));
 
    // Execute the ROOT command making sure stdout will not go in the doxygen file.
    int o = dup(fileno(stdout));
