@@ -5,9 +5,6 @@ class Master::Container
 SIZE: 12 FILE: Master.hh LINE: 8
 Base classes: --------------------------------------------------------
 0x0        public TObject
-List of member variables --------------------------------------------------
-Master.hh        18 0x0      private: static atomic_TClass_ptr fgIsA
-List of member functions :---------------------------------------------------
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: Container();
 (compiled)     (NA):(NA) 0 public: void Print(Option_t *) const;
@@ -29,9 +26,6 @@ class Master::Container
 SIZE: 12 FILE: Master.hh LINE: 8
 Base classes: --------------------------------------------------------
 0x0        public TObject
-List of member variables --------------------------------------------------
-Master.hh        18 0x0      private: static atomic_TClass_ptr fgIsA
-List of member functions :---------------------------------------------------
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: Container();
 (compiled)     (NA):(NA) 0 public: void Print(Option_t *) const;
@@ -53,9 +47,6 @@ class Master::Container
 SIZE: 12 FILE: Master.hh LINE: 8
 Base classes: --------------------------------------------------------
 0x0        public TObject
-List of member variables --------------------------------------------------
-Master.hh        18 0x0      private: static atomic_TClass_ptr fgIsA
-List of member functions :---------------------------------------------------
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: Container();
 (compiled)     (NA):(NA) 0 public: void Print(Option_t *) const;
