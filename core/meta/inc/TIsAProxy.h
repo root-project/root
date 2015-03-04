@@ -29,15 +29,17 @@ class TClass;
 //////////////////////////////////////////////////////////////////////////
 class TIsAProxy  : public TVirtualIsAProxy {
 private:
+   template <typename T> using Atomic_t = std::atomic<T>;
+
    const type_info          *fType;        //Actual typeid of the proxy
-   std::atomic<TClass*>     fClass;        //Actual TClass
-   std::atomic<void*>       fLast;         //points into fSubTypes map for last used values
-   Char_t                   fSubTypes[72]; //map of known sub-types
+   Atomic_t<TClass*>         fClass;       //Actual TClass
+   Atomic_t<void*>           fLast;        //points into fSubTypes map for last used values
+   Char_t                    fSubTypes[72];//map of known sub-types
    void                     *fContext;     //Optional user contex
-   mutable std::atomic<unsigned int> fSubTypesReaders; //number of readers of fSubTypes
-   std::atomic<bool>      fSubTypesWriteLockTaken; //True if there is a writer
-   Bool_t                   fVirtual;      //Flag if class is virtual
-   std::atomic<bool>      fInit;         //Initialization flag
+   mutable Atomic_t<UInt_t>  fSubTypesReaders; //number of readers of fSubTypes
+   Atomic_t<Bool_t>          fSubTypesWriteLockTaken; //True if there is a writer
+   Bool_t                    fVirtual;     //Flag if class is virtual
+   Atomic_t<Bool_t>          fInit;        //Initialization flag
 
    void* FindSubType(const type_info*) const;
    void* CacheSubType(const type_info*, TClass*);

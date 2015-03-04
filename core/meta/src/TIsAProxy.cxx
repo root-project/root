@@ -39,22 +39,23 @@ namespace {
       return (ClassMap_t*)p;
    }
 
-   inline ClassMap_t::value_type* ToPair(void*p) 
+   inline ClassMap_t::value_type* ToPair(void*p)
    {
-     return (ClassMap_t::value_type*)p;
+      return (ClassMap_t::value_type*)p;
    }
 }
 
 //______________________________________________________________________________
 TIsAProxy::TIsAProxy(const std::type_info& typ, void* ctxt)
    : fType(&typ), fClass(nullptr), fLast(nullptr), fContext(ctxt),
-     fSubTypesReaders(0), fSubTypesWriteLockTaken(false),
-     fVirtual(false), fInit(false)
+     fSubTypesReaders(0), fSubTypesWriteLockTaken(kFALSE),
+     fVirtual(kFALSE), fInit(kFALSE)
 {
    // Standard initializing constructor
 
-   ::new(fSubTypes) ClassMap_t();
    static_assert(sizeof(ClassMap_t)<=sizeof(fSubTypes), "ClassMap size is to large for array");
+
+   ::new(fSubTypes) ClassMap_t();
 }
 
 //______________________________________________________________________________
@@ -99,10 +100,10 @@ TClass* TIsAProxy::operator()(const void *obj)
    // a virtual_function_table
    Long_t offset = **(Long_t**)obj;
    if ( offset == 0 ) return fClass.load();
-   
+
    DynamicType* ptr = (DynamicType*)obj;
    const std::type_info* typ = &typeid(*ptr);
-   
+
    if ( typ == fType )  {
      return fClass.load();
    }
@@ -112,7 +113,7 @@ TClass* TIsAProxy::operator()(const void *obj)
    }
    // Check if type is already in sub-class cache
    if ( nullptr == (last = ToPair(FindSubType(typ)) ) )  {
-     
+
      // Last resort: lookup root class
      auto cls = TClass::GetClass(*typ);
      last = ToPair(CacheSubType(typ,cls));
@@ -121,10 +122,13 @@ TClass* TIsAProxy::operator()(const void *obj)
 
    return last == nullptr? nullptr: last->second;
 }
+
 //______________________________________________________________________________
 inline void* TIsAProxy::FindSubType(const type_info* type) const
 {
-   bool needToWait = true;
+   // See if we have already cached the TClass that correspond to this type_info.
+
+   bool needToWait = kTRUE;
    do {
      ++fSubTypesReaders;
 
@@ -134,11 +138,11 @@ inline void* TIsAProxy::FindSubType(const type_info* type) const
        --fSubTypesReaders;
        while(fSubTypesWriteLockTaken) {}
      } else {
-       needToWait = false;
+       needToWait = kFALSE;
      }
    } while(needToWait);
 
-   void* returnValue =nullptr;
+   void* returnValue = nullptr;
    auto const map = GetMap(fSubTypes);
 
    auto found = map->find(type);
@@ -152,9 +156,13 @@ inline void* TIsAProxy::FindSubType(const type_info* type) const
 //______________________________________________________________________________
 void* TIsAProxy::CacheSubType(const type_info* type, TClass* cls)
 {
+   // Record the TClass found for a type_info, so that we can retrieved it faster.
+
    //See if another thread has the write lock, wait if it does
-   bool expected = false;
-   while(not fSubTypesWriteLockTaken.compare_exchange_strong(expected,true) ) {expected = false;};
+   Bool_t expected = kFALSE;
+   while(! fSubTypesWriteLockTaken.compare_exchange_strong(expected,kTRUE) ) {
+      expected = kFALSE;
+   };
 
    //See if there are any readers
    while(fSubTypesReaders > 0);
@@ -162,6 +170,6 @@ void* TIsAProxy::CacheSubType(const type_info* type, TClass* cls)
    auto map = GetMap(fSubTypes);
    auto ret = map->emplace(type,cls);
 
-   fSubTypesWriteLockTaken = false;
+   fSubTypesWriteLockTaken = kFALSE;
    return &(*(ret.first));
 }
