@@ -222,6 +222,6 @@ void ExecuteMacro()
 {
    gLineString.ReplaceAll("../../..","root -l -b -q \"makeimage.C(\\\"../..");
    Int_t l = gLineString.Length();
-   gLineString.Replace(l-2,2,TString::Format(".C\\\",\\\"%s\\\",%d)\"",gClassName.Data(),gImageID++));
+   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s\\\",%d)\"",gClassName.Data(),gImageID++));
    gSystem->Exec(gLineString.Data());
 }
