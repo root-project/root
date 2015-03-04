@@ -3551,12 +3551,12 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Double_t y  = gPad->PadtoY(gPad->AbsPixeltoY(py));
    Double_t x1 = gPad->PadtoX(gPad->AbsPixeltoX(px+1));
-   const char *drawOption = fH->GetDrawOption();
+   TString drawOption = fH->GetDrawOption();
+   drawOption.ToLower();
    Double_t xmin, xmax, uxmin,uxmax;
    Double_t ymin, ymax, uymin,uymax;
    if (fH->GetDimension() == 2) {
-      if (gPad->GetView() || strncmp(drawOption,"cont",4) == 0
-                          || strncmp(drawOption,"CONT",4) == 0) {
+      if (gPad->GetView() || drawOption.Index("cont") >= 0) {
          uxmin=gPad->GetUxmin();
          uxmax=gPad->GetUxmax();
          xmin = fXaxis->GetBinLowEdge(fXaxis->GetFirst());
@@ -3572,7 +3572,17 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    Int_t binx,biny,binmin,binx1;
    if (gPad->IsVertical()) {
       binx   = fXaxis->FindFixBin(x);
-      binmin = fXaxis->GetFirst();
+      if (drawOption.Index("same") >= 0) {
+         TH1 *h1;
+         TIter next(gPad->GetListOfPrimitives());
+         while ((h1 = (TH1 *)next())) {
+            if (!h1->InheritsFrom(TH1::Class())) continue;
+            binmin = h1->GetXaxis()->GetFirst();
+            break;
+         }
+      } else {
+         binmin = fXaxis->GetFirst();
+      }
       binx1  = fXaxis->FindFixBin(x1);
       // special case if more than 1 bin in x per pixel
       if (binx1-binx>1 && fH->GetDimension() == 1) {
@@ -3590,7 +3600,17 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    } else {
       x1 = gPad->PadtoY(gPad->AbsPixeltoY(py+1));
       binx   = fXaxis->FindFixBin(y);
-      binmin = fXaxis->GetFirst();
+      if (drawOption.Index("same") >= 0) {
+         TH1 *h1;
+         TIter next(gPad->GetListOfPrimitives());
+         while ((h1 = (TH1 *)next())) {
+            if (!h1->InheritsFrom(TH1::Class())) continue;
+            binmin = h1->GetXaxis()->GetFirst();
+            break;
+         }
+      } else {
+         binmin = fXaxis->GetFirst();
+      }
       binx1  = fXaxis->FindFixBin(x1);
       // special case if more than 1 bin in x per pixel
       if (binx1-binx>1 && fH->GetDimension() == 1) {
