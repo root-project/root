@@ -6,6 +6,10 @@ set(LLVM_INCLUDE_EXAMPLES OFF)
 set(LLVM_BUILD_TOOLS OFF)
 set(LLVM_TARGETS_TO_BUILD X86 CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
+# We only use llvm/clang through TCling which is (with the help of core/meta) already taking a lock
+# to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
+# mechanism.
+set(LLVM_ENABLE_THREADS OFF)
 
 #---Build type--------------------------------------------------------------------------------------
 if(NOT DEFINED LLVM_BUILD_TYPE)

@@ -174,6 +174,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		--disable-clang-rewriter --disable-clang-static-analyzer \
 		--disable-clang-arcmt \
 		--disable-compiler-version-checks \
+                --disable-threads \
 		$$LLVMLIBCXX \
 		$(LLVMOPTFLAGS) \
 		--enable-targets=host \
