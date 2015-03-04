@@ -835,6 +835,7 @@ void TFormula::HandleExponentiation(TString &formula)
       TString right,left;
       Int_t temp = caretPos;
       temp--;
+      // get the expression in ( ) which has the operator^ applied
       if(formula[temp] == ')')
       {
          Int_t depth = 1;
@@ -847,14 +848,18 @@ void TFormula::HandleExponentiation(TString &formula)
                depth--;
             temp--;
          }
-         temp++;
+         if (depth == 0) temp++;
       }
-      while(temp >= 0 && !IsOperator(formula[temp]))
+      // this in case of someting like sin(x+2)^2
+      temp--;  // go down one
+      assert(temp+1 >= 0); 
+      while(temp >= 0 && !IsOperator(formula[temp]) && !IsBracket(formula[temp]) )
       {
          temp--;
       }
       left = formula(temp + 1, caretPos - (temp + 1));
 
+      // look now at the expression after the ^ operator 
       temp = caretPos;
       temp++;
       if(formula[temp] == '(')
@@ -879,6 +884,9 @@ void TFormula::HandleExponentiation(TString &formula)
 
       TString pattern = TString::Format("%s^%s",left.Data(),right.Data());
       TString replacement = TString::Format("pow(%s,%s)",left.Data(),right.Data());
+
+      // std::cout << "pattern : " << pattern << std::endl;
+      // std::cout << "replacement : " << replacement << std::endl;
       formula.ReplaceAll(pattern,replacement);
 
       caretPos = formula.Last('^');
