@@ -35,7 +35,6 @@ private:
    Atomic_t<TClass*>         fClass;       //Actual TClass
    Atomic_t<void*>           fLast;        //points into fSubTypes map for last used values
    Char_t                    fSubTypes[72];//map of known sub-types
-   void                     *fContext;     //Optional user contex
    mutable Atomic_t<UInt_t>  fSubTypesReaders; //number of readers of fSubTypes
    Atomic_t<Bool_t>          fSubTypesWriteLockTaken; //True if there is a writer
    Bool_t                    fVirtual;     //Flag if class is virtual
@@ -49,7 +48,7 @@ protected:
 
 public:
    // Standard initializing constructor
-   TIsAProxy(const type_info &typ, void *ctxt = 0);
+   TIsAProxy(const type_info &typ);
    // Standard destructor
    virtual ~TIsAProxy();
    // Callbacl to set the class

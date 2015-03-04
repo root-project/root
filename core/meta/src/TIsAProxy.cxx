@@ -46,8 +46,8 @@ namespace {
 }
 
 //______________________________________________________________________________
-TIsAProxy::TIsAProxy(const std::type_info& typ, void* ctxt)
-   : fType(&typ), fClass(nullptr), fLast(nullptr), fContext(ctxt),
+TIsAProxy::TIsAProxy(const std::type_info& typ)
+   : fType(&typ), fClass(nullptr), fLast(nullptr),
      fSubTypesReaders(0), fSubTypesWriteLockTaken(kFALSE),
      fVirtual(kFALSE), fInit(kFALSE)
 {
