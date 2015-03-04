@@ -2,8 +2,6 @@
 .PHONY: filter doxygen clean
 
 docdir="$(shell ./makedocdir.sh)"
-imgdir="$(shell ./makeimgdir.sh)"
-macdir="$(shell ./makemacrodir.sh)"
 
 all: filter doxygen
 
@@ -14,7 +12,5 @@ doxygen:
 	doxygen
 
 clean:
-	rm -r $(macdir)
-	rm -r $(imgdir)
 	rm -r $(docdir)
 	rm filter
