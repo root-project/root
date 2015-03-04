@@ -14,3 +14,6 @@ doxygen:
 clean:
 	rm -r $(docdir)
 	rm filter
+	rm c1*
+	rm *.png
+	rm stdout.dat

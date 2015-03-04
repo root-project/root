@@ -223,5 +223,11 @@ void ExecuteMacro()
    gLineString.ReplaceAll("../../..","root -l -b -q \"makeimage.C(\\\"../..");
    Int_t l = gLineString.Length();
    gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s\\\",%d)\"",gClassName.Data(),gImageID++));
+
+   // Execute the ROOT command making sure stdout will not go in the doxygen file.
+   int o = dup(fileno(stdout));
+   freopen("stdout.dat","a",stdout);
    gSystem->Exec(gLineString.Data());
+   dup2(o,fileno(stdout));
+   close(o);
 }
