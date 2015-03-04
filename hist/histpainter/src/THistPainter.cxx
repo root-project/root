@@ -3569,7 +3569,7 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
          y = ymin +(ymax-ymin)*(y-uymin)/(uymax-uymin);
       }
    }
-   Int_t binx,biny,binmin,binx1;
+   Int_t binx,biny,binmin=0,binx1;
    if (gPad->IsVertical()) {
       binx   = fXaxis->FindFixBin(x);
       if (drawOption.Index("same") >= 0) {
