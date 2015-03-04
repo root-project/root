@@ -99,7 +99,9 @@ TClass* TIsAProxy::operator()(const void *obj)
    // Avoid the case that the first word is a virtual_base_offset_table instead of
    // a virtual_function_table
    Long_t offset = **(Long_t**)obj;
-   if ( offset == 0 ) return fClass.load();
+   if ( offset == 0 ) {
+      return fClass.load();
+   }
 
    DynamicType* ptr = (DynamicType*)obj;
    const std::type_info* typ = &typeid(*ptr);
@@ -109,14 +111,14 @@ TClass* TIsAProxy::operator()(const void *obj)
    }
    auto last = ToPair(fLast.load());
    if ( last && typ == last->first )  {
-     return last->second;
+      return last->second;
    }
    // Check if type is already in sub-class cache
-   if ( nullptr == (last = ToPair(FindSubType(typ)) ) )  {
-
-     // Last resort: lookup root class
-     auto cls = TClass::GetClass(*typ);
-     last = ToPair(CacheSubType(typ,cls));
+   last = ToPair(FindSubType(typ));
+   if ( last == nullptr || last->second == nullptr )  {
+      // Last resort: lookup root class
+      auto cls = TClass::GetClass(*typ);
+      last = ToPair(CacheSubType(typ,cls));
    }
    fLast.store(last);
 
@@ -169,6 +171,10 @@ void* TIsAProxy::CacheSubType(const type_info* type, TClass* cls)
 
    auto map = GetMap(fSubTypes);
    auto ret = map->emplace(type,cls);
+   if (!ret.second) {
+      // type is already in the map, let's update it.
+      (*ret.first).second = cls;
+   }
 
    fSubTypesWriteLockTaken = kFALSE;
    return &(*(ret.first));
