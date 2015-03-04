@@ -437,6 +437,9 @@ void TFormula::FillDefaults()
          {"loge",TMath::LogE()}, {"c",TMath::C()}, {"g",TMath::G()},
          {"h",TMath::H()}, {"k",TMath::K()},{"sigma",TMath::Sigma()},
          {"r",TMath::R()}, {"eg",TMath::EulerGamma()},{"true",1},{"false",0} };
+   // const pair<TString,Double_t> defconsts[] = { {"pi",TMath::Pi()}, {"sqrt2",TMath::Sqrt2()},
+   //       {"infinity",TMath::Infinity()}, {"ln10",TMath::Ln10()},
+   //       {"loge",TMath::LogE()}, {"true",1},{"false",0} };
    const pair<TString,TString> funShortcuts[] = { {"sin","TMath::Sin" },
          {"cos","TMath::Cos" }, {"exp","TMath::Exp"}, {"log","TMath::Log"}, {"log10","TMath::Log10"},
          {"tan","TMath::Tan"}, {"sinh","TMath::SinH"}, {"cosh","TMath::CosH"},
@@ -1021,9 +1024,17 @@ void TFormula::ExtractFunctors(TString &formula)
             i++;
          } while(formula[i] != '\"');
       }
+      // case of e or E for numbers in exponential notaton (e.g. 2.2e-3)
+      if ( (formula[i] == 'e' || formula[i] == 'E')  &&  (i > 0 && i <  formula.Length()-1) )  {
+         // handle cases:  2e+3 2e-3 2e3 and 2.e+3 
+         if ( (isdigit(formula[i-1]) || formula[i-1] == '.') && ( isdigit(formula[i+1]) || formula[i+1] == '+' || formula[i+1] == '-' ) )
+            continue;
+      }
+
       if(isalpha(formula[i]) && !IsOperator(formula[i]))
       {
          //std::cout << "character : " << i << " " << formula[i] << " is not an operator and is alpha " << std::endl;
+
 
          while( IsFunctionNameChar(formula[i]) && i < formula.Length())
          {
