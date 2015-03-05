@@ -179,16 +179,19 @@ private:
    // of the replacement, fPersistentRef points to the new TClass object.
    std::atomic<TClass**> fPersistentRef;//!Persistent address of pointer to this TClass object and its successors.
 
+   typedef std::atomic<std::map<std::string, TObjArray*>*> ConvSIMap_t;
 
-   mutable TObjArray *fStreamerInfo;    //Array of TVirtualStreamerInfo
-   mutable std::atomic<std::map<std::string, TObjArray*>*> fConversionStreamerInfo; //Array of the streamer infos derived from another class.
-   TList             *fRealData;        //linked list for persistent members including base classes
-   TList             *fBase;            //linked list for base classes
-   TListOfDataMembers*fData;            //linked list for data members
-   std::atomic<TListOfEnums*> fEnums;       //linked list for the enums
-   TListOfFunctionTemplates *fFuncTemplate; //linked list for function templates [Not public until implemented as active list]
-   std::atomic<TListOfFunctions*> fMethod;          //linked list for methods
-   TViewPubDataMembers*fAllPubData;      //all public data members (including from base classes)
+   mutable TObjArray  *fStreamerInfo;           //Array of TVirtualStreamerInfo
+   mutable ConvSIMap_t fConversionStreamerInfo; //Array of the streamer infos derived from another class.
+   TList              *fRealData;        //linked list for persistent members including base classes
+   TList              *fBase;            //linked list for base classes
+   TListOfDataMembers *fData;            //linked list for data members
+
+   std::atomic<TListOfEnums*> fEnums;        //linked list for the enums
+   TListOfFunctionTemplates  *fFuncTemplate; //linked list for function templates [Not public until implemented as active list]
+   std::atomic<TListOfFunctions*> fMethod;   //linked list for methods
+
+   TViewPubDataMembers*fAllPubData;     //all public data members (including from base classes)
    TViewPubFunctions *fAllPubMethod;    //all public methods (including from base classes)
    mutable TList     *fClassMenuList;   //list of class menu items
 

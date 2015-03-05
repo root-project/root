@@ -35,7 +35,7 @@ ClassImp(TListOfEnumsWithLock)
 
 //______________________________________________________________________________
 TListOfEnumsWithLock::TListOfEnumsWithLock(TClass *cl /*=0*/) :
-   TListOfEnums(cl)
+TListOfEnums(cl)
 {
 }
 
@@ -177,8 +177,8 @@ TObject *TListOfEnumsWithLock::FindObject(const char *name) const
 //______________________________________________________________________________
 TObject* TListOfEnumsWithLock::FindObject(const TObject* obj) const
 {
-    R__LOCKGUARD(gInterpreterMutex);
-    return TListOfEnums::FindObject(obj);
+   R__LOCKGUARD(gInterpreterMutex);
+   return TListOfEnums::FindObject(obj);
 }
 
 //______________________________________________________________________________
@@ -316,11 +316,11 @@ ClassImp(TListOfEnumsWithLockIter)
 
 //______________________________________________________________________________
 TListOfEnumsWithLockIter::TListOfEnumsWithLockIter(const TListOfEnumsWithLock *l, Bool_t dir ):
-  TListIter(l,dir) {}
+TListIter(l,dir) {}
 
 //______________________________________________________________________________
 TObject *TListOfEnumsWithLockIter::Next()
 {
-  R__LOCKGUARD(gInterpreterMutex);
-  return TListIter::Next();
+   R__LOCKGUARD(gInterpreterMutex);
+   return TListIter::Next();
 }
