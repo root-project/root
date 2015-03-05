@@ -44,8 +44,12 @@ else()
 endif()
 set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
 
-#---Add the sub-directory exclusing all the targets from all-----------------------------------------
-add_subdirectory(llvm/src EXCLUDE_FROM_ALL)
+#---Add the sub-directory excluding all the targets from all-----------------------------------------
+if(CMAKE_GENERATOR MATCHES "Xcode")
+  add_subdirectory(llvm/src)
+else()
+  add_subdirectory(llvm/src EXCLUDE_FROM_ALL)
+endif()
 
 #---Mark the LLVM/CLANG variables as advanced--------------------------------------------------------
 get_cmake_property(variables CACHE_VARIABLES)
@@ -59,7 +63,7 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
                        GCC_INSTALL_PREFIX LIBCLANG_BUILD_STATIC TOOL_INFO_PLIST)
 mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
 #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
-file(READ ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/configure _filestr)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/configure _filestr)
 string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+[.][0-9]+).*" "\\1" _llvm_version ${_filestr})
 set(LLVM_VERSION ${_llvm_version} PARENT_SCOPE)
 
