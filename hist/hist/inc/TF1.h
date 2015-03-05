@@ -225,9 +225,23 @@ public:
    }
    // backward compatible interface
    template <typename Func>
-   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *   ) {
-      TF1 tmp(name,f,xmin,xmax,npar,1);
-      *this = tmp;
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *   ) :
+      TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
+      fXmin(xmin), fXmax(xmax),
+      fNpar(npar), fNdim(1),
+      fNpx(100), fType(1),
+      fNpfits(0), fNDF(0), fChisquare(0),
+      fMinimum(-1111), fMaximum(-1111),
+      fParErrors(std::vector<Double_t>(npar)),
+      fParMin(std::vector<Double_t>(npar)),
+      fParMax(std::vector<Double_t>(npar)),
+      fParent(0), fHistogram(0),
+      fMethodCall(0),
+      fFunctor(ROOT::Math::ParamFunctor(f)),
+      fFormula(0),
+      fParams(new TF1Parameters(npar) )
+   {
+      DoInitialize();
    }
 
 
@@ -260,9 +274,23 @@ public:
    }
    // backward compatible interface
    template <class PtrObj, typename MemFn>
-   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,const char * , const char * ) {
-      TF1 tmp(name,p, memFn,xmin,xmax,npar,1);
-      *this = tmp;
+   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar,const char * , const char * ) :
+      TNamed(name,name), TAttLine(), TAttFill(), TAttMarker(),
+      fXmin(xmin), fXmax(xmax),
+      fNpar(npar), fNdim(1),
+      fNpx(100), fType(1),
+      fNpfits(0), fNDF(0), fChisquare(0),
+      fMinimum(-1111), fMaximum(-1111),
+      fParErrors(std::vector<Double_t>(npar)),
+      fParMin(std::vector<Double_t>(npar)),
+      fParMax(std::vector<Double_t>(npar)),
+      fParent(0), fHistogram(0),
+      fMethodCall(0),
+      fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) ),
+      fFormula(0),
+      fParams(new TF1Parameters(npar) )
+   {
+      DoInitialize();
    }
 
    TF1(const TF1 &f1);
