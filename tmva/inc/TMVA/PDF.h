@@ -19,10 +19,10 @@
  *      Jan Therhaag       <Jan.Therhaag@cern.ch>     - U of Bonn, Germany        *
  *                                                                                *
  * Copyright (c) 2005-2011:                                                       *
- *      CERN, Switzerland                                                         *
- *      U. of Victoria, Canada                                                    *
- *      MPI-K Heidelberg, Germany                                                 *
- *      Freiburg U., Germany                                                      *
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
+ *      Freiburg U., Germany                                                      * 
  *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -52,7 +52,6 @@
 #ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
 #endif
-#include "ThreadLocalStorage.h"
 
 class TSpline;
 class TGraph;
@@ -70,20 +69,20 @@ namespace TMVA {
 
       friend std::ostream& operator<< ( std::ostream& os, const PDF& tree );
       friend std::istream& operator>> ( std::istream& istr, PDF& tree);
-
+      
    public:
 
       enum EInterpolateMethod { kSpline0, kSpline1, kSpline2, kSpline3, kSpline5, kKDE };
 
       explicit PDF( const TString& name, Bool_t norm=kTRUE );
-      explicit PDF( const TString& name, const TH1* theHist, EInterpolateMethod method = kSpline2,
+      explicit PDF( const TString& name, const TH1* theHist, EInterpolateMethod method = kSpline2, 
                     Int_t minnsmooth = 0, Int_t maxnsmooth = 0, Bool_t checkHist = kFALSE, Bool_t norm=kTRUE );
-      explicit PDF( const TString& name, const TH1* theHist,
-                    KDEKernel::EKernelType ktype, KDEKernel::EKernelIter kiter, KDEKernel::EKernelBorder
+      explicit PDF( const TString& name, const TH1* theHist, 
+                    KDEKernel::EKernelType ktype, KDEKernel::EKernelIter kiter, KDEKernel::EKernelBorder 
                     kborder, Float_t FineFactor, Bool_t norm=kTRUE );
       explicit PDF( const TString& name, const TString& options, const TString& suffix = "", PDF* defaultPDF = 0, Bool_t norm=kTRUE);
       virtual ~PDF();
-
+      
       //creates the pdf after the definitions have been stored in
       void BuildPDF (const TH1* theHist);
 
@@ -122,7 +121,7 @@ namespace TMVA {
       const char* GetName() const { return fPDFName; }
 
       // TMVA version control (for weight files)
-      void   SetReadingVersion( UInt_t rv ) { fReadingVersion = rv; }
+      void   SetReadingVersion( UInt_t rv ) { fReadingVersion = rv; }      
       UInt_t GetReadingVersion() const { return fReadingVersion; }
 
       //void WriteOptionsToStream ( std::ostream& o, const TString& prefix ) const;
@@ -133,7 +132,7 @@ namespace TMVA {
 
    private:
 
-      // sanity check of PDF quality (after smoothing): comparison with
+      // sanity check of PDF quality (after smoothing): comparison with 
       // original histogram
       void     CheckHist() const;
       void     FillSplineToHist();
@@ -141,7 +140,7 @@ namespace TMVA {
       void     SmoothHistogram();
       void     FillHistToGraph();
       Double_t GetIntegral() const;
-      Double_t GetPdfHistBinWidth() const {
+      Double_t GetPdfHistBinWidth() const { 
          TH1* h = GetPDFHist();
          return (fPDFHist) ? (h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin())/h->GetNbinsX() : 1;
       }
@@ -149,7 +148,7 @@ namespace TMVA {
       // do we use the original histogram as reference ?
       Bool_t   UseHistogram() const { return fUseHistogram; }
 
-      void FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& higherBin, Double_t& lowerBinValue, Double_t& higherBinValue,
+      void FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& higherBin, Double_t& lowerBinValue, Double_t& higherBinValue, 
 			   Double_t y, Bool_t isMonotonouslyIncreasingFunction=kFALSE ) const;
 
 
@@ -157,11 +156,11 @@ namespace TMVA {
 
       // flag that indicates that no splines are produced and no smoothing
       // is applied, i.e., the original histogram is used as reference
-      // this is useful for discrete variables
+      // this is useful for discrete variables      
       Bool_t                   fUseHistogram;  // spline0 uses histogram as reference
-
+  
       // static configuration variables ----------------------------
-      // to increase computation speed, the final PDF is filled in
+      // to increase computation speed, the final PDF is filled in 
       // a high-binned histogram; "GetValue" then returns the histogram
       // entry, linearized between adjacent bins
       static const Int_t       fgNbin_PdfHist;        // number of bins in high-binned reference histogram
@@ -203,17 +202,17 @@ namespace TMVA {
 
       TString                  fSuffix;               //! the suffix for options
       mutable MsgLogger*       fLogger;               //! message logger
-      MsgLogger&               Log() const { return *fLogger; }
+      MsgLogger&               Log() const { return *fLogger; }    
 
       // static pointer to this object
 #if __cplusplus > 199711L
-      static TTHREAD_TLS(PDF*) fgThisPDF;             // this PDF pointer
+      static thread_local PDF* fgThisPDF;             // this PDF pointer 
 #else
-      static PDF*              fgThisPDF;             // this PDF pointer
+      static PDF*              fgThisPDF;             // this PDF pointer 
 #endif
-      static PDF*              ThisPDF( void );
+      static PDF*              ThisPDF( void ); 
 
-      // external auxiliary functions
+      // external auxiliary functions 
       static Double_t          IGetVal( Double_t*, Double_t* );
 
       ClassDef(PDF,1)  // PDF wrapper for histograms
@@ -221,4 +220,4 @@ namespace TMVA {
 
 } // namespace TMVA
 
-#endif
+#endif 

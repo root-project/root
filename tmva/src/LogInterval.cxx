@@ -75,7 +75,6 @@ End_Html */
 
 #include "TMath.h"
 #include "TRandom3.h"
-#include "ThreadLocalStorage.h"
 
 #include "TMVA/LogInterval.h"
 #include "TMVA/MsgLogger.h"
@@ -150,7 +149,7 @@ Double_t TMVA::LogInterval::GetMean()  const
 
 TMVA::MsgLogger& TMVA::LogInterval::Log() const {
 #if __cplusplus > 199711L
-  static TTHREAD_TLS(MsgLogger) logger("LogInterval");   // message logger
+  static thread_local MsgLogger logger("LogInterval");   // message logger
 #else
   static MsgLogger logger("LogInterval");   // message logger
 #endif

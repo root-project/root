@@ -46,8 +46,6 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Event.h"
 
-#include "ThreadLocalStorage.h"
-
 using std::string;
 
 ClassImp(TMVA::DecisionTreeNode)
@@ -511,7 +509,7 @@ void TMVA::DecisionTreeNode::ReadContent( std::stringstream& /*s*/ )
 //_______________________________________________________________________
 TMVA::MsgLogger& TMVA::DecisionTreeNode::Log() {
 #if __cplusplus > 199711L
-  static TTHREAD_TLS(MsgLogger) logger("DecisionTreeNode");    // static because there is a huge number of nodes...
+  static thread_local MsgLogger logger("DecisionTreeNode");    // static because there is a huge number of nodes...
 #else
   static MsgLogger logger("DecisionTreeNode");    // static because there is a huge number of nodes...
 #endif
