@@ -91,10 +91,12 @@ foreach(_name ${CINTSTLDLLNAMES})
   set(LoaderName ${CMAKE_CURRENT_BINARY_DIR}/stlLoader_${_name}.cc)
   list(FIND CINTSTLDLLNAMES ${_name} _position)
   list(GET CINTSTLDLLHEADERS ${_position} InFileName)
+
   if(${_name} MATCHES map2)
-    set(AdditionalFlags "-DG__MAP2")
-  else()
-    set(AdditionalFlags "")
+    set(AdditionalFlags ${AdditionalFlags} "-DG__MAP2")
+  endif()
+  if(cxx14)
+    set(AdditionalFlags ${AdditionalFlags} "-DG__CXX14")
   endif()
 
   add_Custom_Command(OUTPUT ${OutFileName} 
