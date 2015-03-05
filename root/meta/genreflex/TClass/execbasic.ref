@@ -141,7 +141,7 @@ Class category: foreign.
   * void class6::~class6()
   * class6 class6::class6(const class6&)
   * class6& class6::operator=(const class6&)
- o Members (18):
+ o Members (20):
   * const int m_arrSize [ isBasic ]
   * int* m_arr1 [ isPtr isBasic "[m_arrSize]" ]
   * int* m_arr2 [ isPtr isBasic "[m_arrSize]" ]
@@ -151,6 +151,8 @@ Class category: foreign.
   * int m_transient2 [ isBasic isTransient "!This member is transient and we use doxygen comments" ]
   * int m_transient3 [ isBasic isTransient "!This member is transient" ]
   * int m_transient4 [ isBasic isTransient "!This member is transient and we use doxygen comments" ]
+  * int m_transient5 [ isBasic isTransient "!This member is transient and we use doxygen comments" ]
+  * int m_transient6 [ isBasic isTransient "!This member is transient and we use doxygen comments" ]
   * class3 m_dontSplit1 [ "|| Please do not split me!" ]
   * class3 m_dontSplit2 [ "|| Please do not split me (Doxy)!" ]
   * class3 m_dontSplit3 [ "|| Please do not split me!" ]

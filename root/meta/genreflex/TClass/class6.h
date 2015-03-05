@@ -18,6 +18,8 @@ private:
    int m_transient2; ///<!This member is transient and we use doxygen comments
    int m_transient3; //  !This member is transient
    int m_transient4; ///<   !This member is transient and we use doxygen comments
+   int m_transient5; //!<!This member is transient and we use doxygen comments
+   int m_transient6; //!<   !This member is transient and we use doxygen comments
    class3 m_dontSplit1; //|| Please do not split me!
    class3 m_dontSplit2; ///<|| Please do not split me (Doxy)!
    class3 m_dontSplit3; //    || Please do not split me!
