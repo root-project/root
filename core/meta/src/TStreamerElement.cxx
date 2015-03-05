@@ -39,15 +39,17 @@
 #include <string>
 namespace std {} using namespace std;
 
-#ifdef R__WIN32
-#define thread_local static
-#endif
-
 const Int_t kMaxLen = 1024;
 
 static TString &IncludeNameBuffer() {
+#ifdef R__WIN32
+   thread_local TString *includeNamePtr = 0;
+   if (!includeNamePtr) includeNamePtr = new TString(kMaxLen);
+   return *includeNamePtr;
+#else
    thread_local TString includeName(kMaxLen);
    return includeName;
+#endif
 }
 
 extern void *gMmallocDesc;
@@ -311,7 +313,13 @@ const char *TStreamerElement::GetFullName() const
    // Note that this function stores the name into a static array.
    // You should copy the result.
 
+#ifdef R__WIN32
+   thread_local TString *namePtr = 0;
+   if (!namePtr) namePtr = new TString(kMaxLen);
+   TString &name = *namePtr;
+#else
    thread_local TString name(kMaxLen);
+#endif
    char cdim[20];
    name = GetName();
    for (Int_t i=0;i<fArrayDim;i++) {
