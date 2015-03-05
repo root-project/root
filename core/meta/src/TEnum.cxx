@@ -221,7 +221,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          }
          theEnum = searchEnum(scopeName, enName, kAutoload);
       }
-      if (!theEnum && (sa == kALoadAndInterpLookup)) {
+      if (!theEnum && (sa & kALoadAndInterpLookup)) {
          if (gDebug > 0) {
             printf("TEnum::GetEnum: Header Parsing - The enumerator %s is not known to the typesystem: an interpreter lookup will be performed. This can imply parsing of headers. This can be avoided selecting the numerator in the linkdef/selection file.\n", enumName);
          }
@@ -233,7 +233,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
    } else {
       // We don't have any scope: this is a global enum
       theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kNone);
-      if (!theEnum && (sa == kAutoload)) {
+      if (!theEnum && (sa & kAutoload)) {
          gInterpreter->AutoLoad(enumName);
          theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kAutoload);
       }
