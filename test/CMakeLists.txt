@@ -48,7 +48,7 @@ ROOT_ADD_TEST(test-minexam COMMAND minexam)
 
 #--tstring-------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(tstring tstring.cxx LIBRARIES Core)
-configure_file(tstring.cxx tstring.cxx @COPY_ONLY)
+configure_file(tstring.cxx tstring.cxx COPYONLY)
 ROOT_ADD_TEST(test-tstring COMMAND tstring)
 
 #--tcollex-------------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ ROOT_ADD_TEST(test-stresslinear COMMAND stressLinear FAILREGEX "FAILED")
 
 #--stressGraphics------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript)
-configure_file(stressGraphics.ref stressGraphics.ref @COPY_ONLY) 
+configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat @COPY_ONLY)
 ROOT_ADD_TEST(test-stressgraphics COMMAND stressGraphics -b FAILREGEX "FAILED")
 
@@ -115,7 +115,7 @@ ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED")
 #--stressGUI---------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageGui)
 #---Cannot run GUI test in batch mode--------------------
-#configure_file(stressGUI.ref stressGUI.ref @COPY_ONLY)
+#configure_file(stressGUI.ref stressGUI.ref COPYONLY)
 #ROOT_ADD_TEST(test-stressgui COMMAND stressGUI -ref FAILREGEX "FAILED")
 
 #--stressSpectrum----------------------------------------------------------------------------------
