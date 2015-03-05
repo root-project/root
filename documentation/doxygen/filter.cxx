@@ -70,6 +70,7 @@ TString gFileName;
 TString gLineString;
 TString gClassName;
 TString gImageName;
+TString gCwd;
 Bool_t  gHeader;
 Bool_t  gSource;
 Bool_t  gInClassDef;
@@ -95,6 +96,7 @@ int main(int argc, char *argv[])
    if (gFileName.EndsWith(".cxx")) gSource = kTRUE;
    if (gFileName.EndsWith(".h"))   gHeader = kTRUE;
    GetClassName();
+   gCwd = gFileName(0, gFileName.Last('/'));
 
    // Loop on file.
    FILE *f = fopen(gFileName.Data(),"r");
@@ -136,9 +138,13 @@ int main(int argc, char *argv[])
 
          if (gInMacro) {
             if (gInMacro == 1) {
-               if (gLineString.EndsWith(".C\n")) ExecuteMacro();
+               if (gLineString.EndsWith(".C\n")) {
+                  ExecuteMacro();
+                  gInMacro++;
+               } else {
+               }
+            } else {
             }
-            gInMacro++;
          }
 
          if (gLineString.Index("Begin_Macro") >= 0) {
@@ -198,6 +204,7 @@ void GetClassName()
    }
 
    fclose(f);
+
    return;
 }
 
@@ -227,10 +234,17 @@ void ExecuteMacro()
                                               , gImageID++);
 
    // Build the ROOT command to be executed.
-   gLineString.ReplaceAll("../../..","root -l -b -q \"makeimage.C(\\\"../..");
+   if (gLineString.Index("../../..") >= 0) {
+      gLineString.ReplaceAll("../../..","root -l -b -q \"makeimage.C(\\\"../..");
+   } else {
+      gLineString.Prepend(TString::Format("root -l -b -q \"makeimage.C(\\\"%s/../doc/macros/",gCwd.Data()));
+   }
    Int_t l = gLineString.Length();
-   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s/html/%s\\\")\"", gSystem->Getenv("OUTPUT_DIRECTORY")
-                                                                          , gImageName.Data()));
+   TString OutDir = gSystem->Getenv("OUTPUT_DIRECTORY");
+   OutDir.ReplaceAll("\"","");
+   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s/html/%s\\\")\"",
+                                             OutDir.Data(),
+                                             gImageName.Data()));
 
    ExecuteCommand(gLineString);
 
