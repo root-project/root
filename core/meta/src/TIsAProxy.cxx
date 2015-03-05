@@ -84,12 +84,12 @@ TClass* TIsAProxy::operator()(const void *obj)
    // IsA callback
 
    if ( !fInit )  {
-      if ( !fClass && fType ) {
+      if ( !fClass.load() && fType ) {
          auto cls = TClass::GetClass(*fType);
          TClass* expected = nullptr;
          fClass.compare_exchange_strong(expected,cls);
       }
-      if ( !fClass) return nullptr;
+      if ( !fClass.load() ) return nullptr;
       fVirtual = (*fClass).ClassProperty() & kClassHasVirtual;
       fInit = kTRUE;
    }
