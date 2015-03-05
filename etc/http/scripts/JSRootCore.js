@@ -14,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.4 dev 3/03/2015";
+   JSROOT.version = "3.4 dev 5/03/2015";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -566,7 +566,8 @@
       }
 
       if (kind.indexOf("mathjax;")>=0) {
-         allfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML;";
+         //allfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML;";
+         allfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG;";
          if (JSROOT.MathJax == 0) JSROOT.MathJax = 1;
       }
 

@@ -10,7 +10,8 @@ Many old problems and errors are fixed, new functions are provided.
    usage of jquery.js in core JSROOT classes
 3. Implement main graphics without jquery at all,
    such mode used in `nobrowser` mode.
-4. Implement MathJax support in JSROOT, TMathText always drawn with MathJax
+4. Provide optional latex drawing with MathJax SVG.
+   TMathText always drawn with MathJax,
    other classes require `mathjax` option in URL
 5. Improve drawing of different text classes, correctly handle
    their alignment and scaling
