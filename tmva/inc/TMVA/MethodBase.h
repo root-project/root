@@ -71,6 +71,7 @@
 #ifndef ROOT_TMVA_OptimizeConfigParameters
 #include "TMVA/OptimizeConfigParameters.h"
 #endif
+#include "ThreadLocalStorage.h"
 
 class TGraph;
 class TTree;
@@ -202,7 +203,7 @@ namespace TMVA {
       }
 
       // probability of classifier response (mvaval) to be signal (requires "CreateMvaPdf" option set)
-      virtual Double_t GetProba( const Event *ev); // the simple one, automatically calcualtes the mvaVal and uses the SAME sig/bkg ratio as given in the training sample (typically 50/50 .. (NormMode=EqualNumEvents) but can be different) 
+      virtual Double_t GetProba( const Event *ev); // the simple one, automatically calcualtes the mvaVal and uses the SAME sig/bkg ratio as given in the training sample (typically 50/50 .. (NormMode=EqualNumEvents) but can be different)
       virtual Double_t GetProba( Double_t mvaVal, Double_t ap_sig );
 
       // Rarity of classifier response (signal or background (default) is uniform in [0,1])
@@ -274,7 +275,7 @@ namespace TMVA {
 
       // variables (and private menber functions) for the Evaluation:
       // get the effiency. It fills a histogram for efficiency/vs/bkg
-      // and returns the one value fo the efficiency demanded for 
+      // and returns the one value fo the efficiency demanded for
       // in the TString argument. (Watch the string format)
       virtual Double_t GetEfficiency( const TString&, Types::ETreeType, Double_t& err );
       virtual Double_t GetTrainingEfficiency(const TString& );
@@ -283,7 +284,7 @@ namespace TMVA {
       virtual Double_t GetSignificance() const;
       virtual Double_t GetROCIntegral(TH1D *histS, TH1D *histB) const;
       virtual Double_t GetROCIntegral(PDF *pdfS=0, PDF *pdfB=0) const;
-      virtual Double_t GetMaximumSignificance( Double_t SignalEvents, Double_t BackgroundEvents, 
+      virtual Double_t GetMaximumSignificance( Double_t SignalEvents, Double_t BackgroundEvents,
                                                Double_t& optimal_significance_value  ) const;
       virtual Double_t GetSeparation( TH1*, TH1* ) const;
       virtual Double_t GetSeparation( PDF* pdfS = 0, PDF* pdfB = 0 ) const;
@@ -366,7 +367,7 @@ namespace TMVA {
       mutable const Event*   fTmpEvent; //! temporary event when testing on a different DataSet than the own one
 
       // event reference and update
-      // NOTE: these Event accessors make sure that you get the events transformed according to the 
+      // NOTE: these Event accessors make sure that you get the events transformed according to the
       //        particular clasifiers transformation chosen
       UInt_t           GetNEvents      () const { return Data()->GetNEvents(); }
       const Event*     GetEvent        () const;
@@ -630,7 +631,7 @@ namespace TMVA {
 
       // this carrier
 #if __cplusplus > 199711L
-      static thread_local MethodBase* fgThisBase;         // this pointer
+      static TTHREAD_TLS(MethodBase*) fgThisBase;         // this pointer
 #else
       static MethodBase* fgThisBase;         // this pointer
 #endif
@@ -641,7 +642,7 @@ namespace TMVA {
       Bool_t           fNormalise;                   // normalise input variables
       Bool_t           fUseDecorr;                   // synonymous for decorrelation
       TString          fVariableTransformTypeString; // labels variable transform type
-      Bool_t           fTxtWeightsOnly;              // if TRUE, write weights only to text files 
+      Bool_t           fTxtWeightsOnly;              // if TRUE, write weights only to text files
       Int_t            fNbinsMVAPdf;                 // number of bins used in histogram that creates PDF
       Int_t            fNsmoothMVAPdf;               // number of times a histogram is smoothed before creating the PDF
 
@@ -662,12 +663,12 @@ namespace TMVA {
 
 
 //_______________________________________________________________________
-inline const TMVA::Event* TMVA::MethodBase::GetEvent( const TMVA::Event* ev ) const 
+inline const TMVA::Event* TMVA::MethodBase::GetEvent( const TMVA::Event* ev ) const
 {
    return GetTransformationHandler().Transform(ev);
 }
 
-inline const TMVA::Event* TMVA::MethodBase::GetEvent() const 
+inline const TMVA::Event* TMVA::MethodBase::GetEvent() const
 {
    if(fTmpEvent)
       return GetTransformationHandler().Transform(fTmpEvent);
@@ -675,25 +676,25 @@ inline const TMVA::Event* TMVA::MethodBase::GetEvent() const
       return GetTransformationHandler().Transform(Data()->GetEvent());
 }
 
-inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt ) const 
+inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt ) const
 {
    assert(fTmpEvent==0);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt));
 }
 
-inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt, Types::ETreeType type ) const 
+inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt, Types::ETreeType type ) const
 {
    assert(fTmpEvent==0);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt, type));
 }
 
-inline const TMVA::Event* TMVA::MethodBase::GetTrainingEvent( Long64_t ievt ) const 
+inline const TMVA::Event* TMVA::MethodBase::GetTrainingEvent( Long64_t ievt ) const
 {
    assert(fTmpEvent==0);
    return GetEvent(ievt, Types::kTraining);
 }
 
-inline const TMVA::Event* TMVA::MethodBase::GetTestingEvent( Long64_t ievt ) const 
+inline const TMVA::Event* TMVA::MethodBase::GetTestingEvent( Long64_t ievt ) const
 {
    assert(fTmpEvent==0);
    return GetEvent(ievt, Types::kTesting);

@@ -151,7 +151,7 @@ void TMVA::TNeuron::CalculateDelta()
 void TMVA::TNeuron::SetInputCalculator(TNeuronInput* calculator)
 {
    // set input calculator
-   if (fInputCalculator != NULL) delete fInputCalculator; 
+   if (fInputCalculator != NULL) delete fInputCalculator;
    fInputCalculator = calculator;
 }
 
@@ -294,7 +294,7 @@ void TMVA::TNeuron::InitSynapseDeltas()
 }
 
 //______________________________________________________________________________
-void TMVA::TNeuron::PrintLinks(TObjArray* links) const 
+void TMVA::TNeuron::PrintLinks(TObjArray* links) const
 {
    // print an array of TSynapses, for debugging
 
@@ -308,7 +308,7 @@ void TMVA::TNeuron::PrintLinks(TObjArray* links) const
    Int_t numLinks = links->GetEntriesFast();
    for  (Int_t i = 0; i < numLinks; i++) {
       synapse = (TSynapse*)links->At(i);
-      Log() << kDEBUG <<  
+      Log() << kDEBUG <<
          "\t\t\tweighta: " << synapse->GetWeight()
            << "\t\tw-value: " << synapse->GetWeightedValue()
            << "\t\tw-delta: " << synapse->GetWeightedDelta()
@@ -333,10 +333,10 @@ void TMVA::TNeuron::PrintMessage( EMsgType type, TString message)
 }
 
 //______________________________________________________________________________
-TMVA::MsgLogger& TMVA::TNeuron::Log() const 
+TMVA::MsgLogger& TMVA::TNeuron::Log() const
 {
   #if __cplusplus > 199711L
-  static thread_local MsgLogger logger("TNeuron",kDEBUG);    //! message logger, static to save resources
+  static TTHREAD_TLS(MsgLogger) logger("TNeuron",kDEBUG);    //! message logger, static to save resources
 #else
   static MsgLogger logger("TNeuron",kDEBUG);                 //! message logger, static to save resources
 #endif

@@ -58,6 +58,7 @@
 #include "TVector.h"
 #endif
 #endif
+#include "ThreadLocalStorage.h"
 
 namespace TMVA {
 
@@ -69,7 +70,7 @@ namespace TMVA {
    public:
 
       MethodPDERS( const TString& jobName,
-                   const TString& methodTitle, 
+                   const TString& methodTitle,
                    DataSetInfo& theData,
                    const TString& theOption,
                    TDirectory* theTargetDir = 0 );
@@ -128,8 +129,8 @@ namespace TMVA {
 
       Double_t ApplyKernelFunction( Double_t normalized_distance );
       Double_t KernelNormalization( Double_t pdf );
-      Double_t GetNormalizedDistance( const TMVA::Event &base_event, 
-                                      const BinarySearchTreeNode &sample_event, 
+      Double_t GetNormalizedDistance( const TMVA::Event &base_event,
+                                      const BinarySearchTreeNode &sample_event,
                                       Double_t *dim_normalization);
       Double_t NormSinc( Double_t x );
       Double_t LanczosFilter( Int_t level, Double_t x );
@@ -148,7 +149,7 @@ namespace TMVA {
 
       // create binary search trees for signal and background
       void CreateBinarySearchTree( Types::ETreeType type );
-      
+
       // get sample of training events
       void GetSample( const Event &e, std::vector<const BinarySearchTreeNode*>& events, Volume *volume);
 
@@ -191,7 +192,7 @@ namespace TMVA {
       Float_t            fScaleS;        // weight for signal events
       Float_t            fScaleB;        // weight for background events
       Float_t            fDeltaFrac;     // fraction of RMS
-      Double_t           fGaussSigma;    // size of Gauss in adaptive volume 
+      Double_t           fGaussSigma;    // size of Gauss in adaptive volume
       Double_t           fGaussSigmaNorm;// size of Gauss in adaptive volume (normalised to dimensions)
 
       Double_t           fNRegOut;       // number of output dimensions for regression
@@ -203,10 +204,10 @@ namespace TMVA {
       Float_t            fInitialScale;  // initial scale for adaptive volume
 
       Bool_t             fInitializedVolumeEle; // is volume element initialized ?
-      
+
       Int_t              fkNNMin;        // min number of events in kNN tree
       Int_t              fkNNMax;        // max number of events in kNN tree
-      
+
       Double_t           fMax_distance;  // maximum distance
       Bool_t             fPrinted;       // print
       Bool_t             fNormTree;      // binary-search tree is normalised
@@ -221,7 +222,7 @@ namespace TMVA {
 
       // this carrier
 #if __cplusplus > 199711L
-      static thread_local MethodPDERS* fgThisPDERS; // this pointer (required by root finder)
+      static TTHREAD_TLS(MethodPDERS*) fgThisPDERS; // this pointer (required by root finder)
 #else
       static MethodPDERS* fgThisPDERS; // this pointer (required by root finder)
 #endif

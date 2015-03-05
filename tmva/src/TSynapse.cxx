@@ -36,6 +36,8 @@
 #include "TMVA/MsgLogger.h"
 #endif
 
+#include "ThreadLocalStorage.h"
+
 static const Int_t fgUNINITIALIZED = -1;
 
 ClassImp(TMVA::TSynapse);
@@ -110,7 +112,7 @@ void TMVA::TSynapse::CalculateDelta()
 TMVA::MsgLogger& TMVA::TSynapse::Log() const
 {
 #if __cplusplus > 199711L
-  static thread_local MsgLogger logger("TSynapse");  //! message logger, static to save resources
+  static TTHREAD_TLS(MsgLogger) logger("TSynapse");  //! message logger, static to save resources
 #else
   static MsgLogger logger("TSynapse");               //! message logger, static to save resources
 #endif

@@ -4,9 +4,9 @@
  * Class  : BDTEventWrapper                                                       *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
- * Description:                                                                   *  
- *                                                                                *  
- *                                                                                *  
+ * Description:                                                                   *
+ *                                                                                *
+ *                                                                                *
  * Author: Doug Schouten (dschoute@sfu.ca)                                        *
  *                                                                                *
  *                                                                                *
@@ -27,7 +27,7 @@
 using namespace TMVA;
 
 #if __cplusplus > 199711L
-thread_local Int_t BDTEventWrapper::fVarIndex = 0;
+TTHREAD_TLS(Int_t) BDTEventWrapper::fVarIndex = 0;
 #else
 Int_t BDTEventWrapper::fVarIndex = 0;
 #endif
@@ -39,7 +39,7 @@ BDTEventWrapper::BDTEventWrapper(const Event* e) : fEvent(e) {
   fSigWeight = 0.0;
 }
 
-BDTEventWrapper::~BDTEventWrapper() { 
+BDTEventWrapper::~BDTEventWrapper() {
    // destructor
 }
 
@@ -49,14 +49,14 @@ void BDTEventWrapper::SetCumulativeWeight(Bool_t type, Double_t weight) {
     * @param fType - true for signal, false for background
     * @param weight - the total weight
     */
-   
+
    if(type) fSigWeight = weight;
    else fBkgWeight = weight;
 }
 
 Double_t BDTEventWrapper::GetCumulativeWeight(Bool_t type) const {
    // Get the accumulated weight
-   
+
    if(type) return fSigWeight;
    return fBkgWeight;
 }

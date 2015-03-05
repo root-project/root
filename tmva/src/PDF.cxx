@@ -50,7 +50,7 @@ const Int_t    TMVA::PDF::fgNbin_PdfHist      = 10000;
 const Bool_t   TMVA::PDF::fgManualIntegration = kTRUE;
 const Double_t TMVA::PDF::fgEpsilon           = 1.0e-12;
 #if __cplusplus > 199711L
-thread_local TMVA::PDF* TMVA::PDF::fgThisPDF  = 0;
+TTHREAD_TLS(TMVA::PDF*) TMVA::PDF::fgThisPDF  = 0;
 #else
 TMVA::PDF*     TMVA::PDF::fgThisPDF           = 0;
 #endif
@@ -597,7 +597,7 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
       if (y > 0) {
          ndof++;
          Double_t d = TMath::Abs( (y - yref*rref)/ey );
-         //         std::cout << "bin: " << bin << "  val: " << x << "  data(err): " << y << "(" << ey << ")   pdf: " 
+         //         std::cout << "bin: " << bin << "  val: " << x << "  data(err): " << y << "(" << ey << ")   pdf: "
          //              << yref << "  dev(chi2): " << d << "(" << chi2 << ")  rref: " << rref << std::endl;
          chi2 += d*d;
          if (d > 1) { nc1++; if (d > 2) { nc2++; if (d > 3) { nc3++; if (d > 6) nc6++; } } }
@@ -723,7 +723,7 @@ Double_t TMVA::PDF::GetValInverse( Double_t y, Bool_t isMonotonouslyIncreasingFu
    Int_t    lowerBin=0,      higherBin=0;
    Double_t lowerBinValue=0, higherBinValue=0;
    FindBinInverse(fPDFHist,lowerBin,higherBin,lowerBinValue,higherBinValue,y,isMonotonouslyIncreasingFunction);
-   
+
    Double_t xValueLowerBin =fPDFHist->GetBinCenter (lowerBin);
    Double_t xValueHigherBin=fPDFHist->GetBinCenter (higherBin);
 
@@ -743,7 +743,7 @@ Double_t TMVA::PDF::GetValInverse( Double_t y, Bool_t isMonotonouslyIncreasingFu
 }
 
 //_____________________________________________________________________
-void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& higherBin, Double_t& lowerBinValue, Double_t& higherBinValue, 
+void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& higherBin, Double_t& lowerBinValue, Double_t& higherBinValue,
 				Double_t y, Bool_t isMonotonouslyIncreasingFunction ) const
 {
    // find bin from value on ordinate
@@ -752,7 +752,7 @@ void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& hi
       lowerBin =0;
 
       Int_t bin=higherBin/2;
-      
+
       while (bin>lowerBin && bin<higherBin) {
 	 Double_t binContent=histogram->GetBinContent(bin);
 
