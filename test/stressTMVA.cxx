@@ -60,7 +60,6 @@ Regression_BDTG2 [4/4]...........................................OK
 *  CPUTIME   =  90.2   *  Root5.27/07   20100929/1318
 ******************************************************************
 */
-#include "TThread.h"
 // including file tmvaut/UnitTest.h
 #ifndef UNITTEST_H
 #define UNITTEST_H
@@ -71,7 +70,6 @@ Regression_BDTG2 [4/4]...........................................OK
 #include <string>
 #include <iostream>
 #include <cassert>
-#include <atomic>
 
 // The following have underscores because
 // they are macros. For consistency,
@@ -106,8 +104,8 @@ namespace UnitTesting
       bool floatCompare(float x1, float x2);
    private:
       std::ostream* osptr;
-      std::atomic<long> nPass;
-      std::atomic<long> nFail;
+      long nPass;
+      long nFail;
       mutable std::string fName;
       std::string fFileName;
       // Disallowed:
@@ -209,7 +207,7 @@ long UnitTest::report() const
 {
    if (osptr)
       {
-         std::string counts(Form(" [%li/%li]", nPass.load(), nPass+nFail));
+         std::string counts(Form(" [%li/%li]", nPass, nPass+nFail));
 
          *osptr << name() << counts;
 
@@ -1294,128 +1292,6 @@ void utReader::run()
    reader[2]->EvaluateMVA( "LD method");
    test_(1>0);
 }
-#ifndef UTREADERMT_H
-#define UTREADERMT_H
-
-// Author: D. Piparo, 2015
-// TMVA unit tests
-//
-// this class acts as interface to several reader applications in MT mode
-
-#include <string>
-#include <iostream>
-#include <cassert>
-#include <vector>
-#include <thread>
-
-#include "TTree.h"
-#include "TString.h"
-
-#include "TMVA/Reader.h"
-#include "TMVA/Types.h"
-
-
-
-namespace UnitTesting
-{
-  class utReaderMT : public UnitTest
-  {
-  public:
-    utReaderMT(const char* theOption="");
-    virtual ~utReaderMT();
-
-    virtual void run();
-
-  protected:
-
-  private:
-     // disallow copy constructor and assignment
-     utReaderMT(const utReaderMT&);
-     utReaderMT& operator=(const utReaderMT&);
-  };
-} // namespace UnitTesting
-#endif //
-
-
-#include <string>
-#include <iostream>
-#include <cassert>
-#include <vector>
-
-#include "TTree.h"
-#include "TString.h"
-
-#include "TMVA/Reader.h"
-#include "TMVA/Types.h"
-
-
-
-using namespace std;
-using namespace UnitTesting;
-using namespace TMVA;
-
-utReaderMT::utReaderMT(const char* /*theOption*/)
-   : UnitTest(string("Reader"))
-{
-
-}
-utReaderMT::~utReaderMT(){ }
-
-void utReaderMT::run()
-{
-   auto runSingleReader = [&] () {
-      float xtest,xtest2;
-      Reader* reader2 = new Reader();
-      Reader* reader3 = new Reader();
-      reader2->AddVariable("test", &xtest);
-      reader2->AddVariable("test2", &xtest2);
-      reader3->AddVariable("test", &xtest);
-
-      delete reader2;
-      delete reader3;
-      test_(1>0);
-      const int nTest=3;
-      int ievt;
-      vector<float> testvar(10);
-      std::vector< TMVA::Reader* > reader(nTest);
-      for (int iTest=0;iTest<nTest;iTest++){
-         reader[iTest] = new TMVA::Reader( "!Color:Silent" );
-         if (iTest==0){
-            reader[iTest]->AddVariable( "var0" ,&testvar[0]);
-            reader[iTest]->AddVariable( "var1" ,&testvar[1]);
-            reader[iTest]->AddSpectator( "ievt" ,&ievt);
-            reader[iTest]->BookMVA( "LD method", "weights/TMVATest_LD.weights.xml") ;
-         }
-         if (iTest==1){
-            reader[iTest]->AddVariable( "var0" ,&testvar[0]);
-            reader[iTest]->AddVariable( "var1" ,&testvar[1]);
-            reader[iTest]->AddVariable( "var2" ,&testvar[2]);
-            reader[iTest]->AddSpectator( "ievt" ,&ievt);
-            reader[iTest]->BookMVA( "LD method", "weights/TMVATest3Var_LD.weights.xml") ;
-         }
-         if (iTest==2){
-            reader[iTest]->AddVariable( "var0" ,&testvar[0]);
-            reader[iTest]->AddVariable( "var1" ,&testvar[1]);
-            reader[iTest]->AddVariable( "var2" ,&testvar[2]);
-            reader[iTest]->AddVariable( "ivar0" ,&testvar[3]);
-            reader[iTest]->AddVariable( "ivar1" ,&testvar[4]);
-            reader[iTest]->AddSpectator( "ievt" ,&ievt);
-            reader[iTest]->BookMVA( "LD method", "weights/TMVATest3VarF2VarI_LD.weights.xml") ;
-         }
-      }
-      reader[0]->EvaluateMVA( "LD method");
-      reader[1]->EvaluateMVA( "LD method");
-      reader[2]->EvaluateMVA( "LD method");
-      test_(1>0);
-   };
-   for (int j=0;j<5;++j){ // challenge non reproducibility repeating the loop
-      vector<thread> threads;
-      for (int i=0;i<10;++i) threads.emplace_back(runSingleReader);
-      for (auto&& t : threads) t.join();
-   }
-
-}
-
 // including file tmvaut/utFactory.h
 #ifndef UTFACTORY_H
 #define UTFACTORY_H
@@ -3007,7 +2883,6 @@ int main(int argc, char **argv)
    TMVA_test.addTest(new utDataSet);
    TMVA_test.addTest(new utFactory);
    TMVA_test.addTest(new utReader);
-   TMVA_test.addTest(new utReaderMT);
 
    addClassificationTests(TMVA_test, full);
    addRegressionTests(TMVA_test, full);
@@ -3015,7 +2890,6 @@ int main(int argc, char **argv)
    addComplexClassificationTests(TMVA_test, full);
 
    // run all
-   TThread::Initialize();
    TMVA_test.run();
 
 #ifdef COUTDEBUG
