@@ -220,11 +220,7 @@ namespace TMVA {
                                  Float_t sumW2S, Float_t sumW2B ) const;
 
       // this carrier
-#if __cplusplus > 199711L
-      static thread_local MethodPDERS* fgThisPDERS; // this pointer (required by root finder)
-#else
       static MethodPDERS* fgThisPDERS; // this pointer (required by root finder)
-#endif
       void UpdateThis();
 
       void Init( void );

@@ -93,7 +93,8 @@ namespace TMVA {
 
    protected:
 
-      static MsgLogger& Log();
+      static MsgLogger* fgLogger;  // message logger
+
    };
       
    // ---------------------------------------------------------------------------
@@ -248,16 +249,16 @@ namespace TMVA {
    inline void TMVA::Option<Bool_t>::AddPreDefVal( const Bool_t& ) 
    {
       // template specialization for Bool_t 
-      Log() << kFATAL << "<AddPreDefVal> predefined values for Option<Bool_t> don't make sense" 
-	    << Endl;
+      *fgLogger << kFATAL << "<AddPreDefVal> predefined values for Option<Bool_t> don't make sense" 
+                << Endl;
    }
 
    template<>
    inline void TMVA::Option<Float_t>::AddPreDefVal( const Float_t& ) 
    {
       // template specialization for Float_t 
-      Log() << kFATAL << "<AddPreDefVal> predefined values for Option<Float_t> don't make sense" 
-	    << Endl;
+      *fgLogger << kFATAL << "<AddPreDefVal> predefined values for Option<Float_t> don't make sense" 
+                << Endl;
    }
 
    template<class T>
@@ -357,8 +358,8 @@ namespace TMVA {
          this->Value() = false;
       }
       else {
-         Log() << kFATAL << "<SetValueLocal> value \'" << val 
-	       << "\' can not be interpreted as boolean" << Endl;
+         *fgLogger << kFATAL << "<SetValueLocal> value \'" << val 
+                   << "\' can not be interpreted as boolean" << Endl;
       }
    }
 }

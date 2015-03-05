@@ -26,11 +26,7 @@
 
 using namespace TMVA;
 
-#if __cplusplus > 199711L
-thread_local Int_t BDTEventWrapper::fVarIndex = 0;
-#else
 Int_t BDTEventWrapper::fVarIndex = 0;
-#endif
 
 BDTEventWrapper::BDTEventWrapper(const Event* e) : fEvent(e) {
    // constuctor

@@ -105,7 +105,8 @@ namespace TMVA {
       void SetMax( Double_t m ) { fMax = m; }
       void SetMin( Double_t m ) { fMin = m; }
 
-      MsgLogger& Log() const;
+      static MsgLogger* fgLogger;   // message logger
+      MsgLogger& Log() const { return *fgLogger; }          
 
       ClassDef(Interval,0)    // Interval definition, continous and discrete
    };

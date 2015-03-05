@@ -254,8 +254,6 @@ namespace TMVA {
 
       DataSet* CreateDataSet( DataSetInfo &, DataInputHandler& );
 
-      static DataSetFactory* NewInstance() { return new DataSetFactory(); }
-      static void destroyNewInstance(DataSetFactory* iOther) { delete iOther;}
    protected:
 
       ~DataSetFactory();
@@ -316,8 +314,8 @@ namespace TMVA {
       Bool_t                     fScaleWithPreselEff; //! how to deal with requested #events in connection with preselection cuts 
 
       // the event
-      TTree*                     fCurrentTree;       //! the tree, events are currently read from
-      UInt_t                     fCurrentEvtIdx;     //! the current event (to avoid reading of the same event)
+      mutable TTree*             fCurrentTree;       //! the tree, events are currently read from
+      mutable UInt_t             fCurrentEvtIdx;     //! the current event (to avoid reading of the same event)
 
       // the formulas for reading the original tree
       std::vector<TTreeFormula*> fInputFormulas;   //! input variables
@@ -326,7 +324,7 @@ namespace TMVA {
       std::vector<TTreeFormula*> fWeightFormula;   //! weights
       std::vector<TTreeFormula*> fSpectatorFormulas; //! spectators
 
-      MsgLogger*                 fLogger;          //! message logger
+      mutable MsgLogger*         fLogger;          //! message logger
       MsgLogger& Log() const { return *fLogger; }
    };
 }

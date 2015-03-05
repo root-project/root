@@ -629,11 +629,8 @@ namespace TMVA {
    private:
 
       // this carrier
-#if __cplusplus > 199711L
-      static thread_local MethodBase* fgThisBase;         // this pointer
-#else
       static MethodBase* fgThisBase;         // this pointer
-#endif
+
 
       // ===== depreciated options, kept for backward compatibility  =====
    private:

@@ -223,11 +223,7 @@ Double_t TMVA::MethodTMlpANN::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // calculate the value of the neural net for the current event
    const Event* ev = GetEvent();
-#if __cplusplus > 199711L
-   static thread_local Double_t* d = new Double_t[Data()->GetNVariables()];
-#else
    static Double_t* d = new Double_t[Data()->GetNVariables()];
-#endif
    for (UInt_t ivar = 0; ivar<Data()->GetNVariables(); ivar++) {
       d[ivar] = (Double_t)ev->GetValue(ivar);
    }
@@ -416,13 +412,8 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromXML( void* wghtnode )
 
    // Here we create a dummy tree necessary to create a minimal NN
    // to be used for testing, evaluation and application
-#if __cplusplus > 199711L
-   static thread_local Double_t* d = new Double_t[Data()->GetNVariables()] ;
-   static thread_local Int_t type;
-#else
    static Double_t* d = new Double_t[Data()->GetNVariables()] ;
    static Int_t type;
-#endif
 
    gROOT->cd();
    TTree * dummyTree = new TTree("dummy","Empty dummy tree", 1);
@@ -451,7 +442,7 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromStream( std::istream& istr )
    Log() << kINFO << "Load TMLP weights into " << fMLP << Endl;
 
    Double_t* d = new Double_t[Data()->GetNVariables()] ; 
-   Int_t type;
+   static Int_t type;
    gROOT->cd();
    TTree * dummyTree = new TTree("dummy","Empty dummy tree", 1);
    for (UInt_t ivar = 0; ivar<Data()->GetNVariables(); ivar++) {

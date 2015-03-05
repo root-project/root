@@ -355,7 +355,7 @@ namespace TMVA {
 
    protected:
 
-      static MsgLogger& Log();
+      static MsgLogger* fgLogger;    // static because there is a huge number of nodes...
 
       std::vector<Double_t>       fFisherCoeff;    // the fisher coeff (offset at the last element)
 

@@ -75,12 +75,16 @@ End_Html */
 
 ClassImp(TMVA::Interval)
 
+TMVA::MsgLogger* TMVA::Interval::fgLogger = 0;
+
 //_______________________________________________________________________
 TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) : 
    fMin(min),
    fMax(max),
    fNbins(nbins)
 {
+   if (!fgLogger) fgLogger = new MsgLogger("Interval");
+
    // defines minimum and maximum of an interval
    // when nbins > 0, interval describes a discrete distribution (equally distributed in the interval)
    // when nbins == 0, interval describes a continous interval
@@ -101,6 +105,7 @@ TMVA::Interval::Interval( const Interval& other ) :
    fMax  ( other.fMax ),
    fNbins( other.fNbins )
 {
+   if (!fgLogger) fgLogger = new MsgLogger("Interval");
 }
 
 //_______________________________________________________________________
@@ -162,13 +167,4 @@ void TMVA::Interval::Print(std::ostream &os) const
    for (Int_t i=0; i<GetNbins(); i++){
       os << "| " << GetElement(i)<<" |" ;
    }  
-}
-
-TMVA::MsgLogger& TMVA::Interval::Log() const {
-#if __cplusplus > 199711L
-  static thread_local MsgLogger logger("Interval");   // message logger
-#else
-  static MsgLogger logger("Interval");   // message logger
-#endif
-  return logger;
 }

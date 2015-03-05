@@ -43,9 +43,6 @@
 #include <sstream>
 #include <iostream>
 #include <map>
-#if __cplusplus > 199711L
-#include <atomic>
-#endif
 
 // ROOT include(s)
 #ifndef ROOT_TObject
@@ -78,7 +75,7 @@ namespace TMVA {
       std::string GetPrintedSource()   const;
       std::string GetFormattedSource() const;
 
-      static UInt_t GetMaxSourceSize()                    { return (const UInt_t)fgMaxSourceSize; }
+      static UInt_t GetMaxSourceSize()                    { return (UInt_t)fgMaxSourceSize; }
 
       // Needed for copying
       MsgLogger& operator= ( const MsgLogger& parent );
@@ -116,20 +113,13 @@ namespace TMVA {
       static const std::string fgPrefix;          // the prefix of the source name
       static const std::string fgSuffix;          // suffix following source name
       EMsgType                 fActiveType;       // active type
-      static const UInt_t      fgMaxSourceSize;   // maximum length of source name
-#if __cplusplus > 199711L
-      static std::atomic<Bool_t> fgOutputSupressed; // disable the output globaly (used by generic booster)
-      static std::atomic<Bool_t> fgInhibitOutput;   // flag to suppress all output
-
-      static std::atomic<const std::map<EMsgType, std::string>*> fgTypeMap;   // matches output types with strings
-      static std::atomic<const std::map<EMsgType, std::string>*> fgColorMap;  // matches output types with terminal colors
-#else
+      static UInt_t            fgMaxSourceSize;   // maximum length of source name
       static Bool_t            fgOutputSupressed; // disable the output globaly (used by generic booster)
       static Bool_t            fgInhibitOutput;   // flag to suppress all output
+      static Int_t             fgInstanceCounter; // counts open MsgLogger instances
 
-      static const std::map<EMsgType, std::string>* fgTypeMap;   // matches output types with strings
-      static const std::map<EMsgType, std::string>* fgColorMap;  // matches output types with terminal colors
-#endif
+      static std::map<EMsgType, std::string>* fgTypeMap;   // matches output types with strings
+      static std::map<EMsgType, std::string>* fgColorMap;  // matches output types with terminal colors
       EMsgType                                fMinType;    // minimum type for output
 
       ClassDef(MsgLogger,0) // Ostringstream derivative to redirect and format logging output

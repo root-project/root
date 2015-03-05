@@ -2171,11 +2171,7 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
    Double_t xmin = effhist->GetXaxis()->GetXmin();
    Double_t xmax = effhist->GetXaxis()->GetXmax();
 
-#if __cplusplus > 199711L
-   static thread_local Double_t nevtS;
-#else
    static Double_t nevtS;
-#endif
 
    // first round ? --> create histograms
    if (results->DoesExist("MVA_EFF_S")==0) {
@@ -3089,11 +3085,7 @@ void TMVA::MethodBase::PrintHelpMessage() const
 
 // ----------------------- r o o t   f i n d i n g ----------------------------
 
-#if __cplusplus > 199711L
-thread_local TMVA::MethodBase* TMVA::MethodBase::fgThisBase = 0;
-#else
 TMVA::MethodBase* TMVA::MethodBase::fgThisBase = 0;
-#endif
 
 //_______________________________________________________________________
 Double_t TMVA::MethodBase::IGetEffForRoot( Double_t theCut )

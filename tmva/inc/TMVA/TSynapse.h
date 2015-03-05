@@ -102,7 +102,8 @@ namespace TMVA {
       TNeuron* fPreNeuron;         // pointer to pre-neuron
       TNeuron* fPostNeuron;        // pointer to post-neuron
 
-      MsgLogger& Log() const;
+      static MsgLogger* fgLogger;                     //! message logger, static to save resources
+      MsgLogger& Log() const { return *fgLogger; }                       
 
       ClassDef(TSynapse,0) // Synapse class used by MethodANNBase and derivatives
    };

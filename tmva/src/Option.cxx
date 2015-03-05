@@ -28,6 +28,8 @@
 
 #include "TMVA/Option.h"
 
+TMVA::MsgLogger* TMVA::OptionBase::fgLogger = 0;
+
 //______________________________________________________________________
 TMVA::OptionBase::OptionBase( const TString& name, const TString& desc ) 
    : TObject(), 
@@ -37,6 +39,7 @@ TMVA::OptionBase::OptionBase( const TString& name, const TString& desc )
      fIsSet       ( kFALSE )
 {
    // constructor
+   if (!fgLogger) fgLogger = new MsgLogger("Option",kDEBUG);
    fNameAllLower.ToLower();
 }
 
@@ -49,12 +52,3 @@ Bool_t TMVA::OptionBase::SetValue( const TString& vs, Int_t )
    return kTRUE;
 }
 
-TMVA::MsgLogger& TMVA::OptionBase::Log()
-{
-#if __cplusplus > 199711L
-  static thread_local MsgLogger logger("Option",kDEBUG);  // message logger
-#else
-  static MsgLogger logger("Option",kDEBUG);  // message logger
-#endif
-  return logger;
-}
