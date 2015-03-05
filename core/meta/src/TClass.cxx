@@ -3333,10 +3333,10 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
       return temp;
    }
 
-   if(not load) {
-      if(! ((kIsClass | kIsStruct | kIsUnion) & Property()) ) {
+   if (!load) {
+      if (! ((kIsClass | kIsStruct | kIsUnion) & Property()) ) {
          R__LOCKGUARD(gInterpreterMutex);
-         if(fEnums) {
+         if (fEnums) {
             return fEnums.load();
          }
          //namespaces can have enums added to them
@@ -3349,10 +3349,11 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
    }
 
    R__LOCKGUARD(gInterpreterMutex);
-   if(fEnums) {
+   if (fEnums) {
+      if (load) (*fEnums).Load();
       return fEnums.load();
    }
-   if( (kIsClass | kIsStruct | kIsUnion) & Property()) {
+   if ( (kIsClass | kIsStruct | kIsUnion) & Property()) {
       // For this case, the list will be immutable
       temp = new TListOfEnums(this);
    } else {

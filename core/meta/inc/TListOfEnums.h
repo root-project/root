@@ -50,22 +50,22 @@ private:
    TListOfEnums(const TListOfEnums&) = delete;
    TListOfEnums& operator=(const TListOfEnums&) = delete;
 
-   void       MapObject(TObject *obj);
-   void       UnmapObject(TObject *obj);
+   void MapObject(TObject *obj);
+   void UnmapObject(TObject *obj);
 
    void Load();
    void Unload();
    void Unload(TEnum *e);
-   void       SetClass(TClass* cl) { fClass = cl; }
+   void SetClass(TClass* cl) { fClass = cl; }
 
 public:
    typedef TDictionary::DeclId_t DeclId_t;
 
 protected:
-   TClass* GetClass() const {return fClass;}
-   TExMap* GetIds() { return fIds;}
-   TEnum* FindUnloaded(const char* name) { return (TEnum*)fUnloaded->FindObject(name);}
-   TEnum *Get(DeclId_t id, const char *name);
+   TClass *GetClass() const {return fClass;}
+   TExMap *GetIds() { return fIds;}
+   TEnum  *FindUnloaded(const char* name) { return (TEnum*)fUnloaded->FindObject(name);}
+   TEnum  *Get(DeclId_t id, const char *name);
 
 public:
    TListOfEnums(TClass *cl = 0);

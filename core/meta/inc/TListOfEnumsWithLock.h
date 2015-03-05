@@ -49,17 +49,17 @@ public:
    TObject   *FindObject(const char *name) const override;
    TIterator *MakeIterator(Bool_t dir = kIterForward) const override;
 
-   TObject  *At(Int_t idx) const override;
-   TObject  *After(const TObject *obj) const override;
-   TObject  *Before(const TObject *obj) const override;
-   TObject  *First() const override;
-   TObjLink *FirstLink() const override;
-   TObject **GetObjectRef(const TObject *obj) const override;
-   TObject  *Last() const override;
-   TObjLink *LastLink() const override;
+   TObject   *At(Int_t idx) const override;
+   TObject   *After(const TObject *obj) const override;
+   TObject   *Before(const TObject *obj) const override;
+   TObject   *First() const override;
+   TObjLink  *FirstLink() const override;
+   TObject  **GetObjectRef(const TObject *obj) const override;
+   TObject   *Last() const override;
+   TObjLink  *LastLink() const override;
 
-   Int_t     GetLast() const override;
-   Int_t     IndexOf(const TObject *obj) const override;
+   Int_t      GetLast() const override;
+   Int_t      IndexOf(const TObject *obj) const override;
 
    Int_t      GetSize() const override;
 
@@ -95,7 +95,7 @@ class TListOfEnumsWithLockIter : public TListIter
 
    using TListIter::operator=;
 
-   TObject           *Next();
+   TObject *Next();
 
    ClassDef(TListOfEnumsWithLockIter,0)
 };
