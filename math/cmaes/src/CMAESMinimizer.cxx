@@ -658,8 +658,55 @@ namespace ROOT
     
     bool TCMAESMinimizer::Scan(unsigned int i, unsigned int &nstep, double *x, double *y, double xmin, double xmax)
     {
-      //TODO.
-      return false;
+      std::vector<std::pair<double,double>> result;
+      std::vector<double> params = fValues;
+      double amin = MinValue();
+      result.push_back(std::pair<double,double>(params[i],amin));
+      
+      double low=xmin, high=xmax;
+      if (low <= high && nstep-1 >= 2)
+	{
+	  if (low == 0 && high == 0)
+	    {
+	      low = fValues[i] - 2.0*fErrors.at(i);
+	      high = fValues[i] + 2.0*fErrors.at(i); 
+	    }
+	  
+	  if (low == 0 && high == 0 
+	      && (fLBounds[i] > -std::numeric_limits<double>::max()
+		  || fUBounds[i] < std::numeric_limits<double>::max()))
+	    {
+	      if (fLBounds[i] > -std::numeric_limits<double>::max())
+		low = fLBounds[i];
+	      if (fUBounds[i] < std::numeric_limits<double>::max())
+		high = fUBounds[i];
+	    }
+	  
+	  if (fLBounds[i] > -std::numeric_limits<double>::max()
+	      || fUBounds[i] < std::numeric_limits<double>::max())
+	    {
+	      if (fLBounds[i] > -std::numeric_limits<double>::max())
+		low = std::max(low,fLBounds[i]);
+	      if (fUBounds[i] < std::numeric_limits<double>::max())
+		high = std::min(high,fUBounds[i]);
+	    }
+	  
+	  double x0 = low;
+	  double stp = (high-low) / static_cast<double>(nstep-2);
+	  for (unsigned int j=0;j<nstep-1;j++)
+	    {
+	      params[i] = x0 + j*stp;
+	      double fval = (*fObjFunc)(&params.front());
+	      result.push_back(std::pair<double,double>(params[i],fval));
+	    }
+	}
+      
+      for (int s=0;s<nstep;s++)
+	{
+	  x[s] = result[s].first;
+	  y[s] = result[s].second;
+	}
+      return true;
     }
 
     bool TCMAESMinimizer::Contour(unsigned int i, unsigned int j, unsigned int &npoints, double *xi, double *xj)
