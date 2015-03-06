@@ -37,9 +37,6 @@ using namespace libcmaes;
 
 namespace ROOT
 {
-  // registers a default empty set of extra options.
-  //ROOT::Math::IOptions &defIOptions = ROOT::Math::MinimizerOptions::Default("cmaes");
-  
   namespace cmaes
   {
 
@@ -347,7 +344,9 @@ namespace ROOT
 					 const std::string &fplot,
 					 const bool &withnumgradient,
 					 const bool &mtfeval,
-					 const bool &quiet)
+					 const bool &quiet,
+					 const int &elitist,
+					 const bool &uh)
     {
       cmaparams.set_algo(fMinimizer);
       if (gDebug > 0 || !quiet)
@@ -368,6 +367,8 @@ namespace ROOT
       cmaparams.set_fplot(fplot);
       cmaparams.set_gradient(withnumgradient);
       cmaparams.set_mt_feval(mtfeval);
+      cmaparams.set_elitism(elitist);
+      cmaparams.set_uh(uh);
     }
     
     bool TCMAESMinimizer::Minimize()
@@ -446,6 +447,8 @@ namespace ROOT
       int mtfeval = 0; // parallel execution of objective function
       int quiet = 0;
       int seed = 0;
+      int elitist = 0; // elitism: forces best solution in various manners
+      int uh = 0; // uncertainty handling, for noisy functions
       
       // set hyper-parameters according to IOptions object.
       if (cmaesOpt)
@@ -461,6 +464,8 @@ namespace ROOT
 	  cmaesOpt->GetValue("mt_feval",mtfeval);
 	  cmaesOpt->GetValue("quiet",quiet);
 	  cmaesOpt->GetValue("seed",seed);
+	  cmaesOpt->GetValue("elitist",elitist);
+	  cmaesOpt->GetValue("uh",uh);
 	}
       
       if (gDebug > 0)
@@ -476,25 +481,18 @@ namespace ROOT
 	  if (fWithBounds)
 	    {
 	      Info("CMAESMinimizer","Minimizing with bounds and linear scaling");
-	      /*ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>>,CMASolutions> pfunc = [](const CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> &cmaparams, const CMASolutions &cmasols)
-		{
-		  std::cout << "iter=" << cmasols.niter() << " / evals=" << cmasols.nevals() << " / f-value=" << cmasols.best_candidate().get_fvalue() <<  " / sigma=" << cmasols.sigma() << std::endl;
-		  std::cout << "best x=" << cmaparams.get_gp().pheno(cmasols.best_candidate().get_x_dvec()).transpose() << std::endl;
-		  return 0;
-		  };*/
 	      GenoPheno<pwqBoundStrategy,linScalingStrategy> gp(vscaling,vshift,&fLBounds.front(),&fUBounds.front());
 	      CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,seed,gp);
-	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet,elitist,uh);
 	      fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy,linScalingStrategy>>(ffit,cmaparams,CMAStrategy<CovarianceUpdate,GenoPheno<pwqBoundStrategy,linScalingStrategy>>::_defaultPFunc,fWithGradient?gfit:nullptr);
 	      fCMAparams_lb = cmaparams;
 	    }
 	  else
 	    {
-	      //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
 	      Info("CMAESMinimizer","Minimizing with linear scaling");
 	      GenoPheno<NoBoundStrategy,linScalingStrategy> gp(vscaling,vshift);
 	      CMAParameters<GenoPheno<NoBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,seed,gp);
-	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet,elitist,uh);
 	      fCMAsols = libcmaes::cmaes<GenoPheno<NoBoundStrategy,linScalingStrategy>>(ffit,cmaparams,CMAStrategy<CovarianceUpdate,GenoPheno<NoBoundStrategy,linScalingStrategy>>::_defaultPFunc,fWithGradient?gfit:nullptr);
 	      fCMAparams_l = cmaparams;
 	    }
@@ -506,7 +504,7 @@ namespace ROOT
 	      Info("CMAESMinimizer","Minimizing with bounds");
 	      GenoPheno<pwqBoundStrategy,NoScalingStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
 	      CMAParameters<GenoPheno<pwqBoundStrategy,NoScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,seed,gp);
-	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet,elitist,uh);
 	      fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>(ffit,cmaparams,CMAStrategy<CovarianceUpdate,GenoPheno<pwqBoundStrategy,NoScalingStrategy>>::_defaultPFunc,fWithGradient?gfit:nullptr);
 	      fCMAparams_b = cmaparams;
 	    }
@@ -514,7 +512,7 @@ namespace ROOT
 	    {
 	      Info("CMAESMinimizer","Minimizing without bounds or linear scaling");
 	      CMAParameters<GenoPheno<NoBoundStrategy,NoScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,seed);
-	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot,withnumgradient,mtfeval,quiet,elitist,uh);
 	      fCMAsols = libcmaes::cmaes<GenoPheno<NoBoundStrategy,NoScalingStrategy>>(ffit,cmaparams,CMAStrategy<CovarianceUpdate,GenoPheno<NoBoundStrategy,NoScalingStrategy>>::_defaultPFunc,fWithGradient?gfit:nullptr);
 	      fCMAparams = cmaparams;
 	    }
@@ -569,7 +567,6 @@ namespace ROOT
     const double* TCMAESMinimizer::Errors() const
     {
       fErrors.clear();
-      //const double* diag = fCMAsols._cov.diagonal().data();
       dVec vgdiag;
       if (fWithLinearScaling)
 	{
@@ -647,7 +644,7 @@ namespace ROOT
 	{
 	  if (!fWithBounds)
 	    {
-	      le = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams_l,fCMAsols,i,false,samplesize,ErrorDef());
+	      le = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams_l,fCMAsols,i,false,samplesize,ErrorDef(),100);
 	    }
 	  else
 	    {
@@ -678,8 +675,44 @@ namespace ROOT
 
     bool TCMAESMinimizer::Contour(unsigned int i, unsigned int j, unsigned int &npoints, double *xi, double *xj)
     {
-      //TODO.
-      return false;
+      FitFunc ffit = [this](const double *x, const int N)
+	{
+	  return (*fObjFunc)(x);
+	};
+      
+      contour ct;
+      if (fWithLinearScaling)
+	{
+	  if (!fWithBounds)
+	    {
+	      ct = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::contour_points(ffit,i,j,npoints,ErrorDef(),
+											   fCMAparams_l,fCMAsols,0.1,100);
+	    }
+	  else
+	    {
+	      ct = errstats<GenoPheno<pwqBoundStrategy,linScalingStrategy>>::contour_points(ffit,i,j,npoints,ErrorDef(),
+											    fCMAparams_lb,fCMAsols,0.1,100);
+	    }
+	}
+      else
+	{
+	  if (!fWithBounds)
+	    {
+	      ct = errstats<GenoPheno<NoBoundStrategy,NoScalingStrategy>>::contour_points(ffit,i,j,npoints,ErrorDef(),
+											  fCMAparams,fCMAsols,0.1,100);
+	    }
+	  else
+	    {
+	      ct = errstats<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>::contour_points(ffit,i,j,npoints,ErrorDef(),
+											   fCMAparams_b,fCMAsols,0.1,100);
+	    }
+	}
+      for (size_t i=0;i<ct._points.size();i++)
+	{
+	  xi[i] = ct._points.at(i).first;
+	  xj[i] = ct._points.at(i).second;
+	}
+      return true;
     }
 
     void TCMAESMinimizer::PrintResults()

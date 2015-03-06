@@ -125,7 +125,9 @@ namespace ROOT
 			    const std::string &fplot,
 			    const bool &withnumgradient,
 			    const bool &mtfeval,
-			    const bool &quiet);
+			    const bool &quiet,
+			    const int &elitist, // 0: off (default), then 1, 2 or 3
+			    const bool &uh);
       
       /** 
 	  method to perform the minimization. 
@@ -249,7 +251,6 @@ namespace ROOT
 	 find the contour points (xi,xj) of the function for parameter i and j around the minimum
 	 The contour will be find for value of the function = Min + ErrorUp();
       */
-      //TODO
       virtual bool Contour(unsigned int i, unsigned int j, unsigned int & npoints, double *xi, double *xj); 
       
       
