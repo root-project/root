@@ -51,24 +51,7 @@ namespace ROOT
       std::string algoname(type);
       // tolower() is not an  std function (Windows)
       std::transform(algoname.begin(), algoname.end(), algoname.begin(), (int(*)(int)) tolower );
-      if (algoname == "cmaes")
-	fMinimizer = CMAES_DEFAULT;
-      else if (algoname == "ipop")
-	fMinimizer = IPOP_CMAES;
-      else if (algoname == "bipop")
-	fMinimizer = BIPOP_CMAES;
-      else if (algoname == "acmaes")
-	fMinimizer = aCMAES;
-      else if (algoname == "aipop")
-	fMinimizer = aIPOP_CMAES;
-      else if (algoname == "abipop")
-	fMinimizer = aBIPOP_CMAES;
-      else if (algoname == "sepcmaes")
-	fMinimizer = sepCMAES;
-      else if (algoname == "sepipop")
-	fMinimizer = sepIPOP_CMAES;
-      else if (algoname == "sepbipop")
-	fMinimizer = sepBIPOP_CMAES;
+      fMinimizer = algoname;
     }
 
     TCMAESMinimizer::TCMAESMinimizer(const TCMAESMinimizer &m)
@@ -88,7 +71,6 @@ namespace ROOT
 
     void TCMAESMinimizer::Clear()
     {
-      std::cout << "clearing up minimizer\n";
       fCMAsols = CMASolutions();
       fCMAparams = CMAParameters<GenoPheno<NoBoundStrategy,NoScalingStrategy>>();
       fCMAparams_b = CMAParameters<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>();
@@ -348,7 +330,7 @@ namespace ROOT
 					 const int &elitist,
 					 const bool &uh)
     {
-      cmaparams.set_algo(fMinimizer);
+      cmaparams.set_str_algo(fMinimizer);
       if (gDebug > 0 || !quiet)
 	cmaparams.set_quiet(false);
       else cmaparams.set_quiet(true);
