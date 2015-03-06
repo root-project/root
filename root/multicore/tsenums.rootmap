@@ -1,0 +1,12 @@
+[ libtsenums_dictrflx.so ]
+# List of selected enums and outer classes
+enum enum1
+enum enum2
+enum enum3
+enum enum4
+enum enum5
+enum enumns::enum1
+enum enumns::enum2
+enum enumns::enum3
+enum enumns::enum4
+enum enumns::enum5
