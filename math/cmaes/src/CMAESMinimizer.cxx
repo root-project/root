@@ -675,8 +675,44 @@ namespace ROOT
 
     bool TCMAESMinimizer::Contour(unsigned int i, unsigned int j, unsigned int &npoints, double *xi, double *xj)
     {
-      //TODO.
-      return false;
+      FitFunc ffit = [this](const double *x, const int N)
+	{
+	  return (*fObjFunc)(x);
+	};
+      
+      contour ct;
+      if (fWithLinearScaling)
+	{
+	  if (!fWithBounds)
+	    {
+	      ct = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::contour_points(ffit,i,j,npoints,ErrorDef(),
+											   fCMAparams_l,fCMAsols,0.1,100);
+	    }
+	  else
+	    {
+	      ct = errstats<GenoPheno<pwqBoundStrategy,linScalingStrategy>>::contour_points(ffit,i,j,npoints,ErrorDef(),
+											    fCMAparams_lb,fCMAsols,0.1,100);
+	    }
+	}
+      else
+	{
+	  if (!fWithBounds)
+	    {
+	      ct = errstats<GenoPheno<NoBoundStrategy,NoScalingStrategy>>::contour_points(ffit,i,j,npoints,ErrorDef(),
+											  fCMAparams,fCMAsols,0.1,100);
+	    }
+	  else
+	    {
+	      ct = errstats<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>::contour_points(ffit,i,j,npoints,ErrorDef(),
+											   fCMAparams_b,fCMAsols,0.1,100);
+	    }
+	}
+      for (size_t i=0;i<ct._points.size();i++)
+	{
+	  xi[i] = ct._points.at(i).first;
+	  xj[i] = ct._points.at(i).second;
+	}
+      return true;
     }
 
     void TCMAESMinimizer::PrintResults()

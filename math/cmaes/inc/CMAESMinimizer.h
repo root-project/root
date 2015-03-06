@@ -251,7 +251,6 @@ namespace ROOT
 	 find the contour points (xi,xj) of the function for parameter i and j around the minimum
 	 The contour will be find for value of the function = Min + ErrorUp();
       */
-      //TODO
       virtual bool Contour(unsigned int i, unsigned int j, unsigned int & npoints, double *xi, double *xj); 
       
       
