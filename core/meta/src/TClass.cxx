@@ -3323,7 +3323,14 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
 {
    // Return list containing the TEnums of a class.
    auto temp = fEnums.load();
-   if(temp) {
+   if (temp) {
+      if (load) {
+         if (fProperty == -1) Property();
+         if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
+            R__LOCKGUARD2(gROOTMutex);
+            temp->Load();
+         }
+      }
       return temp;
    }
 
