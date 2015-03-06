@@ -27,11 +27,12 @@ void exectsenums (){
                    "enumns::enum5"};
    tsStringlist names;
    for (auto&& enName : enumNames){
-      threads.emplace_back([&](){
+      auto f = [&](){
          auto en = TEnum::GetEnum(enName);
          names.addString(TEnum::GetEnum(enName)->GetQualifiedName());
-
-      });
+      };
+//       threads.emplace_back(f);
+      f(); //just run serial
    }
 
    for (auto&& t : threads)
