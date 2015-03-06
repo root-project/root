@@ -49,11 +49,6 @@
 const Int_t    TMVA::PDF::fgNbin_PdfHist      = 10000;
 const Bool_t   TMVA::PDF::fgManualIntegration = kTRUE;
 const Double_t TMVA::PDF::fgEpsilon           = 1.0e-12;
-#if __cplusplus > 199711L
-thread_local TMVA::PDF* TMVA::PDF::fgThisPDF  = 0;
-#else
-TMVA::PDF*     TMVA::PDF::fgThisPDF           = 0;
-#endif
 
 ClassImp(TMVA::PDF)
 
@@ -91,7 +86,7 @@ TMVA::PDF::PDF( const TString& name, Bool_t norm )
 {
    // default constructor needed for ROOT I/O
    fLogger   = new MsgLogger(this);
-   fgThisPDF = this;
+   GetThisPdfThreadLocal() = this;
 }
 
 //_______________________________________________________________________
@@ -248,8 +243,7 @@ TMVA::PDF::~PDF()
 //_______________________________________________________________________
 void TMVA::PDF::BuildPDF( const TH1* hist )
 {
-   fgThisPDF = this;
-
+   GetThisPdfThreadLocal() = this;
    // sanity check
    if (hist == NULL) Log() << kFATAL << "Called without valid histogram pointer!" << Endl;
 
@@ -1116,5 +1110,5 @@ std::istream& TMVA::operator>> ( std::istream& istr, PDF& pdf )
 TMVA::PDF*  TMVA::PDF::ThisPDF( void )
 {
    // return global "this" pointer of PDF
-   return fgThisPDF;
+   return GetThisPdfThreadLocal();
 }

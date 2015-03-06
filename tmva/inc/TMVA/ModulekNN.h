@@ -148,11 +148,11 @@ namespace TMVA {
 
       private:
 
-#if __cplusplus > 199711L
-         static thread_local TRandom3 fgRndm;
-#else
-         static TRandom3 fgRndm;
-#endif
+        // This is a workaround for OSx where static thread_local data members are
+        // not supported. The C++ solution would indeed be the following:
+//         static_ thread_local TRandom3 fgRndm;
+         static TRandom3& GetRndmThreadLocal() {thread_local TRandom3 fgRndm(1); return fgRndm;};
+
          UInt_t fDimn;
 
          Node<Event> *fTree;
