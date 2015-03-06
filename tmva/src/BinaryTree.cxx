@@ -46,8 +46,6 @@
 
 ClassImp(TMVA::BinaryTree)
 
-TMVA::MsgLogger* TMVA::BinaryTree::fgLogger = 0;
-
 //_______________________________________________________________________
 TMVA::BinaryTree::BinaryTree( void )
    : fRoot  ( NULL ),
@@ -55,7 +53,6 @@ TMVA::BinaryTree::BinaryTree( void )
      fDepth ( 0 )
 {
    // constructor for a yet "empty" tree. Needs to be filled afterwards
-   if (!fgLogger) fgLogger =  new MsgLogger("BinaryTree");
 }
 
 //_______________________________________________________________________
@@ -220,4 +217,14 @@ void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
    if (n->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(n->GetDepth());
 
    return;
+}
+
+//_______________________________________________________________________
+TMVA::MsgLogger& TMVA::BinaryTree::Log() const {
+#if __cplusplus > 199711L
+  static thread_local MsgLogger logger("BinaryTree");
+#else
+  static MsgLogger logger("BinaryTree");
+#endif
+  return logger;
 }

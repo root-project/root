@@ -205,7 +205,11 @@ namespace TMVA {
       MsgLogger&               Log() const { return *fLogger; }    
 
       // static pointer to this object
+#if __cplusplus > 199711L
+      static thread_local PDF* fgThisPDF;             // this PDF pointer 
+#else
       static PDF*              fgThisPDF;             // this PDF pointer 
+#endif
       static PDF*              ThisPDF( void ); 
 
       // external auxiliary functions 
