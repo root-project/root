@@ -54,10 +54,10 @@ namespace ROOT
       fMinimizer = algoname;
     }
 
-    TCMAESMinimizer::TCMAESMinimizer(const TCMAESMinimizer &m)
+    /*TCMAESMinimizer::TCMAESMinimizer(const TCMAESMinimizer &m)
       :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false),fWithGradient(false)
     {
-    }
+    }*/
 
     TCMAESMinimizer& TCMAESMinimizer::operator = (const TCMAESMinimizer &rhs)
     {
@@ -197,6 +197,7 @@ namespace ROOT
     {
       SetVariable(ivar,name,val,0.0);
       fFixedVariables.insert(std::pair<int,double>(ivar,val));
+      return true;
     }
     
     bool TCMAESMinimizer::SetVariableValue(unsigned int ivar, double val )
@@ -275,7 +276,10 @@ namespace ROOT
 
     bool TCMAESMinimizer::FixVariable(unsigned int ivar)
     {
+      if (ivar >= fInitialX.size())
+	return false;
       fFixedVariables.insert(std::pair<int,double>(ivar,fInitialX.at(ivar))); // XXX: sets initial variable.
+      return true;
     }
 
     bool TCMAESMinimizer::IsFixedVariable(unsigned int ivar) const
@@ -312,7 +316,7 @@ namespace ROOT
 
     int TCMAESMinimizer::VariableIndex(const std::string &name) const
     {
-      for (unsigned int i=0;i<fNames.size();i)
+      for (unsigned int i=0;i<fNames.size();i++)
 	if (fNames.at(i) == name)
 	  return i;
       return -1;
@@ -381,6 +385,7 @@ namespace ROOT
 	{
 	  /*std::copy(x,x+N,std::ostream_iterator<double>(std::cout," "));
 	    std::cout << std::endl;*/
+	  (void)N;
 	  return (*fObjFunc)(x);
 	};
       
@@ -533,7 +538,7 @@ namespace ROOT
 	    x = bc.get_x_pheno_dvec<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>(fCMAparams_b);
 	  else x = bc.get_x_dvec();
 	}
-      for (int i=0;i<fDim;i++)
+      for (int i=0;i<(int)fDim;i++)
 	fValues.push_back(x(i));
       return &fValues.front();
     }
@@ -566,7 +571,7 @@ namespace ROOT
 	  vgdiag = fCMAparams_b.get_gp().pheno(dVec(fCMAsols.sigma()*fCMAsols.cov_ref().diagonal()));
 	}
       else vgdiag = fCMAsols.sigma()*fCMAsols.cov_ref().diagonal();
-      for (int i=0;i<fDim;i++)
+      for (int i=0;i<(int)fDim;i++)
 	fErrors.push_back(std::sqrt(std::abs(vgdiag(i)))); // abs for numerical errors that bring the sqrt below 0.
       return &fErrors.front();
     }
@@ -612,8 +617,10 @@ namespace ROOT
 
     bool TCMAESMinimizer::GetMinosError(unsigned int i, double &errLow, double &errUp, int j)
     {
+      (void)j;
       FitFunc ffit = [this](const double *x, const int N)
 	{
+	  (void)N;
 	  return (*fObjFunc)(x);
 	};
       
@@ -659,6 +666,7 @@ namespace ROOT
     {
       FitFunc ffit = [this](const double *x, const int N)
 	{
+	  (void)N;
 	  return (*fObjFunc)(x);
 	};
       

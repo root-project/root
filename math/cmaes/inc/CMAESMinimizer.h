@@ -279,7 +279,7 @@ namespace ROOT
       
       /// set storage level   = 1 : store all iteration states (default)
       ///                     = 0 : store only first and last state to save memory
-      //TODO.
+      // N/A
       void SetStorageLevel(int level); 
       
     private: 
