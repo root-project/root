@@ -20,7 +20,7 @@ int main()
   TThread::Initialize();
   //When threading, also have to keep ROOT from logging all TObjects into a list
   TObject::SetObjectStat(false);
-      
+
   //Have to avoid having Streamers modify themselves after they have been used
   TVirtualStreamerInfo::Optimize(false);
 
@@ -32,7 +32,7 @@ int main()
     profiles.back()->SetBit(TH1::kCanRebin);
     auto profile = profiles.back().get();
     threads.emplace_back([i,profile,&canStart]() {
-        static thread_local TThread guard;
+        thread_local TThread guard;
         while(not canStart) {}
         for(int x=10; x>0; --x) {
           for(int y=0; y<20; ++y) {

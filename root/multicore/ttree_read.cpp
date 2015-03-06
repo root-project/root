@@ -43,7 +43,7 @@ std::tuple<int,std::string,int> parseOptions(int argc, char** argv)
       printHelp(argv[0],kDefaultNThreads);
       exit( 0 );
     }
-    
+
     nThreads = atoi(argv[1]);
   }
   if(argc >=3) {
@@ -52,7 +52,7 @@ std::tuple<int,std::string,int> parseOptions(int argc, char** argv)
   if(argc == 4) {
     newGDebug = atoi(argv[3]);
   }
-  
+
   if( argc > 4) {
     printHelp(argv[0],kDefaultNThreads);
     exit(1);
@@ -62,7 +62,7 @@ std::tuple<int,std::string,int> parseOptions(int argc, char** argv)
 
 void createDummyFile() {
   auto theList = new TList();
-  
+
   for(unsigned int i=0; i<10;++i) {
     theList->Add(new TList());
     theList->Add(new TMap());
@@ -73,7 +73,7 @@ void createDummyFile() {
 
 
   TFile f(kDefaultFileName.c_str(), "RECREATE","test");
-        
+
   auto listTree = new TTree("Events","TheList");
   listTree->Branch("theList","TList",&theList);
 
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
   gDebug = std::get<2>(options);
 
 
- 
+
 //  AutoLibraryLoader::enable();
 
   //Tell Root we want to be multi-threaded
@@ -117,24 +117,24 @@ int main(int argc, char** argv) {
 
   for(int i=0; i< kNThreads; ++i) {
     threads.push_back(std::make_shared<std::thread>( std::thread([&kFileName]() {
-	static thread_local TThread s_thread_guard;
+	thread_local TThread s_thread_guard;
 	while(waitToStart) ;
 	std::unique_ptr<TFile> f{ TFile::Open(kFileName.c_str()) };
 	assert(f.get());
 
 	TTree* eventTree = dynamic_cast<TTree*>(f.get()->Get("Events"));
 	assert(eventTree);
-	
-	for(Long64_t i = 0, iEnd = eventTree->GetEntries(); 
+
+	for(Long64_t i = 0, iEnd = eventTree->GetEntries();
 	    i != iEnd;
 	    ++i) {
 	  eventTree->GetEntry(i,1);
 	}
-	
+
 	f.get()->Close();
 	  }) ) );
-      
-  }      
+
+  }
   waitToStart = false;
   for(auto& t : threads) {
     t->join();

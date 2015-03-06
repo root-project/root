@@ -39,13 +39,13 @@ std::pair<int,int> parseOptionsForNumberOfThreadsAndgDebug(int argc, char** argv
       printHelp(argv[0],kDefaultNThreads);
       exit( 0 );
     }
-    
+
     nThreads = atoi(argv[1]);
   }
   if(argc == 3) {
     newGDebug = atoi(argv[2]);
   }
-  
+
   if( argc > 3) {
     printHelp(argv[0],kDefaultNThreads);
     exit(1);
@@ -88,11 +88,11 @@ int main(int argc, char** argv) {
   std::vector<std::shared_ptr<std::thread>> threads;
   threads.reserve(kNThreads);
 
-  
+
 
   for(int i=0; i< kNThreads; ++i) {
     threads.push_back(std::make_shared<std::thread>( std::thread([i]() {
-	static thread_local TThread s_thread_guard;
+	thread_local TThread s_thread_guard;
 
         std::stringstream nameStream;
         nameStream <<"write_thread_"<<i<<".root";
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 
 	while(waitToStart) ;
 	TFile f(nameStream.str().c_str(), "RECREATE","test");
-        
+
         auto listTree = new TTree("TheList","TheList");
 	listTree->Branch("theList","TList",&theList);
 
@@ -114,8 +114,8 @@ int main(int argc, char** argv) {
 	f.Write();
 	f.Close();
 	  }) ) );
-      
-  }      
+
+  }
   waitToStart = false;
   for(auto& t : threads) {
     t->join();
