@@ -70,6 +70,7 @@ TString gFileName;
 TString gLineString;
 TString gClassName;
 TString gImageName;
+TString gMacroName;
 TString gCwd;
 Bool_t  gHeader;
 Bool_t  gSource;
@@ -115,6 +116,7 @@ int main(int argc, char *argv[])
 
          printf("%s",gLineString.Data());
       }
+      return 0;
    }
 
    // Source file.
@@ -148,20 +150,27 @@ int main(int argc, char *argv[])
          }
 
          if (gLineString.Index("Begin_Macro") >= 0) {
-            gLineString = "<pre lang=\"cpp\">\n";
+            gLineString = "";
             gInMacro++;
          }
 
          if (gLineString.Index("End_Macro") >= 0) {
-            gLineString.ReplaceAll("End_Macro","</pre>\n");
+            gLineString.ReplaceAll("End_Macro","");
             gInMacro = 0;
          }
 
          printf("%s",gLineString.Data());
       }
+      return 0;
    }
 
-   return 1;
+   // Output anything not header nor source
+   while (fgets(gLine,255,f)) {
+      gLineString = gLine;
+      printf("%s",gLineString.Data());
+   }
+
+   return 0;
 }
 
 
@@ -229,26 +238,35 @@ void ExecuteMacro()
 {
    // Execute the macro in gLineString and produce the corresponding picture
 
+   // Retrieve the output directory
+   TString OutDir = gSystem->Getenv("DOXYGEN_OUTPUT_DIRECTORY");
+   OutDir.ReplaceAll("\"","");
+
    // Name of the next Image to be generated
    gImageName = TString::Format("%s_%3.3d.png", gClassName.Data()
                                               , gImageID++);
 
-   // Build the ROOT command to be executed.
+   // Retrieve the macro to be executed.
    if (gLineString.Index("../../..") >= 0) {
-      gLineString.ReplaceAll("../../..","root -l -b -q \"makeimage.C(\\\"../..");
+      gLineString.ReplaceAll("../../..","../..");
    } else {
-      gLineString.Prepend(TString::Format("root -l -b -q \"makeimage.C(\\\"%s/../doc/macros/",gCwd.Data()));
+      gLineString.Prepend(TString::Format("%s/../doc/macros/",gCwd.Data()));
    }
+   Int_t i1 = gLineString.Last('/')+1;
+   Int_t i2 = gLineString.Last('C');
+   gMacroName = gLineString(i1,i2-i1+1);
+
+   // Build the ROOT command to be executed.
+   gLineString.Prepend(TString::Format("root -l -b -q \"makeimage.C(\\\""));
    Int_t l = gLineString.Length();
-   TString OutDir = gSystem->Getenv("OUTPUT_DIRECTORY");
-   OutDir.ReplaceAll("\"","");
-   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s/html/%s\\\")\"",
+   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s/html/\\\",\\\"%s\\\")\"",
                                              OutDir.Data(),
                                              gImageName.Data()));
 
    ExecuteCommand(gLineString);
 
-   gLineString = TString::Format("\\image html %s\n",gImageName.Data());
+   gLineString = TString::Format("\\include %s\n\\image html %s\n", gMacroName.Data(),
+                                                                    gImageName.Data());
 }
 
 
