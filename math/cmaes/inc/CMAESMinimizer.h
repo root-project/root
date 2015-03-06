@@ -244,7 +244,6 @@ namespace ROOT
 	 scan a parameter i around the minimum. A minimization must have been done before, 
 	 return false if it is not the case
       */
-      //TODO
       virtual bool Scan(unsigned int i, unsigned int & nstep, double * x, double * y, double xmin = 0, double xmax = 0); 
       
       /**
