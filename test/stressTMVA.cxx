@@ -1355,7 +1355,7 @@ using namespace UnitTesting;
 using namespace TMVA;
 
 utReaderMT::utReaderMT(const char* /*theOption*/)
-   : UnitTest(string("Reader"))
+   : UnitTest(string("ReaderMT"))
 {
 
 }
