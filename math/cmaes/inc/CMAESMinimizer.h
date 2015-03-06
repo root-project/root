@@ -285,7 +285,7 @@ namespace ROOT
     private: 
       unsigned int fDim = 0;       // dimension of the function to be minimized 
       unsigned int fFreeDim = 0; // Number of free dimensions.
-      int fMinimizer = CMAES_DEFAULT; // minimizer algo.
+      std::string fMinimizer = "cmaes"; // minimizer algo.
       const ROOT::Math::IMultiGenFunction *fObjFunc = nullptr;
       const ROOT::Math::IMultiGradFunction *fObjFuncGrad = nullptr;
       std::vector<double> fLBounds; // Lower bounds of variables
