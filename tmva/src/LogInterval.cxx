@@ -149,7 +149,7 @@ Double_t TMVA::LogInterval::GetMean()  const
 
 TMVA::MsgLogger& TMVA::LogInterval::Log() const {
 #if __cplusplus > 199711L
-  static thread_local MsgLogger logger("LogInterval");   // message logger
+  thread_local MsgLogger logger("LogInterval");   // message logger
 #else
   static MsgLogger logger("LogInterval");   // message logger
 #endif

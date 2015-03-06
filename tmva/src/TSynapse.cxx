@@ -110,7 +110,7 @@ void TMVA::TSynapse::CalculateDelta()
 TMVA::MsgLogger& TMVA::TSynapse::Log() const
 {
 #if __cplusplus > 199711L
-  static thread_local MsgLogger logger("TSynapse");  //! message logger, static to save resources
+  thread_local MsgLogger logger("TSynapse");  //! message logger, static to save resources
 #else
   static MsgLogger logger("TSynapse");               //! message logger, static to save resources
 #endif

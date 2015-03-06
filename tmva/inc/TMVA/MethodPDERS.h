@@ -219,12 +219,10 @@ namespace TMVA {
       Float_t GetError         ( Float_t countS, Float_t countB,
                                  Float_t sumW2S, Float_t sumW2B ) const;
 
-      // this carrier
-#if __cplusplus > 199711L
-      static thread_local MethodPDERS* fgThisPDERS; // this pointer (required by root finder)
-#else
-      static MethodPDERS* fgThisPDERS; // this pointer (required by root finder)
-#endif
+      // This is a workaround for OSx where static thread_local data members are
+      // not supported. The C++ solution would indeed be the following:
+//      static_ thread_local MethodPDERS* fgThisPDERS; // this pointer (required by root finder)
+      static MethodPDERS*& GetMethodPDERSThreadLocal() {thread_local MethodPDERS* fgThisPDERS(nullptr); return fgThisPDERS;};
       void UpdateThis();
 
       void Init( void );

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -29,11 +29,11 @@
 #include "TMVA/Option.h"
 
 //______________________________________________________________________
-TMVA::OptionBase::OptionBase( const TString& name, const TString& desc ) 
-   : TObject(), 
-     fName        ( name ), 
-     fNameAllLower( name ), 
-     fDescription ( desc ), 
+TMVA::OptionBase::OptionBase( const TString& name, const TString& desc )
+   : TObject(),
+     fName        ( name ),
+     fNameAllLower( name ),
+     fDescription ( desc ),
      fIsSet       ( kFALSE )
 {
    // constructor
@@ -41,7 +41,7 @@ TMVA::OptionBase::OptionBase( const TString& name, const TString& desc )
 }
 
 //______________________________________________________________________
-Bool_t TMVA::OptionBase::SetValue( const TString& vs, Int_t ) 
+Bool_t TMVA::OptionBase::SetValue( const TString& vs, Int_t )
 {
    // set value for option
    fIsSet = kTRUE;
@@ -52,7 +52,7 @@ Bool_t TMVA::OptionBase::SetValue( const TString& vs, Int_t )
 TMVA::MsgLogger& TMVA::OptionBase::Log()
 {
 #if __cplusplus > 199711L
-  static thread_local MsgLogger logger("Option",kDEBUG);  // message logger
+  thread_local MsgLogger logger("Option",kDEBUG);  // message logger
 #else
   static MsgLogger logger("Option",kDEBUG);  // message logger
 #endif
