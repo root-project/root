@@ -443,7 +443,7 @@ long TClingMethodInfo::ExtraProperty() const
 
 TClingTypeInfo *TClingMethodInfo::Type() const
 {
-   static TClingTypeInfo ti(fInterp);
+   thread_local TClingTypeInfo ti(fInterp);
    if (!IsValid()) {
       ti.Init(clang::QualType());
       return &ti;
@@ -489,7 +489,7 @@ const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCt
    if (!IsValid()) {
       return 0;
    }
-   static std::string buf;
+   thread_local std::string buf;
    buf.clear();
    buf += Type()->Name();
    buf += ' ';
@@ -542,7 +542,7 @@ const char *TClingMethodInfo::Name(const ROOT::TMetaUtils::TNormalizedCtxt &norm
    if (!IsValid()) {
       return 0;
    }
-   static std::string buf;
+   thread_local std::string buf;
    ((TCling*)gCling)->GetFunctionName(GetMethodDecl(),buf);
    return buf.c_str();
 }
