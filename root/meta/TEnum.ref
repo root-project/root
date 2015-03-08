@@ -10,7 +10,7 @@ Collection name='THashList', class='THashList', size=2
 
 
 Enums in N:
-Collection name='TListOfEnums', class='TListOfEnums', size=1
+Collection name='TListOfEnumsWithLock', class='TListOfEnumsWithLock', size=1
  OBJ: TEnum	namespaceEnum	
 Collection name='THashList', class='THashList', size=1
  OBJ: TEnumConstant	kNamespace	
