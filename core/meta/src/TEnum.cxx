@@ -198,7 +198,20 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       return theEnum;
    };
 
-   const auto lastPos = strrchr(enumName, ':');
+   const char *lastPos = nullptr;
+   {
+      long depth = 0;
+      for(auto cursor = enumName; *cursor != '\0'; ++cursor) {
+         if ( *cursor == '<') ++depth;
+         else if ( *cursor == '>') --depth;
+         else if ( *cursor == ':' ) {
+            if (depth==0) {
+               lastPos = cursor;
+               break;
+            }
+         }
+      }
+   }
    if (lastPos != nullptr) {
       // We have a scope
       // All of this C gymnastic is to avoid allocations on the heap
