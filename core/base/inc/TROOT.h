@@ -98,11 +98,7 @@ protected:
    TString         fGitBranch;            //Git branch
    TString         fGitDate;              //Date and time when make was run
    Int_t           fTimer;                //Timer flag
-#if __cplusplus >= 201103L
-   std::atomic<TApplication*> fApplication;         //Pointer to current application
-#else
-   TApplication    *fApplication;         //Pointer to current application
-#endif
+   std::atomic<TApplication*> fApplication;  //Pointer to current application
    TInterpreter    *fInterpreter;         //Command interpreter
    Bool_t          fBatch;                //True if session without graphics
    Bool_t          fEditHistograms;       //True if histograms can be edited with the mouse
