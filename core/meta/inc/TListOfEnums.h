@@ -39,6 +39,7 @@ private:
    friend class TCling;
    friend class TClass;
    friend class TProtoClass;
+   friend class TROOT;
 
    TClass    *fClass; //! Context of this list.  Not owned.
 
