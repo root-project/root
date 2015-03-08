@@ -198,20 +198,9 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       return theEnum;
    };
 
-   const char *lastPos = nullptr;
-   {
-      long depth = 0;
-      for(auto cursor = enumName; *cursor != '\0'; ++cursor) {
-         if ( *cursor == '<') ++depth;
-         else if ( *cursor == '>') --depth;
-         else if ( *cursor == ':' ) {
-            if (depth==0 && *(cursor+1) == ':' && *(cursor+2) != '\0') {
-               lastPos = cursor+2;
-            }
-         }
-      }
-   }
-   if (lastPos != nullptr) {
+   const char *lastPos = TClassEdit::GetUnqualifiedName(enumName);
+
+   if (lastPos != enumName) {
       // We have a scope
       // All of this C gymnastic is to avoid allocations on the heap
       const auto enName = lastPos;
