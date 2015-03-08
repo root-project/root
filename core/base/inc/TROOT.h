@@ -229,7 +229,7 @@ public:
    TSeqCollection   *GetListOfProofs() const { return fProofs; }
    TSeqCollection   *GetClipboard() const { return fClipboard; }
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
-   TCollection      *GetListOfEnums(Bool_t load = kTRUE);
+   TCollection      *GetListOfEnums(Bool_t load = kFALSE);
    TCollection      *GetListOfFunctionTemplates();
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
