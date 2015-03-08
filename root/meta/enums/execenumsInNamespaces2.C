@@ -4,8 +4,7 @@ gInterpreter->ProcessLine("namespace mynamespace2{enum en{};}");
 gInterpreter->ProcessLine("enum enGlobal{};");
 
 auto a = TClass::GetClass("mynamespace2")->GetListOfEnums()->GetSize();
-auto localList = dynamic_cast<TListOfEnums*>(gROOT->GetListOfEnums());
-localList->Load();
+auto localList = gROOT->GetListOfEnums(kTRUE);
 auto aLocal = gROOT->GetListOfEnums()->GetSize();
 
 gSystem->Load("libenumsInNamespaces2_dictrflx");
