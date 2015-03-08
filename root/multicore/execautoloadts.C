@@ -11,6 +11,8 @@ void execautoloadts(){
       "ROOT::Math::GeneticMinimizer"};
 
    TThread::Initialize();
+   gEnv->SetValue("RooFit.Banner",0);
+
    //    gSystem->ListLibraries();
    std::atomic<bool> fire(false);
    vector<thread> threads;
