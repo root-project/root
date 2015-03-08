@@ -893,8 +893,8 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    }
 
    // Check if the name is an enumerator
-   const auto lastPos = strrchr(inner, ':');
-   if (lastPos != nullptr)   // Main switch: case 1 - scoped enum, case 2 global enum
+   const auto lastPos = TClassEdit::GetUnqualifiedName(inner);
+   if (lastPos != inner)   // Main switch: case 1 - scoped enum, case 2 global enum
    {
       // We have a scope
       // All of this C gymnastic is here to get the scope name and to avoid
