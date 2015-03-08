@@ -92,7 +92,7 @@ public:
    TObject   *Remove(TObject *obj) override;
    TObject   *Remove(TObjLink *lnk) override;
 
-   ClassDef(TListOfEnums,2);  // List of TDataMembers for a class
+   ClassDefOverride(TListOfEnums,2);  // List of TDataMembers for a class
 };
 
 #endif // ROOT_TListOfEnums

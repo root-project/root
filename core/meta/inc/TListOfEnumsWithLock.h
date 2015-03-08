@@ -77,7 +77,7 @@ public:
    TObject   *Remove(TObject *obj) override;
    TObject   *Remove(TObjLink *lnk) override;
 
-   ClassDef(TListOfEnumsWithLock,2);  // List of TDataMembers for a class
+   ClassDefOverride(TListOfEnumsWithLock,2);  // List of TDataMembers for a class
 };
 
 
