@@ -205,9 +205,8 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          if ( *cursor == '<') ++depth;
          else if ( *cursor == '>') --depth;
          else if ( *cursor == ':' ) {
-            if (depth==0) {
-               lastPos = cursor;
-               break;
+            if (depth==0 && *(cursor+1) == ':' && *(cursor+2) != '\0') {
+               lastPos = cursor+2;
             }
          }
       }
@@ -215,8 +214,8 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
    if (lastPos != nullptr) {
       // We have a scope
       // All of this C gymnastic is to avoid allocations on the heap
-      const auto enName = lastPos + 1;
-      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 1;
+      const auto enName = lastPos;
+      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 2;
 #ifdef R__WIN32
       char *scopeName = new char[scopeNameSize + 1];
 #else
