@@ -66,6 +66,7 @@
 #include "TVirtualStreamerInfo.h"
 #include "TListOfDataMembers.h"
 #include "TListOfEnums.h"
+#include "TListOfEnumsWithLock.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TProtoClass.h"
@@ -1306,7 +1307,17 @@ bool TCling::LoadPCM(TString pcmFileName,
                if (!nsTClassEntry){
                   nsTClassEntry = new TClass(enumScope,0,TClass::kNamespaceForMeta, true);
                }
-               auto listOfEnums = dynamic_cast<THashList*>(nsTClassEntry->GetListOfEnums(false));
+               auto listOfEnums = nsTClassEntry->fEnums.load();
+               if (!listOfEnums) {
+                  if ( (kIsClass | kIsStruct | kIsUnion) & nsTClassEntry->Property() ) {
+                     // For this case, the list will be immutable once constructed
+                     // (i.e. in this case, by the end of this routine).
+                     listOfEnums = nsTClassEntry->fEnums = new TListOfEnums(nsTClassEntry);
+                  } else {
+                     //namespaces can have enums added to them
+                     listOfEnums = nsTClassEntry->fEnums = new TListOfEnumsWithLock(nsTClassEntry);
+                  }
+               }
                if (listOfEnums && !listOfEnums->THashList::FindObject(enumName)){
                   ((TEnum*) selEnum)->SetClass(nsTClassEntry);
                   listOfEnums->Add(selEnum);
