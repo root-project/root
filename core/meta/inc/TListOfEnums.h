@@ -39,6 +39,7 @@ private:
    friend class TCling;
    friend class TClass;
    friend class TProtoClass;
+   friend class TROOT;
 
    typedef TDictionary::DeclId_t DeclId_t;
    TClass    *fClass; //! Context of this list.  Not owned.
