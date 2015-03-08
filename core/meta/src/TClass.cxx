@@ -3345,7 +3345,7 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
          fEnums = new TListOfEnumsWithLock(this);
          return fEnums;
       }
-      //no one is supposed to modify the returned results
+      // no one is supposed to modify the returned results
       static TListOfEnums s_list;
       return &s_list;
    }
