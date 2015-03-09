@@ -1710,6 +1710,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    else if (strstr(s,"bitset"))            fSTLtype = ROOT::kSTLbitset;
    else if (strstr(s,"map"))               fSTLtype = ROOT::kSTLmap;
    else if (strstr(s,"set"))               fSTLtype = ROOT::kSTLset;
+   else if (strstr(s,"unordered_set"))     fSTLtype = ROOT::kSTLunorderedset;
    if (fSTLtype == 0) { delete [] s; return;}
    if (dmPointer) fSTLtype += TVirtualStreamerInfo::kOffsetP;
 
@@ -1861,15 +1862,16 @@ const char *TStreamerSTL::GetInclude() const
 {
    // Return the proper include for this element.
 
-   if      (fSTLtype == ROOT::kSTLvector)      IncludeNameBuffer().Form("<%s>","vector");
-   else if (fSTLtype == ROOT::kSTLlist)        IncludeNameBuffer().Form("<%s>","list");
-   else if (fSTLtype == ROOT::kSTLforwardlist) IncludeNameBuffer().Form("<%s>","forward_list");
-   else if (fSTLtype == ROOT::kSTLdeque)       IncludeNameBuffer().Form("<%s>","deque");
-   else if (fSTLtype == ROOT::kSTLmap)         IncludeNameBuffer().Form("<%s>","map");
-   else if (fSTLtype == ROOT::kSTLset)         IncludeNameBuffer().Form("<%s>","set");
-   else if (fSTLtype == ROOT::kSTLmultimap)    IncludeNameBuffer().Form("<%s>","map");
-   else if (fSTLtype == ROOT::kSTLmultiset)    IncludeNameBuffer().Form("<%s>","set");
-   else if (fSTLtype == ROOT::kSTLbitset)      IncludeNameBuffer().Form("<%s>","bitset");
+   if      (fSTLtype == ROOT::kSTLvector)       IncludeNameBuffer().Form("<%s>","vector");
+   else if (fSTLtype == ROOT::kSTLlist)         IncludeNameBuffer().Form("<%s>","list");
+   else if (fSTLtype == ROOT::kSTLforwardlist)  IncludeNameBuffer().Form("<%s>","forward_list");
+   else if (fSTLtype == ROOT::kSTLdeque)        IncludeNameBuffer().Form("<%s>","deque");
+   else if (fSTLtype == ROOT::kSTLmap)          IncludeNameBuffer().Form("<%s>","map");
+   else if (fSTLtype == ROOT::kSTLset)          IncludeNameBuffer().Form("<%s>","set");
+   else if (fSTLtype == ROOT::kSTLunorderedset) IncludeNameBuffer().Form("<%s>","unordered_set");
+   else if (fSTLtype == ROOT::kSTLmultimap)     IncludeNameBuffer().Form("<%s>","map");
+   else if (fSTLtype == ROOT::kSTLmultiset)     IncludeNameBuffer().Form("<%s>","set");
+   else if (fSTLtype == ROOT::kSTLbitset)       IncludeNameBuffer().Form("<%s>","bitset");
    return IncludeNameBuffer();
 }
 

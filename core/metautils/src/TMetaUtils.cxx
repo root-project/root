@@ -1836,8 +1836,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
       needCollectionProxy = true;
    } else if (stl != 0 &&
-              ((stl>0 && stl<10) || (stl<0 && stl>-10)) && // is an stl container
-              (stl != 8 && stl !=-8) ){     // is no bitset
+              ((stl > 0 && stl<ROOT::kSTLend) || (stl < 0 && stl>-ROOT::kSTLend)) && // is an stl container
+              (stl != ROOT::kSTLbitset && stl !=-ROOT::kSTLbitset) ){     // is no bitset
       int idx = classname.find("<");
       int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
       const char* methodTCP=0;
@@ -1855,6 +1855,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             methodTCP="MapInsert";
             break;
          case ROOT::kSTLset:
+         case ROOT::kSTLunorderedset:
          case ROOT::kSTLmultiset:
             methodTCP="Insert";
             break;
@@ -4583,13 +4584,15 @@ ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
    // Converts STL container name to number. vector -> 1, etc..
 
    static const char *stls[] =                  //container names
-      {"any","vector","list", "deque","map","multimap","set","multiset","bitset","forward_list",0};
+      {"any","vector","list", "deque","map","multimap","set","multiset","bitset","forward_list","unordered_set",0};
    static const ROOT::ESTLType values[] =
       {ROOT::kNotSTL, ROOT::kSTLvector,
        ROOT::kSTLlist, ROOT::kSTLdeque,
        ROOT::kSTLmap, ROOT::kSTLmultimap,
        ROOT::kSTLset, ROOT::kSTLmultiset,
-       ROOT::kSTLbitset, ROOT::kSTLforwardlist,
+       ROOT::kSTLbitset,
+       ROOT::kSTLforwardlist,
+       ROOT::kSTLunorderedset,
        ROOT::kNotSTL
       };
    //              kind of stl container

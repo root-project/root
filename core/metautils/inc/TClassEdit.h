@@ -84,21 +84,24 @@ namespace TClassEdit {
       kLong64           = 1<<8, /* replace all 'long long' with Long64_t. */
       kDropStd          = 1<<9, /* Drop any std:: */
       kKeepOuterConst   = 1<<10,/* Make sure to keep the const keyword even outside the template parameters */
-      kResolveTypedef   = 1<<11 /* Strip all typedef except Double32_t and co. */
+      kResolveTypedef   = 1<<11,/* Strip all typedef except Double32_t and co. */
+      kDropPredicate    = 1<<12,/* Drop the predicate if applies to the collection */
+      kDropHash         = 1<<13 /* Drop the hash if applies to the collection */
    };
 
    enum ESTLType {
-      kNotSTL     = ROOT::kNotSTL,
-      kVector     = ROOT::kSTLvector,
-      kList       = ROOT::kSTLlist,
-      kForwardist = ROOT::kSTLforwardlist,
-      kDeque      = ROOT::kSTLdeque,
-      kMap        = ROOT::kSTLmap,
-      kMultiMap   = ROOT::kSTLmultimap,
-      kSet        = ROOT::kSTLset,
-      kMultiSet   = ROOT::kSTLmultiset,
-      kBitSet     = ROOT::kSTLbitset,
-      kEnd        = ROOT::kSTLend
+      kNotSTL       = ROOT::kNotSTL,
+      kVector       = ROOT::kSTLvector,
+      kList         = ROOT::kSTLlist,
+      kForwardist   = ROOT::kSTLforwardlist,
+      kDeque        = ROOT::kSTLdeque,
+      kMap          = ROOT::kSTLmap,
+      kMultiMap     = ROOT::kSTLmultimap,
+      kSet          = ROOT::kSTLset,
+      kUnorderedSet = ROOT::kSTLunorderedset,
+      kMultiSet     = ROOT::kSTLmultiset,
+      kBitSet       = ROOT::kSTLbitset,
+      kEnd          = ROOT::kSTLend
    };
 
    class TInterpreterLookupHelper {
@@ -139,6 +142,8 @@ namespace TClassEdit {
    bool        IsDefAlloc(const char *alloc, const char *classname);
    bool        IsDefAlloc(const char *alloc, const char *keyclassname, const char *valueclassname);
    bool        IsDefComp (const char *comp , const char *classname);
+   bool        IsDefPred(const char *predname, const char *classname);
+   bool        IsDefHash(const char *hashname, const char *classname);
    bool        IsInterpreterDetail(const char *type);
    bool        IsSTLBitset(const char *type);
    ROOT::ESTLType IsSTLCont (const char *type);

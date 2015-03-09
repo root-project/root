@@ -1192,6 +1192,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
                break;
             }
          case kSTLset:
+         case kSTLunorderedset:
          case kSTLmultiset:
             dictStream << "            R__stl.insert(R__t);" << std::endl;
             break;

@@ -439,6 +439,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
          // Once they are created. Need to take memory from stack or heap.
       case ROOT::kSTLmultiset:
       case ROOT::kSTLset:
+      case ROOT::kSTLunorderedset:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
          fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
          fConstruct(itm,nElements);
@@ -548,6 +549,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
          // Once they are created. Need to take memory from stack or heap.
       case ROOT::kSTLmultiset:
       case ROOT::kSTLset:
+      case ROOT::kSTLunorderedset:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
          fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
          fConstruct(itm,nElements);
@@ -1022,6 +1024,7 @@ void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)
       case ROOT::kSTLdeque:
       case ROOT::kSTLmultiset:
       case ROOT::kSTLset:
+      case ROOT::kSTLunorderedset:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
          switch (fVal->fCase) {
             case kIsClass:
@@ -1375,6 +1378,7 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj, const TCla
          case ROOT::kSTLdeque:
          case ROOT::kSTLmultiset:
          case ROOT::kSTLset:
+         case ROOT::kSTLunorderedset:
             if (obj) {
                if (fProperties & kNeedDelete)   {
                   TGenCollectionProxy::Clear("force");
@@ -1426,6 +1430,7 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
             case ROOT::kSTLdeque:
             case ROOT::kSTLmultiset:
             case ROOT::kSTLset:
+            case ROOT::kSTLunorderedset:
                switch (fVal->fCase) {
                   case kIsFundamental:  // Only handle primitives this way
                   case kIsEnum:
@@ -1456,6 +1461,7 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
             case ROOT::kSTLdeque:
             case ROOT::kSTLmultiset:
             case ROOT::kSTLset:
+            case ROOT::kSTLunorderedset:
                switch (fVal->fCase) {
                   case kIsFundamental:  // Only handle primitives this way
                   case kIsEnum:
@@ -1495,7 +1501,8 @@ void TGenCollectionStreamer::StreamerAsMap(TBuffer &b)
             case ROOT::kSTLforwardlist:
             case ROOT::kSTLdeque:
             case ROOT::kSTLmultiset:
-            case ROOT::kSTLset: {
+            case ROOT::kSTLset:
+            case ROOT::kSTLunorderedset: {
                   ReadPairFromMap(nElements, b);
                   break;
                }

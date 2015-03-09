@@ -478,6 +478,9 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                      case ROOT::kSTLset:
                         what = "set";
                         break;
+                     case ROOT::kSTLunorderedset:
+                        what = "unordered_set";
+                        break;
                      case ROOT::kSTLmultiset:
                         what = "set";
                         break;
@@ -655,6 +658,12 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
                --narg;
             }
             break;
+         case ROOT::kSTLunorderedset:
+         // case ROOT::kSTLunorderedmultiset:
+            if (narg>5 && strncmp(inside[5].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
+               --narg;
+            }
+            break;
       }
       if (stlkind!=0) {
          TClass *key = TClass::GetClass(inside[1].c_str());
@@ -682,6 +691,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
                   break;
                }
                case ROOT::kSTLset:
+               case ROOT::kSTLunorderedset:
                case ROOT::kSTLmultiset:
                   inside[0] = "std::vector";
                   break;

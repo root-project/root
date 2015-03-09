@@ -753,6 +753,7 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
       case ROOT::kSTLmultimap:
          return new TGenMapProxy(*this);
       case ROOT::kSTLset:
+      case ROOT::kSTLunorderedset:
       case ROOT::kSTLmultiset:
          return new TGenSetProxy(*this);
       default:
@@ -843,6 +844,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
             case ROOT::kSTLmap:
             case ROOT::kSTLmultimap:
             case ROOT::kSTLset:
+            case ROOT::kSTLunorderedset:
             case ROOT::kSTLmultiset:
             case ROOT::kSTLbitset: // not really an associate container but it has no real iterator.
                fProperties |= kIsAssociative;
@@ -999,6 +1001,7 @@ void* TGenCollectionProxy::At(UInt_t idx)
             return ((char*)fEnv->fStart) + fValDiff*idx;
          }
       case ROOT::kSTLset:
+      case ROOT::kSTLunorderedset:
       case ROOT::kSTLmultiset:
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:
@@ -1086,6 +1089,7 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
    if ( fEnv && fEnv->fObject ) {
       switch ( fSTL_type ) {
          case ROOT::kSTLset:
+         case ROOT::kSTLunorderedset:
          case ROOT::kSTLmultiset:
          case ROOT::kSTLmap:
          case ROOT::kSTLmultimap: {
