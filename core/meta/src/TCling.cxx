@@ -898,12 +898,11 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    if (lastPos != inner)   // Main switch: case 1 - scoped enum, case 2 global enum
    {
       // We have a scope
-      // All of this C gymnastic is here to get the scope name and to avoid
-      // allocations on the heap
-      const auto enName = lastPos + 1;
-      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)inner) / sizeof(decltype(*lastPos)) - 1;
+      // All of this C gymnastic is to avoid allocations on the heap (see TEnum::GetEnum)
+      const auto enName = lastPos;
+      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 2;
       char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
-      strncpy(scopeName, inner, scopeNameSize);
+      strncpy(scopeName, enumName, scopeNameSize);
       scopeName[scopeNameSize] = '\0';
       // Check if the scope is in the list of classes
       if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
@@ -1214,7 +1213,7 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TDirectory::TContext ctxt(0);
-      
+
       TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
 
       auto listOfKeys = pcmFile->GetListOfKeys();
@@ -1227,9 +1226,9 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TObjArray *protoClasses;
-      if (gDebug > 1) 
+      if (gDebug > 1)
             ::Info("TCling::LoadPCM","reading protoclasses for %s \n",pcmFileName.Data());
-      
+
       pcmFile->GetObject("__ProtoClasses", protoClasses);
 
       if (protoClasses) {

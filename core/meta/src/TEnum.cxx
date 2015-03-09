@@ -202,7 +202,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
 
    if (lastPos != enumName) {
       // We have a scope
-      // All of this C gymnastic is to avoid allocations on the heap
+      // All of this C gymnastic is to avoid allocations on the heap (see TClingLookupHelper__ExistingTypeCheck)
       const auto enName = lastPos;
       const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 2;
       char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
