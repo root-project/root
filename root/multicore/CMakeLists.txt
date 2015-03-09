@@ -1,9 +1,12 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(roottest-root-multicore-exectsinclude
+                 MACRO  exectsinclude.C
+                 OUTREF exectsinclude.ref)
+
 ROOTTEST_ADD_TEST(roottest-root-multicore-execautoloadts
                  MACRO  execautoloadts.C
-                 OUTREF execautoloadts.ref
-                 DEPENDS ${GENERATE_REFLEX_TEST})
+                 OUTREF execautoloadts.ref)
 
 ROOTTEST_GENERATE_EXECUTABLE(tclass_methods tclass_methods.cpp LIBRARIES Core Thread)
 
