@@ -168,6 +168,9 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          return en;
       }
 
+      // Lock need for gROOT->GetListOfClasses() and the later update/modification to
+      // the autoparsing state.
+      R__LOCKGUARD(gInterpreterMutex);
       if (auto tClassScope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
          // If this is a class, load only if the user allowed interpreter lookup
          // If this is a namespace and the user did not allow for interpreter lookup, load but before disable
