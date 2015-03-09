@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TListOfEnums
-#define ROOT_TListOfEnums
+#ifndef ROOT_TListOfEnumsWithLock
+#define ROOT_TListOfEnumsWithLock
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TListOfEnums                                                         //
+// TListOfEnumsWithLock                                                         //
 //                                                                      //
 // A collection of TEnum objects designed for fast access given a       //
 // DeclId_t and for keep track of TEnum that were described             //
@@ -22,62 +22,47 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_THastList
-#include "THashList.h"
-#endif
-
-#ifndef ROOT_TDictionary
-#include "TDictionary.h"
+#ifndef ROOT_TListOfEnums
+#include "TListOfEnums.h"
 #endif
 
 class TExMap;
 class TEnum;
 
-class TListOfEnums : public THashList
+class TListOfEnumsWithLock : public TListOfEnums
 {
 private:
-   friend class TCling;
-   friend class TClass;
-   friend class TProtoClass;
-   friend class TROOT;
-
-   TClass    *fClass; //! Context of this list.  Not owned.
-
-   TExMap    *fIds;      //! Map from DeclId_t to TEnum*
-   THashList *fUnloaded; //! Holder of TEnum for unloaded Enums.
-   Bool_t     fIsLoaded; //! Mark whether Load was executed.
-   ULong64_t  fLastLoadMarker; //! Represent interpreter state when we last did a full load.
-
-   TListOfEnums(const TListOfEnums&) = delete;
-   TListOfEnums& operator=(const TListOfEnums&) = delete;
-
-   void MapObject(TObject *obj);
-   void UnmapObject(TObject *obj);
-
-   void Load();
-   void Unload();
-   void Unload(TEnum *e);
-   void SetClass(TClass* cl) { fClass = cl; }
-
-public:
    typedef TDictionary::DeclId_t DeclId_t;
 
-protected:
-   TClass *GetClass() const {return fClass;}
-   TExMap *GetIds() { return fIds;}
-   TEnum  *FindUnloaded(const char* name) { return (TEnum*)fUnloaded->FindObject(name);}
-   TEnum  *Get(DeclId_t id, const char *name);
+   TListOfEnumsWithLock(const TListOfEnumsWithLock&) = delete;
+   TListOfEnumsWithLock& operator=(const TListOfEnumsWithLock&) = delete;
 
 public:
-   TListOfEnums(TClass *cl = 0);
-   ~TListOfEnums() override;
 
-   TEnum     *Find(DeclId_t id) const;
+   TListOfEnumsWithLock(TClass *cl = 0);
+   ~TListOfEnumsWithLock() override;
 
    void Clear(Option_t *option) override;
    void Delete(Option_t *option="") override;
 
-   Bool_t     IsLoaded() const { return fIsLoaded; }
+   TObject   *FindObject(const TObject* obj) const override;
+   TObject   *FindObject(const char *name) const override;
+   TIterator *MakeIterator(Bool_t dir = kIterForward) const override;
+
+   TObject   *At(Int_t idx) const override;
+   TObject   *After(const TObject *obj) const override;
+   TObject   *Before(const TObject *obj) const override;
+   TObject   *First() const override;
+   TObjLink  *FirstLink() const override;
+   TObject  **GetObjectRef(const TObject *obj) const override;
+   TObject   *Last() const override;
+   TObjLink  *LastLink() const override;
+
+   Int_t      GetLast() const override;
+   Int_t      IndexOf(const TObject *obj) const override;
+
+   Int_t      GetSize() const override;
+
    void       AddFirst(TObject *obj) override;
    void       AddFirst(TObject *obj, Option_t *opt) override;
    void       AddLast(TObject *obj) override;
@@ -92,7 +77,27 @@ public:
    TObject   *Remove(TObject *obj) override;
    TObject   *Remove(TObjLink *lnk) override;
 
-   ClassDefOverride(TListOfEnums,2);  // List of TDataMembers for a class
+   ClassDefOverride(TListOfEnumsWithLock,2);  // List of TDataMembers for a class
 };
 
-#endif // ROOT_TListOfEnums
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TListOfEnumsWithLockIter                                             //
+//                                                                      //
+// Iterator of TListOfEnumsWithLock.                                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+class TListOfEnumsWithLockIter : public TListIter
+{
+ public:
+   TListOfEnumsWithLockIter(const TListOfEnumsWithLock *l, Bool_t dir = kIterForward);
+
+   using TListIter::operator=;
+
+   TObject *Next();
+
+   ClassDef(TListOfEnumsWithLockIter,0)
+};
+
+#endif // ROOT_TListOfEnumsWithLock

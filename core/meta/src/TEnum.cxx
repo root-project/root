@@ -198,12 +198,13 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       return theEnum;
    };
 
-   const auto lastPos = strrchr(enumName, ':');
-   if (lastPos != nullptr) {
+   const char *lastPos = TClassEdit::GetUnqualifiedName(enumName);
+
+   if (lastPos != enumName) {
       // We have a scope
       // All of this C gymnastic is to avoid allocations on the heap
-      const auto enName = lastPos + 1;
-      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 1;
+      const auto enName = lastPos;
+      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 2;
 #ifdef R__WIN32
       char *scopeName = new char[scopeNameSize + 1];
 #else

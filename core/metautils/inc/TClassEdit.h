@@ -154,6 +154,7 @@ namespace TClassEdit {
    std::string ResolveTypedef(const char *tname, bool resolveAll = false);
    std::string ShortType (const char *typeDesc, int mode);
    std::string InsertStd(const char *tname);
+   const char* GetUnqualifiedName(const char*name);
    inline char* DemangleName(const char* mangled_name, int& errorCode)
    {
    // Demangle in a portable way the name.

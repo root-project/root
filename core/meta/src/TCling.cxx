@@ -66,6 +66,7 @@
 #include "TVirtualStreamerInfo.h"
 #include "TListOfDataMembers.h"
 #include "TListOfEnums.h"
+#include "TListOfEnumsWithLock.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TProtoClass.h"
@@ -171,6 +172,13 @@ extern "C" {
 #define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
 #define dlopen(library_name, flags) ::LoadLibraryEx(library_name, NULL, DONT_RESOLVE_DLL_REFERENCES)
 #define dlclose(library) ::FreeLibrary((HMODULE)library)
+char *dlerror() {
+   thread_local char Msg[1000];
+   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
+                 sizeof(Msg), NULL);
+   return Msg;
+}
 #define thread_local static __declspec(thread)
 #endif
 #endif
@@ -885,8 +893,8 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    }
 
    // Check if the name is an enumerator
-   const auto lastPos = strrchr(inner, ':');
-   if (lastPos != nullptr)   // Main switch: case 1 - scoped enum, case 2 global enum
+   const auto lastPos = TClassEdit::GetUnqualifiedName(inner);
+   if (lastPos != inner)   // Main switch: case 1 - scoped enum, case 2 global enum
    {
       // We have a scope
       // All of this C gymnastic is here to get the scope name and to avoid
@@ -1151,7 +1159,7 @@ static const char *FindLibraryName(void (*func)())
    }
 
    HMODULE hMod = (HMODULE) mbi.AllocationBase;
-   static char moduleName[MAX_PATH];
+   thread_local char moduleName[MAX_PATH];
 
    if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
    {
@@ -1307,7 +1315,17 @@ bool TCling::LoadPCM(TString pcmFileName,
                if (!nsTClassEntry){
                   nsTClassEntry = new TClass(enumScope,0,TClass::kNamespaceForMeta, true);
                }
-               auto listOfEnums = dynamic_cast<THashList*>(nsTClassEntry->GetListOfEnums(false));
+               auto listOfEnums = nsTClassEntry->fEnums.load();
+               if (!listOfEnums) {
+                  if ( (kIsClass | kIsStruct | kIsUnion) & nsTClassEntry->Property() ) {
+                     // For this case, the list will be immutable once constructed
+                     // (i.e. in this case, by the end of this routine).
+                     listOfEnums = nsTClassEntry->fEnums = new TListOfEnums(nsTClassEntry);
+                  } else {
+                     //namespaces can have enums added to them
+                     listOfEnums = nsTClassEntry->fEnums = new TListOfEnumsWithLock(nsTClassEntry);
+                  }
+               }
                if (listOfEnums && !listOfEnums->THashList::FindObject(enumName)){
                   ((TEnum*) selEnum)->SetClass(nsTClassEntry);
                   listOfEnums->Add(selEnum);
@@ -1381,7 +1399,7 @@ void TCling::RegisterModule(const char* modulename,
    // The value of 'triggerFunc' is used to find the shared library location.
 
    // rootcling also uses TCling for generating the dictionary ROOT files.
-   static bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+   static const bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
    // We need the dictionary initialization but we don't want to inject the
    // declarations into the interpreter, except for those we really need for
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
@@ -1949,7 +1967,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
-   static TClassRef clRefString("std::string");
+   static const TClassRef clRefString("std::string");
    if (clRefString == cl) {
       // We stream std::string without going through members..
       return;
@@ -3180,20 +3198,18 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
 }
 
 //______________________________________________________________________________
-void TCling::LoadEnums(TClass* cl) const
+void TCling::LoadEnums(TListOfEnums& enumList) const
 {
    // Create list of pointers to enums for TClass cl.
    R__LOCKGUARD2(gInterpreterMutex);
 
    const Decl * D;
-   TListOfEnums* enumList;
+   TClass* cl = enumList.GetClass();
    if (cl) {
       D = ((TClingClassInfo*)cl->GetClassInfo())->GetDecl();
-      enumList = (TListOfEnums*)cl->GetListOfEnums(false);
    }
    else {
       D = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
-      enumList = (TListOfEnums*)gROOT->GetListOfEnums();
    }
    // Iterate on the decl of the class and get the enums.
    if (const clang::DeclContext* DC = dyn_cast<clang::DeclContext>(D)) {
@@ -3217,7 +3233,7 @@ void TCling::LoadEnums(TClass* cl) const
                if (!buf.empty()) {
                   const char* name = buf.c_str();
                   // Add the enum to the list of loaded enums.
-                  enumList->Get(ED, name);
+                  enumList.Get(ED, name);
                }
             }
          }
@@ -5855,7 +5871,7 @@ Bool_t TCling::LoadText(const char* text) const
 const char* TCling::MapCppName(const char* name) const
 {
    // Interface to cling function
-   static std::string buffer;
+   thread_local std::string buffer;
    ROOT::TMetaUtils::GetCppName(buffer,name);
    return buffer.c_str();
 }
@@ -6538,7 +6554,7 @@ const char* TCling::ClassInfo_FileName(ClassInfo_t* cinfo) const
 const char* TCling::ClassInfo_FullName(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   static std::string output;
+   thread_local std::string output;
    TClinginfo->FullName(output,*fNormalizedCtxt);
    return output.c_str();
 }
@@ -6653,7 +6669,7 @@ Long_t TCling::BaseClassInfo_Tagnum(BaseClassInfo_t* bcinfo) const
 const char* TCling::BaseClassInfo_FullName(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
-   static std::string output;
+   thread_local std::string output;
    TClinginfo->FullName(output,*fNormalizedCtxt);
    return output.c_str();
 }
@@ -7131,7 +7147,7 @@ TypeInfo_t* TCling::MethodInfo_Type(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   static TString mangled_name;
+   thread_local  TString mangled_name;
    mangled_name = info->GetMangledName();
    return mangled_name;
 }

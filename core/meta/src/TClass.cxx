@@ -83,6 +83,7 @@
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TListOfEnums.h"
+#include "TListOfEnumsWithLock.h"
 #include "TViewPubDataMembers.h"
 #include "TViewPubFunctions.h"
 
@@ -1550,8 +1551,8 @@ TClass::~TClass()
    delete fData;   fData = 0;
 
    if (fEnums)
-      fEnums->Delete();
-   delete fEnums; fEnums = 0;
+      (*fEnums).Delete();
+   delete fEnums.load(); fEnums = 0;
 
    if (fFuncTemplate)
       fFuncTemplate->Delete();
@@ -3327,12 +3328,50 @@ TList *TClass::GetListOfBases()
 TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
 {
    // Return list containing the TEnums of a class.
+   auto temp = fEnums.load();
+   if (temp) {
+      if (load) {
+         if (fProperty == -1) Property();
+         if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
+            R__LOCKGUARD2(gROOTMutex);
+            temp->Load();
+         }
+      }
+      return temp;
+   }
+
+   if (!load) {
+      if (fProperty == -1) Property();
+      if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
+         R__LOCKGUARD(gInterpreterMutex);
+         if (fEnums) {
+            return fEnums.load();
+         }
+         //namespaces can have enums added to them
+         fEnums = new TListOfEnumsWithLock(this);
+         return fEnums;
+      }
+      // no one is supposed to modify the returned results
+      static TListOfEnums s_list;
+      return &s_list;
+   }
 
    R__LOCKGUARD(gInterpreterMutex);
-
-   if (!fEnums) fEnums = new TListOfEnums(this);
-   if (load) fEnums->Load();
-   return fEnums;
+   if (fEnums) {
+      if (load) (*fEnums).Load();
+      return fEnums.load();
+   }
+   if (fProperty == -1) Property();
+   if ( (kIsClass | kIsStruct | kIsUnion) & fProperty) {
+      // For this case, the list will be immutable
+      temp = new TListOfEnums(this);
+   } else {
+      //namespaces can have enums added to them
+      temp = new TListOfEnumsWithLock(this);
+   }
+   temp->Load();
+   fEnums = temp;
+   return temp;
 }
 
 //______________________________________________________________________________
@@ -3754,8 +3793,8 @@ void TClass::ResetCaches()
    // Not owning lists, don't call Delete(), but unload
    if (fData)
       fData->Unload();
-   if (fEnums)
-      fEnums->Unload();
+   if (fEnums.load())
+      (*fEnums).Unload();
    if (fMethod.load())
       (*fMethod).Unload();
 
@@ -5637,7 +5676,7 @@ void TClass::SetUnloaded()
       fData->Unload();
    }
    if (fEnums) {
-      fEnums->Unload();
+      (*fEnums).Unload();
    }
 
    if (fState <= kForwardDeclared && fStreamerInfo->GetEntries() != 0) {
@@ -6048,64 +6087,64 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char * /*info*/)
 }
 
 //______________________________________________________________________________
-void TClass::StreamerExternal(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerExternal(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
    //There is special streamer for the class
 
    //      case kExternal:
    //      case kExternal|kEmulatedStreamer:
 
-   TClassStreamer *streamer = gThreadTsd ? GetStreamer() : fStreamer;
+   TClassStreamer *streamer = gThreadTsd ? pThis->GetStreamer() : pThis->fStreamer;
    streamer->Stream(b,object,onfile_class);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerTObject(void *object, TBuffer &b, const TClass * /* onfile_class */) const
+void TClass::StreamerTObject(const TClass* pThis, void *object, TBuffer &b, const TClass * /* onfile_class */)
 {
    // Case of TObjects
 
    // case kTObject:
 
-   if (!fIsOffsetStreamerSet) {
-      CalculateStreamerOffset();
+   if (!pThis->fIsOffsetStreamerSet) {
+      pThis->CalculateStreamerOffset();
    }
-   TObject *tobj = (TObject*)((Long_t)object + fOffsetStreamer);
+   TObject *tobj = (TObject*)((Long_t)object + pThis->fOffsetStreamer);
    tobj->Streamer(b);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerTObjectInitialized(void *object, TBuffer &b, const TClass * /* onfile_class */) const
+void TClass::StreamerTObjectInitialized(const TClass* pThis, void *object, TBuffer &b, const TClass * /* onfile_class */)
 {
    // Case of TObjects when fIsOffsetStreamerSet is known to have been set.
 
-   TObject *tobj = (TObject*)((Long_t)object + fOffsetStreamer);
+   TObject *tobj = (TObject*)((Long_t)object + pThis->fOffsetStreamer);
    tobj->Streamer(b);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerTObjectEmulated(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerTObjectEmulated(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
    // Case of TObjects when we do not have the library defining the class.
 
    // case kTObject|kEmulatedStreamer :
    if (b.IsReading()) {
-      b.ReadClassEmulated(this, object, onfile_class);
+      b.ReadClassEmulated(pThis, object, onfile_class);
    } else {
-      b.WriteClassBuffer(this, object);
+      b.WriteClassBuffer(pThis, object);
    }
 }
 
 //______________________________________________________________________________
-void TClass::StreamerInstrumented(void *object, TBuffer &b, const TClass * /* onfile_class */) const
+void TClass::StreamerInstrumented(const TClass* pThis, void *object, TBuffer &b, const TClass * /* onfile_class */)
 {
    // Case of instrumented class with a library
 
    // case kInstrumented:
-   fStreamerFunc(b,object);
+   pThis->fStreamerFunc(b,object);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerStreamerInfo(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
    // Case of where we should directly use the StreamerInfo.
    //    case kForeign:
@@ -6114,29 +6153,32 @@ void TClass::StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile
    //    case kEmulatedStreamer:
 
    if (b.IsReading()) {
-      b.ReadClassBuffer(this, object, onfile_class);
+      b.ReadClassBuffer(pThis, object, onfile_class);
       //ReadBuffer (b, object);
    } else {
       //WriteBuffer(b, object);
-      b.WriteClassBuffer(this, object);
+      b.WriteClassBuffer(pThis, object);
    }
 }
 
 //______________________________________________________________________________
-void TClass::StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerDefault(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
    // Default streaming in cases where either we have no way to know what to do
    // or if Property() has not yet been called.
 
-   if (fProperty==(-1)) {
-      Property();
-      if (fStreamerImpl == &TClass::StreamerDefault) {
-         Fatal("StreamerDefault", "fStreamerImpl not properly initialized (%d)", fStreamerType);
-      } else {
-         (this->*fStreamerImpl)(object,b,onfile_class);
-      }
+   if (pThis->fProperty==(-1)) {
+      pThis->Property();
+   }
+
+   // We could get here because after this thread started StreamerDefault
+   // *and* before check fProperty, another thread might have call Property
+   // and this fProperty when we read it, is not -1 and fStreamerImpl is
+   // supposed to be set properly (no longer pointing to the default).
+   if (pThis->fStreamerImpl == &TClass::StreamerDefault) {
+      pThis->Fatal("StreamerDefault", "fStreamerImpl not properly initialized (%d)", pThis->fStreamerType);
    } else {
-      Fatal("StreamerDefault", "fStreamerType not properly initialized (%d)", fStreamerType);
+      (*pThis->fStreamerImpl)(pThis,object,b,onfile_class);
    }
 }
 
@@ -6174,6 +6216,7 @@ void TClass::SetStreamerFunc(ClassStreamerFunc_t strm)
 {
    // Set a wrapper/accessor function around this class custom streamer.
 
+   R__LOCKGUARD(gInterpreterMutex);
    if (fProperty != -1 &&
        ( (fStreamerFunc == 0 && strm != 0) || (fStreamerFunc != 0 && strm == 0) ) )
    {

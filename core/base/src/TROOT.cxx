@@ -124,7 +124,7 @@ char *dlerror() {
 #include "TInterpreter.h"
 #include "TListOfTypes.h"
 #include "TListOfDataMembers.h"
-#include "TListOfEnums.h"
+#include "TListOfEnumsWithLock.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TFunctionTemplate.h"
@@ -1378,17 +1378,25 @@ TObject *TROOT::GetGeometry(const char *name) const
 }
 
 //______________________________________________________________________________
-TCollection *TROOT::GetListOfEnums()
+TCollection *TROOT::GetListOfEnums(Bool_t load /* = kTRUE */)
 {
    if(!fEnums) {
-      fEnums = new TListOfEnums(0);
+      R__LOCKGUARD2(gROOTMutex);
+      // Test again just in case, another thread did the work while we were
+      // waiting.
+      if (!fEnums) fEnums = new TListOfEnumsWithLock(0);
    }
-   return fEnums;
+   if (load) {
+      R__LOCKGUARD2(gROOTMutex);
+      (*fEnums).Load(); // Refresh the list of enums.
+   }
+   return fEnums.load();
 }
 
 //______________________________________________________________________________
 TCollection *TROOT::GetListOfFunctionTemplates()
 {
+   R__LOCKGUARD2(gROOTMutex);
    if(!fFuncTemplate) {
       fFuncTemplate = new TListOfFunctionTemplates(0);
    }
