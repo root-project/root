@@ -141,3 +141,15 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
 else (CMAKE_SYSTEM_NAME MATCHES Darwin)
   MESSAGE(FATAL_ERROR "There is no setup for this this Apple system up to now. Don't know waht to do. Stop cmake at this point.")
 endif (CMAKE_SYSTEM_NAME MATCHES Darwin)
+
+#---Avoid puting the libraires and executables in different configuration locations
+if(CMAKE_GENERATOR MATCHES Xcode)
+  foreach( _conf ${CMAKE_CONFIGURATION_TYPES} )
+    string( TOUPPER ${_conf} _conf )
+    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${_conf} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} )
+    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${_conf} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} )
+    set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${_conf} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} )
+  endforeach()
+endif()
+
+

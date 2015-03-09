@@ -8,6 +8,10 @@ else(WITH_POLLY)
   list(APPEND LLVM_IMPLICIT_PROJECT_IGNORE "${LLVM_MAIN_SRC_DIR}/tools/polly")
 endif(WITH_POLLY)
 
+if( NOT LLVM_BUILD_TOOLS )
+  set(EXCLUDE_FROM_ALL ON)
+endif()
+
 if( LLVM_BUILD_LLVM_DYLIB )
   add_llvm_tool_subdirectory(llvm-shlib)
 else()

@@ -295,6 +295,9 @@ bool buildingROOT = false;
 # define R__LLVMDIR "./interpreter/llvm/inst" // only works for rootbuild for now!
 #endif
 
+#define xstringify(s) #s
+#define stringify(s) xstringify(s)
+
 namespace {
    // Copy-pasted from TClass.h We cannot #include TClass.h because we are compiling in -fno-rtti mode
    template <typename T> struct IsPointerTClassCopy {
@@ -4042,7 +4045,7 @@ int RootCling(int argc,
 
    std::string resourceDir;
 #ifdef R__LLVMRESOURCEDIR
-   resourceDir = R__LLVMRESOURCEDIR;
+   resourceDir = stringify(R__LLVMRESOURCEDIR);
 #else
    resourceDir = TMetaUtils::GetLLVMResourceDir(buildingROOT);
 #endif
