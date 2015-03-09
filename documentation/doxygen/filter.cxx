@@ -97,7 +97,13 @@ int main(int argc, char *argv[])
    if (gFileName.EndsWith(".cxx")) gSource = kTRUE;
    if (gFileName.EndsWith(".h"))   gHeader = kTRUE;
    GetClassName();
+
+   // Retrieve the current working directory
    gCwd = gFileName(0, gFileName.Last('/'));
+
+   // Retrieve the output directory
+   gOutDir = gSystem->Getenv("DOXYGEN_OUTPUT_DIRECTORY");
+   gOutDir.ReplaceAll("\"","");
 
    // Open the input file name.
    FILE *f = fopen(gFileName.Data(),"r");
@@ -239,10 +245,6 @@ void StandardizeKeywords()
 void ExecuteMacro()
 {
    // Execute the macro in gLineString and produce the corresponding picture
-
-   // Retrieve the output directory
-   gOutDir = gSystem->Getenv("DOXYGEN_OUTPUT_DIRECTORY");
-   gOutDir.ReplaceAll("\"","");
 
    // Name of the next Image to be generated
    gImageName = TString::Format("%s_%3.3d.png", gClassName.Data()
