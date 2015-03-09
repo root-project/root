@@ -4980,6 +4980,8 @@ Int_t TCling::AutoParse(const char *cls)
    // Parse the headers relative to the class
    // Returns 1 in case of success, 0 in case of failure
 
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (!fHeaderParsingOnDemand || fIsAutoParsingSuspended) {
       if (fClingCallbacks->IsAutoloadingEnabled()) {
          return AutoLoad(cls);
