@@ -83,7 +83,7 @@ protected:
       Double_t      fOriginSize;      // Font size of the starting font
       Int_t         fTabMax;          //!Maximum allocation for array fTabSize;
       Int_t         fPos;             //!Current position in array fTabSize;
-      Bool_t        fItalic;          //!Currently inside #it operator
+      Bool_t        fItalic;          //!Currently inside italic operator
 
       TLatex& operator=(const TLatex&);
 
