@@ -249,6 +249,14 @@ TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
    return e;
 }
 
+//______________________________________________________________________________
+TEnum *TListOfEnums::GetObject(const char *name) const
+{
+   // Return an object from the list of enums *if and only if* is has already
+   // been loaded in the list.  This is an internal routine.
+
+   return (TEnum*)THashList::FindObject(name);
+}
 
 //______________________________________________________________________________
 void TListOfEnums::UnmapObject(TObject *obj)
