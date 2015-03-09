@@ -820,6 +820,7 @@
          str = str.replace(/#right/g, "\\right");
          // processing of #[] #{} should be done
          str = str.replace(/#\[\]/g, "\\[]");
+         str = str.replace(/ /g, "\\;");
 
          for (var x in JSROOT.Painter.symbols_map) {
             var y = "\\" + x.substr(1);
