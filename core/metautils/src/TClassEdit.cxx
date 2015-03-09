@@ -315,11 +315,8 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
             }
          }
 
-         bool hashRemoved = false;
-
          if ( predRemoved && (mode & kDropStlDefault) && narg == iall) { // remove default hash
             if ( IsDefHash( fElements[iall-1].c_str(), fElements[1].c_str() ) ) {
-               hashRemoved = true;
                narg--;
             }
          }
