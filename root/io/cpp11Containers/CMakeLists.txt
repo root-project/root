@@ -7,9 +7,9 @@ ROOTTEST_ADD_TEST(roottest-root-io-cpp11Containers-forwardList
                   OUTREF execForwardList.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(unordered_set unordered_set.h  SELECTION unordered_set_selection.xml)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(unorderedSet unorderedSet.h  SELECTION unorderedSet_selection.xml)
 
 ROOTTEST_ADD_TEST(roottest-root-io-cpp11Containers-unordered_set
-                  MACRO  unordered_set.C
-                  OUTREF unordered_set.ref
+                  MACRO  execUnorderedSet.C
+                  OUTREF execUnorderedSet.ref
                   DEPENDS ${GENERATE_REFLEX_TEST} roottest-root-io-cpp11Containers-forwardList)
