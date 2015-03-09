@@ -21,7 +21,7 @@
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = 6.03/03
+PROJECT_NUMBER         = $(DOXYGEN_ROOT_VERSION)
 
 # This tag specifies the encoding used for all characters in the config file
 # that follow. The default is UTF-8 which is also the encoding used for all text
