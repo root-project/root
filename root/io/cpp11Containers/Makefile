@@ -1,6 +1,6 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *root *pcm
 
-TEST_TARGETS += classref tempParse pairs
+#TEST_TARGETS +=
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
    export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
@@ -15,4 +15,5 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
-execForwardList.log: libforwardList_dictrflx.$(DllSuf)
+execForwardList.log:  libforwardList_dictrflx.$(DllSuf)
+execUnorderedSet.log: libunorderedSet_dictrflx.$(DllSuf) execForwardList.log

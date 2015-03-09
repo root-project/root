@@ -10,7 +10,7 @@
 #include "commonUtils.h"
 
 // A shortcut
-#define NESTEDCONT {{TH1F("h","ht",100,-2,2),TH1F("h","ht",10,-1.23,1.23)},{TH1F("h","ht",100,-23,23),TH1F("h","ht",10,-1.92,1.92)}}
+#define NESTEDCONT {{TH1F("h1","ht",100,-2,2),TH1F("h2","ht",10,-1.23,1.23)},{TH1F("h3","ht",100,-23,23),TH1F("h4","ht",10,-1.92,1.92)}}
 
 template<class T>
 void checkObjects(const char* name, const T& a, const T& b){
@@ -18,7 +18,7 @@ void checkObjects(const char* name, const T& a, const T& b){
    std::cerr << "Objects called " << name << " differ!\n";
 }
 
-template <template <typename T,typename V=allocator<T>> class Cont>
+template <template <typename... T> class Cont>
 void check(const char* testName){
 
    printf("o Checking %s\n",testName);
@@ -36,12 +36,8 @@ void check(const char* testName){
    }
 
    Cont<double> doubleCont {1.,2.,3.,4.}; // need double32_t
-   Cont<TH1F> histoCont {TH1F("h","ht",100,-2,2), TH1F("h","ht",10,-1.2,1.2)};
+   Cont<TH1F> histoCont {TH1F("h1","ht",100,-2,2), TH1F("h2","ht",10,-1.2,1.2)};
    fillHistoCont(histoCont);
-
-
-   Cont<Cont<TH1F>> contHistoCont NESTEDCONT;
-   fillHistoNestedCont(contHistoCont);
 
    vector<Cont<TH1F>> vecHistoCont NESTEDCONT;
    fillHistoNestedCont(vecHistoCont);
@@ -55,7 +51,6 @@ void check(const char* testName){
    for (auto&& filename : filenames){
       writeReadCheck(doubleCont,"doubleCont",filename);
       writeReadCheck(histoCont,"histoCont",filename);
-      writeReadCheck(contHistoCont,"contHistoCont",filename);
       writeReadCheck(vecHistoCont,"vecHistoCont",filename);
       writeReadCheck(contHistoVec,"contHistoVec",filename);
    }
@@ -66,7 +61,6 @@ void check(const char* testName){
    // Make a backup of the input
    auto doubleContOrig = doubleCont;
    auto histoContOrig = histoCont;
-   auto contHistoContOrig = contHistoCont;
    auto vecHistoContOrig = vecHistoCont;
    auto contHistoVecOrig = contHistoVec;
 
@@ -80,8 +74,6 @@ void check(const char* testName){
       t.Branch("doubleCont", &doubleCont,16000,0);
       t.Branch("histoCont_split", &histoCont,16000,99);
       t.Branch("histoCont", &histoCont,16000,0);
-      t.Branch("contHistoCont_split", &contHistoCont,16000,99);
-      t.Branch("contHistoCont", &contHistoCont,16000,0);
       t.Branch("vecHistoCont_split", &vecHistoCont,16000,99);
       t.Branch("vecHistoCont", &vecHistoCont,16000,0);
       t.Branch("contHistoVec_split", &contHistoVec,16000,99);
@@ -90,8 +82,6 @@ void check(const char* testName){
       for (int i=0;i<NEvts;++i){
          randomizeCont(doubleCont);
          fillHistoCont(histoCont,10);
-         fillHistoNestedCont(contHistoCont,10);
-         fillHistoNestedCont(vecHistoCont,10);
          fillHistoNestedCont(contHistoVec,10);
          t.Fill();
       }
@@ -107,8 +97,6 @@ void check(const char* testName){
       TTreeReaderValue<decltype(doubleCont)> rdoubleCont(reader, "doubleCont");
       TTreeReaderValue<decltype(histoCont)> rhistoCont_split(reader, "histoCont_split");
       TTreeReaderValue<decltype(histoCont)> rhistoCont(reader, "histoCont");
-      TTreeReaderValue<decltype(contHistoCont)> rcontHistoCont_split(reader, "contHistoCont_split");
-      TTreeReaderValue<decltype(contHistoCont)> rcontHistoCont(reader, "contHistoCont");
       TTreeReaderValue<decltype(vecHistoCont)> rvecHistoCont_split(reader, "vecHistoCont_split");
       TTreeReaderValue<decltype(vecHistoCont)> rvecHistoCont(reader, "vecHistoCont");
       TTreeReaderValue<decltype(contHistoVec)> rcontHistoVec_split(reader, "contHistoVec_split");
@@ -117,8 +105,6 @@ void check(const char* testName){
          // Rebuild original values
          randomizeCont(doubleContOrig);
          fillHistoCont(histoContOrig,10);
-         fillHistoNestedCont(contHistoContOrig,10);
-         fillHistoNestedCont(vecHistoContOrig,10);
          fillHistoNestedCont(contHistoVecOrig,10);
          // Now check them
          reader.Next();
@@ -126,8 +112,6 @@ void check(const char* testName){
          checkObjects("doubleCont",doubleContOrig,*rdoubleCont);
          checkObjects("histoCont_split",histoContOrig,*rhistoCont_split);
          checkObjects("histoCont",histoContOrig,*rhistoCont);
-         checkObjects("contHistoCont_split",contHistoContOrig,*rcontHistoCont_split);
-         checkObjects("contHistoCont",contHistoContOrig,*rcontHistoCont);
          checkObjects("vecHistoCont_split",vecHistoContOrig,*rvecHistoCont_split);
          checkObjects("vecHistoCont",vecHistoContOrig,*rvecHistoCont);
          checkObjects("contHistoVec_split",contHistoVecOrig,*rcontHistoVec_split);
@@ -140,7 +124,7 @@ void check(const char* testName){
 }
 
 
-void execForwardList(){
+void execUnorderedSet(){
 
    // This as a baselinecheck
    check<std::list>("list");
@@ -148,7 +132,7 @@ void execForwardList(){
    check<std::deque>("deque");
 
    // This is for the actual collection
-   check<std::forward_list>("forward_list");
+   check<std::unordered_set>("unordered_set");
 
 
 

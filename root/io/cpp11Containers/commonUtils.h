@@ -1,3 +1,16 @@
+#include <iostream>
+#include "TH1F.h"
+#include <unordered_set>
+#include <forward_list>
+#include <list>
+#include <deque>
+#include <algorithm>
+#include "TFile.h"
+#include "TRandom.h"
+
+#ifndef ROOTTEST_COMMON_UTILS
+#define ROOTTEST_COMMON_UTILS
+
 template <class T>
 bool IsSame(const T& a, const T& b){
    cout << "ERROR\n";
@@ -39,6 +52,50 @@ template <class T, class ALLOCATOR>
 bool IsSame(const std::deque<T,ALLOCATOR>& a, const std::deque<T,ALLOCATOR>& b){
    return IsSameCont(a,b);
 }
+
+template<class T>
+bool IsSame(const std::unordered_set<T>& a, const std::unordered_set<T>& b){
+   std::vector<T> v1;
+   for (auto& el : a) v1.emplace_back(el);
+   std::vector<T> v2;
+   for (auto& el : b) v2.emplace_back(el);
+
+   auto sortingFunction = [](const T& a, const T& b){return std::string(a.GetName())<std::string(b.GetName());};
+   std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
+   std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
+   return IsSame(v1,v2);
+}
+
+template<class T>
+bool IsSame(const std::unordered_set<std::vector<T>>& a, const std::unordered_set<std::vector<T>>& b){
+   std::vector<std::vector<T>> v1;
+   for (auto& el : a) v1.emplace_back(el);
+   std::vector<std::vector<T>> v2;
+   for (auto& el : b) v2.emplace_back(el);
+
+   auto sortingFunction = [](const std::vector<T>& a, const std::vector<T>& b){
+      std::string namesA,namesB;
+      for (auto&& h:a) namesA+=h.GetName();
+      for (auto&& h:b) namesB+=h.GetName();
+      return namesA<namesB;
+   };
+   std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
+   std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
+   return IsSame(v1,v2);
+}
+
+template<>
+bool IsSame<double>(const std::unordered_set<double>& a, const std::unordered_set<double>& b){
+   std::vector<double> v1;
+   for (auto& el : a) v1.emplace_back(el);
+   std::vector<double> v2;
+   for (auto& el : b) v2.emplace_back(el);
+
+   std::sort(v1.begin(),v1.end()); // FUNDAMENTAL!
+   std::sort(v2.begin(),v2.end()); // FUNDAMENTAL!
+   return IsSame(v1,v2);
+}
+
 
 template <>
 bool IsSame<>(const TH1F& a, const TH1F& b){
@@ -93,9 +150,7 @@ void fillHistoCont(Cont& cont, unsigned int n=5000){
 template<class NestedCont>
 void fillHistoNestedCont(NestedCont& nestedCont, unsigned int n=5000){
    for (auto& hCont:nestedCont) {
-      for (auto& h:hCont){
-         h.FillRandom("gaus",n);
-      }
+      fillHistoCont(hCont,n);
    }
 }
 
@@ -105,3 +160,85 @@ void randomizeCont(Cont& cont){
       el*=gRandom->Uniform(1,2);
    }
 }
+
+//------------------------------------------------------------------------------
+// For the unordered set
+namespace std {
+   template <>
+   class hash<TH1F> {
+   public:
+      size_t operator()(const TH1F &h) const {
+         std::hash<std::string> shash;
+         return shash(h.GetName());
+      }
+   }; // hash
+   template <>
+   class hash<std::vector<TH1F>> {
+   public:
+      size_t operator()(const std::vector<TH1F> &hVect) const {
+         std::string names;
+         for (auto&& h:hVect) names+=h.GetName();
+         std::hash<std::string> shash;
+         return shash(names);
+      }
+   }; // hash
+
+   template<>
+   struct equal_to<TH1F>{
+      bool operator()( const TH1F& a, const TH1F& b ) const {
+         return IsSame(a,b);
+      }
+   };
+   template<>
+   struct equal_to<std::vector<TH1F>>{
+      bool operator()( const std::vector<TH1F>& a, const std::vector<TH1F>& b ) const {
+         return IsSame(a,b);
+      }
+   };
+
+
+} // std
+
+template<class T, class HASH, class EQ, class ALLOC>
+void fillHistoCont(std::unordered_set<T,HASH,EQ,ALLOC>& cont, unsigned int n=5000){
+   std::vector<T> v;
+   for (auto& el : cont) v.emplace_back(el);
+   cont.clear();
+   std::sort(v.begin(),v.end(),[](const T& a, const T& b){return std::string(a.GetName())<std::string(b.GetName());}); // FUNDAMENTAL!
+   for (auto& h:v) {
+      h.FillRandom("gaus",n);
+      cont.insert(h);
+   }
+}
+
+template<class T, class HASH, class EQ, class ALLOC>
+void fillHistoNestedCont(std::unordered_set<T,HASH,EQ,ALLOC>& nestedCont, unsigned int n=5000){
+   std::vector<T> v;
+   for (auto& hCont:nestedCont) v.emplace_back(hCont);
+   std::sort(v.begin(),v.end(),[](const T& a, const T& b){
+      std::string namesA, namesB;
+      for (auto&& h : a) namesA+=h.GetName();
+      for (auto&& h : b) namesB+=h.GetName();
+      return namesA < namesB;
+   });
+   nestedCont.clear();
+   for (auto& hCont:v) {
+      fillHistoCont(hCont,n);
+      nestedCont.insert(hCont);
+   }
+}
+
+
+template<class T, class HASH, class EQ, class ALLOC>
+void randomizeCont(std::unordered_set<T,HASH,EQ,ALLOC>& cont){
+   std::vector<T> v;
+   for (auto& el : cont) v.emplace_back(el);
+   std::sort(v.begin(),v.end()); // FUNDAMENTAL!
+   cont.clear();
+   for (auto& el : v){
+      cont.insert(el*gRandom->Uniform(1,2));
+   }
+}
+
+
+#endif
