@@ -897,16 +897,15 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    if (lastPos != inner)   // Main switch: case 1 - scoped enum, case 2 global enum
    {
       // We have a scope
-      // All of this C gymnastic is here to get the scope name and to avoid
-      // allocations on the heap
-      const auto enName = lastPos + 1;
-      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)inner) / sizeof(decltype(*lastPos)) - 1;
+      // All of this C gymnastic is to avoid allocations on the heap (see TEnum::GetEnum)
+      const auto enName = lastPos;
+      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 2;
 #ifdef R__WIN32
       char *scopeName = new char[scopeNameSize + 1];
 #else
       char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
 #endif
-      strncpy(scopeName, inner, scopeNameSize);
+      strncpy(scopeName, enumName, scopeNameSize);
       scopeName[scopeNameSize] = '\0';
       // Check if the scope is in the list of classes
       if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
