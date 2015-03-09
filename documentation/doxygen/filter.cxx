@@ -65,15 +65,16 @@ void    ExecuteCommand(TString);
 
 
 // Global variables.
-char    gLine[255];
-TString gFileName;
-TString gLineString;
-TString gClassName;
-TString gImageName;
-TString gMacroName;
-TString gCwd;
-Bool_t  gHeader;
-Bool_t  gSource;
+char    gLine[255];  // Current line in the current input file
+TString gFileName;   // Input file name
+TString gLineString; // Current line (as a TString) in the current input file
+TString gClassName;  // Current class name
+TString gImageName;  // Current image name
+TString gMacroName;  // Current macro name
+TString gCwd;        // Current working directory
+TString gOutDir;     // Output directory
+Bool_t  gHeader;     // True if the input file is a header
+Bool_t  gSource;     // True if the input file is a source file
 Bool_t  gInClassDef;
 Bool_t  gClass;
 Int_t   gInMacro;
@@ -240,8 +241,8 @@ void ExecuteMacro()
    // Execute the macro in gLineString and produce the corresponding picture
 
    // Retrieve the output directory
-   TString OutDir = gSystem->Getenv("DOXYGEN_OUTPUT_DIRECTORY");
-   OutDir.ReplaceAll("\"","");
+   gOutDir = gSystem->Getenv("DOXYGEN_OUTPUT_DIRECTORY");
+   gOutDir.ReplaceAll("\"","");
 
    // Name of the next Image to be generated
    gImageName = TString::Format("%s_%3.3d.png", gClassName.Data()
@@ -262,7 +263,7 @@ void ExecuteMacro()
    Int_t l = gLineString.Length();
    gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s\\\",\\\"%s\\\")\"",
                                              gImageName.Data(),
-                                             OutDir.Data()));
+                                             gOutDir.Data()));
 
    ExecuteCommand(gLineString);
 
