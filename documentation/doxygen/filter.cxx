@@ -259,9 +259,9 @@ void ExecuteMacro()
    // Build the ROOT command to be executed.
    gLineString.Prepend(TString::Format("root -l -b -q \"makeimage.C(\\\""));
    Int_t l = gLineString.Length();
-   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s/html/\\\",\\\"%s\\\")\"",
-                                             OutDir.Data(),
-                                             gImageName.Data()));
+   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s\\\",\\\"%s\\\")\"",
+                                             gImageName.Data(),
+                                             OutDir.Data()));
 
    ExecuteCommand(gLineString);
 

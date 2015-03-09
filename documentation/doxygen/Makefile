@@ -4,6 +4,7 @@
 export DOXYGEN_ROOT_VERSION=$(shell root -l -b -q -e 'printf("%s\n", gROOT->GetVersion());')
 export DOXYGEN_OUTPUT_DIRECTORY=/tmp/doxygen/rootdoc
 export DOXYGEN_EXAMPLE_PATH=$(DOXYGEN_OUTPUT_DIRECTORY)/macros
+export DOXYGEN_IMAGE_PATH=$(DOXYGEN_OUTPUT_DIRECTORY)/images
 
 all: filter doxygen
 
@@ -13,6 +14,7 @@ filter:
 doxygen:
 	if [ ! -d $(DOXYGEN_OUTPUT_DIRECTORY) ]; then mkdir $(DOXYGEN_OUTPUT_DIRECTORY); fi
 	if [ ! -d $(DOXYGEN_EXAMPLE_PATH) ]; then mkdir $(DOXYGEN_EXAMPLE_PATH); fi
+	if [ ! -d $(DOXYGEN_IMAGE_PATH) ]; then mkdir $(DOXYGEN_IMAGE_PATH); fi
 	./makehtmlfooter.sh > htmlfooter.html
 	doxygen
 	rm c1*
