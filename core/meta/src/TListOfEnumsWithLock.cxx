@@ -180,6 +180,16 @@ TObject* TListOfEnumsWithLock::FindObject(const TObject* obj) const
 }
 
 //______________________________________________________________________________
+TEnum *TListOfEnumsWithLock::GetObject(const char *name) const
+{
+   // Return an object from the list of enums *if and only if* is has already
+   // been loaded in the list.  This is an internal routine.
+
+   R__LOCKGUARD(gInterpreterMutex);
+   return (TEnum*)THashList::FindObject(name);
+}
+
+//______________________________________________________________________________
 void TListOfEnumsWithLock::RecursiveRemove(TObject *obj)
 {
    // Remove object from this collection and recursively remove the object

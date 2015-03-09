@@ -26,6 +26,8 @@
 #include "TProtoClass.h"
 #include "TROOT.h"
 
+#include "TListOfEnums.h"
+
 ClassImp(TEnum)
 
 //______________________________________________________________________________
@@ -150,8 +152,8 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       if (sa_local & kInterpLookup) {
          obj = l->FindObject(enName);
       } else {
-         auto enumTable = dynamic_cast<const THashList *>(l);
-         obj = enumTable->THashList::FindObject(enName);
+         auto enumTable = dynamic_cast<const TListOfEnums *>(l);
+         obj = enumTable->GetObject(enName);
       }
       return static_cast<TEnum *>(obj);
    };

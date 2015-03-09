@@ -71,6 +71,8 @@ public:
    TListOfEnums(TClass *cl = 0);
    ~TListOfEnums() override;
 
+   virtual TEnum *GetObject(const char*) const;
+
    void Clear(Option_t *option) override;
    void Delete(Option_t *option="") override;
 
