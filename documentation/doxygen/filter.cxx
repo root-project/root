@@ -79,7 +79,6 @@ Bool_t  gClass;
 Int_t   gInMacro;
 Int_t   gImageID;
 
-
 //______________________________________________________________________________
 int main(int argc, char *argv[])
 {
@@ -99,7 +98,7 @@ int main(int argc, char *argv[])
    GetClassName();
    gCwd = gFileName(0, gFileName.Last('/'));
 
-   // Loop on file.
+   // Open the input file name.
    FILE *f = fopen(gFileName.Data(),"r");
 
    // File header.
@@ -116,6 +115,7 @@ int main(int argc, char *argv[])
 
          printf("%s",gLineString.Data());
       }
+      fclose(f);
       return 0;
    }
 
@@ -161,6 +161,7 @@ int main(int argc, char *argv[])
 
          printf("%s",gLineString.Data());
       }
+      fclose(f);
       return 0;
    }
 
@@ -169,7 +170,7 @@ int main(int argc, char *argv[])
       gLineString = gLine;
       printf("%s",gLineString.Data());
    }
-
+   fclose(f);
    return 0;
 }
 
