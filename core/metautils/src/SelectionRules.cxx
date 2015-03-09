@@ -305,7 +305,7 @@ const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::NamespaceDecl *D
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) const
-{  
+{
    // Currently rootcling does not need any information on enums, except
    // for the PCM / proto classes that register them to build TEnums without
    // parsing. This can be removed once (real) PCMs are available.
@@ -480,7 +480,6 @@ bool SelectionRules::GetFunctionPrototype(clang::FunctionDecl* F, std::string& p
       if (prototype != "")
          prototype += ",";
 
-      //type = P->getType().getAsString();
       ROOT::TMetaUtils::GetNormalizedName(type,P->getType(),fInterp,fNormCtxt);
 
       // We need to get rid of the "class " string if present
@@ -867,6 +866,11 @@ const BaseSelectionRule *SelectionRules::IsVarSelected(clang::VarDecl* D, const 
 
 const BaseSelectionRule *SelectionRules::IsFunSelected(clang::FunctionDecl *D, const std::string &qual_name) const
 {
+
+   if (fFunctionSelectionRules.size() == 0 ||
+       D->getPrimaryTemplate() != nullptr ||
+       llvm::isa<clang::CXXMethodDecl>(D)) return nullptr;
+
    std::string prototype;
    GetFunctionPrototype(D, prototype);
    prototype = qual_name + prototype;
@@ -970,6 +974,10 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D,
 
 const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDecl* D, const std::string& qual_name) const
 {
+
+   if (fFunctionSelectionRules.size() == 0 ||
+       D->getPrimaryTemplate() != nullptr ||
+       llvm::isa<clang::CXXMethodDecl>(D)) return nullptr;
 
    std::string prototype;
 

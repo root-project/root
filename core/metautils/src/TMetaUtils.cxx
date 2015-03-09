@@ -1747,7 +1747,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       finalString << "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< "  << csymbol << " >(0);" << "\n";
    }
    else {
-      finalString << "      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(" << csymbol << "),0);" << "\n";
+      finalString << "      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(" << csymbol << "));" << "\n";
    }
    finalString << "      static ::ROOT::TGenericClassInfo " << "\n" << "         instance(\"" << classname.c_str() << "\", ";
 
@@ -1835,7 +1835,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << "Pushback" << "<TStdBitsetHelper< " << classname.c_str() << " > >()));" << "\n";
 
       needCollectionProxy = true;
-   } else if (stl != 0 && ((stl>0 && stl<8) || (stl<0 && stl>-8)) )  {
+   } else if (stl != 0 &&
+              ((stl > 0 && stl<ROOT::kSTLend) || (stl < 0 && stl>-ROOT::kSTLend)) && // is an stl container
+              (stl != ROOT::kSTLbitset && stl !=-ROOT::kSTLbitset) ){     // is no bitset
       int idx = classname.find("<");
       int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
       const char* methodTCP=0;
@@ -1845,11 +1847,15 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          case ROOT::kSTLdeque:
             methodTCP="Pushback";
             break;
+         case ROOT::kSTLforwardlist:
+            methodTCP="Pushfront";
+            break;
          case ROOT::kSTLmap:
          case ROOT::kSTLmultimap:
             methodTCP="MapInsert";
             break;
          case ROOT::kSTLset:
+         case ROOT::kSTLunorderedset:
          case ROOT::kSTLmultiset:
             methodTCP="Insert";
             break;
@@ -4325,7 +4331,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
    // In case of Int_t* we need to strip the pointer first, ReSubst and attach
    // the pointer once again.
-   if (isa<PointerType>(QT.getTypePtr())) {
+   if (isa<clang::PointerType>(QT.getTypePtr())) {
       // Get the qualifiers.
       Qualifiers quals = QT.getQualifiers();
       QualType nQT;
@@ -4360,7 +4366,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
    // In case of Int_t[2] we need to strip the array first, ReSubst and attach
    // the array once again.
-   if (isa<ArrayType>(QT.getTypePtr())) {
+   if (isa<clang::ArrayType>(QT.getTypePtr())) {
       // Get the qualifiers.
       Qualifiers quals = QT.getQualifiers();
 
@@ -4578,13 +4584,16 @@ ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
    // Converts STL container name to number. vector -> 1, etc..
 
    static const char *stls[] =                  //container names
-      {"any","vector","list","deque","map","multimap","set","multiset","bitset",0};
+      {"any","vector","list", "deque","map","multimap","set","multiset","bitset","forward_list","unordered_set",0};
    static const ROOT::ESTLType values[] =
       {ROOT::kNotSTL, ROOT::kSTLvector,
        ROOT::kSTLlist, ROOT::kSTLdeque,
        ROOT::kSTLmap, ROOT::kSTLmultimap,
        ROOT::kSTLset, ROOT::kSTLmultiset,
-       ROOT::kSTLbitset, ROOT::kNotSTL
+       ROOT::kSTLbitset,
+       ROOT::kSTLforwardlist,
+       ROOT::kSTLunorderedset,
+       ROOT::kNotSTL
       };
    //              kind of stl container
    for(int k=1;stls[k];k++) {if (type.equals(stls[k])) return values[k];}

@@ -1,7 +1,7 @@
 .\"
 .\" $Id: root.1,v 1.1 2001/08/15 13:30:48 rdm Exp $
 .\"
-.TH ROOT 1 "Version 3" "ROOT"
+.TH ROOT 1 "Version 6" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
 .SH NAME
@@ -29,6 +29,9 @@ Show summary of options.
 .B -b
 Run in batch mode without graphics
 .TP
+.B -e
+Execute the command passed between single quotes
+.TP
 .B -n
 Do not execute logon and logoff macros as specified in
 .B .rootrc
@@ -40,7 +43,7 @@ Exit after processing command line macro files
 Do not show splash screen
 .SH "SEE ALSO"
 .SB
-\fIrootcint\fR(1), \fIcint\fR(1), \fIroot-config\fR(1),
+\fIrootcling\fR(1), \fIcling\fR(1), \fIroot-config\fR(1),
 \fIrootd\fR(1), \fIh2root\fR(1), \fIg2root\fR(1)
 .PP
 For extensive documentation on the \fBROOT\fR system, see

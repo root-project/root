@@ -8,6 +8,8 @@ ROOT_USE_PACKAGE(io/io)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/../metautils/src ${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 if(NOT MSVC)
   add_definitions(${CLING_CXXFLAGS} -Wno-shadow -Wno-unused-parameter)
+else()
+  set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-DNOMINMAX -D_XKEYCHECK_H")
 endif()
 ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           src/TModuleGenerator.cxx src/rootcling.cxx src/rootclingTCling.cxx
@@ -34,10 +36,17 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
 
 add_dependencies(rootcling CLING LLVMRES)
 
-add_custom_command(TARGET rootcling POST_BUILD
-                   COMMAND ln -f rootcling rootcint
-                   COMMAND ln -f rootcling genreflex
-                   WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+if(WIN32)
+  add_custom_command(TARGET rootcling POST_BUILD
+                     COMMAND copy /y rootcling.exe rootcint.exe
+                     COMMAND copy /y rootcling.exe genreflex.exe
+                     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+else()
+  add_custom_command(TARGET rootcling POST_BUILD
+                     COMMAND ln -f rootcling rootcint
+                     COMMAND ln -f rootcling genreflex
+                     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+endif()
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
                          "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint;${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex")
 

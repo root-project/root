@@ -48,6 +48,13 @@
 
 #include <ctime>
 
+#ifdef R__WIN32
+struct timespec {
+   time_t   tv_sec;  // seconds
+   long     tv_nsec; // nanoseconds
+};
+#endif
+
 // For backward compatibility
 typedef struct timespec timespec_t;
 typedef struct tm       tm_t;

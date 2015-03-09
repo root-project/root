@@ -73,12 +73,21 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
                    COMMENT ""
                    DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-add_custom_command(OUTPUT  ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/gitinfo.sh ${CMAKE_SOURCE_DIR}
-                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/githeader.sh RGitCommit.h.tmp
-                   COMMENT "Recording the git revision now"
-                   DEPENDS ${dep_objects}
-                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+if(WIN32)
+  add_custom_command(OUTPUT  ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+                     COMMAND ${CMAKE_SOURCE_DIR}/build/win/gitinfo.bat ${CMAKE_SOURCE_DIR}
+                     COMMAND ${CMAKE_SOURCE_DIR}/build/win/githeader.bat RGitCommit.h.tmp
+                     COMMENT "Recording the git revision now"
+                     DEPENDS ${dep_objects}
+                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+else()
+  add_custom_command(OUTPUT  ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+                     COMMAND ${CMAKE_SOURCE_DIR}/build/unix/gitinfo.sh ${CMAKE_SOURCE_DIR}
+                     COMMAND ${CMAKE_SOURCE_DIR}/build/unix/githeader.sh RGitCommit.h.tmp
+                     COMMENT "Recording the git revision now"
+                     DEPENDS ${dep_objects}
+                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+endif()
 add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)
 set_source_files_properties(${CMAKE_BINARY_DIR}/RGitCommit.h.tmp PROPERTIES GENERATED TRUE)
 add_dependencies(gitcommit ${dep_targets})

@@ -2211,8 +2211,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (dset->TestBit(TDSet::kEmpty))
          set->SetBit(TDSet::kEmpty);
 
-      const char *datapack = (fProof->IsLite()) ? "TPacketizer" : "TPacketizerAdaptive";
-      if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", datapack) != 0) {
+      if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", "TPacketizer") != 0) {
          Error("Process", "cannot init the packetizer");
          fExitStatus = kAborted;
          return -1;
@@ -2539,6 +2538,8 @@ Bool_t TProofPlayerRemote::JoinProcess(TList *workers)
          return kFALSE;
       }
    }
+
+   if (fProof->IsLite()) fProof->fNotIdle += workers->GetSize();
 
    PDB(kGlobal, 2)
       Info("Process", "Adding new workers to the packetizer");
@@ -4167,9 +4168,11 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
    TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
    if (e == 0) {
-      PDB(kPacketizer,2) Info("GetNextPacket","%s: done!", slave->GetOrdinal());
+      PDB(kPacketizer,2) 
+         Info("GetNextPacket","%s: done!", slave->GetOrdinal());
    } else if (e == (TDSetElement*) -1) {
-      PDB(kPacketizer,2) Info("GetNextPacket","%s: waiting ...", slave->GetOrdinal());
+      PDB(kPacketizer,2)
+         Info("GetNextPacket","%s: waiting ...", slave->GetOrdinal());
    } else {
       PDB(kPacketizer,2)
          Info("GetNextPacket","%s (%s): '%s' '%s' '%s' %lld %lld",

@@ -15,9 +15,9 @@
 namespace {
    static void RemoveEscapeSequences(std::string& rawString)
    {
-      const std::vector<std::pair<const std::string, const std::string>> subPairs { {"\\\\","\\"},
-                                                                                    {"\\\"","\""},
-                                                                                    {"\\\'","\'"}};
+      const std::vector<std::pair<std::string, std::string>> subPairs { {"\\\\","\\"},
+                                                                        {"\\\"","\""},
+                                                                        {"\\\'","\'"}};
       size_t start_pos = 0;
       for (auto const & subPair : subPairs){
          start_pos = 0;

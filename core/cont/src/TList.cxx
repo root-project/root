@@ -904,13 +904,14 @@ TIterator &TListIter::operator=(const TIterator &rhs)
 {
    // Overridden assignment operator.
 
-   if (this != &rhs && rhs.IsA() == TListIter::Class()) {
-      const TListIter &rhs1 = (const TListIter &)rhs;
-      fList      = rhs1.fList;
-      fCurCursor = rhs1.fCurCursor;
-      fCursor    = rhs1.fCursor;
-      fDirection = rhs1.fDirection;
-      fStarted   = rhs1.fStarted;
+   const TListIter *rhs1 = dynamic_cast<const TListIter *>(&rhs);
+   if (this != &rhs && rhs1) {
+      TIterator::operator=(rhs);
+      fList      = rhs1->fList;
+      fCurCursor = rhs1->fCurCursor;
+      fCursor    = rhs1->fCursor;
+      fDirection = rhs1->fDirection;
+      fStarted   = rhs1->fStarted;
    }
    return *this;
 }
@@ -921,6 +922,7 @@ TListIter &TListIter::operator=(const TListIter &rhs)
    // Overloaded assignment operator.
 
    if (this != &rhs) {
+      TIterator::operator=(rhs);
       fList      = rhs.fList;
       fCurCursor = rhs.fCurCursor;
       fCursor    = rhs.fCursor;
@@ -987,7 +989,10 @@ Bool_t TListIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
-   if ((aIter.IsA() == TListIter::Class())) {
+   if (IsA() == aIter.IsA()) {
+      // We compared equal only two iterator of the same type.
+      // Since this is a function of TListIter, we consequently know that
+      // both this and aIter are of type inheriting from TListIter.
       const TListIter &iter(dynamic_cast<const TListIter &>(aIter));
       return (fCurCursor != iter.fCurCursor);
    }

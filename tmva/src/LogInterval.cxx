@@ -13,8 +13,8 @@
  *      Helge Voss <helge.voss@cern.ch>  - MPI-K Heidelberg, Germany              *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -35,39 +35,39 @@
    </ul>
 </ul>
 <pre>
-    Example:             
- LogInterval(1,10000,5)                                          
-     i=0 --> 1               note: StepSize(ibin=0) =  not defined !!  
-     i=1 --> 10                    StepSize(ibin=1) = 9              
-     i=2 --> 100                   StepSize(ibin=2) = 99                         
-     i=3 --> 1000                  StepSize(ibin=3) = 999                     
-     i=4 --> 10000                 StepSize(ibin=4) = 9999                 
-                                                
- LogInterval(1,1000,11)                     
-    i=0 --> 1                           
-    i=1 --> 1.99526                 
-    i=2 --> 3.98107             
-    i=3 --> 7.94328         
-    i=4 --> 15.8489      
-    i=5 --> 31.6228      
-    i=6 --> 63.0957      
-    i=7 --> 125.893      
-    i=8 --> 251.189      
-    i=9 --> 501.187      
-    i=10 --> 1000        
-                         
- LogInterval(1,1024,11)  
-    i=0 --> 1            
-    i=1 --> 2            
-    i=2 --> 4            
-    i=3 --> 8            
-    i=4 --> 16           
-    i=5 --> 32           
-    i=6 --> 64           
-    i=7 --> 128          
-    i=8 --> 256          
-    i=9 --> 512          
-    i=10 --> 1024        
+    Example:
+ LogInterval(1,10000,5)
+     i=0 --> 1               note: StepSize(ibin=0) =  not defined !!
+     i=1 --> 10                    StepSize(ibin=1) = 9
+     i=2 --> 100                   StepSize(ibin=2) = 99
+     i=3 --> 1000                  StepSize(ibin=3) = 999
+     i=4 --> 10000                 StepSize(ibin=4) = 9999
+
+ LogInterval(1,1000,11)
+    i=0 --> 1
+    i=1 --> 1.99526
+    i=2 --> 3.98107
+    i=3 --> 7.94328
+    i=4 --> 15.8489
+    i=5 --> 31.6228
+    i=6 --> 63.0957
+    i=7 --> 125.893
+    i=8 --> 251.189
+    i=9 --> 501.187
+    i=10 --> 1000
+
+ LogInterval(1,1024,11)
+    i=0 --> 1
+    i=1 --> 2
+    i=2 --> 4
+    i=3 --> 8
+    i=4 --> 16
+    i=5 --> 32
+    i=6 --> 64
+    i=7 --> 128
+    i=8 --> 256
+    i=9 --> 512
+    i=10 --> 1024
 
 
 </pre>
@@ -81,19 +81,16 @@ End_Html */
 
 ClassImp(TMVA::LogInterval)
 
-TMVA::MsgLogger* TMVA::LogInterval::fgLogger = 0;
 //_______________________________________________________________________
 TMVA::LogInterval::LogInterval( Double_t min, Double_t max, Int_t nbins ) :
 TMVA::Interval(min,max,nbins)
 {
-   if (!fgLogger) fgLogger = new MsgLogger("LogInterval");
    if (min<=0) Log() << kFATAL << "logarithmic intervals have to have Min>0 !!" << Endl;
 }
 
 TMVA::LogInterval::LogInterval( const LogInterval& other ) :
    TMVA::Interval(other)
 {
-   if (!fgLogger) fgLogger = new MsgLogger("LogInterval");
 }
 
 //_______________________________________________________________________
@@ -105,9 +102,9 @@ TMVA::LogInterval::~LogInterval()
 //_______________________________________________________________________
 Double_t TMVA::LogInterval::GetElement( Int_t bin ) const
 {
-   // calculates the value of the "number" bin in a discrete interval. 
+   // calculates the value of the "number" bin in a discrete interval.
    // Parameters:
-   //        Double_t position 
+   //        Double_t position
    //
    if (fNbins <= 0) {
       Log() << kFATAL << "GetElement only defined for discrete value LogIntervals" << Endl;
@@ -123,7 +120,7 @@ Double_t TMVA::LogInterval::GetElement( Int_t bin ) const
 //_______________________________________________________________________
 Double_t TMVA::LogInterval::GetStepSize( Int_t iBin )  const
 {
-   // retuns the step size between the numbers of a "discrete LogInterval" 
+   // retuns the step size between the numbers of a "discrete LogInterval"
    if (fNbins <= 0) {
       Log() << kFATAL << "GetElement only defined for discrete value LogIntervals" << Endl;
    }
@@ -141,12 +138,20 @@ Double_t TMVA::LogInterval::GetRndm( TRandom3& rnd )  const
    return TMath::Exp(rnd.Rndm()*(TMath::Log(fMax/fMin) - TMath::Log(fMin)) + TMath::Log(fMin));
 }
 
-Double_t TMVA::LogInterval::GetWidth() const 
-{ 
-   return fMax - fMin; 
+Double_t TMVA::LogInterval::GetWidth() const
+{
+   return fMax - fMin;
 }
-Double_t TMVA::LogInterval::GetMean()  const 
-{ 
-   return (fMax + fMin)/2; 
+Double_t TMVA::LogInterval::GetMean()  const
+{
+   return (fMax + fMin)/2;
 }
 
+TMVA::MsgLogger& TMVA::LogInterval::Log() const {
+#if __cplusplus > 199711L
+  thread_local MsgLogger logger("LogInterval");   // message logger
+#else
+  static MsgLogger logger("LogInterval");   // message logger
+#endif
+  return logger;
+}

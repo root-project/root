@@ -1,23 +1,24 @@
 
-.PHONY: filter doxygen images clean
+.PHONY: filter doxygen clean
 
-docdir="$(shell ./makedocdir.sh)"
-imgdir="$(shell ./makeimgdir.sh)"
-macdir="$(shell ./makemacrodir.sh)"
+export DOXYGEN_ROOT_VERSION=$(shell root -l -b -q -e 'printf("%s\n", gROOT->GetVersion());')
+export DOXYGEN_OUTPUT_DIRECTORY=/tmp/doxygen/rootdoc
+export DOXYGEN_EXAMPLE_PATH=$(DOXYGEN_OUTPUT_DIRECTORY)/macros
 
-all: filter images doxygen
+all: filter doxygen
 
 filter:
 	`root-config --cxx` -o filter filter.cxx `root-config --libs --glibs --cflags`
 
-images:
-	./makeallimages.sh $(imgdir) $(macdir)
-
 doxygen:
+	if [ ! -d $(DOXYGEN_OUTPUT_DIRECTORY) ]; then mkdir $(DOXYGEN_OUTPUT_DIRECTORY); fi
+	if [ ! -d $(DOXYGEN_EXAMPLE_PATH) ]; then mkdir $(DOXYGEN_EXAMPLE_PATH); fi
+	./makehtmlfooter.sh > htmlfooter.html
 	doxygen
+	rm c1*
+	rm stdout.dat
+	rm htmlfooter.html
 
 clean:
-	rm -r $(macdir)
-	rm -r $(imgdir)
-	rm -r $(docdir)
+	rm -r $(DOXYGEN_OUTPUT_DIRECTORY)
 	rm filter

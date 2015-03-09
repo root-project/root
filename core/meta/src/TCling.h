@@ -27,10 +27,12 @@
 #ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
 #endif
+#ifndef ROOT_Rtypeinfo
+#include "Rtypeinfo.h"
+#endif
 
 #include <set>
 #include <unordered_set>
-#include <typeinfo>
 #include <map>
 #include <vector>
 
@@ -238,7 +240,7 @@ public: // Public Interface
    virtual DeclId_t GetEnum(TClass *cl, const char *name) const;
    virtual TEnum*   CreateEnum(void *VD, TClass *cl) const;
    virtual void     UpdateEnumConstants(TEnum* enumObj, TClass* cl) const;
-   virtual void     LoadEnums(TClass* cl) const;
+   virtual void     LoadEnums(TListOfEnums& cl) const;
    TString GetMangledName(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
    TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void*   GetInterfaceMethod(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);

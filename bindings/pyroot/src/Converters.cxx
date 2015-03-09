@@ -232,6 +232,7 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
    para.fTypeCode = 'v';
    return kTRUE;
 #else
+   (void)para;
    PyErr_SetString( PyExc_NotImplementedError, "int pass-by-ref not implemented in p3" );
    return kFALSE; // there no longer is a PyIntObject in p3
 #endif

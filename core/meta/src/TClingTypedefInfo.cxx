@@ -271,7 +271,7 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
       return "(unknown)";
    }
    // Note: This must be static because we return a pointer to the internals.
-   static std::string truename;
+   thread_local std::string truename;
    truename.clear();
    const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
    clang::QualType underlyingType = td->getUnderlyingType();
@@ -292,7 +292,7 @@ const char *TClingTypedefInfo::Name() const
       return "(unknown)";
    }
    // Note: This must be static because we return a pointer to the internals.
-   static std::string fullname;
+   thread_local std::string fullname;
    fullname.clear();
    const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
    const clang::ASTContext &ctxt = fDecl->getASTContext();

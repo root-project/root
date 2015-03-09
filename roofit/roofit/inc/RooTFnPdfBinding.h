@@ -15,8 +15,8 @@ class TF3 ;
 
 class RooTFnPdfBinding : public RooAbsPdf {
 public:
-  RooTFnPdfBinding() {} ; 
-  RooTFnPdfBinding(const char *name, const char *title, TF1* _func, const RooArgList& _list);
+  RooTFnPdfBinding() : _func(0) {} ; 
+  RooTFnPdfBinding(const char *name, const char *title, TF1* func, const RooArgList& list);
   RooTFnPdfBinding(const RooTFnPdfBinding& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooTFnPdfBinding(*this,newname); }
   inline virtual ~RooTFnPdfBinding() { }
@@ -25,8 +25,8 @@ public:
 
 protected:
 
-  RooListProxy list ;
-  TF1* func ;
+  RooListProxy _list ;
+  TF1* _func ;
   
   Double_t evaluate() const ;
 

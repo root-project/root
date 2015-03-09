@@ -210,7 +210,11 @@ option(LLVM_ENABLE_THREADS "Use threads if available." ON)
 
 option(LLVM_ENABLE_ZLIB "Use zlib for compression/decompression if available." ON)
 
-if(${LLVM_TARGETS_TO_BUILD} STREQUAL "all")
+if(POLICY CMP0054)
+  cmake_policy(SET CMP0054 NEW)
+endif()
+
+if("${LLVM_TARGETS_TO_BUILD}" STREQUAL "all")
   set( LLVM_TARGETS_TO_BUILD ${LLVM_ALL_TARGETS} )
 endif()
 

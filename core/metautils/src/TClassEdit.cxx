@@ -138,7 +138,7 @@ int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
 
    int kind = STLKind(fElements[0].c_str());
 
-   if (kind==ROOT::kSTLvector || kind==ROOT::kSTLlist ) {
+   if (kind==ROOT::kSTLvector || kind==ROOT::kSTLlist || kind==ROOT::kSTLforwardlist) {
 
       int nargs = STLArgs(kind);
       if (testAlloc && (numb-1 > nargs) && !IsDefAlloc(fElements[numb-1].c_str(),fElements[1].c_str())) {
@@ -210,8 +210,8 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    //    fprintf(stderr,"calling ShortType %d for %s with narg %d tail %d\n",imode,typeDesc,narg,tailLoc);
 
    //kind of stl container
-   int kind = STLKind(fElements[0].c_str());
-   int iall = STLArgs(kind);
+   const int kind = STLKind(fElements[0].c_str());
+   const int iall = STLArgs(kind);
 
    // Only class is needed
    if (mode&(8|16)) {
@@ -244,8 +244,10 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
                switch (kind) {
                   case ROOT::kSTLvector:
                   case ROOT::kSTLlist:
+                  case ROOT::kSTLforwardlist:
                   case ROOT::kSTLdeque:
                   case ROOT::kSTLset:
+                  case ROOT::kSTLunorderedset:
                   case ROOT::kSTLmultiset:
                      dropAlloc = IsDefAlloc(fElements[iall+1].c_str(),fElements[1].c_str());
                      break;
@@ -277,6 +279,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          switch (kind) {
             case ROOT::kSTLvector:
             case ROOT::kSTLlist:
+            case ROOT::kSTLforwardlist:
             case ROOT::kSTLdeque:
                break;
             case ROOT::kSTLset:
@@ -293,7 +296,33 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
                break;
          }
       }
-   }
+
+      // Treat now Pred and Hash for unordered containers. Signature is:
+      // template < class Key,
+      //             class Hash = hash<Key>,
+      //             class Pred = equal_to<Key>,
+      //             class Alloc = allocator<Key>
+      //          > class unordered_{set,multiset}
+
+      if (kind == ROOT::kSTLunorderedset){
+
+         bool predRemoved = false;
+
+         if ( allocRemoved && (mode & kDropStlDefault) && narg-1 == iall) { // remove default predicate
+            if ( IsDefPred( fElements[iall].c_str(), fElements[1].c_str() ) ) {
+               predRemoved=true;
+               narg--;
+            }
+         }
+
+         if ( predRemoved && (mode & kDropStlDefault) && narg == iall) { // remove default hash
+            if ( IsDefHash( fElements[iall-1].c_str(), fElements[1].c_str() ) ) {
+               narg--;
+            }
+         }
+      }
+
+   } // End of treatment of stl containers
    else {
       if ( (mode & kDropStlDefault) && (narg >= 3)) {
          unsigned int offset = (0==strncmp("const ",fElements[0].c_str(),6)) ? 6 : 0;
@@ -410,15 +439,18 @@ ROOT::ESTLType TClassEdit::STLKind(const char *type, size_t len)
 
    //container names
    static const char *stls[] =
-      { "any", "vector", "list", "deque", "map", "multimap", "set", "multiset", "bitset", 0};
+      { "any", "vector", "list", "deque", "map", "multimap", "set", "multiset", "bitset", "forward_list", "unordered_set", 0};
    static const size_t stllen[] =
-      { 3, 6, 4, 5, 3, 8, 3, 8, 6, 0};
+      { 3, 6, 4, 5, 3, 8, 3, 8, 6, 12, 13, 0};
    static const ROOT::ESTLType values[] =
       {  ROOT::kNotSTL, ROOT::kSTLvector,
          ROOT::kSTLlist, ROOT::kSTLdeque,
          ROOT::kSTLmap, ROOT::kSTLmultimap,
          ROOT::kSTLset, ROOT::kSTLmultiset,
-         ROOT::kSTLbitset, ROOT::kNotSTL
+         ROOT::kSTLbitset,
+         ROOT::kSTLforwardlist,
+         ROOT::kSTLunorderedset,
+         ROOT::kNotSTL
       };
 
    // kind of stl container
@@ -441,8 +473,8 @@ int   TClassEdit::STLArgs(int kind)
 //      Return number of arguments for STL container before allocator
 
    static const char  stln[] =// min number of container arguments
-      //     vector, list, deque, map, multimap, set, multiset, bitset
-      {    1,     1,    1,     1,   3,        3,   2,        2,      1 };
+      //     vector, list, deque, map, multimap, set, multiset, bitset, forward_list, unordered_set
+      {    1,     1,    1,     1,   3,        3,   2,        2,      1,            1,             3};
 
    return stln[kind];
 }
@@ -620,20 +652,19 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 }
 
 //______________________________________________________________________________
-bool TClassEdit::IsDefComp(const char *compname, const char *classname)
+static bool IsDefElement(const char *elementName, const char* defaultElementName, const char *classname)
 {
-   // return whether or not 'compare' is the STL default comparator for type
+   // return whether or not 'elementName' is the STL default Element for type
    // 'classname'
-
-   string c = compname;
+   string c = elementName;
 
    size_t pos = StdLen(c);
 
-   const static int lesslen = strlen("less<");
-   if (c.compare(pos,lesslen,"less<") != 0) {
+   const int elementlen = strlen(defaultElementName);
+   if (c.compare(pos,elementlen,defaultElementName) != 0) {
       return false;
    }
-   pos += lesslen;
+   pos += elementlen;
 
    string k = classname;
    if (c.compare(pos,k.length(),k) != 0) {
@@ -641,10 +672,10 @@ bool TClassEdit::IsDefComp(const char *compname, const char *classname)
       size_t end = findNameEnd(c,pos);
 
       std::string keypart;
-      GetNormalizedName(keypart,c.substr(pos,end-pos).c_str());
+      TClassEdit::GetNormalizedName(keypart,c.substr(pos,end-pos).c_str());
 
       std::string norm_key;
-      GetNormalizedName(norm_key,k.c_str());
+      TClassEdit::GetNormalizedName(norm_key,k.c_str());
 
       if (keypart != norm_key) {
          return false;
@@ -659,6 +690,32 @@ bool TClassEdit::IsDefComp(const char *compname, const char *classname)
    }
 
    return true;
+}
+
+//______________________________________________________________________________
+bool TClassEdit::IsDefComp(const char *compname, const char *classname)
+{
+   // return whether or not 'compare' is the STL default comparator for type
+   // 'classname'
+
+   return IsDefElement(compname, "less<", classname);
+}
+
+//______________________________________________________________________________
+bool TClassEdit::IsDefPred(const char *predname, const char *classname)
+{
+   // return whether or not 'predname' is the STL default predicate for type
+   // 'classname'
+   return IsDefElement(predname, "equal_to<", classname);
+}
+
+//______________________________________________________________________________
+bool TClassEdit::IsDefHash(const char *hashname, const char *classname)
+{
+   // return whether or not 'hashname' is the STL default hash for type
+   // 'classname'
+
+   return IsDefElement(hashname, "hash<", classname);
 }
 
 //______________________________________________________________________________
@@ -729,6 +786,27 @@ string TClassEdit::GetLong64_Name(const string& original)
       result.replace(pos, longlong_len, "Long64_t");
    }
    return result;
+}
+
+//______________________________________________________________________________
+const char *TClassEdit::GetUnqualifiedName(const char *original)
+{
+   // Return the start of the unqualified name include in 'original'.
+
+   const char *lastPos = original;
+   {
+      long depth = 0;
+      for(auto cursor = original; *cursor != '\0'; ++cursor) {
+         if ( *cursor == '<') ++depth;
+         else if ( *cursor == '>') --depth;
+         else if ( *cursor == ':' ) {
+            if (depth==0 && *(cursor+1) == ':' && *(cursor+2) != '\0') {
+               lastPos = cursor+2;
+            }
+         }
+      }
+   }
+   return lastPos;
 }
 
 //______________________________________________________________________________
@@ -1132,10 +1210,12 @@ bool TClassEdit::IsStdClass(const char *classname)
 
    if ( strncmp(classname,"vector<",strlen("vector<"))==0) return true;
    if ( strncmp(classname,"list<",strlen("list<"))==0) return true;
+   if ( strncmp(classname,"forward_list<",strlen("forward_list<"))==0) return true;
    if ( strncmp(classname,"deque<",strlen("deque<"))==0) return true;
    if ( strncmp(classname,"map<",strlen("map<"))==0) return true;
    if ( strncmp(classname,"multimap<",strlen("multimap<"))==0) return true;
    if ( strncmp(classname,"set<",strlen("set<"))==0) return true;
+   if ( strncmp(classname,"unordered_set<",strlen("unordered_set<"))==0) return true;
    if ( strncmp(classname,"multiset<",strlen("multiset<"))==0) return true;
    if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
 
@@ -1490,11 +1570,13 @@ string TClassEdit::InsertStd(const char *tname)
       "domain_error",
       "equal_to",
       "exception",
+      "forward_list",
       "fpos",
       "greater_equal",
       "greater",
       "gslice_array",
       "gslice",
+      "hash",
       "indirect_array",
       "invalid_argument",
       "ios_base",
@@ -1565,6 +1647,7 @@ string TClassEdit::InsertStd(const char *tname)
       "unary_function",
       "unary_negate",
       "underflow_error",
+      "unordered_set",
       "valarray",
       "vector",
       "wstring"

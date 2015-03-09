@@ -3488,6 +3488,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                case ROOT::kSTLmap:
                case ROOT::kSTLmultimap:
                case ROOT::kSTLset:
+               case ROOT::kSTLunorderedset:
                case ROOT::kSTLmultiset:
                {
                   enamebasic = TMakeProject::UpdateAssociativeToVector(enamebasic);

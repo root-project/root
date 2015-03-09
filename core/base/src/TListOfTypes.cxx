@@ -67,7 +67,11 @@ static bool NameExistsElsewhere(const char* name){
       // We have a scope
       const auto enName = lastPos + 1;
       const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)name) / sizeof(decltype(*lastPos)) - 1;
+#ifdef R__WIN32
+      char *scopeName = new char[scopeNameSize + 1];
+#else
       char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
+#endif
       strncpy(scopeName, name, scopeNameSize);
       scopeName[scopeNameSize] = '\0';
       // We have now an enum name and a scope name
@@ -82,6 +86,9 @@ static bool NameExistsElsewhere(const char* name){
                theEnum = listOfEnums->THashList::FindObject(enName);
          }
       }
+#ifdef R__WIN32
+      delete [] scopeName;
+#endif
    } else { // Here we look in the global scope
       theEnum = ((TListOfEnums*)gROOT->GetListOfEnums())->THashList::FindObject(name);
    }

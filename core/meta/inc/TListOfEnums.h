@@ -36,6 +36,11 @@ class TEnum;
 class TListOfEnums : public THashList
 {
 private:
+   friend class TCling;
+   friend class TClass;
+   friend class TProtoClass;
+   friend class TROOT;
+
    TClass    *fClass; //! Context of this list.  Not owned.
 
    TExMap    *fIds;      //! Map from DeclId_t to TEnum*
@@ -43,48 +48,51 @@ private:
    Bool_t     fIsLoaded; //! Mark whether Load was executed.
    ULong64_t  fLastLoadMarker; //! Represent interpreter state when we last did a full load.
 
-   TListOfEnums(const TListOfEnums&);              // not implemented
-   TListOfEnums& operator=(const TListOfEnums&);   // not implemented
+   TListOfEnums(const TListOfEnums&) = delete;
+   TListOfEnums& operator=(const TListOfEnums&) = delete;
 
-   void       MapObject(TObject *obj);
-   void       UnmapObject(TObject *obj);
-
-public:
-   typedef TDictionary::DeclId_t DeclId_t;
-
-   TListOfEnums(TClass *cl = 0);
-   ~TListOfEnums();
-
-   virtual void Clear(Option_t *option);
-   virtual void Delete(Option_t *option="");
-
-   using THashList::FindObject;
-   virtual TObject   *FindObject(const char *name) const;
-
-   TEnum     *Find(DeclId_t id) const;
-   TEnum     *Get(DeclId_t id, const char *name);
-
-   Bool_t     IsLoaded() const { return fIsLoaded; }
-   void       AddFirst(TObject *obj);
-   void       AddFirst(TObject *obj, Option_t *opt);
-   void       AddLast(TObject *obj);
-   void       AddLast(TObject *obj, Option_t *opt);
-   void       AddAt(TObject *obj, Int_t idx);
-   void       AddAfter(const TObject *after, TObject *obj);
-   void       AddAfter(TObjLink *after, TObject *obj);
-   void       AddBefore(const TObject *before, TObject *obj);
-   void       AddBefore(TObjLink *before, TObject *obj);
-
-   void       RecursiveRemove(TObject *obj);
-   TObject   *Remove(TObject *obj);
-   TObject   *Remove(TObjLink *lnk);
+   void MapObject(TObject *obj);
+   void UnmapObject(TObject *obj);
 
    void Load();
    void Unload();
    void Unload(TEnum *e);
-   void       SetClass(TClass* cl) { fClass = cl; }
+   void SetClass(TClass* cl) { fClass = cl; }
 
-   ClassDef(TListOfEnums,2);  // List of TDataMembers for a class
+public:
+   typedef TDictionary::DeclId_t DeclId_t;
+
+protected:
+   TClass *GetClass() const {return fClass;}
+   TExMap *GetIds() { return fIds;}
+   TEnum  *FindUnloaded(const char* name) { return (TEnum*)fUnloaded->FindObject(name);}
+   TEnum  *Get(DeclId_t id, const char *name);
+
+public:
+   TListOfEnums(TClass *cl = 0);
+   ~TListOfEnums() override;
+
+   TEnum     *Find(DeclId_t id) const;
+
+   void Clear(Option_t *option) override;
+   void Delete(Option_t *option="") override;
+
+   Bool_t     IsLoaded() const { return fIsLoaded; }
+   void       AddFirst(TObject *obj) override;
+   void       AddFirst(TObject *obj, Option_t *opt) override;
+   void       AddLast(TObject *obj) override;
+   void       AddLast(TObject *obj, Option_t *opt) override;
+   void       AddAt(TObject *obj, Int_t idx) override;
+   void       AddAfter(const TObject *after, TObject *obj) override;
+   void       AddAfter(TObjLink *after, TObject *obj) override;
+   void       AddBefore(const TObject *before, TObject *obj) override;
+   void       AddBefore(TObjLink *before, TObject *obj) override;
+
+   void       RecursiveRemove(TObject *obj) override;
+   TObject   *Remove(TObject *obj) override;
+   TObject   *Remove(TObjLink *lnk) override;
+
+   ClassDefOverride(TListOfEnums,2);  // List of TDataMembers for a class
 };
 
 #endif // ROOT_TListOfEnums

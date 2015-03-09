@@ -57,36 +57,227 @@
 #include <TSystem.h>
 
 
+// Auxiliary functions
+void    GetClassName();
+void    StandardizeKeywords();
+void    ExecuteMacro();
+void    ExecuteCommand(TString);
+
+
+// Global variables.
+char    gLine[255];
+TString gFileName;
+TString gLineString;
+TString gClassName;
+TString gImageName;
+TString gMacroName;
+TString gCwd;
+Bool_t  gHeader;
+Bool_t  gSource;
+Bool_t  gInClassDef;
+Bool_t  gClass;
+Int_t   gInMacro;
+Int_t   gImageID;
+
+
 //______________________________________________________________________________
 int main(int argc, char *argv[])
 {
-   // prototype of filter... does nothing right now.
+   // Filter ROOT files for Doxygen.
 
-   FILE *fin;
-   int ch;
+   // Initialisation
 
-   switch (argc) {
-      case 2:
-         if ((fin = fopen(argv[1], "r")) == NULL) {
-            // First string (%s) is program name (argv[0]).
-            // Second string (%s) is name of file that could
-            // not be opened (argv[1]).
-            (void)fprintf(stderr, "%s: Cannot open input file %s\n", argv[0], argv[1]);
-            return(2);
+   gFileName   = argv[1];
+   gHeader     = kFALSE;
+   gSource     = kFALSE;
+   gInClassDef = kFALSE;
+   gClass      = kFALSE;
+   gInMacro    = 0;
+   gImageID    = 0;
+   if (gFileName.EndsWith(".cxx")) gSource = kTRUE;
+   if (gFileName.EndsWith(".h"))   gHeader = kTRUE;
+   GetClassName();
+   gCwd = gFileName(0, gFileName.Last('/'));
+
+   // Loop on file.
+   FILE *f = fopen(gFileName.Data(),"r");
+
+   // File header.
+   if (gHeader) {
+      while (fgets(gLine,255,f)) {
+         gLineString = gLine;
+
+         if (gLineString.BeginsWith("class"))    gInClassDef = kTRUE;
+         if (gLineString.Index("ClassDef") >= 0) gInClassDef = kFALSE;
+
+         if (gInClassDef && gLineString.Index("//") >= 0) {
+            gLineString.ReplaceAll("//","///<");
          }
-         break;
 
-      case 1:
-         fin = stdin;
-         break;
-
-      default:
-         (void)fprintf(stderr, "Usage: %s [file]\n", argv[0]);
-         return(2);
+         printf("%s",gLineString.Data());
+      }
+      return 0;
    }
 
-   while ((ch = getc(fin)) != EOF) (void)putchar(ch);
+   // Source file.
+   if (gSource) {
+      while (fgets(gLine,255,f)) {
+         gLineString = gLine;
+         StandardizeKeywords();
 
-   fclose(fin);
-   return (0);
+         if (gLineString.Index("begin_html") >= 0) {
+            if (!gClass) {
+               gLineString = TString::Format("/*! \\class %s\n",gClassName.Data());
+               gClass = kTRUE;
+            } else {
+               gLineString.ReplaceAll("begin_html","");
+            }
+         }
+
+         if (gLineString.Index("end_html") >= 0) {
+            gLineString.ReplaceAll("end_html","");
+         }
+
+         if (gInMacro) {
+            if (gInMacro == 1) {
+               if (gLineString.EndsWith(".C\n")) {
+                  ExecuteMacro();
+                  gInMacro++;
+               } else {
+               }
+            } else {
+            }
+         }
+
+         if (gLineString.Index("Begin_Macro") >= 0) {
+            gLineString = "";
+            gInMacro++;
+         }
+
+         if (gLineString.Index("End_Macro") >= 0) {
+            gLineString.ReplaceAll("End_Macro","");
+            gInMacro = 0;
+         }
+
+         printf("%s",gLineString.Data());
+      }
+      return 0;
+   }
+
+   // Output anything not header nor source
+   while (fgets(gLine,255,f)) {
+      gLineString = gLine;
+      printf("%s",gLineString.Data());
+   }
+
+   return 0;
+}
+
+
+//______________________________________________________________________________
+void GetClassName()
+{
+   // Retrieve the class name.
+
+   Int_t i1 = 0;
+   Int_t i2 = 0;
+
+   FILE *f = fopen(gFileName.Data(),"r");
+
+   // File header.
+   if (gHeader) {
+      while (fgets(gLine,255,f)) {
+         gLineString = gLine;
+         if (gLineString.Index("ClassDef") >= 0) {
+            i1 = gLineString.Index("(")+1;
+            i2 = gLineString.Index(",")-1;
+            gClassName = gLineString(i1,i2-i1+1);
+            fclose(f);
+            return;
+         }
+      }
+   }
+
+   // Source file.
+   if (gSource) {
+      while (fgets(gLine,255,f)) {
+         gLineString = gLine;
+         if (gLineString.Index("ClassImp") >= 0) {
+            i1 = gLineString.Index("(")+1;
+            i2 = gLineString.Index(")")-1;
+            gClassName = gLineString(i1,i2-i1+1);
+            fclose(f);
+            return;
+         }
+      }
+   }
+
+   fclose(f);
+
+   return;
+}
+
+
+//______________________________________________________________________________
+void StandardizeKeywords()
+{
+   // Standardize the THTML keywords to ease the parsing.
+
+   gLineString.ReplaceAll("End_Html","end_html");
+   gLineString.ReplaceAll("End_html","end_html");
+   gLineString.ReplaceAll("end_html ","end_html");
+   gLineString.ReplaceAll("Begin_Html","begin_html");
+   gLineString.ReplaceAll("Begin_html","begin_html");
+   gLineString.ReplaceAll("<big>","");
+   gLineString.ReplaceAll("</big>","");
+}
+
+
+//______________________________________________________________________________
+void ExecuteMacro()
+{
+   // Execute the macro in gLineString and produce the corresponding picture
+
+   // Retrieve the output directory
+   TString OutDir = gSystem->Getenv("DOXYGEN_OUTPUT_DIRECTORY");
+   OutDir.ReplaceAll("\"","");
+
+   // Name of the next Image to be generated
+   gImageName = TString::Format("%s_%3.3d.png", gClassName.Data()
+                                              , gImageID++);
+
+   // Retrieve the macro to be executed.
+   if (gLineString.Index("../../..") >= 0) {
+      gLineString.ReplaceAll("../../..","../..");
+   } else {
+      gLineString.Prepend(TString::Format("%s/../doc/macros/",gCwd.Data()));
+   }
+   Int_t i1 = gLineString.Last('/')+1;
+   Int_t i2 = gLineString.Last('C');
+   gMacroName = gLineString(i1,i2-i1+1);
+
+   // Build the ROOT command to be executed.
+   gLineString.Prepend(TString::Format("root -l -b -q \"makeimage.C(\\\""));
+   Int_t l = gLineString.Length();
+   gLineString.Replace(l-2,1,TString::Format("C\\\",\\\"%s/html/\\\",\\\"%s\\\")\"",
+                                             OutDir.Data(),
+                                             gImageName.Data()));
+
+   ExecuteCommand(gLineString);
+
+   gLineString = TString::Format("\\include %s\n\\image html %s\n", gMacroName.Data(),
+                                                                    gImageName.Data());
+}
+
+
+//______________________________________________________________________________
+void ExecuteCommand(TString command)
+{
+   // Execute a command making sure stdout will not go in the doxygen file.
+
+   int o = dup(fileno(stdout));
+   freopen("stdout.dat","a",stdout);
+   gSystem->Exec(command.Data());
+   dup2(o,fileno(stdout));
+   close(o);
 }

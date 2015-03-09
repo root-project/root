@@ -47,6 +47,9 @@
 #include <string>
 #include <vector>
 
+#define stringify(s) stringifyx(s)
+#define stringifyx(s) #s
+
 using namespace clang;
 
 namespace {
@@ -63,6 +66,10 @@ namespace {
     default: break;
     }
     return cling::Interpreter::kExeSuccess;
+  }
+
+  static bool isPracticallyEmptyModule(const llvm::Module* M) {
+    return M->empty() && M->global_empty() && M->alias_empty();
   }
 } // unnamed namespace
 
@@ -215,7 +222,7 @@ namespace cling {
          I != E; ++I)
       m_IncrParser->commitTransaction(*I);
     // Disable suggestions for ROOT
-    bool showSuggestions = !llvm::StringRef(CLING_VERSION).startswith("ROOT");
+    bool showSuggestions = !llvm::StringRef(stringify(CLING_VERSION)).startswith("ROOT");
     std::unique_ptr<InterpreterCallbacks>
        AutoLoadCB(new AutoloadCallback(this, showSuggestions));
     setCallbacks(std::move(AutoLoadCB));
@@ -235,7 +242,7 @@ namespace cling {
   }
 
   const char* Interpreter::getVersion() const {
-    return CLING_VERSION;
+    return stringify(CLING_VERSION);
   }
 
   void Interpreter::handleFrontendOptions() {
@@ -1134,12 +1141,15 @@ namespace cling {
     assert(!isInSyntaxOnlyMode() && "Running on what?");
     assert(T.getState() == Transaction::kCommitted && "Must be committed");
 
-    T.setExeUnloadHandle(m_Executor.get(), m_Executor->emitToJIT());
-
-    // Forward to IncrementalExecutor; should not be called by
-    // anyone except for IncrementalParser.
     IncrementalExecutor::ExecutionResult ExeRes
-       = m_Executor->runStaticInitializersOnce(T);
+       = IncrementalExecutor::kExeSuccess;
+    if (!isPracticallyEmptyModule(T.getModule())) {
+      T.setExeUnloadHandle(m_Executor.get(), m_Executor->emitToJIT());
+
+      // Forward to IncrementalExecutor; should not be called by
+      // anyone except for IncrementalParser.
+      ExeRes = m_Executor->runStaticInitializersOnce(T);
+    }
 
     // Reset the module builder to clean up global initializers, c'tors, d'tors
     ASTContext& C = getCI()->getASTContext();

@@ -139,7 +139,16 @@ Bool_t TPythia8::Initialize(Int_t idAin, Int_t idBin, Double_t ecms)
 {
    // Initialization
    AddParticlesToPdgDataBase();
-   return fPythia->init(idAin, idBin, ecms);
+
+   // Set arguments in Settings database.
+   fPythia->settings.mode("Beams:idA",  idAin);
+   fPythia->settings.mode("Beams:idB",  idBin);
+   fPythia->settings.mode("Beams:frameType",  1);
+   fPythia->settings.parm("Beams:eCM", ecms);
+
+   return fPythia->init();
+
+   //return fPythia->init(idAin, idBin, ecms);
 }
 
 //___________________________________________________________________________
@@ -147,7 +156,18 @@ Bool_t TPythia8::Initialize(Int_t idAin, Int_t idBin, Double_t eAin, Double_t eB
 {
    // Initialization
    AddParticlesToPdgDataBase();
-   return fPythia->init(idAin, idBin, eAin, eBin);
+
+   // Set arguments in Settings database.
+   fPythia->settings.mode("Beams:idA",  idAin);
+   fPythia->settings.mode("Beams:idB",  idBin);
+   fPythia->settings.mode("Beams:frameType",  2);
+   fPythia->settings.parm("Beams:eA",      eAin);
+   fPythia->settings.parm("Beams:eB",      eBin);
+
+   // Send on to common initialization.
+   return fPythia->init();
+
+   //return fPythia->init(idAin, idBin, eAin, eBin);
 }
 
 //___________________________________________________________________________
@@ -314,7 +334,7 @@ void TPythia8::PlistChanged() const
 void TPythia8::PrintStatistics() const
 {
    // Print end of run statistics
-   fPythia->statistics();
+   fPythia->stat();
 }
 
 //___________________________________________________________________________

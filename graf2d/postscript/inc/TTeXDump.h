@@ -38,7 +38,7 @@ protected:
    Float_t      fCurrentRed;      //Current Red component
    Float_t      fCurrentGreen;    //Current Green component
    Float_t      fCurrentBlue;     //Current Blue component
-
+   Float_t      fCurrentAlpha;    //Current Alpha value
 
 public:
    TTeXDump();
@@ -84,7 +84,7 @@ public:
    Float_t XtoTeX(Double_t x);
    Float_t YtoTeX(Double_t y);
 
-   ClassDef(TTeXDump,0)  //Tex driver
+   ClassDef(TTeXDump,1)  //Tex driver
 };
 
 #endif

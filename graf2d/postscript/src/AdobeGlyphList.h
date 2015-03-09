@@ -205,7 +205,7 @@ static const char *adobe_glyph_name[nadobe_glyph] = {
    "alphatonos", "epsilontonos", "etatonos", "iotatonos",
    "upsilondieresistonos", "alpha", "beta", "gamma", "delta",
    "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda",
-   "mu", "nu", "xi", "omicron", "pi", "rho", "sigma1", "sigma",
+   "uni03BC", "nu", "xi", "omicron", "pi", "rho", "sigma1", "sigma",
    "tau", "upsilon", "phi", "chi", "psi", "omega", "iotadieresis",
    "upsilondieresis", "omicrontonos", "upsilontonos", "omegatonos",
    "theta1", "Upsilon1", "phi1", "omega1", "afii10023", "afii10051",

@@ -26,18 +26,23 @@
 namespace ROOT {
 
    enum ESTLType {
-      kNotSTL      = 0,
-      kSTLvector   = 1,
-      kSTLlist     = 2,
-      kSTLdeque    = 3,
-      kSTLmap      = 4,
-      kSTLmultimap = 5,
-      kSTLset      = 6,
-      kSTLmultiset = 7,
-      kSTLbitset   = 8,
-      kSTLend      = 9,
-      kSTLany      = 300 /* TVirtualStreamerInfo::kSTL */,
-      kSTLstring   = 365 /* TVirtualStreamerInfo::kSTLstring */
+      kNotSTL          = 0,
+      kSTLvector       = 1,
+      kSTLlist         = 2,
+      kSTLdeque        = 3,
+      kSTLmap          = 4,
+      kSTLmultimap     = 5,
+      kSTLset          = 6,
+      kSTLmultiset     = 7,
+      kSTLbitset       = 8,
+      // Here the c++11 containers start. Order counts. For example,
+      // tstreamerelements in written rootfiles carry a value and we cannot
+      // introduce shifts.
+      kSTLforwardlist  = 9,
+      kSTLunorderedset = 10,
+      kSTLend          = 11,
+      kSTLany          = 300 /* TVirtualStreamerInfo::kSTL */,
+      kSTLstring       = 365 /* TVirtualStreamerInfo::kSTLstring */
    };
 
 }

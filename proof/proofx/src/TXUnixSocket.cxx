@@ -69,7 +69,7 @@ Int_t TXUnixSocket::Reconnect()
                         fConn, (fConn ? fConn->IsValid() : 0), fUrl.Data());
    }
 
-   Int_t tryreconnect = gEnv->GetValue("TXSocket.Reconnect", 1);
+   Int_t tryreconnect = gEnv->GetValue("TXSocket.Reconnect", 0);
    if (tryreconnect == 0 || fXrdProofdVersion < 1005) {
       if (tryreconnect == 0)
          Info("Reconnect","%p: reconnection attempts explicitly disabled!", this);

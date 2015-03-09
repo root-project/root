@@ -63,10 +63,26 @@ public:
    virtual void Clear(Option_t *option);
    virtual void Delete(Option_t *option="");
 
-   using THashList::FindObject;
+   virtual TObject   *FindObject(const TObject* obj) const;
    virtual TObject   *FindObject(const char *name) const;
    virtual TList     *GetListForObject(const char* name) const;
    virtual TList     *GetListForObject(const TObject* obj) const;
+   virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const;
+
+   virtual TObject  *At(Int_t idx) const;
+   virtual TObject  *After(const TObject *obj) const;
+   virtual TObject  *Before(const TObject *obj) const;
+   virtual TObject  *First() const;
+   virtual TObjLink *FirstLink() const;
+   virtual TObject **GetObjectRef(const TObject *obj) const;
+   virtual TObject  *Last() const;
+   virtual TObjLink *LastLink() const;
+
+   virtual Int_t     GetLast() const;
+   virtual Int_t     IndexOf(const TObject *obj) const;
+
+   virtual Int_t      GetSize() const;
+
 
    TFunction *Find(DeclId_t id) const;
    TFunction *Get(DeclId_t id);
@@ -91,5 +107,25 @@ public:
 
    ClassDef(TListOfFunctions,0);  // List of TFunctions for a class
 };
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TListOfFunctionsIter                                                 //
+//                                                                      //
+// Iterator of TListOfFunctions.                                        //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+class TListOfFunctionsIter : public TListIter
+{
+public:
+   TListOfFunctionsIter(const TListOfFunctions *l, Bool_t dir = kIterForward);
+
+   using TListIter::operator=;
+
+   TObject           *Next();
+
+   ClassDef(TListOfFunctionsIter,0)
+};
+
 
 #endif // ROOT_TListOfFunctions

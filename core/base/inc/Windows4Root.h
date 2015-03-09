@@ -29,8 +29,10 @@
 
 #ifndef __CINT__
 
+#ifdef __CLING__
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
-
 
 #undef OpenSemaphore
 

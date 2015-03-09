@@ -77,11 +77,13 @@
 #include <cmath>
 #include <assert.h>
 #include <vector>
+#include <memory>
 
 #include "TListOfDataMembers.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TListOfEnums.h"
+#include "TListOfEnumsWithLock.h"
 #include "TViewPubDataMembers.h"
 #include "TViewPubFunctions.h"
 
@@ -108,7 +110,13 @@ std::atomic<Int_t> TClass::fgClassCount;
 // Implementation of the TDeclNameRegistry
 
 //______________________________________________________________________________
-TClass::TDeclNameRegistry::TDeclNameRegistry(Int_t verbLevel): fVerbLevel(verbLevel){}
+TClass::TDeclNameRegistry::TDeclNameRegistry(Int_t verbLevel): fVerbLevel(verbLevel)
+{
+   // TDeclNameRegistry class constructor.
+
+   // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
+   std::atomic_flag_clear( &fSpinLock );
+}
 
 //______________________________________________________________________________
 void TClass::TDeclNameRegistry::AddQualifiedName(const char *name)
@@ -1543,16 +1551,16 @@ TClass::~TClass()
    delete fData;   fData = 0;
 
    if (fEnums)
-      fEnums->Delete();
-   delete fEnums; fEnums = 0;
+      (*fEnums).Delete();
+   delete fEnums.load(); fEnums = 0;
 
    if (fFuncTemplate)
       fFuncTemplate->Delete();
    delete fFuncTemplate; fFuncTemplate = 0;
 
-   if (fMethod)
-      fMethod->Delete();
-   delete fMethod;   fMethod=0;
+   if (fMethod.load())
+      (*fMethod).Delete();
+   delete fMethod.load();   fMethod=0;
 
    if (fRealData)
       fRealData->Delete();
@@ -2036,11 +2044,11 @@ void TClass::CalculateStreamerOffset() const
       // gets allocated on the heap and not in the mapped file.
 
       TMmallocDescTemp setreset;
-      fIsOffsetStreamerSet = kTRUE;
       fOffsetStreamer = const_cast<TClass*>(this)->GetBaseClassOffsetRecurse(TObject::Class());
       if (fStreamerType == kTObject) {
          fStreamerImpl = &TClass::StreamerTObjectInitialized;
       }
+      fIsOffsetStreamerSet = kTRUE;
    }
 }
 
@@ -3284,13 +3292,22 @@ TList *TClass::GetListOfBases()
    if (!fBase) {
       if (fCanLoadClassInfo) {
          if (fState == kHasTClassInit) {
+
+            R__LOCKGUARD(gInterpreterMutex);
+            // NOTE: Add test to prevent redo if another thread has already done the work.
+            // if (!fHasRootPcmInfo) {
+
             // The bases are in our ProtoClass; we don't need the class info.
             TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
             if (proto && proto->FillTClass(this)) {
+               // Not sure this code is still needed
+               // R__ASSERT(kFALSE);
+
                fHasRootPcmInfo = kTRUE;
             }
          }
-         if (!fHasRootPcmInfo) {
+         // We test again on fCanLoadClassInfo has another thread may have executed it.
+         if (!fHasRootPcmInfo && !fCanLoadClassInfo) {
             LoadClassInfo();
          }
       }
@@ -3311,12 +3328,50 @@ TList *TClass::GetListOfBases()
 TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
 {
    // Return list containing the TEnums of a class.
+   auto temp = fEnums.load();
+   if (temp) {
+      if (load) {
+         if (fProperty == -1) Property();
+         if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
+            R__LOCKGUARD2(gROOTMutex);
+            temp->Load();
+         }
+      }
+      return temp;
+   }
+
+   if (!load) {
+      if (fProperty == -1) Property();
+      if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
+         R__LOCKGUARD(gInterpreterMutex);
+         if (fEnums) {
+            return fEnums.load();
+         }
+         //namespaces can have enums added to them
+         fEnums = new TListOfEnumsWithLock(this);
+         return fEnums;
+      }
+      // no one is supposed to modify the returned results
+      static TListOfEnums s_list;
+      return &s_list;
+   }
 
    R__LOCKGUARD(gInterpreterMutex);
-
-   if (!fEnums) fEnums = new TListOfEnums(this);
-   if (load) fEnums->Load();
-   return fEnums;
+   if (fEnums) {
+      if (load) (*fEnums).Load();
+      return fEnums.load();
+   }
+   if (fProperty == -1) Property();
+   if ( (kIsClass | kIsStruct | kIsUnion) & fProperty) {
+      // For this case, the list will be immutable
+      temp = new TListOfEnums(this);
+   } else {
+      //namespaces can have enums added to them
+      temp = new TListOfEnumsWithLock(this);
+   }
+   temp->Load();
+   fEnums = temp;
+   return temp;
 }
 
 //______________________________________________________________________________
@@ -3328,9 +3383,15 @@ TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
 
    if (!fData) {
       if (fCanLoadClassInfo && fState == kHasTClassInit) {
+         // NOTE: Add test to prevent redo if another thread has already done the work.
+         // if (!fHasRootPcmInfo) {
+
          // The members are in our ProtoClass; we don't need the class info.
          TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
          if (proto && proto->FillTClass(this)) {
+            // Not sure this code is still needed
+            // R__ASSERT(kFALSE);
+
             fHasRootPcmInfo = kTRUE;
             return fData;
          }
@@ -3369,10 +3430,10 @@ TList *TClass::GetListOfMethods(Bool_t load /* = kTRUE */)
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   if (!fMethod) fMethod = new TListOfFunctions(this);
+   if (!fMethod.load()) GetMethodList();
    if (load) {
       if (gDebug>0) Info("GetListOfMethods","Header Parsing - Asking for all the methods of class %s: this can involve parsing.",GetName());
-      fMethod->Load();
+      (*fMethod).Load();
    }
    return fMethod;
 }
@@ -3381,7 +3442,7 @@ TList *TClass::GetListOfMethods(Bool_t load /* = kTRUE */)
 TCollection *TClass::GetListOfMethodOverloads(const char* name) const
 {
    // Return the collection of functions named "name".
-   return ((TListOfFunctions*)fMethod)->GetListForObject(name);
+   return const_cast<TClass*>(this)->GetMethodList()->GetListForObject(name);
 }
 
 
@@ -3732,10 +3793,10 @@ void TClass::ResetCaches()
    // Not owning lists, don't call Delete(), but unload
    if (fData)
       fData->Unload();
-   if (fEnums)
-      fEnums->Unload();
-   if (fMethod)
-      fMethod->Unload();
+   if (fEnums.load())
+      (*fEnums).Unload();
+   if (fMethod.load())
+      (*fMethod).Unload();
 
    delete fAllPubData; fAllPubData = 0;
 
@@ -3864,7 +3925,13 @@ TListOfFunctions *TClass::GetMethodList()
    // the internal type of fMethod and thus can not be made public.
    // It also never 'loads' the content of the list.
 
-   if (!fMethod) fMethod = new TListOfFunctions(this);
+   if (!fMethod.load()) {
+      std::unique_ptr<TListOfFunctions> temp{ new TListOfFunctions(this) };
+      TListOfFunctions* expected = nullptr;
+      if(fMethod.compare_exchange_strong(expected, temp.get()) ) {
+         temp.release();
+      }
+   }
    return fMethod;
 }
 
@@ -3878,7 +3945,7 @@ TMethod *TClass::GetMethodAny(const char *method)
    // of the class.
 
    if (!HasInterpreterInfo()) return 0;
-   return (TMethod*) GetListOfMethods()->FindObject(method);
+   return (TMethod*) GetMethodList()->FindObject(method);
 }
 
 //______________________________________________________________________________
@@ -4470,7 +4537,6 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
       TClass__GetCallingNew() = defConstructor;
-      R__LOCKGUARD2(gInterpreterMutex);
       p = gCling->ClassInfo_New(GetClassInfo());
       TClass__GetCallingNew() = kRealNew;
       if (!p && !quiet) {
@@ -4565,7 +4631,6 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
       TClass__GetCallingNew() = defConstructor;
-      R__LOCKGUARD2(gInterpreterMutex);
       p = gCling->ClassInfo_New(GetClassInfo(),arena);
       TClass__GetCallingNew() = kRealNew;
       if (!p) {
@@ -4653,7 +4718,6 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
       TClass__GetCallingNew() = defConstructor;
-      R__LOCKGUARD2(gInterpreterMutex);
       p = gCling->ClassInfo_New(GetClassInfo(),nElements);
       TClass__GetCallingNew() = kRealNew;
       if (!p) {
@@ -4740,7 +4804,6 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       // constructor that way, or no default constructor is available and
       // we fail.
       TClass__GetCallingNew() = defConstructor;
-      R__LOCKGUARD2(gInterpreterMutex);
       p = gCling->ClassInfo_New(GetClassInfo(),nElements, arena);
       TClass__GetCallingNew() = kRealNew;
       if (!p) {
@@ -4828,10 +4891,8 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // or it will be interpreted, otherwise we fail
       // because there is no destructor code at all.
       if (dtorOnly) {
-         R__LOCKGUARD2(gInterpreterMutex);
          gCling->ClassInfo_Destruct(fClassInfo,p);
       } else {
-         R__LOCKGUARD2(gInterpreterMutex);
          gCling->ClassInfo_Delete(fClassInfo,p);
       }
    } else if (!HasInterpreterInfo() && fCollectionProxy) {
@@ -4947,7 +5008,6 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // call the array delete operator, hopefully
       // the class library is loaded and there will be
       // a destructor we can call.
-      R__LOCKGUARD2(gInterpreterMutex);
       gCling->ClassInfo_DeleteArray(GetClassInfo(),ary, dtorOnly);
    } else if (!HasInterpreterInfo() && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
@@ -5212,9 +5272,11 @@ void TClass::LoadClassInfo() const
    // Try to load the classInfo (it may require parsing the header file
    // and/or loading data from the clang pcm).
 
-   R__ASSERT(fCanLoadClassInfo);
-
    R__LOCKGUARD(gInterpreterMutex);
+
+   // If another thread executed LoadClassInfo at about the same time
+   // as this thread return early since the work was done.
+   if (!fCanLoadClassInfo) return;
 
    gInterpreter->AutoParse(GetName());
    if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
@@ -5458,10 +5520,10 @@ Long_t TClass::Property() const
          kl->fStreamerType  = kExternal;
          kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
-      //must set this last since other threads may read fProperty
-      // and think all test bits have been properly set
-      kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
       kl->fClassProperty = gCling->ClassInfo_ClassProperty(GetClassInfo());
+      // Must set this last since other threads may read fProperty
+      // and think all test bits have been properly set.
+      kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
 
    } else {
 
@@ -5472,6 +5534,8 @@ Long_t TClass::Property() const
 
       kl->fStreamerType |= kEmulatedStreamer;
       kl->SetStreamerImpl();
+      // fProperty was *not* set so that it can be forced to be recalculated
+      // next time.
       return 0;
    }
 
@@ -5605,14 +5669,14 @@ void TClass::SetUnloaded()
    fImplFileLine = 0;
    fTypeInfo     = 0;
 
-   if (fMethod) {
-      fMethod->Unload();
+   if (fMethod.load()) {
+      (*fMethod).Unload();
    }
    if (fData) {
       fData->Unload();
    }
    if (fEnums) {
-      fEnums->Unload();
+      (*fEnums).Unload();
    }
 
    if (fState <= kForwardDeclared && fStreamerInfo->GetEntries() != 0) {
@@ -6023,64 +6087,64 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char * /*info*/)
 }
 
 //______________________________________________________________________________
-void TClass::StreamerExternal(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerExternal(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
    //There is special streamer for the class
 
    //      case kExternal:
    //      case kExternal|kEmulatedStreamer:
 
-   TClassStreamer *streamer = gThreadTsd ? GetStreamer() : fStreamer;
+   TClassStreamer *streamer = gThreadTsd ? pThis->GetStreamer() : pThis->fStreamer;
    streamer->Stream(b,object,onfile_class);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerTObject(void *object, TBuffer &b, const TClass * /* onfile_class */) const
+void TClass::StreamerTObject(const TClass* pThis, void *object, TBuffer &b, const TClass * /* onfile_class */)
 {
    // Case of TObjects
 
    // case kTObject:
 
-   if (!fIsOffsetStreamerSet) {
-      CalculateStreamerOffset();
+   if (!pThis->fIsOffsetStreamerSet) {
+      pThis->CalculateStreamerOffset();
    }
-   TObject *tobj = (TObject*)((Long_t)object + fOffsetStreamer);
+   TObject *tobj = (TObject*)((Long_t)object + pThis->fOffsetStreamer);
    tobj->Streamer(b);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerTObjectInitialized(void *object, TBuffer &b, const TClass * /* onfile_class */) const
+void TClass::StreamerTObjectInitialized(const TClass* pThis, void *object, TBuffer &b, const TClass * /* onfile_class */)
 {
    // Case of TObjects when fIsOffsetStreamerSet is known to have been set.
 
-   TObject *tobj = (TObject*)((Long_t)object + fOffsetStreamer);
+   TObject *tobj = (TObject*)((Long_t)object + pThis->fOffsetStreamer);
    tobj->Streamer(b);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerTObjectEmulated(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerTObjectEmulated(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
    // Case of TObjects when we do not have the library defining the class.
 
    // case kTObject|kEmulatedStreamer :
    if (b.IsReading()) {
-      b.ReadClassEmulated(this, object, onfile_class);
+      b.ReadClassEmulated(pThis, object, onfile_class);
    } else {
-      b.WriteClassBuffer(this, object);
+      b.WriteClassBuffer(pThis, object);
    }
 }
 
 //______________________________________________________________________________
-void TClass::StreamerInstrumented(void *object, TBuffer &b, const TClass * /* onfile_class */) const
+void TClass::StreamerInstrumented(const TClass* pThis, void *object, TBuffer &b, const TClass * /* onfile_class */)
 {
    // Case of instrumented class with a library
 
    // case kInstrumented:
-   fStreamerFunc(b,object);
+   pThis->fStreamerFunc(b,object);
 }
 
 //______________________________________________________________________________
-void TClass::StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerStreamerInfo(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
    // Case of where we should directly use the StreamerInfo.
    //    case kForeign:
@@ -6089,29 +6153,32 @@ void TClass::StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile
    //    case kEmulatedStreamer:
 
    if (b.IsReading()) {
-      b.ReadClassBuffer(this, object, onfile_class);
+      b.ReadClassBuffer(pThis, object, onfile_class);
       //ReadBuffer (b, object);
    } else {
       //WriteBuffer(b, object);
-      b.WriteClassBuffer(this, object);
+      b.WriteClassBuffer(pThis, object);
    }
 }
 
 //______________________________________________________________________________
-void TClass::StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const
+void TClass::StreamerDefault(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
    // Default streaming in cases where either we have no way to know what to do
    // or if Property() has not yet been called.
 
-   if (fProperty==(-1)) {
-      Property();
-      if (fStreamerImpl == &TClass::StreamerDefault) {
-         Fatal("StreamerDefault", "fStreamerImpl not properly initialized (%d)", fStreamerType);
-      } else {
-         (this->*fStreamerImpl)(object,b,onfile_class);
-      }
+   if (pThis->fProperty==(-1)) {
+      pThis->Property();
+   }
+
+   // We could get here because after this thread started StreamerDefault
+   // *and* before check fProperty, another thread might have call Property
+   // and this fProperty when we read it, is not -1 and fStreamerImpl is
+   // supposed to be set properly (no longer pointing to the default).
+   if (pThis->fStreamerImpl == &TClass::StreamerDefault) {
+      pThis->Fatal("StreamerDefault", "fStreamerImpl not properly initialized (%d)", pThis->fStreamerType);
    } else {
-      Fatal("StreamerDefault", "fStreamerType not properly initialized (%d)", fStreamerType);
+      (*pThis->fStreamerImpl)(pThis,object,b,onfile_class);
    }
 }
 
@@ -6149,6 +6216,7 @@ void TClass::SetStreamerFunc(ClassStreamerFunc_t strm)
 {
    // Set a wrapper/accessor function around this class custom streamer.
 
+   R__LOCKGUARD(gInterpreterMutex);
    if (fProperty != -1 &&
        ( (fStreamerFunc == 0 && strm != 0) || (fStreamerFunc != 0 && strm == 0) ) )
    {

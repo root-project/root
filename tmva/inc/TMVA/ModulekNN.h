@@ -148,7 +148,10 @@ namespace TMVA {
 
       private:
 
-         static TRandom3 fgRndm;
+        // This is a workaround for OSx where static thread_local data members are
+        // not supported. The C++ solution would indeed be the following:
+//         static_ thread_local TRandom3 fgRndm;
+         static TRandom3& GetRndmThreadLocal() {thread_local TRandom3 fgRndm(1); return fgRndm;};
 
          UInt_t fDimn;
 

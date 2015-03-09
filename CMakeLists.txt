@@ -61,8 +61,9 @@ endif()
 #---Populate the configure arguments returned by 'root-config --config'-------------------------
 get_cmake_property(variables CACHE_VARIABLES)
 foreach(var ${variables})
-  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE)") AND (NOT "${${var}}" STREQUAL "") AND
-     (NOT "${var}" MATCHES "NOTFOUND"))
+  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE)") AND
+     (NOT ${${var}} STREQUAL "") AND
+     (NOT ${var} MATCHES "NOTFOUND"))
     if (var MATCHES "^QT_")
       # filter out the very long list of Qt libraries and include dirs
       if (var MATCHES "(QT_LIBRARY_DIR|QT_QTCORE_INCLUDE_DIR)")

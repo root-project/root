@@ -79,7 +79,7 @@ Bool_t TFormulaTests::GetParVal()
    for(Int_t i = 0 ; i < Nparams; ++i)
    {
       SDpair param = testParams[i];
-      if(param.second != GetParameter(param.first) || param.second != fParams[param.first].fValue)
+      if(param.second != GetParameter(param.first) )//|| param.second != fParams[param.first].fValue)
       {
          printf("fail:%s\t%lf\n",param.first.Data(), param.second);
          successful = false;
@@ -232,7 +232,7 @@ Bool_t TFormulaTests::SetPars2()
    Bool_t successful = true;
    TFormula *test = new TFormula("SetParsTest2","[0] + [1]+[2]");
    Double_t params[] = { 123,456,789};
-   test->SetParameters(params,3);
+   test->SetParameters(params);
    for(Int_t i = 0; i < 3; ++i)
    {
       if(test->GetParameter(i) != params[i])
@@ -251,7 +251,8 @@ Bool_t TFormulaTests::SetPars1()
    SDpair *params = new SDpair[2];
    params[0] = SDpair("0",1);
    params[1] = SDpair("te_st",2);
-   test->SetParameters(params,2);
+   test->SetParameter(params[0].first,params[0].second);
+   test->SetParameter(params[1].first,params[1].second);
    for(Int_t i = 0 ; i < 2; ++i)
    {
       SDpair p = params[i];
@@ -340,7 +341,7 @@ Bool_t TFormulaTests::Parser()
    for(Int_t i = 0; i < 4; ++i)
    {
       TString param = params[i];
-      if(fParams.find(param) == fVars.end())
+      if(fParams.find(param) == fParams.end())
       {   
          printf("fail:%s\n",param.Data());
          successful = false;
@@ -412,10 +413,11 @@ Bool_t TFormulaTests::Stress(Int_t n)
    // test->AddVariables(vars,n);
    // gBenchmark->Show(TString::Format("Adding %d variables\n",n));
    gBenchmark->Start(TString::Format("Setting %d parameters\n",n*5));
-   test->SetParameters(params,n*5);
+   for (int i = 0; i < n*5; ++i) 
+      test->SetParameter(params[i].first, params[i].second);
    gBenchmark->Show(TString::Format("Setting %d parameters\n",n*5));
 
-   int neval = n*10000;
+   int neval = n*1000;
    gBenchmark->Start(TString::Format("%d Evaluations\n",neval));
    double xx[4] = {3,3,3,3};
    TRandom rndm;
@@ -439,6 +441,7 @@ Bool_t TFormulaTests::Stress(Int_t n)
 
    std::cout << "\n\n Testing old TFormula \n" << endl;
 
+   TFormulaOld::SetMaxima(5000,5000,5000);
 
    gBenchmark->Start(TString::Format("TFormulaOld Initialization with %d variables and %d parameters\n",n,n*5));
    TFormulaOld *testOld = new TFormulaOld("TFStressTestOld",formula);
@@ -487,7 +490,8 @@ int main(int argc, char **argv)
 
 
 
-   testFormula = "x_1- [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*ylandau(0)+zexpo(10)";
+   //testFormula = "x_1- [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*ylandau(0)+zexpo(10)";
+   testFormula = "x - [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*landau(0)+expo(10)";
    TFormulaTests * test = new TFormulaTests("TFtests",testFormula);
 
 #ifdef LATER
@@ -512,7 +516,7 @@ int main(int argc, char **argv)
 
    
    test->AddVariables(testVars,Nvars);
-   test->SetParameters(testParams,Nparams);
+   test->SetParameters(testParams);
 
    printf("Parser test:%s\n",(test->Parser() ? "PASSED" : "FAILED"));
    printf("GetVariableValue test:%s\n",(test->GetVarVal() ? "PASSED" : "FAILED")); 

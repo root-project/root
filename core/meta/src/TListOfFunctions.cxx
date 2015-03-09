@@ -176,10 +176,9 @@ TObject *TListOfFunctions::FindObject(const char *name) const
    // Specialize FindObject to do search for the
    // a function just by name or create it if its not already in the list
 
+   R__LOCKGUARD(gInterpreterMutex);
    TObject *result = THashList::FindObject(name);
    if (!result) {
-
-      R__LOCKGUARD(gInterpreterMutex);
 
       TInterpreter::DeclId_t decl;
       if (fClass) decl = gInterpreter->GetFunction(fClass->GetClassInfo(),name);
@@ -254,6 +253,7 @@ TFunction *TListOfFunctions::Find(DeclId_t id) const
 
    if (!id) return 0;
 
+   R__LOCKGUARD(gInterpreterMutex);
    return (TFunction*)fIds->GetValue((Long64_t)id);
 }
 
@@ -268,6 +268,7 @@ TFunction *TListOfFunctions::Get(DeclId_t id)
    TFunction *f = Find(id);
    if (f) return f;
 
+   R__LOCKGUARD(gInterpreterMutex);
    if (fClass) {
       if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
    } else {
@@ -438,3 +439,118 @@ void TListOfFunctions::Unload(TFunction *func)
       fUnloaded->Add(func);
    }
 }
+
+//______________________________________________________________________________
+TObject* TListOfFunctions::FindObject(const TObject* obj) const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::FindObject(obj);
+}
+
+//______________________________________________________________________________
+TIterator* TListOfFunctions::MakeIterator(Bool_t dir ) const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return new TListOfFunctionsIter(this,dir);
+}
+
+//______________________________________________________________________________
+TObject* TListOfFunctions::At(Int_t idx) const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::At(idx);
+}
+
+//______________________________________________________________________________
+TObject* TListOfFunctions::After(const TObject *obj) const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::After(obj);
+}
+
+//______________________________________________________________________________
+TObject* TListOfFunctions::Before(const TObject *obj) const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::Before(obj);
+}
+
+//______________________________________________________________________________
+TObject* TListOfFunctions::First() const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::First();
+}
+
+//______________________________________________________________________________
+TObjLink* TListOfFunctions::FirstLink() const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::FirstLink();
+}
+
+//______________________________________________________________________________
+TObject** TListOfFunctions::GetObjectRef(const TObject *obj) const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::GetObjectRef(obj);
+}
+
+//______________________________________________________________________________
+TObject* TListOfFunctions::Last() const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::Last();
+}
+
+//______________________________________________________________________________
+TObjLink* TListOfFunctions::LastLink() const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::LastLink();
+}
+
+
+//______________________________________________________________________________
+Int_t TListOfFunctions::GetLast() const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::GetLast();
+}
+
+//______________________________________________________________________________
+Int_t TListOfFunctions::IndexOf(const TObject *obj) const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::IndexOf(obj);
+}
+
+
+//______________________________________________________________________________
+Int_t TListOfFunctions::GetSize() const
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return THashList::GetSize();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TListOfFunctionsIter                                                 //
+//                                                                      //
+// Iterator for TListOfFunctions.                                       //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+ClassImp(TListOfFunctionsIter)
+
+//______________________________________________________________________________
+TListOfFunctionsIter::TListOfFunctionsIter(const TListOfFunctions *l, Bool_t dir ):
+  TListIter(l,dir) {}
+
+//______________________________________________________________________________
+TObject *TListOfFunctionsIter::Next()
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   return TListIter::Next();
+}
+

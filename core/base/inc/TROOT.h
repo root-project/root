@@ -85,6 +85,8 @@ private:
    TROOT& operator=(const TROOT&);        //Not implemented
 
 protected:
+   typedef std::atomic<TListOfEnums*> AListOfEnums_t;
+
    TString         fConfigOptions;        //ROOT ./configure set build options
    TString         fConfigFeatures;       //ROOT ./configure detected build features
    TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
@@ -98,7 +100,7 @@ protected:
    TString         fGitBranch;            //Git branch
    TString         fGitDate;              //Date and time when make was run
    Int_t           fTimer;                //Timer flag
-   std::atomic<TApplication*> fApplication;         //Pointer to current application
+   std::atomic<TApplication*> fApplication;  //Pointer to current application
    TInterpreter    *fInterpreter;         //Command interpreter
    Bool_t          fBatch;                //True if session without graphics
    Bool_t          fEditHistograms;       //True if histograms can be edited with the mouse
@@ -137,7 +139,7 @@ protected:
    TSeqCollection  *fProofs;              //List of proof sessions
    TSeqCollection  *fClipboard;           //List of clipbard objects
    TSeqCollection  *fDataSets;            //List of data sets (TDSet or TChain)
-   TCollection     *fEnums;               //List of enum types
+   AListOfEnums_t   fEnums;               //List of enum types
    TProcessUUID    *fUUIDs;               //Pointer to TProcessID managing TUUIDs
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
@@ -227,7 +229,7 @@ public:
    TSeqCollection   *GetListOfProofs() const { return fProofs; }
    TSeqCollection   *GetClipboard() const { return fClipboard; }
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
-   TCollection      *GetListOfEnums();
+   TCollection      *GetListOfEnums(Bool_t load = kFALSE);
    TCollection      *GetListOfFunctionTemplates();
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
