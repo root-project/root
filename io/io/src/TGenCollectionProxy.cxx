@@ -969,9 +969,9 @@ void TGenCollectionProxy::UpdateValueClass(const TClass *oldValueType, TClass *n
    // Note that we do not need to update anything if we have not yet been
    // initialized.  In addition (see ROOT-6040) doing an initialization here
    // might hence a nested dlopen (due to autoloading).
-   if (fValue && fValue->fType == oldValueType) {
+   if (fValue.load() && (*fValue).fType == oldValueType) {
       // Set pointer to the TClass representing the content.
-      (*fValue).fType = new_Value_type;
+      (*fValue).fType = newValueType;
    }
 }
 
