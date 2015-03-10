@@ -3137,6 +3137,8 @@ void TF1::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
       // process new version with new TFormula class whuich is contained in TF1
+      //printf("reading TF1....- version  %d..\n",v);
+
       if (v > 7) {
          // new classes with new TFormula
          // need to register the objects
@@ -3194,10 +3196,13 @@ void TF1::Streamer(TBuffer &b)
          for (int ibit = 0; ibit < 24; ++ibit) 
             if (fold.TestBit(BIT(ibit) ) ) SetBit(BIT(ibit)); 
 
-         // copy the graph classes
-      //          TAttLine::Streamer(b);
-      // TAttFill::Streamer(b);
-      // TAttMarker::Streamer(b);
+         // copy the graph attributes
+         TAttLine & fOldLine = static_cast<TAttLine &>(fold);
+         fOldLine.Copy(*this); 
+         TAttFill & fOldFill = static_cast<TAttFill &>(fold);
+         fOldFill.Copy(*this); 
+         TAttMarker & fOldMarker = static_cast<TAttMarker &>(fold);
+         fOldMarker.Copy(*this); 
 
       }
    }
