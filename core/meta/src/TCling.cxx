@@ -668,7 +668,7 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
       // vector is special: we need to check whether
       // vector::iterator is a typedef to pointer or a
       // class.
-      static const std::set<std::string> sSTLTypes {"vector","list","deque","map","multimap","set","multiset","queue","priority_queue","stack","iterator"};
+      static const std::set<std::string> sSTLTypes {"vector","list","unordered_list","deque","map","multimap","set","unordered_set","multiset","queue","priority_queue","stack","iterator"};
       std::vector<std::string>::const_iterator it;
       std::string fileContent("");
       for (it = headers.begin(); it != headers.end(); ++it) {
