@@ -1,8 +1,10 @@
 ### This is support for black-box optimization with CMA-ES from within ROOT (http://root.cern.ch/drupal/).
 
+This work was supported by the ANR-2010-COSI-002 grant of the French NationalA Research Agency.
+
 ** This work is improved when needed, see status here: https://github.com/beniz/libcmaes/issues/13 **
 
-** This work may be about to enter ROOT repository, follow integration here: 
+** This work may be about to be merged into ROOT repository, follow integration here: 
 https://github.com/root-mirror/root/pull/40 **
 
 libcmaes can be used from CERN's ROOT6 as a seamless replacement or addition to Minuit2 optimizer. It is designed to be used from ROOT6 **exactly** as Minuit2 is used, so code using Minuit2 should be easily run against CMA-ES.
