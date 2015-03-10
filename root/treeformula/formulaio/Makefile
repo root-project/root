@@ -19,7 +19,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 oldFormulaTest.log:  runoldFormulaTest.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runoldFormulaTest.C > oldFormulaTest.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runoldFormulaTest.C > oldFormulaTest.log 2>&1
 
 oldFormulaTest:oldFormulaTest.log
 	$(CMDECHO) diff -bw oldFormulaTest.log oldFormulaTest.ref
