@@ -709,7 +709,11 @@ TGenCollectionProxy::~TGenCollectionProxy()
    clearVector(fProxyKept);
    clearVector(fStaged);
 
+#if __cplusplus >= 201103L
    if ( fValue ) delete fValue.load();
+#else
+   if ( fValue ) delete fValue;
+#endif
    if ( fVal   ) delete fVal;
    if ( fKey   ) delete fKey;
 
