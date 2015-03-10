@@ -50,8 +50,8 @@ else:
    _builtin_cppyy = False
 
    # load PyROOT C++ extension module, special case for linux and Sun
-   needsGlobal =  ( 0 <= string.find( sys.platform, 'linux' ) ) or\
-                  ( 0 <= string.find( sys.platform, 'sunos' ) )
+   needsGlobal =  ( 0 <= sys.platform.find( 'linux' ) ) or\
+                  ( 0 <= sys.platform.find( 'sunos' ) )
    if needsGlobal:
       # change dl flags to load dictionaries from pre-linked .so's
       dlflags = sys.getdlopenflags()
@@ -180,7 +180,7 @@ class short(int): pass
 class long_int(int): pass
 class unsigned_short(int): pass
 class unsigned_int(int): pass
-class unsigned_long(long): pass
+class unsigned_long(int): pass
 
 #--- Copy over locally defined names ------------------------------------
 if _builtin_cppyy:

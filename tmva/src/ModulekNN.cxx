@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Rustem Ospanov 
+// Author: Rustem Ospanov
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -14,8 +14,8 @@
  *      Rustem Ospanov <rustem@fnal.gov> - U. of Texas at Austin, USA             *
  *                                                                                *
  * Copyright (c) 2007:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      U. of Texas at Austin, USA                                                *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -36,9 +36,9 @@
 
 // TMVA
 #include "TMVA/MsgLogger.h"
- 
+
 //-------------------------------------------------------------------------------------------
-TMVA::kNN::Event::Event() 
+TMVA::kNN::Event::Event()
    :fVar(),
     fWeight(-1.0),
     fType(-1)
@@ -81,12 +81,12 @@ TMVA::kNN::VarType TMVA::kNN::Event::GetDist(const Event &other) const
       std::cerr << "Distance: two events have different dimensions" << std::endl;
       return -1.0;
    }
-   
+
    VarType sum = 0.0;
    for (UInt_t ivar = 0; ivar < nvar; ++ivar) {
       sum += GetDist(other.GetVar(ivar), ivar);
    }
-   
+
    return sum;
 }
 
@@ -149,12 +149,6 @@ std::ostream& TMVA::kNN::operator<<(std::ostream& os, const TMVA::kNN::Event& ev
    return os;
 }
 
-
-
-
-
-TRandom3 TMVA::kNN::ModulekNN::fgRndm(1);
-
 //-------------------------------------------------------------------------------------------
 TMVA::kNN::ModulekNN::ModulekNN()
    :fDimn(0),
@@ -193,11 +187,11 @@ void TMVA::kNN::ModulekNN::Clear()
 
 //-------------------------------------------------------------------------------------------
 void TMVA::kNN::ModulekNN::Add(const Event &event)
-{   
+{
    // add an event to tree
    if (fTree) {
       Log() << kFATAL << "<Add> Cannot add event: tree is already built" << Endl;
-      return;      
+      return;
    }
 
    if (fDimn < 1) {
@@ -230,7 +224,7 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
    if (fTree) {
       Log() << kFATAL << "ModulekNN::Fill - tree has already been created" << Endl;
       return kFALSE;
-   }   
+   }
 
    // If trim option is set then find class with lowest number of events
    // and set that as maximum number of events for all other classes.
@@ -241,14 +235,14 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
             min = it->second;
          }
       }
-      
+
       Log() << kINFO << "<Fill> Will trim all event types to " << min << " events" << Endl;
-      
+
       fCount.clear();
       fVar.clear();
-      
+
       EventVec evec;
-      
+
       for (EventVec::const_iterator event = fEvent.begin(); event != fEvent.end(); ++event) {
          std::map<Short_t, UInt_t>::iterator cit = fCount.find(event->GetType());
          if (cit == fCount.end()) {
@@ -269,7 +263,7 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
       }
 
       Log() << kINFO << "<Fill> Erased " << fEvent.size() - evec.size() << " events" << Endl;
-      
+
       fEvent = evec;
    }
 
@@ -283,7 +277,7 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
 
    if (option.find("metric") != std::string::npos && ifrac > 0) {
       ComputeMetric(ifrac);
-      
+
       // sort again each variable for all events - needs this before Optimize()
       // rescaling has changed variable values
       for (VarMap::iterator it = fVar.begin(); it != fVar.end(); ++it) {
@@ -296,15 +290,15 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
    // all child nodes. If odepth = 0 then split variable 0
    // at the median (in half) and return it as root node
    fTree = Optimize(odepth);
-   
+
    if (!fTree) {
       Log() << kFATAL << "ModulekNN::Fill() - failed to create tree" << Endl;
-      return kFALSE;      
-   }      
-   
+      return kFALSE;
+   }
+
    for (EventVec::const_iterator event = fEvent.begin(); event != fEvent.end(); ++event) {
       fTree->Add(*event, 0);
-      
+
       std::map<Short_t, UInt_t>::iterator cit = fCount.find(event->GetType());
       if (cit == fCount.end()) {
          fCount[event->GetType()] = 1;
@@ -313,20 +307,20 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
          ++(cit->second);
       }
    }
-   
+
    for (std::map<Short_t, UInt_t>::const_iterator it = fCount.begin(); it != fCount.end(); ++it) {
-      Log() << kINFO << "<Fill> Class " << it->first << " has " << std::setw(8) 
+      Log() << kINFO << "<Fill> Class " << it->first << " has " << std::setw(8)
               << it->second << " events" << Endl;
    }
-   
+
    return kTRUE;
 }
 
 //-------------------------------------------------------------------------------------------
 Bool_t TMVA::kNN::ModulekNN::Find(Event event, const UInt_t nfind, const std::string &option) const
-{  
+{
    // find in tree
-   // if tree has been filled then search for nfind closest events 
+   // if tree has been filled then search for nfind closest events
    // if metic (fVarScale map) is computed then rescale event variables
    // using previsouly computed width of variable distribution
 
@@ -352,7 +346,7 @@ Bool_t TMVA::kNN::ModulekNN::Find(Event event, const UInt_t nfind, const std::st
    // latest event for k-nearest neighbor search
    fkNNEvent = event;
    fkNNList.clear();
-   
+
    if(option.find("weight") != std::string::npos)
    {
       // recursive kd-tree search for nfind-nearest neighbors
@@ -364,7 +358,7 @@ Bool_t TMVA::kNN::ModulekNN::Find(Event event, const UInt_t nfind, const std::st
    {
       // recursive kd-tree search for nfind-nearest neighbors
       // count nodes and do not use event weight
-      kNN::Find<kNN::Event>(fkNNList, fTree, event, nfind);      
+      kNN::Find<kNN::Event>(fkNNList, fTree, event, nfind);
    }
 
    return kTRUE;
@@ -377,8 +371,12 @@ Bool_t TMVA::kNN::ModulekNN::Find(const UInt_t nfind, const std::string &option)
    if (fCount.empty() || !fTree) {
       return kFALSE;
    }
-   
+
+#if __cplusplus > 199711L
+   thread_local std::map<Short_t, UInt_t>::const_iterator cit = fCount.end();
+#else
    static std::map<Short_t, UInt_t>::const_iterator cit = fCount.end();
+#endif
 
    if (cit == fCount.end()) {
       cit = fCount.begin();
@@ -393,9 +391,9 @@ Bool_t TMVA::kNN::ModulekNN::Find(const UInt_t nfind, const std::string &option)
          if (vit == fVar.end()) {
             return kFALSE;
          }
-         
+
          const std::vector<Double_t> &vvec = vit->second;
-         
+
          if (vvec.empty()) {
             return kFALSE;
          }
@@ -404,9 +402,9 @@ Bool_t TMVA::kNN::ModulekNN::Find(const UInt_t nfind, const std::string &option)
          const VarType min = vvec.front();
          const VarType max = vvec.back();
          const VarType width = max - min;
-         
+
          if (width < 0.0 || width > 0.0) {
-            dvec.push_back(min + width*fgRndm.Rndm());
+            dvec.push_back(min + width*GetRndmThreadLocal().Rndm());
          }
          else {
             return kFALSE;
@@ -414,9 +412,9 @@ Bool_t TMVA::kNN::ModulekNN::Find(const UInt_t nfind, const std::string &option)
       }
 
       const Event event(dvec, 1.0, etype);
-      
+
       Find(event, nfind);
-      
+
       return kTRUE;
    }
 
@@ -451,8 +449,8 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
 
    if (double(fDimn*size) < TMath::Power(2.0, double(odepth))) {
       Log() << kWARNING << "<Optimize> Optimization depth exceeds number of events" << Endl;
-      return 0;      
-   }   
+      return 0;
+   }
 
    Log() << kINFO << "Optimizing tree for " << fDimn << " variables with " << size << " values" << Endl;
 
@@ -465,14 +463,14 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
    }
 
    const Event pevent(VarVec(fDimn, (it->second)[size/2]), -1.0, -1);
-   
+
    Node<Event> *tree = new Node<Event>(0, pevent, 0);
-   
+
    pvec.push_back(tree);
 
-   for (UInt_t depth = 1; depth < odepth; ++depth) {            
+   for (UInt_t depth = 1; depth < odepth; ++depth) {
       const UInt_t mod = depth % fDimn;
-      
+
       VarMap::const_iterator vit = fVar.find(mod);
       if (vit == fVar.end()) {
          Log() << kFATAL << "Missing " << mod << " variable" << Endl;
@@ -484,26 +482,26 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
          Log() << kFATAL << "Missing " << mod << " variable" << Endl;
          return 0;
       }
-      
+
       UInt_t ichild = 1;
       for (std::vector<Node<Event> *>::iterator pit = pvec.begin(); pit != pvec.end(); ++pit) {
          Node<Event> *parent = *pit;
-         
+
          const VarType lmedian = dvec[size*ichild/(2*pvec.size() + 1)];
          ++ichild;
 
          const VarType rmedian = dvec[size*ichild/(2*pvec.size() + 1)];
          ++ichild;
-      
+
          const Event levent(VarVec(fDimn, lmedian), -1.0, -1);
          const Event revent(VarVec(fDimn, rmedian), -1.0, -1);
-         
+
          Node<Event> *lchild = new Node<Event>(parent, levent, mod);
          Node<Event> *rchild = new Node<Event>(parent, revent, mod);
-         
+
          parent->SetNodeL(lchild);
          parent->SetNodeR(rchild);
-         
+
          cvec.push_back(lchild);
          cvec.push_back(rchild);
       }
@@ -511,14 +509,14 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
       pvec = cvec;
       cvec.clear();
    }
-   
+
    return tree;
 }
 
 //-------------------------------------------------------------------------------------------
 void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
 {
-   // compute scale factor for each variable (dimension) so that 
+   // compute scale factor for each variable (dimension) so that
    // distance is computed uniformely along each dimension
    // compute width of interval that includes (100 - 2*ifrac)% of events
    // below, assume that in fVar each vector of values is sorted
@@ -529,37 +527,37 @@ void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
    if (ifrac > 100) {
       Log() << kFATAL << "ModulekNN::ComputeMetric - fraction can not exceed 100%" << Endl;
       return;
-   }   
+   }
    if (!fVarScale.empty()) {
       Log() << kFATAL << "ModulekNN::ComputeMetric - metric is already computed" << Endl;
       return;
    }
    if (fEvent.size() < 100) {
       Log() << kFATAL << "ModulekNN::ComputeMetric - number of events is too small" << Endl;
-      return;      
+      return;
    }
 
    const UInt_t lfrac = (100 - ifrac)/2;
    const UInt_t rfrac = 100 - (100 - ifrac)/2;
 
-   Log() << kINFO << "Computing scale factor for 1d distributions: " 
-           << "(ifrac, bottom, top) = (" << ifrac << "%, " << lfrac << "%, " << rfrac << "%)" << Endl;   
+   Log() << kINFO << "Computing scale factor for 1d distributions: "
+           << "(ifrac, bottom, top) = (" << ifrac << "%, " << lfrac << "%, " << rfrac << "%)" << Endl;
 
    fVarScale.clear();
-   
+
    for (VarMap::const_iterator vit = fVar.begin(); vit != fVar.end(); ++vit) {
       const std::vector<Double_t> &dvec = vit->second;
-      
+
       std::vector<Double_t>::const_iterator beg_it = dvec.end();
       std::vector<Double_t>::const_iterator end_it = dvec.end();
-      
+
       Int_t dist = 0;
       for (std::vector<Double_t>::const_iterator dit = dvec.begin(); dit != dvec.end(); ++dit, ++dist) {
-         
+
          if ((100*dist)/dvec.size() == lfrac && beg_it == dvec.end()) {
             beg_it = dit;
          }
-         
+
          if ((100*dist)/dvec.size() == rfrac && end_it == dvec.end()) {
             end_it = dit;
          }
@@ -568,35 +566,35 @@ void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
       if (beg_it == dvec.end() || end_it == dvec.end()) {
          beg_it = dvec.begin();
          end_it = dvec.end();
-         
+
          assert(beg_it != end_it && "Empty vector");
-         
+
          --end_it;
       }
 
       const Double_t lpos = *beg_it;
       const Double_t rpos = *end_it;
-      
+
       if (!(lpos < rpos)) {
          Log() << kFATAL << "ModulekNN::ComputeMetric() - min value is greater than max value" << Endl;
          continue;
       }
-      
+
       // Rustem: please find a solution that does not use distance (it does not exist on solaris)
-      //       Log() << kINFO << "Variable " << vit->first 
+      //       Log() << kINFO << "Variable " << vit->first
       //               << " included " << distance(beg_it, end_it) + 1
       //               << " events: width = " << std::setfill(' ') << std::setw(5) << std::setprecision(3) << rpos - lpos
-      //               << ", (min, max) = (" << std::setfill(' ') << std::setw(5) << std::setprecision(3) << lpos 
+      //               << ", (min, max) = (" << std::setfill(' ') << std::setw(5) << std::setprecision(3) << lpos
       //               << ", " << std::setfill(' ') << std::setw(5) << std::setprecision(3) << rpos << ")" << Endl;
-      
+
       fVarScale[vit->first] = rpos - lpos;
    }
 
    fVar.clear();
 
-   for (UInt_t ievent = 0; ievent < fEvent.size(); ++ievent) {      
+   for (UInt_t ievent = 0; ievent < fEvent.size(); ++ievent) {
       fEvent[ievent] = Scale(fEvent[ievent]);
-      
+
       for (UInt_t ivar = 0; ivar < fDimn; ++ivar) {
          fVar[ivar].push_back(fEvent[ievent].GetVar(ivar));
       }
@@ -608,7 +606,7 @@ const TMVA::kNN::Event TMVA::kNN::ModulekNN::Scale(const Event &event) const
 {
    // scale each event variable so that rms of variables is approximately 1.0
    // this allows comparisons of variables with distinct scales and units
-   
+
    if (fVarScale.empty()) {
       return event;
    }
@@ -626,7 +624,7 @@ const TMVA::kNN::Event TMVA::kNN::ModulekNN::Scale(const Event &event) const
          Log() << kFATAL << "ModulekNN::Scale() - failed to find scale for " << ivar << Endl;
          continue;
       }
-      
+
       if (fit->second > 0.0) {
          vvec[ivar] = event.GetVar(ivar)/fit->second;
       }
@@ -660,7 +658,7 @@ void TMVA::kNN::ModulekNN::Print(std::ostream &os) const
    os << "Printing " << fkNNList.size() << " nearest neighbors" << std::endl;
    for (List::const_iterator it = fkNNList.begin(); it != fkNNList.end(); ++it) {
       os << ++count << ": " << it->second << ": " << it->first->GetEvent() << std::endl;
-      
+
       const Event &event = it->first->GetEvent();
       for (UShort_t ivar = 0; ivar < event.GetNVar(); ++ivar) {
          if (min.find(ivar) == min.end()) {
@@ -685,6 +683,6 @@ void TMVA::kNN::ModulekNN::Print(std::ostream &os) const
          Log() << kINFO << "(var, min, max) = (" << i << "," << min[i] << ", " << max[i] << ")" << Endl;
       }
    }
-   
+
    os << "----------------------------------------------------------------------" << std::endl;
 }

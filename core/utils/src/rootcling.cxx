@@ -379,6 +379,10 @@ static void GetCurrentDirectory(std::string &output)
 
    output = currWorkDir;
    output += '/';
+#ifdef WIN32
+   // convert backslashes into forward slashes
+   std::replace(output.begin(), output.end(), '\\', '/');
+#endif
 
    if (fixedLength != currWorkDir) {
       delete [] currWorkDir;
@@ -1188,6 +1192,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
                break;
             }
          case kSTLset:
+         case kSTLunorderedset:
          case kSTLmultiset:
             dictStream << "            R__stl.insert(R__t);" << std::endl;
             break;
@@ -1196,7 +1201,9 @@ int STLContainerStreamer(const clang::FieldDecl &m,
          case kSTLdeque:
             dictStream << "            R__stl.push_back(R__t);" << std::endl;
             break;
-
+         case kSTLforwardlist:
+            dictStream << "            R__stl.push_front(R__t);" << std::endl;
+            break;
          default:
             assert(0);
       }
@@ -1423,7 +1430,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
    if (autoLoad) {
       dictStream << "   Dictionary();\n";
    } else {
-      dictStream << "   if (!fgIsA) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
+      dictStream << "   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
       dictStream << fullname << "*)0x0)->GetClass(); }" << std::endl;
    }
    dictStream    << "   return fgIsA;" << std::endl
@@ -3288,11 +3295,23 @@ public:
          std::ifstream ifile(tmpName);
          if (!ifile)
             ROOT::TMetaUtils::Error(0, "Cannot find %s!\n", tmpName);
-
+#ifdef WIN32
+         // Sometimes files cannot be renamed on Windows if they don't have
+         // been released by the system. So just copy them and try to delete
+         // the old one afterwards.
+         if (ifile.is_open())
+            ifile.close();
          if (0 != std::rename(tmpName , name)) {
-            ROOT::TMetaUtils::Error(0, "Renaming %s into %s!\n", tmpName , name);
+            if (llvm::sys::fs::copy_file(tmpName , name)) {
+               llvm::sys::fs::remove(tmpName);
+            }
+         }
+#else
+         if (0 != std::rename(tmpName , name)) {
+            ROOT::TMetaUtils::Error(0, "Renaming %s into %s!\n", tmpName, name);
             retval++;
          }
+#endif
       }
       return retval;
    }
@@ -4094,6 +4113,10 @@ int RootCling(int argc,
    // flags used only for the pragma parser:
    clingArgs.push_back("-D__CINT__");
    clingArgs.push_back("-D__MAKECINT__");
+#ifdef R__WIN32
+   // Prevent the following #error: The C++ Standard Library forbids macroizing keywords.
+   clingArgs.push_back("-D_XKEYCHECK_H");
+#endif
 
    AddPlatformDefines(clingArgs);
 

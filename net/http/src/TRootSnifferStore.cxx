@@ -144,10 +144,43 @@ void TRootSnifferStoreJson::SetField(Int_t lvl, const char *field,
    fBuf->Append(",");
    if (!fCompact) fBuf->Append("\n");
    fBuf->Append(TString::Format("%*s\"%s\"%s", fCompact ? 0 : lvl * 4 + 2, "", field, (fCompact ? ":" : " : ")));
-   if (with_quotes) {
-      fBuf->Append(TString::Format("\"%s\"", value));
-   } else {
+   if (!with_quotes) {
       fBuf->Append(value);
+   } else {
+      fBuf->Append("\"");
+      for (const char *v = value; *v != 0; v++)
+         switch (*v) {
+            case '\n':
+               fBuf->Append("\\n");
+               break;
+            case '\t':
+               fBuf->Append("\\t");
+               break;
+            case '\"':
+               fBuf->Append("\\\"");
+               break;
+            case '\\':
+               fBuf->Append("\\\\");
+               break;
+            case '\b':
+               fBuf->Append("\\b");
+               break;
+            case '\f':
+               fBuf->Append("\\f");
+               break;
+            case '\r':
+               fBuf->Append("\\r");
+               break;
+            case '/':
+               fBuf->Append("\\/");
+               break;
+            default:
+               if ((*v > 31) && (*v < 127))
+                  fBuf->Append(*v);
+               else
+                  fBuf->Append(TString::Format("\\u%04x", (unsigned) *v));
+         }
+      fBuf->Append("\"");
    }
 }
 

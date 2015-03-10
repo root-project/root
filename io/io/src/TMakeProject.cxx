@@ -463,6 +463,9 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                      case ROOT::kSTLlist:
                         what = "list";
                         break;
+                     case ROOT::kSTLforwardlist:
+                        what = "forward_list";
+                        break;
                      case ROOT::kSTLdeque:
                         what = "deque";
                         break;
@@ -474,6 +477,9 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                         break;
                      case ROOT::kSTLset:
                         what = "set";
+                        break;
+                     case ROOT::kSTLunorderedset:
+                        what = "unordered_set";
                         break;
                      case ROOT::kSTLmultiset:
                         what = "set";
@@ -638,6 +644,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       switch (stlkind) {
          case ROOT::kSTLvector:
          case ROOT::kSTLlist:
+         case ROOT::kSTLforwardlist:
          case ROOT::kSTLdeque:
             if (narg>2 && strncmp(inside[2].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
                --narg;
@@ -648,6 +655,12 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
          case ROOT::kSTLmap:
          case ROOT::kSTLmultimap:
             if (narg>4 && strncmp(inside[4].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
+               --narg;
+            }
+            break;
+         case ROOT::kSTLunorderedset:
+         // case ROOT::kSTLunorderedmultiset:
+            if (narg>5 && strncmp(inside[5].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
                --narg;
             }
             break;
@@ -678,6 +691,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
                   break;
                }
                case ROOT::kSTLset:
+               case ROOT::kSTLunorderedset:
                case ROOT::kSTLmultiset:
                   inside[0] = "std::vector";
                   break;

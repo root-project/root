@@ -39,15 +39,17 @@
 #include <string>
 namespace std {} using namespace std;
 
-#ifdef R__WIN32
-#define thread_local static
-#endif
-
 const Int_t kMaxLen = 1024;
 
 static TString &IncludeNameBuffer() {
+#ifdef R__WIN32
+   thread_local TString *includeNamePtr = 0;
+   if (!includeNamePtr) includeNamePtr = new TString(kMaxLen);
+   return *includeNamePtr;
+#else
    thread_local TString includeName(kMaxLen);
    return includeName;
+#endif
 }
 
 extern void *gMmallocDesc;
@@ -311,7 +313,13 @@ const char *TStreamerElement::GetFullName() const
    // Note that this function stores the name into a static array.
    // You should copy the result.
 
+#ifdef R__WIN32
+   thread_local TString *namePtr = 0;
+   if (!namePtr) namePtr = new TString(kMaxLen);
+   TString &name = *namePtr;
+#else
    thread_local TString name(kMaxLen);
+#endif
    char cdim[20];
    name = GetName();
    for (Int_t i=0;i<fArrayDim;i++) {
@@ -1693,14 +1701,16 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    fCtype   = 0;
    // Any class name that 'contains' the word will be counted
    // as a STL container. Is that really what we want.
-   if      (strstr(s,"vector"))   fSTLtype = ROOT::kSTLvector;
-   else if (strstr(s,"list"))     fSTLtype = ROOT::kSTLlist;
-   else if (strstr(s,"deque"))    fSTLtype = ROOT::kSTLdeque;
-   else if (strstr(s,"multimap")) fSTLtype = ROOT::kSTLmultimap;
-   else if (strstr(s,"multiset")) fSTLtype = ROOT::kSTLmultiset;
-   else if (strstr(s,"bitset"))   fSTLtype = ROOT::kSTLbitset;
-   else if (strstr(s,"map"))      fSTLtype = ROOT::kSTLmap;
-   else if (strstr(s,"set"))      fSTLtype = ROOT::kSTLset;
+   if      (strstr(s,"vector"))            fSTLtype = ROOT::kSTLvector;
+   else if (strstr(s,"list"))              fSTLtype = ROOT::kSTLlist;
+   else if (strstr(s,"forward_list"))      fSTLtype = ROOT::kSTLforwardlist;
+   else if (strstr(s,"deque"))             fSTLtype = ROOT::kSTLdeque;
+   else if (strstr(s,"multimap"))          fSTLtype = ROOT::kSTLmultimap;
+   else if (strstr(s,"multiset"))          fSTLtype = ROOT::kSTLmultiset;
+   else if (strstr(s,"bitset"))            fSTLtype = ROOT::kSTLbitset;
+   else if (strstr(s,"map"))               fSTLtype = ROOT::kSTLmap;
+   else if (strstr(s,"set"))               fSTLtype = ROOT::kSTLset;
+   else if (strstr(s,"unordered_set"))     fSTLtype = ROOT::kSTLunorderedset;
    if (fSTLtype == 0) { delete [] s; return;}
    if (dmPointer) fSTLtype += TVirtualStreamerInfo::kOffsetP;
 
@@ -1852,14 +1862,16 @@ const char *TStreamerSTL::GetInclude() const
 {
    // Return the proper include for this element.
 
-   if      (fSTLtype == ROOT::kSTLvector)   IncludeNameBuffer().Form("<%s>","vector");
-   else if (fSTLtype == ROOT::kSTLlist)     IncludeNameBuffer().Form("<%s>","list");
-   else if (fSTLtype == ROOT::kSTLdeque)    IncludeNameBuffer().Form("<%s>","deque");
-   else if (fSTLtype == ROOT::kSTLmap)      IncludeNameBuffer().Form("<%s>","map");
-   else if (fSTLtype == ROOT::kSTLset)      IncludeNameBuffer().Form("<%s>","set");
-   else if (fSTLtype == ROOT::kSTLmultimap) IncludeNameBuffer().Form("<%s>","map");
-   else if (fSTLtype == ROOT::kSTLmultiset) IncludeNameBuffer().Form("<%s>","set");
-   else if (fSTLtype == ROOT::kSTLbitset)   IncludeNameBuffer().Form("<%s>","bitset");
+   if      (fSTLtype == ROOT::kSTLvector)       IncludeNameBuffer().Form("<%s>","vector");
+   else if (fSTLtype == ROOT::kSTLlist)         IncludeNameBuffer().Form("<%s>","list");
+   else if (fSTLtype == ROOT::kSTLforwardlist)  IncludeNameBuffer().Form("<%s>","forward_list");
+   else if (fSTLtype == ROOT::kSTLdeque)        IncludeNameBuffer().Form("<%s>","deque");
+   else if (fSTLtype == ROOT::kSTLmap)          IncludeNameBuffer().Form("<%s>","map");
+   else if (fSTLtype == ROOT::kSTLset)          IncludeNameBuffer().Form("<%s>","set");
+   else if (fSTLtype == ROOT::kSTLunorderedset) IncludeNameBuffer().Form("<%s>","unordered_set");
+   else if (fSTLtype == ROOT::kSTLmultimap)     IncludeNameBuffer().Form("<%s>","map");
+   else if (fSTLtype == ROOT::kSTLmultiset)     IncludeNameBuffer().Form("<%s>","set");
+   else if (fSTLtype == ROOT::kSTLbitset)       IncludeNameBuffer().Form("<%s>","bitset");
    return IncludeNameBuffer();
 }
 

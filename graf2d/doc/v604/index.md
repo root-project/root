@@ -25,6 +25,7 @@
 - Text color was ignored. It was always black.
 - The underscore `_` produced an error outside the TeX math context.
 - Fix an issue with transparent pads.
+- Implement transparent colors using TiKZ "opacity".
 
 ### TPostScript
 
@@ -52,9 +53,18 @@
 - In `Pad::Print()`, make sure the file format is "pdf" when the option "Title:"
   is present.
 
+### TCanvas
+
+- Make sure that "/" and "." are not part of the method name when a canvas is
+ saved as a .C file.
+
 ### TLatex
 
 - With the Cocoa backend the PDF and PS output produced miss-aligned exponents
   because the `GetTextExtend` method behaved differently in batch mode and "screen"
   mode. This is now fixed. See http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=18883
 - Improve the square-root drawing in case it is small.
+
+### TMathText
+
+- `\mu` is now working for Postscript output.

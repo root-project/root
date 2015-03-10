@@ -77,6 +77,7 @@ public:
 
    const clang::FunctionDecl                   *GetMethodDecl() const;
    TDictionary::DeclId_t                        GetDeclId() const;
+   cling::Interpreter                          *GetInterpreter() const { return fInterp; }
    void                                         CreateSignature(TString &signature) const;
    void                                         Init(const clang::FunctionDecl *);
    void                                        *InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;

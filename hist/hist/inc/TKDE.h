@@ -69,16 +69,29 @@ public:
       kForcedBinning
    };
 
-   explicit TKDE(UInt_t events = 0, const Double_t* data = 0, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option = "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0);
+   explicit TKDE(UInt_t events = 0, const Double_t* data = 0, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option =
+                 "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0) {
+      Instantiate( nullptr,  events, data, nullptr, xMin, xMax, option, rho);
+   }
+
+   TKDE(UInt_t events, const Double_t* data, const Double_t* dataWeight, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option =
+        "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0) {
+      Instantiate( nullptr,  events, data, dataWeight, xMin, xMax, option, rho);
+   }
 
    template<class KernelFunction>
    TKDE(const Char_t* /*name*/, const KernelFunction& kernfunc, UInt_t events, const Double_t* data, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option = "KernelType:UserDefined;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0)  {
-      Instantiate(new ROOT::Math::WrappedFunction<const KernelFunction&>(kernfunc), events, data, xMin, xMax, option, rho);
+      Instantiate(new ROOT::Math::WrappedFunction<const KernelFunction&>(kernfunc), events, data, nullptr, xMin, xMax, option, rho);
+   }
+   template<class KernelFunction>
+   TKDE(const Char_t* /*name*/, const KernelFunction& kernfunc, UInt_t events, const Double_t* data, const Double_t * dataWeight, Double_t xMin = 0.0, Double_t xMax = 0.0, const Option_t* option = "KernelType:UserDefined;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", Double_t rho = 1.0)  {
+      Instantiate(new ROOT::Math::WrappedFunction<const KernelFunction&>(kernfunc), events, data, dataWeight, xMin, xMax, option, rho);
    }
 
    virtual ~TKDE();
 
    void Fill(Double_t data);
+   void Fill(Double_t data, Double_t weight);
    void SetKernelType(EKernelType kern);
    void SetIteration(EIteration iter);
    void SetMirror(EMirror mir);
@@ -134,6 +147,7 @@ private:
 
    std::vector<Double_t> fData;   // Data events
    std::vector<Double_t> fEvents; // Original data storage
+   std::vector<Double_t> fEventWeights; // Original data weights
 
    TF1* fPDF;             // Output Kernel Density Estimation PDF function
    TF1* fUpperPDF;        // Output Kernel Density Estimation upper confidence interval PDF function
@@ -153,6 +167,7 @@ private:
 
    UInt_t fNBins;          // Number of bins for binned data option
    UInt_t fNEvents;        // Data's number of events
+   Double_t fSumOfCounts; // Data sum of weights
    UInt_t fUseBinsNEvents; // If the algorithm is allowed to use binning this is the minimum number of events to do so
 
    Double_t fMean;  // Data mean
@@ -168,14 +183,14 @@ private:
    std::vector<Double_t> fCanonicalBandwidths;
    std::vector<Double_t> fKernelSigmas2;
 
-   std::vector<UInt_t> fBinCount; // Number of events per bin for binned data option
+   std::vector<Double_t> fBinCount; // Number of events per bin for binned data option
 
    std::vector<Bool_t> fSettedOptions; // User input options flag
 
    struct KernelIntegrand;
    friend struct KernelIntegrand;
 
-   void Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_t* data,
+   void Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_t* data, const Double_t* weight, 
                     Double_t xMin, Double_t xMax, const Option_t* option, Double_t rho);
 
    inline Double_t GaussianKernel(Double_t x) const {
@@ -202,14 +217,15 @@ private:
    Double_t ComputeKernelMu() const;
    Double_t ComputeKernelIntegral() const;
    Double_t ComputeMidspread() ;
+   void ComputeDataStats() ;
 
    UInt_t Index(Double_t x) const;
 
    void SetBinCentreData(Double_t xmin, Double_t xmax);
    void SetBinCountData();
    void CheckKernelValidity();
-   void SetCanonicalBandwidth();
-   void SetKernelSigma2();
+   void SetUserCanonicalBandwidth();
+   void SetUserKernelSigma2();
    void SetCanonicalBandwidths();
    void SetKernelSigmas2();
    void SetHistogram();
@@ -223,7 +239,7 @@ private:
    void CheckOptions(Bool_t isUserDefinedKernel = kFALSE);
    void GetOptions(std::string optionType, std::string option);
    void AssureOptions();
-   void SetData(const Double_t* data);
+   void SetData(const Double_t* data, const Double_t * weights);
    void InitFromNewData();
    void SetMirroredEvents();
    void SetDrawOptions(const Option_t* option, TString& plotOpt, TString& drawOpt);
@@ -236,7 +252,7 @@ private:
    TF1* GetPDFUpperConfidenceInterval(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
    TF1* GetPDFLowerConfidenceInterval(Double_t confidenceLevel = 0.95, UInt_t npx = 100, Double_t xMin = 1.0, Double_t xMax = 0.0);
 
-   ClassDef(TKDE, 1) // One dimensional semi-parametric Kernel Density Estimation
+   ClassDef(TKDE, 2) // One dimensional semi-parametric Kernel Density Estimation
 
 };
 

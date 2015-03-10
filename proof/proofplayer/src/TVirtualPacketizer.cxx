@@ -66,6 +66,7 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
 {
    // Constructor.
 
+   fInput =  input;
    // General configuration parameters
    fMinPacketTime = 3;
    Double_t minPacketTime = 0;

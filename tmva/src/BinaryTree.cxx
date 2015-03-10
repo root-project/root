@@ -46,8 +46,6 @@
 
 ClassImp(TMVA::BinaryTree)
 
-TMVA::MsgLogger* TMVA::BinaryTree::fgLogger = 0;
-
 //_______________________________________________________________________
 TMVA::BinaryTree::BinaryTree( void )
    : fRoot  ( NULL ),
@@ -55,7 +53,6 @@ TMVA::BinaryTree::BinaryTree( void )
      fDepth ( 0 )
 {
    // constructor for a yet "empty" tree. Needs to be filled afterwards
-   if (!fgLogger) fgLogger =  new MsgLogger("BinaryTree");
 }
 
 //_______________________________________________________________________
@@ -178,7 +175,7 @@ void TMVA::BinaryTree::Read(std::istream & istr, UInt_t tmva_Version_Code )
 
       // find parent node
       while( parent!=0 && parent->GetDepth() != currentNode->GetDepth()-1) parent=parent->GetParent();
-      
+
       if (parent!=0) { // link new node to parent
          currentNode->SetParent(parent);
          if (currentNode->GetPos()=='l') parent->SetLeft(currentNode);
@@ -193,7 +190,7 @@ void TMVA::BinaryTree::Read(std::istream & istr, UInt_t tmva_Version_Code )
 
 //_______________________________________________________________________
 std::istream& TMVA::operator>> (std::istream& istr, TMVA::BinaryTree& tree)
-{ 
+{
    // read the tree from an std::istream
    tree.Read(istr);
    return istr;
@@ -202,7 +199,7 @@ std::istream& TMVA::operator>> (std::istream& istr, TMVA::BinaryTree& tree)
 void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
 {
    // descend a tree to find all its leaf nodes, fill max depth reached in the
-   // tree at the same time. 
+   // tree at the same time.
 
    if (n == NULL){ //default, start at the tree top, then descend recursively
       n = (Node*) this->GetRoot();
@@ -210,7 +207,7 @@ void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
          Log() << kFATAL << "SetTotalTreeDepth: started with undefined ROOT node" <<Endl;
          return ;
       }
-   } 
+   }
    if (this->GetLeftDaughter(n) != NULL){
       this->SetTotalTreeDepth( this->GetLeftDaughter(n) );
    }
@@ -220,4 +217,14 @@ void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
    if (n->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(n->GetDepth());
 
    return;
+}
+
+//_______________________________________________________________________
+TMVA::MsgLogger& TMVA::BinaryTree::Log() const {
+#if __cplusplus > 199711L
+  thread_local MsgLogger logger("BinaryTree");
+#else
+  static MsgLogger logger("BinaryTree");
+#endif
+  return logger;
 }

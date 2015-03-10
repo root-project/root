@@ -50,7 +50,6 @@ using std::string;
 
 ClassImp(TMVA::DecisionTreeNode)
 
-TMVA::MsgLogger* TMVA::DecisionTreeNode::fgLogger = 0;
 bool     TMVA::DecisionTreeNode::fgIsTraining = false;
 UInt_t   TMVA::DecisionTreeNode::fgTmva_Version_Code = 0;
 //_______________________________________________________________________
@@ -66,8 +65,6 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
      fIsTerminalNode( kFALSE )
 {
    // constructor of an essentially "empty" node floating in space
-   if (!fgLogger) fgLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
-
    if (DecisionTreeNode::fgIsTraining){
       fTrainInfo = new DTNodeTrainingInfo();
       //std::cout << "Node constructor with TrainingINFO"<<std::endl;
@@ -91,8 +88,6 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
      fIsTerminalNode( kFALSE )
 {
    // constructor of a daughter node as a daughter of 'p'
-   if (!fgLogger) fgLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
-
    if (DecisionTreeNode::fgIsTraining){
       fTrainInfo = new DTNodeTrainingInfo();
       //std::cout << "Node constructor with TrainingINFO"<<std::endl;
@@ -118,8 +113,6 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
 {
    // copy constructor of a node. It will result in an explicit copy of
    // the node and recursively all it's daughters
-   if (!fgLogger) fgLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
-
    this->SetParent( parent );
    if (n.GetLeft() == 0 ) this->SetLeft(NULL);
    else this->SetLeft( new DecisionTreeNode( *((DecisionTreeNode*)(n.GetLeft())),this));
@@ -151,11 +144,11 @@ Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
    Bool_t result;
    // first check if the fisher criterium is used or ordinary cuts:
    if (GetNFisherCoeff() == 0){
-      
+
       result = (e.GetValue(this->GetSelector()) >= this->GetCutValue() );
 
    }else{
-      
+
       Double_t fisher = this->GetFisherCoeff(fFisherCoeff.size()-1); // the offset
       for (UInt_t ivar=0; ivar<fFisherCoeff.size()-1; ivar++)
          fisher += this->GetFisherCoeff(ivar)*(e.GetValue(ivar));
@@ -187,8 +180,8 @@ void TMVA::DecisionTreeNode::SetPurity( void )
       fPurity = this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents());
    }
    else {
-      *fgLogger << kINFO << "Zero events in purity calcuation , return purity=0.5" << Endl;
-      this->Print(*fgLogger);
+      Log() << kINFO << "Zero events in purity calcuation , return purity=0.5" << Endl;
+      this->Print(Log());
       fPurity = 0.5;
    }
    return;
@@ -205,7 +198,7 @@ void TMVA::DecisionTreeNode::Print(std::ostream& os) const
       << "NCoef: "  << this->GetNFisherCoeff();
    for (Int_t i=0; i< (Int_t) this->GetNFisherCoeff(); i++) { os << "fC"<<i<<": " << this->GetFisherCoeff(i);}
    os << " ivar: "  << this->GetSelector()
-      << " cut: "   << this->GetCutValue() 
+      << " cut: "   << this->GetCutValue()
       << " cType: " << this->GetCutType()
       << " s: "     << this->GetNSigEvents()
       << " b: "     << this->GetNBkgEvents()
@@ -390,7 +383,7 @@ void TMVA::DecisionTreeNode::PrintRecPrune( std::ostream& os ) const {
 void TMVA::DecisionTreeNode::SetCC(Double_t cc)
 {
    if (fTrainInfo) fTrainInfo->fCC = cc;
-   else *fgLogger << kFATAL << "call to SetCC without trainingInfo" << Endl;
+   else Log() << kFATAL << "call to SetCC without trainingInfo" << Endl;
 }
 
 //_______________________________________________________________________
@@ -398,8 +391,8 @@ Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
    // return the minimum of variable ivar from the training sample
    // that pass/end up in this node
    if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMin[ivar];
-   else *fgLogger << kFATAL << "You asked for Min of the event sample in node for variable "
-                  << ivar << " that is out of range" << Endl;
+   else Log() << kFATAL << "You asked for Min of the event sample in node for variable "
+              << ivar << " that is out of range" << Endl;
    return -9999;
 }
 
@@ -408,8 +401,8 @@ Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
    // return the maximum of variable ivar from the training sample
    // that pass/end up in this node
    if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMax[ivar];
-   else *fgLogger << kFATAL << "You asked for Max of the event sample in node for variable "
-                  << ivar << " that is out of range" << Endl;
+   else Log() << kFATAL << "You asked for Max of the event sample in node for variable "
+              << ivar << " that is out of range" << Endl;
    return 9999;
 }
 
@@ -428,7 +421,7 @@ void TMVA::DecisionTreeNode::SetSampleMax(UInt_t ivar, Float_t xmax){
    // set the maximum of variable ivar from the training sample
    // that pass/end up in this node
    if( ! fTrainInfo ) return;
-   if ( ivar >= fTrainInfo->fSampleMax.size() ) 
+   if ( ivar >= fTrainInfo->fSampleMax.size() )
       fTrainInfo->fSampleMax.resize(ivar+1);
    fTrainInfo->fSampleMax[ivar]=xmax;
 }
@@ -452,10 +445,10 @@ void TMVA::DecisionTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_C
    }
    gTools().ReadAttr(node, "IVar",  fSelector               );
    gTools().ReadAttr(node, "Cut",   fCutValue               );
-   gTools().ReadAttr(node, "cType", fCutType                );               
+   gTools().ReadAttr(node, "cType", fCutType                );
    if (gTools().HasAttr(node,"res")) gTools().ReadAttr(node, "res",   fResponse);
    if (gTools().HasAttr(node,"rms")) gTools().ReadAttr(node, "rms",   fRMS);
-   //   else { 
+   //   else {
    if( gTools().HasAttr(node, "purity") ) {
       gTools().ReadAttr(node, "purity",fPurity );
    } else {
@@ -473,7 +466,7 @@ void TMVA::DecisionTreeNode::AddAttributesToNode(void* node) const
 {
    // add attribute to xml
    gTools().AddAttr(node, "NCoef", GetNFisherCoeff());
-   for (Int_t i=0; i< (Int_t) this->GetNFisherCoeff(); i++) 
+   for (Int_t i=0; i< (Int_t) this->GetNFisherCoeff(); i++)
       gTools().AddAttr(node, Form("fC%d",i),  this->GetFisherCoeff(i));
 
    gTools().AddAttr(node, "IVar",  GetSelector());
@@ -494,8 +487,8 @@ void TMVA::DecisionTreeNode::AddAttributesToNode(void* node) const
 void  TMVA::DecisionTreeNode::SetFisherCoeff(Int_t ivar, Double_t coeff)
 {
    // set fisher coefficients
-   if ((Int_t) fFisherCoeff.size()<ivar+1) fFisherCoeff.resize(ivar+1) ; 
-   fFisherCoeff[ivar]=coeff;      
+   if ((Int_t) fFisherCoeff.size()<ivar+1) fFisherCoeff.resize(ivar+1) ;
+   fFisherCoeff[ivar]=coeff;
 }
 
 //_______________________________________________________________________
@@ -512,4 +505,13 @@ void TMVA::DecisionTreeNode::ReadContent( std::stringstream& /*s*/ )
    // reading attributes from tree node  (well, was used in BinarySearchTree,
    // and somehow I guess someone programmed it such that we need this in
    // this tree too, although we don't..)
+}
+//_______________________________________________________________________
+TMVA::MsgLogger& TMVA::DecisionTreeNode::Log() {
+#if __cplusplus > 199711L
+  thread_local MsgLogger logger("DecisionTreeNode");    // static because there is a huge number of nodes...
+#else
+  static MsgLogger logger("DecisionTreeNode");    // static because there is a huge number of nodes...
+#endif
+  return logger;
 }

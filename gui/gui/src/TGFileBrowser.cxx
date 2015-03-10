@@ -1101,6 +1101,8 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
       itm = parent;
    }
    dirname = gSystem->ExpandPathName(dirname.Data());
+#ifdef R__WIN32
+   // only handle .lnk files on Windows
    while (dirname.Contains(".lnk")) {
       Ssiz_t idx = dirname.Index(".lnk") + 4;
       TString resolved = dirname;
@@ -1108,6 +1110,7 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
       resolved = gSystem->ExpandPathName(resolved.Data());
       dirname = resolved.Append(dirname.Remove(0, idx));
    }
+#endif
    return dirname;
 }
 

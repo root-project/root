@@ -170,7 +170,7 @@ public:
    Bool_t             operator!=(const TIter &aIter) const {
       return !(*this == aIter);
    }
-   TObject           *operator*() const { return *(*fIterator); }
+   TObject           *operator*() const { return fIterator ? *(*fIterator): nullptr; }
    TIter             &Begin();
    static TIter       End();
 

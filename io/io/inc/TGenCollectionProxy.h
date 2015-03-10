@@ -33,7 +33,10 @@
 #include "TCollectionProxyInfo.h"
 #endif
 
-#include <typeinfo>
+#ifndef ROOT_Rtypeinfo
+#include "Rtypeinfo.h"
+#endif
+
 #include <string>
 #include <map>
 #ifndef __CINT__

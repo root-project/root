@@ -371,6 +371,7 @@
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
+#   define R__NULLPTR
 #   if _MSC_VER >= 1400
 #     define DONTNEED_VSNPRINTF
 #   endif

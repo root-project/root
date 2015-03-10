@@ -54,14 +54,14 @@
 </ul>
 <pre>
 
-    Example:   Interval(.5,1.,6) 
+    Example:   Interval(.5,1.,6)
 
-             [ min                           max ]                       
+             [ min                           max ]
          ------------------------------------------------------------
                 |     |     |     |     |     |
-               .5    .6    .7    .8    .9    1.0            
- 
-         bin    0     1     2     3     4     5  
+               .5    .6    .7    .8    .9    1.0
+
+         bin    0     1     2     3     4     5
 
 
 </pre>
@@ -75,16 +75,12 @@ End_Html */
 
 ClassImp(TMVA::Interval)
 
-TMVA::MsgLogger* TMVA::Interval::fgLogger = 0;
-
 //_______________________________________________________________________
-TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) : 
+TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) :
    fMin(min),
    fMax(max),
    fNbins(nbins)
 {
-   if (!fgLogger) fgLogger = new MsgLogger("Interval");
-
    // defines minimum and maximum of an interval
    // when nbins > 0, interval describes a discrete distribution (equally distributed in the interval)
    // when nbins == 0, interval describes a continous interval
@@ -105,7 +101,6 @@ TMVA::Interval::Interval( const Interval& other ) :
    fMax  ( other.fMax ),
    fNbins( other.fNbins )
 {
-   if (!fgLogger) fgLogger = new MsgLogger("Interval");
 }
 
 //_______________________________________________________________________
@@ -117,9 +112,9 @@ TMVA::Interval::~Interval()
 //_______________________________________________________________________
 Double_t TMVA::Interval::GetElement( Int_t bin ) const
 {
-   // calculates the value of the "number" bin in a discrete interval. 
+   // calculates the value of the "number" bin in a discrete interval.
    // Parameters:
-   //        Double_t position 
+   //        Double_t position
    //
    if (fNbins <= 0) {
       Log() << kFATAL << "GetElement only defined for discrete value Intervals" << Endl;
@@ -135,7 +130,7 @@ Double_t TMVA::Interval::GetElement( Int_t bin ) const
 //_______________________________________________________________________
 Double_t TMVA::Interval::GetStepSize( Int_t iBin )  const
 {
-   // retuns the step size between the numbers of a "discrete Interval" 
+   // retuns the step size between the numbers of a "discrete Interval"
    if (fNbins <= 0) {
       Log() << kFATAL << "GetElement only defined for discrete value Intervals" << Endl;
    }
@@ -153,18 +148,27 @@ Double_t TMVA::Interval::GetRndm( TRandom3& rnd )  const
    return rnd.Rndm()*(fMax - fMin) + fMin;
 }
 
-Double_t TMVA::Interval::GetWidth() const 
-{ 
-   return fMax - fMin; 
+Double_t TMVA::Interval::GetWidth() const
+{
+   return fMax - fMin;
 }
-Double_t TMVA::Interval::GetMean()  const 
-{ 
-   return (fMax + fMin)/2; 
+Double_t TMVA::Interval::GetMean()  const
+{
+   return (fMax + fMin)/2;
 }
 
-void TMVA::Interval::Print(std::ostream &os) const 
+void TMVA::Interval::Print(std::ostream &os) const
 {
    for (Int_t i=0; i<GetNbins(); i++){
       os << "| " << GetElement(i)<<" |" ;
-   }  
+   }
+}
+
+TMVA::MsgLogger& TMVA::Interval::Log() const {
+#if __cplusplus > 199711L
+  thread_local MsgLogger logger("Interval");   // message logger
+#else
+  static MsgLogger logger("Interval");   // message logger
+#endif
+  return logger;
 }

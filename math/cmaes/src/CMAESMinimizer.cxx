@@ -554,25 +554,21 @@ namespace ROOT
     const double* TCMAESMinimizer::Errors() const
     {
       fErrors.clear();
-      dVec vgdiag;
+      dVec verrors;
       if (fWithLinearScaling)
 	{
 	  if (fWithBounds)
-	    {
-	      vgdiag = fCMAparams_lb.get_gp().pheno(dVec(fCMAsols.sigma()*fCMAsols.cov_ref().diagonal()));
-	    }
-	  else
-	    {
-	      vgdiag = fCMAparams_l.get_gp().pheno(dVec(fCMAsols.sigma()*fCMAsols.cov_ref().diagonal()));
-	    }
+	    verrors = fCMAsols.errors(fCMAparams_lb);
+	  else verrors = fCMAsols.errors(fCMAparams_l);
 	}
-      else if (fWithBounds)
+      else
 	{
-	  vgdiag = fCMAparams_b.get_gp().pheno(dVec(fCMAsols.sigma()*fCMAsols.cov_ref().diagonal()));
+	  if (fWithBounds)
+	    verrors = fCMAsols.errors(fCMAparams_b);
+	  else verrors = fCMAsols.errors(fCMAparams);
 	}
-      else vgdiag = fCMAsols.sigma()*fCMAsols.cov_ref().diagonal();
       for (int i=0;i<(int)fDim;i++)
-	fErrors.push_back(std::sqrt(std::abs(vgdiag(i)))); // abs for numerical errors that bring the sqrt below 0.
+	fErrors.push_back(verrors(i));
       return &fErrors.front();
     }
     
@@ -701,7 +697,7 @@ namespace ROOT
 	    }
 	}
       
-      for (int s=0;s<nstep;s++)
+      for (int s=0;s<(int)nstep;s++)
 	{
 	  x[s] = result[s].first;
 	  y[s] = result[s].second;

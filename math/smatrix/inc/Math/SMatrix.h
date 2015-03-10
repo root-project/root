@@ -97,6 +97,7 @@ namespace Math {
 template <class T, unsigned int D> class SVector;
 
 struct SMatrixIdentity { };
+struct SMatrixNoInit { };
 
 //__________________________________________________________________________
 /**
@@ -149,6 +150,11 @@ public:
    */
    SMatrix();
    ///
+  /**
+       construct from without initialization
+   */
+   inline SMatrix( SMatrixNoInit ){}
+
    /**
        construct from an identity matrix
    */

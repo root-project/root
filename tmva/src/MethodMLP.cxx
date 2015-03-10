@@ -85,10 +85,10 @@ TMVA::MethodMLP::MethodMLP( const TString& jobName,
      fSamplingFraction(1.0), fSamplingEpoch(0.0), fSamplingWeight(0.0),
      fSamplingTraining(false), fSamplingTesting(false),
      fLastAlpha(0.0), fTau(0.),
-     fResetStep(0), fLearnRate(0.0), fDecayRate(0.0),     
+     fResetStep(0), fLearnRate(0.0), fDecayRate(0.0),
      fBPMode(kSequential), fBpModeS("None"),
      fBatchSize(0), fTestRate(0), fEpochMon(false),
-     fGA_nsteps(0), fGA_preCalc(0), fGA_SC_steps(0), 
+     fGA_nsteps(0), fGA_preCalc(0), fGA_SC_steps(0),
      fGA_SC_rate(0), fGA_SC_factor(0.0),
      fDeviationsFromTargets(0),
      fWeightRange     (1.0)
@@ -107,10 +107,10 @@ TMVA::MethodMLP::MethodMLP( DataSetInfo& theData,
      fSamplingFraction(1.0), fSamplingEpoch(0.0), fSamplingWeight(0.0),
      fSamplingTraining(false), fSamplingTesting(false),
      fLastAlpha(0.0), fTau(0.),
-     fResetStep(0), fLearnRate(0.0), fDecayRate(0.0),     
+     fResetStep(0), fLearnRate(0.0), fDecayRate(0.0),
      fBPMode(kSequential), fBpModeS("None"),
      fBatchSize(0), fTestRate(0), fEpochMon(false),
-     fGA_nsteps(0), fGA_preCalc(0), fGA_SC_steps(0), 
+     fGA_nsteps(0), fGA_preCalc(0), fGA_SC_steps(0),
      fGA_SC_rate(0), fGA_SC_factor(0.0),
      fDeviationsFromTargets(0),
      fWeightRange     (1.0)
@@ -221,13 +221,13 @@ void TMVA::MethodMLP::ProcessOptions()
    // process user options
    MethodANNBase::ProcessOptions();
 
-   
+
    if (IgnoreEventsWithNegWeightsInTraining()) {
-      Log() << kINFO 
+      Log() << kINFO
             << "Will ignore negative events in training!"
             << Endl;
    }
-   
+
 
    if      (fTrainMethodS == "BP"  ) fTrainingMethod = kBP;
    else if (fTrainMethodS == "BFGS") fTrainingMethod = kBFGS;
@@ -301,8 +301,8 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
    for (Int_t i = 0; i < nEvents; i++) {
 
       const Event* ev = GetEvent(i);
-      
-      if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining() 
+
+      if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining()
           &&  (saveType == Types::kTraining)){
          continue;
       }
@@ -419,7 +419,7 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
 
    Int_t nEvents=GetNEvents();
    Int_t nSynapses=fSynapses->GetEntriesFast();
-   if (nSynapses>nEvents) 
+   if (nSynapses>nEvents)
       Log()<<kWARNING<<"ANN too complicated: #events="<<nEvents<<"\t#synapses="<<nSynapses<<Endl;
 
 #ifdef MethodMLP_UseMinuit__
@@ -661,7 +661,7 @@ void TMVA::MethodMLP::ComputeDEDw()
    for (Int_t i=0;i<nEvents;i++) {
 
       const Event* ev = GetEvent(i);
-       if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining() 
+       if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining()
           &&  (Data()->GetCurrentType() == Types::kTraining)){
          --nPosEvents;
          continue;
@@ -810,7 +810,7 @@ Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer,
 
    SetDirWeights( Origin, Dir, alpha2 );
    Double_t err2 = GetError();
-   //Double_t err2 = err1; 
+   //Double_t err2 = err1;
    Double_t err3 = err2;
    Bool_t bingo = kFALSE;
 
@@ -918,7 +918,7 @@ Double_t TMVA::MethodMLP::GetError()
    for (Int_t i=0;i<nEvents;i++) {
       const Event* ev = GetEvent(i);
 
-       if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining() 
+       if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining()
           &&  (Data()->GetCurrentType() == Types::kTraining)){
          continue;
       }
@@ -1089,11 +1089,11 @@ void TMVA::MethodMLP::TrainOneEpoch()
    for (Int_t i = 0; i < nEvents; i++) {
 
       const Event * ev = GetEvent(index[i]);
-      if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining() 
+      if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining()
           &&  (Data()->GetCurrentType() == Types::kTraining)){
          continue;
       }
-      
+
       TrainOneEvent(index[i]);
 
       // do adjustments if in batch mode
@@ -1146,7 +1146,7 @@ void TMVA::MethodMLP::DecaySynapseWeights(Bool_t lateEpoch)
    TSynapse* synapse;
    Int_t numSynapses = fSynapses->GetEntriesFast();
    for (Int_t i = 0; i < numSynapses; i++) {
-      synapse = (TSynapse*)fSynapses->At(i);      
+      synapse = (TSynapse*)fSynapses->At(i);
       if (lateEpoch) synapse->DecayLearningRate(TMath::Sqrt(fDecayRate)); // In order to lower the learning rate even more, we need to apply sqrt instead of square.
       else           synapse->DecayLearningRate(fDecayRate);
    }
@@ -1160,13 +1160,13 @@ void TMVA::MethodMLP::TrainOneEventFast(Int_t ievt, Float_t*& branchVar, Int_t& 
    GetEvent(ievt);
 
    // as soon as we know how to get event weights, get that here
-   
+
    // note: the normalization of event weights will affect the choice
    // of learning rate, one will have to experiment to get the right value.
    // in general, if the "average" event weight is 1, the learning rate
    // should be good if set around 0.02 (a good value if all event weights are 1)
    Double_t eventWeight = 1.0;
-   
+
    // get the desired output of this event
    Double_t desired;
    if (type == 0) desired = fOutput->GetMin();  // background //zjh
@@ -1175,7 +1175,7 @@ void TMVA::MethodMLP::TrainOneEventFast(Int_t ievt, Float_t*& branchVar, Int_t& 
    // force the value for each input neuron
    Double_t x;
    TNeuron* neuron;
-   
+
    for (UInt_t j = 0; j < GetNvar(); j++) {
       x = branchVar[j];
       if (IsNormalised()) x = gTools().NormVariable( x, GetXmin( j ), GetXmax( j ) );
@@ -1260,7 +1260,7 @@ void TMVA::MethodMLP::CalculateNeuronDeltas()
    for (Int_t i = numLayers-1; i >= 0; i--) {
       curLayer = (TObjArray*)fNetwork->At(i);
       numNeurons = curLayer->GetEntriesFast();
-  
+
       for (Int_t j = 0; j < numNeurons; j++) {
          neuron = (TNeuron*) curLayer->At(j);
          neuron->CalculateDelta();
@@ -1498,7 +1498,7 @@ Double_t TMVA::MethodMLP::GetMvaValue( Double_t* errLower, Double_t* errUpper )
      variance=0;
    }
    variance=sqrt(variance);
- 
+
    //upper
    MvaUpper=fOutput->Eval(median+variance);
    if(errUpper)
@@ -1583,8 +1583,13 @@ void TMVA::MethodMLP::IFCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t*
    ((MethodMLP*)GetThisPtr())->FCN( npars, grad, f, fitPars, iflag );
 }
 
+#if __cplusplus > 199711L
+thread_local Int_t  nc   = 0;
+thread_local double minf = 1000000;
+#else
 static Int_t  nc   = 0;
 static double minf = 1000000;
+#endif
 
 void TMVA::MethodMLP::FCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* fitPars, Int_t iflag )
 {

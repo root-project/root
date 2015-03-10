@@ -295,7 +295,10 @@ void TXMLFile::InitXmlFile(Bool_t create)
       ReadFromFile();
    }
 
-   gROOT->GetListOfFiles()->Add(this);
+   {
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfFiles()->Add(this);
+   }
    cd();
 
    fNProcessIDs = 0;
@@ -358,6 +361,7 @@ void TXMLFile::Close(Option_t *option)
    }
    pidDeleted.Delete();
 
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfFiles()->Remove(this);
 }
 

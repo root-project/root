@@ -109,6 +109,8 @@ protected:
 
    TString  fDataSet;         // Name of the dataset being processed (for dataset-driven runs)
 
+   TList      *fInput;        // Input list
+
    TVirtualPacketizer(TList *input, TProofProgressStatus *st = 0);
    TVirtualPacketizer(const TVirtualPacketizer &);  // no implementation, will generate
    void operator=(const TVirtualPacketizer &);      // error on accidental usage

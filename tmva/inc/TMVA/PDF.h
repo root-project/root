@@ -205,7 +205,10 @@ namespace TMVA {
       MsgLogger&               Log() const { return *fLogger; }    
 
       // static pointer to this object
-      static PDF*              fgThisPDF;             // this PDF pointer 
+      // This is a workaround for OSx where static thread_local data members are
+      // not supported. The C++ solution would indeed be the following:
+//      static_ thread_local PDF* fgThisPDF;             // this PDF pointer 
+      static PDF*& GetThisPdfThreadLocal(){thread_local PDF *fgThisPDF(nullptr); return fgThisPDF; };
       static PDF*              ThisPDF( void ); 
 
       // external auxiliary functions 

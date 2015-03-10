@@ -100,8 +100,6 @@
 
 extern "C" {
    extern void Gl_setwidth(int width);
-   extern int G__get_security_error();
-   extern int G__genericerror(const char* msg);
    void *_ReturnAddress(void);
 }
 
@@ -432,13 +430,9 @@ namespace {
                ((TWinNTSystem*)gSystem)->DispatchSignals(kSigInterrupt);
             }
             else {
-               if (!G__get_security_error()) {
-                  G__genericerror("\n *** Break *** keyboard interrupt");
-               } else {
-                  Break("TInterruptHandler::Notify", "keyboard interrupt");
-                  if (TROOT::Initialized()) {
-                     gInterpreter->RewindDictionary();
-                  }
+               Break("TInterruptHandler::Notify", "keyboard interrupt");
+               if (TROOT::Initialized()) {
+                  gInterpreter->RewindDictionary();
                }
             }
             return kTRUE;

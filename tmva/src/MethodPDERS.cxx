@@ -87,7 +87,6 @@ namespace TMVA {
    const Bool_t MethodPDERS_UseFindRoot = kFALSE;
 };
 
-TMVA::MethodPDERS* TMVA::MethodPDERS::fgThisPDERS = NULL;
 
 REGISTER_METHOD(PDERS)
 
@@ -185,7 +184,7 @@ void TMVA::MethodPDERS::Init( void )
    fInitialScale    = 0.99;
    fGaussSigma      = 0.1;
    fNormTree        = kFALSE;
-    
+
    fkNNMin      = Int_t(fNEventsMin);
    fkNNMax      = Int_t(fNEventsMax);
 
@@ -207,12 +206,12 @@ TMVA::MethodPDERS::~MethodPDERS( void )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDERS::DeclareOptions() 
+void TMVA::MethodPDERS::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string 
+   // define the options (their key words) that can be set in the option string
    // know options:
    // VolumeRangeMode   <string>  Method to determine volume range
-   //    available values are:        MinMax 
+   //    available values are:        MinMax
    //                                 Unscaled
    //                                 RMS
    //                                 kNN
@@ -235,10 +234,10 @@ void TMVA::MethodPDERS::DeclareOptions()
    //                                 Trim
    //
    // DeltaFrac         <float>   Ratio of #EventsMin/#EventsMax for MinMax and RMS volume range
-   // NEventsMin        <int>     Minimum number of events for adaptive volume range             
+   // NEventsMin        <int>     Minimum number of events for adaptive volume range
    // NEventsMax        <int>     Maximum number of events for adaptive volume range
    // MaxVIterations    <int>     Maximum number of iterations for adaptive volume range
-   // InitialScale      <float>   Initial scale for adaptive volume range           
+   // InitialScale      <float>   Initial scale for adaptive volume range
    // GaussSigma        <float>   Width with respect to the volume size of Gaussian kernel estimator
    DeclareOptionRef(fVolumeRange="Adaptive", "VolumeRangeMode", "Method to determine volume size");
    AddPreDefVal(TString("Unscaled"));
@@ -273,13 +272,13 @@ void TMVA::MethodPDERS::DeclareOptions()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDERS::ProcessOptions() 
+void TMVA::MethodPDERS::ProcessOptions()
 {
    // process the options specified by the user
-   
+
    if (IgnoreEventsWithNegWeightsInTraining()) {
       Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
-            << GetMethodTypeName() 
+            << GetMethodTypeName()
             << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
             << Endl;
    }
@@ -338,13 +337,13 @@ void TMVA::MethodPDERS::Train( void )
    // trainingTree in the weight file, and to rebuild the binary tree in the
    // test phase from scratch
 
-   if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with PDERS; " 
+   if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with PDERS; "
                                << "please remove the option from the configuration string, or "
                                << "use \"!Normalise\""
                                << Endl;
 
    CreateBinarySearchTree( Types::kTraining );
-    
+
    CalcAverages();
    SetVolumeElement();
 
@@ -421,7 +420,7 @@ void TMVA::MethodPDERS::CalcAverages()
       fAverageRMS.clear();
       fBinaryTree->CalcStatistics();
 
-      for (UInt_t ivar=0; ivar<GetNvar(); ivar++) { 
+      for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          if (!DoRegression()){ //why there are separate rms for signal and background?
             Float_t rmsS = fBinaryTree->RMS(Types::kSignal, ivar);
             Float_t rmsB = fBinaryTree->RMS(Types::kBackground, ivar);
@@ -432,7 +431,7 @@ void TMVA::MethodPDERS::CalcAverages()
          }
       }
    }
-}   
+}
 
 //_______________________________________________________________________
 void TMVA::MethodPDERS::CreateBinarySearchTree( Types::ETreeType type )
@@ -470,7 +469,7 @@ void TMVA::MethodPDERS::SetVolumeElement( void ) {
 
    // init relative scales
    fkNNMin      = Int_t(fNEventsMin);
-   fkNNMax      = Int_t(fNEventsMax);   
+   fkNNMax      = Int_t(fNEventsMax);
 
    if (fDelta) delete fDelta;
    if (fShift) delete fShift;
@@ -479,7 +478,7 @@ void TMVA::MethodPDERS::SetVolumeElement( void ) {
 
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       switch (fVRangeMode) {
-         
+
       case kRMS:
       case kkNN:
       case kAdaptive:
@@ -774,7 +773,7 @@ Double_t TMVA::MethodPDERS::CRScalc( const Event& e )
    }
 
    Volume *volume = new Volume( lb, ub );
-   
+
    GetSample( e, events, volume );
    Double_t count = CKernelEstimate( e, events, *volume );
    delete volume;
@@ -944,18 +943,22 @@ Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
 
    return 0;
 }
-      
+
 //_______________________________________________________________________
-Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf) 
+Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
 {
-   // Calculating the normalization factor only once (might need a reset at some point. 
+   // Calculating the normalization factor only once (might need a reset at some point.
    // Can the method be restarted with different params?)
 
-   // Caching jammed to disable function. 
+   // Caching jammed to disable function.
    // It's not really useful afterall, badly implemented and untested :-)
-   static Double_t ret = 1.0; 
-   
-   if (ret != 0.0) return ret*pdf; 
+#if __cplusplus > 199711L
+   thread_local Double_t ret = 1.0;
+#else
+   static Double_t ret = 1.0;
+#endif
+
+   if (ret != 0.0) return ret*pdf;
 
    // We first normalize by the volume of the hypersphere.
    switch (fKernelEstimator) {
@@ -997,7 +1000,7 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
 //_______________________________________________________________________
 Double_t TMVA::MethodPDERS::GetNormalizedDistance ( const Event &base_event,
                                                     const BinarySearchTreeNode &sample_event,
-                                                    Double_t *dim_normalization) 
+                                                    Double_t *dim_normalization)
 {
    // We use Euclidian metric here. Might not be best or most efficient.
    Double_t ret=0;
@@ -1147,16 +1150,16 @@ void TMVA::MethodPDERS::ReadWeightsFromStream( TFile& /*rf*/ )
 }
 
 //_______________________________________________________________________
-TMVA::MethodPDERS* TMVA::MethodPDERS::ThisPDERS( void ) 
-{ 
+TMVA::MethodPDERS* TMVA::MethodPDERS::ThisPDERS( void )
+{
    // static pointer to this object
-   return fgThisPDERS; 
+   return GetMethodPDERSThreadLocal();
 }
 //_______________________________________________________________________
-void TMVA::MethodPDERS::UpdateThis( void ) 
+void TMVA::MethodPDERS::UpdateThis( void )
 {
    // update static this pointer
-   fgThisPDERS = this; 
+   GetMethodPDERSThreadLocal() = this;
 }
 
 //_______________________________________________________________________
@@ -1172,7 +1175,7 @@ void TMVA::MethodPDERS::GetHelpMessage() const
 {
    // get help message text
    //
-   // typical length of text line: 
+   // typical length of text line:
    //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;

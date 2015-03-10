@@ -2299,6 +2299,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       }
       switch(fSTLtype) {
          case ROOT::kSTLset:
+         case ROOT::kSTLunorderedset:
          case ROOT::kSTLmultiset:
          case ROOT::kSTLmap:
          case ROOT::kSTLmultimap:
@@ -3774,6 +3775,7 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    Int_t nbranches = fBranches.GetEntriesFast();
    switch (fSTLtype) {
       case ROOT::kSTLset:
+      case ROOT::kSTLunorderedset:
       case ROOT::kSTLmultiset:
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:

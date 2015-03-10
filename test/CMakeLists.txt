@@ -49,7 +49,7 @@ ROOT_ADD_TEST(test-minexam COMMAND minexam)
 
 #--tstring-------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(tstring tstring.cxx LIBRARIES Core)
-configure_file(tstring.cxx tstring.cxx @COPY_ONLY)
+configure_file(tstring.cxx tstring.cxx COPYONLY)
 ROOT_ADD_TEST(test-tstring COMMAND tstring)
 
 #--tcollex-------------------------------------------------------------------------------------
@@ -112,8 +112,8 @@ ROOT_ADD_TEST(test-stresslinear-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${
 
 #--stressGraphics------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript)
-configure_file(stressGraphics.ref stressGraphics.ref @COPY_ONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat @COPY_ONLY)
+configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
 ROOT_ADD_TEST(test-stressgraphics ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH} COMMAND stressGraphics -b -k FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressgraphics-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
               FAILREGEX "FAILED|Error in" DEPENDS test-stressgraphics)
@@ -127,7 +127,7 @@ ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${ROOT_root_CMD} -b -q -l
 #--stressGUI---------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageGui)
 #---Cannot run GUI test in batch mode--------------------
-#configure_file(stressGUI.ref stressGUI.ref @COPY_ONLY)
+#configure_file(stressGUI.ref stressGUI.ref COPYONLY)
 #ROOT_ADD_TEST(test-stressgui COMMAND stressGUI -ref FAILREGEX "FAILED|Error in")
 
 #--stressSpectrum----------------------------------------------------------------------------------
@@ -268,3 +268,7 @@ endif()
 if(ROOT_davix_FOUND)
   ROOT_ADD_TEST(test-stressIOPlugins-http COMMAND stressIOPlugins http FAILREGEX "FAILED|Error in")
 endif()
+
+#--TestTformula------------------------------------------------------------------------------------
+ROOT_EXECUTABLE(TFormulaTests TFormulaTests.cxx LIBRARIES Hist RIO)
+ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")

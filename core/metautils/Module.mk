@@ -54,6 +54,7 @@ INCLUDEFILES += $(METAUTILSDEP)
 STLDICTS =
 STLDICTS += lib/libvectorDict.$(SOEXT)
 STLDICTS += lib/liblistDict.$(SOEXT)
+STLDICTS += lib/libforward_listDict.$(SOEXT)
 STLDICTS += lib/libdequeDict.$(SOEXT)
 STLDICTS += lib/libmapDict.$(SOEXT)
 STLDICTS += lib/libmap2Dict.$(SOEXT)
@@ -91,7 +92,7 @@ STLDICTSMAPS = $(STLDICTS:.$(SOEXT)=.rootmap)
 # used in the main Makefile
 ALLLIBS    += $(STLDICTS)
 ALLMAPS    += $(STLDICTSMAPS)
-   
+
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 

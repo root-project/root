@@ -46,6 +46,9 @@
     ![COLZ0 plot example](colzo.png "COLZ0 plot example")
 - The parameter `gStyle->SetHistTopMargin()` was ignored when plotting a 2D histogram
   using the option `E`. This can be seen plotting the histogram with `"LEGO E"`.
+- GetObjectInfo did not display the right value form "Sum" for histograms plotted
+  with option SAME on top of an histogram displayed with a subrange. This was
+  reported in ROOT-7124.
 
 ### TGraph2D
 

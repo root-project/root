@@ -396,7 +396,7 @@ namespace {
       }
       if ( !PyErr_Occurred() ) {
          PyObject* str = PyObject_Str( dummy );
-         if ( str && PyString_Check( str ) )
+         if ( str && PyROOT_PyUnicode_Check( str ) )
             PyErr_Format( PyExc_ValueError, "unknown object %s", PyBytes_AS_STRING( str ) );
          else
             PyErr_Format( PyExc_ValueError, "unknown object at %p", (void*)dummy );

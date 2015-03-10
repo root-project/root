@@ -232,7 +232,7 @@ const char *TDataType::AsString(void *buf) const
    // Return string containing value in buffer formatted according to
    // the basic data type. The result needs to be used or copied immediately.
 
-   static TString line(81);
+   thread_local TString line(81);
    const char *name;
 
    if (fInfo) {

@@ -87,9 +87,14 @@ TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
    fContextIdx(rhs.fContextIdx),
    fIter(rhs.fIter),
    fTitle(rhs.fTitle),
-   fTemplateSpecIter(rhs.fTemplateSpecIter ? new SpecIterator(*rhs.fTemplateSpecIter) : 0),
+   fTemplateSpecIter(nullptr),
    fSingleDecl(rhs.fSingleDecl)
 {
+   if (rhs.fTemplateSpecIter) {
+      // The SpecIterator query the decl.
+      R__LOCKGUARD(gInterpreterMutex);
+      fTemplateSpecIter = new SpecIterator(*rhs.fTemplateSpecIter);
+   }
 }
 
 
@@ -98,6 +103,8 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
    : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
      fTemplateSpecIter(0), fSingleDecl(0)
 {
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (!ci || !ci->IsValid()) {
       return;
    }
@@ -163,7 +170,10 @@ void TClingMethodInfo::CreateSignature(TString &signature) const
       signature += ")";
       return;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
    TClingMethodArgInfo arg(fInterp, this);
+
    int idx = 0;
    while (arg.Next()) {
       if (idx) {
@@ -199,6 +209,7 @@ void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt 
    if (!IsValid()) {
       return 0;
    }
+   R__LOCKGUARD(gInterpreterMutex);
    TClingCallFunc cf(fInterp,normCtxt);
    cf.SetFunc(this);
    return cf.InterfaceMethod();
@@ -209,6 +220,7 @@ bool TClingMethodInfo::IsValid() const
    if (fSingleDecl) return fSingleDecl;
    else if (fTemplateSpecIter) {
       // Could trigger deserialization of decls.
+      R__LOCKGUARD(gInterpreterMutex);
       cling::Interpreter::PushTransactionRAII RAII(fInterp);
       return *(*fTemplateSpecIter);
    }
@@ -278,6 +290,7 @@ int TClingMethodInfo::InternalNext()
          }
          clang::DeclContext *dc = fContexts[fContextIdx];
          // Could trigger deserialization of decls.
+
          cling::Interpreter::PushTransactionRAII RAII(fInterp);
          fIter = dc->decls_begin();
          if (*fIter) {
@@ -430,7 +443,7 @@ long TClingMethodInfo::ExtraProperty() const
 
 TClingTypeInfo *TClingMethodInfo::Type() const
 {
-   static TClingTypeInfo ti(fInterp);
+   thread_local TClingTypeInfo ti(fInterp);
    if (!IsValid()) {
       ti.Init(clang::QualType());
       return &ti;
@@ -476,7 +489,7 @@ const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCt
    if (!IsValid()) {
       return 0;
    }
-   static std::string buf;
+   thread_local std::string buf;
    buf.clear();
    buf += Type()->Name();
    buf += ' ';
@@ -529,7 +542,7 @@ const char *TClingMethodInfo::Name(const ROOT::TMetaUtils::TNormalizedCtxt &norm
    if (!IsValid()) {
       return 0;
    }
-   static std::string buf;
+   thread_local std::string buf;
    ((TCling*)gCling)->GetFunctionName(GetMethodDecl(),buf);
    return buf.c_str();
 }
