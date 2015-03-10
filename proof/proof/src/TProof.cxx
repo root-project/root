@@ -1492,7 +1492,7 @@ Int_t TProof::AddWorkers(TList *workerList)
    else {
       // Not in Dynamic Workers mode
       PDB(kGlobal, 3)
-         Info("AddWorkers", "Will invoke GoParallel()");
+         Info("AddWorkers", "will invoke GoParallel()");
       GoParallel(nwrk, kFALSE, 0);
    }
 
@@ -1501,13 +1501,13 @@ Int_t TProof::AddWorkers(TList *workerList)
 
    // Update list of current workers
    PDB(kGlobal, 3)
-      Info("AddWorkers", "Will invoke SaveWorkerInfo()");
+      Info("AddWorkers", "will invoke SaveWorkerInfo()");
    SaveWorkerInfo();
 
    // Inform the client that the number of workers has changed
    if (fDynamicStartup && gProofServ) {
       PDB(kGlobal, 3)
-         Info("AddWorkers", "Will invoke SendParallel()");
+         Info("AddWorkers", "will invoke SendParallel()");
       gProofServ->SendParallel(kTRUE);
 
       if (goMoreParallel && fPlayer) {
@@ -1515,8 +1515,10 @@ Int_t TProof::AddWorkers(TList *workerList)
          // should invoke a special player's Process() to set only added workers
          // to the proper state
          PDB(kGlobal, 3)
-            Info("AddWorkers", "Will send the PROCESS message to selected workers");
+            Info("AddWorkers", "will send the PROCESS message to selected workers");
          fPlayer->JoinProcess(addedWorkers);
+         // Update merger counters (new workers are not yet active)
+         fMergePrg.SetNWrks(fActiveSlaves->GetSize() + addedWorkers->GetSize());
       }
    }
 
