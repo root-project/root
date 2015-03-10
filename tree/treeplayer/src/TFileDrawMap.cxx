@@ -370,6 +370,8 @@ char *TFileDrawMap::GetObjectInfo(Int_t px, Int_t py) const
 //   Displays the keys info in the file corresponding to cursor position px,py
 //   in the canvas status bar info panel
 
+   // Thread safety: this solution is not elegant, but given the action performed
+   // by the method, this construct can be considered thred-safe.
    static TString info;
    GetObjectInfoDir(fFile, px, py, info);
    return (char*)info.Data();
