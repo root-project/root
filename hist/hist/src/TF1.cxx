@@ -3180,6 +3180,9 @@ void TF1::Streamer(TBuffer &b)
          fChisquare = fold.fChisquare;
          fMaximum = fold.fMaximum;
          fMinimum = fold.fMinimum;
+         fXmin = fold.fXmin;
+         fXmax = fold.fXmax; 
+
          if (fold.fParErrors) fParErrors = std::vector<Double_t>(fold.fParErrors, fold.fParErrors+fNpar);
          if (fold.fParMin) fParMin = std::vector<Double_t>(fold.fParMin, fold.fParMin+fNpar);
          if (fold.fParMax) fParMax = std::vector<Double_t>(fold.fParMax, fold.fParMax+fNpar);
