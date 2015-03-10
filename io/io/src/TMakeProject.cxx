@@ -392,7 +392,9 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, TStreamerElem
    // we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
 
    if (element->IsBase()) {
-      GenerateMissingStreamerInfos(extrainfos,element->GetClassPointer()->GetName());
+      TClass *elemCl = element->GetClassPointer();
+      if (elemCl) GenerateMissingStreamerInfos(extrainfos,elemCl->GetName());
+      else GenerateMissingStreamerInfos(extrainfos,element->GetTypeName());
    } else {
       GenerateMissingStreamerInfos(extrainfos,element->GetTypeName());
    }
