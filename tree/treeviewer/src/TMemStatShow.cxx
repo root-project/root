@@ -99,8 +99,6 @@
 #include "TGToolTip.h"
 #include "TRootCanvas.h"
 
-   static MemInfo_t minfo;
-
    TTree     *TMemStatShow::fgT = 0;         //TMemStat Tree
    TH1D      *TMemStatShow::fgHalloc = 0;    //histogram with allocations
    TH1D      *TMemStatShow::fgHfree = 0;     //histogram with frees
@@ -195,6 +193,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    if (update < 0.001) printf("Warning update parameter is very small, processing may be slow\n");
 
    //autorestrict the amount of data to analyze
+   MemInfo_t minfo;
    gSystem->GetMemInfo(&minfo);
    Int_t nfree = minfo.fMemTotal - minfo.fMemUsed;  //in Mbytes
    printf("TMemStat::Show info: you are running on a machine with %d free MBytes of memory\n",nfree);

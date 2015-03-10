@@ -864,7 +864,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
    TFormLeafInfo *maininfo = 0;
    TFormLeafInfo *previnfo = 0;
    Bool_t unwindCollection = kFALSE;
-   static TClassRef stdStringClass = TClass::GetClass("string");
+   const static TClassRef stdStringClass = TClass::GetClass("string");
 
    if (leaf==0) {
       TNamed *names = (TNamed*)fLeafNames.UncheckedAt(code);
