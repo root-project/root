@@ -2762,6 +2762,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
    Int_t nact = 0;
    Long_t sto = -1;
    Int_t nsto = 60;
+   Int_t pollint = gEnv->GetValue("Proof.DynamicStartupPollInt", (Int_t) kPROOF_DynWrkPollInt_s);
    mon->ResetInterrupt();
    while ((nact = mon->GetActive(sto)) && (nto < 0 || nto > 0)) {
 
@@ -2788,7 +2789,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
       // Preemptive poll for new workers on the master only in Dynamic Mode and only
       // during processing (TODO: should work on Top Master only)
       if (TestBit(TProof::kIsMaster) && !IsIdle() && fDynamicStartup && !fIsPollingWorkers &&
-         ((fLastPollWorkers_s == -1) || (time(0)-fLastPollWorkers_s >= kPROOF_DynWrkPollInt_s))) {
+         ((fLastPollWorkers_s == -1) || (time(0)-fLastPollWorkers_s >= pollint))) {
          fIsPollingWorkers = kTRUE;
          if (PollForNewWorkers() > 0) DeActivateAsyncInput();
          fLastPollWorkers_s = time(0);
