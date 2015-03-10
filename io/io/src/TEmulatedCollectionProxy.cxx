@@ -149,7 +149,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                fValue = new Value(nam,silent);
                fKey   = new Value(inside[1],silent);
                fVal   = new Value(inside[2],silent);
-               if ( !fValue->IsValid() || !fKey->IsValid() || !fVal->IsValid() ) {
+               if ( !(*fValue).IsValid() || !fKey->IsValid() || !fVal->IsValid() ) {
                   return 0;
                }
                fPointers |= 0 != (fKey->fCase&G__BIT_ISPOINTER);
@@ -172,7 +172,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
             default:
                fValue = new Value(inside[1],silent);
                fVal   = new Value(*fValue);
-               if ( !fValue->IsValid() || !fVal->IsValid() ) {
+               if ( !(*fValue).IsValid() || !fVal->IsValid() ) {
                   return 0;
                }
                if ( 0 == fValDiff )  {
