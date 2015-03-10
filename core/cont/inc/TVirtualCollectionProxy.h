@@ -51,7 +51,8 @@ protected:
 
 public:
    enum EProperty {
-      kIsInitialized = BIT(1),
+      // No longer used
+      // kIsInitialized = BIT(1),
       kIsAssociative = BIT(2),
       kIsEmulated    = BIT(3),
       kNeedDelete    = BIT(4)   // Flag to indicate that this collection that contains directly or indirectly (only via other collection) some pointers that will need explicit deletions.
