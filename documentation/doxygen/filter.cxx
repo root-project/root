@@ -79,6 +79,8 @@ Bool_t  gInClassDef;
 Bool_t  gClass;
 Int_t   gInMacro;
 Int_t   gImageID;
+Int_t   gMacroID;
+
 
 //______________________________________________________________________________
 int main(int argc, char *argv[])
@@ -94,6 +96,7 @@ int main(int argc, char *argv[])
    gClass      = kFALSE;
    gInMacro    = 0;
    gImageID    = 0;
+   gMacroID    = 0;
    if (gFileName.EndsWith(".cxx")) gSource = kTRUE;
    if (gFileName.EndsWith(".h"))   gHeader = kTRUE;
    GetClassName();
@@ -107,6 +110,9 @@ int main(int argc, char *argv[])
 
    // Open the input file name.
    FILE *f = fopen(gFileName.Data(),"r");
+
+   // File for inline macros.
+   FILE *m = 0;
 
    // File header.
    if (gHeader) {
@@ -145,25 +151,51 @@ int main(int argc, char *argv[])
             gLineString.ReplaceAll("end_html","");
          }
 
+         if (gLineString.Index("End_Macro") >= 0) {
+            gLineString.ReplaceAll("End_Macro","");
+            gInMacro = 0;
+            if (m) {
+               fclose(m);
+               m = 0;
+            }
+         }
+
          if (gInMacro) {
             if (gInMacro == 1) {
                if (gLineString.EndsWith(".C\n")) {
                   ExecuteMacro();
                   gInMacro++;
                } else {
+                  m = fopen(TString::Format("%s/macros/%s_%3.3d.C", gOutDir.Data()
+                                                                  , gClassName.Data()
+                                                                  , gMacroID)
+                                                                  , "w");
+                  if (m) fprintf(m,"%s",gLineString.Data());
+                  if (gLineString.BeginsWith("{")) {
+                     gLineString.ReplaceAll("{"
+                                             , TString::Format("\\include %s_%3.3d.C"
+                                             , gClassName.Data()
+                                             , gMacroID));
+                  }
+                  gInMacro++;
                }
             } else {
+               if (m) fprintf(m,"%s",gLineString.Data());
+               if (gLineString.BeginsWith("}")) {
+                  gLineString.ReplaceAll("}"
+                                          , TString::Format("\\image html %s_%3.3d.png"
+                                          , gClassName.Data()
+                                          , gImageID));
+               } else {
+                  gLineString = "\n";
+               }
+               gInMacro++;
             }
          }
 
          if (gLineString.Index("Begin_Macro") >= 0) {
-            gLineString = "";
+            gLineString = "\n";
             gInMacro++;
-         }
-
-         if (gLineString.Index("End_Macro") >= 0) {
-            gLineString.ReplaceAll("End_Macro","");
-            gInMacro = 0;
          }
 
          printf("%s",gLineString.Data());
