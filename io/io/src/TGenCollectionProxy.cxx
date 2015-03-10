@@ -709,7 +709,7 @@ TGenCollectionProxy::~TGenCollectionProxy()
    clearVector(fProxyKept);
    clearVector(fStaged);
 
-   if ( fValue ) delete fValue;
+   if ( fValue ) delete fValue.load();
    if ( fVal   ) delete fVal;
    if ( fKey   ) delete fKey;
 
@@ -740,7 +740,7 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
          return new TGenBitsetProxy(*this);
       }
       case ROOT::kSTLvector: {
-         if (fValue->fKind == (EDataType)kBOOL_t) {
+         if ((*fValue).fKind == (EDataType)kBOOL_t) {
             return new TGenVectorBoolProxy(*this);
          } else {
             return new TGenVectorProxy(*this);
@@ -765,7 +765,6 @@ TGenCollectionProxy *TGenCollectionProxy::Initialize(Bool_t silent) const
    // Proxy initializer
    TGenCollectionProxy* p = const_cast<TGenCollectionProxy*>(this);
    if ( fValue ) return p;
-   const_cast<TGenCollectionProxy*>(this)->fProperties |= kIsInitialized;
    return p->InitializeEx(silent);
 }
 
@@ -833,6 +832,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
       int num = TClassEdit::GetSplit(cl->GetName(),inside,nested);
       if ( num > 1 ) {
          std::string nam;
+         Value* newfValue = fValue;
          if ( inside[0].find("stdext::hash_") != std::string::npos )
             inside[0].replace(3,10,"::");
          if ( inside[0].find("__gnu_cxx::hash_") != std::string::npos )
@@ -854,7 +854,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
             case ROOT::kSTLmultimap:
                nam = "pair<"+inside[1]+","+inside[2];
                nam += (nam[nam.length()-1]=='>') ? " >" : ">";
-               fValue = R__CreateValue(nam, silent);
+               newfValue = R__CreateValue(nam, silent);
 
                fVal   = R__CreateValue(inside[2], silent);
                fKey   = R__CreateValue(inside[1], silent);
@@ -876,9 +876,9 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
                inside[1] = "bool";
                // Intentional fall through
             default:
-               fValue = R__CreateValue(inside[1], silent);
+               newfValue = R__CreateValue(inside[1], silent);
 
-               fVal   = new Value(*fValue);
+               fVal   = new Value(*newfValue);
                if ( 0 == fValDiff ) {
                   fValDiff = fVal->fSize;
                   fValDiff += (slong - fValDiff%slong)%slong;
@@ -891,6 +891,8 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
             fProperties |= kNeedDelete;
          }
          fClass = cl;
+         //fValue must be set last since we use it to indicate that we are initialized
+         fValue = newfValue;
          return this;
       }
       Fatal("TGenCollectionProxy","Components of %s not analysed!",cl->GetName());
@@ -955,7 +957,7 @@ TClass *TGenCollectionProxy::GetValueClass() const
    // Return a pointer to the TClass representing the content.
 
    if (!fValue) Initialize(kFALSE);
-   return fValue ? fValue->fType.GetClass() : 0;
+   return fValue ? (*fValue).fType.GetClass() : 0;
 }
 
 //______________________________________________________________________________
@@ -969,7 +971,7 @@ void TGenCollectionProxy::UpdateValueClass(const TClass *oldValueType, TClass *n
    // might hence a nested dlopen (due to autoloading).
    if (fValue && fValue->fType == oldValueType) {
       // Set pointer to the TClass representing the content.
-      fValue->fType = newValueType;
+      (*fValue).fType = new_Value_type;
    }
 }
 
@@ -979,7 +981,7 @@ EDataType TGenCollectionProxy::GetType() const
    // If the content is a simple numerical value, return its type (see TDataType)
 
    if ( !fValue ) Initialize(kFALSE);
-   return fValue->fKind;
+   return (*fValue).fKind;
 }
 
 //______________________________________________________________________________

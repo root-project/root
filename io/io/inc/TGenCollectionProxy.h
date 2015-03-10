@@ -33,7 +33,13 @@
 #include "TCollectionProxyInfo.h"
 #endif
 
-#include <typeinfo>
+#ifndef ROOT_Rtypeinfo
+#include "Rtypeinfo.h"
+#endif
+
+#if __cplusplus >= 201103L
+#include <atomic>
+#endif
 #include <string>
 #include <map>
 #ifndef __CINT__
@@ -325,7 +331,11 @@ protected:
    Feedfunc_t    fFeed;      // Container accessors: block feed
    Collectfunc_t fCollect;   // Method to collect objects from container
    Method0       fCreateEnv; // Method to allocate an Environment holder.
+#if __cplusplus >= 201103L
+   std::atomic<Value*> fValue;     // Descriptor of the container value type
+#else
    Value*        fValue;     // Descriptor of the container value type
+#endif
    Value*        fVal;       // Descriptor of the Value_type
    Value*        fKey;       // Descriptor of the key_type
    EnvironBase_t*fEnv;       // Address of the currently proxied object

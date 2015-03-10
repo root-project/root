@@ -58,7 +58,7 @@ TGenCollectionStreamer::~TGenCollectionStreamer()
 TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const
 {
    // Virtual copy constructor.
-   if (!fClass) Initialize(kFALSE);
+   if (!fValue) Initialize(kFALSE);
    return new TGenCollectionStreamer(*this);
 }
 
