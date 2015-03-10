@@ -4817,7 +4817,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
          if (pointer==0) {
             printf("NULL\n");
          } else {
-            static TClassRef stringClass("string");
+            const static TClassRef stringClass("string");
             if (fClass == stringClass) {
                std::string *st = (std::string*)(pointer);
                printf("%s\n",st->c_str());
@@ -4979,10 +4979,12 @@ void TStreamerInfo::TagFile(TFile *file)
    // the overloads of TBuffer::TagStreamerInfo.
 
    if (file) {
-      static Bool_t onlyonce = kFALSE;
-      if (!onlyonce) {
+      // If the value of the atomic is kFALSE (equal to expected), change its value
+      // to kTRUE and return true. Leave it as it is otherwise and return false.
+      static std::atomic<Bool_t> onlyonce(kFALSE);
+      Bool_t expected = kFALSE;
+      if (onlyonce.compare_exchange_strong(expected,kTRUE)) {
          Warning("TagFile","This function is deprecated, use TBuffer::TagStreamerInfo instead");
-         onlyonce = kTRUE;
       }
       TArrayC *cindex = file->GetClassIndex();
       Int_t nindex = cindex->GetSize();

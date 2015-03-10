@@ -124,7 +124,7 @@ namespace {
                return kFALSE;
             }
          }
-         static TClassRef stringClass("std::string");
+         const static TClassRef stringClass("std::string");
          if (cl == stringClass || cl == TString::Class()) {
             return kFALSE;
          }
