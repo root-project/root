@@ -53,7 +53,7 @@
 ClassImp(TBufferXML);
 
 
-const char* TBufferXML::fgFloatFmt = "%e";
+std::string TBufferXML::fgFloatFmt = "%e";
 
 //______________________________________________________________________________
 TBufferXML::TBufferXML() :
@@ -1282,9 +1282,9 @@ void TBufferXML::PerformPostProcessing()
          } else return; // can not be something else
          fXML->ShiftToNext(node);
       }
-      
+
       TString str;
-      
+
       if (GetIOVersion()<3) {
          if (nodeuchar==0) return;
          if (nodecharstar!=0)
@@ -1297,7 +1297,7 @@ void TBufferXML::PerformPostProcessing()
             str = fXML->GetAttr(nodestring, xmlio::v);
 	 fXML->UnlinkFreeNode(nodestring);
       }
-      
+
       fXML->NewAttr(elemnode, 0, "str", str);
    } else
    if (elem->GetType()==TStreamerInfo::kTObject) {
@@ -1365,7 +1365,7 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement* elem, XMLNodePoint
       if (!fXML->HasAttr(elemnode,"str")) return;
       TString str = fXML->GetAttr(elemnode, "str");
       fXML->FreeAttr(elemnode, "str");
-      
+
       if (GetIOVersion()<3) {
          Int_t len = str.Length();
          XMLNodePointer_t ucharnode = fXML->NewChild(elemnode, 0, xmlio::UChar,0);
@@ -2916,7 +2916,7 @@ XMLNodePointer_t  TBufferXML::XmlWriteBasic(Float_t value)
    // converts Float_t to string and add xml node to buffer
 
    char buf[200];
-   snprintf(buf, sizeof(buf), fgFloatFmt, value);
+   snprintf(buf, sizeof(buf), fgFloatFmt.c_str(), value);
    return XmlWriteValue(buf, xmlio::Float);
 }
 
@@ -2926,7 +2926,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Double_t value)
    // converts Double_t to string and add xml node to buffer
 
    char buf[1000];
-   snprintf(buf, sizeof(buf), fgFloatFmt, value);
+   snprintf(buf, sizeof(buf), fgFloatFmt.c_str(), value);
    return XmlWriteValue(buf, xmlio::Double);
 }
 
@@ -3200,9 +3200,10 @@ const char* TBufferXML::XmlReadValue(const char* name)
 
 void TBufferXML::SetFloatFormat(const char* fmt)
 {
-   // set printf format for float/double members, default "%e"
+   // Set printf format for float/double members, default "%e"
+   // This method is not thread-safe as it changes a global state.
 
-   if (fmt==0) fmt = "%e";
+   if (!fmt) fgFloatFmt = "%e";
    fgFloatFmt = fmt;
 }
 
@@ -3210,7 +3211,7 @@ const char* TBufferXML::GetFloatFormat()
 {
    // return current printf format for float/double members, default "%e"
 
-   return fgFloatFmt;
+   return fgFloatFmt.c_str();
 }
 
 //______________________________________________________________________________

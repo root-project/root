@@ -28,6 +28,8 @@
 #include "TObjArray.h"
 #endif
 
+#include <string>
+
 
 class TExMap;
 class TVirtualStreamerInfo;
@@ -57,7 +59,7 @@ public:
 
    Int_t             GetIOVersion() const { return fIOVersion; }
    void              SetIOVersion(Int_t v) { fIOVersion = v; }
-   
+
    // suppress class writing/reading
 
    virtual TClass*  ReadClass(const TClass* cl = 0, UInt_t* objTag = 0);
@@ -341,7 +343,7 @@ protected:
    Int_t            fCompressLevel;        //!   compression level and algorithm
    Int_t            fIOVersion;            //!   indicates format of ROOT xml file
 
-   static const char* fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
+   static std::string fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
 ClassDef(TBufferXML,2) //a specialized TBuffer to read/write to XML files
 };
