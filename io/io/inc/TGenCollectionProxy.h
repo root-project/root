@@ -33,6 +33,7 @@
 #include "TCollectionProxyInfo.h"
 #endif
 
+#include <atomic>
 #include <typeinfo>
 #include <string>
 #include <map>
@@ -325,7 +326,7 @@ protected:
    Feedfunc_t    fFeed;      // Container accessors: block feed
    Collectfunc_t fCollect;   // Method to collect objects from container
    Method0       fCreateEnv; // Method to allocate an Environment holder.
-   Value*        fValue;     // Descriptor of the container value type
+   std::atomic<Value*> fValue;     // Descriptor of the container value type
    Value*        fVal;       // Descriptor of the Value_type
    Value*        fKey;       // Descriptor of the key_type
    EnvironBase_t*fEnv;       // Address of the currently proxied object
