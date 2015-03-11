@@ -222,6 +222,39 @@ if(builtin_lzma)
 endif()
 
 
+#---Check for LZ4--------------------------------------------------------------------
+if(NOT builtin_lz4)
+  message(STATUS "Looking for LZ4")
+  find_package(LZ4)
+  if(LZ4_FOUND)
+  else()
+    message(STATUS "LZ4 not found. Switching on builtin_lz4 option")
+    set(builtin_lz4 ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+if(builtin_lz4)
+  set(lz4_version 1.7.5)
+  message(STATUS "Building LZ4 version ${lz4_version} included in ROOT itself")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+    set(LZ4_CFLAGS "-Wno-format-nonliteral")
+  elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
+    set(LZ4_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179")
+  endif()
+  set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
+  ExternalProject_Add(
+    LZ4
+    URL ${CMAKE_SOURCE_DIR}/core/lz4/src/lz4-${lz4_version}.tar.gz
+    URL_MD5 0601f6b8477209d07db33d504feb6ac4
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    CONFIGURE_COMMAND  /bin/sh -c "PREFIX=<INSTALL_DIR> make cmake"
+    BUILD_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> MOREFLAGS=-fPIC make"
+    INSTALL_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> make install"
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
+  set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+endif()
+
+
 #---Check for X11 which is mandatory lib on Unix--------------------------------------
 if(x11)
   message(STATUS "Looking for X11")

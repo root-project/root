@@ -5,6 +5,7 @@
 add_subdirectory(rint)
 add_subdirectory(thread)
 add_subdirectory(multiproc)
+add_subdirectory(lz4)
 if(NOT WIN32)
   add_subdirectory(newdelete)
 endif()
@@ -37,6 +38,7 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:Clib>
                $<TARGET_OBJECTS:Cont>
                $<TARGET_OBJECTS:Lzma>
+               $<TARGET_OBJECTS:Lz4>
                $<TARGET_OBJECTS:Zip>
                $<TARGET_OBJECTS:MetaUtils>
                $<TARGET_OBJECTS:Meta>
@@ -101,8 +103,9 @@ add_subdirectory(utils)
 ROOT_LINKER_LIBRARY(Core
                     $<TARGET_OBJECTS:BaseTROOT>
                     ${objectlibs}
-                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARIES}
-                              ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
+                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${LZ4_LIBRARIES} ${ZLIB_LIBRARIES}
+                              ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
+                    BUILTINS PCRE LZMA LZ4)
 
 if(cling)
   add_dependencies(Core CLING)
