@@ -101,6 +101,7 @@ ROOT_BUILD_OPTION(builtin_glew ON "Built included libGLEW, or use system libGLEW
 ROOT_BUILD_OPTION(builtin_pcre OFF "Built included libpcre, or use system libpcre")
 ROOT_BUILD_OPTION(builtin_zlib OFF "Built included libz, or use system libz")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Built included liblzma, or use system liblzma")
+ROOT_BUILD_OPTION(builtin_lz4 OFF "Built included liblz4, or use system liblz4")
 ROOT_BUILD_OPTION(builtin_davix OFF "Built the Davix library internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_gsl OFF "Built the GSL library internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_cfitsio OFF "Built the FITSIO library internally (downloading tarfile from the Web)")
