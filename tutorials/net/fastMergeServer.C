@@ -118,7 +118,7 @@ void fastMergeServer(bool cache = false) {
          delete transient;
          transient = new TMemFile(filename,mess->Buffer() + mess->Length(),length);
          mess->SetBufferOffset(mess->Length()+length);
-         merger.OutputFile(filename);
+         merger.OutputFile(filename,"UPDATE");
          merger.AddAdoptFile(transient);
 
          merger.PartialMerge(TFileMerger::kAllIncremental);
