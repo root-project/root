@@ -188,7 +188,6 @@ Bool_t TRootSnifferScanRec::Done() const
    return kFALSE;
 }
 
-
 //______________________________________________________________________________
 Bool_t TRootSnifferScanRec::IsReadyForResult() const
 {
@@ -207,7 +206,6 @@ Bool_t TRootSnifferScanRec::IsReadyForResult() const
 
    return kTRUE;
 }
-
 
 //______________________________________________________________________________
 Bool_t TRootSnifferScanRec::SetResult(void *obj, TClass *cl, TDataMember *member)
@@ -354,8 +352,9 @@ TRootSniffer::TRootSniffer(const char *name, const char *objpath) :
    TNamed(name, "sniffer of root objects"),
    fObjectsPath(objpath),
    fMemFile(0),
-   fSinfoSize(0),
-   fReadOnly(kTRUE)
+   fSinfo(0),
+   fReadOnly(kTRUE),
+   fScanGlobalDir(kTRUE)
 {
    // constructor
 }
@@ -364,6 +363,11 @@ TRootSniffer::TRootSniffer(const char *name, const char *objpath) :
 TRootSniffer::~TRootSniffer()
 {
    // destructor
+
+   if (fSinfo) {
+      delete fSinfo;
+      fSinfo = 0;
+   }
 
    if (fMemFile) {
       delete fMemFile;
@@ -460,12 +464,8 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
 //_____________________________________________________________________
 void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
 {
-   // scans basic object properties
-   // here such fields as _title properties can be specified
-
-   const char *title = obj->GetTitle();
-   if ((title != 0) && (*title != 0))
-      rec.SetField(item_prop_title, title);
+   // scans object properties
+   // here such fields as _autoload or _icon properties depending on class or object name could be assigned
 }
 
 //_____________________________________________________________________
@@ -530,7 +530,7 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
 
             if (chld.SetResult(obj, obj->IsA())) return;
 
-            Bool_t has_kind = kFALSE;
+            Bool_t has_kind(kFALSE), has_title(kFALSE);
 
             ScanObjectProperties(chld, obj);
             // now properties, coded as TNamed objects, placed after object in the hierarchy
@@ -540,10 +540,12 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
                   // only fields starting with _ are stored
                   chld.SetField(next->GetName(), next->GetTitle());
                   if (strcmp(next->GetName(), item_prop_kind)==0) has_kind = kTRUE;
+                  if (strcmp(next->GetName(), item_prop_title)==0) has_title = kTRUE;
                }
             }
 
             if (!has_kind) chld.SetRootClass(obj->IsA());
+            if (!has_title && (obj->GetTitle()!=0)) chld.SetField(item_prop_title, obj->GetTitle());
 
             ScanObjectChilds(chld, obj);
 
@@ -586,6 +588,8 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
                TClass *obj_class = obj->IsA();
 
                ScanObjectProperties(chld, obj);
+
+               if (obj->GetTitle()!=0) chld.SetField(item_prop_title, obj->GetTitle());
 
                // special handling of TKey class - in non-readonly mode
                // sniffer allowed to fetch objects
@@ -643,11 +647,13 @@ void TRootSniffer::ScanRoot(TRootSnifferScanRec &rec)
       }
    }
 
-   ScanCollection(rec, gROOT->GetList());
+   if (IsScanGlobalDir()) {
+      ScanCollection(rec, gROOT->GetList());
 
-   ScanCollection(rec, gROOT->GetListOfCanvases(), "Canvases");
+      ScanCollection(rec, gROOT->GetListOfCanvases(), "Canvases");
 
-   ScanCollection(rec, gROOT->GetListOfFiles(), "Files");
+      ScanCollection(rec, gROOT->GetListOfFiles(), "Files");
+   }
 }
 
 //______________________________________________________________________________
@@ -700,6 +706,13 @@ void *TRootSniffer::FindInHierarchy(const char *path, TClass **cl,
    // but also number of childs are counted. When member!=0, any object
    // will be scanned for its data members (disregard of extra options)
 
+   if (IsStreamerInfoItem(path)) {
+      // special handling for streamer info
+      CreateMemFile();
+      if (cl && fSinfo) *cl = fSinfo->IsA();
+      return fSinfo;
+   }
+
    TRootSnifferStore store;
 
    TRootSnifferScanRec rec;
@@ -735,7 +748,7 @@ ULong_t TRootSniffer::GetStreamerInfoHash()
    // Returns hash value for streamer infos
    // At the moment - just number of items in streamer infos list.
 
-   return fSinfoSize;
+   return fSinfo ? fSinfo->GetSize() : 0;
 }
 
 //______________________________________________________________________________
@@ -816,10 +829,7 @@ void TRootSniffer::CreateMemFile()
 
    fMemFile->WriteStreamerInfo();
 
-   l = fMemFile->GetStreamerInfoList();
-   // l->Print("*");
-   fSinfoSize = l->GetSize();
-   delete l;
+   fSinfo = fMemFile->GetStreamerInfoList();
 
    gDirectory = olddir;
    gFile = oldfile;
@@ -843,36 +853,15 @@ Bool_t TRootSniffer::ProduceJson(const char *path, const char *options,
    if (url.GetValueFromOptions("compact"))
       compact = url.GetIntValueFromOptions("compact");
 
-   if (IsStreamerInfoItem(path)) {
+   TClass *obj_cl(0);
+   TDataMember *member(0);
+   void *obj_ptr = FindInHierarchy(path, &obj_cl, &member);
+   if ((obj_ptr == 0) || ((obj_cl == 0) && (member == 0))) return kFALSE;
 
-      CreateMemFile();
-
-      TDirectory *olddir = gDirectory;
-      gDirectory = 0;
-      TFile *oldfile = gFile;
-      gFile = 0;
-
-      fMemFile->WriteStreamerInfo();
-      TList *l = fMemFile->GetStreamerInfoList();
-      fSinfoSize = l->GetSize();
-
-      res = TBufferJSON::ConvertToJSON(l, compact);
-
-      delete l;
-      gDirectory = olddir;
-      gFile = oldfile;
-   } else {
-
-      TClass *obj_cl(0);
-      TDataMember *member(0);
-      void *obj_ptr = FindInHierarchy(path, &obj_cl, &member);
-      if ((obj_ptr == 0) || ((obj_cl == 0) && (member == 0))) return kFALSE;
-
-      if (member == 0)
-         res = TBufferJSON::ConvertToJSON(obj_ptr, obj_cl, compact >= 0 ? compact : 0);
-      else
-         res = TBufferJSON::ConvertToJSON(obj_ptr, member, compact >= 0 ? compact : 1);
-   }
+   if (member == 0)
+      res = TBufferJSON::ConvertToJSON(obj_ptr, obj_cl, compact >= 0 ? compact : 0);
+   else
+      res = TBufferJSON::ConvertToJSON(obj_ptr, member, compact >= 0 ? compact : 1);
 
    return res.Length() > 0;
 }
@@ -901,16 +890,23 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char * /*options*/,
    if (gDebug > 0) Info("ExecuteCmd", "Executing command %s method:%s", path, method);
 
    TString item_method;
-
+   TObject *item_obj = 0;
    const char *separ = strstr(method, "/->");
+
+   if (strstr(method, "this->") == method) {
+      // if command name started with this-> means method of sniffer will be executed
+      item_obj = this;
+      separ = method + 3;
+   } else
    if (separ != 0) {
       TString itemname(method, separ - method);
-      TObject *item_obj = FindTObjectInHierarchy(itemname.Data());
-      if (item_obj != 0) {
-         item_method.Form("((%s*)%lu)->%s", item_obj->ClassName(), (long unsigned) item_obj, separ + 3);
-         method = item_method.Data();
-         if (gDebug > 2) Info("ExecuteCmd", "Executing %s", method);
-      }
+      item_obj = FindTObjectInHierarchy(itemname.Data());
+   }
+
+   if (item_obj != 0) {
+      item_method.Form("((%s*)%lu)->%s", item_obj->ClassName(), (long unsigned) item_obj, separ + 3);
+      method = item_method.Data();
+      if (gDebug > 2) Info("ExecuteCmd", "Executing %s", method);
    }
 
    Long_t v = gROOT->ProcessLineSync(method);
@@ -919,6 +915,18 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char * /*options*/,
 
    return kTRUE;
 }
+
+//______________________________________________________________________________
+Bool_t TRootSniffer::ProduceItem(const char *path, const char *options, TString &res)
+{
+   // produce JSON for specified item
+   // contrary to h.json request, all fields for specified item without childs are stroed
+
+   TRootSnifferStoreJson store(res, strstr(options, "compact")!=0);
+   ScanHierarchy("top", path, &store, kTRUE);
+   return res.Length() > 0;
+}
+
 
 //______________________________________________________________________________
 Bool_t TRootSniffer::ProduceXml(const char *path, const char * /*options*/,
@@ -931,32 +939,11 @@ Bool_t TRootSniffer::ProduceXml(const char *path, const char * /*options*/,
 
    if (*path == '/') path++;
 
-   if (IsStreamerInfoItem(path)) {
+   TClass *obj_cl(0);
+   void *obj_ptr = FindInHierarchy(path, &obj_cl);
+   if ((obj_ptr == 0) || (obj_cl == 0)) return kFALSE;
 
-      CreateMemFile();
-
-      TDirectory *olddir = gDirectory;
-      gDirectory = 0;
-      TFile *oldfile = gFile;
-      gFile = 0;
-
-      fMemFile->WriteStreamerInfo();
-      TList *l = fMemFile->GetStreamerInfoList();
-      fSinfoSize = l->GetSize();
-
-      res = TBufferXML::ConvertToXML(l);
-
-      delete l;
-      gDirectory = olddir;
-      gFile = oldfile;
-   } else {
-
-      TClass *obj_cl(0);
-      void *obj_ptr = FindInHierarchy(path, &obj_cl);
-      if ((obj_ptr == 0) || (obj_cl == 0)) return kFALSE;
-
-      res = TBufferXML::ConvertToXML(obj_ptr, obj_cl);
-   }
+   res = TBufferXML::ConvertToXML(obj_ptr, obj_cl);
 
    return res.Length() > 0;
 }
@@ -1195,92 +1182,37 @@ Bool_t TRootSniffer::ProduceBinary(const char *path, const char * /*query*/, voi
 
    if (*path == '/') path++;
 
-   TBufferFile *sbuf = 0;
+   TClass *obj_cl(0);
+   void *obj_ptr = FindInHierarchy(path, &obj_cl);
+   if ((obj_ptr == 0) || (obj_cl == 0)) return kFALSE;
 
-//   Info("ProduceBinary","Request %s", path);
-
-   Bool_t istreamerinfo = IsStreamerInfoItem(path);
-
-   if (istreamerinfo) {
-
-      CreateMemFile();
-
-      TDirectory *olddir = gDirectory;
-      gDirectory = 0;
-      TFile *oldfile = gFile;
-      gFile = 0;
-
-      fMemFile->WriteStreamerInfo();
-      TList *l = fMemFile->GetStreamerInfoList();
-      //l->Print("*");
-
-      fSinfoSize = l->GetSize();
-
-      // TODO: one could reuse memory from dabc::MemoryPool here
-      //       now keep as it is and copy data at least once
-      sbuf = new TBufferFile(TBuffer::kWrite, 100000);
-      sbuf->SetParent(fMemFile);
-      sbuf->MapObject(l);
-      l->Streamer(*sbuf);
-      delete l;
-
-      gDirectory = olddir;
-      gFile = oldfile;
-   } else {
-
-      TClass *obj_cl(0);
-      void *obj_ptr = FindInHierarchy(path, &obj_cl);
-      if ((obj_ptr == 0) || (obj_cl == 0)) return kFALSE;
-
-      CreateMemFile();
-
-      TDirectory *olddir = gDirectory;
-      gDirectory = 0;
-      TFile *oldfile = gFile;
-      gFile = 0;
-
-      TList *l1 = fMemFile->GetStreamerInfoList();
-
-      if (obj_cl->GetBaseClassOffset(TObject::Class()) == 0) {
-         TObject *obj = (TObject *) obj_ptr;
-
-         sbuf = new TBufferFile(TBuffer::kWrite, 100000);
-         sbuf->SetParent(fMemFile);
-         sbuf->MapObject(obj);
-         obj->Streamer(*sbuf);
-      } else {
-         Info("ProduceBinary", "Non TObject class not yet supported");
-         delete sbuf;
-         sbuf = 0;
-      }
-
-      Bool_t believe_not_changed = kFALSE;
-
-      if ((fMemFile->GetClassIndex() == 0) ||
-            (fMemFile->GetClassIndex()->fArray[0] == 0)) {
-         believe_not_changed = kTRUE;
-      }
-
-      fMemFile->WriteStreamerInfo();
-      TList *l2 = fMemFile->GetStreamerInfoList();
-
-      if (believe_not_changed && (l1->GetSize() != l2->GetSize())) {
-         Error("ProduceBinary",
-               "StreamerInfo changed when we were expecting no changes!!!!!!!!!");
-         delete sbuf;
-         sbuf = 0;
-      }
-
-      fSinfoSize = l2->GetSize();
-
-      delete l1;
-      delete l2;
-
-      gDirectory = olddir;
-      gFile = oldfile;
+   if (obj_cl->GetBaseClassOffset(TObject::Class()) != 0) {
+      Info("ProduceBinary", "Non-TObject class not supported");
+      return kFALSE;
    }
 
-   if (sbuf == 0) return kFALSE;
+   // ensure that memfile exists
+   CreateMemFile();
+
+   TDirectory *olddir = gDirectory;
+   gDirectory = 0;
+   TFile *oldfile = gFile;
+   gFile = 0;
+
+   TObject *obj = (TObject *) obj_ptr;
+
+   TBufferFile *sbuf = new TBufferFile(TBuffer::kWrite, 100000);
+   sbuf->SetParent(fMemFile);
+   sbuf->MapObject(obj);
+   obj->Streamer(*sbuf);
+
+   // produce actual version of streamer info
+   delete fSinfo;
+   fMemFile->WriteStreamerInfo();
+   fSinfo = fMemFile->GetStreamerInfoList();
+
+   gDirectory = olddir;
+   gFile = oldfile;
 
    ptr = malloc(sbuf->Length());
    memcpy(ptr, sbuf->Buffer(), sbuf->Length());
@@ -1447,6 +1379,9 @@ Bool_t TRootSniffer::Produce(const char *path, const char *file,
 
    if (strcmp(file, "cmd.json") == 0)
       return ExecuteCmd(path, options, str);
+
+   if (strcmp(file, "item.json") == 0)
+      return ProduceItem(path, options, str);
 
    return kFALSE;
 }
@@ -1677,6 +1612,11 @@ Bool_t TRootSniffer::SetItemField(const char *fullname, const char *name, const 
 
    if ((parent==0) || (obj==0)) return kFALSE;
 
+   if (strcmp(name,"_title")==0) {
+      TNamed* n = dynamic_cast<TNamed*> (obj);
+      if (n!=0) { n->SetTitle(value); return kTRUE; }
+   }
+
    return AccessField(parent, obj, name, value);
 }
 
@@ -1706,4 +1646,41 @@ const char *TRootSniffer::GetItemField(const char *fullname, const char *name)
    TObject *obj = GetItem(fullname, parent);
 
    return GetItemField(parent, obj, name);
+}
+
+
+//______________________________________________________________________________
+Bool_t TRootSniffer::RegisterCommand(const char *cmdname, const char *method, const char *icon)
+{
+   // Register command which can be executed from web interface
+   //
+   // As method one typically specifies string, which is executed with
+   // gROOT->ProcessLine() method. For instance
+   //    serv->RegisterCommand("Invoke","InvokeFunction()");
+   //
+   // Or one could specify any method of the object which is already registered
+   // to the server. For instance:
+   //     serv->Register("/", hpx);
+   //     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()");
+   // Here symbols '/->' separates item name from method to be executed
+   //
+   // Once command is registered, one could specify icon which will appear in the browser:
+   //     serv->SetIcon("/ResetHPX", "/rootsys/icons/ed_execute.png");
+   //
+   // One also can set extra property '_fastcmd', that command appear as
+   // tool button on the top of the browser tree:
+   //     serv->SetItemField("/ResetHPX", "_fastcmd", "true");
+
+   CreateItem(cmdname, Form("command %s", method));
+   SetItemField(cmdname, "_kind", "Command");
+   if (icon != 0) {
+      if (strncmp(icon, "button;", 7) == 0) {
+         SetItemField(cmdname, "_fastcmd", "true");
+         icon += 7;
+      }
+      if (*icon != 0) SetItemField(cmdname, "_icon", icon);
+   }
+   SetItemField(cmdname, "method", method);
+
+   return kTRUE;
 }

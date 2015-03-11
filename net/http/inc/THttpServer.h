@@ -259,9 +259,9 @@ protected:
    Long_t       fMainThrdId;  //! id of the main ROOT process
 
    TString      fJSROOTSYS;   //! location of local JSROOT files
-   TString      fROOTSYS;     //! location of ROOT files
    TString      fTopName;     //! name of top folder, default - "ROOT"
    TString      fJSROOT;      //! location of external JSROOT files
+   TList        fLocations;   //! list of local directories, which could be accessed via server
 
    TString      fDefaultPage; //! file name for default page name
    TString      fDefaultPageCont; //! content of the file content
@@ -308,11 +308,13 @@ public:
       return fTopName.Data();
    }
 
-   void SetJSROOT(const char* location);
+   void SetJSROOT(const char *location);
 
-   void SetDefaultPage(const char* filename);
+   void AddLocation(const char *prefix, const char *path);
 
-   void SetDrawPage(const char* filename);
+   void SetDefaultPage(const char *filename);
+
+   void SetDrawPage(const char *filename);
 
    void SetTimer(Long_t milliSec = 100, Bool_t mode = kTRUE);
 
