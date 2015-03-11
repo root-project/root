@@ -163,8 +163,8 @@ Bool_t THttpCallArg::CompressWithGzip()
    *bufcur++ = 0;    //
    *bufcur++ = 0;    // XFL (eXtra FLags)
    *bufcur++ = 3;    // OS   3 means Unix
-   //strcpy(bufcur, "get.json");
-   //bufcur += strlen("get.json")+1;
+   //strcpy(bufcur, "item.json");
+   //bufcur += strlen("item.json")+1;
 
    char dummy[8];
    memcpy(dummy, bufcur - 6, 6);
@@ -280,9 +280,9 @@ THttpServer::THttpServer(const char *engine) :
    fSniffer(0),
    fMainThrdId(0),
    fJSROOTSYS(),
-   fROOTSYS(),
    fTopName("ROOT"),
    fJSROOT(),
+   fLocations(),
    fDefaultPage(),
    fDefaultPageCont(),
    fDrawPage(),
@@ -302,7 +302,7 @@ THttpServer::THttpServer(const char *engine) :
    // Typically JSROOT sources located in $ROOTSYS/etc/http directory,
    // but one could set JSROOTSYS variable to specify alternative location
 
-   fMainThrdId = TThread::SelfId();
+   fLocations.SetOwner(kTRUE);
 
    // Info("THttpServer", "Create %p in thrd %ld", this, (long) fMainThrdId);
 
@@ -329,18 +329,19 @@ THttpServer::THttpServer(const char *engine) :
       }
    }
 
+   AddLocation("currentdir/", ".");
+   AddLocation("jsrootsys/", fJSROOTSYS);
+
    const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (rootsys != 0) fROOTSYS = rootsys;
-   if (fROOTSYS.Length() == 0) {
+   if (rootsys != 0) {
+      AddLocation("rootsys/", rootsys);
+   } else {
 #ifdef ROOTPREFIX
       TString sysdir = ROOTPREFIX;
 #else
       TString sysdir = "$(ROOTSYS)";
 #endif
-      if (gSystem->ExpandPathName(sysdir))
-         fROOTSYS = ".";
-      else
-         fROOTSYS = sysdir;
+      if (!gSystem->ExpandPathName(sysdir)) AddLocation("rootsys/", sysdir);
    }
 
    fDefaultPage = fJSROOTSYS + "/files/online.htm";
@@ -409,6 +410,24 @@ void THttpServer::SetReadOnly(Bool_t readonly)
    // Server also cannot execute objects method via exe.json request
 
    if (fSniffer) fSniffer->SetReadOnly(readonly);
+}
+
+//______________________________________________________________________________
+void THttpServer::AddLocation(const char *prefix, const char *path)
+{
+   // add files location, which could be used in the server
+   // one could map some system folder to the server like AddLocation("mydir/","/home/user/specials");
+   // Than files from this directory could be addressed via server like
+   // http://localhost:8080/mydir/myfile.root
+
+   if ((prefix==0) || (*prefix==0)) return;
+
+   TNamed *obj = dynamic_cast<TNamed*> (fLocations.FindObject(prefix));
+   if (obj != 0) {
+      obj->SetTitle(path);
+   } else {
+      fLocations.Add(new TNamed(prefix, path));
+   }
 }
 
 //______________________________________________________________________________
@@ -583,30 +602,16 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
    TString fname = uri;
 
-   Ssiz_t pos = fname.Index("jsrootsys/");
-   if (pos != kNPOS) {
-      fname.Remove(0, pos + 9);
-      // check that directory below jsrootsys will not be accessed
+   TIter iter(&fLocations);
+   TObject *obj(0);
+   while ((obj=iter()) != 0) {
+      Ssiz_t pos = fname.Index(obj->GetName());
+      if (pos == kNPOS) continue;
+      fname.Remove(0, pos + (strlen(obj->GetName()) - 1));
       if (!VerifyFilePath(fname.Data())) return kFALSE;
-      res = fJSROOTSYS + fname;
-      return kTRUE;
-   }
-
-   pos = fname.Index("rootsys/");
-   if (pos != kNPOS) {
-      fname.Remove(0, pos + 7);
-      // check that directory below rootsys will not be accessed
-      if (!VerifyFilePath(fname.Data())) return kFALSE;
-      res = fROOTSYS + fname;
-      return kTRUE;
-   }
-
-   pos = fname.Index("currentdir/");
-   if (pos != kNPOS) {
-      fname.Remove(0, pos + 10);
-      // check that directory below currentdir will not be accessed
-      if (!VerifyFilePath(fname.Data())) return kFALSE;
-      res = TString(".") + fname;
+      res = obj->GetTitle();
+      if ((fname[0]=='/') && (res[res.Length()-1]=='/')) res.Resize(res.Length()-1);
+      res.Append(fname);
       return kTRUE;
    }
 
@@ -620,7 +625,7 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
    // Method can be called from any thread
    // Actual execution will be done in main ROOT thread, where analysis code is running.
 
-   if (fMainThrdId == TThread::SelfId()) {
+   if ((fMainThrdId!=0) && (fMainThrdId == TThread::SelfId())) {
       // should not happen, but one could process requests directly without any signaling
 
       ProcessRequest(arg);
@@ -646,6 +651,8 @@ void THttpServer::ProcessRequests()
    // Regularly invoked by THttpTimer, when somewhere in the code
    // gSystem->ProcessEvents() is called.
    // User can call serv->ProcessRequests() directly, but only from main analysis thread.
+
+   if (fMainThrdId==0) fMainThrdId = TThread::SelfId();
 
    if (fMainThrdId != TThread::SelfId()) {
       Error("ProcessRequests", "Should be called only from main ROOT thread");
@@ -796,11 +803,11 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       arg->SetXml();
    } else
 
-   if ((filename == "h.json") || (filename == "get.json"))  {
+   if (filename == "h.json")  {
       TRootSnifferStoreJson store(arg->fContent, arg->fQuery.Index("compact") != kNPOS);
       const char *topname = fTopName.Data();
       if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
-      fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store, (filename == "get.json"));
+      fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
       arg->SetJson();
    } else
 
@@ -869,18 +876,7 @@ Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, con
    // tool button on the top of the browser tree:
    //     serv->SetItemField("/ResetHPX", "_fastcmd", "true");
 
-   CreateItem(cmdname, Form("command %s", method));
-   SetItemField(cmdname, "_kind", "Command");
-   if (icon != 0) {
-      if (strncmp(icon, "button;", 7) == 0) {
-         SetItemField(cmdname, "_fastcmd", "true");
-         icon += 7;
-      }
-      if (*icon != 0) SetItemField(cmdname, "_icon", icon);
-   }
-   SetItemField(cmdname, "method", method);
-
-   return kTRUE;
+   return fSniffer->RegisterCommand(cmdname, method, icon);
 }
 
 //______________________________________________________________________________
