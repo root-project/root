@@ -157,6 +157,11 @@ int main(int argc, char *argv[])
             if (m) {
                fclose(m);
                m = 0;
+               ExecuteCommand(TString::Format("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\")\""
+                                              , TString::Format("%s_%3.3d.C", gClassName.Data(), gMacroID).Data()
+                                              , TString::Format("%s_%3.3d.png", gClassName.Data(), gImageID).Data()
+                                              , gOutDir.Data()));
+               ExecuteCommand(TString::Format("rm %s_%3.3d.C", gClassName.Data(), gMacroID).Data());
             }
          }
 
@@ -166,10 +171,10 @@ int main(int argc, char *argv[])
                   ExecuteMacro();
                   gInMacro++;
                } else {
-                  m = fopen(TString::Format("%s/macros/%s_%3.3d.C", gOutDir.Data()
-                                                                  , gClassName.Data()
-                                                                  , gMacroID)
-                                                                  , "w");
+                  gMacroID++;
+                  m = fopen(TString::Format("%s_%3.3d.C", gClassName.Data()
+                                                        , gMacroID)
+                                                        , "w");
                   if (m) fprintf(m,"%s",gLineString.Data());
                   if (gLineString.BeginsWith("{")) {
                      gLineString.ReplaceAll("{"
@@ -194,8 +199,9 @@ int main(int argc, char *argv[])
          }
 
          if (gLineString.Index("Begin_Macro") >= 0) {
-            gLineString = "\n";
+            gImageID++;
             gInMacro++;
+            gLineString = "\n";
          }
 
          printf("%s",gLineString.Data());
@@ -280,7 +286,7 @@ void ExecuteMacro()
 
    // Name of the next Image to be generated
    gImageName = TString::Format("%s_%3.3d.png", gClassName.Data()
-                                              , gImageID++);
+                                              , gImageID);
 
    // Retrieve the macro to be executed.
    if (gLineString.Index("../../..") >= 0) {
