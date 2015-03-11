@@ -61,9 +61,7 @@ set_source_files_properties(loadfile_tmp.cxx  COMPILE_FLAGS "-UR__HAVE_CONFIG -D
 #---Generate and/or copy the iosenum headerfile to the include directory-------------------------------
 if(${CLANG_MAJOR} GREATER 2)
   set(IOSENUM_H ${PROJECT_SOURCE_DIR}/cint/iosenum/iosenum.${ROOT_ARCHITECTURE}3)
-elseif(${GCC_MAJOR} EQUAL 4)
-  set(IOSENUM_H ${PROJECT_SOURCE_DIR}/cint/iosenum/iosenum.${ROOT_ARCHITECTURE}3)
-elseif(${GCC_MAJOR} EQUAL 3)
+elseif(${GCC_MAJOR} GREATER 3)
   set(IOSENUM_H ${PROJECT_SOURCE_DIR}/cint/iosenum/iosenum.${ROOT_ARCHITECTURE}3)
 else()
   set(IOSENUM_H ${PROJECT_SOURCE_DIR}/cint/iosenum/iosenum.${ROOT_ARCHITECTURE})
