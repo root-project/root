@@ -2,7 +2,7 @@
 .PHONY: filter doxygen clean
 
 export DOXYGEN_ROOT_VERSION=$(shell root -l -b -q -e 'printf("%s\n", gROOT->GetVersion());')
-export DOXYGEN_OUTPUT_DIRECTORY=/tmp/doxygen/rootdoc
+export DOXYGEN_OUTPUT_DIRECTORY=$(HOME)/rootdoc
 export DOXYGEN_EXAMPLE_PATH=$(DOXYGEN_OUTPUT_DIRECTORY)/macros
 export DOXYGEN_IMAGE_PATH=$(DOXYGEN_OUTPUT_DIRECTORY)/images
 
