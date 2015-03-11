@@ -72,6 +72,7 @@ ROOT_BUILD_OPTION(builtin_ftgl ON "Build included libFTGL, or use system libftgl
 ROOT_BUILD_OPTION(builtin_freetype OFF "Build included libfreetype, or use system libfreetype")
 ROOT_BUILD_OPTION(builtin_gl2ps OFF "Build included libgl2ps, or use system libgl2ps")
 ROOT_BUILD_OPTION(builtin_glew ON "Build included libGLEW, or use system libGLEW")
+ROOT_BUILD_OPTION(builtin_lz4 OFF "Built included liblz4, or use system liblz4")
 ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally, or use system OpenSSL")
 ROOT_BUILD_OPTION(builtin_pcre OFF "Build included libpcre, or use system libpcre")
 ROOT_BUILD_OPTION(builtin_unuran OFF "Build included libunuran, or use system libunuran")
