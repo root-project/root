@@ -26,7 +26,7 @@
       e1.source = 'JSRootPainter.jquery.js';
       throw e1;
    }
-   
+
    JSROOT.Painter.createMenu = function(maincallback, menuname) {
       if (!menuname) menuname = "root_ctx_menu";
 
@@ -81,6 +81,7 @@
             .css('left', event.clientX + window.pageXOffset)
             .css('top', event.clientY + window.pageYOffset)
             .attr('class', 'ctxmenu')
+            .css('font-size', '80%')
             .menu({
                items: "> :not(.ui-widget-header)",
                select: function( event, ui ) {
@@ -91,13 +92,21 @@
                   if (typeof func == 'function') func(arg);
               }
          });
+
+         var newx = null, newy = null;
+
+         if (event.clientX + $("#" + menuname).width() > $(window).width()) newx = $(window).width() - $("#" + menuname).width() - 20;
+         if (event.clientY + $("#" + menuname).height() > $(window).height()) newy = $(window).height() - $("#" + menuname).height() - 20;
+
+         if (newx!=null) $("#" + menuname).css('left',(newx>0 ? newx : 0) + window.pageXOffset);
+         if (newy!=null) $("#" + menuname).css('top',(newy>0 ? newy : 0) + window.pageYOffset);
       }
 
       JSROOT.CallBack(maincallback, menu);
-      
+
       return menu;
    }
-   
+
    JSROOT.HierarchyPainter.prototype.isLastSibling = function(hitem) {
       if (!hitem || !hitem._parent || !hitem._parent._childs) return false;
       var chlds = hitem._parent._childs;
@@ -107,7 +116,7 @@
          if (!('_hidden' in chlds[indx])) return false;
       return true;
    }
-   
+
    JSROOT.HierarchyPainter.prototype.addItemHtml = function(hitem, parent) {
       var isroot = (parent == null);
       var has_childs = '_childs' in hitem;
@@ -189,7 +198,7 @@
       if (icon_name.indexOf("img_")==0)
          this['html'] += '<div class="' + icon_name + '"/>';
       else
-         this['html'] += '<img src="' + icon_name + '" alt="" style="vertical-align:top"/>';
+         this['html'] += '<img src="' + icon_name + '" alt="" style="vertical-align:top;width:18px;height:18px"/>';
 
       this['html'] += '<a';
       if (can_click || has_childs) this['html'] +=' class="h_item"';
@@ -219,19 +228,24 @@
 
       this['html'] += '</div>';
    }
-   
+
    JSROOT.HierarchyPainter.prototype.RefreshHtml = function(callback) {
+
       if (this.frameid == null) return JSROOT.CallBack(callback);
       var elem = $("#" + this.frameid);
-      if ((this.h == null) || (elem.length == 0)) { 
+      if ((this.h == null) || (elem.length == 0)) {
          elem.html("");
          return JSROOT.CallBack(callback);
       }
 
-      var factcmds = this.FindFastCommands();
+      var factcmds = [], status_item = null;
+      this.ForEach(function(item) {
+         if (('_fastcmd' in item) && (item._kind == 'Command')) factcmds.push(item);
+         if (('_status' in item) && (status_item==null)) status_item = item;
+      });
 
       this['html'] = "";
-      if (factcmds) {
+      if (factcmds.length>0) {
          for (var n in factcmds)
             this['html'] += "<button class='fast_command'> </button>";
       }
@@ -275,7 +289,7 @@
                     .next().click(function() { h.reload(); return false; })
                     .next().click(function() { h.clear(false); return false; });
 
-      if (factcmds)
+      if (factcmds.length>0)
          elem.find('.fast_command').each(function(index) {
             if ('_icon' in factcmds[index])
                $(this).text("").append('<img src="' + factcmds[index]['_icon'] + '"/>');
@@ -284,10 +298,19 @@
                    .attr("title", factcmds[index]._title)
                    .click(function() { h.ExecuteCommand($(this).attr("item"), $(this)); });
          });
-      
+
+      if ((status_item!=null) && (JSROOT.GetUrlOption('nostatus')==null)) {
+         var func = JSROOT.findFunction(status_item._status);
+         var hdiv = func==null ? null : JSROOT.Painter.ConfigureHSeparator(30);
+         if (hdiv != null) {
+            // painter.CreateStatus(28);
+            func(hdiv, this.itemFullName(status_item));
+         }
+      }
+
       JSROOT.CallBack(callback);
    }
-   
+
    JSROOT.HierarchyPainter.prototype.UpdateTreeNode = function(node, hitem) {
       var has_childs = '_childs' in hitem;
 
@@ -379,7 +402,7 @@
 
       this.UpdateTreeNode(node.parent(), hitem);
    }
-   
+
    JSROOT.HierarchyPainter.prototype.tree_contextmenu = function(node, event) {
       event.preventDefault();
 
@@ -387,7 +410,7 @@
 
       var hitem = this.Find(itemname);
       if (hitem==null) return;
-      
+
       var cando = this.CheckCanDo(hitem);
 
       // if (!cando.display && !cando.ctxt && (itemname!="")) return;
@@ -396,7 +419,7 @@
 
       var onlineprop = painter.GetOnlineProp(itemname);
       var fileprop = painter.GetFileProp(itemname);
-      
+
       function qualifyURL(url) {
          function escapeHTML(s) {
             return s.split('&').join('&amp;').split('<').join('&lt;').split('"').join('&quot;');
@@ -405,7 +428,7 @@
          el.innerHTML = '<a href="' + escapeHTML(url) + '">x</a>';
          return el.firstChild.href;
       }
-      
+
       JSROOT.Painter.createMenu(function(menu) {
 
          if (itemname == "") {
@@ -469,12 +492,12 @@
             menu.add("Close");
             menu.show(event);
          }
-      
+
       }); // end menu creation
 
       return false;
    }
-   
+
    JSROOT.HierarchyPainter.prototype.expand = function(itemname, item0, node) {
       var painter = this;
 
@@ -508,16 +531,16 @@
          }
       });
    }
-   
+
    JSROOT.HierarchyPainter.prototype.CreateDisplay = function(callback) {
       if ('disp' in this) {
          if (this['disp'].NumDraw() > 0) return JSROOT.CallBack(callback, this['disp']);
          this['disp'].Reset();
          delete this['disp'];
       }
-      
+
       // check that we can found frame where drawing should be done
-      if (document.getElementById(this['disp_frameid']) == null) 
+      if (document.getElementById(this['disp_frameid']) == null)
          return JSROOT.CallBack(callback, null);
 
       if (this['disp_kind'] == "tabs")
@@ -555,7 +578,7 @@
             }
          });
    }
-   
+
    // ==================================================
 
    JSROOT.CollapsibleDisplay = function(frameid) {
@@ -702,7 +725,7 @@
       $('#' + hid).prop('title', title);
       return $('#' + hid).get(0);
    }
-   
+
    // ========== performs tree drawing on server ==================
 
    JSROOT.TTreePlayer = function(itemname) {
@@ -825,36 +848,96 @@
    }
 
    // =======================================================================
-   
-   JSROOT.ConfigureVSeparator = function(handle, leftdiv, separdiv, rightdiv) {
-      if (!leftdiv) leftdiv = "left-div";
-      if (!separdiv) separdiv = "separator-div";
-      if (!rightdiv) rightdiv = "right-div";
 
-      function adjustSize(left, firsttime) {
-         var diff = $("#"+leftdiv).outerWidth() - $("#"+leftdiv).width();
+   JSROOT.Painter.separ = null;
+
+   JSROOT.Painter.AdjustLayout = function(left, height, firsttime) {
+      if (this.separ == null) return;
+
+      if (left!=null) {
+         var wdiff = $("#"+this.separ.left).outerWidth() - $("#"+this.separ.left).width();
          var w = JSROOT.touches ? 10 : 4;
-
-         $("#"+separdiv).css('left', left.toString() + "px").width(w);
-         $("#"+leftdiv).width(left-diff-1);
-         $("#"+rightdiv).css('left',(left+w).toString() + "px");
-         if (firsttime || (handle==null)) return;
-
-         if (typeof handle == 'function') handle(); else
-         if ((typeof handle == 'object') && (typeof handle['CheckResize'] == 'function')) handle.CheckResize();
+         $("#"+this.separ.vertical).css('left', left + "px").width(w).css('top','1px');
+         $("#"+this.separ.left).width(left-wdiff-1).css('top','1px');
+         $("#"+this.separ.right).css('left',left+w+"px").css('top','1px');
+         if (!this.separ.horizontal) {
+            $("#"+this.separ.vertical).css('bottom', '1px');
+            $("#"+this.separ.left).css('bottom', '1px');
+            $("#"+this.separ.right).css('bottom', '1px');
+         }
       }
 
-      $("#"+separdiv).draggable({
+      if ((height!=null) && this.separ.horizontal)  {
+         var diff = $("#"+this.separ.bottom).outerHeight() - $("#"+this.separ.bottom).height();
+         height -= 2*diff;
+         if (height<5) height = 5;
+         var bot = height + diff;
+         $('#'+this.separ.bottom).height(height);
+         var h = JSROOT.touches ? 10 : 4;
+         $("#"+this.separ.horizontal).css('bottom', bot + 'px').height(h);
+         bot += h;
+         $("#"+this.separ.left).css('bottom', bot + 'px');
+      }
+
+      if (this.separ.horizontal)
+         if (this.separ.hpart) {
+            var ww = $("#"+this.separ.left).outerWidth() - 2;
+            $('#'+this.separ.bottom).width(ww);
+            $("#"+this.separ.horizontal).width(ww);
+         } else {
+            var bot = $("#"+this.separ.left).css('bottom');
+            $("#"+this.separ.vertical).css('bottom', bot);
+            $("#"+this.separ.right).css('bottom', bot);
+         }
+
+      if (firsttime || (this.separ.handle==null)) return;
+
+      if (typeof this.separ.handle == 'function') this.separ.handle(); else
+      if ((typeof this.separ.handle == 'object') &&
+          (typeof this.separ.handle['CheckResize'] == 'function')) this.separ.handle.CheckResize();
+   }
+
+   JSROOT.Painter.ConfigureVSeparator = function(handle) {
+
+      JSROOT.Painter.separ = { handle: handle, left: "left-div", right: "right-div", vertical: "separator-div",
+                               horizontal : null, bottom : null, hpart: true };
+
+      $("#separator-div").addClass("#separator").draggable({
          axis: "x" , zIndex: 100, cursor: "ew-resize",
-         helper : function() { return $("#"+separdiv).clone().css('background-color','grey'); },
-         stop: function(event,ui) { event.stopPropagation(); adjustSize(ui.position.left, false); }
+         helper : function() { return $("#separator-div").clone().css('background-color','grey'); },
+         stop: function(event,ui) { event.stopPropagation(); JSROOT.Painter.AdjustLayout(ui.position.left, null, false); }
       });
 
       var w0 = Math.round($(window).width() * 0.2);
       if (w0<300) w0 = Math.min(300, Math.round($(window).width() * 0.5));
 
-      adjustSize(w0, true);
+      JSROOT.Painter.AdjustLayout(w0, null, true);
    }
 
-   
+   JSROOT.Painter.ConfigureHSeparator = function(height, onlyleft) {
+
+      if ((JSROOT.Painter.separ == null) ||
+          (JSROOT.Painter.horizontal != null)) return null;
+
+      JSROOT.Painter.separ['horizontal'] = 'horizontal-separator-div';
+      JSROOT.Painter.separ['bottom'] = 'bottom-div';
+      JSROOT.Painter.separ.hpart = (onlyleft === true);
+
+      var prnt = $("#"+this.separ.left).parent();
+
+      prnt.append('<div id="horizontal-separator-div" class="separator" style="left:1px; right:1px;  height:4px; bottom:16px; cursor: ns-resize"></div>');
+      prnt.append('<div id="bottom-div" class="column" style="left:1px; right:1px; height:15px; bottom:1px"></div>');
+
+      $("#horizontal-separator-div").draggable({
+         axis: "y" , zIndex: 100, cursor: "ns-resize",
+         helper : function() { return $("#horizontal-separator-div").clone().css('background-color','grey'); },
+         stop: function(event,ui) { event.stopPropagation(); JSROOT.Painter.AdjustLayout(null, $(window).height() - ui.position.top, false); }
+      });
+
+      JSROOT.Painter.AdjustLayout(null, height, false);
+
+      return JSROOT.Painter.separ.bottom;
+   }
+
+
 })();

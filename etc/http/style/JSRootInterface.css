@@ -33,8 +33,14 @@ div.column {
    border: 1px dotted #666;
    background-color: #E6E6FA;
    position: absolute;
-   top: 1px;
-   bottom: 1px;
+}
+
+div.separator {
+   background-color: white;
+   position: absolute;
+   border: 0;
+   marging: 0;
+   padding: 0;
 }
 
 input.tb {
