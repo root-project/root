@@ -400,7 +400,7 @@ When plotting an histogram or a graph the grid can be set ON or OFF using:
 <li><tt>gPad->SetGrid(1,1);</tt> set the grid on both axis.
 </ul>
 
-<a name="GA14"></a><h3>Time axis</h3>.
+<a name="GA14"></a><h3>Time axis</h3>
 
 Axis labels may be considered as times, plotted in a defined time format.
 The format is set with <tt>SetTimeFormat()</tt>.
