@@ -1047,11 +1047,14 @@ static int G__G__stream_13_0_8(G__value* result7, G__CONST char* funcname, struc
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+#if __cplusplus < 201103L
+// operator void*() const is only available until C++11. Starting C++11 it's replaced with explicit operator bool() const
 static int G__G__stream_13_0_9(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) ((const basic_ios<char,char_traits<char> >*) G__getstructoffset())->operator void*());
    return(1 || funcname || hash || result7 || libp) ;
 }
+#endif
 
 static int G__G__stream_13_0_10(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
@@ -4097,7 +4100,10 @@ static void G__setup_memfuncbasic_ioslEcharcOchar_traitslEchargRsPgR(void) {
    G__memfunc_setup("clear",519,G__G__stream_13_0_6, 121, -1, -1, 0, 1, 1, 1, 0, "i - 'ios_base::iostate' 0 'goodbit' state", (char*)NULL, (void*) NULL, 0);
    G__memfunc_setup("setstate",877,G__G__stream_13_0_7, 121, -1, -1, 0, 1, 1, 1, 0, "i - 'ios_base::iostate' 0 - state", (char*)NULL, (void*) NULL, 0);
    G__memfunc_setup("rdstate",759,G__G__stream_13_0_8, 105, -1, G__defined_typename("ios_base::iostate"), 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
+#if __cplusplus < 201103L
+// operator void*() const is only available until C++11. Starting C++11 it's replaced with explicit operator bool() const
    G__memfunc_setup("operator void*",1384,G__G__stream_13_0_9, 89, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
+#endif
    G__memfunc_setup("operator!",909,G__G__stream_13_0_10, 103, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
    G__memfunc_setup("good",425,G__G__stream_13_0_11, 103, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
    G__memfunc_setup("eof",314,G__G__stream_13_0_12, 103, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
