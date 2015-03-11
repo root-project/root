@@ -512,11 +512,10 @@
       JSROOT.Painter.add3DInteraction(renderer, scene, camera, toplevel, painter);
    }
 
-   JSROOT.Painter.real_drawHistogram3D = function(divid, histo, opt) {
+   JSROOT.Painter.real_drawHistogram3D = function(divid, histo, opt, painter) {
 
       var logx = false, logy = false, logz = false, gridx = false, gridy = false, gridz = false;
 
-      var painter = new JSROOT.TObjectPainter();
       painter.SetDivId(divid, -1);
       var pad = painter.root_pad();
 
@@ -814,6 +813,8 @@
       renderer.render(scene, camera);
 
       JSROOT.Painter.add3DInteraction(renderer, scene, camera, toplevel, null);
+
+      return painter.DrawingReady();
    }
 
 })();

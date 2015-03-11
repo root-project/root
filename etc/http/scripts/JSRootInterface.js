@@ -76,7 +76,7 @@ function BuildSimpleGUI() {
 
    JSROOT.Painter.readStyleFromURL();
 
-   var guiCode = "<div id='left-div' class='column'>";
+   var guiCode = "<div id='left-div' class='column' style='top:1px; bottom:1px'>";
 
    if (online) {
       guiCode += '<h1><font face="Verdana" size="4">ROOT online server</font></h1>'
@@ -95,9 +95,8 @@ function BuildSimpleGUI() {
       if (path==null) path = "";
       var arrFiles = files.split(';');
 
-      var guiCode = "<div id='left-div' class='column'>"
-         +"<h1><font face='Verdana' size='4'>Read a ROOT file</font></h1>"
-         +"<p><font face='Verdana' size='1px'><a href='http://root.cern.ch/js/jsroot.html'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></font></p>";
+      guiCode += "<h1><font face='Verdana' size='4'>Read a ROOT file</font></h1>"
+              + "<p><font face='Verdana' size='1px'><a href='http://root.cern.ch/js/jsroot.html'>JSROOT</a> version <span style='color:green'><b>" + JSROOT.version + "</b></span></font></p>";
 
       if (JSROOT.GetUrlOption("noselect")==null) {
         guiCode += '<form name="ex">'
@@ -123,8 +122,8 @@ function BuildSimpleGUI() {
 
    guiCode += '<div id="browser"></div>'
            +'</div>'
-           +'<div id="separator-div"></div>'
-           +'<div id="right-div" class="column"></div>';
+           +'<div id="separator-div" style="top:1px; bottom:1px"></div>'
+           +'<div id="right-div" class="column" style="top:1px; bottom:1px"></div>';
 
    var drawDivId = 'right-div';
 
@@ -141,9 +140,11 @@ function BuildSimpleGUI() {
 
    hpainter.SetDisplay(guiLayout(), drawDivId);
 
-   hpainter.StartGUI(h0, function() {
+   JSROOT.Painter.ConfigureVSeparator(hpainter);
 
-      JSROOT.ConfigureVSeparator(hpainter);
+   // JSROOT.Painter.ConfigureHSeparator(28, true);
+
+   hpainter.StartGUI(h0, function() {
 
       // specify display kind every time selection done
       // will be actually used only for first drawing or after reset

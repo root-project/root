@@ -46,7 +46,7 @@
          } else
          if (obj['_typename'] == 'TFolder') {
             // special case - seems to be it is item in the sniffer
-            req_url = 'get.json.gz?compact=3';
+            req_url = 'item.json.gz?compact=3';
             get_function();
          } else {
             obj = JSROOT.JSONR_unref(obj);
