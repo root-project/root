@@ -154,7 +154,15 @@ if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
   add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
   add_dependencies(hsimple onepcm)
   ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
-  add_custom_command(OUTPUT tutorials/hsimple.root COMMAND hsimple.exe WORKING_DIRECTORY tutorials DEPENDS Cling)
+  if(WIN32)
+    add_custom_command(OUTPUT tutorials/hsimple.root
+                       COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && $<TARGET_FILE:hsimple.exe>
+                       WORKING_DIRECTORY tutorials DEPENDS Cling)
+  else()
+    add_custom_command(OUTPUT tutorials/hsimple.root
+                       COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} $<TARGET_FILE:hsimple.exe>
+                       WORKING_DIRECTORY tutorials DEPENDS Cling)
+  endif()
   install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 endif()
 
