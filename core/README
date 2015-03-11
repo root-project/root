@@ -27,6 +27,7 @@ and depending on the platform
   - winnt
 and optionaly
   - lzma
+  - lz4
   - zip
 
 libCling depends on libCore and libRIO and contains:

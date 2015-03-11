@@ -38,6 +38,7 @@ endif
 EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
 EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
 EVENTSO       = libEvent.$(DllSuf)
+EVENTLIBS     = -lTreePlayer
 EVENT         = Event$(ExeSuf)
 ifeq ($(PLATFORM),win32)
 EVENTLIB      = libEvent.lib
@@ -381,7 +382,7 @@ endif
 		@echo "$@ done"
 
 $(EVENT):       $(EVENTSO) $(MAINEVENTO)
-		$(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTO) $(LIBS) $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTO) $(LIBS) $(EVENTLIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
 

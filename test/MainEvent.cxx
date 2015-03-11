@@ -11,9 +11,9 @@
 //    - a tree
 //  Additional arguments can be passed to the program to control the flow
 //  of execution. (see comments describing the arguments in the code).
-//      Event  nevent comp split fill
+//      Event  nevent comp split fill tracks IMT compression
 //  All arguments are optional. Default is:
-//      Event  400      1    1     1
+//      Event  400      1    1     1     400   0           1
 //
 //  In this example, the tree consists of one single "super branch"
 //  The statement ***tree->Branch("event", &event, 64000,split);*** below
@@ -41,6 +41,14 @@
 //  The 4th argument fill can be set to 0 if one wants to time
 //     the percentage of time spent in creating the event structure and
 //     not write the event in the file.
+//  The 5th argument will enable IMT mode (Implicit Multi-Threading), allowing
+//  ROOT to use multiple threads internally, if enabled.
+//  The 6th argument allows the user to specify the compression algorithm:
+//  - 1 - zlib.
+//  - 2 - LZMA.
+//  - 3 - "old ROOT algorithm"  A variant of zlib; do not use, kept for
+//        backwards compatability.
+//  - 4 - LZ4.
 //  In this example, one loops over nevent events.
 //  The branch "event" is created at the first event.
 //  The branch address is set for all other events.
@@ -88,6 +96,7 @@
 #include "TNetFile.h"
 #include "TRandom.h"
 #include "TTree.h"
+#include "TTreePerfStats.h"
 #include "TBranch.h"
 #include "TClonesArray.h"
 #include "TStopwatch.h"
@@ -109,6 +118,7 @@ int main(int argc, char **argv)
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
    Int_t enable_imt = 0;   // Whether to enable IMT mode.
+   Int_t compAlg = 1;      // Allow user to specify underlying compression algorithm.
    Int_t netf   = 0;
    Int_t punzip = 0;
 
@@ -118,6 +128,7 @@ int main(int argc, char **argv)
    if (argc > 4)  arg4   = atoi(argv[4]);
    if (argc > 5)  arg5   = atoi(argv[5]);
    if (argc > 6)  enable_imt = atoi(argv[6]);
+   if (argc > 7)  compAlg= atoi(argv[7]);
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
    if (arg4 ==  1) { write = 1; hfill = 0;}
    if (arg4 ==  2) { write = 0; hfill = 0;}
@@ -147,6 +158,7 @@ int main(int argc, char **argv)
 
    TFile *hfile;
    TTree *tree;
+   TTreePerfStats *ioperf = NULL;
    Event *event = 0;
 
    // Fill event, header and tracks with some random numbers
@@ -175,6 +187,7 @@ int main(int argc, char **argv)
       nevent = TMath::Min(nevent,nentries);
       if (read == 1) {  //read sequential
          //by setting the read cache to -1 we set it to the AutoFlush value when writing
+         ioperf = new TTreePerfStats("Perf Stats", tree);
          Int_t cachesize = -1;
          if (punzip) tree->SetParallelUnzip();
          tree->SetCacheSize(cachesize);
@@ -190,6 +203,7 @@ int main(int argc, char **argv)
             }
             nb += tree->GetEntry(ev);        //read complete event in memory
          }
+         ioperf->Finish();
       } else {    //read random
          Int_t evrandom;
          for (ev = 0; ev < nevent; ev++) {
@@ -209,6 +223,7 @@ int main(int argc, char **argv)
       } else
          hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
+      hfile->SetCompressionAlgorithm(compAlg);
 
      // Create histogram to show write_time in function of time
      Float_t curtime = -0.5;
@@ -269,10 +284,11 @@ int main(int argc, char **argv)
    printf("RealTime=%f seconds, CpuTime=%f seconds\n",rtime,ctime);
    if (read) {
       tree->PrintCacheStats();
+      if (ioperf) {ioperf->Print();}
       printf("You read %f Mbytes/Realtime seconds\n",mbytes/rtime);
       printf("You read %f Mbytes/Cputime seconds\n",mbytes/ctime);
    } else {
-      printf("compression level=%d, split=%d, arg4=%d, IMT=%d\n",comp,split,arg4, enable_imt);
+      printf("compression level=%d, split=%d, arg4=%d, IMT=%d, compression algorithm=%d\n",comp, split, arg4, enable_imt, compAlg);
       printf("You write %f Mbytes/Realtime seconds\n",mbytes/rtime);
       printf("You write %f Mbytes/Cputime seconds\n",mbytes/ctime);
       //printf("file compression factor = %f\n",hfile.GetCompressionFactor());
