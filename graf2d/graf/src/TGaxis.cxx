@@ -329,7 +329,7 @@ set the two axes
 
 Axis labels can be any alphanumeric character strings. Such axis can be produced
 only with histograms because the labels'definition is stored in <tt>TAxis</tt>.
-The following example demonstrate how to create such labels.
+The following example demonstrates how to create such labels.
 End_Html
 Begin_Macro(source)
 ../../../tutorials/hist/hlabels2.C
