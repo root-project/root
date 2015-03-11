@@ -809,17 +809,102 @@
       //   if (str.indexOf(x) >= 0) return true;
    }
 
-   JSROOT.Painter.translateMath = function(str, kind) {
+   JSROOT.Painter.translateMath = function(str, kind, color) {
       // function translate ROOT TLatex into MathJax format
 
       if (kind!=2) {
+         str = str.replace(/#LT/g, "\\langle");
+         str = str.replace(/#GT/g, "\\rangle");
+         str = str.replace(/#club/g, "\\clubsuit");
+         str = str.replace(/#spade/g, "\\spadesuit");
+         str = str.replace(/#heart/g, "\\heartsuit");
+         str = str.replace(/#diamond/g, "\\diamondsuit");
+         str = str.replace(/#voidn/g, "\\wp");
+         str = str.replace(/#voidb/g, "f");
+         str = str.replace(/#copyright/g, "(c)");
+         str = str.replace(/#ocopyright/g, "(c)");
+         str = str.replace(/#trademark/g, "TM");
+         str = str.replace(/#void3/g, "TM");
+         str = str.replace(/#oright/g, "R");
+         str = str.replace(/#void1/g, "R");
+         str = str.replace(/#3dots/g, "\\ldots");
+         str = str.replace(/#lbar/g, "\\mid");
+         str = str.replace(/#void8/g, "\\mid");
+         str = str.replace(/#divide/g, "\\div");
+         str = str.replace(/#Jgothic/g, "\\Im");
+         str = str.replace(/#Rgothic/g, "\\Re");
+         str = str.replace(/#doublequote/g, "\"");
+         str = str.replace(/#plus/g, "+");
+
+         str = str.replace(/#diamond/g, "\\diamondsuit");
+         str = str.replace(/#voidn/g, "\\wp");
+         str = str.replace(/#voidb/g, "f");
+         str = str.replace(/#copyright/g, "(c)");
+         str = str.replace(/#ocopyright/g, "(c)");
+         str = str.replace(/#trademark/g, "TM");
+         str = str.replace(/#void3/g, "TM");
+         str = str.replace(/#oright/g, "R");
+         str = str.replace(/#void1/g, "R");
+         str = str.replace(/#3dots/g, "\\ldots");
+         str = str.replace(/#lbar/g, "\\mid");
+         str = str.replace(/#void8/g, "\\mid");
+         str = str.replace(/#divide/g, "\\div");
+         str = str.replace(/#Jgothic/g, "\\Im");
+         str = str.replace(/#Rgothic/g, "\\Re");
+         str = str.replace(/#doublequote/g, "\"");
+         str = str.replace(/#plus/g, "+");
+         str = str.replace(/#minus/g, "-");
+         str = str.replace(/#\//g, "/");
+         str = str.replace(/#upoint/g, ".");
+         str = str.replace(/#aa/g, "\\mathring{a}");
+         str = str.replace(/#AA/g, "\\mathring{A}");
+
+         str = str.replace(/#omicron/g, "o");
+         str = str.replace(/#Alpha/g, "A");
+         str = str.replace(/#Beta/g, "B");
+         str = str.replace(/#Epsilon/g, "E");
+         str = str.replace(/#Zeta/g, "Z");
+         str = str.replace(/#Eta/g, "H");
+         str = str.replace(/#Iota/g, "I");
+         str = str.replace(/#Kappa/g, "K");
+         str = str.replace(/#Mu/g, "M");
+         str = str.replace(/#Nu/g, "N");
+         str = str.replace(/#Omicron/g, "O");
+         str = str.replace(/#Rho/g, "P");
+         str = str.replace(/#Tau/g, "T");
+         str = str.replace(/#Chi/g, "X");
+         str = str.replace(/#varomega/g, "\\varpi");
+
+         str = str.replace(/#corner/g, "?");
+         str = str.replace(/#ltbar/g, "?");
+         str = str.replace(/#bottombar/g, "?");
+         str = str.replace(/#notsubset/g, "?");
+         str = str.replace(/#arcbottom/g, "?");
+         str = str.replace(/#cbar/g, "?");
+         str = str.replace(/#arctop/g, "?");
+         str = str.replace(/#topbar/g, "?");
+         str = str.replace(/#arcbar/g, "?");
+         str = str.replace(/#downleftarrow/g, "?");
+         str = str.replace(/#splitline/g, "\\genfrac{}{}{0pt}{}");
+
          str = str.replace(/#frac/g, "\\frac");
-         str = str.replace(/#left{/g, "\\left\\{");
-         str = str.replace(/#right}/g, "\\right\\}");
-         str = str.replace(/#left/g, "\\left");
-         str = str.replace(/#right/g, "\\right");
+         //str = str.replace(/#left{/g, "\\left\\{");
+         //str = str.replace(/#right}/g, "\\right\\}");
+         str = str.replace(/#left{/g, "\\lbrace");
+         str = str.replace(/#right}/g, "\\rbrace");
+         str = str.replace(/#left\[/g, "\\lbrack");
+         str = str.replace(/#right\]/g, "\\rbrack");
+         //str = str.replace(/#left/g, "\\left");
+         //str = str.replace(/#right/g, "\\right");
          // processing of #[] #{} should be done
-         str = str.replace(/#\[\]/g, "\\[]");
+         str = str.replace(/#\[\]{/g, "\\lbrack");
+         str = str.replace(/ } /g, "\\rbrack");
+         //str = str.replace(/#\[\]/g, "\\brack");
+         //str = str.replace(/#{}/g, "\\brace");
+         str = str.replace(/#\[/g, "\\lbrack");
+         str = str.replace(/#\]/g, "\\rbrack");
+         str = str.replace(/#{/g, "\\lbrace");
+         str = str.replace(/#}/g, "\\rbrace");
          str = str.replace(/ /g, "\\;");
 
          for (var x in JSROOT.Painter.symbols_map) {
@@ -829,9 +914,11 @@
       } else {
          str = str.replace(/\\\^/g, "\\hat");
       }
-
-
-      return "\\(" + str + "\\)";
+      mathcolor = color;
+      mathcolor = mathcolor.replace(/rgb/g, "[RGB]");
+      mathcolor = mathcolor.replace(/\(/g, '{');
+      mathcolor = mathcolor.replace(/\)/g, '}');
+      return "\\(\\color " + mathcolor + str + "\\)";
    }
 
    // ==============================================================================
@@ -1646,7 +1733,7 @@
       d3.select(element).style("visibility", "hidden")
                         .style("overflow", "hidden")
                         .style("position", "absolute")
-                        .html(JSROOT.Painter.translateMath(label, latex_kind));
+                        .html(JSROOT.Painter.translateMath(label, latex_kind, tcolor));
       document.body.appendChild(element)
 
       draw_g.property('mathjax_use', true);  // one need to know that mathjax is used
