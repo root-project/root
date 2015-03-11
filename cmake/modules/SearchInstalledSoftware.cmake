@@ -129,37 +129,22 @@ endif()
 if(builtin_lz4)
   set(lz4_version r127)
   message(STATUS "Building LZ4 version ${lz4_version} included in ROOT itself")
-  if(WIN32)
-    ExternalProject_Add(
-     LZ4
-     URL ${CMAKE_SOURCE_DIR}/core/lz4/src/lz4-${lz4_version}.tar.gz
-     URL_MD5  5ec580285a5c9bf1e5db3df0fce980b1
-     PREFIX LZ4
-     INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND "" BUILD_COMMAND ""
-     INSTALL_COMMAND cmake -E copy lib/liblz4.dll <INSTALL_DIR>/bin
-     BUILD_IN_SOURCE 1)
-    install(FILES ${CMAKE_BINARY_DIR}/LZ4/src/LZ4/lib/liblz4.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
-    set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/LZ4/src/LZ4/lib/liblz4.lib)
-    set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZ4/src/LZ4/include)
-  else()
-    if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-      set(LZ4_CFLAGS "-Wno-format-nonliteral")
-    elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-      set(LZ4_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179")
-    endif()
-    ExternalProject_Add(
-      LZ4
-      URL ${CMAKE_SOURCE_DIR}/core/lz4/src/lz4-${lz4_version}.tar.gz
-      URL_MD5 5ec580285a5c9bf1e5db3df0fce980b1
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND cd <SOURCE_DIR>/cmake_unofficial && cmake . -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DBUILD_LIBS=1 -DCMAKE_C_FLAGS=-O3
-      BUILD_COMMAND cd cmake_unofficial && make
-      INSTALL_COMMAND cd cmake_unofficial && make install
-      BUILD_IN_SOURCE 1)
-    set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+    set(LZ4_CFLAGS "-Wno-format-nonliteral")
+  elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
+    set(LZ4_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179")
   endif()
+  ExternalProject_Add(
+    LZ4
+    URL ${CMAKE_SOURCE_DIR}/core/lz4/src/lz4-${lz4_version}.tar.gz
+    URL_MD5 5ec580285a5c9bf1e5db3df0fce980b1
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    CONFIGURE_COMMAND cd <SOURCE_DIR>/cmake_unofficial && cmake . -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DBUILD_LIBS=1 -DCMAKE_C_FLAGS=-O3
+    BUILD_COMMAND cd cmake_unofficial && make
+    INSTALL_COMMAND cd cmake_unofficial && make install
+    BUILD_IN_SOURCE 1)
+  set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
 endif()
 
 
