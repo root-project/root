@@ -38,7 +38,7 @@ ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 ROOT_GENERATE_DICTIONARY(EventDict ${CMAKE_CURRENT_SOURCE_DIR}/Event.h MODULE Event LINKDEF EventLinkDef.h)
 ROOT_LINKER_LIBRARY(Event Event.cxx EventDict.cxx LIBRARIES Hist MathCore)
 
-ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree Hist Net)
+ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist Net)
 ROOT_ADD_TEST(test-event COMMAND eventexe)
 
 #---hsimple------------------------------------------------------------------------------------
