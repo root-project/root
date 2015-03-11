@@ -416,12 +416,12 @@ set(haspthread ${has${CMAKE_USE_PTHREADS_INIT}})
 set(hasxft ${has${xft}})
 set(hascling ${has${cling}})
 set(haslzmacompression ${has${lzma}})
+set(haslz4compression ${has${lz4}})
 set(hascocoa ${has${cocoa}})
 set(hasvc ${has${vc}})
 set(usec++11 ${has${cxx11}})
 set(usec++14 ${has${cxx14}})
 set(uselibc++ ${has${libcxx}})
-
 
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_SHOW_OPTIONS(features)

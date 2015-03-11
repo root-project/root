@@ -12,6 +12,7 @@ ROOT_USE_PACKAGE(core/unix)
 ROOT_USE_PACKAGE(core/winnt)
 ROOT_USE_PACKAGE(core/macosx)
 ROOT_USE_PACKAGE(core/zip)
+ROOT_USE_PACKAGE(core/lz4)
 ROOT_USE_PACKAGE(core/lzma)
 ROOT_USE_PACKAGE(cint/cint)
 
@@ -39,11 +40,12 @@ if(cocoa)
 endif()
 add_subdirectory(zip)
 add_subdirectory(lzma)
+add_subdirectory(lz4)
 add_subdirectory(base)
 add_subdirectory(metautils)
 add_subdirectory(utils)
 
-set(CORE_DICTIONARIES 
+set(CORE_DICTIONARIES
     ${METAUTILS_DICTIONARY}
     ${CLIB_DICTIONARY} 
     ${CONT_DICTIONARY} 
@@ -134,7 +136,7 @@ if(CXX_HAS_Wno-strict-aliasing)
 endif()
 
 ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} ${CORE_DICTIONARIES}
-                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIB} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
+                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES}  ${LZ4_LIBRARIES}  ${ZLIB_LIB} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
                     DEPENDENCIES Cint)
 add_Dependencies(Core CLIB_DICTIONARY CONT_DICTIONARY  META_DICTIONARY METAUTILS_DICTIONARY BASE_DICTIONARY)
 if(UNIX)
@@ -152,5 +154,8 @@ if(builtin_pcre)
 endif()
 if(builtin_lzma)
   ROOT_ADD_BUILTIN_DEPENDENCIES(Core LZMA)
+endif()
+if(builtin_lzma)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Core LZ4)
 endif()
 
