@@ -117,7 +117,11 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
   add_custom_target(hsimple ALL DEPENDS hsimple.root)
   ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
-  add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
+  if(WIN32)
+    add_custom_command(OUTPUT hsimple.root COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && $<TARGET_FILE:hsimple.exe>)
+  else()
+    add_custom_command(OUTPUT hsimple.root COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} $<TARGET_FILE:hsimple.exe>)
+  endif()
   install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 endif()
 
