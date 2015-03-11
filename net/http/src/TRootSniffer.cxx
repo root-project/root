@@ -462,7 +462,7 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
 }
 
 //_____________________________________________________________________
-void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
+void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec & /*rec*/, TObject * /*obj*/)
 {
    // scans object properties
    // here such fields as _autoload or _icon properties depending on class or object name could be assigned
