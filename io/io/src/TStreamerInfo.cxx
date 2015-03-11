@@ -1778,10 +1778,33 @@ void TStreamerInfo::BuildOld()
                }
                fNVirtualInfoLoc += infobase->fNVirtualInfoLoc;
             }
-            // FIXME: Presumably we're in emulated mode, but it still does not make any sense
-            // shouldn't it be element->SetNewType(-1) ?
+
+
             if (baseOffset < 0) {
-               baseOffset = 0;
+
+               // See if this base element can be converted into one of
+               // the existing base class.
+               TList* listOfBases = fClass->GetListOfBases();
+               if (listOfBases) {
+                  TBaseClass* bc = 0;
+                  TIter nextBC(fClass->GetListOfBases());
+                  while ((bc = (TBaseClass*) nextBC())) {
+                     TClass *in_memory_bcl = bc->GetClassPointer();
+                     if (in_memory_bcl && in_memory_bcl->GetSchemaRules()) {
+                        auto baserule = in_memory_bcl->GetSchemaRules()->FindRules( base->GetName(), base->GetBaseVersion(), base->GetBaseCheckSum() );
+                        if (baserule) {
+                           base->SetNewBaseClass(in_memory_bcl);
+                           baseOffset = bc->GetDelta();
+
+                        }
+                     }
+                  }
+               }
+               if (baseOffset < 0) {
+                  // FIXME: Presumably we're in emulated mode, but it still does not make any sense
+                  // shouldn't it be element->SetNewType(-1) ?
+                  baseOffset = 0;
+               }
             }
             element->SetOffset(baseOffset);
             offset += baseclass->Size();
