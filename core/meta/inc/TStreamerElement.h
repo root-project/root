@@ -140,7 +140,8 @@ protected:
    UInt_t           &fBaseCheckSum;   //!checksum of the base class (used during memberwise streaming)
    TClass           *fBaseClass;      //!pointer to base class
    TClass           *fNewBaseClass;   //!pointer to new base class if renamed
-   ClassStreamerFunc_t   fStreamerFunc; //!Pointer to a wrapper around a custom streamer member function.
+   ClassStreamerFunc_t     fStreamerFunc;     //!Pointer to a wrapper around a custom streamer member function.
+   ClassConvStreamerFunc_t fConvStreamerFunc; //!Pointer to a wrapper around a custom convertion streamer member function.
    TVirtualStreamerInfo *fStreamerInfo; //!Pointer to the current StreamerInfo for the baset class.
    TString               fErrorMsg;     //!Error message in case of checksum/version mismatch.
 

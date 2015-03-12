@@ -566,7 +566,7 @@ ClassImp(TStreamerBase)
 TStreamerBase::TStreamerBase() :
    // Abuse TStreamerElement data member that is not used by TStreamerBase
    fBaseCheckSum( *( (UInt_t*)&(fMaxIndex[1]) ) ),
-   fStreamerFunc(0), fStreamerInfo(0)
+   fStreamerFunc(0), fConvStreamerFunc(0), fStreamerInfo(0)
 {
    // Default ctor.
 
@@ -580,7 +580,7 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
    : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kBase,"BASE"),
      // Abuse TStreamerElement data member that is not used by TStreamerBase
      fBaseCheckSum( *( (UInt_t*)&(fMaxIndex[1]) ) ),
-     fStreamerFunc(0), fStreamerInfo(0)
+     fStreamerFunc(0), fConvStreamerFunc(0), fStreamerInfo(0)
 
 {
    // Create a TStreamerBase object.
@@ -646,6 +646,7 @@ void TStreamerBase::InitStreaming()
 
    if (fNewBaseClass) {
       fStreamerFunc = fNewBaseClass->GetStreamerFunc();
+      fConvStreamerFunc = fNewBaseClass->GetConvStreamerFunc();
       if (fBaseVersion > 0 || fBaseCheckSum == 0) {
          fStreamerInfo = fNewBaseClass->GetConversionStreamerInfo(fBaseClass,fBaseVersion);
       } else {
@@ -653,6 +654,7 @@ void TStreamerBase::InitStreaming()
       }
    } else if (fBaseClass && fBaseClass != (TClass*)-1) {
       fStreamerFunc = fBaseClass->GetStreamerFunc();
+      fConvStreamerFunc = fBaseClass->GetConvStreamerFunc();
       if (fBaseVersion >= 0 || fBaseCheckSum == 0) {
          fStreamerInfo = fBaseClass->GetStreamerInfo(fBaseVersion);
       } else {
@@ -660,6 +662,7 @@ void TStreamerBase::InitStreaming()
       }
    } else {
       fStreamerFunc = 0;
+      fConvStreamerFunc = 0;
       fStreamerInfo = 0;
    }
 }
@@ -705,7 +708,10 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
 {
    // Read the content of the buffer.
 
-   if (fStreamerFunc) {
+   if (fConvStreamerFunc) {
+      // We have a custom Streamer member function, we must use it.
+      fConvStreamerFunc(b,pointer+fOffset,fNewBaseClass ? fBaseClass : nullptr);
+   } else if (fStreamerFunc) {
       // We have a custom Streamer member function, we must use it.
       fStreamerFunc(b,pointer+fOffset);
    } else {
