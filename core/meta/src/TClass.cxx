@@ -996,7 +996,7 @@ TClass::TClass() :
    fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
@@ -1023,7 +1023,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
@@ -1070,7 +1070,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
@@ -1096,7 +1096,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
    fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(theState),
@@ -1133,7 +1133,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
@@ -1189,7 +1189,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
@@ -1219,7 +1219,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kHasTClassInit),
@@ -2244,6 +2244,7 @@ TObject *TClass::Clone(const char *new_name) const
    copy->SetDestructor(fDestructor);
    copy->SetDirectoryAutoAdd(fDirAutoAdd);
    copy->fStreamerFunc = fStreamerFunc;
+   copy->fConvStreamerFunc = fConvStreamerFunc;
    if (fStreamer) {
       copy->AdoptStreamer(fStreamer->Generate());
    }
@@ -2692,12 +2693,21 @@ TClassStreamer *TClass::GetStreamer() const
    }
    return fStreamer;
 }
+
 //______________________________________________________________________________
 ClassStreamerFunc_t TClass::GetStreamerFunc() const
 {
    // Get a wrapper/accessor function around this class custom streamer (member function).
 
    return fStreamerFunc;
+}
+
+//______________________________________________________________________________
+ClassConvStreamerFunc_t TClass::GetConvStreamerFunc() const
+{
+   // Get a wrapper/accessor function around this class custom conversion streamer (member function).
+
+   return fConvStreamerFunc;
 }
 
 //______________________________________________________________________________
@@ -5499,7 +5509,10 @@ Long_t TClass::Property() const
          kl->fStreamerImpl  = &TClass::StreamerStreamerInfo;
 
       } else if ( kl->fStreamerType == TClass::kDefault ) {
-         if (kl->fStreamerFunc) {
+         if (kl->fConvStreamerFunc) {
+            kl->fStreamerType  = kInstrumented;
+            kl->fStreamerImpl  = &TClass::ConvStreamerInstrumented;
+         } else if (kl->fStreamerFunc) {
             kl->fStreamerType  = kInstrumented;
             kl->fStreamerImpl  = &TClass::StreamerInstrumented;
          } else {
@@ -5547,8 +5560,9 @@ void TClass::SetStreamerImpl()
       case kForeign:  fStreamerImpl  = &TClass::StreamerStreamerInfo; break;
       case kExternal: fStreamerImpl  = &TClass::StreamerExternal; break;
       case kInstrumented:  {
-         if (fStreamerFunc) fStreamerImpl  = &TClass::StreamerInstrumented;
-         else               fStreamerImpl  = &TClass::StreamerStreamerInfo;
+         if (fConvStreamerFunc)  fStreamerImpl  = &TClass::ConvStreamerInstrumented;
+         else if (fStreamerFunc) fStreamerImpl  = &TClass::StreamerInstrumented;
+         else                    fStreamerImpl  = &TClass::StreamerStreamerInfo;
          break;
       }
 
@@ -6138,6 +6152,15 @@ void TClass::StreamerInstrumented(const TClass* pThis, void *object, TBuffer &b,
 }
 
 //______________________________________________________________________________
+void TClass::ConvStreamerInstrumented(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
+{
+   // Case of instrumented class with a library
+
+   // case kInstrumented:
+   pThis->fConvStreamerFunc(b,object,onfile_class);
+}
+
+//______________________________________________________________________________
 void TClass::StreamerStreamerInfo(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
    // Case of where we should directly use the StreamerInfo.
@@ -6211,7 +6234,7 @@ void TClass::SetStreamerFunc(ClassStreamerFunc_t strm)
    // Set a wrapper/accessor function around this class custom streamer.
 
    R__LOCKGUARD(gInterpreterMutex);
-   if (fProperty != -1 &&
+   if (fProperty != -1 && !fConvStreamerFunc &&
        ( (fStreamerFunc == 0 && strm != 0) || (fStreamerFunc != 0 && strm == 0) ) )
    {
       fStreamerFunc = strm;
@@ -6227,6 +6250,30 @@ void TClass::SetStreamerFunc(ClassStreamerFunc_t strm)
    }
    fCanSplit = -1;
 }
+
+//______________________________________________________________________________
+void TClass::SetConvStreamerFunc(ClassConvStreamerFunc_t strm)
+{
+   // Set a wrapper/accessor function around this class custom conversion streamer.
+
+   R__LOCKGUARD(gInterpreterMutex);
+   if (fProperty != -1 &&
+       ( (fConvStreamerFunc == 0 && strm != 0) || (fConvStreamerFunc != 0 && strm == 0) ) )
+   {
+      fConvStreamerFunc = strm;
+
+      // Since initialization has already been done, make sure to tweak it
+      // for the new state.
+      if (HasInterpreterInfo() && fStreamerType != kTObject && !fStreamer) {
+         fStreamerType  = kInstrumented;
+         fStreamerImpl  = &TClass::ConvStreamerInstrumented;
+      }
+   } else {
+      fConvStreamerFunc = strm;
+   }
+   fCanSplit = -1;
+}
+
 
 //______________________________________________________________________________
 void TClass::SetMerge(ROOT::MergeFunc_t newMerge)

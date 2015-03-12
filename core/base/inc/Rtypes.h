@@ -57,6 +57,7 @@ enum EColor { kWhite =0,   kBlack =1,   kGray=920,
 class TClassStreamer;   // Streamer functor for a class
 class TMemberStreamer;  // Streamer functor for a data member
 typedef void (*ClassStreamerFunc_t)(TBuffer&, void*);  // Streamer function for a class
+typedef void (*ClassConvStreamerFunc_t)(TBuffer&, void*, const TClass*);  // Streamer function for a class with conversion.
 typedef void (*MemberStreamerFunc_t)(TBuffer&, void*, Int_t); // Streamer function for a data member
 
 // This class is used to implement proxy around collection classes.

@@ -515,6 +515,12 @@ bool HasCustomStreamerMemberFunction(const AnnotatedRecordDecl &cl,
                                      const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
+bool HasCustomConvStreamerMemberFunction(const AnnotatedRecordDecl &cl,
+                                         const clang::CXXRecordDecl* clxx,
+                                         const cling::Interpreter &interp,
+                                         const TNormalizedCtxt &normCtxt);
+
+//______________________________________________________________________________
 // Return the header file to be included to declare the Decl
 llvm::StringRef GetFileName(const clang::Decl& decl,
                             const cling::Interpreter& interp);
