@@ -9,6 +9,6 @@ void makeimage(const char *MacroName, const char *ImageName, const char *OutDir)
    TVirtualPad* pad = 0;
 
    while ((pad = (TVirtualPad*) iCanvas())) {
-      pad->SaveAs(TString::Format("%s/images/%s",OutDir,ImageName));
+      pad->SaveAs(TString::Format("%s/html/%s",OutDir,ImageName));
    }
 }
