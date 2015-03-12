@@ -146,6 +146,8 @@ function BuildSimpleGUI() {
 
    hpainter.StartGUI(h0, function() {
 
+      setGuiLayout(hpainter.GetLayout());
+
       // specify display kind every time selection done
       // will be actually used only for first drawing or after reset
       $("#layout").change(function() {

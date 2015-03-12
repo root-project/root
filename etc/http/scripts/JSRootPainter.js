@@ -1688,7 +1688,6 @@
             if (h==-270) txt.attr("transform", "rotate(270, 0, 0)");
          }
 
-         // console.log('text attr y = ' + txt.attr("y"));
          var box = txt.node().getBBox();
          var real_w = parseInt(box.width), real_h = parseInt(box.height);
 
@@ -2971,20 +2970,38 @@
 
    JSROOT.TPadPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
 
+   JSROOT.TPadPainter.prototype.GetStyleValue = function(select, name) {
+      var value = select.style(name);
+      if (!value) return 0;
+      value = parseFloat(value.replace("px",""));
+      return (value === NaN) ? 0 : value;
+   }
+
    JSROOT.TPadPainter.prototype.CreateCanvasSvg = function(check_resize) {
 
       var render_to = d3.select("#" + this.divid);
 
       var rect = render_to.node().getBoundingClientRect();
-      var w = rect.width, h = rect.height, factor = null;
+
+      var w = Math.round(rect.width - this.GetStyleValue(render_to, 'padding-left') - this.GetStyleValue(render_to, 'padding-right'));
+      var h = Math.round(rect.height - this.GetStyleValue(render_to, 'padding-top') - this.GetStyleValue(render_to, 'padding-bottom'));
+      var factor = null;
 
       var svg = null;
 
       if (check_resize > 0) {
+
          svg = this.svg_canvas();
 
          var oldw = svg.property('last_width');
          var oldh = svg.property('last_height');
+
+         if ((w<=0) && (h<=0)) {
+            svg.attr("visibility", "hidden");
+            return false;
+         } else {
+            svg.attr("visibility", "visible");
+         }
 
          if (check_resize == 1) {
             if ((svg.attr('width') == w) && (svg.attr('height') == h)) return false;
@@ -3049,8 +3066,9 @@
       }
 
       svg.attr("width", w).attr("height", h)
+         .attr("visibility", "visible")
          .attr("viewBox", "0 0 " + w + " " + h)
-         .attr("preserveAspectRatio", "none")  // we do not keep relative ratio
+         .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
          .property('height_factor', factor)
          .property('last_width', w)
          .property('last_height', h)
@@ -7944,9 +7962,13 @@
       return this['_monitoring_on'];
    }
 
-   JSROOT.HierarchyPainter.prototype.SetDisplay = function(kind, frameid) {
-      this['disp_kind'] = kind;
+   JSROOT.HierarchyPainter.prototype.SetDisplay = function(layout, frameid) {
+      this['disp_kind'] = layout;
       this['disp_frameid'] = frameid;
+   }
+
+   JSROOT.HierarchyPainter.prototype.GetLayout = function() {
+      return this['disp_kind'];
    }
 
    JSROOT.HierarchyPainter.prototype.clear = function(withbrowser) {
@@ -8143,11 +8165,14 @@
       // do nothing by default
    }
 
-   JSROOT.MDIDisplay.prototype.CheckResize = function() {
+   JSROOT.MDIDisplay.prototype.CheckResize = function(only_frame_id) {
       // perform resize for each frame
       var resized_frame = null;
 
       this.ForEachPainter(function(painter, frame) {
+
+         if ((only_frame_id != null) && (d3.select(frame).attr('id') != only_frame_id)) return;
+
          if ((painter.GetItemName()!=null) && (typeof painter['CheckResize'] == 'function')) {
             // do not call resize for many painters on the same frame
             if (resized_frame === frame) return;

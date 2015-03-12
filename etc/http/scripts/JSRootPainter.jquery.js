@@ -627,6 +627,8 @@
       entryInfo += "<div class='collapsible_draw' id='" + hid + "'></div>\n";
       $("#" + topid).append(entryInfo);
 
+      var pthis = this;
+
       $('#' + uid)
             .addClass("ui-accordion-header ui-helper-reset ui-state-default ui-corner-top ui-corner-bottom")
             .hover(function() { $(this).toggleClass("ui-state-hover"); })
@@ -638,10 +640,11 @@
                      $(this).toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
                            .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s")
                            .end().next().toggleClass("ui-accordion-content-active").slideToggle(0);
+                     pthis.CheckResize($(this).next().attr('id'));
                      return false;
                   })
             .next()
-            .addClass("ui-accordion-content  ui-helper-reset ui-widget-content ui-corner-bottom")
+            .addClass("ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom")
             .hide();
 
       $('#' + uid)
@@ -700,12 +703,22 @@
             + '</a><span class="ui-icon ui-icon-close" role="presentation">Remove Tab</span></li>';
       var cont = '<div class="tabs_draw" id="' + hid + '"></div>';
 
+      var pthis = this;
+
       if (document.getElementById(topid) == null) {
          $("#" + this.frameid).append('<div id="' + topid + '">' + ' <ul>' + li + ' </ul>' + cont + '</div>');
 
          var tabs = $("#" + topid)
                        .css('overflow','hidden')
-                       .tabs({ heightStyle : "fill" });
+                       .tabs({
+                          heightStyle : "fill",
+                          activate : function (event,ui) {
+                             $(ui.newPanel).css('overflow', 'hidden');
+                             pthis.CheckResize($(ui.newPanel).attr('id'));
+                             // console.log('activate element old ' + $(ui.oldPanel).attr('id'));
+                             // console.log('activate element new ' + $(ui.newPanel).attr('id'));
+                           }
+                          });
 
          tabs.delegate("span.ui-icon-close", "click", function() {
             var panelId = $(this).closest("li").remove().attr("aria-controls");
@@ -721,8 +734,11 @@
          $("#" + topid).tabs("refresh");
          $("#" + topid).tabs("option", "active", -1);
       }
-      $('#' + hid).empty();
-      $('#' + hid).prop('title', title);
+      $('#' + hid)
+         .empty()
+         .css('overflow', 'hidden')
+         .prop('title', title);
+
       return $('#' + hid).get(0);
    }
 
@@ -902,10 +918,15 @@
       JSROOT.Painter.separ = { handle: handle, left: "left-div", right: "right-div", vertical: "separator-div",
                                horizontal : null, bottom : null, hpart: true };
 
-      $("#separator-div").addClass("#separator").draggable({
+      $("#separator-div").addClass("separator").draggable({
          axis: "x" , zIndex: 100, cursor: "ew-resize",
-         helper : function() { return $("#separator-div").clone().css('background-color','grey'); },
-         stop: function(event,ui) { event.stopPropagation(); JSROOT.Painter.AdjustLayout(ui.position.left, null, false); }
+         helper : function() { return $("#separator-div").clone().attr('id','separator-clone').css('background-color','grey'); },
+         stop: function(event,ui) {
+            event.stopPropagation();
+            var left = ui.position.left;
+            $("#separator-clone").remove();
+            JSROOT.Painter.AdjustLayout(left, null, false);
+         }
       });
 
       var w0 = Math.round($(window).width() * 0.2);
@@ -928,10 +949,15 @@
       prnt.append('<div id="horizontal-separator-div" class="separator" style="left:1px; right:1px;  height:4px; bottom:16px; cursor: ns-resize"></div>');
       prnt.append('<div id="bottom-div" class="column" style="left:1px; right:1px; height:15px; bottom:1px"></div>');
 
-      $("#horizontal-separator-div").draggable({
+      $("#horizontal-separator-div").addClass("separator").draggable({
          axis: "y" , zIndex: 100, cursor: "ns-resize",
-         helper : function() { return $("#horizontal-separator-div").clone().css('background-color','grey'); },
-         stop: function(event,ui) { event.stopPropagation(); JSROOT.Painter.AdjustLayout(null, $(window).height() - ui.position.top, false); }
+         helper : function() { return $("#horizontal-separator-div").clone().attr('id','horizontal-separator-clone').css('background-color','grey'); },
+         stop: function(event,ui) {
+            event.stopPropagation();
+            var top = $(window).height() - ui.position.top;
+            $('#horizontal-separator-clone').remove();
+            JSROOT.Painter.AdjustLayout(null, top, false);
+         }
       });
 
       JSROOT.Painter.AdjustLayout(null, height, false);
