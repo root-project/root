@@ -224,6 +224,7 @@ private:
    ROOT::DesFunc_t     fDestructor;     //pointer to a function call an object's destructor.
    ROOT::DirAutoAdd_t  fDirAutoAdd;     //pointer which implements the Directory Auto Add feature for this class.']'
    ClassStreamerFunc_t fStreamerFunc;   //Wrapper around this class custom Streamer member function.
+   ClassConvStreamerFunc_t fConvStreamerFunc;   //Wrapper around this class custom conversion Streamer member function.
    Int_t               fSizeof;         //Sizeof the class.
 
            Int_t      fCanSplit;          //!Indicates whether this class can be split or not.
@@ -275,6 +276,7 @@ private:
    static void StreamerTObjectInitialized(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
    static void StreamerTObjectEmulated(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
    static void StreamerInstrumented(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
+   static void ConvStreamerInstrumented(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
    static void StreamerStreamerInfo(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
    static void StreamerDefault(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
 
@@ -440,6 +442,7 @@ public:
    EState             GetState() const { return fState; }
    TClassStreamer    *GetStreamer() const;
    ClassStreamerFunc_t GetStreamerFunc() const;
+   ClassConvStreamerFunc_t GetConvStreamerFunc() const;
    const TObjArray          *GetStreamerInfos() const { return fStreamerInfo; }
    TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
@@ -504,6 +507,7 @@ public:
    void               AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
    void               SetMemberStreamer(const char *name, MemberStreamerFunc_t strm);
    void               SetStreamerFunc(ClassStreamerFunc_t strm);
+   void               SetConvStreamerFunc(ClassConvStreamerFunc_t strm);
 
    // Function to retrieve the TClass object and dictionary function
    static void           AddClass(TClass *cl);

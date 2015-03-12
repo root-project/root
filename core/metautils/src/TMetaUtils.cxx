@@ -1224,6 +1224,26 @@ bool ROOT::TMetaUtils::HasCustomStreamerMemberFunction(const AnnotatedRecordDecl
 }
 
 //______________________________________________________________________________
+bool ROOT::TMetaUtils::HasCustomConvStreamerMemberFunction(const AnnotatedRecordDecl &cl,
+                                                           const clang::CXXRecordDecl* clxx,
+                                                           const cling::Interpreter &interp,
+                                                           const TNormalizedCtxt &normCtxt)
+{
+   // Return true if the class has a custom member function streamer.
+
+   static const char *proto = "TBuffer&,TClass*";
+
+   const clang::CXXMethodDecl *method
+      = GetMethodWithProto(clxx,"Streamer",proto, interp,
+                        cling::LookupHelper::NoDiagnostics);
+   const clang::DeclContext *clxx_as_context = llvm::dyn_cast<clang::DeclContext>(clxx);
+
+   return (method && method->getDeclContext() == clxx_as_context
+           && ( cl.RequestNoStreamer() || !cl.RequestStreamerInfo()));
+}
+
+
+//______________________________________________________________________________
 void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext)
 {
    // Main implementation relying on GetFullyQualifiedTypeName
@@ -1660,6 +1680,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasCustomStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       finalString << "   static void streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj);" << "\n";
    }
+   if (HasCustomConvStreamerMemberFunction(cl, decl, interp, normCtxt)) {
+      finalString << "   static void conv_streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj, const TClass*);" << "\n";
+   }
    if (HasNewMerge(decl, interp) || HasOldMerge(decl, interp)) {
       finalString << "   static Long64_t merge_" << mappedname.c_str() << "(void *obj, TCollection *coll,TFileMergeInfo *info);" << "\n";
    }
@@ -1824,6 +1847,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasCustomStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       // We have a custom member function streamer or an older (not StreamerInfo based) automatic streamer.
       finalString << "      instance.SetStreamerFunc(&streamer_" << mappedname.c_str() << ");" << "\n";
+   }
+   if (HasCustomConvStreamerMemberFunction(cl, decl, interp, normCtxt)) {
+      // We have a custom member function streamer or an older (not StreamerInfo based) automatic streamer.
+      finalString << "      instance.SetConvStreamerFunc(&conv_streamer_" << mappedname.c_str() << ");" << "\n";
    }
    if (HasNewMerge(decl, interp) || HasOldMerge(decl, interp)) {
       finalString << "      instance.SetMerge(&merge_" << mappedname.c_str() << ");" << "\n";
@@ -2266,6 +2293,10 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
 
    if (HasCustomStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       finalString << "   // Wrapper around a custom streamer member function." << "\n" << "   static void streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj) {" << "\n" << "      ((" << classname.c_str() << "*)obj)->" << classname.c_str() << "::Streamer(buf);" << "\n" << "   }" << "\n";
+   }
+
+   if (HasCustomConvStreamerMemberFunction(cl, decl, interp, normCtxt)) {
+      finalString << "   // Wrapper around a custom streamer member function." << "\n" << "   static void conv_streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj, const TClass *onfile_class) {" << "\n" << "      ((" << classname.c_str() << "*)obj)->" << classname.c_str() << "::Streamer(buf,onfile_class);" << "\n" << "   }" << "\n";
    }
 
    if (HasNewMerge(decl, interp)) {
