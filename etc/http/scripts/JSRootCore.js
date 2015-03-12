@@ -14,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.4 dev 11/03/2015";
+   JSROOT.version = "3.4 dev 12/03/2015";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -486,20 +486,6 @@
          element = document.createElement("script");
          element.setAttribute('type', "text/javascript");
          element.setAttribute('src', filename);
-
-         //if (filename.indexOf('MathJax.js?config')>0) {
-         //   var el1 = document.createElement("script");
-         //   el1.setAttribute('type', "text/x-mathjax-config");
-         //   el1.text = 'MathJax.Hub.Config({ TeX: { extensions: ["color.js"] }}); \
-         //               MathJax.Hub.Register.StartupHook("SVG Jax Ready",function () { \
-         //                  var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT; \
-         //                  VARIANT["normal"].fonts.unshift("MathJax_SansSerif"); \
-         //                  VARIANT["bold"].fonts.unshift("MathJax_SansSerif-bold"); \
-         //                  VARIANT["italic"].fonts.unshift("MathJax_SansSerif"); \
-         //                  VARIANT["-tex-mathit"].fonts.unshift("MathJax_SansSerif"); \
-         //               });';
-         //   document.getElementsByTagName("head")[0].appendChild(el1);
-         //}
       }
 
       if (element.readyState) { // Internet Explorer specific
@@ -583,7 +569,6 @@
       }
 
       if (kind.indexOf("mathjax;")>=0) {
-         // allfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG;";
          allfiles += "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG," +
                       JSROOT.source_dir + "scripts/mathjax_config.js;";
          if (JSROOT.MathJax == 0) JSROOT.MathJax = 1;
