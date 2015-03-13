@@ -105,8 +105,8 @@ TKDE::~TKDE() {
    if (fLowerPDF)         delete fLowerPDF;
    if (fGraph)         delete fGraph;
    if (fApproximateBias)  delete fApproximateBias;
-   delete fKernelFunction;
-   delete fKernel;
+   if (fKernelFunction && fKernelType != kUserDefined) delete fKernelFunction;
+   if (fKernel) delete fKernel;
 }
 
 void TKDE::Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_t* data, const Double_t* dataWeights, Double_t xMin, Double_t xMax, const Option_t* option, Double_t rho) {
@@ -114,9 +114,15 @@ void TKDE::Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_
    fData = std::vector<Double_t>(events, 0.0);
    fEvents = std::vector<Double_t>(events, 0.0);
    fPDF = 0;
+   fKernel = 0;
+   fKernelFunction = 0;
    fUpperPDF = 0;
    fLowerPDF = 0;
    fApproximateBias = 0;
+   fGraph = 0;
+   fNewData = false;
+   fUseMirroring = false; fMirrorLeft = false; fMirrorRight = false;
+   fAsymLeft = false; fAsymRight = false; 
    fNBins = events < 10000 ? 100 : events / 10;
    fNEvents = events;
    fUseBinsNEvents = 10000;
@@ -125,7 +131,10 @@ void TKDE::Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_
    fXMin = xMin;
    fXMax = xMax;
    fUseMinMaxFromData = (fXMin >= fXMax);
+   fSumOfCounts = 0;
    fAdaptiveBandwidthFactor = 1.;
+   fRho = rho;
+   fWeightSize = 0;
    fCanonicalBandwidths = std::vector<Double_t>(kTotalKernels, 0.0);
    fKernelSigmas2 = std::vector<Double_t>(kTotalKernels, -1.0);
    fSettedOptions = std::vector<Bool_t>(4, kFALSE);
@@ -315,9 +324,13 @@ void TKDE::CheckOptions(Bool_t isUserDefinedKernel) {
 
 void TKDE::SetKernelType(EKernelType kern) {
    // Sets User option for the choice of kernel estimator
+   if (fKernelFunction && fKernelType != kUserDefined) {
+      delete fKernelFunction;
+      fKernelFunction = 0;
+   }
    fKernelType = kern;
    CheckOptions();
-   SetKernel();
+   SetKernelFunction(0);
 }
 
 void TKDE::SetIteration(EIteration iter) {
@@ -529,6 +542,7 @@ void TKDE::SetKernel() {
    // Optimal bandwidth (Silverman's rule of thumb with assumed Gaussian density)
    Double_t weight = fCanonicalBandwidths[kGaussian] * fSigmaRob * std::pow(3. / (8. * std::sqrt(M_PI)) * n, -0.2);
    weight *= fRho * fCanonicalBandwidths[fKernelType] / fCanonicalBandwidths[kGaussian];
+   if (fKernel) delete fKernel;
    fKernel = new TKernel(weight, this);
    if (fIteration == kAdaptive) {
       fKernel->ComputeAdaptiveWeights();
@@ -536,7 +550,8 @@ void TKDE::SetKernel() {
 }
 
 void TKDE::SetKernelFunction(KernelFunction_Ptr kernfunc) {
-   // Sets kernel estimator
+
+   assert(fKernelFunction == 0);  // to avoid memory leaks
    switch (fKernelType) {
       case kGaussian :
          fKernelFunction = new ROOT::Math::WrappedMemFunction<TKDE, Double_t (TKDE::*)(Double_t) const>(*this, &TKDE::GaussianKernel);
@@ -681,18 +696,26 @@ fWeights(fNWeights, weight)
 void TKDE::TKernel::ComputeAdaptiveWeights() {
    // Gets the adaptive weights (bandwidths) for TKernel internal computation
    std::vector<Double_t> weights = fWeights;
-   std::vector<Double_t>::iterator weight = weights.begin();
-   Double_t minWeight = *weight * 0.05;
-   std::vector<Double_t>::iterator data = fKDE->fData.begin();
+   Double_t minWeight = weights[0] * 0.05;
+   unsigned int n = fKDE->fData.size();
+   assert( n == weights.size() );
+   bool useDataWeights = (fKDE->fBinCount.size() == n); 
    Double_t f = 0.0;
-   for (; weight != weights.end(); ++weight, ++data) {
-      f = (*fKDE->fKernel)(*data);
-      *weight = std::max(*weight /= std::sqrt(f), minWeight);
+   for (unsigned int i = 0; i < n; ++i) { 
+//   for (; weight != weights.end(); ++weight, ++data, ++dataW) {
+      if (useDataWeights && fKDE->fBinCount[i] <= 0) continue;  // skip negative or null weights
+      f = (*fKDE->fKernel)(fKDE->fData[i]);
+      if (f <= 0)
+         fKDE->Warning("ComputeAdativeWeights","function value is zero or negative for x = %f w = %f",
+                       fKDE->fData[i],(useDataWeights) ? fKDE->fBinCount[i] : 1.);
+      weights[i] = std::max(weights[i] /= std::sqrt(f), minWeight);
       fKDE->fAdaptiveBandwidthFactor += std::log(f);
+      //printf("(f = %f w = %f af = %f ),",f,*weight,fKDE->fAdaptiveBandwidthFactor);
    }
    Double_t kAPPROX_GEO_MEAN = 0.241970724519143365; // 1 / TMath::Power(2 * TMath::Pi(), .5) * TMath::Exp(-.5). Approximated geometric mean over pointwise data (the KDE function is substituted by the "real Gaussian" pdf) and proportional to sigma. Used directly when the mirroring is enabled, otherwise computed from the data
    fKDE->fAdaptiveBandwidthFactor = fKDE->fUseMirroring ? kAPPROX_GEO_MEAN / fKDE->fSigmaRob : std::sqrt(std::exp(fKDE->fAdaptiveBandwidthFactor / fKDE->fData.size()));
    transform(weights.begin(), weights.end(), fWeights.begin(), std::bind2nd(std::multiplies<Double_t>(), fKDE->fAdaptiveBandwidthFactor));
+   //printf("adaptive bandwidth factor % f weight 0 %f , %f \n",fKDE->fAdaptiveBandwidthFactor, weights[0],fWeights[0] );
 }
 
 Double_t TKDE::TKernel::GetWeight(Double_t x) const {
@@ -721,6 +744,7 @@ void TKDE::SetBinCountData() {
             if (fEvents[i] >= fXMin && fEvents[i] < fXMax) {
                fBinCount[Index(fEvents[i])] += fEventWeights[i];
                fSumOfCounts += fEventWeights[i];
+               //printf("sum of counts %f - bin count %d - %f \n",fSumOfCounts, Index(fEvents[i]), fBinCount[Index(fEvents[i])] );
             }
          }
       }
@@ -880,7 +904,9 @@ Double_t TKDE::TKernel::operator()(Double_t x) const {
    UInt_t n = fKDE->fData.size();
    // case of bins or weighted data 
    Bool_t useBins = (fKDE->fBinCount.size() == n);
-   Double_t nSum = (useBins) ? fKDE->fSumOfCounts : fKDE->fNEvents; 
+   Double_t nSum = (useBins) ? fKDE->fSumOfCounts : fKDE->fNEvents;
+   // double dmin = 1.E10;
+   // double xmin,bmin,wmin; 
    for (UInt_t i = 0; i < n; ++i) {
       Double_t binCount = (useBins) ? fKDE->fBinCount[i] : 1.0;
       //printf("data point %i  %f  count %f weight % f result % f\n",i,fKDE->fData[i],binCount,fWeights[i], result);
@@ -891,6 +917,22 @@ Double_t TKDE::TKernel::operator()(Double_t x) const {
       if (fKDE->fAsymRight) {
          result -= binCount / fWeights[i] * (*fKDE->fKernelFunction)((x - (2. * fKDE->fXMax - fKDE->fData[i])) / fWeights[i]);
       }
+      // if ( TMath::IsNaN(result) ) {
+      //    printf("event %i count %f  weight %f  data % f x %f \n",i,binCount,fWeights[i],fKDE->fData[i],x );
+      // }
+      // if ( result <= 0 ) {
+      //    printf("event %i count %f  weight %f  data % f x %f \n",i,binCount,fWeights[i],fKDE->fData[i],x );
+      // }
+      // if (std::abs(x -  fKDE->fData[i]) < dmin ) {
+      //    xmin = x;
+      //    bmin = binCount;
+      //    wmin = fWeights[i];
+      //    dmin = std::abs(x -  fKDE->fData[i]);
+      // }
+   }
+   if ( TMath::IsNaN(result) ) {
+      fKDE->Warning("operator()","Result is NaN for  x %f \n",x);
+    //xmin % f , %f, %f \n",result,x,xmin,bmin,wmin );
    }
    return result / nSum;
 }
