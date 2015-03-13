@@ -64,14 +64,28 @@ static TStreamerBasicType *InitCounter(const char *countClass, const char *count
 
    TStreamerBasicType *counter = 0;
 
-   if (directive && directive->InheritsFrom(TVirtualStreamerInfo::Class()) && strcmp(directive->GetName(),countClass)==0) {
+   if (directive && directive->InheritsFrom(TVirtualStreamerInfo::Class())) {
 
-      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)directive;
-      TStreamerElement *element = (TStreamerElement *)info->GetElements()->FindObject(countName);
-      if (!element) return 0;
-      if (element->IsA() != TStreamerBasicType::Class()) return 0;
-      counter = (TStreamerBasicType*)element;
+      if (strcmp(directive->GetName(),countClass)==0) {
 
+         TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)directive;
+         TStreamerElement *element = (TStreamerElement *)info->GetElements()->FindObject(countName);
+         if (!element) return 0;
+         if (element->IsA() != TStreamerBasicType::Class()) return 0;
+         counter = (TStreamerBasicType*)element;
+
+      } else {
+
+         TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)directive;
+         TRealData* rdCounter = (TRealData*) info->GetClass()->GetListOfRealData()->FindObject(countName);
+         if (!rdCounter) return 0;
+         TDataMember *dmCounter = rdCounter->GetDataMember();
+
+         TClass *cl = dmCounter->GetClass();
+         if (cl==0) return 0;
+         counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
+
+      }
    } else {
 
       TClass *cl = TClass::GetClass(countClass);
@@ -892,6 +906,11 @@ ULong_t TStreamerBasicPointer::GetMethod() const
 
    if (!fCounter) ((TStreamerBasicPointer*)this)->Init();
    if (!fCounter) return 0;
+   // FIXME: does not suport multiple inheritance for counter in base class.
+   // This is wrong in case counter is not in the same class or one of
+   // the left most (non virtual) base classes.  For the other we would
+   // really need to use the object coming from the list of real data.
+   // (and even that need analysis for virtual base class).
    return (ULong_t)fCounter->GetOffset();
 }
 
