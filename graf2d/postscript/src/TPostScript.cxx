@@ -1788,7 +1788,7 @@ void TPostScript::Initialize()
    PrintStr("/cl {closepath} def /sf {scalefont setfont} def /lw {setlinewidth} def@");
    PrintStr("/box {m dup 0 exch d exch 0 d 0 exch neg d cl} def@");
    PrintStr("/NC{systemdict begin initclip end}def/C{NC box clip newpath}def@");
-   PrintStr("/bl {box s} def /bf {box f} def /Y { 0 exch d} def /X { 0 d} def @");
+   PrintStr("/bl {box s} def /bf {box gsave f grestore s} def /Y { 0 exch d} def /X { 0 d} def @");
    PrintStr("/K {{pop pop 0 moveto} exch kshow} bind def@");
    PrintStr("/ita {/ang 15 def gsave [1 0 ang dup sin exch cos div 1 0 0] concat} def @");
 
