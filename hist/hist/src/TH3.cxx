@@ -332,7 +332,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    binz = fZaxis.FindBin(z);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -377,7 +377,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Double_
    binz = fZaxis.FindBin(namez);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
@@ -420,7 +420,7 @@ Int_t TH3::Fill(const char *namex, Double_t y, const char *namez, Double_t w)
    binz = fZaxis.FindBin(namez);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
@@ -464,7 +464,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
    binz = fZaxis.FindBin(z);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
@@ -508,7 +508,7 @@ Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
    binz = fZaxis.FindBin(namez);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -552,7 +552,7 @@ Int_t TH3::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
    binz = fZaxis.FindBin(z);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -597,7 +597,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
    binz = fZaxis.FindBin(namez);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -918,7 +918,7 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
                hlist[ipar]->Fill(x,y,f1->GetParameter(ipar));
                hlist[ipar]->SetBinError(binx,biny,f1->GetParError(ipar));
             }
-            hchi2->Fill(x,y,f1->GetChisquare()/(npfits-npar));
+            hchi2->SetBinContent(binx,biny,f1->GetChisquare()/(npfits-npar));
          }
       }
    }
@@ -2592,7 +2592,8 @@ void TH3::DoFillProfileProjection(TProfile2D * p2,
    Double_t cont = GetBinContent(inBin);
    if (!cont) return;
    TArrayD & binSumw2 = *(p2->GetBinSumw2());
-   if (useWeights && binSumw2.fN <= 0) useWeights = false;
+   if (useWeights && binSumw2.fN <= 0) useWeights = false;   
+   if (!useWeights) p2->SetBit(TH1::kIsNotW);  // to use Fill for setting the bin contents of the Profile
    // the following fill update wrongly the fBinSumw2- need to save it before
    Double_t u = a1.GetBinCenter(bin1);
    Double_t v = a2.GetBinCenter(bin2);
@@ -2724,6 +2725,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
 
    TArrayD & binSumw2 = *(p2->GetBinSumw2());
    if (useWeights && binSumw2.fN <= 0) useWeights = false;
+   if (!useWeights) p2->SetBit(TH1::kIsNotW);
 
    // Call specific method for the projection
    for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++) {

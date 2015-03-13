@@ -9451,7 +9451,6 @@ int stressHistogram()
            << std::endl;
 
 
-   TH1::SetDefaultSumw2();
    // to avoid cases in chi2-test of profiles when error is zero
    TProfile::Approximate();
    TProfile2D::Approximate();
@@ -9481,6 +9480,9 @@ int stressHistogram()
            << "        Test with weights         \n"
            << "**********************************\n"
            << std::endl;
+
+   TH1::SetDefaultSumw2();
+
 
    ProjectionTester* ht2 = new ProjectionTester();
    ht2->buildHistogramsWithWeights();
@@ -10237,7 +10239,7 @@ int main(int argc, char** argv)
 {
    TApplication* theApp = 0;
 
-   TH1::SetDefaultSumw2();
+   //TH1::SetDefaultSumw2();
 
    if ( __DRAW__ )
       theApp = new TApplication("App",&argc,argv);
