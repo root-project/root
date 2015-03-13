@@ -20,6 +20,7 @@ METAUTILSS     := $(filter-out $(MODDIRS)/TMetaUtils.%,\
 
 METAUTILSTH     += $(MODDIRI)/TMetaUtils.h
 METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx
+METAUTILSTH     += $(MODDIRI)/root_std_complex.h
 
 METAUTILSSLLVM := $(MODDIRS)/BaseSelectionRule.cxx \
                   $(MODDIRS)/ClassSelectionRule.cxx \

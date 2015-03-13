@@ -3017,7 +3017,8 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
                            "#include \"TDictAttributeMap.h\"\n"
                            "#include \"TMessageHandler.h\"\n"
                            "#include \"TArray.h\"\n"
-                           "#include \"TRefArray.h\"\n");
+                           "#include \"TRefArray.h\"\n"
+                           "#include \"root_std_complex.h\"\n");
    if (!CloseStreamerInfoROOTFile(writeEmptyRootPCM)) {
       return 1;
    }
@@ -4469,7 +4470,6 @@ int RootCling(int argc,
          !selectionRules.AreAllSelectionRulesUsed()) {
       ROOT::TMetaUtils::Warning(0, "Not all selection rules are used!\n");
    }
-
 
    // SELECTION LOOP
    // Check for error in the class layout before doing anything else.
