@@ -3149,7 +3149,7 @@ Int_t TH1::Fill(Double_t x, Double_t w)
    fEntries++;
    bin =fXaxis.FindBin(x);
    if (bin <0) return -1;
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW) )  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN)  fSumw2.fArray[bin] += w*w;
    AddBinContent(bin, w);
    if (bin == 0 || bin > fXaxis.GetNbins()) {
@@ -3183,7 +3183,7 @@ Int_t TH1::Fill(const char *namex, Double_t w)
    fEntries++;
    bin =fXaxis.FindBin(namex);
    if (bin <0) return -1;
-   if (!fSumw2.fN && w != 1.0)  Sumw2();
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin, w);
    if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
@@ -3249,7 +3249,7 @@ void TH1::DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stri
       bin =fXaxis.FindBin(x[i]);
       if (bin <0) continue;
       if (w) ww = w[i];
-      if (!fSumw2.fN && ww != 1.0)  Sumw2();
+      if (!fSumw2.fN && ww != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();
       if (fSumw2.fN) fSumw2.fArray[bin] += ww*ww;
       AddBinContent(bin, ww);
       if (bin == 0 || bin > nbins) {

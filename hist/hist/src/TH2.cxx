@@ -349,7 +349,7 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
    biny = fYaxis.FindBin(y);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -393,7 +393,7 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
    biny = fYaxis.FindBin(namey);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
@@ -435,7 +435,7 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
    biny = fYaxis.FindBin(y);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
@@ -478,7 +478,7 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
    biny = fYaxis.FindBin(namey);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -543,7 +543,7 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
       if (binx <0 || biny <0) continue;
       bin  = biny*(fXaxis.GetNbins()+2) + binx;
       if (w) ww = w[i];
-      if (!fSumw2.fN && ww != 1.0)  Sumw2();
+      if (!fSumw2.fN && ww != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();
       if (fSumw2.fN) fSumw2.fArray[bin] += ww*ww;
       AddBinContent(bin,ww);
       if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -810,7 +810,7 @@ void TH2::DoFitSlices(bool onX,
             hlist[ipar]->Fill(outerAxis.GetBinCenter(binOn),f1->GetParameter(ipar));
             hlist[ipar]->SetBinError(binOn,f1->GetParError(ipar));
          }
-         hchi2->Fill(outerAxis.GetBinCenter(binOn),f1->GetChisquare()/(npfits-npar));
+         hchi2->SetBinContent(binOn,f1->GetChisquare()/(npfits-npar));
       }
       delete hp;
    }
@@ -2066,6 +2066,9 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    // in case need to store sum of weight square/bin for the profile
    bool useWeights = (GetSumw2N() > 0);
    if (useWeights) h1->Sumw2();
+   // we need to set this bit because we fill the profile using a single Fill for many entries
+   // This is needed for the changes applied to make automaticall y hthe histogram weighted in ROOT 6 versions
+   else h1->SetBit(TH1::kIsNotW);  
 
    // Fill the profile histogram
    // no entries/bin is available so can fill only using bin content as weight

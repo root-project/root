@@ -171,7 +171,8 @@ public:
       kLogX        = BIT(15), // X-axis in log scale
       kIsZoomed    = BIT(16), // bit set when zooming on Y axis
       kNoTitle     = BIT(17), // don't draw the histogram title
-      kIsAverage   = BIT(18)  // Bin contents are average (used by Add)
+      kIsAverage   = BIT(18), // Bin contents are average (used by Add)
+      kIsNotW      = BIT(19)  // Histogram is forced to be not weighted even when the histogram is filled with weighted different than 1.   
    };
    // size of statistics data (size of  array used in GetStats()/ PutStats )
    // s[0]  = sumw       s[1]  = sumw2
