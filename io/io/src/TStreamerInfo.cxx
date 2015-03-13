@@ -1684,7 +1684,6 @@ void TStreamerInfo::BuildOld()
       };
 
       element->SetNewType(element->GetType());
-      element->Init();
       if (element->IsBase()) {
          //---------------------------------------------------------------------
          // Dealing with nonSTL bases
@@ -1809,6 +1808,7 @@ void TStreamerInfo::BuildOld()
             element->SetOffset(baseOffset);
             offset += baseclass->Size();
 
+            element->Init(this);
             continue;
          } else {
             // Not a base elem but still base, string or STL as a base
@@ -1891,6 +1891,7 @@ void TStreamerInfo::BuildOld()
             }
             element->SetOffset(baseOffset);
             offset += asize;
+            element->Init(this);
             continue;
          }
       }
