@@ -1742,6 +1742,32 @@ void TStreamerInfo::BuildOld()
             // '@@emulated' in the case of the emulation of an abstract base class.
             Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
 
+            // Deal with potential schema evolution (renaming) of the base class.
+            if (baseOffset < 0) {
+
+               // See if this base element can be converted into one of
+               // the existing base class.
+               TList* listOfBases = fClass->GetListOfBases();
+               if (listOfBases) {
+                  TBaseClass* bc = 0;
+                  TIter nextBC(fClass->GetListOfBases());
+                  while ((bc = (TBaseClass*) nextBC())) {
+                     TClass *in_memory_bcl = bc->GetClassPointer();
+                     if (in_memory_bcl && in_memory_bcl->GetSchemaRules()) {
+                        auto baserule = in_memory_bcl->GetSchemaRules()->FindRules( base->GetName(), base->GetBaseVersion(), base->GetBaseCheckSum() );
+                        if (baserule) {
+                           base->SetNewBaseClass(in_memory_bcl);
+                           baseOffset = bc->GetDelta();
+
+                        }
+                     }
+                  }
+               }
+            }
+            // We need to initialize the element now, as we need the
+            // correct StraemerInfo next.
+            element->Init(this);
+
             // Force the StreamerInfo "Compilation" of the base classes first. This is necessary in
             // case the base class contains a member used as an array dimension in the derived classes.
             TStreamerInfo* infobase;
@@ -1779,26 +1805,7 @@ void TStreamerInfo::BuildOld()
             }
 
 
-            if (baseOffset < 0) {
-
-               // See if this base element can be converted into one of
-               // the existing base class.
-               TList* listOfBases = fClass->GetListOfBases();
-               if (listOfBases) {
-                  TBaseClass* bc = 0;
-                  TIter nextBC(fClass->GetListOfBases());
-                  while ((bc = (TBaseClass*) nextBC())) {
-                     TClass *in_memory_bcl = bc->GetClassPointer();
-                     if (in_memory_bcl && in_memory_bcl->GetSchemaRules()) {
-                        auto baserule = in_memory_bcl->GetSchemaRules()->FindRules( base->GetName(), base->GetBaseVersion(), base->GetBaseCheckSum() );
-                        if (baserule) {
-                           base->SetNewBaseClass(in_memory_bcl);
-                           baseOffset = bc->GetDelta();
-
-                        }
-                     }
-                  }
-               }
+            {
                if (baseOffset < 0) {
                   // FIXME: Presumably we're in emulated mode, but it still does not make any sense
                   // shouldn't it be element->SetNewType(-1) ?
@@ -1808,7 +1815,6 @@ void TStreamerInfo::BuildOld()
             element->SetOffset(baseOffset);
             offset += baseclass->Size();
 
-            element->Init(this);
             continue;
          } else {
             // Not a base elem but still base, string or STL as a base
