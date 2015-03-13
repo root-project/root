@@ -21,6 +21,7 @@
 
 #include "TListOfDataMembers.h"
 #include "TClass.h"
+#include "TClassRef.h"
 #include "TExMap.h"
 #include "TDataMember.h"
 #include "TGlobal.h"
@@ -258,10 +259,14 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
 }
 
 //______________________________________________________________________________
-TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
+TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info, bool skipChecks)
 {
    // Return (after creating it if necessary) the TDataMember
    // describing the data member corresponding to the Decl 'id'.
+   // The skipChecks flag controls the consistency checks performed inspecting
+   // the AST. In some cases, we explicitely alter the datamembers in the
+   // typesystem with respect to the AST and therefore we must not enforce
+   // consistency.
 
    if (!info) return 0;
 
@@ -278,9 +283,9 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
             //  of the header which we want to avoid].
             return 0;
          }
-         if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
+         if (!skipChecks && !gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
       } else {
-         if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
+         if (!skipChecks && !gInterpreter->ClassInfo_Contains(0,id)) return 0;
       }
 
       R__LOCKGUARD(gInterpreterMutex);
@@ -418,12 +423,35 @@ void TListOfDataMembers::Load()
    if (fClass) info = fClass->GetClassInfo();
    else info = gInterpreter->ClassInfo_Factory();
 
+   // Treat the complex<float>, complex<double> in a special way, i.e. replacing
+   // the datamembers with the ones of _root_std_complex<T>
+   bool skipChecks = false;
+   if (fClass && 0 == strncmp(fClass->GetName(), "complex<", 8))
+   {
+      const char *clName = fClass->GetName();
+      const char *clNamePlus8 = clName + 8;
+      if (fClass && 0 == strcmp(clNamePlus8, "float>")) {
+         skipChecks = true;
+         info = TClass::GetClass("_root_std_complex<float>")->GetClassInfo();
+      } else if (fClass && 0 == strcmp(clNamePlus8, "double>")) {
+         skipChecks = true;
+         info = TClass::GetClass("_root_std_complex<double>")->GetClassInfo();
+      } else if (fClass && 0 == strcmp(clNamePlus8, "int>")) {
+         skipChecks = true;
+         info = TClass::GetClass("_root_std_complex<int>")->GetClassInfo();
+      } else if (fClass && 0 == strcmp(clNamePlus8, "long>")) {
+         skipChecks = true;
+         info = TClass::GetClass("_root_std_complex<long>")->GetClassInfo();
+      }
+   }
+
+   // Now we follow the ordinary pattern
    DataMemberInfo_t *t = gInterpreter->DataMemberInfo_Factory(info);
    while (gInterpreter->DataMemberInfo_Next(t)) {
       if (gInterpreter->DataMemberInfo_IsValid(t)) {
          // Get will check if there is already there or create a new one
          // (or re-use a previously unloaded version).
-         Get(t);
+         Get(t,skipChecks);
       }
    }
    if (!fClass) gInterpreter->ClassInfo_Delete(info);

@@ -54,13 +54,13 @@ public:
 
    TListOfDataMembers(TClass *cl = 0);
    // construct from a generic collection of data members objects
-   template<class DataMemberList> 
-   TListOfDataMembers(DataMemberList & dmlist) : 
+   template<class DataMemberList>
+   TListOfDataMembers(DataMemberList & dmlist) :
       fClass(0),fIds(0),fUnloaded(0),
       fIsLoaded(kTRUE), fLastLoadMarker(0)
-   { 
-      for (auto * dataMember : dmlist) 
-         Add(dataMember);      
+   {
+      for (auto * dataMember : dmlist)
+         Add(dataMember);
    }
 
    ~TListOfDataMembers();
@@ -72,7 +72,7 @@ public:
    virtual TObject   *FindObject(const char *name) const;
 
    TDictionary *Get(DeclId_t id);
-   TDictionary *Get(DataMemberInfo_t *info);
+   TDictionary *Get(DataMemberInfo_t *info, bool skipChecks=false);
 
    Bool_t     IsLoaded() const { return fIsLoaded; }
    void       AddFirst(TObject *obj);

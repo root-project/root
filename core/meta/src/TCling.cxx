@@ -1955,6 +1955,37 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 
    const char* cobj = (const char*) obj; // for ptr arithmetics
 
+   // Treat the case of std::complex in a special manner. We want to enforce
+   // the layout of a stl implementation independent class, which is the
+   // complex as implmented in ROOT5.
+
+   // A simple lambda to simplify the code
+   auto inspInspect =  [&] (ptrdiff_t offset){
+      insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), "_real", cobj, isTransient);
+      insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), "_imag", cobj + offset, isTransient);
+   };
+
+   const char *clName = cl->GetName();
+   if (0 == strncmp(clName, "complex<", 8)) {
+   const char *clNamePlus8 = clName + 8;
+   if (0 == strcmp("float>", clNamePlus8)) {
+         inspInspect(sizeof(float));
+         return;
+      }
+      if (0 == strcmp("double>", clNamePlus8)) {
+         inspInspect(sizeof(double));
+         return;
+      }
+      if (0 == strcmp("int>", clNamePlus8)) {
+         inspInspect(sizeof(int));
+         return;
+      }
+      if (0 == strcmp("long>", clNamePlus8)) {
+         inspInspect(sizeof(long));
+         return;
+      }
+   }
+
    static clang::PrintingPolicy
       printPol(fInterpreter->getCI()->getLangOpts());
    if (printPol.Indentation) {
