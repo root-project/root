@@ -703,7 +703,7 @@ std::string Cppyy::GetMethodArgType( TCppMethod_t method, int iarg )
    if ( method ) {
       TFunction* f = (TFunction*)method;
       TMethodArg* arg = (TMethodArg*)f->GetListOfMethodArgs()->At( iarg );
-      return arg->GetFullTypeName();
+      return arg->GetTypeNormalizedName();
    }
    return "<unknown>";
 }
