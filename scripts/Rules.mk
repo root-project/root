@@ -16,6 +16,10 @@ summary:
 	  echo "At least $$res tests have failed:" ; \
 	  grep --text -h FAILING $(SUMMARY).*.summary; \
           exit $$res; \
+	else \
+	  res=$$?; \
+	  echo "At least one test not captured in the summary file have failed." ; \
+	  exit $$res; \
 	fi
 
 ifneq ($(V),)
