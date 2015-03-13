@@ -38,6 +38,14 @@
 
 - When a text size was equal or smaller than 0 the PDF file was corrupted.
 - Small fix for fill patterns 1, 2 and 3.
+- When printing a coloured 2D histograms (with option COLZ) into a PDF or PostScript
+  file, the preview on screen using many standard PDF previewer tools showed very
+  thin white lines between the bins as well as in the color palette.
+  This made very ugly the final output.
+  This problem is due to bad implementation of anti-aliasing in these previewers.
+  A way to bypass this issue was to turn off the anti-aliasing in the previewer
+  but then the rest of the document does not look nice. This problem is now bypassed
+  with a fix in both PDF and PostScript output.
 
 ### TSVG
 
