@@ -2,7 +2,7 @@
   File: roottest/python/cpp/Template.C
   Author: Wim Lavrijsen@lbl.gov
   Created: 01/07/08
-  Last: 11/13/13
+  Last: 03/13/15
 */
 
 #include <string>
@@ -14,6 +14,12 @@ class MyTemplatedClass {
 public:
    T m_b;
 };
+
+template< class T >
+struct MyTemplatedClass2 {
+   void set( const T& v ) {}
+};    
+typedef MyTemplatedClass2< std::string > MyTemplateTypedef;
 
 template< class T >
 T MyTemplatedFunction( T t ) { return t; }

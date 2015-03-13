@@ -270,6 +270,12 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( f( 3. ), 3. )
       self.assertEqual( type( f( 4. ) ), type( 4. ) )
 
+   def test8TemplatedArgument( self ):
+      """Use of template argument"""
+
+      obj = MyTemplateTypedef()
+      obj.set( 'hi' )   # used to fail with TypeError
+
 
 ### C++ by-non-const-ref arguments tests =====================================
 class Cpp03PassByNonConstRef( MyTestCase ):

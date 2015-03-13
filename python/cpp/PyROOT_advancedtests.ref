@@ -7,6 +7,7 @@ Test template member functions lookup and calls ... ok
 Test template member functions lookup and calls (set 2) ... ok
 Test overloaded template member functions lookup and calls ... ok
 Test template global function lookup and calls ... ok
+Use of template argument ... ok
 Test usage of Long/Double place holders ... ok
 Test parameter passing of builtins through non-const reference ... ok
 Test parameter passing of builtins through const reference ... ok
