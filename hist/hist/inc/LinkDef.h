@@ -28,6 +28,8 @@
 #pragma link C++ class TFitResultPtr+;
 #pragma link C++ class TF1-;
 #pragma link C++ class TF1Old-;
+#pragma read sourceClass="TF1" targetClass="TF1Old";
+#pragma read sourceClass="TFormula" targetClass="TFormulaOld";
 #pragma link C++ class TF1Parameters+;
 #pragma link C++ class TF12+;
 #pragma link C++ class TF2-;

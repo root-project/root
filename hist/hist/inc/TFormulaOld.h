@@ -265,6 +265,9 @@ public:
    static  void        SetMaxima(Int_t maxop=1000, Int_t maxpar=1000, Int_t maxconst=1000);
    static  void        GetMaxima(Int_t& maxop, Int_t& maxpar, Int_t& maxconst);
 
+   void Streamer(TBuffer &b, const TClass *onfile_class);
+   void Streamer(TBuffer &b, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = 0);
+
    ClassDef(TFormulaOld,8)  //The formula base class  f(x,y,z,par)
 };
 

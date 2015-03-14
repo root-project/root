@@ -2077,11 +2077,14 @@ void TFormula::Streamer(TBuffer &b)
       if (v <= 8 && v > 3 && v != 6) {
          // old TFormula class
          TFormulaOld * fold = new TFormulaOld();
-         b.ReadClassBuffer(TFormulaOld::Class(), fold, v, R__s, R__c);
+         // read old TFormula class 
+         fold->Streamer(b, v,  R__s, R__c, TFormula::Class());
          //std::cout << "read old tformula class " << std::endl;
-         //fold->Print();
          TFormula fnew(fold->GetName(), fold->GetExpFormula() );
+         
          *this = fnew;
+         
+         printf("copying content in a new TFormula \n");
          SetParameters(fold->GetParameters() );
          if (!fReadyToExecute ) {
             Error("Streamer","Old formula read from file is NOT valid");

@@ -3437,6 +3437,24 @@ void TFormulaOld::SetParNames(const char*name0,const char*name1,const char*name2
    if (fNpar >10) fNames[10]= name10;
 }
 
+//______________________________________________________________________________
+void TFormulaOld::Streamer(TBuffer &b, const TClass *onfile_class)
+{
+   // Stream a class object.
+
+   if (b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t v = b.ReadVersion(&R__s, &R__c);
+      if (v==6) {
+         Error("Streamer","version 6 is not supported");
+         return;
+      }
+      Streamer(b, v, R__s, R__c, onfile_class);
+
+   } else {
+      b.WriteClassBuffer(TFormulaOld::Class(),this);
+   }
+}
 
 //______________________________________________________________________________
 void TFormulaOld::Streamer(TBuffer &b)
@@ -3446,73 +3464,84 @@ void TFormulaOld::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
-      if (v > 3) {
-
-         if (v==6) {
-            Error("Streamer","version 6 is not supported");
-            return;
-         }
-         b.ReadClassBuffer(TFormulaOld::Class(), this, v, R__s, R__c);
-         if (!TestBit(kNotGlobal)) {
-            R__LOCKGUARD2(gROOTMutex);
-            gROOT->GetListOfFunctions()->Add(this);
-         }
-
-         // We need to reinstate (if possible) the TMethodCall.
-         if (fFunctions.GetLast()>=0) {
-            // Compiles will reset the parameter values so we need
-            // to temporarily keep them
-            Double_t *param = fParams;
-            TString *names = fNames;
-            Int_t npar = fNpar;
-            fParams = 0;
-            fNames = 0;
-            if (Compile()) {
-               Error("Streamer","error compiling formula");
-               return;
-            }
-            for (Int_t i = 0; i<npar && i<fNpar; ++i) fParams[i] = param[i];
-            delete [] param;
-            delete [] fNames;
-            fNames = names;
-         } else if (v<6) {
-            Convert(v);
-         }
-         Optimize();
+      if (v==6) {
+         Error("Streamer","version 6 is not supported");
          return;
       }
-      // process old versions before automatic schema evolution
-      TNamed::Streamer(b);
-      b >> fNdim;
-      b >> fNumber;
-      if (v > 1) b >> fNval;
-      if (v > 2) b >> fNstring;
-      fNpar   = b.ReadArray(fParams);
-      fOper = new Int_t[gMAXOP];
-      fNoper  = b.ReadArray(fOper);
-      fNconst = b.ReadArray(fConst);
-      if (fNoper) {
-         fExpr   = new TString[fNoper];
-      }
-      if (fNpar) {
-         fNames  = new TString[fNpar];
-      }
-      Int_t i;
-      for (i=0;i<fNoper;i++)  fExpr[i].Streamer(b);
-      for (i=0;i<fNpar;i++)   fNames[i].Streamer(b);
-      {
-         R__LOCKGUARD2(gROOTMutex);
-         if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
-         gROOT->GetListOfFunctions()->Add(this);
-      }
-      b.CheckByteCount(R__s, R__c, TFormulaOld::IsA());
-
-      Convert(v);
-      // end of old versions
-
+      Streamer(b, v, R__s, R__c, nullptr);
+      
    } else {
       b.WriteClassBuffer(TFormulaOld::Class(),this);
    }
+}
+
+//______________________________________________________________________________
+void TFormulaOld::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TClass *onfile_class)
+{
+   // specialized streamer function being able to read old TF1 versions as TF1Old in memory
+
+         
+   //printf("Reading TFormulaOld - version %d \n",v);
+   if (v > 3 ) { 
+      b.ReadClassBuffer(TFormulaOld::Class(), this, v, R__s, R__c, onfile_class);
+      if (!TestBit(kNotGlobal)) {
+         R__LOCKGUARD2(gROOTMutex);
+         gROOT->GetListOfFunctions()->Add(this);
+      }
+     
+      // We need to reinstate (if possible) the TMethodCall.
+      if (fFunctions.GetLast()>=0) {
+         // Compiles will reset the parameter values so we need
+         // to temporarily keep them
+         Double_t *param = fParams;
+         TString *names = fNames;
+         Int_t npar = fNpar;
+         fParams = 0;
+         fNames = 0;
+         if (Compile()) {
+            Error("Streamer","error compiling formula");
+            return;
+         }
+         for (Int_t i = 0; i<npar && i<fNpar; ++i) fParams[i] = param[i];
+         delete [] param;
+         delete [] fNames;
+         fNames = names;
+      } else if (v<6) {
+         Convert(v);
+      }
+      Optimize();
+      return;
+   }
+   // version smaller or equal to 3 
+   // process old versions before automatic schema evolution
+   TNamed::Streamer(b);
+   b >> fNdim;
+   b >> fNumber;
+   if (v > 1) b >> fNval;
+   if (v > 2) b >> fNstring;
+   fNpar   = b.ReadArray(fParams);
+   fOper = new Int_t[gMAXOP];
+   fNoper  = b.ReadArray(fOper);
+   fNconst = b.ReadArray(fConst);
+   if (fNoper) {
+      fExpr   = new TString[fNoper];
+   }
+   if (fNpar) {
+      fNames  = new TString[fNpar];
+   }
+   Int_t i;
+   for (i=0;i<fNoper;i++)  fExpr[i].Streamer(b);
+   for (i=0;i<fNpar;i++)   fNames[i].Streamer(b);
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
+      gROOT->GetListOfFunctions()->Add(this);
+   }
+   b.CheckByteCount(R__s, R__c, TFormulaOld::IsA());
+
+   Convert(v);
+   // end of old versions
+
 }
 
 void TFormulaOld::Convert(UInt_t /* fromVersion */)

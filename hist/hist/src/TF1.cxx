@@ -3151,7 +3151,9 @@ void TF1::Streamer(TBuffer &b)
       }
       else {
          TF1Old fold;
-         b.ReadClassBuffer(TF1Old::Class(), &fold, v, R__s, R__c);
+         //printf("Reading TF1 as TF1Old - version %d \n",v);
+         fold.Streamer(b, v, R__s, R__c, TF1::Class());
+//         b.ReadClassBuffer(TF1Old::Class(), &fold, v, R__s, R__c, TF1::Class());
          // convert old TF1 to new one
          fNpar = fold.GetNpar();
          fNdim = fold.GetNdim(); 

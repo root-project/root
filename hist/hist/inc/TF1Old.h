@@ -61,7 +61,8 @@ struct TF1Old : public TFormulaOld, public TAttLine, public TAttFill, public TAt
 
    TF1Old();
    virtual   ~TF1Old();
-
+   void Streamer(TBuffer &b, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = 0);
+   
    ClassDef(TF1Old,7)  //The Old Parametric 1-D function
 };
 
