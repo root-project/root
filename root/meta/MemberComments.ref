@@ -18,6 +18,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TDataMember	kIsZoomed	 : 0
  OBJ: TDataMember	kNoTitle	 : 0
  OBJ: TDataMember	kIsAverage	 : 0
+ OBJ: TDataMember	kIsNotW	 : 0
  OBJ: TDataMember	kNstat	 : 0
  OBJ: TDataMember	kCanDelete	 : 0
  OBJ: TDataMember	kMustCleanup	 : 0
