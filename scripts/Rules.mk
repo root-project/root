@@ -629,6 +629,7 @@ endif
 
 ifneq ($(GCCTOOLCHAIN),)
 CXXFLAGS    += --gcc-toolchain=$(GCCTOOLCHAIN)
+LDFLAGS     += --gcc-toolchain=$(GCCTOOLCHAIN)
 endif
 
 ifeq ($(PT),)
