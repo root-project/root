@@ -13,6 +13,8 @@
 #include <TFormulaOld.h>
 #include <TRandom.h>
 #include <iostream>
+#include "TFormulaParceTests.h"
+
 using namespace std;
 
 
@@ -41,7 +43,7 @@ protected:
 public:
                TFormulaTests(TString name, TString formula): TFormula(name,formula){}
    virtual     ~TFormulaTests(){}
-   Bool_t      Parser();
+   Bool_t      ParserNew();
    Bool_t      GetVarVal();
    Bool_t      GetParVal();
    Bool_t      AddVar();
@@ -54,6 +56,10 @@ public:
    Bool_t      SetPars2();
    Bool_t      Eval();
    Bool_t      Stress(Int_t n = 10000);
+
+   Bool_t      Parser();
+
+   
 
 };
 
@@ -287,7 +293,7 @@ Bool_t TFormulaTests::Eval()
    return successful;
 }
 
-Bool_t TFormulaTests::Parser()
+Bool_t TFormulaTests::ParserNew()
 {
    //x_1- [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*ylandau(0)+zexpo(10)
 
@@ -477,6 +483,22 @@ Bool_t TFormulaTests::Stress(Int_t n)
    
    return true;
 }
+
+
+bool TFormulaTests::Parser() {
+   std::cout << "Test parsing of expression compatible with old TFormula" << std::endl;
+   TFormulaParceTests t;
+   int nfailed = t.runTests();
+   if (nfailed != 0) {
+      std::cout << "ERROR - Parcing test of TFormula failed - number of failures is " << nfailed << std::endl;
+      return false;
+   }
+   return true; 
+}
+   
+
+
+
 int main(int argc, char **argv)
 {
    TApplication theApp("App", &argc, argv);
@@ -518,7 +540,7 @@ int main(int argc, char **argv)
    test->AddVariables(testVars,Nvars);
    test->SetParameters(testParams);
 
-   printf("Parser test:%s\n",(test->Parser() ? "PASSED" : "FAILED"));
+   printf("Parser test:%s\n",(test->ParserNew() ? "PASSED" : "FAILED"));
    printf("GetVariableValue test:%s\n",(test->GetVarVal() ? "PASSED" : "FAILED")); 
    printf("GetParameterValue test:%s\n",(test->GetParVal() ? "PASSED" : "FAILED"));   
    printf("AddVariable test:%s\n",(test->AddVar() ? "PASSED" : "FAILED"));
@@ -532,6 +554,7 @@ int main(int argc, char **argv)
    printf("Eval test:%s\n",(test->Eval() ? "PASSED" : "FAILED"));
 #endif
    printf("Stress test:%s\n",(test->Stress(n) ? "PASSED" : "FAILED"));
+   printf("Parsing test:%s\n",(test->Parser() ? "PASSED" : "FAILED"));
 
    return 0;
 }

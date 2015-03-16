@@ -1053,9 +1053,14 @@ void TFormula::ExtractFunctors(TString &formula)
          {
             // need special case for separting operator  ":" from scope operator "::"
             if (formula[i] == ':' && ( (i+1) < formula.Length() ) ) {
-               if ( formula[i+1]  != ':' ) {
-                  break;
+               if ( formula[i+1]  == ':' ) {
+                  // case of :: (scopeOperator)
+                  name.Append("::");
+                  i+=2;
+                  continue; 
                }
+               else
+                  break;
             }
 
             name.Append(formula[i++]);
