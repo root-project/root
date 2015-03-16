@@ -27,6 +27,7 @@
      -e 's:_LIBCPP_END_NAMESPACE_LFTS:_ROOT_LIBCPP_END_NAMESPACE_LFTS:' \
      -e 's:#include <__debug>://#include <__debug>:' \
      -e 's:#include <experimental/__config>://#include <experimental/__config>:' \
+     -e 's:__put_character_sequence:R__put_character_sequence:g' \
  > core/base/inc/libcpp_string_view.h
 */
 
@@ -109,10 +110,9 @@ inline namespace __1 {
    //      {return _Traits::eq(__x, __y);}
    //   };
 
-#ifndef _LIBCPP_OSTREAM
    template<class _CharT, class _Traits>
    basic_ostream<_CharT, _Traits>&
-   __put_character_sequence(basic_ostream<_CharT, _Traits>& __os,
+   R__put_character_sequence(basic_ostream<_CharT, _Traits>& __os,
                             const _CharT* __str, size_t __len)
    {
 #ifndef _LIBCPP_NO_EXCEPTIONS
@@ -142,7 +142,6 @@ inline namespace __1 {
 #endif  // _LIBCPP_NO_EXCEPTIONS
       return __os;
    }
-#endif
 
    template <typename _CharT, typename _SizeT, typename _Traits, _SizeT __npos>
    _SizeT

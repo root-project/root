@@ -768,7 +768,7 @@ _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS
     basic_ostream<_CharT, _Traits>&
     operator<<(basic_ostream<_CharT, _Traits>& __os, basic_string_view<_CharT, _Traits> __sv)
     {
-        return _VSTD::__put_character_sequence(__os, __sv.data(), __sv.size());
+        return _VSTD::R__put_character_sequence(__os, __sv.data(), __sv.size());
     }
 
   typedef basic_string_view<char>     string_view;
