@@ -100,6 +100,16 @@ namespace TClassEdit {
       kEnd      = ROOT::kSTLend
    };
 
+   enum class EComplexType : short {
+      kNone,
+      kDouble,
+      kFloat,
+      kInt,
+      kLong
+   };
+
+   EComplexType GetComplexType(const char*);
+
    class TInterpreterLookupHelper {
    public:
       TInterpreterLookupHelper() { }

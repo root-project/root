@@ -87,6 +87,26 @@ static void RemoveStd(std::string &name, size_t pos = 0)
    }
 }
 
+//______________________________________________________________________________
+TClassEdit::EComplexType TClassEdit::GetComplexType(const char* clName)
+{
+   if (0 == strncmp(clName, "complex<", 8)) {
+      const char *clNamePlus8 = clName + 8;
+      if (0 == strcmp("float>", clNamePlus8)) {
+         return EComplexType::kFloat;
+         }
+      if (0 == strcmp("double>", clNamePlus8)) {
+         return EComplexType::kDouble;
+      }
+      if (0 == strcmp("int>", clNamePlus8)) {
+         return EComplexType::kInt;
+      }
+      if (0 == strcmp("long>", clNamePlus8)) {
+         return EComplexType::kLong;
+      }
+   }
+   return EComplexType::kNone;
+}
 
 //______________________________________________________________________________
 void TClassEdit::Init(TClassEdit::TInterpreterLookupHelper *helper)
