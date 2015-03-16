@@ -58,7 +58,6 @@ PyROOT::TPyROOTApplication::TPyROOTApplication(
    if ( bLoadLibs )   // note that this section could be programmed in python
    {
    // follow TRint to minimize differences with CINT
-      ProcessLine( "#include <iostream>", kTRUE );
       ProcessLine( "#include <_string>",  kTRUE ); // for std::string iostream.
       ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
       ProcessLine( "#include <pair>",     kTRUE ); //  core ROOT dicts and CINT won't be able

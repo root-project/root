@@ -347,7 +347,8 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title), f
       ProcessLine("#include <RtypesCint.h>");
       delete[] whichTypesCint;
   }
-
+  // We cannot autoload this but ROOT needs it (ROOT-7103)
+  ProcessLine("#include <iostream>");
 }
 
 //______________________________________________________________________________
