@@ -10,6 +10,8 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON)
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF)
 
+set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
+
 if(ROOT_ARCHITECTURE MATCHES linuxarm64)
   set(ROOT_CLING_TARGET "AArch64")
 elseif(ROOT_ARCHITECTURE MATCHES linux)
