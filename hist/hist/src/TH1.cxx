@@ -8177,6 +8177,8 @@ void TH1::SetName(const char *name)
 
    //  Histograms are named objects in a THashList.
    //  We must update the hashlist if we change the name
+   //  We protect this operation
+   R__LOCKGUARD2(gROOTMutex);
    if (fDirectory) fDirectory->Remove(this);
    fName = name;
    if (fDirectory) fDirectory->Append(this);
