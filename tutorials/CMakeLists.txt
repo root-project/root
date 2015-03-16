@@ -197,6 +197,7 @@ set(fit-fit1-depends tutorial-hist-fillrandom)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
 set(tree-staff-depends  tutorial-tree-cernbuild)
 set(tree-cernstaff-depends  tutorial-tree-cernbuild)
+set(hist-hbars-depends  tutorial-tree-cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
                        tutorial-hist-h1draw
