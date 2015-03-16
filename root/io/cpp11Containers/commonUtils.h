@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "TFile.h"
 #include "TRandom.h"
+#include <complex>
 
 #ifndef ROOTTEST_COMMON_UTILS
 #define ROOTTEST_COMMON_UTILS
@@ -24,15 +25,8 @@ bool IsSame<>(const double& a, const double& b){
    return false;
 }
 
-template <>
-bool IsSame<>(const complex<double>& a, const complex<double>& b){
-   if (a==b) return true;
-   cout << "Error complex numbers differ: " << a << " " << b << std::endl;
-   return false;
-}
-
 template <class T>
-bool IsSame(const complex<T>& a, const complex<T>& b){
+bool IsSame(const std::complex<T>& a, const std::complex<T>& b){
    if (a==b) return true;
    cout << "Error complex numbers differ: " << a << " " << b << std::endl;
    return false;
