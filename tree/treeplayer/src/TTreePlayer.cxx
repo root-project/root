@@ -617,15 +617,14 @@ const char *TTreePlayer::GetNameByIndex(TString &varexp, Int_t *index,Int_t coli
 //   varexp is a string of names separated by :
 //   index is an array with pointers to the start of name[i] in varexp
 //
-
-   Int_t i1,n;
-   static TString column;
+   thread_local std::string column;
    if (colindex<0 ) return "";
+   Int_t i1,n;
    i1 = index[colindex] + 1;
    n  = index[colindex+1] - i1;
-   column = varexp(i1,n);
+   column = varexp(i1,n).Data();
    //  return (const char*)Form((const char*)column);
-   return column.Data();
+   return column.c_str();
 }
 
 //______________________________________________________________________________
@@ -2973,7 +2972,9 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    for (int i = 0; i < ndim; ++i)
       vlist[i] = fSelector->GetVal(i);
 
-   // fill the data
+   // fill the fit data object
+   // the object will be then managed by the fitted classes - however it will be invalid when the
+   // data pointers (given by fSelector->GetVal() ) wil be invalidated
    ROOT::Fit::UnBinData * fitdata = new ROOT::Fit::UnBinData(nrows, ndim, vlist.begin());
 
 
