@@ -29,6 +29,7 @@
 #include "TVirtualMutex.h"
 #include "TError.h"
 #include "TEnumConstant.h"
+#include "TClassEdit.h"
 
 const unsigned int idsSize=19;
 
@@ -438,22 +439,37 @@ void TListOfDataMembers::Load()
    // Treat the complex<float>, complex<double> in a special way, i.e. replacing
    // the datamembers with the ones of _root_std_complex<T>
    bool skipChecks = false;
-   if (fClass && 0 == strncmp(fClass->GetName(), "complex<", 8))
-   {
-      const char *clName = fClass->GetName();
-      const char *clNamePlus8 = clName + 8;
-      if (fClass && 0 == strcmp(clNamePlus8, "float>")) {
-         skipChecks = true;
-         info = TClass::GetClass("_root_std_complex<float>")->GetClassInfo();
-      } else if (fClass && 0 == strcmp(clNamePlus8, "double>")) {
-         skipChecks = true;
-         info = TClass::GetClass("_root_std_complex<double>")->GetClassInfo();
-      } else if (fClass && 0 == strcmp(clNamePlus8, "int>")) {
-         skipChecks = true;
-         info = TClass::GetClass("_root_std_complex<int>")->GetClassInfo();
-      } else if (fClass && 0 == strcmp(clNamePlus8, "long>")) {
-         skipChecks = true;
-         info = TClass::GetClass("_root_std_complex<long>")->GetClassInfo();
+   if (fClass){
+      auto complexType = TClassEdit::GetComplexType(fClass->GetName());
+      switch(complexType) {
+         case TClassEdit::EComplexType::kNone:
+         {
+            break;
+         }
+         case TClassEdit::EComplexType::kFloat:
+         {
+            skipChecks = true;
+            info = TClass::GetClass("_root_std_complex<float>")->GetClassInfo();
+            break;
+         }
+         case TClassEdit::EComplexType::kDouble:
+         {
+            skipChecks = true;
+            info = TClass::GetClass("_root_std_complex<double>")->GetClassInfo();
+            break;
+         }
+         case TClassEdit::EComplexType::kInt:
+         {
+            skipChecks = true;
+            info = TClass::GetClass("_root_std_complex<int>")->GetClassInfo();
+            break;
+         }
+         case TClassEdit::EComplexType::kLong:
+         {
+            skipChecks = true;
+            info = TClass::GetClass("_root_std_complex<long>")->GetClassInfo();
+            break;
+         }
       }
    }
 

@@ -1985,24 +1985,31 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), "_imag", cobj + offset, isTransient);
    };
 
-   const char *clName = cl->GetName();
-   if (0 == strncmp(clName, "complex<", 8)) {
-   const char *clNamePlus8 = clName + 8;
-   if (0 == strcmp("float>", clNamePlus8)) {
-         inspInspect(sizeof(float));
-         return;
+   auto complexType = TClassEdit::GetComplexType(cl->GetName());
+   switch(complexType) {
+      case TClassEdit::EComplexType::kNone:
+      {
+        break;
       }
-      if (0 == strcmp("double>", clNamePlus8)) {
-         inspInspect(sizeof(double));
-         return;
+      case TClassEdit::EComplexType::kFloat:
+      {
+        inspInspect(sizeof(float));
+        return;
       }
-      if (0 == strcmp("int>", clNamePlus8)) {
-         inspInspect(sizeof(int));
-         return;
+      case TClassEdit::EComplexType::kDouble:
+      {
+        inspInspect(sizeof(double));
+        return;
       }
-      if (0 == strcmp("long>", clNamePlus8)) {
-         inspInspect(sizeof(long));
-         return;
+      case TClassEdit::EComplexType::kInt:
+      {
+        inspInspect(sizeof(int));
+        return;
+      }
+      case TClassEdit::EComplexType::kLong:
+      {
+        inspInspect(sizeof(long));
+        return;
       }
    }
 
