@@ -148,6 +148,14 @@ TFormula::TFormula(): TNamed()
    fOptimal        = (TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 }
 
+//______________________________________________________________________________
+static bool IsReservedName(const char* name){
+   if (strlen(name)!=1) return false;
+   for (auto const & specialName : {"x","z","y","z"}){
+      if (strcmp(name,specialName)==0) return true;
+   }
+   return false;
+}
 
 //______________________________________________________________________________
 TFormula::TFormula(const char *name,const char *expression) :
@@ -247,8 +255,7 @@ TFormula::TFormula(const char *name,const char *expression) :
    // Store formula in linked list of formula in ROOT
 
 
-   if (strcmp(name,"x")==0 || strcmp(name,"y")==0 ||
-       strcmp(name,"z")==0 || strcmp(name,"t")==0 )
+   if (IsReservedName(name))
    {
       Error("TFormula","The name \'%s\' is reserved as a TFormula variable name.\n"
          "\tThis function will not be registered in the list of functions",name);
@@ -3344,6 +3351,21 @@ void TFormula::ProcessLinear(TString &formula)
    oa->Delete();
 }
 
+//______________________________________________________________________________
+void TFormula::SetName(const char* name)
+{
+   // Set the name of the formula
+   if (IsReservedName(name)) {
+      Error("SetName","The name \'%s\' is reserved as a TFormula variable name.\n"
+         "\tThis function will not be renamed.",name);
+   } else {
+      R__LOCKGUARD2(gROOTMutex);
+      TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
+      if (old) {
+         old->SetName(name);
+      }
+   }
+}
 
 //______________________________________________________________________________
 void TFormula::SetParameter(const char *name, Double_t value)
