@@ -157,6 +157,16 @@ TFormula::TFormula()
    fFormula = "";
 }
 
+//______________________________________________________________________________
+static bool IsReservedName(const char* name){
+   if (strlen(name)!=1) return false;
+   for (auto const & specialName : {"x","z","y","z"}){
+      if (strcmp(name,specialName)==0) return true;
+   }
+   return false;
+}
+
+
 TFormula::~TFormula()
 {
 
@@ -222,7 +232,7 @@ TFormula::TFormula(const TString &name, TString formula, bool addToGlobList)   :
       old = dynamic_cast<TFormula*> ( gROOT->GetListOfFunctions()->FindObject(name) );
       if (old)
          gROOT->GetListOfFunctions()->Remove(old);
-      if (name == "x" || name == "y" || name == "z" || name == "t")
+      if (IsReservedName(name))
          Error("TFormula","The name %s is reserved as a TFormula variable name.\n",name.Data());
       else
          gROOT->GetListOfFunctions()->Add(this);
@@ -264,8 +274,7 @@ TFormula::TFormula(const TFormula &formula) : TNamed(formula.GetName(),formula.G
       if (old)
          gROOT->GetListOfFunctions()->Remove(old);
 
-      if (strcmp(formula.GetName(),"x") == 0 || strcmp(formula.GetName(),"y") == 0 ||
-          strcmp(formula.GetName(),"z") == 0 || strcmp(formula.GetName(),"t") == 0) {
+      if (IsReservedName(formula.GetName())) {
          Error("TFormula","The name %s is reserved as a TFormula variable name.\n",formula.GetName());
       } else
          gROOT->GetListOfFunctions()->Add(this);
@@ -856,14 +865,14 @@ void TFormula::HandleExponentiation(TString &formula)
       }
       // this in case of someting like sin(x+2)^2
       temp--;  // go down one
-      assert(temp+1 >= 0); 
+      assert(temp+1 >= 0);
       while(temp >= 0 && !IsOperator(formula[temp]) && !IsBracket(formula[temp]) )
       {
          temp--;
       }
       left = formula(temp + 1, caretPos - (temp + 1));
 
-      // look now at the expression after the ^ operator 
+      // look now at the expression after the ^ operator
       temp = caretPos;
       temp++;
       if(formula[temp] == '(')
@@ -1029,7 +1038,7 @@ void TFormula::ExtractFunctors(TString &formula)
       }
       // case of e or E for numbers in exponential notaton (e.g. 2.2e-3)
       if ( (formula[i] == 'e' || formula[i] == 'E')  &&  (i > 0 && i <  formula.Length()-1) )  {
-         // handle cases:  2e+3 2e-3 2e3 and 2.e+3 
+         // handle cases:  2e+3 2e-3 2e3 and 2.e+3
          if ( (isdigit(formula[i-1]) || formula[i-1] == '.') && ( isdigit(formula[i+1]) || formula[i+1] == '+' || formula[i+1] == '-' ) )
             continue;
       }
@@ -1688,6 +1697,25 @@ void TFormula::GetParameters(Double_t *params) const
          params[i] = -1;
    }
 }
+
+void TFormula::SetName(const char* name)
+{
+   // Set the name of the formula. This method is specialised since TFormulae
+   // are registered in a central list and we need to make the renaming
+   // operation thread safe.
+   if (IsReservedName(name)) {
+      Error("SetName","The name \'%s\' is reserved as a TFormula variable name.\n"
+         "\tThis function will not be renamed.",name);
+   } else {
+      R__LOCKGUARD2(gROOTMutex);
+      auto old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
+      if (old) {
+         old->SetName(name);
+      }
+   }
+}
+
+
 void TFormula::SetParameter(const char *name, Double_t value)
 {
    //*-*
@@ -2089,13 +2117,13 @@ void TFormula::Streamer(TBuffer &b)
       if (v <= 8 && v > 3 && v != 6) {
          // old TFormula class
          TFormulaOld * fold = new TFormulaOld();
-         // read old TFormula class 
+         // read old TFormula class
          fold->Streamer(b, v,  R__s, R__c, TFormula::Class());
          //std::cout << "read old tformula class " << std::endl;
          TFormula fnew(fold->GetName(), fold->GetExpFormula() );
-         
+
          *this = fnew;
-         
+
          printf("copying content in a new TFormula \n");
          SetParameters(fold->GetParameters() );
          if (!fReadyToExecute ) {
