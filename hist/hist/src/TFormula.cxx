@@ -112,6 +112,7 @@ static int gFormulaIndex = 0;
 
 Bool_t TFormula::IsOperator(const char c)
 {
+   // operator ":" must be handled separatly
    char ops[] = { '+','^', '-','/','*','<','>','|','&','!','=','?'};
    Int_t opsLen = sizeof(ops)/sizeof(char);
    for(Int_t i = 0; i < opsLen; ++i)
@@ -556,7 +557,7 @@ void TFormula::HandlePolN(TString &formula)
       }
       fNumber = 300 + degree;
       TString replacement = TString::Format("[%d]",counter);
-      if(polPos - 1 < 0 || !IsFunctionNameChar(formula[polPos-1]))
+      if(polPos - 1 < 0 || !IsFunctionNameChar(formula[polPos-1]) || formula[polPos-1] == ':' )
       {
          variable = "x";
          defaultVariable = true;
@@ -564,7 +565,7 @@ void TFormula::HandlePolN(TString &formula)
       else
       {
          Int_t tmp = polPos - 1;
-         while(tmp >= 0 && IsFunctionNameChar(formula[tmp]))
+         while(tmp >= 0 && IsFunctionNameChar(formula[tmp]) && formula[tmp] != ':')
          {
             tmp--;
          }
@@ -996,10 +997,12 @@ void TFormula::ExtractFunctors(TString &formula)
    //*-*
    TString name = "";
    TString body = "";
+   //printf("formula is : %s \n",formula.Data() );
    for(Int_t i = 0 ; i < formula.Length(); ++i )
    {
 
       //std::cout << "loop on character : " << i << " " << formula[i] << std::endl;
+      // case of parameters
       if(formula[i] == '[')
       {
          Int_t tmp = i;
@@ -1031,15 +1034,24 @@ void TFormula::ExtractFunctors(TString &formula)
             continue;
       }
 
-      if(isalpha(formula[i]) && !IsOperator(formula[i]))
+      //std::cout << "investigating character : " << i << " " << formula[i] << " of formula " << formula << std::endl;
+      // look for variable and function names. They  start in C++ with alphanumeric characters
+      if(isalpha(formula[i]) && !IsOperator(formula[i]))  // not really needed to check if operator (if isalpha is not an operator)
       {
          //std::cout << "character : " << i << " " << formula[i] << " is not an operator and is alpha " << std::endl;
 
-
          while( IsFunctionNameChar(formula[i]) && i < formula.Length())
          {
+            // need special case for separting operator  ":" from scope operator "::"
+            if (formula[i] == ':' && ( (i+1) < formula.Length() ) ) {
+               if ( formula[i+1]  != ':' ) {
+                  break;
+               }
+            }
+
             name.Append(formula[i++]);
          }
+         //printf(" build a name %s \n",name.Data() );
          if(formula[i] == '(')
          {
             i++;
