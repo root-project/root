@@ -387,7 +387,8 @@ void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
          WriteReal(iy1);
          WriteReal(ix2 - ix1);
          WriteReal(iy2 - iy1);
-         PrintFast(6," re b*");
+         if (fAlpha == 1) PrintFast(6," re b*");
+         else             PrintFast(6," re f*");
       }
    }
    if (fillis == 1) {
@@ -396,7 +397,8 @@ void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       WriteReal(iy1);
       WriteReal(ix2 - ix1);
       WriteReal(iy2 - iy1);
-      PrintFast(6," re b*");
+      if (fAlpha == 1) PrintFast(6," re b*");
+      else             PrintFast(6," re f*");
    }
    if (fillis == 0) {
       SetColor(fLineColor);
