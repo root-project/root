@@ -115,7 +115,8 @@ inline namespace __1 {
    R__put_character_sequence(basic_ostream<_CharT, _Traits>& __os,
                             const _CharT* __str, size_t __len)
    {
-#ifndef _LIBCPP_NO_EXCEPTIONS
+#if 0
+//#ifndef _LIBCPP_NO_EXCEPTIONS
       try
       {
 #endif  // _LIBCPP_NO_EXCEPTIONS
@@ -133,7 +134,8 @@ inline namespace __1 {
                                  __os.fill()).failed())
                __os.setstate(ios_base::badbit | ios_base::failbit);
          }
-#ifndef _LIBCPP_NO_EXCEPTIONS
+#if 0
+//#ifndef _LIBCPP_NO_EXCEPTIONS
       }
       catch (...)
       {
