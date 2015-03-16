@@ -14,13 +14,16 @@ METAUTILSDIRI  := $(METAUTILSDIR)/inc
 
 ##### $(METAUTILSO) #####
 METAUTILSH     := $(filter-out $(MODDIRI)/TMetaUtils.%,\
-  $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h)))
+  $(filter-out $(MODDIRI)/libcpp_string_view.h,\
+  $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))))
 METAUTILSS     := $(filter-out $(MODDIRS)/TMetaUtils.%,\
   $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 
 METAUTILSTH     += $(MODDIRI)/TMetaUtils.h
 METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx
 METAUTILSTH     += $(MODDIRI)/root_std_complex.h
+METAUTILSTH     += $(MODDIRI)/libcpp_string_view.h
+
 
 METAUTILSSLLVM := $(MODDIRS)/BaseSelectionRule.cxx \
                   $(MODDIRS)/ClassSelectionRule.cxx \
