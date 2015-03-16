@@ -1213,8 +1213,8 @@ Int_t TH1::BufferEmpty(Int_t action)
          delete [] fBuffer;
          fBuffer = 0;
          fBufferSize = 0;
-      }         
-      return 0;      
+      }
+      return 0;
    }
    if (nbentries < 0 && action == 0) return 0;    // case histogram has been already filled from the buffer
 
@@ -1297,11 +1297,11 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
    }
    if (2*nbentries+2 >= fBufferSize) {
       BufferEmpty(1);
-      if (!fBuffer) 
+      if (!fBuffer)
          // to avoid infinite recursion Fill->BufferFill->Fill
          return Fill(x,w);
       // this cannot happen
-      R__ASSERT(0); 
+      R__ASSERT(0);
    }
    fBuffer[2*nbentries+1] = w;
    fBuffer[2*nbentries+2] = x;
@@ -2435,7 +2435,7 @@ void TH1::Copy(TObject &obj) const
    //
    // Note also that the histogram it will be created in gDirectory (if AddDirectoryStatus()=true)
    // or will not be added to any directory if  AddDirectoryStatus()=false
-   // independently of the current directory stored in the original histogram 
+   // independently of the current directory stored in the original histogram
 
    if (((TH1&)obj).fDirectory) {
       // We are likely to change the hash value of this object
@@ -2500,9 +2500,9 @@ void TH1::Copy(TObject &obj) const
    // any directory (fDirectory = 0)
    if (fgAddDirectory && gDirectory) {
       gDirectory->Append(&obj);
-      ((TH1&)obj).fDirectory = gDirectory;      
+      ((TH1&)obj).fDirectory = gDirectory;
    } else
-      ((TH1&)obj).fDirectory = 0; 
+      ((TH1&)obj).fDirectory = 0;
 
 }
 
@@ -2867,7 +2867,7 @@ TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
    //     Once the histogram is drawn into the pad, any further modification
    //     using graphics input will be made on the copy of the histogram,
    //     and not to the original object.
-   //     By default a postfix "_copy" is added to the histogram name. Pass an empty postfix in case 
+   //     By default a postfix "_copy" is added to the histogram name. Pass an empty postfix in case
    //     you want to draw an histogram with the same name
    //
    //     See Draw for the list of options
@@ -3142,7 +3142,7 @@ Int_t TH1::Fill(Double_t x, Double_t w)
    //
    //    The function returns the corresponding bin number which has its content incremented by w
 
-   
+
    if (fBuffer) return BufferFill(x,w);
 
    Int_t bin;
@@ -3214,7 +3214,7 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
    //    weights is automatically triggered and the sum of the squares of weights is incremented
    //    by w^2 in the bin corresponding to x.
    //    if w is NULL each entry is assumed a weight=1
-   
+
    //If a buffer is activated, fill buffer
    if (fBuffer) {
       ntimes *= stride;
@@ -3224,12 +3224,12 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
          if (w) BufferFill(x[i],w[i]);
          else BufferFill(x[i], 1.);
       }
-      // fill the remaining entries if the buffer has been deleted 
-      if (i < ntimes && fBuffer==0) 
+      // fill the remaining entries if the buffer has been deleted
+      if (i < ntimes && fBuffer==0)
          DoFillN((ntimes-i)/stride,&x[i],&w[i],stride);
       return;
    }
-   // call internal method 
+   // call internal method
    DoFillN(ntimes, x, w, stride);
 }
 
@@ -3240,7 +3240,7 @@ void TH1::DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stri
    // called directly by TH1::BufferEmpty
 
    Int_t bin,i;
-   
+
    fEntries += ntimes;
    Double_t ww = 1;
    Int_t nbins   = fXaxis.GetNbins();
@@ -5500,10 +5500,10 @@ Long64_t TH1::Merge(TCollection *li)
                      return -1;
                   }
                   // special case for underflow/overflows
-                  if (label[0] == 0 &&  (binx == 0 || binx ==(nx+1)) ) { 
+                  if (label[0] == 0 &&  (binx == 0 || binx ==(nx+1)) ) {
                         ix = binx;
                   }
-                  else { 
+                  else {
                      // if bin does not exists FindBin will add it automatically
                      // by calling LabelsInflate() if the bit is set
                      // otherwise it will return zero and bin will be merged in underflow/overflow
@@ -6038,7 +6038,7 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
       return;
 
    //save a copy of this histogram
-   TH1 *hold = (TH1*)IsA()->New(); 
+   TH1 *hold = (TH1*)IsA()->New();
    hold->SetDirectory(0);
    Copy(*hold);
    //set new axis limits
@@ -6258,24 +6258,24 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
    Int_t ii;
    Double_t hh[6] = {0,0,0,0,0,0};
 
-   std::vector<double> yy(nn); 
-   std::vector<double> zz(nn); 
-   std::vector<double> rr(nn); 
+   std::vector<double> yy(nn);
+   std::vector<double> zz(nn);
+   std::vector<double> rr(nn);
 
    for (Int_t pass=0;pass<ntimes;pass++) {
       // first copy original data into temp array
-      std::copy(xx, xx+nn, zz.begin() ); 
+      std::copy(xx, xx+nn, zz.begin() );
 
 
 
-      for (int noent = 0; noent < 2; ++noent) { // run algorithm two times 
-      
+      for (int noent = 0; noent < 2; ++noent) { // run algorithm two times
+
          //  do 353 i.e. running median 3, 5, and 3 in a single loop
          for  (int kk = 0; kk < 3; kk++)  {
             std::copy(zz.begin(), zz.end(), yy.begin());
-            int medianType = (kk != 1)  ?  3 : 5; 
+            int medianType = (kk != 1)  ?  3 : 5;
             int ifirst      = (kk != 1 ) ?  1 : 2;
-            int ilast       = (kk != 1 ) ? nn-1 : nn -2; 
+            int ilast       = (kk != 1 ) ? nn-1 : nn -2;
             //nn2 = nn - ik - 1;
             // do all elements beside the first and last point for median 3
             //  and first two and last 2 for median 5
@@ -6331,17 +6331,17 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
          }
 
          // running means
-         //std::copy(zz.begin(), zz.end(), yy.begin()); 
+         //std::copy(zz.begin(), zz.end(), yy.begin());
          for  (ii = 1; ii < nn - 1; ii++) {
             zz[ii] = 0.25*yy[ii - 1] + 0.5*yy[ii] + 0.25*yy[ii + 1];
          }
          zz[0] = yy[0];
          zz[nn - 1] = yy[nn - 1];
 
-         if (noent == 0) { 
+         if (noent == 0) {
 
-            // save computed values 
-            std::copy(zz.begin(), zz.end(), rr.begin()); 
+            // save computed values
+            std::copy(zz.begin(), zz.end(), rr.begin());
 
             // COMPUTE  residuals
             for  (ii = 0; ii < nn; ii++)  {
@@ -6350,8 +6350,8 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
          }
 
       }  // end loop on noent
-      
- 
+
+
       double xmin = TMath::MinElement(nn,xx);
       for  (ii = 0; ii < nn; ii++) {
          if (xmin < 0) xx[ii] = rr[ii] + zz[ii];
@@ -8192,6 +8192,8 @@ void TH1::SetName(const char *name)
 
    //  Histograms are named objects in a THashList.
    //  We must update the hashlist if we change the name
+   //  We protect this operation
+   R__LOCKGUARD2(gROOTMutex);
    if (fDirectory) fDirectory->Remove(this);
    fName = name;
    if (fDirectory) fDirectory->Append(this);
