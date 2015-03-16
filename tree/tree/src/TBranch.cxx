@@ -39,6 +39,7 @@
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
 
+#include <atomic>
 #include <cstddef>
 #include <string.h>
 #include <stdio.h>
@@ -1081,7 +1082,11 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
 {
    //         Return pointer to basket basketnumber in this Branch
 
-   static Int_t nerrors = 0;
+   // This counter in the sequential case collects errors coming also from
+   // different files (suppose to have a program reading f1.root, f2.root ...)
+   // In the mt case, it is made atomic: it safely collects errors from
+   // different files processed simultaneously.
+   static std::atomic<Int_t> nerrors(0);
 
       // reference to an existing basket in memory ?
    if (basketnumber <0 || basketnumber > fWriteBasket) return 0;
@@ -1125,7 +1130,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
             return 0;
          }
       }
-      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%lld, badread=%d, nerrors=%d, basketnumber=%d",file->GetName(),basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors,basketnumber);
+      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%lld, badread=%d, nerrors=%d, basketnumber=%d",file->GetName(),basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors.load(),basketnumber);
       return 0;
    }
 
