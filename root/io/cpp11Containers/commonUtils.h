@@ -24,6 +24,21 @@ bool IsSame<>(const double& a, const double& b){
    return false;
 }
 
+template <>
+bool IsSame<>(const complex<double>& a, const complex<double>& b){
+   if (a==b) return true;
+   cout << "Error complex numbers differ: " << a << " " << b << std::endl;
+   return false;
+}
+
+template <class T>
+bool IsSame(const complex<T>& a, const complex<T>& b){
+   if (a==b) return true;
+   cout << "Error complex numbers differ: " << a << " " << b << std::endl;
+   return false;
+}
+
+
 template<class Cont>
 bool IsSameCont(const Cont& a, const Cont& b){
    auto size =std::distance(a.begin(),a.end());

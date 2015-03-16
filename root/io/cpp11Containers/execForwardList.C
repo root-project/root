@@ -36,6 +36,8 @@ void check(const char* testName){
    }
 
    Cont<double> doubleCont {1.,2.,3.,4.}; // need double32_t
+   Cont<complex<double>> complexDCont {{1,2},{3,4},{5,6},{7,8},{9,10},{11,12}};
+   Cont<complex<float>> complexFCont {{1,2},{3,4},{5,6},{7,8},{9,10},{11,12}};
    Cont<TH1F> histoCont {TH1F("h","ht",100,-2,2), TH1F("h","ht",10,-1.2,1.2)};
    fillHistoCont(histoCont);
 
@@ -54,6 +56,8 @@ void check(const char* testName){
    // Row wise
    for (auto&& filename : filenames){
       writeReadCheck(doubleCont,"doubleCont",filename);
+      writeReadCheck(complexDCont,"complexDCont",filename);
+      writeReadCheck(complexFCont,"complexFCont",filename);
       writeReadCheck(histoCont,"histoCont",filename);
       writeReadCheck(contHistoCont,"contHistoCont",filename);
       writeReadCheck(vecHistoCont,"vecHistoCont",filename);
@@ -65,6 +69,8 @@ void check(const char* testName){
    int NEvts=100;
    // Make a backup of the input
    auto doubleContOrig = doubleCont;
+   auto complexDContOrig = complexDCont;
+   auto complexFContOrig = complexFCont;
    auto histoContOrig = histoCont;
    auto contHistoContOrig = contHistoCont;
    auto vecHistoContOrig = vecHistoCont;
@@ -78,6 +84,10 @@ void check(const char* testName){
       TTree t("t","Test Tree");
       t.Branch("doubleCont_split", &doubleCont,16000,99);
       t.Branch("doubleCont", &doubleCont,16000,0);
+      t.Branch("complexDCont_split", &complexDCont,16000,99);
+      t.Branch("complexDCont", &complexDCont,16000,0);
+      t.Branch("complexFCont_split", &complexFCont,16000,99);
+      t.Branch("complexFCont", &complexFCont,16000,0);
       t.Branch("histoCont_split", &histoCont,16000,99);
       t.Branch("histoCont", &histoCont,16000,0);
       t.Branch("contHistoCont_split", &contHistoCont,16000,99);
@@ -89,6 +99,8 @@ void check(const char* testName){
 
       for (int i=0;i<NEvts;++i){
          randomizeCont(doubleCont);
+         randomizeCont(complexDCont);
+         randomizeCont(complexFCont);
          fillHistoCont(histoCont,10);
          fillHistoNestedCont(contHistoCont,10);
          fillHistoNestedCont(vecHistoCont,10);
@@ -105,6 +117,10 @@ void check(const char* testName){
       TTreeReader reader("t", &f);
       TTreeReaderValue<decltype(doubleCont)> rdoubleCont_split(reader, "doubleCont_split");
       TTreeReaderValue<decltype(doubleCont)> rdoubleCont(reader, "doubleCont");
+      TTreeReaderValue<decltype(complexDCont)> rcomplexDCont_split(reader, "complexDCont_split");
+      TTreeReaderValue<decltype(complexDCont)> rcomplexDCont(reader, "complexDCont");
+      TTreeReaderValue<decltype(complexFCont)> rcomplexFCont_split(reader, "complexFCont_split");
+      TTreeReaderValue<decltype(complexFCont)> rcomplexFCont(reader, "complexFCont");
       TTreeReaderValue<decltype(histoCont)> rhistoCont_split(reader, "histoCont_split");
       TTreeReaderValue<decltype(histoCont)> rhistoCont(reader, "histoCont");
       TTreeReaderValue<decltype(contHistoCont)> rcontHistoCont_split(reader, "contHistoCont_split");
@@ -116,6 +132,8 @@ void check(const char* testName){
       for (int i=0;i<NEvts;++i){
          // Rebuild original values
          randomizeCont(doubleContOrig);
+         randomizeCont(complexDContOrig);
+         randomizeCont(complexFContOrig);
          fillHistoCont(histoContOrig,10);
          fillHistoNestedCont(contHistoContOrig,10);
          fillHistoNestedCont(vecHistoContOrig,10);
@@ -124,6 +142,10 @@ void check(const char* testName){
          reader.Next();
          checkObjects("doubleCont_split",doubleContOrig,*rdoubleCont_split);
          checkObjects("doubleCont",doubleContOrig,*rdoubleCont);
+         checkObjects("complexDCont_split",complexDContOrig,*rcomplexDCont_split);
+         checkObjects("complexDCont",complexDContOrig,*rcomplexDCont);
+         checkObjects("complexFCont_split",complexFContOrig,*rcomplexFCont_split);
+         checkObjects("complexFCont",complexFContOrig,*rcomplexFCont);
          checkObjects("histoCont_split",histoContOrig,*rhistoCont_split);
          checkObjects("histoCont",histoContOrig,*rhistoCont);
          checkObjects("contHistoCont_split",contHistoContOrig,*rcontHistoCont_split);
