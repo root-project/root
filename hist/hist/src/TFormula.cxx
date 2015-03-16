@@ -3359,11 +3359,13 @@ void TFormula::SetName(const char* name)
       Error("SetName","The name \'%s\' is reserved as a TFormula variable name.\n"
          "\tThis function will not be renamed.",name);
    } else {
+      // Here we need to remove and re-add to keep the hashes consistent with
+      // the underlying names.
+      auto listOfFunctions = gROOT->GetListOfFunctions();
       R__LOCKGUARD2(gROOTMutex);
-      TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
-      if (old) {
-         old->SetName(name);
-      }
+      if (listOfFunctions) listOfFunctions->Remove(this);
+      fName = name;
+      if (listOfFunctions) listOfFunctions->Add(this);
    }
 }
 
