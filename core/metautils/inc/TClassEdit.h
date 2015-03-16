@@ -63,6 +63,7 @@ namespace ROOT {
       class TNormalizedCtxt;
    }
 }
+#include "TStringView.h"
 
 // TClassEdit is used to manipulate class and type names.
 //
@@ -160,7 +161,7 @@ namespace TClassEdit {
    int         IsSTLCont (const char *type,int testAlloc);
    bool        IsStdClass(const char *type);
    bool        IsVectorBool(const char *name);
-   void        GetNormalizedName(std::string &norm_name,const char *name);
+   void        GetNormalizedName(std::string &norm_name,ROOT::TStringView name);
    std::string GetLong64_Name(const char *original);
    std::string GetLong64_Name(const std::string& original);
    int         GetSplit  (const char *type, std::vector<std::string> &output, int &nestedLoc, EModType mode = TClassEdit::kNone);

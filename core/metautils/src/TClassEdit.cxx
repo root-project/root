@@ -12,6 +12,7 @@
 #include <set>
 // for shared_ptr
 #include <memory>
+#include "TStringView.h"
 
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = 0;
@@ -551,7 +552,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
       size_t end = findNameEnd(a,pos);
 
       std::string valuepart;
-      GetNormalizedName(valuepart,a.substr(pos,end-pos).c_str());
+      GetNormalizedName(valuepart,ROOT::TStringView(a.c_str()+pos,end-pos));
 
       std::string norm_value;
       GetNormalizedName(norm_value,k.c_str());
@@ -614,7 +615,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
       size_t end = findNameEnd(a,pos);
 
       std::string keypart;
-      GetNormalizedName(keypart,a.substr(pos,end-pos).c_str());
+      GetNormalizedName(keypart,ROOT::TStringView(a.c_str()+pos,end-pos));
 
       std::string norm_key;
       GetNormalizedName(norm_key,k.c_str());
@@ -651,7 +652,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
       size_t end = findNameEnd(a,pos);
 
       std::string valuepart;
-      GetNormalizedName(valuepart,a.substr(pos,end-pos).c_str());
+      GetNormalizedName(valuepart,ROOT::TStringView(a.c_str()+pos,end-pos));
 
       std::string norm_value;
       GetNormalizedName(norm_value,k.c_str());
@@ -692,7 +693,7 @@ static bool IsDefElement(const char *elementName, const char* defaultElementName
       size_t end = findNameEnd(c,pos);
 
       std::string keypart;
-      TClassEdit::GetNormalizedName(keypart,c.substr(pos,end-pos).c_str());
+      TClassEdit::GetNormalizedName(keypart,ROOT::TStringView(c.c_str()+pos,end-pos));
 
       std::string norm_key;
       TClassEdit::GetNormalizedName(norm_key,k.c_str());
@@ -739,7 +740,7 @@ bool TClassEdit::IsDefHash(const char *hashname, const char *classname)
 }
 
 //______________________________________________________________________________
-void TClassEdit::GetNormalizedName(std::string &norm_name, const char *name)
+void TClassEdit::GetNormalizedName(std::string &norm_name, ROOT::TStringView name)
 {
    // Return the normalized name.  See TMetaUtils::GetNormalizedName.
    //
@@ -750,7 +751,7 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, const char *name)
    // Compare to TMetaUtils::GetNormalizedName, this routines does not
    // and can not add default template parameters.
 
-   norm_name = name;
+   norm_name = std::string(name); // NOTE: Is that the shortest version?
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
