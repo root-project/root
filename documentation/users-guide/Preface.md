@@ -1,6 +1,6 @@
 # Preface {.unnumbered}
 
-Draft, November 2000 - version 0.6.2In late 1994, we decided to learn
+In late 1994, we decided to learn
 and investigate Object Oriented programming and C++ to better judge
 the suitability of these relatively new techniques for scientific
 programming. We knew that there is no better way to learn a new
