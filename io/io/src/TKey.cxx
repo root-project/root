@@ -77,7 +77,10 @@ const ULong64_t kPidOffsetMask = 0xffffffffffffUL;
 #endif
 const UChar_t kPidOffsetShift = 48;
 
-thread_local TString gTDirectoryString("TDirectory");
+TString &gTDirectoryString() {
+   thread_local TString gTDirectoryString("TDirectory");
+   return gTDirectoryString;
+}
 std::atomic<UInt_t> keyAbsNumber{0};
 
 ClassImp(TKey)
@@ -602,7 +605,7 @@ void TKey::FillBuffer(char *&buffer)
    }
    if (TestBit(kIsDirectoryFile)) {
       // We want to record "TDirectory" instead of TDirectoryFile so that the file can be read by ancient version of ROOT.
-      gTDirectoryString.FillBuffer(buffer);
+      gTDirectoryString().FillBuffer(buffer);
    } else {
       fClassName.FillBuffer(buffer);
    }
@@ -1404,7 +1407,7 @@ void TKey::Streamer(TBuffer &b)
       }
       if (TestBit(kIsDirectoryFile)) {
          // We want to record "TDirectory" instead of TDirectoryFile so that the file can be read by ancient version of ROOT.
-         gTDirectoryString.Streamer(b);
+         gTDirectoryString().Streamer(b);
       } else {
          fClassName.Streamer(b);
       }
