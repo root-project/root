@@ -607,7 +607,7 @@ const char *TClingDataMemberInfo::Title()
 // ValidArrayIndex return a static string (so use it or copy it immediatly, do not
 // call GrabIndex twice in the same expression) containing the size of the
 // array data member.
-const char *TClingDataMemberInfo::ValidArrayIndex() const
+llvm::StringRef TClingDataMemberInfo::ValidArrayIndex() const
 {
    if (!IsValid()) {
       return 0;

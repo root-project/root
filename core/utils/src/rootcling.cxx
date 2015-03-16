@@ -1553,7 +1553,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 }
 
 //______________________________________________________________________________
-const char *GrabIndex(const clang::FieldDecl &member, int printError)
+llvm::StringRef GrabIndex(const clang::FieldDecl &member, int printError)
 {
    // GrabIndex returns a static string (so use it or copy it immediatly, do not
    // call GrabIndex twice in the same expression) containing the size of the
@@ -1561,10 +1561,10 @@ const char *GrabIndex(const clang::FieldDecl &member, int printError)
    // In case of error, or if the size is not specified, GrabIndex returns 0.
 
    int error;
-   const char *where = 0;
+   llvm::StringRef where;
 
-   const char *index = ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(member, &error, &where);
-   if (index == 0 && printError) {
+   llvm::StringRef index = ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(member, &error, &where);
+   if (index.size() == 0 && printError) {
       const char *errorstring;
       switch (error) {
          case TMetaUtils::NOT_INT:
@@ -1583,12 +1583,12 @@ const char *GrabIndex(const clang::FieldDecl &member, int printError)
             errorstring = "UNKNOWN ERROR!!!!";
       }
 
-      if (where == 0) {
+      if (where.size() == 0) {
          ROOT::TMetaUtils::Error(0, "*** Datamember %s::%s: no size indication!\n",
                                  member.getParent()->getName().str().c_str(), member.getName().str().c_str());
       } else {
          ROOT::TMetaUtils::Error(0, "*** Datamember %s::%s: size of array (%s) %s!\n",
-                                 member.getParent()->getName().str().c_str(), member.getName().str().c_str(), where, errorstring);
+                                 member.getParent()->getName().str().c_str(), member.getName().str().c_str(), where.str().c_str(), errorstring);
       }
    }
    return index;
@@ -1745,8 +1745,8 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                      dictStream << "         ;//R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
                   }
                } else if (type.getTypePtr()->isPointerType()) {
-                  const char *indexvar = GrabIndex(**field_iter, i == 0);
-                  if (indexvar == 0) {
+                  llvm::StringRef indexvar = GrabIndex(**field_iter, i == 0);
+                  if (indexvar.size() == 0) {
                      if (i == 0) {
                         ROOT::TMetaUtils::Error(0, "*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
                         dictStream << "      //R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
@@ -1757,27 +1757,27 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                      if (i == 0) {
                         dictStream << "      delete [] " << field_iter->getName().str() << ";" << std::endl
                                    << "      " << GetNonConstMemberName(**field_iter) << " = new "
-                                   << ROOT::TMetaUtils::ShortTypeName(**field_iter) << "[" << indexvar << "];" << std::endl;
+                                   << ROOT::TMetaUtils::ShortTypeName(**field_iter) << "[" << indexvar.str() << "];" << std::endl;
                         if (isFloat16) {
                            dictStream << "      R__b.ReadFastArrayFloat16(" <<  GetNonConstMemberName(**field_iter)
-                                      << "," << indexvar << ");" << std::endl;
+                                      << "," << indexvar.str() << ");" << std::endl;
                         } else if (isDouble32) {
                            dictStream << "      R__b.ReadFastArrayDouble32(" <<  GetNonConstMemberName(**field_iter)
-                                      << "," << indexvar << ");" << std::endl;
+                                      << "," << indexvar.str() << ");" << std::endl;
                         } else {
                            dictStream << "      R__b.ReadFastArray(" << GetNonConstMemberName(**field_iter)
-                                      << "," << indexvar << ");" << std::endl;
+                                      << "," << indexvar.str() << ");" << std::endl;
                         }
                      } else {
                         if (isFloat16) {
                            dictStream << "      R__b.WriteFastArrayFloat16("
-                                      << field_iter->getName().str() << "," << indexvar << ");" << std::endl;
+                                      << field_iter->getName().str() << "," << indexvar.str() << ");" << std::endl;
                         } else if (isDouble32) {
                            dictStream << "      R__b.WriteFastArrayDouble32("
-                                      << field_iter->getName().str() << "," << indexvar << ");" << std::endl;
+                                      << field_iter->getName().str() << "," << indexvar.str() << ");" << std::endl;
                         } else {
                            dictStream << "      R__b.WriteFastArray("
-                                      << field_iter->getName().str() << "," << indexvar << ");" << std::endl;
+                                      << field_iter->getName().str() << "," << indexvar.str() << ");" << std::endl;
                         }
                      }
                   }

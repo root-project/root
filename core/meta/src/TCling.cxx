@@ -6850,8 +6850,11 @@ const char* TCling::DataMemberInfo_Title(DataMemberInfo_t* dminfo) const
 //______________________________________________________________________________
 const char* TCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) const
 {
+   thread_local std::string result;
+
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
-   return TClinginfo->ValidArrayIndex();
+   result = TClinginfo->ValidArrayIndex().str();
+   return result.c_str();
 }
 
 //______________________________________________________________________________

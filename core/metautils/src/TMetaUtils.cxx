@@ -206,14 +206,14 @@ static bool IsFieldDeclInt(const clang::FieldDecl *field)
 }
 
 //______________________________________________________________________________
-static const clang::FieldDecl *GetDataMemberFromAll(const clang::CXXRecordDecl &cl, const char *what)
+static const clang::FieldDecl *GetDataMemberFromAll(const clang::CXXRecordDecl &cl, llvm::StringRef what)
 {
    // Return a data member name 'what' in the class described by 'cl' if any.
 
    for(clang::RecordDecl::field_iterator field_iter = cl.field_begin(), end = cl.field_end();
        field_iter != end;
-   ++field_iter){
-      if (field_iter->getNameAsString() == what) {
+       ++field_iter){
+      if (field_iter->getName() == what) {
          return *field_iter;
       }
    }
@@ -2935,7 +2935,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 }
 
 //______________________________________________________________________________
-const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum, const char **errstr)
+llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum, llvm::StringRef *errstr)
 {
    // ValidArrayIndex return a static string (so use it or copy it immediatly, do not
    // call GrabIndex twice in the same expression) containing the size of the
@@ -2969,21 +2969,20 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Decla
 
    if (errnum) *errnum = VALID;
 
-   if (title.size() == 0 || (title[0] != '[')) return 0;
+   if (title.size() == 0 || (title[0] != '[')) return llvm::StringRef();
    size_t rightbracket = title.find(']');
-   if (rightbracket == llvm::StringRef::npos) return 0;
+   if (rightbracket == llvm::StringRef::npos) return llvm::StringRef();
 
    std::string working;
-   static std::string indexvar;
-   indexvar = title.substr(1,rightbracket-1).str();
+   llvm::StringRef indexvar(title.data()+1,rightbracket-1);
 
    // now we should have indexvar=dimension
    // Let's see if this is legal.
    // which means a combination of data member and digit separated by '*','+','-'
    // First we remove white spaces.
    unsigned int i;
-   size_t indexvarlen = indexvar.length();
-   for ( i=0; i<=indexvarlen; i++) {
+   size_t indexvarlen = indexvar.size();
+   for ( i=0; i<indexvarlen; i++) {
       if (!isspace(indexvar[i])) {
          working += indexvar[i];
       }
@@ -3005,7 +3004,7 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Decla
                //        member.MemberOf()->Name(), member.Name(), current);
                if (errstr) *errstr = current;
                if (errnum) *errnum = NOT_INT;
-               return 0;
+               return llvm::StringRef();
             }
          }
       } else { // current token is not a digit
@@ -3032,7 +3031,7 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Decla
                      //        member.MemberOf()->Name(), member.Name(), current);
                      if (errstr) *errstr = current;
                      if (errnum) *errnum = NOT_DEF;
-                     return 0;
+                     return llvm::StringRef();
                   }
                   if ( field_iter->getNameAsString() == index1->getNameAsString() ) {
                      break;
@@ -3044,7 +3043,7 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Decla
                //        member.MemberOf()->Name(), member.Name(), current);
                if (errstr) *errstr = current;
                if (errnum) *errnum = NOT_INT;
-               return 0;
+               return llvm::StringRef();
             }
          } else {
             // There is no variable by this name in this class, let see
@@ -3065,23 +3064,23 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Decla
                   //  member.MemberOf()->Name(), member.Name(), current);
                   if (errnum) *errnum = NOT_INT;
                   if (errstr) *errstr = current;
-                  return 0;
+                  return llvm::StringRef();
                }
                if ( found && (index1->getAccess() == clang::AS_private) ) {
                   //NOTE: *** Need to print an error;
                   //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is a private member of %s \n",
                   if (errstr) *errstr = current;
                   if (errnum) *errnum = IS_PRIVATE;
-                  return 0;
+                  return llvm::StringRef();
                }
             }
             if (!found) {
                //NOTE: *** Need to print an error;
                //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not known \n",
                //        member.MemberOf()->Name(), member.Name(), indexvar);
-               if (errstr) *errstr = indexvar.c_str();
+               if (errstr) *errstr = indexvar;
                if (errnum) *errnum = UNKNOWN;
-               return 0;
+               return llvm::StringRef();
             } // end of if not found
          } // end of if is a data member of the class
       } // end of if isdigit
@@ -3089,7 +3088,7 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Decla
       current = strtok(0,tokenlist);
    } // end of while loop on tokens
 
-   return indexvar.c_str();
+   return indexvar;
 
 }
 

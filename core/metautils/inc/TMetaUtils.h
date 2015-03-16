@@ -329,7 +329,7 @@ clang::QualType AddDefaultParameters(clang::QualType instanceType,
                                      const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
-const char* DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum = 0, const char **errstr = 0);
+llvm::StringRef DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum = 0, llvm::StringRef  *errstr = 0);
 
 //______________________________________________________________________________
 // Return the ROOT include directory

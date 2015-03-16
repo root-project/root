@@ -129,7 +129,7 @@ public:
    const char        *TypeTrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char        *Name() const;
    const char        *Title();
-   const char        *ValidArrayIndex() const;
+   llvm::StringRef    ValidArrayIndex() const;
 
 };
 
