@@ -1473,7 +1473,7 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
 {
    // Draw list tree item.
 
-   Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext, xline, yline, xc;
+   Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext = 0, xline, yline, xc;
    Int_t  xpic2 = 0;
    UInt_t height;
    const TGPicture *pic1 = item->GetPicture();
