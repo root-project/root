@@ -371,7 +371,7 @@ char *TFileDrawMap::GetObjectInfo(Int_t px, Int_t py) const
 //   in the canvas status bar info panel
 
    // Thread safety: this solution is not elegant, but given the action performed
-   // by the method, this construct can be considered thred-safe.
+   // by the method, this construct can be considered nonproblematic.
    static TString info;
    GetObjectInfoDir(fFile, px, py, info);
    return (char*)info.Data();
