@@ -16,4 +16,5 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 exectsenums.log: libtsenums_dictrflx.$(DllSuf)
 exectsinclude.log: exectsinclude.C
 exectsautoparse.log: exectsautoparse.C
+execexectstformula.log: exectstformula.C
 

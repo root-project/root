@@ -1,5 +1,9 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(roottest-root-multicore-exectstformula
+                  MACRO exectstformula.C
+                  OUTREF exectstformula.ref)
+
 ROOTTEST_ADD_TEST(roottest-root-multicore-exectsautoparse
                   MACRO exectsautoparse.C
                   OUTREF exectsautoparse.ref)
