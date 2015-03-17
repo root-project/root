@@ -610,10 +610,10 @@ const char *TClingDataMemberInfo::Title()
 llvm::StringRef TClingDataMemberInfo::ValidArrayIndex() const
 {
    if (!IsValid()) {
-      return 0;
+      return llvm::StringRef();
    }
    const clang::DeclaratorDecl *FD = llvm::dyn_cast<clang::DeclaratorDecl>(GetDecl());
    if (FD) return ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(*FD);
-   else return 0;
+   else return llvm::StringRef();
 }
 
