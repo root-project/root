@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.log *so *pcm *rflx* dummy*.C
+CLEAN_TARGETS += *.log *so *pcm *rflx* dummy*.C dummy*_C.d
 TEST_TARGETS += execloadLib
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
