@@ -3352,24 +3352,6 @@ void TFormula::ProcessLinear(TString &formula)
 }
 
 //______________________________________________________________________________
-void TFormula::SetName(const char* name)
-{
-   // Set the name of the formula
-   if (IsReservedName(name)) {
-      Error("SetName","The name \'%s\' is reserved as a TFormula variable name.\n"
-         "\tThis function will not be renamed.",name);
-   } else {
-      // Here we need to remove and re-add to keep the hashes consistent with
-      // the underlying names.
-      auto listOfFunctions = gROOT->GetListOfFunctions();
-      R__LOCKGUARD2(gROOTMutex);
-      if (listOfFunctions) listOfFunctions->Remove(this);
-      fName = name;
-      if (listOfFunctions) listOfFunctions->Add(this);
-   }
-}
-
-//______________________________________________________________________________
 void TFormula::SetParameter(const char *name, Double_t value)
 {
    // Initialize parameter number ipar.
