@@ -36,6 +36,7 @@
 #include <iterator>
 #include <ostream>
 #include <iomanip>
+#include <stdexcept>
 
 #define _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS \
 namespace std { \
