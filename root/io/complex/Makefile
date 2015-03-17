@@ -1,4 +1,4 @@
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog complexOfileROOT6.root *pcm classWithComplex.root classWithComplex.xml
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog complexOfileROOT6.root complexOfileROOT6.xml *pcm classWithComplex.root classWithComplex.xml
 
 #TEST_TARGETS +=
 
