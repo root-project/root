@@ -473,6 +473,8 @@ std::string TClingMethodInfo::GetMangledName() const
    std::string mangled_name;
    mangled_name.clear();
    const FunctionDecl* D = GetMethodDecl();
+
+   R__LOCKGUARD(gInterpreterMutex);
    GlobalDecl GD;
    if (const CXXConstructorDecl* Ctor = dyn_cast<CXXConstructorDecl>(D))
      GD = GlobalDecl(Ctor, Ctor_Complete);
@@ -481,7 +483,6 @@ std::string TClingMethodInfo::GetMangledName() const
    else
      GD = GlobalDecl(D);
 
-   R__LOCKGUARD(gInterpreterMutex);
    cling::utils::Analyze::maybeMangleDeclName(GD, mangled_name);
    return mangled_name;
 }
