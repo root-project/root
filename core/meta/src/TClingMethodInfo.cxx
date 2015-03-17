@@ -480,6 +480,8 @@ std::string TClingMethodInfo::GetMangledName() const
      GD = GlobalDecl(Dtor, Dtor_Deleting);
    else
      GD = GlobalDecl(D);
+
+   R__LOCKGUARD(gInterpreterMutex);
    cling::utils::Analyze::maybeMangleDeclName(GD, mangled_name);
    return mangled_name;
 }
@@ -571,6 +573,9 @@ const char *TClingMethodInfo::Title()
    // Iterate over the redeclarations, we can have muliple definitions in the
    // redecl chain (came from merging of pcms).
    const FunctionDecl *FD = GetMethodDecl();
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    // Could trigger deserialization of decls.
    cling::Interpreter::PushTransactionRAII RAII(fInterp);
    if (const FunctionDecl *AnnotFD

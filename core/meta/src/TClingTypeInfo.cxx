@@ -28,6 +28,8 @@
 #include "Rtypes.h" // for gDebug
 #include "TClassEdit.h"
 #include "TMetaUtils.h"
+#include "TInterpreter.h"
+
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Utils/AST.h"
@@ -106,6 +108,7 @@ const char *TClingTypeInfo::Name() const
    thread_local std::string buf;
    buf.clear();
 
+   R__LOCKGUARD(gInterpreterMutex);
    ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf,fQualType,*fInterp);
    return buf.c_str();
 }
