@@ -311,6 +311,9 @@ endif
 ifeq ($(BUILDHTTP),yes)
 MODULES      += net/http
 endif
+ifeq ($(BUILDR),yes)
+MODULES      += bindings/r
+endif
 
 -include MyModules.mk   # allow local modules
 
@@ -332,7 +335,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
                 proof/proofbench proof/afdsmgrd graf2d/ios \
                 graf2d/quartz graf2d/cocoa core/macosx math/vc math/vdt \
-                net/http
+                net/http  bindings/r
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

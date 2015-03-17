@@ -96,6 +96,7 @@ options="                    \
    enable_qt                 \
    enable_qtgsi              \
    enable_roofit             \
+   enable_r                  \
    enable_ruby               \
    enable_rfio               \
    enable_rpath              \
@@ -164,6 +165,7 @@ enable_gsl_shared=no
 enable_http=no
 enable_qt=no
 enable_qtgsi=no
+enable_r=yes
 enable_roofit=no
 enable_minuit2=no
 enable_rpath=no
@@ -198,6 +200,7 @@ if test "x$ENABLEALL" = "xyes"; then
     enable_unuran=yes
     enable_vc=yes
     enable_vdt=yes
+    enable_r=yes
 fi
 
 # Remove old log file
@@ -2200,6 +2203,9 @@ if test $# -gt 0 ; then
       --with-python-libdir=*)  pythonlibdir=$optarg  ; enable_python="yes"  ;;
       --with-qt-incdir=*)      qtincdir=$optarg      ; mocdir=$optarg/../bin; enable_qt="yes"; enable_qtgsi="yes" ;;
       --with-qt-libdir=*)      qtlibdir=$optarg      ; enable_qt="yes"; enable_qtgsi="yes" ;;
+      --with-r-incdir=*)       rincdir=$optarg       ; enable_r="yes"       ;;
+      --with-r-libdir=*)       rlibdir=$optarg       ; enable_r="yes"       ;;
+      --with-r-sitedir=*)      rsitedir=$optarg      ; enable_r="yes"       ;;     
       --with-ruby-incdir=*)    rubyincdir=$optarg    ; enable_ruby="yes"    ;;
       --with-ruby-libdir=*)    rubylibdir=$optarg    ; enable_ruby="yes"    ;;
       --with-sapdb-incdir=*)   sapdbincdir=$optarg   ; enable_sapdb="yes"   ;;
@@ -6696,6 +6702,97 @@ fi
 check_explicit "$enable_mathmore" "$enable_mathmore_explicit" \
      "Explicitly required MathMore dependencies not fulfilled"
 
+     
+######################################################################
+#
+### echo %%% RInterface Library - Contributed library
+#
+if test ! "x$enable_r" = "xno"; then
+     checking_msg "R command"
+     if `$cwhich R > /dev/null 2>&1` ; then
+         REXE=`$cwhich R`
+         echo $REXE
+         # we found R - now check the version number
+         message "Checking for R version"
+         r_version=`$REXE CMD config -v | head -n  1 | awk -F":" '{print $2}' | awk -F" " '{print $1}' | awk -F"." '{print $1"."$2}'`
+         echo $r_version
+         
+         R_HOME=`echo 'cat(Sys.getenv("R_HOME"))'   | R --vanilla --slave 2> /dev/null`
+
+         RCPPFLAGS=`$REXE CMD config --cppflags`
+         if test "x$platform" = "xmacosx" ; then
+         RLDFLAGS="-L$R_HOME/lib -lR"
+         else
+         RLDFLAGS=`$REXE CMD config --ldflags`
+         fi
+         RBLAS=`$REXE CMD config BLAS_LIBS`
+         RLAPACK=`$REXE CMD config LAPACK_LIBS`
+         
+         checking_msg "Rcpp"
+         RCPPINCL=`echo 'Rcpp:::CxxFlags()'  | $REXE --vanilla --slave 2> /dev/null`
+         RCPPINCLSTATUS=$?
+         RCPPLIBS=`echo 'Rcpp:::LdFlags(static=0)'   | $REXE --vanilla --slave 2> /dev/null`
+         RCPPLIBSSTATUS=$?
+         
+         if test "x$RCPPLIBS" = "x" ;then
+            RCPPLIBS=`echo 'cat(find.package("Rcpp"))'   | $REXE --vanilla --slave 2> /dev/null`
+	    RCPPLIBS="$RCPPLIBS/libs"
+
+	    	if test -e "$RCPPLIBS/Rcpp.dll"; then
+            		RCPPLIBS="$RCPPLIBS/Rcpp.dll"
+            		RCPPLIBSSTATUS=$((0))
+		else
+	        	check_library "libRcpp Rcpp" "" "" $RCPPLIBS
+        	    	if test ! "x$found_lib" = "x"; then
+            			RCPPLIBS="$RCPPLIBS/$found_lib"
+            			RCPPLIBSSTATUS=$((0))
+            		fi
+		fi
+         fi
+         
+         if [ $RCPPINCLSTATUS -eq 0 ] && [ $RCPPLIBSSTATUS -eq 0 ];then
+            echo "Checking for Rcpp ... found"
+         else
+            message "Install it running 'R -e \"install.packages(\\\"RInside\\\",repos=\\\"http://cran.irsn.fr/\\\")\"'"
+            enable_r="no"
+            result "no"
+         fi
+         checking_msg "RInside"
+         RINSIDEINCL=`echo 'RInside:::CxxFlags()'  | $REXE --vanilla --slave 2> /dev/null`
+         RINSIDEINCLSTATUS=$?
+         RINSIDELIBS=`echo 'RInside:::LdFlags(static=0)'   | $REXE --vanilla --slave 2> /dev/null`
+         RINSIDELIBSSTATUS=$?
+
+         if [ $RINSIDEINCLSTATUS -eq 0 ] && [ $RINSIDELIBSSTATUS -eq 0 ] ; then
+             echo "found"
+	 else
+	    message "Install it running 'R -e \"install.packages(\"RInside\",repos=\"http://cran.irsn.fr/\")\"'"
+	    enable_r="no"
+	    result "no"
+         fi
+         rflags="$RCPPFLAGS $RCPPINCL $RINSIDEINCL"
+         rlibs=" $RCPPLIBS $RINSIDELIBS $RLDFLAGS"
+     else
+        message "R not found"
+        enable_r="no"
+        result "no"     
+     fi         
+fi
+message "Checking whether to build libRInterface"
+if test "x$enable_r" = "xyes"; then
+    ##adding this two lines to supoort ACLiC for RInterface
+    echo "#define RINCLUDEPATH \" $RCPPFLAGS $RCPPINCL $RINSIDEINCL\" " > bindings/r/inc/compilerdata.h
+    echo "#define RLINKEDLIBS  \" $RLDFLAGS  $RCPPLIBS $RINSIDELIBS\"  " >> bindings/r/inc/compilerdata.h
+    result "yes"
+    hasr="define"
+else
+    result "no"
+    hasr="undef"
+fi
+check_explicit "$enable_r" "$enable_r_explicit" \
+     "Explicitly required R dependencies not fulfilled"
+     
+     
 ######################################################################
 #
 ### echo %%% GenVector Library - Contributed library
@@ -6950,6 +7047,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_krb5"     = "xyes" && pl="$pl root-plugin-net-krb5"
     test "x$enable_monalisa" = "xyes" && pl="$pl root-plugin-net-monalisa"
     test "x$enable_srp"      = "xyes" && pl="$pl root-plugin-net-srp"
+    test "x$enable_r"        = "xyes" && pl="$pl root-plugin-r"
     test "x$enable_mysql"    = "xyes" && pl="$pl root-plugin-sql-mysql"
     test "x$enable_odbc"     = "xyes" && pl="$pl root-plugin-sql-odbc"
     test "x$enable_oracle"   = "xyes" && pl="$pl root-plugin-sql-oracle"
@@ -7004,6 +7102,7 @@ if test "x$show_pkglist" = "xyes" ; then
         root-plugin-math-fumili \
         root-plugin-proof-proofplayer \
         root-plugin-proof-xproof \
+        root-plugin-r \
         root-plugin-tree-treeviewer \
         root-system-proofd \
         root-system-rootd \
@@ -7535,6 +7634,7 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@pgsqlincdir@|$pgsqlincdir|"          \
     -e "s|@pgsqllib@|$pgsqllib|"                \
     -e "s|@pgsqllibdir@|$pgsqllibdir|"          \
+    -e "s|@buildr@|$enable_r|"                  \
     -e "s|@sqliteincdir@|$sqliteincdir|"        \
     -e "s|@sqlitelib@|$sqlitelib|"              \
     -e "s|@sqlitelibdir@|$sqlitelibdir|"        \
@@ -7566,6 +7666,9 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@shiftlib@|$shiftlib|"                \
     -e "s|@shiftlibdir@|$shiftlibdir|"          \
     -e "s|@shiftcflags@|$shiftcflags|"          \
+    -e "s|@buildr@|$enable_r|"                  \
+    -e "s|@rflags@|$rflags|"                    \
+    -e "s|@rlibs@|$rlibs|"                      \
         < Makefile.tmp > Makefile.tmpp
 mv Makefile.tmpp Makefile.tmp
 

@@ -142,6 +142,7 @@ MEMSTATLIBDEPM         = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(IOLIB)
 MEMSTATGUILIBDEPM      = $(MEMSTATLIB) $(TREELIB) $(GUILIB)
 RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
 FITSIOLIBDEPM          = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(MATRIXLIB)
+RLIBDEPM               = $(MATRIXLIB) $(GUILIB) $(THREADLIB)
 HTTPLIBDEPM            = $(THREADLIB) $(TREELIB) $(HISTLIB) $(GPADLIB) \
                          $(GRAFLIB) $(IOLIB) $(XMLLIB)
 
@@ -248,6 +249,7 @@ MEMSTATLIBDEP          = $(MEMSTATLIBDEPM)
 MEMSTATGUILIBDEP       = $(MEMSTATGUILIBDEPM)
 RECLIBDEP              = $(RECLIBDEPM)
 FITSIOLIBDEP           = $(FITSIOLIBDEPM)
+RLIBDEP                = $(RLIBDEPM)
 HTTPLIBDEP             = $(HTTPLIBDEPM)
 
 ifeq ($(PLATFORM),win32)
@@ -563,6 +565,7 @@ MEMSTATLIBEXTRA         = -Llib -lTree -lGpad -lGraf -lHist -lRIO
 MEMSTATGUILIBEXTRA      = -Llib -lMemStat -lTree -lGui
 RECLIBEXTRA             = -Llib -lGui -lRIO -lTree -lThread
 FITSIOLIBEXTRA          = -Llib -lHist -lGpad -lGraf -lMatrix
+RLIBEXTRA               = -Llib -lCore -lMatrix -lGui -lreadline -lThread
 HTTPLIBEXTRA            = -Llib -lThread -lTree -lHist -lGpad -lGraf -lRIO -lXMLIO
 ifeq ($(USEFASCGI), yes)
 HTTPLIBEXTRA           += -lfcgi

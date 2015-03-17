@@ -1,0 +1,11 @@
+require(ROOT)
+LoadModule('RIO')
+LoadModule('Hist')
+LoadModule('Graf')
+
+rfilein <- new(TFile,'gamma.root','read')
+f1 <- rfilein$Get('gamma')
+c1<-new(TCanvas,'c1','gamma')
+f1$Draw()
+c1$Update()
+rfilein$Close('')
