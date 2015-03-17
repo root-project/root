@@ -73,7 +73,7 @@ public:
 
    TDictionary *Find(DeclId_t id) const;
    TDictionary *Get(DeclId_t id);
-   TDictionary *Get(DataMemberInfo_t *info, bool skipChecks=false);
+   TDictionary *Get(DataMemberInfo_t *info, bool skipChecks=kFALSE);
 
    Bool_t     IsLoaded() const { return fIsLoaded; }
    void       AddFirst(TObject *obj);
