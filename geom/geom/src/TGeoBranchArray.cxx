@@ -174,7 +174,7 @@ TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
 void TGeoBranchArray::AddLevel(Int_t dindex)
 {
 // Add and extra daughter to the current path array. No validity check performed !
-   if (fLevel<=0) {
+   if (fLevel<0) {
       Error("AddLevel", "You must initialize from navigator or copy from another branch array first.");
       return;
    }
