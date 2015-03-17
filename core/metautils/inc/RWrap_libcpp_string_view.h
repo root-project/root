@@ -100,7 +100,12 @@ namespace experimental { inline namespace __ROOT {
  */
 
 namespace std {
+#ifdef LOCAL_VSTD
+inline namespace __ROOT {
+#else
+// libC++ wins.
 inline namespace __1 {
+#endif
 
    //   template <class _Traits>
    //   struct _LIBCPP_HIDDEN __traits_eq
