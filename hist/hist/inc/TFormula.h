@@ -166,6 +166,7 @@ public:
    Bool_t         IsValid() const { return fReadyToExecute; }
    Bool_t         IsLinear() const { return TestBit(kLinear); }
    void           Print(Option_t *option = "") const;
+   void           SetName(const char* name);
    void           SetParameter(const char* name, Double_t value);
    void           SetParameter(Int_t param, Double_t value);
    void           SetParameters(const Double_t *params);

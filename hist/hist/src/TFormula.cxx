@@ -1546,6 +1546,29 @@ void TFormula::AddVariables(const pair<TString,Double_t> *vars, const Int_t size
    }
 
 }
+
+void TFormula::SetName(const char* name)
+{
+   // Set the name of the formula. We need to allow the list of function to
+   // properly handle the hashes.
+   if (IsReservedName(name)) {
+      Error("SetName","The name \'%s\' is reserved as a TFormula variable name.\n"
+         "\tThis function will not be renamed.",name);
+   } else {
+      // Here we need to remove and re-add to keep the hashes consistent with
+      // the underlying names.
+      auto listOfFunctions = gROOT->GetListOfFunctions();
+      TObject* thisAsFunctionInList = nullptr;
+      R__LOCKGUARD2(gROOTMutex);
+      if (listOfFunctions){
+         thisAsFunctionInList = listOfFunctions->FindObject(this);
+         if (thisAsFunctionInList) listOfFunctions->Remove(thisAsFunctionInList);
+      }
+      TNamed::SetName(name);
+      if (thisAsFunctionInList) listOfFunctions->Add(thisAsFunctionInList);
+   }
+}
+
 void TFormula::SetVariables(const pair<TString,Double_t> *vars, const Int_t size)
 {
    //*-*
