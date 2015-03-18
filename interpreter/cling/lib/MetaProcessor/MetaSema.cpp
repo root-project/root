@@ -103,10 +103,9 @@ namespace cling {
       StringRefPair pairFuncExt = pairPathFile.second.rsplit('.');
       std::string expression = pairFuncExt.first.str() + "(" + args.str() + ")";
 
-      assert(T);
-
       using namespace clang;
-      NamedDecl* ND = T->containsNamedDecl(pairFuncExt.first);
+      // T can be nullptr if there is no code (but comments)
+      NamedDecl* ND = T ? T->containsNamedDecl(pairFuncExt.first) : 0;
       DiagnosticsEngine& Diags = m_Interpreter.getCI()->getDiagnostics();
       SourceLocation noLoc;
       if (!ND) {
