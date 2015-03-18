@@ -1276,7 +1276,9 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                return BindCppObjectNoCast( *(char**)branch->GetAddress(), Cppyy::GetScope( branch->GetClassName() ) );
 
          // try leaf, otherwise indicate failure by returning a typed null-object
-            if ( klass && ! tree->GetLeaf( name ) )
+            TObjArray* leaves = branch->GetListOfLeaves();
+            if ( klass && ! tree->GetLeaf( name ) &&
+                 ! (leaves->GetSize() && ( leaves->First() == leaves->Last() ) ) )
                return BindCppObjectNoCast( NULL, Cppyy::GetScope( branch->GetClassName() ) );
          }
       }
