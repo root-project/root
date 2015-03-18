@@ -491,7 +491,9 @@ class ModuleFacade( types.ModuleType ):
 
     # special case for cout (backwards compatibility)
       if hasattr( cppyy.gbl.std, '__1' ):
-         self.__dict__[ 'cout' ] = getattr( cppyy.gbl.std, '__1' ).cout
+         attr_1 = getattr( cppyy.gbl.std, '__1' )
+         if hasattr( attr_1, 'cout' ):
+            self.__dict__[ 'cout' ] = attr_1.cout
 
     # custom logon file (must be after creation of ROOT globals)
       if hasargv and not '-n' in sys.argv:
