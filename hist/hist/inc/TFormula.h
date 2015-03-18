@@ -248,6 +248,7 @@ public:
    virtual Bool_t      IsNormalized() const {return TestBit(kNormalized);}
    virtual void        Print(Option_t *option="") const; // *MENU*
    virtual void        ProcessLinear(TString &replaceformula);
+   virtual void        SetName(const char* name);
    virtual void        SetNumber(Int_t number) {fNumber = number;}
    virtual void        SetParameter(const char *name, Double_t parvalue);
    virtual void        SetParameter(Int_t ipar, Double_t parvalue);
