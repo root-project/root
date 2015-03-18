@@ -17,7 +17,8 @@ ROOT_INSTALL_HEADERS()
 add_custom_target(ProofBenchPARFiles ALL DEPENDS ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
                                                  ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchDataSel.par)
 add_dependencies(ProofBenchPARFiles move_headers) # The /etc directory from sources is copied when moving the headers
-add_custom_command(OUTPUT etc/proof/proofbench/ProofBenchCPUSel.par etc/proof/proofbench/ProofBenchDataSel.par
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
+                          ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchDataSel.par
     COMMAND etc/proof/utils/makepbenchpars.sh ARGS ProofBenchCPUSel ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} 
     COMMAND etc/proof/utils/makepbenchpars.sh ARGS ProofBenchDataSel ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} 
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
