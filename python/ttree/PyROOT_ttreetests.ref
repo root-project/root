@@ -10,6 +10,8 @@ Test writing of a builtin array ... ok
 Test reading of a builtin array ... ok
 Test writing of a TObjArray ... ok
 Test reading of a TObjArray ... ok
+Test writing of an differently named leaf ... ok
+Test reading of an differently named leaf ... ok
 
 ----------------------------------------------------------------------
 

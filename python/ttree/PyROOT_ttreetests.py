@@ -228,6 +228,35 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       f.Close()
 
+   def test13WriteMisnamedLeaf( self ):
+      """Test writing of an differently named leaf"""
+
+      f = TFile( self.fname, 'RECREATE' )
+      t = TTree( self.tname, self.ttitle )
+      s = SomeDataStruct()
+      t.Branch( 'cpu_packet_time', AddressOf(s, 'NLabel'), 'time/I' );
+
+      for i in range(self.N):
+         s.NLabel = i
+         t.Fill()
+
+      f.Write()
+      f.Close()
+
+   def test14ReadMisnamedLeaf( self ):
+      """Test reading of an differently named leaf"""
+
+      f = TFile( self.fname )
+      t = f.Get( self.tname )
+
+      val = 0
+      for event in t:
+         event.time == val             # from 'time/I' label
+         event.cpu_packet_time == val  # from branch name
+         val += 1
+
+      f.Close()
+
 
 ## actual test run
 if __name__ == '__main__':
