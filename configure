@@ -6781,8 +6781,12 @@ fi
 message "Checking whether to build libRInterface"
 if test "x$enable_r" = "xyes"; then
     ##adding this two lines to supoort ACLiC for RInterface
-    echo "#define RINCLUDEPATH \" $RCPPFLAGS $RCPPINCL $RINSIDEINCL\" " > bindings/r/inc/compilerdata.h
-    echo "#define RLINKEDLIBS  \" $RLDFLAGS  $RCPPLIBS $RINSIDELIBS\"  " >> bindings/r/inc/compilerdata.h
+    if [ ! -d include ]
+    then 
+      mkdir -p include
+    fi
+    echo "#define RINCLUDEPATH \" $RCPPFLAGS $RCPPINCL $RINSIDEINCL\" " > include/compilerdata.h
+    echo "#define RLINKEDLIBS  \" $RLDFLAGS  $RCPPLIBS $RINSIDELIBS\"  " >> include/compilerdata.h
     result "yes"
     hasr="define"
 else

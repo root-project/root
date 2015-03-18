@@ -28,7 +28,7 @@ RDH          := $(MODDIRI)/RExports.h \
                 $(MODDIRI)/TRObjectProxy.h \
                 $(MODDIRI)/TRFunction.h \
                 $(MODDIRI)/TRInternalFunction.h \
-                $(MODDIRI)/compilerdata.h 
+                $(MODDIRI)/TRInternalFunction__ctors.h
 
 RDHMOD       := $(MODDIRI)/TRCanvas.h \
                 $(MODDIRI)/TRF1.h \
@@ -37,11 +37,8 @@ RDHMOD       := $(MODDIRI)/TRCanvas.h \
                 $(MODDIRI)/TRGraph.h \
                 $(MODDIRI)/TRSystem.h
 
-                
-RDHEXTRA     := $(MODDIRI)/TRInternalFunction__ctors.h
 
-
-RH    := $(RDH) $(RDHMOD) $(RDHEXTRA)
+RH    := $(RDH)  $(RDHMOD)
 RS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 RO    := $(call stripsrc,$(RS:.cxx=.o))
 
