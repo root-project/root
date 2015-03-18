@@ -1315,7 +1315,7 @@ The method to set the function to be integrated,  must be of the function interf
 The only difference between the  `ROOT::Math::IntegratorOneDim`  and `ROOT::Math::IntegratorMultiDim` resides
 in the dimensionality of that function and some specific that will be seen afterwards for the one dimensional one.
 
-![ROOT::Math Numerical Integrator classes](pictures/integration.png)
+![ROOT::Math Numerical Integrator classes](pictures/Integration.png)
 
 The rest of the classes shown above in the diagram are the specialized classes provided. Each one implements a different method that will be explained in detail. It is important
 to notice that the two grayed classes (the one which name starts by GSL) are part of the *MathMore* library.
@@ -1590,7 +1590,7 @@ the right one is used for multidimensional minimization. In the case of multidim
 implemented using `TFumili` for least square or likelihood minimizations.
 We encourage the use of the GSL algorithms for one dimensional minimization and `Minuit2` (or the old version`Minuit`) for multi dimensional minimization.
 
-![Numerical Minimization classes](pictures/minimization.png)
+![Numerical Minimization classes](pictures/Minimization.png)
 
 
 ### One-Dimensional Minimization

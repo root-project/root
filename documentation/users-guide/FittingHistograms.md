@@ -1061,7 +1061,7 @@ Note that not all the options are implemented by all the minimizers.
 For example in *Minuit* is possible to set the maximum number of function calls, but not the maximum number of iterations.  The Strategy and the Precision options apply instead only for *Minuit*  (and
 *Minuit2*).
 
-The class supports alo setting different default values for the options, by using the static functions `MinimizerOptions::SetDefault...` (e.g. `MinimizerOptions::SetDefaultPrintLevel(int )`).
+The class supports also setting different default values for the options, by using the static functions `MinimizerOptions::SetDefault...` (for example `MinimizerOptions::SetDefaultPrintLevel(int )`).
 The list of the current option values can be inspected by using `MinimizerOptions::Print`.
 ```{.cpp}
 ROOT::Math::MinimizerOptions() opt;
