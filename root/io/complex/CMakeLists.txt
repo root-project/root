@@ -18,7 +18,7 @@ ROOTTEST_ADD_TEST(roottest-root-io-complex-writecomplex
                   OUTREF execwritecomplex.ref)
 
 ROOTTEST_ADD_TEST(roottest-root-io-complex-readcomplex
-                  COPY_TO_BUILDDIR complexOfilekubuntuROOT5.root  complexOfilekubuntuROOT6.root  complexOfileROOT6.xml complexOfileslc6ROOT5.xml complexOfilekubuntuROOT5.xml   complexOfilekubuntuROOT6.xml   complexOfileslc6ROOT5.root
+                  COPY_TO_BUILDDIR complexOfilekubuntuROOT5.root  complexOfilekubuntuROOT6.root complexOfileslc6ROOT5.xml complexOfilekubuntuROOT5.xml   complexOfilekubuntuROOT6.xml   complexOfileslc6ROOT5.root
                   MACRO  execreadcomplex.C
                   OUTREF execreadcomplex.ref
                   DEPENDS roottest-root-io-complex-writecomplex)
