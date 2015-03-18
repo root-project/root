@@ -715,8 +715,6 @@
                           activate : function (event,ui) {
                              $(ui.newPanel).css('overflow', 'hidden');
                              pthis.CheckResize($(ui.newPanel).attr('id'));
-                             // console.log('activate element old ' + $(ui.oldPanel).attr('id'));
-                             // console.log('activate element new ' + $(ui.newPanel).attr('id'));
                            }
                           });
 
