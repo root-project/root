@@ -505,118 +505,116 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
       if (!folderrec.GoInside(rec, 0, foldername)) return;
    }
 
-   {
-      TRootSnifferScanRec &master = foldername ? folderrec : rec;
+   TRootSnifferScanRec &master = foldername ? folderrec : rec;
 
-      if (lst != 0) {
-         TIter iter(lst);
-         TObject *next = iter();
-         Bool_t isany = kFALSE;
+   if (lst != 0) {
+      TIter iter(lst);
+      TObject *next = iter();
+      Bool_t isany = kFALSE;
 
-         while (next!=0) {
-            if (IsItemField(next)) {
-               // special case - in the beginning one could have items for master folder
-               if (!isany && (next->GetName() != 0) && ((*(next->GetName()) == '_') || master.ScanOnlyFields()))
-                  master.SetField(next->GetName(), next->GetTitle());
-               next = iter();
-               continue;
+      while (next!=0) {
+         if (IsItemField(next)) {
+            // special case - in the beginning one could have items for master folder
+            if (!isany && (next->GetName() != 0) && ((*(next->GetName()) == '_') || master.ScanOnlyFields()))
+               master.SetField(next->GetName(), next->GetTitle());
+            next = iter();
+            continue;
+         }
+
+         isany = kTRUE;
+         TObject* obj = next;
+
+         TRootSnifferScanRec chld;
+         if (!chld.GoInside(master, obj)) { next = iter(); continue; }
+
+         if (chld.SetResult(obj, obj->IsA())) return;
+
+         Bool_t has_kind(kFALSE), has_title(kFALSE);
+
+         ScanObjectProperties(chld, obj);
+         // now properties, coded as TNamed objects, placed after object in the hierarchy
+         while ((next = iter()) != 0) {
+            if (!IsItemField(next)) break;
+            if ((next->GetName() != 0) && ((*(next->GetName()) == '_') || chld.ScanOnlyFields())) {
+               // only fields starting with _ are stored
+               chld.SetField(next->GetName(), next->GetTitle());
+               if (strcmp(next->GetName(), item_prop_kind)==0) has_kind = kTRUE;
+               if (strcmp(next->GetName(), item_prop_title)==0) has_title = kTRUE;
             }
+         }
 
-            isany = kTRUE;
-            TObject* obj = next;
+         if (!has_kind) chld.SetRootClass(obj->IsA());
+         if (!has_title && (obj->GetTitle()!=0)) chld.SetField(item_prop_title, obj->GetTitle());
 
-            TRootSnifferScanRec chld;
-            if (!chld.GoInside(master, obj)) { next = iter(); continue; }
+         ScanObjectChilds(chld, obj);
+
+         if (chld.SetResult(obj, obj->IsA())) return;
+      }
+   }
+
+   if (keys_lst != 0) {
+      TIter iter(keys_lst);
+      TObject *kobj(0);
+
+      while ((kobj = iter()) != 0) {
+         TKey *key = dynamic_cast<TKey *>(kobj);
+         if (key == 0) continue;
+         TObject *obj = (lst == 0) ? 0 : lst->FindObject(key->GetName());
+
+         // even object with the name exists, it should also match with class name
+         if ((obj!=0) && (strcmp(obj->ClassName(),key->GetClassName())!=0)) obj = 0;
+
+         // if object of that name and of that class already in the list, ignore appropriate key
+         if ((obj != 0) && (master.fMask & TRootSnifferScanRec::kScan)) continue;
+
+         Bool_t iskey = kFALSE;
+         // if object not exists, provide key itself for the scan
+         if (obj == 0) { obj = key; iskey = kTRUE; }
+
+         TRootSnifferScanRec chld;
+         TString fullname = TString::Format("%s;%d", key->GetName(), key->GetCycle());
+
+         if (chld.GoInside(master, obj, fullname.Data())) {
+
+            if (!fReadOnly && iskey && chld.IsReadyForResult()) {
+               TObject *keyobj = key->ReadObj();
+               if (keyobj != 0)
+                  if (chld.SetResult(keyobj, keyobj->IsA())) return;
+            }
 
             if (chld.SetResult(obj, obj->IsA())) return;
 
-            Bool_t has_kind(kFALSE), has_title(kFALSE);
+            TClass *obj_class = obj->IsA();
 
             ScanObjectProperties(chld, obj);
-            // now properties, coded as TNamed objects, placed after object in the hierarchy
-            while ((next = iter()) != 0) {
-               if (!IsItemField(next)) break;
-               if ((next->GetName() != 0) && ((*(next->GetName()) == '_') || chld.ScanOnlyFields())) {
-                  // only fields starting with _ are stored
-                  chld.SetField(next->GetName(), next->GetTitle());
-                  if (strcmp(next->GetName(), item_prop_kind)==0) has_kind = kTRUE;
-                  if (strcmp(next->GetName(), item_prop_title)==0) has_title = kTRUE;
+
+            if (obj->GetTitle()!=0) chld.SetField(item_prop_title, obj->GetTitle());
+
+            // special handling of TKey class - in non-readonly mode
+            // sniffer allowed to fetch objects
+            if (!fReadOnly && iskey) {
+               if (strcmp(key->GetClassName(), "TDirectoryFile") == 0) {
+                  if (chld.fLevel == 0) {
+                     TDirectory *dir = dynamic_cast<TDirectory *>(key->ReadObj());
+                     if (dir != 0) {
+                        obj = dir;
+                        obj_class = dir->IsA();
+                     }
+                  } else {
+                     chld.SetField(item_prop_more, "true", kFALSE);
+                     chld.fHasMore = kTRUE;
+                  }
+               } else {
+                  obj_class = TClass::GetClass(key->GetClassName());
                }
             }
 
-            if (!has_kind) chld.SetRootClass(obj->IsA());
-            if (!has_title && (obj->GetTitle()!=0)) chld.SetField(item_prop_title, obj->GetTitle());
+            rec.SetRootClass(obj_class);
 
             ScanObjectChilds(chld, obj);
 
-            if (chld.SetResult(obj, obj->IsA())) return;
-         }
-      }
-
-      if (keys_lst != 0) {
-         TIter iter(keys_lst);
-         TObject *kobj(0);
-
-         while ((kobj = iter()) != 0) {
-            TKey *key = dynamic_cast<TKey *>(kobj);
-            if (key == 0) continue;
-            TObject *obj = (lst == 0) ? 0 : lst->FindObject(key->GetName());
-
-            // even object with the name exists, it should also match with class name
-            if ((obj!=0) && (strcmp(obj->ClassName(),key->GetClassName())!=0)) obj = 0;
-
-            // if object of that name and of that class already in the list, ignore appropriate key
-            if ((obj != 0) && (master.fMask & TRootSnifferScanRec::kScan)) continue;
-
-            Bool_t iskey = kFALSE;
-            // if object not exists, provide key itself for the scan
-            if (obj == 0) { obj = key; iskey = kTRUE; }
-
-            TRootSnifferScanRec chld;
-            TString fullname = TString::Format("%s;%d", key->GetName(), key->GetCycle());
-
-            if (chld.GoInside(master, obj, fullname.Data())) {
-
-               if (!fReadOnly && iskey && chld.IsReadyForResult()) {
-                  TObject *keyobj = key->ReadObj();
-                  if (keyobj != 0)
-                     if (chld.SetResult(keyobj, keyobj->IsA())) return;
-               }
-
-               if (chld.SetResult(obj, obj->IsA())) return;
-
-               TClass *obj_class = obj->IsA();
-
-               ScanObjectProperties(chld, obj);
-
-               if (obj->GetTitle()!=0) chld.SetField(item_prop_title, obj->GetTitle());
-
-               // special handling of TKey class - in non-readonly mode
-               // sniffer allowed to fetch objects
-               if (!fReadOnly && iskey) {
-                  if (strcmp(key->GetClassName(), "TDirectoryFile") == 0) {
-                     if (chld.fLevel == 0) {
-                        TDirectory *dir = dynamic_cast<TDirectory *>(key->ReadObj());
-                        if (dir != 0) {
-                           obj = dir;
-                           obj_class = dir->IsA();
-                        }
-                     } else {
-                        chld.SetField(item_prop_more, "true", kFALSE);
-                        chld.fHasMore = kTRUE;
-                     }
-                  } else {
-                     obj_class = TClass::GetClass(key->GetClassName());
-                  }
-               }
-
-               rec.SetRootClass(obj_class);
-
-               ScanObjectChilds(chld, obj);
-
-               // here we should know how many childs are accumulated
-               if (chld.SetResult(obj, obj_class)) return;
-            }
+            // here we should know how many childs are accumulated
+            if (chld.SetResult(obj, obj_class)) return;
          }
       }
    }
@@ -683,7 +681,7 @@ void TRootSniffer::ScanHierarchy(const char *topname, const char *path,
    }
 
    // if path non-empty, we should find item first and than start scanning
-   rec.fMask = rec.fSearchPath == 0 ? TRootSnifferScanRec::kScan : TRootSnifferScanRec::kExpand;
+   rec.fMask = (rec.fSearchPath == 0) ? TRootSnifferScanRec::kScan : TRootSnifferScanRec::kExpand;
    if (only_fields) rec.fMask |= TRootSnifferScanRec::kOnlyFields;
 
    rec.fStore = store;
