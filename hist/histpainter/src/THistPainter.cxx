@@ -1337,7 +1337,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 <p>
-The option <tt>COL</tt> can be combined with the option <tt>POL/tt>:
+The option <tt>COL</tt> can be combined with the option <tt>POL</tt>:
 End_Html
 Begin_Macro(source)
 {
