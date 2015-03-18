@@ -9,9 +9,17 @@
 
 message(STATUS "Looking for R")
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(CMAKE_FIND_FRAMEWORK  "LAST")
+  set(CMAKE_FIND_APPBUNDLE "LAST")
+endif()
+
 find_program ( R_EXECUTABLE
                NAMES R R.exe
               )
+
+MESSAGE(STATUS "R_EXECUTABLE=${R_EXECUTABLE}")
+
 #searching flags unsing R executable              
 if ( R_EXECUTABLE )
   execute_process ( COMMAND echo "cat(Sys.getenv(\"R_HOME\"))"
@@ -36,9 +44,10 @@ else()
                   )
 endif()
 
-# MESSAGE(STATUS "R_HOME=${R_HOME}")
-# MESSAGE(STATUS "R_INCLUDE_DIR=${R_INCLUDE_DIR}")
-# MESSAGE(STATUS "R_LIBRARY=${R_LIBRARY}")
+
+MESSAGE(STATUS "R_HOME=${R_HOME}")
+MESSAGE(STATUS "R_INCLUDE_DIR=${R_INCLUDE_DIR}")
+MESSAGE(STATUS "R_LIBRARY=${R_LIBRARY}")
 
 else()              
 set(R_PKGCONF_INCLUDE_DIRS  
