@@ -1596,7 +1596,7 @@
          fo_g.append(function() { return vvv.node(); });
 
          if (fo_g.property('_scale')) {
-            var box = fo_g.node().getBBox();
+            var box = fo_g.node().getBoundingClientRect(); //.getBBox();
             var real_w = parseInt(box.width), real_h = parseInt(box.height);
             painter.TextScaleFactor(1.*real_w / parseInt(fo_g.attr('width')), draw_g);
             painter.TextScaleFactor(1.*real_h / parseInt(fo_g.attr('height')), draw_g);
@@ -1614,7 +1614,7 @@
          var fo_g = d3.select(this);
          // only direct parent
          if (fo_g.node().parentNode !== draw_g.node()) return;
-         var box = fo_g.node().getBBox();
+         var box = fo_g.node().getBoundingClientRect();// .getBBox();
          var real_w = parseInt(box.width), real_h = parseInt(box.height);
          var align = fo_g.property('_align');
          var fo_w = parseInt(fo_g.attr('width')), fo_h = parseInt(fo_g.attr('height'));
@@ -1688,7 +1688,7 @@
             if (h==-270) txt.attr("transform", "rotate(270, 0, 0)");
          }
 
-         var box = txt.node().getBBox();
+         var box = txt.node().getBoundingClientRect(); // .getBBox();
          var real_w = parseInt(box.width), real_h = parseInt(box.height);
 
          if (!scale) {
@@ -3026,7 +3026,7 @@
 
       } else {
 
-         if (h < 10) {
+         if ((h < 10) && (w > 0)) {
             // set aspect ratio for the place, where object will be drawn
 
             factor = 0.66;
@@ -3065,8 +3065,14 @@
           svg.append("svg:g").attr("class","stat_layer");
       }
 
+      if ((w<=0) || (h<=0)) {
+         svg.attr("visibility", "hidden");
+         w = 200; h = 100; // just to complete drawing
+      } else {
+         svg.attr("visibility", "visible");
+      }
+
       svg.attr("width", w).attr("height", h)
-         .attr("visibility", "visible")
          .attr("viewBox", "0 0 " + w + " " + h)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
          .property('height_factor', factor)
@@ -3431,10 +3437,10 @@
       }
 
       chopt = chopt.trim();
+      while ((chopt.length>0) && (chopt[0]==',' || chopt[0]==';')) chopt = chopt.substr(1);
+
       var nch = chopt.length;
-
       if (!nch) option.Hist = 1;
-
 
       var l = chopt.indexOf('SPEC');
       if (l != -1) {
@@ -8496,7 +8502,7 @@
 
       if (typeof draw_func == 'function') return draw_func(divid, obj, opt);
 
-      if ((typeof draw_func == 'object') &&
+      if ((draw_func!=null) && (typeof draw_func == 'object') &&
           (typeof draw_func['script']=='string') &&
           (typeof draw_func['func']=='string')) {
          // special case - function should be loaded from external script
