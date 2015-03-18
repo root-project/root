@@ -100,7 +100,7 @@ namespace experimental { inline namespace __ROOT {
  */
 
 namespace std {
-#ifdef LOCAL_VSTD
+#ifdef _LOCAL_VSTD
 inline namespace __ROOT {
 #else
 // libC++ wins.
