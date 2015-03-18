@@ -475,7 +475,7 @@ void TGFileBrowser::BrowseObj(TObject *obj)
          fListTree->AdjustPosition(fListLevel);
       }
    }
-   obj->Browse(fBrowser);
+   if (fBrowser) obj->Browse(fBrowser);
    if (obj == gROOT) {
       TList *volumes = gSystem->GetVolumes("all");
       TList *curvol  = gSystem->GetVolumes("cur");
@@ -1297,12 +1297,12 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       }
       if (!obj->InheritsFrom("TObjString") ||
           gSystem->AccessPathName(fullpath.Data())) {
-         fBrowser->SetDrawOption(GetDrawOption());
+         if (fBrowser) fBrowser->SetDrawOption(GetDrawOption());
          fDblClick = kTRUE;
          if (gClient->GetMimeTypeList()->GetAction(obj->IsA()->GetName(), action)) {
             act = action;
             if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
-            else if (act.Contains("->Browse()")) obj->Browse(fBrowser);
+            else if (fBrowser && act.Contains("->Browse()")) obj->Browse(fBrowser);
             else if (act.Contains("->Draw()")) obj->Draw(GetDrawOption());
             else {
                act.Prepend(obj->GetName());
@@ -1324,7 +1324,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             // than a canvas already embedded in one of the browser's tab
             obj->DrawClone();
          }
-         else if (!obj->InheritsFrom("TFormula"))
+         else if (fBrowser && !obj->InheritsFrom("TFormula"))
             obj->Browse(fBrowser);
          fDblClick = kFALSE;
          fNKeys = 0;
@@ -1456,7 +1456,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             item->SetUserData(rfile);
             fNKeys = rfile->GetListOfKeys()->GetEntries();
             fCnt = 0;
-            rfile->Browse(fBrowser);
+            if (fBrowser) rfile->Browse(fBrowser);
             fNKeys = 0;
             fCnt = 0;
          }
@@ -1515,7 +1515,7 @@ Long_t TGFileBrowser::XXExecuteDefaultAction(TObject *obj)
    char action[512];
    TString act;
    TString ext = obj->GetName();
-   fBrowser->SetDrawOption(GetDrawOption());
+   if (fBrowser) fBrowser->SetDrawOption(GetDrawOption());
 
    if (gClient->GetMimeTypeList()->GetAction(obj->GetName(), action)) {
       act = action;
