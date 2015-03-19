@@ -10,7 +10,6 @@
 message(STATUS "Looking for R")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  set(CMAKE_FIND_FRAMEWORK  "LAST")
   set(CMAKE_FIND_APPBUNDLE "LAST")
 endif()
 
