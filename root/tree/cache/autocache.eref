@@ -44,4 +44,5 @@ Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEven
 Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
 Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
 Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Warning in <TTree::SetCacheSizeAux>: A TTreeCache could not be created because the TTree has no file
 Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
