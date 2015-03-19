@@ -97,8 +97,8 @@ public:
    TTreeCacheUnzip();
    TTreeCacheUnzip(TTree *tree, Int_t buffersize=0);
    virtual ~TTreeCacheUnzip();
-   virtual void        AddBranch(TBranch *b, Bool_t subbranches = kFALSE);
-   virtual void        AddBranch(const char *branch, Bool_t subbranches = kFALSE);
+   virtual Int_t       AddBranch(TBranch *b, Bool_t subbranches = kFALSE);
+   virtual Int_t       AddBranch(const char *branch, Bool_t subbranches = kFALSE);
    Bool_t              FillBuffer();
    virtual Int_t       ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    void                SetEntryRange(Long64_t emin,   Long64_t emax);
@@ -120,6 +120,7 @@ public:
    Int_t          GetRecordHeader(char *buf, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual void   ResetCache();
    virtual Int_t  GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free);
+   virtual Int_t  SetBufferSize(Int_t buffersize);
    void           SetUnzipBufferSize(Long64_t bufferSize);
    static void    SetUnzipRelBufferSize(Float_t relbufferSize);
    Int_t          UnzipBuffer(char **dest, char *src);

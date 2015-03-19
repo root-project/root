@@ -171,7 +171,7 @@ protected:
    TTreeCache      *GetReadCache(TFile *file, Bool_t create = kFALSE);
    void             ImportClusterRanges(TTree *fromtree);
    void             MoveReadCache(TFile *src, TDirectory *dir);
-   void             SetCacheSizeAux(Bool_t autocache = kTRUE, Long64_t cacheSize = 0);
+   Int_t            SetCacheSizeAux(Bool_t autocache = kTRUE, Long64_t cacheSize = 0);
 
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
@@ -283,10 +283,10 @@ public:
    TTree(const char* name, const char* title, Int_t splitlevel = 99);
    virtual ~TTree();
 
-   virtual void            AddBranchToCache(const char *bname, Bool_t subbranches = kFALSE);
-   virtual void            AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
-   virtual void            DropBranchFromCache(const char *bname, Bool_t subbranches = kFALSE);
-   virtual void            DropBranchFromCache(TBranch *branch,   Bool_t subbranches = kFALSE);
+   virtual Int_t           AddBranchToCache(const char *bname, Bool_t subbranches = kFALSE);
+   virtual Int_t           AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
+   virtual Int_t           DropBranchFromCache(const char *bname, Bool_t subbranches = kFALSE);
+   virtual Int_t           DropBranchFromCache(TBranch *branch,   Bool_t subbranches = kFALSE);
    virtual TFriendElement *AddFriend(const char* treename, const char* filename = "");
    virtual TFriendElement *AddFriend(const char* treename, TFile* file);
    virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", Bool_t warn = kFALSE);
@@ -519,8 +519,8 @@ public:
 #endif
    virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = 0);
    static  void            SetBranchStyle(Int_t style = 1);  //style=0 for old branch, =1 for new branch style
-   virtual void            SetCacheSize(Long64_t cachesize = -1);
-   virtual void            SetCacheEntryRange(Long64_t first, Long64_t last);
+   virtual Int_t           SetCacheSize(Long64_t cachesize = -1);
+   virtual Int_t           SetCacheEntryRange(Long64_t first, Long64_t last);
    virtual void            SetCacheLearnEntries(Int_t n=10);
    virtual void            SetChainOffset(Long64_t offset = 0) { fChainOffset=offset; }
    virtual void            SetCircular(Long64_t maxEntries);
@@ -548,7 +548,7 @@ public:
    virtual void            SetUpdate(Int_t freq = 0) { fUpdate = freq; }
    virtual void            Show(Long64_t entry = -1, Int_t lenmax = 20);
    virtual void            StartViewer(); // *MENU*
-   virtual void            StopCacheLearningPhase();
+   virtual Int_t           StopCacheLearningPhase();
    virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    void                    UseCurrentStyle();
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0);

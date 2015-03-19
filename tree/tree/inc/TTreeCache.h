@@ -71,10 +71,10 @@ public:
    TTreeCache();
    TTreeCache(TTree *tree, Int_t buffersize=0);
    virtual ~TTreeCache();
-   virtual void         AddBranch(TBranch *b, Bool_t subgbranches = kFALSE);
-   virtual void         AddBranch(const char *branch, Bool_t subbranches = kFALSE);
-   virtual void         DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
-   virtual void         DropBranch(const char *branch, Bool_t subbranches = kFALSE);
+   virtual Int_t        AddBranch(TBranch *b, Bool_t subgbranches = kFALSE);
+   virtual Int_t        AddBranch(const char *branch, Bool_t subbranches = kFALSE);
+   virtual Int_t        DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
+   virtual Int_t        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
    virtual void         Disable() {fEnabled = kFALSE;}
    virtual void         Enable() {fEnabled = kTRUE;}
    const TObjArray     *GetCachedBranches() const { return fBranches; }
@@ -99,6 +99,7 @@ public:
    virtual Int_t        ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
    virtual void         ResetCache();
    void                 SetAutoCreated(Bool_t val) {fAutoCreated = val;}
+   virtual Int_t        SetBufferSize(Int_t buffersize);
    virtual void         SetEntryRange(Long64_t emin,   Long64_t emax);
    virtual void         SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect);
    virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);

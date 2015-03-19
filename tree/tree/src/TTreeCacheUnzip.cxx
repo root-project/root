@@ -192,23 +192,27 @@ TTreeCacheUnzip::~TTreeCacheUnzip()
 }
 
 //_____________________________________________________________________________
-void TTreeCacheUnzip::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
+Int_t TTreeCacheUnzip::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 {
    //add a branch to the list of branches to be stored in the cache
    //this function is called by TBranch::GetBasket
+   // Returns  0 branch added or already included
+   //         -1 on error
    R__LOCKGUARD(fMutexList);
 
-   TTreeCache::AddBranch(b, subbranches);
+   return TTreeCache::AddBranch(b, subbranches);
 }
 
 //_____________________________________________________________________________
-void TTreeCacheUnzip::AddBranch(const char *branch, Bool_t subbranches /*= kFALSE*/)
+Int_t TTreeCacheUnzip::AddBranch(const char *branch, Bool_t subbranches /*= kFALSE*/)
 {
    //add a branch to the list of branches to be stored in the cache
    //this function is called by TBranch::GetBasket
+   // Returns  0 branch added or already included
+   //         -1 on error
    R__LOCKGUARD(fMutexList);
 
-   TTreeCache::AddBranch(branch, subbranches);
+   return TTreeCache::AddBranch(branch, subbranches);
 }
 
 //_____________________________________________________________________________
@@ -301,6 +305,27 @@ Bool_t TTreeCacheUnzip::FillBuffer()
 
    return kTRUE;
 }
+
+
+//_____________________________________________________________________________
+Int_t TTreeCacheUnzip::SetBufferSize(Int_t buffersize)
+{
+   // Change the underlying buffer size of the cache.
+   // Returns  0 if the buffer content is still available
+   //          1 if some or all of the buffer content has been made unavailable
+   //         -1 on error
+
+   R__LOCKGUARD(fMutexList);
+
+   Int_t res = TTreeCache::SetBufferSize(buffersize);
+   if (res < 0) {
+      return res;
+   }
+   fUnzipBufferSize = Long64_t(fgRelBuffSize * GetBufferSize());
+   ResetCache();
+   return 1;
+}
+
 
 //_____________________________________________________________________________
 void TTreeCacheUnzip::SetEntryRange(Long64_t emin, Long64_t emax)

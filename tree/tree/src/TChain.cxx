@@ -2246,21 +2246,26 @@ void TChain::SetAutoDelete(Bool_t autodelete)
    }
 }
 
-void TChain::SetCacheSize(Long64_t cacheSize)
+Int_t TChain::SetCacheSize(Long64_t cacheSize)
 {
    // Set the cache size of the underlying TTree,
    // See TTree::SetCacheSize.
+   // Returns  0 cache state ok (exists or not, as appropriate)
+   //         -1 on error
+
+   Int_t res = 0;
 
    // remember user has requested this cache setting
    fCacheUserSet = kTRUE;
 
    if (fTree) {
-      fTree->SetCacheSize(cacheSize);
+      res = fTree->SetCacheSize(cacheSize);
    } else {
-      // If we don't have a TTree yet, do not
-      // allocate the cache.
+      // If we don't have a TTree yet only record the cache size wanted
+      res = 0;
    }
    fCacheSize = cacheSize; // Record requested size.
+   return res;
 }
 
 //______________________________________________________________________________

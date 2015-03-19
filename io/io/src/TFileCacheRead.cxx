@@ -687,6 +687,66 @@ void TFileCacheRead::WaitFinishPrefetch()
 
 
 //______________________________________________________________________________
+Int_t TFileCacheRead::SetBufferSize(Int_t buffersize)
+{
+   // Sets the buffer size. If the current prefetch list is too large to fit in
+   // the new buffer some or all of the prefetch blocks are dropped. The
+   // requested buffersize must be greater than zero.
+   // Returns  0 if the prefetch block lists remain unchanged
+   //          1 if some or all blocks have been removed from the prefetch list
+   //         -1 on error
+
+   if (buffersize <= 0) return -1;
+   if (buffersize <=10000) buffersize = 100000;
+
+   if (buffersize == fBufferSize) {
+      fBufferSizeMin = buffersize;
+      return 0;
+   }
+
+   Bool_t inval = kFALSE;
+
+   // the cached data is too large to fit in the new buffer size mark data unavailable
+   if (fNtot > buffersize) {
+      Prefetch(0, 0);
+      inval = kTRUE;
+   }
+   if (fBNtot > buffersize) {
+      SecondPrefetch(0, 0);
+      inval = kTRUE;
+   }
+
+   char *np = 0;
+   if (!fEnablePrefetching && !fAsyncReading) {
+      char *pres = 0;
+      if (fIsTransferred) {
+         // will need to preserve buffer data
+         pres = fBuffer;
+         fBuffer = 0;
+      }
+      delete [] fBuffer;
+      fBuffer = 0;
+      np = new char[buffersize];
+      if (pres) {
+         memcpy(np, pres, fNtot);
+      }
+      delete [] pres;
+   }
+
+   delete [] fBuffer;
+   fBuffer = np;
+   fBufferSizeMin = buffersize;
+   fBufferSize = buffersize;
+
+   if (inval) {
+      return 1;
+   }
+
+   return 0;
+}
+
+
+//______________________________________________________________________________
 void TFileCacheRead::SetEnablePrefetching(Bool_t setPrefetching)
 {
    // Set the prefetching mode of this file.
