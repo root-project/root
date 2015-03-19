@@ -12,11 +12,11 @@ To start the http server, at any time, create an instance of the **`THttpServer`
 
     serv = new THttpServer("http:8080");
 
-This will start a civetweb-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (IE, Firefox, Chrome, Opera) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
+This will start a civetweb-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (IE9, Firefox, Chrome, Opera) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
 
-There is a [snapshot (frozen copy)](https://root.cern.ch/js/3.2/demo/) of such server, running in httpserver.C macro from ROOT tutorial.
+There is a [snapshot (frozen copy)](https://root.cern.ch/js/3.4/httpserver.C/) of such server, running in [tutorials/http/httpserver.C](https://root.cern.ch/gitweb?p=root.git;a=blob_plain;f=tutorials/http/httpserver.C;hb=HEAD) macro from ROOT tutorial.
 
-<iframe width="800" height="500" src="https://root.cern.ch/js/3.2/demo/?layout=grid2x2&item=Canvases/c1">
+<iframe width="800" height="500" src="https://root.cern.ch/js/3.4/httpserver.C/?layout=simple&item=Canvases/c1">
 </iframe>
 
 
@@ -30,7 +30,7 @@ At any time, one could register other objects with the command:
 
 One should specify sub-folder name, where objects will be registered.
 If sub-folder name does not starts with slash `/`, than top-name folder `/Objects/` will be prepended.
-At any time one unregister objects:
+At any time one could unregister objects:
  
     serv->Unregister(gr);
 
@@ -45,21 +45,23 @@ THttpServer class provide simple interface to invoke command from web browser.
 One just register command like:
 
     serv->RegisterCommand("/DoSomething","SomeFunction()");
-     
+
 Element with name `DoSomething` will appear in the web browser and can be clicked.
 It will result in `gROOT->ProcessLineSync("SomeFunction()")` call. When registering command,
 one could specify icon name which will be displayed with the command.  
 
     serv->RegisterCommand("/DoSomething","SomeFunction()", "/rootsys/icons/ed_execute.png");
-    
+
 In example usage of images from `$ROOTSYS/icons` directory is shown. One could prepend `button;`
 string to the icon name to let browser show command as extra button. In last case one could 
 hide command element from elements list:
 
     serv->Hide("/DoSomething");
 
+One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://root.cern.ch/gitweb?p=root.git;a=blob_plain;f=tutorials/http/httpcontrol.C;hb=HEAD) macro.
+ 
 
-  
+
 ## Configuring user access
 
 By default, the http server is open for anonymous access. One could restrict the access to the server for authenticated users only. First of all, one should create a password file, using the **htdigest** utility.  
@@ -107,7 +109,7 @@ One could specify a debug parameter to be able to adjust the FastCGI configurati
 
     serv->CreateEngine("fastcgi:9000?debug=1");
  
-All user access will be ruled by the web server - for the moment one cannot restrict with fastcgi engine.
+All user access will be ruled by the main web server - for the moment one cannot restrict access with fastcgi engine.
 
 
 ## Integration with existing applications
@@ -139,7 +141,6 @@ In such case, one can fully disable the timer of the server:
 
 
 
-
 ## Data access from command shell
 
 The big advantage of the http protocol is that it is not only supported in web browsers, but also in many other applications. One could use http requests to directly access ROOT objects and data members from any kind of scripts.
@@ -164,45 +165,42 @@ Then, its representation will look like:
        "fTitle" : "title"
     }
 
-One could also access the class members of an object like:
-
-    [shell] wget http://localhost:8080/Objects/subfolder/obj/fTitle/root.json
-  
-The result will be: "title".
-
-Or one could call object method:
-
-    [shell] wget http://localhost:8080/Objects/subfolder/obj/exe.json?method=GetTitle
-  
-Result also will be: "title".
-
-If the access to the server is restricted with htdigest, it is recommended to use the **curl** program since only curl correctly implements such authentication method. The command will look like:
-
-    [shell] curl --user "accout:password" http://localhost:8080/Objects/subfolder/obj/fTitle/root.json --digest -o title.json
-
 The following requests can be performed:
 
   - `root.bin`  - binary data produced by object streaming with TBufferFile
   - `root.json` - ROOT JSON representation for object and objects members
   - `root.xml`  - ROOT XML representation
-  - `root.png`  - PNG image
+  - `root.png`  - PNG image (if object drawing implemented)
   - `root.gif`  - GIF image
   - `root.jpeg` - JPEG image
   - `exe.json`  - method execution in the object
+  - `cmd.json`  - command execution
+  - `item.json` - item (object) properties, specified on the server
 
 All data will be automatically zipped if '.gz' extension is appended. Like:
 
-    wget http://localhost:8080/Files/hsimple.root/hpx/root.bin.gz
+    [shell] wget http://localhost:8080/Objects/subfolder/obj/root.json.gz
+
+If the access to the server is restricted with htdigest, it is recommended to use the **curl** program since only curl correctly implements such authentication method. The command will look like:
+
+    [shell] curl --user "accout:password" http://localhost:8080/Objects/subfolder/obj/root.json --digest -o root.json
 
 
-### Access to object data
+### Access to object data in JSON format
 
-Request root.json implemented with [TBufferJSON class](https://root.cern.ch/root/html/TBufferJSON.html)
-and be used to access objects (or objects members). It generates such JSON representation,
-which could be directly used in JSROOT for drawing.
+Request `root.json` implemented with [TBufferJSON](https://root.cern.ch/root/html/TBufferJSON.html) class.
+TBufferJSON generates such object representation, which could be directly used in [JSROOT](https://root.cern.ch/js/) for drawing.
+`root.json` returns either complete object or just object member like: 
 
-For the root.json request, one could specify the 'compact' parameter, which will reduce the number of spaces and new lines without lost of data. This parameter can have values from '0' - no compression, till '3' - no spaces at all.
+    [shell] wget http://localhost:8080/Objects/subfolder/obj/fTitle/root.json
+  
+The result will be: "title".
 
+For the `root.json` request one could specify the 'compact' parameter,
+which allow to reduce the number of spaces and new lines without data lost.
+This parameter can have values from '0' (no compression) till '3' (no spaces and new lines at all).
+
+Usage of `root.json` request is about as efficient as binary `root.bin` request.
 Comparison of different request methods with TH1 object shown in the table:
 
 +-------------------------+------------+
@@ -219,12 +217,16 @@ Comparison of different request methods with TH1 object shown in the table:
 | root.json.gz?compact=3  | 1207 bytes |
 +-------------------------+------------+
 
-One should take into account that json always includes names of the data fields which are not present in the binary representation. Even then, the size difference is negligible.  
+One should remember that json always includes names of the data fields which are not present in the binary representation. 
+Even then, the size difference is negligible. 
 
+`root.json` used in JSROOT to request objects from THttpServer.
+  
 
 ### Generating images out of objects
 
-Three kinds of requests (root.png, root.gif, root.jpeg) could be used for creating images like:  
+For the ROOT classes which are implementing Draw method (like [TH1](https://root.cern.ch/root/html/TH1.html) or [TGraph](https://root.cern.ch/root/html/TGraph.html))  
+one could produce images with requests: `root.png`, `root.gif`, `root.jpeg`. For example:  
 
     wget "http://localhost:8080/Files/hsimple.root/hpx/root.png?w=500&h=500&opt=lego1" -O lego1.png
 
@@ -233,8 +235,6 @@ For all such requests one could specify following parameters:
    - `h` - image height
    - `w` - image width
    - `opt` - draw options
-
-Receiving such requests, THttpServer creates TCanvas and draw specified object with provided draw option. 
 
 
 ### Methods execution 
@@ -272,9 +272,9 @@ If command registered to the server:
 
     serv->RegisterCommand("/Folder/Start", "DoSomthing()");
     
-It can be invoked with cmd.json request like:
+It can be invoked with `cmd.json` request like:
 
-    [shell] wget 'http://localhost:8080/Folder/Start/cmd.json' -O title.txt
+    [shell] wget http://localhost:8080/Folder/Start/cmd.json -O result.txt
 
 If command fails, `false` will be returned, otherwise result of gROOT->ProcessLineSync() execution
     
