@@ -126,10 +126,19 @@ TNetXNGFile::TNetXNGFile(const char *url,
 
    using namespace XrdCl;
 
+   // Remove any anchor from the url. It may have been used by the base TFile
+   // constructor to setup a TArchiveFile but we should not pass it to the xroot
+   // client as a part of the filename
+   {
+     TUrl urlnoanchor(url);
+     urlnoanchor.SetAnchor("");
+     fUrl = new URL(std::string(urlnoanchor.GetUrl()));
+   }
+
    fFile        = new File();
-   fUrl         = new URL(std::string(url));
    fInitCondVar = new XrdSysCondVar();
    fUrl->SetProtocol(std::string("root"));
+   fOption      = mode;
    fMode = ParseOpenMode(mode);
    fQueryReadVParams = 1;
    fReadvIorMax = 2097136;
@@ -322,6 +331,7 @@ Int_t TNetXNGFile::ReOpen(Option_t *modestr)
    }
 
    fFile->Close();
+   fOption = modestr;
    fMode = mode;
 
    XRootDStatus st = fFile->Open(fUrl->GetURL(), fMode);
