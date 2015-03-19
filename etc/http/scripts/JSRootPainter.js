@@ -914,6 +914,8 @@
       } else {
          str = str.replace(/\\\^/g, "\\hat");
       }
+
+      if (typeof color != 'string') return "\\(" + str + "\\)";
       mathcolor = color;
       mathcolor = mathcolor.replace(/rgb/g, "[RGB]");
       mathcolor = mathcolor.replace(/\(/g, '{');
@@ -1596,7 +1598,7 @@
          fo_g.append(function() { return vvv.node(); });
 
          if (fo_g.property('_scale')) {
-            var box = fo_g.node().getBoundingClientRect(); //.getBBox();
+            var box = fo_g.node().getBBox(); // .getBoundingClientRect();
             var real_w = parseInt(box.width), real_h = parseInt(box.height);
             painter.TextScaleFactor(1.*real_w / parseInt(fo_g.attr('width')), draw_g);
             painter.TextScaleFactor(1.*real_h / parseInt(fo_g.attr('height')), draw_g);
@@ -1614,7 +1616,7 @@
          var fo_g = d3.select(this);
          // only direct parent
          if (fo_g.node().parentNode !== draw_g.node()) return;
-         var box = fo_g.node().getBoundingClientRect();// .getBBox();
+         var box = fo_g.node().getBBox(); // .getBoundingClientRect();
          var real_w = parseInt(box.width), real_h = parseInt(box.height);
          var align = fo_g.property('_align');
          var fo_w = parseInt(fo_g.attr('width')), fo_h = parseInt(fo_g.attr('height'));
@@ -1688,7 +1690,7 @@
             if (h==-270) txt.attr("transform", "rotate(270, 0, 0)");
          }
 
-         var box = txt.node().getBoundingClientRect(); // .getBBox();
+         var box = txt.node().getBBox(); // .getBoundingClientRect();
          var real_w = parseInt(box.width), real_h = parseInt(box.height);
 
          if (!scale) {
@@ -1715,6 +1717,7 @@
       if (!scale) {
          if (h==-270) rotate = true;
          w = this.pad_width(); h = this.pad_height(); // artifical values, big enough to see output
+         // w = 5; h = 5;
       }
 
       var fo_g = draw_g.append("svg")
