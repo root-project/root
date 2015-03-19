@@ -987,10 +987,10 @@ Bool_t TListIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
-   if (nullptr == (&aIter))
-      return fCurCursor;
-
-   if ((aIter.IsA() == TListIter::Class())) {
+   if (IsA() == aIter.IsA()) {
+      // We compared equal only two iterator of the same type.
+      // Since this is a function of TListIter, we consequently know that
+      // both this and aIter are of type inheriting from TListIter.
       const TListIter &iter(dynamic_cast<const TListIter &>(aIter));
       return (fCurCursor != iter.fCurCursor);
    }
@@ -1001,10 +1001,6 @@ Bool_t TListIter::operator!=(const TIterator &aIter) const
 Bool_t TListIter::operator!=(const TListIter &aIter) const
 {
    // This operator compares two TListIter objects.
-
-   if (nullptr == (&aIter))
-      return fCurCursor;
-
    return (fCurCursor != aIter.fCurCursor);
 }
 

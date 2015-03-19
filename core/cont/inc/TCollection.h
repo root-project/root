@@ -38,6 +38,7 @@
 class TClass;
 class TObjectTable;
 class TVirtualMutex;
+class TIter;
 
 const Bool_t kIterForward  = kTRUE;
 const Bool_t kIterBackward = !kIterForward;
@@ -122,6 +123,9 @@ public:
    static void          GarbageCollect(TObject *obj);
    static void          EmptyGarbageCollection();
 
+   TIter begin() const;
+   TIter end() const;
+
    ClassDef(TCollection,3)  //Collection abstract base class
 };
 
@@ -156,8 +160,17 @@ public:
    Option_t          *GetOption() const { return fIterator ? fIterator->GetOption() : ""; }
    void               Reset() { if (fIterator) fIterator->Reset(); }
    TIter             &operator++() { Next(); return *this; }
-   Bool_t             operator!=(const TIter &aIter) const { return ((*fIterator) != *(aIter.fIterator)); }
-   TObject           *operator*() const { return *(*fIterator); }
+   Bool_t             operator==(const TIter &aIter) const {
+      if (fIterator == nullptr)
+         return aIter.fIterator == nullptr || **aIter.fIterator == nullptr;
+      if (aIter.fIterator == nullptr)
+         return fIterator == nullptr || **fIterator == nullptr;
+      return *fIterator == *aIter.fIterator;
+   }
+   Bool_t             operator!=(const TIter &aIter) const {
+      return !(*this == aIter);
+   }
+   TObject           *operator*() const { return fIterator ? *(*fIterator): nullptr; }
    TIter             &Begin();
    static TIter       End();
 
@@ -174,6 +187,10 @@ public:
    TIterCategory &Begin() { TIter::Begin(); return *this; }
    static TIterCategory End() { return TIterCategory(static_cast<TIterator*>(nullptr)); }
 };
+
+
+inline TIter TCollection::begin() const { return ++(TIter(this)); }
+inline TIter TCollection::end() const { return TIter::End(); }
 
 
 //---- R__FOR_EACH macro -------------------------------------------------------
