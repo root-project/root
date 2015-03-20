@@ -407,7 +407,8 @@ namespace cling {
           strm << "cling-module-" << ++m_ModuleNo;
         }
         getCodeGenerator()->StartModule(ModuleName,
-                                        *m_Interpreter->getLLVMContext());
+                                        *m_Interpreter->getLLVMContext(),
+                                        getCI()->getCodeGenOpts());
       }
       return;
     }
@@ -514,21 +515,6 @@ namespace cling {
     // Could trigger derserialization of decls.
     Transaction* deserT = beginTransaction(CompilationOptions());
 
-    // The initializers are emitted to the symbol "_GLOBAL__sub_I_" + filename.
-    // Make that unique!
-    ASTContext& Context = getCI()->getASTContext();
-    SourceManager &SM = Context.getSourceManager();
-    const FileEntry *MainFile = SM.getFileEntryForID(SM.getMainFileID());
-    FileEntry* NcMainFile = const_cast<FileEntry*>(MainFile);
-    // Hack to temporarily set the file entry's name to a unique name.
-    assert(MainFile->getName() == *(const char**)NcMainFile
-           && "FileEntry does not start with the name");
-    const char* &FileName = *(const char**)NcMainFile;
-    const char* OldName = FileName;
-    std::string ModName = getCodeGenerator()->GetModule()->getName().str();
-    FileName = ModName.c_str();
-    getCodeGenerator()->HandleTranslationUnit(Context);
-    FileName = OldName;
 
     // Commit this transaction first - T might need symbols from it, so
     // trigger emission of weak symbols by providing use.
@@ -538,6 +524,26 @@ namespace cling {
     // This llvm::Module is done; finalize it and pass it to the execution
     // engine.
     if (!T->isNestedTransaction() && hasCodeGenerator()) {
+      // The initializers are emitted to the symbol "_GLOBAL__sub_I_" + filename.
+      // Make that unique!
+      ASTContext& Context = getCI()->getASTContext();
+      SourceManager &SM = Context.getSourceManager();
+      const FileEntry *MainFile = SM.getFileEntryForID(SM.getMainFileID());
+      FileEntry* NcMainFile = const_cast<FileEntry*>(MainFile);
+      // Hack to temporarily set the file entry's name to a unique name.
+      assert(MainFile->getName() == *(const char**)NcMainFile
+         && "FileEntry does not start with the name");
+      const char* &FileName = *(const char**)NcMainFile;
+      const char* OldName = FileName;
+      std::string ModName = getCodeGenerator()->GetModule()->getName().str();
+      FileName = ModName.c_str();
+
+      deserT = beginTransaction(CompilationOptions());
+      // Reset the module builder to clean up global initializers, c'tors, d'tors
+      getCodeGenerator()->HandleTranslationUnit(Context);
+      FileName = OldName;
+      commitTransaction(endTransaction(deserT));
+
       std::unique_ptr<llvm::Module> M(getCodeGenerator()->ReleaseModule());
 
       if (M) {
@@ -552,7 +558,8 @@ namespace cling {
         strm << "cling-module-" << ++m_ModuleNo;
       }
       getCodeGenerator()->StartModule(ModuleName,
-                                      *m_Interpreter->getLLVMContext());
+                                      *m_Interpreter->getLLVMContext(),
+                                      getCI()->getCodeGenOpts());
     }
   }
 

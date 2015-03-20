@@ -61,7 +61,7 @@ protected:
       RTDyld->resolveRelocations();
       RTDyld->registerEHFrames();
       MM->finalizeMemory();
-      OwnedBuffers.clear();
+      // OwnedBuffers.clear(); Needed by GDBListener!
       State = Finalized;
     }
 
