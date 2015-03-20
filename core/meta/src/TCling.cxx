@@ -2304,6 +2304,8 @@ bool TCling::Declare(const char* code)
    // plain #include.
    // Returns true on success, false on failure.
 
+   R__LOCKGUARD(gInterpreterMutex);
+
    int oldload = SetClassAutoloading(0);
    SuspendAutoParsing autoParseRaii(this);
 
