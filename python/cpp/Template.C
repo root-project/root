@@ -17,7 +17,7 @@ public:
 
 template< class T >
 struct MyTemplatedClass2 {
-   void set( const T& v ) {}
+   void set( const T& /* v */) {}
 };    
 typedef MyTemplatedClass2< std::string > MyTemplateTypedef;
 
