@@ -1420,8 +1420,8 @@ void TFormula::ProcessFormula(TString &formula)
       {
          R__LOCKGUARD2(gROOTMutex);
          gFormulaIndex++;
+         fClingName = TString::Format("%s__id%d",fClingName.Data(),  gFormulaIndex);
       }
-      fClingName = TString::Format("%s__id%d",fClingName.Data(),  gFormulaIndex);
 
       fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(),argumentsPrototype.Data(),formula.Data());
 
