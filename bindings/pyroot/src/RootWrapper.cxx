@@ -508,6 +508,12 @@ PyObject* PyROOT::CreateScopeProxy( PyObject*, PyObject* args )
 PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* parent )
 {
 // Build a python shadow class for the named C++ class.
+   if ( scope_name.empty() ) {
+      PyObject* mods = PyImport_GetModuleDict();
+      PyObject* gbl = PyDict_GetItemString( mods, "cppyy.gbl" );
+      Py_XINCREF( gbl );
+      return gbl;
+   }
 
 // force building of the class if a parent is specified (prevents loops)
    Bool_t force = parent != 0;
