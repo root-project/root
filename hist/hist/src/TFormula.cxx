@@ -417,21 +417,9 @@ void TFormula::InputFormulaIntoCling()
    //*-*
    if(!fClingInitialized && fReadyToExecute && fClingInput.Length() > 0)
    {
-      char rawInputOn[]  = ".rawInput 1";
-      char rawInputOff[] = ".rawInput 0";
-      gCling->ProcessLine(rawInputOn);
-      gCling->ProcessLine(fClingInput);
-      gCling->ProcessLine(rawInputOff);
+      gCling->Declare(fClingInput);
       PrepareEvalMethod();
       fClingInitialized = true;
-
-      // // store function pointer
-      // TString funcAddress = "&" + TString(GetName() );
-      // cling::StoredValueRef valref;
-      // cling::runtime::gCling->evaluate(funcAddress,valref);
-      // typedef Double_t (* FuncPointerType)(Double_t *, Double_t *);
-      // void * ptr = valref.get().getAs(&ptr);
-      // FuncPointerType fFuncPointer = (FuncPointerType) ptr;
    }
 }
 void TFormula::FillDefaults()
