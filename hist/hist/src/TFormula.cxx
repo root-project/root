@@ -108,7 +108,7 @@ ClassImp(TFormula)
 // prefix used for function name passed to Cling
 static const TString gNamePrefix = "T__";
 // function index number used to append in cling name to avoid a clash
-static int gFormulaIndex = 0;
+static std::atomic<unsigned int> gFormulaAtomicIndex(0);
 
 Bool_t TFormula::IsOperator(const char c)
 {
@@ -1416,12 +1416,9 @@ void TFormula::ProcessFormula(TString &formula)
       fClingName.ReplaceAll("-","_minus_");
       fClingName.ReplaceAll("*","_times_");
       fClingName.ReplaceAll("/","_div_");
-      // add also an increasing index to function name to make it unique
-      {
-         R__LOCKGUARD2(gROOTMutex);
-         gFormulaIndex++;
-         fClingName = TString::Format("%s__id%d",fClingName.Data(),  gFormulaIndex);
-      }
+
+      // Add also an increasing index to function name to make it unique.
+      fClingName = TString::Format("%s__id%d",fClingName.Data(),  gFormulaAtomicIndex++);
 
       fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(),argumentsPrototype.Data(),formula.Data());
 
@@ -2212,7 +2209,3 @@ void TFormula::Streamer(TBuffer &b)
        //std::cout << "writing npar = " << GetNpar() << std::endl;
    }
 }
-
-
-
-
