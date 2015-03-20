@@ -156,6 +156,10 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    for (int i = 0; i < fArgc; i++)
       fArgv[i] = StrDup(argv[i]);
 
+   // Save current interpreter context in case GetOptions calls Terminate.
+   gInterpreter->SaveContext();
+   gInterpreter->SaveGlobalsContext();
+
    if (numOptions >= 0)
       GetOptions(argc, argv);
 
