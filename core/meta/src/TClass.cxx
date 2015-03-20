@@ -2872,7 +2872,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    if (gDebug>0){
       printf("TClass::GetClass: Header Parsing - The representation of %s was not found in the type system. A lookup in the interpreter is about to be tried: this can cause parsing. This can be avoided selecting %s in the linkdef/selection file.\n",normalizedName.c_str(), normalizedName.c_str());
    }
-   if (gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */, kTRUE /*Only class, structs and ns*/)) {
+   if (normalizedName.length() &&
+       gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */, kTRUE /*Only class, structs and ns*/)) {
       // Get the normalized name based on the decl (currently the only way
       // to get the part to add or drop the default arguments as requested by the user)
       std::string alternative;
