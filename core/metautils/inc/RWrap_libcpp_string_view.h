@@ -38,6 +38,8 @@
 #include <iomanip>
 #include <stdexcept>
 
+#define R_HAS_std_experimental_string_view
+
 #define _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS \
 namespace std { \
 namespace experimental { inline namespace __ROOT {

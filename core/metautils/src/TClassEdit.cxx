@@ -12,7 +12,7 @@
 #include <set>
 // for shared_ptr
 #include <memory>
-#include "TStringView.h"
+#include "RStringView.h"
 
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = 0;
@@ -552,7 +552,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
       size_t end = findNameEnd(a,pos);
 
       std::string valuepart;
-      GetNormalizedName(valuepart,ROOT::TStringView(a.c_str()+pos,end-pos));
+      GetNormalizedName(valuepart,std::string_view(a.c_str()+pos,end-pos));
 
       std::string norm_value;
       GetNormalizedName(norm_value,k.c_str());
@@ -615,7 +615,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
       size_t end = findNameEnd(a,pos);
 
       std::string keypart;
-      GetNormalizedName(keypart,ROOT::TStringView(a.c_str()+pos,end-pos));
+      GetNormalizedName(keypart,std::string_view(a.c_str()+pos,end-pos));
 
       std::string norm_key;
       GetNormalizedName(norm_key,k.c_str());
@@ -652,7 +652,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
       size_t end = findNameEnd(a,pos);
 
       std::string valuepart;
-      GetNormalizedName(valuepart,ROOT::TStringView(a.c_str()+pos,end-pos));
+      GetNormalizedName(valuepart,std::string_view(a.c_str()+pos,end-pos));
 
       std::string norm_value;
       GetNormalizedName(norm_value,k.c_str());
@@ -693,7 +693,7 @@ static bool IsDefElement(const char *elementName, const char* defaultElementName
       size_t end = findNameEnd(c,pos);
 
       std::string keypart;
-      TClassEdit::GetNormalizedName(keypart,ROOT::TStringView(c.c_str()+pos,end-pos));
+      TClassEdit::GetNormalizedName(keypart,std::string_view(c.c_str()+pos,end-pos));
 
       std::string norm_key;
       TClassEdit::GetNormalizedName(norm_key,k.c_str());
@@ -740,7 +740,7 @@ bool TClassEdit::IsDefHash(const char *hashname, const char *classname)
 }
 
 //______________________________________________________________________________
-void TClassEdit::GetNormalizedName(std::string &norm_name, ROOT::TStringView name)
+void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name)
 {
    // Return the normalized name.  See TMetaUtils::GetNormalizedName.
    //
