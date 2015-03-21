@@ -38,6 +38,7 @@
 
 #include <stdarg.h>
 #include <string>
+#include <RStringView.h>
 
 #ifdef R__GLOBALSTL
 namespace std { using ::string; }
@@ -111,6 +112,9 @@ public:
    char         &operator[](Ssiz_t i);           // Index with bounds checking
    char          operator()(Ssiz_t i) const;     // Index with optional bounds checking
    char          operator[](Ssiz_t i) const;     // Index with bounds checking
+
+   operator std::string_view() const { return std::string_view(Data(),fExtent); }
+   operator std::string() const { return std::string_view(Data(),fExtent).to_string(); }
 
    const char   *Data() const;
    Ssiz_t        Length() const          { return fExtent; }
@@ -261,6 +265,7 @@ public:
    TString(const std::string &s);
    TString(char c);
    TString(char c, Ssiz_t s);
+   TString(const std::string_view &sub);
    TString(const TSubString &sub);
 
    virtual ~TString();
@@ -281,12 +286,14 @@ public:
 
    // Type conversion
    operator const char*() const { return GetPointer(); }
+   operator std::string_view() const { return std::string_view(GetPointer(),Length()); }
 
    // Assignment
    TString    &operator=(char s);                // Replace string
    TString    &operator=(const char *s);
    TString    &operator=(const TString &s);
    TString    &operator=(const std::string &s);
+   TString    &operator=(const std::string_view &s);
    TString    &operator=(const TSubString &s);
    TString    &operator+=(const char *s);        // Append string
    TString    &operator+=(const TString &s);
