@@ -19,6 +19,13 @@ else()
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
 endif()
 
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+   # This to avoid warning coming from  message coming from llvm/src/tools/clang/include/clang/Sema/Lookup.h:441
+   # in clang + llvm version r227800.
+   set(CLANG_ADDITIONAL_FLAGS "-Wno-conditional-uninitialized")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLANG_ADDITIONAL_FLAGS}")
+endif()
+
 ROOT_OBJECT_LIBRARY(MetaLLVM ${sources})
 add_dependencies(MetaLLVM CLING)
 

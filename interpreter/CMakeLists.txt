@@ -1,6 +1,7 @@
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 
+set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF)
 set(LLVM_BUILD_TOOLS OFF)
@@ -27,7 +28,9 @@ set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated
 #---Protect against warnings clang would fire-------------------------------------------------------
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conditional-uninitialized")
+   set(CLANG_ADDITIONAL_FLAGS "-Wno-conditional-uninitialized -Wno-unused-parameter -Wno-parentheses-equality -Wno-unused-private-field -Wno-sign-compare")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLANG_ADDITIONAL_FLAGS}")
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CLANG_ADDITIONAL_FLAGS}")
 endif()
 
 #---Do not transform warnings in errors-------------------------------------------------------------
