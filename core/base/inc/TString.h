@@ -785,6 +785,10 @@ namespace cling {
    class Value;
    std::string printValue(const TString* const p, const TString* const u,
                           const Value& V);
+   std::string printValue(const std::string* const p, const std::string* const u,
+                          const Value& V);
+   std::string printValue(const std::string_view* const p, const std::string_view* const u,
+                          const Value& V);
 }
 
 #endif
