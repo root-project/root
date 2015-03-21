@@ -260,6 +260,7 @@ public:
    TString();                           // Null string
    explicit TString(Ssiz_t ic);         // Suggested capacity
    TString(const TString &s);           // Copy constructor
+   TString(TString &&s);                // Move constructor
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
    TString(const std::string &s);

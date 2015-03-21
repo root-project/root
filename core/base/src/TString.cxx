@@ -179,6 +179,20 @@ TString::TString(const TString &s)
 }
 
 //______________________________________________________________________________
+TString::TString(TString &&s)
+{
+   // Move constructor.
+
+   if (!s.IsLong()) {
+      fRep.fRaw = s.fRep.fRaw;
+      s.Init(0,0);
+   } else {
+      fRep.fRaw = s.fRep.fRaw;
+      s.Init(0,0);
+   }
+}
+
+//______________________________________________________________________________
 TString::TString(const TSubString& substr)
 {
    // Copy a TSubString in a TString.
