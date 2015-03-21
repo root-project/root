@@ -2605,6 +2605,14 @@ std::string cling::printValue(const TString* const /*p*/, const TString* const u
 }
 
 //______________________________________________________________________________
+std::string cling::printValue(const TSubString* const /*p*/, const TSubString* const u,
+                              const cling::Value& /*VPI*/) {
+   // Print a TString in the cling interpreter:
+   TString s = TString::Format("\"%.*s\"[%d]", (int)u->Length(), u->Data(), (int)u->Length());
+   return s.Data();
+}
+
+//______________________________________________________________________________
 std::string cling::printValue(const std::string* const /*p*/, const std::string* const u,
                               const cling::Value& /*VPI*/) {
    // Print a TString in the cling interpreter:
