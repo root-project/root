@@ -122,6 +122,7 @@ protected:
    Bool_t PrepareFormula(TString &formula);
    void   DoAddParameter(const TString &name, Double_t value, bool processFormula);
    void   DoSetParameters(const Double_t * p, Int_t size);
+   void   SetPredefinedParamNames(); 
 
    Double_t       DoEval(const Double_t * x  = nullptr, const Double_t * p = nullptr);
 

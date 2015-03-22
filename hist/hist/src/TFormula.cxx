@@ -624,8 +624,8 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
    map<TString,Int_t> functionsNumbers;
    functionsNumbers["gaus"] = 100;
-   functionsNumbers["landau"] = 200;
-   functionsNumbers["expo"] = 400;
+   functionsNumbers["landau"] = 400;
+   functionsNumbers["expo"] = 200;
 
    // replace old names xygaus -> gaus[x,y]
    formula.ReplaceAll("xygaus","gaus[x,y]");
@@ -672,8 +672,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
                }
             }
          }
-
-         fNumber = functionsNumbers[funName];
+         
          if(isNormalized)
          {
             SetBit(kNormalized,1);
@@ -815,12 +814,18 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          }
          TString replacement = body;
 
-         formula.Replace(funPos,pattern.Length(),replacement,replacement.Length());
+         // set the number (only in case a function exists without anything else
+         if (fNumber == 0 && formula.Length() <= (pattern.Length()-funPos) +1 ) { // leave 1 extra
+            fNumber = functionsNumbers[funName] + 10*(dim-1);            
+         }
 
+         formula.Replace(funPos,pattern.Length(),replacement,replacement.Length());
+        
          funPos = formula.Index(funName);
       }
       //std::cout << " formula is now " << formula << std::endl;
    }
+
 }
 void TFormula::HandleExponentiation(TString &formula)
 {
@@ -978,6 +983,10 @@ Bool_t TFormula::PrepareFormula(TString &formula)
    fFuncs.unique();
 
    ProcessFormula(formula);
+
+   // for pre-defined functions (need after processing)
+   if (fNumber != 0) SetPredefinedParamNames();
+
    return fReadyToExecute;
 }
 void TFormula::ExtractFunctors(TString &formula)
@@ -1437,6 +1446,38 @@ void TFormula::ProcessFormula(TString &formula)
    }
    while( itvar != fVars.end() );
 
+}
+void TFormula::SetPredefinedParamNames() {
+
+   // set parameter names in case of numbers
+   if (fNumber == 0) return;
+   if (fNumber == 100) { // Gaussian
+      SetParName(0,"Constant");
+      SetParName(1,"Mean");
+      SetParName(2,"Sigma");
+      return;
+   }
+   if (fNumber == 110) { 
+      SetParName(0,"Constant");
+      SetParName(1,"MeanX");
+      SetParName(2,"SigmaX");
+      SetParName(3,"MeanY");
+      SetParName(4,"SigmaY");
+      return;
+   }
+   if (fNumber == 200) { // exponential
+      SetParName(0,"Constant");
+      SetParName(1,"Slope");
+      SetParName(2,"Sigma");
+      return;
+   }
+   if (fNumber == 400) { // exponential
+      SetParName(0,"Constant");
+      SetParName(1,"MPV");
+      SetParName(2,"Sigma");
+      return;
+   }
+   return;
 }
 const TObject* TFormula::GetLinearPart(Int_t i) const
 {
