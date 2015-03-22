@@ -1468,15 +1468,19 @@ void TFormula::SetPredefinedParamNames() {
    if (fNumber == 200) { // exponential
       SetParName(0,"Constant");
       SetParName(1,"Slope");
-      SetParName(2,"Sigma");
       return;
    }
-   if (fNumber == 400) { // exponential
+   if (fNumber == 400) { // landau
       SetParName(0,"Constant");
       SetParName(1,"MPV");
       SetParName(2,"Sigma");
       return;
    }
+   // if formula is a polynome, set parameter names
+   if (fNumber == (300+fNpar-1)) {
+      for (int i = 0; i < fNpar; i++) SetParName(i,Form("p%d",i));
+   }
+
    return;
 }
 const TObject* TFormula::GetLinearPart(Int_t i) const
