@@ -49,6 +49,7 @@ bool scanPosterior = false;    // flag to compute interval by scanning posterior
 int nScanPoints = 20;          // number of points for scanning the posterior (if scanPosterior = false it is used only for plotting). Use by default a low value to speed-up tutorial
 int intervalType = 1;          // type of interval (0 is shortest, 1 central, 2 upper limit)
 double   maxPOI = -999;        // force a different value of POI for doing the scan (default is given value)
+double   nSigmaNuisance = -1;   // force integration of nuisance parameters to be withing nSigma of their error (do first a model fit to find nuisance error)
 
 void StandardBayesianNumericalDemo(const char* infile = "",
                                    const char* workspaceName = "combined",
@@ -132,6 +133,22 @@ void StandardBayesianNumericalDemo(const char* infile = "",
 
   // do without systematics
   //mc->SetNuisanceParameters(RooArgSet() );
+  if (nSigmaNuisance > 0) {
+     RooAbsPdf * pdf = mc->GetPdf();
+     assert(pdf); 
+     RooFitResult * res = pdf->fitTo(*data, Save(true), Minimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str()), Hesse(true),
+                                     PrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1) );
+
+     res->Print();
+     RooArgList nuisPar(*mc->GetNuisanceParameters());
+     for (int i = 0; i < nuisPar.getSize(); ++i) {
+        RooRealVar * v = dynamic_cast<RooRealVar*> (&nuisPar[i] );
+        assert( v);
+        v->setMin( TMath::Max( v->getMin(), v->getVal() - nSigmaNuisance * v->getError() ) ); 
+        v->setMax( TMath::Min( v->getMax(), v->getVal() + nSigmaNuisance * v->getError() ) );
+        std::cout << "setting interval for nuisance  " << v->GetName() << " : [ " << v->getMin() << " , " << v->getMax() << " ]" << std::endl;
+     }
+  }
 
 
   BayesianCalculator bayesianCalc(*data,*mc);

@@ -46,6 +46,10 @@ for simple problems, but it scales to much more complicated cases.
 using namespace RooFit;
 using namespace RooStats;
 
+int intervalType = 2;          // type of interval (0 is shortest, 1 central, 2 upper limit)
+double   maxPOI = -999;        // force a different value of POI for doing the scan (default is given value)
+
+
 void StandardBayesianMCMCDemo(const char* infile = "",
                               const char* workspaceName = "combined",
                               const char* modelConfigName = "ModelConfig",
@@ -55,6 +59,8 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   // First part is just to access a user-defined file
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
+
+   
 
    const char* filename = "";
    if (!strcmp(infile,"")) {
@@ -142,11 +148,14 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   mcmc.SetNumIters(1000000);         // Metropolis-Hastings algorithm iterations
   mcmc.SetNumBurnInSteps(50);       // first N steps to be ignored as burn-in
 
-  // default is the shortest interval.  here use central
-  mcmc.SetLeftSideTailFraction(0); // for one-sided Bayesian interval
+  // default is the shortest interval.  
+  if (intervalType == 0)  mcmc.SetIntervalType(MCMCInterval::kShortest); // for shortest interval (not really needed)
+  if (intervalType == 1)  mcmc.SetLeftSideTailFraction(0.5); // for central interval
+  if (intervalType == 2)  mcmc.SetLeftSideTailFraction(0.); // for upper limit                                    
 
   RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
-  firstPOI->setMax(10.);
+  if (maxPOI != -999) 
+     firstPOI->setMax(maxPOI);
 
   MCMCInterval* interval = mcmc.GetInterval();
 
