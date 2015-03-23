@@ -76,7 +76,8 @@ private:
    virtual Bool_t GetVectorReadLimits();
    virtual void   SetEnv();
 #ifndef __CINT__
-   XrdCl::OpenFlags::Flags ParseOpenMode(Option_t *modestr);
+   Int_t ParseOpenMode(Option_t *in, TString &modestr,
+                       XrdCl::OpenFlags::Flags &mode, Bool_t assumeRead);
 #endif
 
    TNetXNGFile(const TNetXNGFile &other);             // Not implemented
