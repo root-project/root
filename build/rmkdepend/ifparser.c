@@ -183,6 +183,7 @@ long *valp;
    const char *var;
 
    *valp = 0;
+   var = 0;
 
    SKIPSPACE(cp);
    if (!*cp)
