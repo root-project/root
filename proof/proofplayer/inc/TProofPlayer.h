@@ -124,8 +124,8 @@ protected:
    virtual Int_t DrawCanvas(TObject *obj); // Canvas drawing via libProofDraw
 
    virtual void SetupFeedback();  // specialized setup
-
-   virtual void  MergeOutput();
+   
+   virtual void  MergeOutput(Bool_t savememvalues = kFALSE);
 
 public:   // fix for broken compilers so TCleanup can call StopFeedback()
    virtual void StopFeedback();   // specialized teardown
@@ -350,7 +350,7 @@ public:
    Bool_t         HistoSameAxis(TH1 *h0, TH1 *h1);
    Int_t          AddOutputObject(TObject *obj);
    void           AddOutput(TList *out);   // Incorporate a list
-   virtual void   MergeOutput();
+   virtual void   MergeOutput(Bool_t savememvalues = kFALSE);
    void           Progress(Long64_t total, Long64_t processed); // *SIGNAL*
    void           Progress(TSlave*, Long64_t total, Long64_t processed)
                      { Progress(total, processed); }

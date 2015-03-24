@@ -114,7 +114,7 @@ public:
                                    Double_t& ymin, Double_t& ymax,
                                    Double_t& zmin, Double_t& zmax) = 0;
 
-   virtual void MergeOutput() = 0;
+   virtual void MergeOutput(Bool_t = kFALSE) = 0;
 
    virtual Bool_t    IsClient() const = 0;
 
