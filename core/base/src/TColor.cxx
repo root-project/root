@@ -1672,9 +1672,11 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    if ncolors = 51 and colors=0, a Deep Sea palette is used.
    if ncolors = 52 and colors=0, a Grey Scale palette is used.
    if ncolors = 53 and colors=0, a Dark Body Radiator palette is used.
-   if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright yellow)
+   if ncolors = 54 and colors=0, a Two-Color Hue palette is used.(dark blue through neutral gray to bright yellow)
    if ncolors = 55 and colors=0, a Rain Bow palette is used.
-   if ncolors = 56 and colors=0, an inverted Dark Body Radiator palette is used.
+   if ncolors = 56 and colors=0, an Inverted Dark Body Radiator palette is used.
+   if ncolors = 57 and colors=0, an Parula palette is used.
+
    </pre>
    (see TColor::CreateGradientColorTable for more details)
    <p>
@@ -1797,10 +1799,24 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       return;
    }
 
+   // set Parula palette
+   if (ncolors == 57 && colors == 0) {
+      TColor::InitializeColors();
+      if (paletteType == 9) return;
+      const Int_t nRGBs = 9;
+      Double_t stops[nRGBs] = { 0.0000, 0.1250, 0.2500, 0.3750, 0.5000, 0.6250, 0.7500, 0.8750, 1.0000};
+      Double_t red[nRGBs]   = { 0.2081, 0.0591, 0.0779, 0.0231, 0.1801, 0.5300, 0.8185, 0.9955, 0.9763};
+      Double_t green[nRGBs] = { 0.1663, 0.3598, 0.5040, 0.6418, 0.7177, 0.7491, 0.7327, 0.7861, 0.9831};
+      Double_t blue[nRGBs]  = { 0.5292, 0.8683, 0.8384, 0.7913, 0.6424, 0.4661, 0.3498, 0.1967, 0.0538};
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
+      paletteType = 9;
+      return;
+   }
+
    // set user defined palette
    fgPalette.Set(ncolors);
    if (colors)  for (i=0;i<ncolors;i++) fgPalette.fArray[i] = colors[i];
    else         for (i=0;i<ncolors;i++) fgPalette.fArray[i] = palette[i];
-   paletteType = 9;
+   paletteType = 10;
 }
 
