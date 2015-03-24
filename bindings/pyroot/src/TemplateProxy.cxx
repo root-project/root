@@ -74,6 +74,29 @@ namespace {
    }
 
 //____________________________________________________________________________
+   PyObject* tpp_doc( TemplateProxy* pytmpl, void* )
+   {
+   // Forward to method proxies to doc all overloads
+      PyObject* doc = nullptr;
+      if ( pytmpl->fNonTemplated )
+         doc = PyObject_GetAttrString( (PyObject*)pytmpl->fNonTemplated, "__doc__" );
+      if ( pytmpl->fTemplated ) {
+         PyObject* doc2 = PyObject_GetAttrString( (PyObject*)pytmpl->fTemplated, "__doc__" );
+         if ( doc && doc2 ) {
+            PyROOT_PyUnicode_AppendAndDel( &doc, PyROOT_PyUnicode_FromString( "\n" ));
+            PyROOT_PyUnicode_AppendAndDel( &doc, doc2 );
+         } else if ( !doc && doc2 ) {
+            doc = doc2;
+         }
+      }
+
+      if ( doc )
+         return doc;
+
+      return PyROOT_PyUnicode_FromString( TemplateProxy_Type.tp_doc );
+   }
+
+//____________________________________________________________________________
    int tpp_traverse( TemplateProxy* pytmpl, visitproc visit, void* args )
    {
    // Garbage collector traverse of held python member objects.
@@ -354,6 +377,12 @@ namespace {
       return newPyTmpl;
    }
 
+//____________________________________________________________________________
+   PyGetSetDef tpp_getset[] = {
+      { (char*)"__doc__",    (getter)tpp_doc,    NULL, NULL, NULL },
+      { (char*)NULL, NULL, NULL, NULL, NULL }
+   };
+
 } // unnamed namespace
 
 
@@ -388,7 +417,7 @@ PyTypeObject TemplateProxy_Type = {
    0,                         // tp_iternext
    0,                         // tp_methods
    0,                         // tp_members
-   0,                         // tp_getset
+   tpp_getset,                // tp_getset
    0,                         // tp_base
    0,                         // tp_dict
    (descrgetfunc)tpp_descrget,// tp_descr_get

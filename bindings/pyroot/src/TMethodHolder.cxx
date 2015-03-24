@@ -319,21 +319,29 @@ Int_t PyROOT::TMethodHolder::GetMaxArgs()
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TMethodHolder::GetArgSpec( Int_t iarg )
+PyObject* PyROOT::TMethodHolder::GetCoVarNames()
 {
-// Build a string representation of the arguments list.
-   if ( iarg >= (int)GetMaxArgs() )
-      return 0;
+// Build a tuple of the argument types/names.
+   int co_argcount = (int)GetMaxArgs() + 1;
 
-   std::string argrep = Cppyy::GetMethodArgType( fMethod, iarg );
+// TODO: static methods need no 'self' (but is harmless otherwise)
 
-   const std::string& parname = Cppyy::GetMethodArgName( fMethod, iarg );
-   if ( ! parname.empty() ) {
-      argrep += " ";
-      argrep += parname;
+   PyObject* co_varnames = PyTuple_New( co_argcount );
+   PyTuple_SET_ITEM( co_varnames, 0, PyROOT_PyUnicode_FromString( "self" ) );
+   for ( int iarg = 1; iarg < co_argcount; ++iarg ) {
+      std::string argrep = Cppyy::GetMethodArgType( fMethod, iarg );
+      const std::string& parname = Cppyy::GetMethodArgName( fMethod, iarg );
+      if ( ! parname.empty() ) {
+         argrep += " ";
+         argrep += parname;
+      }
+
+      PyObject* pyspec = PyROOT_PyUnicode_FromString( argrep.c_str() );
+
+      PyTuple_SET_ITEM( co_varnames, iarg, pyspec );
    }
 
-   return PyROOT_PyUnicode_FromString( argrep.c_str() );
+   return co_varnames;
 }
 
 //____________________________________________________________________________

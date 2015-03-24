@@ -212,9 +212,15 @@ namespace {
 
    // collect arguments only if there is just 1 overload, otherwise put in a
    // fake *args (see below for co_varnames)
-      int co_argcount = (methods.size() == 1 ? methods[0]->GetMaxArgs() : 1) + 1 /* for 'self' */;
+      PyObject* co_varnames = methods.size() == 1 ? methods[0]->GetCoVarNames() : NULL;
+      if ( !co_varnames ) {
+      // TODO: static methods need no 'self' (but is harmless otherwise)
+         co_varnames = PyTuple_New( 1 /* self */ + 1 /* fake */ );
+         PyTuple_SET_ITEM( co_varnames, 0, PyROOT_PyUnicode_FromString( "self" ) );
+         PyTuple_SET_ITEM( co_varnames, 1, PyROOT_PyUnicode_FromString( "*args" ) );
+      }
 
-   // TODO: static methods need no 'self' (but is harmless otherwise)
+      int co_argcount = PyTuple_Size( co_varnames );
 
    // for now, code object representing the statement 'pass'
       PyObject* co_code = PyString_FromStringAndSize( "d\x00\x00S", 4 );
@@ -225,15 +231,6 @@ namespace {
 
    // names, freevars, and cellvars go unused
       PyObject* co_unused = PyTuple_New( 0 );
-
-   // variable names are both the argument and local names
-      PyObject* co_varnames = PyTuple_New( co_argcount );
-      PyTuple_SET_ITEM( co_varnames, 0, PyString_FromString( "self" ) );
-      if ( methods.size() == 1 ) {
-         for ( int iarg = 1; iarg < co_argcount; ++iarg )
-            PyTuple_SET_ITEM( co_varnames, iarg, methods[0]->GetArgSpec( iarg - 1 ) );
-      } else
-         PyTuple_SET_ITEM( co_varnames, 1, PyString_FromString( "*args" ) );
 
    // filename is made-up
       PyObject* co_filename = PyString_FromString( "ROOT.py" );

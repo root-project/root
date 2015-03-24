@@ -30,7 +30,7 @@ namespace PyROOT {
       virtual Int_t GetPriority();
 
       virtual Int_t GetMaxArgs();
-      virtual PyObject* GetArgSpec( Int_t iarg );
+      virtual PyObject* GetCoVarNames();
       virtual PyObject* GetArgDefault( Int_t iarg );
       virtual PyObject* GetScopeProxy();
 

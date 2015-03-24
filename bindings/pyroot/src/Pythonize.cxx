@@ -1356,8 +1356,13 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "(...)" ); }
       virtual PyObject* GetPrototype() { return PyObject_GetAttrString( (PyObject*)fOrg, (char*)"__doc__" ); }
       virtual Int_t GetPriority() { return 100; }
-      virtual PyObject* GetArgSpec( Int_t ) { return PyROOT_PyUnicode_FromString( "" ); }
-      virtual PyObject* GetArgDefault( Int_t ) { return PyROOT_PyUnicode_FromString( "" ); }
+      virtual PyObject* GetCoVarNames() {
+         PyObject* co_varnames = PyTuple_New( 1 /* self */ + 1 /* fake */ );
+         PyTuple_SET_ITEM( co_varnames, 0, PyROOT_PyUnicode_FromString( "self" ) );
+         PyTuple_SET_ITEM( co_varnames, 1, PyROOT_PyUnicode_FromString( "*args" ) );
+         return co_varnames;
+      }
+      virtual PyObject* GetArgDefault( Int_t ) { return NULL; }
       virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TTree" ); }
 
    protected:
@@ -1678,8 +1683,13 @@ namespace {
       Int_t GetNArgs() { return fNArgs; }
       virtual Int_t GetPriority() { return 100; }
       virtual Int_t GetMaxArgs() { return GetNArgs()+1; }
-      virtual PyObject* GetArgSpec( Int_t ) { return PyROOT_PyUnicode_FromString( "" ); }
-      virtual PyObject* GetArgDefault( Int_t ) { return PyROOT_PyUnicode_FromString( "" ); }
+      virtual PyObject* GetCoVarNames() {
+         PyObject* co_varnames = PyTuple_New( 1 /* self */ + 1 /* fake */ );
+         PyTuple_SET_ITEM( co_varnames, 0, PyROOT_PyUnicode_FromString( "self" ) );
+         PyTuple_SET_ITEM( co_varnames, 1, PyROOT_PyUnicode_FromString( "*args" ) );
+         return co_varnames;
+      }
+      virtual PyObject* GetArgDefault( Int_t ) { return NULL; }
 
       Bool_t IsCallable( PyObject* pyobject )
       {

@@ -708,9 +708,17 @@ std::string Cppyy::GetMethodArgType( TCppMethod_t method, int iarg )
    return "<unknown>";
 }
 
-std::string Cppyy::GetMethodArgDefault( TCppMethod_t /* method */, int /* iarg */ )
+std::string Cppyy::GetMethodArgDefault( TCppMethod_t method, int iarg )
 {
-   return "";      // unused for now
+   if ( method ) {
+      TFunction* f = (TFunction*)method;
+      TMethodArg* arg = (TMethodArg*)f->GetListOfMethodArgs()->At( iarg );
+      const char* def = arg->GetDefault();
+      if ( def )
+         return def;
+   }
+
+   return "";
 }
 
 std::string Cppyy::GetMethodSignature( TCppScope_t /* scope */, TCppIndex_t /* imeth */ )
