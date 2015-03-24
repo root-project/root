@@ -202,14 +202,6 @@ endif()
 #---Avoid creating dependencies to 'non-statndard' header files -------------------------------
 include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 
-#---Set all directories where to install parts of root up to now everything is installed ------
-#---according to the setting of CMAKE_INSTALL_DIR
-
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND NOT gnuinstall)
-  message(STATUS "Setting default installation prefix CMAKE_INSTALL_PREFIX to ${ROOTSYS}")
-  set(CMAKE_INSTALL_PREFIX ${ROOTSYS} CACHE PATH "Default installation of ROOT" FORCE)
-endif()
-
 #---Add Installation Variables------------------------------------------------------------------
 include(RootInstallDirs)
 
