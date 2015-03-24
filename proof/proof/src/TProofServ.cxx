@@ -7311,9 +7311,9 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                      PDB(kSubmerger, 2) Info("HandleSubmerger","starting delayed merging on %s", fOrdinal.Data());
 
                      // Delayed merging if neccessary
-                     mergerPlayer->MergeOutput();
-                  
-                     PDB(kSubmerger, 2) mergerPlayer->GetOutputList()->Print();
+                     mergerPlayer->MergeOutput(kTRUE);
+
+                     PDB(kSubmerger, 2) mergerPlayer->GetOutputList()->Print("all");
 
                      PDB(kSubmerger, 2) Info("HandleSubmerger", "delayed merging on %s finished ", fOrdinal.Data());
                      PDB(kSubmerger, 2) Info("HandleSubmerger", "%s sending results to master ", fOrdinal.Data());

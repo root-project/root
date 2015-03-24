@@ -1596,7 +1596,7 @@ Long64_t TProofPlayer::Finalize(TQueryResult *)
    return -1;
 }
 //______________________________________________________________________________
-void TProofPlayer::MergeOutput()
+void TProofPlayer::MergeOutput(Bool_t)
 {
    // Merge output (may not be used in this class).
 
@@ -3085,7 +3085,7 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
 }
 
 //______________________________________________________________________________
-void TProofPlayerRemote::MergeOutput()
+void TProofPlayerRemote::MergeOutput(Bool_t saveMemValues)
 {
    // Merge objects in output the lists.
 
@@ -3205,6 +3205,17 @@ void TProofPlayerRemote::MergeOutput()
       while ((obj = nxrm()))
          fOutput->Remove(obj);
       rmlist.SetOwner(kTRUE);
+   }
+
+   // If requested (typically in case of submerger to count possible side-effects in that process)
+   // save the measured memory usage
+   if (saveMemValues) {
+      TPerfStats::Stop();
+      // Save memory usage on master
+      Long_t vmaxmst, rmaxmst;
+      TPerfStats::GetMemValues(vmaxmst, rmaxmst);
+      TStatus *status = (TStatus *) fOutput->FindObject("PROOF_Status");
+      if (status) status->SetMemValues(vmaxmst, rmaxmst, kFALSE);
    }
 
    PDB(kOutput,1) fOutput->Print();
