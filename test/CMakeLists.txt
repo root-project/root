@@ -105,7 +105,7 @@ ROOT_ADD_TEST(test-stresslinear COMMAND stressLinear FAILREGEX "FAILED")
 #--stressGraphics------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript)
 configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat @COPY_ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat COPYONLY)
 ROOT_ADD_TEST(test-stressgraphics COMMAND stressGraphics -b FAILREGEX "FAILED")
 
 #--stressHistogram------------------------------------------------------------------------------------
