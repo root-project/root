@@ -269,7 +269,6 @@ Int_t PyROOT::TMethodHolder::GetPriority()
 
    // the following numbers are made up and may cause problems in specific
    // situations: use <obj>.<meth>.disp() for choice of exact dispatch
-   // WORK HERE: used to be (Bool_t)arg
       if ( Cppyy::IsBuiltin( aname ) ) {
       // happens for builtin types (and namespaces, but those can never be an
       // argument), NOT for unknown classes as that concept no longer exists
@@ -308,6 +307,11 @@ Int_t PyROOT::TMethodHolder::GetPriority()
 // getitem/setitem
    if ( Cppyy::IsConstMethod( fMethod ) && Cppyy::GetMethodName( fMethod ) == "operator[]" )
        priority -= 1;
+
+// another special case for RooFit, as it is inconsistent on base <-> derived
+   if ( Cppyy::GetMethodName( fMethod ) == "import" &&
+        nArgs != 0 && Cppyy::GetMethodArgType( fMethod, 0 ) == "TObject&" )
+      priority -= 1000;
 
    return priority;
 }
