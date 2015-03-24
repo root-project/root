@@ -4156,10 +4156,21 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
       Bool_t outok = (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted &&
                         fPlayer->GetOutputList()) ? kTRUE : kFALSE;
       if (outok) {
-         // Check if in controlled output sending mode
-         Int_t cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
-         if (TProof::GetParameter(input, "PROOF_ControlSendOutput", cso) != 0)
+         // Check if in controlled output sending mode or submerging
+         Int_t cso = 0;
+         Bool_t isSubMerging = kFALSE;
+
+         // Check if we are in merging mode (i.e. parameter PROOF_UseMergers exists)
+         Int_t nm = 0;
+         if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
+            isSubMerging = (nm >= 0) ? kTRUE : kFALSE;
+         }
+         if (!isSubMerging) {
             cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
+            if (TProof::GetParameter(input, "PROOF_ControlSendOutput", cso) != 0)
+               cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
+         }
+
          if (cso > 0) {
 
             // Control output sending mode: wait for the master to ask for the objects.
@@ -4178,18 +4189,16 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
                                      " sizes sent to master", fOrdinal.Data());
          } else {
 
-
             // Check if we are in merging mode (i.e. parameter PROOF_UseMergers exists)
-            Bool_t isInMergingMode = kFALSE;
-            if (!(TestBit(TProofServ::kHighMemory))) {
-               Int_t nm = 0;
-               if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
-                  isInMergingMode = (nm >= 0) ? kTRUE : kFALSE;
-               }
+            if (TestBit(TProofServ::kHighMemory)) {
+               if (isSubMerging)
+                  Info("HandleProcess", "submerging disabled because of high-memory case");
+               isSubMerging = kFALSE;
+            } else {
+               PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isSubMerging);
             }
-            PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isInMergingMode);
 
-            if (!IsMaster() && isInMergingMode) {
+            if (!IsMaster() && isSubMerging) {
                // Worker in merging mode.
                //----------------------------
                // First, it reports only the size of its output to the master
