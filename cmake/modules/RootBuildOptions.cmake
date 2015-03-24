@@ -215,14 +215,6 @@ endif()
 #---Avoid creating dependencies to 'non-statndard' header files -------------------------------
 include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 
-#---Set all directories where to install parts of root up to now everything is installed ------
-#---according to the setting of CMAKE_INSTALL_DIR
-
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND NOT gnuinstall)
-  message(STATUS "Setting default installation prefix CMAKE_INSTALL_PREFIX to ${CMAKE_BINARY_DIR}/root")
-  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/root CACHE PATH "Default installation of ROOT" FORCE)
-endif()
-
 #---Add defines for CINT limits-----------------------------------------------------------------
 if(DEFINED CINTMAXSTRUCT)
   add_definitions(-DG__MAXSTRUCT=${CINTMAXSTRUCT})
