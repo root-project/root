@@ -592,19 +592,8 @@ Cppyy::TCppIndex_t Cppyy::GetNumMethods( TCppScope_t scope )
    if ( cr.GetClass() && cr->GetListOfMethods() )
       return (TCppIndex_t)cr->GetListOfMethods()->GetSize();
    else if ( scope == (TCppScope_t)GLOBAL_HANDLE ) {
-      // TODO: make sure the following is done lazily instead
-      std::cerr << " GetNumMethods on global scope must be made lazy " << std::endl;
-      if (g_globalfuncs.empty()) {
-         TCollection* funcs = gROOT->GetListOfGlobalFunctions( kTRUE );
-         g_globalfuncs.reserve(funcs->GetSize());
-
-         TIter ifunc(funcs);
-
-         TFunction* func = 0;
-         while ((func = (TFunction*)ifunc.Next()))
-            g_globalfuncs.push_back(*func);
-      }
-      return (TCppIndex_t)g_globalfuncs.size();
+   // enforce lazines by denying the existence of methods
+      return (TCppIndex_t)0;
    }
    return (TCppIndex_t)0;
 }

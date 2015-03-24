@@ -477,9 +477,9 @@ static PyObject* BuildCppClassBases( Cppyy::TCppType_t klass )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::CreateScopeProxy( Cppyy::TCppScope_t scope )
+PyObject* PyROOT::GetScopeProxy( Cppyy::TCppScope_t scope )
 {
-// Convenience function with a lookup first through the known existing proxies.
+// Retrieve scope proxy from the known ones.
    PyClassMap_t::iterator pci = gPyClasses.find( scope );
    if ( pci != gPyClasses.end() ) {
       PyObject* pyclass = PyWeakref_GetObject( pci->second );
@@ -489,6 +489,17 @@ PyObject* PyROOT::CreateScopeProxy( Cppyy::TCppScope_t scope )
       }
    }
 
+   return nullptr;
+}
+
+//____________________________________________________________________________
+PyObject* PyROOT::CreateScopeProxy( Cppyy::TCppScope_t scope )
+{
+// Convenience function with a lookup first through the known existing proxies.
+   PyObject* pyclass = GetScopeProxy( scope );
+   if ( pyclass )
+      return pyclass;
+
    return CreateScopeProxy( Cppyy::GetScopedFinalName( scope ) );
 }
 
@@ -497,9 +508,8 @@ PyObject* PyROOT::CreateScopeProxy( PyObject*, PyObject* args )
 {
 // Build a python shadow class for the named C++ class.
    std::string cname = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
-
    if ( PyErr_Occurred() )
-      return 0;
+      return nullptr;
 
    return CreateScopeProxy( cname );
 }
@@ -508,11 +518,19 @@ PyObject* PyROOT::CreateScopeProxy( PyObject*, PyObject* args )
 PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* parent )
 {
 // Build a python shadow class for the named C++ class.
-   if ( scope_name.empty() ) {
+   if ( scope_name.empty() || scope_name == "std" ) {
+   // special cases, as gbl and gbl.std are defined in cppyy.py
       PyObject* mods = PyImport_GetModuleDict();
       PyObject* gbl = PyDict_GetItemString( mods, "cppyy.gbl" );
-      Py_XINCREF( gbl );
-      return gbl;
+      if ( gbl ) {
+         if ( scope_name.empty() ) {
+            Py_INCREF( gbl );
+            return gbl;
+         } else
+            return PyObject_GetAttrString( gbl, "std" );
+      }
+      PyErr_SetString( PyExc_SystemError, "could not locate global namespace" );
+      return nullptr;
    }
 
 // force building of the class if a parent is specified (prevents loops)
@@ -543,6 +561,10 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
 // retrieve ROOT class (this verifies name, and is therefore done first)
    const std::string& lookup = parent ? (scName+"::"+name) : name;
    Cppyy::TCppScope_t klass = Cppyy::GetScope( lookup );
+   PyObject* pyscope = GetScopeProxy( klass );
+   if ( pyscope )
+      return pyscope;
+   
    if ( ! (Bool_t)klass || Cppyy::GetNumMethods( klass ) == 0 ) {
    // special action for STL classes to enforce loading dict lib
    // TODO: LoadDictionaryForSTLType should not be necessary with Cling
