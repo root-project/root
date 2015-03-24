@@ -124,6 +124,9 @@ static PyTypeObject PyNullPtr_t_Type = {
 #if PY_VERSION_HEX >= 0x02060000
    , 0                 // tp_version_tag
 #endif
+#if PY_VERSION_HEX >= 0x03040000
+   , 0                        // tp_finalize
+#endif
 };
 
 PyObject _PyROOT_NullPtrStruct = {

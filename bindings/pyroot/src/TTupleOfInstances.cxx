@@ -89,7 +89,9 @@ PyTypeObject TTupleOfInstances_Type = {
 #if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
-
+#if PY_VERSION_HEX >= 0x03040000
+   , 0                        // tp_finalize
+#endif
 };
 
 } // namespace PyROOT
