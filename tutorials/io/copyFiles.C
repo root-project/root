@@ -72,7 +72,7 @@ void copyFiles() {
       gSystem->CopyFile("hsimple.root", "hs2.root");
    }
    //main function copying 4 files as subdirectories of a new file
-   TFile *f = new TFile("result.root","recreate");
+   TFile *f = new TFile("copy-result.root","recreate");
    CopyFile("tot100.root");
    CopyFile("hsimple.root");
    CopyFile("hs1.root");
