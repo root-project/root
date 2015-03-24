@@ -3596,6 +3596,7 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
    //                = "L"  Use Loglikelihood method (default is chisquare method)
    //                = "WL" Use Loglikelihood method and bin contents are not integer,
    //                       i.e. histogram is weighted (must have Sumw2() set)
+   //                = "P"  Use Pearson chi2 (using expected errors instead of observed errors)
    //                = "U"  Use a User specified fitting algorithm (via SetFCN)
    //                = "Q"  Quiet mode (minimum printing)
    //                = "V"  Verbose mode (default is between Q and V)
