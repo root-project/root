@@ -40,10 +40,23 @@
 
 #define R_HAS_std_experimental_string_view
 
+#ifndef R__WIN32
+
 #define _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS \
 namespace std { \
 namespace experimental { inline namespace __ROOT {
 #define _ROOT_LIBCPP_END_NAMESPACE_LFTS } } }
+
+#else
+
+// Microsoft compiler does not support inline namespace yet.
+#define _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS \
+namespace std { \
+namespace experimental { namespace __ROOT {
+#define _ROOT_LIBCPP_END_NAMESPACE_LFTS } using namespace __ROOT; } }
+
+#endif
+
 
 #ifndef _LIBCPP_BEGIN_NAMESPACE_STD
 #define _LOCAL_LIBCPP_BEGIN_NAMESPACE_STD
