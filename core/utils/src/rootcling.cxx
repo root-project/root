@@ -4386,7 +4386,10 @@ int RootCling(int argc,
    int scannerVerbLevel = 0;
    {
       using namespace ROOT::TMetaUtils;
-      scannerVerbLevel = (gErrorIgnoreLevel == kInfo || (isGenreflex && gErrorIgnoreLevel != kFatal)) ? 1 : 0;
+      scannerVerbLevel = gErrorIgnoreLevel == kInfo; // 1 if true, 0 if false
+      if (isGenreflex){
+         scannerVerbLevel = gErrorIgnoreLevel < kWarning;
+      }
    }
 
    // Select the type of scan
@@ -5088,7 +5091,9 @@ int GenReflex(int argc, char **argv)
                        DEEP,
                        OLDRMFFORMAT,
                        DEBUG,
+                       VERBOSE,
                        QUIET,
+                       SILENT,
                        WRITEEMPTYROOTPCM,
                        HELP,
                        CAPABILITIESFILENAME,
@@ -5301,19 +5306,35 @@ int GenReflex(int argc, char **argv)
       //"--deep\tGenerate dictionaries for all dependent classes (ignored).\n"
 
       {
+         VERBOSE,
+         NOTYPE ,
+         "-v" , "verbose",
+         ROOT::option::Arg::None,
+         "-v, --verbose\tPrint some debug information.\n"
+      },
+
+      {
          DEBUG,
          NOTYPE ,
          "" , "debug",
-         option::Arg::None,
-         "--debug\tPrint debug information.\n"
+         ROOT::option::Arg::None,
+         "--debug\tPrint all debug information.\n"
       },
 
       {
          QUIET,
          NOTYPE ,
          "" , "quiet",
-         option::Arg::None,
-         "--quiet\tPrint no information at all.\n"
+         ROOT::option::Arg::None,
+         "--quiet\tPrint only warnings and errors (default).\n"
+      },
+
+      {
+         SILENT,
+         NOTYPE ,
+         "" , "silent",
+         ROOT::option::Arg::None,
+         "--silent\tPrint no information at all.\n"
       },
 
       {
@@ -5432,7 +5453,8 @@ int GenReflex(int argc, char **argv)
    // The verbosity: debug wins over quiet
    //std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
    std::string verbosityOption("-v2");
-   if (options[QUIET]) verbosityOption = "-v0";
+   if (options[SILENT]) verbosityOption = "-v0";
+   if (options[VERBOSE] || getenv ("VERBOSE")) verbosityOption = "-v3";
    if (options[DEBUG]) verbosityOption = "-v4";
 
    genreflex::verbose = verbosityOption == "-v4";
