@@ -110,14 +110,14 @@ set(CPACK_PACKAGE_FILE_NAME "root_v${ROOT_VERSION}.${OS_NAME_VERSION}${COMPILER_
 set(CPACK_PACKAGE_EXECUTABLES "root" "ROOT")
 
 if(WIN32)
-  set(CPACK_GENERATOR "ZIP;NSIS;TGZ")
+  set(CPACK_GENERATOR "ZIP;NSIS")
   set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
 elseif(APPLE)
   set(CPACK_GENERATOR "TGZ;PackageMaker")
   set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2")
 else()
-  set(CPACK_GENERATOR "STGZ;TGZ")
-  set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2;ZIP")
+  set(CPACK_GENERATOR "TGZ")
+  set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2")
 endif()
 
 #----------------------------------------------------------------------------------------------------
