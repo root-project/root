@@ -60,7 +60,7 @@ std::tuple<int,std::string,int> parseOptions(int argc, char** argv)
   return std::make_tuple(nThreads, fileName, newGDebug) ;
 }
 
-void createDummyFile() {
+void createDummyFile(int tid) {
   auto theList = new TList();
 
   for(unsigned int i=0; i<10;++i) {
@@ -71,8 +71,8 @@ void createDummyFile() {
     theList->Add(new TH1D());
   }
 
-
-  TFile f(kDefaultFileName.c_str(), "RECREATE","test");
+  std::string name = std::to_string(tid) + kDefaultFileName;
+  TFile f(name.c_str(), "RECREATE","test");
 
   auto listTree = new TTree("Events","TheList");
   listTree->Branch("theList","TList",&theList);
@@ -106,20 +106,21 @@ int main(int argc, char** argv) {
   //Have to avoid having Streamers modify themselves after they have been used
   TVirtualStreamerInfo::Optimize(false);
 
-
   if(kFileName == kDefaultFileName) {
-    createDummyFile();
+    for(int i=0; i< kNThreads; ++i) {
+        createDummyFile(i);
+    }
   }
-
 
   std::vector<std::shared_ptr<std::thread>> threads;
   threads.reserve(kNThreads);
 
   for(int i=0; i< kNThreads; ++i) {
-    threads.push_back(std::make_shared<std::thread>( std::thread([&kFileName]() {
+    threads.push_back(std::make_shared<std::thread>( std::thread([&kFileName, i]() {
 	thread_local TThread s_thread_guard;
 	while(waitToStart) ;
-	std::unique_ptr<TFile> f{ TFile::Open(kFileName.c_str()) };
+        std::string name = std::to_string(i) + kFileName;
+        std::unique_ptr<TFile> f{ TFile::Open(name.c_str()) };
 	assert(f.get());
 
 	TTree* eventTree = dynamic_cast<TTree*>(f.get()->Get("Events"));
