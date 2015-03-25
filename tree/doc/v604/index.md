@@ -32,3 +32,7 @@ the branches.  It can be overridden by the environment variable ROOT_TTREECACHE_
 In particular the default can be set back to the same as in version 5 by
 setting TTreeCache.Size (or ROOT_TTREECACHE_SIZE) and TTreeCache.Prefill
 (or ROOT_TTREECACHE_PREFILL) both to zero.
+
+### TSelectorDraw
+
+The axis titles in case of a `x:y:z` plot with the option `COLZ` were not correct.
