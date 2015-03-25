@@ -4650,6 +4650,9 @@ void TProofServ::ProcessNext(TString *slb)
       fPlayer->Process(dset, filename, opt, nentries, first);
    }
 
+   // This is the end of merging
+   fPlayer->SetMerging(kFALSE);
+
    // Return number of events processed
    Bool_t abort =
       (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;

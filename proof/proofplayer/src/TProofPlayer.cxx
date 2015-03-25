@@ -1820,6 +1820,36 @@ Int_t TProofPlayer::GetLearnEntries()
    return -1;
 }
 
+//______________________________________________________________________________
+void TProofPlayerRemote::SetMerging(Bool_t on)
+{
+   // Switch on/off merge timer
+
+   if (on) {
+      if (!fMergeSTW) fMergeSTW = new TStopwatch();
+      PDB(kGlobal,1)
+         Info("SetMerging", "ON: mergers: %d", fProof->fMergersCount);
+      if (fNumMergers <= 0 && fProof->fMergersCount > 0)
+         fNumMergers = fProof->fMergersCount;
+   } else if (fMergeSTW) {
+      fMergeSTW->Stop();
+      Float_t rt = fMergeSTW->RealTime();
+      PDB(kGlobal,1)
+         Info("SetMerging", "OFF: rt: %f, mergers: %d", rt, fNumMergers);
+      if (fQuery) {
+         if (!fProof->TestBit(TProof::kIsClient) || fProof->IsLite()) {
+            // On the master (or in Lite()) we set the merging time and the numebr of mergers
+            fQuery->SetMergeTime(rt);
+            fQuery->SetNumMergers(fNumMergers);
+         } else {
+            // In a standard client we save the transfer-to-client time 
+            fQuery->SetRecvTime(rt);
+         }
+         PDB(kGlobal,2) fQuery->Print("F");
+      }
+   }
+}
+
 //------------------------------------------------------------------------------
 
 ClassImp(TProofPlayerLocal)
@@ -2888,6 +2918,11 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          SetSelectorDataMembersFromOutputList();
 
          PDB(kLoop,1) Info("Finalize","Call Terminate()");
+         // This is the end of merging
+         SetMerging(kFALSE);
+         // We measure the merge time
+         fProof->fQuerySTW.Reset();
+         // Call Terminate now
          fSelector->Terminate();
 
          rv = fSelector->GetStatus();

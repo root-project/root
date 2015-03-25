@@ -39,7 +39,8 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                fEntries(entries), fFirst(first),
                fBytes(0), fParList("-"), fOutputList(0),
                fFinalized(kFALSE), fArchived(kFALSE), fResultFile("-"),
-               fInitTime(0.), fProcTime(0.), fNumWrks(-1)
+               fPrepTime(0.), fInitTime(0.), fProcTime(0.), fMergeTime(0.),
+               fRecvTime(-1), fTermTime(-1), fNumWrks(-1), fNumMergers(-1)
 {
    // Main constructor.
 
@@ -138,9 +139,14 @@ TQueryResult *TQueryResult::CloneInfo()
    qr->fParList = fParList;
    qr->fResultFile = fResultFile;
    qr->fArchived = fArchived;
+   qr->fPrepTime = fPrepTime;
    qr->fInitTime = fInitTime;
    qr->fProcTime = fProcTime;
+   qr->fMergeTime = fMergeTime;
+   qr->fRecvTime = fRecvTime;
+   qr->fTermTime = fTermTime;
    qr->fNumWrks = fNumWrks;
+   qr->fNumMergers = fNumMergers;
 
    qr->fSelecHdr = 0;
    if (GetSelecHdr()) {
@@ -363,8 +369,19 @@ void TQueryResult::Print(Option_t *opt) const
    Float_t elapsed = (fProcTime > 0.) ? fProcTime
                                       : (Float_t)(fEnd.Convert() - fStart.Convert());
    Printf("+++        started:   %s", fStart.AsString());
-   Printf("+++        init time: %.3f sec", fInitTime);
-   Printf("+++        proc time: %.3f sec (CPU time: %.1f sec)", elapsed, fUsedCPU);
+   if (fPrepTime > 0.)
+      Printf("+++        prepare:   %.3f sec", fPrepTime);
+   Printf("+++        init:      %.3f sec", fInitTime);
+   Printf("+++        process:   %.3f sec (CPU time: %.1f sec)", elapsed, fUsedCPU);
+   if (fNumMergers > 0) {
+      Printf("+++        merge:     %.3f sec (%d mergers)", fMergeTime, fNumMergers);
+   } else {
+      Printf("+++        merge:     %.3f sec ", fMergeTime);
+   }
+   if (fRecvTime > 0.)
+      Printf("+++        transfer:  %.3f sec", fRecvTime);
+   if (fTermTime > 0.)
+      Printf("+++        terminate: %.3f sec", fTermTime);
 
    // Number of events processed, rate, size
    Double_t rate = 0.0;
