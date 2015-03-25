@@ -2,11 +2,11 @@
 // Author: Rene Brun
 void cernstaff () {
    TString dir = gSystem->DirName(__FILE__);
-   if (gSystem->AccessPathName(dir+"/cernstaff.root")) {
+   if (gSystem->AccessPathName("cernstaff.root")) {
       gROOT->SetMacroPath(dir);
       gROOT->ProcessLine(".x cernbuild.C");
    }
-   TFile *f = new TFile(dir+"/cernstaff.root");
+   TFile *f = new TFile("cernstaff.root");
    TTree *T = (TTree*)f->Get("T");
    TCanvas *c1 = new TCanvas("c1","CERN staff",10,10,1000,750);
    c1->SetFillColor(17);

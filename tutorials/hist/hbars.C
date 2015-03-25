@@ -5,7 +5,7 @@ void hbars() {
    // try to open first the file cernstaff.root in tutorials/tree directory
    TString filedir = gSystem->DirName(__FILE__);
    filedir += TString("/../tree/");
-   TString filename = filedir + "cernstaff.root";
+   TString filename = "cernstaff.root";
    bool fileNotFound = gSystem->AccessPathName(filename); // note opposite return code
    // if file is not found try to generate it uing the macro tree/cernbuild.C
    if (fileNotFound) {
