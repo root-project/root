@@ -326,13 +326,13 @@ Int_t PyROOT::TMethodHolder::GetMaxArgs()
 PyObject* PyROOT::TMethodHolder::GetCoVarNames()
 {
 // Build a tuple of the argument types/names.
-   int co_argcount = (int)GetMaxArgs() + 1;
+   int co_argcount = (int)GetMaxArgs() /* +1 for self */;
 
 // TODO: static methods need no 'self' (but is harmless otherwise)
 
-   PyObject* co_varnames = PyTuple_New( co_argcount );
+   PyObject* co_varnames = PyTuple_New( co_argcount + 1 /* self */ );
    PyTuple_SET_ITEM( co_varnames, 0, PyROOT_PyUnicode_FromString( "self" ) );
-   for ( int iarg = 1; iarg < co_argcount; ++iarg ) {
+   for ( int iarg = 0; iarg < co_argcount; ++iarg ) {
       std::string argrep = Cppyy::GetMethodArgType( fMethod, iarg );
       const std::string& parname = Cppyy::GetMethodArgName( fMethod, iarg );
       if ( ! parname.empty() ) {
@@ -342,7 +342,7 @@ PyObject* PyROOT::TMethodHolder::GetCoVarNames()
 
       PyObject* pyspec = PyROOT_PyUnicode_FromString( argrep.c_str() );
 
-      PyTuple_SET_ITEM( co_varnames, iarg, pyspec );
+      PyTuple_SET_ITEM( co_varnames, iarg + 1, pyspec );
    }
 
    return co_varnames;
