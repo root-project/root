@@ -21,7 +21,7 @@
 #ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
 #endif
-
+ 
 class TGCheckButton;
 class TGNumberEntry;
 class TGButtonGroup;
@@ -92,6 +92,10 @@ private:
 
    TGLClipSetSubEditor *fClipSet;
 
+   //'Extras' tab.
+   TGCheckButton    *fRotateSceneOn;
+   TGNumberEntry    *fSceneRotDt;
+   
    TGNumberEntry    *fARotDt,     *fARotWPhi;
    TGNumberEntry    *fARotATheta, *fARotWTheta;
    TGNumberEntry    *fARotADolly, *fARotWDolly;
@@ -105,7 +109,7 @@ private:
 
    // Model
    TGLViewer        *fViewer;
-   Bool_t            fIsInPad;
+   Bool_t	     fIsInPad;
 
    void ConnectSignals2Slots();
 
@@ -146,6 +150,7 @@ public:
    void UpdateViewerReference();
    void DoCameraOverlay();
    // Extras
+   void SetRotatorMode();
    void UpdateRotator();
    void DoRotatorStart();
    void DoRotatorStop();

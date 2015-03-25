@@ -25,7 +25,8 @@
 #include "TClass.h"
 #include "TGTab.h"
 #include "TGComboBox.h"
-
+#include "TError.h"
+ 
 #include "TGLViewerEditor.h"
 #include "TGLViewer.h"
 #include "TGLLightSetEditor.h"
@@ -37,6 +38,13 @@
 //______________________________________________________________________________
 //
 // GUI editor for TGLViewer.
+
+namespace {
+
+void SetLabeledNEntryState(TGNumberEntry *entry, Bool_t enabled);
+
+}
+
 
 ClassImp(TGLViewerEditor);
 
@@ -136,7 +144,11 @@ void TGLViewerEditor::ConnectSignals2Slots()
 
    fCamMode->Connect("Selected(Int_t)", "TGLViewerEditor", this, "DoCameraOverlay()");
    fCamOverlayOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraOverlay()");
+   
+   //
+   fRotateSceneOn->Connect("Clicked()", "TGLViewerEditor", this, "SetRotatorMode()");
 
+   fSceneRotDt->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
    fARotDt    ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
    fARotWPhi  ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
    fARotATheta->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
@@ -576,24 +588,40 @@ void TGLViewerEditor::CreateExtrasTab()
    // ----- Auto rotator -----
 
    p = new TGGroupFrame(tab, "Auto rotator", kVerticalFrame);
-
+   
+   //
+   fRotateSceneOn = new TGCheckButton(p, "Rotate scene");
+   fRotateSceneOn->SetToolTipText("Rotate scene/camera");
+   p->AddFrame(fRotateSceneOn, new TGLayoutHints(kLHintsLeft, 4, 1, 1, 1));
+   fRotateSceneOn->SetState(kButtonDown);
+   
+   fSceneRotDt = MakeLabeledNEntry(p, "Delta Phi:", labw, 5, TGNumberFormat::kNESRealThree);
+   fSceneRotDt->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.005, 0.06);
+   SetLabeledNEntryState(fSceneRotDt, kTRUE);
+   
    fARotDt = MakeLabeledNEntry(p, "Delta T:", labw, 5, TGNumberFormat::kNESRealThree);
    fARotDt->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.001, 1);
+   SetLabeledNEntryState(fARotDt, kFALSE);
 
    fARotWPhi = MakeLabeledNEntry(p, "Omega Phi:", labw, 5, TGNumberFormat::kNESRealTwo);
    fARotWPhi->SetLimits(TGNumberFormat::kNELLimitMinMax, -10, 10);
+   SetLabeledNEntryState(fARotWPhi, kFALSE);
 
    fARotATheta = MakeLabeledNEntry(p, "A Theta:", labw, 5, TGNumberFormat::kNESRealTwo);
    fARotATheta->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.01, 1);
+   SetLabeledNEntryState(fARotATheta, kFALSE);
 
    fARotWTheta = MakeLabeledNEntry(p, "Omega Theta:", labw, 5, TGNumberFormat::kNESRealTwo);
    fARotWTheta->SetLimits(TGNumberFormat::kNELLimitMinMax, -10, 10);
+   SetLabeledNEntryState(fARotWTheta, kFALSE);
 
    fARotADolly = MakeLabeledNEntry(p, "A Dolly:", labw, 5, TGNumberFormat::kNESRealTwo);
    fARotADolly->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.01, 1);
+   SetLabeledNEntryState(fARotADolly, kFALSE);
 
    fARotWDolly = MakeLabeledNEntry(p, "Omega Dolly:", labw, 5, TGNumberFormat::kNESRealTwo);
    fARotWDolly->SetLimits(TGNumberFormat::kNELLimitMinMax, -10, 10);
+   SetLabeledNEntryState(fARotWDolly, kFALSE);
 
    {
       TGCompositeFrame *l = new TGHorizontalFrame(p);
@@ -727,26 +755,61 @@ void TGLViewerEditor::SetGuides()
 }
 
 //______________________________________________________________________________
+void TGLViewerEditor::SetRotatorMode()
+{
+   if (TGLAutoRotator * const r = fViewer->GetAutoRotator()) {
+      r->Stop();
+
+      if (fRotateSceneOn->IsOn()) {
+         r->SetDeltaPhi(fSceneRotDt->GetNumber());
+
+         SetLabeledNEntryState(fSceneRotDt, kTRUE);
+         SetLabeledNEntryState(fARotDt, kFALSE);
+         SetLabeledNEntryState(fARotWPhi, kFALSE);
+         SetLabeledNEntryState(fARotATheta, kFALSE);
+         SetLabeledNEntryState(fARotWTheta, kFALSE);
+         SetLabeledNEntryState(fARotADolly, kFALSE);
+         SetLabeledNEntryState(fARotWDolly, kFALSE);
+      } else {
+         SetLabeledNEntryState(fSceneRotDt, kFALSE);
+         SetLabeledNEntryState(fARotDt, kTRUE);
+         SetLabeledNEntryState(fARotWPhi, kTRUE);
+         SetLabeledNEntryState(fARotATheta, kTRUE);
+         SetLabeledNEntryState(fARotWTheta, kTRUE);
+         SetLabeledNEntryState(fARotADolly, kTRUE);
+         SetLabeledNEntryState(fARotWDolly, kTRUE);
+      }
+      
+      r->SetRotateScene(fRotateSceneOn->IsOn());
+   }
+}
+
+//______________________________________________________________________________
 void TGLViewerEditor::UpdateRotator()
 {
    // Update rotator related variables.
-
    TGLAutoRotator *r = fViewer->GetAutoRotator();
-
-   r->SetDt    (fARotDt->GetNumber());
-   r->SetWPhi  (fARotWPhi->GetNumber());
-   r->SetATheta(fARotATheta->GetNumber());
-   r->SetWTheta(fARotWTheta->GetNumber());
-   r->SetADolly(fARotADolly->GetNumber());
-   r->SetWDolly(fARotWDolly->GetNumber());
+   if (fRotateSceneOn->IsOn()) {
+      r->SetDeltaPhi(fSceneRotDt->GetNumber());
+   } else {
+      r->SetDt    (fARotDt->GetNumber());
+      r->SetWPhi  (fARotWPhi->GetNumber());
+      r->SetATheta(fARotATheta->GetNumber());
+      r->SetWTheta(fARotWTheta->GetNumber());
+      r->SetADolly(fARotADolly->GetNumber());
+      r->SetWDolly(fARotWDolly->GetNumber());
+   }
 }
 
 //______________________________________________________________________________
 void TGLViewerEditor::DoRotatorStart()
 {
    // Start auto-rotator.
+   TGLAutoRotator *r = fViewer->GetAutoRotator();
+   if (!r->IsRunning())
+      r->SetRotateScene(fRotateSceneOn->IsOn());
 
-   fViewer->GetAutoRotator()->Start();
+   r->Start();
 }
 
 //______________________________________________________________________________
@@ -814,4 +877,75 @@ void TGLViewerEditor::UpdateStereo()
    fViewer->SetStereoEyeOffsetFac  (fStereoEyeOffsetFac->GetNumber());
    fViewer->SetStereoFrustumAsymFac(fStereoFrustumAsymFac->GetNumber());
    ViewerRedraw(); 
+}
+
+//Aux. functions that do not have to be members.
+
+namespace {
+
+//Here's how we create a number entry and its label:
+
+//   TGHorizontalFrame *rfr   = new TGHorizontalFrame(p);
+//   TGHorizontalFrame *labfr = new TGHorizontalFrame(rfr, labelw, 20, kFixedSize);
+//   TGLabel           *lab   = new TGLabel(labfr, name);
+//   labfr->AddFrame(lab, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 0, 0, 0) );
+//   rfr->AddFrame(labfr, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 0, 0, 0));
+//
+//   TGNumberEntry* ne = new TGNumberEntry(rfr, 0.0f, nd, -1, (TGNumberFormat::EStyle)style);
+//   rfr->AddFrame(ne, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsBottom, 2, 0, 0));
+//
+//   p->AddFrame(rfr, new TGLayoutHints(kLHintsLeft, 0, 0, 1, 0));
+
+//______________________________________________________________________________
+TGLabel *FindLabelForNEntry(TGNumberEntry *entry)
+{
+   if (!entry) {
+      //I would prefer an assert here.
+      ::Error("FindLabelForNEntry", "parameter 'entry' is null");
+      return 0;
+   }
+   
+   TGLabel *label = 0;
+   
+   if (const TGHorizontalFrame * const grandpa = dynamic_cast<const TGHorizontalFrame *>(entry->GetParent())) {
+      if (TList * const parents = grandpa->GetList()) {
+         TIter next1(parents);
+         while (TGFrameElement * const frameElement = dynamic_cast<TGFrameElement *>(next1())) {
+            if (TGHorizontalFrame * const parent = dynamic_cast<TGHorizontalFrame *>(frameElement->fFrame)) {
+               if (TList * const children = parent->GetList()) {
+                  TIter next2(children);
+                  while (TGFrameElement * const candidate = dynamic_cast<TGFrameElement *>(next2())) {
+                     if ((label = dynamic_cast<TGLabel *>(candidate->fFrame)))
+                        break;
+                  }
+               }
+            }
+            
+            if (label)
+               break;
+         }
+      }
+   }
+   
+   return label;
+}
+
+//______________________________________________________________________________
+void SetLabeledNEntryState(TGNumberEntry *entry, Bool_t enabled)
+{
+   //This is quite an ugly hack but still not as ugly as having 5-6 additional
+   //TGLabels as data members.
+   
+   if (!entry) {
+      //I would prefer an assert here.
+      ::Error("SetLabeledNEntryState", "parameter 'entry' is null");
+      return;
+   }
+
+   entry->SetState(enabled);
+   if (TGLabel * const label = FindLabelForNEntry(entry))
+      //Wah!
+      label->Disable(!enabled);
+}
+
 }
