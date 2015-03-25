@@ -128,9 +128,12 @@ public:
    virtual void      SetStopTimer(Bool_t on = kTRUE,
                                   Bool_t abort = kFALSE, Int_t timeout = 0) = 0;
    virtual void      SetInitTime() = 0;
+
+   virtual void      SetMerging(Bool_t on = kTRUE) = 0;
+
    virtual Long64_t  GetCacheSize() = 0;
    virtual Int_t     GetLearnEntries() = 0;
-   
+
    virtual void      UpdateProgressInfo() = 0;
 
    virtual TVirtualPacketizer *GetPacketizer() const { return 0; }

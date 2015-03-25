@@ -1305,6 +1305,9 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       SetupWorkers(1, startedWorkers);
    }
 
+   // This is the end of preparation
+   fQuerySTW.Reset();
+
    Long64_t rv = 0;
    if (!(pq->IsDraw())) {
       if (selector && strlen(selector)) {
@@ -1314,6 +1317,16 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       }
    } else {
       rv = fPlayer->DrawSelect(dset, varexp, selection, opt, nentries, first);
+   }
+
+   // This is the end of merging
+   fQuerySTW.Stop();
+   Float_t rt = fQuerySTW.RealTime();
+   // Update the query content
+   TQueryResult *qr = GetQueryResult();
+   if (qr) {
+      qr->SetTermTime(rt);
+      // Preparation time is always null in PROOF-Lite
    }
 
    // Disable feedback, if required

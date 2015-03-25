@@ -604,6 +604,8 @@ void TProof::InitMembers()
 
    fSelector = 0;
 
+   fPrepTime = 0.;
+
    // Check if the user defined a list of environment variables to send over:
    // include them into the dedicated list
    if (gSystem->Getenv("PROOF_ENVVARS")) {
@@ -3296,7 +3298,11 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
          break;
 
       case kPROOF_SENDOUTPUT:
-         {  // Worker is ready to send output: make sure the relevant bit is reset
+         {
+            // We start measuring the merging time
+            fPlayer->SetMerging();
+
+            // Worker is ready to send output: make sure the relevant bit is reset
             sl->ResetBit(TSlave::kOutputRequested);
             PDB(kGlobal,2)
                Info("HandleInputMessage","kPROOF_SENDOUTPUT: enter (%s)", sl->GetOrdinal());
@@ -3311,6 +3317,9 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
 
       case kPROOF_OUTPUTOBJECT:
          {
+            // We start measuring the merging time
+            fPlayer->SetMerging();
+
             PDB(kGlobal,2)
                Info("HandleInputMessage","kPROOF_OUTPUTOBJECT: enter");
             Int_t type = 0;
@@ -3395,6 +3404,9 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
 
       case kPROOF_OUTPUTLIST:
          {
+            // We start measuring the merging time
+            fPlayer->SetMerging();
+
             PDB(kGlobal,2)
                Info("HandleInputMessage","%s: kPROOF_OUTPUTLIST: enter", sl->GetOrdinal());
             TList *out = 0;
@@ -3577,6 +3589,12 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
             // the start of processing; on clients it allows to update the
             // progress dialog
             if (!TestBit(TProof::kIsMaster)) {
+
+               // This is the end of preparation
+               fQuerySTW.Stop();
+               fPrepTime = fQuerySTW.RealTime();
+               PDB(kGlobal,2) Info("HandleInputMessage","Preparation time: %f s", fPrepTime);
+
                TString selec;
                Int_t dsz = -1;
                Long64_t first = -1, nent = -1;
@@ -4116,6 +4134,14 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                      else
                         Printf("%s",msg.Data());
                   }
+
+                  // We started merging; we call it here because fMergersCount is still the original number
+                  // and can be saved internally
+                  fPlayer->SetMerging(kTRUE);
+
+                  // Update merger counters (new workers are not yet active)
+                  fMergePrg.SetNWrks(fMergersCount);
+
                   if (fMergersCount > 0) {
 
                      fMergers = new TList();
@@ -5276,7 +5302,10 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
       fWrksOutputReady->SetOwner(kFALSE);
       fWrksOutputReady->Clear();
    }
-   
+
+   // Reset time measurements
+   fQuerySTW.Reset();
+
    Long64_t rv = -1;
    if (selector && strlen(selector)) {
       rv = fPlayer->Process(dset, selector, opt.Data(), nentries, first);
@@ -5285,6 +5314,16 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
    } else {
       Error("Process", "neither a selecrot file nor a selector object have"
                        " been specified: cannot process!");
+   }
+
+   // This is the end of merging
+   fQuerySTW.Stop();
+   Float_t rt = fQuerySTW.RealTime();
+   // Update the query content
+   TQueryResult *qr = GetQueryResult();
+   if (qr) {
+      qr->SetTermTime(rt);
+      qr->SetPrepTime(fPrepTime);
    }
 
    // Disable feedback, if required

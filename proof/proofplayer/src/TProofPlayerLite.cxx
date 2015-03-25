@@ -383,6 +383,11 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
 
       PDB(kLoop,1) Info("Finalize","Call Terminate()");
       fOutput->Clear("nodelete");
+      // This is the end of merging
+      SetMerging(kFALSE);
+      // We measure the merge time
+      fProof->fQuerySTW.Reset();
+      // Call Terminate now
       fSelector->Terminate();
 
       rv = fSelector->GetStatus();

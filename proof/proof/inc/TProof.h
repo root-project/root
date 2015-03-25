@@ -57,6 +57,9 @@
 #ifndef ROOT_TProofOutputList
 #include "TProofOutputList.h"
 #endif
+#ifndef ROOT_TStopwatch
+#include "TStopwatch.h"
+#endif
 
 #include <map>
 
@@ -628,6 +631,9 @@ protected:
    Bool_t          fDynamicStartup; // are the workers started dynamically?
 
    TSelector       *fSelector;      // Selector to be processed, if any
+
+   TStopwatch      fQuerySTW;       // Stopwatch to measure query times
+   Float_t         fPrepTime;       // Preparation time
 
    static TSemaphore *fgSemaphore;   //semaphore to control no of parallel startup threads
 
