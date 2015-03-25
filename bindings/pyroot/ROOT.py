@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 11/17/14
+# Last: 03/24/15
 
 """PyROOT user module.
 
@@ -343,15 +343,13 @@ try:
 except ImportError:
    import builtins as __builtin__  # name change in p3
 _orig_ihook = __builtin__.__import__
-def _importhook( name, glbls = {}, lcls = {}, fromlist = [], level = -1 ):
+def _importhook( name, *args, **kwds ):
    if name[0:5] == 'ROOT.':
       try:
          sys.modules[ name ] = getattr( sys.modules[ 'ROOT' ], name[5:] )
       except Exception:
          pass
-   if 5 <= sys.version_info[1]:    # minor
-      return _orig_ihook( name, glbls, lcls, fromlist, level )
-   return _orig_ihook( name, glbls, lcls, fromlist )
+   return _orig_ihook( name, *args, **kwds )
 
 __builtin__.__import__ = _importhook
 

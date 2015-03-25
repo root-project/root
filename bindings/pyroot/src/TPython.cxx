@@ -196,7 +196,11 @@ void TPython::LoadMacro( const char* name )
 }
 
 //____________________________________________________________________________
-void TPython::ExecScript( const char* name, int argc, const char** argv )
+void TPython::ExecScript( const char* name, int argc, const char**
+#if PY_VERSION_HEX < 0x03000000
+      argv
+#endif
+   )
 {
 // Execute a python stand-alone script, with argv CLI arguments.
 //
@@ -245,7 +249,6 @@ void TPython::ExecScript( const char* name, int argc, const char** argv )
    delete [] argv2;
 #else
 // TODO: fix this to work like above ...
-   argv = 0;
 #endif
 
 // actual script execution
