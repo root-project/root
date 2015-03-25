@@ -821,7 +821,8 @@ void TSelectorDraw::Begin(TTree *tree)
             if (canRebin)h2->SetBit(TH1::kCanRebin);
             if (!hkeep) {
                h2->GetXaxis()->SetTitle(fVar[1]->GetTitle());
-               h2->GetZaxis()->SetTitle(fVar[0]->GetTitle());
+               h2->GetYaxis()->SetTitle(fVar[0]->GetTitle());
+               h2->GetZaxis()->SetTitle(fVar[2]->GetTitle());
                h2->SetBit(TH1::kNoStats);
                h2->SetBit(kCanDelete);
                if (!opt.Contains("goff")) h2->SetDirectory(0);
