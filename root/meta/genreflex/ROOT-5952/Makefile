@@ -16,7 +16,7 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 
 selLog.log: classes.h
-	$(CMDECHO) genreflex classes.h -s classes_selection.xml >$@ 2>&1
+	$(CMDECHO) genreflex classes.h --verbose -s classes_selection.xml >$@ 2>&1
 
 selLog: selLog.log
 	$(TestDiff)
