@@ -230,7 +230,7 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
               FAILREGEX Error|FAILED)
 
 #--stressHepix-------------------------------------------------------------------------------
-#ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
+ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
 #ROOT_ADD_TEST(test-stressHepix COMMAND stressHepix FAILREGEX "FAILED|Error in")
 
 #--stressProof-------------------------------------------------------------------------------
