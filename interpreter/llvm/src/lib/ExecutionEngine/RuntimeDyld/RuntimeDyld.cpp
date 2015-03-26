@@ -208,7 +208,11 @@ RuntimeDyldImpl::loadObjectImpl(const object::ObjectFile &Obj) {
         {
           GlobalSymbolTable[Name] = SymbolInfo(SectionID, SectOffset, Vis);
         } else {
-          WeakSymbolTable[Name] = SymbolInfo(SectionID, SectOffset, Vis);
+          if (object::SymbolRef::ST_Data) {
+            WeakDataSymbolTable[Name] = SymbolInfo(SectionID, SectOffset, Vis);
+          } else {
+            WeakFuncSymbolTable[Name] = SymbolInfo(SectionID, SectOffset, Vis);
+          }
         }
       }
     }
@@ -760,7 +764,31 @@ void RuntimeDyldImpl::resolveExternalSymbols() {
     } else {
       uint64_t Addr = 0;
       RTDyldSymbolTable::const_iterator Loc = GlobalSymbolTable.find(Name);
-      if (Loc == GlobalSymbolTable.end()) {
+      if (Loc != GlobalSymbolTable.end()) {
+        // We found the symbol in our global table.  It was probably in a
+        // Module that we loaded previously.
+        const auto &SymInfo = Loc->second;
+        Addr = getSectionLoadAddress(SymInfo.getSectionID()) +
+               SymInfo.getOffset();
+      }
+
+      // If we didn't find the symbol yet, and it is present in the weak
+      // function symbol table, the definition from this object file needs to be
+      // used, so emit it now
+      if (!Addr) {
+        RTDyldSymbolTable::const_iterator Loc = WeakFuncSymbolTable.find(Name);
+        if (Loc != WeakFuncSymbolTable.end()) {
+          const SymbolInfo& SymInfo = Loc->second;
+          Addr = getSectionLoadAddress(SymInfo.getSectionID());
+          Addr += SymInfo.getOffset();
+          // Since the weak symbol is now, materialized, add it to the
+          // GlobalSymbolTable. If somebody later asks the ExecutionEngine
+          // for the address of this symbol that's where it'll look
+          GlobalSymbolTable[Name] = SymInfo;
+        }
+      }
+
+      if (!Addr) {
         // This is an external symbol, try to get its address from
         // MemoryManager.
         Addr = MemMgr->getSymbolAddress(Name.data());
@@ -771,20 +799,14 @@ void RuntimeDyldImpl::resolveExternalSymbols() {
         // associated with this symbol is deferred until below this point.
         // New entries may have been added to the relocation list.
         i = ExternalSymbolRelocations.find(Name);
-      } else {
-        // We found the symbol in our global table.  It was probably in a
-        // Module that we loaded previously.
-        const auto &SymInfo = Loc->second;
-        Addr = getSectionLoadAddress(SymInfo.getSectionID()) +
-               SymInfo.getOffset();
       }
 
-      // If we didn't find the symbol yet, and it is present in the weak symbol
-      // table, the definition from this object file needs to be used, so emit
-      // it now
+      // If we didn't find the symbol yet, and it is present in the weak
+      // data symbol table, the definition from this object file needs to be
+      // used, so emit it now
       if (!Addr) {
-        RTDyldSymbolTable::const_iterator Loc = WeakSymbolTable.find(Name);
-        if (Loc != WeakSymbolTable.end()) {
+        RTDyldSymbolTable::const_iterator Loc = WeakDataSymbolTable.find(Name);
+        if (Loc != WeakDataSymbolTable.end()) {
           const SymbolInfo& SymInfo = Loc->second;
           Addr = getSectionLoadAddress(SymInfo.getSectionID());
           Addr += SymInfo.getOffset();

@@ -203,8 +203,11 @@ protected:
   // A global symbol table for symbols from all loaded modules.
   RTDyldSymbolTable GlobalSymbolTable;
 
-  // Like the global symbol table but for weak symbols
-  RTDyldSymbolTable WeakSymbolTable;
+  // Like the global symbol table but for weak function symbols
+  RTDyldSymbolTable WeakFuncSymbolTable;
+
+  // Like the global symbol table but for weak data symbols
+  RTDyldSymbolTable WeakDataSymbolTable;
 
   // Pair representing the size and alignment requirement for a common symbol.
   typedef std::pair<unsigned, unsigned> CommonSymbolInfo;
@@ -377,9 +380,13 @@ protected:
   const SymbolInfo* getGlobalOrWeakNamed(StringRef Name) {
     RTDyldSymbolTable::const_iterator pos = GlobalSymbolTable.find(Name);
     if (pos == GlobalSymbolTable.end()) {
-      pos = WeakSymbolTable.find(Name);
-      if (pos == WeakSymbolTable.end())
-        return nullptr;
+      pos = WeakFuncSymbolTable.find(Name);
+      if (pos == WeakFuncSymbolTable.end()) {
+        pos = WeakDataSymbolTable.find(Name);
+        if (pos == WeakDataSymbolTable.end()) {
+          return nullptr;
+        }
+      }
       GlobalSymbolTable[Name] = pos->second;
     }
     return &pos->second;
