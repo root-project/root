@@ -46,9 +46,7 @@ foreach(pyfile ${pyfiles})
   install(FILES ${pyfile} DESTINATION ${runtimedir})
   install(CODE "execute_process(COMMAND python -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
   install(CODE "execute_process(COMMAND python -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
-    if(testing)
-    file(COPY ${pyfile} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
-  endif()
+  file(COPY ${pyfile} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
 endforeach()
 
 #---Install headers----------------------------------------------------------
