@@ -50,7 +50,7 @@ if(NOT ROOT_minuit2_FOUND)
                    fit/minuit2FitBench2D.C fit/minuit2FitBench.C
                    fit/minuit2FitBench.C fit/minuit2GausFit.C
                    fit/minuit2GausFit.C fit/NumericalMinimization.C
-                   fit/combinedFit.C)
+                   fit/combinedFit.C fit/TestBinomial.C)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
