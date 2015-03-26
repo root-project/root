@@ -609,7 +609,7 @@ std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
 // TODO: this method assumes that the call for this name is made only
 // once, and thus there is no need to store the results of the search
 // in g_globalfuncs ... probably true, but needs verification
-   std::vector< TCppIndex_t > methods;
+   std::vector< TCppMethod_t > methods;
    if ( scope == GLOBAL_HANDLE ) {
       TCollection* funcs = gROOT->GetListOfGlobalFunctions( kTRUE );
       g_globalfuncs.reserve(funcs->GetSize());
