@@ -25,12 +25,16 @@ class TGLAutoRotator : public TObject
 private:
    TGLAutoRotator(const TGLAutoRotator&);            // Not implemented
    TGLAutoRotator& operator=(const TGLAutoRotator&); // Not implemented
-
+ 
 protected:
    TGLViewer  *fViewer;
    TGLCamera  *fCamera;
    TTimer     *fTimer;
    TStopwatch *fWatch;
+
+   Bool_t     fRotateScene;
+
+   Double_t   fDeltaPhi;
 
    Double_t   fDt;
    Double_t   fWPhi;
@@ -60,10 +64,16 @@ public:
    void Stop();
 
    void Timeout();
+   void RotateScene();
 
    // --------------------------------
 
    Bool_t   IsRunning() const     { return fTimerRunning; }
+
+   void     SetRotateScene(Bool_t rotateScene) {Stop(); fRotateScene = rotateScene; }
+
+   Double_t GetDeltaPhi() const {return fDeltaPhi; }
+   void     SetDeltaPhi(Double_t dPhi) {fDeltaPhi = dPhi; }
 
    Double_t GetDt() const         { return fDt; }
    void     SetDt(Double_t dt);

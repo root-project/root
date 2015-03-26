@@ -14,7 +14,7 @@ Many old problems and errors are fixed, new functions are provided.
    TMathText always drawn with MathJax,
    other classes require `mathjax` option in URL
 5. Improve drawing of different text classes, correctly handle
-   their alignment and scaling
+   their alignment and scaling, special handling for IE
 
 
 ## Changes in v 3.3

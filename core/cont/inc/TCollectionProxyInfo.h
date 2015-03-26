@@ -139,14 +139,16 @@ namespace ROOT {
             *(void**)dest = *(void**)(const_cast<void*>(source));
             return dest;
          }
-         static void* next(void *iter_loc, const void *end_loc) {
-            const iterator *end = (const iterator *)(end_loc);
-            iterator *iter = (iterator *)(iter_loc);
-            if (*iter != *end) {
-               void *result = IteratorValue<Cont_t, typename Cont_t::value_type>::get(*iter);
-               ++(*iter);
-               return result;
-            }
+         static void* next(void * /* iter_loc */, const void * /* end_loc */) {
+            // Should not be used.
+            // In the case of vector, so that the I/O can perform better,
+            // the begin_arena and the end_arena are *not* set to the
+            // address of any iterator rather they are set to the value of
+            // the beginning (and end) address of the vector's data.
+            // Hence this routine (which takes the value of fBegin) can
+            // *not* update where its points to (which in the case of vector
+            // would require update the value of fBegin).
+            R__ASSERT(0 && "Intentionally not implemented, do not use.");
             return 0;
          }
          static void destruct1(void  * /* iter_ptr */) {

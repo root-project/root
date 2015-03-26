@@ -30,7 +30,7 @@
 
 #include "GuiTypes.h"
 #include "TQObject.h"
-
+ 
 #include <vector>
 
 class TGLSceneBase;
@@ -56,6 +56,7 @@ class TGLViewer : public TVirtualViewer3D,
 {
    friend class TGLOutput;
    friend class TGLEventHandler;
+   friend class TGLAutoRotator;
 public:
 
    enum ECameraType { kCameraPerspXOZ,  kCameraPerspYOZ,  kCameraPerspXOY,

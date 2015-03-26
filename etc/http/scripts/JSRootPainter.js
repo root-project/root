@@ -1540,6 +1540,7 @@
       draw_g.property('mathjax_use', false);
       draw_g.property('text_factor', 0.);
       draw_g.property('max_text_width', 0); // keep maximal text width, use it later
+      draw_g.attr('opacity','0'); // hide elements until drawing is finished
    }
 
    JSROOT.TObjectPainter.prototype.TextScaleFactor = function(value, draw_g) {
@@ -1605,6 +1606,7 @@
          }
       });
 
+      // adjust font size
       var f = draw_g.property('text_factor');
       var font = draw_g.property('text_font');
       if ((f>0) && ((f<0.9) || (f>1.))) {
@@ -1639,6 +1641,8 @@
              .attr('visibility', null);
       });
 
+      draw_g.attr('opacity','1'); // now processing finished and text can be shown
+
       return draw_g.property('max_text_width');
    }
 
@@ -1667,40 +1671,40 @@
       if (((JSROOT.MathJax<1) && (latex_kind!=2)) || (latex_kind<1)) {
          if (latex_kind>0) label = JSROOT.Painter.translateLaTeX(label);
 
-         var pos_x = x.toFixed(1);
+         var pos_x = x.toFixed(1), pos_y = y.toFixed(1), pos_dy = null, middleline = false;
 
-         if (scale) {
+         if (w>0) {
+            // adjust x position when scale into specified rectangle
             if (align[0]=="middle") pos_x = (x+w*0.5).toFixed(1); else
             if (align[0]=="end") pos_x = (x+w).toFixed(1);
+         }
+
+         if (h>0) {
+            if (align[1] == 'bottom') pos_y = (y + h).toFixed(1); else
+            if (align[1] == 'top') pos_dy = ".8em"; else {
+               pos_y = (y + h/2).toFixed(1);
+               if (JSROOT.browser.isIE) pos_dy = ".4em"; else middleline = true;
+            }
+         } else
+         if (h==0) {
+            if (align[1] == 'top') pos_dy = ".8em"; else
+            if (align[1] == 'middle') {
+               if (JSROOT.browser.isIE) pos_dy = ".4em"; else middleline = true;
+            }
          }
 
          var txt = draw_g.append("text")
                          .attr("text-anchor", align[0])
                          .attr("x", pos_x)
+                         .attr("y", pos_y)
                          .attr("fill", tcolor ? tcolor : null)
                          .text(label);
-
-         if (align[1]=="middle") txt.attr("dominant-baseline", "middle");
-
-         if (scale) {
-            if (align[1]=="middle") txt.attr("y", (y + h*0.5).toFixed(1));
-                               else txt.attr("y", y.toFixed(1));
-         } else {
-            txt.attr("y", y.toFixed(1));
-            if (h==-270) txt.attr("transform", "rotate(270, 0, 0)");
-         }
+         if (pos_dy!=null) txt.attr("dy", pos_dy);
+         if (middleline) txt.attr("dominant-baseline", "middle");
+         if ((!scale) && (h==-270)) txt.attr("transform", "rotate(270, 0, 0)");
 
          var box = txt.node().getBBox(); // .getBoundingClientRect();
          var real_w = parseInt(box.width), real_h = parseInt(box.height);
-
-         if (!scale) {
-            // make adjustment after drawing
-            // if (align[0]=="middle") txt.attr("x", (x + real_w/2).toFixed(1)); else
-            // if (align[0]=="end") txt.attr("x", (x + real_w).toFixed(1));
-            // if (align[1]=="middle") txt.attr("y", (y-real_h/2).toFixed(1)); else
-
-            if ((align[1]=="bottom") && (h==0)) txt.attr("y", (y+real_h).toFixed(1));
-         }
 
          if (real_w > draw_g.property('max_text_width')) draw_g.property('max_text_width', real_w);
          if ((w>0) && scale) this.TextScaleFactor(real_w / w, draw_g);
