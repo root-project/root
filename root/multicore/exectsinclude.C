@@ -15,7 +15,7 @@ void exectsinclude(){
 
    auto headers = {"TH1F.h",
                    "TGraph.h",
-                   "RooRealVar.h",
+//                    "RooRealVar.h",
                    "TBrowser.h",
                    "THtml.h",
                    "TMatrixD.h",
@@ -24,8 +24,8 @@ void exectsinclude(){
 //                    "TGLClip.h",
 //                    "TEveBox.h",
                    "TBufferXML.h",
-                   "TQClass.h",
-                   "RooGaussian.h"};
+                   "TQClass.h"};
+//                    "RooGaussian.h"};
 
    tsStringlist inclusions;
    gInterpreter->SetClassAutoloading(false);
