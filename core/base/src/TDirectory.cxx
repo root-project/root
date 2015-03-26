@@ -526,8 +526,11 @@ void TDirectory::Close(Option_t *)
    // if this dir contains subdirs, we must use the slow option for Delete!
    // we must avoid "slow" as much as possible, in particular Delete("slow")
    // with a large number of objects (eg >10^5) would take for ever.
-   if (fast) fList->Delete();
-   else      fList->Delete("slow");
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      if (fast) fList->Delete();
+      else      fList->Delete("slow");
+   }
 
    CleanTargets();
 }
