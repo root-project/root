@@ -1,5 +1,3 @@
-# ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes classes.h SELECTION classes_selection.xml)
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-ROOT-5952
-                  EXEC gendict.sh
-                  COPY_TO_BUILDDIR classes_selection.xml classes.h gendict.sh
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classes.h --verbose --select=${CMAKE_CURRENT_SOURCE_DIR}/classes_selection.xml
                   OUTREF selLog.ref)
