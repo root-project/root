@@ -27,11 +27,11 @@ ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-escapedQuotesreadTree
                   DEPENDS roottest-root-meta-genreflex-escapedQuotesWriteTree)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-classSelectedTwice
-                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice.h --quiet --select=${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice_selection.xml
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice.h --verbose --select=${CMAKE_CURRENT_SOURCE_DIR}/classSelectedTwice_selection.xml
                   OUTREF classSelectedTwice.ref)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-virtualInheritance
-                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/virtualInheritance.h --quiet --select=${CMAKE_CURRENT_SOURCE_DIR}/virtualInheritance_selection.xml
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/virtualInheritance.h --verbose --select=${CMAKE_CURRENT_SOURCE_DIR}/virtualInheritance_selection.xml
                   OUTREF virtualInheritance.ref)
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(typedefSelection typedefSelection.h SELECTION typedefSelection_selection.xml)
