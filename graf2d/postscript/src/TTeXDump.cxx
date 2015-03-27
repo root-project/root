@@ -99,6 +99,7 @@ TTeXDump::TTeXDump() : TVirtualPS()
    fCurrentGreen = -1.;
    fCurrentBlue  = -1.;
    fCurrentAlpha = 1.;
+   fLineScale    = 0.;
 }
 
 
@@ -124,6 +125,7 @@ TTeXDump::TTeXDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    fCurrentGreen = -1.;
    fCurrentBlue  = -1.;
    fCurrentAlpha = 1.;
+   fLineScale    = 0.;
 
    Open(fname, wtype);
 }
@@ -139,6 +141,7 @@ void TTeXDump::Open(const char *fname, Int_t wtype)
       return;
    }
 
+   SetLineScale(gStyle->GetLineScalePS());
    fLenBuffer = 0;
    fType      = abs(wtype);
 
@@ -293,6 +296,8 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       SetColor(fLineColor);
       PrintStr("@");
       PrintStr("\\draw [c");
+      PrintStr(",line width=");
+      WriteReal(0.3*fLineScale*fLineWidth, kFALSE);
       if (fCurrentAlpha != 1.) {
          PrintStr(", opacity=");
          WriteReal(fCurrentAlpha, kFALSE);
@@ -541,10 +546,8 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
          PrintStr(",dash pattern=on 16pt off 8pt on 0.8pt off 8pt");
          break;
       }
-      if (fLineWidth>1) {
-         PrintStr(",line width=");
-         WriteReal(0.9*fLineWidth, kFALSE);
-      }
+      PrintStr(",line width=");
+      WriteReal(0.3*fLineScale*fLineWidth, kFALSE);
    } else {
       SetColor(fFillColor);
       if (fillis==1) {
