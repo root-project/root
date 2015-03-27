@@ -3202,7 +3202,6 @@ void TPad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t y
       glist->AddFirst(frame);
       fFrame->SetBit(kMustCleanup);
    }
-   if (gROOT->GetForceStyle()) frame->UseCurrentStyle();
    frame->Paint();
 }
 
@@ -4426,10 +4425,14 @@ void TPad::Print(const char *filenam, Option_t *option)
    //
    // As before, the same macro is valid for PDF files.
    //
-   // It is possible to print a canvas into an animated GIF file by specifying the
-   // file name as "myfile.gif+" or "myfile.gif+NN", where NN*10ms is delay
-   // between the subimages' display. If NN is ommitted the delay between
-   // subimages is zero. Each picture is added in the animation thanks to a loop
+   // It's possible to write images into an animated GIF file by specifying file
+   // name as "myfile.gif+" of "myfile.gif+NN", where NN is delay of displaying
+   // subimages during animation in 10ms seconds units.
+   // If NN is ommitted the delay between subimages is zero.
+   // For repeated animation the last subimage must be specified as
+   // "myfile.gif++NN", where NN is number of cycles. If NN is ommitted the
+   // animation will be infinite.
+   // Each picture is added in the animation thanks to a loop
    // similar to the following one:
    //
    //    for (int i=0; i<10; ++i) {
