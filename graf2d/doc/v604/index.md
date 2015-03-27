@@ -26,6 +26,7 @@
 - The underscore `_` produced an error outside the TeX math context.
 - Fix an issue with transparent pads.
 - Implement transparent colors using TiKZ "opacity".
+- Implement `TStyle::SetLineScalePS()` to control le global basic line width.
 
 ### TPostScript
 
