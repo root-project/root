@@ -117,7 +117,7 @@ TStyle::TStyle(const char *name, const char *title)
 
    if (strcmp(style_name,"Modern") == 0) {
       // Modern style
-      SetPalette(57,0);
+//      SetPalette(57,0);
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
       SetCanvasBorderMode(0);
@@ -576,7 +576,7 @@ void TStyle::Reset(Option_t *opt)
 
    if (strcmp(style_name,"Modern") == 0) {
       // Modern style
-      SetPalette(57,0);
+//      SetPalette(57,0);
       SetFrameBorderMode(0);
       SetFrameFillColor(0);
       SetCanvasBorderMode(0);
