@@ -456,7 +456,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
-   ClassDef(TH1C,1)  //1-Dim histograms (one char per channel)
+   ClassDef(TH1C,2)  //1-Dim histograms (one char per channel)
 
    friend  TH1C     operator*(Double_t c1, const TH1C &h1);
    friend  TH1C     operator*(const TH1C &h1, Double_t c1);
@@ -497,7 +497,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
-   ClassDef(TH1S,1)  //1-Dim histograms (one short per channel)
+   ClassDef(TH1S,2)  //1-Dim histograms (one short per channel)
 
    friend  TH1S     operator*(Double_t c1, const TH1S &h1);
    friend  TH1S     operator*(const TH1S &h1, Double_t c1);
@@ -538,7 +538,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
-   ClassDef(TH1I,1)  //1-Dim histograms (one 32 bits integer per channel)
+   ClassDef(TH1I,2)  //1-Dim histograms (one 32 bits integer per channel)
 
    friend  TH1I     operator*(Double_t c1, const TH1I &h1);
    friend  TH1I     operator*(const TH1I &h1, Double_t c1);
@@ -581,7 +581,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
-   ClassDef(TH1F,1)  //1-Dim histograms (one float per channel)
+   ClassDef(TH1F,2)  //1-Dim histograms (one float per channel)
 
    friend  TH1F     operator*(Double_t c1, const TH1F &h1);
    friend  TH1F     operator*(const TH1F &h1, Double_t c1);
@@ -624,7 +624,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
-   ClassDef(TH1D,1)  //1-Dim histograms (one double per channel)
+   ClassDef(TH1D,2)  //1-Dim histograms (one double per channel)
 
    friend  TH1D     operator*(Double_t c1, const TH1D &h1);
    friend  TH1D     operator*(const TH1D &h1, Double_t c1);
