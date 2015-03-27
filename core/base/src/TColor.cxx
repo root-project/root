@@ -1675,7 +1675,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    if ncolors = 54 and colors=0, a Two-Color Hue palette is used.(dark blue through neutral gray to bright yellow)
    if ncolors = 55 and colors=0, a Rain Bow palette is used.
    if ncolors = 56 and colors=0, an Inverted Dark Body Radiator palette is used.
-   if ncolors = 57 and colors=0, an Parula palette is used.
+   if ncolors = 57 and colors=0, a monotonically increasing L value palette is used.
 
    </pre>
    (see TColor::CreateGradientColorTable for more details)
@@ -1799,15 +1799,15 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       return;
    }
 
-   // set Parula palette
+   // set monotonically increasing L value palette.
    if (ncolors == 57 && colors == 0) {
       TColor::InitializeColors();
       if (paletteType == 9) return;
       const Int_t nRGBs = 9;
       Double_t stops[nRGBs] = { 0.0000, 0.1250, 0.2500, 0.3750, 0.5000, 0.6250, 0.7500, 0.8750, 1.0000};
-      Double_t red[nRGBs]   = { 0.2081, 0.0591, 0.0779, 0.0231, 0.1801, 0.5300, 0.8185, 0.9955, 0.9763};
-      Double_t green[nRGBs] = { 0.1663, 0.3598, 0.5040, 0.6418, 0.7177, 0.7491, 0.7327, 0.7861, 0.9831};
-      Double_t blue[nRGBs]  = { 0.5292, 0.8683, 0.8384, 0.7913, 0.6424, 0.4661, 0.3498, 0.1967, 0.0538};
+      Double_t red[nRGBs]   = { 0.2082, 0.0592, 0.0780, 0.0232, 0.1802, 0.5301, 0.8186, 0.9956, 0.9764};
+      Double_t green[nRGBs] = { 0.1664, 0.3599, 0.5041, 0.6419, 0.7178, 0.7492, 0.7328, 0.7862, 0.9832};
+      Double_t blue[nRGBs]  = { 0.5293, 0.8684, 0.8385, 0.7914, 0.6425, 0.4662, 0.3499, 0.1968, 0.0539};
       TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 9;
       return;
