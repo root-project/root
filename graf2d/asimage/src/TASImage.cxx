@@ -611,7 +611,7 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    // If there is no file extension or if the file extension is unknown, the
    // type argument will be used to determine the file type. The quality and
    // compression is derived from the TAttImage values.
-   // It's posiible to write image into an animated GIF file by specifying file
+   // It's possible to write images into an animated GIF file by specifying file
    // name as "myfile.gif+" of "myfile.gif+NN", where NN is delay of displaying
    // subimages during animation in 10ms seconds units.
    // If NN is ommitted the delay between subimages is zero.
