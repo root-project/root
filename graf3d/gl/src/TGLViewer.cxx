@@ -749,7 +749,7 @@ void TGLViewer::DoDrawStereo(Bool_t swap_buffers)
 //______________________________________________________________________________
 Bool_t TGLViewer::SavePicture()
 {
-   // Save current image using the defualt file name which can be set
+   // Save current image using the default file name which can be set
    // via SetPictureFileName() and defaults to "viewer.jpg".
    // Really useful for the files ending with 'gif+'.
 
@@ -946,6 +946,131 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
 
    return kTRUE;
 }
+
+//______________________________________________________________________________
+TImage* TGLViewer::GetPictureUsingBB()
+{
+    // Returns current image.
+    // Back-Buffer is used for capturing of the image.
+    // The viewer window most be fully contained within the desktop but
+    // can be covered by other windows.
+
+    static const TString eh("TGLViewer::GetPictureUsingBB");
+
+    if ( ! TakeLock(kDrawLock)) {
+        Error(eh, "viewer locked - try later.");
+        return NULL;
+    }
+
+    TUnlocker ulck(this);
+
+    fLOD = TGLRnrCtx::kLODHigh;
+    fRnrCtx->SetGrabImage(kTRUE);
+
+    if (!gVirtualX->IsCmdThread())
+        gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw(kFALSE)", (ULong_t)this));
+    else
+        DoDraw(kFALSE);
+
+    fRnrCtx->SetGrabImage(kFALSE);
+
+    glReadBuffer(GL_BACK);
+
+    UChar_t* xx = new UChar_t[4 * fViewport.Width() * fViewport.Height()];
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
+                 GL_BGRA, GL_UNSIGNED_BYTE, xx);
+
+    TImage *image(TImage::Create());
+    image->FromGLBuffer(xx, fViewport.Width(), fViewport.Height());
+
+    delete [] xx;
+
+    return image;
+}
+
+//______________________________________________________________________________
+TImage* TGLViewer::GetPictureUsingFBO(Int_t w, Int_t h,Float_t pixel_object_scale)
+{
+    // Returns current image.
+    // Frame-Buffer-Object is used for capturing of the image - OpenGL
+    // 1.5 is required.
+    // The viewer window does not have to be visible at all.
+    //
+    // pixel_object_scale is used to scale (as much as possible) the
+    // objects whose representation size is pixel based (point-sizes,
+    // line-widths, bitmap/pixmap font-sizes).
+    // If set to 0 (default) no scaling is applied.
+
+    static const TString eh("TGLViewer::GetPictureUsingFBO");
+
+    if ( ! TakeLock(kDrawLock)) {
+        Error(eh, "viewer locked - try later.");
+        return NULL;
+    }
+
+    TUnlocker ulck(this);
+
+    MakeCurrent();
+
+    TGLFBO *fbo = new TGLFBO();
+    try
+    {
+        fbo->Init(w, h, fGLWidget->GetPixelFormat()->GetSamples());
+    }
+    catch (std::runtime_error& exc)
+    {
+        Error(eh, "%s",exc.what());
+        if (gEnv->GetValue("OpenGL.GetPictureFallbackToBB", 1)) {
+            Info(eh, "Falling back to saving image via back-buffer. Window must be fully visible.");
+            if (w != fViewport.Width() || h != fViewport.Height())
+                Warning(eh, "Back-buffer does not support image scaling, window size will be used.");
+            return GetPictureUsingBB();
+        } else {
+            return NULL;
+        }
+    }
+
+    TGLRect old_vp(fViewport);
+    SetViewport(0, 0, w, h);
+
+    Float_t old_scale = 1;
+    if (pixel_object_scale != 0)
+    {
+        old_scale = fRnrCtx->GetRenderScale();
+        fRnrCtx->SetRenderScale(old_scale * pixel_object_scale);
+    }
+
+    fbo->Bind();
+
+    fLOD = TGLRnrCtx::kLODHigh;
+    fRnrCtx->SetGrabImage(kTRUE);
+
+    if (!gVirtualX->IsCmdThread())
+        gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw(kFALSE)", (ULong_t)this));
+    else
+        DoDraw(kFALSE);
+
+    fRnrCtx->SetGrabImage(kFALSE);
+
+    fbo->Unbind();
+
+    fbo->SetAsReadBuffer();
+
+    UChar_t* xx = new UChar_t[4 * fViewport.Width() * fViewport.Height()];
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
+                 GL_BGRA, GL_UNSIGNED_BYTE, xx);
+
+    TImage *image(TImage::Create());
+    image->FromGLBuffer(xx, fViewport.Width(), fViewport.Height());
+
+    delete [] xx;
+    delete fbo;
+
+    return image;
+}
+
 
 //______________________________________________________________________________
 Bool_t TGLViewer::SavePictureWidth(const TString &fileName, Int_t width,
