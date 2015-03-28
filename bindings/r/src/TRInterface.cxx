@@ -217,9 +217,15 @@ TRObjectProxy TRInterface::ParseEval(const TString &code, Bool_t exception)
    SEXP ans;
    int rc = fR->parseEval(code.Data(), ans);
    if (rc != 0 && exception) {
-      if (exception) throw std::runtime_error(std::string("Error evaluating: ") + code.Data());
+      if (exception){
+	std::string msg("Error evaluating: ");
+	msg+=code.Data();
+	throw std::runtime_error(msg);
+	}
    } else if (rc != 0) {
-      Error("ParseEval", (std::string("Error evaluating: ") + code.Data()).c_str());
+	std::string msg("Error evaluating: ");
+	msg+=code.Data();
+        Error("ParseEval", msg.c_str());
    }   
    return TRObjectProxy(ans , (rc == 0) ? kTRUE : kFALSE);
 }

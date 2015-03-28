@@ -113,6 +113,10 @@ namespace Rcpp {
       } ;
    }
 }
+//added to fix bug in last version of Rcpp on mac
+#if !defined(R_Version)
+#define R_Version(v,p,s) ((v * 65536) + (p * 256) + (s))
+#endif
 #include<Rcpp.h>//this headers should be called after templates definitions
 #undef HAVE_UINTPTR_T
 #include<RInside.h>
