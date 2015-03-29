@@ -40,7 +40,7 @@ TFile *cernbuild(Int_t get=0, Int_t print=1) {
    }
    //no cernstaff.root file found. Must generate it !
    //generate cernstaff.root in $ROOTSYS/tutorials/tree if we have write access
-   if (gSystem->AccessPathName(dir,kWritePermission)) {
+   if (gSystem->AccessPathName(".",kWritePermission)) {
       printf("you must run the script in a directory with write access\n");
       return 0;
    }
