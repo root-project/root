@@ -15,17 +15,23 @@ void exectsinclude(){
 
    auto headers = {"TH1F.h",
                    "TGraph.h",
-//                    "RooRealVar.h",
+#if __has_include("RooRealVar.h")
+                   "RooRealVar.h",
+		   "RooGaussian.h",
+#endif
                    "TBrowser.h",
                    "THtml.h",
                    "TMatrixD.h",
                    "TF1.h",
                    "TGeoSphere.h",
-//                    "TGLClip.h",
-//                    "TEveBox.h",
+#if __has_include("TGLClip.h")
+                   "TGLClip.h",
+#endif
+#if __has_include("TEveBox.h")
+                   "TEveBox.h",
+#endif
                    "TBufferXML.h",
                    "TQClass.h"};
-//                    "RooGaussian.h"};
 
    tsStringlist inclusions;
    gInterpreter->SetClassAutoloading(false);
