@@ -690,8 +690,8 @@ TGeoManager::~TGeoManager()
    if (fMaterials) {fMaterials->Delete(); SafeDelete(fMaterials);}
    SafeDelete(fElementTable);
    if (fMedia) {fMedia->Delete(); SafeDelete(fMedia);}
-   SafeDelete(fHashVolumes);
-   SafeDelete(fHashGVolumes);
+   fHashVolumes->Clear("nodelete"); SafeDelete(fHashVolumes);
+   fHashGVolumes->Clear("nodelete"); SafeDelete(fHashGVolumes);
    if (fHashPNE) {fHashPNE->Delete(); SafeDelete(fHashPNE);}
    if (fArrayPNE) {delete fArrayPNE;}
    if (fVolumes) {fVolumes->Delete(); SafeDelete(fVolumes);}
