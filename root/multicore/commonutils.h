@@ -1,9 +1,11 @@
 auto keys {"TH1F",
 "TXMLFile",
 "TGraph",
-//"RooRealVar",
-//"RooVoigtian",
-//"RooStats::LikelihoodInterval",
+#if __has_include("RooRealVar.h")
+"RooRealVar",
+"RooVoigtian",
+"RooStats::LikelihoodInterval",
+#endif 
 "TMultiLayerPerceptron",
 "TBrowser",
 "THtml",
