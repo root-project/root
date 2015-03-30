@@ -318,7 +318,7 @@ TDirectory *&TDirectory::CurrentDirectory()
 {
    // Return the current directory for the current thread.
 
-   static TDirectory *currentDirectory = 0;
+   thread_local TDirectory *currentDirectory = nullptr;
    if (!gThreadTsd)
       return currentDirectory;
    else
