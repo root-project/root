@@ -395,7 +395,6 @@
       res.stringWidth = function(svg, line) {
          /* compute the bounding box of a string by using temporary svg:text */
          var text = svg.append("svg:text")
-                     .attr("class", "temp_text")
                      .attr("xml:space","preserve")
                      .style("opacity", 0)
                      .text(line);
@@ -520,31 +519,23 @@
    }
 
    JSROOT.Painter.getTimeOffset = function(axis) {
-      var timeFormat = axis['fTimeFormat'];
+      var idF = axis['fTimeFormat'].indexOf('%F');
+      if (idF < 0) return JSROOT.gStyle['TimeOffset'];
+      var sof = axis['fTimeFormat'].substr(idF + 2);
+      if (sof == '1995-01-01 00:00:00s0') return JSROOT.gStyle['TimeOffset'];
+      // special case, used from DABC painters
+      if ((sof == "0") || (sof == "")) return 0;
 
-      var idF = timeFormat.indexOf('%F');
-
-      if (idF >= 0) {
-         var lnF = timeFormat.length;
-         var stringtimeoffset = timeFormat.substr(idF + 2, lnF);
-         for (var i = 0; i < 3; ++i)
-            stringtimeoffset = stringtimeoffset.replace('-', '/');
-         // special case, used from DABC painters
-         if ((stringtimeoffset == "0") || (stringtimeoffset == "")) return 0;
-
-         var stimeoffset = new Date(stringtimeoffset);
-         var timeoffset = stimeoffset.getTime();
-         var ids = stringtimeoffset.indexOf('s');
-         if (ids >= 0) {
-            var lns = stringtimeoffset.length;
-            var sdp = stringtimeoffset.substr(ids + 1, lns);
-            var dp = parseFloat(sdp);
-            timeoffset += dp;
-         }
-         return timeoffset;
-      }
-
-      return JSROOT.gStyle['TimeOffset'];
+      // decode time from ROOT string
+      var dt = new Date(0);
+      var pos = sof.indexOf("-"); dt.setFullYear(sof.substr(0,pos)); sof = sof.substr(pos+1);
+      pos = sof.indexOf("-"); dt.setMonth(parseInt(sof.substr(0,pos))-1); sof = sof.substr(pos+1);
+      pos = sof.indexOf(" "); dt.setDate(sof.substr(0,pos)); sof = sof.substr(pos+1);
+      pos = sof.indexOf(":"); dt.setHours(sof.substr(0,pos)); sof = sof.substr(pos+1);
+      pos = sof.indexOf(":"); dt.setMinutes(sof.substr(0,pos)); sof = sof.substr(pos+1);
+      pos = sof.indexOf("s"); dt.setSeconds(sof.substr(0,pos));
+      if (pos>0) { sof = sof.substr(pos+1); dt.setMilliseconds(sof); }
+      return dt.getTime();
    }
 
    JSROOT.Painter.formatExp = function(label) {
@@ -1371,15 +1362,14 @@
             if (detectRightButton(d3.event.sourceEvent)) return;
 
             d3.event.sourceEvent.preventDefault();
-
             acc_x = 0; acc_y = 0;
             pad_w = pthis.pad_width() - rect_width();
             pad_h = pthis.pad_height() - rect_height();
 
-            drag_rect = pthis.draw_g.append("rect")
-                 .attr("class", "zoom")
-                 .attr("x",  0)
-                 .attr("y", 0)
+            drag_rect = d3.select(pthis.draw_g.node().parentNode).append("rect")
+                 .classed("zoom", true)
+                 .attr("x",  pthis.draw_g.attr("x"))
+                 .attr("y", pthis.draw_g.attr("y"))
                  .attr("width", rect_width())
                  .attr("height", rect_height())
                  .style("cursor", "move");
@@ -1388,18 +1378,19 @@
 
                d3.event.sourceEvent.preventDefault();
 
-               var x = Number(drag_rect.attr("x"));
-               var y = Number(drag_rect.attr("y"));
-               var real_x = Number(pthis.draw_g.attr("x")) + x;
-               var real_y = Number(pthis.draw_g.attr("y")) + y;
-
+               var x = Number(drag_rect.attr("x")), y = Number(drag_rect.attr("y"));
                var dx = d3.event.dx, dy = d3.event.dy;
 
-               if (((acc_x<0) && (dx>0)) || ((acc_x>0) && (dx<0))) { acc_x+=dx; dx=0; }
-               if (((acc_y<0) && (dy>0)) || ((acc_y>0) && (dy<0))) { acc_y+=dy; dy=0; }
+               if ((acc_x<0) && (dx>0)) { acc_x+=dx; dx=0; if (acc_x>0) { dx=acc_x; acc_x=0; }}
+               if ((acc_x>0) && (dx<0)) { acc_x+=dx; dx=0; if (acc_x<0) { dx=acc_x; acc_x=0; }}
+               if ((acc_y<0) && (dy>0)) { acc_y+=dy; dy=0; if (acc_y>0) { dy=acc_y; acc_y=0; }}
+               if ((acc_y>0) && (dy<0)) { acc_y+=dy; dy=0; if (acc_y<0) { dy=acc_y; acc_y=0; }}
 
-               if ((real_x+dx < 0) || (real_x+dx > pad_w)) acc_x+=dx; else x+=dx;
-               if ((real_y+dy < 0) || (real_y+dy > pad_h)) acc_y+=dy; else y+=dy;
+               if (x+dx<0) { acc_x+=(x+dx); x=0; } else
+               if (x+dx>pad_w) { acc_x+=(x+dx-pad_w); x=pad_w; } else x+=dx;
+
+               if (y+dy<0) { acc_y+=(y+dy); y = 0; } else
+               if (y+dy>pad_h) { acc_y+=(y+dy-pad_h); y=pad_h; } else y+=dy;
 
                drag_rect.attr("x", x).attr("y", y);
 
@@ -1411,17 +1402,14 @@
 
                drag_rect.style("cursor", "auto");
 
-               var dx = Number(drag_rect.attr("x"));
-               var dy = Number(drag_rect.attr("y"));
-
-               var x = Number(pthis.draw_g.attr("x")) + dx;
-               var y = Number(pthis.draw_g.attr("y")) + dy;
+               var x = Number(drag_rect.attr("x")), y = Number(drag_rect.attr("y"));
+               var dx = x - Number(pthis.draw_g.attr("x")), dy = y - Number(pthis.draw_g.attr("y"));
 
                drag_rect.remove();
                drag_rect = null;
 
-               pthis.draw_g.attr("x", x).attr("y", y);
-               pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
+               pthis.draw_g.attr("x", x).attr("y", y)
+                           .attr("transform", "translate(" + x + "," + y + ")");
 
                resize_rect.attr("x", rect_width() - 20)
                           .attr("y", rect_height() - 20);
@@ -1445,10 +1433,10 @@
            acc_x = 0; acc_y = 0;
            pad_w = pthis.pad_width() - Number(pthis.draw_g.attr("x"));
            pad_h = pthis.pad_height() - Number(pthis.draw_g.attr("y"));
-           drag_rect = pthis.draw_g.append("rect")
-                .attr("class", "zoom")
-                .attr("x",  0)
-                .attr("y", 0)
+           drag_rect = d3.select(pthis.draw_g.node().parentNode).append("rect")
+                .classed("zoom",true)
+                .attr("x",  pthis.draw_g.attr("x"))
+                .attr("y", pthis.draw_g.attr("y"))
                 .attr("width", rect_width())
                 .attr("height", rect_height())
                 .style("cursor", "se-resize");
@@ -1457,13 +1445,16 @@
 
             d3.event.sourceEvent.preventDefault();
 
-            var w = Number(drag_rect.attr("width"));
-            var h = Number(drag_rect.attr("height"));
+            var w = Number(drag_rect.attr("width")), h = Number(drag_rect.attr("height"));
             var dx = d3.event.dx, dy = d3.event.dy;
-            if ((acc_x>0) && (dx<0)) { acc_x += dx; dx = 0; }
-            if ((acc_y>0) && (dy<0)) { acc_y += dy; dy = 0; }
-            if (w+dx > pad_w) acc_x += dx; else w+=dx;
-            if (h+dy > pad_h) acc_y += dy; else h+=dy;
+            if ((acc_x<0) && (dx>0)) { acc_x+=dx; dx=0; if (acc_x>0) { dx=acc_x; acc_x=0; }}
+            if ((acc_x>0) && (dx<0)) { acc_x+=dx; dx=0; if (acc_x<0) { dx=acc_x; acc_x=0; }}
+            if ((acc_y<0) && (dy>0)) { acc_y+=dy; dy=0; if (acc_y>0) { dy=acc_y; acc_y=0; }}
+            if ((acc_y>0) && (dy<0)) { acc_y+=dy; dy=0; if (acc_y<0) { dy=acc_y; acc_y=0; }}
+            if (w+dx>pad_w) { acc_x += (w+dx-pad_w); w=pad_w;} else
+            if (w+dx<0) { acc_x += (w+dx); w=0;} else w+=dx;
+            if (h+dy>pad_h) { acc_y += (h+dy-pad_h); h=pad_h; } else
+            if (h+dy<0) { acc_y += (h+dy); h=0; } else h+=dy;
             drag_rect.attr("width", w).attr("height", h);
 
             d3.event.sourceEvent.stopPropagation();
@@ -1540,7 +1531,6 @@
       draw_g.property('mathjax_use', false);
       draw_g.property('text_factor', 0.);
       draw_g.property('max_text_width', 0); // keep maximal text width, use it later
-      draw_g.attr('opacity','0'); // hide elements until drawing is finished
    }
 
    JSROOT.TObjectPainter.prototype.TextScaleFactor = function(value, draw_g) {
@@ -1641,7 +1631,8 @@
              .attr('visibility', null);
       });
 
-      draw_g.attr('opacity','1'); // now processing finished and text can be shown
+      // now hidden text after rescaling can be shown
+      draw_g.selectAll('.hidden_text').attr('opacity', '1').classed('hidden_text',false);
 
       return draw_g.property('max_text_width');
    }
@@ -1705,6 +1696,8 @@
 
          var box = txt.node().getBBox(); // .getBoundingClientRect();
          var real_w = parseInt(box.width), real_h = parseInt(box.height);
+
+         if (scale) txt.classed('hidden_text',true).attr('opacity','0'); // hide rescale elements
 
          if (real_w > draw_g.property('max_text_width')) draw_g.property('max_text_width', real_w);
          if ((w>0) && scale) this.TextScaleFactor(real_w / w, draw_g);
@@ -2842,7 +2835,6 @@
 
       if (pavetext['fBorderSize'] && (pavetext['_typename'] == 'TPaveStats')) {
          this.draw_g.append("svg:line")
-                    .attr("class", "pavedraw")
                     .attr("x1", 0)
                     .attr("y1", stepy.toFixed(1))
                     .attr("x2", width)
@@ -3303,11 +3295,8 @@
                  .attr("height", rectHeight.toFixed(1))
                  .attr("fill", function(d) { return d; })
                  .attr("stroke", function(d) { return d; });
-                 //.append("svg:title").text(function(d) { return "color" + d; });
-      /*
-       * Build and draw axes
-       */
 
+      // Build and draw axes
       var z_axis = d3.svg.axis().scale(z)
                     .orient("right")
                     .tickPadding(axisOffset)
@@ -3931,11 +3920,9 @@
 
       this['zoom_xmin'] = 0;
       this['zoom_xmax'] = 0;
-      this['zoom_xpad'] = true; // indicate that zooming specified from pad
 
       this['zoom_ymin'] = 0;
       this['zoom_ymax'] = 0;
-      this['zoom_ypad'] = true; // indicate that zooming specified from pad
 
       if ((pad!=null) && ('fUxmin' in pad) && !this.create_canvas) {
          this['zoom_xmin'] = pad.fUxmin;
@@ -3972,6 +3959,8 @@
       this.histo['fArray'] = obj['fArray'];
       this.histo['fNcells'] = obj['fNcells'];
       this.histo['fTitle'] = obj['fTitle'];
+      this.histo['fMinimum'] = obj['fMinimum'];
+      this.histo['fMaximum'] = obj['fMaximum'];
       this.histo['fXaxis']['fNbins'] = obj['fXaxis']['fNbins'];
       this.histo['fXaxis']['fXmin'] = obj['fXaxis']['fXmin'];
       this.histo['fXaxis']['fXmax'] = obj['fXaxis']['fXmax'];
@@ -4060,10 +4049,10 @@
       this['scale_ymin'] = this.ymin;
       this['scale_ymax'] = this.ymax;
 
-      if (this.zoom_ypad) {
-         if (this.histo.fMinimum != -1111) this.zoom_ymin = this.histo.fMinimum;
-         if (this.histo.fMaximum != -1111) this.zoom_ymax = this.histo.fMaximum;
-         this['zoom_ypad'] = false;
+      if ((this.Dimension()==1) && (this.histo.fMinimum != -1111) && (this.histo.fMaximum != -1111)) {
+         // only for 1D histogram use min.max for range selection
+         this['scale_ymin'] = this.histo.fMinimum;
+         this['scale_ymax'] = this.histo.fMaximum;
       }
 
       if (this.zoom_ymin != this.zoom_ymax) {
@@ -4408,16 +4397,12 @@
          yax_g.append("svg:g").attr("class", "yaxis").call(y_axis_sub);
       }
 
-      // xax_g.selectAll("text").call(xlabelfont.func);
-      // yax_g.selectAll("text").call(ylabelfont.func);
-
       xax_g.call(xlabelfont.func);
       yax_g.call(ylabelfont.func);
 
       // we will use such rect for zoom selection
       if (JSROOT.gStyle.Zooming) {
          xax_g.append("svg:rect")
-            .attr("class", "xaxis_zoom")
             .attr("x", 0)
             .attr("y", 0)
             .attr("width", w)
@@ -4426,7 +4411,6 @@
 
          // we will use such rect for zoom selection
          yax_g.append("svg:rect")
-            .attr("class", "yaxis_zoom")
             .attr("x",-2 * ylabelfont.size - 3)
             .attr("y", 0)
             .attr("width", 2 * ylabelfont.size + 3)
@@ -4745,7 +4729,6 @@
       }
 
       function startTouchSel() {
-
          // in case when zooming was started, block any other kind of events
          if (zoom_kind != 0) {
             d3.event.preventDefault();
@@ -7812,9 +7795,11 @@
    JSROOT.HierarchyPainter.prototype.OpenOnline = function(server_address, user_callback) {
       var painter = this;
 
-      var AdoptHierarchy = function(result) {
+      function AdoptHierarchy(result) {
          painter.h = result;
          if (painter.h == null) return;
+
+         if (('_title' in painter.h) && (painter.h._title!='')) document.title = painter.h._title;
 
          result._isopen = true;
 
@@ -7861,12 +7846,10 @@
 
                if (item['_drawscript'] != null)
                   JSROOT.addDrawFunc(typename, { script:item['_drawscript'], func: item['_drawfunc']} , drawopt);
-
             });
 
             JSROOT.CallBack(user_callback, painter);
          });
-
       }
 
       if (!server_address) server_address = "";
@@ -7874,13 +7857,10 @@
       if (typeof server_address == 'object') {
          var h = server_address;
          server_address = "";
-         AdoptHierarchy(h);
-         return;
+         return AdoptHierarchy(h);
       }
 
-      var req = JSROOT.NewHttpRequest(server_address + "h.json?compact=3", 'object', AdoptHierarchy);
-
-      req.send(null);
+      JSROOT.NewHttpRequest(server_address + "h.json?compact=3", 'object', AdoptHierarchy).send(null);
    }
 
    JSROOT.HierarchyPainter.prototype.GetOnlineProp = function(itemname) {
@@ -8026,6 +8006,21 @@
          JSROOT.AssertPrerequisites('jq2d', function() {
             h.CreateDisplay(callback);
          });
+   }
+
+   JSROOT.HierarchyPainter.prototype.updateOnOtherFrames = function(painter, obj) {
+      // function should update object drawings for other painters
+      var mdi = this['disp'];
+      if (mdi==null) return false;
+
+      var isany = false;
+      mdi.ForEachPainter(function(p, frame) {
+         if ((p===painter) || (p.GetItemName() != painter.GetItemName())) return;
+         mdi.ActivateFrame(frame);
+         p.RedrawObject(obj);
+         isany = true;
+      });
+      return isany;
    }
 
    JSROOT.HierarchyPainter.prototype.CheckResize = function(force) {
