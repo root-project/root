@@ -263,7 +263,8 @@ inline void TBranchElement::ValidateAddress() const
          // FIXME: Disable the check/warning TTree until we add a missing interface.
          if (TestBit(kDeleteObject)) {
             // This should never happen!
-            Error("ValidateAddress", "We owned an object whose address changed!  our ptr: %p  new ptr: %p", fObject, *((char**) fAddress));
+            Error("ValidateAddress", "We owned an object whose address changed!  our ptr: %p  new ptr: %p",
+                  (void*)fObject, (void*)*((char**) fAddress));
             const_cast<TBranchElement*>(this)->ResetBit(kDeleteObject);
          }
          const_cast<TBranchElement*>(this)->SetAddress(fAddress);
