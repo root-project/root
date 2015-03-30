@@ -2751,7 +2751,10 @@ void TBufferJSON::JsonWriteBasic(Float_t value)
    // converts Float_t to string and add to json value buffer
 
    char buf[200];
-   snprintf(buf, sizeof(buf), fgFloatFmt, value);
+   if (value == TMath::Floor(value))
+      snprintf(buf, sizeof(buf), "%1.0f", value);
+   else
+      snprintf(buf, sizeof(buf), fgFloatFmt, value);
    fValue.Append(buf);
 }
 
@@ -2760,8 +2763,11 @@ void TBufferJSON::JsonWriteBasic(Double_t value)
 {
    // converts Double_t to string and add to json value buffer
 
-   char buf[1000];
-   snprintf(buf, sizeof(buf), fgFloatFmt, value);
+   char buf[200];
+   if (value == TMath::Floor(value))
+      snprintf(buf, sizeof(buf), "%1.0f", value);
+   else
+      snprintf(buf, sizeof(buf), fgFloatFmt, value);
    fValue.Append(buf);
 }
 
