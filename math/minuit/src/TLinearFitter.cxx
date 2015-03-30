@@ -24,6 +24,11 @@
 
 ClassImp(TLinearFitter)
 
+
+std::map<TString,TFormula*> TLinearFitter::fgFormulaMap;
+
+
+
 //////////////////////////////////////////////////////////////////////////
 //
 // The Linear Fitter - fitting functions that are LINEAR IN PARAMETERS
@@ -394,7 +399,9 @@ TLinearFitter::~TLinearFitter()
       fFixedParams = 0;
    }
    fInputFunction = 0;
-   fFunctions.Delete();
+
+   //fFunctions.Delete();
+   fFunctions.Clear();
 
 }
 
@@ -420,7 +427,8 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fAtbTemp2.ResizeTo(tlf.fAtbTemp2);    fAtbTemp2=tlf.fAtbTemp2;
       fAtbTemp3.ResizeTo(tlf.fAtbTemp3);    fAtbTemp3=tlf.fAtbTemp3;
 
-      fFunctions.Delete();
+      // use clear instead of delete
+      fFunctions.Clear();
       fFunctions= *(TObjArray*) tlf.fFunctions.Clone();
 
       fY.ResizeTo(tlf.fY);    fY = tlf.fY;
@@ -1545,7 +1553,18 @@ void TLinearFitter::SetFormula(const char *formula)
       oa = sstring.Tokenize("|");
       for (i=0; i<fNfunctions; i++) {
          replaceformula = ((TObjString *)oa->UncheckedAt(i))->GetString();
-         TFormula *f = new TFormula("f", replaceformula.Data());
+         // look first if exists in the map
+         TFormula * f = nullptr; 
+         if (fgFormulaMap.count(replaceformula ) > 0) 
+            f = fgFormulaMap.find(replaceformula )->second;
+         else {
+            // create a new formula and add in the static map
+            f = new TFormula("f", replaceformula.Data());
+            {
+               R__LOCKGUARD2(gROOTMutex);
+               fgFormulaMap[replaceformula]=f;
+            }
+         }
          if (!f) {
             Error("TLinearFitter", "f_linear not allocated");
             return;
