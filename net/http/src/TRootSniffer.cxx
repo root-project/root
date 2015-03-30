@@ -634,7 +634,10 @@ void TRootSniffer::ScanRoot(TRootSnifferScanRec &rec)
 
    // should be on the top while //root/http folder could have properties for itself
    TFolder *topf = dynamic_cast<TFolder *>(gROOT->FindObject("//root/http"));
-   if (topf) ScanCollection(rec, topf->GetListOfFolders());
+   if (topf) {
+      rec.SetField(item_prop_title, topf->GetTitle());
+      ScanCollection(rec, topf->GetListOfFolders());
+   }
 
    {
       TRootSnifferScanRec chld;
@@ -1399,7 +1402,7 @@ TObject *TRootSniffer::GetItem(const char *fullname, TFolder *&parent, Bool_t fo
    TFolder *httpfold = dynamic_cast<TFolder *>(topf->FindObject("http"));
    if (httpfold == 0) {
       if (!force) return 0;
-      httpfold = topf->AddFolder("http", "Top folder");
+      httpfold = topf->AddFolder("http", "ROOT http server");
       httpfold->SetBit(kCanDelete);
       // register top folder in list of cleanups
       gROOT->GetListOfCleanups()->Add(httpfold);
@@ -1610,7 +1613,7 @@ Bool_t TRootSniffer::SetItemField(const char *fullname, const char *name, const 
 
    if ((parent==0) || (obj==0)) return kFALSE;
 
-   if (strcmp(name,"_title")==0) {
+   if (strcmp(name, item_prop_title)==0) {
       TNamed* n = dynamic_cast<TNamed*> (obj);
       if (n!=0) { n->SetTitle(value); return kTRUE; }
    }
