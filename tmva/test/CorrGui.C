@@ -45,8 +45,8 @@ void CorrGui(  TString fin = "TMVA.root", TString dirName = "InputVariables_Id",
 
    // how many variables  are in the directory?
    Int_t noVar = TMVAGlob::GetNumberOfInputVariables(dir);
-   cout << "found number of variables='" << noVar<< endl;
-   TString Var[noVar]; 
+   cout << "found number of variables: " << noVar<< endl;
+   vector<TString> Var(noVar);
 
    TIter next(dir->GetListOfKeys());
    Int_t it=0;
@@ -69,7 +69,7 @@ void CorrGui(  TString fin = "TMVA.root", TString dirName = "InputVariables_Id",
          }
       }
    }
-   cout << "found histos for "<< it <<" variables='" << endl;
+   cout << "found histos for "<< it <<" variables." << endl;
   
    for (Int_t ic=0;ic<it;ic++) {    
       cbar->AddButton( (Var[ic].Contains("_target") ? 

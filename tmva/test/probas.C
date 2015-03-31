@@ -1,5 +1,7 @@
 #include "tmvaglob.C"
 
+#include "TH2F.h"
+
 // this macro plots the MVA probability distributions (Signal and
 // Background overlayed) of different MVA methods run in TMVA
 // (e.g. running TMVAnalysis.C).
@@ -72,7 +74,7 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,instDir);
          Bool_t found = kFALSE;
-         while (hkey = (TKey*)nextInDir()) {
+         while ((hkey = (TKey*)nextInDir())) {
             TH1 *th1 = (TH1*)hkey->ReadObj();
             TString hname= th1->GetName();
             if (hname.Contains( suffixSig ) && !hname.Contains( "Cut") && 
@@ -147,7 +149,7 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                      Float_t ymin = 0;
                      Float_t ymax = TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*1.5;
             
-                     if (Draw_CFANN_Logy && mvaName[imva] == "CFANN") ymin = 0.01;
+                     if (Draw_CFANN_Logy && methodTitle == "CFANN") ymin = 0.01;
             
                      // build a frame
                      Int_t nb = 500;
@@ -160,7 +162,7 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                      // eventually: draw the frame
                      frame->Draw();  
             
-                     if (Draw_CFANN_Logy && mvaName[imva] == "CFANN") c->SetLogy();
+                     if (Draw_CFANN_Logy && methodTitle == "CFANN") c->SetLogy();
             
                      // overlay signal and background histograms
                      sig->SetMarkerColor( TMVAGlob::c_SignalLine );
