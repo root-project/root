@@ -20,8 +20,9 @@ HISTDH       := $(HISTDS:.cxx=.h)
 
 HISTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HISTHMAT     := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
+HISTHV5      := $(filter-out $(MODDIRI)/v5/LinkDef%,$(wildcard $(MODDIRI)/v5/*.h))
 #HISTHMAT     += mathcore/inc/Math/WrappedFunction.h
-HISTHH       := $(HISTH) $(HISTHMAT) 
+HISTHH       := $(HISTH) $(HISTHMAT) $(HISTHV5)
 
 HISTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTO        := $(call stripsrc,$(HISTS:.cxx=.o))
@@ -46,6 +47,12 @@ INCLUDEFILES += $(HISTDEP)
 include/Math/%.h: $(HISTDIRI)/Math/%.h
 		@(if [ ! -d "include/Math" ]; then     \
 		   mkdir -p include/Math;              \
+		fi)
+		cp $< $@
+
+include/v5/%.h: $(HISTDIRI)/v5/%.h
+		@(if [ ! -d "include/v5" ]; then     \
+		   mkdir -p include/v5;              \
 		fi)
 		cp $< $@
 

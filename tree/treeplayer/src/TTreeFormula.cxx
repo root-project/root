@@ -124,7 +124,7 @@ public:
 //
 
 //______________________________________________________________________________
-TTreeFormula::TTreeFormula(): TFormulaOld(), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
+TTreeFormula::TTreeFormula(): ROOT::v5::TFormula(), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
    fDidBooleanOptimization(kFALSE), fDimensionSetup(0)
 
 {
@@ -156,7 +156,7 @@ TTreeFormula::TTreeFormula(): TFormulaOld(), fQuickLoad(kFALSE), fNeedLoading(kT
 
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
-   :TFormulaOld(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
+   :ROOT::v5::TFormula(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
     fDidBooleanOptimization(kFALSE), fDimensionSetup(0)
 {
    // Normal TTree Formula Constuctor
@@ -167,7 +167,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree,
                            const std::vector<std::string>& aliases)
-   :TFormulaOld(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
+   :ROOT::v5::TFormula(), fTree(tree), fQuickLoad(kFALSE), fNeedLoading(kTRUE),
     fDidBooleanOptimization(kFALSE), fDimensionSetup(0), fAliasesUsed(aliases)
 {
    // Constructor used during the expansion of an alias
@@ -2296,7 +2296,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                }
 
                // This is actually not really any error, we probably received something
-               // like "abs(some_val)", let TFormulaOld decompose it first.
+               // like "abs(some_val)", let ROOT::v5::TFormula decompose it first.
                return -1;
             }
             //         if (!leaf->InheritsFrom(TLeafObject::Class()) ) {
@@ -2639,7 +2639,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 //*-*-*-*-*-*Check if name is in the list of Tree/Branch leaves*-*-*-*-*
 //*-*        ==================================================
 //
-//   This member function redefines the function in TFormulaOld
+//   This member function redefines the function in ROOT::v5::TFormula
 //   If a leaf has a name corresponding to the argument name, then
 //   returns a new code.
 //   A TTreeFormula may contain more than one variable.
@@ -3984,7 +3984,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
       const Int_t newaction = oper >> kTFOperShift;
 
       if (newaction<kDefinedVariable) {
-         // TFormulaOld operands.
+         // ROOT::v5::TFormula operands.
 
          // one of the most used cases
          if (newaction==kConstant) { pos++; tab[pos-1] = GetConstant<T>(oper & kTFOperMask); continue; }
@@ -4653,7 +4653,7 @@ Bool_t TTreeFormula::IsString(Int_t oper) const
    // return true if the expression at the index 'oper' is to be treated as
    // as string
 
-   if (TFormulaOld::IsString(oper)) return kTRUE;
+   if (ROOT::v5::TFormula::IsString(oper)) return kTRUE;
    if (GetAction(oper)==kDefinedString) return kTRUE;
    if (GetAction(oper)==kAliasString) return kTRUE;
    if (GetAction(oper)==kAlternateString) return kTRUE;
@@ -4958,7 +4958,7 @@ void TTreeFormula::Streamer(TBuffer &R__b)
          return;
       }
       //====process old versions before automatic schema evolution
-      TFormulaOld::Streamer(R__b);
+      ROOT::v5::TFormula::Streamer(R__b);
       R__b >> fTree;
       R__b >> fNcodes;
       R__b.ReadFastArray(fCodes, fNcodes);
@@ -5570,14 +5570,14 @@ void TTreeFormula::Convert(UInt_t oldversion)
 {
    // Convert the fOper of a TTTreeFormula version fromVersion to the current in memory version
 
-   enum { kOldAlias           = /*TFormulaOld::kVariable*/ 100000+10000+1,
+   enum { kOldAlias           = /*ROOT::v5::TFormula::kVariable*/ 100000+10000+1,
           kOldAliasString     = kOldAlias+1,
           kOldAlternate       = kOldAlias+2,
           kOldAlternateString = kOldAliasString+2
    };
 
    for (int k=0; k<fNoper; k++) {
-      // First hide from TFormulaOld convertion
+      // First hide from ROOT::v5::TFormula convertion
 
       Int_t action = GetOper()[k];
 
@@ -5590,7 +5590,7 @@ void TTreeFormula::Convert(UInt_t oldversion)
       }
    }
 
-   TFormulaOld::Convert(oldversion);
+   ROOT::v5::TFormula::Convert(oldversion);
 
    for (int i=0,offset=0; i<fNoper; i++) {
       Int_t action = GetOper()[i+offset];

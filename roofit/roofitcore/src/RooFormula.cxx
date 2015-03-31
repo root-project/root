@@ -17,7 +17,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
 // BEGIN_HTML
-// RooFormula an implementation of TFormulaOld that interfaces it to RooAbsArg
+// RooFormula an implementation of ROOT::v5::TFormula that interfaces it to RooAbsArg
 // value objects. It allows to use the value of a given list of RooAbsArg objects in the formula
 // expression. Reference is done either by the RooAbsArgs name
 // or by list ordinal postion ('@0,@1,...'). State information
@@ -48,7 +48,7 @@ ClassImp(RooFormula)
 
 
 //_____________________________________________________________________________
-RooFormula::RooFormula() : TFormulaOld(), _nset(0)
+RooFormula::RooFormula() : ROOT::v5::TFormula(), _nset(0)
 {
   // Default constructor
   // coverity[UNINIT_CTOR]
@@ -57,7 +57,7 @@ RooFormula::RooFormula() : TFormulaOld(), _nset(0)
 
 //_____________________________________________________________________________
 RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& list) : 
-  TFormulaOld(), _isOK(kTRUE), _compiled(kFALSE)
+  ROOT::v5::TFormula(), _isOK(kTRUE), _compiled(kFALSE)
 {
   // Constructor with expression string and list of RooAbsArg variables
 
@@ -83,7 +83,7 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& 
 
 //_____________________________________________________________________________
 RooFormula::RooFormula(const RooFormula& other, const char* name) : 
-  TFormulaOld(), RooPrintable(other), _isOK(other._isOK), _compiled(kFALSE) 
+  ROOT::v5::TFormula(), RooPrintable(other), _isOK(other._isOK), _compiled(kFALSE) 
 {
   // Copy constructor
 
@@ -228,7 +228,7 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
 //_____________________________________________________________________________
 Double_t RooFormula::eval(const RooArgSet* nset)
 { 
-  // Evaluate TFormulaOld using given normalization set to be used as
+  // Evaluate ROOT::v5::TFormula using given normalization set to be used as
   // observables definition passed to RooAbsReal::getVal()
 
   if (!_compiled) {
@@ -254,7 +254,7 @@ Double_t
 //_____________________________________________________________________________
 RooFormula::DefinedValue(Int_t code) 
 {
-  // Interface to TFormulaOld, return value defined by object with id 'code'
+  // Interface to ROOT::v5::TFormula, return value defined by object with id 'code'
   // Object ids are mapped from object names by method DefinedVariable()
 
   // Return current value for variable indicated by internal reference code
@@ -288,7 +288,7 @@ RooFormula::DefinedValue(Int_t code)
 //_____________________________________________________________________________
 Int_t RooFormula::DefinedVariable(TString &name, int& action)
 {
-  // Interface to TFormulaOld. If name passed by TFormulaOld is recognized
+  // Interface to ROOT::v5::TFormula. If name passed by ROOT::v5::TFormula is recognized
   // as one of our RooAbsArg servers, return a unique id integer
   // that represent this variable.
 
@@ -310,7 +310,7 @@ Int_t RooFormula::DefinedVariable(TString &name, int& action)
 //_____________________________________________________________________________
 Int_t RooFormula::DefinedVariable(TString &name) 
 {
-  // Interface to TFormulaOld. If name passed by TFormulaOld is recognized
+  // Interface to ROOT::v5::TFormula. If name passed by ROOT::v5::TFormula is recognized
   // as one of our RooAbsArg servers, return a unique id integer
   // that represent this variable.
 

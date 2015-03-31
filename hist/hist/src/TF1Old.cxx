@@ -16,7 +16,7 @@
 ClassImp(TF1Old)
 
 //______________________________________________________________________________
-TF1Old::TF1Old(): TFormulaOld(), TAttLine(), TAttFill(), TAttMarker()
+TF1Old::TF1Old(): ROOT::v5::TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
    // F1 default constructor.
 
@@ -88,7 +88,7 @@ void TF1Old::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TClas
       return;
    }
    //====process old versions before automatic schema evolution
-   TFormulaOld::Streamer(b);
+   ROOT::v5::TFormula::Streamer(b);
    TAttLine::Streamer(b);
    TAttFill::Streamer(b);
    TAttMarker::Streamer(b);

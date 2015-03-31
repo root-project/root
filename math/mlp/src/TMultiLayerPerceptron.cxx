@@ -1197,8 +1197,8 @@ void TMultiLayerPerceptron::AttachData()
 
    // Set the size of the internal array of parameters of the formula
    Int_t maxop, maxpar, maxconst;
-   TFormulaOld::GetMaxima(maxop, maxpar, maxconst);
-   TFormulaOld::SetMaxima(10, 10, 10);
+   ROOT::v5::TFormula::GetMaxima(maxop, maxpar, maxconst);
+   ROOT::v5::TFormula::SetMaxima(10, 10, 10);
    
    //first layer
    const TString input = TString(fStructure(0, fStructure.First(':')));
@@ -1240,7 +1240,7 @@ void TMultiLayerPerceptron::AttachData()
    //fManager->Sync();
 
    // Set the old values
-   TFormulaOld::SetMaxima(maxop, maxpar, maxconst);
+   ROOT::v5::TFormula::SetMaxima(maxop, maxpar, maxconst);
 }
 
 //______________________________________________________________________________

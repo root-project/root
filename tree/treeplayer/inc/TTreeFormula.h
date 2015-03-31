@@ -23,8 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFormulaOld
-#include "TFormulaOld.h"
+#ifndef ROOT_v5_TFormula
+#include "v5/TFormula.h"
 #endif
 
 #ifndef ROOT_TLeaf
@@ -61,7 +61,7 @@ class TAxis;
 class TTreeFormulaManager;
 
 
-class TTreeFormula : public TFormulaOld {
+class TTreeFormula : public ROOT::v5::TFormula {
 
 friend class TTreeFormulaManager;
 

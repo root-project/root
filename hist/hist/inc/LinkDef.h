@@ -21,8 +21,8 @@
 #pragma link C++ class TAxis-;
 #pragma link C++ class TBinomialEfficiencyFitter+;
 #pragma link C++ class TFormula-;
-#pragma link C++ class TFormulaOld-;
-#pragma link C++ class TFormulaOldPrimitive+;
+#pragma link C++ class ROOT::v5::TFormula-;
+#pragma link C++ class ROOT::v5::TFormulaPrimitive+;
 #pragma link C++ class TFractionFitter+;
 #pragma link C++ class TFitResult+;
 #pragma link C++ class TFitResultPtr+;

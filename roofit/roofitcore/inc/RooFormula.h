@@ -17,14 +17,14 @@
 #define ROO_FORMULA
 
 #include "Rtypes.h"
-#include "TFormulaOld.h"
+#include "v5/TFormula.h"
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
 #include "RooPrintable.h"
 #include "RooLinkedList.h"
 #include <vector>
 
-class RooFormula : public TFormulaOld, public RooPrintable {
+class RooFormula : public ROOT::v5::TFormula, public RooPrintable {
 public:
   // Constructors etc.
   RooFormula() ;
@@ -72,7 +72,7 @@ protected:
   RooFormula& operator=(const RooFormula& other) ;
   void initCopy(const RooFormula& other) ;
 
-  // Interface to TFormulaOld engine
+  // Interface to ROOT::v5::TFormula engine
   Int_t DefinedVariable(TString &name, int& action) ; // ROOT 4
   Int_t DefinedVariable(TString &name) ; // ROOT 3
   Double_t DefinedValue(Int_t code) ;
@@ -86,7 +86,7 @@ protected:
   RooLinkedList _labelList ;    //  List of label names for category objects  
   mutable Bool_t    _compiled ; //  Flag set if formula is compiled
 
-  ClassDef(RooFormula,1)     // TFormulaOld derived class interfacing with RooAbsArg objects
+  ClassDef(RooFormula,1)     // ROOT::v5::TFormula derived class interfacing with RooAbsArg objects
 };
 
 #endif

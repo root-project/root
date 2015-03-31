@@ -25,8 +25,8 @@
 
 #include "RConfigure.h"
 
-#ifndef ROOT_TFormulaOld
-#include "TFormulaOld.h"
+#ifndef ROOT_v5_TFormula
+#include "v5/TFormula.h"
 #endif
 #ifndef ROOT_TAttLine
 #include "TAttLine.h"
@@ -40,7 +40,7 @@
 
 
 
-struct TF1Old : public TFormulaOld, public TAttLine, public TAttFill, public TAttMarker {
+struct TF1Old : public ROOT::v5::TFormula, public TAttLine, public TAttFill, public TAttMarker {
 
    Double_t    fXmin;        //Lower bounds for the range
    Double_t    fXmax;        //Upper bounds for the range

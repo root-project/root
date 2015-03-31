@@ -10,14 +10,14 @@
  *************************************************************************/
 // ---------------------------------- Formula.h
 
-#ifndef ROOT_TFormulaOld
-#define ROOT_TFormulaOld
+#ifndef ROOT_v5_TFormula
+#define ROOT_v5_TFormula
 
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TFormulaOld                                                             //
+// TFormula                                                             //
 //                                                                      //
 // The old formula base class  f(x,y,z,par)                                 //
 // mantained for backward compatibility and TTree usage                  //
@@ -33,15 +33,20 @@
 #include "TObjArray.h"
 #endif
 
-class TFormulaOldPrimitive;
 
 const Int_t kMAXFOUND = 500;
 const Int_t kTFOperMask = 0x7fffff;
 const UChar_t kTFOperShift = 23;
 
 
+
+namespace ROOT {
+   namespace v5 {
+
+     class TFormulaPrimitive;
+
 class  TOperOffset {
-   friend class TFormulaOld;
+   friend class TFormula;
 public:
    enum {
       kVariable  = 0,
@@ -62,7 +67,8 @@ protected:
    Short_t fOldAction;        // temporary variable used during optimization
 };
 
-class TFormulaOld : public TNamed {
+      
+class TFormula : public TNamed {
 
 protected:
 
@@ -92,7 +98,7 @@ protected:
    TString             *fExprOptimized;  //![fNOperOptimized] List of expressions
    Int_t               *fOperOptimized;  //![fNOperOptimized] List of operators. (See documentation for changes made at version 7)
    TOperOffset         *fOperOffset;     //![fNOperOptimized]         Offsets of operrands
-   TFormulaOldPrimitive  **fPredefined;      //![fNPar] predefined function
+   TFormulaPrimitive  **fPredefined;      //![fNPar] predefined function
    TFuncG               fOptimal; //!pointer to optimal function
 
    Int_t             PreCompile();
@@ -207,18 +213,18 @@ protected:
    };
 
 public:
-   // TFormulaOld status bits
+   // TFormula status bits
    enum {
       kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction
       kNormalized    = BIT(14),   // set to true if the function (ex gausn) is normalized
       kLinear        = BIT(16)    //set to true if the function is for linear fitting
    };
 
-               TFormulaOld();
-               TFormulaOld(const char *name,const char *formula);
-               TFormulaOld(const TFormulaOld &formula);
-   TFormulaOld&   operator=(const TFormulaOld &rhs);
-   virtual    ~TFormulaOld();
+               TFormula();
+               TFormula(const char *name,const char *formula);
+               TFormula(const TFormula &formula);
+   TFormula&   operator=(const TFormula &rhs);
+   virtual    ~TFormula();
 
  public:
    void                Optimize();
@@ -268,7 +274,11 @@ public:
    void Streamer(TBuffer &b, const TClass *onfile_class);
    void Streamer(TBuffer &b, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = 0);
 
-   ClassDef(TFormulaOld,8)  //The formula base class  f(x,y,z,par)
+   ClassDef(ROOT::v5::TFormula,8)  //The formula base class  f(x,y,z,par)
 };
 
+   } // end namespace v5
+
+} // end namespace ROOT
+      
 #endif

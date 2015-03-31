@@ -10,7 +10,7 @@
 #include <TSystem.h>
 #include <TApplication.h>
 #include <TFormula.h>
-#include <TFormulaOld.h>
+#include <v5/TFormula.h>
 #include <TRandom.h>
 #include <iostream>
 #include "TFormulaParceTests.h"
@@ -447,19 +447,19 @@ Bool_t TFormulaTests::Stress(Int_t n)
 
    std::cout << "\n\n Testing old TFormula \n" << endl;
 
-   TFormulaOld::SetMaxima(5000,5000,5000);
+   ROOT::v5::TFormula::SetMaxima(5000,5000,5000);
 
-   gBenchmark->Start(TString::Format("TFormulaOld Initialization with %d variables and %d parameters\n",n,n*5));
-   TFormulaOld *testOld = new TFormulaOld("TFStressTestOld",formula);
-   gBenchmark->Show(TString::Format("TFormulaOld Initialization with %d variables and %d parameters\n",n,n*5));
+   gBenchmark->Start(TString::Format("ROOT::v5::TFormula Initialization with %d variables and %d parameters\n",n,n*5));
+   ROOT::v5::TFormula *testOld = new ROOT::v5::TFormula("TFStressTestOld",formula);
+   gBenchmark->Show(TString::Format("ROOT::v5::TFormula Initialization with %d variables and %d parameters\n",n,n*5));
    // gBenchmark->Start(TString::Format("Adding %d variables\n",n));
    // test->AddVariables(vars,n);
    // gBenchmark->Show(TString::Format("Adding %d variables\n",n));
-   gBenchmark->Start(TString::Format("TFormulaOld: Setting %d parameters\n",n*5));
+   gBenchmark->Start(TString::Format("ROOT::v5::TFormula: Setting %d parameters\n",n*5));
    testOld->SetParameters(&parv[0]);
-   gBenchmark->Show( TString::Format("TFormulaOld: Setting %d parameters\n",n*5));
+   gBenchmark->Show( TString::Format("ROOT::v5::TFormula: Setting %d parameters\n",n*5));
 
-   gBenchmark->Start(TString::Format("TFormulaOld: %d Evaluations\n",neval));
+   gBenchmark->Start(TString::Format("ROOT::v5::TFormula: %d Evaluations\n",neval));
    TRandom rndm2;
    std::cout << "start evaluatuons  " << std::endl;
    s = 0;
@@ -476,9 +476,9 @@ Bool_t TFormulaTests::Stress(Int_t n)
    printf("Evaluation time :\t");
    w.Print();
    std::cout << "result = " <<  s << std::endl; 
-   gBenchmark->Show(TString::Format("TFormulaOld: %d Evaluations\n",neval));
+   gBenchmark->Show(TString::Format("ROOT::v5::TFormula: %d Evaluations\n",neval));
    //testOld->Print("v");
-   gBenchmark->Show("TFormulaOld Stress Total Time");
+   gBenchmark->Show("ROOT::v5::TFormula Stress Total Time");
 
    
    return true;

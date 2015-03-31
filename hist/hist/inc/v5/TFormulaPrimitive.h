@@ -8,16 +8,16 @@
 * For the licensing terms see $ROOTSYS/LICENSE.                         *
 * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 *************************************************************************/
-// ---------------------------------- TFormulaOldPrimitive.h
+// ---------------------------------- TFormulaPrimitive.h
 
-#ifndef ROOT_TFormulaOldPrimitive
-#define ROOT_TFormulaOldPrimitive
+#ifndef ROOT_v5_TFormulaPrimitive
+#define ROOT_v5_TFormulaPrimitive
 
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TFormulaOldPrimitive                                                    //
+// TFormulaPrimitive                                                    //
 //                                                                      //
 // The formula primitive base class                                     //
 //                                                                      //
@@ -33,11 +33,15 @@
 #include "TObjArray.h"
 #endif
 
-class TFormulaOld;
+namespace ROOT {
 
-class TFormulaOldPrimitive : public TNamed
+   namespace v5 {
+      
+class TFormula;
+
+class TFormulaPrimitive : public TNamed
 {
-   friend class TFormulaOld;
+   friend class ROOT::v5::TFormula;
 public:
    typedef Double_t (*GenFuncG)(const Double_t*,const Double_t*);
    typedef Double_t (*GenFunc0)();
@@ -53,12 +57,12 @@ protected:
    static TObjArray * fgListOfFunction;                   //!list of global primitive formulas
    static Int_t       BuildBasicFormulas();               //build list of basic formulas
    union {
-      GenFuncG    fFuncG;                                 //!pointer to the TFormulaOld generic function
+      GenFuncG    fFuncG;                                 //!pointer to the TFormula generic function
       GenFunc0    fFunc0;                                 //!pointer to the function
       GenFunc10   fFunc10;                                //!pointer to the function
       GenFunc110  fFunc110;                               //!pointer to the function
       GenFunc1110 fFunc1110;                              //!pointer to the function
-      TFuncG      fTFuncG;                                //!pointer to the TFormulaOld generic function
+      TFuncG      fTFuncG;                                //!pointer to the TFormula generic function
       TFunc0      fTFunc0;                                //! pointer to member function
       TFunc10     fTFunc10;                               //! pointer to member function
       TFunc110    fTFunc110;                              //! pointer to member function
@@ -69,29 +73,34 @@ protected:
    Int_t      fNParameters;                               //number of parameters
    Bool_t     fIsStatic;                                  // indication if the function is static
 private:
-   TFormulaOldPrimitive(const TFormulaOldPrimitive&); // Not implemented
-   TFormulaOldPrimitive& operator=(const TFormulaOldPrimitive&); // Not implemented
+   TFormulaPrimitive(const TFormulaPrimitive&); // Not implemented
+   TFormulaPrimitive& operator=(const TFormulaPrimitive&); // Not implemented
 public:
-   TFormulaOldPrimitive();
-   TFormulaOldPrimitive(const char *name,const char *formula, GenFunc0 fpointer);
-   TFormulaOldPrimitive(const char *name,const char *formula, GenFunc10 fpointer);
-   TFormulaOldPrimitive(const char *name,const char *formula, GenFunc110 fpointer);
-   TFormulaOldPrimitive(const char *name,const char *formula, GenFunc1110 fpointer);
-   TFormulaOldPrimitive(const char *name,const char *formula, GenFuncG fpointer,Int_t npar);
-   TFormulaOldPrimitive(const char *name,const char *formula, TFunc0 fpointer);
-   TFormulaOldPrimitive(const char *name,const char *formula, TFunc10 fpointer);
-   TFormulaOldPrimitive(const char *name,const char *formula, TFunc110 fpointer);
-   TFormulaOldPrimitive(const char *name,const char *formula, TFunc1110 fpointer);
-   TFormulaOldPrimitive(const char *name,const char *formula, TFuncG fpointer);
-   static Int_t AddFormula(TFormulaOldPrimitive * formula);
-   static TFormulaOldPrimitive* FindFormula(const char* name);
-   static TFormulaOldPrimitive* FindFormula(const char* name, const char *args);
-   static TFormulaOldPrimitive* FindFormula(const char* name, UInt_t nargs);
+   TFormulaPrimitive();
+   TFormulaPrimitive(const char *name,const char *formula, GenFunc0 fpointer);
+   TFormulaPrimitive(const char *name,const char *formula, GenFunc10 fpointer);
+   TFormulaPrimitive(const char *name,const char *formula, GenFunc110 fpointer);
+   TFormulaPrimitive(const char *name,const char *formula, GenFunc1110 fpointer);
+   TFormulaPrimitive(const char *name,const char *formula, GenFuncG fpointer,Int_t npar);
+   TFormulaPrimitive(const char *name,const char *formula, TFunc0 fpointer);
+   TFormulaPrimitive(const char *name,const char *formula, TFunc10 fpointer);
+   TFormulaPrimitive(const char *name,const char *formula, TFunc110 fpointer);
+   TFormulaPrimitive(const char *name,const char *formula, TFunc1110 fpointer);
+   TFormulaPrimitive(const char *name,const char *formula, TFuncG fpointer);
+   static Int_t AddFormula(TFormulaPrimitive * formula);
+   static TFormulaPrimitive* FindFormula(const char* name);
+   static TFormulaPrimitive* FindFormula(const char* name, const char *args);
+   static TFormulaPrimitive* FindFormula(const char* name, UInt_t nargs);
    Double_t Eval(Double_t* x);                   //eval primitive function
    Double_t Eval(TObject *o,  Double_t *x);      //eval member function
    Double_t Eval(Double_t *x, Double_t *param);  //eval primitive parametric function
 
-   ClassDef(TFormulaOldPrimitive,0)  //The primitive formula
+   ClassDef(ROOT::v5::TFormulaPrimitive,0)  //The primitive formula
 };
 
+   } // end namespace v5
+
+} // end namespace ROOT
+
+      
 #endif

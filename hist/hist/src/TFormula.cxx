@@ -39,7 +39,7 @@ using namespace std;
 #ifdef WIN32
 #pragma optimize("",off)
 #endif
-#include "TFormulaOld.h"
+#include "v5/TFormula.h"
 
 ClassImp(TFormula)
 //______________________________________________________________________________
@@ -48,11 +48,6 @@ ClassImp(TFormula)
 //*-*
 //*-*   This class has been implemented during Google Summer of Code 2013 by Maciej Zimnoch.
 //*-*   =========================================================
-//Begin_Html
-/*
-<img src="gif/tformula_classtree.gif">
-*/
-//End_Html
 //*-*
 //*-*  Example of valid expressions:
 //*-*     -  sin(x)/x
@@ -2144,8 +2139,8 @@ void TFormula::Print(Option_t *option) const
 
    }
 
-}
 
+}
 //______________________________________________________________________________
 void TFormula::Streamer(TBuffer &b)
 {
@@ -2156,7 +2151,7 @@ void TFormula::Streamer(TBuffer &b)
       //std::cout << "version " << v << std::endl;
       if (v <= 8 && v > 3 && v != 6) {
          // old TFormula class
-         TFormulaOld * fold = new TFormulaOld();
+         ROOT::v5::TFormula * fold = new ROOT::v5::TFormula();
          // read old TFormula class
          fold->Streamer(b, v,  R__s, R__c, TFormula::Class());
          //std::cout << "read old tformula class " << std::endl;
