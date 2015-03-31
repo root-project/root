@@ -15,6 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 exectsenums.log: libtsenums_dictrflx.$(DllSuf)
 exectsinclude.log: exectsinclude.C
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l exectsinclude.C | grep -v -e "Line processed" > exectsinclude.log
 exectsautoparse.log: exectsautoparse.C
 execexectstformula.log: exectstformula.C
 
