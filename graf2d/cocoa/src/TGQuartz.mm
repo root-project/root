@@ -176,7 +176,8 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
             return;
          }
       }
-
+      Quartz::SetLineStyle(ctx, GetLineStyle());
+      Quartz::SetLineWidth(ctx, GetLineWidth());
       Quartz::DrawBox(ctx, x1, y1, x2, y2, isHollow);
    }
 }
