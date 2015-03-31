@@ -8,19 +8,19 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// ---------------------------------- F1.h
 
-#ifndef ROOT_TF1OLD
-#define ROOT_TF1OLD
+
+#ifndef ROOT_v5_TF1DATA
+#define ROOT_v5_TF1DATA
 
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TF1Old                                                                  //
+// TF1Data                                                                 //
 //                                                                      //
-// Dummy class with same structure of old TF1 objects 
-// used olny for reading the old files                                   //
+// Dummy class with same structure of v5::TF1 objects 
+// used only for reading the old files                                   //
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
@@ -38,9 +38,11 @@
 #include "TAttMarker.h"
 #endif
 
+namespace ROOT {
 
+   namespace v5 { 
 
-struct TF1Old : public ROOT::v5::TFormula, public TAttLine, public TAttFill, public TAttMarker {
+struct TF1Data : public ROOT::v5::TFormula, public TAttLine, public TAttFill, public TAttMarker {
 
    Double_t    fXmin;        //Lower bounds for the range
    Double_t    fXmax;        //Upper bounds for the range
@@ -59,12 +61,14 @@ struct TF1Old : public ROOT::v5::TFormula, public TAttLine, public TAttFill, pub
 
 
 
-   TF1Old();
-   virtual   ~TF1Old();
+   TF1Data();
+   virtual   ~TF1Data();
    void Streamer(TBuffer &b, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = 0);
    
-   ClassDef(TF1Old,7)  //The Old Parametric 1-D function
+   ClassDef(TF1Data,7)  //The Parametric 1-D function data structure  of v5::TF1
 };
 
+   }  // end namespace v5
+}   // end namespace ROOT
 
 #endif

@@ -9,14 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TF1Old.h"
+#include "v5/TF1Data.h"
 
 #include "TH1.h"
 
-ClassImp(TF1Old)
+ClassImp(ROOT::v5::TF1Data)
 
+namespace ROOT {
+
+   namespace v5 {
+      
 //______________________________________________________________________________
-TF1Old::TF1Old(): ROOT::v5::TFormula(), TAttLine(), TAttFill(), TAttMarker()
+TF1Data::TF1Data(): ROOT::v5::TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
    // F1 default constructor.
 
@@ -38,7 +42,7 @@ TF1Old::TF1Old(): ROOT::v5::TFormula(), TAttLine(), TAttFill(), TAttMarker()
 }
 
 //______________________________________________________________________________
-TF1Old::~TF1Old()
+TF1Data::~TF1Data()
 {
    // TF1 default destructor.
 
@@ -49,7 +53,7 @@ TF1Old::~TF1Old()
 }
 
 //______________________________________________________________________________
-void TF1Old::Streamer(TBuffer &b)
+void TF1Data::Streamer(TBuffer &b)
 {
    // Stream a class object.
 
@@ -63,7 +67,7 @@ void TF1Old::Streamer(TBuffer &b)
       //Int_t saved = 0;
       // if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
 
-      b.WriteClassBuffer(TF1Old::Class(),this);
+      b.WriteClassBuffer(TF1Data::Class(),this);
 
       //if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
    }
@@ -71,13 +75,13 @@ void TF1Old::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TF1Old::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TClass *onfile_class)
+void TF1Data::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TClass *onfile_class)
 {
-   // specialized streamer function being able to read old TF1 versions as TF1Old in memory
+   // specialized streamer function being able to read old TF1 versions as TF1Data in memory
 
-   //printf("reading TF1Old ..- version  %d..\n",v);
+   //printf("reading TF1Data ..- version  %d..\n",v);
    if (v > 4) {
-      b.ReadClassBuffer(TF1Old::Class(), this, v, R__s, R__c, onfile_class);
+      b.ReadClassBuffer(ROOT::v5::TF1Data::Class(), this, v, R__s, R__c, onfile_class);
       if (v == 5 && fNsave > 0) {
          //correct badly saved fSave in 3.00/06
          Int_t np = fNsave - 3;
@@ -139,6 +143,10 @@ void TF1Old::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TClas
          fNsave += 3;
       } else fSave = 0;
    }
-   b.CheckByteCount(R__s, R__c, TF1Old::IsA());
+   b.CheckByteCount(R__s, R__c, TF1Data::IsA());
    //====end of old versions
 }
+
+   }  // end namespace v5
+}   // end namespace ROOT
+      

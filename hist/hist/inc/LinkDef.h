@@ -27,9 +27,9 @@
 #pragma link C++ class TFitResult+;
 #pragma link C++ class TFitResultPtr+;
 #pragma link C++ class TF1-;
-#pragma link C++ class TF1Old-;
-#pragma read sourceClass="TF1" targetClass="TF1Old";
-#pragma read sourceClass="TFormula" targetClass="TFormulaOld";
+#pragma link C++ class ROOT::v5::TF1Data-;
+#pragma read sourceClass="TF1" targetClass="ROOT::v5::TF1Data";
+#pragma read sourceClass="TFormula" targetClass="ROOT::v5::TFormula";
 #pragma link C++ class TF1Parameters+;
 #pragma link C++ class TF12+;
 #pragma link C++ class TF2-;

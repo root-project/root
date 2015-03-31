@@ -45,7 +45,7 @@
 #include "Math/ChebyshevPol.h"
 #include "Fit/FitResult.h"
 // for I/O backward compatibility 
-#include "TF1Old.h"
+#include "v5/TF1Data.h"
 
 //#include <iostream>
 
@@ -3150,10 +3150,9 @@ void TF1::Streamer(TBuffer &b)
          return;
       }
       else {
-         TF1Old fold;
-         //printf("Reading TF1 as TF1Old - version %d \n",v);
+         ROOT::v5::TF1Data fold;
+         //printf("Reading TF1 as v5::TF1Data- version %d \n",v);
          fold.Streamer(b, v, R__s, R__c, TF1::Class());
-//         b.ReadClassBuffer(TF1Old::Class(), &fold, v, R__s, R__c, TF1::Class());
          // convert old TF1 to new one
          fNpar = fold.GetNpar();
          fNdim = fold.GetNdim(); 
