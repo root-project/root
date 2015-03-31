@@ -5746,7 +5746,9 @@ const char* TCling::GetIncludePath()
 
          if (includePaths[i] != "-I")
             fIncludePath.Append(' ');
+         fIncludePath.Append('"');
          fIncludePath.Append(includePaths[i + 1], includePaths[i + 1].length());
+         fIncludePath.Append('"');
       }
    }
 
