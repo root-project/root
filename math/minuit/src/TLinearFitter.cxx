@@ -21,6 +21,7 @@
 #include "TH1.h"
 #include "TList.h"
 #include "TClass.h"
+#include "TROOT.h"
 
 ClassImp(TLinearFitter)
 
