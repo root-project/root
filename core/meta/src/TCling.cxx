@@ -2926,9 +2926,11 @@ Int_t TCling::DeleteVariable(const char* name)
 
    clang::QualType qType = varDecl->getType();
    const clang::Type* type = qType->getUnqualifiedDesugaredType();
-   if (type->isPointerType() || type->isReferenceType()) {
+   // Cannot set a reference's address to nullptr; the JIT can place it
+   // into read-only memory (ROOT-7100).
+   if (type->isPointerType()) {
       int** ppInt = (int**)fInterpreter->getAddressOfGlobal(GlobalDecl(varDecl));
-      // set pointer / reference to invalid.
+      // set pointer to invalid.
       if (ppInt) *ppInt = 0;
    }
    return 1;
