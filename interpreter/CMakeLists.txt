@@ -51,6 +51,8 @@ else()
   endif()
 endif()
 set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
+#--- Do not build cling as part of llvm.
+set(LLVM_NOCLING "YES")
 
 #---Add the sub-directory excluding all the targets from all-----------------------------------------
 if(CMAKE_GENERATOR MATCHES "Xcode")
