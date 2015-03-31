@@ -78,3 +78,8 @@
 ### TMathText
 
 - `\mu` is now working for Postscript output.
+
+### Cocoa backend
+
+- Line width and line style were not applied on boxes.
+
