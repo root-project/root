@@ -1,3 +1,3 @@
 
 Processing testString.C...
-Error in <TFormulaOld::Compile>: "+" requires two numerical operands.
+Error in <ROOT::v5::TFormula::Compile>: "+" requires two numerical operands.
