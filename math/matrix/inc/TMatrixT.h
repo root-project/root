@@ -51,9 +51,9 @@ protected:
    void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
                      Int_t /*nr_nonzeros*/ = -1);
 
-   static Element & NaNValue();
 
 public:
+
 
    enum {kWorkMax = 100};
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
@@ -242,11 +242,11 @@ template <class Element> inline Element TMatrixT<Element>::operator()(Int_t rown
    const Int_t acoln = coln-this->fColLwb;
    if (arown >= this->fNrows || arown < 0) {
       Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
-      return NaNValue();
+      return TMatrixTBase<Element>::NaNValue();
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return NaNValue();
+      return TMatrixTBase<Element>::NaNValue();
 
    }
    return (fElements[arown*this->fNcols+acoln]);
@@ -259,12 +259,11 @@ template <class Element> inline Element &TMatrixT<Element>::operator()(Int_t row
    const Int_t acoln = coln-this->fColLwb;
    if (arown >= this->fNrows || arown < 0) {
       Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
-      return NaNValue();
-
+      return TMatrixTBase<Element>::NaNValue();
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return NaNValue();
+      return TMatrixTBase<Element>::NaNValue();
    }
    return (fElements[arown*this->fNcols+acoln]);
 }

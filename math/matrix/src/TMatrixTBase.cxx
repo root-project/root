@@ -1250,6 +1250,23 @@ void TMatrixTBase<Element>::Streamer(TBuffer &R__b)
    }
 }
 
+// trick to return a reference to nan in operator(i,j_ when i,j are outside of range
+template<class Element>
+struct nan_value_t {
+   static Element gNanValue;
+};
+template<>
+Double_t nan_value_t<Double_t>::gNanValue = std::numeric_limits<Double_t>::quiet_NaN();
+template<>
+Float_t nan_value_t<Float_t>::gNanValue = std::numeric_limits<Float_t>::quiet_NaN();
+
+template<class Element>
+Element & TMatrixTBase<Element>::NaNValue()
+{
+   return nan_value_t<Element>::gNanValue;
+}
+
+
 template class TMatrixTBase<Float_t>;
 
 template Bool_t   operator==          <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);

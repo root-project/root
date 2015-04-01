@@ -205,11 +205,11 @@ template <class Element> inline Element TMatrixTSym<Element>::operator()(Int_t r
    const Int_t acoln = coln-this->fColLwb;
    if (arown >= this->fNrows || arown < 0) {
       Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
-      return 0.0;
+      return TMatrixTBase<Element>::NaNValue();
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return 0.0;
+      return TMatrixTBase<Element>::NaNValue();      
    }
    return (fElements[arown*this->fNcols+acoln]);
 }
@@ -221,11 +221,11 @@ template <class Element> inline Element &TMatrixTSym<Element>::operator()(Int_t 
    const Int_t acoln = coln-this->fColLwb;
    if (arown >= this->fNrows || arown < 0) {
       Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
    return (fElements[arown*this->fNcols+acoln]);
 }

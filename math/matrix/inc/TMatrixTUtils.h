@@ -134,6 +134,7 @@ public:
    inline       Int_t                  GetInc     () const { return fInc; }
    inline const Element               *GetPtr     () const { return fPtr; }
    inline const Element               &operator   ()(Int_t i) const {
+      if (!fMatrix) return TMatrixTBase<Element>::NaNValue();
       R__ASSERT(fMatrix->IsValid());
       const Int_t acoln = i-fMatrix->GetColLwb();
       if (acoln < fMatrix->GetNcols() && acoln >= 0)
@@ -141,7 +142,7 @@ public:
       else {
          Error("operator()","Request col(%d) outside matrix range of %d - %d",
                             i,fMatrix->GetColLwb(),fMatrix->GetColLwb()+fMatrix->GetNcols());
-         return fPtr[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
    inline const Element               &operator   [](Int_t i) const { return (*(const TMatrixTRow_const<Element> *)this)(i); }
@@ -160,6 +161,7 @@ public:
    inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
 
    inline const Element &operator()(Int_t i) const {
+      if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue();
       R__ASSERT(this->fMatrix->IsValid());
       const Int_t acoln = i-this->fMatrix->GetColLwb();
       if (acoln < this->fMatrix->GetNcols() || acoln >= 0)
@@ -167,10 +169,11 @@ public:
       else {
          Error("operator()","Request col(%d) outside matrix range of %d - %d",
                             i,this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
-         return (this->fPtr)[0];
+         return TMatrixTBase<Element>::NaNValue();
      }
    }
    inline       Element &operator()(Int_t i) {
+      if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue();
       R__ASSERT(this->fMatrix->IsValid());
       const Int_t acoln = i-this->fMatrix->GetColLwb();
       if (acoln < this->fMatrix->GetNcols() && acoln >= 0)
@@ -178,7 +181,8 @@ public:
       else {
          Error("operator()","Request col(%d) outside matrix range of %d - %d",
                             i,this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
-         return (const_cast<Element *>(this->fPtr))[0];
+         //return (const_cast<Element *>(this->fPtr))[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
    inline const Element &operator[](Int_t i) const { return (*(const TMatrixTRow<Element> *)this)(i); }
@@ -229,6 +233,7 @@ public:
    inline       Int_t                   GetInc     () const { return fInc; }
    inline const Element                *GetPtr     () const { return fPtr; }
    inline const Element                &operator   ()(Int_t i) const {
+      if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue();
       R__ASSERT(fMatrix->IsValid());
       const Int_t arown = i-fMatrix->GetRowLwb();
       if (arown < fMatrix->GetNrows() && arown >= 0)
@@ -236,7 +241,7 @@ public:
       else {
          Error("operator()","Request row(%d) outside matrix range of %d - %d",
                             i,fMatrix->GetRowLwb(),fMatrix->GetRowLwb()+fMatrix->GetNrows());
-         return fPtr[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
    inline const Element                &operator [](Int_t i) const { return (*(const TMatrixTColumn_const<Element> *)this)(i); }
@@ -255,6 +260,7 @@ public:
    inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
 
    inline const Element &operator()(Int_t i) const {
+      if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue();
       R__ASSERT(this->fMatrix->IsValid());
       const Int_t arown = i-this->fMatrix->GetRowLwb();
       if (arown < this->fMatrix->GetNrows() && arown >= 0)
@@ -262,10 +268,11 @@ public:
       else {
          Error("operator()","Request row(%d) outside matrix range of %d - %d",
                             i,this->fMatrix->GetRowLwb(),this->fMatrix->GetRowLwb()+this->fMatrix->GetNrows());
-         return (this->fPtr)[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
    inline       Element &operator()(Int_t i) {
+      if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue();
       R__ASSERT(this->fMatrix->IsValid());
       const Int_t arown = i-this->fMatrix->GetRowLwb();
 
@@ -274,7 +281,7 @@ public:
       else {
          Error("operator()","Request row(%d) outside matrix range of %d - %d",
                             i,this->fMatrix->GetRowLwb(),this->fMatrix->GetRowLwb()+this->fMatrix->GetNrows());
-         return (const_cast<Element *>(this->fPtr))[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
    inline const Element &operator[](Int_t i) const { return (*(const TMatrixTColumn<Element> *)this)(i); }
@@ -329,7 +336,7 @@ public:
          return fPtr[i*fInc];
       else {
          Error("operator()","Request diagonal(%d) outside matrix range of 0 - %d",i,fNdiag);
-         return fPtr[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
    inline const Element               &operator [](Int_t i) const { return (*(const TMatrixTDiag_const<Element> *)this)(i); }
@@ -355,7 +362,7 @@ public:
          return (this->fPtr)[i*this->fInc];
       else {
          Error("operator()","Request diagonal(%d) outside matrix range of 0 - %d",i,this->fNdiag);
-         return (this->fPtr)[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
    inline       Element &operator()(Int_t i) {
@@ -417,7 +424,7 @@ public:
          return fPtr[i];
       else {
          Error("operator()","Request element(%d) outside matrix range of 0 - %d",i,fNelems);
-         return fPtr[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
    inline const Element               &operator [](Int_t i) const { return (*(const TMatrixTFlat_const<Element> *)this)(i); }
@@ -441,7 +448,7 @@ public:
          return (this->fPtr)[i];
       else {
          Error("operator()","Request element(%d) outside matrix range of 0 - %d",i,this->fNelems);
-         return (this->fPtr)[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
    inline       Element &operator()(Int_t i) {
@@ -450,7 +457,7 @@ public:
          return (const_cast<Element *>(this->fPtr))[i];
       else {
          Error("operator()","Request element(%d) outside matrix range of 0 - %d",i,this->fNelems);
-         return (const_cast<Element *>(this->fPtr))[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
    }
    inline const Element &operator[](Int_t i) const { return (*(const TMatrixTFlat<Element> *)this)(i); }
@@ -504,11 +511,11 @@ public:
       const Element *ptr = fMatrix->GetMatrixArray();
       if (rown >= fNrowsSub || rown < 0) {
          Error("operator()","Request row(%d) outside matrix range of 0 - %d",rown,fNrowsSub);
-         return ptr[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
       if (coln >= fNcolsSub || coln < 0) {
          Error("operator()","Request column(%d) outside matrix range of 0 - %d",coln,fNcolsSub);
-         return ptr[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
       const Int_t index = (rown+fRowOff)*fMatrix->GetNcols()+coln+fColOff;
       return ptr[index];
@@ -534,11 +541,11 @@ public:
       const Element *ptr = this->fMatrix->GetMatrixArray();
       if (rown >= this->fNrowsSub || rown < 0) {
          Error("operator()","Request row(%d) outside matrix range of 0 - %d",rown,this->fNrowsSub);
-         return (const_cast<Element *>(ptr))[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
       if (coln >= this->fNcolsSub || coln < 0) {
          Error("operator()","Request column(%d) outside matrix range of 0 - %d",coln,this->fNcolsSub);
-         return (const_cast<Element *>(ptr))[0];
+         return TMatrixTBase<Element>::NaNValue();
       }
       const Int_t index = (rown+this->fRowOff)*this->fMatrix->GetNcols()+coln+this->fColOff;
       return (const_cast<Element *>(ptr))[index];

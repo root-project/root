@@ -1350,6 +1350,7 @@ TMatrixTSparseRow_const<Element>::TMatrixTSparseRow_const(const TMatrixTSparse<E
 template<class Element>
 Element TMatrixTSparseRow_const<Element>::operator()(Int_t i) const
 {
+  if (!fMatrix) return TMatrixTBase<Element>::NaNValue(); 
   R__ASSERT(fMatrix->IsValid());
   const Int_t acoln = i-fMatrix->GetColLwb();
   if (acoln < fMatrix->GetNcols() && acoln >= 0) {
@@ -1359,7 +1360,7 @@ Element TMatrixTSparseRow_const<Element>::operator()(Int_t i) const
   } else {
      Error("operator()","Request col(%d) outside matrix range of %d - %d",
                         i,fMatrix->GetColLwb(),fMatrix->GetColLwb()+fMatrix->GetNcols());
-     return 0.0;
+     return TMatrixTBase<Element>::NaNValue(); 
   }
  }
 
@@ -1385,17 +1386,18 @@ TMatrixTSparseRow<Element>::TMatrixTSparseRow(const TMatrixTSparseRow<Element> &
 template<class Element>
 Element TMatrixTSparseRow<Element>::operator()(Int_t i) const
 {
-  R__ASSERT(this->fMatrix->IsValid());
-  const Int_t acoln = i-this->fMatrix->GetColLwb();
-  if (acoln < this->fMatrix->GetNcols() && acoln >= 0) {
-     const Int_t index = TMath::BinarySearch(this->fNindex,this->fColPtr,acoln);
-     if (index >= 0 && this->fColPtr[index] == acoln) return this->fDataPtr[index];
-     else                                             return 0.0;
-  } else {
-     Error("operator()","Request col(%d) outside matrix range of %d - %d",
-                        i,this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
-     return 0.0;
-  }
+   if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue(); 
+   R__ASSERT(this->fMatrix->IsValid());
+   const Int_t acoln = i-this->fMatrix->GetColLwb();
+   if (acoln < this->fMatrix->GetNcols() && acoln >= 0) {
+      const Int_t index = TMath::BinarySearch(this->fNindex,this->fColPtr,acoln);
+      if (index >= 0 && this->fColPtr[index] == acoln) return this->fDataPtr[index];
+      else                                             return 0.0;
+   } else {
+      Error("operator()","Request col(%d) outside matrix range of %d - %d",
+            i,this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
+      return TMatrixTBase<Element>::NaNValue(); 
+   }
 }
 
 //______________________________________________________________________________
@@ -1404,13 +1406,14 @@ Element &TMatrixTSparseRow<Element>::operator()(Int_t i)
 {
 // operator() : pick element row(i)
 
+   if (!this->fMatrix) return TMatrixTBase<Element>::NaNValue(); 
    R__ASSERT(this->fMatrix->IsValid());
 
    const Int_t acoln = i-this->fMatrix->GetColLwb();
    if (acoln >= this->fMatrix->GetNcols() || acoln < 0) {
       Error("operator()(Int_t","Requested element %d outside range : %d - %d",i,
             this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
-      return (const_cast<Element*>(this->fDataPtr))[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
 
    Int_t index = TMath::BinarySearch(this->fNindex,this->fColPtr,acoln);
@@ -1431,7 +1434,7 @@ Element &TMatrixTSparseRow<Element>::operator()(Int_t i)
          return (const_cast<Element*>(this->fDataPtr))[index];
       else {
          Error("operator()(Int_t","Insert row failed");
-         return (const_cast<Element*>(this->fDataPtr))[0];
+         return TMatrixTBase<Element>::NaNValue(); 
       }
    }
 }

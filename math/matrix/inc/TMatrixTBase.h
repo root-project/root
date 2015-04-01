@@ -209,6 +209,9 @@ public:
 
    virtual TMatrixTBase<Element> &Randomize(Element alpha,Element beta,Double_t &seed);
 
+   // make it public since it can be called by TMatrixTRow
+   static Element & NaNValue();
+
    ClassDef(TMatrixTBase,5) // Matrix base class (template)
 };
 
