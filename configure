@@ -6785,7 +6785,11 @@ if test "x$enable_r" = "xyes"; then
     then 
       mkdir -p include
     fi
-    echo "#define RINCLUDEPATH \" $RCPPFLAGS $RCPPINCL $RINSIDEINCL\" " > include/compilerdata.h
+    RINC=`echo $RCPPFLAGS | sed -e 's/-I//g'`
+    RCPPINC=`echo $RCPPINCL | sed -e 's/\-I//g'`
+    RINSIDEINC=`echo $RINSIDEINCL | sed -e 's/\-I//g'`
+    echo "#define ROOT_INCLUDE_PATH $RINC:$RCPPINC:$RINSIDEINC " > include/compilerdata.h
+    echo "#define RINCLUDEPATH \" $RCPPFLAGS $RCPPINCL $RINSIDEINCL\" " >> include/compilerdata.h
     echo "#define RLINKEDLIBS  \" $RLDFLAGS  $RCPPLIBS $RINSIDELIBS\"  " >> include/compilerdata.h
     result "yes"
     hasr="define"

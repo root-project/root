@@ -123,6 +123,12 @@ else
    MANPATH=`dirname @mandir@`:$MANPATH; export MANPATH
 fi
 
+if [ -z "${ROOT_INCLUDE_PATH}" ]; then
+   ROOT_INCLUDE_PATH=`grep ROOT_INCLUDE_PATH $ROOTSYS/include/compilerdata.h | cut -d" " -f3`; export ROOT_INCLUDE_PATH
+else
+   ROOT_INCLUDE_PATH=`grep ROOT_INCLUDE_PATH $ROOTSYS/include/compilerdata.h | cut -d" " -f3`:$ROOT_INCLUDE_PATH; export ROOT_INCLUDE_PATH
+fi
+
 if [ "x`root-config --arch | grep -v win32gcc | grep -i win32`" != "x" ]; then
   ROOTSYS="`cygpath -w $ROOTSYS`"
 fi
