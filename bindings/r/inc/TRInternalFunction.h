@@ -16,6 +16,10 @@
 #include<RExports.h>
 #endif
 
+#ifndef Rcpp_hpp
+#include <Rcpp.h>
+#endif
+
 //________________________________________________________________________________________________________
 /**
    This is a class to support deprecated method to pass function to R's Environment,
