@@ -375,7 +375,6 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       nLLatCondMLE = nll->getVal();
       // this value contains the offset 
       if (RooStats::IsNLLOffset() ) nLLatCondMLE -= nlloffset; 
-      delete nll;
    }
 
    // Use Wilks' theorem to translate -2 log lambda into a signifcance/p-value
