@@ -227,8 +227,11 @@ namespace cling {
               DiagnosticsEngine& Diags = m_Sema->getDiagnostics();
               unsigned diagID
                 = Diags.getCustomDiagID(DiagnosticsEngine::Error,
-                                        "Feature not supported yet");
+                                        "Syntax error");
               Diags.Report(NewBody.getAsSingleNode()->getLocStart(), diagID);
+              D->dump();
+              if (NewBody.hasSingleNode())
+                NewBody.getAs<Expr>()->dump();
               return; // Signal a fatal error.
             }
             FD->setBody(NewBody.getAsSingleNode());
@@ -521,6 +524,20 @@ namespace cling {
   ASTNodeInfo EvaluateTSynthesizer::VisitCXXDeleteExpr(CXXDeleteExpr* Node) {
     ASTNodeInfo deleteArg = Visit(Node->getArgument());
     return ASTNodeInfo(Node, /*needs eval*/deleteArg.isForReplacement());
+  }
+
+  ASTNodeInfo EvaluateTSynthesizer::VisitCXXDependentScopeMemberExpr(
+                                            CXXDependentScopeMemberExpr* Node) {
+    ASTNodeInfo ContentTransform = Visit(Node->getBase());
+    // Simply skip the CXXDependentScopeMemberExpr and only use its content.
+    assert(ContentTransform.hasSingleNode() &&
+           "Cannot substitute multiple nodes for CXXDependentScopeMemberExpr.");
+    if (ContentTransform.isForReplacement()) {
+      Expr* Replacement = ContentTransform.getAs<Expr>();
+      return ASTNodeInfo(Replacement, ContentTransform.isForReplacement());
+    }
+    ContentTransform.setErrorOccurred();
+    return ContentTransform;
   }
 
   ASTNodeInfo EvaluateTSynthesizer::VisitExpr(Expr* Node) {
