@@ -36,9 +36,7 @@ inline void PyROOT::TMethodHolder::Copy_( const TMethodHolder& /* other */ )
 
 // do not copy caches
    fExecutor   = 0;
-
    fArgsRequired = -1;
-   fOffset       =  0;
 
 // being uninitialized will trigger setting up caches as appropriate
    fIsInitialized  = kFALSE;
@@ -55,7 +53,7 @@ inline void PyROOT::TMethodHolder::Destroy_() const
 }
 
 //____________________________________________________________________________
-inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, TCallContext* ctxt )
+inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, TCallContext* ctxt )
 {
 // Helper code to prevent some duplication; this is called from CallSafe() as well
 // as directly from TMethodHolder::Execute in fast mode.
@@ -63,7 +61,7 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, TCallContext* ctxt
    PyObject* result = 0;
 
    try {       // C++ try block
-      result = fExecutor->Execute( fMethod, (Cppyy::TCppObject_t)((Long_t)self + fOffset), ctxt );
+      result = fExecutor->Execute( fMethod, (Cppyy::TCppObject_t)((Long_t)self + offset), ctxt );
    } catch ( TPyException& ) {
       result = (PyObject*)TPyExceptionMagic;
    } catch ( std::exception& e ) {
@@ -78,7 +76,7 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, TCallContext* ctxt
 }
 
 //____________________________________________________________________________
-inline PyObject* PyROOT::TMethodHolder::CallSafe( void* self, TCallContext* ctxt )
+inline PyObject* PyROOT::TMethodHolder::CallSafe( void* self, ptrdiff_t offset, TCallContext* ctxt )
 {
 // Helper code to prevent some code duplication; this code embeds a ROOT "try/catch"
 // block that saves the stack for restoration in case of an otherwise fatal signal.
@@ -86,7 +84,7 @@ inline PyObject* PyROOT::TMethodHolder::CallSafe( void* self, TCallContext* ctxt
    PyObject* result = 0;
 
    TRY {       // ROOT "try block"
-      result = CallFast( self, ctxt );
+      result = CallFast( self, offset, ctxt );
    } CATCH( excode ) {
       PyErr_SetString( PyExc_SystemError, "problem in C++; program state has been reset" );
       result = 0;
@@ -209,7 +207,7 @@ void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
 PyROOT::TMethodHolder::TMethodHolder(
       Cppyy::TCppScope_t scope, Cppyy::TCppMethod_t method ) :
    fMethod( method ), fScope( scope ), fExecutor( nullptr ), fArgsRequired( -1 ),
-   fOffset( 0 ), fIsInitialized( kFALSE )
+   fIsInitialized( kFALSE )
 {
    // empty
 }
@@ -467,7 +465,7 @@ Bool_t PyROOT::TMethodHolder::ConvertAndSetArgs( PyObject* args, TCallContext* c
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TMethodHolder::Execute( void* self, TCallContext* ctxt )
+PyObject* PyROOT::TMethodHolder::Execute( void* self, ptrdiff_t offset, TCallContext* ctxt )
 {
 // call the interface method
 
@@ -475,10 +473,10 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self, TCallContext* ctxt )
 
    if ( TCallContext::sSignalPolicy == TCallContext::kFast ) {
    // bypasses ROOT try block (i.e. segfaults will abort)
-      result = CallFast( self, ctxt );
+      result = CallFast( self, offset, ctxt );
    } else {
    // at the cost of ~10% performance, don't abort the interpreter on any signal
-      result = CallSafe( self, ctxt );
+      result = CallSafe( self, offset, ctxt );
    }
 
    if ( result && result != (PyObject*)TPyExceptionMagic
@@ -528,15 +526,18 @@ PyObject* PyROOT::TMethodHolder::Call(
 
 // get its class
    Cppyy::TCppType_t derived = self->ObjectIsA();
-   if ( derived ) // the method expects 'this' to point to an object of fScope
-      fOffset = Cppyy::GetBaseOffset( derived, fScope, object, 1 /* up-cast */ );
+
+// calculate offset (the method expects 'this' to be an object of fScope)
+   ptrdiff_t offset = 0;
+   if ( derived && derived != fScope ) // 
+      offset = Cppyy::GetBaseOffset( derived, fScope, object, 1 /* up-cast */ );
 
 // actual call; recycle self instead of returning new object for same address objects
-   ObjectProxy* pyobj = (ObjectProxy*)Execute( object, ctxt );
+   ObjectProxy* pyobj = (ObjectProxy*)Execute( object, offset, ctxt );
    if ( pyobj != (ObjectProxy*)TPyExceptionMagic &&
         ObjectProxy_Check( pyobj ) &&
-        pyobj->GetObject() == object &&
-        derived && pyobj->ObjectIsA() == derived ) {
+        derived && pyobj->ObjectIsA() == derived &&
+        pyobj->GetObject() == object ) {
       Py_INCREF( (PyObject*)self );
       Py_DECREF( pyobj );
       return (PyObject*)self;

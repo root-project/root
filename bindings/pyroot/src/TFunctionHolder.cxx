@@ -57,5 +57,5 @@ PyObject* PyROOT::TFunctionHolder::Call(
       return 0;                              // important: 0, not Py_None
 
 // execute function
-   return this->Execute( 0, ctxt );
+   return this->Execute( 0, 0, ctxt );
 }

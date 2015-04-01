@@ -12,6 +12,7 @@
 
 // ROOT
 #include "TROOT.h"
+#include "TClassRef.h"
 #include "TObject.h"
 
 // Standard

@@ -49,7 +49,7 @@ namespace PyROOT {
       Cppyy::TCppType_t ObjectIsA() const
       {
       // Retrieve a pointer to the C++ type; may return NULL.
-         return Cppyy::GetScope( ((PyRootClass*)Py_TYPE(this))->fClass.GetClass()->GetName() );
+         return ((PyRootClass*)Py_TYPE(this))->fCppType;
       }
 
       void HoldOn() { fFlags |= kIsOwner; }

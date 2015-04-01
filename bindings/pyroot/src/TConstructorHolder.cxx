@@ -61,7 +61,7 @@ PyObject* PyROOT::TConstructorHolder::Call(
    }
 
 // perform the call, 0 makes the other side allocate the memory
-   Long_t address = (Long_t)this->Execute( 0, ctxt );
+   Long_t address = (Long_t)this->Execute( 0, 0, ctxt );
 
 // done with filtered args
    Py_DECREF( args );

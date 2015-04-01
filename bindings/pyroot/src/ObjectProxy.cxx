@@ -9,6 +9,7 @@
 
 // ROOT
 #include "TBufferFile.h"      // for pickling
+#include "TClass.h"           // id.
 #include "TObject.h"          // for gROOT life-check
 #include "TROOT.h"            // id.
 

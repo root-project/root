@@ -43,7 +43,7 @@ namespace PyROOT {
       virtual Bool_t Initialize();
       virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
       virtual Bool_t    ConvertAndSetArgs( PyObject* args, TCallContext* ctxt = 0 );
-      virtual PyObject* Execute( void* self, TCallContext* ctxt = 0 );
+      virtual PyObject* Execute( void* self, ptrdiff_t offset, TCallContext* ctxt = 0 );
 
    protected:
       Cppyy::TCppMethod_t GetMethod()   { return fMethod; }
@@ -58,8 +58,8 @@ namespace PyROOT {
       void Copy_( const TMethodHolder& );
       void Destroy_() const;
 
-      PyObject* CallFast( void*, TCallContext* );
-      PyObject* CallSafe( void*, TCallContext* );
+      PyObject* CallFast( void*, ptrdiff_t, TCallContext* );
+      PyObject* CallSafe( void*, ptrdiff_t, TCallContext* );
 
       Bool_t InitConverters_();
 
@@ -76,7 +76,6 @@ namespace PyROOT {
 
    // cached values
       Int_t  fArgsRequired;
-      Long_t fOffset;
 
    // admin
       Bool_t fIsInitialized;

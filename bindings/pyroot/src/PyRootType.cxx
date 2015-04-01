@@ -36,7 +36,6 @@ namespace {
 //____________________________________________________________________________
    void meta_dealloc( PyRootClass* pytype )
    {
-      pytype->fClass.~TClassRef();
       return PyType_Type.tp_dealloc( (PyObject*)pytype );
    }
 
@@ -65,11 +64,13 @@ namespace {
       if ( ! mp ) {
       // there has been a user meta class override in a derived class, so do
       // the consistent thing, thus allowing user control over naming
-         new (&result->fClass) TClassRef( PyROOT_PyUnicode_AsString( PyTuple_GET_ITEM( args, 0 ) ) );
+         result->fCppType = Cppyy::GetScope(
+            PyROOT_PyUnicode_AsString( PyTuple_GET_ITEM( args, 0 ) ) );
       } else {
       // coming here from PyROOT, use meta class name instead of given name,
       // so that it is safe to inherit python classes from the bound class
-         new (&result->fClass) TClassRef( std::string( subtype->tp_name ).substr( 0, mp-subtype->tp_name ).c_str() );
+         result->fCppType = Cppyy::GetScope(
+            std::string( subtype->tp_name ).substr( 0, mp-subtype->tp_name ).c_str() );
       }
 
       return (PyObject*)result;
