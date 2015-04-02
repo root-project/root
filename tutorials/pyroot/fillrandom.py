@@ -54,7 +54,7 @@ c1.Update()
 #
 # Open a ROOT file and save the formula, function and histogram
 #
-myfile = TFile( 'fillrandom.root', 'RECREATE' )
+myfile = TFile( 'py-fillrandom.root', 'RECREATE' )
 form1.Write()
 sqroot.Write()
 h1f.Write()
