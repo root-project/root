@@ -8473,6 +8473,7 @@ void THistPainter::PaintTriangles(Option_t *option)
    if (!fGraph2DPainter) fGraph2DPainter = new TGraph2DPainter(dt);
 
    // Define the 3D view
+   if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}
    if (Hoption.Same) {
       TView *viewsame = gPad->GetView();
       if (!viewsame) {
