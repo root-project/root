@@ -1150,8 +1150,10 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
          hzmax = GetZmax();
       }
       if (hzmin == hzmax) {
-         hzmin = hzmin - 0.01 * hzmin;
-         hzmax = hzmax + 0.01 * hzmax;
+         Double_t hz = hzmin;
+         if (hz==0) hz = 1.;
+         hzmin = hz - 0.01 * hz;
+         hzmax = hz + 0.01 * hz;
       }
       fHistogram->SetMinimum(hzmin);
       fHistogram->SetMaximum(hzmax);
