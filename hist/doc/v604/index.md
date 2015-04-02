@@ -56,6 +56,9 @@
   before the 2D graph has been filled with points. That was not possible previously.
   This problem was reported
  <a href="https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=19186">here</a>.
+- When a `TGraph2D` was entirely in the plane `Z=0` the 3D could not be defined.
+  This problem was reported
+ <a href="https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=19517>here</a>.
 
 ### THStack
 
