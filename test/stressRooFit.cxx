@@ -344,4 +344,18 @@ int main(int argc,const char *argv[])
   return retVal;
 }
 
+//______________________________________________________________________________
+Int_t stressRooFit()
+{
+   Bool_t doWrite     = kFALSE ;
+   Int_t doVerbose    = 0 ;
+   Int_t oneTest      = -1 ;
+   Int_t dryRun       = kFALSE ;
+   Bool_t doDump      = kFALSE ;
+   Bool_t doTreeStore = kFALSE ;
+
+   string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+   return stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
+}
+
 #endif

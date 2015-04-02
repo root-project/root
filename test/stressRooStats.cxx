@@ -396,4 +396,19 @@ int main(int argc, const char *argv[])
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
 }
 
+//______________________________________________________________________________
+Int_t stressRooStats()
+{
+   Bool_t doWrite     = kFALSE;
+   Int_t  verbose     =      0;
+   Bool_t allTests    = kFALSE;
+   Bool_t oneTest     = kFALSE;
+   Int_t testNumber   =      0;
+   Bool_t dryRun      = kFALSE;
+   Bool_t doDump      = kFALSE;
+   Bool_t doTreeStore = kFALSE;
+   string refFileName = "$ROOTSYS/test/stressRooStats_ref.root";
+   return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
+}
+
 #endif

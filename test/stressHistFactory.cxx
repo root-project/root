@@ -243,4 +243,18 @@ int main(int argc, const char *argv[])
    return stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
 }
 
+//______________________________________________________________________________
+Int_t stressHistFactory()
+{
+   Bool_t doWrite     = kFALSE;
+   Int_t  verbose     =      0;
+   Bool_t allTests    = kFALSE;
+   Bool_t oneTest     = kFALSE;
+   Int_t testNumber   =      0;
+   Bool_t dryRun      = kFALSE;
+
+   string refFileName = "$ROOTSYS/test/stressHistFactory_ref.root" ;
+   return stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
+}
+
 #endif
