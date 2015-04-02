@@ -200,6 +200,7 @@ set(tree-cernstaff-depends  tutorial-tree-cernbuild)
 set(hist-hbars-depends  tutorial-tree-cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
+                       tutorial-fit-myfit
                        tutorial-hist-h1draw
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
