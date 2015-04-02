@@ -805,9 +805,9 @@ void TParallelCoordVar::PaintLabels()
       }
       if (!fParallel->TestBit(TParallelCoord::kCandleChart)) {
          t->SetTextAlign(21);
-         t->PaintLatex(fX1,frame->GetY2() + 0.005,0,0.025,Form("%6.4f",fMaxCurrent));
+         t->PaintLatex(fX1,frame->GetY2() + 0.005,0,0.025,Form("%g",fMaxCurrent));
          t->SetTextAlign(23);
-         t->PaintLatex(fX1,frame->GetY1() - 0.005,0,0.025,Form("%6.4f",fMinCurrent));
+         t->PaintLatex(fX1,frame->GetY1() - 0.005,0,0.025,Form("%g",fMinCurrent));
       }
    } else {
       t->SetText(fX1-0.04,fY1+0.02,GetName());
@@ -823,9 +823,9 @@ void TParallelCoordVar::PaintLabels()
       }
       if (!fParallel->TestBit(TParallelCoord::kCandleChart)) {
          t->SetTextAlign(12);
-         t->PaintLatex(0.01,fY1-0.02,0,0.025,Form("%6.4f",fMinCurrent));
+         t->PaintLatex(0.01,fY1-0.02,0,0.025,Form("%g",fMinCurrent));
          t->SetTextAlign(32);
-         t->PaintLatex(0.99,fY1-0.02,0,0.025,Form("%6.4f",fMaxCurrent));
+         t->PaintLatex(0.99,fY1-0.02,0,0.025,Form("%g",fMaxCurrent));
       }
    }
    delete t;
