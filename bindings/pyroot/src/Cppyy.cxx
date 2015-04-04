@@ -589,9 +589,23 @@ ptrdiff_t Cppyy::GetBaseOffset(
 Cppyy::TCppIndex_t Cppyy::GetNumMethods( TCppScope_t scope )
 {
    TClassRef& cr = type_from_handle( scope );
-   if ( cr.GetClass() && cr->GetListOfMethods() )
-      return (TCppIndex_t)cr->GetListOfMethods()->GetSize();
-   else if ( scope == (TCppScope_t)GLOBAL_HANDLE ) {
+   if ( cr.GetClass() && cr->GetListOfMethods() ) {
+      Cppyy::TCppIndex_t nMethods = (TCppIndex_t)cr->GetListOfMethods()->GetSize();
+      if ( nMethods == (TCppIndex_t)0 ) {
+         std::string clName = GetScopedFinalName( scope );
+         if ( clName.find( '<' ) != std::string::npos ) {
+         // chicken-and-egg problem: TClass does not know about methods until instantiation: force it
+            if ( TClass::GetClass( ("std::" + clName).c_str() ) )
+               clName = "std::" + clName;
+            std::ostringstream stmt;
+            stmt << "template class " << clName << ";";
+            gInterpreter->Declare( stmt.str().c_str() );
+         // now reload the methods
+            return (TCppIndex_t)cr->GetListOfMethods( kTRUE )->GetSize();
+         }
+      }
+      return nMethods;
+   } else if ( scope == (TCppScope_t)GLOBAL_HANDLE ) {
    // enforce lazines by denying the existence of methods
       return (TCppIndex_t)0;
    }
