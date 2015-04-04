@@ -39,6 +39,7 @@ class TClingValue : public TInterpreterValue {
 private:
    struct HasTheSameSizeAsClingValue {
       long double fBiggestElementOfUnion;
+      int   fStorageType;
       void* fType;
       void* fInterpreter;
    } fValue;
