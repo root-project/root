@@ -561,10 +561,7 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
 // retrieve ROOT class (this verifies name, and is therefore done first)
    const std::string& lookup = parent ? (scName+"::"+name) : name;
    Cppyy::TCppScope_t klass = Cppyy::GetScope( lookup );
-   PyObject* pyscope = GetScopeProxy( klass );
-   if ( pyscope )
-      return pyscope;
-   
+
    if ( ! (Bool_t)klass || Cppyy::GetNumMethods( klass ) == 0 ) {
    // special action for STL classes to enforce loading dict lib
    // TODO: LoadDictionaryForSTLType should not be necessary with Cling
@@ -606,15 +603,10 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
       return 0;
    }
 
-// locate class by TClass*, if possible, to prevent parsing scopes/templates anew
-   PyClassMap_t::iterator pci = gPyClasses.find( klass );
-   if ( pci != gPyClasses.end() ) {
-      PyObject* pyclass = PyWeakref_GetObject( pci->second );
-      if ( pyclass ) {
-         Py_INCREF( pyclass );
-         return pyclass;
-      }
-   }
+// locate class by ID, if possible, to prevent parsing scopes/templates anew
+   PyObject* pyscope = GetScopeProxy( klass );
+   if ( pyscope )
+      return pyscope;
 
 // locate the parent, if necessary, for building the class if not specified
    if ( ! parent ) {

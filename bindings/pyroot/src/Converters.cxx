@@ -814,8 +814,10 @@ Bool_t PyROOT::TCppObjectConverter::SetArg(
 
    // calculate offset between formal and actual arguments
       para.fValue.fVoidp = pyobj->GetObject();
-      para.fValue.fLong += Cppyy::GetBaseOffset(
-         pyobj->ObjectIsA(), fClass, para.fValue.fVoidp, 1 /* up-cast */ );
+      if ( pyobj->ObjectIsA() != fClass ) {
+         para.fValue.fLong += Cppyy::GetBaseOffset(
+            pyobj->ObjectIsA(), fClass, para.fValue.fVoidp, 1 /* up-cast */ );
+      }
 
    // set pointer (may be null) and declare success
       para.fTypeCode = 'v';
