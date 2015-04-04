@@ -90,7 +90,7 @@ if not _builtin_cppyy:
          result = _backend.MakeRootTemplateClass( *newargs )
 
        # special case pythonization (builtin_map is not available from the C-API)
-         if hasattr( result, 'push_back' ):
+         if 'push_back' in result.__dict__:
             def iadd( self, ll ):
                [ self.push_back(x) for x in ll ]
                return self
