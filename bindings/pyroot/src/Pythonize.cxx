@@ -19,6 +19,7 @@
 // ROOT
 #include "TClass.h"
 #include "TFunction.h"
+#include "TInterpreter.h"
 #include "TMethod.h"
 
 #include "TClonesArray.h"
@@ -830,13 +831,17 @@ namespace {
 //- vector behavior as primitives ----------------------------------------------
    typedef struct {
       PyObject_HEAD
-      PyObject*  vi_vector;
-      Py_ssize_t vi_pos;
-      Py_ssize_t vi_len;
+      PyObject*           vi_vector;
+      void*               vi_data;
+      PyROOT::TConverter* vi_converter;
+      Py_ssize_t          vi_pos;
+      Py_ssize_t          vi_len;
+      Py_ssize_t          vi_stride;
    } vectoriterobject;
 
    static void vectoriter_dealloc( vectoriterobject* vi ) {
       Py_XDECREF( vi->vi_vector );
+      delete vi->vi_converter;
       PyObject_GC_Del( vi );
    }
 
@@ -847,15 +852,20 @@ namespace {
 
    static PyObject* vectoriter_iternext( vectoriterobject* vi ) {
       if ( vi->vi_pos >= vi->vi_len )
-         return NULL;
+         return nullptr;
 
-      Py_ssize_t cur = vi->vi_pos;
+      PyObject* result = nullptr;
+
+      if ( vi->vi_data && vi->vi_converter ) {
+         void* location  = (void*)((ptrdiff_t)vi->vi_data + vi->vi_stride * vi->vi_pos );
+         result = vi->vi_converter->FromMemory( location );
+      } else {
+         PyObject* pyindex = PyLong_FromLong( vi->vi_pos );
+         result = CallPyObjMethod( (PyObject*)vi->vi_vector, "_vector__at", pyindex );
+         Py_DECREF( pyindex );
+      }
+
       vi->vi_pos += 1;
-
-      PyObject* pyindex = PyLong_FromLong( cur );
-      PyObject* result = CallPyObjMethod( (PyObject*)vi->vi_vector, "_vector__at", pyindex );
-      Py_DECREF( pyindex );
-
       return result;
    }
 
@@ -889,10 +899,34 @@ namespace {
    static PyObject* vector_iter( PyObject* v ) {
       vectoriterobject* vi = PyObject_GC_New( vectoriterobject, &VectorIter_Type );
       if ( ! vi ) return NULL;
+
       Py_INCREF( v );
       vi->vi_vector = v;
-      vi->vi_pos = 0;
+
+      PyObject* pyvalue_type = PyObject_GetAttrString( (PyObject*)Py_TYPE(v), "value_type" );
+      PyObject* pyvalue_size = PyObject_GetAttrString( (PyObject*)Py_TYPE(v), "value_size" );
+
+      if ( pyvalue_type && pyvalue_size ) {
+         PyObject* pydata = CallPyObjMethod( v, "data" );
+         if ( Utility::GetBuffer( pydata, '*', 1, vi->vi_data, kFALSE ) == 0 )
+            vi->vi_data = nullptr;
+         Py_DECREF( pydata );
+
+         vi->vi_converter = PyROOT::CreateConverter( PyROOT_PyUnicode_AsString( pyvalue_type ) );
+         vi->vi_stride    = PyLong_AsLong( pyvalue_size );
+      } else {
+         PyErr_Clear();
+         vi->vi_data      = nullptr;
+         vi->vi_converter = nullptr;
+         vi->vi_stride    = 0;
+      }
+
+      Py_XDECREF( pyvalue_size );
+      Py_XDECREF( pyvalue_type );
+
+      vi->vi_len = vi->vi_pos = 0;
       vi->vi_len = PySequence_Size( v );
+
       _PyObject_GC_TRACK( vi );
       return (PyObject*)vi;
    }
@@ -1155,14 +1189,6 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 
 
 //- TIter behavior -------------------------------------------------------------
-   PyObject* TIterIter( PyObject* self )
-   {
-   // Implementation of python __iter__ (iterator protocol) for TIter.
-      Py_INCREF( self );
-      return self;
-   }
-
-//____________________________________________________________________________
    PyObject* TIterNext( PyObject* self )
    {
    // Implementation of python __next__ (iterator protocol) for TIter.
@@ -2312,6 +2338,18 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // vector-optimized iterator protocol
       ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)vector_iter;
 
+   // helpers for iteration
+      TypedefInfo_t* ti = gInterpreter->TypedefInfo_Factory( (name+"::value_type").c_str() );
+      if ( gInterpreter->TypedefInfo_IsValid( ti ) ) {
+         PyObject* pyvalue_size = PyLong_FromLong( gInterpreter->TypedefInfo_Size( ti ) );
+         PyObject_SetAttrString( pyclass, "value_size", pyvalue_size );
+         Py_DECREF( pyvalue_size );
+
+         PyObject* pyvalue_type = PyROOT_PyUnicode_FromString( gInterpreter->TypedefInfo_TrueName( ti ) );
+         PyObject_SetAttrString( pyclass, "value_type", pyvalue_type );
+         Py_DECREF( pyvalue_type );
+      }
+
    // provide a slice-able __getitem__, if possible
       if ( HasAttrDirect( pyclass, PyStrings::gVectorAt ) )
          Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) VectorGetItem, METH_O );
@@ -2386,8 +2424,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( name == "TIter" ) {
-      ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)TIterIter;
-      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) TIterIter, METH_NOARGS );
+      ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)PyObject_SelfIter;
+      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) PyObject_SelfIter, METH_NOARGS );
 
       ((PyTypeObject*)pyclass)->tp_iternext = (iternextfunc)TIterNext;
       Utility::AddToClass( pyclass, "next", (PyCFunction) TIterNext, METH_NOARGS );
