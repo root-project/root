@@ -856,8 +856,6 @@ ptrdiff_t Cppyy::GetDatamemberOffset( TCppScope_t scope, TCppIndex_t idata )
 {
    if ( scope == GLOBAL_HANDLE ) {
       TGlobal* gbl = g_globalvars[ idata ];
-      if ( gbl->Property() & kIsEnum )
-         return (ptrdiff_t)*(void**)gbl->GetAddress();
       return (ptrdiff_t)gbl->GetAddress();
    }
 

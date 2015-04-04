@@ -828,6 +828,76 @@ namespace {
    }
 
 //- vector behavior as primitives ----------------------------------------------
+   typedef struct {
+      PyObject_HEAD
+      PyObject*  vi_vector;
+      Py_ssize_t vi_pos;
+      Py_ssize_t vi_len;
+   } vectoriterobject;
+
+   static void vectoriter_dealloc( vectoriterobject* vi ) {
+      Py_XDECREF( vi->vi_vector );
+      PyObject_GC_Del( vi );
+   }
+
+   static int vectoriter_traverse( vectoriterobject* vi, visitproc visit, void* arg ) {
+      Py_VISIT( vi->vi_vector );
+      return 0;
+   }
+
+   static PyObject* vectoriter_iternext( vectoriterobject* vi ) {
+      if ( vi->vi_pos >= vi->vi_len )
+         return NULL;
+
+      Py_ssize_t cur = vi->vi_pos;
+      vi->vi_pos += 1;
+
+      PyObject* pyindex = PyLong_FromLong( cur );
+      PyObject* result = CallPyObjMethod( (PyObject*)vi->vi_vector, "_vector__at", pyindex );
+      Py_DECREF( pyindex );
+
+      return result;
+   }
+
+   PyTypeObject VectorIter_Type = {
+      PyVarObject_HEAD_INIT( &PyType_Type, 0 )
+      (char*)"ROOT.vectoriter",  // tp_name
+      sizeof(vectoriterobject),  // tp_basicsize
+      0,
+      (destructor)vectoriter_dealloc,            // tp_dealloc
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      Py_TPFLAGS_DEFAULT |
+         Py_TPFLAGS_HAVE_GC,     // tp_flags
+      0,
+      (traverseproc)vectoriter_traverse,         // tp_traverse
+      0, 0, 0,
+      PyObject_SelfIter,         // tp_iter
+      (iternextfunc)vectoriter_iternext,         // tp_iternext
+      0,                         // tp_methods
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+#if PY_VERSION_HEX >= 0x02030000
+      , 0                        // tp_del
+#endif
+#if PY_VERSION_HEX >= 0x02060000
+      , 0                        // tp_version_tag
+#endif
+#if PY_VERSION_HEX >= 0x03040000
+      , 0                        // tp_finalize
+#endif
+   };
+
+   static PyObject* vector_iter( PyObject* v ) {
+      vectoriterobject* vi = PyObject_GC_New( vectoriterobject, &VectorIter_Type );
+      if ( ! vi ) return NULL;
+      Py_INCREF( v );
+      vi->vi_vector = v;
+      vi->vi_pos = 0;
+      vi->vi_len = PySequence_Size( v );
+      _PyObject_GC_TRACK( vi );
+      return (PyObject*)vi;
+   }
+
+
    PyObject* VectorGetItem( ObjectProxy* self, PySliceObject* index )
    {
    // Implement python's __getitem__ for std::vector<>s.
@@ -2237,8 +2307,10 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
             PyObject_DelAttr( pyclass, PyStrings::gIter );
       } else if ( HasAttrDirect( pyclass, PyStrings::gGetItem ) ) {
          Utility::AddToClass( pyclass, "_vector__at", "__getitem__" );   // unchecked!
-      // if unchecked getitem, use checked iterator protocol (was set above if begin/end)
       }
+
+   // vector-optimized iterator protocol
+      ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)vector_iter;
 
    // provide a slice-able __getitem__, if possible
       if ( HasAttrDirect( pyclass, PyStrings::gVectorAt ) )

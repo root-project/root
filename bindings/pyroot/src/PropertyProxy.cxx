@@ -26,7 +26,7 @@ namespace {
    {
    // normal getter access
       void* address = pyprop->GetAddress( pyobj );
-      if ( PyErr_Occurred() )
+      if ( ! address || (ptrdiff_t)address == -1 /* Cling error */ )
          return 0;
 
    // for fixed size arrays
@@ -74,7 +74,7 @@ namespace {
       }
 
       ptrdiff_t address = (ptrdiff_t)pyprop->GetAddress( pyobj );
-      if ( ! address || address == -1 /* Cling error */ || PyErr_Occurred() )
+      if ( ! address || address == -1 /* Cling error */ )
          return errret;
 
    // for fixed size arrays
@@ -194,7 +194,7 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t id
    fProperty       = Cppyy::IsStaticData( scope, idata ) ? kIsStaticData : 0;
 
    Int_t size = Cppyy::GetDimensionSize( scope, idata, 0 );
-   if ( size != -1 )
+   if ( 0 < size )
       fProperty |= kIsArrayType;
 
    std::string fullType = Cppyy::GetDatamemberType( scope, idata );
@@ -240,8 +240,9 @@ void* PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
    }
 
 // the proxy's internal offset is calculated from the enclosing class
-   ptrdiff_t offset = Cppyy::GetBaseOffset(
-      pyobj->ObjectIsA(), fEnclosingScope, obj, 1 /* up-cast */ );
+   ptrdiff_t offset = 0;
+   if ( pyobj->ObjectIsA() != fEnclosingScope)
+      offset = Cppyy::GetBaseOffset( pyobj->ObjectIsA(), fEnclosingScope, obj, 1 /* up-cast */ );
 
    return (void*)((ptrdiff_t)obj + offset + fOffset);
 }
