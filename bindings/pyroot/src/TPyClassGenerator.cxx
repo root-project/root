@@ -36,6 +36,27 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
    if ( ! load || ! name )
       return 0;
 
+// first, check whether the name is of a module
+   PyObject* modules = PySys_GetObject( const_cast<char*>("modules") );
+   PyObject* pyname = PyROOT_PyUnicode_FromString( name );
+   PyObject* keys = PyDict_Keys( modules );
+   Bool_t isModule = PySequence_Contains( keys, pyname );
+   Py_DECREF( keys );
+   Py_DECREF( pyname );
+
+   if ( isModule ) {
+      std::ostringstream nsCode;
+      nsCode << "namespace " << name << " { }";
+
+      if ( gInterpreter->LoadText( nsCode.str().c_str() ) ) {
+          TClass* klass = new TClass( name, silent );
+          TClass::AddClass( klass );
+          return klass;
+      }
+
+      return nullptr;
+   }
+
 // determine module and class name part
    std::string clName = name;
    std::string::size_type pos = clName.rfind( '.' );
@@ -46,9 +67,14 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
    std::string mdName = clName.substr( 0, pos );
    clName = clName.substr( pos+1, std::string::npos );
 
-// ROOT doesn't know about python modules; the class may exist (TODO: add scopes)
-   if ( TClass::GetClass( clName.c_str(), load, silent ) )
-      return TClass::GetClass( clName.c_str(), load, silent );
+// create class in in namespace, if it exists (no load, silent)
+   Bool_t useNS = TClass::GetClass( mdName.c_str(), kFALSE, kTRUE ) != 0;
+
+   if ( ! useNS ) {
+   // the class itself may exist if we're using the global scope
+      TClass* klass = TClass::GetClass( clName.c_str(), kFALSE, kTRUE );
+      if ( klass ) return klass;
+   }
 
 // locate and get class
    PyObject* mod = PyImport_AddModule( const_cast< char* >( mdName.c_str() ) );
@@ -78,6 +104,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
 
 // pre-amble Cling proxy class
    std::ostringstream proxyCode;
+   if ( useNS ) proxyCode << "namespace " << mdName << " { ";
    proxyCode << "class " << clName << " {\nprivate:\n PyObject* fPyObject;\npublic:\n";
 
 // loop over and add member functions
@@ -147,14 +174,18 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
 
 // closing and building of Cling proxy class
    proxyCode << "};";
+   if ( useNS ) proxyCode << " }";
+
+   Py_DECREF( attrs );
+// done with pyclass, decref here, assuming module is kept
+   Py_DECREF( pyclass );
 
 // body compilation
-   gInterpreter->LoadText( proxyCode.str().c_str() );
+   if ( ! gInterpreter->LoadText( proxyCode.str().c_str() ) )
+      return nullptr;
 
 // done, let ROOT manage the new class
-   Py_DECREF( pyclass ); // or not, given hard-wired pointers above?
-
-   TClass* klass = new TClass( clName.c_str(), silent );
+   TClass* klass = new TClass( useNS ? (mdName+"::"+clName).c_str() : clName.c_str(), silent );
    TClass::AddClass( klass );
 
    return klass;

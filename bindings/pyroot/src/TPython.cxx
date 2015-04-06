@@ -84,6 +84,10 @@
 ClassImp(TPython)
 static PyObject* gMainDict = 0;
 
+namespace PyROOT {
+   R__EXTERN PyObject* gRootModule;
+}
+
 
 //- static public members ----------------------------------------------------
 Bool_t TPython::Initialize()
@@ -131,6 +135,67 @@ Bool_t TPython::Initialize()
 
 // declare success ...
    isInitialized = kTRUE;
+   return kTRUE;
+}
+
+//____________________________________________________________________________
+Bool_t TPython::Import( const char* mod_name )
+{
+// Import the named python module and create Cling equivalents for its classes
+// and methods.
+
+// setup
+   if ( ! Initialize() )
+      return kFALSE;
+
+   PyObject* mod = PyImport_ImportModule( mod_name );
+   if ( ! mod ) {
+      PyErr_Print();
+      return kFALSE;
+   }
+
+// allow finding to prevent creation of a python proxy for the C++ proxy
+   Py_INCREF( mod );
+   PyModule_AddObject( PyROOT::gRootModule, mod_name, mod );
+
+// force creation of the module as a namespace
+   TClass::GetClass( mod_name, kTRUE );
+
+   PyObject* dct = PyModule_GetDict( mod );
+
+// create Cling classes for all new python classes
+   PyObject* values = PyDict_Values( dct );
+   for ( int i = 0; i < PyList_GET_SIZE( values ); ++i ) {
+      PyObject* value = PyList_GET_ITEM( values, i );
+      Py_INCREF( value );
+
+   // collect classes
+      if ( PyClass_Check( value ) || PyObject_HasAttr( value, PyROOT::PyStrings::gBases ) ) {
+      // get full class name (including module)
+         PyObject* pyClName  = PyObject_GetAttr( value, PyROOT::PyStrings::gName );
+
+         if ( PyErr_Occurred() )
+            PyErr_Clear();
+
+      // build full, qualified name
+         std::string fullname = mod_name;
+         fullname += ".";
+         fullname += PyROOT_PyUnicode_AsString( pyClName );
+
+      // force class creation (this will eventually call TPyClassGenerator)
+         TClass::GetClass( fullname.c_str(), kTRUE );
+
+         Py_XDECREF( pyClName );
+      }
+
+      Py_DECREF( value );
+   }
+
+   Py_DECREF( values );
+
+// TODO: mod "leaks" here
+   if ( PyErr_Occurred() )
+      return kFALSE;
    return kTRUE;
 }
 

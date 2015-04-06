@@ -471,6 +471,21 @@ static PyObject* BuildCppClassBases( Cppyy::TCppType_t klass )
 
          PyTuple_SET_ITEM( pybases, ibase, pyclass );
       }
+
+   // special case, if true python types enter the hierarchy, make sure that
+   // the first base seen is still the ObjectProxy_Type
+      if ( ! PyObject_IsSubclass( PyTuple_GET_ITEM( pybases, 0 ), (PyObject*)&ObjectProxy_Type ) ) {
+         PyObject* newpybases = PyTuple_New( nbases + 1 );
+         Py_INCREF( (PyObject*)(void*)&ObjectProxy_Type );
+         PyTuple_SET_ITEM( newpybases, 0, (PyObject*)(void*)&ObjectProxy_Type );
+         for ( int ibase = 0; ibase < (int)nbases; ++ibase ) {
+             PyObject* pyclass = PyTuple_GET_ITEM( pybases, ibase );
+             Py_INCREF( pyclass );
+             PyTuple_SET_ITEM( newpybases, ibase + 1, pyclass );
+         }
+         Py_DECREF( pybases );
+         pybases = newpybases;
+      }
    }
 
    return pybases;
@@ -609,10 +624,10 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
       return pyscope;
 
 // locate the parent, if necessary, for building the class if not specified
+   std::string::size_type last = 0;
    if ( ! parent ) {
    // need to deal with template paremeters that can have scopes themselves
       Int_t tpl_open = 0;
-      std::string::size_type last = 0;
       for ( std::string::size_type pos = 0; pos < name.size(); ++pos ) {
          std::string::value_type c = name[ pos ];
 
@@ -647,6 +662,15 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
             last = pos+2; ++pos;
          }
 
+      }
+
+      if ( parent ) {   // possibly freshly created above
+         std::string unscoped = scope_name.substr( last, std::string::npos );
+         PyObject* pyklass = PyObject_GetAttrString( parent, unscoped.c_str() );
+         if ( pyklass )
+            return pyklass;
+         PyErr_Clear();
+         return CreateScopeProxy( unscoped.c_str(), parent );
       }
    }
 

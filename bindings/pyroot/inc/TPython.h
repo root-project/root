@@ -28,6 +28,9 @@ private:
    static Bool_t Initialize();
 
 public:
+// import a python module, making its classes available
+   static Bool_t Import( const char* name );
+
 // load a python script as if it were a macro
    static void LoadMacro( const char* name );
 
