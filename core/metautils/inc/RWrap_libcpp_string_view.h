@@ -22,6 +22,8 @@
 // To import a new version of the original file do:
 //
 /*
+ svn co http://llvm.org/svn/llvm-project/libcxx/trunk libcxx
+
  cat original/string_view | \
  sed -e 's:_LIBCPP_BEGIN_NAMESPACE_LFTS:_ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS:' \
      -e 's:_LIBCPP_END_NAMESPACE_LFTS:_ROOT_LIBCPP_END_NAMESPACE_LFTS:' \
@@ -46,7 +48,6 @@
 namespace std { \
 namespace experimental { inline namespace __ROOT {
 #define _ROOT_LIBCPP_END_NAMESPACE_LFTS } } }
-
 #else
 
 // Microsoft compiler does not support inline namespace yet.
@@ -166,56 +167,111 @@ inline namespace __1 {
       return __os;
    }
 
-   template <typename _CharT, typename _SizeT, typename _Traits, _SizeT __npos>
-   _SizeT
-   __str_find(_CharT* __p, _SizeT __sz, _CharT *__s, _SizeT __pos, _SizeT __n)
+   template <class _ForwardIterator1, class _ForwardIterator2, class _BinaryPredicate>
+   _LIBCPP_CONSTEXPR_AFTER_CXX11 _ForwardIterator1
+   __find_first_of_ce(_ForwardIterator1 __first1, _ForwardIterator1 __last1,
+                      _ForwardIterator2 __first2, _ForwardIterator2 __last2, _BinaryPredicate __pred)
    {
-      //_LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::find(): recieved nullptr");
-      if (__pos > __sz || __sz - __pos < __n)
-         return __npos;
+      for (; __first1 != __last1; ++__first1)
+         for (_ForwardIterator2 __j = __first2; __j != __last2; ++__j)
+            if (__pred(*__first1, *__j))
+               return __first1;
+      return __last1;
+   }
+
+   // __str_find
+   template<class _CharT, class _SizeT, class _Traits, _SizeT __npos>
+   _SizeT _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+   __str_find(const _CharT *__p, _SizeT __sz,
+              _CharT __c, _SizeT __pos) _NOEXCEPT
+   {
+   if (__pos >= __sz)
+      return __npos;
+   const _CharT* __r = _Traits::find(__p + __pos, __sz - __pos, __c);
+   if (__r == 0)
+      return __npos;
+   return static_cast<_SizeT>(__r - __p);
+}
+
+   template<class _CharT, class _SizeT, class _Traits, _SizeT __npos>
+   _SizeT _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+   __str_find(const _CharT *__p, _SizeT __sz,
+              const _CharT* __s, _SizeT __pos, _SizeT __n)
+   {
+     if (__pos > __sz || __sz - __pos < __n)
+        return __npos;
       if (__n == 0)
          return __pos;
-      const _CharT* __r = _VSTD::search(__p + __pos, __p + __sz, __s, __s + __n,
-                                        _Traits::eq);
+      const _CharT* __r =
+      _VSTD::__search(__p + __pos, __p + __sz,
+                      __s, __s + __n, _Traits::eq,
+                      random_access_iterator_tag(), random_access_iterator_tag());
       if (__r == __p + __sz)
          return __npos;
       return static_cast<_SizeT>(__r - __p);
    }
 
 
-   template <typename _CharT, typename _SizeT, typename _Traits, _SizeT __npos>
-   _SizeT
-   __str_rfind(_CharT* __p, _SizeT __sz, _CharT *__s, _SizeT __pos, _SizeT __n)
+   // __str_rfind
+
+   template<class _CharT, class _SizeT, class _Traits, _SizeT __npos>
+   _SizeT _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+   __str_rfind(const _CharT *__p, _SizeT __sz,
+               _CharT __c, _SizeT __pos)
    {
-      //_LIBCPP_ASSERT(__n == 0 || __s != nullptr, "string::rfind(): recieved nullptr");
+      if (__sz < 1)
+         return __npos;
+      if (__pos < __sz)
+         ++__pos;
+      else
+         __pos = __sz;
+      for (const _CharT* __ps = __p + __pos; __ps != __p;)
+      {
+         if (_Traits::eq(*--__ps, __c))
+            return static_cast<_SizeT>(__ps - __p);
+      }
+      return __npos;
+   }
+
+   template<class _CharT, class _SizeT, class _Traits, _SizeT __npos>
+   _SizeT _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+   __str_rfind(const _CharT *__p, _SizeT __sz,
+               const _CharT* __s, _SizeT __pos, _SizeT __n)
+   {
       __pos = _VSTD::min(__pos, __sz);
       if (__n < __sz - __pos)
          __pos += __n;
       else
          __pos = __sz;
-      const _CharT* __r = _VSTD::find_end(__p, __p + __pos, __s, __s + __n,
-                                          _Traits::eq());
+      const _CharT* __r = _VSTD::__find_end(
+                                            __p, __p + __pos, __s, __s + __n, _Traits::eq,
+                                            random_access_iterator_tag(), random_access_iterator_tag());
       if (__n > 0 && __r == __p + __pos)
          return __npos;
       return static_cast<_SizeT>(__r - __p);
    }
 
-   template <typename _CharT, typename _SizeT, typename _Traits, size_t __npos>
-   _SizeT
-   __str_find_first_of(_CharT* __p, _SizeT __sz, _CharT *__s, _SizeT __pos, _SizeT __n)
+   // __str_find_first_of
+   template<class _CharT, class _SizeT, class _Traits, _SizeT __npos>
+   _SizeT _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+   __str_find_first_of(const _CharT *__p, _SizeT __sz,
+                       const _CharT* __s, _SizeT __pos, _SizeT __n)
    {
       if (__pos >= __sz || __n == 0)
          return __npos;
-      const _CharT* __r = _VSTD::find_first_of
+      const _CharT* __r = _VSTD::__find_first_of_ce
       (__p + __pos, __p + __sz, __s, __s + __n, _Traits::eq );
       if (__r == __p + __sz)
          return __npos;
       return static_cast<_SizeT>(__r - __p);
    }
 
-   template <typename _CharT, typename _SizeT, typename _Traits, _SizeT __npos>
-   _SizeT
-   __str_find_last_of(_CharT* __p, _SizeT __sz, _CharT *__s, _SizeT __pos, _SizeT __n)
+
+   // __str_find_last_of
+   template<class _CharT, class _SizeT, class _Traits, _SizeT __npos>
+   _SizeT _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+   __str_find_last_of(const _CharT *__p, _SizeT __sz,
+                      const _CharT* __s, _SizeT __pos, _SizeT __n)
    {
       if (__n != 0)
       {
@@ -233,9 +289,12 @@ inline namespace __1 {
       return __npos;
    }
 
-   template <typename _CharT, typename _SizeT, typename _Traits, _SizeT __npos>
-   _SizeT
-   __str_find_first_not_of(_CharT* __p, _SizeT __sz, _CharT *__s, _SizeT __pos, _SizeT __n)
+
+   // __str_find_first_not_of
+   template<class _CharT, class _SizeT, class _Traits, _SizeT __npos>
+   _SizeT _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+   __str_find_first_not_of(const _CharT *__p, _SizeT __sz,
+                           const _CharT* __s, _SizeT __pos, _SizeT __n)
    {
       if (__pos < __sz)
       {
@@ -247,9 +306,28 @@ inline namespace __1 {
       return __npos;
    }
 
-   template <typename _CharT, typename _SizeT, typename _Traits, _SizeT __npos>
-   _SizeT
-   __str_find_last_not_of(_CharT* __p, _SizeT __sz, _CharT *__s, _SizeT __pos, _SizeT __n)
+
+   template<class _CharT, class _SizeT, class _Traits, _SizeT __npos>
+   _SizeT _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+   __str_find_first_not_of(const _CharT *__p, _SizeT __sz,
+                           _CharT __c, _SizeT __pos)
+   {
+      if (__pos < __sz)
+      {
+         const _CharT* __pe = __p + __sz;
+         for (const _CharT* __ps = __p + __pos; __ps != __pe; ++__ps)
+            if (!_Traits::eq(*__ps, __c))
+               return static_cast<_SizeT>(__ps - __p);
+      }
+      return __npos;
+   }
+
+
+   // __str_find_last_not_of
+   template<class _CharT, class _SizeT, class _Traits, _SizeT __npos>
+   _SizeT _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+   __str_find_last_not_of(const _CharT *__p, _SizeT __sz,
+                          const _CharT* __s, _SizeT __pos, _SizeT __n)
    {
       if (__pos < __sz)
          ++__pos;
@@ -257,6 +335,22 @@ inline namespace __1 {
          __pos = __sz;
       for (const _CharT* __ps = __p + __pos; __ps != __p;)
          if (_Traits::find(__s, __n, *--__ps) == 0)
+            return static_cast<_SizeT>(__ps - __p);
+      return __npos;
+   }
+
+
+   template<class _CharT, class _SizeT, class _Traits, _SizeT __npos>
+   _SizeT _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+   __str_find_last_not_of(const _CharT *__p, _SizeT __sz,
+                          _CharT __c, _SizeT __pos)
+   {
+      if (__pos < __sz)
+         ++__pos;
+      else
+         __pos = __sz;
+      for (const _CharT* __ps = __p + __pos; __ps != __p;)
+         if (!_Traits::eq(*--__ps, __c))
             return static_cast<_SizeT>(__ps - __p);
       return __npos;
    }
