@@ -522,7 +522,7 @@
       var idF = axis['fTimeFormat'].indexOf('%F');
       if (idF < 0) return JSROOT.gStyle['TimeOffset'];
       var sof = axis['fTimeFormat'].substr(idF + 2);
-      if (sof == '1995-01-01 00:00:00s0') return JSROOT.gStyle['TimeOffset'];
+      if (sof == '1995-01-01 00:00:00s0') return 788918400000;
       // special case, used from DABC painters
       if ((sof == "0") || (sof == "")) return 0;
 
