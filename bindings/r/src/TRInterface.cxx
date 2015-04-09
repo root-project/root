@@ -215,7 +215,10 @@ TRObjectProxy TRInterface::ParseEval(const TString &code, Bool_t exception)
 //The RObject result of execution is returned in TRObjectProxy
   
    SEXP ans;
-   int rc = fR->parseEval(code.Data(), ans);
+   int rc;
+   BEGIN_RCPP
+   rc = fR->parseEval(code.Data(), ans);
+   END_RCPP
    if (rc != 0 && exception) {
       if (exception){
 	std::string msg("Error evaluating: ");
