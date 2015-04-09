@@ -228,7 +228,7 @@ TRObjectProxy TRInterface::ParseEval(const TString &code, Bool_t exception)
    } else if (rc != 0) {
 	std::string msg("Error evaluating: ");
 	msg+=code.Data();
-        Error("ParseEval", msg.c_str());
+        Error("ParseEval", "%s",msg.c_str());
    }   
    return TRObjectProxy(ans , (rc == 0) ? kTRUE : kFALSE);
 }
