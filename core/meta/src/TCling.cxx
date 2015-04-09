@@ -1824,6 +1824,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    cling::Interpreter::CompilationResult compRes = cling::Interpreter::kSuccess;
    if (!strncmp(sLine.Data(), ".L", 2) || !strncmp(sLine.Data(), ".x", 2) ||
        !strncmp(sLine.Data(), ".X", 2)) {
+      cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
       // If there was a trailing "+", then CINT compiled the code above,
       // and we will need to strip the "+" before passing the line to cling.
       TString mod_line(sLine);
