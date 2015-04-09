@@ -1,5 +1,12 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_GENERATE_EXECUTABLE(current_dir current_dir.cpp LIBRARIES Core RIO Thread)
+
+ROOTTEST_ADD_TEST(roottest-root-multicore-current_dir
+                  EXEC current_dir
+                  OUTREF current_dir.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_ADD_TEST(roottest-root-multicore-exectstformula
                   MACRO exectstformula.C
                   OUTREF exectstformula.ref)
