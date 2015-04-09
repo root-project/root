@@ -47,15 +47,15 @@ namespace ROOT {
          }
          
          template<class T> T As() {
-	   T data;
 	   if(fStatus)
 	   {
-	     data=::Rcpp::as<T>(x);
+	    T data=::Rcpp::as<T>(x);
+            return data;
 	   }else
 	   {
 	     Error("Cast Operator", "Can not make the requested data, returning an unknow value");
+             return T();
 	   }
-            return data;
          }
 
          template<class T> T operator=(TRObjectProxy &obj) {
@@ -63,7 +63,6 @@ namespace ROOT {
          }
 
          template <class T> operator T() {
-	   T data;
 	     
 	   if(fStatus)
 	   {
