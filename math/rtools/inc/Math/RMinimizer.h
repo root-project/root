@@ -5,9 +5,6 @@
 #ifndef ROOT_Math_RMinimizer
 #define ROOT_Math_RMinimizer
 
-#ifndef ROOT_TRInterface
-#include "TRInterface.h"
-#endif
 
 #ifndef ROOT_Math_Functor
 #include "Math/Functor.h"
@@ -19,6 +16,10 @@
 
 #ifndef ROOT_Math_BasicMinimizer
 #include "Math/BasicMinimizer.h"
+#endif
+
+#ifndef ROOT_TMatrixD
+#include "TMatrixD.h"
 #endif
 
 namespace ROOT {
