@@ -40,3 +40,7 @@ endif()
 if(vdt)
   add_subdirectory(vdt)
 endif()
+
+if(r)
+  add_subdirectory(rtools)
+endif()
