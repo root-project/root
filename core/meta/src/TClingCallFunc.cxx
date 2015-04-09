@@ -132,24 +132,7 @@ namespace {
    template <typename returnType>
    returnType sv_to(const cling::Value &val)
    {
-      QualType QT = val.getType().getDesugaredType(val.getASTContext());
-      if (QT->isMemberPointerType()) {
-         const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
-         if (MPT->isMemberDataPointer()) {
-            return (returnType)(ptrdiff_t)val.getPtr();
-         }
-         return (returnType)(long) val.getPtr();
-      }
-      if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
-            QT->isReferenceType()) {
-         return (returnType)(long) val.getPtr();
-      }
-      if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
-         if (ET->getDecl()->getIntegerType()->hasSignedIntegerRepresentation())
-            return (returnType) val.getLL();
-         else
-            return (returnType) val.getULL();
-      }
+      QualType QT = val.getType().getCanonicalType();
       if (const BuiltinType *BT =
                dyn_cast<BuiltinType>(&*QT)) {
          //
@@ -239,6 +222,23 @@ namespace {
             default:
                break;
          }
+      }
+      if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
+            QT->isReferenceType()) {
+         return (returnType)(long) val.getPtr();
+      }
+      if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
+         if (ET->getDecl()->getIntegerType()->hasSignedIntegerRepresentation())
+            return (returnType) val.getLL();
+         else
+            return (returnType) val.getULL();
+      }
+      if (QT->isMemberPointerType()) {
+         const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
+         if (MPT->isMemberDataPointer()) {
+            return (returnType)(ptrdiff_t)val.getPtr();
+         }
+         return (returnType)(long) val.getPtr();
       }
       Error("TClingCallFunc::sv_to", "Invalid Type!");
       QT->dump();
@@ -1477,34 +1477,7 @@ void TClingCallFunc::exec(void *address, void *ret) const
             Ty = fArgVals[i].getType();
          }
          QualType QT = Ty.getCanonicalType();
-         if (QT->isReferenceType()) {
-            // the argument is already a pointer value (point to the same thing
-            // as the reference.
-            vp_ary.push_back((void *) sv_to_ulong_long(fArgVals[i]));
-         } else if (QT->isMemberPointerType()) {
-            ValHolder vh;
-            vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
-            vh_ary.push_back(vh);
-            vp_ary.push_back(&vh_ary.back());
-         } else if (QT->isPointerType() || QT->isArrayType()) {
-            ValHolder vh;
-            vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
-            vh_ary.push_back(vh);
-            vp_ary.push_back(&vh_ary.back());
-         } else if (QT->isRecordType()) {
-            // the argument is already a pointer value (pointing to object passed
-            // by value).
-            vp_ary.push_back((void *) sv_to_ulong_long(fArgVals[i]));
-         } else if (const EnumType *ET =
-                    dyn_cast<EnumType>(&*QT)) {
-            // Note: We may need to worry about the underlying type
-            //       of the enum here.
-            (void) ET;
-            ValHolder vh;
-            vh.u.i = (int) sv_to_long_long(fArgVals[i]);
-            vh_ary.push_back(vh);
-            vp_ary.push_back(&vh_ary.back());
-         } else if (const BuiltinType *BT =
+         if (const BuiltinType *BT =
                     dyn_cast<BuiltinType>(&*QT)) {
             //
             //  WARNING!!!
@@ -1871,6 +1844,33 @@ void TClingCallFunc::exec(void *address, void *ret) const
                   }
                   break;
             }
+         } else if (QT->isReferenceType()) {
+            // the argument is already a pointer value (point to the same thing
+            // as the reference.
+            vp_ary.push_back((void *) sv_to_ulong_long(fArgVals[i]));
+         } else if (QT->isPointerType() || QT->isArrayType()) {
+            ValHolder vh;
+            vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
+            vh_ary.push_back(vh);
+            vp_ary.push_back(&vh_ary.back());
+         } else if (QT->isRecordType()) {
+            // the argument is already a pointer value (pointing to object passed
+            // by value).
+            vp_ary.push_back((void *) sv_to_ulong_long(fArgVals[i]));
+         } else if (const EnumType *ET =
+                    dyn_cast<EnumType>(&*QT)) {
+            // Note: We may need to worry about the underlying type
+            //       of the enum here.
+            (void) ET;
+            ValHolder vh;
+            vh.u.i = (int) sv_to_long_long(fArgVals[i]);
+            vh_ary.push_back(vh);
+            vp_ary.push_back(&vh_ary.back());
+         } else if (QT->isMemberPointerType()) {
+            ValHolder vh;
+            vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
+            vh_ary.push_back(vh);
+            vp_ary.push_back(&vh_ary.back());
          } else {
             Error("TClingCallFunc::exec(void*)",
                   "Invalid type (unrecognized)!");
@@ -1910,9 +1910,9 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) c
    R__LOCKGUARD_NAMED(global,gInterpreterMutex);
 
    const FunctionDecl *FD = fMethod->GetMethodDecl();
-   ASTContext &Context = FD->getASTContext();
 
    if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
+      ASTContext &Context = FD->getASTContext();
       const TypeDecl *TD = dyn_cast<TypeDecl>(CD->getDeclContext());
       QualType ClassTy(TD->getTypeForDecl(), 0);
       QualType QT = Context.getLValueReferenceType(ClassTy);
