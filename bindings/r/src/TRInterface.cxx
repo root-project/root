@@ -190,7 +190,12 @@ Int_t  TRInterface::ParseEval(const TString &code, TRObjectProxy  &ans)
 // Parse R code and returns status of execution.
 // the RObject's response is saved in  ans
    SEXP fans;
-   Int_t rc = fR->parseEval(code.Data(), fans);
+   Int_t rc;
+   try{ 
+   rc = fR->parseEval(code.Data(), fans);
+    } 
+   catch( std::exception& __ex__ ){ forward_exception_to_r( __ex__ ) ; } 
+   catch(...){ 	Error("ParseEval", "Can execute the requested code: %s",code.Data());}
    ans = fans;
    ans.SetStatus((rc == 0) ? kTRUE : kFALSE);
    return rc;
@@ -202,8 +207,12 @@ void TRInterface::Parse(const TString &code, Bool_t exception)
 // Parse R code. The argument exception is by defualt false, and
 // if the code has an error prints the error and continues executing.
 // if exception is true, the code launches an exception and stops the execution.
-   if (exception) fR->parseEvalQ((std::string)code);
-   else fR->parseEvalQNT(code.Data());
+   try{ 
+        if (exception) fR->parseEvalQ(code.Data());
+        else fR->parseEvalQNT(code.Data());
+    } 
+   catch( std::exception& __ex__ ){ forward_exception_to_r( __ex__ ) ; } 
+   catch(...){ 	Error("Parse", "Can execute the requested code: %s",code.Data());}
 }
 
 //______________________________________________________________________________
@@ -216,9 +225,12 @@ TRObjectProxy TRInterface::ParseEval(const TString &code, Bool_t exception)
   
    SEXP ans;
    int rc;
-   BEGIN_RCPP
+   try{
    rc = fR->parseEval(code.Data(), ans);
-   END_RCPP
+       } 
+   catch( std::exception& __ex__ ){ forward_exception_to_r( __ex__ ) ; } 
+   catch(...){ 	Error("ParseEval", "Can execute the requested code: %s",code.Data());}
+
    if (rc != 0 && exception) {
       if (exception){
 	std::string msg("Error evaluating: ");

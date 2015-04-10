@@ -25,6 +25,7 @@ ROOT_LINKER_LIBRARY(Rtools *.cxx G__Rtools.cxx LIBRARIES Core ${R_LIBRARIES}  ${
 
 ROOT_INSTALL_HEADERS()
 
+FILE(COPY "${CMAKE_SOURCE_DIR}/etc/plugins/ROOT@@Math@@Minimizer/P090_RMinimizer.C" DESTINATION "${CMAKE_BINARY_DIR}/etc/plugins/ROOT@@Math@@Minimizer/")
 
 #ROOT_ADD_TEST_SUBDIRECTORY(test)
 
