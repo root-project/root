@@ -5961,8 +5961,10 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
 
          if (code > kWithTypeDef || code == kReflexNoComment) {
             type = tdm->GetTrueTypeName();
-            if (TClassEdit::IsSTLCont(type))
-               type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+            // GetTrueTypeName uses GetFullyQualifiedName which already drops
+            // the default template parameter, so we no longer need to do this.
+            //if (TClassEdit::IsSTLCont(type))
+            //   type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
             if (code == kReflex || code == kReflexNoComment) {
                if (prop&kIsEnum) {
                   type = "int";
@@ -5976,8 +5978,10 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
             }
          } else {
             type = tdm->GetFullTypeName();
-            if (TClassEdit::IsSTLCont(type))
-               type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+            // GetFullTypeName uses GetFullyQualifiedName which already drops
+            // the default template parameter, so we no longer need to do this.
+            //if (TClassEdit::IsSTLCont(type))
+            //   type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
          }
 
          il = type.Length();
