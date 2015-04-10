@@ -692,8 +692,8 @@ Int_t TBufferJSON::JsonSpecialClass(const TClass *cl) const
    if (cl == TString::Class()) return 110;
 
    bool isstd = TClassEdit::IsStdClass(cl->GetName());
-   int isstlcont(0);
-   if (isstd) isstlcont = TMath::Abs((Int_t)TClassEdit::IsSTLCont(cl->GetName()));
+   int isstlcont(ROOT::kNotSTL);
+   if (isstd) isstlcont = cl->GetCollectionType();
    if (isstlcont > 0) return isstlcont;
 
    // also special handling for STL string, which handled similar to TString

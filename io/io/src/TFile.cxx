@@ -2857,7 +2857,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          }
 
       }
-      if (TClassEdit::IsSTLCont(info->GetName())) {
+      if ((info->GetClass() && info->GetClass()->GetCollectionType()) || TClassEdit::IsSTLCont(info->GetName())) {
          std::vector<std::string> inside;
          int nestedLoc;
          TClassEdit::GetSplit( info->GetName(), inside, nestedLoc, TClassEdit::kLong64 );

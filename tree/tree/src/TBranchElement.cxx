@@ -2142,7 +2142,7 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
          TStreamerElement* se = si->GetElement(fID);
          className = se->GetTypeName();
       }
-      TClass* cl = TClass::GetClass(className);
+      TClass* cl = className ? TClass::GetClass(className) : 0;
       if (!cl) {
          // The TClass was not created but we do know (since it
          // is used as a collection) that it 'className' was a
@@ -2155,6 +2155,7 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
          } else {
             cl = new TClass(className, fClassVersion);
             cl->SetBit(TClass::kIsEmulation);
+            className = cl->GetName();
          }
       }
       TVirtualCollectionProxy* proxy = cl->GetCollectionProxy();
@@ -2177,10 +2178,7 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
          cl->CopyCollectionProxy( *proxy );
       }
       fCollProxy = proxy->Generate();
-      fSTLtype = className ? TClassEdit::IsSTLCont(className) : 0;
-      if (fSTLtype < 0) {
-         fSTLtype = -fSTLtype;
-      }
+      fSTLtype = proxy->GetCollectionType();
    } else if (fType == 41) {
       // STL container sub-branch.
       thiscast->fCollProxy = fBranchCount->GetCollectionProxy();
@@ -4529,7 +4527,7 @@ void TBranchElement::SetAddress(void* addr)
             // Change from 3/31 to 4/41
             SetType(4);
             // Set the proxy.
-            fSTLtype = TMath::Abs(TClassEdit::IsSTLCont(newType->GetName()));
+            fSTLtype = newType->GetCollectionType();
             fCollProxy = newType->GetCollectionProxy()->Generate();
 
             SwitchContainer(GetListOfBranches());

@@ -3036,7 +3036,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
       delete info;
       cl->fClassInfo = 0;
    }
-   if (zombieCandidate && !TClassEdit::IsSTLCont(cl->GetName())) {
+   if (zombieCandidate && !cl->GetCollectionType()) {
       cl->MakeZombie();
    }
    // If we reach here, the info was valid (See early returns).

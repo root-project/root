@@ -382,7 +382,7 @@ namespace ROOT {
       Int_t stlType;
       if (0 == strcmp(cl->GetName(),"string")) {
          directive = "#include <string>\n";
-      } else if (cl->GetCollectionProxy() && (stlType=TClassEdit::IsSTLCont(cl->GetName()))) {
+      } else if (cl->GetCollectionProxy() && (stlType = cl->GetCollectionType())) {
          const char *what = "";
          switch(stlType)  {
             case ROOT::kSTLvector:       what = "vector"; break;

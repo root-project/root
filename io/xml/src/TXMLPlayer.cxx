@@ -959,14 +959,12 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream& fs, TClass* cl, TStreamerSTL
    TClass* argcl[2];
    TString argtname[2];
 
-   if (!isstr && TClassEdit::IsSTLCont(contcl->GetName())) {
-         std::string shortTypeName =
-            TClassEdit::ShortType(contcl->GetName(), TClassEdit::kDropStlDefault);
+   if (!isstr && contcl->GetCollectionType() != ROOT::kNotSTL) {
          int nestedLoc = 0;
          std::vector<std::string> splitName;
-         TClassEdit::GetSplit(shortTypeName.c_str(), splitName, nestedLoc);
+         TClassEdit::GetSplit(contcl->GetName(), splitName, nestedLoc);
 
-         stltyp = TClassEdit::STLKind(splitName[0].c_str());
+         stltyp = contcl->GetCollectionType();
          switch (stltyp) {
             case ROOT::kSTLvector       : narg = 1; break;
             case ROOT::kSTLlist         : narg = 1; break;
