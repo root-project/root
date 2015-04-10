@@ -21,30 +21,30 @@ namespace {
 namespace std {} using namespace std;
 
 //______________________________________________________________________________
-static size_t StdLen(const std::string &name, size_t pos = 0)
+static size_t StdLen(const std::string_view name)
 {
    // Return the length, if any, taken by std:: and any
    // potential inline namespace (well compiler detail namespace).
 
    size_t len = 0;
-   if (name.compare(pos,5,"std::")==0) {
+   if (name.compare(0,5,"std::")==0) {
       len = 5;
 
       // TODO: This is likely to induce unwanted autoparsing, those are reduced
       // by the caching of the result.
       if (gInterpreterHelper) {
-         for(size_t i = pos+5; i < name.length(); ++i) {
+         for(size_t i = 5; i < name.length(); ++i) {
             if (name[i] == '<') break;
             if (name[i] == ':') {
                bool isInlined;
-               std::string scope(name.substr(pos,i-pos));
+               std::string scope(name.data(),i);
                std::string scoperesult;
                // We assume that we are called in already serialized code.
                // Note: should we also cache the negative answers?
                static std::set<std::string> gInlined;
 
                if (gInlined.find(scope) != gInlined.end()) {
-                  len = i - pos;
+                  len = i;
                   if (i+1<name.length() && name[i+1]==':') {
                      len += 2;
                   }
@@ -53,7 +53,7 @@ static size_t StdLen(const std::string &name, size_t pos = 0)
                    && gInterpreterHelper->IsDeclaredScope(scope,isInlined)) {
                   if (isInlined) {
                      gInlined.insert(scope);
-                     len = i - pos;
+                     len = i;
                      if (i+1<name.length() && name[i+1]==':') {
                         len += 2;
                      }
@@ -68,23 +68,26 @@ static size_t StdLen(const std::string &name, size_t pos = 0)
 }
 
 //______________________________________________________________________________
-static size_t StdLen(const char *name, size_t pos = 0)
-{
-   // Return the length, if any, taken by std:: and any
-   // potential inline namespace (well compiler detail namespace).
-
-   return StdLen(std::string(name),pos);
-}
-
-//______________________________________________________________________________
 static void RemoveStd(std::string &name, size_t pos = 0)
 {
    // Remove std:: and any potential inline namespace (well compiler detail
    // namespace.
 
-   size_t len = StdLen(name,pos);
+   size_t len = StdLen({name.data()+pos,name.length()-pos});
    if (len) {
       name.erase(pos,len);
+   }
+}
+
+//______________________________________________________________________________
+static void RemoveStd(std::string_view &name)
+{
+   // Remove std:: and any potential inline namespace (well compiler detail
+   // namespace.
+
+   size_t len = StdLen(name);
+   if (len) {
+      name.remove_prefix(len);
    }
 }
 
@@ -130,7 +133,7 @@ ROOT::ESTLType TClassEdit::TSplitType::IsInSTL() const
    //             result: code of container that the type or is the scope of the type
 
    if (fElements[0].empty()) return ROOT::kNotSTL;
-   return STLKind(fElements[0].c_str());
+   return STLKind(fElements[0]);
 }
 
 //______________________________________________________________________________
@@ -157,7 +160,7 @@ int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
       return 0;
    }
 
-   int kind = STLKind(fElements[0].c_str());
+   int kind = STLKind(fElements[0]);
 
    if (kind==ROOT::kSTLvector || kind==ROOT::kSTLlist || kind==ROOT::kSTLforwardlist) {
 
@@ -231,7 +234,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    //    fprintf(stderr,"calling ShortType %d for %s with narg %d tail %d\n",imode,typeDesc,narg,tailLoc);
 
    //kind of stl container
-   const int kind = STLKind(fElements[0].c_str());
+   const int kind = STLKind(fElements[0]);
    const int iall = STLArgs(kind);
 
    // Only class is needed
@@ -449,14 +452,14 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 }
 
 //______________________________________________________________________________
-ROOT::ESTLType TClassEdit::STLKind(const char *type, size_t len)
+ROOT::ESTLType TClassEdit::STLKind(std::string_view type)
 {
    // Converts STL container name to number. vector -> 1, etc..
    // If len is greater than 0, only look at that many characters in the string.
 
    unsigned char offset = 0;
-   if (strncmp(type,"const ",6)==0) { offset += 6; }
-   offset += StdLen(type,offset);
+   if (type.compare(0,6,"const ")==0) { offset += 6; }
+   offset += StdLen(type.substr(offset));
 
    //container names
    static const char *stls[] =
@@ -475,15 +478,16 @@ ROOT::ESTLType TClassEdit::STLKind(const char *type, size_t len)
       };
 
    // kind of stl container
+   auto len = type.length();
    if (len) {
       len -= offset;
       for(int k=1;stls[k];k++) {
          if (len == stllen[k]) {
-            if (strncmp(type+offset,stls[k],len)==0) return values[k];
+            if (type.compare(offset,len,stls[k])==0) return values[k];
          }
       }
    } else {
-      for(int k=1;stls[k];k++) {if (strcmp(type+offset,stls[k])==0) return values[k];}
+      for(int k=1;stls[k];k++) {if (type.compare(offset,len,stls[k])==0) return values[k];}
    }
    return ROOT::kNotSTL;
 }
@@ -501,10 +505,10 @@ int   TClassEdit::STLArgs(int kind)
 }
 
 //______________________________________________________________________________
-size_t findNameEnd(std::string &full, size_t pos)
+static size_t findNameEnd(const std::string_view full)
 {
    int level = 0;
-   for(size_t i = pos; i < full.length(); ++i) {
+   for(size_t i = 0; i < full.length(); ++i) {
       switch(full[i]) {
          case '<': { ++level; break; }
          case '>': {
@@ -523,12 +527,18 @@ size_t findNameEnd(std::string &full, size_t pos)
 }
 
 //______________________________________________________________________________
+static size_t findNameEnd(const std::string &full, size_t pos)
+{
+   return pos + findNameEnd( {full.data()+pos,full.length()-pos} );
+}
+
+//______________________________________________________________________________
 bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
 {
    // return whether or not 'allocname' is the STL default allocator for type
    // 'classname'
 
-   string a = allocname;
+   string_view a( allocname );
    RemoveStd(a);
 
    if (a=="alloc")                              return true;
@@ -539,33 +549,32 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    if (a.compare(0,alloclen,"allocator<") != 0) {
       return false;
    }
-   size_t pos = alloclen;
+   a.remove_prefix(alloclen);
 
-   pos += StdLen(a,pos);
+   RemoveStd(a);
 
-   string k = classname;
-   size_t pos2 = StdLen(k);
-   if (pos2) k = classname + pos2;
+   string_view k = classname;
+   RemoveStd(k);
 
-   if (a.compare(pos,k.length(),k) != 0) {
+   if (a.compare(0,k.length(),k) != 0) {
       // Now we need to compare the normalized name.
-      size_t end = findNameEnd(a,pos);
+      size_t end = findNameEnd(a);
 
       std::string valuepart;
-      GetNormalizedName(valuepart,std::string_view(a.c_str()+pos,end-pos));
+      GetNormalizedName(valuepart,std::string_view(a.data(),end));
 
       std::string norm_value;
-      GetNormalizedName(norm_value,k.c_str());
+      GetNormalizedName(norm_value,k);
 
       if (valuepart != norm_value) {
          return false;
       }
-      pos = end;
+      a.remove_prefix(end);
    } else {
-      pos += k.length();
+      a.remove_prefix(k.length());
    }
 
-   if (a.compare(pos,1,">")!=0 && a.compare(pos,2," >")!=0) {
+   if (a.compare(0,1,">")!=0 && a.compare(0,2," >")!=0) {
       return false;
    }
 
@@ -582,43 +591,42 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
    if (IsDefAlloc(allocname,keyclassname)) return true;
 
-   string a = allocname;
+   string_view a( allocname );
    RemoveStd(a);
 
    const static int alloclen = strlen("allocator<");
    if (a.compare(0,alloclen,"allocator<") != 0) {
       return false;
    }
-   size_t pos = alloclen;
+   a.remove_prefix(alloclen);
 
-   pos += StdLen(a,pos);
+   RemoveStd(a);
 
    const static int pairlen = strlen("pair<");
-   if (a.compare(pos,pairlen,"pair<") != 0) {
+   if (a.compare(0,pairlen,"pair<") != 0) {
       return false;
    }
-   pos += pairlen;
+   a.remove_prefix(pairlen);
 
    const static int constlen = strlen("const ");
-   if (a.compare(pos,constlen,"const ") == 0) {
-      pos += constlen;
+   if (a.compare(0,constlen,"const ") == 0) {
+      a.remove_prefix(constlen);
    }
 
-   pos += StdLen(a,pos);
+   RemoveStd(a);
 
-   string k = keyclassname;
-   size_t pos2 = StdLen(k);
-   if (pos2) k = keyclassname + pos2;
+   string_view k = keyclassname;
+   RemoveStd(k);
 
-   if (a.compare(pos,k.length(),k) != 0) {
+   if (a.compare(0,k.length(),k) != 0) {
       // Now we need to compare the normalized name.
-      size_t end = findNameEnd(a,pos);
+      size_t end = findNameEnd(a);
 
       std::string keypart;
-      GetNormalizedName(keypart,std::string_view(a.c_str()+pos,end-pos));
+      GetNormalizedName(keypart,std::string_view(a.data(),end));
 
       std::string norm_key;
-      GetNormalizedName(norm_key,k.c_str());
+      GetNormalizedName(norm_key,k);
 
       if (keypart != norm_key) {
          if ( k[k.length()-1] == '*' ) {
@@ -631,41 +639,39 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
             return false;
          }
       }
-      pos = end;
+      a.remove_prefix(end);
    } else {
-      pos += k.length();
+      a.remove_prefix(k.length());
    }
 
-   if (a[pos] != ',') {
+   if (a[0] != ',') {
       return false;
    }
-   ++pos;
+   a.remove_prefix(1);
+   RemoveStd(a);
 
-   pos += StdLen(a,pos);
+   string_view v = valueclassname;
+   RemoveStd(v);
 
-   string v = valueclassname;
-   size_t pos3 = StdLen(v);
-   if (pos3) v = valueclassname + pos3;
-
-   if (a.compare(pos,v.length(),v) != 0) {
+   if (a.compare(0,v.length(),v) != 0) {
       // Now we need to compare the normalized name.
-      size_t end = findNameEnd(a,pos);
+      size_t end = findNameEnd(a);
 
       std::string valuepart;
-      GetNormalizedName(valuepart,std::string_view(a.c_str()+pos,end-pos));
+      GetNormalizedName(valuepart,std::string_view(a.data(),end));
 
       std::string norm_value;
-      GetNormalizedName(norm_value,k.c_str());
+      GetNormalizedName(norm_value,v);
 
       if (valuepart != norm_value) {
          return false;
       }
-      pos = end;
+      a.remove_prefix(end);
    } else {
-      pos += v.length();
+      a.remove_prefix(v.length());
    }
 
-   if (a.compare(pos,1,">")!=0 && a.compare(pos,2," >")!=0) {
+   if (a.compare(0,1,">")!=0 && a.compare(0,2," >")!=0) {
       return false;
    }
 
@@ -1182,17 +1188,17 @@ bool TClassEdit::IsSTLBitset(const char *classname)
 }
 
 //______________________________________________________________________________
-ROOT::ESTLType TClassEdit::IsSTLCont(const char *type)
+ROOT::ESTLType TClassEdit::IsSTLCont(std::string_view type)
 {
    //  type     : type name: vector<list<classA,allocator>,allocator>
    //  result:    0          : not stl container
    //             code of container 1=vector,2=list,3=deque,4=map
    //                     5=multimap,6=set,7=multiset
 
-   const char *pos = strchr(type,'<');
-   if (pos==0) return ROOT::kNotSTL;
+   auto pos = type.find('<');
+   if (pos==std::string_view::npos) return ROOT::kNotSTL;
 
-   return STLKind(type,pos-type);
+   return STLKind({type.data(),pos});
 }
 
 //______________________________________________________________________________
@@ -1248,7 +1254,7 @@ bool TClassEdit::IsStdClass(const char *classname)
 bool TClassEdit::IsVectorBool(const char *name) {
    TSplitType splitname( name );
 
-   return ( TClassEdit::STLKind( splitname.fElements[0].c_str() ) == ROOT::kSTLvector)
+   return ( TClassEdit::STLKind( splitname.fElements[0] ) == ROOT::kSTLvector)
       && ( splitname.fElements[1] == "bool" || splitname.fElements[1]=="Bool_t");
 }
 
