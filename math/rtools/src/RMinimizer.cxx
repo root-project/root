@@ -17,9 +17,10 @@ namespace ROOT {
       int gNCalls = 0;       
 
       ///function to return the function values at point x
-      double minfunction(TVectorD x){
+      double minfunction(const std::vector<double> &  x){
         gNCalls++; 
-	return (*gFunction)(x.GetMatrixArray());
+	//return (*gFunction)(x.GetMatrixArray());
+	return (*gFunction)(x.data());
       }
       ///function to return the gradient values at point y
       TVectorD mingradfunction(TVectorD y){
