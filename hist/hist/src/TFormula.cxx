@@ -45,6 +45,11 @@ ClassImp(TFormula)
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*The  F O R M U L A  class*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
+//*-*   This is a new version of the TFormula class based on Cling.
+//*-*   This class is not 100% backward compatible with the old TFOrmula class, which is still available in ROOT as
+//*-*   ROOT::v5::TFormula. Some of the TFormula member funtions available in version 5, such as
+//*-*   Analyze and AnalyzeFunction are not available in the new TFormula.
+//*-*   On the other hand formula expressions which were valid in version 5 are still valid in TFormula version 6
 //*-*
 //*-*   This class has been implemented during Google Summer of Code 2013 by Maciej Zimnoch.
 //*-*   =========================================================
@@ -182,6 +187,7 @@ TFormula::~TFormula()
    }
 }
 
+#ifdef OLD_VERSION
 TFormula::TFormula(const char *name, Int_t nparams, Int_t ndims)
 {
    //*-*
@@ -207,6 +213,7 @@ TFormula::TFormula(const char *name, Int_t nparams, Int_t ndims)
       DoAddParameter(parName,0,false);
    }
 }
+#endif
 
 TFormula::TFormula(const TString &name, TString formula, bool addToGlobList)   :
    TNamed(name,formula),
@@ -291,6 +298,40 @@ TFormula& TFormula::operator=(const TFormula &rhs)
    }
    return *this;
 }
+
+Int_t TFormula::Compile(const char *expression)
+{   
+    // Compile the given expression with Cling
+    // backward compatibility method to be used in combination with the empty constructor
+    // if no expression is given , the current stored formula (retrieved with GetExpFormula()) or the title  is used.
+   // return 0 if the formula compilation is successfull
+
+   
+   TString formula = expression;
+   if (formula.IsNull() ) {
+      formula = fFormula;
+      if (formula.IsNull() ) formula = GetTitle();
+   }
+   
+   if (formula.IsNull() ) return -1; 
+
+   // do not re-process if it was done before 
+   if (IsValid() && formula == fFormula ) return 0;
+
+   // clear if a formula was already existing
+   if (!fFormula.IsNull() ) Clear(); 
+
+   fFormula = formula;
+   if (fVars.empty() ) FillDefaults(); 
+   // prepare the formula for Cling
+   PreProcessFormula(fFormula);
+   fClingInput = fFormula;
+   // pass formula in CLing
+   bool ret = PrepareFormula(fClingInput);
+
+   return (ret) ? 0 : 1;      
+}
+
 void TFormula::Copy(TObject &obj) const
 {
    TNamed::Copy(obj);
@@ -348,6 +389,39 @@ void TFormula::Copy(TObject &obj) const
    }
 
    fnew.fFuncPtr = fFuncPtr;
+
+}
+
+void TFormula::Clear(Option_t * )
+{
+   // clear the formula setting expression to empty and reset the variables and parameters containers
+   fNdim = 0;
+   fNpar = 0;
+   fNumber = 0; 
+   fFormula = "";
+   fClingName = "";
+  
+
+   if(fMethod) fMethod->Delete();
+   fMethod = nullptr; 
+
+   fClingVariables.clear();
+   fClingParameters.clear();
+   fReadyToExecute = false;
+   fClingInitialized = false;
+   fAllParametersSetted = false; 
+   fFuncs.clear();
+   fVars.clear();
+   fParams.clear();
+   fConsts.clear();
+   fFunctionsShortcuts.clear();
+   
+   // delete linear parts 
+   int nLinParts = fLinearParts.size();
+   if (nLinParts > 0) {
+      for (int i = 0; i < nLinParts; ++i) delete fLinearParts[i];
+   }
+   fLinearParts.clear();
 
 }
 void TFormula::PrepareEvalMethod()

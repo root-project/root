@@ -141,12 +141,14 @@ public:
    TFormula&      operator=(const TFormula &rhs);
    TFormula(const TString &name, TString formula, bool addToGlobList = true);
                   TFormula(const TFormula &formula);
-                  TFormula(const char *name, Int_t nparams, Int_t ndims);
+   //               TFormula(const char *name, Int_t nparams, Int_t ndims);
 
    void           AddParameter(const TString &name, Double_t value) { DoAddParameter(name,value,true); }
    void           AddVariable(const TString &name, Double_t value);
    void           AddVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
-   void           Copy(TObject &f1) const;
+   Int_t          Compile(const char *expression="");
+   virtual void   Copy(TObject &f1) const;
+   virtual void   Clear(Option_t * option="");
    Double_t       Eval(Double_t x);
    Double_t       Eval(Double_t x, Double_t y);
    Double_t       Eval(Double_t x, Double_t y , Double_t z);
