@@ -2659,6 +2659,17 @@ namespace {
 }
 
 //______________________________________________________________________________
+ROOT::ESTLType TClass::GetCollectionType() const
+{
+   // Return the 'type' of the STL the TClass is representing.
+   // and return ROOT::kNotSTL if it is not representing an STL collection.
+   auto proxy = GetCollectionProxy();
+   if (proxy) return (ROOT::ESTLType)proxy->GetCollectionType();
+   return ROOT::kNotSTL;
+}
+
+
+//______________________________________________________________________________
 TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 {
    // Return the proxy describing the collection (if any).

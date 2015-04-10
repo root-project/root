@@ -1198,6 +1198,16 @@ ROOT::ESTLType TClassEdit::IsSTLCont(std::string_view type)
    auto pos = type.find('<');
    if (pos==std::string_view::npos) return ROOT::kNotSTL;
 
+   auto c = pos+1;
+   for (decltype(type.length()) level = 1; c < type.length(); ++c) {
+      if (type[c] == '<') ++level;
+      if (type[c] == '>') --level;
+      if (level == 0) break;
+   }
+   if (c != (type.length()-1) ) {
+      return ROOT::kNotSTL;
+   }
+
    return STLKind({type.data(),pos});
 }
 

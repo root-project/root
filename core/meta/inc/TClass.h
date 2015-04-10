@@ -412,6 +412,7 @@ public:
    TClass            *GetBaseClass(const TClass *base);
    Int_t              GetBaseClassOffset(const TClass *toBase, void *address = 0, bool isDerivedObject = true);
    TClass            *GetBaseDataMember(const char *datamember);
+   ROOT::ESTLType     GetCollectionType() const;
    ROOT::DirAutoAdd_t GetDirectoryAutoAdd() const;
    TFunctionTemplate *GetFunctionTemplate(const char *name);
    UInt_t             GetInstanceCount() const { return fInstanceCount; }
