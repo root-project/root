@@ -86,7 +86,7 @@ namespace ROOT {
                fInterface->Assign<T>(var, fName);
                return *this;
             }
-
+            #include<TRInterface_Binding.h>
             template <class T> operator T() {
                return fInterface->ParseEval(fName);
             }

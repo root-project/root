@@ -39,6 +39,7 @@ include_directories(${CMAKE_SOURCE_DIR}/bindings/r/inc ${RCPP_INCLUDE_DIR} ${RIN
 
 
 set(R_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface.h 
+              ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface_Binding.h 
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRObjectProxy.h 
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFunction.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInternalFunction.h

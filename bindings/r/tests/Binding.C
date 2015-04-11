@@ -8,6 +8,16 @@ Double_t Function(Double_t x)
   return x/(x-1);
 }
 
+Double_t Fun(Double_t x)
+{
+  return x/(x-1);
+}
+//overloaded function to test the operator <<
+Int_t Fun(Int_t x)
+{
+  return x-1;
+}
+
 void Binding(){
 //creating variables
 TVectorD v(3);
@@ -61,15 +71,15 @@ r<<"print(m)";
 std::cout<<"--------------------\n";
 r<<"print(b)";
 std::cout<<"--------------------\n";
-r.Parse("print(i)");
+r<<"print(i)";
 std::cout<<"--------------------\n";
-r.Parse("print(d)");
+r<<"print(d)";
 std::cout<<"--------------------\n";
-r.Parse("print(f)");
+r<<"print(f)";
 std::cout<<"--------------------\n";
-r.Parse("print(s)");
+r<<"print(s)";
 std::cout<<"--------------------\n";
-r.Parse("print(array)");
+r<<"print(array)";
 std::cout<<"--------------------\n";
 
 //reassigning the variable s
@@ -119,5 +129,21 @@ r["s"]>>str2;
 
 mat.Print();
 std::cout<<" array={"<<a[0]<<","<<a[1]<<","<<a[2]<<"}";
+r["func"]<<Function;
+r<<"print(func(2))";
+std::cout<<"func="<<Function(2);
 
+//passing overloaded functions
+r["funi"]<<(Int_t (*)(Int_t))Fun;
+r<<"print(funi(2))";
+std::cout<<"funi="<<Fun(2)<<std::endl;
+
+r["fund"]<<(Double_t (*)(Double_t))Fun;
+r<<"print(fund(2.01))";
+std::cout<<"fund="<<Fun(2.01)<<std::endl;
+
+//if you uncomment the next line you get a big
+//traceback because the template can not reslve the overloaded
+//function.
+//r["fun"]<<Fun;
 }
