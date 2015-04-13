@@ -229,7 +229,7 @@ namespace cling {
                 = Diags.getCustomDiagID(DiagnosticsEngine::Error,
                                         "Syntax error");
               Diags.Report(NewBody.getAsSingleNode()->getLocStart(), diagID);
-              D->dump();
+              FD->dump();
               if (NewBody.hasSingleNode())
                 NewBody.getAs<Expr>()->dump();
               return; // Signal a fatal error.
