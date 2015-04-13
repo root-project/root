@@ -361,7 +361,17 @@ void TGeoBranchArray::Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_
 void TGeoBranchArray::UpdateNavigator(TGeoNavigator *nav) const
 {
 // Update the navigator to reflect the branch.
-   nav->CdTop();
+//   nav->CdTop();
    if (fLevel<0) {nav->SetOutside(kTRUE); return;}
-   for (Int_t i=1; i<fLevel+1; i++) nav->CdDown(fArray[i]);
+   Int_t matchlev = 0;
+   Int_t navlev = nav->GetLevel();
+   Int_t i;
+   Int_t maxlev = TMath::Min(fLevel, navlev);
+   for (i=1; i<maxlev+1; ++i) {
+     if (fArray[i] != nav->GetMother(navlev-i)) break;
+     matchlev++;
+   }
+   // Go to matching level
+   for (i=0; i<navlev-matchlev; i++) nav->CdUp();
+   for (i=matchlev+1; i<fLevel+1; i++) nav->CdDown(fArray[i]);
 }
