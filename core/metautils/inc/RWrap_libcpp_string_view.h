@@ -167,6 +167,159 @@ inline namespace __1 {
       return __os;
    }
 
+#ifdef _LOCAL_VSTD
+   // search
+
+   template <class _BinaryPredicate, class _ForwardIterator1, class _ForwardIterator2>
+   _ForwardIterator1
+   __search(_ForwardIterator1 __first1, _ForwardIterator1 __last1,
+            _ForwardIterator2 __first2, _ForwardIterator2 __last2, _BinaryPredicate __pred,
+            forward_iterator_tag, forward_iterator_tag)
+   {
+      if (__first2 == __last2)
+         return __first1;  // Everything matches an empty sequence
+      while (true)
+      {
+         // Find first element in sequence 1 that matchs *__first2, with a mininum of loop checks
+         while (true)
+         {
+            if (__first1 == __last1)  // return __last1 if no element matches *__first2
+               return __last1;
+            if (__pred(*__first1, *__first2))
+               break;
+            ++__first1;
+         }
+         // *__first1 matches *__first2, now match elements after here
+         _ForwardIterator1 __m1 = __first1;
+         _ForwardIterator2 __m2 = __first2;
+         while (true)
+         {
+            if (++__m2 == __last2)  // If pattern exhausted, __first1 is the answer (works for 1 element pattern)
+               return __first1;
+            if (++__m1 == __last1)  // Otherwise if source exhaused, pattern not found
+               return __last1;
+            if (!__pred(*__m1, *__m2))  // if there is a mismatch, restart with a new __first1
+            {
+               ++__first1;
+               break;
+            }  // else there is a match, check next elements
+         }
+      }
+   }
+
+   template <class _BinaryPredicate, class _RandomAccessIterator1, class _RandomAccessIterator2>
+   _LIBCPP_CONSTEXPR_AFTER_CXX11 _RandomAccessIterator1
+   __search(_RandomAccessIterator1 __first1, _RandomAccessIterator1 __last1,
+            _RandomAccessIterator2 __first2, _RandomAccessIterator2 __last2, _BinaryPredicate __pred,
+            random_access_iterator_tag, random_access_iterator_tag)
+   {
+      typedef typename std::iterator_traits<_RandomAccessIterator1>::difference_type _D1;
+      typedef typename std::iterator_traits<_RandomAccessIterator2>::difference_type _D2;
+      // Take advantage of knowing source and pattern lengths.  Stop short when source is smaller than pattern
+      _D2 __len2 = __last2 - __first2;
+      if (__len2 == 0)
+         return __first1;
+      _D1 __len1 = __last1 - __first1;
+      if (__len1 < __len2)
+         return __last1;
+      const _RandomAccessIterator1 __s = __last1 - (__len2 - 1);  // Start of pattern match can't go beyond here
+      while (true)
+      {
+#if !_LIBCPP_UNROLL_LOOPS
+         while (true)
+         {
+            if (__first1 == __s)
+               return __last1;
+            if (__pred(*__first1, *__first2))
+               break;
+            ++__first1;
+         }
+#else  // !_LIBCPP_UNROLL_LOOPS
+         for (_D1 __loop_unroll = (__s - __first1) / 4; __loop_unroll > 0; --__loop_unroll)
+         {
+            if (__pred(*__first1, *__first2))
+               goto __phase2;
+            if (__pred(*++__first1, *__first2))
+               goto __phase2;
+            if (__pred(*++__first1, *__first2))
+               goto __phase2;
+            if (__pred(*++__first1, *__first2))
+               goto __phase2;
+            ++__first1;
+         }
+         switch (__s - __first1)
+         {
+            case 3:
+               if (__pred(*__first1, *__first2))
+                  break;
+               ++__first1;
+            case 2:
+               if (__pred(*__first1, *__first2))
+                  break;
+               ++__first1;
+            case 1:
+               if (__pred(*__first1, *__first2))
+                  break;
+            case 0:
+               return __last1;
+         }
+      __phase2:
+#endif  // !_LIBCPP_UNROLL_LOOPS
+         _RandomAccessIterator1 __m1 = __first1;
+         _RandomAccessIterator2 __m2 = __first2;
+#if !_LIBCPP_UNROLL_LOOPS
+         while (true)
+         {
+            if (++__m2 == __last2)
+               return __first1;
+            ++__m1;          // no need to check range on __m1 because __s guarantees we have enough source
+            if (!__pred(*__m1, *__m2))
+            {
+               ++__first1;
+               break;
+            }
+         }
+#else  // !_LIBCPP_UNROLL_LOOPS
+         ++__m2;
+         ++__m1;
+         for (_D2 __loop_unroll = (__last2 - __m2) / 4; __loop_unroll > 0; --__loop_unroll)
+         {
+            if (!__pred(*__m1, *__m2))
+               goto __continue;
+            if (!__pred(*++__m1, *++__m2))
+               goto __continue;
+            if (!__pred(*++__m1, *++__m2))
+               goto __continue;
+            if (!__pred(*++__m1, *++__m2))
+               goto __continue;
+            ++__m1;
+            ++__m2;
+         }
+         switch (__last2 - __m2)
+         {
+            case 3:
+               if (!__pred(*__m1, *__m2))
+                  break;
+               ++__m1;
+               ++__m2;
+            case 2:
+               if (!__pred(*__m1, *__m2))
+                  break;
+               ++__m1;
+               ++__m2;
+            case 1:
+               if (!__pred(*__m1, *__m2))
+                  break;
+            case 0:
+               return __first1;
+         }
+      __continue:
+         ++__first1;
+#endif  // !_LIBCPP_UNROLL_LOOPS
+      }
+   }
+#endif // _LOCAL_VSTD for __search
+
    template <class _ForwardIterator1, class _ForwardIterator2, class _BinaryPredicate>
    _LIBCPP_CONSTEXPR_AFTER_CXX11 _ForwardIterator1
    __find_first_of_ce(_ForwardIterator1 __first1, _ForwardIterator1 __last1,
