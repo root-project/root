@@ -157,6 +157,7 @@ namespace TClassEdit {
    bool        IsDefHash(const char *hashname, const char *classname);
    bool        IsInterpreterDetail(const char *type);
    bool        IsSTLBitset(const char *type);
+   ROOT::ESTLType UnderlyingIsSTLCont(std::string_view type);
    ROOT::ESTLType IsSTLCont (std::string_view type);
    int         IsSTLCont (const char *type,int testAlloc);
    bool        IsStdClass(const char *type);

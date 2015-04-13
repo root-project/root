@@ -1188,6 +1188,31 @@ bool TClassEdit::IsSTLBitset(const char *classname)
 }
 
 //______________________________________________________________________________
+ROOT::ESTLType TClassEdit::UnderlyingIsSTLCont(std::string_view type)
+{
+   // Return the type of STL collection, if any, that is the underlying type
+   // of the given type.   Namely return the value of IsSTLCont after stripping
+   // pointer, reference and constness from the type.
+   //    UnderlyingIsSTLCont("vector<int>*") == IsSTLCont("vector<int>")
+   // See TClassEdit::IsSTLCont
+   //
+   //  type     : type name: vector<list<classA,allocator>,allocator>*
+   //  result:    0          : not stl container
+   //             code of container 1=vector,2=list,3=deque,4=map
+   //                     5=multimap,6=set,7=multiset
+
+   if (type.compare(0,6,"const ",6) == 0)
+      type.remove_prefix(6);
+
+   while(type[type.length()-1]=='*' ||
+         type[type.length()-1]=='&' ||
+         type[type.length()-1]==' ') {
+      type.remove_suffix(1);
+   }
+   return IsSTLCont(type);
+}
+
+//______________________________________________________________________________
 ROOT::ESTLType TClassEdit::IsSTLCont(std::string_view type)
 {
    //  type     : type name: vector<list<classA,allocator>,allocator>

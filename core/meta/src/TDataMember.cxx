@@ -754,7 +754,7 @@ int TDataMember::IsSTLContainer()
 
    if (fSTLCont != -1) return fSTLCont;
    R__LOCKGUARD(gInterpreterMutex);
-   fSTLCont = TClassEdit::IsSTLCont(GetTrueTypeName());
+   fSTLCont = TClassEdit::UnderlyingIsSTLCont(GetTrueTypeName());
    return fSTLCont;
 }
 

@@ -426,7 +426,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
       if (splitlevel > 0) {
          // -- Create sub branches if requested by splitlevel.
          const char* elem_type = element->GetTypeName();
-         fSTLtype = TMath::Abs(TClassEdit::IsSTLCont(elem_type));
+         fSTLtype = TClassEdit::UnderlyingIsSTLCont(elem_type);
          if (element->CannotSplit()) {
             fSplitLevel = 0;
          } else if (element->IsA() == TStreamerBase::Class()) {
