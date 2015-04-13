@@ -21,7 +21,7 @@ if test "x`uname | grep -i cygwin`" != "x"; then
 fi
 
 echo "Committing changes."
-git commit core/base/inc/RVersion.h rootx/src/rootcoreteam.h build/version_number \
+git commit core/base/inc/RVersion.h rootx/src/rootcoreteam.h build/version_number documentation/doxygen/Doxyfile \
   -m "Update ROOT version files to v$VERSION." || exit 1
 
 echo "Update also doc/vXXX/index.html to $VERSION."
