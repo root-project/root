@@ -559,7 +559,7 @@ inline namespace __1 {
 #undef _NOEXCEPT
 #endif
 
-#ifdef #define _LOCAL_LIBCPP_ASSERT
+#ifdef _LOCAL_LIBCPP_ASSERT
 #undef _LIBCPP_ASSERT
 #endif
 
