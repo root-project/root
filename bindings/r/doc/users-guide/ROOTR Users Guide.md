@@ -1,7 +1,14 @@
 <center>![](img/logo.jpeg)</center>
 # ROOTR Users Guide
 
-##ROOTR BASICS
+
+## DESCRIPTION
+ROOT R is an interface in ROOT to call R functions using an R C++ interface (Rcpp, see http://dirk.eddelbuettel.com/code/rcpp.html).
+This interface opens the possibility in ROOT to use the very large set of mathematical and statistical tools provided by R.
+With ROOTR you can perform a conversion from ROOT's C++ objects to R's objects, transform the returned R objects into ROOT's C++ objects, then
+the R functionality can be used directly for statistical studies in ROOT.
+
+## ROOTR BASICS
 ROOTR creates a working environment to execute R coding called from `C++`. It allows to translate some datatypes from `C++` to R
 inside the R environment and vice versa in an easy way to get the most from both R and ROOT.
 To ease the sending and receiving of data in both environments, I overloaded the operators `<<`,`>>` and `[]`
@@ -9,7 +16,96 @@ which make look the job as a flow of data between environments, we will see more
 With this tool you ca use any library or R package wich allows you to access a big ammount of benefits to make statistical analysis.
 ROOTR also has a R events processing system, which allows to use the R graphical system from `C++`.
 
-##HOW DOES IT WORK
+## INSTALLATION
+To install ROOTR please read first.
+
+- [http://root.cern.ch/drupal/content/installing-root-source](http://root.cern.ch/drupal/content/installing-root-source)
+- [http://root.cern.ch/drupal/content/build-prerequisites](http://root.cern.ch/drupal/content/build-prerequisites)
+
+
+### COMPILING ROOTR ON MAC WITH CMAKE:
+**NOTE:** Mac OSX Yosemite last xcode and without macports
+
+
+**Prerequisities**
+
+-  xcode
+- [http://xquartz.macosforge.org/](http://xquartz.macosforge.org/)
+-  R last version [http://cran.rstudio.com/bin/macosx/R-3.1.3-mavericks.pkg](http://cran.rstudio.com/bin/macosx/R-3.1.3-mavericks.pkg)
+- [http://www.cmake.org/files/v3.2/cmake-3.2.1-Darwin-x86_64.dmg](http://www.cmake.org/files/v3.2/cmake-3.2.1-Darwin-x86_64.dmg)
+
+To compile with cmake added into ~/.profile
+
+``` {.sh}
+export PATH=$PATH:/Applications/CMake.app/Contents/bin/
+```
+and
+
+``` {.sh}
+source ~/.profile
+```
+
+Install needed R packages, open R and in the prompt type
+
+``` {.sh}
+install.packages(c('Rcpp','RInside'))
+```
+select a mirror and install.
+
+Download code from git repo
+
+``` {.sh}
+git clone -b master-root-R  https://github.com/lmoneta/root.git
+```
+
+To compile ROOTR lets to create a compilation directory and to activate it use cmake -Dr=ON ..
+
+``` {.sh}
+mkdir compile
+cd compile
+cmake -Dr=ON ..
+make -j n
+```
+This is a basic video using ROOTR on
+
+![ROOTR Mac](http://img.youtube.com/vi/tvhuEen8t7c/0.jpg)](http://www.youtube.com/watch?v=tvhuEen8t7c)
+
+### Compiling ROOTR on Gnu/Linux with CMake:
+**NOTE:** Tested on Gnu/Linux Debian Jessie with gcc 4.9
+
+**Prerequisities**
+install
+(For debian-based distros)
+
+``` {.sh}
+apt-get install r-base r-base-dev
+```
+Install needed R packages, open R and in the prompt type
+
+``` {.sh}
+install.packages(c('Rcpp','RInside'))
+```
+select a mirror and install.
+Download code from git repo
+
+``` {.sh}
+git clone -b master-root-R  https://github.com/lmoneta/root.git
+```
+
+To compile ROOTR lets to create a compilation directory and to activate it use cmake -Dr=ON ..
+
+``` {.sh}
+mkdir compile
+cd compile
+cmake -Dr=ON ..
+make -j n
+```
+This is a basic video using ROOTR on
+
+![ROOTR Gnu/Linux](http://img.youtube.com/vi/FkrmM2xCPoM/0.jpg)](http://www.youtube.com/watch?v=FkrmM2xCPoM)
+
+
+## HOW DOES IT WORK
 There is a class called TRInterface which is located at the header TRInterface.h and uses the namespace `ROOT::R`, it is in charge
 of making calls to R to give and obtein data. This class has a series of overcharged operators which ease the passing and obtaining of data
 and code from R to C++ and vice versa. To create an object of this class the user must use the static methods `ROOT::R::TRInterface::Instance`
@@ -20,7 +116,7 @@ and `ROOT::R::TRInterface::InstancePtr` which return a reference object and a po
 ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
 ```
 
-##Running R code and passing/getting variables.
+## Running R code and passing/getting variables.
 We have different ways to run R code and pass/obtain data to/from R environment: using the methods Execute(code) and
 Eval(code).
 
@@ -64,7 +160,7 @@ m.Print();
 ```
 So, working with ROOTR is like working with flows of data to pass, obtain and process data.
 
-##Passing functions from ROOT to R
+## Passing functions from ROOT to R
 You can pass functions from ROOT to R using the opetrators `<<` and `=` or using the class TRFunction, but the arguments and datatypes of the return value cannot be pointers. They must be ROOTR supported datatypes.
 So instead of using `*Double_t` you must use `std::vector` and instead of `*Char_t` use TString or `std::string`.
 
@@ -126,7 +222,7 @@ r<<"print(myfuni(1))";
 }
 ```
 
-##Wrapping a class
+## Wrapping a class
 You can wrap a class and expose it in R environment using only a pair of macrodefinitions and the template class
 `ROOT::R::class_<>`
 The `ROOTR_EXPOSED_CLASS(Class)` macro allows you to expose the class as a new datatype of R, but it has to be alongside
@@ -136,12 +232,12 @@ each constructor, attribute or method that the class to export has.
 Then the macrodefinition `LOAD_ROOTR_MODULE(Module)` can load the module and the class in R's environment.
 You can find a more clear instruction by looking at a example below in Functor section.
 
-##Plotting with R's graphical system.
+## Plotting with R's graphical system.
 ROOTR supports an eventloop for R's graphical system which allows plotting using the R functions to the
 graphical system or generating images(ps, pdf png, etc).
 You can find a demo in Interpolation below in examples section.
 
-##Interactive Mode
+## Interactive Mode
 The interactive mode lets you get the R's command line within ROOT's command line to run R code with tab completion support.
 The variables created in the interactive mode can be passed to ROOT with TRObjectProxy and the method ParseEval?.
 To initialize the interactive mode just call Interactive() method and type ".q" to exit from R's prompt and to go to the ROOT's prompt again.
@@ -175,10 +271,10 @@ Vector (9)  is as follows
 root [4]
 ``` 
 
-##EXAMPLES
+## EXAMPLES
 The examples can also be found in `$ROOTSYS/tutorials/r`
 
-##Creating a Functor
+## Creating a Functor
 A functor is a class which wraps a function, very useful when states and propierties
 associated to that function are needed.
 In this example I show how to give support to a custom class to be used in R's environment,
@@ -262,7 +358,7 @@ void Functor()
 }
 ```
 
-##Simple fitting in R and plot in ROOT
+## Simple fitting in R and plot in ROOT
 The next example creates an exponential fit.
 The idea is to create a set of numbers x,y with noise from ROOT,
 pass them to R and fit the data to `x^3`,
@@ -347,7 +443,7 @@ In the first image you can see the blue dots wichi are the function `x^3` with g
 the original function and the green ones correspond to the fitted function.
 <center> ![](img/simplefit.gif) </center>
 
-##Global Minimization in R using the package DEoptim
+## Global Minimization in R using the package DEoptim
 DEoptim is a R package for Differential Evolution Minimization that lets you do global
 Minimization.
 To install this package you just need to run:
@@ -461,7 +557,7 @@ In the image you can see the convergence plots of the functions and their minimu
 For RosenBrock is (1,1,1) and for Rastrigin is (0,0,0).
 <center>![](img/minimization.jpeg) </center>
 
-##Interpolation (Plotting in R)
+## Interpolation (Plotting in R)
 This example shows an interpolation using the function aproxfun and how to make a plot with R's
 graphical functions.
 
@@ -521,7 +617,7 @@ r<<"plot(approxfun(x, y, rule = 2:1), 0, 11,col = 'tomato', add = TRUE, lty = 3,
 The image shows the interpolated function plotted within R
 <center> ![](img/interpolation.png) </center>
 
-##Integration (Passing vectorized function to R)
+## Integration (Passing vectorized function to R)
 Numerical integration using R passing the function from ROOT
 
 ``` {.cpp}
@@ -578,3 +674,6 @@ void Integration()
  
 }
 ```
+
+
+

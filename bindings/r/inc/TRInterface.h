@@ -78,7 +78,7 @@ namespace ROOT {
             }
 
             template <class T> Binding &operator >>(T &var) {
-               var = fInterface->ParseEval(fName).As<T>();
+               var = fInterface->Eval(fName).As<T>();
                return *this;
             }
 
@@ -88,7 +88,7 @@ namespace ROOT {
             }
             #include<TRInterface_Binding.h>
             template <class T> operator T() {
-               return fInterface->ParseEval(fName);
+               return fInterface->Eval(fName);
             }
 
          private:
@@ -101,11 +101,11 @@ namespace ROOT {
          ~TRInterface();
 
          void SetVerbose(Bool_t status);
-         Int_t ParseEval(const TString &code, TRObjectProxy  &ans); // parse line, returns in ans; error code rc
-         //throws on error if exception is kTRUE
-         void  Parse(const TString &code, Bool_t exception = kFALSE);
+         Int_t Eval(const TString &code, TRObjectProxy  &ans); // parse line, returns in ans; error code rc
+         
+         void  Execute(const TString &code);
 
-         TRObjectProxy ParseEval(const TString &code, Bool_t exception = kFALSE);
+         TRObjectProxy Eval(const TString &code);
 
          static void LoadModule(TString name);
 
@@ -132,7 +132,7 @@ namespace ROOT {
 
 inline ROOT::R::TRInterface &operator<<(ROOT::R::TRInterface &r, TString code)
 {
-   r.Parse(code);
+   r.Execute(code);
    return r;
 }
 

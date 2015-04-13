@@ -69,9 +69,9 @@ namespace ROOT {
          //check if optimx is available
          bool optimxloaded = FALSE;
          r["optimxloaded"] = optimxloaded;
-         r.Parse("optimxloaded<-library(optimx,logical.return=TRUE)");
+         r.Execute("optimxloaded<-library(optimx,logical.return=TRUE)");
          //int ibool = r.ParseEval("optimxloaded").ToScalar<Int_t>();
-         int ibool = r.ParseEval("optimxloaded");
+         int ibool = r.Eval("optimxloaded");
          if (ibool==1) optimxloaded=kTRUE;
          
          //string for the command to be processed in R
@@ -103,30 +103,30 @@ namespace ROOT {
          }
          //execute the minimization in R         
          std::cout << "Calling R with command " << cmd << std::endl;   
-         r.Parse(cmd.Data());
+         r.Execute(cmd.Data());
          
          //results with optimx
          if (optimxloaded){
             //get result from R
-            r.Parse("par<-coef(result)");
+            r.Execute("par<-coef(result)");
             //get hessian matrix (in list form)
-            r.Parse("hess<-attr(result,\"details\")[,\"nhatend\"]");
+            r.Execute("hess<-attr(result,\"details\")[,\"nhatend\"]");
             //convert hess to a matrix
-            r.Parse("hess<-sapply(hess,function(x) x)");
+            r.Execute("hess<-sapply(hess,function(x) x)");
             //convert to square matrix
-            r.Parse("hess<-matrix(hess,c(ndim,ndim))");
+            r.Execute("hess<-matrix(hess,c(ndim,ndim))");
             //find covariant matrix from inverse of hess
-            r.Parse("cov<-solve(hess)");
+            r.Execute("cov<-solve(hess)");
             //get errors from the sqrt of the diagonal of cov
-            r.Parse("errors<-sqrt(abs(diag(cov)))");
+            r.Execute("errors<-sqrt(abs(diag(cov)))");
          }
 
          //results with optim
          else {
-            r.Parse("par<-result$par");
-            r.Parse("hess<-result$hessian");
-            r.Parse("cov<-solve(hess)");
-            r.Parse("errors<-sqrt(abs(diag(cov)))");
+            r.Execute("par<-result$par");
+            r.Execute("hess<-result$hessian");
+            r.Execute("cov<-solve(hess)");
+            r.Execute("errors<-sqrt(abs(diag(cov)))");
          }
          
          //return the minimum to ROOT

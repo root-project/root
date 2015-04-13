@@ -39,7 +39,7 @@ void GlobalMinimization()
  TBenchmark bench;
  ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
  
- Bool_t installed=r.ParseEval("is.element('DEoptim', installed.packages()[,1])");
+ Bool_t installed=r.Eval("is.element('DEoptim', installed.packages()[,1])");
  if(!installed)
  {
     std::cout<<"Package DEoptim no installed in R"<<std::endl;

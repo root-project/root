@@ -41,11 +41,11 @@ void Minimization()
  //the option "control" lets you put some constraints like 
  //"maxit" The maximum number of iterations.
  //"abstol" The absolute convergence tolerance.
- r.Parse("result <- optim( c(0.01,0.01), RosenBrock,method='BFGS',control = list(maxit = 1000000) )");
+ r.Execute("result <- optim( c(0.01,0.01), RosenBrock,method='BFGS',control = list(maxit = 1000000) )");
  //"reltol" Relative convergence tolerance.
  
  //Getting results from R
- TVectorD  min=r.ParseEval("result$par");
+ TVectorD  min=r.Eval("result$par");
  
  std::cout.precision(8);
  //printing results
@@ -54,10 +54,10 @@ void Minimization()
  std::cout<<"Value at minimum ="<<RosenBrock(min)<<std::endl;
  
  //using the gradient
- r.Parse("optimHess(result$par, RosenBrock, RosenBrockGrad)");
- r.Parse("hresult <- optim(c(-1.2,1), RosenBrock, NULL, method = 'BFGS', hessian = TRUE)");
+ r.Execute("optimHess(result$par, RosenBrock, RosenBrockGrad)");
+ r.Execute("hresult <- optim(c(-1.2,1), RosenBrock, NULL, method = 'BFGS', hessian = TRUE)");
  //getting the min calculated with the gradient
-  TVectorD  hmin=r.ParseEval("hresult$par");
+  TVectorD  hmin=r.Eval("hresult$par");
  
  //printing results
   std::cout<<"-----------------------------------------"<<std::endl;

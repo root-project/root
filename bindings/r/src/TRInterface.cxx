@@ -154,22 +154,22 @@ void TRInterface::LoadModule(TString name)
    if (name == "Hist") {
       gApplication->ProcessLine("#include<TRF1.h>");
       gApplication->ProcessLine("LOAD_ROOTR_MODULE(ROOTR_TRF1);");
-      gR->Parse("TF1       <- .GlobalEnv$.__C__Rcpp_TRF1");
+      gR->Execute("TF1       <- .GlobalEnv$.__C__Rcpp_TRF1");
 
       gApplication->ProcessLine("#include<TRGraph.h>");
       gApplication->ProcessLine("LOAD_ROOTR_MODULE(ROOTR_TRGraph);");
-      gR->Parse("TGraph     <- .GlobalEnv$.__C__Rcpp_TRGraph");
+      gR->Execute("TGraph     <- .GlobalEnv$.__C__Rcpp_TRGraph");
 
    }
    if (name == "Gpad") {
       gApplication->ProcessLine("#include<TRCanvas.h>");
       gApplication->ProcessLine("LOAD_ROOTR_MODULE(ROOTR_TRCanvas);");
-      gR->Parse("TCanvas     <- .GlobalEnv$.__C__Rcpp_TRCanvas");
+      gR->Execute("TCanvas     <- .GlobalEnv$.__C__Rcpp_TRCanvas");
    }
    if (name == "Rint") {
       gApplication->ProcessLine("#include<TRRint.h>");
       gApplication->ProcessLine("LOAD_ROOTR_MODULE(ROOTR_TRRint);");
-      gR->Parse("TRint     <- .GlobalEnv$.__C__Rcpp_TRRint");
+      gR->Execute("TRint     <- .GlobalEnv$.__C__Rcpp_TRRint");
    }
    if (name == "Core") {
       gApplication->ProcessLine("#include<TRSystem.h>");
@@ -178,14 +178,14 @@ void TRInterface::LoadModule(TString name)
    if (name == "IO") {
       gApplication->ProcessLine("#include<TRFile.h>");
       gApplication->ProcessLine("LOAD_ROOTR_MODULE(ROOTR_TRFile);");
-      gR->Parse("TFile     <- .GlobalEnv$.__C__Rcpp_TRFile");
+      gR->Execute("TFile     <- .GlobalEnv$.__C__Rcpp_TRFile");
    }
 
 }
 
 
 //______________________________________________________________________________
-Int_t  TRInterface::ParseEval(const TString &code, TRObjectProxy  &ans)
+Int_t  TRInterface::Eval(const TString &code, TRObjectProxy  &ans)
 {
 // Parse R code and returns status of execution.
 // the RObject's response is saved in  ans
@@ -195,32 +195,27 @@ Int_t  TRInterface::ParseEval(const TString &code, TRObjectProxy  &ans)
    rc = fR->parseEval(code.Data(), fans);
     } 
    catch( std::exception& __ex__ ){ forward_exception_to_r( __ex__ ) ; } 
-   catch(...){ 	Error("ParseEval", "Can execute the requested code: %s",code.Data());}
+   catch(...){ 	Error("Eval", "Can execute the requested code: %s",code.Data());}
    ans = fans;
    ans.SetStatus((rc == 0) ? kTRUE : kFALSE);
    return rc;
 }
 
 //______________________________________________________________________________
-void TRInterface::Parse(const TString &code, Bool_t exception)
+void TRInterface::Execute(const TString &code)
 {
-// Parse R code. The argument exception is by defualt false, and
-// if the code has an error prints the error and continues executing.
-// if exception is true, the code launches an exception and stops the execution.
+// Execute R code.
    try{ 
-        if (exception) fR->parseEvalQ(code.Data());
-        else fR->parseEvalQNT(code.Data());
+        fR->parseEvalQNT(code.Data());
     } 
    catch( std::exception& __ex__ ){ forward_exception_to_r( __ex__ ) ; } 
-   catch(...){ 	Error("Parse", "Can execute the requested code: %s",code.Data());}
+   catch(...){ 	Error("Eval", "Can execute the requested code: %s",code.Data());}
 }
 
 //______________________________________________________________________________
-TRObjectProxy TRInterface::ParseEval(const TString &code, Bool_t exception)
+TRObjectProxy TRInterface::Eval(const TString &code)
 {
-// Parse R code. The argument exception is by defualt false, and
-// if the code has an error prints the error and continues executing.
-//if exception is true, the code launches an exception and stops the execution.
+// Execute R code. 
 //The RObject result of execution is returned in TRObjectProxy
   
    SEXP ans;
@@ -229,19 +224,8 @@ TRObjectProxy TRInterface::ParseEval(const TString &code, Bool_t exception)
    rc = fR->parseEval(code.Data(), ans);
        } 
    catch( std::exception& __ex__ ){ forward_exception_to_r( __ex__ ) ; } 
-   catch(...){ 	Error("ParseEval", "Can execute the requested code: %s",code.Data());}
+   catch(...){ 	Error("Eval", "Can execute the requested code: %s",code.Data());}
 
-   if (rc != 0 && exception) {
-      if (exception){
-	std::string msg("Error evaluating: ");
-	msg+=code.Data();
-	throw std::runtime_error(msg);
-	}
-   } else if (rc != 0) {
-	std::string msg("Error evaluating: ");
-	msg+=code.Data();
-        Error("ParseEval", "%s",msg.c_str());
-   }   
    return TRObjectProxy(ans , (rc == 0) ? kTRUE : kFALSE);
 }
 
@@ -276,7 +260,7 @@ void TRInterface::Interactive()
       char *line = readline("[r]:");
       if (!line) continue;
       if (std::string(line) == ".q") break;
-      Parse(line, false);
+      Execute(line);
       if (*line) add_history(line);
       free(line);
    }
