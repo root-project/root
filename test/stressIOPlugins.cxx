@@ -12,20 +12,23 @@
 //   tested via tests based on some of stress.cxx tests.
 //
 //   Can be run as:
-//     stressIOPlugins
 //     stressIOPlugins [name]
 //
 //   The name parameter is a protocol name, as expected
-//   in a url. The supported names are: xroot, root, http, https
-//   If the name is omitted a selection of schemes are
+//   in a url. The supported names are: xroot, root, http, https,
+//   rfio. If the name is omitted a selection of schemes are
 //   tested based on feature availability:
 //
-//           feature          protocol
+//           feature          protocol    multithreaded test available
 //
-//            xrootd           root
-//            davix            http
+//            xrootd           root                no
+//            davix            http                no
+//            rfio             rfio(*)             no
 //
-// An example of output when all the tests run OK is shown below:
+// (*) Requires a cern.ch kerberos token for sftnight to run the test
+//
+// An example of output of a non multithreaded test, when all the tests
+// run OK is shown below:
 //
 // ****************************************************************************
 // *  Starting stressIOPlugins test for protocol http
@@ -69,7 +72,7 @@
 R__LOAD_LIBRARY( libEvent )
 
 void stressIOPlugins();
-void stressIOPluginsForProto(const char *protoName = 0);
+void stressIOPluginsForProto(const char *protoName = 0, int multithread = 0);
 void stressIOPlugins1();
 void stressIOPlugins2();
 void stressIOPlugins3();
@@ -148,10 +151,28 @@ int setPath(const char *proto)
       gPfx = p + "://root.cern.ch/files/StressIOPluginsTestFiles/";
       return 0;
    }
+   if (p == "rfio") {
+      gSystem->Setenv("STAGE_HOST","castorpublic.cern.ch");
+      gPfx = p + ":/castor/cern.ch/user/s/sftnight/StressIOPluginsTestFiles/";
+      return 0;
+   }
    return -1;
 }
 
-void stressIOPluginsForProto(const char *protoName /*=0*/)
+Bool_t running_as_sftnight_with_kerberos() {
+   UserGroup_t *ug = gSystem->GetUserInfo((const char*)0);
+   if (!ug) {
+     return kFALSE;
+   }
+   if (ug->fUser != "sftnight") {
+     delete ug;
+     return kFALSE;
+   }
+   delete ug;
+   return (gSystem->Exec("(klist | grep sftnight@CERN.CH) > /dev/null 2>&1") == 0);
+}
+
+void stressIOPluginsForProto(const char *protoName /*=0*/, int multithread /*=0*/)
 {
    //Main control function invoking all test programs
    if (!protoName) {
@@ -165,11 +186,29 @@ void stressIOPluginsForProto(const char *protoName /*=0*/)
      } else {
         printf("* Skipping http protocol test because 'davix' feature not available\n");
      }
+     if (isFeatureAvailable("rfio")) {
+        stressIOPluginsForProto("rfio");
+     } else {
+        printf("* Skipping rfio protocol test because 'rfio' feature not available\n");
+     }
      return;
+   }
+
+   if (!strcmp(protoName,"rfio")) {
+     if (!running_as_sftnight_with_kerberos()) {
+       printf("* Skipping protocol test for '%s' because it needs to be "
+              "run as the CERN sftnight user and have its kerberos token\n", protoName);
+       return;
+     }
    }
 
    if (setPath(protoName)) {
      printf("No server and path available to test protocol %s\n", protoName);
+     return;
+   }
+
+   if (multithread) {
+     printf("No multithreaded tests are available\n");
      return;
    }
 
@@ -190,7 +229,7 @@ void stressIOPluginsForProto(const char *protoName /*=0*/)
 
 void stressIOPlugins()
 {
-   stressIOPluginsForProto((const char*)0);
+   stressIOPluginsForProto((const char*)0,0);
 }
 
 //_______________________________________________________________

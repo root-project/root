@@ -260,8 +260,9 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
       iov[n].iov_len  = len[n];
    }
 
-   // prefetch the stuff
-   if (rfio_preseek64(fD, iov, nbuf) < 0) {
+   // prefetch the stuff if preseek is supported,
+   // preseek support was removed from client and server in castor 2.1.15
+   if (rfio_preseek64(fD, iov, nbuf) < 0 && rfio_errno != SEOPNOTSUP) {
       Error("TRFIOFile", "error doing rfio_preseek64");
       return kTRUE;
    }
