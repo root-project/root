@@ -111,7 +111,8 @@ namespace experimental { namespace __ROOT {
 #endif
 
 #ifndef _LIBCPP_ASSERT
-#define _LIBCPP_ASSERT(X)
+#define _LOCAL_LIBCPP_ASSERT
+#define _LIBCPP_ASSERT(X,Y) ((void)0)
 #endif
 
 /* Also used:
@@ -556,6 +557,10 @@ inline namespace __1 {
 
 #ifdef _LOCAL_NOEXCEPT
 #undef _NOEXCEPT
+#endif
+
+#ifdef #define _LOCAL_LIBCPP_ASSERT
+#undef _LIBCPP_ASSERT
 #endif
 
 #endif // RWrap_libcpp_string_view_h
