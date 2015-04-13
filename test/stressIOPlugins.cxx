@@ -23,9 +23,10 @@
 //
 //            xrootd           root                no
 //            davix            http                no
-//            rfio             rfio(*)             no
+//            rfio(*)          rfio                no
 //
-// (*) Requires a cern.ch kerberos token for sftnight to run the test
+// (*) Also requires a cern.ch kerberos token for sftnight to run the test,
+//     and rfio is not selected unless explicitly given as [name]
 //
 // An example of output of a non multithreaded test, when all the tests
 // run OK is shown below:
@@ -185,11 +186,6 @@ void stressIOPluginsForProto(const char *protoName /*=0*/, int multithread /*=0*
         stressIOPluginsForProto("http");
      } else {
         printf("* Skipping http protocol test because 'davix' feature not available\n");
-     }
-     if (isFeatureAvailable("rfio")) {
-        stressIOPluginsForProto("rfio");
-     } else {
-        printf("* Skipping rfio protocol test because 'rfio' feature not available\n");
      }
      return;
    }

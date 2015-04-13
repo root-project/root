@@ -270,9 +270,6 @@ endif()
 if(ROOT_davix_FOUND)
   ROOT_ADD_TEST(test-stressIOPlugins-http COMMAND stressIOPlugins http FAILREGEX "FAILED|Error in")
 endif()
-if(ROOT_rfio_FOUND)
-  ROOT_ADD_TEST(test-stressIOPlugins-rfio COMMAND stressIOPlugins rfio FAILREGEX "FAILED|Error in")
-endif()
 
 #--TestTformula------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(TFormulaTests TFormulaTests.cxx LIBRARIES Hist RIO)
