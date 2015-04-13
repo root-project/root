@@ -110,6 +110,10 @@ namespace experimental { namespace __ROOT {
 #define _NOEXCEPT
 #endif
 
+#ifndef _LIBCPP_ASSERT
+#define _LIBCPP_ASSERT(X)
+#endif
+
 /* Also used:
  _LIBCPP_TYPE_VIS_ONLY
  _LIBCPP_CONSTEXPR_AFTER_CXX11
