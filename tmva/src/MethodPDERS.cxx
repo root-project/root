@@ -952,11 +952,7 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
 
    // Caching jammed to disable function.
    // It's not really useful afterall, badly implemented and untested :-)
-#if __cplusplus > 199711L
-   thread_local Double_t ret = 1.0;
-#else
-   static Double_t ret = 1.0;
-#endif
+   TTHREAD_TLS(Double_t) ret = 1.0;
 
    if (ret != 0.0) return ret*pdf;
 

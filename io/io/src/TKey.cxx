@@ -78,7 +78,7 @@ const ULong64_t kPidOffsetMask = 0xffffffffffffUL;
 const UChar_t kPidOffsetShift = 48;
 
 TString &gTDirectoryString() {
-   thread_local TString gTDirectoryString("TDirectory");
+   TTHREAD_TLS_DECL_ARG(TString,gTDirectoryString,"TDirectory");
    return gTDirectoryString;
 }
 std::atomic<UInt_t> keyAbsNumber{0};

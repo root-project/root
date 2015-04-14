@@ -29,6 +29,7 @@
 #include "TClassEdit.h"
 #include "TMetaUtils.h"
 #include "TInterpreter.h"
+#include "ThreadLocalStorage.h"
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
@@ -105,7 +106,7 @@ const char *TClingTypeInfo::Name() const
       return "";
    }
    // Note: This *must* be static because we are returning a pointer inside it!
-   thread_local std::string buf;
+   TTHREAD_TLS_DECL( std::string, buf);
    buf.clear();
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -279,7 +280,7 @@ const char *TClingTypeInfo::StemName() const
       break;
    }
    // Note: This *must* be static because we are returning a pointer inside it.
-   thread_local std::string buf;
+   TTHREAD_TLS_DECL( std::string, buf);
    buf.clear();
    clang::PrintingPolicy Policy(fInterp->getCI()->getASTContext().
                                 getPrintingPolicy());
@@ -297,7 +298,7 @@ const char *TClingTypeInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &no
       return 0;
    }
    // Note: This *must* be static because we are returning a pointer inside it.
-   thread_local std::string buf;
+   TTHREAD_TLS_DECL( std::string, buf);
    buf.clear();
 
    ROOT::TMetaUtils::GetNormalizedName(buf,fQualType, *fInterp, normCtxt);

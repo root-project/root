@@ -221,10 +221,6 @@ void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
 
 //_______________________________________________________________________
 TMVA::MsgLogger& TMVA::BinaryTree::Log() const {
-#if __cplusplus > 199711L
-  thread_local MsgLogger logger("BinaryTree");
-#else
-  static MsgLogger logger("BinaryTree");
-#endif
+  TTHREAD_TLS_DECL_ARG(MsgLogger,logger,"BinaryTree");
   return logger;
 }

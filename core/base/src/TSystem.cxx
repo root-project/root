@@ -1992,8 +1992,7 @@ TString &TSystem::GetLastErrorString()
 {
    // Return the thread local storage for the custom last error message
 
-   thread_local TString gLastErrorString;
-
+   TTHREAD_TLS_DECL( TString, gLastErrorString);
    return gLastErrorString;
 }
 

@@ -2171,11 +2171,7 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
    Double_t xmin = effhist->GetXaxis()->GetXmin();
    Double_t xmax = effhist->GetXaxis()->GetXmax();
 
-#if __cplusplus > 199711L
-   thread_local Double_t nevtS;
-#else
-   static Double_t nevtS;
-#endif
+   TTHREAD_TLS(Double_t) nevtS;
 
    // first round ? --> create histograms
    if (results->DoesExist("MVA_EFF_S")==0) {

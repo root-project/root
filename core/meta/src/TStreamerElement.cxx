@@ -46,7 +46,7 @@ namespace std {} using namespace std;
 const Int_t kMaxLen = 1024;
 
 static TString &IncludeNameBuffer() {
-   thread_local TString includeName(kMaxLen);
+   TTHREAD_TLS_DECL_ARG(TString,includeName,kMaxLen);
    return includeName;
 }
 
@@ -325,7 +325,7 @@ const char *TStreamerElement::GetFullName() const
    // Note that this function stores the name into a static array.
    // You should copy the result.
 
-   thread_local TString name(kMaxLen);
+   TTHREAD_TLS_DECL_ARG(TString,name,kMaxLen);
    char cdim[20];
    name = GetName();
    for (Int_t i=0;i<fArrayDim;i++) {

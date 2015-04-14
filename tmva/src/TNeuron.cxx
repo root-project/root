@@ -335,10 +335,6 @@ void TMVA::TNeuron::PrintMessage( EMsgType type, TString message)
 //______________________________________________________________________________
 TMVA::MsgLogger& TMVA::TNeuron::Log() const
 {
-  #if __cplusplus > 199711L
-  thread_local MsgLogger logger("TNeuron",kDEBUG);    //! message logger, static to save resources
-#else
-  static MsgLogger logger("TNeuron",kDEBUG);                 //! message logger, static to save resources
-#endif
-  return logger;
+   TTHREAD_TLS_DECL_ARG2(MsgLogger,logger,"TNeuron",kDEBUG);    //! message logger, static to save resources
+   return logger;
 }

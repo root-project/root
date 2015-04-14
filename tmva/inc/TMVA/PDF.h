@@ -46,6 +46,9 @@
 #ifndef ROOT_TH1
 #include "TH1.h"
 #endif
+#ifndef ROOT_ThreadLocalStorage
+#include "ThreadLocalStorage.h"
+#endif
 #ifndef ROOT_TMVA_KDEKernel
 #include "TMVA/KDEKernel.h"
 #endif
@@ -207,8 +210,7 @@ namespace TMVA {
       // static pointer to this object
       // This is a workaround for OSx where static thread_local data members are
       // not supported. The C++ solution would indeed be the following:
-//      static_ thread_local PDF* fgThisPDF;             // this PDF pointer 
-      static PDF*& GetThisPdfThreadLocal(){thread_local PDF *fgThisPDF(nullptr); return fgThisPDF; };
+      static PDF*& GetThisPdfThreadLocal() { TTHREAD_TLS(PDF*) fgThisPDF(nullptr); return fgThisPDF; };
       static PDF*              ThisPDF( void ); 
 
       // external auxiliary functions 
