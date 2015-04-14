@@ -1733,10 +1733,8 @@ void TStreamerInfo::BuildOld()
                }
                fNVirtualInfoLoc += infobase->fNVirtualInfoLoc;
             }
-            // FIXME: Presumably we're in emulated mode, but it still does not make any sense
-            // shouldn't it be element->SetNewType(-1) ?
             if (baseOffset < 0) {
-               baseOffset = 0;
+               element->SetNewType(-1);
             }
             element->SetOffset(baseOffset);
             offset += baseclass->Size();
