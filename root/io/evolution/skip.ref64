@@ -16,7 +16,7 @@ x11 = 110011
 
 StreamerInfo for class: MyClass, version=1, checksum=0x43db4a7d
   TObject        BASE            offset=  0 type=66 Basic ROOT object   
-  TAttFill       BASE            offset=  0 type= 0 Fill area attributes
+  TAttFill       BASE            offset= -1 type= 0 Fill area attributes
   int          x               offset= 16 type= 3                     
   TNamed         obj             offset=99999 type=67                     
   int          x1              offset= 24 type= 3                     
@@ -46,7 +46,7 @@ StreamerInfo for class: MyClass, version=1, checksum=0x43db4a7d
   int          x12             offset=99999 type= 3                     
   int          x13             offset=99999 type= 3                     
    i= 0, TObject         type= 66, offset=  0, len=1, 
-   i= 1, TAttFill        type=  0, offset=  0, len=1, 
+   i= 1, TAttFill        type=100, offset=  -1, len=1,
    i= 2, x               type=  3, offset= 16, len=1, 
    i= 3, obj             type=167, offset=99999, len=1, 
    i= 4, x1              type=203, offset= 24, len=1, 
@@ -90,7 +90,7 @@ x11 = 110011
 
 StreamerInfo for class: MyClass, version=1, checksum=0x43db4a7d
   TObject        BASE            offset=  0 type=66 Basic ROOT object   
-  TAttFill       BASE            offset=  0 type= 0 Fill area attributes
+  TAttFill       BASE            offset= -1 type= 0 Fill area attributes
   int          x               offset= 16 type= 3                     
   TNamed         obj             offset=99999 type=67                     
   int          x1              offset= 24 type= 3                     
@@ -120,7 +120,7 @@ StreamerInfo for class: MyClass, version=1, checksum=0x43db4a7d
   int          x12             offset=99999 type= 3                     
   int          x13             offset=99999 type= 3                     
    i= 0, TObject         type= 66, offset=  0, len=1, 
-   i= 1, TAttFill        type=  0, offset=  0, len=1, 
+   i= 1, TAttFill        type=100, offset= -1, len=1,
    i= 2, x               type=  3, offset= 16, len=1, 
    i= 3, obj             type=167, offset=99999, len=1, 
    i= 4, x1              type=203, offset= 24, len=1, 
