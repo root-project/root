@@ -26,7 +26,7 @@
 
 #ifdef R_HAS_std_string_view_header
 #include <string_view>
-#elif R_HAS_lib_std_experimental_string_view
+#elif defined(R_HAS_lib_std_experimental_string_view)
 #define R_HAS_std_experimental_string_view
 #include <experimental/string_view>
 #else
