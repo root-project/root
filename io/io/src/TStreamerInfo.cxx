@@ -1807,9 +1807,7 @@ void TStreamerInfo::BuildOld()
 
             {
                if (baseOffset < 0) {
-                  // FIXME: Presumably we're in emulated mode, but it still does not make any sense
-                  // shouldn't it be element->SetNewType(-1) ?
-                  baseOffset = 0;
+                  element->SetNewType(-1);
                }
             }
             element->SetOffset(baseOffset);
