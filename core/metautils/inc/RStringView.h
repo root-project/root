@@ -12,8 +12,23 @@
 #ifndef RStringView_H
 #define RStringView_H
 
+#if defined(__has_include)
+#if __has_include("string_view")
+
+#define R_HAS_std_string_view_header
+
+#elif __has_include("experimental/string_view")
+
+#define R_HAS_lib_std_experimental_string_view
+
+#endif
+#endif // __has_include
+
 #ifdef R_HAS_std_string_view_header
 #include <string_view>
+#elif R_HAS_lib_std_experimental_string_view
+#define R_HAS_std_experimental_string_view
+#include <experimental/string_view>
 #else
 #include "RWrap_libcpp_string_view.h"
 #endif
