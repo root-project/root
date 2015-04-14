@@ -69,8 +69,7 @@ namespace TMVA {
 
       // This is a workaround for OSx where static thread_local data members are
       // not supported. The C++ solution would indeed be the following:
-      //static_ thread_local Int_t fVarIndex;  // index of the variable to sort on
-      static Int_t& GetVarIndex(){thread_local Int_t fVarIndex(0); return fVarIndex;}; // index of the variable to sort on
+      static Int_t& GetVarIndex(){TTHREAD_TLS(Int_t) fVarIndex(0); return fVarIndex;}; // index of the variable to sort on
 
       const Event* fEvent;     // pointer to the event
 

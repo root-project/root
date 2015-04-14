@@ -28,6 +28,7 @@
 #include "TDictionary.h"
 #include "TClingMethodInfo.h"
 #include "TClingTypeInfo.h"
+#include "ThreadLocalStorage.h"
 
 #include "cling/Interpreter/Interpreter.h"
 #include "clang/AST/ASTContext.h"
@@ -128,7 +129,7 @@ const char *TClingMethodArgInfo::DefaultValue() const
    }
    clang::ASTContext &context = pvd->getASTContext();
    clang::PrintingPolicy policy(context.getPrintingPolicy());
-   thread_local std::string buf;
+   TTHREAD_TLS_DECL( std::string, buf );
    buf.clear();
    llvm::raw_string_ostream out(buf);
    if (!expr) {
@@ -165,7 +166,7 @@ const char *TClingMethodArgInfo::Name() const
    }
    const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
    const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
-   thread_local std::string buf;
+   TTHREAD_TLS_DECL( std::string, buf);
    buf.clear();
    clang::PrintingPolicy policy(pvd->getASTContext().getPrintingPolicy());
    llvm::raw_string_ostream stream(buf);
@@ -176,7 +177,7 @@ const char *TClingMethodArgInfo::Name() const
 
 const TClingTypeInfo *TClingMethodArgInfo::Type() const
 {
-   thread_local TClingTypeInfo ti(fInterp);
+   TTHREAD_TLS_DECL_ARG( TClingTypeInfo, ti, fInterp);
    if (!IsValid()) {
       return &ti;
    }

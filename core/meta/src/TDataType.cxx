@@ -22,6 +22,7 @@
 #include "TInterpreter.h"
 #include "TCollection.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 #ifdef R__SOLARIS
 #include <typeinfo>
 #endif
@@ -232,7 +233,7 @@ const char *TDataType::AsString(void *buf) const
    // Return string containing value in buffer formatted according to
    // the basic data type. The result needs to be used or copied immediately.
 
-   thread_local TString line(81);
+   TTHREAD_TLS_DECL_ARG(TString, line ,81);
    const char *name;
 
    if (fInfo) {

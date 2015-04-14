@@ -69,6 +69,7 @@ End_Html */
 
 #include "TMath.h"
 #include "TRandom3.h"
+#include "ThreadLocalStorage.h"
 
 #include "TMVA/Interval.h"
 #include "TMVA/MsgLogger.h"
@@ -165,10 +166,6 @@ void TMVA::Interval::Print(std::ostream &os) const
 }
 
 TMVA::MsgLogger& TMVA::Interval::Log() const {
-#if __cplusplus > 199711L
-  thread_local MsgLogger logger("Interval");   // message logger
-#else
-  static MsgLogger logger("Interval");   // message logger
-#endif
+  TTHREAD_TLS_DECL_ARG(MsgLogger,logger,"Interval");   // message logger
   return logger;
 }

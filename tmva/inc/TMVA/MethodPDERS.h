@@ -221,8 +221,7 @@ namespace TMVA {
 
       // This is a workaround for OSx where static thread_local data members are
       // not supported. The C++ solution would indeed be the following:
-//      static_ thread_local MethodPDERS* fgThisPDERS; // this pointer (required by root finder)
-      static MethodPDERS*& GetMethodPDERSThreadLocal() {thread_local MethodPDERS* fgThisPDERS(nullptr); return fgThisPDERS;};
+      static MethodPDERS*& GetMethodPDERSThreadLocal() {TTHREAD_TLS(MethodPDERS*) fgThisPDERS(nullptr); return fgThisPDERS;};
       void UpdateThis();
 
       void Init( void );

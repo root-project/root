@@ -33,6 +33,7 @@
 #include "TError.h"
 #include "TMetaUtils.h"
 #include "TCling.h"
+#include "ThreadLocalStorage.h"
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/AST.h"
@@ -443,7 +444,7 @@ long TClingMethodInfo::ExtraProperty() const
 
 TClingTypeInfo *TClingMethodInfo::Type() const
 {
-   thread_local TClingTypeInfo ti(fInterp);
+   TTHREAD_TLS_DECL_ARG( TClingTypeInfo, ti, fInterp );
    if (!IsValid()) {
       ti.Init(clang::QualType());
       return &ti;
@@ -492,7 +493,7 @@ const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCt
    if (!IsValid()) {
       return 0;
    }
-   thread_local std::string buf;
+   TTHREAD_TLS_DECL( std::string, buf );
    buf.clear();
    buf += Type()->Name();
    buf += ' ';
@@ -545,7 +546,7 @@ const char *TClingMethodInfo::Name(const ROOT::TMetaUtils::TNormalizedCtxt &norm
    if (!IsValid()) {
       return 0;
    }
-   thread_local std::string buf;
+   TTHREAD_TLS_DECL( std::string, buf );
    ((TCling*)gCling)->GetFunctionName(GetMethodDecl(),buf);
    return buf.c_str();
 }

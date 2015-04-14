@@ -371,12 +371,8 @@ Bool_t TMVA::kNN::ModulekNN::Find(const UInt_t nfind, const std::string &option)
    if (fCount.empty() || !fTree) {
       return kFALSE;
    }
-
-#if __cplusplus > 199711L
-   thread_local std::map<Short_t, UInt_t>::const_iterator cit = fCount.end();
-#else
-   static std::map<Short_t, UInt_t>::const_iterator cit = fCount.end();
-#endif
+   typedef std::map<Short_t, UInt_t>::const_iterator const_iterator;
+   TTHREAD_TLS_DECL_ARG(const_iterator,cit,fCount.end());
 
    if (cit == fCount.end()) {
       cit = fCount.begin();

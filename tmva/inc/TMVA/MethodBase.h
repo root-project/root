@@ -630,8 +630,7 @@ namespace TMVA {
 
       // This is a workaround for OSx where static thread_local data members are
       // not supported. The C++ solution would indeed be the following:
-//       static_ thread_local MethodBase* fgThisBase;         // this pointer
-      static MethodBase*& GetThisBaseThreadLocal() {thread_local MethodBase* fgThisBase(nullptr); return fgThisBase; };
+      static MethodBase*& GetThisBaseThreadLocal() {TTHREAD_TLS(MethodBase*) fgThisBase(nullptr); return fgThisBase; };
 
       // ===== depreciated options, kept for backward compatibility  =====
    private:

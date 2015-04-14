@@ -398,7 +398,7 @@ static void SigHandler(ESignals sig)
 //______________________________________________________________________________
 static const char *GetExePath()
 {
-   thread_local TString exepath;
+   TTHREAD_TLS_DECL(TString,exepath);
    if (exepath == "") {
 #if defined(R__MACOSX)
       exepath = _dyld_get_image_name(0);

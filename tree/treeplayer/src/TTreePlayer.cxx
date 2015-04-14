@@ -617,7 +617,8 @@ const char *TTreePlayer::GetNameByIndex(TString &varexp, Int_t *index,Int_t coli
 //   varexp is a string of names separated by :
 //   index is an array with pointers to the start of name[i] in varexp
 //
-   thread_local std::string column;
+
+   TTHREAD_TLS_DECL(std::string,column);
    if (colindex<0 ) return "";
    Int_t i1,n;
    i1 = index[colindex] + 1;

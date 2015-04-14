@@ -32,6 +32,7 @@
 #include "TClingTypeInfo.h"
 #include "TError.h"
 #include "TMetaUtils.h"
+#include "ThreadLocalStorage.h"
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
@@ -1287,13 +1288,8 @@ const char *TClingClassInfo::Name() const
       return 0;
    }
    // Note: This *must* be static/thread_local because we are returning a pointer inside it!
-#ifdef R__WIN32
-   thread_local std::string *pbuf = 0;
-   if (!pbuf) pbuf = new std::string();
-   std::string &buf = *pbuf;
-#else
-   thread_local std::string buf;
-#endif
+   TTHREAD_TLS_DECL( std::string, buf);
+
    buf.clear();
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
       PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
@@ -1352,13 +1348,7 @@ const char *TClingClassInfo::TmpltName() const
    R__LOCKGUARD(gInterpreterMutex);
 
    // Note: This *must* be static/thread_local because we are returning a pointer inside it!
-#ifdef R__WIN32
-   thread_local std::string *pbuf = 0;
-   if (!pbuf) pbuf = new std::string();
-   std::string &buf = *pbuf;
-#else
-   thread_local std::string buf;
-#endif
+   TTHREAD_TLS_DECL( std::string, buf);
    buf.clear();
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
       // Note: This does *not* include the template arguments!

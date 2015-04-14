@@ -27,6 +27,7 @@
  **********************************************************************************/
 
 #include "TMVA/Option.h"
+#include "ThreadLocalStorage.h"
 
 //______________________________________________________________________
 TMVA::OptionBase::OptionBase( const TString& name, const TString& desc )
@@ -51,10 +52,6 @@ Bool_t TMVA::OptionBase::SetValue( const TString& vs, Int_t )
 
 TMVA::MsgLogger& TMVA::OptionBase::Log()
 {
-#if __cplusplus > 199711L
-  thread_local MsgLogger logger("Option",kDEBUG);  // message logger
-#else
-  static MsgLogger logger("Option",kDEBUG);  // message logger
-#endif
-  return logger;
+   TTHREAD_TLS_DECL_ARG2(MsgLogger,logger,"Option",kDEBUG);  // message logger
+   return logger;
 }

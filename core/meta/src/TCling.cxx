@@ -71,7 +71,7 @@
 #include "TListOfFunctionTemplates.h"
 #include "TProtoClass.h"
 #include "TStreamerInfo.h" // This is here to avoid to use the plugin manager
-
+#include "ThreadLocalStorage.h"
 #include "TFile.h"
 
 #include "clang/AST/ASTContext.h"
@@ -173,13 +173,12 @@ extern "C" {
 #define dlopen(library_name, flags) ::LoadLibraryEx(library_name, NULL, DONT_RESOLVE_DLL_REFERENCES)
 #define dlclose(library) ::FreeLibrary((HMODULE)library)
 char *dlerror() {
-   thread_local char Msg[1000];
+   static __declspec(thread) char Msg[1000];
    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
                  sizeof(Msg), NULL);
    return Msg;
 }
-#define thread_local static __declspec(thread)
 #endif
 #endif
 
@@ -1158,7 +1157,7 @@ static const char *FindLibraryName(void (*func)())
    }
 
    HMODULE hMod = (HMODULE) mbi.AllocationBase;
-   thread_local char moduleName[MAX_PATH];
+   TTHREAD_TLS_ARRAY(char, moduleName, MAX_PATH);
 
    if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
    {
@@ -4225,8 +4224,8 @@ const char* TCling::TypeName(const char* typeDesc)
    // Return the absolute type of typeDesc.
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
    // You need to use the result immediately before it is being overwritten.
-   thread_local char* t = 0;
-   thread_local unsigned int tlen = 0;
+   TTHREAD_TLS(char*) t = 0;
+   TTHREAD_TLS(unsigned int) tlen = 0;
 
    unsigned int dlen = strlen(typeDesc);
    if (dlen > tlen) {
@@ -5926,7 +5925,7 @@ Bool_t TCling::LoadText(const char* text) const
 const char* TCling::MapCppName(const char* name) const
 {
    // Interface to cling function
-   thread_local std::string buffer;
+   TTHREAD_TLS_DECL(std::string,buffer);
    ROOT::TMetaUtils::GetCppName(buffer,name);
    return buffer.c_str();
 }
@@ -6609,7 +6608,7 @@ const char* TCling::ClassInfo_FileName(ClassInfo_t* cinfo) const
 const char* TCling::ClassInfo_FullName(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   thread_local std::string output;
+   TTHREAD_TLS_DECL(std::string,output);
    TClinginfo->FullName(output,*fNormalizedCtxt);
    return output.c_str();
 }
@@ -6724,7 +6723,7 @@ Long_t TCling::BaseClassInfo_Tagnum(BaseClassInfo_t* bcinfo) const
 const char* TCling::BaseClassInfo_FullName(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
-   thread_local std::string output;
+   TTHREAD_TLS_DECL(std::string,output);
    TClinginfo->FullName(output,*fNormalizedCtxt);
    return output.c_str();
 }
@@ -6865,7 +6864,7 @@ const char* TCling::DataMemberInfo_Title(DataMemberInfo_t* dminfo) const
 //______________________________________________________________________________
 const char* TCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) const
 {
-   thread_local std::string result;
+   TTHREAD_TLS_DECL(std::string,result);
 
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    result = TClinginfo->ValidArrayIndex().str();
@@ -7205,7 +7204,7 @@ TypeInfo_t* TCling::MethodInfo_Type(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   thread_local  TString mangled_name;
+   TTHREAD_TLS_DECL(TString, mangled_name);
    mangled_name = info->GetMangledName();
    return mangled_name;
 }

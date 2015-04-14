@@ -508,10 +508,6 @@ void TMVA::DecisionTreeNode::ReadContent( std::stringstream& /*s*/ )
 }
 //_______________________________________________________________________
 TMVA::MsgLogger& TMVA::DecisionTreeNode::Log() {
-#if __cplusplus > 199711L
-  thread_local MsgLogger logger("DecisionTreeNode");    // static because there is a huge number of nodes...
-#else
-  static MsgLogger logger("DecisionTreeNode");    // static because there is a huge number of nodes...
-#endif
+  TTHREAD_TLS_DECL_ARG(MsgLogger,logger,"DecisionTreeNode");    // static because there is a huge number of nodes...
   return logger;
 }

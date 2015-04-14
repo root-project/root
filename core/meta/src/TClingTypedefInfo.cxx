@@ -29,6 +29,7 @@
 #include "TError.h"
 #include "TMetaUtils.h"
 #include "Rtypes.h" // for gDebug
+#include "ThreadLocalStorage.h"
 
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Utils/AST.h"
@@ -271,7 +272,7 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
       return "(unknown)";
    }
    // Note: This must be static because we return a pointer to the internals.
-   thread_local std::string truename;
+   TTHREAD_TLS_DECL( std::string, truename);
    truename.clear();
    const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
    clang::QualType underlyingType = td->getUnderlyingType();
@@ -292,7 +293,7 @@ const char *TClingTypedefInfo::Name() const
       return "(unknown)";
    }
    // Note: This must be static because we return a pointer to the internals.
-   thread_local std::string fullname;
+   TTHREAD_TLS_DECL( std::string, fullname);
    fullname.clear();
    const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
    const clang::ASTContext &ctxt = fDecl->getASTContext();
