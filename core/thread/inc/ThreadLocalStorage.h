@@ -83,7 +83,7 @@
 #if __cplusplus >= 201103L
 
 // Clang 3.4 also support SD-6 (feature test macros __cpp_*), but no thread local macro
-#  if defined(__clang__) && __has_feature(cxx_thread_local)
+#  if defined(__clang__)
 
 #    if __has_feature(cxx_thread_local)
      // thread_local was added in Clang 3.3
@@ -124,7 +124,7 @@
 
 #  define TTHREAD_TLS_DECL(type, name) thread_local type name
 #  define TTHREAD_TLS_DECL_ARG(type, name, arg) thread_local type name(arg)
-#  define TTHREAD_TLS_DECL_ARG2(type, name, arg) thread_local type name(arg1,arg2)
+#  define TTHREAD_TLS_DECL_ARG2(type, name, arg1, arg2) thread_local type name(arg1,arg2)
 
 #elif defined(R__HAS___THREAD)
 
