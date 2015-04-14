@@ -210,7 +210,7 @@ void TGPack::FindFrames(TGFrame* splitter, TGFrameElementPack*& f0, TGFrameEleme
 
    while ((el = (TGFrameElementPack *) next()))
    {
-      if ( ! el->fState & kIsVisible)
+      if ( ! (el->fState & kIsVisible) )
          continue;
 
       if (el->fFrame == splitter)
@@ -603,7 +603,7 @@ void TGPack::SetVertical(Bool_t x)
    {
       TGFrameElement *el = (TGFrameElement*) fList->At(1);
       TGFrame        *f  = el->fFrame;
-      if ( ! el->fState & kIsVisible)
+      if ( ! (el->fState & kIsVisible) )
          f->SetBit(kTempFrame);
       RemoveFrameInternal(f);
       list.Add(f);

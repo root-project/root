@@ -118,14 +118,18 @@ ClassImp(RooSimWSTool::ObjSplitRule)
 using namespace std ;
 
 
+static Int_t init();
+
+static Int_t dummy = init() ;
+
 static Int_t init()
 {
   RooFactoryWSTool::IFace* iface = new RooSimWSTool::SimWSIFace ;
   RooFactoryWSTool::registerSpecial("SIMCLONE",iface) ;
   RooFactoryWSTool::registerSpecial("MSIMCLONE",iface) ;
+  (void) dummy;
   return 0 ;
 }
-static Int_t dummy = init() ;
 
 
 //_____________________________________________________________________________

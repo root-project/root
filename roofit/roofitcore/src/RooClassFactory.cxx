@@ -46,14 +46,18 @@ using namespace std ;
 ClassImp(RooClassFactory)
 ;
 
+static Int_t init();
+
+static Int_t dummy = init() ;
+
 static Int_t init()
 {
   RooFactoryWSTool::IFace* iface = new RooClassFactory::ClassFacIFace ;
   RooFactoryWSTool::registerSpecial("CEXPR",iface) ;
   RooFactoryWSTool::registerSpecial("cexpr",iface) ;
+  (void)dummy;
   return 0 ;
 }
-static Int_t dummy = init() ;
 
 
 

@@ -73,6 +73,10 @@ ClassImp(RooFactoryWSTool)
 RooFactoryWSTool* RooFactoryWSTool::_of = 0 ;
 map<string,RooFactoryWSTool::IFace*>* RooFactoryWSTool::_hooks=0 ;
 
+static Int_t init();
+
+static Int_t dummy = init() ;
+
 static Int_t init()
 {
   RooFactoryWSTool::IFace* iface = new RooFactoryWSTool::SpecialsIFace ;
@@ -108,9 +112,9 @@ static Int_t init()
   RooFactoryWSTool::registerSpecial("dataobs",iface) ;
   RooFactoryWSTool::registerSpecial("set",iface) ;
 
+  (void) dummy;
   return 0 ;
 }
-static Int_t dummy = init() ;
 
 
 #ifndef _WIN32

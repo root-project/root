@@ -1420,7 +1420,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                      break;
                   default:
                      Error("DefineVariable","Method %s from %s has an impossible return type %d",
-                        work,cl->GetName(),method->ReturnType());
+                           work,cl->GetName(), (Int_t)method->ReturnType());
                      return -2;
                }
             }

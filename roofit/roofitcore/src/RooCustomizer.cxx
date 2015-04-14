@@ -155,13 +155,17 @@ ClassImp(RooCustomizer)
 ;
 
 
+static Int_t init();
+
+static Int_t dummy = init() ;
+
 static Int_t init()
 {
   RooFactoryWSTool::IFace* iface = new RooCustomizer::CustIFace ;
   RooFactoryWSTool::registerSpecial("EDIT",iface) ;
+  (void) dummy;
   return 0 ;
 }
-static Int_t dummy = init() ;
 
 
 //_____________________________________________________________________________
