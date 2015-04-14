@@ -43,66 +43,97 @@ using namespace std;
 
 ClassImp(TFormula)
 //______________________________________________________________________________
-//*-*-*-*-*-*-*-*-*-*-*The  F O R M U L A  class*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
-//*-*   This is a new version of the TFormula class based on Cling.
-//*-*   This class is not 100% backward compatible with the old TFOrmula class, which is still available in ROOT as
-//*-*   ROOT::v5::TFormula. Some of the TFormula member funtions available in version 5, such as
-//*-*   Analyze and AnalyzeFunction are not available in the new TFormula.
-//*-*   On the other hand formula expressions which were valid in version 5 are still valid in TFormula version 6
-//*-*
-//*-*   This class has been implemented during Google Summer of Code 2013 by Maciej Zimnoch.
-//*-*   =========================================================
-//*-*
-//*-*  Example of valid expressions:
-//*-*     -  sin(x)/x
-//*-*     -  [0]*sin(x) + [1]*exp(-[2]*x)
-//*-*     -  x + y**2
-//*-*     -  x^2 + y^2
-//*-*     -  [0]*pow([1],4)
-//*-*     -  2*pi*sqrt(x/y)
-//*-*     -  gaus(0)*expo(3)  + ypol3(5)*x
-//*-*     -  gausn(0)*expo(3) + ypol3(5)*x
-//*-*
-//*-*  In the last example above:
-//*-*     gaus(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)
-//*-*        and (0) means start numbering parameters at 0
-//*-*     gausn(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)/(sqrt(2*pi)*[2]))
-//*-*        and (0) means start numbering parameters at 0
-//*-*     expo(3) is a substitute for exp([3]+[4]*x)
-//*-*     pol3(5) is a substitute for par[5]+par[6]*x+par[7]*x**2+par[8]*x**3
-//*-*         (PolN stands for Polynomial of degree N)
-//*-*
-//*-*   TMath functions can be part of the expression, eg:
-//*-*     -  TMath::Landau(x)*sin(x)
-//*-*     -  TMath::Erf(x)
-//*-*
-//*-*   Formula may contain constans, eg:
-//*-*    - sqrt2
-//*-*    - e
-//*-*    - pi
-//*-*    - ln10
-//*-*    - infinity
-//*-*      and more.
-//*-*
-//*-*   Comparisons operators are also supported (&&, ||, ==, <=, >=, !)
-//*-*   Examples:
-//*-*      sin(x*(x<0.5 || x>1))
-//*-*   If the result of a comparison is TRUE, the result is 1, otherwise 0.
-//*-*
-//*-*   Already predefined names can be given. For example, if the formula
-//*-*     TFormula old("old",sin(x*(x<0.5 || x>1))) one can assign a name to the formula. By default
-//*-*     the name of the object = title = formula itself.
-//*-*     TFormula new("new","x*old") is equivalent to:
-//*-*     TFormula new("new","x*sin(x*(x<0.5 || x>1))")
-//*-*
-//*-*   Class supports unlimited numer of variables and parameters.
-//*-*   By default it has 4 variables(indicated by x,y,z,t) and no parameters.
-//*-*
-//*-*   This class is the base class for the function classes TF1,TF2 and TF3.
-//*-*   It is also used by the ntuple selection mechanism TNtupleFormula.
-//*-*
-//*-*
+/******************************************************************************
+Begin_Htnl
+<h1>The  F O R M U L A  class</h1>
+
+<p>This is a new version of the TFormula class based on Cling.
+This class is not 100% backward compatible with the old TFOrmula class, which is still available in ROOT as
+<code>ROOT::v5::TFormula</code>. Some of the TFormula member funtions available in version 5, such as
+<code>Analyze</code> and <code>AnalyzeFunction</code> are not available in the new TFormula.
+On the other hand formula expressions which were valid in version 5 are still valid in TFormula version 6</p>
+
+<p>This class has been implemented during Google Summer of Code 2013 by Maciej Zimnoch.</p>
+
+<h3>Example of valid expressions:</h3>
+
+<ul>
+<li><code>sin(x)/x</code></li>
+<li><code>[0]*sin(x) + [1]*exp(-[2]*x)</code></li>
+<li><code>x + y**2</code></li>
+<li><code>x^2 + y^2</code></li>
+<li><code>[0]*pow([1],4)</code></li>
+<li><code>2*pi*sqrt(x/y)</code></li>
+<li><code>gaus(0)*expo(3)  + ypol3(5)*x</code></li>
+<li><code>gausn(0)*expo(3) + ypol3(5)*x</code></li>
+</ul>
+
+<p>In the last example above:</p>
+
+<ul>
+<li><code>gaus(0)</code> is a substitute for <code>[0]*exp(-0.5*((x-[1])/[2])**2)</code>
+         and (0) means start numbering parameters at 0</li>
+<li><code>gausn(0)</code> is a substitute for <code>[0]*exp(-0.5*((x-[1])/[2])**2)/(sqrt(2*pi)*[2]))</code>
+         and (0) means start numbering parameters at 0</li>
+<li><code>expo(3)</code> is a substitute for <code>exp([3]+[4]*x</code></li>
+<li><code>pol3(5)</code> is a substitute for <code>par[5]+par[6]*x+par[7]*x**2+par[8]*x**3</code>
+          (<code>PolN</code> stands for Polynomial of degree N)</li>
+</ul>
+
+<p><code>TMath</code> functions can be part of the expression, eg:</p>
+
+<ul>
+<li><code>TMath::Landau(x)*sin(x)</code></li>
+<li><code>TMath::Erf(x)</code></li>
+</ul>
+
+<p>Formula may contain constans, eg:</p>
+
+<ul>
+<li><code>sqrt2</code></li>
+<li><code>e</code></li>
+<li><code>pi</code></li>
+<li><code>ln10</code></li>
+<li><code>infinity</code></li>
+</ul>
+
+<p>and more.</p>
+
+<p>Comparisons operators are also supported <code>(&amp;&amp;, ||, ==, &lt;=, &gt;=, !)</code></p>
+
+<p>Examples:</p>
+
+<pre><code>    `sin(x*(x&lt;0.5 || x&gt;1))`
+</code></pre>
+
+<p>If the result of a comparison is TRUE, the result is 1, otherwise 0.</p>
+
+<p>Already predefined names can be given. For example, if the formula</p>
+
+<pre><code> `TFormula old("old",sin(x*(x&lt;0.5 || x&gt;1)))`
+</code></pre>
+
+<p>one can assign a name to the formula. By default the name of the object = title = formula itself.</p>
+
+<pre><code> `TFormula new("new","x*old")`
+</code></pre>
+
+<p>is equivalent to:</p>
+
+<pre><code> `TFormula new("new","x*sin(x*(x&lt;0.5 || x&gt;1))")`
+</code></pre>
+
+<p>The class supports unlimited numer of variables and parameters.
+ By default the names which can be used for the variables are <code>x,y,z,t</code> or
+ <code>x[0],x[1],x[2],x[3],....x[N]</code> for N-dimensionals formula.</p>
+
+<p>This class is not anymore the base class for the function classes <code>TF1</code>, but it has now
+adata member of TF1 which can be access via <code>TF1::GetFormula</code>.   </p>
+
+
+End_Html
+********************************************************************************/
+   
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 // prefix used for function name passed to Cling
