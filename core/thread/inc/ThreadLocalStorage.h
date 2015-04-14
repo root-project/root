@@ -35,6 +35,21 @@
  *  - We do NOT allow something like
  *       func (a, TTHREAD_TLS_SET(int, my_var, 5));
  *    as we do not use the gcc-extension of returning macro-values.
+ *
+ * C++11 requires the implementation of the thread_local storage but
+ * a few platforms do not yet implement it.
+ *
+ *  For simple type use:
+ *      TTHREAD_TLS(int) varname;
+ *
+ *  For array of simple type use:
+ *      TTHREAD_TLS_ARRAY(int, arraysize, varname);
+ *
+ *  For object use:
+ *      TTHREAD_TLS_DECL(classname, varname);
+ *      TTHREAD_TLS_DECL_ARG(classname, varname, arg);
+ *      TTHREAD_TLS_DECL_ARG2(classname, varname, arg1, arg2);
+ *
  */
 
 #ifndef ROOT_ThreadLocalStorage
@@ -67,15 +82,18 @@
 
 #if __cplusplus >= 201103L
 
-// Note: it would be tempting to use __has_feature(cxx_thread_local) but despite
-// documentation claims it support for it ... it is in fact ineffective (return
-// a false negative).
 // Clang 3.4 also support SD-6 (feature test macros __cpp_*), but no thread local macro
-#  if defined(__clang__) && (__clang_major__ >= 3 && __clang_minor__ >= 3)
+#  if defined(__clang__) && __has_feature(cxx_thread_local)
+
+#    if __has_feature(cxx_thread_local)
      // thread_local was added in Clang 3.3
      // Still requires libstdc++ from GCC 4.8
      // For that __GLIBCXX__ isn't good enough
-#    define R__HAS_THREAD_LOCAL
+     // Also the MacOS build of clang does *not* support thread local yet.
+#      define R__HAS_THREAD_LOCAL
+#    else
+#      define R__HAS___THREAD
+#    endif
 
 #  elif defined(__GNUG__) && (__GNUC__ <= 4 && __GNUC_MINOR__ < 80)
     // The C++11 thread_local keyword is supported in GCC only since 4.8
@@ -95,25 +113,29 @@
 #ifdef __CINT__
 
 #  define TTHREAD_TLS(type) static type
-#  define TTHREAD_TLS_ARRAY(type,size,name) static type name[size];
+#  define TTHREAD_TLS_ARRAY(type,size,name) static type name[size]
 #  define TTHREAD_TLS_PTR(name) &name
 
 #elif defined(R__HAS_THREAD_LOCAL)
 
 #  define TTHREAD_TLS(type) thread_local type
-#  define TTHREAD_TLS_ARRAY(type,size,name) thread_local type name[size];
+#  define TTHREAD_TLS_ARRAY(type,size,name) thread_local type name[size]
 #  define TTHREAD_TLS_PTR(name) &name
+
+#  define TTHREAD_TLS_DECL(type, name) thread_local type name
+#  define TTHREAD_TLS_DECL_ARG(type, name, arg) thread_local type name(arg)
+#  define TTHREAD_TLS_DECL_ARG2(type, name, arg) thread_local type name(arg1,arg2)
 
 #elif defined(R__HAS___THREAD)
 
 #  define TTHREAD_TLS(type)  static __thread type
-#  define TTHREAD_TLS_ARRAY(type,size,name) static __thread type name[size];
+#  define TTHREAD_TLS_ARRAY(type,size,name) static __thread type name[size]
 #  define TTHREAD_TLS_PTR(name) &name
 
 #elif defined(R__HAS_DECLSPEC_THREAD)
 
 #  define TTHREAD_TLS(type) static __declspec(thread) type
-#  define TTHREAD_TLS_ARRAY(type,size,name) static __declspec(thread) type name[size];
+#  define TTHREAD_TLS_ARRAY(type,size,name) static __declspec(thread) type name[size]
 #  define TTHREAD_TLS_PTR(name) &name
 
 #elif defined(R__HAS_PTHREAD)
@@ -216,6 +238,8 @@ public:
 #  define TTHREAD_TLS(type) static TThreadTLSWrapper<type>
 #  define TTHREAD_TLS_ARRAY(type,size,name) static TThreadTLSArrayWrapper<type,size> name;
 #  define TTHREAD_TLS_PTR(name) &(name.get())
+#  define TTHREAD_TLS_OBJ(index,type,name) type &name( TTHREAD_TLS_INIT<index,type>() )
+
 #else
 
 #error "No Thread Local Storage (TLS) technology for this platform specified."
@@ -223,6 +247,34 @@ public:
 #endif
 
 // Available on all platforms
+
+
+// Neither TTHREAD_TLS_DECL_IMPL and TTHREAD_TLS_INIT
+// do not delete the object at the end of the process.
+
+#define TTHREAD_TLS_DECL_IMPL(type, name, ptr, arg) \
+   TTHREAD_TLS(type *) ptr = 0; \
+   if (!ptr) ptr = new type(arg); \
+   type &name = *ptr;
+
+#define TTHREAD_TLS_DECL_IMPL2(type, name, ptr, arg1, arg2) \
+   TTHREAD_TLS(type *) ptr = 0; \
+   if (!ptr) ptr = new type(arg1,arg2); \
+   type &name = *ptr;
+
+#ifndef TTHREAD_TLS_DECL
+
+#define TTHREAD_TLS_DECL(type, name) \
+   TTHREAD_TLS_DECL_IMPL(type,name,_R__JOIN_(ptr,__LINE__),)
+
+#define TTHREAD_TLS_DECL_ARG(type, name, arg) \
+   TTHREAD_TLS_DECL_IMPL(type,name,_R__JOIN_(ptr,__LINE__),arg)
+
+#define TTHREAD_TLS_DECL_ARG2(type, name, arg1, arg2) \
+   TTHREAD_TLS_DECL_IMPL2(type,name,_R__JOIN_(ptr,__LINE__),arg1,arg2)
+
+#endif
+
 template <int marker, typename T>
 T &TTHREAD_TLS_INIT() {
    TTHREAD_TLS(T*) ptr = NULL;
