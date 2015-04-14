@@ -323,6 +323,7 @@ inline namespace __1 {
 #endif  // !_LIBCPP_UNROLL_LOOPS
       }
    }
+
 #endif // _LOCAL_VSTD for __search
 
    template <class _ForwardIterator1, class _ForwardIterator2, class _BinaryPredicate>
@@ -513,8 +514,9 @@ inline namespace __1 {
       return __npos;
    }
 
-}
-}
+} // namespace __1 or __ROOT
+
+} // namespace std
 
 // Now include the main meat
 #include "libcpp_string_view.h"
