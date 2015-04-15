@@ -2293,12 +2293,10 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
          // Check if it's a member
          TDataMember *dmptr = 0; //pclass->GetDataMember(memberName.Data());
-         TList  *dlist = pclass->GetListOfDataMembers();
          TIter   next(pclass->GetListOfAllPublicDataMembers());
          while ((dmptr = (TDataMember *) next())) {
             if (memberName == dmptr->GetName()) break;
          }
-         delete dlist;
          if (dmptr)
          {
             if (0) printf("It's a member!\n");
@@ -2328,8 +2326,6 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          while ((mptr = (TMethod *) next())) {
             if (strcmp(memberName.Data(),mptr->GetName())==0) break;
          }
-         delete mlist;
-
          if (mptr)
          {
             TString returnName = mptr->GetReturnTypeName();
