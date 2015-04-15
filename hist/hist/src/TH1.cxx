@@ -79,7 +79,7 @@ ROOT supports the following histogram types:
          <li>TH3D : histograms with one double per channel. Maximum precision 14 digits
    </ul>
   <li>Profile histograms: See classes  TProfile, TProfile2D and TProfile3D.
-      Profile histograms are used to display the mean value of Y and its RMS
+      Profile histograms are used to display the mean value of Y and its standard deviation
       for each bin in X. Profile histograms are in many cases an elegant
       replacement of two-dimensional histograms : the inter-relation of two
       measured quantities X and Y can always be visualized by a two-dimensional
@@ -515,7 +515,7 @@ All histogram classes are derived from the base class TH1
         TH1::Smooth() smooths the bin contents of a 1-d histogram
         TH1::Integral() returns the integral of bin contents in a given bin range
         TH1::GetMean(int axis) returns the mean value along axis
-        TH1::GetRMS(int axis)  returns the sigma distribution along axis
+        TH1::GetStdDev(int axis)  returns the sigma distribution along axis
         TH1::GetEntries() returns the number of entries
         TH1::Reset() resets the bin contents and errors of an histogram
 </pre>
@@ -4181,11 +4181,11 @@ void H1InitGaus()
 {
    // Compute Initial values of parameters for a gaussian.
 
-   Double_t allcha, sumx, sumx2, x, val, rms, mean;
+   Double_t allcha, sumx, sumx2, x, val, stddev, mean;
    Int_t bin;
    const Double_t sqrtpi = 2.506628;
 
-   //   - Compute mean value and RMS of the histogram in the given range
+   //   - Compute mean value and StdDev of the histogram in the given range
    TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
    TH1 *curHist = (TH1*)hFitter->GetObjectFit();
    Int_t hxfirst = hFitter->GetXfirst();
@@ -4203,33 +4203,33 @@ void H1InitGaus()
    }
    if (allcha == 0) return;
    mean = sumx/allcha;
-   rms  = sumx2/allcha - mean*mean;
-   if (rms > 0) rms  = TMath::Sqrt(rms);
-   else         rms  = 0;
-   if (rms == 0) rms = binwidx*(hxlast-hxfirst+1)/4;
+   stddev  = sumx2/allcha - mean*mean;
+   if (stddev > 0) stddev  = TMath::Sqrt(stddev);
+   else         stddev  = 0;
+   if (stddev == 0) stddev = binwidx*(hxlast-hxfirst+1)/4;
    //if the distribution is really gaussian, the best approximation
-   //is binwidx*allcha/(sqrtpi*rms)
+   //is binwidx*allcha/(sqrtpi*stddev)
    //However, in case of non-gaussian tails, this underestimates
    //the normalisation constant. In this case the maximum value
    //is a better approximation.
    //We take the average of both quantities
-   Double_t constant = 0.5*(valmax+binwidx*allcha/(sqrtpi*rms));
+   Double_t constant = 0.5*(valmax+binwidx*allcha/(sqrtpi*stddev));
 
    //In case the mean value is outside the histo limits and
-   //the RMS is bigger than the range, we take
+   //the StdDev is bigger than the range, we take
    //  mean = center of bins
-   //  rms  = half range
+   //  stddev  = half range
    Double_t xmin = curHist->GetXaxis()->GetXmin();
    Double_t xmax = curHist->GetXaxis()->GetXmax();
-   if ((mean < xmin || mean > xmax) && rms > (xmax-xmin)) {
+   if ((mean < xmin || mean > xmax) && stddev > (xmax-xmin)) {
       mean = 0.5*(xmax+xmin);
-      rms  = 0.5*(xmax-xmin);
+      stddev  = 0.5*(xmax-xmin);
    }
    TF1 *f1 = (TF1*)hFitter->GetUserFunc();
    f1->SetParameter(0,constant);
    f1->SetParameter(1,mean);
-   f1->SetParameter(2,rms);
-   f1->SetParLimits(2,0,10*rms);
+   f1->SetParameter(2,stddev);
+   f1->SetParLimits(2,0,10*stddev);
 }
 
 
@@ -6417,7 +6417,7 @@ void  TH1::Smooth(Int_t ntimes, Option_t *option)
 void  TH1::StatOverflows(Bool_t flag)
 {
    //  if flag=kTRUE, underflows and overflows are used by the Fill functions
-   //  in the computation of statistics (mean value, RMS).
+   //  in the computation of statistics (mean value, StdDev).
    //  By default, underflows or overflows are not used.
 
    fgStatOverflows = flag;
@@ -6927,7 +6927,7 @@ Double_t TH1::GetMean(Int_t axis) const
    //  For axis = 11, 12, 13 returns the standard error of the mean value
    //  of the histogram along X, Y or Z axis
    //
-   //  Note that the mean value/RMS is computed using the bins in the currently
+   //  Note that the mean value/StdDev is computed using the bins in the currently
    //  defined range (see TAxis::SetRange). By default the range includes
    //  all bins from 1 to nbins included, excluding underflows and overflows.
    //  To force the underflows and overflows in the computation, one must
@@ -6936,7 +6936,7 @@ Double_t TH1::GetMean(Int_t axis) const
    //
    // Return mean value of this histogram along the X axis.
    //
-   //  Note that the mean value/RMS is computed using the bins in the currently
+   //  Note that the mean value/StdDev is computed using the bins in the currently
    //  defined range (see TAxis::SetRange). By default the range includes
    //  all bins from 1 to nbins included, excluding underflows and overflows.
    //  To force the underflows and overflows in the computation, one must
@@ -6952,10 +6952,10 @@ Double_t TH1::GetMean(Int_t axis) const
       Int_t ax[3] = {2,4,7};
       return stats[ax[axis-1]]/stats[0];
    } else {
-      // mean error = RMS / sqrt( Neff )
-      Double_t rms = GetRMS(axis-10);
+      // mean error = StdDev / sqrt( Neff )
+      Double_t stddev = GetStdDev(axis-10);
       Double_t neff = GetEffectiveEntries();
-      return ( neff > 0 ? rms/TMath::Sqrt(neff) : 0. );
+      return ( neff > 0 ? stddev/TMath::Sqrt(neff) : 0. );
    }
 }
 
@@ -6965,7 +6965,7 @@ Double_t TH1::GetMeanError(Int_t axis) const
 {
    // Return standard error of mean of this histogram along the X axis.
    //
-   //  Note that the mean value/RMS is computed using the bins in the currently
+   //  Note that the mean value/StdDev is computed using the bins in the currently
    //  defined range (see TAxis::SetRange). By default the range includes
    //  all bins from 1 to nbins included, excluding underflows and overflows.
    //  To force the underflows and overflows in the computation, one must
@@ -6983,7 +6983,7 @@ Double_t TH1::GetRMS(Int_t axis) const
 {
    //  For axis = 1,2 or 3 returns the Sigma value of the histogram along
    //  X, Y or Z axis
-   //  For axis = 11, 12 or 13 returns the error of RMS estimation along
+   //  For axis = 11, 12 or 13 returns the error of StdDev estimation along
    //  X, Y or Z axis for Normal distribution
    //
    //     Note that the mean value/sigma is computed using the bins in the currently
@@ -7000,21 +7000,21 @@ Double_t TH1::GetRMS(Int_t axis) const
 
    if (axis<1 || (axis>3 && axis<11) || axis>13) return 0;
 
-   Double_t x, rms2, stats[kNstat];
+   Double_t x, stddev2, stats[kNstat];
    for (Int_t i=4;i<kNstat;i++) stats[i] = 0;
    GetStats(stats);
    if (stats[0] == 0) return 0;
    Int_t ax[3] = {2,4,7};
    Int_t axm = ax[axis%10 - 1];
    x    = stats[axm]/stats[0];
-   rms2 = TMath::Abs(stats[axm+1]/stats[0] -x*x);
+   stddev2 = TMath::Abs(stats[axm+1]/stats[0] -x*x);
    if (axis<10)
-      return TMath::Sqrt(rms2);
+      return TMath::Sqrt(stddev2);
    else {
-      // The right formula for RMS error depends on 4th momentum (see Kendall-Stuart Vol 1 pag 243)
+      // The right formula for StdDev error depends on 4th momentum (see Kendall-Stuart Vol 1 pag 243)
       // formula valid for only gaussian distribution ( 4-th momentum =  3 * sigma^4 )
       Double_t neff = GetEffectiveEntries();
-      return ( neff > 0 ? TMath::Sqrt(rms2/(2*neff) ) : 0. );
+      return ( neff > 0 ? TMath::Sqrt(stddev2/(2*neff) ) : 0. );
    }
 }
 
@@ -7022,9 +7022,9 @@ Double_t TH1::GetRMS(Int_t axis) const
 //______________________________________________________________________________
 Double_t TH1::GetRMSError(Int_t axis) const
 {
-   //  Return error of RMS estimation for Normal distribution
+   //  Return error of standard deviation estimation for Normal distribution
    //
-   //  Note that the mean value/RMS is computed using the bins in the currently
+   //  Note that the mean value/StdDev is computed using the bins in the currently
    //  defined range (see TAxis::SetRange). By default the range includes
    //  all bins from 1 to nbins included, excluding underflows and overflows.
    //  To force the underflows and overflows in the computation, one must
@@ -7053,8 +7053,8 @@ Double_t TH1::GetSkewness(Int_t axis) const
    if (axis > 0 && axis <= 3){
 
       Double_t mean = GetMean(axis);
-      Double_t rms = GetRMS(axis);
-      Double_t rms3 = rms*rms*rms;
+      Double_t stddev = GetStdDev(axis);
+      Double_t stddev3 = stddev*stddev*stddev;
 
       Int_t firstBinX = fXaxis.GetFirst();
       Int_t lastBinX  = fXaxis.GetLast();
@@ -7093,7 +7093,7 @@ Double_t TH1::GetSkewness(Int_t axis) const
             }
          }
       }
-      sum/=np*rms3;
+      sum/=np*stddev3;
       return sum;
    }
    else if (axis > 10 && axis <= 13) {
@@ -7122,8 +7122,8 @@ Double_t TH1::GetKurtosis(Int_t axis) const
    if (axis > 0 && axis <= 3){
 
       Double_t mean = GetMean(axis);
-      Double_t rms = GetRMS(axis);
-      Double_t rms4 = rms*rms*rms*rms;
+      Double_t stddev = GetStdDev(axis);
+      Double_t stddev4 = stddev*stddev*stddev*stddev;
 
       Int_t firstBinX = fXaxis.GetFirst();
       Int_t lastBinX  = fXaxis.GetLast();
@@ -7162,7 +7162,7 @@ Double_t TH1::GetKurtosis(Int_t axis) const
             }
          }
       }
-      sum/=(np*rms4);
+      sum/=(np*stddev4);
       return sum-3;
 
    } else if (axis > 10 && axis <= 13) {
@@ -7193,7 +7193,7 @@ void TH1::GetStats(Double_t *stats) const
    // If a sub-range is specified, the function recomputes these quantities
    // from the bin contents in the current axis range.
    //
-   //  Note that the mean value/RMS is computed using the bins in the currently
+   //  Note that the mean value/StdDev is computed using the bins in the currently
    //  defined range (see TAxis::SetRange). By default the range includes
    //  all bins from 1 to nbins included, excluding underflows and overflows.
    //  To force the underflows and overflows in the computation, one must

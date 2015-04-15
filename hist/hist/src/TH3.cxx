@@ -835,7 +835,7 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
    //          with h3_0 containing parameter 0(Constant) for a Gaus fit
    //                    of each cell in X,Y projected along Z
    //          with h3_1 containing parameter 1(Mean) for a gaus fit
-   //          with h3_2 containing parameter 2(RMS)  for a gaus fit
+   //          with h3_2 containing parameter 2(StdDev)  for a gaus fit
    //          with h3_chi2 containing the chisquare/number of degrees of freedom for a gaus fit
    //
    //   Root > h3->Fit(0,15,22,0,0,10);
@@ -1011,11 +1011,11 @@ Double_t TH3::GetCorrelationFactor(Int_t axis1, Int_t axis2) const
       return 0;
    }
    if (axis1 == axis2) return 1;
-   Double_t rms1 = GetRMS(axis1);
-   if (rms1 == 0) return 0;
-   Double_t rms2 = GetRMS(axis2);
-   if (rms2 == 0) return 0;
-   return GetCovariance(axis1,axis2)/rms1/rms2;
+   Double_t stddev1 = GetStdDev(axis1);
+   if (stddev1 == 0) return 0;
+   Double_t stddev2 = GetStdDev(axis2);
+   if (stddev2 == 0) return 0;
+   return GetCovariance(axis1,axis2)/stddev1/stddev2;
 }
 
 
@@ -1898,8 +1898,8 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax,
 
 
 //______________________________________________________________________________
-TH1D *TH3::DoProject1D(const char* name, const char * title, int imin1, int imax1, int imin2, int imax2, 
-                       const TAxis* projAxis, const TAxis * axis1, const TAxis * axis2, Option_t * option) const 
+TH1D *TH3::DoProject1D(const char* name, const char * title, int imin1, int imax1, int imin2, int imax2,
+                       const TAxis* projAxis, const TAxis * axis1, const TAxis * axis2, Option_t * option) const
 {
    // internal methdod performing the projection to 1D histogram
    // called from TH3::Project3D
@@ -1913,7 +1913,7 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, int imin1, int imax
    Int_t iminOld2 = axis2->GetFirst();
    Int_t imaxOld2 = axis2->GetLast();
 
-   // need to cast-away constness to set range 
+   // need to cast-away constness to set range
    const_cast<TAxis*>(axis1)->SetRange(imin1,imax1);
    const_cast<TAxis*>(axis2)->SetRange(imin2,imax2);
 
@@ -1956,7 +1956,7 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
                        bool useUF, bool useOF) const
 {
    // internal methdod performing the projection to 1D histogram
-   // called from other TH3::DoProject1D 
+   // called from other TH3::DoProject1D
 
 
    // Create the projection histogram
@@ -2592,7 +2592,7 @@ void TH3::DoFillProfileProjection(TProfile2D * p2,
    Double_t cont = GetBinContent(inBin);
    if (!cont) return;
    TArrayD & binSumw2 = *(p2->GetBinSumw2());
-   if (useWeights && binSumw2.fN <= 0) useWeights = false;   
+   if (useWeights && binSumw2.fN <= 0) useWeights = false;
    if (!useWeights) p2->SetBit(TH1::kIsNotW);  // to use Fill for setting the bin contents of the Profile
    // the following fill update wrongly the fBinSumw2- need to save it before
    Double_t u = a1.GetBinCenter(bin1);

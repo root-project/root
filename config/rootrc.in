@@ -170,10 +170,10 @@ Hist.Stats.Mean:             Mean
 Hist.Stats.MeanX:            Mean x
 Hist.Stats.MeanY:            Mean y
 Hist.Stats.MeanZ:            Mean z
-Hist.Stats.RMS:              RMS
-Hist.Stats.RMSX:             RMS x
-Hist.Stats.RMSY:             RMS y
-Hist.Stats.RMSZ:             RMS z
+Hist.Stats.StdDev:           Std Dev
+Hist.Stats.StdDevX:          Std Dev x
+Hist.Stats.StdDevY:          Std Dev y
+Hist.Stats.StdDevZ:          Std Dev z
 Hist.Stats.Underflow:        Underflow
 Hist.Stats.Overflow:         Overflow
 Hist.Stats.Integral:         Integral

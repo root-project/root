@@ -862,7 +862,7 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
    //          with h2_0 containing parameter 0(Constant) for a Gaus fit
    //                    of each bin in Y projected along X
    //          with h2_1 containing parameter 1(Mean) for a gaus fit
-   //          with h2_2 containing parameter 2(RMS)  for a gaus fit
+   //          with h2_2 containing parameter 2(StdDev)  for a gaus fit
    //          with h2_chi2 containing the chisquare/number of degrees of freedom for a gaus fit
    //
    //   Root > h2->FitSlicesX(0,15,22,10);
@@ -919,7 +919,7 @@ void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option
    //          with h2_0 containing parameter 0(Constant) for a Gaus fit
    //                    of each bin in X projected along Y
    //          with h2_1 containing parameter 1(Mean) for a gaus fit
-   //          with h2_2 containing parameter 2(RMS)  for a gaus fit
+   //          with h2_2 containing parameter 2(StdDev)  for a gaus fit
    //          with h2_chi2 containing the chisquare/number of degrees of freedom for a gaus fit
    //
    //   Root > h2->FitSlicesY(0,15,22,10);
@@ -1007,11 +1007,11 @@ Double_t TH2::GetCorrelationFactor(Int_t axis1, Int_t axis2) const
       return 0;
    }
    if (axis1 == axis2) return 1;
-   Double_t rms1 = GetRMS(axis1);
-   if (rms1 == 0) return 0;
-   Double_t rms2 = GetRMS(axis2);
-   if (rms2 == 0) return 0;
-   return GetCovariance(axis1,axis2)/rms1/rms2;
+   Double_t stddev1 = GetStdDev(axis1);
+   if (stddev1 == 0) return 0;
+   Double_t stddev2 = GetStdDev(axis2);
+   if (stddev2 == 0) return 0;
+   return GetCovariance(axis1,axis2)/stddev1/stddev2;
 }
 
 
@@ -1096,7 +1096,7 @@ void TH2::GetStats(Double_t *stats) const
    // If sub-ranges are specified, the function recomputes these quantities
    // from the bin contents in the current axis ranges.
    //
-   //  Note that the mean value/RMS is computed using the bins in the currently
+   //  Note that the mean value/StdDev is computed using the bins in the currently
    //  defined ranges (see TAxis::SetRange). By default the ranges include
    //  all bins from 1 to nbins included, excluding underflows and overflows.
    //  To force the underflows and overflows in the computation, one must
@@ -2068,7 +2068,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    if (useWeights) h1->Sumw2();
    // we need to set this bit because we fill the profile using a single Fill for many entries
    // This is needed for the changes applied to make automaticall y hthe histogram weighted in ROOT 6 versions
-   else h1->SetBit(TH1::kIsNotW);  
+   else h1->SetBit(TH1::kIsNotW);
 
    // Fill the profile histogram
    // no entries/bin is available so can fill only using bin content as weight
@@ -2644,7 +2644,7 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
     // quantile error  ~  sqrt (q*(1-q)/ *( n * f(xq) ) from Kendall
     // where f(xq) is the p.d.f value at the quantile xqp
     Double_t n = slice->GetEffectiveEntries();
-    Double_t f = TMath::Gaus(qq[0], slice->GetRMS(), kTRUE);
+    Double_t f = TMath::Gaus(qq[0], slice->GetStdDev(), kTRUE);
     Double_t error = TMath::Sqrt( prob*(1.-prob)/ ( n * f) );
     h1->SetBinError(ibin, error);
   }

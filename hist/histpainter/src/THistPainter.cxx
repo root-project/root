@@ -741,8 +741,8 @@ The "<tt>mode</tt>" has up to nine digits that can be set to on (1 or 2), off (0
       i = 2;  integral of bins with option "width" printed
       o = 1;  number of overflows printed
       u = 1;  number of underflows printed
-      r = 1;  rms printed
-      r = 2;  rms and rms error printed
+      r = 1;  standard deviation printed
+      r = 2;  standard deviation and standard deviation error printed
       m = 1;  mean value printed
       m = 2;  mean and mean error values printed
       e = 1;  number of entries printed
@@ -756,7 +756,7 @@ displays only the name of histogram and the number of entries, whereas:
 <pre>
       gStyle->SetOptStat(1101);
 </pre>
-displays the name of histogram, mean value and RMS.
+displays the name of histogram, mean value and standard deviation.
 
 <p><b>WARNING 1:</b> never do:
 <pre>
@@ -795,8 +795,8 @@ of underflow/overflows and not just one single number.
       I :  integral of bins with option "width" printed
       o :  number of overflows printed
       u :  number of underflows printed
-      r :  rms printed
-      R :  rms and rms error printed
+      r :  standard deviation printed
+      R :  standard deviation and standard deviation error printed
       m :  mean value printed
       M :  mean value mean error values printed
       e :  number of entries printed
@@ -865,7 +865,7 @@ and activate it again with:
       h->SetStats(1).
 </pre>
 
-<p>Labels used in the statistics box ("Mean", "RMS", ...) can be changed from
+<p>Labels used in the statistics box ("Mean", "Std Dev", ...) can be changed from
 <a href="http://root.cern.ch/download/doc/primer/ROOTPrimer.html#configure-root-at-start-up">$ROOTSYS/etc/system.rootrc</a> or
 <a href="http://root.cern.ch/download/doc/primer/ROOTPrimer.html#configure-root-at-start-up">.rootrc</a>
 (look for the string <tt>"Hist.Stats."</tt>).
@@ -3022,10 +3022,10 @@ static TString gStringMean;
 static TString gStringMeanX;
 static TString gStringMeanY;
 static TString gStringMeanZ;
-static TString gStringRMS;
-static TString gStringRMSX;
-static TString gStringRMSY;
-static TString gStringRMSZ;
+static TString gStringStdDev;
+static TString gStringStdDevX;
+static TString gStringStdDevY;
+static TString gStringStdDevZ;
 static TString gStringUnderflow;
 static TString gStringOverflow;
 static TString gStringIntegral;
@@ -3073,10 +3073,10 @@ THistPainter::THistPainter()
    gStringMeanX            = gEnv->GetValue("Hist.Stats.MeanX",            "Mean x");
    gStringMeanY            = gEnv->GetValue("Hist.Stats.MeanY",            "Mean y");
    gStringMeanZ            = gEnv->GetValue("Hist.Stats.MeanZ",            "Mean z");
-   gStringRMS              = gEnv->GetValue("Hist.Stats.RMS",              "RMS");
-   gStringRMSX             = gEnv->GetValue("Hist.Stats.RMSX",             "RMS x");
-   gStringRMSY             = gEnv->GetValue("Hist.Stats.RMSY",             "RMS y");
-   gStringRMSZ             = gEnv->GetValue("Hist.Stats.RMSZ",             "RMS z");
+   gStringStdDev           = gEnv->GetValue("Hist.Stats.StdDev",           "Std Dev");
+   gStringStdDevX          = gEnv->GetValue("Hist.Stats.StdDevX",          "Std Dev x");
+   gStringStdDevY          = gEnv->GetValue("Hist.Stats.StdDevY",          "Std Dev y");
+   gStringStdDevZ          = gEnv->GetValue("Hist.Stats.StdDevZ",          "Std Dev z");
    gStringUnderflow        = gEnv->GetValue("Hist.Stats.Underflow",        "Underflow");
    gStringOverflow         = gEnv->GetValue("Hist.Stats.Overflow",         "Overflow");
    gStringIntegral         = gEnv->GetValue("Hist.Stats.Integral",         "Integral");
@@ -7657,13 +7657,13 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    Int_t print_name    = dostat%10;
    Int_t print_entries = (dostat/10)%10;
    Int_t print_mean    = (dostat/100)%10;
-   Int_t print_rms     = (dostat/1000)%10;
+   Int_t print_stddev  = (dostat/1000)%10;
    Int_t print_under   = (dostat/10000)%10;
    Int_t print_over    = (dostat/100000)%10;
    Int_t print_integral= (dostat/1000000)%10;
    Int_t print_skew    = (dostat/10000000)%10;
    Int_t print_kurt    = (dostat/100000000)%10;
-   Int_t nlines = print_name + print_entries + print_mean + print_rms +
+   Int_t nlines = print_name + print_entries + print_mean + print_stddev +
                   print_under + print_over + print_integral +
                   print_skew + print_kurt;
    Int_t print_fval    = dofit%10;
@@ -7675,7 +7675,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       if (print_fval < 2) nlinesf += fit->GetNumberFreeParameters();
       else                nlinesf += fit->GetNpar();
    }
-   if (fH->InheritsFrom(TProfile::Class())) nlinesf += print_mean + print_rms;
+   if (fH->InheritsFrom(TProfile::Class())) nlinesf += print_mean + print_stddev;
 
    // Pavetext with statistics
    Bool_t done = kFALSE;
@@ -7746,24 +7746,24 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
          stats->AddText(t);
       }
    }
-   if (print_rms) {
-      if (print_rms == 1) {
-         snprintf(textstats,50,"%s   = %s%s",gStringRMS.Data(),"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,fH->GetRMS(1));
+   if (print_stddev) {
+      if (print_stddev == 1) {
+         snprintf(textstats,50,"%s   = %s%s",gStringStdDev.Data(),"%",stats->GetStatFormat());
+         snprintf(t,100,textstats,fH->GetStdDev(1));
       } else {
-         snprintf(textstats,50,"%s   = %s%s #pm %s%s",gStringRMS.Data(),"%",stats->GetStatFormat()
+         snprintf(textstats,50,"%s   = %s%s #pm %s%s",gStringStdDev.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,fH->GetRMS(1),fH->GetRMSError(1));
+         snprintf(t,100,textstats,fH->GetStdDev(1),fH->GetStdDevError(1));
       }
       stats->AddText(t);
       if (fH->InheritsFrom(TProfile::Class())) {
-         if (print_rms == 1) {
-            snprintf(textstats,50,"%s = %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat());
-            snprintf(t,100,textstats,fH->GetRMS(2));
+         if (print_stddev == 1) {
+            snprintf(textstats,50,"%s = %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat());
+            snprintf(t,100,textstats,fH->GetStdDev(2));
          } else {
-            snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat()
+            snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat()
                                                      ,"%",stats->GetStatFormat());
-            snprintf(t,100,textstats,fH->GetRMS(2),fH->GetRMSError(2));
+            snprintf(t,100,textstats,fH->GetStdDev(2),fH->GetStdDevError(2));
          }
          stats->AddText(t);
       }
@@ -7882,13 +7882,13 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    Int_t print_name    = dostat%10;
    Int_t print_entries = (dostat/10)%10;
    Int_t print_mean    = (dostat/100)%10;
-   Int_t print_rms     = (dostat/1000)%10;
+   Int_t print_stddev  = (dostat/1000)%10;
    Int_t print_under   = (dostat/10000)%10;
    Int_t print_over    = (dostat/100000)%10;
    Int_t print_integral= (dostat/1000000)%10;
    Int_t print_skew    = (dostat/10000000)%10;
    Int_t print_kurt    = (dostat/100000000)%10;
-   Int_t nlines = print_name + print_entries + 2*print_mean + 2*print_rms + print_integral;
+   Int_t nlines = print_name + print_entries + 2*print_mean + 2*print_stddev + print_integral;
    if (print_under || print_over) nlines += 3;
 
    // Pavetext with statistics
@@ -7959,22 +7959,22 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
          stats->AddText(t);
       }
    }
-   if (print_rms) {
-      if (print_rms == 1) {
-         snprintf(textstats,50,"%s = %s%s",gStringRMSX.Data(),"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,h2->GetRMS(1));
+   if (print_stddev) {
+      if (print_stddev == 1) {
+         snprintf(textstats,50,"%s = %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat());
+         snprintf(t,100,textstats,h2->GetStdDev(1));
          stats->AddText(t);
-         snprintf(textstats,50,"%s = %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,h2->GetRMS(2));
+         snprintf(textstats,50,"%s = %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat());
+         snprintf(t,100,textstats,h2->GetStdDev(2));
          stats->AddText(t);
       } else {
-         snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringRMSX.Data(),"%",stats->GetStatFormat()
+         snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,h2->GetRMS(1),h2->GetRMSError(1));
+         snprintf(t,100,textstats,h2->GetStdDev(1),h2->GetStdDevError(1));
          stats->AddText(t);
-         snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat()
+         snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,h2->GetRMS(2),h2->GetRMSError(2));
+         snprintf(t,100,textstats,h2->GetStdDev(2),h2->GetStdDevError(2));
          stats->AddText(t);
       }
    }
@@ -8102,13 +8102,13 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    Int_t print_name    = dostat%10;
    Int_t print_entries = (dostat/10)%10;
    Int_t print_mean    = (dostat/100)%10;
-   Int_t print_rms     = (dostat/1000)%10;
+   Int_t print_stddev  = (dostat/1000)%10;
    Int_t print_under   = (dostat/10000)%10;
    Int_t print_over    = (dostat/100000)%10;
    Int_t print_integral= (dostat/1000000)%10;
    Int_t print_skew    = (dostat/10000000)%10;
    Int_t print_kurt    = (dostat/100000000)%10;
-   Int_t nlines = print_name + print_entries + 3*print_mean + 3*print_rms + print_integral;
+   Int_t nlines = print_name + print_entries + 3*print_mean + 3*print_stddev + print_integral;
    if (print_under || print_over) nlines += 3;
 
    // Pavetext with statistics
@@ -8184,29 +8184,29 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
          stats->AddText(t);
       }
    }
-   if (print_rms) {
-      if (print_rms == 1) {
-         snprintf(textstats,50,"%s = %s%s",gStringRMSX.Data(),"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,h3->GetRMS(1));
+   if (print_stddev) {
+      if (print_stddev == 1) {
+         snprintf(textstats,50,"%s = %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat());
+         snprintf(t,100,textstats,h3->GetStdDev(1));
          stats->AddText(t);
-         snprintf(textstats,50,"%s = %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,h3->GetRMS(2));
+         snprintf(textstats,50,"%s = %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat());
+         snprintf(t,100,textstats,h3->GetStdDev(2));
          stats->AddText(t);
-         snprintf(textstats,50,"%s = %s%s",gStringRMSZ.Data(),"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,h3->GetRMS(3));
+         snprintf(textstats,50,"%s = %s%s",gStringStdDevZ.Data(),"%",stats->GetStatFormat());
+         snprintf(t,100,textstats,h3->GetStdDev(3));
          stats->AddText(t);
       } else {
-         snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringRMSX.Data(),"%",stats->GetStatFormat()
+         snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringStdDevX.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,h3->GetRMS(1),h3->GetRMSError(1));
+         snprintf(t,100,textstats,h3->GetStdDev(1),h3->GetStdDevError(1));
          stats->AddText(t);
-         snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat()
+         snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringStdDevY.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,h3->GetRMS(2),h3->GetRMSError(2));
+         snprintf(t,100,textstats,h3->GetStdDev(2),h3->GetStdDevError(2));
          stats->AddText(t);
-         snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringRMSZ.Data(),"%",stats->GetStatFormat()
+         snprintf(textstats,50,"%s = %s%s #pm %s%s",gStringStdDevZ.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         snprintf(t,100,textstats,h3->GetRMS(3),h3->GetRMSError(3));
+         snprintf(t,100,textstats,h3->GetStdDev(3),h3->GetStdDevError(3));
          stats->AddText(t);
       }
    }
