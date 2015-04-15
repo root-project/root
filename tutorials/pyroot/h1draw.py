@@ -6,7 +6,6 @@ from ROOT import TCanvas, TPad, TFile, TPaveLabel, TPaveText
 from ROOT import gROOT
 
 
-gROOT.Reset()
 
 c1 = TCanvas( 'c1', 'Histogram Drawing Options', 200, 10, 700, 900 )
 

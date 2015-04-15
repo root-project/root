@@ -6,7 +6,6 @@ from ROOT import TCanvas, TPaveLabel, TPave, TLine, TArrow, TText, TPaveText
 from ROOT import gROOT
 
 
-gROOT.Reset()
 
 c1 = TCanvas( 'c1', 'ROOT File description', 200, 10, 700, 550 )
 

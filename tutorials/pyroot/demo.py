@@ -12,7 +12,6 @@ if workdir:
 # To execute an item, click with the left mouse button.
 # To see the HELP of a button, click on the right mouse button.
 
-ROOT.gROOT.Reset()
 ROOT.gStyle.SetScreenFactor(1)   # if you have a large screen, select 1.2 or 1.4
 
 bar = ROOT.TControlBar( 'vertical', 'Demos', 10, 10 )

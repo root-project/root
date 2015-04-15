@@ -5,7 +5,6 @@ from os import path
 from ROOT import TCanvas, TFile, TPaveText
 from ROOT import gROOT, gBenchmark
 
-gROOT.Reset()
 c1 = TCanvas( 'c1', 'The Fit Canvas', 200, 10, 700, 500 )
 c1.SetGridx()
 c1.SetGridy()

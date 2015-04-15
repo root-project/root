@@ -7,7 +7,6 @@ try:
 except NameError:
    macrodir = ''         # in case of p2.2
 
-ROOT.gROOT.Reset()
 
 # the na49.C file was generated, so no python conversion is provided
 ROOT.gROOT.Macro( ROOT.gSystem.UnixPathName( os.path.join( macrodir, os.pardir, 'geom', 'na49.C' ) ) )

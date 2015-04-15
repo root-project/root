@@ -5,7 +5,6 @@ from ROOT import gROOT, gBenchmark
 from math import cos, sin, pi
 
 
-gROOT.Reset()
 
 gBenchmark.Start( 'tornado' )
 

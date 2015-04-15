@@ -15,7 +15,6 @@ from ROOT import gROOT
 from array import array
 
 
-gROOT.Reset()
 
 x = ( 1.913521, 1.953769, 2.347435, 2.883654, 3.493567,
       4.047560, 4.337210, 4.364347, 4.563004, 5.054247,

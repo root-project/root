@@ -14,7 +14,6 @@ from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1F, TH2F
 from ROOT import gROOT, gBenchmark, gRandom, gSystem, Double
 
 
-gROOT.Reset()
 
 # Create a new canvas, and customize it.
 c1 = TCanvas( 'c1', 'Dynamic Filling Example', 200, 10, 700, 500 )

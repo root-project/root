@@ -2,7 +2,6 @@ from ROOT import TCanvas, TPavesText
 from ROOT import gROOT
 
 
-gROOT.Reset();
 
 c1 = TCanvas("c1","The ROOT Framework",200,10,700,500)
 c1.Range(0,0,19,12)

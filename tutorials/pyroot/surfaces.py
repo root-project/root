@@ -6,7 +6,6 @@ from ROOT import TCanvas, TPaveText, TPad, TF2
 from ROOT import gROOT, gStyle
 
 
-gROOT.Reset()
 
 c1 = TCanvas( 'c1', 'Surfaces Drawing Options', 200, 10, 700, 900 )
 c1.SetFillColor( 42 )

@@ -6,7 +6,6 @@
 
 import ROOT
 
-ROOT.gROOT.Reset();
 c1 = ROOT.TCanvas( 'c1', 'The NA49 canvas', 200, 10, 700, 780 )
 
 ROOT.gBenchmark.Start( 'na49view' )

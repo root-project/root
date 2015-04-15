@@ -7,7 +7,6 @@ from ROOT import gROOT
 from array import array
 
 
-gROOT.Reset()
 
 c1 = TCanvas( 'c1', 'A Simple Graph with error bars', 200, 10, 700, 500 )
 

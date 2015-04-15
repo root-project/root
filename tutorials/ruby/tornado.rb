@@ -3,7 +3,6 @@
 #
 # This example tests static method calls (TView.CreateView()).
 #
-gROOT.Reset()
 
 gBenchmark = TBenchmark.new().Start('tornado')
 

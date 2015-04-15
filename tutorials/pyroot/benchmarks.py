@@ -35,7 +35,6 @@ def bexec( dir, macro, bench ):
 
 ### --------------------------------------------------------------------------
 if __name__ == '__main__':
-   ROOT.gROOT.Reset()
 
    try:
     # convenience, allowing to run this file from a different directory

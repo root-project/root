@@ -3,7 +3,6 @@ from ROOT import TCanvas, TPaveText
 from ROOT import gROOT
 
 
-gROOT.Reset()
 
 chelp = TCanvas( 'chelp', 'Help to run demos', 200, 10, 700, 500 )
 

@@ -8,7 +8,6 @@ from ROOT import TCanvas, TH1F, TSlider
 from ROOT import gROOT, gBenchmark, gRandom
 
 
-gROOT.Reset();
 
 # Create a new canvas, and customize it.
 c1 = TCanvas( 'c1', 'The HSUM example', 200, 10, 600, 400 )

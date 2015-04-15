@@ -1,5 +1,4 @@
 
-   gROOT.Reset()
    c1 = TCanvas( 'c1', 'The Fit Canvas' )
    c1.SetGridx()
    c1.SetGridy()
