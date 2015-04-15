@@ -1031,11 +1031,13 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    //
    int indent_level = 0;
    ostringstream buf;
-   buf << "__attribute__((used)) ";
-   buf << "extern \"C\" void ";
+   buf << "#pragma clang diagnostic push\n"
+      "#pragma clang diagnostic ignored \"-Wformat-security\"\n"
+      "__attribute__((used)) "
+      "extern \"C\" void ";
    buf << wrapper_name;
-   buf << "(void* obj, int nargs, void** args, void* ret)\n";
-   buf << "{\n";
+   buf << "(void* obj, int nargs, void** args, void* ret)\n"
+      "{\n";
    ++indent_level;
    if (min_args == num_params) {
       // No parameters with defaults.
@@ -1058,7 +1060,8 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
       }
    }
    --indent_level;
-   buf << "}\n";
+   buf << "}\n"
+      "#pragma clang diagnostic pop";
    string wrapper(buf.str());
    //fprintf(stderr, "%s\n", wrapper.c_str());
    //
