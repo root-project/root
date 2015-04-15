@@ -394,7 +394,8 @@ protected:
 
 public:
   RuntimeDyldImpl(RTDyldMemoryManager *mm)
-    : MemMgr(mm), Checker(nullptr), ProcessAllSections(false), HasError(false) {
+    : MemMgr(mm), Checker(nullptr), Relocations(4), ProcessAllSections(false),
+      HasError(false) {
   }
 
   virtual ~RuntimeDyldImpl();
