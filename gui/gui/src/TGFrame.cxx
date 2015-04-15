@@ -2639,7 +2639,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
       // Don't save hidden (unmapped) frames having a parent different
       // than this frame. Solves a problem with shared frames
       // (e.g. shared menus in the new Browser)
-      if ((!el->fState & kIsVisible) && (el->fFrame->GetParent() != this))
+      if ((!(el->fState & kIsVisible)) && (el->fFrame->GetParent() != this))
          continue;
 
       // Remember if the frame to be saved is a TG(H,V)Splitter
@@ -2682,7 +2682,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
          hsplit = 0;
       }
 
-      if (!el->fState & kIsVisible) {
+      if (!(el->fState & kIsVisible)) {
          gListOfHiddenFrames->Add(el->fFrame);
       }
 
