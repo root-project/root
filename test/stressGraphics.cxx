@@ -216,6 +216,12 @@ int main(int argc, char *argv[])
    cleanup();
    return 0;
 }
+#else
+// Unlinking causes the file system to re-use inodes. This confuses clang:
+// "Ummm I know the content of the file with that inode number already",
+// even though the deleted file has been replaced by a new one (which happens
+// to re-use the old inode number).
+#define ClingWorkAroundDeletedSourceFile 1
 #endif
 
 
