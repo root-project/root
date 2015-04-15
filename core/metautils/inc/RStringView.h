@@ -13,6 +13,16 @@
 #define RStringView_H
 
 #if defined(__has_include)
+
+#if !defined(__clang__) && defined(__GNUC__) && __cplusplus > 201103L
+// Don't check with GCC and less than C++14
+#else
+#define R__CHECK_FOR_STRING_VIEW
+#endif
+
+#endif
+
+#ifdef R__CHECK_FOR_STRING_VIEW
 #if __has_include("string_view")
 
 #define R_HAS_std_string_view_header
@@ -22,7 +32,7 @@
 #define R_HAS_lib_std_experimental_string_view
 
 #endif
-#endif // __has_include
+#endif // R__CHECK_FOR_STRING_VIEW
 
 #ifdef R_HAS_std_string_view_header
 #include <string_view>
