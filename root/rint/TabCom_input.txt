@@ -7,3 +7,5 @@ tabComTestNamedOb	.GetTitl	()
 #include "MyClass.h"
 MyCla	::fgM	
 MyCla	::fgPrivateM	
+TH1F *h = 0;
+h->GetXaxis()->SetTi		

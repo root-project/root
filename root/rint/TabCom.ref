@@ -37,3 +37,28 @@ void SetTitle(const char* title = "") 	// *MENU*
 (const char *) "OtherTitle"
 (int) 42
 
+
+SetTickLength
+SetTickSize
+SetTicks
+SetTimeDisplay
+SetTimeFormat
+SetTimeOffset
+SetTitle
+SetTitleColor
+SetTitleFont
+SetTitleOffset
+SetTitleSize
+
+
+SetTickLength
+SetTickSize
+SetTicks
+SetTimeDisplay
+SetTimeFormat
+SetTimeOffset
+SetTitle
+SetTitleColor
+SetTitleFont
+SetTitleOffset
+SetTitleSize
