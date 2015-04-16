@@ -3770,6 +3770,11 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
 
   p = strrchr(linkfilepref,'/'); /* ../aaa/bbb/ccc.cxx */
 #ifdef G__WIN32
+  G__FastAllocString drive(10);
+  G__FastAllocString dir(MAX_PATH);
+  G__FastAllocString fname(MAX_PATH);
+  G__FastAllocString ext(10);
+  _splitpath(linkfilename, drive, dir, fname, ext);
   if (!p) p = strrchr(linkfilepref,'\\'); /* in case of Windows pathname */
 #endif
   if (!p) p = linkfilepref;      /*  /ccc.cxx */
@@ -3811,11 +3816,11 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
 
 #ifdef G__GENWINDEF
     if (G__PROJNAME[0])
-      buf.Format("%s.def",G__PROJNAME.data());
+      buf.Format("%s\\%s%s.def",drive(),dir(),G__PROJNAME.data());
     else if (G__DLLID[0])
-      buf.Format("%s.def",G__DLLID);
+      buf.Format("%s\\%s%s.def",drive(),dir(),G__DLLID);
     else
-      buf.Format("%s.def","G__lib");
+      buf.Format("%s\\%s%s.def",drive(),dir(),"G__lib");
     G__WINDEF = (char*)malloc(strlen(buf)+1);
     strcpy(G__WINDEF,buf); // Okay, we allocated the right size
     G__write_windef_header();
@@ -3876,7 +3881,7 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
     strcpy(G__CLINK_C,buf); // Okay, we allocated the right size
 
 #ifdef G__GENWINDEF
-    buf.Format("%s.def",G__PROJNAME.data());
+    buf.Format("%s\\%s%s.def",drive(),dir(),G__PROJNAME.data());
     G__WINDEF = (char*)malloc(strlen(buf)+1);
     strcpy(G__WINDEF,buf); // Okay, we allocated the right size
     G__write_windef_header();
