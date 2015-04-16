@@ -27,6 +27,8 @@
 #@usec++11@ R__USE_CXX11    /**/
 #@usec++14@ R__USE_CXX14    /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
+#@hasstdstringview@ R__HAS_STD_STRING_VIEW   /**/
+#@hasstdexpstringview@ R__HAS_STD_EXPERIMENTAL_STRING_VIEW   /**/
 #@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@
 
 #endif

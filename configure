@@ -907,6 +907,41 @@ check_header()  {
 }
 
 #_____________________________________________________________________
+check_include() {
+    # This function compiles a source file including the header in $1
+    # with extra CXXFLAGS $2 (can be empty), e.g. to pass -I.
+    # The result of the check is stored in include_result, 1 if true,
+    # 0 otherwise, which should be immediately copied, since the variable
+    # will be overwritten at next invocation of this function.
+
+    # Assert that we got enough arguments
+    if test $# -lt 1 ; then
+        echo "check_include: Too few arguments"
+        return 1
+    fi
+
+    logmsg " Checking for header $1 with flags '$2'"
+    cat <<EOF > conftest.mk
+include ${ac_srcdir}/config/Makefile.${arch}
+CXX = ${altcxx}
+conftest.o: conftest.cxx
+	\$(CXX) $2 -c \$^ -o \$@
+conftest.cxx:
+	echo '#include <$1>' > \$@
+	echo 'int main(int,char*[]){return 0;}' >> \$@
+EOF
+    $gnumake -f conftest.mk >> $logfile 2>&1
+    if test $? -eq 0 ; then
+        logmsg "  supported"
+        include_result=1
+    else
+        logmsg "  not supported"
+        include_result=0
+    fi
+    rm -f conftest.mk conftest.o conftest.cxx conftest.d
+}
+
+#_____________________________________________________________________
 check_link() {
     # This function will try to link a specific library [$1] in an
     # optional directory [$2] and test, optionally, for a specified
@@ -2643,6 +2678,32 @@ if test "x$enable_libcxx" = "xyes" ; then
         uselibcxx="define"
         result "yes"
     fi
+fi
+
+######################################################################
+#
+### echo %%% string_view - determine which string_view implementation to use
+#
+
+hasstdstringview="undef"
+hasstdexpstringview="undef"
+message "Checking for string_view implementation"
+if test "x$usecxx11" = "xdefine" ; then
+    check_include 'string_view'
+    if test $include_result -eq 1 ; then
+        hasstdstringview="define"
+        result '<string_view>'
+    else
+        check_include 'experimental/string_view'
+        if test $include_result -eq 1 ; then
+            hasstdexpstringview="define"
+            result '<experimental/string_view>'
+        else
+            result "using builtin string_view"
+        fi
+    fi
+else
+    result "using builtin string_view"
 fi
 
 ######################################################################
@@ -7649,6 +7710,8 @@ sed \
     -e "s|@usec++11@|$usecxx11|"           \
     -e "s|@usec++14@|$usecxx14|"           \
     -e "s|@uselibc++@|$uselibcxx|"         \
+    -e "s|@hasstdstringview@|$hasstdstringview|"       \
+    -e "s|@hasstdexpstringview@|$hasstdexpstringview|" \
     -e "s|@hasllvm@|$hasllvm|"             \
     -e "s|@llvmdir@|$llvmdir|"             \
     < RConfigure.tmp > RConfigure-out.tmp

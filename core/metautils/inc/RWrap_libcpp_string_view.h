@@ -40,8 +40,6 @@
 #include <iomanip>
 #include <stdexcept>
 
-#define R_HAS_std_experimental_string_view
-
 #ifndef R__WIN32
 
 #define _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS \
