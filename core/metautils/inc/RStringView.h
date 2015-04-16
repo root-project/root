@@ -12,21 +12,44 @@
 #ifndef RStringView_H
 #define RStringView_H
 
-#if defined(__has_include)
+// Make sure the C++ standard library 'detection' macros are visible.
+#include <string>
 
-// If the compiler is g++ and we are not in C++14 or higher and the standard
-// library is not LLVM's libcxx, there is no point in checking for
-// string_view.
-#if ((!defined(__clang__)&&defined(__GNUC__)) || defined(__CLING__GNUC__)) &&  __cplusplus <= 201103L \
-    && !defined(_LIBCPP_VERSION)
-// Don't check with GCC and less than C++14
+#if defined(__GLIBCXX__)
+
+// With glibcxx, we use our version unless we are being compiled in C++14 mode
+// (or higher)
+#if __cplusplus > 201103L
+
+#if !defined(__has_include)
+#define R_HAS_std_experimental_string_view
 #else
-#define R__CHECK_FOR_STRING_VIEW
+#define R__CHECK_FOR_STRING_VIEW_HEADER
 #endif
 
 #endif
 
-#ifdef R__CHECK_FOR_STRING_VIEW
+#elif defined(_LIBCPP_VERSION)
+
+#if !defined(__has_include)
+#if __cplusplus <= 201402L
+#define R_HAS_std_experimental_string_view
+#else
+#define R_HAS_std_string_view_header
+#endif
+#else
+#define R__CHECK_FOR_STRING_VIEW_HEADER
+#endif
+
+#else
+
+#if defined(__has_include)
+#define R__CHECK_FOR_STRING_VIEW_HEADER
+#endif
+
+#endif
+
+#if defined(R__CHECK_FOR_STRING_VIEW_HEADER)
 #if __has_include("string_view")
 
 #define R_HAS_std_string_view_header
