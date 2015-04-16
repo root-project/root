@@ -3775,7 +3775,6 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
   G__FastAllocString fname(MAX_PATH);
   G__FastAllocString ext(10);
   _splitpath(linkfilename, drive, dir, fname, ext);
-  if (drive[0]) drive += "\\";
   if (!p) p = strrchr(linkfilepref,'\\'); /* in case of Windows pathname */
 #endif
   if (!p) p = linkfilepref;      /*  /ccc.cxx */
