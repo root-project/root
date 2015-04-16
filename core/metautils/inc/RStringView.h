@@ -14,7 +14,11 @@
 
 #if defined(__has_include)
 
-#if !defined(__clang__) && defined(__GNUC__) && __cplusplus > 201103L
+// If the compiler is g++ and we are not in C++14 or higher and the standard
+// library is not LLVM's libcxx, there is no point in checking for
+// string_view.
+#if ((!defined(__clang__)&&defined(__GNUC__)) || defined(__CLING__GNUC__)) &&  __cplusplus <= 201103L \
+    && !defined(_LIBCPP_VERSION)
 // Don't check with GCC and less than C++14
 #else
 #define R__CHECK_FOR_STRING_VIEW
