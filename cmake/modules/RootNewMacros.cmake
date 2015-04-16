@@ -191,7 +191,7 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
 
   add_custom_command(
     OUTPUT ${gensrcdict} ${rootmapname}
-    COMMAND ${ROOT_genreflex_cmd}
+    COMMAND ${ROOT_genreflex_CMD}
     ARGS ${headerfiles} -o ${gensrcdict} ${rootmapopts} --select=${selectionfile}
          --gccxmlpath=${GCCXML_home}/bin ${ARG_OPTIONS} ${include_dirs} ${definitions}
     DEPENDS ${headerfiles} ${selectionfile})
