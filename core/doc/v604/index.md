@@ -13,6 +13,30 @@ ROOT supports GCC 5.0 (a preview thereof) and XCode 6.3, Mac OSX 10.10.3
 
 A lot of effort went into improving the thread-safety of Core and Meta classes / functions. A special thanks to Chris Jones from CMS!
 
+#### std::string_view
+
+Introduce a preview of C++17's std::string_view.  To take advantage of this new
+class use:
+```{.cpp}
+#include "RStringView.h"
+```
+The documentation of this can be found at `http://en.cppreference.com/w/cpp/experimental/basic_string_view`
+The implementation provided is extracted from libcxx.  Whenever the current
+compiler and standard library provide an implmentation, it is used.
+
+The type string_view describes an object that can refer to a constant contiguous sequence of char-like objects with the first element of the sequence at position zero.
+
+This type is used throughout the ROOT code to avoid copying strings when a
+sub-string is needed and to extent interfaces that uses to take a const char*
+to take a std::string_view as thus be able to be directly directly passed a
+TString, a std::string or a std::string_view.   Usage example:
+
+``` {.cpp}
+// With SetName(std::string_view)
+std::string str; …
+obj.SetName( std );
+obj.SetName( {str.data()+pos, len} );
+```
 
 ### Meta library
 
