@@ -11,7 +11,7 @@ ROOT supports GCC 5.0 (a preview thereof) and XCode 6.3, Mac OSX 10.10.3
 
 #### Thread-Safety
 
-A lot of effort went into improving the thread-safety of Core and Meta classes / functions. A special thanks to Chris Jones from CDF!
+A lot of effort went into improving the thread-safety of Core and Meta classes / functions. A special thanks to Chris Jones from CMS!
 
 
 ### Meta library
