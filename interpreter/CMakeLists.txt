@@ -26,10 +26,11 @@ endif()
 set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 
 #---Protect against warnings clang/gcc would fire----------------------------------------------------
+set(INTERP_COMMON_ADDITIONAL_FLAGS "-Wno-comment -Wno-unused-parameter")
 if(CMAKE_COMPILER_IS_GNUCXX)
-   set(INTERP_ADDITIONAL_FLAGS "-Wno-unused-parameter -Wno-maybe-uninitialized -Wno-unused-but-set-variable -Wno-missing-field-initializers")
+   set(INTERP_ADDITIONAL_FLAGS "${INTERP_COMMON_ADDITIONAL_FLAGS} -Wno-maybe-uninitialized -Wno-unused-but-set-variable -Wno-missing-field-initializers")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-   set(INTERP_ADDITIONAL_FLAGS "-Wno-conditional-uninitialized -Wno-unused-parameter -Wno-parentheses-equality -Wno-unused-private-field")
+   set(INTERP_ADDITIONAL_FLAGS "${INTERP_COMMON_ADDITIONAL_FLAGS} -Wno-conditional-uninitialized -Wno-parentheses-equality -Wno-unused-private-field")
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_FLAGS}")
