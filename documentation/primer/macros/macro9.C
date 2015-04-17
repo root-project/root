@@ -2,7 +2,7 @@
 // Check pull distribution to compare chi2 and binned
 // log-likelihood methods.
 
-pull( int n_toys = 10000,
+void pull( int n_toys = 10000,
       int n_tot_entries = 100,
       int nbins = 40,
       bool do_chi2=true ){

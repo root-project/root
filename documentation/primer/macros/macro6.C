@@ -15,7 +15,7 @@ void macro6(){
     // simulate the measurements
     TRandom3 rndgen;
     for (int imeas=0;imeas<4000;imeas++){
-        exp_h->Fill(rndgen.Exp(4));
+        bkg_h->Fill(rndgen.Exp(4));
         if (imeas%4==0) gaus_h1->Fill(rndgen.Gaus(5,2));
         if (imeas%4==0) gaus_h2->Fill(rndgen.Gaus(5,2));
         if (imeas%10==0)sig_h->Fill(rndgen.Gaus(5,.5));}
