@@ -81,4 +81,27 @@ public:
    ClassDef(TCut,1)  //A specialized string object used for TTree selections
 };
 
+// Declarations.
+TCut operator+(const TCut &lhs, const char *rhs);
+TCut operator+(const char *lhs, const TCut &rhs);
+TCut operator+(const TCut &lhs, const TCut &rhs);
+TCut operator*(const TCut &lhs, const char *rhs);
+TCut operator*(const char *lhs, const TCut &rhs);
+TCut operator*(const TCut &lhs, const TCut &rhs);
+// Preventing warnings with -Weffc++ in GCC since the overloading of the && and || operators was a design choice.
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+#endif
+TCut operator&&(const TCut &lhs, const char *rhs);
+TCut operator&&(const char *lhs, const TCut &rhs);
+TCut operator&&(const TCut &lhs, const TCut &rhs);
+TCut operator||(const TCut &lhs, const char *rhs);
+TCut operator||(const char *lhs, const TCut &rhs);
+TCut operator||(const TCut &lhs, const TCut &rhs);
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
+#pragma GCC diagnostic pop
+#endif
+TCut operator!(const TCut &rhs);
+
 #endif
