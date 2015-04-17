@@ -1115,10 +1115,12 @@ Long64_t TTree::AutoSave(Option_t* option)
    //
    //   When large Trees are produced, it is safe to activate the AutoSave
    //   procedure. Some branches may have buffers holding many entries.
-   //   AutoSave is automatically called by TTree::Fill when the number of bytes
-   //   generated since the previous AutoSave is greater than fAutoSave bytes.
-   //   This function may also be invoked by the user, for example every
-   //   N entries.
+   //   If fAutoSave is negative, AutoSave is automatically called by
+   //   TTree::Fill when the number of bytes generated since the previous
+   //   AutoSave is greater than -fAutoSave bytes.
+   //   If fAutoSave is positive, AutoSave is automatically called by
+   //   TTree::Fill every N entries.
+   //   This function may also be invoked by the user.
    //   Each AutoSave generates a new key on the file.
    //   Once the key with the tree header has been written, the previous cycle
    //   (if any) is deleted.
