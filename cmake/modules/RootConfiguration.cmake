@@ -1,3 +1,5 @@
+INCLUDE (CheckCXXSourceCompiles)
+
 #---Define a function to do not polute the top level namespace with unneeded variables-----------------------
 function(RootConfigure)
 
@@ -466,6 +468,24 @@ if(gcctoolchain)
   set(setgcctoolchain define)
 else()
   set(setgcctoolchain undef)
+endif()
+
+CHECK_CXX_SOURCE_COMPILES("#include <string_view>
+int main() { return 0; }
+" found_stdstringview)
+if(found_stdstringview)
+  set(hasstdstringview define)
+else()
+  set(hasstdstringview undef)
+endif()
+
+CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
+int main() { return 0; }
+" found_stdexpstringview)
+if(found_stdexpstringview)
+  set(hasstdexpstringview define)
+else()
+  set(hasstdexpstringview undef)
 endif()
 
 #---root-config----------------------------------------------------------------------------------------------
