@@ -17,10 +17,10 @@ void read_ntuple_with_chain(){
 
    // define variables and assign them to the corresponding branches
    float pot, cur, temp, pres;
-   my_tuple->SetBranchAddress("Potential", &pot);
-   my_tuple->SetBranchAddress("Current", &cur);
-   my_tuple->SetBranchAddress("Temperature", &temp);
-   my_tuple->SetBranchAddress("Pressure", &pres);
+   in_chain.SetBranchAddress("Potential", &pot);
+   in_chain.SetBranchAddress("Current", &cur);
+   in_chain.SetBranchAddress("Temperature", &temp);
+   in_chain.SetBranchAddress("Pressure", &pres);
 
    cout << "Potential\tCurrent\tTemperature\tPressure\n";
    for (size_t irow=0; irow<in_chain.GetEntries(); ++irow){

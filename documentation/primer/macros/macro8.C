@@ -61,4 +61,5 @@ int macro8(){
     TLatex latex(2,220,
                  "#splitline{Signal Peak over}{background}");
     latex.DrawClone("Same");
+    return 0;
 }

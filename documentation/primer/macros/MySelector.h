@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Wed Feb 15 15:45:38 2012 by ROOT version 5.30/01
+// Fri Apr 17 11:53:41 2015 by ROOT version 6.03/03
 // from TTree cond_data/Example N-Tuple
-// found on file: conductivity_experiment_1.root
+// found on file: conductivity_experiment.root
 //////////////////////////////////////////////////////////
 
 #ifndef MySelector_h
@@ -13,9 +13,13 @@
 #include <TFile.h>
 #include <TSelector.h>
 
+// Header file for the classes stored in the TTree if any.
+
 class MySelector : public TSelector {
 public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
+
+// Fixed size dimensions of array or collections stored in the TTree if any.
 
    // Declaration of leaf types
    Float_t         Potential;
@@ -29,7 +33,7 @@ public :
    TBranch        *b_Temperature;   //!
    TBranch        *b_Pressure;   //!
 
-   MySelector(TTree * /*tree*/ =0) { }
+   MySelector(TTree * /*tree*/ =0) : fChain(0) { }
    virtual ~MySelector() { }
    virtual Int_t   Version() const { return 2; }
    virtual void    Begin(TTree *tree);

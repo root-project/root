@@ -7,9 +7,9 @@ int macro2(){
     TGraphErrors graph_expected("./macro2_input_expected.txt",
                                 "%lg %lg %lg");
     graph_expected.SetTitle(
-       "Measurement XYZ and Expectation;
-        lenght [cm];
-        Arb.Units");
+       "Measurement XYZ and Expectation;"
+       "lenght [cm];"
+       "Arb.Units");
     graph_expected.SetFillColor(kYellow);
     graph_expected.DrawClone("E3AL"); // E3 draws the band
 
@@ -26,4 +26,5 @@ int macro2(){
     leg.DrawClone("Same");
 
     graph.Print();
+    return 0;
 }
