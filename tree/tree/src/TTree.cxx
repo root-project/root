@@ -6016,7 +6016,7 @@ Bool_t TTree::MemoryFull(Int_t nbytes)
 }
 
 //______________________________________________________________________________
-TTree* TTree::MergeTrees(TList* li, Option_t* /* option */)
+TTree* TTree::MergeTrees(TList* li, Option_t* options)
 {
    // Static function merging the trees in the TList into a new tree.
    //
@@ -6049,14 +6049,10 @@ TTree* TTree::MergeTrees(TList* li, Option_t* /* option */)
       }
 
       newtree->CopyAddresses(tree);
-      for (Long64_t i=0;i<nentries;i++) {
-         tree->GetEntry(i);
-         newtree->Fill();
-      }
+
+      newtree->CopyEntries(tree,-1,options);
+
       tree->ResetBranchAddresses(); // Disconnect from new tree.
-      if (newtree->GetTreeIndex()) {
-         newtree->GetTreeIndex()->Append(tree->GetTreeIndex(),kTRUE);
-      }
    }
    if (newtree && newtree->GetTreeIndex()) {
       newtree->GetTreeIndex()->Append(0,kFALSE); // Force the sorting
@@ -6065,7 +6061,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* /* option */)
 }
 
 //______________________________________________________________________________
-Long64_t TTree::Merge(TCollection* li, Option_t* /* option */)
+Long64_t TTree::Merge(TCollection* li, Option_t *options)
 {
    // Merge the trees in the TList into this tree.
    //
@@ -6093,17 +6089,10 @@ Long64_t TTree::Merge(TCollection* li, Option_t* /* option */)
       if (nentries == 0) continue;
 
       CopyAddresses(tree);
-      for (Long64_t i=0; i<nentries ; i++) {
-         tree->GetEntry(i);
-         Fill();
-      }
-      if (GetTreeIndex()) {
-         GetTreeIndex()->Append(tree->GetTreeIndex(),kTRUE);
-      }
+
+      CopyEntries(tree,-1,options);
+
       tree->ResetBranchAddresses();
-   }
-   if (GetTreeIndex()) {
-      GetTreeIndex()->Append(0,kFALSE); // Force the sorting
    }
    fAutoSave = storeAutoSave;
    return GetEntries();
@@ -6156,6 +6145,8 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       CopyAddresses(tree);
 
       CopyEntries(tree,-1,options);
+
+      tree->ResetBranchAddresses();
    }
    fAutoSave = storeAutoSave;
    return GetEntries();

@@ -3,6 +3,10 @@
 
 ### TTree Behavior change.
 
+#### Merging.
+
+Added fast cloning support to TTree::MergeTrees and TTree::Merge(TCollection*,Option_t*).
+
 #### TTreeCache
 
 The TTreeCache is now enabled by default.  The default size of the TTreeCache
