@@ -242,19 +242,19 @@ void stressGraphics(Int_t verbose = 0)
       }
    }
 
-   // Check if $ROOTSYS/tutorials/tree/cernstaff.root exists
-   gCernstaff = new TFile("$(ROOTSYS)/tutorials/tree/cernstaff.root");
+   // Check if cernstaff.root exists
+   gCernstaff = new TFile("cernstaff.root");
    if (gCernstaff->IsZombie()) {
       delete gCernstaff;
       gCernstaff = new TFile("cernstaff.root");
       if (gCernstaff->IsZombie()) {
          delete gCernstaff;
-         printf("Create $(ROOTSYS)/tutorials/tree/cernstaff.root\n");
+         printf("Create ./cernstaff.root\n");
          gROOT->Macro("$(ROOTSYS)/tutorials/tree/cernbuild.C(0,0)");
-         gCernstaff = new TFile("$(ROOTSYS)/tutorials/tree/cernstaff.root");
+         gCernstaff = new TFile("cernstaff.root");
          if (gCernstaff->IsZombie()) {
             delete gCernstaff;
-            printf("Could not create $(ROOTSYS)/tutorials/tree/cernstaff.root\n");
+            printf("Could not create ./cernstaff.root\n");
             return;
          }
       }
