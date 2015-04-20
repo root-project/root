@@ -1,3 +1,12 @@
+void drawtext(double x, double y, int f, const char *s)
+{
+   TLatex *t = new TLatex(x,y,Form("#font[41]{%d :} %s",f,s));
+   t->SetTextFont(f);
+   t->SetTextAlign(12);
+   t->SetTextSize(0.048);
+   t->Draw();
+}
+
 TCanvas * fonts()
 {
    TCanvas *Tf = new TCanvas("Tf", "Tf",0,0,500,700);
@@ -12,13 +21,4 @@ TCanvas * fonts()
       y -= 0.065;
    }
    return Tf;
-}
-
-void drawtext(double x, double y, int f, char *s)
-{
-   TLatex *t = new TLatex(x,y,Form("#font[41]{%d :} %s",f,s));
-   t->SetTextFont(f);
-   t->SetTextAlign(12);
-   t->SetTextSize(0.048);
-   t->Draw();
 }
