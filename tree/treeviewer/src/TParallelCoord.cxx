@@ -75,7 +75,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1");
-   TFile *f = TFile::Open("$ROOTSYS/tutorials/tree/cernstaff.root");
+   TFile *f = TFile::Open("cernstaff.root");
    TTree *T = (TTree*)f->Get("T");
    T->Draw("Age:Grade:Step:Cost:Division:Nation","","para");
    TParallelCoord* para = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
