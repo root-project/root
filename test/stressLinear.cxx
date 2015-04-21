@@ -2076,7 +2076,7 @@ void mstress_matrix_io()
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
 
-  TFile *f = new TFile("vmatrix.root", "RECREATE");
+  TFile *f = new TFile("stress-vmatrix.root", "RECREATE");
 
   Char_t name[80];
   Int_t iloop = gNrLoop;
@@ -2123,7 +2123,7 @@ void mstress_matrix_io()
 
   if (gVerbose)
     cout << "\nOpen database in read-only mode and read matrix" << endl;
-  TFile *f1 = new TFile("vmatrix.root");
+  TFile *f1 = new TFile("stress-vmatrix.root");
 
   iloop = gNrLoop;
   while (iloop >= 0) {
@@ -3109,7 +3109,7 @@ void spstress_matrix_io()
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
 
-  TFile *f = new TFile("vmatrix.root", "RECREATE");
+  TFile *f = new TFile("stress-vmatrix.root", "RECREATE");
 
   Char_t name[80];
   Int_t iloop = gNrLoop;
@@ -3142,7 +3142,7 @@ void spstress_matrix_io()
 
   if (gVerbose)
     cout << "\nOpen database in read-only mode and read matrix" << endl;
-  TFile *f1 = new TFile("vmatrix.root");
+  TFile *f1 = new TFile("stress-vmatrix.root");
 
   iloop = gNrLoop;
   while (iloop >= 0) {
@@ -3746,7 +3746,7 @@ void vstress_vector_io()
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
 
-  TFile *f = new TFile("vvector.root","RECREATE");
+  TFile *f = new TFile("stress-vvector.root","RECREATE");
 
   Char_t name[80];
   Int_t iloop = gNrLoop;
@@ -3783,7 +3783,7 @@ void vstress_vector_io()
 
   if (gVerbose)
     cout << "\nOpen database in read-only mode and read vector" << endl;
-  TFile *f1 = new TFile("vvector.root");
+  TFile *f1 = new TFile("stress-vvector.root");
 
   iloop = gNrLoop;
   while (iloop >= 0) {
@@ -4272,7 +4272,7 @@ void astress_decomp_io(Int_t msize)
   if (gVerbose)
     cout << "\nWrite decomp m to database" << endl;
 
-  TFile *f = new TFile("vdecomp.root", "RECREATE");
+  TFile *f = new TFile("stress-vdecomp.root", "RECREATE");
 
   TDecompLU   lu(m,1.0e-20);
   TDecompQRH  qrh(m,1.0e-20);
@@ -4292,7 +4292,7 @@ void astress_decomp_io(Int_t msize)
 
   if (gVerbose)
     cout << "\nOpen database in read-only mode and read matrix" << endl;
-  TFile *f1 = new TFile("vdecomp.root");
+  TFile *f1 = new TFile("stress-vdecomp.root");
 
   if (gVerbose)
     cout << "\nRead decompositions should create same solutions" << endl;
@@ -4415,7 +4415,7 @@ void stress_backward_io()
 
 void cleanup()
 {
-  gSystem->Unlink("vmatrix.root");
-  gSystem->Unlink("vvector.root");
-  gSystem->Unlink("vdecomp.root");
+  gSystem->Unlink("stress-vmatrix.root");
+  gSystem->Unlink("stress-vvector.root");
+  gSystem->Unlink("stress-vdecomp.root");
 }
