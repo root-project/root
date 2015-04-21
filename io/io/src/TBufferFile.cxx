@@ -3696,19 +3696,6 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    //   count    is the number of bytes for this object in the buffer
    //
 
-   const TObjArray* infos;
-   Int_t ninfos;
-   {
-      R__LOCKGUARD(gInterpreterMutex);
-      infos = cl->GetStreamerInfos();
-      ninfos = infos->GetSize();
-   }
-   if (version < -1 || version >= ninfos) {
-      Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
-            cl->GetName(), version, Length() );
-      CheckByteCount(start, count, cl);
-      return 0;
-   }
 
    //---------------------------------------------------------------------------
    // The ondisk class has been specified so get foreign streamer info
@@ -3731,6 +3718,14 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
       // The StreamerInfo should exist at this point.
 
       R__LOCKGUARD(gInterpreterMutex);
+      auto infos = cl->GetStreamerInfos();
+      auto ninfos = infos->GetSize();
+      if (version < -1 || version >= ninfos) {
+         Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+               cl->GetName(), version, Length() );
+         CheckByteCount(start, count, cl);
+         return 0;
+      }
       sinfo = (TStreamerInfo*)infos->At(version);
       if (sinfo == 0) {
          // Unless the data is coming via a socket connection from with schema evolution
