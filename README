@@ -3,7 +3,7 @@ Downloading roottest:
 
 You can download read-only it via:
 
-   svn co http://root.cern.ch/svn/roottest/trunk roottest
+   git clone http://root.cern.ch/git/roottest
 
 ==============================================================================
 Running roottest:
