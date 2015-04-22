@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
   for(int i=0; i<kNThreads; ++i) {
     threads.emplace_back([i,&canStart,&classWasGotten,&firstMethodGotten]() {
-        thread_local TThread guard;
+        TTHREAD_TLS(TThread) guard;
         ++classWasGotten;
         ++firstMethodGotten;
         while(not canStart) {}

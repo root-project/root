@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
 
   for(int i=0; i< kNThreads; ++i) {
     threads.push_back(std::make_shared<std::thread>( std::thread([&kFileName, i]() {
-	thread_local TThread s_thread_guard;
+	TTHREAD_TLS(TThread) s_thread_guard;
 	while(waitToStart) ;
         std::string name = std::to_string(i) + kFileName;
         std::unique_ptr<TFile> f{ TFile::Open(name.c_str()) };

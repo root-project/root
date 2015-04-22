@@ -23,7 +23,7 @@ int main()
 
  for(unsigned int i=0; i<kNThreads; ++i) {
    threads.emplace_back([i,&canStart]() {
-       thread_local TThread guard;
+       TTHREAD_TLS(TThread) guard;
        --canStart;
        while( canStart > 0 ) {}
 

@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
 
   for(int i=0; i< kNThreads; ++i) {
     threads.push_back(std::make_shared<std::thread>( std::thread([i]() {
-	thread_local TThread s_thread_guard;
+	TTHREAD_TLS(TThread) s_thread_guard;
 
         std::stringstream nameStream;
         nameStream <<"write_thread_"<<i<<".root";

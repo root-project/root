@@ -32,7 +32,7 @@ int main()
     profiles.back()->SetBit(TH1::kCanRebin);
     auto profile = profiles.back().get();
     threads.emplace_back([i,profile,&canStart]() {
-        thread_local TThread guard;
+        TTHREAD_TLS(TThread) guard;
         while(not canStart) {}
         for(int x=10; x>0; --x) {
           for(int y=0; y<20; ++y) {
