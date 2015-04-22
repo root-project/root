@@ -23,7 +23,7 @@ int main()
 
  for(unsigned int i=0; i<kNThreads; ++i) {
    threads.emplace_back([i,&canStart]() {
-       TTHREAD_TLS(TThread) guard;
+       TTHREAD_TLS_DECL(TThread, s_thread_guard);
        --canStart;
        while( canStart > 0 ) {}
 

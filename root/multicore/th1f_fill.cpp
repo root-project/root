@@ -8,7 +8,7 @@
 #include "TThread.h"
 
 void fillHisto(const char* filename, TH1F& histo){
-  TTHREAD_TLS(TThread) s_thread_guard;
+  TTHREAD_TLS_DECL(TThread, s_thread_guard);
   printf("Reading file %s\n",filename);
   TFile f(filename);
   TNtuple* ntuple;
