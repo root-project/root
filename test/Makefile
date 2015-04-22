@@ -110,7 +110,7 @@ STRESSGUIS    = stressGUI.$(SrcSuf)
 STRESSGUI     = stressGUI$(ExeSuf)
 ifeq ($(PLATFORM),win32)
 STRESSGUILIBS = '$(ROOTSYS)/lib/libASImage.lib' '$(ROOTSYS)/lib/libASImageGui.lib' \
-                '$(ROOTSYS)/lib/libRecorder.lib' '$(ROOTSYS)/lib/libGuiHtml.lib' 
+                '$(ROOTSYS)/lib/libRecorder.lib' '$(ROOTSYS)/lib/libGuiHtml.lib'
 else
 STRESSGUILIBS = -lASImage -lASImageGui -lRecorder -lGuiHtml
 endif
@@ -120,12 +120,12 @@ STRESSVECO   = stressVector.$(ObjSuf)
 STRESSVECS   = stressVector.$(SrcSuf)
 STRESSVEC    = stressVector$(ExeSuf)
 
-STRESSMATHO   = stressMathCore.$(ObjSuf) 
-STRESSMATHS   = stressMathCore.$(SrcSuf) 
+STRESSMATHO   = stressMathCore.$(ObjSuf)
+STRESSMATHS   = stressMathCore.$(SrcSuf)
 ifneq ($(USE_REFLEX),)
 CXXFLAGS += -DUSE_REFLEX
 ifeq ($(PLATFORM),win32)
-STRESSMATHLIBS = '$(ROOTSYS)/lib/libGenVector.lib' '$(ROOTSYS)/lib/libReflex.lib' '$(ROOTSYS)/lib/libCintex.lib' 
+STRESSMATHLIBS = '$(ROOTSYS)/lib/libGenVector.lib' '$(ROOTSYS)/lib/libReflex.lib' '$(ROOTSYS)/lib/libCintex.lib'
 else
 STRESSMATHLIBS = -lGenVector -lReflex -lCintex
 endif
@@ -134,7 +134,7 @@ TRACKMATHSRC = TrackMathCoreRflx.$(SrcSuf)
 TRACKMATHOBJ = TrackMathCoreRflx.$(ObjSuf)
 TRACKMATHLIB = libTrackMathCoreRflx.$(DllSuf)
 
-else 
+else
 
 ifeq ($(PLATFORM),win32)
 STRESSMATHLIBS = '$(ROOTSYS)/lib/libGenVector.lib'
@@ -145,7 +145,7 @@ endif
 TRACKMATHSRC = TrackMathCoreDict.$(SrcSuf)
 TRACKMATHOBJ = TrackMathCoreDict.$(ObjSuf)
 TRACKMATHLIB = libTrackMathCoreDict.$(DllSuf)
- 
+
 endif
 
 STRESSMATH    = stressMathCore$(ExeSuf)
@@ -153,10 +153,10 @@ STRESSMATH    = stressMathCore$(ExeSuf)
 endif
 
 ifeq ($(shell $(RC) --has-mathmore),yes)
-STRESSMATHMOREO   = stressMathMore.$(ObjSuf) 
-STRESSMATHMORES   = stressMathMore.$(SrcSuf)  
+STRESSMATHMOREO   = stressMathMore.$(ObjSuf)
+STRESSMATHMORES   = stressMathMore.$(SrcSuf)
 ifeq ($(PLATFORM),win32)
-STRESSMATHMORELIBS = '$(ROOTSYS)/lib/libMathMore.lib'  
+STRESSMATHMORELIBS = '$(ROOTSYS)/lib/libMathMore.lib'
 else
 STRESSMATHMORELIBS = -lMathMore
 endif
@@ -751,12 +751,12 @@ else
 endif
 endif
 
-$(STRESSINTERP): $(STRESSINTERPO) 
+$(STRESSINTERP): $(STRESSINTERPO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
 
-$(STRESSITER):	$(STRESSITERO) 
+$(STRESSITER):	$(STRESSITERO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
@@ -772,7 +772,7 @@ $(SQLITETEST):  $(SQLITETESTO)
 		@echo "$@ done"
 
 clean:
-		@rm -f $(OBJS) $(TRACKMATHSRC) core *Dict.*
+		@rm -f $(OBJS) $(TRACKMATHSRC) core *Dict.* cernstaff.root sg*
 
 distclean:      clean
 		-@(mv -f stressRooStats_ref.root stressRooStats_ref.root- >/dev/null 2>&1;true)
@@ -793,7 +793,7 @@ distclean:      clean
 
 ###
 stressIterators.$(ObjSuf): stressIterators.h
- 
+
 Event.$(ObjSuf): Event.h
 EventMT.$(ObjSuf): EventMT.h
 MainEvent.$(ObjSuf): Event.h
@@ -834,7 +834,7 @@ guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
 stressMathCore.$(ObjSuf): 	TrackMathCore.h
 TrackMathCoreDict.$(SrcSuf): 	TrackMathCore.h TrackMathCoreLinkDef.h
 	@echo "Generating dictionary $@ using rootcling ..."
-	$(ROOTCLING) -f $@ -c $^	
+	$(ROOTCLING) -f $@ -c $^
 
 stressProof.$(ObjSuf):	stressProof.$(SrcSuf)
 	$(CXX)  $(CXXFLAGS) -I$(TUTDIR) -c $<
