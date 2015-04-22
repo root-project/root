@@ -9353,6 +9353,7 @@ void THistPainter::PaintTitle()
    ptitle->Draw();
    ptitle->Paint();
 
+   if(!gPad->IsEditable()) delete ptitle;
 }
 
 
