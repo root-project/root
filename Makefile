@@ -879,7 +879,7 @@ dist:
 	@$(MAKEDIST) $(ROOT_SRCDIR) $(GCC_VERS)
 
 distsrc:
-	@$(MAKEDISTSRC)
+	@$(MAKEDISTSRC) $(ROOT_SRCDIR)
 
 distmsi: build/package/msi/makemsi$(EXEEXT)
 	$(MAKEDIST) $(ROOT_SRCDIR) -msi

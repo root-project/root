@@ -1,15 +1,23 @@
-#! /bin/sh
+#! /bin/sh -x
 
-CURVERS=`cat build/version_number | sed -e "s/^/v/" -e "s/\./-/" -e "s/\//-/"`
-ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
+# first arguments is the source directory
+if [ $# -ge 1 ]; then
+   ROOT_SRCDIR=$1
+   shift
+else
+   echo "$0: expecting at least ROOT_SRCDIR as first argument"
+   exit 1
+fi
+
+CURVERS=`cat $ROOT_SRCDIR/build/version_number | sed -e "s/^/v/" -e "s/\./-/" -e "s/\//-/"`
+ROOTVERS=`cat $ROOT_SRCDIR/build/version_number | sed -e 's/\//\./'`
 TYPE=source
 TARFILE=root_v$ROOTVERS.$TYPE.tar
 
 # generate etc/gitinfo.txt
-build/unix/gitinfo.sh
+$ROOT_SRCDIR/build/unix/gitinfo.sh $ROOT_SRCDIR
 
-#git archive -v -o ../$TARFILE --prefix=root/ master
-git archive -v -o ../$TARFILE --prefix=root/ $CURVERS
+git -C $ROOT_SRCDIR archive -v -o ../$TARFILE --prefix=root/ $CURVERS
 
 mkdir -p etc/root/etc
 cp etc/gitinfo.txt etc/root/etc/
