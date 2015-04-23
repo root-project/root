@@ -57,27 +57,25 @@ be validated or compared. In many cases, the distribution of the
 measurement errors is not precisely known, and simulation offers the
 possibility to test the effects of different assumptions.
 
-## Welcome to ROOT ##
-
 A powerful software framework addressing all of the above requirements
-is ROOT [@ROOT], an open source project coordinated by the European
-Organisation for Nuclear Research, CERN in Geneva. ROOT is very flexible
-and provides both a programming interface to use in own applications and
-a graphical user interface for interactive data analysis. The purpose of
-this document is to serve as a beginners guide and provides extendable
+is ROOT, an open source project coordinated by the European Organisation for
+Nuclear Research, CERN in Geneva.
+
+ROOT is very flexible and provides both a programming interface to use in own
+applications and a graphical user interface for interactive data analysis. The
+purpose of this document is to serve as a beginners guide and provides extendable
 examples for your own use cases, based on typical problems addressed in
 student labs. This guide will hopefully lay the ground for more complex
 applications in your future scientific work building on a modern,
 state-of the art tool for data analysis.
 
-This guide in form of a tutorial is intended to introduce you to the
-ROOT package in about *30* pages. This goal will be accomplished using
-concrete examples, according to the "learning by doing" principle. Also
-because of this reason, this guide cannot cover the complexity of the
-ROOT package. Nevertheless, once you feel confident with the concepts
-presented in the following chapters, you will be able to appreciate the
-ROOT Users Guide [@ROOT_Users_Guide] and navigate through the Class
-Reference [@ROOT_Class_Reference] to find all the details you might be
+This guide in form of a tutorial is intended to introduce you quickly to the
+ROOT package. This goal will be accomplished using concrete examples, according
+to the "learning by doing" principle. Also because of this reason, this guide
+cannot cover all the complexity of the ROOT package. Nevertheless, once you feel
+confident with the concepts presented in the following chapters, you will be
+able to appreciate the ROOT Users Guide [@ROOT_Users_Guide] and navigate through
+the Class Reference [@ROOT_Class_Reference] to find all the details you might be
 interested in. You can even look at the code itself, since ROOT is a
 free, open-source product. Use these documents in parallel to this
 tutorial!
@@ -90,7 +88,7 @@ object oriented programming could be.
 
 ROOT is available for many platforms (Linux, Mac OS X, Windows...), but
 in this guide we will implicitly assume that you are using Linux. The
-first thing you need to do with ROOT is install it, don't you? Obtaining
+first thing you need to do with ROOT is install it, don't you ? Obtaining
 the latest ROOT version is straightforward. Just seek the "Pro" version
 on this webpage <http://root.cern.ch/drupal/content/downloading-root>.
 You will find precompiled versions for the different architectures, or

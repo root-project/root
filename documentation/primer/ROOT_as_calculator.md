@@ -2,7 +2,7 @@
 
 Now that you have installed ROOT, what's this interactive shell thing
 you're running ? It's like this: ROOT leads a double life. It has an
-interpreter for macros (Cint [@Cint]) that you can run from the command
+interpreter for macros (Cling [@Cling]) that you can run from the command
 line or run like applications. But it is also an interactive shell that
 can evaluate arbitrary statements and expressions. This is extremely
 useful for debugging, quick hacking and testing. Let us first have a
@@ -20,24 +20,24 @@ Launch the ROOT interactive shell with the command
 on your Linux box. The prompt should appear shortly:
 
 ``` {.cpp}
- root [1]
+ root [0]
 ```
 
 and let's dive in with the steps shown here:
 
 ``` {.cpp}
 root [0] 1+1
-(const int)2
+(int)2
 root [1] 2*(4+2)/12.
-(const double)1.00000000000000000e+00
-root [2] sqrt(3)
-(const double)1.73205080756887719e+00
+(double) 1.000000e+00
+root [2] sqrt(3.)
+(double) 1.732051e+00
 root [3] 1 > 2
-(const int)0
+(bool) false
 root [4] TMath::Pi()
-(Double_t)3.14159265358979312e+00
+(Double_t) 3.141593e+00
 root [5] TMath::Erf(.2)
-(Double_t)2.22702589210478447e-01
+(Double_t) 2.227026e-01
 ```
 
 Not bad. You can see that ROOT offers you the possibility not only to
@@ -49,16 +49,19 @@ well known geometrical series:
 
 ``` {.cpp}
 root [6] double x=.5
+(double) 5.000000e-01
 root [7] int N=30
+(int) 30
 root [8] double geom_series=0
+(double) 0.000000e+00
 root [9] for (int i=0;i<N;++i)geom_series+=TMath::Power(x,i)
 root [10] TMath::Abs(geom_series - (1-TMath::Power(x,N-1))/(1-x))
-(Double_t)1.86264514923095703e-09
+(Double_t) 1.862645e-09
 ```
 
 Here we made a step forward. We even declared variables and used a *for*
 control structure. Note that there are some subtle differences between
-Cint and the standard C++ language. You do not need the ";" at the end
+Cling and the standard C++ language. You do not need the ";" at the end
 of line in interactive mode -- try the difference e.g. using the command
 at line `root [6]`.
 
@@ -78,11 +81,7 @@ in the internal ROOT memory management system, the second string type
 parameter defines the function, here `sin(x)/x`, and the two parameters
 of type double define the range of the variable *x*. The `Draw()`
 method, here without any parameters, displays the function in a window
-which should pop up after you typed the above two lines. Note again
-differences between Cint and C++: you could have omitted the ";" at the
-end of lines, Cint woud also have accepted the "." to access the method
-`Draw()`. However, it is best to stick to standard C++ syntax and avoid
-Cint-specific code, as will become clear in a moment.
+which should pop up after you typed the above two lines.
 
 A slightly extended version of this example is the definition of a
 function with parameters, called `[0]`, `[1]` and so on in the ROOT
@@ -112,9 +111,7 @@ at you disposal whenever you need it.
 
 To extend a little bit on the above example, consider a more complex
 function you would like to define. You can also do this using standard
-`C` or `C++` code. In many cases this is the only practical way, as the
-ROOT formula interpreter has clear limitations concerning complexity and
-speed of evaluation.
+`C` or `C++` code.
 
 Consider the example below, which calculates and displays the
 interference pattern produced by light falling on a multiple slit.
@@ -190,7 +187,7 @@ is the definition of the interface of these functions to make them
 usable for the ROOT class `TF1`: the first argument is the pointer to
 *x*, the second one points to the array of parameters.
 
-The main program starts in line 17 with the definition of a function
+The main program starts in line 21 with the definition of a function
 `slits()` of type `void`. After asking for user input, a ROOT function
 is defined using the C-type function given in the beginning. We can now
 use all methods of the `TF1` class to control the behaviour of our
@@ -202,7 +199,7 @@ or of a grid with narrow slits, function `double nslit0`, in `TF1`
 instances.
 
 Here, we used a macro, some sort of lightweight program, that the
-interpreter distributed with ROOT, Cint, is able to execute. This is a
+interpreter distributed with ROOT, Cling, is able to execute. This is a
 rather extraordinary situation, since C++ is not natively an interpreted
 language! There is much more to say: chapter is indeed dedicated to
 macros.
@@ -210,7 +207,7 @@ macros.
 ## Controlling ROOT ##
 
 One more remark at this point: as every command you type into ROOT is
-usually interpreted by Cint, an "escape character" is needed to pass
+usually interpreted by Cling, an "escape character" is needed to pass
 commands to ROOT directly. This character is the dot at the beginning of
 a line:
 
@@ -245,7 +242,7 @@ To
 ## Plotting Measurements ##
 
 To display measurements in ROOT, including errors, there exists a
-powerful class `TGrapErrors` with different types of constructors. In
+powerful class `TGraphErrors` with different types of constructors. In
 the example here, we use data from the file `ExampleData.txt` in text
 format:
 
@@ -265,7 +262,7 @@ Make sure the file `ExampleData.txt` is available in the directory from
 which you started ROOT. Inspect this file now with your favourite
 editor, or use the command `less ExampleData.txt` to inspect the file,
 you will see that the format is very simple and easy to understand.
-Lines beginning with `|` are ignored, very convenient to add some
+Lines beginning with `#` are ignored. It is very convenient to add some
 comments about the type of data. The data itself consist of lines with
 four real numbers each, representing the x- and y- coordinates and their
 errors of each data point.
@@ -277,7 +274,7 @@ example relies on the default settings of ROOT, concerning the size of
 the canvas holding the plot, the marker type and the line colours and
 thickness used and so on. In a well-written, complete example, all this
 would need to be specified explicitly in order to obtain nice and well
-readable results. A full chapter on graphs (chapter ) will explain many
+readable results. A full chapter on graphs will explain many
 more of the features of the class `TGraphErrors` and its relation to
 other ROOT classes in much more detail.
 
@@ -298,7 +295,7 @@ root [5] h->Draw();
 ```
 
 The first three lines of this example define a function, an exponential
-in this case, and set its parameters. In Line 4 a histogram is
+in this case, and set its parameters. In line 4 a histogram is
 instantiated, with a name, a title, a certain number of bins (100 of
 them, equidistant, equally sized) in the range from 0 to 5.
 
@@ -338,7 +335,7 @@ root [6] inp.close();
 ```
 
 Histograms and random numbers are very important tools in statistical
-data analysis, and the whole Chapter will be dedicated to this topic.
+data analysis, a whole chapter will be dedicated to this topic.
 
 ## Interactive ROOT ##
 
@@ -389,7 +386,7 @@ select the fit method, fix or release individual parameters in the fit, to steer
 the level of output printed on the console, or to extract and display additional
 information like contour lines showing parameter correlations. As function fitting
 is of prime importance in any kind of data analysis, this topic will again show up
-in chapter .
+later.
 
 If you are satisfied with your plot, you probably want to save it. Just
 close all selector boxes you opened previously and select the menu item
@@ -497,22 +494,15 @@ The most important among them are presented in the following:
     object attributes.
 
     -   Canvas
-
     -   Pad
-
     -   Histogram axis
-
     -   Lines
-
     -   Fill areas
-
     -   Text
-
     -   Markers
-
     -   Functions
-
     -   Histogram Statistics and Titles
+    -   etc ...
 
 -   **[gSystem](http://root.cern.ch/root/html/TSystem.html)**: An
     instance of a base class defining a generic interface to the
