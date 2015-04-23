@@ -1896,7 +1896,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    // Register Altenate spelling of the class name.
    //---------------------------------------------------------------------------
    if (cl.GetRequestedName()[0] && classname != cl.GetRequestedName()) {
-      finalString << "\n" << "      ROOT::AddClassAlternate(\""
+      finalString << "\n" << "      ::ROOT::AddClassAlternate(\""
                   << classname << "\",\"" << cl.GetRequestedName() << "\");\n";
    }
 
