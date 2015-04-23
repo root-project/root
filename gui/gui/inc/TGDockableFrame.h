@@ -117,7 +117,7 @@ protected:
    TGDockButton     *fDockButton;    // dock button
    TGDockHideButton *fHideButton;    // hide button
    TGUndockedFrame  *fFrame;         // undocked frame
-   TGLayoutHints    *fCl, *fHints;   // layout hints
+   TGLayoutHints    *fHints;         // layout hints
    TGLayoutHints    *fLb, *fLc;      // layout hints
 
 public:
