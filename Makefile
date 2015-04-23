@@ -512,7 +512,7 @@ STATICOBJLIST := $(ROOT_SRCDIR)/build/unix/staticobjectlist.sh
 MAKESTATICLIB := $(ROOT_SRCDIR)/build/unix/makestaticlib.sh
 MAKESTATIC    := $(ROOT_SRCDIR)/build/unix/makestatic.sh
 RECONFIGURE   := $(ROOT_SRCDIR)/build/unix/reconfigure.sh
-MAKEPCHINPUT  := $(ROOT_SRCDIR)/build/unix/makepchinput.sh
+MAKEPCHINPUT  := $(ROOT_SRCDIR)/build/unix/makepchinput.py
 MAKEPCH       := etc/dictpch/makepch.sh
 ifeq ($(PLATFORM),win32)
 MAKELIB       := $(ROOT_SRCDIR)/build/win/makelib.sh
@@ -548,7 +548,7 @@ endif
 
 COREBASEDIRS := $(ROOT_SRCDIR)/core/base/src
 COREBASEDIRI := $(ROOT_SRCDIR)/core/base/inc
-COREL0        = -I$(ROOT_SRCDIR) $(COREBASEDIRI)/LinkDef.h 
+COREL0        = -I$(ROOT_SRCDIR) $(COREBASEDIRI)/LinkDef.h
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
                 $(SYSTEML) $(CLIBL) $(METAUTILSL) $(TEXTINPUTL)
 COREDS       := $(call stripsrc,$(COREBASEDIRS)/G__Core.cxx)
