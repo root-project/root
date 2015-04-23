@@ -238,6 +238,6 @@ endif()
 
 #--executables------------------------------------------------------------------------------
 if(TARGET g2root)
-  ROOT_ADD_TEST(test-g2root COMMAND $<TARGET_FILE:g2root>)
+  ROOT_ADD_TEST(test-g2root COMMAND g2root)
 endif()
 
