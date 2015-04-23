@@ -9,11 +9,12 @@ if(WIN32)
       test-tcollex)
 endif()
 
-if(CTEST_BUILD_NAME MATCHES icc14)  #  sse tests of vc fail for icc compiler
+if(CTEST_BUILD_NAME MATCHES icc)  #  sse tests of vc fail for icc compiler
   set(CTEST_CUSTOM_TESTS_IGNORE ${CTEST_CUSTOM_TESTS_IGNORE}
       vc-math_sse
       vc-math_VC_LOG_ILP2_sse
-      vc-math_VC_LOG_ILP_sse)
+      vc-math_VC_LOG_ILP_sse
+      stressVdt)
 endif()
 
 
