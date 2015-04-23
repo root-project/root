@@ -1973,7 +1973,7 @@ void th2poly()
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    p->DrawClone("COL");
 
    TestReport1(C, "TH2Poly.(DrawClone() and remote file access)");
@@ -2145,7 +2145,7 @@ void options2d1()
    TCanvas *C = StartTest(800,600);
 
    gStyle->SetOptStat(0);
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    gStyle->SetCanvasColor(33);
    gStyle->SetFrameFillColor(18);
    TF2 *f2 = new TF2("f2","xygaus + xygaus(5) + xylandau(10)",-4,4,-4,4);
@@ -2206,8 +2206,9 @@ void options2d3()
    C->Divide(2,2);
    gPad->SetGrid();
    C->SetFillColor(17);
+   gStyle->SetPalette(57);
    C->cd(1);
-   gH2->Draw("contz"); pl3.DrawPaveLabel(x1,y1,x2,y2,"CONTZ","brNDC");
+   gH2->Draw("cont4z"); pl3.DrawPaveLabel(x1,y1,x2,y2,"CONT4Z","brNDC");
    C->cd(2);
    gPad->SetGrid();
    gH2->Draw("cont1"); pl3.DrawPaveLabel(x1,y1,x2,y2,"CONT1","brNDC");
@@ -2236,6 +2237,7 @@ void options2d4()
    C->Divide(2,2);
    C->SetFillColor(17);
    C->cd(1);
+   gStyle->SetPalette(57);
    gH2->Draw("lego");     pl4.DrawPaveLabel(x1,y1,x2,y2,"LEGO","brNDC");
    C->cd(2);
    gH2->Draw("lego1");    pl4.DrawPaveLabel(x1,y1,x2,y2,"LEGO1","brNDC");
@@ -2263,6 +2265,7 @@ void options2d5()
    Float_t x1=0.67, y1=0.875, x2=0.85, y2=0.95;
    C->Divide(2,2);
    C->SetFillColor(17);
+   gStyle->SetPalette(57);
    C->cd(1);
    gH2->Draw("surf1");   pl5.DrawPaveLabel(x1,y1,x2,y2,"SURF1","brNDC");
    C->cd(2);
@@ -2286,7 +2289,7 @@ void earth()
 
    TCanvas *C = StartTest(1000,800);
 
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);
    C->Divide(2,2);
@@ -2357,7 +2360,7 @@ void tgraph2d1()
        x = x+dx;
        y = -P;
    }
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    dt->SetFillColor(0);
    dt->SetLineColor(1);
    dt->SetMarkerSize(1);
@@ -2398,7 +2401,7 @@ void tgraph2d2()
       ry[N]=2*Py*(r->Rndm(N))-Py;
       rz[N]=sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
    }
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    TGraph2D *dt = new TGraph2D( np, rx, ry, rz);
    dt->SetName("Graph2DA");
    dt->SetFillColor(0);
@@ -2439,7 +2442,7 @@ void tgraph2d3()
       ry[N]=2*Py*(r->Rndm(N))-Py;
       rz[N]=sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
    }
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    TGraph2D *dt = new TGraph2D( np, rx, ry, rz);
    dt->SetName("Graph2DA");
    dt->SetFillColor(0);
@@ -2666,9 +2669,15 @@ void zoomtf1()
    TF1* f[6];
 
    for (int i=0;i<6;++i) {
-      f[i]=new TF1(Form("f%d",i),fg, 0,2, 1);
+      f[i] = new TF1(Form("f%d",i),fg, 0,2, 1);
       f[i]->SetParameter(0,i+1);
       f[i]->SetLineColor(i+1);
+      if (i==0) {
+         f[i]->GetYaxis()->SetTitle("Y axis title on the right side of the plot");
+         f[i]->GetXaxis()->SetTitle("X axis");
+         f[i]->GetYaxis()->SetTitleOffset(-13.);
+         f[i]->SetTitle("Zoom/UnZoom a collection of TF1 and change axis attributes");
+      }
       f[i]->Draw(i?"same":"");
    }
    f[0]->GetXaxis()->SetRangeUser(.1,.3);
