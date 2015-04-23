@@ -133,8 +133,8 @@ get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
                           etc/dictpch/allCppflags.txt
-                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.sh ${CMAKE_SOURCE_DIR} "." ${__clingetcpch}
-                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.sh ${__allFiles})
+                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} "." ${__clingetcpch}
+                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
 
 add_custom_command(OUTPUT etc/allDict.cxx.pch
                    COMMAND ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.sh etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}
