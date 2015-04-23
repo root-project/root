@@ -348,7 +348,12 @@ void TRootCanvas::CreateCanvas(const char *name)
    if (!img) {
       Int_t sav = gErrorIgnoreLevel;
       gErrorIgnoreLevel = kFatal;
-      img = TImage::Create() ? 1 : -1;
+      TImage* itmp = TImage::Create();
+      img = itmp ? 1 : -1;
+      if (itmp) {
+         delete itmp;
+         itmp=NULL;
+      }
       gErrorIgnoreLevel = sav;
    }
    if (img > 0) {
@@ -2051,7 +2056,7 @@ Bool_t TRootCanvas::HandleDNDLeave()
 //______________________________________________________________________________
 void TRootCanvas::Activated(Int_t id)
 {
-   // Slot handling tab switching in the browser, to properly set the canvas 
+   // Slot handling tab switching in the browser, to properly set the canvas
    // and the model to the editor.
 
    if (fEmbedded) {
