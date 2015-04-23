@@ -1,4 +1,3 @@
-
 set (Libraries  Core Hist Gpad MathCore)
 set (testname stressVdt) 
 
@@ -21,12 +20,7 @@ if( ModernClang)
    set(additional_compile_flags "-O3 -ffast-math ${alwaysInlineClang}")
 endif()
 
-if (CMAKE_CXX_COMPILER MATCHES "/(icpc|icc)$")
-   set (IsIcc True)
-endif()
-
-if(NOT WIN32 AND NOT IsIcc)
+if(NOT WIN32)
   ROOT_EXECUTABLE(${testname} ${testname}.cxx LIBRARIES ${Libraries} ADDITIONAL_COMPILE_FLAGS ${additional_compile_flags} )
   ROOT_ADD_TEST(${testname} COMMAND ${testname} FAILREGEX "too") # for "too slow" and "too inaccurate" :)
 endif()
-
