@@ -2665,6 +2665,16 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
                assert(newcl!=cl);
                newcl->ForceReload(cl);
 
+               // Force reload does not touch newcl's CollectionProxy, we
+               // need to move it explicitly back to the old PersistentRef.
+               if (newcl->fCollectionProxy) {
+                  newcl->fCollectionProxy->fClass.fClassPtr = newcl->fPersistentRef;
+               }
+               if (newcl->fStreamer) {
+                  TVirtualCollectionProxy *pr = dynamic_cast<TVirtualCollectionProxy*>(newcl->fStreamer);
+                  if(pr) pr->fClass.fClassPtr = newcl->fPersistentRef;
+               }
+
                delete persistentRef;
                return newcl;
             }
