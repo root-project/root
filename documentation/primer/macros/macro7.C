@@ -2,11 +2,11 @@
 // together with its profiles and projections
 
 void macro7(){
-    gStyle->SetPalette(53);
+    gStyle->SetPalette(57);
     gStyle->SetOptStat(0);
     gStyle->SetOptTitle(0);
 
-    TH2F bidi_h("bidi_h","2D Histo;Guassian Vals;Exp. Vals",
+    TH2F bidi_h("bidi_h","2D Histo;Gaussian Vals;Exp. Vals",
                 30,-5,5,  // X axis
                 30,0,10); // Y axis
 

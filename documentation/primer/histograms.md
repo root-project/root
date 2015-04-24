@@ -20,32 +20,32 @@ can fill and draw a histogram with the following example macro.
  // counts of a scaler linked to a Geiger counter.
 
  void macro5(){
-     TH1F* cnt_r_h=new TH1F("count_rate",
-                 "Count Rate;N_{Counts};# occurencies",
-                 100, // Number of Bins
-                 -0.5, // Lower X Boundary
-                 15.5); // Upper X Boundary
+    TH1F* cnt_r_h=new TH1F("count_rate",
+                "Count Rate;N_{Counts};# occurencies",
+                100, // Number of Bins
+                -0.5, // Lower X Boundary
+                15.5); // Upper X Boundary
 
-     const float mean_count=3.6;
-     TRandom3 rndgen;
-     // simulate the measurements
-     for (int imeas=0;imeas<400;imeas++)
-         cnt_r_h->Fill(rndgen.Poisson(mean_count));
+    const float mean_count=3.6;
+    TRandom3 rndgen;
+    // simulate the measurements
+    for (int imeas=0;imeas<400;imeas++)
+        cnt_r_h->Fill(rndgen.Poisson(mean_count));
 
-     TCanvas* c= new TCanvas();
-     cnt_r_h->Draw();
+    TCanvas* c= new TCanvas();
+    cnt_r_h->Draw();
 
-     TCanvas* c_norm= new TCanvas();
-     cnt_r_h->DrawNormalized();
+    TCanvas* c_norm= new TCanvas();
+    cnt_r_h->DrawNormalized();
 
-     // Print summary
-     cout << "Moments of Distribution:\n"
-          << " - Mean = " << cnt_r_h->GetMean() << " +- "
-                          << cnt_r_h->GetMeanError() << "\n"
-          << " - RMS = " << cnt_r_h->GetRMS() << " +- "
-                         << cnt_r_h->GetRMSError() << "\n"
-          << " - Skewness = " << cnt_r_h->GetSkewness() << "\n"
-          << " - Kurtosis = " << cnt_r_h->GetKurtosis() << "\n";
+    // Print summary
+    cout << "Moments of Distribution:\n"
+         << " - Mean     = " << cnt_r_h->GetMean() << " +- "
+                             << cnt_r_h->GetMeanError() << "\n"
+         << " - Std Dev  = " << cnt_r_h->GetStdDev() << " +- "
+                             << cnt_r_h->GetStdDevError() << "\n"
+         << " - Skewness = " << cnt_r_h->GetSkewness() << "\n"
+         << " - Kurtosis = " << cnt_r_h->GetKurtosis() << "\n";
  }
 ```
 
@@ -68,10 +68,10 @@ graphs that emerge from the example are:
 -   line *15*: An entry is stored in the histogram through the
     `TH1F::Fill` method.
 
--   line *19* and *22*: The histogram can be drawn also normalised, ROOT
+-   line *18* and *21*: The histogram can be drawn also normalised, ROOT
     automatically takes cares of the necessary rescaling.
 
--   line *25* to *31*: This small snippet shows how easy it is to access
+-   line *24* to *30*: This small snippet shows how easy it is to access
     the moments and associated errors of a histogram.
 
 ## Add and Divide Histograms ##
@@ -160,15 +160,15 @@ The plots that you will obtain are shown in Figures [5.2](#f52) and [5.3](#f53).
 
 Some lines now need a bit of clarification:
 
--   line *3*: Cint, as we know, is also able to interpret more than one
+-   line *3*: Cling, as we know, is also able to interpret more than one
     function per file. In this case the function simply sets up some
     parameters to conveniently set the line of histograms.
 
--   line *20* to *22*: Some contracted C++ syntax for conditional
+-   line *19* to *21*: Some contracted C++ syntax for conditional
     statements is used to fill the histograms with different numbers of
     entries inside the loop.
 
--   line *27*: This is a crucial step for the sum and ratio of
+-   line *26*: This is a crucial step for the sum and ratio of
     histograms to handle errors properly. The method `TH1::Sumw2` makes
     sure that the squares of weights are stored inside the histogram
     (equivalent to the number of entries per bin if weights of 1 are
@@ -176,13 +176,13 @@ Some lines now need a bit of clarification:
     of each bin entry when the methods `TH1::Add` and `TH1::Divide` are
     invoked.
 
--   line *33*: The sum of two histograms. A weight can be assigned to
+-   line *32*: The sum of two histograms. A weight can be assigned to
     the added histogram, for example to comfortably switch to
     subtraction.
 
--   line *44*: The division of two histograms is rather straightforward.
+-   line *43*: The division of two histograms is rather straightforward.
 
--   line *53* to *63*: When you draw two quantities and their ratios, it
+-   line *52* to *62*: When you draw two quantities and their ratios, it
     is much better if all the information is condensed in one single
     plot. These lines provide a skeleton to perform this operation.
 
@@ -194,36 +194,36 @@ bi-dimensional histogram classes provided by ROOT in a very simple way.
 Let's see how in the following macro:
 
 ``` {.cpp}
-// Draw a Bidimensional Histogram in many ways
-// together with its profiles and projections
+ // Draw a Bidimensional Histogram in many ways
+ // together with its profiles and projections
 
-void macro7(){
-    gStyle->SetPalette(53);
-    gStyle->SetOptStat(0);
-    gStyle->SetOptTitle(0);
+ void macro7(){
+     gStyle->SetPalette(57);
+     gStyle->SetOptStat(0);
+     gStyle->SetOptTitle(0);
 
-    TH2F bidi_h("bidi_h","2D Histo;Guassian Vals;Exp. Vals",
-                30,-5,5,  // X axis
-                30,0,10); // Y axis
+     TH2F bidi_h("bidi_h","2D Histo;Gaussian Vals;Exp. Vals",
+                 30,-5,5,  // X axis
+                 30,0,10); // Y axis
 
-    TRandom3 rgen;
-    for (int i=0;i<500000;i++)
-        bidi_h.Fill(rgen.Gaus(0,2),10-rgen.Exp(4),.1);
+     TRandom3 rgen;
+     for (int i=0;i<500000;i++)
+         bidi_h.Fill(rgen.Gaus(0,2),10-rgen.Exp(4),.1);
 
-    TCanvas* c=new TCanvas("Canvas","Canvas",800,800);
-    c->Divide(2,2);
-    c->cd(1);bidi_h.DrawClone("Cont1");
-    c->cd(2);bidi_h.DrawClone("Colz");
-    c->cd(3);bidi_h.DrawClone("lego2");
-    c->cd(4);bidi_h.DrawClone("surf3");
+     TCanvas* c=new TCanvas("Canvas","Canvas",800,800);
+     c->Divide(2,2);
+     c->cd(1);bidi_h.DrawClone("Cont1");
+     c->cd(2);bidi_h.DrawClone("Colz");
+     c->cd(3);bidi_h.DrawClone("lego2");
+     c->cd(4);bidi_h.DrawClone("surf3");
 
-    // Profiles and Projections
-    TCanvas* c2=new TCanvas("Canvas2","Canvas2",800,800);
-    c2->Divide(2,2);
-    c2->cd(1);bidi_h.ProjectionX()->DrawClone();
-    c2->cd(2);bidi_h.ProjectionY()->DrawClone();
-    c2->cd(3);bidi_h.ProfileX()->DrawClone();
-    c2->cd(4);bidi_h.ProfileY()->DrawClone();
+     // Profiles and Projections
+     TCanvas* c2=new TCanvas("Canvas2","Canvas2",800,800);
+     c2->Divide(2,2);
+     c2->cd(1);bidi_h.ProjectionX()->DrawClone();
+     c2->cd(2);bidi_h.ProjectionY()->DrawClone();
+     c2->cd(3);bidi_h.ProfileX()->DrawClone();
+     c2->cd(4);bidi_h.ProfileY()->DrawClone();
 }
 ```
 

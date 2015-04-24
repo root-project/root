@@ -22,10 +22,10 @@ void macro5(){
 
     // Print summary
     cout << "Moments of Distribution:\n"
-         << " - Mean = " << cnt_r_h->GetMean() << " +- "
-                         << cnt_r_h->GetMeanError() << "\n"
-         << " - RMS = " << cnt_r_h->GetRMS() << " +- "
-                        << cnt_r_h->GetRMSError() << "\n"
+         << " - Mean     = " << cnt_r_h->GetMean() << " +- "
+                             << cnt_r_h->GetMeanError() << "\n"
+         << " - Std Dev  = " << cnt_r_h->GetStdDev() << " +- "
+                             << cnt_r_h->GetStdDevError() << "\n"
          << " - Skewness = " << cnt_r_h->GetSkewness() << "\n"
          << " - Kurtosis = " << cnt_r_h->GetKurtosis() << "\n";
 }
