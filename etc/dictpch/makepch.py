@@ -62,7 +62,10 @@ def makepch():
 
    rootbuildFlag=""
    loc1 = os.path.join(rootdir, allheadersFilename)
-   rootsys = os.environ["ROOTSYS"]
+   rootsys = ""
+   rootSysEnvName = "ROOTSYS"
+   if os.environ.has_key(rootSysEnvName):
+      rootsys = os.environ[rootSysEnvName]
    loc2 = os.path.join(rootsys, allheadersFilename)
 
    if not os.path.exists(loc1):
