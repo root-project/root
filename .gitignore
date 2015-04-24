@@ -924,6 +924,7 @@ root/tree/stl/vecptr.root
 /root/treeproxy/make_tuple.root
 /root/treeproxy/make_tuple_sel.h
 /root/treeproxy/btagobjsSel.h
+/root/treeproxy/VectorProxyTestSel.h
 
 # /root/treeproxy/stlvec/
 /root/treeproxy/stlvec/tlorentzvecProxy.h
