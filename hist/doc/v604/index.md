@@ -87,7 +87,12 @@ The equivalent correct code is now
  <a href="https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=19186">here</a>.
 - When a `TGraph2D` was entirely in the plane `Z=0` the 3D could not be defined.
   This problem was reported
- <a href="https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=19517>here</a>.
+ <a href="https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=19517">here</a>.
+
+### TMultiGraph
+- When a `TMultiGraph` contained only one `TGraph` the number of bins for the
+  internal histogram was not set correctly.   This problem was reported
+  <a href="https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=19603&p=83973#p83973">here</a>.
 
 ### THStack
 
