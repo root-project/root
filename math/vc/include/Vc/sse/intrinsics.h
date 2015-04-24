@@ -493,7 +493,7 @@ namespace Vc
 namespace SSE
 {
     static Vc_INTRINSIC Vc_CONST float extract_float_imm(const __m128 v, const size_t i) {
-        float f;
+        float f = 0.;
         switch (i) {
         case 0:
             f = _mm_cvtss_f32(v);
