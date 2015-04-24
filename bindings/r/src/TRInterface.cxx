@@ -192,10 +192,13 @@ Int_t  TRInterface::Eval(const TString &code, TRObjectProxy  &ans)
    SEXP fans;
    Int_t rc;
    try{ 
-   rc = fR->parseEval(code.Data(), fans);
+        rc = fR->parseEval(code.Data(), fans);
     } 
-   catch( std::exception& __ex__ ){ forward_exception_to_r( __ex__ ) ; } 
-   catch(...){ 	Error("Eval", "Can execute the requested code: %s",code.Data());}
+   catch(Rcpp::exception& __ex__){
+       Error("Eval", "%s",__ex__.what());
+       forward_exception_to_r( __ex__ ) ;
+   }
+   catch(...){Error("Eval", "Can execute the requested code: %s",code.Data());}
    ans = fans;
    ans.SetStatus((rc == 0) ? kTRUE : kFALSE);
    return rc;
@@ -205,11 +208,15 @@ Int_t  TRInterface::Eval(const TString &code, TRObjectProxy  &ans)
 void TRInterface::Execute(const TString &code)
 {
 // Execute R code.
-   try{ 
-        fR->parseEvalQNT(code.Data());
-    } 
-   catch( std::exception& __ex__ ){ forward_exception_to_r( __ex__ ) ; } 
-   catch(...){ 	Error("Eval", "Can execute the requested code: %s",code.Data());}
+  try{ 
+
+        fR->parseEvalQ(code.Data());
+    }
+   catch(Rcpp::exception& __ex__){
+       Error("Execute", "%s",__ex__.what());
+       forward_exception_to_r( __ex__ ) ;
+   }
+   catch(...){Error("Execute", "Can execute the requested code: %s",code.Data());}
 }
 
 //______________________________________________________________________________
@@ -223,8 +230,11 @@ TRObjectProxy TRInterface::Eval(const TString &code)
    try{
    rc = fR->parseEval(code.Data(), ans);
        } 
-   catch( std::exception& __ex__ ){ forward_exception_to_r( __ex__ ) ; } 
-   catch(...){ 	Error("Eval", "Can execute the requested code: %s",code.Data());}
+   catch(Rcpp::exception& __ex__){
+       Error("Eval", "%s",__ex__.what());
+       forward_exception_to_r( __ex__ ) ;
+   }
+   catch(...){Error("Eval", "Can execute the requested code: %s",code.Data());}
 
    return TRObjectProxy(ans , (rc == 0) ? kTRUE : kFALSE);
 }
