@@ -517,6 +517,8 @@ bool Sema::MergeCXXFunctionDecl(FunctionDecl *New, FunctionDecl *Old,
 
       Diag(OldParam->getLocation(), diag::note_previous_definition)
         << OldParam->getDefaultArgRange();
+#else
+      (void)DiagDefaultParamID;
 #endif
     } else if (OldParamHasDfl) {
       // Merge the old default argument into the new parameter.
