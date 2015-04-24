@@ -332,21 +332,25 @@ def getDefUndefLines(dirName):
 #-------------------------------------------------------------------------------
 def mkdirIfNotThere(dirName):
    if not os.path.exists(dirName):
-      os.mkdir(dirName)
+      os.makedirs(dirName)
 
 #-------------------------------------------------------------------------------
-def copyLinkDefs(rootSrcDir, outdir , dirName):
+def copyLinkDefs(rootSrcDir, outdir):
    """
    Extract the linkdef files
    """
    linkDefPartContent = ""
    curDir = os.getcwd()
    os.chdir(rootSrcDir)
-   wildcard = os.path.join(dirName, "inc", "*LinkDef*.h")
-   linkDefNames = glob.glob(wildcard)
+   wildcards = (os.path.join("*", "inc", "*LinkDef*.h"),
+                os.path.join("*", "*", "inc", "*LinkDef*.h"),
+                os.path.join("*", "*", "inc", "*" , "*LinkDef*.h"))
+   linkDefNames = []
+   for wildcard in wildcards:
+      linkDefNames += glob.glob(wildcard)
    os.chdir(curDir)
    for linkDefName in linkDefNames:
-      linkDefDirName = os.path.basename(linkDefName)
+      linkDefDirName = os.path.dirname(linkDefName)
       mkdirIfNotThere(os.path.join(outdir,linkDefDirName))
       srcName = os.path.join(rootSrcDir,linkDefName)
       destName = os.path.join(outdir,linkDefName)
@@ -450,7 +454,7 @@ def makePCHInput():
 
       allLinkdefsContent += getLocalLinkDefs(rootSrcDir, outdir , dirName)
 
-      copyLinkDefs(rootSrcDir, outdir , dirName)
+   copyLinkDefs(rootSrcDir, outdir)
 
    cppFlagsContent = getCppFlags(rootSrcDir,allIncPathsList)
 
