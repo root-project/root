@@ -1,6 +1,6 @@
 // Create, Draw and fit a TGraph2DErrors
 void macro4(){
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    const double e = 0.3;
    const int nd = 500;
 
@@ -29,6 +29,8 @@ void macro4(){
    dte->Fit(f2);
    // Plot the result
    TCanvas *c1 = new TCanvas();
+   f2->SetLineWidth(1);
+   f2->SetLineColor(kBlue-5);
    f2->Draw("Surf1");
    dte->Draw("P0 Same");
    // Make the x and y projections

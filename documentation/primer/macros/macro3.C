@@ -15,5 +15,5 @@ void macro3(){
     grP1.SetTitle("A Fan");
     grP1.SetLineWidth(3);
     grP1.SetLineColor(2);
-    grP1.DrawClone("AOL");
+    grP1.DrawClone("L");
 }
