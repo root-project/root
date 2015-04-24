@@ -3297,6 +3297,12 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
          acl->GetCollectionProxy()->SetValueClass(newcl);
          // We should also inform all the TBranchElement :( but we do not have a master list :(
       }
+      if (acl->GetStreamer()) {
+         TVirtualCollectionProxy *pr = dynamic_cast<TVirtualCollectionProxy*>(acl->GetStreamer());
+         if (pr && pr->GetValueClass()==this) {
+            pr->SetValueClass(newcl);
+         }
+      }
    }
 
    TIter delIter( &tobedeleted );
