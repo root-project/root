@@ -35,18 +35,18 @@ Not bad, eh ? Especially for a language that does not foresees
 persistency natively like C++. The *RECREATE* option forces ROOT to
 create a new file even if a file with the same name exists on disk.
 
-Now, you may use the Cint command line to access information in the file
+Now, you may use the Cling command line to access information in the file
 and draw the previously written histogram:
 
 ``` {.cpp}
->>>  root my_rootfile.root
+>  root my_rootfile.root
 root [0]
 Attaching file my_rootfile.root as _file0...
-root [1] _file0.ls()
-TFile**         my_rootfile.root
- TFile*         my_rootfile.root
-  KEY: TH1F     my_histogram;1  My Title
-root [2] my_histogram.Draw()
+root [1] _file0->ls()
+TFile**     my_rootfile.root
+ TFile*     my_rootfile.root
+  KEY: TH1F	my_histogram;1 My Title
+root [2] my_histogram->Draw()
 ```
 
 Alternatively, you can use a simple macro to carry out the job:
@@ -160,7 +160,7 @@ interactive ROOT shell, respectively:
 ``` {.cpp}
 > root conductivity_experiment.root
 Attaching file conductivity_experiment.root as _file0...
-root [0] cond_data.Draw("Current:Potential")
+root [0] cond_data->Draw("Current:Potential")
 ```
 
 You just produced a correlation plot with one single line of code!
@@ -168,7 +168,7 @@ You just produced a correlation plot with one single line of code!
 Try to extend the syntax typing for example
 
 ``` {.cpp}
-root [1] cond_data.Draw("Current:Potential","Temperature<270")
+root [1] cond_data->Draw("Current:Potential","Temperature<270")
 ```
 
 What do you obtain ?
@@ -176,7 +176,7 @@ What do you obtain ?
 Now try
 
 ``` {.cpp}
-root [2] cond_data.Draw("Current/Potential:Temperature")
+root [2] cond_data->Draw("Current/Potential:Temperature")
 ```
 
 It should have become clear from these examples how to navigate in such
