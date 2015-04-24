@@ -1,6 +1,6 @@
 // Builds a graph with errors, displays it and saves it as
-// image. First, include some header files (within CINT,
-// these will be ignored).
+// image. First, include some header files 
+// (not necessary for Cling)
 
 #include "TCanvas.h"
 #include "TROOT.h"
