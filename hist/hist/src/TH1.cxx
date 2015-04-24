@@ -6979,8 +6979,11 @@ Double_t TH1::GetMeanError(Int_t axis) const
 
 
 //______________________________________________________________________________
-Double_t TH1::GetRMS(Int_t axis) const
+Double_t TH1::GetStdDev(Int_t axis) const
 {
+   //  Returns the Standard Deviation (Sigma).
+   //  The Sigma estimate is computed as Sqrt((1/N)*(Sum(x_i-x_mean)^2))
+   //
    //  For axis = 1,2 or 3 returns the Sigma value of the histogram along
    //  X, Y or Z axis
    //  For axis = 11, 12 or 13 returns the error of StdDev estimation along
@@ -6992,11 +6995,6 @@ Double_t TH1::GetRMS(Int_t axis) const
    //  To force the underflows and overflows in the computation, one must
    //  call the static function TH1::StatOverflows(kTRUE) before filling
    //  the histogram.
-   //  Note that this function returns the Standard Deviation (Sigma)
-   //  of the distribution (not RMS).
-   //  The Sigma estimate is computed as Sqrt((1/N)*(Sum(x_i-x_mean)^2))
-   //  The name "RMS" was introduced many years ago (Hbook/PAW times).
-   //  We kept the name for continuity.
 
    if (axis<1 || (axis>3 && axis<11) || axis>13) return 0;
 
@@ -7020,7 +7018,7 @@ Double_t TH1::GetRMS(Int_t axis) const
 
 
 //______________________________________________________________________________
-Double_t TH1::GetRMSError(Int_t axis) const
+Double_t TH1::GetStdDevError(Int_t axis) const
 {
    //  Return error of standard deviation estimation for Normal distribution
    //
@@ -7036,7 +7034,7 @@ Double_t TH1::GetRMSError(Int_t axis) const
    //  the 4-th momentum value, which cannot be accurately estimated from an histogram since
    //  the x-information for all entries is not kept.
 
-   return GetRMS(axis+10);
+   return GetStdDev(axis+10);
 }
 
 

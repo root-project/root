@@ -172,7 +172,7 @@ public:
       kIsZoomed    = BIT(16), // bit set when zooming on Y axis
       kNoTitle     = BIT(17), // don't draw the histogram title
       kIsAverage   = BIT(18), // Bin contents are average (used by Add)
-      kIsNotW      = BIT(19)  // Histogram is forced to be not weighted even when the histogram is filled with weighted different than 1.   
+      kIsNotW      = BIT(19)  // Histogram is forced to be not weighted even when the histogram is filled with weighted different than 1.
    };
    // size of statistics data (size of  array used in GetStats()/ PutStats )
    // s[0]  = sumw       s[1]  = sumw2
@@ -306,14 +306,15 @@ public:
    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=0);
    virtual Double_t GetRandom() const;
    virtual void     GetStats(Double_t *stats) const;
-           Double_t GetStdDev(Int_t axis=1) const { return GetRMS(axis); }
-           Double_t GetStdDevError(Int_t axis=1) const { return GetRMSError(axis); }
+   virtual Double_t GetStdDev(Int_t axis=1) const;
+   virtual Double_t GetStdDevError(Int_t axis=1) const;
    virtual Double_t GetSumOfWeights() const;
    virtual TArrayD *GetSumw2() {return &fSumw2;}
    virtual const TArrayD *GetSumw2() const {return &fSumw2;}
    virtual Int_t    GetSumw2N() const {return fSumw2.fN;}
-   virtual Double_t GetRMS(Int_t axis=1) const;
-   virtual Double_t GetRMSError(Int_t axis=1) const;
+           Double_t GetRMS(Int_t axis=1) const { return GetStdDev(axis); }
+           Double_t GetRMSError(Int_t axis=1) const { return GetStdDevError(axis); }
+
    virtual Double_t GetSkewness(Int_t axis=1) const;
            TAxis*   GetXaxis()  { return &fXaxis; }
            TAxis*   GetYaxis()  { return &fYaxis; }
