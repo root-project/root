@@ -3261,10 +3261,16 @@ static void R__WriteMoveConstructorBody(FILE *file, const TString &protoname, TI
             if (!defMod) {
                fprintf(file,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE;
             }
+            TClass *cle = element->GetClassPointer();
+            TVirtualCollectionProxy *proxy = cle ? element->GetClassPointer()->GetCollectionProxy() : 0;
+            std::string method_name = "clear";
+            if (!element->TestBit(TStreamerElement::kDoNotDelete) && proxy && (((TStreamerSTL*)element)->GetSTLtype() == ROOT::kSTLbitset)) {
+                method_name = "reset";
+            }
             if (element->IsBase()) {
-               fprintf(file,"   modrhs.clear();\n");
+               fprintf(file,"   modrhs.%s();\n", method_name.c_str());
             } else {
-               fprintf(file,"   modrhs.%s.clear();\n",ename);
+               fprintf(file,"   modrhs.%s.%s();\n",ename, method_name.c_str());
             }
          }
       }
