@@ -121,6 +121,7 @@ AutoDict_*.cxx
 /cling/typedef_global/output[0-9]
 /cling/typedef_global/*_timestamp
 
+/python/basic/failingDowncast.h
 /python/ttree/test.root
 
 /root/aclic/global/idDict*
