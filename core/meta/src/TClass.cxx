@@ -2405,42 +2405,43 @@ TClass *TClass::GetActualClass(const void *object) const
    // class.
 
    if (object==0) return (TClass*)this;
-   if (!IsLoaded()) {
-      TVirtualStreamerInfo* sinfo = GetStreamerInfo();
-      if (sinfo) {
-         return sinfo->GetActualClass(object);
-      }
-      return (TClass*)this;
-   }
    if (fIsA) {
       return (*fIsA)(object); // ROOT::IsA((ThisClass*)object);
    } else if (fGlobalIsA) {
       return fGlobalIsA(this,object);
    } else {
-      //Always call IsA via the interpreter. A direct call like
-      //      object->IsA(brd, parent);
-      //will not work if the class derives from TObject but not as primary
-      //inheritance.
-      if (fIsAMethod.load()==0) {
-         TMethodCall* temp = new TMethodCall((TClass*)this, "IsA", "");
+      if (IsTObject()) {
 
-         if (!temp->GetMethod()) {
-            delete temp;
-            Error("IsA","Can not find any IsA function for %s!",GetName());
-            return (TClass*)this;
+         if (!fIsOffsetStreamerSet) {
+            CalculateStreamerOffset();
          }
-         //Force cache to be updated here so do not have to worry about concurrency
-         temp->ReturnType();
+         TObject* realTObject = (TObject*)((size_t)object + fOffsetStreamer);
 
-         TMethodCall* expected = nullptr;
-         if( !fIsAMethod.compare_exchange_strong(expected,temp) ) {
-            //another thread beat us to it
-            delete temp;
+         return realTObject->IsA();
+      }
+
+      if (HasInterpreterInfo()) {
+
+         TVirtualIsAProxy *isa = 0;
+         if (GetClassInfo() && gCling->ClassInfo_HasMethod(fClassInfo,"IsA")) {
+            isa = (TVirtualIsAProxy*)gROOT->ProcessLineFast(TString::Format("new ::TInstrumentedIsAProxy<%s>(0);",GetName()));
+         }
+         else {
+            isa = (TVirtualIsAProxy*)gROOT->ProcessLineFast(TString::Format("new ::TIsAProxy(typeid(%s));",GetName()));
+         }
+         if (isa) {
+            R__LOCKGUARD(gInterpreterMutex);
+            const_cast<TClass*>(this)->fIsA = isa;
+         }
+         if (fIsA) {
+            return (*fIsA)(object); // ROOT::IsA((ThisClass*)object);
          }
       }
-      char * char_result = 0;
-      (*fIsAMethod).Execute((void*)object, &char_result);
-      return (TClass*)char_result;
+      TVirtualStreamerInfo* sinfo = GetStreamerInfo();
+      if (sinfo) {
+         return sinfo->GetActualClass(object);
+      }
+      return (TClass*)this;
    }
 }
 
