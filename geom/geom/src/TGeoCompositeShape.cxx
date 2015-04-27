@@ -112,9 +112,9 @@
 // properly substituted during parsing.
 //   Let's look at the code implementing the second example :
 //
-//      TGeoTranslation *t1 = new TGeoTranslation("T1",0,0,-20);
-//      TGeoTranslation *t2 = new TGeoTranslation("T2",0,0, 20);
-//      TGeoRotation *r1 = new TGeoRotation("R1"); // transformations need names
+//      TGeoTranslation *t1 = new TGeoTranslation("t1",0,0,-20);
+//      TGeoTranslation *t2 = new TGeoTranslation("t2",0,0, 20);
+//      TGeoRotation *r1 = new TGeoRotation("r1"); // transformations need names
 //      r1->SetAngles(90,30,90,120,0,0); // rotation with 30 degrees about Z
 //      TGeoTube *a = new TGeoTube(0, 10,20);
 //      a->SetName("A");                 // shapes need names too
