@@ -126,10 +126,10 @@ $(LLVMDEPO): $(LLVMDEPS)
 			LLVM_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "macosx" ]; then \
-			LLVM_CFLAGS="-m32 -Wunused-private-field"; \
+			LLVM_CFLAGS="-m32 -Wno-unused-private-field"; \
 		fi; \
 		if [ $(ARCH) = "macosx64" ]; then \
-			LLVM_CFLAGS="-m64 -Wunused-private-field"; \
+			LLVM_CFLAGS="-m64 -Wno-unused-private-field"; \
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
 			LLVM_CFLAGS="-arch i386 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
