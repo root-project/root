@@ -54,6 +54,12 @@
   rounding problems.
 - Implement missing math symbols.
 
+### TASImage
+
+- In the animated gif it is now possible to specify the delay between the last
+  image and the fist image in case of infinite loop. (Fernando Hueso González
+  <f.gonzalez@hzdr.de>).
+
 ### TPad
 
 - In `TPad::ShowGuidelines` the number of guide lines is limited to 15. Above
