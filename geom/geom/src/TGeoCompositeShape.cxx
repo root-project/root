@@ -84,7 +84,7 @@
 //   Building this composite shapes takes the following line :
 //      TGeoCompositeShape *cs1 = new TGeoCompositeShape("CS1", "A+B+C");
 //
-// 2.      (A+B)\(C+D)
+// 2.      (A+B)-(C+D)
 //   This expression means: subtract the union of C and D from the union of A and
 // B. The usage of paranthesys to force operator precedence is always recommended.
 // The representation of the corresponding composite shape looks like:
@@ -93,13 +93,13 @@
 //                                  |
 //                       [A+B] = (+)
 //                      |           |
-//   [(A+B)\(C+D)] = (\)           C B
+//   [(A+B)-(C+D)] = (-)           C B
 //                      |         |
 //                       [C+D]=(+)
 //                                |
 //                                 D
 //
-//      TGeoCompositeShape *cs2 = new TGeoCompositeShape("CS2", "(A+B)\(C+D)");
+//      TGeoCompositeShape *cs2 = new TGeoCompositeShape("CS2", "(A+B)-(C+D)");
 //
 //   Building composite shapes as in the 2 examples above is not always quite
 // usefull since we were using unpositioned shapes. When suplying just shape
@@ -126,7 +126,7 @@
 //      d->SetName("D");
 //
 //      TGeoCompositeShape *cs;
-//      cs = new TGeoCompositeShape("CS", "(A:t1+B:t2)\(C+D:r1)");
+//      cs = new TGeoCompositeShape("CS", "(A:t1+B:t2)-(C+D:r1)");
 //
 //   The newly created composite looks like 2 cylinders of different radii sitting
 // one on top of the other and having 2 rectangular holes : a longitudinal one
