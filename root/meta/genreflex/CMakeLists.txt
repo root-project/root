@@ -1,5 +1,21 @@
 ROOTTEST_ADD_TESTDIRS()
 
+# These 3 tests will fail because a pragma once will be found in the inlined header
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-pragmaOnce1
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/pragmaOnce1.h -o  pragmaOnce1.cxx
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/pragmaOnce1_selection.xml -I ${CMAKE_CURRENT_SOURCE_DIR}
+                  WILLFAIL)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-pragmaOnce2
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/pragmaOnce2.h -o  pragmaOnce2.cxx
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/pragmaOnce2_selection.xml -I ${CMAKE_CURRENT_SOURCE_DIR}
+                  WILLFAIL)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-pragmaOnce3
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/pragmaOnce3.h -o  pragmaOnce3.cxx
+                          --select=${CMAKE_CURRENT_SOURCE_DIR}/pragmaOnce3_selection.xml -I ${CMAKE_CURRENT_SOURCE_DIR}
+                  WILLFAIL)
+
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(mangledName mangledTest_lhapdf-5.9.1.h  SELECTION mangledTest_lhapdf-5.9.1_selection.xml)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-mangledName
