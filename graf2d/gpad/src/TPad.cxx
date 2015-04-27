@@ -4295,6 +4295,7 @@ void TPad::Print(const char *filename) const
    //   if filename contains .eps, an Encapsulated Postscript file is produced
    //   if filename contains .gif, a GIF file is produced
    //   if filename contains .gif+NN, an animated GIF file is produced
+   //     See comments in TASImage::WriteImage for meaning of NN and other .gif sufix variants
    //   if filename contains .C or .cxx, a C++ macro file is produced
    //   if filename contains .root, a Root file is produced
    //   if filename contains .xml,  a XML file is produced
@@ -4345,6 +4346,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    //               "tex" - a TeX file is produced
    //               "gif" - a GIF file is produced
    //            "gif+NN" - an animated GIF file is produced, where NN is delay in 10ms units
+   //                       NOTE: See other variants for looping animation in TASImage::WriteImage
    //               "xpm" - a XPM file is produced
    //               "png" - a PNG file is produced
    //               "jpg" - a JPEG file is produced.
@@ -4441,7 +4443,8 @@ void TPad::Print(const char *filenam, Option_t *option)
    //
    // The delay between each frame must be specified in each Print() statement.
    // If the file "myfile.gif" already exists, the new frame are appended at
-   // the end of the file.
+   // the end of the file. To avoid this, delete it first with gSystem->Unlink(myfile.gif);
+   // If you want the gif file to repeat or loop forever, check TASImage::WriteImage documentation
 
    TString psname, fs1, fs2;
    char *filename;
@@ -5131,6 +5134,7 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
    //   if filename contains .tex, a TeX file is produced
    //   if filename contains .gif, a GIF file is produced
    //   if filename contains .gif+NN, an  animated GIF file is produced
+   //     See comments in TASImage::WriteImage for meaning of NN and other .gif sufix variants
    //   if filename contains .xpm, a XPM file is produced
    //   if filename contains .png, a PNG file is produced
    //   if filename contains .jpg, a JPEG file is produced

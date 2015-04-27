@@ -608,16 +608,29 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    // If there is no file extension or if the file extension is unknown, the
    // type argument will be used to determine the file type. The quality and
    // compression is derived from the TAttImage values.
-   // It's posiible to write image into an animated GIF file by specifying file
-   // name as "myfile.gif+" of "myfile.gif+NN", where NN is delay of displaying
-   // subimages during animation in 10ms seconds units.
-   // If NN is ommitted the delay between subimages is zero.
-   // For repeated animation the last subimage must be specified as
-   // "myfile.gif++NN", where NN is number of cycles. If NN is ommitted the
-   // animation will be infinite.
+   // It's possible to write image into an animated GIF file by specifying file
+   // name as "myfile.gif+" or "myfile.gif+NN", where NN is the delay of displaying
+   // subimages during animation in 10ms seconds units. NN is not restricted
+   // to two digits. If NN is ommitted the delay between subimages is zero.
+   // For an animation that stops after last subimage is reached, one has to
+   // write the last image as .gif+ (zero delay of last image) or .gif+NN
+   // (NN*10ms delay of last image).
+   // For repeated animation (looping), the last subimage must be specified as:
+   // (a) "myfile.gif++NN++" if you want an infinite looping gif with NN*10ms
+   // delay of the last image.
+   // (b) "myfile.gif++" for an infinite loop with zero delay of last image.
+   // (c) "myfile.gif+NN++RR" if you want a finite looping gif with NN*10ms
+   // delay of the last image and the animation to be stopped after RR
+   // repeats. RR is not restricted to two digits.
+   // A deprecated version for saving the last subimage of a looping gif animation is:
+   // (d) "myfile.gif++NN" for a finite loop where NN is number of repetitions
+   // and NN*10ms the delay of last image. (No separate control of repeats and delay).
+   // Note: If the file "myfile.gif" already exists, the new frames are appended at
+   // the end of the file. To avoid this, delete it first with gSystem->Unlink(myfile.gif);
    //
    // The following macro creates animated gif from jpeg images with names
    //    imageNN.jpg, where 1<= NN <= 10
+   //    The delays are set to 10*10ms.
    // {
    //    TImage *img = 0;
    //    gSystem->Unlink("anim.gif");  // delete existing file
@@ -629,9 +642,9 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    //       img = TImage::Open(Form("image%d.jpg", i));
    //
    //       if (i < 10) {
-   //          img->WriteImage("anim.gif+");
+   //          img->WriteImage("anim.gif+10"); // 10 centiseconds delay
    //       } else { // the last image written.  "++" stands for infinit animation.
-   //          img->WriteImage("anim.gif++");
+   //          img->WriteImage("anim.gif++10++"); // 10 centiseconds delay of last image
    //       }
    //    }
    // }
@@ -715,15 +728,59 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       parms.gif.animate_repeats = 0;
 
       s += 4; // skip "gif+"
-      int delay = atoi(s);
+      int delay = 0;
 
-      if (delay < 0) {
+      const TString sufix = s; // we denote as sufix as everything that is after .gif+
+      const UInt_t sLength = sufix.Length();
+
+      if (sufix=="+") {
+         // .gif++ implies that this is the last image of the animation
+         // and that the gif will loop forever (infinite animation)
+         // and that the delay of last image is 0ms (backward compatibility reasons)
          delay = 0;
-      }
-      if (s[0] == '+') { // repeat count
-         parms.gif.flags |= EXPORT_ANIMATION_REPEATS;
-         s++;
-         parms.gif.animate_repeats = atoi(s);
+         parms.gif.flags |= EXPORT_ANIMATION_REPEATS;// activate repetition
+         parms.gif.animate_repeats = 0;// 0 is code for looping forever (if EXPORT_ANIMATION_REPEATS is also set)
+      } else if(sufix=="") {
+         // .gif+ implies that this is a subimage of the animation with zero delay
+         // or the last image of an animation that will not repeat.
+         // Last image delay is zero because atoi("")=0.
+         delay = atoi(s);
+         //Nothing else needed here
+      } else if(!sufix.Contains("+")) {
+         // .gif+NN implies that this is a subimage of the animation
+         // with NN*10ms delay (latency) until the next one.
+         // You can also use this option on the last image if you do not want the gif to replay
+         delay = atoi(s);
+         //Nothing else needed here
+      } else if(sLength>1 && sufix.BeginsWith("+") && sufix.CountChar('+')==1) {
+         // .gif++NN implies that this is the last image of the animation
+         // and that it will loop NN number of times (finite animation)
+         // and that the delay of last image is NN*10ms (backward compatibility reasons).
+         delay = atoi(s);// atoi is smart enough to ignore the "+" sign before.
+         parms.gif.flags |= EXPORT_ANIMATION_REPEATS;// activate repetition
+         parms.gif.animate_repeats = atoi(s);// loops only NN times, then it stops. atoi discards + sign.
+      } else if(sLength>3 && sufix.BeginsWith("+") && sufix.EndsWith("++") && !TString(sufix(1,sLength-3)).Contains("+")) {
+         // .gif++NN++ implies that this is the last image of the animation
+         // and that the gif will loop forever (infinite animation)
+         // and that the delay of last image is NN*10ms.
+         // In contrast, .gif++ is an infinite loop but with 0 delay, whereas the option
+         // .gif++NN is a loop repeated NN times (not infinite) with NN*10ms delay
+         // between last and first loop images.
+         delay = atoi(s);// atoi discards the three plus signs
+         parms.gif.flags |= EXPORT_ANIMATION_REPEATS;// activate repetition
+         parms.gif.animate_repeats = 0;// 0 is code for looping forever (if EXPORT_ANIMATION_REPEATS is also set)
+      } else if(sLength>3 && sufix.CountChar('+')==2 && TString(sufix(1,sLength-2)).Contains("++")) {
+         // .gif+NN++RR implies that this is the last image animation
+         // and that the gif will loop RR number of times (finite animation)
+         // and that the delay of last image is NN*10ms.
+         const TString sDelay = sufix(0,sufix.First('+'));
+         const TString sRepeats = sufix(sufix.First('+')+2,sLength-(sufix.First('+')+2));
+         delay = atoi(sDelay);
+         parms.gif.flags |= EXPORT_ANIMATION_REPEATS;// activate repetition
+         parms.gif.animate_repeats = atoi(sRepeats);// loops NN times.
+      } else {
+         Error("WriteImage", "gif sufix %s not yet supported", s);
+         return;
       }
 
       parms.gif.animate_delay = delay;
@@ -731,6 +788,10 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       int i1 = fname.Index("gif+");
       if (i1 != kNPOS) {
          fname = fname(0, i1 + 3);
+      }
+      else {
+         Error("WriteImage", "unexpected gif extension structure %s", fname.Data());
+         return;
       }
       break;
    }
