@@ -77,6 +77,7 @@ ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
                               NOINSTALL)
 add_dependencies(rootcling_tmp CLING LLVMRES)
 set_source_files_properties(src/LinkdefReader.cxx PROPERTIES COMPILE_FLAGS -fno-rtti)
+set_source_files_properties(src/TModuleGenerator.cxx PROPERTIES COMPILE_FLAGS -fno-rtti)
 set_source_files_properties(src/rootclingTCling.cxx PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/meta/src)
 
 #---Deal with LLVM resource here----------------------------------------------
