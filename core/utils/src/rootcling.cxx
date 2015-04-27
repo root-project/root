@@ -4516,19 +4516,19 @@ int RootCling(int argc,
       }
    }
 
-   int retCode(0);
+   int rootclingRetCode(0);
 
    if (onepcm) {
       AnnotateAllDeclsForPCH(interp, scan);
    } else if (interpreteronly) {
-      retCode = CheckClassesForInterpreterOnlyDicts(interp, scan);
+      rootclingRetCode = CheckClassesForInterpreterOnlyDicts(interp, scan);
       // generate an empty pcm nevertheless for consistency
       // Negate as true is 1 and true is returned in case of success.
 #ifndef ROOT_STAGE1_BUILD
-      retCode +=  FinalizeStreamerInfoWriting(interp);
+      rootclingRetCode +=  FinalizeStreamerInfoWriting(interp);
 #endif
    } else {
-      retCode = GenerateFullDict(splitDictStream,
+      rootclingRetCode = GenerateFullDict(splitDictStream,
                                  interp,
                                  scan,
                                  constructorTypes,
@@ -4537,8 +4537,8 @@ int RootCling(int argc,
                                  writeEmptyRootPCM);
    }
 
-   if (retCode != 0) {
-      return retCode;
+   if (rootclingRetCode != 0) {
+      return rootclingRetCode;
    }
 
    if (doSplit && splitDictStreamPtr) delete splitDictStreamPtr;
@@ -4591,6 +4591,8 @@ int RootCling(int argc,
                      inlineInputHeader);
    }
 
+
+
    if (liblistPrefix.length()) {
       string liblist_filename = liblistPrefix + ".out";
 
@@ -4612,6 +4614,9 @@ int RootCling(int argc,
       }
    }
 
+   // Check for errors in module generation
+   rootclingRetCode += modGen.GetErrorCount();
+   if (0 != rootclingRetCode) return rootclingRetCode;
 
    // Create rootmap and capabilities files
    std::string rootmapLibName = std::accumulate(rootmapLibNames.begin(),
@@ -4628,17 +4633,17 @@ int RootCling(int argc,
    std::list<std::string> classesNamesForRootmap;
    std::list<std::string> classesDefsList;
 
-   retCode = ExtractSelectedClassesAndTemplateDefs(scan,
+   rootclingRetCode = ExtractSelectedClassesAndTemplateDefs(scan,
                                                    classesNames,
                                                    classesNamesForRootmap,
                                                    classesDefsList,
                                                    interp);
    std::list<std::string> enumNames;
-   retCode += ExtractEnumAutoloadKeys(enumNames,
+   rootclingRetCode += ExtractEnumAutoloadKeys(enumNames,
                                       scan.fSelectedEnums,
                                       interp);
 
-   if (0 != retCode) return retCode;
+   if (0 != rootclingRetCode) return rootclingRetCode;
 
    // Create the rootmapfile if needed
    if (rootMapNeeded) {
@@ -4655,7 +4660,6 @@ int RootCling(int argc,
                              rootmapLibName.c_str());
 
       tmpCatalog.addFileName(rootmapFileName);
-      int rmStatusCode = 0;
       if (useNewRmfFormat) {
          std::unordered_set<std::string> headersToIgnore;
          if (inlineInputHeader) {
@@ -4671,7 +4675,7 @@ int RootCling(int argc,
                                     scan.fSelectedTypedefs,
                                     interp);
 
-         rmStatusCode = CreateNewRootMapFile(rootmapFileName,
+         rootclingRetCode = CreateNewRootMapFile(rootmapFileName,
                                              rootmapLibName,
                                              classesDefsList,
                                              classesNamesForRootmap,
@@ -4681,12 +4685,12 @@ int RootCling(int argc,
                                              headersClassesMap,
                                              headersToIgnore);
       } else {
-         rmStatusCode = CreateRootMapFile(rootmapFileName,
+         rootclingRetCode = CreateRootMapFile(rootmapFileName,
                                           rootmapLibName,
                                           classesNamesForRootmap,
                                           nsNames);
       }
-      if (0 != rmStatusCode) return 1;
+      if (0 != rootclingRetCode) return 1;
    }
 
    // Create the capabilities file if needed
@@ -4695,10 +4699,10 @@ int RootCling(int argc,
       // Lump together classes and enum names
       std::list<std::string>& capaKeysNames=classesNames;
       capaKeysNames.splice(capaKeysNames.end(),enumNames);
-      int capaStatusCode = CreateCapabilitiesFile(capaFileName,
+      rootclingRetCode = CreateCapabilitiesFile(capaFileName,
                                                   dictpathname,
                                                   capaKeysNames);
-      if (0 != capaStatusCode) return 1;
+      if (0 != rootclingRetCode) return 1;
    }
 
 
@@ -4706,7 +4710,9 @@ int RootCling(int argc,
       tmpCatalog.dump();
 
    // Before returning, rename the files
-   return tmpCatalog.commit();
+   rootclingRetCode += tmpCatalog.commit();
+
+   return rootclingRetCode;
 
 }
 

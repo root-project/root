@@ -67,6 +67,11 @@ namespace ROOT {
       const std::string &GetModuleDirName() const {
          return fModuleDirName;
       }
+
+      int GetErrorCount() const {
+         return fErrorCount;
+      }
+
       const std::string &GetUmbrellaName() const {
          return fUmbrellaName;
       }
@@ -83,7 +88,6 @@ namespace ROOT {
 
       std::ostream &WritePPDefines(std::ostream &out) const;
       std::ostream &WritePPUndefines(std::ostream &out) const;
-      std::ostream &WritePPIncludes(std::ostream &out) const;
 
       void WriteRegistrationSource(std::ostream &out,
                                    const std::string &fwdDeclnArgsToKeepString,
@@ -94,6 +98,9 @@ namespace ROOT {
 
    private:
       void ConvertToCppString(std::string &text) const;
+
+      std::ostream &WritePPIncludes(std::ostream &out) const;
+
       std::ostream &WritePPCode(std::ostream &out) const {
          // Write defines, undefiles, includes, corrsponding to a rootcling
          // invocation with -c -DFOO -UBAR header.h.
@@ -145,6 +152,7 @@ namespace ROOT {
 
       StringPairVec_t fCompD; // -Dfirst=second
       std::vector<std::string> fCompU; // -Ufirst
+      mutable int fErrorCount;
    };
 
 } // namespace ROOT

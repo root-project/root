@@ -22,6 +22,7 @@
 #include "RConfigure.h"
 #include "RConfig.h"
 
+#include "cling/Interpreter/CIFactory.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/HeaderSearch.h"
@@ -48,7 +49,8 @@ TModuleGenerator::TModuleGenerator(CompilerInstance *CI,
    fInlineInputHeaders(inlineInputHeaders),
    fDictionaryName(llvm::sys::path::stem(shLibFileName)),
    fDemangledDictionaryName(llvm::sys::path::stem(shLibFileName)),
-   fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
+   fModuleDirName(llvm::sys::path::parent_path(shLibFileName)),
+   fErrorCount(0)
 {
 
    // Need to resolve _where_ to create the pcm
@@ -235,6 +237,37 @@ std::ostream &TModuleGenerator::WritePPUndefines(std::ostream &out) const
 }
 
 //______________________________________________________________________________
+int WarnIfPragmaOnceDetected(const std::string& fullHeaderPath,
+                              const std::string& headerFileContent)
+{
+   // To be replaced with proper pragma handlers.
+   std::istringstream headerFile(headerFileContent);
+   std::string line;
+   while(std::getline(headerFile,line)){
+      llvm::StringRef lineRef (line);
+      auto trimmedLineRef = lineRef.trim();
+      if (trimmedLineRef.startswith("#pragma") &&
+          (trimmedLineRef.endswith(" once") || trimmedLineRef.endswith("\tonce"))) {
+         std::cerr << "Error: #pragma once directive detected in header file "
+                  << fullHeaderPath
+                  << " which was requested to be inlined.\n";
+         return 1;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+int ExtractBufferContent(const std::string& fullHeaderPath, std::string& bufferContent)
+{
+   std::ifstream buffer(fullHeaderPath);
+   bufferContent = std::string((std::istreambuf_iterator<char>(buffer)),
+                                std::istreambuf_iterator<char>());
+
+   return WarnIfPragmaOnceDetected(fullHeaderPath,bufferContent);
+}
+
+//______________________________________________________________________________
 std::ostream &TModuleGenerator::WritePPIncludes(std::ostream &out) const
 {
    // Write
@@ -249,9 +282,10 @@ std::ostream &TModuleGenerator::WritePPIncludes(std::ostream &out) const
             ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", fullHeaderPath.c_str());
             continue;
          }
-         std::ifstream buffer(fullHeaderPath);
-         std::string bufferContent((std::istreambuf_iterator<char>(buffer)),
-                                    std::istreambuf_iterator<char>());
+
+         std::string bufferContent;
+         fErrorCount += ExtractBufferContent(fullHeaderPath, bufferContent);
+
          out << bufferContent << std::endl;
       } else {
          out << "#include \"" << incl << "\"\n";
