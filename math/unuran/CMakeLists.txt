@@ -18,6 +18,9 @@ endif()
 
 if(WIN32)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.win.in  ${UNR_UNTARDIR}/config.h)
+  if (MSVC_VERSION GREATER 1700)
+    add_definitions(-wd4056 -wd4756)
+  endif()
 else()  
   #---Define special compiler settings for unurun-----------------------------------------------------
   set(UNR_CC ${CMAKE_C_COMPILER})
