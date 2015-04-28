@@ -97,7 +97,8 @@ TMVA::StatDialogBDT::StatDialogBDT( const TGWindow* p, TString wfile, TString me
 
    fInput->Connect("ValueSet(Long_t)","TMVA::StatDialogBDT",this, "SetItree()");
 
-   fDrawButton->Connect("ValueSet(Long_t)","TGNumberEntry",fInput, "Clicked()");
+   // doesn't seem to exist .. gives an 'error message' and seems to work just fine without ... :)
+   //   fDrawButton->Connect("ValueSet(Long_t)","TGNumberEntry",fInput, "Clicked()");
    fDrawButton->Connect("Clicked()", "TMVA::StatDialogBDT", this, "Redraw()");   
 
    fCloseButton->Connect("Clicked()", "TMVA::StatDialogBDT", this, "Close()");
