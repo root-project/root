@@ -708,7 +708,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          if (fJSROOT.Length() > 0) {
             TString repl = TString("=\"") + fJSROOT;
             if (!repl.EndsWith("/")) repl+="/";
-            arg->fContent.ReplaceAll("=\"/jsrootsys/", repl);
+            arg->fContent.ReplaceAll("=\"jsrootsys/", repl);
          }
 
          const char *hjsontag = "\"$$$h.json$$$\"";
@@ -750,7 +750,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          if (fJSROOT.Length() > 0) {
             TString repl = TString("=\"") + fJSROOT;
             if (!repl.EndsWith("/")) repl+="/";
-            arg->fContent.ReplaceAll("=\"/jsrootsys/", repl);
+            arg->fContent.ReplaceAll("=\"jsrootsys/", repl);
          }
 
          if (arg->fContent.Index(rootjsontag) != kNPOS) {
