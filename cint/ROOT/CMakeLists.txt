@@ -81,8 +81,10 @@ set(CINTDLLCXXFLAGS "${CINT_CXX_DEFINITIONS} -DG__HAVE_CONFIG -DG__NOMAKEINFO")
 set(CINTDLLCFLAGS "${CINT_C_DEFINITIONS} -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__SYSTYPES")
 
 if(MACOSX_TMPNAM_DEPRECATED OR CMAKE_COMPILER_IS_GNUCXX)
-  add_definitions(-Wno-deprecated-declarations)
+  ROOT_ADD_CXX_FLAG(_cxxflags -Wno-deprecated-declarations)
 endif()
+ROOT_ADD_CXX_FLAG(_cxxflags -Wno-ignored-qualifiers)
+add_definitions(${_cxxflags})
 
 set(IncludeDirs -I${CMAKE_SOURCE_DIR}/cint/cint/lib/dll_stl  -I${CMAKE_SOURCE_DIR}/cint/cint/lib -I${HEADER_OUTPUT_PATH})
 
