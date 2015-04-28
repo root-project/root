@@ -67,6 +67,8 @@ private:
    Double_t fMBRateAvgMax;       // Max running MB processing rate
    Double_t fEvtRateAvg;         // Average event processing rate
    Double_t fMBRateAvg;          // Average MB processing rate
+   TString fFileResult;          // File where to save basics of a run when requested
+   Bool_t fSaveResult;           // Whether to save the results of a run
 
    Int_t fDebug;                 // Local verbosity level
 
@@ -80,6 +82,7 @@ private:
    TString GetCanvasTitle(const char *t);
    void  GetWrkFileList(TList *wl, TList *sl);
    void  LoadTree(TDirectory *dir);
+   void  DoDraw(TObject *o, Option_t *opt = "", const char *name = 0);
 
 public:
 
@@ -113,6 +116,8 @@ public:
 
    void  Summary(Option_t *opt = "", const char *out = "");
   
+   Int_t SetSaveResult(const char *file = "results.root", Option_t *mode = "RECREATE");
+
    void  SetDebug(Int_t d = 0);   // Setter for the verbosity level
    static void  SetgDebug(Bool_t on = kTRUE);   // Overall verbosity level
 
