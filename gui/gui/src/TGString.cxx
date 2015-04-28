@@ -234,15 +234,21 @@ void TGHotString::DrawHotChar(Drawable_t id, GContext_t gc, Int_t x, Int_t y)
       if (fLastGC != gc) {
          GCValues_t   gcval;
          FontStruct_t font;
+         font = gVirtualX->GetGCFont(gc);
+         if (font) {
+            fOff1   = gVirtualX->TextWidth(font, Data(), fHotPos-1); //+1;
+            fOff2   = gVirtualX->TextWidth(font, Data(), fHotPos) - 1;
+         }
+         else {
+            gcval.fMask = kGCFont;
+            gVirtualX->GetGCValues(gc, gcval);
+            font = gVirtualX->GetFontStruct(gcval.fFont);
 
-         gcval.fMask = kGCFont;
-         gVirtualX->GetGCValues(gc, gcval);
-         font = gVirtualX->GetFontStruct(gcval.fFont);
+            fOff1   = gVirtualX->TextWidth(font, Data(), fHotPos-1); //+1;
+            fOff2   = gVirtualX->TextWidth(font, Data(), fHotPos) - 1;
 
-         fOff1   = gVirtualX->TextWidth(font, Data(), fHotPos-1); //+1;
-         fOff2   = gVirtualX->TextWidth(font, Data(), fHotPos) - 1;
-
-         gVirtualX->FreeFontStruct(font);
+            gVirtualX->FreeFontStruct(font);
+         }
          fLastGC = gc;
       }
       gVirtualX->DrawLine(id, gc, x+fOff1, y+1, x+fOff2, y+1);

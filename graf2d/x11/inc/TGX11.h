@@ -157,6 +157,7 @@ protected:
    Int_t      fGreenShift;         //Bits to left shift green
    Int_t      fBlueShift;          //Bits to left shift blue
    Bool_t     fHasTTFonts;         //True when TrueType fonts are used
+   Bool_t     fHasXft;             //True when XftFonts are used
 
    // needed by TGX11TTF
    Bool_t     AllocColor(Colormap cmap, RXColor *color);
