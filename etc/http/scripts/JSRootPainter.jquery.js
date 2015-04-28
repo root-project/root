@@ -301,11 +301,9 @@
 
       if ((status_item!=null) && (JSROOT.GetUrlOption('nostatus')==null)) {
          var func = JSROOT.findFunction(status_item._status);
-         var hdiv = func==null ? null : JSROOT.Painter.ConfigureHSeparator(30);
-         if (hdiv != null) {
-            // painter.CreateStatus(28);
+         var hdiv = (typeof func == 'function') ? JSROOT.Painter.ConfigureHSeparator(30) : null;
+         if (hdiv != null)
             func(hdiv, this.itemFullName(status_item));
-         }
       }
 
       JSROOT.CallBack(callback);
@@ -389,6 +387,9 @@
          if (cando.display)
             return this.display(itemname);
 
+         if ('_player' in hitem)
+            return this.player(itemname);
+
          if (cando.execute)
             return this.ExecuteCommand(itemname, node);
 
@@ -412,8 +413,6 @@
       if (hitem==null) return;
 
       var cando = this.CheckCanDo(hitem);
-
-      // if (!cando.display && !cando.ctxt && (itemname!="")) return;
 
       var painter = this;
 
@@ -505,7 +504,7 @@
          node = $("#" + this.frameid).find("[item='" + itemname + "']");
 
       if (node.length==0)
-         return console.log("Did not found node with item = " + itemname);
+         return JSROOT.console("Did not found node with item = " + itemname);
 
       if (item0==null) item0 = this.Find(itemname);
       if (item0==null) return;
@@ -936,7 +935,7 @@
    JSROOT.Painter.ConfigureHSeparator = function(height, onlyleft) {
 
       if ((JSROOT.Painter.separ == null) ||
-          (JSROOT.Painter.horizontal != null)) return null;
+          (JSROOT.Painter.separ.horizontal != null)) return null;
 
       JSROOT.Painter.separ['horizontal'] = 'horizontal-separator-div';
       JSROOT.Painter.separ['bottom'] = 'bottom-div';

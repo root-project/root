@@ -1,9 +1,22 @@
-# JSROOT changelog {#jsroot_changes}
+# JSROOT changelog
 
-This is further development of JSRootIO project of Bertrand Bellenot.
-Many old problems and errors are fixed, new functions are provided.
+## Changes in master
+1. Fix error in vertical text alignment
+2. Many improvements in TPaletteAxis drawing - draw label, avoid too large ticks.
+3. Fix error with col drawing - bin with maximum value got wrong color  
+4. Test for existing jquery.js, jquery-ui.js and d3.js libraries, reuse when provided 
+5. Fix several I/O problems; now one could read files, produced in Geant4
+6. Implement 'e2' drawing option for TH1 class, 
+   use by default 'e' option when TH1 has non-empty fSumw2
+7. Reuse statistic from histogram itself, when no axis selection done 
+8. Support log/lin z scale for color drawing
+9. Implement interactive z-scale selection on TPaletteAxis 
+10. Allow to redraw item with other draw options (before one should clear drawings)
+11. Several improvements in THttpServer user interface - repair hierarchy reload,
+    hide unsupported context menu entries, status line update 
 
-## Changes in v 3.4
+
+## Changes in 3.4
 1. Support usage of minimized versions of .js and .css files.
    Minimized scripts used by default on web servers.
 2. Implement JSROOT.extend instead of jQuery.extend, reduce
@@ -18,7 +31,7 @@ Many old problems and errors are fixed, new functions are provided.
 6. Fix error with time axes - time offset was not correctly interpreted
 
 
-## Changes in v 3.3
+## Changes in 3.3
 1. Use d3.time.scale for display of time scales
 2. Within JSRootCore.js script URL one could specify JSROOT
    functionality to be loaded: '2d', '3d', 'io', 'load', 'onload'.
