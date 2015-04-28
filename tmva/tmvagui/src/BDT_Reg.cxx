@@ -92,12 +92,12 @@ TMVA::StatDialogBDTReg::StatDialogBDTReg( const TGWindow* p, TString wfile, TStr
    fMain->Resize(fMain->GetDefaultSize());
    fMain->MapWindow();
 
-   fInput->Connect("ValueSet(Long_t)","StatDialogBDTReg",this, "SetItree()");
+   fInput->Connect("ValueSet(Long_t)","TMVA::StatDialogBDTReg",this, "SetItree()");
 
    fDrawButton->Connect("Clicked()","TGNumberEntry",fInput, "ValueSet(Long_t)");
-   fDrawButton->Connect("Clicked()", "StatDialogBDTReg", this, "Redraw()");   
+   fDrawButton->Connect("Clicked()", "TMVA::StatDialogBDTReg", this, "Redraw()");   
 
-   fCloseButton->Connect("Clicked()", "StatDialogBDTReg", this, "Close()");
+   fCloseButton->Connect("Clicked()", "TMVA::StatDialogBDTReg", this, "Close()");
 }
 
 void TMVA::StatDialogBDTReg::UpdateCanvases() 
@@ -179,7 +179,7 @@ void TMVA::StatDialogBDTReg::DrawNode( TMVA::DecisionTreeNode *n,
 
    t->SetBorderSize(1);
 
-   t->SetFillStyle(1);
+   t->SetFillStyle(1001);
    if      (n->GetNodeType() ==  1) { t->SetFillColor( kSigColorF ); t->SetTextColor( kSigColorT ); }
    else if (n->GetNodeType() == -1) { t->SetFillColor( kBkgColorF ); t->SetTextColor( kBkgColorT ); }
    else if (n->GetNodeType() ==  0) { t->SetFillColor( kIntColorF ); t->SetTextColor( kIntColorT ); }
@@ -312,14 +312,14 @@ void TMVA::StatDialogBDTReg::DrawTree( Int_t itree )
  
    TPaveText *whichTree = new TPaveText(0.85,ydown,0.98,yup, "NDC");
    whichTree->SetBorderSize(1);
-   whichTree->SetFillStyle(1);
+   whichTree->SetFillStyle(1001);
    whichTree->SetFillColor( TColor::GetColor( "#ffff33" ) );
    whichTree->AddText( tbuffer );
    whichTree->Draw();
 
    TPaveText *intermediate = new TPaveText(0.02,ydown,0.15,yup, "NDC");
    intermediate->SetBorderSize(1);
-   intermediate->SetFillStyle(1);
+   intermediate->SetFillStyle(1001);
    intermediate->SetFillColor( kIntColorF );
    intermediate->AddText("Intermediate Nodes");
    intermediate->SetTextColor( kIntColorT );
@@ -329,7 +329,7 @@ void TMVA::StatDialogBDTReg::DrawTree( Int_t itree )
    yup   = yup - ystep/2.5 -dy;
    TPaveText *signalleaf = new TPaveText(0.02,ydown ,0.15,yup, "NDC");
    signalleaf->SetBorderSize(1);
-   signalleaf->SetFillStyle(1);
+   signalleaf->SetFillStyle(1001);
    signalleaf->SetFillColor( kSigColorF );
    signalleaf->AddText("Leaf Nodes");
    signalleaf->SetTextColor( kSigColorT );
@@ -339,7 +339,7 @@ void TMVA::StatDialogBDTReg::DrawTree( Int_t itree )
    yup   = yup - ystep/2.5 -dy;
    TPaveText *backgroundleaf = new TPaveText(0.02,ydown,0.15,yup, "NDC");
    backgroundleaf->SetBorderSize(1);
-   backgroundleaf->SetFillStyle(1);
+   backgroundleaf->SetFillStyle(1001);
    backgroundleaf->SetFillColor( kBkgColorF );
 
    backgroundleaf->AddText("Backgr. Leaf Nodes");

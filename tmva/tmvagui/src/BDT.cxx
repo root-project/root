@@ -95,12 +95,12 @@ TMVA::StatDialogBDT::StatDialogBDT( const TGWindow* p, TString wfile, TString me
    fMain->Resize(fMain->GetDefaultSize());
    fMain->MapWindow();
 
-   fInput->Connect("ValueSet(Long_t)","StatDialogBDT",this, "SetItree()");
+   fInput->Connect("ValueSet(Long_t)","TMVA::StatDialogBDT",this, "SetItree()");
 
    fDrawButton->Connect("ValueSet(Long_t)","TGNumberEntry",fInput, "Clicked()");
-   fDrawButton->Connect("Clicked()", "StatDialogBDT", this, "Redraw()");   
+   fDrawButton->Connect("Clicked()", "TMVA::StatDialogBDT", this, "Redraw()");   
 
-   fCloseButton->Connect("Clicked()", "StatDialogBDT", this, "Close()");
+   fCloseButton->Connect("Clicked()", "TMVA::StatDialogBDT", this, "Close()");
 }
 
 void TMVA::StatDialogBDT::UpdateCanvases() 
@@ -182,7 +182,7 @@ void TMVA::StatDialogBDT::DrawNode( TMVA::DecisionTreeNode *n,
 
    t->SetBorderSize(1);
 
-   t->SetFillStyle(1);
+   t->SetFillStyle(1001);
 
 
    Double_t pur=n->GetPurity();
@@ -328,14 +328,14 @@ void TMVA::StatDialogBDT::DrawTree( Int_t itree )
  
    TPaveText *whichTree = new TPaveText(0.85,ydown,0.98,yup, "NDC");
    whichTree->SetBorderSize(1);
-   whichTree->SetFillStyle(1);
+   whichTree->SetFillStyle(1001);
    whichTree->SetFillColor( TColor::GetColor( "#ffff33" ) );
    whichTree->AddText( tbuffer );
    whichTree->Draw();
 
    TPaveText *signalleaf = new TPaveText(0.02,ydown ,0.15,yup, "NDC");
    signalleaf->SetBorderSize(1);
-   signalleaf->SetFillStyle(1);
+   signalleaf->SetFillStyle(1001);
    signalleaf->SetFillColor( kSigColorF );
    signalleaf->AddText("Pure Signal Nodes");
    signalleaf->SetTextColor( kSigColorT );
@@ -345,7 +345,7 @@ void TMVA::StatDialogBDT::DrawTree( Int_t itree )
    yup   = yup - ystep/2.5 -dy;
    TPaveText *backgroundleaf = new TPaveText(0.02,ydown,0.15,yup, "NDC");
    backgroundleaf->SetBorderSize(1);
-   backgroundleaf->SetFillStyle(1);
+   backgroundleaf->SetFillStyle(1001);
    backgroundleaf->SetFillColor( kBkgColorF );
 
    backgroundleaf->AddText("Pure Backgr. Nodes");
