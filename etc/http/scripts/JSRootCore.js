@@ -14,7 +14,7 @@
 
    JSROOT = {};
 
-   JSROOT.version = "3.4 8/04/2015";
+   JSROOT.version = "3.5 28/04/2015";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -67,6 +67,12 @@
          kDecimals      : JSROOT.BIT(11)
    };
 
+   // wrapper for console.log, avoids missing console in IE
+   JSROOT.console = function(value) {
+     if ((typeof console != 'undefined') && (typeof console.log == 'function'))
+        console.log(value);
+   }
+
    // This is part of the JSON-R code, found on
    // https://github.com/graniteds/jsonr
    // Only unref part was used, arrays are not accounted as objects
@@ -81,7 +87,6 @@
              c = parseInt(value.substr(5));
              if (!isNaN(c) && (c < dy.length)) {
                 value = dy[c];
-                // console.log("replace index " + c + "  name = " + value.fName);
              }
           }
           break;
@@ -97,7 +102,6 @@
 
                // account only objects in ref table
                if (dy.indexOf(value) === -1) {
-                  //if (dy.length<10) console.log("Add object " + value._typename + "  $ref:" + dy.length);
                   dy.push(value);
                }
 
@@ -108,7 +112,6 @@
                ks = Object.keys(value);
                for (i = 0; i < ks.length; i++) {
                   k = ks[i];
-                  //if (dy.length<10) console.log("Check field " + k);
                   value[k] = JSROOT.JSONR_unref(value[k], dy);
                }
             }
@@ -310,7 +313,6 @@
       if (window.ActiveXObject) {
 
          xhr.onreadystatechange = function() {
-            // console.log(" Ready IE request");
             if (xhr.readyState != 4) return;
 
             if (xhr.status != 200 && xhr.status != 206) {
@@ -412,7 +414,7 @@
          if (debugout)
             document.getElementById(debugout).innerHTML = str;
          else
-            console.log(str);
+            JSROOT.console(str);
       }
 
       function completeLoad() {
@@ -547,8 +549,11 @@
                      "$$$scripts/JSRootIOEvolution" + ext + ".js;";
 
       if (kind.indexOf('2d;')>=0) {
-         allfiles += '$$$scripts/d3.v3.min.js;' +
-                     '$$$scripts/JSRootPainter' + ext + ".js;" +
+         if (typeof d3 != 'undefined')
+            JSROOT.console('Reuse existing d3.js ' + d3.version + ", required 3.4.10");
+         else
+            allfiles += '$$$scripts/d3.v3.min.js;';
+         allfiles += '$$$scripts/JSRootPainter' + ext + ".js;" +
                      '$$$style/JSRootPainter' + ext + ".css;";
       }
 
@@ -581,10 +586,18 @@
       }
 
       if (need_jquery) {
-         allfiles = '$$$scripts/jquery.min.js;' +
-                    '$$$style/jquery-ui.css;' +
-                    '$$$scripts/jquery-ui.min.js;' +
-                    allfiles;
+         var has_jq = (typeof jQuery != 'undefined'), lst_jq = "";
+
+         if (has_jq)
+            JSROOT.console('Reuse existing jQuery ' + jQuery.fn.jquery + ", required 2.1.1");
+         else
+            lst_jq += "$$$scripts/jquery.min.js;";
+         if (has_jq && typeof $.ui != 'undefined')
+            JSROOT.console('Reuse existing jQuery-ui ' + $.ui.version + ", required 1.11.0");
+         else
+            lst_jq += '$$$style/jquery-ui.css;$$$scripts/jquery-ui.min.js;';
+
+         allfiles = lst_jq + allfiles;
          if (JSROOT.touches)
             allfiles += '$$$scripts/touch-punch.min.js;';
       }
@@ -2214,7 +2227,7 @@
          JSROOT.source_dir = src.substr(0, pos);
          JSROOT.source_min = src.indexOf("scripts/JSRootCore.min.js")>=0;
 
-         console.log("Set JSROOT.source_dir to " + JSROOT.source_dir);
+         JSROOT.console("Set JSROOT.source_dir to " + JSROOT.source_dir);
 
          if (JSROOT.GetUrlOption('gui', src)!=null) {
             window.onload = function() { JSROOT.BuildSimpleGUI(); }
