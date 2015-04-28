@@ -7749,11 +7749,20 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, G__Fa
     if (islower(type) && !isconst) {
       // Reference to a non-const object.
       // Note:  The type string already has the ampersand in it.
-      fprintf(fp, "%s   const %s obj = ", indent, typestring);
+       if(typestring[strlen(typestring)-1] == '&') {
+          fprintf(fp, "%s   const %s obj = ", indent, typestring);
+       } else {
+          fprintf(fp, "%s   %s obj = ", indent, typestring);
+       }
     } else {
       // Reference to a pointer or to a const object.
       // Note:  The type string already has the ampersand in it.
-      fprintf(fp, "%s   %s obj = ", indent, typestring);
+       if(typestring[strlen(typestring)-1] != '&'
+          && strncmp(typestring,"const ",6) == 0 ) {
+          fprintf(fp, "%s   %s obj = ", indent, typestring+6);
+       } else {
+          fprintf(fp, "%s   %s obj = ", indent, typestring);
+       }
     }
     if ((typenum != -1) && G__newtype.nindex[typenum]) {
        endoffunc.Format(";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s}", indent, indent, indent);

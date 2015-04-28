@@ -2231,7 +2231,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          break;
       }
 
-      (*dictSrcOut) << "         int R__n=(&R__stl) ? int(R__stl.size()) : 0;" << std::endl
+      (*dictSrcOut) << "         int R__n=(true) ? int(R__stl.size()) : 0;" << std::endl
                     << "         R__b << R__n;" << std::endl
                     << "         if(R__n) {" << std::endl;
 

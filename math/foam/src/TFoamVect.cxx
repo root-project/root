@@ -216,7 +216,6 @@ void TFoamVect::PrintList(void)
 {
 // Printout of all member vectors in the list starting from "this"
    Long_t i=0;
-   if(this == 0) return;
    TFoamVect *current=this;
    while(current != 0) {
       cout<<"vec["<<i<<"]=";

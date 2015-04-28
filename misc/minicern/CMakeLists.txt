@@ -38,6 +38,6 @@ if(WIN32)
   ROOT_LINKER_LIBRARY(minicern *.c ${FortranObjects} TYPE STATIC)
 
 else()
-  set(CMAKE_Fortran_FLAGS -fPIC)  
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fPIC")
   ROOT_LINKER_LIBRARY(minicern *.c *.f TYPE STATIC)
 endif()

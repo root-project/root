@@ -47,7 +47,7 @@
 #include "TSystem.h"
 #include "TMath.h"
 
-#define PAWC_SIZE 2000000
+#define PAWC_SIZE 4000000
 
 //  Define the names of the Fortran common blocks for the different OSs
 
@@ -58,10 +58,10 @@
 #  define hcbook hcbook_
 #  define rzcl rzcl_
 int pawc[PAWC_SIZE];
-int quest[100];
-int hcbits[37];
-int hcbook[51];
-int rzcl[11];
+int quest[112];
+int hcbits[48];
+int hcbook[64];
+int rzcl[16];
 #else
 #  define pawc   PAWC
 #  define quest  QUEST
