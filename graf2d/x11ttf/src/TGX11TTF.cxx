@@ -38,19 +38,23 @@
 /////////////////////////  xft font data //////////////////////////////////////
 class TXftFontData : public TNamed, public TRefCnt {
 public:
-   XFontStruct   *fFontStruct;   // fontstruct
+   GContext_t     fGC;           // graphics context
    XftFont       *fXftFont;      // xft font
 
-   TXftFontData(FontStruct_t font, XftFont *xftfont, const char *name) :
+   TXftFontData(GContext_t gc, XftFont *xftfont, const char *name) :
       TNamed(name, ""), TRefCnt(), fXftFont(xftfont)
    {
       SetRefCount(1);
-      fFontStruct = (XFontStruct*)font;
+      fGC = gc;
+   }
+   
+   void MapGCFont(GContext_t gc, FontStruct_t font)
+   {
+      fGC = gc; fXftFont = (XftFont *)font;
    }
 
    ~TXftFontData()
    {
-      if (fFontStruct) ((TGX11*)gVirtualX)->DeleteFont((FontStruct_t)fFontStruct);
       if (fXftFont) XftFontClose((Display*)gVirtualX->GetDisplay(), fXftFont);
    }
 };
@@ -68,26 +72,26 @@ public:
       return (TXftFontData*)fList->FindObject(name);
    }
 
-   TXftFontData *FindByStruct(FontStruct_t font)
+   TXftFontData *FindByFont(FontStruct_t font)
    {
       TIter next(fList);
       TXftFontData *d = 0;
 
       while ((d = (TXftFontData*) next())) {
-         if (d->fFontStruct == (XFontStruct*)font) {
+         if (d->fXftFont == (XftFont *)font) {
             return d;
          }
       }
       return 0;
    }
 
-   TXftFontData *FindByHandle(FontH_t id)
+   TXftFontData *FindByGC(GContext_t gc)
    {
       TIter next(fList);
       TXftFontData *d = 0;
 
       while ((d = (TXftFontData*) next())) {
-         if (d->fFontStruct->fid == id) {
+         if (d->fGC == gc) {
             return d;
          }
       }
@@ -138,14 +142,12 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
    if (!TTF::fgInit) TTF::Init();
 
    fHasTTFonts = kTRUE;
+   fHasXft = kFALSE;
    fAlign.x = 0;
    fAlign.y = 0;
 
 #ifdef R__HAS_XFT
    fXftFontHash = 0;
-   if (gEnv->GetValue("X11.UseXft", 0)) {
-      fXftFontHash = new TXftFontHash();
-   }
 #endif
 }
 
@@ -166,6 +168,17 @@ Bool_t TGX11TTF::Init(void *display)
 {
    // Initialize X11 system. Returns kFALSE in case of failure.
 
+#ifdef R__HAS_XFT
+   fXftFontHash = 0;
+   XFontStruct *fs = 0;
+   if (display) fs = XLoadQueryFont((Display *)display, "-*-helvetica-*-r-*-*-14-*-*-*-*-*-*-*");
+   if (!fs) gEnv->SetValue("X11.UseXft", 1);
+   if (display && fs) XFreeFont((Display *)display, fs);
+   if (gEnv->GetValue("X11.UseXft", 0)) {
+      fHasXft = kTRUE;
+      fXftFontHash = new TXftFontHash();
+   }
+#endif
    Bool_t r = TGX11::Init(display);
 
    if (fDepth > 8) {
@@ -569,22 +582,15 @@ FontStruct_t TGX11TTF::LoadQueryFont(const char *font_name)
    // already loaded
    if (data) {
       data->AddReference();
-      return (FontStruct_t)data->fFontStruct;
-   }
-
-   // load both X11 and Xft fonts
-   FontStruct_t font = TGX11::LoadQueryFont(font_name);
-
-   if (!font) {
-      return font;
+      return (FontStruct_t)data->fXftFont;
    }
 
    XftFont *xftfont = XftFontOpenXlfd(fDisplay, fScreenNumber, font_name);
 
-   data = new TXftFontData(font, xftfont, font_name);
+   data = new TXftFontData(0, xftfont, font_name);
    fXftFontHash->AddFont(data);
 
-   return font;
+   return (FontStruct_t)xftfont;
 }
 
 //______________________________________________________________________________
@@ -597,14 +603,74 @@ void TGX11TTF::DeleteFont(FontStruct_t fs)
       return;
    }
 
-   TXftFontData *data = fXftFontHash->FindByStruct(fs);
+   TXftFontData *data = fXftFontHash->FindByFont(fs);
 
-   if (!data) {
-      TGX11::DeleteFont(fs);
+   if (data)
+      fXftFontHash->FreeFont(data);
+}
+
+//______________________________________________________________________________
+void TGX11TTF::DeleteGC(GContext_t gc)
+{
+   // Explicitely delete a graphics context.
+
+   if (!fXftFontHash) {
+      TGX11::DeleteGC(gc);
       return;
    }
 
-   fXftFontHash->FreeFont(data);
+   TXftFontData *gcdata = fXftFontHash->FindByGC(gc);
+   if (gcdata) fXftFontHash->FreeFont(gcdata);
+   TGX11::DeleteGC(gc);
+}
+
+//______________________________________________________________________________
+FontH_t TGX11TTF::GetFontHandle(FontStruct_t fs)
+{
+   // Return handle to font described by font structure.
+
+   if (!fXftFontHash) {
+      return TGX11::GetFontHandle(fs);
+   }
+
+   return (FontH_t)fs;
+}
+
+//______________________________________________________________________________
+FontStruct_t TGX11TTF::GetGCFont(GContext_t gc)
+{
+   // Return the font associated with the graphics context gc
+
+   if (!fXftFontHash) {
+      return 0;
+   }
+
+   TXftFontData *data = fXftFontHash->FindByGC(gc);
+
+   // no XftFont data
+   if (!data) return 0;
+
+   return (FontStruct_t)data->fXftFont;
+}
+
+//______________________________________________________________________________
+void TGX11TTF::MapGCFont(GContext_t gc, FontStruct_t font)
+{
+   // Map the XftFont with the Graphics Context using it.
+   
+   if (!fXftFontHash) 
+      return;
+
+   TXftFontData *gcdata = fXftFontHash->FindByGC(gc);
+   TXftFontData *fontdata = fXftFontHash->FindByFont(font);
+
+   if (gcdata) { // && (gcdata->fXftFont == 0)) {
+      gcdata->fXftFont = (XftFont *)font;
+   }
+   else if (fontdata) {
+      TXftFontData *data = new TXftFontData(gc, (XftFont *)font, fontdata->GetName());
+      fXftFontHash->AddFont(data);
+   }
 }
 
 //______________________________________________________________________________
@@ -616,22 +682,18 @@ Int_t TGX11TTF::TextWidth(FontStruct_t font, const char *s, Int_t len)
       return TGX11::TextWidth(font, s, len);
    }
 
-   TXftFontData *data = fXftFontHash->FindByStruct(font);
+   TXftFontData *data = fXftFontHash->FindByFont(font);
 
-   if (!data) {
-      return TGX11::TextWidth(font, s, len);
-   }
+   if (!data) return 0;
 
    XftFont *xftfont = data->fXftFont;
 
-   if (!xftfont) {
-      return TGX11::TextWidth(font, s, len);
+   if (xftfont) {
+      XGlyphInfo glyph_info;
+      XftTextExtents8((Display *)fDisplay, xftfont, (XftChar8 *)s, len, &glyph_info);
+      return glyph_info.xOff;
    }
-
-   XGlyphInfo glyph_info;
-   XftTextExtents8(fDisplay, xftfont, (XftChar8 *)s, len, &glyph_info);
-
-   return glyph_info.xOff;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -644,7 +706,7 @@ void TGX11TTF::GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &ma
       return;
    }
 
-   TXftFontData *data = fXftFontHash->FindByStruct(font);
+   TXftFontData *data = fXftFontHash->FindByFont(font);
 
    if (!data) {
       TGX11::GetFontProperties(font, max_ascent, max_descent);
@@ -691,10 +753,10 @@ void TGX11TTF::DrawString(Drawable_t xwindow, GContext_t gc, Int_t x, Int_t y,
    }
 
    GCValues_t gval;
-   gval.fMask = kGCForeground | kGCBackground | kGCFont;  // retrieve GC values
+   gval.fMask = kGCForeground | kGCBackground;  // retrieve GC values
    GetGCValues(gc, gval);
 
-   TXftFontData *data = fXftFontHash->FindByHandle(gval.fFont);
+   TXftFontData *data = fXftFontHash->FindByGC(gc);
 
    // no XftFont data
    if (!data) {
@@ -751,3 +813,4 @@ void TGX11TTF::DrawString(Drawable_t xwindow, GContext_t gc, Int_t x, Int_t y,
 }
 
 #endif // R__HAS_XFT
+

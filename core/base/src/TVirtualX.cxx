@@ -1703,6 +1703,14 @@ void TVirtualX::GetGCValues(GContext_t /*gc*/, GCValues_t &gval)
 }
 
 //______________________________________________________________________________
+FontStruct_t TVirtualX::GetGCFont(GContext_t /*gc*/)
+{
+   // Return the font associated with the graphics context gc
+
+   return 0;
+}
+
+//______________________________________________________________________________
 FontStruct_t TVirtualX::GetFontStruct(FontH_t /*fh*/)
 {
    // Retrieves the associated font structure of the font specified font
@@ -2315,3 +2323,12 @@ Int_t TVirtualX::SupportsExtension(const char *) const
 
    return -1;
 }
+
+//______________________________________________________________________________
+void TVirtualX::MapGCFont(GContext_t, FontStruct_t)
+{
+   // Map the XftFont with the Graphics Context using it.
+
+}
+
+

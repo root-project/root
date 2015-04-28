@@ -624,8 +624,10 @@ void TGX11::MapGCValues(GCValues_t &gval,
          xgval.ts_y_origin = gval.fTsYOrigin;
       }
       if ((mask & kGCFont)) {
-         xmask |= GCFont;
-         xgval.font = (Font) gval.fFont;
+         if (!fHasXft) {
+            xmask |= GCFont;
+            xgval.font = (Font) gval.fFont;
+         }
       }
       if ((mask & kGCSubwindowMode)) {
          xmask |= GCSubwindowMode;
@@ -987,6 +989,8 @@ GContext_t TGX11::CreateGC(Drawable_t id, GCValues_t *gval)
 
    GC gc = XCreateGC(fDisplay, (Drawable) id, xmask, &xgval);
 
+   if (gval->fMask & kGCFont) MapGCFont((GContext_t)gc, gval->fFont);
+
    return (GContext_t) gc;
 }
 
@@ -1002,6 +1006,8 @@ void TGX11::ChangeGC(GContext_t gc, GCValues_t *gval)
       MapGCValues(*gval, xmask, xgval);
 
    XChangeGC(fDisplay, (GC) gc, xmask, &xgval);
+
+   if (gval->fMask & kGCFont) MapGCFont((GContext_t)gc, gval->fFont);
 }
 
 //______________________________________________________________________________
