@@ -36,11 +36,10 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-
-#if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
 #include "TMVA/Factory.h"
-#endif
+#include "TMVA/TMVARegGui.h"
+
 
 using namespace TMVA;
    
@@ -282,4 +281,18 @@ void TMVARegression( TString myMethodList = "" )
 
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVA::TMVARegGui( outfileName );
+}
+
+int main( int argc, char** argv )
+{
+   // Select methods (don't look at this code - not of interest)
+   TString methodList; 
+   for (int i=1; i<argc; i++) {
+      TString regMethod(argv[i]);
+      if(regMethod=="-b" || regMethod=="--batch") continue;
+      if (!methodList.IsNull()) methodList += TString(","); 
+      methodList += regMethod;
+   }
+   TMVARegression(methodList);
+   return 0;
 }

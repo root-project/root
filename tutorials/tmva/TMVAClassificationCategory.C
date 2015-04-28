@@ -33,13 +33,11 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-
-#if not defined(__CINT__) || defined(__MAKECINT__)
-// needs to be included when makecint runs (ACLIC)
 #include "TMVA/MethodCategory.h"
 #include "TMVA/Factory.h"
 #include "TMVA/Tools.h"
-#endif
+#include "TMVA/TMVAGui.h"
+
 
 // two types of category methods are implemented
 Bool_t UseOffsetMethod = kTRUE;
@@ -168,4 +166,8 @@ void TMVAClassificationCategory()
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVA::TMVAGui( outfileName );
 }
-
+int main( int argc, char** argv )
+{
+   TMVAClassificationCategory();
+   return 0;
+}

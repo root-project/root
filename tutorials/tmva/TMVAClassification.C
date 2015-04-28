@@ -25,6 +25,18 @@
  *                                                                                *
  *    root -l ./TMVAGui.C                                                         *
  *                                                                                *
+ * You can also compile and run the example with the following commands           *
+ *                                                                                *
+ *    make                                                                        *
+ *    ./TMVAClassification <Methods>                                              *
+ *                                                                                *
+ * where: <Methods> = "method1 method2"                                           *
+ *        are the TMVA classifier names                                           *
+ *                                                                                *
+ * example:                                                                       *
+ *    ./TMVAClassification Fisher LikelihoodPCA BDT                               *
+ *                                                                                *
+ * If no method given, a default set is of classifiers is used                    *
  **********************************************************************************/
 
 #include <cstdlib>
@@ -40,14 +52,11 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-
-#if not defined(__CINT__) || defined(__MAKECINT__)
-// needs to be included when makecint runs (ACLIC)
 #include "TMVA/Factory.h"
 #include "TMVA/Tools.h"
-#endif
+#include "TMVA/TMVAGui.h"
 
-void TMVAClassification( TString myMethodList = "" )
+int TMVAClassification( TString myMethodList = "" )
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
    // if you use your private .rootrc, or run from a different directory, please copy the
@@ -144,7 +153,7 @@ void TMVAClassification( TString myMethodList = "" )
             std::cout << "Method \"" << regMethod << "\" not known in TMVA under this name. Choose among the following:" << std::endl;
             for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) std::cout << it->first << " ";
             std::cout << std::endl;
-            return;
+            return 1;
          }
          Use[regMethod] = 1;
       }
@@ -485,4 +494,19 @@ void TMVAClassification( TString myMethodList = "" )
 
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVA::TMVAGui( outfileName );
+
+   return 0;
+}
+
+int main( int argc, char** argv )
+{
+   // Select methods (don't look at this code - not of interest)
+   TString methodList; 
+   for (int i=1; i<argc; i++) {
+      TString regMethod(argv[i]);
+      if(regMethod=="-b" || regMethod=="--batch") continue;
+      if (!methodList.IsNull()) methodList += TString(","); 
+      methodList += regMethod;
+   }
+   return TMVAClassification(methodList); 
 }

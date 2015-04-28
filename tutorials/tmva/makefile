@@ -28,9 +28,9 @@ INCS = $(shell root-config --incdir)
 
 default : $(BINS)
 
-$(BINS): % : %.cxx 
+$(BINS): % : %.C 
 	@echo -n "Building $@ ... "
-	$(CXX) $(CCFLAGS) $<  $(addprefix -I, $(INCS))  $(shell root-config --libs) -lMLP -lMinuit -lTreePlayer -lTMVA -lXMLIO  -lMLP -lm  -g -o $@
+	$(CXX) $(CCFLAGS) $<  $(addprefix -I, $(INCS))  $(shell root-config --libs) -lMLP -lMinuit -lTreePlayer -lTMVA -lTMVAGui -lXMLIO  -lMLP -lm  -g -o $@
 	@echo "Done"
 
 

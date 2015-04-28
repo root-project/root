@@ -20,19 +20,14 @@
 #include "TROOT.h"
 #include "TStopwatch.h"
 
-#if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
 #include "TMVA/MethodCuts.h"
-#endif
 
 using namespace TMVA;
 
 void TMVAClassificationApplication( TString myMethodList = "" ) 
 {   
-#ifdef __CINT__
-   gROOT->ProcessLine( ".O0" ); // turn off optimization in CINT
-#endif
 
    //---------------------------------------------------------------
 
@@ -405,5 +400,18 @@ void TMVAClassificationApplication( TString myMethodList = "" )
   
    delete reader;
     
-   std::cout << "==> TMVAClassificationApplication is done!" << endl << std::endl;
+   std::cout << "==> TMVAClassificationApplication is done!" << std::endl << std::endl;
 } 
+
+int main( int argc, char** argv )
+{
+   TString methodList; 
+   for (int i=1; i<argc; i++) {
+      TString regMethod(argv[i]);
+      if(regMethod=="-b" || regMethod=="--batch") continue;
+      if (!methodList.IsNull()) methodList += TString(","); 
+      methodList += regMethod;
+   }
+   TMVAClassificationApplication(methodList); 
+   return 0; 
+}

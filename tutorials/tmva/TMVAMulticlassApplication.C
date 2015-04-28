@@ -21,18 +21,13 @@
 #include "TStopwatch.h"
 #include "TH1F.h"
 
-#if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
-#endif
 
 using namespace TMVA;
 
 void TMVAMulticlassApplication( TString myMethodList = "" )
 {
-#ifdef __CINT__
-   gROOT->ProcessLine( ".O0" ); // turn off optimization in CINT
-#endif
 
    TMVA::Tools::Instance();
    
@@ -166,4 +161,18 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
    delete reader;
    
    std::cout << "==> TMVAClassificationApplication is done!" << std::endl << std::endl;
+}
+
+int main( int argc, char** argv )
+{
+   // Select methods (don't look at this code - not of interest)
+   TString methodList; 
+   for (int i=1; i<argc; i++) {
+      TString regMethod(argv[i]);
+      if(regMethod=="-b" || regMethod=="--batch") continue;
+      if (!methodList.IsNull()) methodList += TString(","); 
+      methodList += regMethod;
+   }
+   TMVAMulticlassApplication(methodList);
+   return 0;
 }

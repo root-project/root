@@ -46,14 +46,36 @@ class MyFitness : public IFitterTarget {
 };
 
 
+class MyGA2nd : public GeneticAlgorithm {
+    public:
+       MyGA2nd( IFitterTarget& target, Int_t size, vector<Interval*>& ranges ) : GeneticAlgorithm(target,
+       size, ranges ){
+       }
+
+
+       // this method has to be activated if one wants to change the behaviour of the evolution 
+       // works only with the head version
+       //void Evolution(){
+       //    fSexual = true;
+       //    if (fSexual) {
+       //       fPopulation.MakeCopies( 5 );  
+       //       fPopulation.MakeChildren();
+       //       fPopulation.NextGeneration();
+
+       //       fPopulation.Mutate( 10, 3, kTRUE, fSpread, fMirror );
+       //       fPopulation.Mutate( 40, fPopulation.GetPopulationSize()*3/4 );
+       //    } else {
+       //       fPopulation.MakeCopies( 3 );  
+       //       fPopulation.MakeMutants(100,true, 0.1, true);
+       //       fPopulation.NextGeneration();
+       //    }
+      // }
+};
 
 
 
-
-
-
-void exampleGA(){
-        std::cout << "\nEXAMPLE" << std::endl;
+void exampleGA2nd(){
+        std::cout << "\n2nd EXAMPLE" << std::endl;
         // define all the parameters by their minimum and maximum value
         // in this example 3 parameters are defined. 
         vector<Interval*> ranges;
@@ -73,36 +95,64 @@ void exampleGA(){
         // the extreme case of 1 generation and populationsize n is equal to 
         // a Monte Carlo calculation with n tries
 
-        const TString name( "exampleGA" );
-        const TString opts( "PopSize=100:Steps=30" );
-
-        GeneticFitter mg( *myFitness, name, ranges, opts);
+        MyGA2nd mg( *myFitness, 100, ranges );
        // mg.SetParameters( 4, 30, 200, 10,5, 0.95, 0.001 );
 
-        std::vector<Double_t> result;
-        Double_t estimator = mg.Run(result);
-
-         int n = 0;
-         for( std::vector<Double_t>::iterator it = result.begin(); it<result.end(); it++ ){
-             std::cout << "FACTOR " << n << " : " << (*it) << std::endl;
-             n++;
-         }
+        #define CONVSTEPS 20	   
+        #define CONVCRIT 0.0001
+        #define SCSTEPS 10
+        #define SCRATE 5
+        #define SCFACTOR 0.95
         
+        do {
+           // prepares the new generation and does evolution
+           mg.Init();
+
+           // assess the quality of the individuals
+           mg.CalculateFitness();
+
+           mg.GetGeneticPopulation().Print(0);
+//     std::cout << "---" << std::endl;
+           
+           // reduce the population size to the initially defined one
+           mg.GetGeneticPopulation().TrimPopulation();
+
+           // tricky thing: control the speed of how fast the "solution space" is searched through
+           // this function basically influences the sigma of a gaussian around the actual value
+           // of the parameter where the new value will be randomly thrown. 
+           // when the number of improvements within the last SCSTEPS 
+           // A) smaller than SCRATE: divide the preset sigma by SCFACTOR
+           // B) equal to SCRATE: do nothing
+           // C) greater than SCRATE: multiply the preset sigma by SCFACTOR
+           // if you don't know what to do, leave it unchanged or even delete this function call
+           mg.SpreadControl( SCSTEPS, SCRATE, SCFACTOR );
+
+        } while (!mg.HasConverged( CONVSTEPS, CONVCRIT ));  // converged if: fitness-improvement < CONVCRIT within the last CONVSTEPS loops
+
+        GeneticGenes* genes = mg.GetGeneticPopulation().GetGenes( 0 );
+        std::vector<Double_t> gvec;
+        gvec = genes->GetFactors();
+        int n = 0;
+        for( std::vector<Double_t>::iterator it = gvec.begin(); it<gvec.end(); it++ ){
+            std::cout << "FACTOR " << n << " : " << (*it) << std::endl;
+            n++;
+        }
 }
-
-
-
-
 
 
 
 } // namespace TMVA
 
-int main( int argc, char** argv ) 
-{
+void TMVAGAexample() {
+   
    cout << "Start Test TMVAGAexample" << endl
         << "========================" << endl
         << endl;
 
-   TMVA::exampleGA();
+   TMVA::exampleGA2nd();
+}
+
+int main( int argc, char** argv ) 
+{
+   TMVAGAexample();
 }

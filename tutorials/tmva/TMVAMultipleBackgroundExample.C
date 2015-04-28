@@ -446,13 +446,13 @@ void MaximizeSignificance(){
 
 
 // ------------------------------ Run all ----------------------------------------------------------------
-int main( int argc, char** argv ) 
+void TMVAMultipleBackgroundExample()
 {
    cout << "Start Test TMVAGAexample" << endl
         << "========================" << endl
         << endl;
 
-   gROOT->ProcessLine(".L createData.C+");
+   gROOT->ProcessLine(".L createData.C");
    gROOT->ProcessLine("create_MultipleBackground(2000)");
 
 
@@ -470,4 +470,8 @@ int main( int argc, char** argv )
    cout << "========================" << endl;
    cout << "--- maximize significance" << endl;
    TMVA::MaximizeSignificance();
+}
+
+int main( int argc, char** argv ) {
+   TMVAMultipleBackgroundExample(); 
 }

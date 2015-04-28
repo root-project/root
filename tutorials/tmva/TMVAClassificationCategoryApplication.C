@@ -136,3 +136,9 @@ void TMVAClassificationCategoryApplication()
    delete reader;
    std::cout << "==> TMVAClassificationApplication is done!" << std::endl << std::endl;
 }
+
+int main( int argc, char** argv )
+{
+   TMVAClassificationCategoryApplication();
+   return 0;
+}

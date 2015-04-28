@@ -19,10 +19,10 @@
 #include "TROOT.h"
 
 
-#ifndef __CINT__
 #include "TMVA/Tools.h"
 #include "TMVA/Factory.h"
-#endif
+#include "TMVA/TMVAMultiClassGui.h"
+
 
 using namespace TMVA;
 
@@ -88,10 +88,10 @@ void TMVAMulticlass( TString myMethodList = "" )
       input = TFile::Open( fname );
    }
    else {
-      cout << "Creating testdata...." << std::endl;
-      gROOT->ProcessLine(".L createData.C+");
+      std::cout << "Creating testdata...." << std::endl;
+      gROOT->ProcessLine(".L createData.C");
       gROOT->ProcessLine("create_MultipleBackground(2000)");
-      cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<endl;
+      std::cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<std::endl;
       input = TFile::Open( fname );
    }
    if (!input) {
@@ -145,3 +145,18 @@ void TMVAMulticlass( TString myMethodList = "" )
    
    
 }
+
+int main( int argc, char** argv )
+{
+   // Select methods (don't look at this code - not of interest)
+   TString methodList; 
+   for (int i=1; i<argc; i++) {
+      TString regMethod(argv[i]);
+      if(regMethod=="-b" || regMethod=="--batch") continue;
+      if (!methodList.IsNull()) methodList += TString(","); 
+      methodList += regMethod;
+   }
+   TMVAMulticlass(methodList);
+   return 0;
+}
+
