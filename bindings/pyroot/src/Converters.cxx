@@ -1165,7 +1165,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
       h = gConvFactories.find( "void*" );
    }
 
-   if ( ! result and cpd == "&&" )                 // moves
+   if ( ! result && cpd == "&&" )                  // moves
       result = new TNotImplementedConverter();
 
    if ( ! result && h != gConvFactories.end() )
