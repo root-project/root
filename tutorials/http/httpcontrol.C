@@ -30,8 +30,8 @@ void httpcontrol()
    THttpServer* serv = new THttpServer("http:8080");
 
    // One could specify location of newer version of JSROOT
-   // serv->SetJSROOT("https://root.cern.ch/js/3.3/");
-   // serv->SetJSROOT("http://web-docs.gsi.de/~linev/js/3.3/");
+   // serv->SetJSROOT("https://root.cern.ch/js/3.5/");
+   // serv->SetJSROOT("http://web-docs.gsi.de/~linev/js/3.5/");
 
    // register histograms
    serv->Register("/", hpx);
@@ -45,16 +45,16 @@ void httpcontrol()
    serv->SetItemField("/","_drawopt","col");
 
    // register simple start/stop commands
-   serv->RegisterCommand("/Start", "bFillHist=kTRUE;", "button;/rootsys/icons/ed_execute.png");
-   serv->RegisterCommand("/Stop",  "bFillHist=kFALSE;", "button;/rootsys/icons/ed_interrupt.png");
+   serv->RegisterCommand("/Start", "bFillHist=kTRUE;", "button;rootsys/icons/ed_execute.png");
+   serv->RegisterCommand("/Stop",  "bFillHist=kFALSE;", "button;rootsys/icons/ed_interrupt.png");
 
    // one could hide commands and let them appear only as buttons
    serv->Hide("/Start");
    serv->Hide("/Stop");
 
    // register commands, invoking object methods
-   serv->RegisterCommand("/ResetHPX","/hpx/->Reset()", "button;/rootsys/icons/ed_delete.png");
-   serv->RegisterCommand("/ResetHPXPY","/hpxpy/->Reset()", "button;/rootsys/icons/bld_delete.png");
+   serv->RegisterCommand("/ResetHPX","/hpx/->Reset()", "button;rootsys/icons/ed_delete.png");
+   serv->RegisterCommand("/ResetHPXPY","/hpxpy/->Reset()", "button;rootsys/icons/bld_delete.png");
 
 
    // create debug text element, use MathJax - works only on Firefox
