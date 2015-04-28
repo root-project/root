@@ -136,25 +136,25 @@ void TMVA::TMVARegGui( const char* fName )
 
    RegGuiActionButton( cbar,  
                  Form( "(%ia) Regression Output Deviation versus Target (test sample)", ++ic ),
-                 Form( "TMVA::deviations(\"%s\",0,kTRUE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",TMVA::kMVAType,kTRUE)", fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
                  Form( "(%ib) Regression Output Deviation versus Target (training sample)", ic ),
-                 Form( "TMVA::deviations(\"%s\",3,kTRUE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",TMVA::kCompareType,kTRUE)", fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
                  Form( "(%ic) Regression Output Deviation versus Input Variables (test sample)", ic ),
-                 Form( "TMVA::deviations(\"%s\",0,kFALSE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",TMVA::kMVAType,kFALSE)", fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
                  Form( "   (%id) Regression Output Deviation versus Input Variables (training sample)   ", ic ),
-                 Form( "TMVA::deviations(\"%s\",3,kFALSE)", fName ),
+                 Form( "TMVA::deviations(\"%s\",TMVA::kCompareType,kFALSE)", fName ),
                  "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                  buttonType, defaultRequiredClassifier );
 
