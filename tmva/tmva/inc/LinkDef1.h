@@ -7,7 +7,6 @@
 
 #pragma link C++ nestedclass;
 
-#pragma link C++ namespace TMVA;
 
 #pragma link C++ class TMVA::Configurable+;
 #pragma link C++ class TMVA::Event+;

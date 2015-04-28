@@ -295,7 +295,7 @@ ifneq ($(ARCH),win32)
 MODULES      += net/rpdutils net/rootd proof/proofd proof/pq2 proof/proofbench
 endif
 ifeq ($(BUILDTMVA),yes)
-MODULES      += tmva math/genetic
+MODULES      += tmva/tmva tmva/tmvagui math/genetic
 endif
 ifeq ($(HASXRD),yes)
 ifeq ($(BUILDXRDCLT),no)
@@ -325,7 +325,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/netx net/netxng net/alien \
                 proof/proofd proof/proofx proof/pq2 graf3d/x3d net/davix \
                 sql/oracle io/xmlparser math/mathmore \
-                tmva math/genetic io/hdfs graf2d/fitsio roofit/roofitcore \
+                tmva/tmva tmva/tmvagui math/genetic io/hdfs graf2d/fitsio roofit/roofitcore \
                 roofit/roofit roofit/roostats roofit/histfactory \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/geocad geom/gdml graf3d/eve net/glite misc/memstat \

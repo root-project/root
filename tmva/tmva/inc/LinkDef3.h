@@ -7,7 +7,6 @@
 
 #pragma link C++ nestedclass;
 
-#pragma link C++ namespace TMVA;
 
 // other classes
 #pragma link C++ class TMVA::Config+;

@@ -23,6 +23,15 @@ namespace TMVA{
                       const TString& buttonType, TString requiredKey = ""); 
 
    // main GUI
-   void TMVAGui( const char* fName = "TMVA.root" ); 
+   void TMVAGui( const char* fName = "TMVA.root" );
+
+   struct  TMVAGUI {
+      TMVAGUI(TString name = "TMVA.root" ) {
+         TMVA::TMVAGui(name.Data());
+      }
+   };
+   
 }
+
+
 #endif
