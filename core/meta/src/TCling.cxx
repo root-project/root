@@ -126,6 +126,7 @@
 
 #ifndef R__WIN32
 #include <cxxabi.h>
+#define R__DLLEXPORT
 #endif
 #include <limits.h>
 #include <stdio.h>
@@ -168,17 +169,11 @@ extern "C" {
 #include "Windows4Root.h"
 #include <Psapi.h>
 #undef GetModuleFileName
-#define RTLD_DEFAULT ((void *) -2)
+#define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
 #define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
-#define dlopen(library_name, flags) ::LoadLibraryEx(library_name, NULL, DONT_RESOLVE_DLL_REFERENCES)
+#define dlopen(library_name, flags) ::LoadLibrary(library_name)
 #define dlclose(library) ::FreeLibrary((HMODULE)library)
-char *dlerror() {
-   static __declspec(thread) char Msg[1000];
-   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
-                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
-                 sizeof(Msg), NULL);
-   return Msg;
-}
+#define R__DLLEXPORT __declspec(dllexport)
 #endif
 #endif
 
@@ -520,13 +515,13 @@ extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
    return ((TClingClassInfo*)obj->IsA()->GetClassInfo())->GetDecl();
 }
 
-extern "C" TInterpreter *CreateInterpreter(void* interpLibHandle)
+extern "C" R__DLLEXPORT TInterpreter *CreateInterpreter(void* interpLibHandle)
 {
    cling::DynamicLibraryManager::ExposeHiddenSharedLibrarySymbols(interpLibHandle);
    return new TCling("C++", "cling C++ Interpreter");
 }
 
-extern "C" void DestroyInterpreter(TInterpreter *interp)
+extern "C" R__DLLEXPORT void DestroyInterpreter(TInterpreter *interp)
 {
    delete interp;
 }
@@ -1157,7 +1152,7 @@ static const char *FindLibraryName(void (*func)())
    }
 
    HMODULE hMod = (HMODULE) mbi.AllocationBase;
-   TTHREAD_TLS_ARRAY(char, moduleName, MAX_PATH);
+   TTHREAD_TLS_ARRAY(char, MAX_PATH, moduleName);
 
    if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
    {

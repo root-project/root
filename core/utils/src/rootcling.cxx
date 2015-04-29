@@ -8,8 +8,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifdef _MSC_VER
+  #define R__DLLEXPORT __declspec(dllexport)
+#else
+  #define R__DLLEXPORT
+#endif
+
 extern "C" {
-   void usedToIdentifyRootClingByDlSym() {};
+   R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {};
 }
 
 const char *shortHelp =
