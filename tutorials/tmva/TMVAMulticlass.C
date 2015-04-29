@@ -33,11 +33,11 @@ void TMVAMulticlass( TString myMethodList = "" )
    TMVA::Tools::Instance();
 
    // to get access to the GUI and all tmva macros
-   TString tmva_dir(TString(gRootDir) + "/tmva");
-   if(gSystem->Getenv("TMVASYS"))
-      tmva_dir = TString(gSystem->Getenv("TMVASYS"));
-   gROOT->SetMacroPath(tmva_dir + "/test/:" + gROOT->GetMacroPath() );
-   gROOT->ProcessLine(".L TMVAMultiClassGui.C");
+   // TString tmva_dir(TString(gRootDir) + "/tmva");
+   // if(gSystem->Getenv("TMVASYS"))
+   //    tmva_dir = TString(gSystem->Getenv("TMVASYS"));
+   // gROOT->SetMacroPath(tmva_dir + "/test/:" + gROOT->GetMacroPath() );
+   // gROOT->ProcessLine(".L TMVAMultiClassGui.C");
 
    
    //---------------------------------------------------------------

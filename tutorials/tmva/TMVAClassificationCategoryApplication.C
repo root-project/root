@@ -77,7 +77,6 @@ void TMVAClassificationCategoryApplication()
    // in this example, there is a toy tree with signal and one with background events
    // we'll later on use only the "signal" events for the test in this example.
    //
-   TString fname( "" );
    TString fname = TString(gSystem->DirName(__FILE__) ) + "/data/";
    if (UseOffsetMethod) fname += "toy_sigbkg_categ_offset.root";
    else                 fname += "toy_sigbkg_categ_varoff.root";
