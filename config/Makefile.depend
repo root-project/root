@@ -64,7 +64,7 @@ TMVALIBDEPM            = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) \
                          $(GRAFLIB) $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB) \
                          $(MINUITLIB) $(MATHCORELIB) $(XMLLIB)
 TMVAGUILIBDEPM         = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) \
-                         $(GUILIB) $(GRAFLIB) $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB) \
+                         $(GUILIB) $(GRAFLIB) $(GPADLIB) $(TREEPLAYERLIB) $(TREEVIEWERLIB) $(MLPLIB) \
                          $(MINUITLIB) $(MATHCORELIB) $(XMLLIB) $(TMVALIB)
 GENETICLIBDEPM         = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) \
                          $(GRAFLIB) $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB) \
@@ -331,7 +331,7 @@ TMVALIBEXTRA            = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libMinuit.lib lib/libMathCore.lib lib/libXMLIO.lib
 TMVAGUILIBEXTRA         = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGui.lib lib/libGraf.lib lib/libGpad.lib \
-                          lib/libTreePlayer.lib  lib/libMLP.lib \
+                          lib/libTreePlayer.lib lib/libTreeViewer.lib lib/libMLP.lib \
                           lib/libMinuit.lib lib/libMathCore.lib lib/libXMLIO.lib lib/libTMVA.lib
 GENETICLIBEXTRA         = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGraf.lib lib/libGpad.lib \
@@ -501,9 +501,9 @@ MLPLIBEXTRA             = -Llib -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMathCore
 SPECTRUMLIBEXTRA        = -Llib -lHist -lMatrix
 TMVALIBEXTRA            = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
-                          -lTreePlayer  -lMLP -lMinuit -lMathCore -lXMLIO
+                          -lTreePlayer -lMLP -lMinuit -lMathCore -lXMLIO
 TMVAGUILIBEXTRA         = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
-                          -lGui -lTreePlayer -lMLP -lMinuit -lMathCore -lXMLIO -lTMVA
+                          -lGui -lTreePlayer -lTreeViewer -lMLP -lMinuit -lMathCore -lXMLIO -lTMVA
 GENETICLIBEXTRA         = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMLP -lMinuit -lMathCore -lXMLIO -lTMVA
 SPLOTLIBEXTRA           = -Llib -lMatrix -lHist -lTree -lTreePlayer -lGraf3d \
