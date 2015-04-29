@@ -16,7 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && (_MSC_VER < 1800)
 // Visual C++ 2008 doesn't have stdint.h
 typedef __int8 int8_t;
 typedef __int16 int16_t;
