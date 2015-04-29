@@ -198,7 +198,7 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
 Bool_t TProtoClass::FillTClass(TClass* cl) {
    // Move data from this TProtoClass into cl.
 
-   if (cl->fRealData || cl->fBase || cl->fData || cl->fEnums
+   if (cl->fRealData || cl->fBase || cl->fData || cl->fEnums.load()
        || cl->fSizeof != -1 || cl->fCanSplit >= 0
        || cl->fProperty != (-1) ) {
       if (cl->fProperty & kIsNamespace){
@@ -284,7 +284,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
       }
       ((TListOfDataMembers*)cl->fData)->SetClass(cl);
    }
-   if (cl->fEnums) {
+   if (cl->fEnums.load()) {
       for (auto en: *cl->fEnums) {
          ((TEnum*)en)->SetClass(cl);
       }
