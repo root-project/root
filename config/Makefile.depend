@@ -501,9 +501,9 @@ MLPLIBEXTRA             = -Llib -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMathCore
 SPECTRUMLIBEXTRA        = -Llib -lHist -lMatrix
 TMVALIBEXTRA            = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
-                          -lTreePlayer -lTreeViewer -lMLP -lMinuit -lMathCore -lXMLIO
+                          -lTreePlayer  -lMLP -lMinuit -lMathCore -lXMLIO
 TMVAGUILIBEXTRA         = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
-                          -lGui -lTreePlayer -lTreeViewer -lMLP -lMinuit -lMathCore -lXMLIO -lTMVA
+                          -lGui -lTreePlayer -lMLP -lMinuit -lMathCore -lXMLIO -lTMVA
 GENETICLIBEXTRA         = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMLP -lMinuit -lMathCore -lXMLIO -lTMVA
 SPLOTLIBEXTRA           = -Llib -lMatrix -lHist -lTree -lTreePlayer -lGraf3d \
