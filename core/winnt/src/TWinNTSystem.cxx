@@ -1195,7 +1195,7 @@ const char *TWinNTSystem::BaseName(const char *name)
       char *cp;
       char *bslash = (char *)strrchr(&symbol[idx],'\\');
       char *rslash = (char *)strrchr(&symbol[idx],'/');
-      if (cp = max(rslash, bslash)) {
+      if (cp = std::max(rslash, bslash)) {
          //return StrDup(++cp);
          return ++cp;
       }
@@ -2349,7 +2349,7 @@ const char *TWinNTSystem::DirName(const char *pathname)
       if (strchr(pathname, '/') || strchr(pathname, '\\')) {
          const char *rslash = strrchr(pathname, '/');
          const char *bslash = strrchr(pathname, '\\');
-         const char *r = max(rslash, bslash);
+         const char *r = std::max(rslash, bslash);
          const char *ptr = pathname;
          while (ptr <= r) {
             if (*ptr == ':') {
