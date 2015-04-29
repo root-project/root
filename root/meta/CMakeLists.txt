@@ -28,7 +28,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-drawing
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 ROOTTEST_ADD_TEST(roottest-root-meta-namespaceconflict
-                  MACRO namespaceconflict.C+)
+                  MACRO execnamespaceconflict.C+)
 
 
 ROOTTEST_ADD_TESTDIRS()
