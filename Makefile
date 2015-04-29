@@ -1360,16 +1360,17 @@ runtimedirs:
 	$(RSYNC) \
 		--include '*.py' \
 		--exclude '*' \
-		$(ROOT_SRCDIR)/geom/gdml/ geom/gdml ; \
-	echo "Rsync'ing $(ROOT_SRCDIR)/tmva/test/*.C, *.gif, *.png..."; \
-   mkdir -p tmva/test; \
-	$(RSYNC) \
-		--include '*.C' \
-		--include '*.gif' \
-		--include '*.png' \
-		--include 'README' \
-		--exclude '*' \
-		$(ROOT_SRCDIR)/tmva/test/ tmva/test ;
+		$(ROOT_SRCDIR)/geom/gdml/ geom/gdml ; 
+#		$(ROOT_SRCDIR)/geom/gdml/ geom/gdml ; \
+#	echo "Rsync'ing $(ROOT_SRCDIR)/tmva/test/*.C, *.gif, *.png..."; \
+#   mkdir -p tmva/test; \
+#	$(RSYNC) \
+#		--include '*.C' \
+#		--include '*.gif' \
+#		--include '*.png' \
+#		--include 'README' \
+#		--exclude '*' \
+#		$(ROOT_SRCDIR)/tmva/test/ tmva/test ;
 endif
 
 showbuild:

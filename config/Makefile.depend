@@ -327,11 +327,11 @@ MLPLIBEXTRA             = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
 SPECTRUMLIBEXTRA        = lib/libHist.lib lib/libMatrix.lib
 TMVALIBEXTRA            = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGraf.lib lib/libGpad.lib \
-                          lib/libTreePlayer.lib lib/libTreeViewer.lib lib/libMLP.lib \
+                          lib/libTreePlayer.lib  lib/libMLP.lib \
                           lib/libMinuit.lib lib/libMathCore.lib lib/libXMLIO.lib
 TMVAGUILIBEXTRA         = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGui.lib lib/libGraf.lib lib/libGpad.lib \
-                          lib/libTreePlayer.lib lib/libTreeViewer.lib lib/libMLP.lib \
+                          lib/libTreePlayer.lib  lib/libMLP.lib \
                           lib/libMinuit.lib lib/libMathCore.lib lib/libXMLIO.lib lib/libTMVA.lib
 GENETICLIBEXTRA         = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGraf.lib lib/libGpad.lib \
