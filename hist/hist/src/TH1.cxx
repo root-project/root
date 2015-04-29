@@ -2520,7 +2520,7 @@ TObject* TH1::Clone(const char* newname) const
    if(fFunctions) {
       obj->fFunctions = (TList*)fFunctions->Clone();
    }
-   if(newname and strlen(newname) ) {
+   if(newname && strlen(newname) ) {
       obj->SetName(newname);
    }
    return obj;
