@@ -78,9 +78,9 @@ void TMVAClassificationCategory()
 
    // Load the signal and background event samples from ROOT trees
    TFile *input(0);
-   TString fname( "" );
-   if (UseOffsetMethod) fname = "data/toy_sigbkg_categ_offset.root";
-   else                 fname = "data/toy_sigbkg_categ_varoff.root";
+   TString fname = TString(gSystem->DirName(__FILE__) ) + "/data/";
+   if (UseOffsetMethod) fname += "toy_sigbkg_categ_offset.root";
+   else                 fname += "toy_sigbkg_categ_varoff.root";
    if (!gSystem->AccessPathName( fname )) {
       // first we try to find tmva_example.root in the local directory
       std::cout << "--- TMVAClassificationCategory: Accessing " << fname << std::endl;
