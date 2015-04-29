@@ -512,9 +512,9 @@ void TMVA::RuleFit::FillCut(TH2F* h2, const Rule *rule, Int_t vind)
    Int_t binmin=(dormin ? h2->FindBin(rmin,0.5):firstbin);
    Int_t binmax=(dormax ? h2->FindBin(rmax,0.5):lastbin);
    Int_t fbin;
-   Double_t xbinw = h2->GetBinWidth(firstbin);
-   Double_t fbmin = h2->GetBinLowEdge(binmin-firstbin+1);
-   Double_t lbmax = h2->GetBinLowEdge(binmax-firstbin+1)+xbinw;
+   Double_t xbinw = h2->GetXaxis()->GetBinWidth(firstbin);
+   Double_t fbmin = h2->GetXaxis()->GetBinLowEdge(binmin-firstbin+1);
+   Double_t lbmax = h2->GetXaxis()->GetBinLowEdge(binmax-firstbin+1)+xbinw;
    Double_t fbfrac = (dormin ? ((fbmin+xbinw-rmin)/xbinw):1.0);
    Double_t lbfrac = (dormax ? ((rmax-lbmax+xbinw)/xbinw):1.0);
    Double_t f;
@@ -532,7 +532,7 @@ void TMVA::RuleFit::FillCut(TH2F* h2, const Rule *rule, Int_t vind)
       else {
          f = 1.0;
       }
-      xc = h2->GetBinCenter(fbin);
+      xc = h2->GetXaxis()->GetBinCenter(fbin);
       //
       if (fVisHistsUseImp) {
          val = rule->GetImportance();
@@ -562,7 +562,7 @@ void TMVA::RuleFit::FillLin(TH2F* h2,Int_t vind)
       val = fRuleEnsemble.GetLinCoefficients(vind);
    }
    for (Int_t bin = firstbin; bin<lastbin+1; bin++) {
-      xc = h2->GetBinCenter(bin);
+      xc = h2->GetXaxis()->GetBinCenter(bin);
       h2->Fill(xc,0.5,val);
    }
 }
