@@ -452,7 +452,8 @@ void TMVAMultipleBackgroundExample()
         << "========================" << endl
         << endl;
 
-   gROOT->ProcessLine(".L createData.C");
+   TString createDataMacro = TString(gSystem->DirName(__FILE__) ) + "/createData.C";
+   gROOT->ProcessLine(TString::Format(".L %s",createDataMacro.Data()));
    gROOT->ProcessLine("create_MultipleBackground(2000)");
 
 

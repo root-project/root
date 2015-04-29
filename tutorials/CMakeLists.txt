@@ -125,6 +125,9 @@ set(gui_veto fit/fitpanel_playback.C
              tree/tvdemo.C
              eve/*.C)
 
+#---These do not need to run for TMVA
+set (tmva_veto tmva/createData.C)
+
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   htmlex.C
@@ -160,6 +163,7 @@ set(all_veto hsimple.C
              ${unuran_veto}
              ${xml_veto}
              ${fitsio_veto}
+	     ${tmva_veto}
              ${mathmore_veto}
              ${fftw3_veto}
              ${opengl_veto}
@@ -228,6 +232,16 @@ foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBay
                OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands)
   set(roostats-${tname}-depends tutorial-roostats-StandardProfileLikelihoodDemo)
 endforeach()
+
+#--dependency for TMVA tutorials
+set (tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification)
+set (tmva-TMVAClassificationCategory-depends tutorial-tmva-TMVAClassification)
+set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassification)
+set (tmva-TMVAMulticlass-depends tutorial-tmva-TMVAMultipleBackgroundExample)
+set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass)
+set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass)
+set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
+
 
 #---Loop over all tutorials and define the corresponding test---------
 
