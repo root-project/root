@@ -482,6 +482,19 @@ endif
 SOFLAGS       = -shared
 endif
 
+ifeq ($(ARCH),linuxarm64)
+
+CXX          ?= g++
+LD           ?= g++
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS      += -g -Wall -fPIC
+else
+CXXFLAGS      += -O -Wall -fPIC
+endif
+SOFLAGS       = -shared
+endif
+
+
 ifeq ($(ARCH),linuxicc)
 # Linux with Intel icc compiler in 32-bit mode
 CC ?= icc
