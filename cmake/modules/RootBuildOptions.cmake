@@ -88,6 +88,12 @@ else()
  set(vc_defvalue OFF)
 endif()
 
+# VC does not support yet Arm processors.
+if (ROOT_ARCHITECTURE STREQUAL "linuxarm64")
+  set(vc_defvalue OFF)
+endif()
+
+
 ROOT_BUILD_OPTION(afdsmgrd OFF "Dataset manager for PROOF-based analysis facilities")
 ROOT_BUILD_OPTION(afs OFF "AFS support, requires AFS libs and objects")
 ROOT_BUILD_OPTION(alien ON "AliEn support, requires libgapiUI from ALICE")
