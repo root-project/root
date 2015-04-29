@@ -73,9 +73,9 @@
 #include <io.h>
 #include "Windows4Root.h"
 #include <Psapi.h>
-#define RTLD_DEFAULT ((void *) -2)
+#define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
 #define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
-#define dlopen(library_name, flags) ::LoadLibraryEx(library_name, NULL, DONT_RESOLVE_DLL_REFERENCES)
+#define dlopen(library_name, flags) ::LoadLibrary(library_name)
 #define dlclose(library) ::FreeLibrary((HMODULE)library)
 char *dlerror() {
    static char Msg[1000];
@@ -1380,11 +1380,11 @@ TObject *TROOT::GetGeometry(const char *name) const
 //______________________________________________________________________________
 TCollection *TROOT::GetListOfEnums(Bool_t load /* = kTRUE */)
 {
-   if(!fEnums) {
+   if(!fEnums.load()) {
       R__LOCKGUARD2(gROOTMutex);
       // Test again just in case, another thread did the work while we were
       // waiting.
-      if (!fEnums) fEnums = new TListOfEnumsWithLock(0);
+      if (!fEnums.load()) fEnums = new TListOfEnumsWithLock(0);
    }
    if (load) {
       R__LOCKGUARD2(gROOTMutex);
