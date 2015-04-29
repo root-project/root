@@ -89,9 +89,10 @@ else()
 endif()
 
 # VC does not support yet Arm processors.
-if (ROOT_ARCHITECTURE STREQUAL "linuxarm64")
-  set(vc_defvalue OFF)
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+   set(vc_defvalue OFF)
 endif()
+
 
 
 ROOT_BUILD_OPTION(afdsmgrd OFF "Dataset manager for PROOF-based analysis facilities")
