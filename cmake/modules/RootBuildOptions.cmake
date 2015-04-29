@@ -91,6 +91,7 @@ endif()
 # VC does not support yet Arm processors.
 if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
    set(vc_defvalue OFF)
+   set(unuran_defvalue OFF)
 endif()
 
 
