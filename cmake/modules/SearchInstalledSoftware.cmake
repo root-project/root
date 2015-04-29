@@ -82,13 +82,13 @@ if(NOT builtin_lzma)
   endif()
 endif()
 if(builtin_lzma)
-  set(lzma_version 5.0.3)
+  set(lzma_version 5.2.1)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     ExternalProject_Add(
      LZMA
      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
-     URL_MD5  65693dc257802b6778c28ed53ecca678
+#      URL_MD5  65693dc257802b6778c28ed53ecca678
      PREFIX LZMA
      INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
@@ -106,7 +106,7 @@ if(builtin_lzma)
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
-      URL_MD5 858405e79590e9b05634c399497f4ba7
+      URL_MD5 3e44c766c3fb4f19e348e646fcd5778a
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --with-pic --disable-shared CFLAGS=${LZMA_CFLAGS}
       BUILD_IN_SOURCE 1)
