@@ -93,7 +93,7 @@ ROOT_GENERATE_DICTIONARY(G__Win32gdk TGWin32.h TGWin32GL.h MODULE Win32gdk LINKD
 # The library itself
 #
 
-ROOT_LINKER_LIBRARY(Win32gdk *.cxx *.c G__Win32gdk.cxx LIBRARIES Cint Core Graf ${FREETYPE_LIBRARIES} 
+ROOT_LINKER_LIBRARY(Win32gdk *.cxx *.c G__Win32gdk.cxx LIBRARIES Cling Core Graf ${FREETYPE_LIBRARIES} 
 					${gdklib} ${gliblib} Glu32.lib Opengl32.lib)
 
 add_dependencies(Win32gdk GDKLIB glib)
