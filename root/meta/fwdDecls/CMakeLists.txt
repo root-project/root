@@ -9,7 +9,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-fwdDecls-clingFwdDeclExample
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(fwdDeclarations fwdDeclarations.h SELECTION fwdDeclarations_selection.xml NO_ROOTMAP)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-fwdDecl-fwdDeclarations
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-fwdDecls-fwdDeclarations
                   MACRO execfwdDeclarations.C
                   OUTREF execfwdDeclarations.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
