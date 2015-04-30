@@ -295,7 +295,6 @@ inline void QtGContext::Copy(const QtGContext &dst, Mask_t rootMask)
 //______________________________________________________________________________
 const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
 {
-   if (!&gval) return *this;
    // Fill this object from the "GCValues_t" structure
    // map GCValues_t to QtGContext
    Mask_t rootMask = gval.fMask;

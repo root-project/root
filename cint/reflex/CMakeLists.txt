@@ -14,6 +14,9 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Reflex/Builder/*.h )
   list(REMOVE_ITEM headers Reflex/Builder/ReflexBuilder.h Reflex/Reflex.h 
                            Reflex/SharedLibrary.h Reflex/DictionaryGenerator.h)
+
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-potentially-evaluated-expression)
+
   #---Rootcint dictionary ---------------------------------------------------
   ROOT_GENERATE_DICTIONARY(G__Reflex ${headers} LINKDEF LinkDef.h OPTIONS -p)
   ROOT_GENERATE_ROOTMAP(ReflexDict LINKDEF LinkDef.h DEPENDENCIES Reflex )
