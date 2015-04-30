@@ -17,4 +17,4 @@ namespace Test {
 
 using namespace Test;
 
-void namespaceconflict(){};
+void execnamespaceconflict(){};
