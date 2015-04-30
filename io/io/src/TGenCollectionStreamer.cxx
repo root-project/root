@@ -58,7 +58,7 @@ TGenCollectionStreamer::~TGenCollectionStreamer()
 TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const
 {
    // Virtual copy constructor.
-   if (!fValue) Initialize(kFALSE);
+   if (!fValue.load()) Initialize(kFALSE);
    return new TGenCollectionStreamer(*this);
 }
 
@@ -1265,7 +1265,7 @@ void TGenCollectionStreamer::ReadBufferDefault(TBuffer &b, void *obj, const TCla
    fReadBufferFunc = &TGenCollectionStreamer::ReadBufferGeneric;
 
    // We will need this later, so let's make sure it is initialized.
-   if ( !fValue ) InitializeEx(kFALSE);
+   if ( !fValue.load() ) InitializeEx(kFALSE);
    if (!GetFunctionCreateIterators()) {
       Fatal("TGenCollectionStreamer::ReadBufferDefault","No CreateIterators function for %s",fName.c_str());
    }
