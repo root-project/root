@@ -58,11 +58,11 @@ get_filename_component(ROOT_BINARY_DIR  "${ROOTSYS}/bin" ABSOLUTE)
 get_filename_component(ROOT_LIBRARY_DIR "${ROOTSYS}/lib" ABSOLUTE)
 
 # Detect bitness.
-if(CMAKE_SYSTEM_PROCESSOR MATCHES amd64.*|x86_64.*)
-  set(X86_64 1)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES amd64.*|x86_64.*|aarch64.*)
+  set(64BIT 1)
   message("-- Check for bitness: Found 64 bit architecture.")
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES i686.*|i386.*|x86.*)
-  set(X86 1)
+  set(32BIT 1)
   message("-- Check for bitness: Found 32 bit architecture.")
 endif()
 
