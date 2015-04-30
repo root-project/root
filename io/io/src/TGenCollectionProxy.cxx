@@ -750,11 +750,14 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
       case ROOT::kSTLforwardlist:
          return new TGenListProxy(*this);
       case ROOT::kSTLmap:
+      case ROOT::kSTLunorderedmap:
       case ROOT::kSTLmultimap:
+      case ROOT::kSTLunorderedmultimap:
          return new TGenMapProxy(*this);
       case ROOT::kSTLset:
       case ROOT::kSTLunorderedset:
       case ROOT::kSTLmultiset:
+      case ROOT::kSTLunorderedmultiset:
          return new TGenSetProxy(*this);
       default:
          return new TGenCollectionProxy(*this);
@@ -842,10 +845,13 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
          fSTL_type = TClassEdit::STLKind(inside[0].c_str());
          switch ( fSTL_type ) {
             case ROOT::kSTLmap:
+            case ROOT::kSTLunorderedmap:
             case ROOT::kSTLmultimap:
+            case ROOT::kSTLunorderedmultimap:
             case ROOT::kSTLset:
             case ROOT::kSTLunorderedset:
             case ROOT::kSTLmultiset:
+            case ROOT::kSTLunorderedmultiset:
             case ROOT::kSTLbitset: // not really an associate container but it has no real iterator.
                fProperties |= kIsAssociative;
                break;
@@ -854,7 +860,9 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
          int slong = sizeof(void*);
          switch ( fSTL_type ) {
             case ROOT::kSTLmap:
+            case ROOT::kSTLunorderedmap:
             case ROOT::kSTLmultimap:
+            case ROOT::kSTLunorderedmultimap:
                nam = "pair<"+inside[1]+","+inside[2];
                nam += (nam[nam.length()-1]=='>') ? " >" : ">";
                newfValue = R__CreateValue(nam, silent);
@@ -1005,8 +1013,11 @@ void* TGenCollectionProxy::At(UInt_t idx)
       case ROOT::kSTLset:
       case ROOT::kSTLunorderedset:
       case ROOT::kSTLmultiset:
+      case ROOT::kSTLunorderedmultiset:
       case ROOT::kSTLmap:
+      case ROOT::kSTLunorderedmap:
       case ROOT::kSTLmultimap:
+      case ROOT::kSTLunorderedmultimap:
          if ( fEnv->fUseTemp ) {
             return (((char*)fEnv->fTemp)+idx*fValDiff);
          }
@@ -1093,8 +1104,11 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
          case ROOT::kSTLset:
          case ROOT::kSTLunorderedset:
          case ROOT::kSTLmultiset:
+         case ROOT::kSTLunorderedmultiset:
          case ROOT::kSTLmap:
-         case ROOT::kSTLmultimap: {
+         case ROOT::kSTLunorderedmap:
+         case ROOT::kSTLmultimap:
+         case ROOT::kSTLunorderedmultimap:{
             if ( (fProperties & kNeedDelete) )
                Clear("force");
             else

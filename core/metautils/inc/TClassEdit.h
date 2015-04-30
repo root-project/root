@@ -91,18 +91,21 @@ namespace TClassEdit {
    };
 
    enum ESTLType {
-      kNotSTL       = ROOT::kNotSTL,
-      kVector       = ROOT::kSTLvector,
-      kList         = ROOT::kSTLlist,
-      kForwardist   = ROOT::kSTLforwardlist,
-      kDeque        = ROOT::kSTLdeque,
-      kMap          = ROOT::kSTLmap,
-      kMultiMap     = ROOT::kSTLmultimap,
-      kSet          = ROOT::kSTLset,
-      kUnorderedSet = ROOT::kSTLunorderedset,
-      kMultiSet     = ROOT::kSTLmultiset,
-      kBitSet       = ROOT::kSTLbitset,
-      kEnd          = ROOT::kSTLend
+      kNotSTL            = ROOT::kNotSTL,
+      kVector            = ROOT::kSTLvector,
+      kList              = ROOT::kSTLlist,
+      kForwardist        = ROOT::kSTLforwardlist,
+      kDeque             = ROOT::kSTLdeque,
+      kMap               = ROOT::kSTLmap,
+      kMultiMap          = ROOT::kSTLmultimap,
+      kSet               = ROOT::kSTLset,
+      kMultiSet          = ROOT::kSTLmultiset,
+      kUnorderedSet      = ROOT::kSTLunorderedset,
+      kUnorderedMultiSet = ROOT::kSTLunorderedmultiset,
+      kUnorderedMap      = ROOT::kSTLunorderedmap,
+      kUnorderedMultiMap = ROOT::kSTLunorderedmultimap,
+      kBitSet            = ROOT::kSTLbitset,
+      kEnd               = ROOT::kSTLend
    };
 
    enum class EComplexType : short {

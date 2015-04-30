@@ -110,17 +110,20 @@ ROOT::ESTLType TBaseClass::IsSTLContainer()
          fSTLType = -2;
       } else {
          const char *type = gCling->BaseClassInfo_TmpltName(fInfo);
-         if (!type)                               fSTLType = ROOT::kNotSTL;
-         else if (!strcmp(type, "vector"))        fSTLType = ROOT::kSTLvector;
-         else if (!strcmp(type, "list"))          fSTLType = ROOT::kSTLlist;
-         else if (!strcmp(type, "forward_list"))  fSTLType = ROOT::kSTLforwardlist;
-         else if (!strcmp(type, "deque"))         fSTLType = ROOT::kSTLdeque;
-         else if (!strcmp(type, "map"))           fSTLType = ROOT::kSTLmap;
-         else if (!strcmp(type, "multimap"))      fSTLType = ROOT::kSTLmultimap;
-         else if (!strcmp(type, "set"))           fSTLType = ROOT::kSTLset;
-         else if (!strcmp(type, "unordered_set")) fSTLType = ROOT::kSTLunorderedset;
-         else if (!strcmp(type, "multiset"))      fSTLType = ROOT::kSTLmultiset;
-         else                                     fSTLType = ROOT::kNotSTL;
+         if (!type)                                    fSTLType = ROOT::kNotSTL;
+         else if (!strcmp(type, "vector"))             fSTLType = ROOT::kSTLvector;
+         else if (!strcmp(type, "list"))               fSTLType = ROOT::kSTLlist;
+         else if (!strcmp(type, "forward_list"))       fSTLType = ROOT::kSTLforwardlist;
+         else if (!strcmp(type, "deque"))              fSTLType = ROOT::kSTLdeque;
+         else if (!strcmp(type, "map"))                fSTLType = ROOT::kSTLmap;
+         else if (!strcmp(type, "multimap"))           fSTLType = ROOT::kSTLmultimap;
+         else if (!strcmp(type, "set"))                fSTLType = ROOT::kSTLset;
+         else if (!strcmp(type, "multiset"))           fSTLType = ROOT::kSTLmultiset;
+         else if (!strcmp(type, "unordered_set"))      fSTLType = ROOT::kSTLunorderedset;
+         else if (!strcmp(type, "unordered_multiset")) fSTLType = ROOT::kSTLunorderedmultiset;
+         else if (!strcmp(type, "unordered_map"))      fSTLType = ROOT::kSTLunorderedmap;
+         else if (!strcmp(type, "unordered_multimap")) fSTLType = ROOT::kSTLunorderedmultimap;
+         else                                          fSTLType = ROOT::kNotSTL;
       }
    }
    if (fSTLType == -2) return ROOT::kNotSTL;

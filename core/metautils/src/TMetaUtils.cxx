@@ -1879,11 +1879,14 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             break;
          case ROOT::kSTLmap:
          case ROOT::kSTLmultimap:
+         case ROOT::kSTLunorderedmap:
+         case ROOT::kSTLunorderedmultimap:
             methodTCP="MapInsert";
             break;
          case ROOT::kSTLset:
-         case ROOT::kSTLunorderedset:
          case ROOT::kSTLmultiset:
+         case ROOT::kSTLunorderedset:
+         case ROOT::kSTLunorderedmultiset:
             methodTCP="Insert";
             break;
       }
@@ -4614,7 +4617,8 @@ ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
    // Converts STL container name to number. vector -> 1, etc..
 
    static const char *stls[] =                  //container names
-      {"any","vector","list", "deque","map","multimap","set","multiset","bitset","forward_list","unordered_set",0};
+      {"any","vector","list", "deque","map","multimap","set","multiset","bitset",
+         "forward_list","unordered_set","unordered_multiset","unordered_map","unordered_multimap",0};
    static const ROOT::ESTLType values[] =
       {ROOT::kNotSTL, ROOT::kSTLvector,
        ROOT::kSTLlist, ROOT::kSTLdeque,
@@ -4622,7 +4626,8 @@ ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
        ROOT::kSTLset, ROOT::kSTLmultiset,
        ROOT::kSTLbitset,
        ROOT::kSTLforwardlist,
-       ROOT::kSTLunorderedset,
+       ROOT::kSTLunorderedset, ROOT::kSTLunorderedmultiset,
+       ROOT::kSTLunorderedmap, ROOT::kSTLunorderedmultimap,
        ROOT::kNotSTL
       };
    //              kind of stl container

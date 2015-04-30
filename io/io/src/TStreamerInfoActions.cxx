@@ -959,8 +959,9 @@ namespace TStreamerInfoActions
       if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) {
          return kVectorLooper;
       } else if (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLunorderedset
-                 || proxy.GetCollectionType() == ROOT::kSTLmultiset
+                 || proxy.GetCollectionType() == ROOT::kSTLmultiset || proxy.GetCollectionType() == ROOT::kSTLunorderedmultiset
                  || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap
+                 || proxy.GetCollectionType() == ROOT::kSTLunorderedmap || proxy.GetCollectionType() == ROOT::kSTLunorderedmultimap
                  || proxy.GetCollectionType() == ROOT::kSTLbitset) {
          return kAssociativeLooper;
       } else {
@@ -2914,8 +2915,9 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       Long_t increment = proxy.GetIncrement();
       sequence->fLoopConfig = new TVectorLoopConfig(increment, /* read */ kTRUE);
    } else if (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLunorderedset
-              || proxy.GetCollectionType() == ROOT::kSTLmultiset
-              || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap)
+              || proxy.GetCollectionType() == ROOT::kSTLmultiset || proxy.GetCollectionType() == ROOT::kSTLunorderedmultiset
+              || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap
+              || proxy.GetCollectionType() == ROOT::kSTLunorderedmap || proxy.GetCollectionType() == ROOT::kSTLunorderedmultimap)
    {
       Long_t increment = proxy.GetIncrement();
       sequence->fLoopConfig = new TVectorLoopConfig(increment, /* read */ kTRUE);

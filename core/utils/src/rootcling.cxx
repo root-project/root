@@ -1192,7 +1192,9 @@ int STLContainerStreamer(const clang::FieldDecl &m,
       switch (stltype) {
 
          case kSTLmap:
-         case kSTLmultimap: {
+         case kSTLmultimap:
+         case kSTLunorderedmap:
+         case kSTLunorderedmultimap:{
                std::string keyName(ti.getAsString());
                dictStream << "            typedef " << keyName << " Value_t;" << std::endl
                           << "            std::pair<Value_t const, " << tmplt_specialization->getTemplateArgs().get(1).getAsType().getAsString() << " > R__t3(R__t,R__t2);" << std::endl
@@ -1202,6 +1204,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
             }
          case kSTLset:
          case kSTLunorderedset:
+         case kSTLunorderedmultiset:
          case kSTLmultiset:
             dictStream << "            R__stl.insert(R__t);" << std::endl;
             break;

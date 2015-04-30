@@ -472,20 +472,20 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                         what = "deque";
                         break;
                      case ROOT::kSTLmap:
-                        what = "map";
-                        break;
                      case ROOT::kSTLmultimap:
                         what = "map";
                         break;
+                     case ROOT::kSTLunorderedmap:
+                     case ROOT::kSTLunorderedmultimap:
+                        what = "unordered_map";
+                        break;
                      case ROOT::kSTLset:
-                        what = "set";
-                        break;
-                     case ROOT::kSTLunorderedset:
-                        what = "unordered_set";
-                        break;
                      case ROOT::kSTLmultiset:
                         what = "set";
                         break;
+                     case ROOT::kSTLunorderedset:
+                     case ROOT::kSTLunorderedmultiset:
+                        what = "unordered_set";
                      case ROOT::kSTLbitset:
                         what = "bitset";
                         break;
@@ -624,7 +624,7 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
 //______________________________________________________________________________
 TString TMakeProject::UpdateAssociativeToVector(const char *name)
 {
-   // If we have a map, multimap, set or multiset,
+   // If we have a map, multimap, set or multiset, plus unordered partners,
    // and the key is a class, we need to replace the
    // container by a vector since we don't have the
    // comparator function.
@@ -643,12 +643,14 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
       }
       // Remove default allocator if any.
+      static const char* allocPrefix = "std::allocator<";
+      static const unsigned int allocPrefixLen (strlen(allocPrefix));
       switch (stlkind) {
          case ROOT::kSTLvector:
          case ROOT::kSTLlist:
          case ROOT::kSTLforwardlist:
          case ROOT::kSTLdeque:
-            if (narg>2 && strncmp(inside[2].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
+            if (narg>2 && strncmp(inside[2].c_str(),allocPrefix,allocPrefixLen)==0) {
                --narg;
             }
             break;
@@ -656,13 +658,19 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
          case ROOT::kSTLmultiset:
          case ROOT::kSTLmap:
          case ROOT::kSTLmultimap:
-            if (narg>4 && strncmp(inside[4].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
+            if (narg>4 && strncmp(inside[4].c_str(),allocPrefix,allocPrefixLen)==0) {
                --narg;
             }
             break;
          case ROOT::kSTLunorderedset:
-         // case ROOT::kSTLunorderedmultiset:
-            if (narg>5 && strncmp(inside[5].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
+         case ROOT::kSTLunorderedmultiset:
+            if (narg>5 && strncmp(inside[5].c_str(),allocPrefix,allocPrefixLen)==0) {
+               --narg;
+            }
+            break;
+         case ROOT::kSTLunorderedmap:
+         case ROOT::kSTLunorderedmultimap:
+            if (narg>6 && strncmp(inside[6].c_str(),allocPrefix,allocPrefixLen)==0) {
                --narg;
             }
             break;
@@ -676,7 +684,9 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
             std::string what;
             switch ( stlkind )  {
                case ROOT::kSTLmap:
-               case ROOT::kSTLmultimap: {
+               case ROOT::kSTLunorderedmap:
+               case ROOT::kSTLmultimap:
+               case ROOT::kSTLunorderedmultimap: {
                   what = "std::pair<";
                   what += inside[1];
                   what += ",";
@@ -695,6 +705,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
                case ROOT::kSTLset:
                case ROOT::kSTLunorderedset:
                case ROOT::kSTLmultiset:
+               case ROOT::kSTLunorderedmultiset:
                   inside[0] = "std::vector";
                   break;
             }

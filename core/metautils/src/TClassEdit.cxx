@@ -186,7 +186,7 @@ int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
    if(kind>2) kind = - kind;
    return kind;
 }
-
+#include <iostream>
 //______________________________________________________________________________
 void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 {
@@ -271,12 +271,15 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
                   case ROOT::kSTLforwardlist:
                   case ROOT::kSTLdeque:
                   case ROOT::kSTLset:
-                  case ROOT::kSTLunorderedset:
                   case ROOT::kSTLmultiset:
+                  case ROOT::kSTLunorderedset:
+                  case ROOT::kSTLunorderedmultiset:
                      dropAlloc = IsDefAlloc(fElements[iall+1].c_str(),fElements[1].c_str());
                      break;
                   case ROOT::kSTLmap:
                   case ROOT::kSTLmultimap:
+                  case ROOT::kSTLunorderedmap:
+                  case ROOT::kSTLunorderedmultimap:
                      dropAlloc = IsDefAlloc(fElements[iall+1].c_str(),fElements[1].c_str(),fElements[2].c_str());
                      break;
                   default:
@@ -321,14 +324,21 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          }
       }
 
-      // Treat now Pred and Hash for unordered containers. Signature is:
+      // Treat now Pred and Hash for unordered set/map containers. Signature is:
       // template < class Key,
-      //             class Hash = hash<Key>,
-      //             class Pred = equal_to<Key>,
-      //             class Alloc = allocator<Key>
+      //            class Hash = hash<Key>,
+      //            class Pred = equal_to<Key>,
+      //            class Alloc = allocator<Key>
       //          > class unordered_{set,multiset}
+      // template < class Key,
+      //            class Val,
+      //            class Hash = hash<Key>,
+      //            class Pred = equal_to<Key>,
+      //            class Alloc = allocator<Key>
+      //          > class unordered_{map,multimap}
 
-      if (kind == ROOT::kSTLunorderedset){
+
+      if (kind == ROOT::kSTLunorderedset || kind == ROOT::kSTLunorderedmultiset || kind == ROOT::kSTLunorderedmap || kind == ROOT::kSTLunorderedmultimap){
 
          bool predRemoved = false;
 
@@ -345,7 +355,6 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
             }
          }
       }
-
    } // End of treatment of stl containers
    else {
       if ( (mode & kDropStlDefault) && (narg >= 3)) {
@@ -463,17 +472,21 @@ ROOT::ESTLType TClassEdit::STLKind(std::string_view type)
 
    //container names
    static const char *stls[] =
-      { "any", "vector", "list", "deque", "map", "multimap", "set", "multiset", "bitset", "forward_list", "unordered_set", 0};
+      { "any", "vector", "list", "deque", "map", "multimap", "set", "multiset", "bitset",
+         "forward_list", "unordered_set", "unordered_multiset", "unordered_map", "unordered_multimap", 0};
    static const size_t stllen[] =
-      { 3, 6, 4, 5, 3, 8, 3, 8, 6, 12, 13, 0};
+      { 3, 6, 4, 5, 3, 8, 3, 8, 6,
+         12, 13, 18, 13, 18, 0};
    static const ROOT::ESTLType values[] =
       {  ROOT::kNotSTL, ROOT::kSTLvector,
          ROOT::kSTLlist, ROOT::kSTLdeque,
          ROOT::kSTLmap, ROOT::kSTLmultimap,
          ROOT::kSTLset, ROOT::kSTLmultiset,
          ROOT::kSTLbitset,
+         // New C++11
          ROOT::kSTLforwardlist,
-         ROOT::kSTLunorderedset,
+         ROOT::kSTLunorderedset, ROOT::kSTLunorderedmultiset,
+         ROOT::kSTLunorderedmap, ROOT::kSTLunorderedmultimap,
          ROOT::kNotSTL
       };
 
@@ -498,8 +511,10 @@ int   TClassEdit::STLArgs(int kind)
 //      Return number of arguments for STL container before allocator
 
    static const char  stln[] =// min number of container arguments
-      //     vector, list, deque, map, multimap, set, multiset, bitset, forward_list, unordered_set
-      {    1,     1,    1,     1,   3,        3,   2,        2,      1,            1,             3};
+      //     vector, list, deque, map, multimap, set, multiset, bitset,
+      {    1,     1,    1,     1,   3,        3,   2,        2,      1,
+      // forward_list, unordered_set, unordered_multiset, unordered_map, unordered_multimap
+                    1,             3,                  3,             4,                  4};
 
    return stln[kind];
 }
@@ -1258,7 +1273,7 @@ int TClassEdit::IsSTLCont(const char *type, int testAlloc)
 //______________________________________________________________________________
 bool TClassEdit::IsStdClass(const char *classname)
 {
-   // return true if the class belond to the std namespace
+   // return true if the class belongs to the std namespace
 
    classname += StdLen( classname );
    if ( strcmp(classname,"string")==0 ) return true;
@@ -1268,6 +1283,8 @@ bool TClassEdit::IsStdClass(const char *classname)
    if ( strncmp(classname,"allocator<",strlen("allocator<"))==0) return true;
    if ( strncmp(classname,"greater<",strlen("greater<"))==0) return true;
    if ( strncmp(classname,"less<",strlen("less<"))==0) return true;
+   if ( strncmp(classname,"equal_to<",strlen("equal_to<"))==0) return true;
+   if ( strncmp(classname,"hash<",strlen("hash<"))==0) return true;
    if ( strncmp(classname,"auto_ptr<",strlen("auto_ptr<"))==0) return true;
 
    if ( strncmp(classname,"vector<",strlen("vector<"))==0) return true;
@@ -1277,8 +1294,11 @@ bool TClassEdit::IsStdClass(const char *classname)
    if ( strncmp(classname,"map<",strlen("map<"))==0) return true;
    if ( strncmp(classname,"multimap<",strlen("multimap<"))==0) return true;
    if ( strncmp(classname,"set<",strlen("set<"))==0) return true;
-   if ( strncmp(classname,"unordered_set<",strlen("unordered_set<"))==0) return true;
    if ( strncmp(classname,"multiset<",strlen("multiset<"))==0) return true;
+   if ( strncmp(classname,"unordered_set<",strlen("unordered_set<"))==0) return true;
+   if ( strncmp(classname,"unordered_multiset<",strlen("unordered_multiset<"))==0) return true;
+   if ( strncmp(classname,"unordered_map<",strlen("unordered_map<"))==0) return true;
+   if ( strncmp(classname,"unordered_multimap<",strlen("unordered_multimap<"))==0) return true;
    if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
 
    return false;
@@ -1709,6 +1729,9 @@ string TClassEdit::InsertStd(const char *tname)
       "unary_function",
       "unary_negate",
       "underflow_error",
+      "unordered_map",
+      "unordered_multimap",
+      "unordered_multiset",
       "unordered_set",
       "valarray",
       "vector",

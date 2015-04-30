@@ -385,21 +385,28 @@ namespace ROOT {
       } else if (cl->GetCollectionProxy() && (stlType = cl->GetCollectionType())) {
          const char *what = "";
          switch(stlType)  {
-            case ROOT::kSTLvector:       what = "vector"; break;
-            case ROOT::kSTLlist:         what = "list"; break;
-            case ROOT::kSTLforwardlist:  what = "forward_list"; break;
+            case ROOT::kSTLvector:            what = "vector"; break;
+            case ROOT::kSTLlist:              what = "list"; break;
+            case ROOT::kSTLforwardlist:       what = "forward_list"; break;
             case -ROOT::kSTLdeque: // same as positive
-            case ROOT::kSTLdeque:        what = "deque"; break;
+            case ROOT::kSTLdeque:             what = "deque"; break;
             case -ROOT::kSTLmap: // same as positive
-            case ROOT::kSTLmap:          what = "map"; break;
+            case ROOT::kSTLmap:               what = "map"; break;
             case -ROOT::kSTLmultimap: // same as positive
-            case ROOT::kSTLmultimap:     what = "map"; break;
+            case ROOT::kSTLmultimap:          what = "map"; break;
             case -ROOT::kSTLset:  // same as positive
-            case ROOT::kSTLset:          what = "set"; break;
-            case -ROOT::kSTLunorderedset:  // same as positive
-            case ROOT::kSTLunorderedset: what = "unordered_set"; break;
+            case ROOT::kSTLset:               what = "set"; break;
             case -ROOT::kSTLmultiset: // same as positive
-            case ROOT::kSTLmultiset:     what = "set"; break;
+            case ROOT::kSTLmultiset:          what = "set"; break;
+            case -ROOT::kSTLunorderedset:  // same as positive
+            case ROOT::kSTLunorderedset:      what = "unordered_set"; break;
+            case -ROOT::kSTLunorderedmultiset:  // same as positive
+            case ROOT::kSTLunorderedmultiset: what = "unordered_multiset"; break;
+            case -ROOT::kSTLunorderedmap:  // same as positive
+            case ROOT::kSTLunorderedmap:      what = "unordered_map"; break;
+            case -ROOT::kSTLunorderedmultimap:  // same as positive
+            case ROOT::kSTLunorderedmultimap: what = "unordered_multimap"; break;
+
          }
          if (what[0]) {
             directive = "#include <";

@@ -966,15 +966,19 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream& fs, TClass* cl, TStreamerSTL
 
          stltyp = contcl->GetCollectionType();
          switch (stltyp) {
-            case ROOT::kSTLvector       : narg = 1; break;
-            case ROOT::kSTLlist         : narg = 1; break;
-            case ROOT::kSTLforwardlist  : narg = 1; break;
-            case ROOT::kSTLdeque        : narg = 1; break;
-            case ROOT::kSTLmap          : narg = 2; break;
-            case ROOT::kSTLmultimap     : narg = 2; break;
-            case ROOT::kSTLset          : narg = 1; break;
-            case ROOT::kSTLunorderedset : narg = 1; break;
-            case ROOT::kSTLmultiset     : narg = 1; break;
+            case ROOT::kSTLvector            : narg = 1; break;
+            case ROOT::kSTLlist              : narg = 1; break;
+            case ROOT::kSTLforwardlist       : narg = 1; break;
+            case ROOT::kSTLdeque             : narg = 1; break;
+            case ROOT::kSTLmap               : narg = 2; break;
+            case ROOT::kSTLmultimap          : narg = 2; break;
+            case ROOT::kSTLset               : narg = 1; break;
+            case ROOT::kSTLmultiset          : narg = 1; break;
+            case ROOT::kSTLunorderedset      : narg = 1; break;
+            case ROOT::kSTLunorderedmultiset : narg = 1; break;
+            case ROOT::kSTLunorderedmap      : narg = 2; break;
+            case ROOT::kSTLunorderedmultimap : narg = 2; break;
+
             default: return false;
          }
 

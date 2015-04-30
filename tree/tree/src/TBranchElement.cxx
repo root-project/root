@@ -2297,10 +2297,13 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       }
       switch(fSTLtype) {
          case ROOT::kSTLset:
-         case ROOT::kSTLunorderedset:
          case ROOT::kSTLmultiset:
+         case ROOT::kSTLunorderedset:
+         case ROOT::kSTLunorderedmultiset:
          case ROOT::kSTLmap:
          case ROOT::kSTLmultimap:
+         case ROOT::kSTLunorderedmap:
+         case ROOT::kSTLunorderedmultimap:
             break;
          default:
             ValidateAddress(); // There is no ReadLeave for this node, so we need to do the validation here.
@@ -3774,9 +3777,12 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    switch (fSTLtype) {
       case ROOT::kSTLset:
       case ROOT::kSTLunorderedset:
+      case ROOT::kSTLunorderedmultiset:
       case ROOT::kSTLmultiset:
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:
+      case ROOT::kSTLunorderedmap:
+      case ROOT::kSTLunorderedmultimap:
          for (Int_t i = 0; i < nbranches; ++i) {
             TBranch *branch = (TBranch*) fBranches[i];
             Int_t nb = branch->GetEntry(GetReadEntry(), 1);

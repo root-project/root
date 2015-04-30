@@ -1623,7 +1623,8 @@ void TCling::RegisterModule(const char* modulename,
        && strcmp(modulename,"libmapDict")!=0 && strcmp(modulename,"libmultimap2Dict")!=0
        && strcmp(modulename,"libmap2Dict")!=0 && strcmp(modulename,"libmultimapDict")!=0
        && strcmp(modulename,"libsetDict")!=0 && strcmp(modulename,"libmultisetDict")!=0
-       && strcmp(modulename,"libunordered_setDict")!=0
+       && strcmp(modulename,"libunordered_setDict")!=0 && strcmp(modulename,"libunordered_multisetDict")!=0
+       && strcmp(modulename,"libunordered_mapDict")!=0 && strcmp(modulename,"libunordered_multimapDict")!=0
        && strcmp(modulename,"libvalarrayDict")!=0
        && strcmp(modulename,"G__GenVector32")!=0 && strcmp(modulename,"G__Smatrix32")!=0
 

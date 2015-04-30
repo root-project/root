@@ -190,17 +190,20 @@ public:
 
    // Type of STL container (returned by IsSTLContainer).
    enum ESTLType {
-      kNone         = ROOT::kNotSTL,
-      kVector       = ROOT::kSTLvector,
-      kList         = ROOT::kSTLlist,
-      kForwardlist  = ROOT::kSTLforwardlist,
-      kDeque        = ROOT::kSTLdeque,
-      kMap          = ROOT::kSTLmap,
-      kMultimap     = ROOT::kSTLmultimap,
-      kSet          = ROOT::kSTLset,
-      kUnorderedSet = ROOT::kSTLunorderedset,
-      kMultiset     = ROOT::kSTLmultiset,
-      kBitset       = ROOT::kSTLbitset
+      kNone              = ROOT::kNotSTL,
+      kVector            = ROOT::kSTLvector,
+      kList              = ROOT::kSTLlist,
+      kForwardlist       = ROOT::kSTLforwardlist,
+      kDeque             = ROOT::kSTLdeque,
+      kMap               = ROOT::kSTLmap,
+      kMultimap          = ROOT::kSTLmultimap,
+      kSet               = ROOT::kSTLset,
+      kMultiset          = ROOT::kSTLmultiset,
+      kUnorderedSet      = ROOT::kSTLunorderedset,
+      kUnorderedMultiset = ROOT::kSTLunorderedmultiset,
+      kUnorderedMap      = ROOT::kSTLunorderedmap,
+      kUnorderedMultimap = ROOT::kSTLunorderedmultimap,
+      kBitset            = ROOT::kSTLbitset
    };
 
    typedef const void *DeclId_t;
