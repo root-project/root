@@ -246,7 +246,11 @@ private:
    ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
 
    typedef void (*StreamerImpl_t)(const TClass* pThis, void *obj, TBuffer &b, const TClass *onfile_class);
+#ifdef R__NO_ATOMIC_FUNCTION_POINTER
+   mutable StreamerImpl_t fStreamerImpl;  //! Pointer to the function implementing the right streaming behavior for the class represented by this object.
+#else
    mutable std::atomic<StreamerImpl_t> fStreamerImpl;  //! Pointer to the function implementing the right streaming behavior for the class represented by this object.
+#endif
 
    TListOfFunctions  *GetMethodList();
    TMethod           *GetClassMethod(Long_t faddr);
@@ -540,8 +544,12 @@ public:
    inline void        Streamer(void *obj, TBuffer &b, const TClass *onfile_class = 0) const
    {
       // Inline for performance, skipping one function call.
+#ifdef R__NO_ATOMIC_FUNCTION_POINTER
+      fStreamerImpl(this,obj,b,onfile_class);
+#else
       auto t = fStreamerImpl.load();
       t(this,obj,b,onfile_class);
+#endif
    }
 
    ClassDef(TClass,0)  //Dictionary containing class information

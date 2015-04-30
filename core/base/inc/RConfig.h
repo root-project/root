@@ -378,6 +378,9 @@
 #   if _MSC_VER < 1310
 #      define R__NO_CLASS_TEMPLATE_SPECIALIZATION
 #   endif
+#   if _MSC_VER <= 1800
+#      define R__NO_ATOMIC_FUNCTION_POINTER
+#   endif
 #endif
 
 /*--- memory and object statistics -------------------------------------------*/

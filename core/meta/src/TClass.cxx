@@ -1550,7 +1550,7 @@ TClass::~TClass()
       fData->Delete();
    delete fData;   fData = 0;
 
-   if (fEnums)
+   if (fEnums.load())
       (*fEnums).Delete();
    delete fEnums.load(); fEnums = 0;
 
@@ -3367,7 +3367,7 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
       if (fProperty == -1) Property();
       if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
          R__LOCKGUARD(gInterpreterMutex);
-         if (fEnums) {
+         if (fEnums.load()) {
             return fEnums.load();
          }
          //namespaces can have enums added to them
@@ -3380,7 +3380,7 @@ TList *TClass::GetListOfEnums(Bool_t load /* = kTRUE */)
    }
 
    R__LOCKGUARD(gInterpreterMutex);
-   if (fEnums) {
+   if (fEnums.load()) {
       if (load) (*fEnums).Load();
       return fEnums.load();
    }
@@ -5702,7 +5702,7 @@ void TClass::SetUnloaded()
    if (fData) {
       fData->Unload();
    }
-   if (fEnums) {
+   if (fEnums.load()) {
       (*fEnums).Unload();
    }
 
