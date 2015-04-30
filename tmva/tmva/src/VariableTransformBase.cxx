@@ -308,17 +308,20 @@ Bool_t TMVA::VariableTransformBase::GetInput( const Event* event, std::vector<Fl
    ItVarTypeIdxConst itEntry;
    ItVarTypeIdxConst itEntryEnd;
 
+   input.clear();
+   mask.clear();
+
    if( backTransformation && !fPut.empty() ){
       itEntry = fPut.begin();
       itEntryEnd = fPut.end();
+      input.reserve(fPut.size());
    }
    else {
       itEntry = fGet.begin();
       itEntryEnd = fGet.end();
+      input.reserve(fGet.size() );
    }
 
-   input.clear();
-   mask.clear();
    Bool_t hasMaskedEntries = kFALSE;
 //   event->Print(std::cout);
    for( ; itEntry != itEntryEnd; ++itEntry ) {
