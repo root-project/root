@@ -15,7 +15,7 @@
 
 // NOT REVISED
 
-#if // Not used!
+#if 0 // Not used!
 static const uchar unkn = '?'; // BLACK SQUARE (94) would be better
 #endif
 
