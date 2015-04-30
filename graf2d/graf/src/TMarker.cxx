@@ -173,6 +173,7 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    TPoint p;
    static Int_t pxold, pyold;
+   static Bool_t ndcsav;
    Double_t dpx, dpy, xp1,yp1;
    Bool_t opaque  = gPad->OpaqueMoving();
 
@@ -181,6 +182,7 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kButton1Down:
+      ndcsav = TestBit(kMarkerNDC);
       if (!opaque) {
          gVirtualX->SetTextColor(-1);  // invalidate current text color (use xor mode)
          TAttMarker::Modify();  //Change marker attributes only if necessary
@@ -199,17 +201,9 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (!opaque) gVirtualX->DrawPolyMarker(1, &p);
       pxold = px;  pyold = py;
       if (opaque) {
-         if (TestBit(kMarkerNDC)) {
-            dpx  = gPad->GetX2() - gPad->GetX1();
-            dpy  = gPad->GetY2() - gPad->GetY1();
-            xp1  = gPad->GetX1();
-            yp1  = gPad->GetY1();
-            this->SetX((gPad->AbsPixeltoX(pxold)-xp1)/dpx);
-            this->SetY((gPad->AbsPixeltoY(pyold)-yp1)/dpy);
-         } else {
-            this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px)));
-            this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py)));
-         }
+         if (ndcsav) this->SetNDC(kFALSE);
+         this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px)));
+         this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py)));
          gPad->ShowGuidelines(this, event, 'i', true);
          gPad->Modified(kTRUE);
          gPad->Update();
@@ -218,6 +212,11 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Up:
       if (opaque) {
+         if (ndcsav) {
+            this->SetX((fX - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
+            this->SetY((fY - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
+            this->SetNDC();
+         }
          gPad->ShowGuidelines(this, event);
       } else {
          if (TestBit(kMarkerNDC)) {

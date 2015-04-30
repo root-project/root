@@ -5,6 +5,8 @@
 
 - The character position was not correct with the Cocoa backend.
   (see https://sft.its.cern.ch/jira/browse/ROOT-6561)
+- Interactive update of `TText` position did not work in NDC mode.
+  (se https://sft.its.cern.ch/jira/browse/ROOT-7284).
 
 ### TLegend
 

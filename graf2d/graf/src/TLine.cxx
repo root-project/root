@@ -133,7 +133,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t d1,d2,px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
    static Double_t oldX1, oldY1, oldX2, oldY2;
-   static Bool_t p1, p2, pL;
+   static Bool_t p1, p2, pL, ndcsav;
    Double_t dpx,dpy,xp1,yp1;
    Int_t dx, dy;
 
@@ -149,6 +149,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       oldY1 = fY1;
       oldX2 = fX2;
       oldY2 = fY2;
+      ndcsav = TestBit(kLineNDC);
       if (!opaque) {
          gVirtualX->SetLineColor(-1);
          TAttLine::Modify();  //Change line attributes only if necessary
@@ -199,8 +200,8 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (!opaque) {
             gVirtualX->DrawLine(px1old, py1old, px2, py2);
             gVirtualX->DrawLine(px, py, px2, py2);
-         }
-         else {
+         } else {
+            if (ndcsav) this->SetNDC(kFALSE);
             this->SetX1(gPad->AbsPixeltoX(px));
             this->SetY1(gPad->AbsPixeltoY(py));
          }
@@ -211,8 +212,8 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (!opaque) {
             gVirtualX->DrawLine(px1, py1, px2old, py2old);
             gVirtualX->DrawLine(px1, py1, px, py);
-         }
-         else {
+         } else {
+            if (ndcsav) this->SetNDC(kFALSE);
             this->SetX2(gPad->AbsPixeltoX(px));
             this->SetY2(gPad->AbsPixeltoY(py));
          }
@@ -227,6 +228,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          pxold = px;
          pyold = py;
          if (opaque) {
+            if (ndcsav) this->SetNDC(kFALSE);
             this->SetX1(gPad->AbsPixeltoX(px1));
             this->SetY1(gPad->AbsPixeltoY(py1));
             this->SetX2(gPad->AbsPixeltoX(px2));
@@ -241,8 +243,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                   gPad->ShowGuidelines(this, event, '2', true);
                else
                   gPad->ShowGuidelines(this, event, '3', true);
-            }
-            else {
+            } else {
                if (fY1>fY2)
                   gPad->ShowGuidelines(this, event, '1', true);
                else
@@ -256,8 +257,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                   gPad->ShowGuidelines(this, event, '4', true);
                else
                   gPad->ShowGuidelines(this, event, '1', true);
-            }
-            else {
+            } else {
                if (fY1>fY2)
                   gPad->ShowGuidelines(this, event, '3', true);
                else
@@ -287,6 +287,13 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       }
       if (opaque) {
+         if (ndcsav) {
+            this->SetX1((fX1 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
+            this->SetX2((fX2 - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
+            this->SetY1((fY1 - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
+            this->SetY2((fY2 - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
+            this->SetNDC();
+         }
          gPad->ShowGuidelines(this, event);
       } else {
          if (TestBit(kLineNDC)) {

@@ -229,7 +229,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
    Double_t co, si, dtheta, norm;
-   static Bool_t right;
+   static Bool_t right, ndcsav;
    static Double_t theta;
    Int_t ax, ay, bx, by, cx, cy;
    ax = ay = 0;
@@ -244,6 +244,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
+      ndcsav = TestBit(kTextNDC);
       // No break !!!
 
    case kMouseMotion:
@@ -309,8 +310,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             if (theta<0) theta += 360;
             if (right) {theta = theta+180; if (theta>=360) theta -= 360;}
          }
-      }
-      else if (resize) {
+      } else if (resize) {
 
          co = TMath::Cos(fTextAngle*0.017453293);
          si = TMath::Sin(fTextAngle*0.017453293);
@@ -346,12 +346,12 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
          SetTextSize(Size/sizetowin);
          TAttText::Modify();
-      }
-      else {
+      } else {
          dx = px - pxold;  px1 += dx;
          dy = py - pyold;  py1 += dy;
       }
       if (opaque) {
+         if (ndcsav) this->SetNDC(kFALSE);
          this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
          this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py1)));
          if (resize) gPad->ShowGuidelines(this, event, 't', false);
@@ -367,6 +367,11 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Up:
       if (opaque) {
+         if (ndcsav) {
+            this->SetX((fX - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
+            this->SetY((fY - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
+            this->SetNDC();
+         }
          gPad->ShowGuidelines(this, event, !resize&!turn);
       } else {
          if (TestBit(kTextNDC)) {
