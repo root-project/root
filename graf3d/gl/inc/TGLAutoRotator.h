@@ -70,6 +70,7 @@ public:
 
    Bool_t   IsRunning() const     { return fTimerRunning; }
 
+   Bool_t   GetRotateScene() const { return fRotateScene; }
    void     SetRotateScene(Bool_t rotateScene) {Stop(); fRotateScene = rotateScene; }
 
    Double_t GetDeltaPhi() const {return fDeltaPhi; }
