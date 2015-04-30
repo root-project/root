@@ -46,9 +46,8 @@ endif()
 
 #---We need to disable some warnings-------------------------------------------------------------------
 string(REPLACE -Wall "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-  add_definitions(-Wno-parentheses-equality)
-endif()
+ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -Wno-uninitialized)
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-parentheses-equality)
 
 ROOT_USE_PACKAGE(hist/hist)
 
