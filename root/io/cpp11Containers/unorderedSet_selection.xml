@@ -4,5 +4,10 @@
    <class name="std::vector<unordered_set<TH1F>>" />
    <class name="std::unordered_set<vector<TH1F>>" />
 
+   <class name="std::unordered_multiset<TH1F>" />
+   <class name="std::unordered_multiset<double>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<unordered_multiset<TH1F>>" />
+   <class name="std::unordered_multiset<vector<TH1F>>" />
 
 </rootdict>

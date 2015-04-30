@@ -4,10 +4,13 @@
 #include <forward_list>
 #include <list>
 #include <deque>
+#include <map>
+#include <unordered_map>
 #include <algorithm>
 #include "TFile.h"
 #include "TRandom.h"
 #include <complex>
+
 
 #ifndef ROOTTEST_COMMON_UTILS
 #define ROOTTEST_COMMON_UTILS
@@ -19,7 +22,28 @@ bool IsSame(const T& a, const T& b){
 }
 
 template <>
+bool IsSame<>(const int& a, const int& b){
+   if (a==b) return true;
+   cout << "Error numbers differ: " << a << " " << b << std::endl;
+   return false;
+}
+
+template <>
+bool IsSame<>(const Long64_t& a, const Long64_t& b){
+   if (a==b) return true;
+   cout << "Error numbers differ: " << a << " " << b << std::endl;
+   return false;
+}
+
+template <>
 bool IsSame<>(const double& a, const double& b){
+   if (a==b) return true;
+   cout << "Error numbers differ: " << a << " " << b << std::endl;
+   return false;
+}
+
+template <>
+bool IsSame<>(const float& a, const float& b){
    if (a==b) return true;
    cout << "Error numbers differ: " << a << " " << b << std::endl;
    return false;
@@ -30,6 +54,12 @@ bool IsSame(const std::complex<T>& a, const std::complex<T>& b){
    if (a==b) return true;
    cout << "Error complex numbers differ: " << a << " " << b << std::endl;
    return false;
+}
+
+
+template <class T, class U>
+bool IsSame(const std::pair<T,U>& a, const std::pair<T,U>& b){
+   return IsSame(a.first,b.first) && IsSame(a.second,b.second);
 }
 
 
@@ -62,8 +92,22 @@ bool IsSame(const std::deque<T,ALLOCATOR>& a, const std::deque<T,ALLOCATOR>& b){
    return IsSameCont(a,b);
 }
 
+
 template<class T>
 bool IsSame(const std::unordered_set<T>& a, const std::unordered_set<T>& b){
+   std::vector<T> v1;
+   for (auto& el : a) v1.emplace_back(el);
+   std::vector<T> v2;
+   for (auto& el : b) v2.emplace_back(el);
+
+   auto sortingFunction = [](const T& a, const T& b){return std::string(a.GetName())<std::string(b.GetName());};
+   std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
+   std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
+   return IsSame(v1,v2);
+}
+
+template<class T>
+bool IsSame(const std::unordered_multiset<T>& a, const std::unordered_multiset<T>& b){
    std::vector<T> v1;
    for (auto& el : a) v1.emplace_back(el);
    std::vector<T> v2;
@@ -93,6 +137,24 @@ bool IsSame(const std::unordered_set<std::vector<T>>& a, const std::unordered_se
    return IsSame(v1,v2);
 }
 
+template<class T>
+bool IsSame(const std::unordered_multiset<std::vector<T>>& a, const std::unordered_multiset<std::vector<T>>& b){
+   std::vector<std::vector<T>> v1;
+   for (auto& el : a) v1.emplace_back(el);
+   std::vector<std::vector<T>> v2;
+   for (auto& el : b) v2.emplace_back(el);
+
+   auto sortingFunction = [](const std::vector<T>& a, const std::vector<T>& b){
+      std::string namesA,namesB;
+      for (auto&& h:a) namesA+=h.GetName();
+      for (auto&& h:b) namesB+=h.GetName();
+      return namesA<namesB;
+   };
+   std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
+   std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
+   return IsSame(v1,v2);
+}
+
 template<>
 bool IsSame<double>(const std::unordered_set<double>& a, const std::unordered_set<double>& b){
    std::vector<double> v1;
@@ -105,6 +167,17 @@ bool IsSame<double>(const std::unordered_set<double>& a, const std::unordered_se
    return IsSame(v1,v2);
 }
 
+template<>
+bool IsSame<double>(const std::unordered_multiset<double>& a, const std::unordered_multiset<double>& b){
+   std::vector<double> v1;
+   for (auto& el : a) v1.emplace_back(el);
+   std::vector<double> v2;
+   for (auto& el : b) v2.emplace_back(el);
+
+   std::sort(v1.begin(),v1.end()); // FUNDAMENTAL!
+   std::sort(v2.begin(),v2.end()); // FUNDAMENTAL!
+   return IsSame(v1,v2);
+}
 
 template <>
 bool IsSame<>(const TH1F& a, const TH1F& b){
@@ -117,6 +190,58 @@ bool IsSame<>(const TH1F& a, const TH1F& b){
    }
    return true;
 }
+
+
+
+template<class T, class U>
+bool IsSame(const std::map<T,U>& a, const std::map<T,U>& b){
+   std::vector<std::pair<T,U>> v1;
+   for (auto& el : a) v1.emplace_back(el);
+   std::vector<std::pair<T,U>> v2;
+   for (auto& el : b) v2.emplace_back(el);
+
+   return IsSame(v1,v2);
+}
+
+template<class T, class U>
+bool IsSame(const std::multimap<T,U>& a, const std::multimap<T,U>& b){
+   std::vector<std::pair<T,U>> v1;
+   for (auto& el : a) v1.emplace_back(el);
+   std::vector<std::pair<T,U>> v2;
+   for (auto& el : b) v2.emplace_back(el);
+   return IsSame(v1,v2);
+}
+
+template<class T, class U>
+bool IsSame(const std::unordered_map<T,U>& a, const std::unordered_map<T,U>& b){
+   std::vector<std::pair<T,U>> v1;
+   for (auto& el : a) v1.emplace_back(el);
+   std::vector<std::pair<T,U>> v2;
+   for (auto& el : b) v2.emplace_back(el);
+
+   auto sortingFunction = [](std::pair<T,U>& p1,std::pair<T,U>& p2){return p1.first<p2.first;};
+
+   std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
+   std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
+
+   return IsSame(v1,v2);
+}
+
+template<class T, class U>
+bool IsSame(const std::unordered_multimap<T,U>& a, const std::unordered_multimap<T,U>& b){
+   std::vector<std::pair<T,U>> v1;
+   for (auto& el : a) v1.emplace_back(el);
+   std::vector<std::pair<T,U>> v2;
+   for (auto& el : b) v2.emplace_back(el);
+
+   auto sortingFunction = [](std::pair<T,U>& p1,std::pair<T,U>& p2){return p1.first<p2.first;};
+
+   std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
+   std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
+
+   return IsSame(v1,v2);
+}
+
 
 void createFile(const char* filename){
    auto file = TFile::Open(filename,"RECREATE");
@@ -152,14 +277,32 @@ void writeReadCheck(const T& obj, const char* objName, const char* filename){
    readAndCheckFromFile(obj,objName,filename);
 }
 
+template<class T>
+void fillRandomGeneric(T& h, int n){
+   h.FillRandom("gaus",n);
+}
+
+template<class T, class U>
+void fillRandomGeneric(std::pair<T,U>& p, int n){
+   p.second.FillRandom("gaus",n);
+}
+
 template<class Cont>
 void fillHistoCont(Cont& cont, unsigned int n=5000){
-   for (auto& h:cont) h.FillRandom("gaus",n);
+   for (auto& h:cont) fillRandomGeneric(h,n);
 }
+
 template<class NestedCont>
 void fillHistoNestedCont(NestedCont& nestedCont, unsigned int n=5000){
    for (auto& hCont:nestedCont) {
       fillHistoCont(hCont,n);
+   }
+}
+
+template<class NestedCont>
+void fillHistoNestedAssoCont(NestedCont& nestedCont, unsigned int n=5000){
+   for (auto& hCont:nestedCont) {
+      fillHistoCont(hCont.second,n);
    }
 }
 
@@ -170,11 +313,18 @@ void randomizeCont(Cont& cont){
    }
 }
 
+template<class Cont>
+void randomizeAssoCont(Cont& cont){
+   for (auto& el : cont){
+      el.second*=gRandom->Uniform(1,2);
+   }
+}
+
 //------------------------------------------------------------------------------
 // For the unordered set
 namespace std {
    template <>
-   class hash<TH1F> {
+   struct hash<TH1F> {
    public:
       size_t operator()(const TH1F &h) const {
          std::hash<std::string> shash;
@@ -182,7 +332,7 @@ namespace std {
       }
    }; // hash
    template <>
-   class hash<std::vector<TH1F>> {
+   struct hash<std::vector<TH1F>> {
    public:
       size_t operator()(const std::vector<TH1F> &hVect) const {
          std::string names;
@@ -240,6 +390,47 @@ void fillHistoNestedCont(std::unordered_set<T,HASH,EQ,ALLOC>& nestedCont, unsign
 
 template<class T, class HASH, class EQ, class ALLOC>
 void randomizeCont(std::unordered_set<T,HASH,EQ,ALLOC>& cont){
+   std::vector<T> v;
+   for (auto& el : cont) v.emplace_back(el);
+   std::sort(v.begin(),v.end()); // FUNDAMENTAL!
+   cont.clear();
+   for (auto& el : v){
+      cont.insert(el*gRandom->Uniform(1,2));
+   }
+}
+
+template<class T, class HASH, class EQ, class ALLOC>
+void fillHistoCont(std::unordered_multiset<T,HASH,EQ,ALLOC>& cont, unsigned int n=5000){
+   std::vector<T> v;
+   for (auto& el : cont) v.emplace_back(el);
+   cont.clear();
+   std::sort(v.begin(),v.end(),[](const T& a, const T& b){return std::string(a.GetName())<std::string(b.GetName());}); // FUNDAMENTAL!
+   for (auto& h:v) {
+      h.FillRandom("gaus",n);
+      cont.insert(h);
+   }
+}
+
+template<class T, class HASH, class EQ, class ALLOC>
+void fillHistoNestedCont(std::unordered_multiset<T,HASH,EQ,ALLOC>& nestedCont, unsigned int n=5000){
+   std::vector<T> v;
+   for (auto& hCont:nestedCont) v.emplace_back(hCont);
+   std::sort(v.begin(),v.end(),[](const T& a, const T& b){
+      std::string namesA, namesB;
+      for (auto&& h : a) namesA+=h.GetName();
+      for (auto&& h : b) namesB+=h.GetName();
+      return namesA < namesB;
+   });
+   nestedCont.clear();
+   for (auto& hCont:v) {
+      fillHistoCont(hCont,n);
+      nestedCont.insert(hCont);
+   }
+}
+
+
+template<class T, class HASH, class EQ, class ALLOC>
+void randomizeCont(std::unordered_multiset<T,HASH,EQ,ALLOC>& cont){
    std::vector<T> v;
    for (auto& el : cont) v.emplace_back(el);
    std::sort(v.begin(),v.end()); // FUNDAMENTAL!

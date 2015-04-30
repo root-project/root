@@ -20,3 +20,8 @@ o Checking unordered_set
   - ColumnWise
     * Write
     * Read
+o Checking unordered_multiset
+  - RowWise
+  - ColumnWise
+    * Write
+    * Read

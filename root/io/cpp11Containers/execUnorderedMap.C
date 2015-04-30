@@ -1,4 +1,4 @@
-/* Stress the usage of forward_list.
+/* Stress the usage of unordered_{multi}map.
  * Dimensons to test
  * o type of streaming (rowwise,columnwise)
  * o "T" (POD,class, nested)
@@ -9,8 +9,6 @@
 
 #include "commonUtils.h"
 
-// A shortcut
-#define NESTEDCONT {{TH1F("h1","ht",100,-2,2),TH1F("h2","ht",10,-1.23,1.23)},{TH1F("h3","ht",100,-23,23),TH1F("h4","ht",10,-1.92,1.92)}}
 
 template<class T>
 void checkObjects(const char* name, const T& a, const T& b){
@@ -18,7 +16,7 @@ void checkObjects(const char* name, const T& a, const T& b){
    std::cerr << "Objects called " << name << " differ!\n";
 }
 
-template <template <typename... T> class Cont>
+template <class KeyType, template <typename... T> class Cont>
 void check(const char* testName){
 
    printf("o Checking %s\n",testName);
@@ -35,15 +33,20 @@ void check(const char* testName){
       createFile(filename);
    }
 
-   Cont<double> doubleCont {1.,2.,3.,4.}; // need double32_t
-   Cont<TH1F> histoCont {TH1F("h1","ht",100,-2,2), TH1F("h2","ht",10,-1.2,1.2)};
+   Cont<KeyType,double> doubleCont {{1,1.},
+                                    {2,2.},
+                                    {3,3.},
+                                    {4,4.}}; // need double32_t
+   Cont<KeyType,TH1F> histoCont {{1,TH1F("h1","ht",100,-2,2)}, {9,TH1F("h2","ht",10,-1.2,1.2)}};
    fillHistoCont(histoCont);
 
-   vector<Cont<TH1F>> vecHistoCont NESTEDCONT;
+   vector<Cont<KeyType,TH1F>> vecHistoCont {{{1,TH1F("h1","ht",100,-2,2)}, {2,TH1F("h2","ht",10,-1.23,1.23)}},
+                                            {{7,TH1F("h3","ht",100,-23,23)},{8,TH1F("h4","ht",10,-1.92,1.92)}}};
    fillHistoNestedCont(vecHistoCont);
 
-   Cont<vector<TH1F>> contHistoVec NESTEDCONT;
-   fillHistoNestedCont(contHistoVec);
+   Cont<KeyType,vector<TH1F>> contHistoVec {{1,{TH1F("h1","ht",100,-2,2),TH1F("h2","ht",10,-1.23,1.23)}},
+                                            {2,{TH1F("h3","ht",100,-23,23),TH1F("h4","ht",10,-1.92,1.92)}}};
+   fillHistoNestedAssoCont(contHistoVec);
 
    printf("  - RowWise\n");
 
@@ -80,9 +83,9 @@ void check(const char* testName){
       t.Branch("contHistoVec", &contHistoVec,16000,0);
 
       for (int i=0;i<NEvts;++i){
-         randomizeCont(doubleCont);
+         randomizeAssoCont(doubleCont);
          fillHistoCont(histoCont,10);
-         fillHistoNestedCont(contHistoVec,10);
+         fillHistoNestedAssoCont(contHistoVec,10);
          t.Fill();
       }
       t.Write();
@@ -103,9 +106,9 @@ void check(const char* testName){
       TTreeReaderValue<decltype(contHistoVec)> rcontHistoVec(reader, "contHistoVec");
       for (int i=0;i<NEvts;++i){
          // Rebuild original values
-         randomizeCont(doubleContOrig);
+         randomizeAssoCont(doubleContOrig);
          fillHistoCont(histoContOrig,10);
-         fillHistoNestedCont(contHistoVecOrig,10);
+         fillHistoNestedAssoCont(contHistoVecOrig,10);
          // Now check them
          reader.Next();
          checkObjects("doubleCont_split",doubleContOrig,*rdoubleCont_split);
@@ -123,18 +126,22 @@ void check(const char* testName){
 
 }
 
-
-void execUnorderedSet(){
-
+template <class T>
+void checkMaps(){
    // This as a baselinecheck
-   check<std::list>("list");
-   check<std::vector>("vector");
-   check<std::deque>("deque");
+   check<T, std::map>("map");
+   check<T,std::multimap>("multimap");
 
    // This is for the actual collection
-   check<std::unordered_set>("unordered_set");
-   check<std::unordered_multiset>("unordered_multiset");
+   check<T,std::unordered_map>("unordered_map");
+   check<T,std::unordered_multimap>("unordered_multimap");
+}
 
+void execUnorderedMap(){
 
+   checkMaps<int>();
+   checkMaps<float>();
+   checkMaps<double>();
+   checkMaps<Long64_t>();
 
 }

@@ -1,0 +1,19 @@
+{ decls }
+namespace std {  }
+
+[ libunorderedMap_dictrflx.so ]
+# List of selected classes
+class map<int,TH1F>
+class map<int,vector<TH1F> >
+class multimap<int,TH1F>
+class multimap<int,double>
+class multimap<int,vector<TH1F> >
+class unordered_map<int,TH1F>
+class unordered_map<int,vector<TH1F> >
+class unordered_multimap<int,TH1F>
+class unordered_multimap<int,double>
+class unordered_multimap<int,vector<TH1F> >
+class vector<map<int,TH1F> >
+class vector<multimap<int,TH1F> >
+class vector<unordered_map<int,TH1F> >
+class vector<unordered_multimap<int,TH1F> >
