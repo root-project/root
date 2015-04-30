@@ -229,6 +229,7 @@ void TGLViewerEditor::SetModel(TObject* obj)
    {
       TGLAutoRotator *r = fViewer->GetAutoRotator();
 
+      fSceneRotDt->SetNumber(r->GetDeltaPhi());
       fARotDt    ->SetNumber(r->GetDt());
       fARotWPhi  ->SetNumber(r->GetWPhi());
       fARotATheta->SetNumber(r->GetATheta());
@@ -238,6 +239,16 @@ void TGLViewerEditor::SetModel(TObject* obj)
 
       fASavImageGUIBaseName->SetText(r->GetImageGUIBaseName());
       fASavImageGUIOutMode ->SetButton(r->GetImageGUIOutMode());
+
+      Bool_t rotate_standard = ! fViewer->GetAutoRotator()->GetRotateScene();
+      fRotateSceneOn->SetState(rotate_standard ? kButtonUp : kButtonDown);
+      SetLabeledNEntryState(fSceneRotDt, ! rotate_standard);
+      SetLabeledNEntryState(fARotDt,     rotate_standard);
+      SetLabeledNEntryState(fARotWPhi,   rotate_standard);
+      SetLabeledNEntryState(fARotATheta, rotate_standard);
+      SetLabeledNEntryState(fARotWTheta, rotate_standard);
+      SetLabeledNEntryState(fARotADolly, rotate_standard);
+      SetLabeledNEntryState(fARotWDolly, rotate_standard);
    }
 
    if (fViewer->GetStereo())
@@ -590,38 +601,30 @@ void TGLViewerEditor::CreateExtrasTab()
    p = new TGGroupFrame(tab, "Auto rotator", kVerticalFrame);
    
    //
-   fRotateSceneOn = new TGCheckButton(p, "Rotate scene");
-   fRotateSceneOn->SetToolTipText("Rotate scene/camera");
+   fRotateSceneOn = new TGCheckButton(p, "Rotate all objects");
+   fRotateSceneOn->SetToolTipText("This covers a very specific use-case and is most likely not what you need.\nProceed at your own risk. Sorry about that.");
    p->AddFrame(fRotateSceneOn, new TGLayoutHints(kLHintsLeft, 4, 1, 1, 1));
-   fRotateSceneOn->SetState(kButtonDown);
-   
+
    fSceneRotDt = MakeLabeledNEntry(p, "Delta Phi:", labw, 5, TGNumberFormat::kNESRealThree);
    fSceneRotDt->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.005, 0.06);
-   SetLabeledNEntryState(fSceneRotDt, kTRUE);
    
    fARotDt = MakeLabeledNEntry(p, "Delta T:", labw, 5, TGNumberFormat::kNESRealThree);
    fARotDt->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.001, 1);
-   SetLabeledNEntryState(fARotDt, kFALSE);
 
    fARotWPhi = MakeLabeledNEntry(p, "Omega Phi:", labw, 5, TGNumberFormat::kNESRealTwo);
    fARotWPhi->SetLimits(TGNumberFormat::kNELLimitMinMax, -10, 10);
-   SetLabeledNEntryState(fARotWPhi, kFALSE);
 
    fARotATheta = MakeLabeledNEntry(p, "A Theta:", labw, 5, TGNumberFormat::kNESRealTwo);
    fARotATheta->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.01, 1);
-   SetLabeledNEntryState(fARotATheta, kFALSE);
 
    fARotWTheta = MakeLabeledNEntry(p, "Omega Theta:", labw, 5, TGNumberFormat::kNESRealTwo);
    fARotWTheta->SetLimits(TGNumberFormat::kNELLimitMinMax, -10, 10);
-   SetLabeledNEntryState(fARotWTheta, kFALSE);
 
    fARotADolly = MakeLabeledNEntry(p, "A Dolly:", labw, 5, TGNumberFormat::kNESRealTwo);
    fARotADolly->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.01, 1);
-   SetLabeledNEntryState(fARotADolly, kFALSE);
 
    fARotWDolly = MakeLabeledNEntry(p, "Omega Dolly:", labw, 5, TGNumberFormat::kNESRealTwo);
    fARotWDolly->SetLimits(TGNumberFormat::kNELLimitMinMax, -10, 10);
-   SetLabeledNEntryState(fARotWDolly, kFALSE);
 
    {
       TGCompositeFrame *l = new TGHorizontalFrame(p);
