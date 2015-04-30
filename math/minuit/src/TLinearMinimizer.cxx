@@ -18,6 +18,7 @@
 #include "Fit/Chi2FCN.h"
 
 #include "TLinearFitter.h"
+#include "TVirtualMutex.h"
 
 #include <iostream>
 #include <cassert>
@@ -155,6 +156,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
       TF1 * f = new TF1(fname.c_str(),ROOT::Math::ParamFunctor(bf));
       flist.Add(f);
       // remove this functions from gROOT
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfFunctions()->Remove(f);
 
    }
