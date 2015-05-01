@@ -394,6 +394,17 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
    }
 
    if ( ! pyfunc ) {
+      std::string::size_type pos = lcname.rfind( "::" );
+      if ( pos != std::string::npos ) {
+         TClass* lcscope = TClass::GetClass( lcname.substr( 0, pos ).c_str() );
+         if ( lcscope ) {
+            Cppyy::TCppMethod_t func = FindAndAddOperator( lcname, rcname, op, lcscope );
+            if ( func ) pyfunc = new TFunctionHolder( Cppyy::GetScope( lcname.substr( 0, pos ) ), func );
+         }
+      }
+   }
+
+   if ( ! pyfunc ) {
       Cppyy::TCppMethod_t func = FindAndAddOperator( lcname, rcname, op );
       if ( func ) pyfunc = new TFunctionHolder( Cppyy::gGlobalScope, func );
    }
