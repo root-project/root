@@ -169,7 +169,7 @@ public:
    template <typename... T> Long_t ExecPlugin(int nargs, const T&... params)
    {
       // For backward compatibility.
-      if (gDebug > 1) {
+      if ((gDebug > 1) && (nargs != (int)sizeof...(params))) {
          Warning("ExecPlugin","Announced number of args different from the real number of argument passed %d vs %lu",
                  nargs, (unsigned long)sizeof...(params) );
       }
