@@ -432,16 +432,16 @@ class ModuleFacade( types.ModuleType ):
          return self.module.__all__
 
     # lookup into ROOT (which may cause python-side enum/class/global creation)
-      attr = _root.LookupCppEntity( name, PyConfig.ExposeCppMacros )
-
-    # the call above will raise AttributeError as necessary; so if we get here,
-    # attr is valid: cache as appropriate, so we don't come back
-      if type(attr) == _root.PropertyProxy:
-         setattr( self.__class__, name, attr )         # descriptor
-         return getattr( self, name )
-      else:
-         self.__dict__[ name ] = attr                  # normal member
-         return attr
+      try:
+         attr = _root.LookupCppEntity( name, PyConfig.ExposeCppMacros )
+         if type(attr) == _root.PropertyProxy:
+            setattr( self.__class__, name, attr )      # descriptor
+            return getattr( self, name )
+         else:
+            self.__dict__[ name ] = attr               # normal member
+            return attr
+      except AttributeError:
+         pass
 
     # reaching this point means failure ...
       raise AttributeError( name )
