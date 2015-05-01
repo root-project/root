@@ -58,7 +58,7 @@ namespace Rcpp {
 
    template<> ROOT::R::TRDataFrame as(SEXP obj)
    {
-      return ROOT::R::TRDataFrame(obj);
+      return ROOT::R::TRDataFrame(Rcpp::as<Rcpp::DataFrame>(obj));
    }
 
 }

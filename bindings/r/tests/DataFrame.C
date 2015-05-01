@@ -6,34 +6,58 @@
 
 using namespace ROOT::R;
 
-void DataFrame(){
+void DataFrame() {
 //creating variables
-TVectorD v(3);
-std::vector<Double_t> sv(3);
-std::array<Int_t,3>  a{ {1,2,3} };
+    TVectorD v(3);
+    std::vector<Double_t> sv(3);
+//std::array<Int_t,3>  a{ {1,2,3} };
 
 //assinging values
-v[0]=0.01;
-v[1]=1.01;
-v[2]=2.01;
+    v[0]=1;
+    v[1]=2;
+    v[2]=3;
 
-sv[0]=0.101;
-sv[1]=0.202;
-sv[2]=0.303;
+    sv[0]=0.101;
+    sv[1]=0.202;
+    sv[2]=0.303;
 
 
-TRInterface &r=TRInterface::Instance();
+    TRInterface &r=TRInterface::Instance();
 // r.SetVerbose(kTRUE);
-std::list<std::string> names;
-names.push_back("v1");
-names.push_back("v2");
-names.push_back("v3");
-//TRDataFrame  df(Label["var1"]=v);
-TRDataFrame  df(Label["var"]=v,Label["var2"]=sv,Label["var3"]=sv,Label["strings"]=names);
+    std::list<std::string> names;
+    names.push_back("v1");
+    names.push_back("v2");
+    names.push_back("v3");
 
-r["df"]<<df;
+    TRDataFrame  df(Label["var1"]=v,Label["var2"]=sv,Label["var3"]=sv,Label["strings"]=names);
+    TRDataFrame  df2;
+
+
+    r["df"]<<df;
+
 //printting results
-std::cout<<"-----------Printing Results---------\n";
-r<<"print(df)";
+    std::cout<<"-----------Printing Results---------\n";
+    r<<"print(df)";
+
+    std::cout<<"------------------------------------\n";
+    df["var1"]>>sv;
+
+    r["v"]<<sv;
+    r<<"print(v)";
+    df["var3"]<<sv;
+
+    df["var4"]<<sv;
+    df["var5"]=names;
+    r["df"]<<df;
+    std::cout<<"------------------------------------\n";
+    r<<"print(df)";
+
+    std::cout<<"------------------------------------\n";
+    r<<"df2<-data.frame(v1=c(1,2,3),v2=c('a','b','c'),v3=c(3,2,1))";
+    r["df2"]>>df2;
+    //the next line is not working
+    //r["v2"]=df2["v2"];
+    //r<<"print(v2)";
+    
 
 }

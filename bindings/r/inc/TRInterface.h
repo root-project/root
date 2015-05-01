@@ -16,6 +16,10 @@
 #include<TRObjectProxy.h>
 #endif
 
+#ifndef ROOT_R_TRDataFrame
+#include<TRDataFrame.h>
+#endif
+
 #ifndef ROOT_R_TFunction
 #include<TRFunction.h>
 #endif
@@ -81,7 +85,7 @@ namespace ROOT {
                var = fInterface->Eval(fName).As<T>();
                return *this;
             }
-
+            
             template <class T> Binding &operator <<(T var) {
                fInterface->Assign<T>(var, fName);
                return *this;

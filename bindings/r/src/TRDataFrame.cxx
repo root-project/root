@@ -24,12 +24,17 @@ ClassImp(TRDataFrame)
 //______________________________________________________________________________
 TRDataFrame::TRDataFrame(): TObject()
 {
-   df = Rcpp::DataFrame::create();
+    df = Rcpp::DataFrame::create();
 }
 
 //______________________________________________________________________________
 TRDataFrame::TRDataFrame(const TRDataFrame &_df): TObject(_df)
 {
-   df = _df.df;
+    df = _df.df;
 }
 
+//______________________________________________________________________________
+TRDataFrame::Binding TRDataFrame::operator[](const TString &name)
+{
+    return Binding(df,name);
+}
