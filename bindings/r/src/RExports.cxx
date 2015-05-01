@@ -8,6 +8,7 @@
 #include<RExports.h>
 #include<TRFunction.h>
 #include<TRObjectProxy.h>
+#include<TRDataFrame.h>
 #include<Rcpp/Vector.h>
 namespace Rcpp {
 //TVectorD
@@ -48,6 +49,16 @@ namespace Rcpp {
    template<> ROOT::R::TRObjectProxy as(SEXP obj)
    {
       return ROOT::R::TRObjectProxy(obj);
+   }
+//TRDataFrame   
+   template<> SEXP wrap(const ROOT::R::TRDataFrame &obj)
+   {
+      return obj.df;
+   }
+
+   template<> ROOT::R::TRDataFrame as(SEXP obj)
+   {
+      return ROOT::R::TRDataFrame(obj);
    }
 
 }

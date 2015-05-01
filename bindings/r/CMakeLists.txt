@@ -44,6 +44,8 @@ set(R_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFunction.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInternalFunction.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInternalFunction__ctors.h
+              ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRDataFrame.h
+              ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRDataFrame__ctors.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/RExports.h
               ${CMAKE_BINARY_DIR}/include/compilerdata.h              
               )
