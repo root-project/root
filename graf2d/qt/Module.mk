@@ -57,15 +57,6 @@ endif
 
 GQTCXXFLAGS   +=  -I. $(QTINCDIR:%=-I%)
 
-ifneq ($(GCC_MAJOR),)
-# Building with  GCC
-GQTCXXFLAGS   += -Wno-deprecated-register -Wno-uninitialized
-endif
-ifneq ($(CLANG_MAJOR),)
-# Building with clang
-GQTCXXFLAGS   += -Wno-deprecated -Wno-uninitialized
-endif
-
 GQTLIB        := $(LPATH)/libGQt.$(SOEXT)
 GQTMAP        := $(GQTLIB:.$(SOEXT)=.rootmap)
 
