@@ -13,3 +13,10 @@ ROOTTEST_ADD_TEST(roottest-root-io-cpp11Containers-unordered_set
                   MACRO  execUnorderedSet.C
                   OUTREF execUnorderedSet.ref
                   DEPENDS ${GENERATE_REFLEX_TEST} roottest-root-io-cpp11Containers-forwardList)
+
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(unorderedMap unorderedMap.h  SELECTION unorderedMap_selection.xml)
+
+ROOTTEST_ADD_TEST(roottest-root-io-cpp11Containers-unordered_map
+                  MACRO  execUnorderedMap.C
+                  OUTREF execUnorderedMap.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST} roottest-root-io-cpp11Containers-forwardList)
