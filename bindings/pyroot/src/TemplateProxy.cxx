@@ -307,12 +307,15 @@ namespace {
             TMethod* cppmeth = klass ? klass->GetMethodWithPrototype( tmplname.c_str(), proto.c_str() ) : 0;
             if ( cppmeth ) {    // overload stops here
                Py_XDECREF( pyname_v1 );
+               Cppyy::TCppScope_t scope = Cppyy::GetScope( klass->GetName() );
                if ( (klass->Property() & kIsNamespace) || (cppmeth->Property() & kIsStatic) ) {
-                  pytmpl->fTemplated->AddMethod( new TFunctionHolder( Cppyy::GetScope( klass->GetName() ), (Cppyy::TCppMethod_t)cppmeth ) );
-                  pymeth = (PyObject*)MethodProxy_New( cppmeth->GetName(), new TFunctionHolder( Cppyy::GetScope( klass->GetName() ), (Cppyy::TCppMethod_t)cppmeth ) );
+                  pytmpl->fTemplated->AddMethod( new TFunctionHolder( scope, (Cppyy::TCppMethod_t)cppmeth ) );
+                  pymeth = (PyObject*)MethodProxy_New(
+                     cppmeth->GetName(), new TFunctionHolder( scope, (Cppyy::TCppMethod_t)cppmeth ) );
                } else {
-                  pytmpl->fTemplated->AddMethod( new TMethodHolder( Cppyy::GetScope( klass->GetName() ), (Cppyy::TCppMethod_t)cppmeth ) );
-                  pymeth = (PyObject*)MethodProxy_New( cppmeth->GetName(), new TMethodHolder( Cppyy::GetScope( klass->GetName() ), (Cppyy::TCppMethod_t)cppmeth ) );
+                  pytmpl->fTemplated->AddMethod( new TMethodHolder( scope, (Cppyy::TCppMethod_t)cppmeth ) );
+                  pymeth = (PyObject*)MethodProxy_New(
+                     cppmeth->GetName(), new TMethodHolder( scope, (Cppyy::TCppMethod_t)cppmeth ) );
                }
                PyObject_SetAttrString( pytmpl->fPyClass, (char*)cppmeth->GetName(), (PyObject*)pymeth );
                Py_DECREF( pymeth );
@@ -331,7 +334,8 @@ namespace {
        // the following causes instantiation as necessary
          TMethod* cppmeth = klass ? klass->GetMethodAny( mname.c_str() ) : 0;
          if ( cppmeth ) {    // overload stops here
-            pymeth = (PyObject*)MethodProxy_New( mname, new TMethodHolder( Cppyy::GetScope( klass->GetName() ), (Cppyy::TCppMethod_t)cppmeth ) );
+            pymeth = (PyObject*)MethodProxy_New(
+               mname, new TMethodHolder( Cppyy::GetScope( klass->GetName() ), (Cppyy::TCppMethod_t)cppmeth ) );
             PyObject_SetAttr( pytmpl->fPyClass, pyname_v1, (PyObject*)pymeth );
             if ( mname != cppmeth->GetName() ) // happens with typedefs and template default arguments
                PyObject_SetAttrString( pytmpl->fPyClass, (char*)mname.c_str(), (PyObject*)pymeth );

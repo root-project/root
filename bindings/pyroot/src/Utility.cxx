@@ -9,6 +9,7 @@
 #include "MethodProxy.h"
 #include "TFunctionHolder.h"
 #include "TCustomPyTypes.h"
+#include "TemplateProxy.h"
 #include "RootWrapper.h"
 #include "PyCallable.h"
 
@@ -22,6 +23,7 @@
 #include "TCollection.h"
 #include "TDataType.h"
 #include "TFunction.h"
+#include "TFunctionTemplate.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TError.h"
@@ -237,7 +239,8 @@ Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, PyCall
          PyErr_Clear();
       Py_XDECREF( (PyObject*)method );
       method = MethodProxy_New( label, pyfunc );
-      Bool_t isOk = PyObject_SetAttrString( pyclass, const_cast< char* >( label ), (PyObject*)method ) == 0;
+      Bool_t isOk = PyObject_SetAttrString(
+         pyclass, const_cast< char* >( label ), (PyObject*)method ) == 0;
       Py_DECREF( method );
       return isOk;
    }
@@ -408,6 +411,18 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
       fname  << lcname << ", " << rcname << ">";
       Cppyy::TCppMethod_t func = (Cppyy::TCppMethod_t)_pr_int->GetMethodAny( fname.str().c_str() );
       if ( func ) pyfunc = new TFunctionHolder( Cppyy::GetScope( "_pyroot_internal" ), func );
+   }
+
+// last chance: there could be a non-instantiated templated method
+   TClass* lc = TClass::GetClass( lcname.c_str() );
+   if ( lc && strcmp(op, "==") != 0 && strcmp(op, "!=") != 0 ) {
+      std::string opname = "operator"; opname += op;
+      gInterpreter->LoadFunctionTemplates(lc);
+      gInterpreter->GetFunctionTemplate(lc->GetClassInfo(), opname.c_str());
+      TFunctionTemplate*f = lc->GetFunctionTemplate(opname.c_str());
+      Cppyy::TCppMethod_t func =
+         (Cppyy::TCppMethod_t)lc->GetMethodWithPrototype( opname.c_str(), rcname.c_str() );
+      if ( func && f ) pyfunc = new TMethodHolder( Cppyy::GetScope( lcname ), func );
    }
 
    if ( pyfunc ) {  // found a matching overload; add to class
