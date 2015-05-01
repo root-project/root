@@ -89,7 +89,7 @@ namespace TMVA{
 
   class StatDialogMVAEffs {  
 
-      RQ_OBJECT("StatDialogMVAEffs");
+      RQ_OBJECT("StatDialogMVAEffs")
       
    public:
 

@@ -39,7 +39,7 @@ namespace TMVA{
 
    class StatDialogBDTReg {  
 
-      RQ_OBJECT("StatDialogBDTReg");
+      RQ_OBJECT("StatDialogBDTReg")
 
    public:
 
