@@ -67,7 +67,9 @@ void DataFrame() {
     r<<"print(df2)";
     
     //the next line is not working
+    df2["v5"]=df2["v1"];
     df2["v1"]=df2["v3"];
+    df2["v6"]<<df2["v5"];
     r["df2"]<<df2;
     r<<"print(df2)";
     

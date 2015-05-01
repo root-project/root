@@ -41,15 +41,11 @@ protected:
 public:
     //Proxy class to use operators for assignation Ex: df["name"]>>object
     class Binding {
+        friend class TRDataFrame;
     public:
         Binding(Rcpp::DataFrame &_df,TString name):fName(name),fDf(_df) {}
-
-        Binding &operator=(const Binding &obj) {
-            fDf = obj.fDf;
-            fName = obj.fName;
-            return *this;
-        }
-        template <class T> Binding &operator=(const T &var) {
+        Binding(const Binding &obj):fName(obj.fName),fDf(obj.fDf){}
+        template <class T> Binding operator=(T var) {
             int size = fDf.size(),i=0 ;
             Rcpp::CharacterVector names=fDf.attr("names");
             bool found=false;
@@ -81,7 +77,41 @@ public:
             }
             return *this;
         }
+        Binding operator=(Binding obj)
+        {
+            int size = fDf.size(),i=0 ;
+            Rcpp::CharacterVector names=fDf.attr("names");
+            bool found=false;
+            while(i<size)
+            {
+                if(names[i]==fName.Data())
+                {
+                    found=true;
+                    break;
+                }
+                i++;
+            }
+            if(found) fDf[fName.Data()]=obj.fDf[obj.fName.Data()];
+            else
+            {
+                Rcpp::List nDf(size+1);
+                Rcpp::CharacterVector nnames(size+1);
+                for(i=0; i<size; i++) {
+                    nDf[i] = obj.fDf[i] ;
+                    nnames[i] = names[i];
+                }
+                nDf[size]=obj.fDf[obj.fName.Data()];
+                nnames[size]=fName.Data();
 
+                nDf.attr("class") = obj.fDf.attr("class") ;
+                nDf.attr("row.names") = obj.fDf.attr("row.names") ;
+                nDf.attr("names") = nnames ;
+                fDf=nDf;
+            }
+            
+            return *this;
+        }
+       
         template <class T> Binding &operator >>(T &var) {
             var = Rcpp::as<T>(fDf[fName.Data()]);
             return *this;
@@ -135,8 +165,8 @@ public:
     TRDataFrame(const TRDataFrame &_df);
     TRDataFrame(const Rcpp::DataFrame &_df):df(_df){};
 #include <TRDataFrame__ctors.h>
-
     Binding operator[](const TString &name);
+    
     TRDataFrame& operator=(TRDataFrame &obj) {
             df=obj.df;
             return *this;
