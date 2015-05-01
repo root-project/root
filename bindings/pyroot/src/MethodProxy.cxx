@@ -572,10 +572,8 @@ namespace {
    // Deallocate memory held by method proxy object.
       PyObject_GC_UnTrack( pymeth );
 
-      if ( ! IsPseudoFunc( pymeth ) ) {
-         Py_XDECREF( (PyObject*)pymeth->fSelf );
-      }
-
+      if ( ! IsPseudoFunc( pymeth ) )
+         Py_CLEAR( pymeth->fSelf );
       pymeth->fSelf = NULL;
 
       if ( --(*pymeth->fMethodInfo->fRefCount) <= 0 ) {
@@ -608,10 +606,8 @@ namespace {
    int mp_clear( MethodProxy* pymeth )
    {
    // Garbage collector clear of held python member objects.
-      if ( ! IsPseudoFunc( pymeth ) ) {
-         Py_XDECREF( (PyObject*)pymeth->fSelf );
-      }
-
+      if ( ! IsPseudoFunc( pymeth ) )
+         Py_CLEAR( pymeth->fSelf );
       pymeth->fSelf = NULL;
 
       return 0;

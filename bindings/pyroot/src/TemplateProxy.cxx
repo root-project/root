@@ -66,10 +66,24 @@ namespace {
    }
 
 //____________________________________________________________________________
+   int tpp_clear( TemplateProxy* pytmpl )
+   {
+   // Garbage collector clear of held python member objects.
+      Py_CLEAR( pytmpl->fPyName );
+      Py_CLEAR( pytmpl->fPyClass );
+      Py_CLEAR( pytmpl->fSelf );
+      Py_CLEAR( pytmpl->fNonTemplated );
+      Py_CLEAR( pytmpl->fTemplated );
+
+      return 0;
+   }
+
+//____________________________________________________________________________
    void tpp_dealloc( TemplateProxy* pytmpl )
    {
    // Destroy the given template method proxy.
       PyObject_GC_UnTrack( pytmpl );
+      tpp_clear( pytmpl );
       PyObject_GC_Del( pytmpl );
    }
 
@@ -124,28 +138,6 @@ namespace {
          int err = visit( (PyObject*)pytmpl->fTemplated, args );
          if ( err ) return err;
       }
-
-      return 0;
-   }
-
-//____________________________________________________________________________
-   int tpp_clear( TemplateProxy* pytmpl )
-   {
-   // Garbage collector clear of held python member objects.
-      Py_XDECREF( pytmpl->fPyName );
-      pytmpl->fPyName = NULL;
-
-      Py_XDECREF( pytmpl->fPyClass );
-      pytmpl->fPyClass = NULL;
-
-      Py_XDECREF( pytmpl->fSelf );
-      pytmpl->fSelf = NULL;
-
-      Py_XDECREF( (PyObject*)pytmpl->fNonTemplated );
-      pytmpl->fNonTemplated = NULL;
-
-      Py_XDECREF( (PyObject*)pytmpl->fTemplated );
-      pytmpl->fTemplated = NULL;
 
       return 0;
    }
