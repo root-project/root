@@ -122,6 +122,9 @@ public:
         template <class T> operator T() {
             return Rcpp::as<T>(fDf[fName.Data()]);
         }
+        template <class T> operator T() const{
+            return Rcpp::as<T>(fDf[fName.Data()]);
+        }
 
     private:
         TString fName;
