@@ -26,12 +26,12 @@ ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-create-examples
                   DEPENDS ${depends})
 
 ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-cleanup
-                  COMMAND cmake -E remove stl_makeproject_test.so stl_makeproject_test.rootmap stl_makeproject_test_rdict.pcm stl_makeproject_test.cxx
+                  COMMAND cmake -E remove stl_makeproject_test.so stl_makeproject_test.rootmap stl_makeproject_test_rdict.pcm stl_makeproject_test.cxx stl_example.root
                   DEPENDS roottest-root-meta-MakeProject-create-examples)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-stltest
                   MACRO runstltest.C
-                  OUTREF stltest.ref
+                  OUTREF teststl.ref
                   DEPENDS roottest-root-meta-MakeProject-cleanup)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-stltest2

@@ -603,6 +603,8 @@ AutoDict_*.cxx
 /root/meta/MakeProject/small_aod
 /root/meta/MakeProject/cms310
 /root/meta/MakeProject/aliceesd
+/root/meta/MakeProject/stltest
+/root/meta/MakeProject/stl_example.root
 
 # /root/meta/callfunc/
 

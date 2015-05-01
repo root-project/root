@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) cms310 small_aod aliceesd
+CLEAN_TARGETS += $(ALL_LIBRARIES) cms310 small_aod aliceesd stl_example.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -40,6 +40,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
+include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 
 # The name of this target should be changed according to the test being run.  Any name changes
@@ -102,4 +103,26 @@ endif
 aliceesd.log: runaliceesd.C
 	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs)  | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@
 
+stl_makeproject_test.$(DllSuf): stl_makeproject_test_cling.$(ObjSuf)  $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(BuildFromObj)
+
+stl_example.log: create_makeproject_examples.C | stl_makeproject_test.$(DllSuf)
+	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs)  | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@
+
+stl_example: stl_example.log
+	$(TestDiff)
+
+stl_example.root: stl_example.log
+
+stltest.log: runstltest.C stl_example.root
+	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) | grep -v 'WARNING: IO rule for class' | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@
+
+stltest2.log: runstltest2.C | stl_example.root runstltest2_C.$(DllSuf)
+	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $<+ 2>&1 | $(RemoveLeadingDirs) | grep -v 'WARNING: IO rule for class' | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@
+
+teststl: stltest.log
+	$(TestDiff)
+
+stltest2: stltest2.log
+	$(TestDiff)
 
