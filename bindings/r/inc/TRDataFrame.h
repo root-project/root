@@ -116,6 +116,10 @@ public:
             var = Rcpp::as<T>(fDf[fName.Data()]);
             return *this;
         }
+        Binding operator >>(Binding var) {
+            var.fDf[var.fName.Data()] = fDf[fName.Data()];
+            return var;
+        }
 
         template <class T> Binding &operator <<(T var) {
             int size = fDf.size(),i=0 ;

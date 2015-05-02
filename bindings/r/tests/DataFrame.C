@@ -75,16 +75,24 @@ void DataFrame() {
     r["df2"]<<df2;
     r<<"print(df2)";
     
-     // the next line donk work, the operator >> is not supported between Bindings
-     //df2["v6"]>>df2["v1"];
+     // the next line donk work, the operator >> is not supported between Bindings(FIXED NOW))
+     df2["v6"]>>df2["v1"];
      
      //basic methods
      std::cout<<"------------------------------------\n";
      std::cout<<"nrows = "<<df2.GetNrows()<<std::endl;
      std::cout<<"ncols = "<<df2.GetNcols()<<std::endl;
      
+     
+     r["v5"]<<df2["v5"];
+     r<<"print(v5)";
+     df2["v5"]>>df["var1"];
+     r["v5"]<<df2["v5"];
+     r<<"print(v5)";
+    
+     
      //Error Handling
-     std::cout<<"------------------------------------\n";
+/*     std::cout<<"------------------------------------\n";
      try{
       r["qwe"]<<df2["qwe"];
      }   
@@ -93,5 +101,5 @@ void DataFrame() {
         forward_exception_to_r( __ex__ ) ;
      }
      catch(...){::Error("operator=", "Can not assign in v5");}
-     
+*/     
 }
