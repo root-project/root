@@ -212,6 +212,9 @@ bool IsSame(const std::multimap<T,U>& a, const std::multimap<T,U>& b){
    return IsSame(v1,v2);
 }
 
+// For gcc48: lambda not correctly compiled
+// template<class T, class U> bool sortingFunction(std::pair<T,U>& p1,std::pair<T,U>& p2){return p1.first<p2.first;};
+
 template<class T, class U>
 bool IsSame(const std::unordered_map<T,U>& a, const std::unordered_map<T,U>& b){
    std::vector<std::pair<T,U>> v1;
@@ -219,7 +222,7 @@ bool IsSame(const std::unordered_map<T,U>& a, const std::unordered_map<T,U>& b){
    std::vector<std::pair<T,U>> v2;
    for (auto& el : b) v2.emplace_back(el);
 
-   auto sortingFunction = [](std::pair<T,U>& p1,std::pair<T,U>& p2){return p1.first<p2.first;};
+   auto sortingFunction = [](const std::pair<T,U>& p1,const std::pair<T,U>& p2){return p1.first<p2.first;};
 
    std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
    std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
@@ -234,7 +237,7 @@ bool IsSame(const std::unordered_multimap<T,U>& a, const std::unordered_multimap
    std::vector<std::pair<T,U>> v2;
    for (auto& el : b) v2.emplace_back(el);
 
-   auto sortingFunction = [](std::pair<T,U>& p1,std::pair<T,U>& p2){return p1.first<p2.first;};
+   auto sortingFunction = [](const std::pair<T,U>& p1,const std::pair<T,U>& p2){return p1.first<p2.first;};
 
    std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
    std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
