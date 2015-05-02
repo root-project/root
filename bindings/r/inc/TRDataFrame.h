@@ -175,6 +175,8 @@ public:
             df=obj.df;
             return *this;
          }
+    int GetNcols(){return df.size();}
+    int GetNrows(){return df.nrows();}
     ClassDef(TRDataFrame, 0) //
 };
 }
