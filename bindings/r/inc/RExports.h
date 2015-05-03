@@ -20,12 +20,12 @@
 #include<TString.h>
 #endif
 
-#ifndef ROOT_TVectorD
-#include<TVectorD.h>
+#ifndef ROOT_TVector
+#include<TVector.h>
 #endif
 
-#ifndef ROOT_TMatrixD
-#include<TMatrixD.h>
+#ifndef ROOT_TMatrix
+#include<TMatrix.h>
 #endif
 
 #ifndef ROOT_TArrayD
@@ -82,12 +82,20 @@ namespace Rcpp {
       return TString(::Rcpp::as<std::string>(s).c_str());
    }
 
-   template<> SEXP wrap(const TVectorD &v);
-   template<> TVectorD as(SEXP) ;
+//TVectorT
+   template<> SEXP wrap(const TVectorT<Double_t> &v);
+   template<> TVectorT<Double_t> as(SEXP v);
+   
+   template<> SEXP wrap(const TVectorT<Float_t> &v);
+   template<> TVectorT<Float_t> as(SEXP v);
+   
+//TMatrixT
+   template<> SEXP wrap(const TMatrixT<Double_t> &m);
+   template<> TMatrixT<Double_t> as(SEXP) ;
+   template<> SEXP wrap(const TMatrixT<Float_t> &m);
+   template<> TMatrixT<Float_t> as(SEXP) ;
 
-   template<> SEXP wrap(const TMatrixD &m);
-   template<> TMatrixD as(SEXP) ;
-
+//TRDataFrame
    template<> SEXP wrap(const ROOT::R::TRDataFrame &o);
    template<> ROOT::R::TRDataFrame as(SEXP) ;
    

@@ -11,20 +11,33 @@
 #include<TRDataFrame.h>
 #include<Rcpp/Vector.h>
 namespace Rcpp {
-//TVectorD
-   template<> SEXP wrap(const TVectorD &v)
+//TVectorT
+   template<>  SEXP wrap(const TVectorT<Double_t> &v)
    {
-      std::vector<double> vec(v.GetMatrixArray(), v.GetMatrixArray() + v.GetNoElements());
+      std::vector<Double_t> vec(v.GetMatrixArray(), v.GetMatrixArray() + v.GetNoElements());
       return wrap(vec);
    }
 
-   template<> TVectorD as(SEXP v)
+   template<> TVectorT<Double_t> as(SEXP v)
    {
       std::vector<Double_t> vec =::Rcpp::as<std::vector<Double_t> >(v);
       return TVectorT<Double_t>(vec.size(), vec.data());
    }
-//TMatrixD
-   template<> SEXP wrap(const TMatrixD &m)
+   
+   template<> SEXP wrap(const TVectorT<Float_t> &v)
+   {
+      std::vector<Float_t> vec(v.GetMatrixArray(), v.GetMatrixArray() + v.GetNoElements());
+      return wrap(vec);
+   }
+
+   template<> TVectorT<Float_t> as(SEXP v)
+   {
+      std::vector<Float_t> vec =::Rcpp::as<std::vector<Float_t> >(v);
+      return TVectorT<Float_t>(vec.size(), vec.data());
+   }
+    
+//TMatrixT
+   template<> SEXP wrap(const TMatrixT<Double_t> &m)
    {
       Int_t rows = m.GetNrows();
       Int_t cols = m.GetNcols();
@@ -34,10 +47,27 @@ namespace Rcpp {
       return wrap(mat);
    }
 
-   template<> TMatrixD as(SEXP m)
+   template<> TMatrixT<Double_t> as(SEXP m)
    {
       NumericMatrix mat =::Rcpp::as<NumericMatrix>(m);
-      return TMatrixD(mat.rows(), mat.cols(), mat.begin(), "F");
+      return TMatrixT<Double_t>(mat.rows(), mat.cols(), mat.begin(), "F");
+   }
+   
+   template<> SEXP wrap(const TMatrixT<Float_t> &m)
+   {
+      Int_t rows = m.GetNrows();
+      Int_t cols = m.GetNcols();
+      Float_t *data = new Float_t[rows * cols];
+      m.GetMatrix2Array(data, "F"); //ROOT has a bug here(Fixed)
+      NumericMatrix mat(rows, cols, data);
+      return wrap(mat);
+   }
+
+   template<> TMatrixT<Float_t> as(SEXP m)
+   {
+      NumericMatrix mat =::Rcpp::as<NumericMatrix>(m);
+      std::vector<float> dat = Rcpp::as<std::vector<float> >(mat);
+      return TMatrixT<Float_t>(mat.rows(), mat.cols(), &dat[0], "F");
    }
 
 //TRObjectProxy   
