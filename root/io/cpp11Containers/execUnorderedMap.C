@@ -38,11 +38,11 @@ void check(const char* testName){
                                     {3,3.},
                                     {4,4.}}; // need double32_t
    Cont<KeyType,TH1F> histoCont {{1,TH1F("h1","ht",100,-2,2)}, {9,TH1F("h2","ht",10,-1.2,1.2)}};
-   fillHistoCont(histoCont);
+   fillHistoAssoCont(histoCont);
 
    vector<Cont<KeyType,TH1F>> vecHistoCont {{{1,TH1F("h1","ht",100,-2,2)}, {2,TH1F("h2","ht",10,-1.23,1.23)}},
                                             {{7,TH1F("h3","ht",100,-23,23)},{8,TH1F("h4","ht",10,-1.92,1.92)}}};
-   fillHistoNestedCont(vecHistoCont);
+   fillHistoNestedAssoCont(vecHistoCont);
 
    Cont<KeyType,vector<TH1F>> contHistoVec {{1,{TH1F("h1","ht",100,-2,2),TH1F("h2","ht",10,-1.23,1.23)}},
                                             {2,{TH1F("h3","ht",100,-23,23),TH1F("h4","ht",10,-1.92,1.92)}}};
@@ -84,7 +84,7 @@ void check(const char* testName){
 
       for (int i=0;i<NEvts;++i){
          randomizeAssoCont(doubleCont);
-         fillHistoCont(histoCont,10);
+         fillHistoAssoCont(histoCont,10);
          fillHistoNestedAssoCont(contHistoVec,10);
          t.Fill();
       }
@@ -107,7 +107,7 @@ void check(const char* testName){
       for (int i=0;i<NEvts;++i){
          // Rebuild original values
          randomizeAssoCont(doubleContOrig);
-         fillHistoCont(histoContOrig,10);
+         fillHistoAssoCont(histoContOrig,10);
          fillHistoNestedAssoCont(contHistoVecOrig,10);
          // Now check them
          reader.Next();

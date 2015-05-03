@@ -280,19 +280,24 @@ void writeReadCheck(const T& obj, const char* objName, const char* filename){
    readAndCheckFromFile(obj,objName,filename);
 }
 
-template<class T>
-void fillRandomGeneric(T& h, int n){
-   h.FillRandom("gaus",n);
-}
-
-template<class T, class U>
-void fillRandomGeneric(std::pair<T,U>& p, int n){
-   p.second.FillRandom("gaus",n);
+template<class Cont>
+void fillHistoCont(Cont& cont, unsigned int n=5000){
+   for (auto& h:cont) h.FillRandom("gaus",n);
 }
 
 template<class Cont>
-void fillHistoCont(Cont& cont, unsigned int n=5000){
-   for (auto& h:cont) fillRandomGeneric(h,n);
+void fillHistoAssoCont(Cont& cont, unsigned int n=5000){
+   using contPair_t = std::pair<typename Cont::key_type,typename Cont::mapped_type>;
+   std::vector<contPair_t> v;
+   for (auto& el : cont) v.emplace_back(el);
+   auto sortingFunction = [](const contPair_t& p1,const contPair_t& p2){return p1.first<p2.first;};
+   std::sort(v.begin(),v.end(),sortingFunction); // FUNDAMENTAL!
+   cont.clear();
+   for (auto& h:v) {
+      h.second.FillRandom("gaus",n);
+      cont.insert(h);
+   }
+
 }
 
 template<class NestedCont>
@@ -303,11 +308,26 @@ void fillHistoNestedCont(NestedCont& nestedCont, unsigned int n=5000){
 }
 
 template<class NestedCont>
-void fillHistoNestedAssoCont(NestedCont& nestedCont, unsigned int n=5000){
+void fillHistoNestedAssoCont(std::vector<NestedCont>& nestedCont, unsigned int n=5000){
    for (auto& hCont:nestedCont) {
-      fillHistoCont(hCont.second,n);
+      fillHistoAssoCont(hCont,n);
    }
 }
+
+template<class NestedCont>
+void fillHistoNestedAssoCont(NestedCont& nestedCont, unsigned int n=5000){
+   using contPair_t = std::pair<typename NestedCont::key_type,typename NestedCont::mapped_type>;
+   std::vector<contPair_t> v;
+   for (auto& el : nestedCont) v.emplace_back(el);
+   auto sortingFunction = [](const contPair_t& p1,const contPair_t& p2){return p1.first<p2.first;};
+   std::sort(v.begin(),v.end(),sortingFunction); // FUNDAMENTAL!
+   nestedCont.clear();   
+   for (auto& hCont:v){
+      fillHistoCont(hCont.second,n);
+      nestedCont.insert(hCont);
+   }
+}
+
 
 template<class Cont>
 void randomizeCont(Cont& cont){
@@ -318,8 +338,14 @@ void randomizeCont(Cont& cont){
 
 template<class Cont>
 void randomizeAssoCont(Cont& cont){
-   for (auto& el : cont){
-      el.second*=gRandom->Uniform(1,2);
+   using contPair_t = std::pair<typename Cont::key_type,typename Cont::mapped_type>;
+   std::vector<contPair_t> v;
+   for (auto& el : cont) v.emplace_back(el);
+   auto sortingFunction = [](const contPair_t& p1,const contPair_t& p2){return p1.first<p2.first;};
+   std::sort(v.begin(),v.end(),sortingFunction); // FUNDAMENTAL!
+   cont.clear();
+   for (auto& el : v){
+      cont.insert(std::make_pair(el.first, el.second*gRandom->Uniform(1,2)));
    }
 }
 
