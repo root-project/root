@@ -189,6 +189,9 @@
 #   if defined(R__ppc64)
 #      define R__B64
 #   endif
+#   if defined(_LITTLE_ENDIAN)
+#      define R__BYTESWAP
+#   endif
 #endif
 
 #if defined(linux) && defined(__aarch64__)
