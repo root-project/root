@@ -7,7 +7,7 @@
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
 #include "RootWrapper.h"
-#include "TClassMethodHolder.h"
+#include "TFunctionHolder.h"
 #include "TemplateProxy.h"
 
 // ROOT
@@ -112,7 +112,7 @@ namespace {
                         for ( size_t imeth = 0; imeth < nmeth; ++imeth ) {
 			   Cppyy::TCppMethod_t method = Cppyy::GetMethod( scope, imeth );
                            if ( Cppyy::GetMethodName( method ) == name )
-                              overloads.push_back( new TClassMethodHolder( scope, method ) );
+                              overloads.push_back( new TFunctionHolder( scope, method ) );
                         }
 
                      // Note: can't re-use Utility::AddClass here, as there's the risk of

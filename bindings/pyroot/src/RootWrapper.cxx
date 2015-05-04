@@ -285,11 +285,11 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
       }
 
    // decide on method type: member or static (which includes globals)
-      Bool_t isStatic = isNamespace || Cppyy::IsStaticMethod( method );
+      Bool_t isStatic = Cppyy::IsStaticMethod( method );
 
    // template members; handled by adding a dispatcher to the class
       std::string tmplName = "";
-      if ( ! (isStatic || isConstructor) && mtName[mtName.size()-1] == '>' ) {
+      if ( ! (isNamespace || isStatic || isConstructor) && mtName[mtName.size()-1] == '>' ) {
          tmplName = mtName.substr( 0, mtName.find('<') );
       // TODO: the following is incorrect if both base and derived have the same
       // templated method (but that is an unlikely scenario anyway)
@@ -322,8 +322,10 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
 
    // construct the holder
       PyCallable* pycall = 0;
-      if ( isStatic == kTRUE )               // class method
+      if ( isStatic )                        // class method
          pycall = new TClassMethodHolder( scope, method );
+      else if ( isNamespace )                // free function
+         pycall = new TFunctionHolder( scope, method );
       else if ( isConstructor ) {            // constructor
          pycall = new TConstructorHolder( scope, method );
          mtName = "__init__";
