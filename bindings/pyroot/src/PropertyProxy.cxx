@@ -203,6 +203,9 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t id
       fProperty |= kIsEnumData;
    }
 
+   if ( Cppyy::IsConstData( scope, idata ) )
+      fProperty |= kIsConstData;
+
    fConverter = CreateConverter( fullType, size );
 }
 

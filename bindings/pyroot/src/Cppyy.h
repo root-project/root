@@ -114,6 +114,7 @@ namespace Cppyy {
 // data member properties ----------------------------------------------------
    Bool_t IsPublicData( TCppScope_t scope, TCppIndex_t idata );
    Bool_t IsStaticData( TCppScope_t scope, TCppIndex_t idata );
+   Bool_t IsConstData( TCppScope_t scope, TCppIndex_t idata );
    Bool_t IsEnumData( TCppScope_t scope, TCppIndex_t idata );
    Int_t  GetDimensionSize( TCppScope_t scope, TCppIndex_t idata, int dimension );
 

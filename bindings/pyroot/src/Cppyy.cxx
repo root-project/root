@@ -938,6 +938,20 @@ Bool_t Cppyy::IsStaticData( TCppScope_t scope, TCppIndex_t idata  )
    return m->Property() & kIsStatic;
 }
 
+Bool_t Cppyy::IsConstData( TCppScope_t scope, TCppIndex_t idata )
+{
+   if ( scope == GLOBAL_HANDLE ) {
+      TGlobal* gbl = g_globalvars[ idata ];
+      return gbl->Property() & kIsConstant;
+   }
+   TClassRef& cr = type_from_handle( scope );
+   if ( cr.GetClass() ) {
+      TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
+      return m->Property() & kIsConstant;
+   }
+   return kFALSE;
+}
+
 Bool_t Cppyy::IsEnumData( TCppScope_t scope, TCppIndex_t idata )
 {
    if ( scope == GLOBAL_HANDLE ) {
