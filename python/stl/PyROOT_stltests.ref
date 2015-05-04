@@ -10,6 +10,7 @@ Test access to a map<int,int> (part of cintdlls) ... ok
 Test access to a map<std::string,int> (part of cintdlls) ... ok
 Test behavior of empty map<int,int> (part of cintdlls) ... ok
 Test assignability of maps with unsigned value types (not part of cintdlls) ... ok
+Instantiate a map from a newly defined class ... ok
 Test overloading of operator[] in STL like class ... ok
 Test the iterator protocol mapping for an STL like class ... ok
 Test mapping of python strings and std::string ... ok

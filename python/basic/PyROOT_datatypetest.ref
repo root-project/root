@@ -6,7 +6,7 @@
 . PyROOT_datatypetest.py::TestClassDATATYPES::()::test06_class_data_write_access
 . PyROOT_datatypetest.py::TestClassDATATYPES::()::test07_range_access
 . PyROOT_datatypetest.py::TestClassDATATYPES::()::test08_type_conversions
-. PyROOT_datatypetest.py::TestClassDATATYPES::()::test09_global_builtin_type
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test09_global_builtin_types
 . PyROOT_datatypetest.py::TestClassDATATYPES::()::test10_global_ptr
 . PyROOT_datatypetest.py::TestClassDATATYPES::()::test11_enum
 . PyROOT_datatypetest.py::TestClassDATATYPES::()::test12_string_passing

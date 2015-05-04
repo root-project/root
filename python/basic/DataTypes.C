@@ -281,7 +281,25 @@ long get_double_address(CppyyTestData& c)
 
 
 //= global variables/pointers ===============================================
-int g_int = 42;
+bool               g_bool     = false;
+char               g_char     = 'w';
+signed char        g_schar    = 'v';
+unsigned char      g_uchar    = 'u';
+short              g_short    =  -88;
+unsigned short     g_ushort   =   88u;
+int                g_int      = -188;
+unsigned int       g_uint     =  188u;
+long               g_long     = -288;
+unsigned long      g_ulong    =  288ul;
+long long          g_llong    = -388ll;
+unsigned long long g_ullong   =  388ull;
+Long64_t           g_long64   = -488ll;
+ULong64_t          g_ulong64  =  488ull;
+float              g_float    = -588.f;
+double             g_double   = -688.;
+long double        g_ldouble  = -788.l;
+EFruit             g_enum     = kBanana;
+void*              g_voidp    = nullptr;
 
 void set_global_int(int i) {
    g_int = i;

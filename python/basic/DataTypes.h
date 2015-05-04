@@ -15,6 +15,12 @@ enum EFruit { kApple=78, kBanana=29, kCitrus=34 };
 
 
 //===========================================================================
+namespace EnumSpace {
+   enum E { E1 = 1, E2 };
+};
+
+
+//===========================================================================
 class FourVector {
 public:
     FourVector(double x, double y, double z, double t) :
@@ -298,7 +304,46 @@ long get_double_address(CppyyTestData& c);
 
 
 //= global variables/pointers ===============================================
-extern int g_int;
+extern bool               g_bool;
+extern char               g_char;
+extern signed char        g_schar;
+extern unsigned char      g_uchar;
+extern short              g_short;
+extern unsigned short     g_ushort;
+extern int                g_int;
+extern unsigned int       g_uint;
+extern long               g_long;
+extern unsigned long      g_ulong;
+extern long long          g_llong;
+extern unsigned long long g_ullong;
+extern Long64_t           g_long64;
+extern ULong64_t          g_ulong64;
+extern float              g_float;
+extern double             g_double;
+extern long double        g_ldouble;
+extern EFruit             g_enum;
+extern void*              g_voidp;
+
+static const bool               g_c_bool    = true;
+static const char               g_c_char    = 'z';
+static const signed char        g_c_schar   = 'y';
+static const unsigned char      g_c_uchar   = 'x';
+static const short              g_c_short   =  -99;
+static const unsigned short     g_c_ushort  =   99u;
+static const int                g_c_int     = -199;
+static const unsigned int       g_c_uint    =  199u;
+static const long               g_c_long    = -299;
+static const unsigned long      g_c_ulong   =  299ul;
+static const long long          g_c_llong   = -399ll;
+static const unsigned long long g_c_ullong  =  399ull;
+static const Long64_t           g_c_long64  = -499ll;
+static const ULong64_t          g_c_ulong64 =  499ull;
+static const float              g_c_float   = -599.f;
+static const double             g_c_double  = -699.;
+static const long double        g_c_ldouble = -799.l;
+static const EFruit             g_c_enum    = kApple;
+static const void*              g_c_voidp   = nullptr;
+
 void set_global_int(int i);
 int get_global_int();
 

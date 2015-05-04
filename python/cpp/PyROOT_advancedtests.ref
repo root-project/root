@@ -17,6 +17,7 @@ Test assignment to an instance returned by reference ... ok
 Want nice error message of failing assign by reference ... ok
 Test operator int/long/double incl. typedef ... ok
 Check that the global operator!=/== is picked up ... ok
+Check that the namespaced global operator!=/== is picked up ... ok
 Verify access to array of doubles ... ok
 Verify writability of global instances ... ok
 Test life time of temporary in long expression ... ok

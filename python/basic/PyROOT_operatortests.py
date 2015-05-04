@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_operatortests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 09/30/10
+# Last: 05/04/15
 
 """C++ operators interface unit tests for PyROOT package."""
 
@@ -13,7 +13,8 @@ from common import *
 
 __all__ = [
    'Cpp1OperatorsTestCase',
-   'Cpp2ConverterOperatorsTestCase'
+   'Cpp2ConverterOperatorsTestCase',
+   'Cpp3TemplatedMathOperatorsTestCase'
 ]
 
 gROOT.LoadMacro( "Operators.C+" )
@@ -116,6 +117,21 @@ class Cpp2ConverterOperatorsTestCase( MyTestCase ):
       o = OperatorFloat(); o.m_float =      3.14
       self.assertEqual( round( o.m_float  - 3.14, 5 ), 0. )
       self.assertEqual( round( float( o ) - 3.14, 5 ), 0. )
+
+
+### Templated math operators =================================================
+class Cpp3TemplatedMathOperatorsTestCase( MyTestCase ):
+   def test01LorentzVector( self ):
+      """Templated method operator+/-"""
+
+      if FIXCLING:
+         return
+
+      v1 = ROOT.Math.LorentzVector('ROOT::Math::PxPyPzE4D<double>')(1, 2, 3, 4)
+      v2 = ROOT.Math.LorentzVector('ROOT::Math::PxPyPzE4D<double>')(4, 3, 2, 1)
+
+      v3 = v1.__add__( v2 )
+      v3.Print()
 
 
 ## actual test run

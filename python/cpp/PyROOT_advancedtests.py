@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 08/29/14
+# Last: 05/04/15
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -394,6 +394,23 @@ class Cpp07GloballyOverloadedComparator( MyTestCase ):
       self.assertEqual( b.__eq__( a ), True )
       self.assertEqual( a.__eq__( a ), False )
       self.assertEqual( b.__eq__( b ), False )
+
+   def test2Comparator( self ):
+      """Check that the namespaced global operator!=/== is picked up"""
+
+      a, b = ComparableSpace.NSComparable(), ComparableSpace.NSComparable()
+
+      self.assertEqual( a, b )
+      self.assertEqual( b, a )
+      self.assert_( a.__eq__( b ) )
+      self.assert_( b.__eq__( a ) )
+      self.assert_( a.__ne__( a ) )
+      self.assert_( b.__ne__( b ) )
+      self.assertEqual( a.__eq__( b ), True )
+      self.assertEqual( b.__eq__( a ), True )
+      self.assertEqual( a.__eq__( a ), False )
+      self.assertEqual( b.__eq__( b ), False )
+
 
 
 ### Check access to global variables =========================================

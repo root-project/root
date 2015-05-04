@@ -2,7 +2,7 @@
   File: roottest/python/cpp/AdvancedCpp.C
   Author: WLavrijsen@lbl.gov
   Created: 06/04/05
-  Last: 08/29/14
+  Last: 05/01/15
 */
 
 #include "TString.h"
@@ -156,10 +156,22 @@ bool operator!=( const Comparable& c1, const Comparable& c2 )
    return &c1 == &c2;
 }
 
-#ifdef __CINT__
-#pragma link C++ function operator==( const Comparable&, const Comparable& );
-#pragma link C++ function operator!=( const Comparable&, const Comparable& );
-#endif
+namespace ComparableSpace {
+   class NSComparable {
+   };
+
+   bool operator==( const NSComparable& c1, const NSComparable& c2 )
+   {
+   // does the opposite of a (default PyROOT) pointer comparison
+      return &c1 != &c2;
+   }
+
+   bool operator!=( const NSComparable& c1, const NSComparable& c2 )
+   {
+   // does the opposite of a (default PyROOT) pointer comparison
+      return &c1 == &c2;
+   }
+}
 
 // a couple of globals
 double myGlobalDouble = 12.;

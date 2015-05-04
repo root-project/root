@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 12/03/14
+# Last: 04/20/15
 
 """Data type conversion unit tests for PyROOT package."""
 
@@ -477,9 +477,10 @@ class TestClassDATATYPES:
 
         c.__destruct__()
 
-    def test09_global_builtin_type(self):
-        """Access to a global builtin type"""
+    def test09_global_builtin_types(self):
+        """Access to a global builtin types"""
 
+        # basic test with cross-check
         import cppyy
         gbl = cppyy.gbl
 
@@ -493,6 +494,59 @@ class TestClassDATATYPES:
         assert gbl.get_global_int() == 22
         assert gbl.g_int == 22
 
+        # other builtin types
+        testcount = 0
+        testdata = [
+            # bool type
+            ('bool',   False,  True,  True, False),
+            # char types
+            ('char',     'w',   'W',   'z',   'Z'),
+            ('schar',    'v',   'V',   'y',   'Y'),
+            ('uchar',    'u',   'U',   'x',   'X'),
+            # integer types
+            ('short',    -88,   -87,   -99,   -98),
+            ('ushort',    88,    87,    99,    98),
+            ('int',       22,  -187,  -199,  -198),
+            ('uint',     188,   187,   199,   198),
+            ('long',    -288,  -287,  -299,  -298),
+            ('ulong',    288,   287,   299,   298),
+            ('llong',   -388,  -387,  -399,  -398),
+            ('ullong',   388,   387,   399,   398),
+            ('long64',  -488,  -487,  -499,  -498),
+            ('ulong64',  488,   487,   499,   498),
+        ]
+
+        if not FIXCLING:
+            testdata.append(('float',   -588., -587., -599., -598.))
+            testdata.append(('double',  -688., -687., -699., -698.))
+            testdata.append(('ldouble', -788., -787., -799., -798.))
+
+        for name, dat, adat, cdat, acdat in testdata:
+            assert getattr(gbl, 'g_'+name)   == dat
+            setattr(gbl, 'g_'+name, adat)
+            assert getattr(gbl, 'g_'+name)   == adat
+            assert getattr(gbl, 'g_c_'+name) == cdat
+            raises(TypeError, setattr, 'g_c_'+name, acdat)
+            testcount += 1
+        assert testcount == len(testdata)
+
+        # enum types
+        assert gbl.g_enum   == gbl.kBanana;
+        if not FIXCLING:
+           assert gbl.g_c_enum == gbl.kApple
+
+        # void pointer
+        assert gbl.g_voidp   == gbl.nullptr
+        if not FIXCLING:
+           assert gbl.g_c_voidp == gbl.nullptr
+
+        # boundary checks
+        raises(ValueError, setattr, gbl, 'g_uchar',   -1)
+#        raises(ValueError, setattr, gbl, 'g_ushort',  -1)
+        raises(ValueError, setattr, gbl, 'g_uint',    -1)
+        raises(ValueError, setattr, gbl, 'g_ulong',   -1)
+        raises(ValueError, setattr, gbl, 'g_ulong64', -1)
+                        
     def test10_global_ptr(self):
         """Access of global objects through a pointer"""
 
@@ -573,6 +627,12 @@ class TestClassDATATYPES:
         assert gbl.kApple  == 78
         assert gbl.kBanana == 29
         assert gbl.kCitrus == 34
+
+        # global enums in namespace
+        assert gbl.EnumSpace
+        assert gbl.EnumSpace.E
+        assert gbl.EnumSpace.E1 == 1
+        assert gbl.EnumSpace.E2 == 2
 
     def test12_string_passing(self):
         """Passing/returning of a const char*"""

@@ -1,7 +1,7 @@
-# File: roottest/python/stl/PyROOT_stltests.py
+1# File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 05/20/14
+# Last: 05/01/15
 
 """STL unit tests for PyROOT package."""
 
@@ -148,7 +148,7 @@ class STL2ListTestCase( MyTestCase ):
 class STL3MapTestCase( MyTestCase ):
    N = 13
 
-   def test1BuiltinMapType( self ):
+   def test01BuiltinMapType( self ):
       """Test access to a map<int,int> (part of cintdlls)"""
 
       a = std.map( int, int )()
@@ -174,7 +174,7 @@ class STL3MapTestCase( MyTestCase ):
       self.assertEqual( key,   self.N-1 )
       self.assertEqual( value, (self.N-1)*(self.N-1) )
 
-   def test2KeyedMapType( self ):
+   def test02KeyedMapType( self ):
       """Test access to a map<std::string,int> (part of cintdlls)"""
 
       a = std.map( std.string, int )()
@@ -185,14 +185,14 @@ class STL3MapTestCase( MyTestCase ):
       self.assertEqual( i, self.N-1 )
       self.assertEqual( len(a), self.N )
 
-   def test3EmptyMapType( self ):
+   def test03EmptyMapType( self ):
       """Test behavior of empty map<int,int> (part of cintdlls)"""
 
       m = std.map( int, int )()
       for key, value in m:
          pass
 
-   def test4UnsignedvalueTypeMapTypes( self ):
+   def test04UnsignedvalueTypeMapTypes( self ):
       """Test assignability of maps with unsigned value types (not part of cintdlls)"""
 
       import math
@@ -213,6 +213,18 @@ class STL3MapTestCase( MyTestCase ):
       mul[ 'maxint' ] = maxvalue + 3
       self.assertEqual( mul[ 'maxint' ], maxvalue + 3 )
       self.assertRaises( ValueError, mul.__setitem__, 'minus two', -2 )
+
+   def test05FreshlyInstantiatedMapType( self ):
+      """Instantiate a map from a newly defined class"""
+
+      gInterpreter.Declare( 'template<typename T> struct Data { T fVal; };' )
+
+      results = std.map( std.string, Data(int) )()
+      d = Data(int)(); d.fVal = 42
+      results[ 'summary' ] = d
+      self.assertEqual( results.size(), 1 )
+      for tag, data in results:
+         self.assertEqual( data.fVal, 42 )
 
 
 ### Protocol mapping for an STL like class ===================================
@@ -345,6 +357,7 @@ class STL6IteratorComparisonTestCase( MyTestCase ):
       m[1] = 1
 
       self.__run_tests( m )
+
 
 ### Stream usage =============================================================
 class STL7StreamTestCase( MyTestCase ):
