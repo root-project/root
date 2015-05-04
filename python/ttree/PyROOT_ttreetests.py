@@ -1,7 +1,7 @@
 # File: roottest/python/ttree/PyROOT_ttreetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/13/06
-# Last: 06/16/14
+# Last: 05/04/15
 
 """TTree reading/writing unit tests for PyROOT package."""
 
@@ -82,17 +82,35 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       f = TFile( self.fname )
       mytree = f.Get( self.tname )
 
+      # normal reading
+      j = 0
       for event in mytree:
          i = 0
          for entry in event.data.GetFloats():
             self.assertEqual( i, int(entry) )
             i += 1
+         self.assertEqual( i, len(event.data.GetFloats()) )
 
          for mytuple in event.data.GetTuples():
             i = 0
             for entry in mytuple:
                self.assertEqual( i, int(entry) )
                i += 1
+            self.assertEqual( i, len(mytuple) )
+         j += 1
+      self.assertEqual( j, mytree.GetEntriesFast() )
+
+      # reading through an alias
+      mytree.SetAlias( "Data0", "data" )
+      j = 0
+      for event in mytree:
+         i = 0
+         for entry in event.Data0.GetFloats():
+            self.assertEqual( i, int(entry) )
+            i += 1
+         self.assertEqual( i, len(event.Data0.GetFloats()) )
+         j += 1
+      self.assertEqual( j, mytree.GetEntriesFast() )
 
       f.Close()
 
