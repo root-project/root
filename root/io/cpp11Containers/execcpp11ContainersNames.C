@@ -13,6 +13,9 @@ std::string getCppForCling(const char* name){
 int checkAndPrint(const char* name, const char* normName){
 
    // Check if it is sane C++
+#ifdef __APPLE__
+   if (strstr(name,"unordered_map")==nullptr && strstr(name,"unordered_multimap")==nullptr)
+#endif
    gInterpreter->ProcessLine(getCppForCling(name).c_str());
 
    auto cl = TClass::GetClass(name);
