@@ -237,13 +237,10 @@ DataFrame? is a very important datatype in R and in ROOTR we have a class to man
 dataframes called TRDataFrame, with a lot of very useful operators overloaded to work with TRDataFrame's objects
 in a similar way that in the R environment but from c++ in ROOT.
 Example:
-You can find the code in $ROOTSYS/tutorials/r/DataFrame.C
+
+Lets to create need data to play with dataframe features
+
 ``` {.cpp}
-#include<TRInterface.h>
- 
-using namespace ROOT::R;
-void DataFrame()
-{
 ////////////////////////
 //creating variables//
 ////////////////////////
@@ -266,14 +263,18 @@ v2[2]=0.303;
 names.push_back("v1");
 names.push_back("v2");
 names.push_back("v3");
-
-TRInterface &r=TRInterface::Instance(); 
-
-/////////////////////////////////////////////
-//creating dataframe object with its labels//
-/////////////////////////////////////////////
  
-TRDataFrame  df1(Label["var1"]=v1,Label["var2"]=v2,Label["var3"]=v3,Label["strings"]=names);
+ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
+```
+In R the dataframe have associate to every column a label, in ROOTR you can have the same label using the class ROOT::R::Label to create a TRDataFrame where you data
+have a label associate.
+
+``` {.cpp}
+/////////////////////////////////////////////////
+//creating dataframe object with its labels//
+/////////////////////////////////////////////////
+ 
+ROOT::R::TRDataFrame  df1(ROOT::R::Label["var1"]=v1,ROOT::R::Label["var2"]=v2,ROOT::R::Label["var3"]=v3,ROOT::R::Label["strings"]=names);
  
 //////////////////////////////////////////////
 //Passing dataframe to R's environment//
@@ -281,11 +282,22 @@ TRDataFrame  df1(Label["var1"]=v1,Label["var2"]=v2,Label["var3"]=v3,Label["strin
  
 r["df1"]<<df1;
 r<<"print(df1)";
+```
+Output
 
+``` {.sh}
+var1  var2 var3 strings
+1    1 0.101    1      v1
+2    2 0.202    2      v2
+3    3 0.303    3      v3
+```
+Manipulating data between dataframes
+
+``` {.cpp}
 ////////////////////////////////
 //Adding colunms to dataframe //
 ////////////////////////////////
-
+ 
 TVectorD v4(3);
 //filling the vector fro R's environment
 r["c(-1,-2,-3)"]>>v4;
@@ -295,44 +307,95 @@ df1["var4"]=v4;
 r["df1"]<<df1;
 //printing df1
 r<<"print(df1)";
+```
+Output
 
+``` {.sh}
+var1  var2 var3 strings var4
+1    1 0.101    1      v1   -1
+2    2 0.202    2      v2   -2
+3    3 0.303    3      v3   -3
+``` 
 
+Getting data frames from R's environment
+
+``` {.cpp}
 //////////////////////////////////////////
 //Getting dataframe from R's environment//
 //////////////////////////////////////////
-TRDataFrame df2;
-
+ROOT::R::TRDataFrame df2;
+ 
 r<<"df2<-data.frame(v1=c(0.1,0.2,0.3),v2=c(3,2,1))";
 r["df2"]>>df2;
-
+ 
 TVectorD v(3);
 df2["v1"]>>v;
 v.Print();
-
+ 
 df2["v2"]>>v;
 v.Print();
+```
 
+Output
 
+``` {.sh}
+Vector (3)  is as follows
+ 
+     |        1  |
+------------------
+   0 |0.1 
+   1 |0.2 
+   2 |0.3 
+ 
+Vector (3)  is as follows
+ 
+     |        1  |
+------------------
+   0 |3 
+   1 |2 
+   2 |1
+```
 
+``` {.cpp}
 ///////////////////////////////////////////
 //Working with colunms between dataframes//
 ///////////////////////////////////////////
-
+ 
 df2["v3"]<<df1["strings"];
-
+ 
 //updating df2 in R's environment
 r["df2"]<<df2;
 r<<"print(df2)";
+```
+Output
 
+``` {.sh}
+v1 v2 v3
+1 0.1  3 v1
+2 0.2  2 v2
+3 0.3  1 v3
+```
+
+``` {.cpp}
+///////////////////////////////////////////
+//Working with colunms between dataframes//
+///////////////////////////////////////////
+ 
 //passing values from colunm v3 of df2 to var1 of df1 
 df2["v3"]>>df1["var1"];
 //updating df1 in R's environment
 r["df1"]<<df1;
 r<<"print(df1)";
-
-}
 ```
 
+Output
+
+``` {.sh}
+var1  var2 var3 strings var4
+1   v1 0.101    1      v1   -1
+2   v2 0.202    2      v2   -2
+3   v3 0.303    3      v3   -3
+```
 
 ## Plotting with R's graphical system.
 ROOTR supports an eventloop for R's graphical system which allows plotting using the R functions to the
