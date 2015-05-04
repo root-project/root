@@ -1233,8 +1233,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
    PyObject* TTreeGetAttr( ObjectProxy* self, PyObject* pyname )
    {
    // allow access to branches/leaves as if they are data members
-      const char* name = PyROOT_PyUnicode_AsString( pyname );
-      if ( ! name )
+      const char* name1 = PyROOT_PyUnicode_AsString( pyname );
+      if ( ! name1 )
          return 0;
 
    // get hold of actual tree
@@ -1245,6 +1245,10 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
          return 0;
       }
+
+   // deal with possible aliasing
+      const char* name = tree->GetAlias( name1 );
+      if ( ! name ) name = name1;
 
    // search for branch first (typical for objects)
       TBranch* branch = tree->GetBranch( name );
