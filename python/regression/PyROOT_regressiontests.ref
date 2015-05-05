@@ -23,6 +23,7 @@ Load TPyException into python and make sure its usable ... ok
 Test passing arguments by const reference ... ok
 Test nested namespace lookup ... ok
 Matrix lookup has to be non-const to allow assigment ... ok
+Auto-downcast of interpreted class ... ok
 
 ----------------------------------------------------------------------
 

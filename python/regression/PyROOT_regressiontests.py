@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 02/17/15
+# Last: 05/05/15
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -33,6 +33,7 @@ __all__ = [
    'Regression15ConsRef',
    'Regression16NestedNamespace',
    'Regression17MatrixD',
+   'Regression18FailingDowncast'
 ]
 
 
@@ -357,6 +358,7 @@ class Regression16NestedNamespace( MyTestCase ):
       gROOT.ProcessLine('#include "NestedNamespace.h"')
       self.assert_( ABCDEFG.ABCD.Nested )
 
+
 ### matrix access has to go through non-const lookup =========================
 class Regression17MatrixD( MyTestCase ):
    def test1MatrixElementAssignment( self ):
@@ -371,6 +373,28 @@ class Regression17MatrixD( MyTestCase ):
 
       m[1, 2] = 4.
       self.assertEqual( m[1][2], 4. )
+
+
+### classes weren't always classes making GetActualClass fail ================
+class Regression18FailingDowncast( MyTestCase ):
+   def test1DowncastOfInterpretedClass( self ):
+      """Auto-downcast of interpreted class"""
+
+      code = """namespace RG18 {
+class Base {
+public:
+  virtual ~Base(){}
+};
+
+class Derived : public Base {
+  virtual ~Derived() {}
+};
+
+Base* g() { return new Derived(); }
+}"""
+      gInterpreter.LoadText( code )
+
+      self.assertEqual( type(RG18.g()), RG18.Derived )
 
 
 ## actual test run
