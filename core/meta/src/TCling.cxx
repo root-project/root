@@ -1003,6 +1003,7 @@ TCling::TCling(const char *name, const char *title)
       clingArgsStorage.push_back("-I");
       clingArgsStorage.push_back(include);
       clingArgsStorage.push_back("-Wno-undefined-inline");
+      clingArgsStorage.push_back("-fsigned-char");
    }
 
    std::vector<const char*> interpArgs;

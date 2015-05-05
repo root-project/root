@@ -83,6 +83,7 @@ def makepch():
                  "-D__STDC_LIMIT_MACROS",
                  "-D__STDC_CONSTANT_MACROS",
                  "-DROOT_PCH",
+                 "-fsigned-char",
                  "-I%s" %os.path.join(rootdir,"include"),
                  "-I%s" %os.path.join(rootdir,"etc"),
                  "-I%s" %os.path.join(rootdir,cfgdir),
