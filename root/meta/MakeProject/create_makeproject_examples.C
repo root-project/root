@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY(stl_makeproject_test)
+//R__LOAD_LIBRARY(stl_makeproject_test)
 
 #include "stl_makeproject_test.h"
 
@@ -13,5 +13,6 @@ int create_makeproject_examples()
    delete event;
    tree.Write();
    _file0.Close();
+   gSystem->Unlink("./stltest_makeproject_test.rootmap");
    return 0;
 }

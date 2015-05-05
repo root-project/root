@@ -16,23 +16,19 @@ ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-runaliceesd
                   OUTCNV aliceesd_convert.sh
                   OUTREF aliceesd.ref)
 
-ROOTTEST_GENERATE_DICTIONARY(stl_makeproject_test LINKDEF stl_makeproject_test.h stl_makeproject_test_linkdef.h)
-set(depends ${depends} ${GENERATE_DICTIONARY_TEST})
+ROOTTEST_GENERATE_DICTIONARY(stltest_makeproject_test LINKDEF stl_makeproject_test.h stl_makeproject_test_linkdef.h)
 
-ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-create-examples
+ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-stltest-create-examples
+                  COPY_TO_BUILDDIR stl_makeproject_test.h
                   MACRO create_makeproject_examples.C
                   PRECMD cmake -E remove stl_example.root || :
                   OUTREF create_makeproject_examples.ref
-                  DEPENDS ${depends})
-
-ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-cleanup
-                  COMMAND cmake -E remove stl_makeproject_test.so stl_makeproject_test.rootmap stl_makeproject_test_rdict.pcm stl_makeproject_test.cxx stl_example.root
-                  DEPENDS roottest-root-meta-MakeProject-create-examples)
+                  DEPENDS ${GENERATE_DICTIONARY_TEST})
 
 ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-stltest
                   MACRO runstltest.C
-                  OUTREF teststl.ref
-                  DEPENDS roottest-root-meta-MakeProject-cleanup)
+                  OUTREF teststlCTEST.ref
+                  DEPENDS roottest-root-meta-MakeProject-stltest-create-examples)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-stltest2
                   MACRO runstltest2.C+
