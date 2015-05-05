@@ -1,7 +1,7 @@
 # File: roottest/python/cling/PyROOT_clingtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 05813/13
+# Last: 05/05/15
 
 """Cling compatability tests for PyROOT package."""
 
@@ -12,7 +12,8 @@ from ROOT import *
 from common import FIXCLING
 
 __all__ = [
-   'Cling1ErrorTranslationTestCase'
+   'Cling1ErrorTranslationTestCase',
+   'Cling2WarningTranslationTestCase'
 ]
 
 
@@ -25,6 +26,18 @@ class Cling1ErrorTranslationTestCase( unittest.TestCase ):
          return
 
       self.assertRaises( IndexError, gROOT.ProcessLine, "char aap[5]; aap[6] = \'\\0\';" )
+
+
+### Cling warning translation test cases =====================================
+class Cling2WarningTranslationTestCase( unittest.TestCase ):
+   def test1DirectWarningCall( self ):
+      """Test Cling warning translation"""
+
+      import warnings, ROOT
+
+      warnings.filterwarnings( 'ignore', 'c1test' )
+    # namespaced call, as 'Warning' is a builtin exception
+      ROOT.Warning( 'c1test', 'c1test' )
 
 
 ## actual test run
