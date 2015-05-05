@@ -411,6 +411,16 @@ class Cpp07GloballyOverloadedComparator( MyTestCase ):
       self.assertEqual( a.__eq__( a ), False )
       self.assertEqual( b.__eq__( b ), False )
 
+   def test3DirectUseComparator( self ):
+      """Check that a namespaced global operator!=/== can be used directly"""
+
+      eq = getattr(ComparableSpace, 'operator==')
+      ComparableSpace.NSComparable.__eq__ = eq
+
+      a, b = ComparableSpace.NSComparable(), ComparableSpace.NSComparable()
+
+      self.assertEqual( a, b )
+      self.assertEqual( b, a )
 
 
 ### Check access to global variables =========================================
