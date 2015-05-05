@@ -364,8 +364,9 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 
 // This function can be called too early when setting up some of the ROOT core classes,
 // which in turn can trigger the creation of a (default) TApplication. Wait with looking
-// for binary operators until fully initialized.
-   if ( !gApplication )
+// for binary operators '!=' and '==' (which are set early in Pythonize.cxx) until fully
+// initialized. Other operators are expected to have entered from user code.
+   if ( !gApplication && (strcmp( op, "==" ) == 0 || strcmp( op, "!=" ) == 0) )
       return kFALSE;
 
 // For GNU on clang, search the internal __gnu_cxx namespace for binary operators (is
@@ -394,7 +395,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
    }
 
    if ( ! pyfunc ) {
-      std::string::size_type pos = lcname.rfind( "::" );
+      std::string::size_type pos = lcname.substr(0, lcname.find('<')).rfind( "::" );
       if ( pos != std::string::npos ) {
          TClass* lcscope = TClass::GetClass( lcname.substr( 0, pos ).c_str() );
          if ( lcscope ) {

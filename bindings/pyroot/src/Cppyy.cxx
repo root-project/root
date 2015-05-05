@@ -266,7 +266,7 @@ static CallFunc_t* GetCallFunc( Cppyy::TCppMethod_t method )
    
       TMethodArg* method_arg = 0;
       while ((method_arg = (TMethodArg*)iarg.Next())) {
-         std::string fullType = method_arg->GetFullTypeName();
+         std::string fullType = method_arg->GetTypeNormalizedName();
          if ( callString.empty() )
             callString = fullType;
          else
