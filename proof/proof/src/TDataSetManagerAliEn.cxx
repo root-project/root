@@ -1128,7 +1128,7 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
 
     // Fill locality: initialize stager, locate URLs
     if (fillLocality) {
-
+      
       if (fReadFromSE) {
 
         // If we have the redirector's URL, file is staged; elsewhere, assume
@@ -1152,6 +1152,7 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
         // Fill locality with a redirector
 
         fi = dynamic_cast<TFileInfo *>(newFc->GetList()->At(0));
+        
         if (fi) {
           Info("GetDataSet", "Filling dataset locality information: "
             "it might take time, be patient!");
@@ -1179,6 +1180,19 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
             }
             else if (gDebug >= 1) {
               Info("GetDataSet", "Lookup successful for %d file(s)", rv);
+            }
+            if ( TString(fi->GetCurrentUrl()->GetUrl()).Contains("FILTER_") )
+            {
+              TIter next(newFc->GetList());
+              TFileInfo* lfi;
+              FileStat_t stat;
+              
+              while ( ( lfi = static_cast<TFileInfo*>(next()) ) )
+              {
+                gSystem->GetPathInfo(lfi->GetCurrentUrl()->GetUrl(),stat);
+                
+                lfi->SetSize(stat.fSize);
+              }
             }
           }
         } // end if fi
