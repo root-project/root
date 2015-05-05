@@ -4,6 +4,9 @@
 
 #include <bitset>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
+#include "TH1D.h"
 
 #include "TObject.h"
 
@@ -12,6 +15,12 @@ class SillyStlEvent : public TObject {
 private:
    std::bitset<16> foo = 0xfa2;
    std::vector<int> bar = {1,2};
+   std::unordered_set<double> spam = {1,3,5,6,8};
+   std::unordered_map<int,string> eggs = {{2,"two"},{4,"four"}};
+   std::unordered_multimap<string,TH1D> strange = {{"one",TH1D("","one",11,0,10)},
+                                                   {"one",TH1D("","oneBis",100,0,10)},
+                                                   {"two",TH1D("","two",123,0,10)}};
+
 
 public:
    SillyStlEvent() {}
