@@ -25,7 +25,7 @@ summary:
 ifneq ($(V),)
 VERBOSE:=$(V)
 endif
-ifeq ($(VERBOSE),) 
+ifeq ($(VERBOSE),)
    CMDECHO=@
 else
    CMDECHO=
@@ -72,7 +72,7 @@ TEST_TARGETS_DIR = $(SUBDIRS:%=%.test)
 TEST_TARGETS += $(TEST_TARGETS_DIR) \
      $(subst .C,,$(ALL_ASSERT_C))  $(subst .cxx,,$(ALL_ASSERT_CXX)) \
      $(subst .C,,$(ALL_EXEC_C))  $(subst .cxx,,$(ALL_EXEC_CXX)) \
-     $(subst .py,,$(ALL_EXEC_PY)) 
+     $(subst .py,,$(ALL_EXEC_PY))
 
 # allow tests to be disabled by putting their names into a file called !DISABLE
 ifneq ($(MAKECMDGOALS),clean)
@@ -84,7 +84,7 @@ TEST_TARGETS := $(if $(TEST_TARGETS_DISABLED),\
                   $(TEST_TARGETS))
 
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
-CLEAN_TARGETS += 
+CLEAN_TARGETS +=
 
 ALL_LIBRARIES += AutoDict_* *_ACLiC_* *.success *.summary *.d *.o *.obj *.so *.pcm *.def *.exp *.dll *.lib dummy.C \
 	*.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log *.elog *.celog *.eclog *.pylog \
@@ -168,7 +168,7 @@ $(ROOTTEST_LOC)scripts/pt_collector: $(ROOTTEST_LOC)scripts/pt_collector.cpp $(R
 	$(CMDECHO)$(CXX) -g $^ -Wall `root-config --cflags` `root-config --libs` -o $@
 
 $(ROOTTEST_LOC)scripts/ptpreload.so: $(ROOTTEST_LOC)scripts/pt_mymalloc.cpp
-	$(CMDECHO)$(CXX) -g $< -shared -fPIC -Wall `root-config --cflags` -o $@ 
+	$(CMDECHO)$(CXX) -g $< -shared -fPIC -Wall `root-config --cflags` -o $@
 
 perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.so
 	$(CMDECHO) LD_LIBRARY_PATH=$(ROOTTEST_LOC)/scripts:$$LD_LIBRARY_PATH $(MAKE) -C $$PWD $(filter-out perftrack,$(MAKECMDGOALS)) \
@@ -178,7 +178,7 @@ perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.
 perftrack.tar.gz: $(ROOTTEST_LOC)scripts/pt_createIndex_C.so
 	$(CMDECHO) rm -f perftrack.tar perftrack.tar.gz; touch perftrack.tar ; \
                 $(CALLROOTEXEBUILD) -b -l -q $(ROOTTEST_LOC)/scripts/pt_createIndex.C+ ; \
-		find . -type f -name 'pt_*.root' -o -name 'pt_*.gif' -o -name pt_index.html | xargs -I{}  tar --transform=s/pt_index.html/index.html/ -u -f perftrack.tar "{}" ; gzip  perftrack.tar 
+		find . -type f -name 'pt_*.root' -o -name 'pt_*.gif' -o -name pt_index.html | xargs -I{}  tar --transform=s/pt_index.html/index.html/ -u -f perftrack.tar "{}" ; gzip  perftrack.tar
 
 #	$(CMDECHO) cd $(ROOTTEST_LOC) && find . -type f -name 'pt_*.root' | xargs -I{} bash -c 'mkdir -p $(ROOTTEST_LOC)/../perftrack/`dirname "{}"` && cp "{}" "$(ROOTTEST_LOC)/../perftrack/{}"' || true
 #	$(CMDECHO) cd $(ROOTTEST_LOC) && find . -type f -name 'pt_*.gif'  | xargs -I{} bash -c 'mkdir -p $(ROOTTEST_LOC)/../perftrack/`dirname "{}"` && cp "{}" "$(ROOTTEST_LOC)/../perftrack/{}"' || true
@@ -256,10 +256,10 @@ EVENTDIR = root/io/event
 else
 EVENTDIR = $(ROOTTEST_LOC)/root/io/event
 endif
-$(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
+$(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)
 	$(CMDECHO) (cd $(EVENTDIR); $(call locked_execution,globalrun,$(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL),notest);)
 
-$(EVENTDIR)/bigeventTest.success: $(ROOTCORELIBS)  
+$(EVENTDIR)/bigeventTest.success: $(ROOTCORELIBS)
 	$(CMDECHO) (cd $(EVENTDIR); $(call locked_execution,globalrun,$(MAKE) EVENT=Event$(ExeSuf) CURRENTDIR=$(EVENTDIR) --no-print-directory bigeventTest.success,notest);)
 
 $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
@@ -280,7 +280,7 @@ $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 	      printf 'FAIL\n' ; \
         false ; \
      $(TESTTIMEACTION) \
-     fi ) 
+     fi )
 
 #     result=$$?; \
 #     len=`echo Test in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Tests in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \
@@ -303,13 +303,13 @@ distclean: clean
 cleantest: test
 
 # For now logs.tar.gz is a phony target
-logs.tar.gz:	
-	$(CMDECHO) rm -f logs.tar logs.tar.gz ; touch logs.tar ; find . -name '*log' | xargs -I{}  tar -uf logs.tar "{}" ; gzip logs.tar 
+logs.tar.gz:
+	$(CMDECHO) rm -f logs.tar logs.tar.gz ; touch logs.tar ; find . -name '*log' | xargs -I{}  tar -uf logs.tar "{}" ; gzip logs.tar
 
 ifeq ($(MAKECMDGOALS),cleantest)
-  ifeq ($(VERBOSE),) 
+  ifeq ($(VERBOSE),)
      ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS) )
-  else 
+  else
      ForceRemoveFilesVerbose := $(shell echo rm -rf 'main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS)' 1>&2 )
      ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS) )
   endif
@@ -351,7 +351,7 @@ ifeq ($(PYTHON),)
          ifneq ($(subst $(MACOSX_MINOR),,12345),12345)
             export PYTHON := python
          else
-            export PYTHON := arch -i386 python2.6         
+            export PYTHON := arch -i386 python2.6
          endif
       endif
    endif
@@ -426,18 +426,18 @@ ifeq ($(RCONFIG_INC),)
    export RCONFIG_INC   := $(shell root-config --incdir)
 endif
 CXXFLAGS      += $(CXXOPT) -nologo -I$(RCONFIG_INC) -FIw32pragma.h
-CXXFLAGS      += -TP 
+CXXFLAGS      += -TP
 # replace script invocation for LD in Makefile.comp
 LD             = link -nologo
 #LDOPT         = -opt:ref
 #LDOPT         = -debug
 #LDFLAGS       = $(LDOPT) -nologo -nodefaultlib -incremental:no
-CLDFLAGS      = -link 
+CLDFLAGS      = -link
 SOFLAGS       = -DLL
 SYSLIBS       = kernel32.lib  ws2_32.lib mswsock.lib \
-                advapi32.lib  user32.lib gdi32.lib comdlg32.lib winspool.lib 
+                advapi32.lib  user32.lib gdi32.lib comdlg32.lib winspool.lib
 
-else 
+else
 
 # Non windows default:
 
@@ -452,8 +452,8 @@ SrcSuf        = cxx
 ExeSuf        =
 DllSuf        = so
 LibSuf        = so
-OutPutOpt     = -o 
-OutOpt        = -o 
+OutPutOpt     = -o
+OutOpt        = -o
 
 endif
 
@@ -471,6 +471,18 @@ SOFLAGS       = -shared
 endif
 
 ifeq ($(ARCH),linuxx8664gcc)
+
+CXX          ?= g++
+LD           ?= g++
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS      += -g -Wall -fPIC
+else
+CXXFLAGS      += -O -Wall -fPIC
+endif
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),ppc64le)
 
 CXX          ?= g++
 LD           ?= g++
@@ -501,11 +513,11 @@ CC ?= icc
 CXX?= icpc
 LD ?= icpc
 ifeq ($(ROOTBUILD),debug)
-CXXFLAGS += -g -wd191 -fPIC 
+CXXFLAGS += -g -wd191 -fPIC
 else
 CXXFLAGS += -O -wd191 -fPIC
 endif
-SOFLAGS  = -shared 
+SOFLAGS  = -shared
 endif
 
 ifeq ($(ARCH),linuxx8664icc)
@@ -531,7 +543,7 @@ CXXFLAGS      += -m32 -g -pipe -Wall -fPIC -Woverloaded-virtual
 else
 CXXFLAGS      += -m32 -O -pipe -Wall -fPIC -Woverloaded-virtual
 endif
-ifeq ($(MACOSX_MINOR),) 
+ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 endif
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
@@ -570,7 +582,7 @@ CXXFLAGS      += -m64 -g -pipe -Wall -fPIC -Woverloaded-virtual
 else
 CXXFLAGS      += -m64 -O -pipe -Wall -fPIC -Woverloaded-virtual
 endif
-ifeq ($(MACOSX_MINOR),) 
+ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 endif
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
@@ -607,7 +619,7 @@ CXXFLAGS      += -g -fPIC -wd191 -wd1476
 else
 CXXFLAGS      += -O -fPIC -wd191 -wd1476
 endif
-ifeq ($(MACOSX_MINOR),) 
+ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 endif
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
@@ -693,18 +705,18 @@ $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(RO
 	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$?  --log=$(ROOTTEST_LOC)scripts/utils_cc.build.log
 
 $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/recordtiming.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$?  --log=$(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$?  --log=$(ROOTTEST_LOC)scripts/recordtiming_cc.build.log
 
 override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 
-$(ROOTMAP): 
+$(ROOTMAP):
 	@echo Error $(ROOTMAP) is required for roottest '(Do cd $$ROOTSYS; $(MAKE) map)'
 
 check: $(ROOT_LOC)/lib/libCore.$(LibSuf)
 
-UTILS_PREREQ =  $(UTILS_LIBS) 
+UTILS_PREREQ =  $(UTILS_LIBS)
 
-utils:  $(UTILS_LIBS) 
+utils:  $(UTILS_LIBS)
 
 copiedEvent$(ExeSuf): $(EVENTDIR)/bigeventTest.success
 	$(CMDECHO) cp $(EVENTDIR)/libEvent.* $(EVENTDIR)/Event.h $(EVENTDIR)/EventDict_rdict.pcm .
@@ -714,34 +726,34 @@ ifeq ($(PLATFORM),win32)
 endif
 
 %.o: %.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_o_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_C.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_o_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_C.build.log --test=$@
 
 %.o: %.cc
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_o_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cc.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_o_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cc.build.log --test=$@
 
 %.o: %.cxx
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_o_cxx.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cxx.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_o_cxx.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cxx.build.log --test=$@
 
 %.o: %.cpp
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_o_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cpp.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_o_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cpp.build.log --test=$@
 
 %.$(ObjSuf): %.cc
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_o_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cc.build.log --test=$@
 
 %.obj: %.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_obj_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_C.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_obj_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_C.build.log --test=$@
 
 %.obj: %.cc
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_obj_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cc.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_obj_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cc.build.log --test=$@
 
 %.obj: %.cxx
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_obj_cxx.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cxx.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_obj_cxx.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cxx.build.log --test=$@
 
 %.obj: %.cpp
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_obj_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cpp.build.log --test=$@ 
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_obj_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cpp.build.log --test=$@
 
 %_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cpp.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cpp.build.log
 
 %_C.$(DllSuf) : %.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_C.build.log
@@ -769,15 +781,15 @@ assert%.elog : assert%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 assert%.eclog : assert%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b assert$*.cxx+ > assert$*.log 2> $@ || handleError.sh --cmd='Execution of assert$*.cxx+' --result=$$? --log=$@ --test=assert$*
 
-$(subst .cxx,.success,$(ALL_ASSERT_CXX)) : assert%.success: assert%.eclog assert%.ref 
+$(subst .cxx,.success,$(ALL_ASSERT_CXX)) : assert%.success: assert%.eclog assert%.ref
 	$(SuccessTestDiff) && touch $@
 
-$(subst .C,.success,$(ALL_ASSERT_C)) : assert%.success: assert%.elog assert%.ref 
+$(subst .C,.success,$(ALL_ASSERT_C)) : assert%.success: assert%.elog assert%.ref
 	$(SuccessTestDiff) && touch $@
 
-$(subst .cxx,,$(ALL_ASSERT_CXX)) : assert%: assert%.success 
+$(subst .cxx,,$(ALL_ASSERT_CXX)) : assert%: assert%.success
 
-$(subst .C,,$(ALL_ASSERT_C)) : assert%: assert%.success 
+$(subst .C,,$(ALL_ASSERT_C)) : assert%: assert%.success
 
 exec%.log : exec%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 || handleError.sh --cmd='Execution of $< > $@' --result=$$? --log=$@ --test=exec$*
@@ -785,25 +797,25 @@ exec%.log : exec%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 exec%.clog : exec%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b exec$*.cxx+ > $@ 2>&1 || handleError.sh --cmd='Execution of exec$*.cxx+' --result=$$? --log=$@ --test=exec$*
 
-$(subst .cxx,.success,$(ALL_EXEC_CXX)) : %.success: %.clog %.ref 
+$(subst .cxx,.success,$(ALL_EXEC_CXX)) : %.success: %.clog %.ref
 	$(SuccessTestDiff) && touch $@
 
-$(subst .C,.success,$(ALL_EXEC_C)) : %.success: %.log %.ref 
+$(subst .C,.success,$(ALL_EXEC_C)) : %.success: %.log %.ref
 	$(SuccessTestDiff) && touch $@
 
-$(subst .py,.py.success,$(ALL_EXEC_PY)) : %.py.success: %.pylog %.py.ref 
+$(subst .py,.py.success,$(ALL_EXEC_PY)) : %.py.success: %.pylog %.py.ref
 	$(SuccessTestDiff) && touch $@
 
-$(subst .cxx,,$(ALL_EXEC_CXX)) : %: %.success 
+$(subst .cxx,,$(ALL_EXEC_CXX)) : %: %.success
 
-$(subst .C,,$(ALL_EXEC_C)) : %: %.success 
+$(subst .C,,$(ALL_EXEC_C)) : %: %.success
 
-$(subst .py,,$(ALL_EXEC_PY)) : %: %.py.success 
+$(subst .py,,$(ALL_EXEC_PY)) : %: %.py.success
 
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)
 	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib $(PYTHON) $< -b - $(PYROOT_EXTRAFLAGS) > $@ 2>&1 || cat $@
-else 
+else
 	$(CMDECHO) $(PYTHON) $< -b - $(PYROOT_EXTRAFLAGS) > $@ 2>&1 || cat $@
 endif
 
@@ -814,7 +826,7 @@ else
 	$(CMDECHO) $(PYTHON) $< -b - $(PYROOT_EXTRAFLAGS) > $@ 2>&1 || cat $@
 endif
 
-.PRECIOUS: %_C.$(DllSuf) 
+.PRECIOUS: %_C.$(DllSuf)
 
 %.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1 || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=$*
@@ -848,7 +860,7 @@ exec%.ref:  | exec%.log
 ifneq ($(PLATFORM),macosx)
 
 define BuildWithLib
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) )\",\"\")" > $*.build.log 2>&1 || cat $*.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) )\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
 endef
 
 else
@@ -865,7 +877,7 @@ endef
 
 ifneq ($(SUMMARY),)
 SUMMARYDIFF= > $(SUMMARY).$@.diff.log || handleError.sh --cmd=diff --result=$$? --log=$(SUMMARY).$@.diff.log --test=$@
-SUMMARYDIFF_STAR= > $(SUMMARY).$*.diff.log || handleError.sh --cmd=diff --result=$$? --log=$(SUMMARY).$*.diff.log --test=$@  
+SUMMARYDIFF_STAR= > $(SUMMARY).$*.diff.log || handleError.sh --cmd=diff --result=$$? --log=$(SUMMARY).$*.diff.log --test=$@
 endif
 
 define PathDiff
@@ -939,14 +951,14 @@ ifeq ($(SED_VERSION),)
       else
          export SED_VERSION=macosx
       endif
-   else 
+   else
       export SED_VERSION=GNU
    endif
-endif   
+endif
 
 RemoveLeadingDirs := sed -e 's?^[A-Za-z/\].*[/\]??' -e 's/.dll/.so/'
 ifeq ($(SED_VERSION),macosx)
-   RemoveDirs := sed -E -e 's,([[:alpha:]]:\\|/)[^[:space:]]*[/\\],,g' 
+   RemoveDirs := sed -E -e 's,([[:alpha:]]:\\|/)[^[:space:]]*[/\\],,g'
 else
    RemoveDirs := sed -e 's?\([A-Za-z]:\\\|[/]\).*[/\\]??'
 endif
