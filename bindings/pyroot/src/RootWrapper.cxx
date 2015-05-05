@@ -864,9 +864,12 @@ PyObject* PyROOT::BindCppObject( Cppyy::TCppObject_t address, Cppyy::TCppType_t 
 
 // downcast to real class for object returns
    if ( clActual && klass != clActual ) {
-      address = (void*)((Long_t)address + \
-         Cppyy::GetBaseOffset( clActual, klass, address, -1 /* down-cast */ ) );
-      klass = clActual;
+      ptrdiff_t offset = Cppyy::GetBaseOffset( clActual, klass, address, -1 /* down-cast */ );
+      if ( offset != -1 ) {   // may fail if clActual not fully defined
+         address = (void*)((Long_t)address +                               \
+            Cppyy::GetBaseOffset( clActual, klass, address, -1 /* down-cast */ ) );
+         klass = clActual;
+      }
    }
 
 // actual binding

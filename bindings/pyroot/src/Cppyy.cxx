@@ -571,10 +571,14 @@ ptrdiff_t Cppyy::GetBaseOffset(
    if ( !cd.GetClass() || !cb.GetClass() )
       return (ptrdiff_t)0;
 
-   Long_t offset = gInterpreter->ClassInfo_GetBaseOffset(
-      cd->GetClassInfo(), cb->GetClassInfo(), (void*)address, direction > 0 );
+   Long_t offset = -1;
+   if ( cd->GetClassInfo() && cb->GetClassInfo() ) {
+      offset = gInterpreter->ClassInfo_GetBaseOffset(
+         cd->GetClassInfo(), cb->GetClassInfo(), (void*)address, direction > 0 );
+   }
+
    if ( offset == -1 ) {
-   // warn to allow diagnostics, but 0 offset is often good, so use that and continue
+   // warn to allow diagnostics, return -1 to signal caller NOT to apply offset
       std::ostringstream msg;
       msg << "failed offset calculation between " << cb->GetName() << " and " << cd->GetName();
       PyErr_Warn( PyExc_RuntimeWarning, const_cast<char*>( msg.str().c_str() ) );
