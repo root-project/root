@@ -389,10 +389,12 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 // in addition, __gnu_cxx, std::__1, and _pyroot_internal are searched pro-actively (as
 // there's AFAICS no way to unearth using information).
 
+
 // This function can be called too early when setting up some of the ROOT core classes,
 // which in turn can trigger the creation of a (default) TApplication. Wait with looking
-// for binary operators until fully initialized.
-   if ( !gApplication )
+// for binary operators '!=' and '==' (which are set early in Pythonize.cxx) until fully
+// initialized. Other operators are expected to have entered from user code.
+   if ( !gApplication && (strcmp( op, "==" ) == 0 || strcmp( op, "!=" ) == 0) )
       return kFALSE;
 
 // For GNU on clang, search the internal __gnu_cxx namespace for binary operators (is
@@ -421,6 +423,17 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
    }
 
    if ( ! pyfunc ) {
+      std::string::size_type pos = lcname.substr(0, lcname.find('<')).rfind( "::" );
+      if ( pos != std::string::npos ) {
+         TClass* lcscope = TClass::GetClass( lcname.substr( 0, pos ).c_str() );
+         if ( lcscope ) {
+            TFunction* func = FindAndAddOperator( lcname, rcname, op, lcscope );
+            if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( lcname.substr( 0, pos ) ), func );
+         }
+      }
+   }
+
+   if ( ! pyfunc ) {
       TFunction* func = FindAndAddOperator( lcname, rcname, op );
       if ( func ) pyfunc = new TFunctionHolder( func );
    }
@@ -438,6 +451,18 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
       fname  << lcname << ", " << rcname << ">";
       TFunction* func = _pr_int->GetMethodAny( fname.str().c_str() );
       if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "_pyroot_internal" ), func );
+   }
+
+   
+// last chance: there could be a non-instantiated templated method
+   TClass* lc = TClass::GetClass( lcname.c_str() );
+   if ( lc && strcmp(op, "==") != 0 && strcmp(op, "!=") != 0 ) {
+      std::string opname = "operator"; opname += op;
+      gInterpreter->LoadFunctionTemplates(lc);
+      gInterpreter->GetFunctionTemplate(lc->GetClassInfo(), opname.c_str());
+      TFunctionTemplate*f = lc->GetFunctionTemplate(opname.c_str());
+      TFunction* func = lc->GetMethodWithPrototype( opname.c_str(), rcname.c_str() );
+      if ( func && f ) pyfunc = new TMethodHolder( TScopeAdapter::ByName( lcname ), func );
    }
 
    if ( pyfunc ) {  // found a matching overload; add to class
