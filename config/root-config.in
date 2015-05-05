@@ -213,6 +213,12 @@ linuxppc64gcc)
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
+ppc64le)
+   # PPC64 (64 bit mode) little endian
+   auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m64 -fsigned-char"
+   auxldflags="-m64"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
 linuxx8664gcc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
    auxcflags="${cxxversionflag} -Wno-deprecated-declarations -m64"
