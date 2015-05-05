@@ -149,9 +149,16 @@ if not _builtin_cppyy:
 else:
    _global_cpp = _backend
  
-def Namespace( name ) :
-   if name == '' : return _global_cpp
-   else :          return _backend.LookupCppEntity( name )
+def Namespace( name ):
+   if not name:
+      return _global_cpp
+   try:
+      return _backend.LookupCppEntity( name )
+   except AttributeError:
+      pass
+ # to help auto-loading, simply declare the namespace
+   _backend.gInterpreter.Declare( 'namespace %s {}' % name )
+   return _backend.LookupCppEntity( name )
 makeNamespace = Namespace
 
 def makeClass( name ) :
