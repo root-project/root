@@ -175,6 +175,14 @@ class Func4GlobalCppFunctionAsMethodTestCase( MyTestCase ):
       a = FuncLess( 1234 )
       self.assertEqual( a.m_int, a.InstallableFunc().m_int );
 
+   def test2InstallAndCallGlobalCppFunctionAsPythonMethod( self ):
+      """Test installing and calling namespaced C++ function as python method"""
+
+      FuncLess.InstallableFunc2 = FunctionNS.InstallableFunc
+
+      a = FuncLess( 1234 )
+      self.assertEqual( a.m_int, a.InstallableFunc2().m_int );
+
 
 ### test minuit callback functionality and fit results =======================
 class Func5MinuitTestCase( MyTestCase ):
