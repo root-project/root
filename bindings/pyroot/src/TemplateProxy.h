@@ -27,9 +27,9 @@ namespace PyROOT {
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
-      PyObject* fPyName;
+      PyObject* fSelf;             // must be first (same layout as MethodProxy)
       PyObject* fPyClass;
-      PyObject* fSelf;
+      PyObject* fPyName;
       MethodProxy* fNonTemplated;  // holder for non-template overloads
       MethodProxy* fTemplated;     // holder for templated overloads
 

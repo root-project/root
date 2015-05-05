@@ -111,33 +111,14 @@ namespace {
    }
 
 //____________________________________________________________________________
-   int tpp_traverse( TemplateProxy* pytmpl, visitproc visit, void* args )
+   int tpp_traverse( TemplateProxy* pytmpl, visitproc visit, void* arg )
    {
    // Garbage collector traverse of held python member objects.
-      if ( pytmpl->fPyName ) {
-         int err = visit( pytmpl->fPyName, args );
-         if ( err ) return err;
-      }
-
-      if ( pytmpl->fPyClass ) {
-         int err = visit( pytmpl->fPyClass, args );
-         if ( err ) return err;
-      }
-
-      if ( pytmpl->fSelf ) {
-         int err = visit( pytmpl->fSelf, args );
-         if ( err ) return err;
-      }
-
-      if ( pytmpl->fNonTemplated ) {
-         int err = visit( (PyObject*)pytmpl->fNonTemplated, args );
-         if ( err ) return err;
-      }
-
-      if ( pytmpl->fTemplated ) {
-         int err = visit( (PyObject*)pytmpl->fTemplated, args );
-         if ( err ) return err;
-      }
+      Py_VISIT( pytmpl->fPyName );
+      Py_VISIT( pytmpl->fPyClass );
+      Py_VISIT( pytmpl->fSelf );
+      Py_VISIT( pytmpl->fNonTemplated );
+      Py_VISIT( pytmpl->fTemplated );
 
       return 0;
    }

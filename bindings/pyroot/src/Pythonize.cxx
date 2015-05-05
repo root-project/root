@@ -74,6 +74,15 @@ namespace {
    }
 
 //____________________________________________________________________________
+   PyObject* PyObject_GetAttrFromDict( PyObject* pyclass, PyObject* pyname ) {
+   // prevents calls to descriptors
+      PyObject* dict = PyObject_GetAttr( pyclass, PyStrings::gDict );
+      PyObject* attr = PyObject_GetItem( dict, pyname );
+      Py_DECREF( dict );
+      return attr;
+   }
+
+//____________________________________________________________________________
    inline Bool_t IsTemplatedSTLClass( const std::string& name, const std::string& klass ) {
    // Scan the name of the class and determine whether it is a template instantiation.
       const int nsize = (int)name.size();
@@ -1253,7 +1262,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 //____________________________________________________________________________
    PyObject* StlIterIsNotEqual( PyObject* self, PyObject* other )
    {
-   // Called if operator== not available (e.g. if a global overload as under gcc).
+   // Called if operator!= not available (e.g. if a global overload as under gcc).
    // An exception is raised as the user should fix the dictionary.
       return PyErr_Format( PyExc_LookupError,
          "No operator!=(const %s&, const %s&) available in the dictionary!",
@@ -1446,6 +1455,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       // Assignment operator; conform to python reference counting.
          if ( &t != this ) {
             Py_INCREF( t.fOrg );
+            Py_XDECREF( fOrg );
             fOrg = t.fOrg;
          }
          return *this;
@@ -2452,7 +2462,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TTreeGetAttr, METH_O );
 
    // workaround for templated member Branch()
-      MethodProxy* original = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gBranch );
+      MethodProxy* original =
+         (MethodProxy*)PyObject_GetAttrFromDict( pyclass, PyStrings::gBranch );
       MethodProxy* method = MethodProxy_New( "Branch", new TTreeBranch( original ) );
       Py_DECREF( original ); original = 0;
 
@@ -2461,7 +2472,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Py_DECREF( method ); method = 0;
 
    // workaround for templated member SetBranchAddress()
-      original = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gSetBranchAddress );
+      original = (MethodProxy*)PyObject_GetAttrFromDict( pyclass, PyStrings::gSetBranchAddress );
       method = MethodProxy_New( "SetBranchAddress", new TTreeSetBranchAddress( original ) );
       Py_DECREF( original ); original = 0;
 
@@ -2474,7 +2485,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TChain" ) {
    // allow SetBranchAddress to take object directly, w/o needing AddressOf()
-      MethodProxy* original = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gSetBranchAddress );
+      MethodProxy* original =
+         (MethodProxy*)PyObject_GetAttrFromDict( pyclass, PyStrings::gSetBranchAddress );
       MethodProxy* method = MethodProxy_New( "SetBranchAddress", new TChainSetBranchAddress( original ) );
       Py_DECREF( original ); original = 0;
 
