@@ -33,6 +33,18 @@ include(RootNewMacros)
 include(CheckCompiler)
 include(MacroEnsureVersion)
 
+#---Enable CCache ------------------------------------------------------------------------------
+if(ccache)
+   find_program(ccache_cmd NAMES ccache ccache-swig)
+   mark_as_advanced(ccache_cmd ${ccache_cmd})
+   if(ccache_cmd)
+      message(STATUS "Using ccache for building")
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+   else()
+      message(STATUS "Could NOT find ccache")
+   endif()
+endif()
+
 #---Enable CTest package -----------------------------------------------------------------------
 #include(CTest)
 if(testing)
