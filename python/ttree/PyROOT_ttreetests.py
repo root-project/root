@@ -1,7 +1,7 @@
 # File: roottest/python/ttree/PyROOT_ttreetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/13/06
-# Last: 05/04/15
+# Last: 05/05/15
 
 """TTree reading/writing unit tests for PyROOT package."""
 
@@ -12,7 +12,8 @@ from ROOT import *
 from common import *
 
 __all__ = [
-   'TTree1ReadWriteSimpleObjectsTestCase'
+   'TTree1ReadWriteSimpleObjectsTestCase',
+   'TTree2BranchCreation'
 ]
 
 gROOT.LoadMacro( "TTreeTypes.C+" )
@@ -274,6 +275,14 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
          val += 1
 
       f.Close()
+
+
+class TTree2BranchCreation( MyTestCase ):
+   def test01TemplatedBranchCreation( self ):
+      """Templated call when creating a branch"""
+
+      t = TTree()
+      t.Branch( "a", 0 )
 
 
 ## actual test run
