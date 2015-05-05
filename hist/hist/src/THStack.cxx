@@ -512,6 +512,15 @@ Double_t THStack::GetMinimum(Option_t *option)
 }
 
 //______________________________________________________________________________
+Int_t THStack::GetNhists() const
+{
+   // Return the number of histograms in the stack
+
+   if (fHists) return fHists->GetSize();
+   return 0;
+}
+
+//______________________________________________________________________________
 TObjArray *THStack::GetStack()
 {
    // Return pointer to Stack. Build it if not yet done
@@ -677,6 +686,8 @@ void THStack::Paint(Option_t *option)
    Double_t ymin = 1e100;
    Double_t ymax = -xmin;
    while ((h=(TH1*)next())) {
+      // in case of automatic binning
+      if (h->GetBuffer()) h->BufferEmpty(-1);
       if (h->GetXaxis()->GetXmin() < xmin) xmin = h->GetXaxis()->GetXmin();
       if (h->GetXaxis()->GetXmax() > xmax) xmax = h->GetXaxis()->GetXmax();
       if (h->GetYaxis()->GetXmin() < ymin) ymin = h->GetYaxis()->GetXmin();

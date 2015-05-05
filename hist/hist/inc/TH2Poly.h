@@ -128,12 +128,12 @@ public:
    void         SetNewBinAdded(Bool_t flag){fNewBinAdded = flag;}
 
 protected:
-   TList   *fBins;              //List of bins.
+   TList   *fBins;              //List of bins. The list owns the contained objects
    Double_t fOverflow[9];       //Overflow bins
    Int_t    fCellX;             //Number of partition cells in the x-direction of the histogram
    Int_t    fCellY;             //Number of partition cells in the y-direction of the histogram
    Int_t    fNCells;            //Number of partition cells: fCellX*fCellY
-   TList   *fCells;             //[fNCells] The array of TLists that store the bins that intersect with each cell
+   TList   *fCells;             //[fNCells] The array of TLists that store the bins that intersect with each cell. List do not own the contained objects
    Double_t fStepX, fStepY;     //Dimensions of a partition cell
    Bool_t  *fIsEmpty;           //[fNCells] The array that returns true if the cell at the given coordinate is empty
    Bool_t  *fCompletelyInside;  //[fNCells] The array that returns true if the cell at the given coordinate is completely inside a bin
@@ -144,7 +144,7 @@ protected:
    void   AddBinToPartition(TH2PolyBin *bin);  // Adds the input bin into the partition matrix
    void   Initialize(Double_t xlow, Double_t xup, Double_t ylow, Double_t yup, Int_t n, Int_t m);
    Bool_t IsIntersecting(TH2PolyBin *bin, Double_t xclipl, Double_t xclipr, Double_t yclipb, Double_t yclipt);
-   Bool_t IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y, Double_t xclipl, Double_t xclipr, Double_t yclipb, Double_t yclipt);
+   Bool_t IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y, Double_t xclipl, Double_t xclipr, Double_t yclipb, Double_t yclipt);  
 
    ClassDef(TH2Poly,1)  //2-Dim histogram with polygon bins
 };

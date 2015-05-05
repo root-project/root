@@ -365,7 +365,16 @@ void TRobustEstimator::Evaluate()
    for (ii=0; ii<5; ii++)
       sum+=indsubdat[ii];
    Int_t *subdat=new Int_t[sum];
+   //printf("allocates subdat[ %d ]\n", sum);
+   // init the subdat matrix
+   for (int iii = 0; iii < sum; ++iii) subdat[iii] = -999;
    RDraw(subdat, nsub, indsubdat);
+   for (int iii = 0; iii < sum; ++iii) {
+      if (subdat[iii] < 0 || subdat[iii] >= fN ) {
+         Error("Evaluate","subdat index is invalid subdat[%d] = %d",iii, subdat[iii] );
+         R__ASSERT(0);
+      }
+   }
    //now the indexes of selected cases are in the array subdat
    //matrices to store best means and covariances
    Int_t nbestsub=nbest*nsub;
@@ -1234,12 +1243,11 @@ void TRobustEstimator::RDraw(Int_t *subdat, Int_t ngroup, Int_t *indsubdat)
    Int_t i, k, m, j;
    for (k=1; k<=ngroup; k++) {
       for (m=1; m<=indsubdat[k-1]; m++) {
-
-         nrand = Int_t(gRandom->Uniform(0, 1) * (fN-jndex))+1;
-         
+         nrand = Int_t(gRandom->Uniform(0, 1) * double(fN-jndex))+1;
+         //printf("nrand = %d - jndex %d\n",nrand,jndex);
          jndex++;
          if (jndex==1) {
-            subdat[0]=nrand;
+            subdat[0]=nrand-1;  // in case nrand is equal to fN
          } else {
             subdat[jndex-1]=nrand+jndex-2;
             for (i=1; i<=jndex-1; i++) {
@@ -1247,6 +1255,7 @@ void TRobustEstimator::RDraw(Int_t *subdat, Int_t ngroup, Int_t *indsubdat)
                   for(j=jndex; j>=i+1; j--) {
                      subdat[j-1]=subdat[j-2];
                   }
+                  //printf("subdata[] i = %d - nrand %d\n",i,nrand);
                   subdat[i-1]=nrand+i-2;
                   break;  //breaking the loop for(i=1...
                }

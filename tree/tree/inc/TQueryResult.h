@@ -77,9 +77,14 @@ protected:
    Bool_t          fFinalized;    //whether Terminate has been run
    Bool_t          fArchived;     //whether the query has been archived
    TString         fResultFile;   //URL of the file where results have been archived
+   Float_t         fPrepTime;     //Prepare time (seconds) (millisec precision)
    Float_t         fInitTime;     //Initialization time (seconds) (millisec precision)
    Float_t         fProcTime;     //Processing time (seconds) (millisec precision)
+   Float_t         fMergeTime;    //Merging time (seconds) (millisec precision)
+   Float_t         fRecvTime;     //Transfer-to-client time (seconds) (millisec precision)
+   Float_t         fTermTime;     //Terminate time (seconds) (millisec precision)
    Int_t           fNumWrks;      //Number of workers at start
+   Int_t           fNumMergers;   //Number of submergers
 
    TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                 Long64_t entries, Long64_t first,
@@ -97,14 +102,20 @@ protected:
    virtual void    SetProcessInfo(Long64_t ent, Float_t cpu = 0.,
                                   Long64_t siz = -1,
                                   Float_t inittime = 0., Float_t proctime = 0.);
+   void            SetPrepTime(Float_t preptime) { fPrepTime = preptime; }
+   void            SetMergeTime(Float_t mergetime) { fMergeTime = mergetime; }
+   void            SetRecvTime(Float_t recvtime) { fRecvTime = recvtime; }
+   void            SetTermTime(Float_t termtime) { fTermTime = termtime; }
+   void            SetNumMergers(Int_t nmergers) { fNumMergers = nmergers; }
 
 public:
    TQueryResult() : fSeqNum(-1), fDraw(0), fStatus(kSubmitted), fUsedCPU(0.),
                     fInputList(0), fEntries(-1), fFirst(-1), fBytes(0),
                     fLogFile(0), fSelecHdr(0), fSelecImp(0),
                     fLibList("-"), fOutputList(0),
-                    fFinalized(kFALSE), fArchived(kFALSE),
-                    fInitTime(0.), fProcTime(0.), fNumWrks(-1) { }
+                    fFinalized(kFALSE), fArchived(kFALSE), fPrepTime(0.),
+                    fInitTime(0.), fProcTime(0.), fMergeTime(0.),
+                    fRecvTime(-1), fTermTime(0.), fNumWrks(-1), fNumMergers(-1) { }
    virtual ~TQueryResult();
 
    void           Browse(TBrowser *b = 0);
@@ -127,9 +138,14 @@ public:
    const char    *GetParList() const { return fParList; }
    TList         *GetOutputList() { return fOutputList; }
    const char    *GetResultFile() const { return fResultFile; }
+   Float_t        GetPrepTime() const { return fPrepTime; }
    Float_t        GetInitTime() const { return fInitTime; }
    Float_t        GetProcTime() const { return fProcTime; }
+   Float_t        GetMergeTime() const { return fMergeTime; }
+   Float_t        GetRecvTime() const { return fRecvTime; }
+   Float_t        GetTermTime() const { return fTermTime; }
    Int_t          GetNumWrks() const { return fNumWrks; }
+   Int_t          GetNumMergers() const { return fNumMergers; }
 
    Bool_t         IsArchived() const { return fArchived; }
    virtual Bool_t IsDone() const { return (fStatus > kRunning); }
@@ -140,7 +156,7 @@ public:
 
    void Print(Option_t *opt = "") const;
 
-   ClassDef(TQueryResult,4)  //Class describing a query
+   ClassDef(TQueryResult,5)  //Class describing a query
 };
 
 inline Bool_t operator!=(const TQueryResult &qr1,  const TQueryResult &qr2)

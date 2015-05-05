@@ -31,7 +31,7 @@
 
 #include "Math/Interpolator.h"
 #include "GSLInterpolator.h"
-
+#include <algorithm>
 
 namespace ROOT {
 namespace Math {

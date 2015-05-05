@@ -87,6 +87,7 @@ enum ERootCanvasCommands {
    kFileSaveAsGIF,
    kFileSaveAsJPG,
    kFileSaveAsPNG,
+   kFileSaveAsTEX,
    kFilePrint,
    kFileCloseCanvas,
    kFileQuit,
@@ -339,6 +340,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fFileSaveMenu->AddEntry(Form("%s.&ps",  name), kFileSaveAsPS);
    fFileSaveMenu->AddEntry(Form("%s.&eps", name), kFileSaveAsEPS);
    fFileSaveMenu->AddEntry(Form("%s.p&df", name), kFileSaveAsPDF);
+   fFileSaveMenu->AddEntry(Form("%s.&tex", name), kFileSaveAsTEX);
    fFileSaveMenu->AddEntry(Form("%s.&gif", name), kFileSaveAsGIF);
 
    static Int_t img = 0;
@@ -346,7 +348,12 @@ void TRootCanvas::CreateCanvas(const char *name)
    if (!img) {
       Int_t sav = gErrorIgnoreLevel;
       gErrorIgnoreLevel = kFatal;
-      img = TImage::Create() ? 1 : -1;
+      TImage* itmp = TImage::Create();
+      img = itmp ? 1 : -1;
+      if (itmp) {
+         delete itmp;
+         itmp=NULL;
+      }
       gErrorIgnoreLevel = sav;
    }
    if (img > 0) {
@@ -923,6 +930,9 @@ again:
                   case kFileSaveAsPNG:
                      fCanvas->SaveAs(".png");
                      break;
+                  case kFileSaveAsTEX:
+                     fCanvas->SaveAs(".tex");
+                     break;
                   case kFilePrint:
                      PrintCanvas();
                      break;
@@ -1478,19 +1488,23 @@ void TRootCanvas::ShowEditor(Bool_t show)
          fEmbedded = kTRUE;
          if (show && (!fEditor || !((TGedEditor *)fEditor)->IsMapped())) {
             if (!browser->GetTabLeft()->GetTabTab("Pad Editor")) {
-               browser->StartEmbedding(TRootBrowser::kLeft);
-               if (!fEditor)
-                  fEditor = TVirtualPadEditor::GetPadEditor(kTRUE);
-               else {
-                  ((TGedEditor *)fEditor)->ReparentWindow(fClient->GetRoot());
-                  ((TGedEditor *)fEditor)->MapWindow();
-               }
-               browser->StopEmbedding("Pad Editor");
-               fEditor->SetGlobal(kFALSE);
-               gROOT->GetListOfCleanups()->Remove((TGedEditor *)fEditor);
-               if (fEditor) {
-                  ((TGedEditor *)fEditor)->SetCanvas(fCanvas);
-                  ((TGedEditor *)fEditor)->SetModel(fCanvas, fCanvas, kButton1Down);
+               if (browser->GetActFrame()) { //already in edit mode
+                  TTimer::SingleShot(200, "TRootCanvas", this, "ShowEditor(=kTRUE)");
+               } else {
+                  browser->StartEmbedding(TRootBrowser::kLeft);
+                  if (!fEditor)
+                     fEditor = TVirtualPadEditor::GetPadEditor(kTRUE);
+                  else {
+                     ((TGedEditor *)fEditor)->ReparentWindow(fClient->GetRoot());
+                     ((TGedEditor *)fEditor)->MapWindow();
+                  }
+                  browser->StopEmbedding("Pad Editor");
+                  fEditor->SetGlobal(kFALSE);
+                  gROOT->GetListOfCleanups()->Remove((TGedEditor *)fEditor);
+                  if (fEditor) {
+                     ((TGedEditor *)fEditor)->SetCanvas(fCanvas);
+                     ((TGedEditor *)fEditor)->SetModel(fCanvas, fCanvas, kButton1Down);
+                  }
                }
             }
             else
@@ -2042,7 +2056,7 @@ Bool_t TRootCanvas::HandleDNDLeave()
 //______________________________________________________________________________
 void TRootCanvas::Activated(Int_t id)
 {
-   // Slot handling tab switching in the browser, to properly set the canvas 
+   // Slot handling tab switching in the browser, to properly set the canvas
    // and the model to the editor.
 
    if (fEmbedded) {

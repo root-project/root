@@ -19,36 +19,76 @@ static int begin_request_handler(struct mg_connection *conn)
 
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
+   THttpCallArg arg;
+
    TString filename;
 
+   Bool_t execres = kTRUE;
+
    if (serv->IsFileRequested(request_info->uri, filename)) {
-      mg_send_file(conn, filename.Data());
-      return 1;
+      if ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS)) {
+         Int_t length = 0;
+         char *buf = THttpServer::ReadFileContent(filename.Data(), length);
+         if (buf == 0) {
+            arg.Set404();
+         } else {
+            arg.SetContentType(THttpServer::GetMimeType(filename.Data()));
+            arg.SetBinData(buf, length);
+            arg.AddHeader("Cache-Control", "max-age=3600");
+            arg.SetZipping(2);
+         }
+      } else {
+         arg.SetFile(filename.Data());
+      }
+   } else {
+      arg.SetPathAndFileName(request_info->uri); // path and file name
+      arg.SetQuery(request_info->query_string);  //! additional arguments
+      arg.SetTopName(engine->GetTopName());
+
+      execres = serv->ExecuteHttp(&arg);
    }
 
-   THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->uri); // path and file name
-   arg.SetQuery(request_info->query_string);  //! additional arguments
-   arg.SetTopName(engine->GetTopName());
-
-   TString hdr;
-
-   if (!serv->ExecuteHttp(&arg) || arg.Is404()) {
+   if (!execres || arg.Is404()) {
+      TString hdr;
       arg.FillHttpHeader(hdr, "HTTP/1.1");
       mg_printf(conn, "%s", hdr.Data());
-      return 1;
-   }
-
-   if (arg.IsFile()) {
+   } else if (arg.IsFile()) {
       mg_send_file(conn, (const char *) arg.GetContent());
-      return 1;
+   } else {
+
+      Bool_t dozip = arg.GetZipping() > 0;
+      switch (arg.GetZipping()) {
+         case 2:
+            if (arg.GetContentLength() < 10000) {
+               dozip = kFALSE;
+               break;
+            }
+         case 1:
+            // check if request header has Accept-Encoding
+            dozip = kFALSE;
+            for (int n = 0; n < request_info->num_headers; n++) {
+               TString name = request_info->http_headers[n].name;
+               if (name.Index("Accept-Encoding", 0, TString::kIgnoreCase) != 0) continue;
+               TString value = request_info->http_headers[n].value;
+               dozip = (value.Index("gzip", 0, TString::kIgnoreCase) != kNPOS);
+               break;
+            }
+
+            break;
+         case 3:
+            dozip = kTRUE;
+            break;
+      }
+
+      if (dozip) arg.CompressWithGzip();
+
+      TString hdr;
+      arg.FillHttpHeader(hdr, "HTTP/1.1");
+      mg_printf(conn, "%s", hdr.Data());
+
+      if (arg.GetContentLength() > 0)
+         mg_write(conn, arg.GetContent(), (size_t) arg.GetContentLength());
    }
-
-   arg.FillHttpHeader(hdr, "HTTP/1.1");
-   mg_printf(conn, "%s", hdr.Data());
-
-   if (arg.GetContentLength() > 0)
-      mg_write(conn, arg.GetContent(), (size_t) arg.GetContentLength());
 
    // Returning non-zero tells civetweb that our function has replied to
    // the client, and civetweb should not send client any more data.
@@ -70,7 +110,7 @@ static int begin_request_handler(struct mg_connection *conn)
 //    auth_domain - domain name, used for authentication                //
 //                                                                      //
 // Example:                                                             //
-//    new THttpServer("http:8080/none?top=MyApp&thrds=3");              //
+//    new THttpServer("http:8080?top=MyApp&thrds=3");                   //
 //                                                                      //
 // Authentication:                                                      //
 //    When auth_file and auth_domain parameters are specified, access   //
@@ -82,7 +122,7 @@ static int begin_request_handler(struct mg_connection *conn)
 //                                                                      //
 //    When creating server, parameters should be:                       //
 //                                                                      //
-//       new THttpServer("http:8080/none?auth_file=.htdigets&auth_domain=domain_name");   //
+//       new THttpServer("http:8080?auth_file=.htdigets&auth_domain=domain_name");  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -113,6 +153,11 @@ Bool_t TCivetweb::Create(const char *args)
 {
    // Creates embedded civetweb server
    // As argument, http port should be specified in form "8090"
+   // One could provide extra parameters after '?' (like URL parameters)
+   //    thrds=N   - there N is number of threads used by the civetweb (default is 5)
+   //    top=name  - configure top name, visible at the web browser
+   //    auth_file=filename  - authentication file name, created with htdigets utility
+   //    auth_domain=domain   - authentication domain
 
    fCallbacks = malloc(sizeof(struct mg_callbacks));
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
@@ -122,24 +167,35 @@ Bool_t TCivetweb::Create(const char *args)
    TString num_threads = "5";
    TString auth_file, auth_domain;
 
-   // for the moment the only argument is port number
+   // extract arguments
    if ((args != 0) && (strlen(args) > 0)) {
-      TUrl url(TString::Format("http://localhost:%s", args));
 
-      if (url.IsValid()) {
-         url.ParseOptions();
-         if (url.GetPort() > 0) sport.Form("%d", url.GetPort());
+      // first extract port number
+      sport = "";
+      while ((*args != 0) && (*args >= '0') && (*args <= '9'))
+         sport.Append(*args++);
 
-         const char *top = url.GetValueFromOptions("top");
-         if (top != 0) fTopName = top;
+      // than search for extra parameters
+      while ((*args != 0) && (*args != '?')) args++;
 
-         Int_t thrds = url.GetIntValueFromOptions("thrds");
-         if (thrds > 0) num_threads.Form("%d", thrds);
+      if (*args == '?') {
+         TUrl url(TString::Format("http://localhost/folder%s", args));
 
-         const char *afile = url.GetValueFromOptions("auth_file");
-         if (afile != 0) auth_file = afile;
-         const char *adomain = url.GetValueFromOptions("auth_domain");
-         if (adomain != 0) auth_domain = adomain;
+         if (url.IsValid()) {
+            url.ParseOptions();
+
+            const char *top = url.GetValueFromOptions("top");
+            if (top != 0) fTopName = top;
+
+            Int_t thrds = url.GetIntValueFromOptions("thrds");
+            if (thrds > 0) num_threads.Form("%d", thrds);
+
+            const char *afile = url.GetValueFromOptions("auth_file");
+            if (afile != 0) auth_file = afile;
+
+            const char *adomain = url.GetValueFromOptions("auth_domain");
+            if (adomain != 0) auth_domain = adomain;
+         }
       }
    }
 

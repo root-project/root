@@ -15,33 +15,17 @@
 #include <unistd.h>
 #endif
 
-
 #ifndef HTTP_WITHOUT_FASTCGI
 
 #include "fcgiapp.h"
-#include <fstream>
+
 #include <stdlib.h>
 
 void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 {
-   std::ifstream is(fname);
+   Int_t length = 0;
 
-   char *buf = 0;
-   int length = 0;
-
-   if (is) {
-      is.seekg(0, is.end);
-      length = is.tellg();
-      is.seekg(0, is.beg);
-
-      buf = (char *) malloc(length);
-      is.read(buf, length);
-      if (!is) {
-         free(buf);
-         buf = 0;
-         length = 0;
-      }
-   }
+   char *buf = THttpServer::ReadFileContent(fname, length);
 
    if (buf == 0) {
       FCGX_FPrintF(request->out,
@@ -49,24 +33,6 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
                    "Content-Length: 0\r\n" // Always set Content-Length
                    "Connection: close\r\n\r\n");
    } else {
-
-      /*      char sbuf[100], etag[100];
-            time_t curtime = time(NULL);
-            strftime(sbuf, sizeof(sbuf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&curtime));
-            snprintf(etag, sizeof(etag), "\"%lx.%ld\"",
-                     (unsigned long) curtime, (long) length);
-
-            // Send HTTP reply to the client
-            FCGX_FPrintF(request->out,
-                   "HTTP/1.1 200 OK\r\n"
-                   "Date: %s\r\n"
-                   "Last-Modified: %s\r\n"
-                   "Etag: %s\r\n"
-                   "Content-Type: %s\r\n"
-                   "Content-Length: %d\r\n"     // Always set Content-Length
-                   "\r\n", sbuf, sbuf, etag, THttpServer::GetMimeType(fname), length);
-
-      */
 
       FCGX_FPrintF(request->out,
                    "Status: 200 OK\r\n"
@@ -89,7 +55,7 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 //                                                                      //
 // TFastCgi                                                             //
 //                                                                      //
-// Http engine implementation, based on fastcgi package                 //
+// http engine implementation, based on fastcgi package                 //
 // Allows to redirect http requests from normal web server like         //
 // Apache or lighttpd                                                   //
 //                                                                      //
@@ -117,7 +83,7 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 //    top=foldername - name of top folder, seen in the browser          //
 //    debug=1 - run fastcgi server in debug mode                        //
 // Example:                                                             //
-//    serv->CreateEngine("fastcgi:9000/none?top=fastcgiserver"          //
+//    serv->CreateEngine("fastcgi:9000?top=fastcgiserver");             //
 //                                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -167,23 +133,33 @@ Bool_t TFastCgi::Create(const char *args)
    TString sport = ":9000";
 
    if ((args != 0) && (strlen(args) > 0)) {
-      TUrl url(TString::Format("http://localhost:%s", args));
 
-      if (url.IsValid()) {
-         url.ParseOptions();
-         if (url.GetPort() > 0) sport.Form(":%d", url.GetPort());
+      // first extract port number
+      sport = ":";
+      while ((*args != 0) && (*args >= '0') && (*args <= '9'))
+         sport.Append(*args++);
 
-         if (url.GetValueFromOptions("debug") != 0) fDebugMode = kTRUE;
+      // than search for extra parameters
+      while ((*args != 0) && (*args != '?')) args++;
 
-         const char *top = url.GetValueFromOptions("top");
+      if (*args == '?') {
+         TUrl url(TString::Format("http://localhost/folder%s", args));
 
-         if (top != 0) fTopName = top;
+         if (url.IsValid()) {
+
+            url.ParseOptions();
+
+            if (url.GetValueFromOptions("debug") != 0) fDebugMode = kTRUE;
+
+            const char *top = url.GetValueFromOptions("top");
+            if (top != 0) fTopName = top;
+         }
       }
 
 //      Info("Create", "valid url opt %s debug = %d", url.GetOptions(), fDebugMode);
    }
 
-   Info("Create", "Starting FastCGI server on port %s", sport.Data());
+   Info("Create", "Starting FastCGI server on port %s", sport.Data() + 1);
 
    fSocket = FCGX_OpenSocket(sport.Data(), 10);
    fThrd = new TThread("FastCgiThrd", TFastCgi::run_func, this);
@@ -293,6 +269,9 @@ void *TFastCgi::run_func(void *args)
       } else if (arg.IsFile()) {
          FCGX_ROOT_send_file(&request, (const char *) arg.GetContent());
       } else {
+
+         // TODO: check in request header that gzip encoding is supported
+         if (arg.GetZipping() > 0) arg.CompressWithGzip();
 
          arg.FillHttpHeader(hdr, "Status:");
          FCGX_FPrintF(request.out, hdr.Data());

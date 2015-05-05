@@ -166,6 +166,7 @@ TGX11::TGX11()
    fCharacterUpY       = 1;
    fDepth              = 0;
    fHasTTFonts         = kFALSE;
+   fHasXft             = kFALSE;
    fMaxNumberOfWindows = 10;
    fTextAlignH         = 1;
    fTextAlignV         = 1;
@@ -200,6 +201,7 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
    fCharacterUpY       = 1;
    fDepth              = 0;
    fHasTTFonts         = kFALSE;
+   fHasXft             = kFALSE;
    fMaxNumberOfWindows = 10;
    fTextAlignH         = 1;
    fTextAlignV         = 1;
@@ -231,6 +233,7 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
    fBlackPixel      = org.fBlackPixel;
    fWhitePixel      = org.fWhitePixel;
    fHasTTFonts      = org.fHasTTFonts;
+   fHasXft          = org.fHasXft;
    fTextAlignH      = org.fTextAlignH;
    fTextAlignV      = org.fTextAlignV;
    fTextAlign       = org.fTextAlign;

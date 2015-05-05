@@ -1,7 +1,5 @@
-// JSRootIOEvolution.js
-//
-// core methods for JavaScript ROOT I/O.
-//
+/// @file JSRootIOEvolution.js
+/// I/O methods of JavaScript ROOT
 
 (function(){
 
@@ -40,8 +38,7 @@
 
    JSROOT.fUserStreamers = null; // map of user-streamer function like func(buf,obj,prop,streamerinfo)
 
-   JSROOT.addUserStreamer = function(type, user_streamer)
-   {
+   JSROOT.addUserStreamer = function(type, user_streamer) {
       if (JSROOT.fUserStreamers == null) JSROOT.fUserStreamers = {};
       JSROOT.fUserStreamers[type] = user_streamer;
    }
@@ -61,11 +58,11 @@
          if (!noalert) alert("Error R__unzip_header: error in header");
          return -1;
       }
-      return JSROOT.IO.Z_HDRSIZE + 
+      return JSROOT.IO.Z_HDRSIZE +
                 ((str.charCodeAt(off+3) & 0xff) |
                  ((str.charCodeAt(off+4) & 0xff) << 8) |
                  ((str.charCodeAt(off+5) & 0xff) << 16));
-   };
+   }
 
    JSROOT.R__unzip = function(srcsize, str, off, noalert) {
 
@@ -102,9 +99,8 @@
          return null;
       }
       return null;
-   };
+   }
 
-   
    JSROOT.ReconstructObject = function(class_name, obj_rawdata, sinfo_rawdata) {
       // method can be used to reconstruct ROOT object from binary buffer
       // Buffer can be requested from online server with request like:
@@ -113,7 +109,7 @@
       //   http://localhost:8080/StreamerInfo/root.bin
       // And one should provide class name of the object
       //
-      // Method provided for convenience only to see how binary JSROOT.IO works.  
+      // Method provided for convenience only to see how binary JSROOT.IO works.
       // It is strongly recommended to use JSON representation:
       //   http://localhost:8080/Files/job1.root/hpx/root.json
 
@@ -122,13 +118,11 @@
       file.ExtractStreamerInfos(buf);
 
       var obj = {};
-      
-      obj['_typename'] = class_name;
+
       buf = new JSROOT.TBuffer(obj_rawdata, 0, file);
       buf.MapObject(obj, 1);
-
       buf.ClassStreamer(obj, class_name);
-      
+
       return obj;
    }
 
@@ -156,25 +150,25 @@
 
    JSROOT.TBuffer.prototype.ntou2 = function() {
       // convert (read) two bytes of buffer b into a UShort_t
-      var n  = ((this.b.charCodeAt(this.o)   & 0xff) << 8) >>> 0;
-      n +=  (this.b.charCodeAt(this.o+1) & 0xff) >>> 0;
+      var n = ((this.b.charCodeAt(this.o) & 0xff) << 8) >>> 0;
+      n += (this.b.charCodeAt(this.o+1) & 0xff) >>> 0;
       this.o += 2;
       return n;
-   };
+   }
 
    JSROOT.TBuffer.prototype.ntou4 = function() {
       // convert (read) four bytes of buffer b into a UInt_t
-      var n  = ((this.b.charCodeAt(this.o)   & 0xff) << 24) >>> 0;
+      var n  = ((this.b.charCodeAt(this.o) & 0xff) << 24) >>> 0;
       n += ((this.b.charCodeAt(this.o+1) & 0xff) << 16) >>> 0;
       n += ((this.b.charCodeAt(this.o+2) & 0xff) << 8)  >>> 0;
       n +=  (this.b.charCodeAt(this.o+3) & 0xff) >>> 0;
       this.o += 4;
       return n;
-   };
+   }
 
    JSROOT.TBuffer.prototype.ntou8 = function() {
       // convert (read) eight bytes of buffer b into a ULong_t
-      var n  = ((this.b.charCodeAt(this.o)   & 0xff) << 56) >>> 0;
+      var n = ((this.b.charCodeAt(this.o) & 0xff) << 56) >>> 0;
       n += ((this.b.charCodeAt(this.o+1) & 0xff) << 48) >>> 0;
       n += ((this.b.charCodeAt(this.o+2) & 0xff) << 40) >>> 0;
       n += ((this.b.charCodeAt(this.o+3) & 0xff) << 32) >>> 0;
@@ -182,9 +176,9 @@
       n += ((this.b.charCodeAt(this.o+5) & 0xff) << 16) >>> 0;
       n += ((this.b.charCodeAt(this.o+6) & 0xff) << 8) >>> 0;
       n +=  (this.b.charCodeAt(this.o+7) & 0xff) >>> 0;
-      this.op += 8;
+      this.o += 8;
       return n;
-   };
+   }
 
    JSROOT.TBuffer.prototype.ntoi1 = function() {
       return (this.b.charCodeAt(this.o++) & 0xff);
@@ -196,21 +190,21 @@
       n += (this.b.charCodeAt(this.o+1) & 0xff);
       this.o += 2;
       return n;
-   };
+   }
 
    JSROOT.TBuffer.prototype.ntoi4 = function() {
       // convert (read) four bytes of buffer b into a Int_t
-      var n  = (this.b.charCodeAt(this.o)   & 0xff) << 24;
-      n += (this.b.charCodeAt(this.o+1) & 0xff) << 16;
-      n += (this.b.charCodeAt(this.o+2) & 0xff) << 8;
-      n += (this.b.charCodeAt(this.o+3) & 0xff);
+      var n  = ((this.b.charCodeAt(this.o) & 0xff) << 24) +
+               ((this.b.charCodeAt(this.o+1) & 0xff) << 16) +
+               ((this.b.charCodeAt(this.o+2) & 0xff) << 8) +
+               ((this.b.charCodeAt(this.o+3) & 0xff));
       this.o += 4;
       return n;
-   };
+   }
 
    JSROOT.TBuffer.prototype.ntoi8 = function(b, o) {
       // convert (read) eight bytes of buffer b into a Long_t
-      var n  = (this.b.charCodeAt(this.o)   & 0xff) << 56;
+      var n = (this.b.charCodeAt(this.o) & 0xff) << 56;
       n += (this.b.charCodeAt(this.o+1) & 0xff) << 48;
       n += (this.b.charCodeAt(this.o+2) & 0xff) << 40;
       n += (this.b.charCodeAt(this.o+3) & 0xff) << 32;
@@ -220,7 +214,7 @@
       n += (this.b.charCodeAt(this.o+7) & 0xff);
       this.o += 8;
       return n;
-   };
+   }
 
    JSROOT.TBuffer.prototype.ntof = function() {
       // IEEE-754 Floating-Point Conversion (single precision - 32 bits)
@@ -250,7 +244,7 @@
          }
       }
       return (bsign * Math.pow(2, bexp) * bman);
-   };
+   }
 
    JSROOT.TBuffer.prototype.ntod = function() {
       // IEEE-754 Floating-Point Conversion (double precision - 64 bits)
@@ -280,8 +274,7 @@
          }
       }
       return (bsign * Math.pow(2, bexp) * bman);
-   };
-
+   }
 
    JSROOT.TBuffer.prototype.ReadFastArray = function(n, array_type) {
       // read array of n integers from the I/O buffer
@@ -330,11 +323,10 @@
       default:
          for (var i = 0; i < n; ++i)
             array[i] = this.ntou4();
-      break;
+         break;
       }
       return array;
-   };
-
+   }
 
    JSROOT.TBuffer.prototype.ReadBasicPointer = function(len, array_type) {
       var isArray = this.b.charCodeAt(this.o++) & 0xff;
@@ -345,8 +337,7 @@
 
       this.o--;
       return this.ReadFastArray(len, array_type);
-   };
-
+   }
 
    JSROOT.TBuffer.prototype.ReadString = function(max_len) {
       // stream a string from buffer
@@ -359,7 +350,7 @@
       }
 
       return (len == 0) ? "" : this.b.substring(pos0, pos0 + len);
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadTString = function() {
       // stream a TString object from buffer
@@ -371,32 +362,31 @@
       this.o += len;
 
       return (this.b.charCodeAt(pos) == 0) ? '' : this.b.substring(pos, pos + len);
-   };
-
+   }
 
    JSROOT.TBuffer.prototype.GetMappedObject = function(tag) {
       return this.fObjectMap[tag];
-   };
+   }
 
    JSROOT.TBuffer.prototype.MapObject = function(tag, obj) {
       if (obj==null) return;
       this.fObjectMap[tag] = obj;
-   };
+   }
 
    JSROOT.TBuffer.prototype.MapClass = function(tag, classname) {
       this.fClassMap[tag] = classname;
-   };
+   }
 
    JSROOT.TBuffer.prototype.GetMappedClass = function(tag) {
       if (tag in this.fClassMap) return this.fClassMap[tag];
       return -1;
-   };
+   }
 
    JSROOT.TBuffer.prototype.ClearObjectMap = function() {
       this.fObjectMap = {};
       this.fClassMap = {};
       this.fObjectMap[0] = null;
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadVersion = function() {
       // read class version from I/O buffer
@@ -404,10 +394,12 @@
       var bytecnt = this.ntou4(); // byte count
       if (bytecnt & JSROOT.IO.kByteCountMask)
          ver['bytecnt'] = bytecnt - JSROOT.IO.kByteCountMask - 2; // one can check between Read version and end of streamer
+      else
+         this.o -= 4; // rollback read bytes, this is old buffer without bytecount
       ver['val'] = this.ntou2();
       ver['off'] = this.o;
       return ver;
-   };
+   }
 
    JSROOT.TBuffer.prototype.CheckBytecount = function(ver, where) {
       if (('bytecnt' in ver) && (ver['off'] + ver['bytecnt'] != this.o)) {
@@ -436,7 +428,7 @@
       tobj['fName'] = this.ReadTString();
       tobj['fTitle'] = this.ReadTString();
       return this.CheckBytecount(ver, "ReadTNamed");
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadTObjString = function(tobj) {
       // read a TObjString definition from I/O buffer
@@ -444,7 +436,7 @@
       this.ReadTObject(tobj);
       tobj['fString'] = this.ReadTString();
       return this.CheckBytecount(ver, "ReadTObjString");
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadTList = function(list) {
       // stream all objects in the list from the I/O buffer
@@ -468,7 +460,7 @@
       }
 
       return this.CheckBytecount(ver);
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadTObjArray = function(list) {
       list['_typename'] = "TObjArray";
@@ -486,7 +478,7 @@
          list['arr'].push(obj);
       }
       return this.CheckBytecount(ver, "ReadTObjArray");
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadTClonesArray = function(list) {
       list['_typename'] = "TClonesArray";
@@ -517,7 +509,28 @@
          list['arr'].push(obj);
       }
       return this.CheckBytecount(ver, "ReadTClonesArray");
-   };
+   }
+
+   JSROOT.TBuffer.prototype.ReadTPolyMarker3D = function(marker) {
+      var ver = this.ReadVersion();
+
+      this.ReadTObject(marker);
+
+      this.ClassStreamer(marker, "TAttMarker");
+
+      marker['fN'] = this.ntoi4();
+
+      marker['fP'] = this.ReadFastArray(marker['fN']*3, 'F');
+
+      marker['fOption'] = this.ReadTString();
+
+      if (ver['val'] > 1)
+         marker['fName'] = this.ReadTString();
+      else
+         marker['fName'] = "TPolyMarker3D";
+
+      return this.CheckBytecount(ver, "ReadTPolyMarker3D");
+   }
 
    JSROOT.TBuffer.prototype.ReadTCollection = function(list, str, o) {
       list['_typename'] = "TCollection";
@@ -534,7 +547,100 @@
          list['arr'].push(null);
       }
       return this.CheckBytecount(ver,"ReadTCollection");
-   };
+   }
+
+   JSROOT.TBuffer.prototype.ReadTKey = function(key) {
+      key['fNbytes'] = this.ntoi4();
+      key['fVersion'] = this.ntoi2();
+      key['fObjlen'] = this.ntou4();
+      var datime = this.ntou4();
+      key['fDatime'] = new Date();
+      key['fDatime'].setFullYear((datime >>> 26) + 1995);
+      key['fDatime'].setMonth((datime << 6) >>> 28);
+      key['fDatime'].setDate((datime << 10) >>> 27);
+      key['fDatime'].setHours((datime << 15) >>> 27);
+      key['fDatime'].setMinutes((datime << 20) >>> 26);
+      key['fDatime'].setSeconds((datime << 26) >>> 26);
+      key['fDatime'].setMilliseconds(0);
+      key['fKeylen'] = this.ntou2();
+      key['fCycle'] = this.ntou2();
+      if (key['fVersion'] > 1000) {
+         key['fSeekKey'] = this.ntou8();
+         this.shift(8); // skip seekPdir
+      } else {
+         key['fSeekKey'] = this.ntou4();
+         this.shift(4); // skip seekPdir
+      }
+      key['fClassName'] = this.ReadTString();
+      key['fName'] = this.ReadTString();
+      key['fTitle'] = this.ReadTString();
+
+      var name = key['fName'].replace(/['"]/g,'');
+
+      if (name != key['fName']) {
+         key['fRealName'] = key['fName'];
+         key['fName'] = name;
+      }
+
+      return true;
+   }
+
+   JSROOT.TBuffer.prototype.ReadTBasket = function(obj) {
+      this.ReadTKey(obj);
+      var ver = this.ReadVersion();
+      obj['fBufferSize'] = this.ntoi4();
+      obj['fNevBufSize'] = this.ntoi4();
+      obj['fNevBuf'] = this.ntoi4();
+      obj['fLast'] = this.ntoi4();
+      var flag = this.ntoi1();
+      // here we implement only data skipping, no real I/O for TBasket is performed
+      if ((flag % 10) != 2) {
+         var sz = this.ntoi4(); this.o += sz*4; // fEntryOffset
+         if (flag>40) { sz = this.ntoi4(); this.o += sz*4; } // fDisplacement
+      }
+
+      if (flag == 1 || flag > 10) {
+         var sz = obj['fLast'];
+         if (ver['val'] <=1) sz = this.ntoi4();
+         this.o += sz; // fBufferRef
+      }
+      return this.CheckBytecount(ver,"ReadTBasket");
+   }
+
+
+   JSROOT.TBuffer.prototype.ReadTCanvas = function(obj) {
+      // stream all objects in the list from the I/O buffer
+      var ver = this.ReadVersion();
+
+      this.ClassStreamer(obj, "TPad");
+
+      obj['fDISPLAY'] = this.ReadTString();
+      obj['fDoubleBuffer'] = this.ntoi4();
+      obj['fRetained'] = this.ntou1()!=0;
+      obj['fXsizeUser'] = this.ntoi4();
+      obj['fYsizeUser'] = this.ntoi4();
+      obj['fXsizeReal'] = this.ntoi4();
+      obj['fYsizeReal'] = this.ntoi4();
+      obj['fWindowTopX'] = this.ntoi4();
+      obj['fWindowTopY'] = this.ntoi4();
+      obj['fWindowWidth'] = this.ntoi4();
+      obj['fWindowHeight'] = this.ntoi4();
+      obj['fCw'] = this.ntou4();
+      obj['fCh'] = this.ntou4();
+
+      obj['fCatt'] = {};
+      this.ClassStreamer(obj['fCatt'], "TAttCanvas");
+      this.ntou1(); // ignore b << TestBit(kMoveOpaque);
+      this.ntou1(); // ignore b << TestBit(kResizeOpaque);
+      obj['fHighLightColor'] = this.ntoi2();
+      obj['fBatch'] = this.ntou1()!=0;
+      this.ntou1();   // ignore b << TestBit(kShowEventStatus);
+      this.ntou1();   // ignore b << TestBit(kAutoExec);
+      this.ntou1();   // ignore b << TestBit(kMenuBar);
+
+      // now TCanvas streamer should be complete - verify that bytecount is correct
+      return this.CheckBytecount(ver, "TCanvas");
+   }
 
    JSROOT.TBuffer.prototype.ReadTStreamerInfo = function(streamerinfo) {
       // stream an object of class TStreamerInfo from the I/O buffer
@@ -549,7 +655,7 @@
          streamerinfo['fElements'] = this.ReadObjectAny();
       }
       return this.CheckBytecount(R__v, "ReadTStreamerInfo");
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadStreamerElement = function(element) {
       // stream an object of class TStreamerElement
@@ -589,8 +695,7 @@
          //if (TestBit(kHasRange)) GetRange(GetTitle(),fXmin,fXmax,fFactor);
       }
       return this.CheckBytecount(R__v, "ReadStreamerElement");
-   };
-
+   }
 
    JSROOT.TBuffer.prototype.ReadStreamerBase = function(streamerbase) {
       // stream an object of class TStreamerBase
@@ -601,7 +706,7 @@
          streamerbase['baseversion'] = this.ntou4();
       }
       return this.CheckBytecount(R__v, "ReadStreamerBase");
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadStreamerBasicType = function(streamerbase) {
       // stream an object of class TStreamerBasicType
@@ -610,7 +715,7 @@
          this.ReadStreamerElement(streamerbase);
       }
       return this.CheckBytecount(R__v, "ReadStreamerBasicType");
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadStreamerBasicPointer = function(streamerbase) {
       // stream an object of class TStreamerBasicPointer
@@ -622,19 +727,19 @@
          streamerbase['countClass'] = this.ReadTString();
       }
       return this.CheckBytecount(R__v, "ReadStreamerBasicPointer");
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadStreamerSTL = function(streamerSTL) {
       // stream an object of class TStreamerSTL
 
       var R__v = this.ReadVersion();
-      if (R__v['val'] > 2) {
+      if (R__v['val'] > 1) {
          this.ReadStreamerElement(streamerSTL);
          streamerSTL['stltype'] = this.ntou4();
          streamerSTL['ctype'] = this.ntou4();
       }
       return this.CheckBytecount(R__v, "ReadStreamerSTL");
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadTStreamerObject = function(streamerbase) {
       // stream an object of class TStreamerObject
@@ -643,8 +748,7 @@
          this.ReadStreamerElement(streamerbase);
       }
       return this.CheckBytecount(R__v, "ReadTStreamerObject");
-   };
-
+   }
 
    JSROOT.TBuffer.prototype.ReadClass = function() {
       // read class definition from I/O buffer
@@ -685,7 +789,7 @@
       // classInfo['cnt'] = (bcnt & ~JSROOT.IO.kByteCountMask);
 
       return classInfo;
-   };
+   }
 
    JSROOT.TBuffer.prototype.ReadObjectAny = function() {
       var startpos = this.o;
@@ -704,10 +808,10 @@
       this.ClassStreamer(obj, clRef['name']);
 
       return obj;
-   };
+   }
 
    JSROOT.TBuffer.prototype.ClassStreamer = function(obj, classname) {
-      // console.log("Start streaming of class " + classname);
+      if (! ('_typename' in obj))  obj['_typename'] = classname;
 
       if (classname == 'TObject' || classname == 'TMethodCall') {
          this.ReadTObject(obj);
@@ -732,10 +836,10 @@
          alert("Trying to read TCollection - wrong!!!");
       }
       else if (classname == 'TCanvas') {
-         var ver = this.ReadVersion();
-         this.ClassStreamer(obj, "TPad");
-         // we repair here correct position - no warning to outside
-         this.CheckBytecount(ver);
+         this.ReadTCanvas(obj);
+      }
+      else if (classname == 'TPolyMarker3D') {
+         this.ReadTPolyMarker3D(obj);
       }
       else if (classname == "TStreamerInfo") {
          this.ReadTStreamerInfo(obj);
@@ -748,41 +852,44 @@
       }
       else if ((classname == "TStreamerBasicPointer") || (classname == "TStreamerLoop")) {
          this.ReadStreamerBasicPointer(obj);
-      } else if (classname == "TStreamerSTL") {
+      }
+      else if (classname == "TStreamerSTL") {
          this.ReadStreamerSTL(obj);
-      } else if (classname == "TStreamerObject" ||
+      }
+      else if (classname == "TStreamerObject" ||
             classname == "TStreamerObjectAny" ||
             classname == "TStreamerString" ||
             classname == "TStreamerObjectPointer" ) {
          this.ReadTStreamerObject(obj);
       }
+      else if (classname == "TBasket") {
+         this.ReadTBasket(obj);
+      }
       else {
          var streamer = this.fFile.GetStreamer(classname);
          if (streamer != null)
             streamer.Stream(obj, this);
-         else
-            console.log("Did not found streamer for class " + classname);
+         else {
+            JSROOT.console("Did not found streamer for class " + classname + " try to skip data");
+            var ver = this.ReadVersion();
+            this.CheckBytecount(ver);
+         }
       }
-
-      // TODO: check how typename set
-      obj['_typename'] = classname;
 
       JSROOT.addMethods(obj);
    }
 
-   
+
    // ==============================================================================
-   
+
    // ctor
    JSROOT.TStreamer = function(file) {
       this.fFile = file;
       this._typename = "TStreamer";
       return this;
-   };
-
+   }
 
    JSROOT.TStreamer.prototype.ReadBasicType = function(buf, obj, prop) {
-
       // read basic types (known from the streamer info)
       switch (this[prop]['type']) {
          case JSROOT.IO.kBase:
@@ -960,7 +1067,7 @@
             alert('failed to stream ' + prop + ' (' + this[prop]['typename'] + ')');
             break;
       }
-   };
+   }
 
    JSROOT.TStreamer.prototype.Stream = function(obj, buf) {
 
@@ -974,8 +1081,8 @@
             var clname = this[prop]['class'];
             if (this[prop]['class'].indexOf("TArray") == 0) {
                var array_type = this[prop]['class'].charAt(6);
-               obj['fN'] = buf.ntou4();
-               obj['fArray'] = buf.ReadFastArray(obj['fN'], array_type);
+               var len = buf.ntou4();
+               obj['fArray'] = buf.ReadFastArray(len, array_type);
             } else {
                buf.ClassStreamer(obj, this[prop]['class']);
             }
@@ -1043,9 +1150,7 @@
       buf.CheckBytecount(ver, "TStreamer.Stream");
 
       return buf.o;
-
-   };
-
+   }
 
 
    // ==============================================================================
@@ -1066,42 +1171,57 @@
       this['dir_cycle'] = cycle;
       this.fKeys = new Array();
       return this;
-   };
+   }
 
-
-   JSROOT.TDirectory.prototype.GetKey = function(keyname, cycle) {
+   JSROOT.TDirectory.prototype.GetKey = function(keyname, cycle, call_back) {
       // retrieve a key by its name and cycle in the list of keys
-      for (var i=0; i<this.fKeys.length; ++i) {
-         if (this.fKeys[i]['fName'] == keyname && this.fKeys[i]['fCycle'] == cycle)
+      for (var i in this.fKeys) {
+         if (this.fKeys[i]['fName'] == keyname && this.fKeys[i]['fCycle'] == cycle) {
+            JSROOT.CallBack(call_back, this.fKeys[i]);
             return this.fKeys[i];
+         }
       }
+
+      var pos = keyname.lastIndexOf("/");
+      // try to handle situation when object name contains slashed (bad practice anyway)
+      while (pos > 0) {
+         var dirname = keyname.substr(0, pos);
+         var subname = keyname.substr(pos+1);
+
+         var dirkey = this.GetKey(dirname, 1);
+         if ((dirkey!=null) && (typeof call_back == 'function') &&
+              (dirkey['fClassName'].indexOf("TDirectory")==0)) {
+
+            this.fFile.ReadObject(this['dir_name'] + "/" + dirname, 1, function(newdir) {
+               if (newdir) newdir.GetKey(subname, cycle, call_back);
+            });
+            return null;
+         }
+
+         pos = keyname.lastIndexOf("/", pos-1);
+      }
+
+
+      JSROOT.CallBack(call_back, null);
       return null;
    }
 
    JSROOT.TDirectory.prototype.ReadKeys = function(readkeys_callback) {
-
       var thisdir = this;
+      var file = this.fFile;
 
-      var callback2 = function(file, _buffer) {
-         //headerkey->ReadKeyBuffer(buffer);
-         var buf = new JSROOT.TBuffer(_buffer, 0, thisdir.fFile);
+      //*-*-------------Read directory info
+      var nbytes = this.fNbytesName + 22;
+      nbytes += 4;  // fDatimeC.Sizeof();
+      nbytes += 4;  // fDatimeM.Sizeof();
+      nbytes += 18; // fUUID.Sizeof();
+      // assume that the file may be above 2 Gbytes if file version is > 4
+      if (file.fVersion >= 40000) nbytes += 12;
 
-         var key = thisdir.fFile.ReadKey(buf);
-
-         var nkeys = buf.ntoi4();
-         for (var i = 0; i < nkeys; i++) {
-            key = thisdir.fFile.ReadKey(buf);
-            thisdir.fKeys.push(key);
-         }
-         thisdir.fFile.fDirectories.push(thisdir);
-
-         delete buf;
-         
-         if (typeof readkeys_callback == 'function') readkeys_callback(thisdir);
-      };
-
-      var callback1 = function(file, buffer) {
-         var buf = new JSROOT.TBuffer(buffer, thisdir.fNbytesName, thisdir.fFile);
+      file.Seek(this.fSeekDir, this.fFile.ERelativeTo.kBeg);
+      file.ReadBuffer(nbytes, function(blob1) {
+         if (blob1==null) return JSROOT.CallBack(readkeys_callback,null);
+         var buf = new JSROOT.TBuffer(blob1, thisdir.fNbytesName, file);
 
          thisdir.StreamHeader(buf);
 
@@ -1115,41 +1235,50 @@
          buf.ReadTString();
          thisdir.fTitle = buf.ReadTString();
          if (thisdir.fNbytesName < 10 || thisdir.fNbytesName > 10000) {
-            throw "Init : cannot read directory info of file " + thisdir.fURL;
+            JSROOT.console("Cannot read directory info of file " + file.fURL);
+            return JSROOT.CallBack(readkeys_callback, null);
          }
          //*-* -------------Read keys of the top directory
 
-         if ( thisdir.fSeekKeys >  0) {
-            thisdir.fFile.Seek(thisdir.fSeekKeys, thisdir.fFile.ERelativeTo.kBeg);
-            thisdir.fFile.ReadBuffer(thisdir.fNbytesKeys, callback2);
-         }
-      };
+         if (thisdir.fSeekKeys <=0)
+            return JSROOT.CallBack(readkeys_callback, null);
 
-      //*-*-------------Read directory info
-      var nbytes = this.fNbytesName + 22;
-      nbytes += 4;  // fDatimeC.Sizeof();
-      nbytes += 4;  // fDatimeM.Sizeof();
-      nbytes += 18; // fUUID.Sizeof();
-      // assume that the file may be above 2 Gbytes if file version is > 4
-      if (this.fFile.fVersion >= 40000) nbytes += 12;
+         file.Seek(thisdir.fSeekKeys, file.ERelativeTo.kBeg);
+         file.ReadBuffer(thisdir.fNbytesKeys, function(blob2) {
+            if (blob2 == null) return JSROOT.CallBack(readkeys_callback, null);
 
-      this.fFile.Seek(this.fSeekDir, this.fFile.ERelativeTo.kBeg);
-      this.fFile.ReadBuffer(nbytes, callback1);
-   };
+            var buf = new JSROOT.TBuffer(blob2, 0, file);
+
+            var key = file.ReadKey(buf);
+
+            var nkeys = buf.ntoi4();
+            for (var i = 0; i < nkeys; i++) {
+               key = file.ReadKey(buf);
+               thisdir.fKeys.push(key);
+            }
+            file.fDirectories.push(thisdir);
+            delete buf;
+
+            JSROOT.CallBack(readkeys_callback, thisdir);
+         });
+
+         delete buf;
+      });
+   }
 
    JSROOT.TDirectory.prototype.StreamHeader = function(buf) {
       var version = buf.ntou2();
-      var versiondir = version%1000;
-      buf.shift(8); // skip fDatimeC and fDatimeM ReadBuffer()
+      var versiondir = version % 1000;
+      buf.shift(8); // skip fDatimeC and fDatimeM
       this.fNbytesKeys = buf.ntou4();
       this.fNbytesName = buf.ntou4();
       this.fSeekDir = (version > 1000) ? buf.ntou8() : buf.ntou4();
       this.fSeekParent = (version > 1000) ? buf.ntou8() : buf.ntou4();
       this.fSeekKeys = (version > 1000) ? buf.ntou8() : buf.ntou4();
-      if (versiondir > 2) buf.shift(18); // skip fUUID.ReadBuffer(buffer);
-   };
+      if (versiondir > 2) buf.shift(18); // skip fUUID
+   }
 
-   
+
    // ==============================================================================
    // A class that reads ROOT files.
    //
@@ -1186,17 +1315,14 @@
 
       this._typename = "TFile";
       this.fOffset = 0;
-      this.fArchiveOffset = 0;
       this.fEND = 0;
+      this.fFullURL = url;
       this.fURL = url;
-      this.fAcceptRanges = true;
-      this.fFullFileContent = ""; // this can be full content of the file (if ranges are not supported)
+      this.fAcceptRanges = true; // when disabled ('+' at the end of file name), complete file content read with single operation
+      this.fUseStampPar = true;  // use additional stamp parameter for file name to avoid browser caching problem
+      this.fFileContent = ""; // this can be full or parial content of the file (if ranges are not supported or if 1K header read from file)
 
-      this.ERelativeTo = {
-         kBeg : 0,
-         kCur : 1,
-         kEnd : 2
-      };
+      this.ERelativeTo = { kBeg : 0, kCur : 1, kEnd : 2 };
       this.fDirectories = new Array();
       this.fKeys = new Array();
       this.fSeekInfo = 0;
@@ -1204,157 +1330,123 @@
       this.fTagOffset = 0;
       this.fStreamers = 0;
       this.fStreamerInfos = null;
-      this.fFileName = "";  
+      this.fFileName = "";
       this.fStreamers = new Array;
 
-      if (this.fURL) {
-         var pos = Math.max(this.fURL.lastIndexOf("/"), this.fURL.lastIndexOf("\\"));
-         if (pos>=0) this.fFileName = this.fURL.substr(pos+1); 
-         
+      if (typeof this.fURL != 'string') return this;
+
+      if (this.fURL.charAt(this.fURL.length-1) == "+") {
+         this.fURL = this.fURL.substr(0, this.fURL.length-1);
+         this.fAcceptRanges = false;
+      }
+
+      var pos = Math.max(this.fURL.lastIndexOf("/"), this.fURL.lastIndexOf("\\"));
+      this.fFileName = pos>=0 ? this.fURL.substr(pos+1) : this.fURL;
+
+      if (!this.fAcceptRanges) {
+         this.ReadKeys(newfile_callback);
+      } else {
          var file = this;
-         
+
          var xhr = JSROOT.NewHttpRequest(this.fURL, "head", function(res) {
-             if (res==null) {
-                if (typeof newfile_callback == 'function')
-                   newfile_callback(null); 
-                return; 
-             } 
-             
-             var accept_ranges = res.getResponseHeader("Accept-Ranges");
-             if (!accept_ranges) file.fAcceptRanges = false;
-             file.fEND = parseInt(res.getResponseHeader("Content-Length"));
-             file.ReadKeys(newfile_callback);
+            if (res==null)
+               return JSROOT.CallBack(newfile_callback, null);
+
+            var accept_ranges = res.getResponseHeader("Accept-Ranges");
+            if (accept_ranges==null) file.fAcceptRanges = false;
+            var len = res.getResponseHeader("Content-Length");
+            if (len!=null) file.fEND = parseInt(len);
+            else file.fAcceptRanges = false;
+            file.ReadKeys(newfile_callback);
          });
-         
+
          xhr.send(null);
-         xhr = null;
-         
       }
 
       return this;
-   };
-
+   }
 
    JSROOT.TFile.prototype.ReadBuffer = function(len, callback) {
 
-      if (!this.fAcceptRanges && (this.fFullFileContent.length>0)) {
-         var res = this.fFullFileContent.substr(this.fOffset, len);
-         callback(this, res);
-         return;
-      }
-      
+      if ((this.fFileContent.length>0) && (!this.fAcceptRanges || (this.fOffset+len <= this.fFileContent.length)))
+         return callback(this.fFileContent.substr(this.fOffset, len));
+
       var file = this;
-      var xhrcallback = function(res) {
-         
-         if ((res!=null) && !file.fAcceptRanges && 
-             (res.length != len) && (file.fEND == res.length)) {
-            // special case - local file reading will not accept ranges
-            file.fFullFileContent = res;
-            res = file.fFullFileContent.substr(file.fOffset, len);
+
+      var url = this.fURL;
+      if (this.fUseStampPar) {
+         // try to avoid browser caching by adding stamp parameter to URL
+         if (url.indexOf('?')>0) url+="&stamp="; else url += "?stamp=";
+         var d = new Date;
+         url += d.getTime();
+      }
+
+      function read_callback(res) {
+         if ((res==null) && file.fUseStampPar && (file.fOffset==0)) {
+            // if fail to read file with stamp parameter, try once to avoid it
+            file.fUseStampPar = false;
+            var xhr2 = JSROOT.NewHttpRequest(this.fURL, "bin", read_callback);
+            if (this.fAcceptRanges)
+               xhr2.setRequestHeader("Range", "bytes=" + this.fOffset + "-" + (this.fOffset + len - 1));
+            xhr2.send(null);
+            return;
+         } else
+         if ((res!=null) && (file.fOffset==0) && (file.fFileContent.length == 0)) {
+            // special case - read content all at once
+            file.fFileContent = res;
+            if (!this.fAcceptRanges) {
+               file.fEND = res.length;
+               res = file.fFileContent.substr(file.fOffset, len);
+            }
          }
 
-         callback(file, res);
+         callback(res);
       }
 
-      var xhr = JSROOT.NewHttpRequest(this.fURL, "bin", xhrcallback);
-
-      xhr.setRequestHeader("Range", "bytes=" + this.fOffset + "-" + (this.fOffset + len));
-      xhr.setRequestHeader("If-Modified-Since", "Wed, 31 Dec 1980 00:00:00 GMT");
+      var xhr = JSROOT.NewHttpRequest(url, "bin", read_callback);
+      if (this.fAcceptRanges)
+         xhr.setRequestHeader("Range", "bytes=" + this.fOffset + "-" + (this.fOffset + len - 1));
       xhr.send(null);
-   };
+   }
 
    JSROOT.TFile.prototype.Seek = function(offset, pos) {
       // Set position from where to start reading.
       switch (pos) {
          case this.ERelativeTo.kBeg:
-            this.fOffset = offset + this.fArchiveOffset;
+            this.fOffset = offset;
             break;
          case this.ERelativeTo.kCur:
             this.fOffset += offset;
             break;
          case this.ERelativeTo.kEnd:
             // this option is not used currently in the ROOT code
-            if (this.fArchiveOffset)
-               throw  "Seek : seeking from end in archive is not (yet) supported";
-            this.fOffset = this.fEND - offset;  // is fEND really EOF or logical EOF?
+            if (this.fEND == 0)
+               throw  "Seek : seeking from end in file with fEND==0 is not supported";
+            this.fOffset = this.fEND - offset;
             break;
          default:
             throw  "Seek : unknown seek option (" + pos + ")";
             break;
       }
-   };
-
-   JSROOT.TFile.prototype.ReadHeader = function(str) {
-      // read the Root header file informations
-      if (str.substring(0, 4) != "root") {
-         alert("NOT A ROOT FILE!");
-         return null;
-      }
-      var header = {};
-
-      var buf = new JSROOT.TBuffer(str, 4, this); // skip root
-      header['version'] = buf.ntou4();
-      header['begin'] = buf.ntou4();
-      var largeFile = header['version'] >= 1000000;
-      header['end'] = largeFile ? buf.ntou8() : buf.ntou4();
-      header['seekFree'] = largeFile ? buf.ntou8() : buf.ntou4();
-      buf.shift(12); // skip fNBytesFree, nfree, fNBytesName
-      header['units'] = buf.ntoi1();
-      header['fCompress'] = buf.ntou4();
-      header['seekInfo'] = largeFile ? buf.ntou8() : buf.ntou4();
-      header['nbytesInfo'] = buf.ntou4();
-
-      if (!header['seekInfo'] && !header['nbytesInfo']) {
-         // empty file
-         return null;
-      }
-      this.fSeekInfo = header['seekInfo'];
-      this.fNbytesInfo = header['nbytesInfo'];
-      return header;
-   };
+   }
 
    JSROOT.TFile.prototype.ReadKey = function(buf) {
       // read key from buffer
       var key = {};
-      
-      key['fNbytes'] = buf.ntoi4();
-      key['fVersion'] = buf.ntoi2();
-      key['fObjlen'] = buf.ntou4();
-      var datime = buf.ntou4();
-      key['fDatime'] = new Date();
-      key['fDatime'].setFullYear((datime >>> 26) + 1995);
-      key['fDatime'].setMonth((datime << 6) >>> 28);
-      key['fDatime'].setDate((datime << 10) >>> 27);
-      key['fDatime'].setHours((datime << 15) >>> 27);
-      key['fDatime'].setMinutes((datime << 20) >>> 26);
-      key['fDatime'].setSeconds((datime << 26) >>> 26);
-      key['fDatime'].setMilliseconds(0);
-      key['fKeylen'] = buf.ntou2();
-      key['fCycle'] = buf.ntou2();
-      if (key['fVersion'] > 1000) {
-         key['fSeekKey'] = buf.ntou8();
-         buf.shift(8); // skip seekPdir
-      } else {
-         key['fSeekKey'] = buf.ntou4();
-         buf.shift(4); // skip seekPdir
-      }
-      key['fClassName'] = buf.ReadTString();
-      key['fName'] = buf.ReadTString(); 
-      key['fTitle'] = buf.ReadTString(); 
-      
-      var name = key['fName'].replace(/['"]/g,'');
-      
-      if (name != key['fName']) {
-         key['fRealName'] = key['fName'];
-         key['fName'] = name;
-      }
-
+      buf.ReadTKey(key);
       return key;
-   };
+   }
 
    JSROOT.TFile.prototype.GetDir = function(dirname, cycle) {
+      // check first that directory with such name exists
+
+      if ((cycle==null) && (typeof dirname == 'string')) {
+         var pos = dirname.lastIndexOf(';');
+         if (pos>0) { cycle = dirname.substr(pos+1); dirname = dirname.substr(0,pos); }
+      }
+
       for (var j in this.fDirectories) {
-         var dir = this.fDirectories[j]; 
+         var dir = this.fDirectories[j];
          if (dir['dir_name'] != dirname) continue;
          if ((cycle!=null) && (dir['dir_cycle']!=cycle)) continue;
          return dir;
@@ -1362,281 +1454,285 @@
       return null;
    }
 
-   JSROOT.TFile.prototype.GetKey = function(keyname, cycle) {
-
+   JSROOT.TFile.prototype.GetKey = function(keyname, cycle, getkey_callback) {
       // retrieve a key by its name and cycle in the list of keys
-      for (var i=0; i<this.fKeys.length; ++i) {
-         if (this.fKeys[i]['fName'] == keyname && this.fKeys[i]['fCycle'] == cycle)
+      // one should call_back when keys must be read first from the directory
+
+      for (var i in this.fKeys) {
+         if (this.fKeys[i]['fName'] == keyname && this.fKeys[i]['fCycle'] == cycle) {
+            JSROOT.CallBack(getkey_callback, this.fKeys[i]);
             return this.fKeys[i];
+         }
       }
-      
+
       var pos = keyname.lastIndexOf("/");
       // try to handle situation when object name contains slashed (bad practice anyway)
       while (pos > 0) {
-         var dir = this.GetDir(keyname.substr(0, pos));
-         if (dir!=null) return dir.GetKey(keyname.substr(pos+1), cycle);
+         var dirname = keyname.substr(0, pos);
+         var subname = keyname.substr(pos+1);
+
+         var dir = this.GetDir(dirname);
+         if (dir!=null) return dir.GetKey(subname, cycle, getkey_callback);
+
+         var dirkey = this.GetKey(dirname, 1);
+         if ((dirkey!=null) && (getkey_callback != null) &&
+             (dirkey['fClassName'].indexOf("TDirectory")==0)) {
+
+            this.ReadObject(dirname, function(newdir) {
+               if (newdir) newdir.GetKey(subname, cycle, getkey_callback);
+            });
+            return null;
+         }
+
          pos = keyname.lastIndexOf("/", pos-1);
       }
+
+      JSROOT.CallBack(getkey_callback, null);
       return null;
-   };
+   }
 
    JSROOT.TFile.prototype.ReadObjBuffer = function(key, callback) {
       // read and inflate object buffer described by its key
-      var callback1 = function(file, buffer) {
+
+      var file = this;
+
+      this.Seek(key['fSeekKey'] + key['fKeylen'], this.ERelativeTo.kBeg);
+      this.ReadBuffer(key['fNbytes'] - key['fKeylen'], function(blob1) {
+
+         if (blob1==null) callback(null);
+
          var buf = null;
 
          if (key['fObjlen'] <= key['fNbytes']-key['fKeylen']) {
-            buf = new JSROOT.TBuffer(buffer, 0, file);
+            buf = new JSROOT.TBuffer(blob1, 0, file);
          } else {
-            var hdrsize = JSROOT.R__unzip_header(buffer, 0);
-            if (hdrsize<0) return;
-            var objbuf = JSROOT.R__unzip(hdrsize, buffer, 0);
+            var hdrsize = JSROOT.R__unzip_header(blob1, 0);
+            if (hdrsize<0) return callback(null);
+            var objbuf = JSROOT.R__unzip(hdrsize, blob1, 0);
             buf = new JSROOT.TBuffer(objbuf, 0, file);
          }
 
          buf.fTagOffset = key.fKeylen;
-         callback(file, buf);
+         callback(buf);
          delete buf;
-      };
-
-      this.Seek(key['fSeekKey'] + key['fKeylen'], this.ERelativeTo.kBeg);
-      this.ReadBuffer(key['fNbytes'] - key['fKeylen'], callback1);
-   };
+      });
+   }
 
    JSROOT.TFile.prototype.ReadObject = function(obj_name, cycle, user_call_back) {
-      // read any object from a root file
+      // Read any object from a root file
+      // One could specify cycle number in the object name or as separate argument
+      // Last argument should be callback function, while data reading from file is asynchron
+
+      if (typeof cycle == 'function') { user_call_back = cycle; cycle = 1; }
 
       var pos = obj_name.lastIndexOf(";");
       if (pos>0) {
          cycle = parseInt(obj_name.slice(pos+1));
          obj_name = obj_name.slice(0, pos);
       }
-      
+
       if ((typeof cycle != 'number') || (cycle<0)) cycle = 1;
+      // remove leading slashes
+      while ((obj_name.length>0) && (obj_name[0] == "/")) obj_name = obj_name.substr(1);
 
-      var key = this.GetKey(obj_name, cycle);
-      if (key == null) {
-         if (typeof user_call_back == 'function') user_call_back(null);
-         return;
-      }
-      
-      var isdir = false;
-      if ((key['fClassName'] == 'TDirectory' || key['fClassName'] == 'TDirectoryFile')) {
-         isdir = true;
-         var dir = this.GetDir(obj_name, cycle);
-         if (dir!=null) {
-            if (typeof callback == 'user_call_back') user_call_back(dir);
-            return dir;
+      var file = this;
+
+      // we use callback version while in some cases we need to
+      // read sub-directory to get list of keys
+      // in such situation calls are asynchrone
+      this.GetKey(obj_name, cycle, function(key) {
+
+         if (key == null)
+            return JSROOT.CallBack(user_call_back, null);
+
+         if ((obj_name=="StreamerInfo") && (key['fClassName']=="TList"))
+            return file.fStreamerInfos;
+
+         var isdir = false;
+         if ((key['fClassName'] == 'TDirectory' || key['fClassName'] == 'TDirectoryFile')) {
+            isdir = true;
+            var dir = file.GetDir(obj_name, cycle);
+            if (dir!=null)
+               return JSROOT.CallBack(user_call_back, dir);
          }
-      }
 
-      var callback = function(file, buf) {
-         if (!buf) {
-            if (typeof user_call_back == 'function') user_call_back(null);
-            return;
-         }
+         file.ReadObjBuffer(key, function(buf) {
+            if (!buf) return JSROOT.CallBack(user_call_back, null);
 
-         if (isdir) {
-            var dir = new JSROOT.TDirectory(file, obj_name, cycle);
-            dir.StreamHeader(buf);
-            if (dir.fSeekKeys) {
-               dir.ReadKeys(user_call_back);
-            } else {
-               if (typeof user_call_back == 'function') user_call_back(dir);
+            if (isdir) {
+               var dir = new JSROOT.TDirectory(file, obj_name, cycle);
+               dir.StreamHeader(buf);
+               if (dir.fSeekKeys) {
+                  dir.ReadKeys(user_call_back);
+               } else {
+                  JSROOT.CallBack(user_call_back,dir);
+               }
+
+               return;
             }
-            
-            return;
-         }
 
-         
-         var obj = {};
-         obj['_typename'] = key['fClassName'];
+            var obj = {};
+            buf.MapObject(1, obj); // tag object itself with id==1
+            buf.ClassStreamer(obj, key['fClassName']);
 
-         buf.MapObject(1, obj); // tag object itself with id==1
-         buf.ClassStreamer(obj, key['fClassName']);
-
-         if (typeof user_call_back == 'function') {
-            user_call_back(obj);
-            return;
-         }
-      };
-
-      this.ReadObjBuffer(key, callback);
-   };
+            JSROOT.CallBack(user_call_back, obj);
+         }); // end of ReadObjBuffer callback
+      }); // end of GetKey callback
+   }
 
    JSROOT.TFile.prototype.ExtractStreamerInfos = function(buf)
    {
       if (!buf) return;
 
       var lst = {};
-      lst['_typename'] = "TList";
-
       buf.MapObject(1, lst);
       buf.ClassStreamer(lst, 'TList');
-      
+
       lst['_typename'] = "TStreamerInfoList";
-      
+
       this.fStreamerInfos = lst;
    }
-   
+
    JSROOT.TFile.prototype.ReadFormulas = function()
    {
-      for (var i in this.fKeys) 
-        if (this.fKeys[i]['fClassName'] == 'TFormula') 
+      for (var i in this.fKeys)
+        if (this.fKeys[i]['fClassName'] == 'TFormula')
           this.ReadObject(this.fKeys[i]['fName'], this.fKeys[i]['fCycle'], function(obj) {
                JSROOT.addFormula(obj);
          });
    }
 
-   JSROOT.TFile.prototype.ReadStreamerInfos = function(si_callback) {
-
-      if (this.fSeekInfo == 0 || this.fNbytesInfo == 0) return;
+   JSROOT.TFile.prototype.ReadStreamerInfos = function(si_callback)
+   {
+      if (this.fSeekInfo == 0 || this.fNbytesInfo == 0) return si_callback(null);
       this.Seek(this.fSeekInfo, this.ERelativeTo.kBeg);
-      var callback1 = function(file, _buffer) {
-         var buf = new JSROOT.TBuffer(_buffer, 0, file);
+
+      var file = this;
+
+      file.ReadBuffer(file.fNbytesInfo, function(blob1) {
+         var buf = new JSROOT.TBuffer(blob1, 0, file);
          var key = file.ReadKey(buf);
-         if (key == null) return;
+         if (key == null) return si_callback(null);
          file.fKeys.push(key);
-         var callback2 = function(file, buf) {
 
-            file.ExtractStreamerInfos(buf);
-            
+         file.ReadObjBuffer(key, function(blob2) {
+            if (blob2==null) return si_callback(null);
+            file.ExtractStreamerInfos(blob2);
             file.ReadFormulas();
-
-            if (typeof(si_callback) == 'function')
-               si_callback(file);
-         };
-         file.ReadObjBuffer(key, callback2);
-      };
-      this.ReadBuffer(this.fNbytesInfo, callback1);
-   };
+            si_callback(file);
+         });
+      });
+   }
 
    JSROOT.TFile.prototype.ReadKeys = function(readkeys_callback) {
       // read keys only in the root file
 
-      var callback1 = function(file, buffer) {
-         var header = file.ReadHeader(buffer);
-         if (header == null) {
-            delete buffer;
-            buffer = null;
-            return;
+      var file = this;
+
+      // with the first readbuffer we read bigger amount to create header cache
+      this.ReadBuffer(1024, function(blob1) {
+         if (blob1==null) return JSROOT.CallBack(readkeys_callback, null);
+
+         if (blob1.substring(0, 4)!='root') {
+            alert("NOT A ROOT FILE! " + file.fURL);
+            return JSROOT.CallBack(readkeys_callback, null);
          }
 
-         var callback2 = function(file, str) {
+         var buf = new JSROOT.TBuffer(blob1, 4, file); // skip the "root" file identifier
+         file.fVersion = buf.ntou4();
+         file.fBEGIN = buf.ntou4();
+         if (file.fVersion < 1000000) { //small file
+            file.fEND = buf.ntou4();
+            file.fSeekFree = buf.ntou4();
+            file.fNbytesFree = buf.ntou4();
+            var nfree = buf.ntoi4();
+            file.fNbytesName = buf.ntou4();
+            file.fUnits = buf.ntou1();
+            file.fCompress = buf.ntou4();
+            file.fSeekInfo = buf.ntou4();
+            file.fNbytesInfo = buf.ntou4();
+         } else { // new format to support large files
+            file.fEND = buf.ntou8();
+            file.fSeekFree = buf.ntou8();
+            file.fNbytesFree = buf.ntou4();
+            var nfree = buf.ntou4();
+            file.fNbytesName = buf.ntou4();
+            file.fUnits = buf.ntou1();
+            file.fCompress = buf.ntou4();
+            file.fSeekInfo = buf.ntou8();
+            file.fNbytesInfo = buf.ntou4();
+         }
 
-            var buf = new JSROOT.TBuffer(str, 4, file); // skip the "root" file identifier
-            file.fVersion = buf.ntou4();
-            var headerLength = buf.ntou4();
-            file.fBEGIN = headerLength;
-            if (file.fVersion < 1000000) { //small file
-               file.fEND = buf.ntou4();
-               file.fSeekFree = buf.ntou4();
-               file.fNbytesFree = buf.ntou4();
-               var nfree = buf.ntoi4();
-               file.fNbytesName = buf.ntou4();
-               file.fUnits = buf.ntou1();
-               file.fCompress = buf.ntou4();
-               file.fSeekInfo = buf.ntou4();
-               file.fNbytesInfo = buf.ntou4();
-            } else { // new format to support large files
-               file.fEND = buf.ntou8();
-               file.fSeekFree = buf.ntou8();
-               file.fNbytesFree = buf.ntou4();
-               var nfree = buf.ntou4();
-               file.fNbytesName = buf.ntou4();
-               file.fUnits = buf.ntou1();
-               file.fCompress = buf.ntou4();
-               file.fSeekInfo = buf.ntou8();
-               file.fNbytesInfo = buf.ntou4();
+         // empty file
+         if (!file.fSeekInfo && !file.fNbytesInfo)
+            return JSROOT.CallBack(readkeys_callback, null);
+
+         //*-*-------------Read directory info
+         var nbytes = file.fNbytesName + 22;
+         nbytes += 4;  // fDatimeC.Sizeof();
+         nbytes += 4;  // fDatimeM.Sizeof();
+         nbytes += 18; // fUUID.Sizeof();
+         // assume that the file may be above 2 Gbytes if file version is > 4
+         if (file.fVersion >= 40000) nbytes += 12;
+
+         file.Seek(file.fBEGIN, file.ERelativeTo.kBeg);
+
+         file.ReadBuffer(Math.max(300, nbytes), function(blob3) {
+            if (blob3==null) return JSROOT.CallBack(readkeys_callback, null);
+
+            var buf3 = new JSROOT.TBuffer(blob3, file.fNbytesName, file);
+
+            // we call TDirectory method while TFile is just derived class
+            JSROOT.TDirectory.prototype.StreamHeader.call(file, buf3);
+
+            //*-*---------read TKey::FillBuffer info
+            buf3.o = 4; // Skip NBytes;
+            var keyversion = buf3.ntoi2();
+            // Skip ObjLen, DateTime, KeyLen, Cycle, SeekKey, SeekPdir
+            if (keyversion > 1000) buf3.shift(28); // Large files
+                              else buf3.shift(20);
+            buf3.ReadTString();
+            buf3.ReadTString();
+            file.fTitle = buf3.ReadTString();
+            if (file.fNbytesName < 10 || this.fNbytesName > 10000) {
+               JSROOT.console("Init : cannot read directory info of file " + file.fURL);
+               return JSROOT.CallBack(readkeys_callback, null);
             }
-            file.fSeekDir = file.fBEGIN;
+            //*-* -------------Read keys of the top directory
 
-            //*-*-------------Read directory info
+            if (file.fSeekKeys <= 0) {
+               JSROOT.console("Empty keys list - not supported" + file.fURL);
+               return JSROOT.CallBack(readkeys_callback, null);
+            }
 
-            var nbytes = file.fNbytesName + 22;
-            nbytes += 4;  // fDatimeC.Sizeof();
-            nbytes += 4;  // fDatimeM.Sizeof();
-            nbytes += 18; // fUUID.Sizeof();
-            // assume that the file may be above 2 Gbytes if file version is > 4
-            if (file.fVersion >= 40000) nbytes += 12;
+            file.Seek(file.fSeekKeys, file.ERelativeTo.kBeg);
+            file.ReadBuffer(file.fNbytesKeys, function(blob4) {
+               if (blob4==null) return JSROOT.CallBack(readkeys_callback, null);
 
-            file.Seek(file.fBEGIN, file.ERelativeTo.kBeg);
+               var buf4 = new JSROOT.TBuffer(blob4, 0, file);
 
-            var callback3 = function(file, str) {
+               var key = file.ReadKey(buf4);
 
-               var buf = new JSROOT.TBuffer(str, file.fNbytesName, file);
-
-               var version = buf.ntou2();
-               var versiondir = version%1000;
-               buf.shift(8); // skip fDatimeC and fDatimeM ReadBuffer()
-               file.fNbytesKeys = buf.ntou4();
-               file.fNbytesName = buf.ntou4();
-               if (version > 1000) {
-                  file.fSeekDir = buf.ntou8();
-                  file.fSeekParent = buf.ntou8();
-                  file.fSeekKeys = buf.ntou8();
-               } else {
-                  file.fSeekDir = buf.ntou4();
-                  file.fSeekParent = buf.ntou4();
-                  file.fSeekKeys = buf.ntou4();
+               var nkeys = buf4.ntoi4();
+               for (var i = 0; i < nkeys; i++) {
+                  key = file.ReadKey(buf4);
+                  file.fKeys.push(key);
                }
-               if (versiondir > 1) buf.o += 18; // skip fUUID.ReadBuffer(buffer);
+               file.ReadStreamerInfos(readkeys_callback);
+               delete buf4;
+            });
+            delete buf3;
+         });
+         delete buf;
+      });
+   }
 
-               //*-*---------read TKey::FillBuffer info
-               buf.o = 4; // Skip NBytes;
-               var keyversion = buf.ntoi2();
-               // Skip ObjLen, DateTime, KeyLen, Cycle, SeekKey, SeekPdir
-               if (keyversion > 1000) buf.shift(28); // Large files
-                                 else buf.shift(20);
-               buf.ReadTString();
-               buf.ReadTString();
-               file.fTitle = buf.ReadTString();
-               if (file.fNbytesName < 10 || this.fNbytesName > 10000) {
-                  throw "Init : cannot read directory info of file " + file.fURL;
-               }
-               //*-* -------------Read keys of the top directory
-
-               if ( file.fSeekKeys >  0) {
-                  file.Seek(file.fSeekKeys, file.ERelativeTo.kBeg);
-
-                  var callback4 = function(file, _buffer) {
-                     //headerkey->ReadKeyBuffer(buffer);
-
-                     var buf = new JSROOT.TBuffer(_buffer, 0, file);
-
-                     var key = file.ReadKey(buf);
-
-                     var nkeys = buf.ntoi4();
-                     for (var i = 0; i < nkeys; i++) {
-                        key = file.ReadKey(buf);
-                        file.fKeys.push(key);
-                     }
-                     file.ReadStreamerInfos(readkeys_callback);
-                     delete buf;
-                  };
-                  file.ReadBuffer(file.fNbytesKeys, callback4);
-               }
-               delete str;
-               str = null;
-            };
-            file.ReadBuffer(Math.max(300, nbytes), callback3);
-            delete str;
-            str = null;
-         };
-         file.ReadBuffer(300, callback2);
-         delete buffer;
-         buffer = null;
-      };
-      this.ReadBuffer(256, callback1);
-   };
-   
    JSROOT.TFile.prototype.ReadDirectory = function(dir_name, cycle, readdir_callback) {
       // read the directory content from  a root file
       // do not read directory if it is already exists
 
       return this.ReadObject(dir_name, cycle, readdir_callback);
    }
-
 
    JSROOT.TFile.prototype.GetStreamer = function(clname) {
       // return the streamer for the class 'clname', from the list of streamers
@@ -1646,11 +1742,11 @@
       if (typeof(streamer) != 'undefined') return streamer;
 
       var s_i;
-      
+
       if (this.fStreamerInfos)
          for (var i in this.fStreamerInfos.arr)
             if (this.fStreamerInfos.arr[i].fName == clname)  {
-               s_i = this.fStreamerInfos.arr[i]; 
+               s_i = this.fStreamerInfos.arr[i];
                break;
             }
       if (typeof s_i == 'undefined') return null;
@@ -1682,7 +1778,7 @@
          }
       }
       return this.fStreamers[clname];
-   };
+   }
 
    JSROOT.TFile.prototype.Delete = function() {
       if (this.fDirectories) this.fDirectories.splice(0, this.fDirectories.length);
@@ -1694,8 +1790,7 @@
       this.fSeekInfo = 0;
       this.fNbytesInfo = 0;
       this.fTagOffset = 0;
-   };
-
+   }
 
 })();
 

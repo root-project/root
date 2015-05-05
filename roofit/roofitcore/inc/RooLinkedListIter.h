@@ -110,14 +110,12 @@ public:
   }
 
   bool operator!=(const TIterator &aIter) const {
-    if (nullptr == &aIter) return _ptr;
     const RooLinkedListIter *iter(dynamic_cast<const RooLinkedListIter*>(&aIter));
     if (iter) return (_ptr != iter->_ptr);
     return false; // for base class we don't implement a comparison
   }
 
   bool operator!=(const RooLinkedListIter &aIter) const {
-    if (nullptr == (&aIter)) return _ptr;
     return (_ptr != aIter._ptr);
   }
 

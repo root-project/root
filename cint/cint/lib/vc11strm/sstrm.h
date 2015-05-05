@@ -33,6 +33,7 @@ using namespace std;
 namespace std {
 template<class CharType, class Traits, class Allocator>
 class basic_string;
+typedef basic_string<char, char_traits<char>, allocator<char>> string;
 }
 
 template<class charT, class traits, class Allocator>
@@ -47,8 +48,8 @@ class basic_stringbuf : public basic_streambuf<charT, traits>
   
   typedef basic_ios<charT, traits>                 ios_type;
 #ifdef __CINT__
-  //typedef string  _Mystr;
-  typedef basic_string<charT, traits, Allocator >  _Mystr;
+  typedef string  _Mystr;
+  //typedef basic_string<charT, traits, Allocator >  _Mystr;
 #else
   typedef basic_string<charT, traits, Allocator >  _Mystr;
 #endif
@@ -98,8 +99,8 @@ class basic_istringstream : public basic_istream<charT, traits>
   typedef basic_stringbuf<charT, traits, Allocator>       sb_type;
   typedef basic_ios<charT, traits>                        ios_type;
 #ifdef __CINT__
-  typedef basic_string<charT, traits, Allocator >         _Mystr;
-  //typedef string         _Mystr;
+  typedef string  _Mystr;
+  //typedef basic_string<charT, traits, Allocator >         _Mystr;
 #else
   typedef basic_string<charT, traits, Allocator >         _Mystr;
 #endif
@@ -134,8 +135,8 @@ class basic_ostringstream : public basic_ostream<charT, traits>
   typedef basic_stringbuf<charT, traits, Allocator>         sb_type;
   typedef basic_ios<charT, traits>                          ios_type;
 #ifdef __CINT__
-  //typedef string          _Mystr;
-  typedef basic_string<charT, traits, Allocator>            _Mystr;
+  typedef string  _Mystr;
+  //typedef basic_string<charT, traits, Allocator>            _Mystr;
 #else
   typedef basic_string<charT, traits, Allocator>            _Mystr;
 #endif
@@ -165,8 +166,8 @@ class basic_stringstream : public basic_iostream<charT, traits>
   typedef basic_stringbuf<charT, traits, Allocator>         sb_type;
   typedef basic_ios<charT, traits>                          ios_type;
 #ifdef __CINT__
-  typedef basic_string<charT, traits, Allocator>            _Mystr;
-  //typedef string            _Mystr;
+  typedef string  _Mystr;
+  //typedef basic_string<charT, traits, Allocator>            _Mystr;
 #else
   typedef basic_string<charT, traits, Allocator>            _Mystr;
 #endif

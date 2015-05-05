@@ -77,7 +77,8 @@ void pileup(Int_t nev=200) {
 
 void jets(Int_t nev=100, Int_t npileup=200) {
    gSystem->Load("libPhysics");
-   gROOT->ProcessLine(".L $ROOTSYS/tutorials/tree/JetEvent.cxx+");
+   TString tutdir = gROOT->GetTutorialsDir();
+   gROOT->ProcessLine(".L " + tutdir + "/tree/JetEvent.cxx+");
    write(nev);
    read();
    pileup(npileup);

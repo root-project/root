@@ -218,6 +218,7 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
                  fEvtRate(0), fEvtRateRun(0), fMBRate(0), fMBRateRun(0),
                  fEvtRateAvgMax(-1.), fMBRateAvgMax(-1.),
                  fEvtRateAvg(-1.), fMBRateAvg(0),
+                 fFileResult(""), fSaveResult(kFALSE),
                  fDebug(0)
 {
    // Constructor: open the file and attach to the tree
@@ -500,7 +501,7 @@ void TProofPerfAnalysis::FileDist(Bool_t writedet)
 
       TCanvas *c2 = new TCanvas("cv-hxpak",  GetCanvasTitle(hxpak->GetTitle()), 800,350,700,700);
       c2->cd();
-      hxpak->Draw();
+      DoDraw(hxpak);
       c2->Update();
    
    } else {
@@ -561,14 +562,14 @@ void TProofPerfAnalysis::FileDist(Bool_t writedet)
       TPad *pad1 = (TPad *) c1->GetPad(1);
       TPad *pad2 = (TPad *) c1->GetPad(2);
       pad1->cd();
-      hfdis->Draw();
+      DoDraw(hfdis);
       pad2->cd();
-      hbdis->Draw();
+      DoDraw(hbdis);
       c1->Update();
 
       TCanvas *c2 = new TCanvas("cv-hxpak",  GetCanvasTitle(hxpak->GetTitle()), 500,350,700,700);
       c2->cd();
-      hxpak->Draw("lego");
+      DoDraw(hxpak, "lego");
       c2->Update();
    }
    // Done
@@ -810,12 +811,12 @@ void TProofPerfAnalysis::WorkerActivity()
    TPad *pad10 = (TPad *) pad1->GetPad(1);
    TPad *pad11 = (TPad *) pad1->GetPad(2);
    pad10->cd();
-   hact10->Draw();
+   DoDraw(hact10);
    pad11->cd();
-   hact11->Draw();
+   DoDraw(hact11);
    TPad *pad2 = (TPad *) c1->GetPad(2);
    pad2->cd();
-   hact2->Draw();
+   DoDraw(hact2);
    c1->cd();
    c1->Update();
 
@@ -1391,6 +1392,76 @@ void TProofPerfAnalysis::SetDebug(Int_t d)
    fDebug = d;
 }
 
+//________________________________________________________________________
+void TProofPerfAnalysis::DoDraw(TObject *o, Option_t *opt, const char *name)
+{
+   // Draw object 'o' with options 'opt'
+   // Save it with 'name' if in saving mode (see SetSaveResult)
+
+   // Draw
+   o->Draw(opt);
+
+   // Save the result
+   if (fSaveResult) {
+      // Preparation is done in SetSaveResult, here we just update
+      TDirectory *curdir = gDirectory;
+      TFile *f = TFile::Open(fFileResult, "UPDATE");
+      if (f && !f->IsZombie()) {
+         const char *n = (name && strlen(name) > 0) ? name : 0;
+         o->Write(n);
+         f->Close();
+      }
+      if (f) delete f;
+      gDirectory = curdir;
+   }
+} 
+ 
+//________________________________________________________________________
+Int_t TProofPerfAnalysis::SetSaveResult(const char *file, Option_t *mode)
+{
+   // Set save result mode and validate 'file' according to 'mode'.
+   // Return 0 on success, -1 if any problem with the file is encountered
+   // (save result mode is not enabled in such a case).
+   // If 'file' is null saving is disabled.
+
+   // A null 'file' indicates the will to disable
+   if (!file) {
+      fFileResult = "";
+      fSaveResult = kFALSE;
+      // Notify
+      Printf("Drawn objects saving disabled");
+      return 0;
+   }
+
+   // Check if there is a change
+   if (!fFileResult.IsNull() && fFileResult == file) {
+      // No change
+      fSaveResult = kTRUE;
+      return 0;
+   }
+   // New or changed file: validate
+   fFileResult = "";
+   fSaveResult = kFALSE;
+   TDirectory *curdir = gDirectory;
+   TFile *f = TFile::Open(file, mode);
+   if (!f || f->IsZombie()) {
+      if (f) delete f;
+      fFileResult = "";
+      Error("SetSaveResult", "could not open file '%s' in mode '%s'",
+                             file ? file : "(undefined)", mode);
+      gDirectory = curdir;
+      return -1;
+   }
+   f->Close();
+   delete f;
+   gDirectory = curdir;
+   // Ok
+   fFileResult = file;
+   fSaveResult = kTRUE;
+   // Notify
+   Printf("Drawn objects will be saved in file '%s'", file);
+   return 0;
+}
 
 //________________________________________________________________________
 void TProofPerfAnalysis::SetgDebug(Bool_t on)
@@ -1414,11 +1485,11 @@ void TProofPerfAnalysis::EventDist()
    TPad *pad1 = (TPad *) c1->GetPad(1);
    pad1->cd();
    fEvents->SetStats(kFALSE);
-   fEvents->Draw();
+   DoDraw(fEvents);
    TPad *pad2 = (TPad *) c1->GetPad(2);
    pad2->cd();
    fPackets->SetStats(kFALSE);
-   fPackets->Draw();
+   DoDraw(fPackets);
    c1->cd();
    c1->Update();
 
@@ -1458,11 +1529,11 @@ void TProofPerfAnalysis::RatePlot(const char *wrks)
    TPad *pad1 = (TPad *) c1->GetPad(1);
    pad1->cd();
    hrt1->Draw();
-   if (global) fEvtRateRun->Draw("SAME");
+   if (global) DoDraw(fEvtRateRun, "SAME", "EvtRateRun");
    TPad *pad2 = (TPad *) c1->GetPad(2);
    pad2->cd();
    hrt2->Draw();
-   if (global) fMBRateRun->Draw("SAME");
+   if (global) DoDraw(fMBRateRun, "SAME", "MBRateRun");
    c1->cd();
    c1->Update();
 
@@ -1491,25 +1562,25 @@ void TProofPerfAnalysis::RatePlot(const char *wrks)
          wi->fRateT->SetNameTitle(wi->GetName(), wi->GetTitle());
          pad1->cd();
          wi->fRateT->SetLineColor(ci);
-         wi->fRateT->Draw("L");
+         DoDraw(wi->fRateT, "L", TString::Format("RateT-%s", wi->fRateT->GetName()));
       }
       if (wi->fRateRemoteT && wi->fRateRemoteT->GetN() > 0) {
          wi->fRateRemoteT->SetNameTitle(wi->GetName(), wi->GetTitle());
          pad1->cd();
          wi->fRateRemoteT->SetLineColor(cir);
-         wi->fRateRemoteT->Draw("L");
+         DoDraw(wi->fRateRemoteT, "L", TString::Format("RateRemoteT-%s", wi->fRateRemoteT->GetName()));
       }
       if (wi->fMBRateT && wi->fMBRateT->GetN() > 0) {
          wi->fMBRateT->SetNameTitle(wi->GetName(), wi->GetTitle());
          pad2->cd();
          wi->fMBRateT->SetLineColor(ci);
-         wi->fMBRateT->Draw("L");
+         DoDraw(wi->fMBRateT, "L", TString::Format("MBRateT-%s", wi->fMBRateT->GetName()));
       }
       if (wi->fMBRateRemoteT && wi->fMBRateRemoteT->GetN() > 0) {
          wi->fMBRateRemoteT->SetNameTitle(wi->GetName(), wi->GetTitle());
          pad2->cd();
          wi->fMBRateRemoteT->SetLineColor(cir);
-         wi->fMBRateRemoteT->Draw("L");
+         DoDraw(wi->fMBRateRemoteT, "L", TString::Format("MBRateRemoteT-%s", wi->fMBRateRemoteT->GetName()));
       }
       ic++;
       ci = ic%10 + 40;
@@ -1567,7 +1638,7 @@ void TProofPerfAnalysis::LatencyPlot(const char *wrks)
       if (wi->fLatencyT) {
          wi->fLatencyT->SetNameTitle(wi->GetName(), wi->GetTitle());
          wi->fLatencyT->SetLineColor(ci);
-         wi->fLatencyT->Draw("L");
+         DoDraw(wi->fLatencyT, "L", TString::Format("LatencyT-%s", wi->fLatencyT->GetName()));
       }
       ic++;
       ci = ic%10 + 40;
@@ -1689,14 +1760,14 @@ void TProofPerfAnalysis::FileProcPlot(const char *fn, const char *out)
    c1->Divide(1,3);
    TPad *pad1 = (TPad *) c1->GetPad(1);
    pad1->cd();
-   hrt1->Draw();
+   DoDraw(hrt1);
    TPad *pad2 = (TPad *) c1->GetPad(2);
    pad2->cd();
-   hrt2->Draw();
+   DoDraw(hrt2);
    TPad *pad4 = (TPad *) c1->GetPad(3);
    pad4->cd();
    hrt4->Divide(hrt3);
-   hrt4->Draw();
+   DoDraw(hrt4);
    c1->cd();
    c1->Update();
 }
@@ -1755,25 +1826,25 @@ void TProofPerfAnalysis::FileRatePlot(const char *fns)
          fi->fRateP->SetNameTitle(fi->GetName(), fi->GetTitle());
          pad1->cd();
          fi->fRateP->SetLineColor(ci);
-         fi->fRateP->Draw("L");
+         DoDraw(fi->fRateP, "L", TString::Format("RateP-%d", ic));
       }
       if (fi->fRatePRemote && fi->fRatePRemote->GetN() > 0) {
          fi->fRatePRemote->SetNameTitle(fi->GetName(), fi->GetTitle());
          pad1->cd();
          fi->fRatePRemote->SetLineColor(cir);
-         fi->fRatePRemote->Draw("L");
+         DoDraw(fi->fRatePRemote, "L", TString::Format("RatePRemote-%d", ic));
       }
       if (fi->fMBRateP && fi->fMBRateP->GetN() > 0) {
          fi->fMBRateP->SetNameTitle(fi->GetName(), fi->GetTitle());
          pad2->cd();
          fi->fMBRateP->SetLineColor(ci);
-         fi->fMBRateP->Draw("L");
+         DoDraw(fi->fMBRateP, "L", TString::Format("MBRateP-%d", ic));
       }
       if (fi->fMBRatePRemote && fi->fMBRatePRemote->GetN() > 0) {
          fi->fMBRatePRemote->SetNameTitle(fi->GetName(), fi->GetTitle());
          pad2->cd();
          fi->fMBRatePRemote->SetLineColor(cir);
-         fi->fMBRatePRemote->Draw("L");
+         DoDraw(fi->fMBRatePRemote, "L", TString::Format("MBRatePRemote-%d", ic));
       }
       ic++;
       ci = ic%10 + 40;

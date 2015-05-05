@@ -16,9 +16,9 @@ class TF3 ;
 
 class RooTFnBinding : public RooAbsReal {
 public:
-  RooTFnBinding() {} ; 
-  RooTFnBinding(const char *name, const char *title, TF1* _func, const RooArgList& _list);
-  RooTFnBinding(const char *name, const char *title, TF1* _func, const RooArgList& _list, const RooArgList& _plist);
+   RooTFnBinding() : _func(0) {} ; 
+  RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list);
+  RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list, const RooArgList& plist);
   RooTFnBinding(const RooTFnBinding& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooTFnBinding(*this,newname); }
   inline virtual ~RooTFnBinding() { }
@@ -27,9 +27,9 @@ public:
 
 protected:
 
-  RooListProxy olist ;
-  RooListProxy plist ;
-  TF1* func ;
+  RooListProxy _olist ;
+  RooListProxy _plist ;
+  TF1* _func ;
   
   Double_t evaluate() const ;
 

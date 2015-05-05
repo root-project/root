@@ -30,5 +30,17 @@ endif()
 
 get_property(test_dirs GLOBAL PROPERTY ROOT_TEST_SUBDIRS)
 foreach(d ${test_dirs})
-  add_subdirectory(${d})
+  list(APPEND test_list ${d})
+endforeach()
+
+if(test_list)
+  list(SORT test_list)
+endif()
+
+foreach(d ${test_list})
+  if(d STREQUAL tutorials)
+    add_subdirectory(${d} runtutorials)  # to avoid clashes with the tutorial sources copied to binary tree
+  else()
+    add_subdirectory(${d})
+  endif()
 endforeach()

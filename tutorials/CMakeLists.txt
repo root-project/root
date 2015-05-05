@@ -39,6 +39,9 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
   gSystem->SetBuildDir(\".\", kTRUE);
 }")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.rootrc "
+Proof.Sandbox: /tmp/proof
+")
 
 #---Tutorials disabled depending on the build components-------------
 if(NOT ROOT_minuit2_FOUND)
@@ -47,7 +50,7 @@ if(NOT ROOT_minuit2_FOUND)
                    fit/minuit2FitBench2D.C fit/minuit2FitBench.C
                    fit/minuit2FitBench.C fit/minuit2GausFit.C
                    fit/minuit2GausFit.C fit/NumericalMinimization.C
-                   fit/combinedFit.C)
+                   fit/combinedFit.C fit/TestBinomial.C)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
@@ -134,7 +137,6 @@ set(extra_veto
   tree/tree2a.C
   tree/tree4.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
-  roostats/rs_bernsteinCorrection.C # Takes too much output :-)
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
   tree/copytree2.C
@@ -179,6 +181,7 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  hist/h2proj.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C
+                 hist/cumulative.C
                  tree/h1analysis.C
                  io/fildir.C
                  math/chi2test.C )
@@ -194,6 +197,17 @@ set(fit-fit1-depends tutorial-hist-fillrandom)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
 set(tree-staff-depends  tutorial-tree-cernbuild)
 set(tree-cernstaff-depends  tutorial-tree-cernbuild)
+set(hist-hbars-depends  tutorial-tree-cernbuild)
+set(benchmarks-depends tutorial-hsimple
+                       tutorial-fit-fit1
+                       tutorial-fit-myfit
+                       tutorial-fit-fitslicesy
+                       tutorial-hist-h1draw
+                       tutorial-geom-na49view
+                       tutorial-tree-ntuple1
+                       tutorial-io-hadd
+                       tutorial-io-copyFiles)
+
 #--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
                StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo
@@ -255,16 +269,21 @@ if(ROOT_python_FOUND)
 
   #---Python tutorials dependencies--------------------------------------
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
-  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple tutorial-pyroot-fillrandom)
+  set(pyroot-h1draw-depends tutorial-pyroot-hsimple)
+  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple
+                                tutorial-pyroot-fit1
+                                tutorial-pyroot-na49view
+                                tutorial-pyroot-h1draw
+                                tutorial-pyroot-ntuple1)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
-  set(pyroot-na49view-depends tutorial-geom-geometry)
+  set(pyroot-na49view-depends tutorial-pyroot-geometry)
 
   foreach(t ${pytutorials})
     string(REPLACE ".py" "" tname ${t})
     string(REPLACE "/" "-" tname ${tname})
     ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t} -b
-                PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
+                FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ})

@@ -27,6 +27,8 @@ altcc=
 altcxx=
 altf77=
 altld=
+usercflags=
+usercxxflags=
 host=
 
 deprecated_options="         \
@@ -51,6 +53,7 @@ options="                    \
    enable_builtin_zlib       \
    enable_builtin_lzma       \
    enable_cxx11              \
+   enable_cxx14              \
    enable_libcxx             \
    enable_castor             \
    enable_chirp              \
@@ -145,6 +148,7 @@ done
 for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_cxx11=no
+enable_cxx14=no
 enable_libcxx=no
 enable_cling=no
 enable_cocoa=
@@ -1592,6 +1596,8 @@ FIRST argument one of the architecures given at the end of this message.
    --build         Build configuration [debug, ...],
                    overrides the ROOTBUILD shell variable
    --cintincdir    CINT interpeted headers   (<libdir>/cint)
+   --cflags        Flags to pass to the C compiler that change the ABI, none by default
+   --cxxflags      Flags to pass to the C++ compiler that change the ABI, none by default
    --datadir       Data installation dir     (<prefix>/share/root)
    --docdir        Documentation             (<prefix>/share/doc/root)
    --elispdir      Where to put Emacs Lisp   (<prefix>/share/emacs/site-lisp)
@@ -1629,7 +1635,8 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-zlib       Built included libz, or use system libz
   builtin-lzma       Built included liblzma, or use system liblzma
   cxx11              Build using C++11 compatible mode, requires gcc > 4.7.x or clang
-  libcxx             Build using libc++, required by clang cxx11 option (MacOS X only, for the time being)
+  cxx14              Build using C++14 compatible mode, requires gcc > 4.9.x or clang
+  libcxx             Build using libc++, required by clang cxx11 and cxx14 option (MacOS X only, for the time being)
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cintex             Build the libCintex Reflex interface library
@@ -1794,6 +1801,7 @@ with options, prefix with --with-, enables corresponding support
   xml-incdir         XML support, location of libxml/tree.h
   xml-libdir         XML support, location of libxml2
   x11-libdir         X11 support, path to libX11
+  xpm-incdir         XPM support, path to X11/Xpm.h
   xpm-libdir         XPM support, path to libXpm
   xft-libdir         Xft support, path to libXft
   xext-libdir        Xext support, path to libXext
@@ -2183,6 +2191,7 @@ if test $# -gt 0 ; then
       --with-xml-incdir=*)     xmlincdir=$optarg     ; enable_xml="yes"     ;;
       --with-xml-libdir=*)     xmllibdir=$optarg     ; enable_xml="yes"     ;;
       --with-x11-libdir=*)     x11libdir=$optarg     ;;
+      --with-xpm-incdir=*)     xpmincdir=$optarg     ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
       --with-xft-libdir=*)     xftlibdir=$optarg     ;;
       --with-xext-libdir=*)    xextlibdir=$optarg    ;;
@@ -2257,6 +2266,8 @@ if test $# -gt 0 ; then
       # Build steering option
       #
       --build=*)      rootbuild="ROOTBUILD      := $optarg"  ;;
+      --cflags=*)      usercflags=$optarg ;;
+      --cxxflags=*)    usercxxflags=$optarg ;;
       ################################################################
       #
       # Install path options
@@ -2526,6 +2537,11 @@ fi
 # needs gcc > 4.7.x or clang
 usecxx11="undef"
 if test "x$enable_cxx11" = "xyes"; then
+    if test "x$enable_cxx14" = "xyes"; then
+       message "Note: c++11 mode requested but superseded by request for c++14 mode"
+       result ""
+       enable_cxx11="no"
+    else
     message "Checking whether c++11 mode is supported"
     check_cxxopt -std=c++11
     if test $cxxopt_result -eq 0 ; then
@@ -2542,6 +2558,33 @@ if test "x$enable_cxx11" = "xyes"; then
         fi
         result "yes"
     fi
+    fi
+fi
+
+######################################################################
+#
+### echo %%% C++14 - compile using c++14 compatible option
+#
+# needs gcc > 4.9.x or clang
+usecxx14="undef"
+if test "x$enable_cxx14" = "xyes"; then
+message "Checking whether c++14 mode is supported"
+check_cxxopt -std=c++1y
+if test $cxxopt_result -eq 0 ; then
+enable_cxx14="no"
+result "no"
+result "`basename $0`: c++14 mode is requested but the current compiler does not support it."
+exit 1
+else
+usecxx11="define"
+usecxx14="define"
+# on OS X libcxx is required for C++11 support with clang
+# so turn the option on when using clang
+if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
+enable_libcxx="yes"
+fi
+result "yes"
+fi
 fi
 
 ######################################################################
@@ -2649,7 +2692,7 @@ if test ! "x$enable_x11" = "xno" ; then
         exit 1
     fi
 
-    check_header "X11/xpm.h" "" \
+    check_header "X11/xpm.h" "" "$xpmincdir" \
         $XPM ${XPM:+$XPM/include} \
         ${finkdir:+$finkdir/include} \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
@@ -3624,8 +3667,10 @@ if test ! "x$enable_rfio" = "xno" ; then
         $RFIO ${RFIO:+$RFIO/include} \
         ${RFIO:+$RFIO/include/shift} ${RFIO:+$RFIO/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
-        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
-        /usr/local/include/shift /usr/include /usr/local/include
+        /opt/shift/include /usr/local/shift/include \
+        /usr/include/shift /usr/local/include/shift \
+        /usr/include/dpm /usr/local/include/dpm \
+        /usr/include /usr/local/include
     shiftinc=$found_hdr
     shiftincdir=$found_dir
 
@@ -3699,7 +3744,7 @@ if test ! "x$enable_castor" = "xno" ; then
         $CASTOR ${CASTOR:+$CASTOR/include} \
         ${CASTOR:+$CASTOR/include/shift} ${CASTOR:+$CASTOR/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
-        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+        /opt/shift/include /usr/local/shift/include /usr/include/shift \
         /usr/local/include/shift /usr/include /usr/local/include
     castorinc=$found_hdr
     castorincdir=$found_dir
@@ -3721,7 +3766,7 @@ if test ! "x$enable_castor" = "xno" ; then
         $CASTOR ${CASTOR:+$CASTOR/include} \
         ${CASTOR:+$CASTOR/include/shift} ${CASTOR:+$CASTOR/h} \
         /cern/pro/include /cern/new/include /cern/old/include \
-        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+        /opt/shift/include /usr/local/shift/include /usr/include/shift \
         /usr/local/include/shift /usr/include /usr/local/include
     stagerinc=$found_hdr
 
@@ -3792,6 +3837,7 @@ if test ! "x$enable_gfal" = "xno"; then
     # Check for GFAL include and library
     check_header "gfal_api.h" "$gfalincdir" \
         $GFAL ${GFAL:+$GFAL/include} \
+        /usr/include/gfal2 /usr/include \
         /opt/lcg/include /opt/gfal/include /usr/local/lcg/include \
         /usr/local/gfal/include
     gfalinc=$found_hdr
@@ -3800,11 +3846,13 @@ if test ! "x$enable_gfal" = "xno"; then
     if test ! "x$gfalincdir" = "x" && grep GFAL2 $gfalincdir/gfal_api.h > /dev/null 2>&1 ; then
         check_library "libgfal2" "$enable_shared" "$gfallibdir" \
             $GFAL ${GFAL:+$GFAL/lib} \
+            /usr/lib \
             /opt/lcg/lib /opt/gfal2/lib /usr/local/lcg/lib \
             /usr/local/gfal2/lib
     else
         check_library "libgfal" "$enable_shared" "$gfallibdir" \
             $GFAL ${GFAL:+$GFAL/lib} \
+            /usr/lib \
             /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
             /usr/local/gfal/lib
     fi
@@ -4240,7 +4288,7 @@ if test ! "x$enable_hdfs" = "xno" ; then
     check_header "hdfs.h" "$hdfsincdir" \
         $HDFS ${HDFS:+$HDFS/include} ${HDFS:+$HDFS/src/c++/libhdfs} \
         $HADOOP_HOME ${HADOOP_HOME:+$HADOOP_HOME/src/c++/libhdfs} \
-        /usr/include /usr/local/include
+        /usr/include /usr/include/hadoop /usr/local/include
     hdfsinc=$found_hdr
     hdfsincdir=$found_dir
 
@@ -5032,6 +5080,8 @@ if test "x$enable_xrootd" = "xyes" ; then
    if test "x$enable_xrootd" = "xyes"; then
       if test -d "$xrdincdir/private"; then
          xrdincprivate="yes"
+      elif test -d "${ac_srcdir}/proof/xrdinc"; then
+         xrdincprivate="proof"
       fi
    fi
 
@@ -6163,6 +6213,7 @@ EOF
                 echo "Clang before version 3.1 is unable to compile Vc correctly. Please update clang or disable Vc."
                 exit 1
             fi
+	    vcflags="$vcflags -Wno-local-type-template-args -Wno-unnamed-type-template-args"
             ;;
         GCC)
             vcflags="$vcflags -Wno-unused-function"
@@ -7095,7 +7146,9 @@ if test ! "x$haveconfig" = "x" ; then
     fi
 
     sed -e "s|@useconfig@|TRUE|"                       \
-        -e "s|@cflags@|$haveconfig|"                   \
+        -e "s|@cflags@|$haveconfig $usercflags|"       \
+        -e "s|@usercflags@|$usercflags|"               \
+        -e "s|@usercxxflags@|$usercxxflags|"           \
             < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 else
@@ -7148,6 +7201,8 @@ else
 
     sed -e "s|@useconfig@|FALSE|" \
         -e "s|@cflags@||"         \
+        -e "s|@usercflags@|$usercflags|"         \
+        -e "s|@usercxxflags@|$usercxxflags|"     \
         -e "s|@ldflags@||"        \
             < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
@@ -7442,6 +7497,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildxrdclt@|$buildxrdclt|"          \
     -e "s|@buildnetxng@|$buildnetxng|"          \
     -e "s|@c++11@|$enable_cxx11|"               \
+    -e "s|@c++14@|$enable_cxx14|"               \
     -e "s|@libc++@|$enable_libcxx|"             \
     -e "s|@werror@|$enable_werror|"             \
     < Makefile.tmp > $MAKEOUT
@@ -7499,6 +7555,7 @@ sed \
     -e "s|@hascocoa@|$hascocoa|"           \
     -e "s|@hasvc@|$hasvc|"                 \
     -e "s|@usec++11@|$usecxx11|"           \
+    -e "s|@usec++14@|$usecxx14|"           \
     -e "s|@uselibc++@|$uselibcxx|"         \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
@@ -7623,6 +7680,8 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@altcxx@|$altcxx2|"              \
     -e "s|@altf77@|$altf772|"              \
     -e "s|@altld@|$altld2|"                \
+    -e "s|@usercflags@|$usercflags|"       \
+    -e "s|@usercxxflags@|$usercxxflags|"   \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT

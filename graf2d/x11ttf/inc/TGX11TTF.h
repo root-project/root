@@ -79,9 +79,13 @@ public:
    //void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    FontStruct_t LoadQueryFont(const char *font_name);
    void         DeleteFont(FontStruct_t fs);
+   void         DeleteGC(GContext_t gc);
    void         DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y, const char *s, Int_t len);
    Int_t        TextWidth(FontStruct_t font, const char *s, Int_t len);
    void         GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent);
+   FontH_t      GetFontHandle(FontStruct_t fs);
+   FontStruct_t GetGCFont(GContext_t gc);
+   void         MapGCFont(GContext_t gc, FontStruct_t font);
 #endif
 
    static void  Activate();

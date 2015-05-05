@@ -26,7 +26,7 @@ using namespace Vc;
 template<typename Vec> void alignedStore()
 {
     typedef typename Vec::EntryType T;
-    enum {
+    enum JustAnotherName__ {
         Count = 256 * 1024 / sizeof(T)
     };
 
@@ -48,7 +48,7 @@ template<typename Vec> void alignedStore()
 template<typename Vec> void unalignedStore()
 {
     typedef typename Vec::EntryType T;
-    enum {
+    enum JustAnotherName__ {
         Count = 256 * 1024 / sizeof(T)
     };
 
@@ -70,7 +70,7 @@ template<typename Vec> void unalignedStore()
 template<typename Vec> void streamingAndAlignedStore()
 {
     typedef typename Vec::EntryType T;
-    enum {
+    enum JustAnotherName__ {
         Count = 256 * 1024 / sizeof(T)
     };
 
@@ -92,7 +92,7 @@ template<typename Vec> void streamingAndAlignedStore()
 template<typename Vec> void streamingAndUnalignedStore()
 {
     typedef typename Vec::EntryType T;
-    enum {
+    enum JustAnotherName__ {
         Count = 256 * 1024 / sizeof(T)
     };
 
@@ -126,7 +126,7 @@ template<typename Vec> void maskedStore()
     const int count = 256 * 1024 / sizeof(T);
     const int outerCount = count / Vec::Size;
     Vc::Memory<Vec> array(count);
-    array.setZero();
+	array.setZero();
     const T nullValue = 0;
     const T setValue = 170;
     const Vec x(setValue);

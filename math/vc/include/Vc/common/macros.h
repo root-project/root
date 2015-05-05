@@ -23,10 +23,13 @@
 
 #include <Vc/global.h>
 
-#if VC_GCC && !defined(__OPTIMIZE__)
+#if defined(VC_GCC) && !defined(__OPTIMIZE__)
+#  if VC_GCC >= 0x40500
+#    pragma GCC diagnostic push
+#    define Vc_POP_GCC_DIAGNOSTIC__ 1
+#  endif
 // GCC uses lots of old-style-casts in macros that disguise as intrinsics
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
 #endif
 
 #ifdef VC_MSVC
@@ -178,22 +181,22 @@
 #endif
 
 #define unrolled_loop16(_it_, _start_, _end_, _code_) \
-if (_start_ +  0 < _end_) { enum { _it_ = (_start_ +  0) < _end_ ? (_start_ +  0) : _start_ }; _code_ } \
-if (_start_ +  1 < _end_) { enum { _it_ = (_start_ +  1) < _end_ ? (_start_ +  1) : _start_ }; _code_ } \
-if (_start_ +  2 < _end_) { enum { _it_ = (_start_ +  2) < _end_ ? (_start_ +  2) : _start_ }; _code_ } \
-if (_start_ +  3 < _end_) { enum { _it_ = (_start_ +  3) < _end_ ? (_start_ +  3) : _start_ }; _code_ } \
-if (_start_ +  4 < _end_) { enum { _it_ = (_start_ +  4) < _end_ ? (_start_ +  4) : _start_ }; _code_ } \
-if (_start_ +  5 < _end_) { enum { _it_ = (_start_ +  5) < _end_ ? (_start_ +  5) : _start_ }; _code_ } \
-if (_start_ +  6 < _end_) { enum { _it_ = (_start_ +  6) < _end_ ? (_start_ +  6) : _start_ }; _code_ } \
-if (_start_ +  7 < _end_) { enum { _it_ = (_start_ +  7) < _end_ ? (_start_ +  7) : _start_ }; _code_ } \
-if (_start_ +  8 < _end_) { enum { _it_ = (_start_ +  8) < _end_ ? (_start_ +  8) : _start_ }; _code_ } \
-if (_start_ +  9 < _end_) { enum { _it_ = (_start_ +  9) < _end_ ? (_start_ +  9) : _start_ }; _code_ } \
-if (_start_ + 10 < _end_) { enum { _it_ = (_start_ + 10) < _end_ ? (_start_ + 10) : _start_ }; _code_ } \
-if (_start_ + 11 < _end_) { enum { _it_ = (_start_ + 11) < _end_ ? (_start_ + 11) : _start_ }; _code_ } \
-if (_start_ + 12 < _end_) { enum { _it_ = (_start_ + 12) < _end_ ? (_start_ + 12) : _start_ }; _code_ } \
-if (_start_ + 13 < _end_) { enum { _it_ = (_start_ + 13) < _end_ ? (_start_ + 13) : _start_ }; _code_ } \
-if (_start_ + 14 < _end_) { enum { _it_ = (_start_ + 14) < _end_ ? (_start_ + 14) : _start_ }; _code_ } \
-if (_start_ + 15 < _end_) { enum { _it_ = (_start_ + 15) < _end_ ? (_start_ + 15) : _start_ }; _code_ } \
+if (_start_ +  0 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  0) < _end_ ? (_start_ +  0) : _start_ }; _code_ } \
+if (_start_ +  1 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  1) < _end_ ? (_start_ +  1) : _start_ }; _code_ } \
+if (_start_ +  2 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  2) < _end_ ? (_start_ +  2) : _start_ }; _code_ } \
+if (_start_ +  3 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  3) < _end_ ? (_start_ +  3) : _start_ }; _code_ } \
+if (_start_ +  4 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  4) < _end_ ? (_start_ +  4) : _start_ }; _code_ } \
+if (_start_ +  5 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  5) < _end_ ? (_start_ +  5) : _start_ }; _code_ } \
+if (_start_ +  6 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  6) < _end_ ? (_start_ +  6) : _start_ }; _code_ } \
+if (_start_ +  7 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  7) < _end_ ? (_start_ +  7) : _start_ }; _code_ } \
+if (_start_ +  8 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  8) < _end_ ? (_start_ +  8) : _start_ }; _code_ } \
+if (_start_ +  9 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  9) < _end_ ? (_start_ +  9) : _start_ }; _code_ } \
+if (_start_ + 10 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 10) < _end_ ? (_start_ + 10) : _start_ }; _code_ } \
+if (_start_ + 11 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 11) < _end_ ? (_start_ + 11) : _start_ }; _code_ } \
+if (_start_ + 12 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 12) < _end_ ? (_start_ + 12) : _start_ }; _code_ } \
+if (_start_ + 13 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 13) < _end_ ? (_start_ + 13) : _start_ }; _code_ } \
+if (_start_ + 14 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 14) < _end_ ? (_start_ + 14) : _start_ }; _code_ } \
+if (_start_ + 15 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 15) < _end_ ? (_start_ + 15) : _start_ }; _code_ } \
 do {} while ( false )
 
 #define for_all_vector_entries(_it_, _code_) \
@@ -243,35 +246,35 @@ namespace Vc {
 #define VC_STATIC_ASSERT(cond, msg) VC_STATIC_ASSERT_NC(cond, msg)
 #endif // C++11/98
 
-    template<int e, int center> struct exponentToMultiplier { enum {
+    template<int e, int center> struct exponentToMultiplier { enum Values__ {
         X = exponentToMultiplier<e - 1, center>::X * ((e - center < 31) ? 2 : 1),
         Value = (X == 0 ? 1 : X)
     }; };
-    template<int center> struct exponentToMultiplier<center,center> { enum { X = 1, Value = X }; };
-    template<int center> struct exponentToMultiplier<   -1, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToMultiplier< -128, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToMultiplier< -256, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToMultiplier< -384, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToMultiplier< -512, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToMultiplier< -640, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToMultiplier< -768, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToMultiplier< -896, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToMultiplier<-1024, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier<center,center> { enum Values__ { X = 1, Value = X }; };
+    template<int center> struct exponentToMultiplier<   -1, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -128, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -256, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -384, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -512, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -640, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -768, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -896, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier<-1024, center> { enum Values__ { X = 0, Value = 1 }; };
 
-    template<int e, int center> struct exponentToDivisor { enum {
+    template<int e, int center> struct exponentToDivisor { enum Values__ {
         X = exponentToDivisor<e + 1, center>::X * ((center - e < 31) ? 2 : 1),
         Value = (X == 0 ? 1 : X)
     }; };
-    template<int center> struct exponentToDivisor<center, center> { enum { X = 1, Value = X }; };
-    template<int center> struct exponentToDivisor<     1, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToDivisor<   128, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToDivisor<   256, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToDivisor<   384, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToDivisor<   512, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToDivisor<   640, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToDivisor<   768, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToDivisor<   896, center> { enum { X = 0, Value = 1 }; };
-    template<int center> struct exponentToDivisor<  1024, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<center, center> { enum Values__ { X = 1, Value = X }; };
+    template<int center> struct exponentToDivisor<     1, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   128, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   256, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   384, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   512, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   640, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   768, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   896, center> { enum Values__ { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<  1024, center> { enum Values__ { X = 0, Value = 1 }; };
 #endif // VC_COMMON_MACROS_H_ONCE
 
 #define _CAT_IMPL(a, b) a##b

@@ -1958,6 +1958,8 @@ void TCanvas::Streamer(TBuffer &b)
       Version_t v = b.ReadVersion(&R__s, &R__c);
       gPad    = this;
       fCanvas = this;
+      if (v>7) b.ClassBegin(TCanvas::IsA());
+      if (v>7) b.ClassMember("TPad");
       TPad::Streamer(b);
       gPad    = this;
       //restore the colors
@@ -1985,38 +1987,62 @@ void TCanvas::Streamer(TBuffer &b)
          colors->Delete();
          delete colors;
       }
-
+      if (v>7) b.ClassMember("fDISPLAY","TString");
       fDISPLAY.Streamer(b);
+      if (v>7) b.ClassMember("fDoubleBuffer", "Int_t");
       b >> fDoubleBuffer;
+      if (v>7) b.ClassMember("fRetained", "Bool_t");
       b >> fRetained;
+      if (v>7) b.ClassMember("fXsizeUser", "Size_t");
       b >> fXsizeUser;
+      if (v>7) b.ClassMember("fYsizeUser", "Size_t");
       b >> fYsizeUser;
+      if (v>7) b.ClassMember("fXsizeReal", "Size_t");
       b >> fXsizeReal;
+      if (v>7) b.ClassMember("fYsizeReal", "Size_t");
       b >> fYsizeReal;
       fCanvasID = -1;
+      if (v>7) b.ClassMember("fWindowTopX", "Int_t");
       b >> fWindowTopX;
+      if (v>7) b.ClassMember("fWindowTopY", "Int_t");
       b >> fWindowTopY;
       if (v > 2) {
+         if (v>7) b.ClassMember("fWindowWidth", "UInt_t");
          b >> fWindowWidth;
+         if (v>7) b.ClassMember("fWindowHeight", "UInt_t");
          b >> fWindowHeight;
       }
+      if (v>7) b.ClassMember("fCw", "UInt_t");
       b >> fCw;
+      if (v>7) b.ClassMember("fCh", "UInt_t");
       b >> fCh;
       if (v <= 2) {
          fWindowWidth  = fCw;
          fWindowHeight = fCh;
       }
+      if (v>7) b.ClassMember("fCatt", "TAttCanvas");
       fCatt.Streamer(b);
       Bool_t dummy;
+      if (v>7) b.ClassMember("kMoveOpaque", "Bool_t");
       b >> dummy; if (dummy) MoveOpaque(1);
+      if (v>7) b.ClassMember("kResizeOpaque", "Bool_t");
       b >> dummy; if (dummy) ResizeOpaque(1);
+      if (v>7) b.ClassMember("fHighLightColor", "Color_t");
       b >> fHighLightColor;
+      if (v>7) b.ClassMember("fBatch", "Bool_t");
       b >> dummy; //was fBatch
       if (v < 2) return;
+      if (v>7) b.ClassMember("kShowEventStatus", "Bool_t");
       b >> dummy; if (dummy) SetBit(kShowEventStatus);
-      if (v > 3) {b >> dummy; if (dummy) SetBit(kAutoExec);}
+
+      if (v > 3) {
+         if (v>7) b.ClassMember("kAutoExec", "Bool_t");
+         b >> dummy; if (dummy) SetBit(kAutoExec);
+      }
+      if (v>7) b.ClassMember("kMenuBar", "Bool_t");
       b >> dummy; if (dummy) SetBit(kMenuBar);
       fBatch = gROOT->IsBatch();
+      if (v>7) b.ClassEnd(TCanvas::IsA());
       b.CheckByteCount(R__s, R__c, TCanvas::IsA());
    } else {
       //save list of colors
@@ -2029,33 +2055,57 @@ void TCanvas::Streamer(TBuffer &b)
          fPrimitives->Add(colors);
       }
       R__c = b.WriteVersion(TCanvas::IsA(), kTRUE);
+      b.ClassBegin(TCanvas::IsA());
+      b.ClassMember("TPad");
       TPad::Streamer(b);
       if(colors) fPrimitives->Remove(colors);
+      b.ClassMember("fDISPLAY","TString");
       fDISPLAY.Streamer(b);
+      b.ClassMember("fDoubleBuffer", "Int_t");
       b << fDoubleBuffer;
+      b.ClassMember("fRetained", "Bool_t");
       b << fRetained;
+      b.ClassMember("fXsizeUser", "Size_t");
       b << fXsizeUser;
+      b.ClassMember("fYsizeUser", "Size_t");
       b << fYsizeUser;
+      b.ClassMember("fXsizeReal", "Size_t");
       b << fXsizeReal;
+      b.ClassMember("fYsizeReal", "Size_t");
       b << fYsizeReal;
       UInt_t w   = fWindowWidth,  h    = fWindowHeight;
       Int_t topx = fWindowTopX,   topy = fWindowTopY;
       UInt_t editorWidth = 0;
       if(fCanvasImp) editorWidth = fCanvasImp->GetWindowGeometry(topx,topy,w,h);
+      b.ClassMember("fWindowTopX", "Int_t");
       b << topx;
+      b.ClassMember("fWindowTopY", "Int_t");
       b << topy;
+      b.ClassMember("fWindowWidth", "UInt_t");
       b << (UInt_t)(w-editorWidth);
+      b.ClassMember("fWindowHeight", "UInt_t");
       b << h;
+      b.ClassMember("fCw", "UInt_t");
       b << fCw;
+      b.ClassMember("fCh", "UInt_t");
       b << fCh;
+      b.ClassMember("fCatt", "TAttCanvas");
       fCatt.Streamer(b);
+      b.ClassMember("kMoveOpaque", "Bool_t");
       b << TestBit(kMoveOpaque);      //please remove in ROOT version 6
+      b.ClassMember("kResizeOpaque", "Bool_t");
       b << TestBit(kResizeOpaque);    //please remove in ROOT version 6
+      b.ClassMember("fHighLightColor", "Color_t");
       b << fHighLightColor;
+      b.ClassMember("fBatch", "Bool_t");
       b << fBatch;                    //please remove in ROOT version 6
+      b.ClassMember("kShowEventStatus", "Bool_t");
       b << TestBit(kShowEventStatus); //please remove in ROOT version 6
+      b.ClassMember("kAutoExec", "Bool_t");
       b << TestBit(kAutoExec);        //please remove in ROOT version 6
+      b.ClassMember("kMenuBar", "Bool_t");
       b << TestBit(kMenuBar);         //please remove in ROOT version 6
+      b.ClassEnd(TCanvas::IsA());
       b.SetByteCount(R__c, kTRUE);
    }
 }

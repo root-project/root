@@ -135,6 +135,7 @@ clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -rf $(HISTFACTORYDEP) $(HISTFACTORYLIB) $(HISTFACTORYMAP) \
-		   $(HISTFACTORYDS) $(HISTFACTORYDH)
+		   $(HISTFACTORYDS) $(HISTFACTORYDH) $(HF_MAKEWORKSPACEEXE) \
+		   $(HF_PREPAREHISTFACTORY)
 
 distclean::     distclean-$(MODNAME)

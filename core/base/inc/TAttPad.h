@@ -88,7 +88,7 @@ public:
    void             SetFrameBorderSize(Width_t size=1) {fFrameBorderSize = size;}
    void             SetFrameBorderMode(Int_t mode=1) {fFrameBorderMode = mode;}
 
-   ClassDef(TAttPad,3);  //Pad attributes
+   ClassDef(TAttPad,4);  //Pad attributes
 };
 
 #endif

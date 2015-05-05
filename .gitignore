@@ -45,6 +45,7 @@ rootcint_*.h
 /buildtools
 /roottest
 /*.mk
+/.project
 
 # cint/cint
 cint/cint/inc/configcint.h
@@ -135,6 +136,7 @@ cint/cint/src/loadfile_tmp.cxx
 /etc/cling
 /etc/allDict.cxx.pch
 /etc/allDict.cxx.h
+/etc/dictpch
 
 # /etc/daemons/
 /etc/daemons/rootd.rc.d

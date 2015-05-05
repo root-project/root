@@ -122,6 +122,10 @@
 #undef StrDup
 #undef SendMessage
 
+// the following two are roofit specific
+#undef ERROR
+#undef GetYValue
+
 #if !defined(ROOT_TGWin32Object) && !defined(ROOT_TGWin32)
 #   undef GetObject
 #   undef GetClassInfo

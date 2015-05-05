@@ -165,6 +165,13 @@ public:
 
    Double_t     AsDouble() const { return fSec + 1e-9 * fNanoSec; }
    Double_t     AsJulianDate() const { return (AsDouble()/86400.0 + 2440587.5); }
+
+   // return stored time values converted to sidereal time
+   Double_t     AsGMST(Double_t UT1Offset = 0 /*milliseconds*/) const; //rval in hours
+   Double_t     AsGAST(Double_t UT1Offset = 0 /*milliseconds*/) const; //rval in hours
+   Double_t     AsLMST(Double_t Longitude /*degrees*/, Double_t UT1Offset = 0 /*milliseconds*/) const; //rval in hours
+   Double_t     AsLAST(Double_t Longitude /*degrees*/, Double_t UT1Offset = 0 /*milliseconds*/) const; //rval in hours
+
    const char  *AsString(const Option_t *option="") const;
 
    void         Copy(TTimeStamp &ts) const;

@@ -64,11 +64,6 @@ namespace RooStats {
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*paramsOfInterest*/)  {       
       
-         if(!&data) {
-            std::cout << "Data set reference is NULL" << std::endl;
-            return 0;
-         }
-
          if(data.isWeighted()) {
             return data.sumEntries();
          }

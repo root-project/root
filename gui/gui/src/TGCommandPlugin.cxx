@@ -48,12 +48,13 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
             kLHintsExpandX, 3, 3, 3, 3));
    fCommand->Connect("ReturnPressed()", "TGCommandPlugin", this,
                      "HandleCommand()");
-
-   Pixel_t pxl;
-   gClient->GetColorByName("#3399ff", pxl);
    fStatus = new TGTextView(this, 10, 100, 1);
-   fStatus->SetSelectBack(pxl);
-   fStatus->SetSelectFore(TGFrame::GetWhitePixel());
+   if (gClient->GetStyle() < 2) {
+      Pixel_t pxl;
+      gClient->GetColorByName("#a0a0a0", pxl);
+      fStatus->SetSelectBack(pxl);
+      fStatus->SetSelectFore(TGFrame::GetWhitePixel());
+   }
    AddFrame(fStatus, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
             kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3));
    fPid = gSystem->GetPid();

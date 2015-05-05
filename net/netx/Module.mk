@@ -44,6 +44,10 @@ NETXINCEXTRA += -I$(ROOT_SRCDIR)/proof/proofd/inc
 endif
 ifeq ($(XRDINCPRIVATE),yes)
 NETXINCEXTRA += -I$(XRDINCDIR)/private
+else
+ifeq ($(XRDINCPRIVATE),proof)
+NETXINCEXTRA += -Iproof/xrdinc
+endif
 endif
 
 # Xrootd client libs

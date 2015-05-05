@@ -118,10 +118,6 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
     f = new TFile("SamplingDistributions.root","recreate");
   }
   
-  if(!&fData) {
-    oocoutF((TObject*)0,Contents) << "Neyman Construction: data is not set, can't get interval" << endl;
-    return 0;
-  }
   Int_t npass = 0;
   RooArgSet* point; 
   

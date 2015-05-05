@@ -434,7 +434,7 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
    if (nargs<=0) fCmPar[0] = 0;
    Int_t i;
    for(i=0;i<fMaxParam;i++) {
-      if(i<=nargs) fCmPar[i] = args[i];
+      if(i<nargs) fCmPar[i] = args[i];
    }
    /*
    fNmaxIter = int(fCmPar[0]);

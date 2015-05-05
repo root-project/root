@@ -1788,7 +1788,7 @@ void TPostScript::Initialize()
    PrintStr("/cl {closepath} def /sf {scalefont setfont} def /lw {setlinewidth} def@");
    PrintStr("/box {m dup 0 exch d exch 0 d 0 exch neg d cl} def@");
    PrintStr("/NC{systemdict begin initclip end}def/C{NC box clip newpath}def@");
-   PrintStr("/bl {box s} def /bf {box f} def /Y { 0 exch d} def /X { 0 d} def @");
+   PrintStr("/bl {box s} def /bf {gsave box gsave f grestore 1 lw [] 0 sd s grestore} def /Y { 0 exch d} def /X { 0 d} def @");
    PrintStr("/K {{pop pop 0 moveto} exch kshow} bind def@");
    PrintStr("/ita {/ang 15 def gsave [1 0 ang dup sin exch cos div 1 0 0] concat} def @");
 
@@ -2129,7 +2129,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
       PrintStr(" << /PatternType 1 /PaintType 2 /TilingType 1");
       switch (ipat) {
          case 1 :
-            PrintStr(" /BBox [ 0 0 100 100 ]");
+            PrintStr(" /BBox [ 0 0 98 4 ]");
             PrintStr(" /XStep 98 /YStep 4");
             PrintStr(" /PaintProc { begin gsave");
             PrintStr(" [1] 0 sd 2 4 m 99 4 l s 1 3 m 98 3 l s");
@@ -2137,7 +2137,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
             PrintStr(" gr end } >> [ 4.0 0 0 4.0 0 0 ]");
             break;
          case 2 :
-            PrintStr(" /BBox [ 0 0 100 100 ]");
+            PrintStr(" /BBox [ 0 0 96 4 ]");
             PrintStr(" /XStep 96 /YStep 4");
             PrintStr(" /PaintProc { begin gsave");
             PrintStr(" [1 3] 0 sd 2 4 m 98 4 l s 0 3 m 96 3 l s");
@@ -2145,7 +2145,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
             PrintStr(" gr end } >> [ 3.0 0 0 3.0 0 0 ]");
             break;
          case 3 :
-            PrintStr(" /BBox [ 0 0 100 100 ]");
+            PrintStr(" /BBox [ 0 0 96 16 ]");
             PrintStr(" /XStep 96 /YStep 16");
             PrintStr(" /PaintProc { begin gsave");
             PrintStr(" [1 3] 0 sd 2 13 m 98 13 l s 0 9 m 96 9 l s");
@@ -3069,7 +3069,7 @@ void TPostScript::Zone()
       fIXzone++;
       if( fIXzone > fNXzone) { fIXzone=1; fIYzone++; }
    }
-   
+
    // Picture Initialisation
    SaveRestore(1);
    if (fgLineJoin) {

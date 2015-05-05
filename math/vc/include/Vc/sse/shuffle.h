@@ -46,14 +46,17 @@ namespace Vc
             return _mm_shuffle_pd(x, y, Dst0 + (Dst1 - Y0) * 2);
         }
 
+#if !defined(VC_IMPL_SSE4_1) && !defined(VC_IMPL_AVX)
+#define Vc_MAKE_INTRINSIC__(name__) Vc::SSE::_VC_CAT(m,m,_,name__)
+#else
+#define Vc_MAKE_INTRINSIC__(name__) _VC_CAT(_,mm,_,name__)
+#endif
+
         // blend<X0, Y1>([x0 x1], [y0, y1]) = [x0 y1]
         template<VecPos Dst0, VecPos Dst1> static Vc_ALWAYS_INLINE __m128d Vc_CONST blend(__m128d x, __m128d y) {
             VC_STATIC_ASSERT(Dst0 == X0 || Dst0 == Y0, Incorrect_Range);
             VC_STATIC_ASSERT(Dst1 == X1 || Dst1 == Y1, Incorrect_Range);
-#if !defined(VC_IMPL_SSE4_1) && !defined(VC_IMPL_AVX)
-            using Vc::SSE::_mm_blend_pd;
-#endif
-            return _mm_blend_pd(x, y, (Dst0 / Y0) + (Dst1 / Y0) * 2);
+            return Vc_MAKE_INTRINSIC__(blend_pd)(x, y, (Dst0 / Y0) + (Dst1 / Y0) * 2);
         }
 
         // blend<X0, Y1>([x0 x1], [y0, y1]) = [x0 y1]
@@ -62,10 +65,7 @@ namespace Vc
             VC_STATIC_ASSERT(Dst1 == X1 || Dst1 == Y1, Incorrect_Range);
             VC_STATIC_ASSERT(Dst2 == X2 || Dst2 == Y2, Incorrect_Range);
             VC_STATIC_ASSERT(Dst3 == X3 || Dst3 == Y3, Incorrect_Range);
-#if !defined(VC_IMPL_SSE4_1) && !defined(VC_IMPL_AVX)
-            using Vc::SSE::_mm_blend_ps;
-#endif
-            return _mm_blend_ps(x, y,
+            return Vc_MAKE_INTRINSIC__(blend_ps)(x, y,
                     (Dst0 / Y0) *  1 + (Dst1 / Y1) *  2 +
                     (Dst2 / Y2) *  4 + (Dst3 / Y3) *  8);
         }
@@ -80,10 +80,7 @@ namespace Vc
             VC_STATIC_ASSERT(Dst5 == X5 || Dst5 == Y5, Incorrect_Range);
             VC_STATIC_ASSERT(Dst6 == X6 || Dst6 == Y6, Incorrect_Range);
             VC_STATIC_ASSERT(Dst7 == X7 || Dst7 == Y7, Incorrect_Range);
-#if !defined(VC_IMPL_SSE4_1) && !defined(VC_IMPL_AVX)
-            using Vc::SSE::_mm_blend_epi16;
-#endif
-            return _mm_blend_epi16(x, y,
+            return Vc_MAKE_INTRINSIC__(blend_epi16)(x, y,
                     (Dst0 / Y0) *  1 + (Dst1 / Y1) *  2 +
                     (Dst2 / Y2) *  4 + (Dst3 / Y3) *  8 +
                     (Dst4 / Y4) * 16 + (Dst5 / Y5) * 32 +

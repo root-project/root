@@ -3362,9 +3362,13 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (dimension ==2) {
          bin1 = xaxis->GetFirst()+1;
          bin2 = xaxis->GetLast()-1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, xaxis->GetNbins());
          if (bin2>bin1) xaxis->SetRange(bin1,bin2);
          bin1 = yaxis->GetFirst()+1;
          bin2 = yaxis->GetLast()-1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, yaxis->GetNbins());
          if (bin2>bin1) yaxis->SetRange(bin1,bin2);
       }
       gPad->Modified();
@@ -3377,9 +3381,13 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (dimension == 2) {
          bin1 = xaxis->GetFirst()-1;
          bin2 = xaxis->GetLast()+1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, xaxis->GetNbins());
          if (bin2>bin1) xaxis->SetRange(bin1,bin2);
          bin1 = yaxis->GetFirst()-1;
          bin2 = yaxis->GetLast()+1;
+         bin1 = TMath::Max(bin1, 1);
+         bin2 = TMath::Min(bin2, yaxis->GetNbins());
          if (bin2>bin1) yaxis->SetRange(bin1,bin2);
       }
       gPad->Modified();
@@ -3404,6 +3412,10 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             Double_t x2 = TMath::Max(zoombox->GetX1(), zoombox->GetX2());
             Double_t y1 = TMath::Min(zoombox->GetY1(), zoombox->GetY2());
             Double_t y2 = TMath::Max(zoombox->GetY1(), zoombox->GetY2());
+            x1 = TMath::Max(x1,xaxis->GetXmin());
+            x2 = TMath::Min(x2,xaxis->GetXmax());
+            y1 = TMath::Max(y1,yaxis->GetXmin());
+            y2 = TMath::Min(y2,yaxis->GetXmax());
             if (x1<x2 && y1<y2) {
                xaxis->SetRangeUser(x1, x2);
                yaxis->SetRangeUser(y1, y2);
@@ -5745,8 +5757,7 @@ void THistPainter::PaintErrors(Option_t *)
    if (fixbin) {
       if (Hoption.Logx) xp = TMath::Power(10,Hparam.xmin) + 0.5*Hparam.xbinsize;
       else              xp = Hparam.xmin + 0.5*Hparam.xbinsize;
-   }
-   else {
+   } else {
       delta = fH->GetBinWidth(first);
       xp    = fH->GetBinLowEdge(first) + 0.5*delta;
    }
@@ -5759,8 +5770,8 @@ void THistPainter::PaintErrors(Option_t *)
    for (k=first; k<=last; k++) {
 
       //          get the data
-      //     xp      = X position of the current point
-      //     yp      = Y position of the current point
+      //     xp    = X position of the current point
+      //     yp    = Y position of the current point
       //     ex1   = Low X error
       //     ex2   = Up X error
       //     ey1   = Low Y error
@@ -5786,8 +5797,7 @@ void THistPainter::PaintErrors(Option_t *)
       if (fH->GetBinErrorOption() == TH1::kNormal) {
          ey1 = factor*fH->GetBinError(k);
          ey2 = ey1;
-      }
-      else {
+      } else {
          ey1 = factor*fH->GetBinErrorLow(k);
          ey2 = factor*fH->GetBinErrorUp(k);
       }
@@ -5850,6 +5860,7 @@ void THistPainter::PaintErrors(Option_t *)
       }
 
       //          draw the error bars
+      if (Hoption.Logy && yp < logymin) drawmarker = kFALSE;
       if (optionE && drawmarker) {
          if ((yi3 < yi1 - s2y) && (yi3 < ymax)) gPad->PaintLine(xi3,yi3,xi4,TMath::Min(yi1 - s2y,ymax));
          if ((yi1 + s2y < yi4) && (yi4 > ymin)) gPad->PaintLine(xi3,TMath::Max(yi1 + s2y, ymin),xi4,yi4);
@@ -5861,7 +5872,7 @@ void THistPainter::PaintErrors(Option_t *)
             }
          }
       }
-      if (optionE && !drawmarker && ey1 != 0) {
+      if (optionE && !drawmarker && (ey1 != 0 || ey2 !=0)) {
          if ((yi3 < yi1) && (yi3 < ymax)) gPad->PaintLine(xi3,yi3,xi4,TMath::Min(yi1,ymax));
          if ((yi1 < yi4) && (yi4 > ymin)) gPad->PaintLine(xi3,TMath::Max(yi1,ymin),xi4,yi4);
          // don't duplicate the horizontal line
@@ -6488,6 +6499,7 @@ Int_t THistPainter::PaintInit()
                f1 = (TF1*)f;
                if (xv[0] < f1->GetXmin() || xv[0] > f1->GetXmax()) continue;
                fval = f1->Eval(xv[0],0,0);
+               if (f1->GetMaximumStored() != -1111) fval = TMath::Min(f1->GetMaximumStored(), fval);
                ymax = TMath::Max(ymax,fval);
                if (Hoption.Logy) {
                   if (c1 > 0 && fval > 0.3*c1) ymin = TMath::Min(ymin,fval);
@@ -8461,6 +8473,7 @@ void THistPainter::PaintTriangles(Option_t *option)
    if (!fGraph2DPainter) fGraph2DPainter = new TGraph2DPainter(dt);
 
    // Define the 3D view
+   if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}
    if (Hoption.Same) {
       TView *viewsame = gPad->GetView();
       if (!viewsame) {
@@ -9232,6 +9245,7 @@ void THistPainter::PaintTitle()
    ptitle->Draw();
    ptitle->Paint();
 
+   if(!gPad->IsEditable()) delete ptitle;
 }
 
 

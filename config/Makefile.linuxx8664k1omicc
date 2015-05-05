@@ -20,16 +20,16 @@ MICFLAGS      = -mmic
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -fPIC -wd1476 $(MICFLAGS) $(EXTRA_CXXFLAGS) -O2 -m64 -no-vec -no-fma -Wall -DWARNINGMSG
-CFLAGS        = -fPIC $(MICFLAGS) $(EXTRA_CFLAGS) -restrict
+CXXFLAGS      = -fPIC -wd1476 $(MICFLAGS) $(EXTRA_CXXFLAGS) -O2 -m64 -no-vec -no-fma -Wall -DWARNINGMSG $(USERCONF_CXXFLAGS)
+CFLAGS        = -fPIC $(MICFLAGS) $(EXTRA_CFLAGS) -restrict $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -fPIC $(MICFLAGS) $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION -DG__64BIT
+                -DG__STD_EXCEPTION -DG__64BIT $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -fPIC $(MICFLAGS) $(EXTRA_CFLAGS) -restrict \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION -DG__64BIT
+                -DG__STD_EXCEPTION -DG__64BIT $(USERCONF_CFLAGS)
 
 # Linker:
 LD            = icpc

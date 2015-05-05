@@ -19,6 +19,7 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "RooAbsDataStore.h" 
 #include "TString.h"
 #include "RooCatType.h"

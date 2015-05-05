@@ -2332,6 +2332,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    case kWheelUp:
       bin1 = axis->GetFirst()+1;
       bin2 = axis->GetLast()-1;
+      bin1 = TMath::Max(bin1, 1);
+      bin2 = TMath::Min(bin2, axis->GetNbins());
       if (bin2>bin1) {
          axis->SetRange(bin1,bin2);
          gPad->Modified();
@@ -2342,6 +2344,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    case kWheelDown:
       bin1 = axis->GetFirst()-1;
       bin2 = axis->GetLast()+1;
+      bin1 = TMath::Max(bin1, 1);
+      bin2 = TMath::Min(bin2, axis->GetNbins());
       if (bin2>bin1) {
          axis->SetRange(bin1,bin2);
          gPad->Modified();
@@ -2393,6 +2397,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                last  = axis->GetLast();
                bin1 = first + Int_t((last-first+1)*ratio1);
                bin2 = first + Int_t((last-first+1)*ratio2);
+               bin1 = TMath::Max(bin1, 1);
+               bin2 = TMath::Min(bin2, axis->GetNbins());
                axis->SetRange(bin1, bin2);
             }
             delete view;
@@ -2447,6 +2453,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             TH1 *hobj1 = (TH1*)axis->GetParent();
             bin1 = axis->FindFixBin(xmin);
             bin2 = axis->FindFixBin(xmax);
+            bin1 = TMath::Max(bin1, 1);
+            bin2 = TMath::Min(bin2, axis->GetNbins());
             if (axisNumber == 1) axis->SetRange(bin1,bin2);
             if (axisNumber == 2 && hobj1) {
                if (hobj1->GetDimension() == 1) {
@@ -4287,6 +4295,7 @@ void TPad::Print(const char *filename) const
    //   if filename contains .eps, an Encapsulated Postscript file is produced
    //   if filename contains .gif, a GIF file is produced
    //   if filename contains .gif+NN, an animated GIF file is produced
+   //     See comments in TASImage::WriteImage for meaning of NN and other .gif sufix variants
    //   if filename contains .C or .cxx, a C++ macro file is produced
    //   if filename contains .root, a Root file is produced
    //   if filename contains .xml,  a XML file is produced
@@ -4337,6 +4346,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    //               "tex" - a TeX file is produced
    //               "gif" - a GIF file is produced
    //            "gif+NN" - an animated GIF file is produced, where NN is delay in 10ms units
+   //                       NOTE: See other variants for looping animation in TASImage::WriteImage
    //               "xpm" - a XPM file is produced
    //               "png" - a PNG file is produced
    //               "jpg" - a JPEG file is produced.
@@ -4433,7 +4443,8 @@ void TPad::Print(const char *filenam, Option_t *option)
    //
    // The delay between each frame must be specified in each Print() statement.
    // If the file "myfile.gif" already exists, the new frame are appended at
-   // the end of the file.
+   // the end of the file. To avoid this, delete it first with gSystem->Unlink(myfile.gif);
+   // If you want the gif file to repeat or loop forever, check TASImage::WriteImage documentation
 
    TString psname, fs1, fs2;
    char *filename;
@@ -4458,6 +4469,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    Int_t lenfil =  filename ? strlen(filename) : 0;
    const char *opt = option;
+   if (strstr(opt,"Title:")) opt = "pdf";
    Bool_t image = kFALSE;
 
    // Set the default option as "Postscript" (Should be a data member of TPad)
@@ -5122,6 +5134,7 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
    //   if filename contains .tex, a TeX file is produced
    //   if filename contains .gif, a GIF file is produced
    //   if filename contains .gif+NN, an  animated GIF file is produced
+   //     See comments in TASImage::WriteImage for meaning of NN and other .gif sufix variants
    //   if filename contains .xpm, a XPM file is produced
    //   if filename contains .png, a PNG file is produced
    //   if filename contains .jpg, a JPEG file is produced

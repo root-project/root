@@ -70,7 +70,7 @@ size_t fwrite(void *buffer,size_t size,size_t n,FILE *fp);
 int getc(FILE *fp);
 int getchar(void);
 char *getenv(const char *variable);
-char *gets(char *buffer);
+/* char *gets(char *buffer); */
 struct tm* gmtime(time_t *caltime);
 int isalnum(int c);
 int isalpha(int c);

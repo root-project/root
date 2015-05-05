@@ -18,15 +18,15 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -Wall -fsigned-char -fPIC \
-                -I/usr/X11/include $(EXTRA_CXXFLAGS)
+                -I/usr/X11/include $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -pipe -Wall -fPIC -fsigned-char \
-                -I/usr/X11/include $(EXTRA_CFLAGS)
+                -I/usr/X11/include $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -pipe -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
                 -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                $(EXTRA_CXXFLAGS)
+                $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -pipe -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
                 -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                $(EXTRA_CFLAGS)
+                $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

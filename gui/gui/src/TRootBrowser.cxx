@@ -1133,7 +1133,7 @@ void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
    if (name && strlen(name)) {
       SetTabTitle(name, fEditPos, fEditSubPos);
    }
-   fEditTab->Selected(fEditSubPos);
+   if (fEditTab) fEditTab->Selected(fEditSubPos);
    fEditFrame = fEditTab = 0;
    fEditPos = fEditSubPos = -1;
 }

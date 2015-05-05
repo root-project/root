@@ -97,6 +97,7 @@ std::string massValue = "";              // extra string to tag output file of r
 std::string  minimizerType = "";                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
 int   printLevel = 0;                    // print level for debugging PL test statistics and calculators  
 
+bool useNLLOffset = false;               // use NLL offset when fitting (this increase stability of fits) 
 
 
 // internal class to run the inverter and more
@@ -385,6 +386,8 @@ StandardHypoTestInvDemo(const char * infile = 0,
    calc.SetParameter("RandomSeed",randomSeed);
    calc.SetParameter("AsimovBins",nAsimovBins);
 
+   // enable offset for all roostats
+   if (useNLLOffset) RooStats::UseNLLOffset(true); 
 
    RooWorkspace * w = dynamic_cast<RooWorkspace*>( file->Get(wsName) );
    HypoTestInverterResult * r = 0;  
@@ -711,10 +714,11 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       RooStats::RemoveConstantParameters(&constrainParams);
       tw.Start(); 
       RooFitResult * fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),
-                                                       Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel), Constrain(constrainParams), Save(true) );
-      if (fitres->status() != 0) { 
+                                                       Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel), Constrain(constrainParams), Save(true), Offset(RooStats::IsNLLOffset()) );
+      if (fitres->status() != 0) {
          Warning("StandardHypoTestInvDemo","Fit to the model failed - try with strategy 1 and perform first an Hesse computation");
-         fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer(minimizerType.c_str(),"Migrad"), Strategy(1), PrintLevel(mPrintLevel+1), Constrain(constrainParams), Save(true) );
+         fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer(minimizerType.c_str(),"Migrad"), Strategy(1), PrintLevel(mPrintLevel+1), Constrain(constrainParams),
+                                           Save(true), Offset(RooStats::IsNLLOffset()) );
       }
       if (fitres->status() != 0) 
          Warning("StandardHypoTestInvDemo"," Fit still failed - continue anyway.....");
@@ -993,7 +997,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
              RooStats::SetAllConstant(*poiModel,true);
 
              sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),
-                                   Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel), Constrain(constrainParams) );
+                                      Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel), Constrain(constrainParams), Offset(RooStats::IsNLLOffset()) );
 
 
              std::cout << "rebuild using fitted parameter value for B-model snapshot" << std::endl;

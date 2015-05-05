@@ -92,9 +92,9 @@ TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic,
    fState = kButtonUp;
    fPicD = 0;
    fStyle = 0;
-   if (p && p->InheritsFrom("TGScrollBar"))
+   if ((gClient->GetStyle() > 1) || (p && p->InheritsFrom("TGScrollBar")))
       fStyle = gClient->GetStyle();
-   
+
    fBgndColor = fBackground;
    fHighColor = gClient->GetResourcePool()->GetHighLightColor();
    AddInput(kEnterWindowMask | kLeaveWindowMask);

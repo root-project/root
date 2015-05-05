@@ -220,8 +220,6 @@ TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
 
    fMsgWindow = fParent;
 
-   fCl = new TGLayoutHints(kLHintsExpandY | kLHintsExpandX);
-
    TGLayoutHints *l1 = new TGLayoutHints(kLHintsTop | kLHintsLeft);
    TGLayoutHints *l2 = new TGLayoutHints(kLHintsExpandY | kLHintsLeft);
    fLb = new TGLayoutHints(kLHintsExpandY | kLHintsLeft, 0, 2, 0, 0);
@@ -294,7 +292,7 @@ void TGDockableFrame::UndockContainer()
    TGDimension size = fContainer->GetSize();
    RemoveFrame(fContainer);
    fContainer->ReparentWindow(fFrame);
-   fFrame->AddFrame(fContainer, fCl);  // fHints
+   fFrame->AddFrame(fContainer, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
    gVirtualX->TranslateCoordinates(GetId(), fClient->GetDefaultRoot()->GetId(), fX,
                                    fY + fFrame->GetHeight(), ax, ay, wdummy);
@@ -330,7 +328,7 @@ void TGDockableFrame::DockContainer(Int_t del)
 
    fFrame->RemoveFrame(fContainer);
    fContainer->ReparentWindow(this);
-   TGCompositeFrame::AddFrame(fContainer, fCl);  // fHints
+   TGCompositeFrame::AddFrame(fContainer, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
    // kludge! (for special case)
    fDockButton->Resize(fDockButton->GetDefaultWidth(), 1);

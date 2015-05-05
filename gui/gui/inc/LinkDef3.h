@@ -96,4 +96,7 @@
 #pragma link C++ class TGShapedFrame;
 #pragma link C++ class TGEventHandler;
 
+#pragma link C++ class TGTextViewStreamBuf;
+#pragma link C++ class TGTextViewostream;
+
 #endif

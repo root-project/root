@@ -145,6 +145,10 @@ XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
 ifeq ($(XRDINCPRIVATE),yes)
 XPDINCEXTRA    += -I$(XRDINCDIR)/private
+else
+ifeq ($(XRDINCPRIVATE),proof)
+XPDINCEXTRA    += -Iproof/xrdinc
+endif
 endif
 
 

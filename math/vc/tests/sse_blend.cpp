@@ -47,7 +47,7 @@ void blendpd()
 #ifdef VC_IMPL_SSE4_1
 #define blend _mm_blend_pd
 #else
-#define blend Vc::SSE::_mm_blend_pd
+#define blend Vc::SSE::mm_blend_pd
 #endif
     __m128d a = _mm_set_pd(11, 10);
     __m128d b = _mm_set_pd(21, 20);
@@ -63,7 +63,7 @@ void blendps()
 #ifdef VC_IMPL_SSE4_1
 #define blend _mm_blend_ps
 #else
-#define blend Vc::SSE::_mm_blend_ps
+#define blend Vc::SSE::mm_blend_ps
 #endif
     __m128 a = _mm_set_ps(13, 12, 11, 10);
     __m128 b = _mm_set_ps(23, 22, 21, 20);
@@ -91,12 +91,12 @@ void blendepi16()
 #ifdef VC_IMPL_SSE4_1
 #define blend _mm_blend_epi16
 #else
-#define blend Vc::SSE::_mm_blend_epi16
+#define blend Vc::SSE::mm_blend_epi16
 #endif
     __m128i a = _mm_set_epi16(17, 16, 15, 14, 13, 12, 11, 10);
     __m128i b = _mm_set_epi16(27, 26, 25, 24, 23, 22, 21, 20);
 
-#define CALL_2(_i, code) { enum { i = _i }; code } { enum { i = _i + 1 }; code }
+#define CALL_2(_i, code) { enum JustAnotherName__ { i = _i }; code } { enum JustAnotherName__ { i = _i + 1 }; code }
 #define CALL_4(_i, code) CALL_2(_i, code) CALL_2(_i + 2, code)
 #define CALL_8(_i, code) CALL_4(_i, code) CALL_4(_i + 4, code)
 #define CALL_16(_i, code) CALL_8(_i, code) CALL_8(_i + 8, code)

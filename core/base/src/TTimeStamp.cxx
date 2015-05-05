@@ -37,6 +37,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TTimeStamp.h"
+#include "TMath.h"
 #include "TString.h"
 #include "TError.h"
 #include "Riostream.h"
@@ -136,6 +137,86 @@ TTimeStamp::TTimeStamp(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDat
    // is a dosDate value.
 
    Set(tloc, isUTC, secOffset, dosDate);
+}
+
+//______________________________________________________________________________
+Double_t TTimeStamp::AsGMST(Double_t UT1Offset) const
+{
+   // Return Greenwich mean sidereal time (GMST) in hour-angle. Return value
+   // will always be between 0 and 24 (hours). Sidereal time is most accurately
+   // calculated from UT1. If fSec and fNanoSec are in UTC (which they are by
+   // default), the optional argument UT1Offset can be supplied (in
+   // milliseconds). If UT1Offset is not supplied, conversion has maximum error
+   // of 1s. If offset is supplied error can be reduced to us level. Values for
+   // UT1Offset can be found in IERS Bulletin B:
+   // ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
+   // The conversion to sidereal time used here is given by
+   // Aoki et. al. Astron. Astrophys. 105, 359-362 (1982)
+   // http://adsabs.harvard.edu/abs/1982A%26A...105..359A
+
+   Double_t D = (AsJulianDate() + UT1Offset/86400000.0) - 2451545.0;
+   Double_t D_r = D - fmod(2.0*D+1.0, 2.0)/2.0;
+   Double_t T = D_r/36525.0;
+   Double_t sidereal = (24110.54841 + 8640184.812866*T + 0.093142*T*T
+      - 0.0000062*T*T*T + (D - D_r)*86400.0*1.002737909350795)/3600.0;
+   Double_t rval = fmod(sidereal, 24.0);
+   return rval < 0 ? rval + 24.0 : rval;
+}
+
+//______________________________________________________________________________
+Double_t TTimeStamp::AsGAST(Double_t UT1Offset) const
+{
+   // Return Greenwich apparant sidereal time (GAST) in hour-angle. Return
+   // value will always be between 0 and 24 (hours). Sidereal time is most
+   // accurately calculated from UT1. If fSec and fNanoSec are in UTC (which
+   // they are by default), the optional argument UT1Offset can be supplied (in
+   // milliseconds). If UT1Offset is not supplied, conversion has maximum error
+   // of 1s. If offset is supplied error can be reduced to us level. Values for
+   // UT1Offset can be found in IERS Bulletin B:
+   // ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
+   // Equation of the equinoxes is given by USNO:
+   // http://aa.usno.navy.mil/faq/docs/GAST.php
+
+   Double_t D = (AsJulianDate() + UT1Offset/86400000.0) - 2451545.0;
+   Double_t epsilon = (23.4393 - 0.0000004*D)*TMath::Pi()/180.0;
+   Double_t L = (280.47 + 0.98565*D)*TMath::Pi()/180.0;
+   Double_t Omega = (125.04 - 0.052954*D)*TMath::Pi()/180.0;
+   Double_t Deltapsi = -0.000319*TMath::Sin(Omega) - 0.000024*TMath::Sin(2.0*L);
+   Double_t eqeq = Deltapsi*TMath::Cos(epsilon);
+   Double_t rval = fmod(AsGMST(UT1Offset) + eqeq, 24.0);
+   return rval < 0 ? rval + 24.0 : rval;
+}
+
+//______________________________________________________________________________
+Double_t TTimeStamp::AsLMST(Double_t Longitude, Double_t UT1Offset) const
+{
+   // Return local mean sidereal time (LMST) in hour-angle, given a longitude
+   // in degrees. Return value will always be between 0 and 24 (hours).
+   // Sidereal time is most accurately calculated from UT1. If fSec and
+   // fNanoSec are in UTC (which they are by default), the optional argument
+   // UT1Offset can be supplied (in milliseconds). If UT1Offset is not
+   // supplied, conversion has maximum error of 1s. If offset is supplied error
+   // can be reduced to us level. Values for UT1Offset can be found in IERS
+   // Bulletin B: ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
+
+   Double_t rval = fmod(AsGMST(UT1Offset) + Longitude/15.0, 24.0);
+   return rval < 0 ? rval + 24.0 : rval;
+}
+
+//______________________________________________________________________________
+Double_t TTimeStamp::AsLAST(Double_t Longitude, Double_t UT1Offset) const
+{
+   // Return local apparant sidereal time (LAST) in hour-angle, given a
+   // longitude in degrees. Return value will always be between 0 and 24
+   // (hours). Sidereal time is most accurately calculated from UT1. If fSec
+   // and fNanoSec are in UTC (which they are by default), the optional
+   // argument UT1Offset can be supplied (in milliseconds). If UT1Offset is not
+   // supplied, conversion has maximum error of 1s. If offset is supplied error
+   // can be reduced to us level. Values for UT1Offset can be found in IERS
+   // Bulletin B: ftp://ftp.iers.org/products/eop/bulletinb/format_2009/
+
+   Double_t rval = fmod(AsGAST(UT1Offset) + Longitude/15.0, 24.0);
+   return rval < 0 ? rval + 24.0 : rval;
 }
 
 //______________________________________________________________________________
@@ -421,8 +502,8 @@ Int_t TTimeStamp::GetZoneOffset()
    return -localtime_r(&tp, &buf)->tm_gmtoff;
 #else
    return -localtime(&tp)->tm_gmtoff;
-#endif 
-#endif  
+#endif
+#endif
 #endif
 #else
    _tzset();

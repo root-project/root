@@ -3770,6 +3770,11 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
 
   p = strrchr(linkfilepref,'/'); /* ../aaa/bbb/ccc.cxx */
 #ifdef G__WIN32
+  G__FastAllocString drive(10);
+  G__FastAllocString dir(MAX_PATH);
+  G__FastAllocString fname(MAX_PATH);
+  G__FastAllocString ext(10);
+  _splitpath(linkfilename, drive, dir, fname, ext);
   if (!p) p = strrchr(linkfilepref,'\\'); /* in case of Windows pathname */
 #endif
   if (!p) p = linkfilepref;      /*  /ccc.cxx */
@@ -3811,11 +3816,11 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
 
 #ifdef G__GENWINDEF
     if (G__PROJNAME[0])
-      buf.Format("%s.def",G__PROJNAME.data());
+      buf.Format("%s%s%s.def",drive(),dir(),G__PROJNAME.data());
     else if (G__DLLID[0])
-      buf.Format("%s.def",G__DLLID);
+      buf.Format("%s%s%s.def",drive(),dir(),G__DLLID);
     else
-      buf.Format("%s.def","G__lib");
+      buf.Format("%s%s%s.def",drive(),dir(),"G__lib");
     G__WINDEF = (char*)malloc(strlen(buf)+1);
     strcpy(G__WINDEF,buf); // Okay, we allocated the right size
     G__write_windef_header();
@@ -3876,7 +3881,7 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
     strcpy(G__CLINK_C,buf); // Okay, we allocated the right size
 
 #ifdef G__GENWINDEF
-    buf.Format("%s.def",G__PROJNAME.data());
+    buf.Format("%s%s%s.def",drive(),dir(),G__PROJNAME.data());
     G__WINDEF = (char*)malloc(strlen(buf)+1);
     strcpy(G__WINDEF,buf); // Okay, we allocated the right size
     G__write_windef_header();
@@ -7744,11 +7749,20 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, G__Fa
     if (islower(type) && !isconst) {
       // Reference to a non-const object.
       // Note:  The type string already has the ampersand in it.
-      fprintf(fp, "%s   const %s obj = ", indent, typestring);
+       if(typestring[strlen(typestring)-1] == '&') {
+          fprintf(fp, "%s   const %s obj = ", indent, typestring);
+       } else {
+          fprintf(fp, "%s   %s obj = ", indent, typestring);
+       }
     } else {
       // Reference to a pointer or to a const object.
       // Note:  The type string already has the ampersand in it.
-      fprintf(fp, "%s   %s obj = ", indent, typestring);
+       if(typestring[strlen(typestring)-1] != '&'
+          && strncmp(typestring,"const ",6) == 0 ) {
+          fprintf(fp, "%s   %s obj = ", indent, typestring+6);
+       } else {
+          fprintf(fp, "%s   %s obj = ", indent, typestring);
+       }
     }
     if ((typenum != -1) && G__newtype.nindex[typenum]) {
        endoffunc.Format(";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s}", indent, indent, indent);

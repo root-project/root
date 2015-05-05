@@ -42,7 +42,7 @@
 // *   Test  4 : Dataset handling with H1 files ................... OK *   * //
 // *   Test  5 : H1: chain processing ............................. OK *   * //
 // *   Test  6 : H1: file collection processing ................... OK *   * //
-// *   Test  7 : H1: file collection, TPacketizer ................. OK *   * //
+// *   Test  7 : H1: file collection, TPacketizerAdaptive ......... OK *   * //
 // *   Test  8 : H1: by-name processing ........................... OK *   * //
 // *   Test  9 : H1: multi dataset processing ..................... OK *   * //
 // *   Test 10 : H1: multi dataset and entry list ................. OK *   * //
@@ -54,7 +54,7 @@
 // *   Test 16 : Admin functionality .............................. OK *   * //
 // *   Test 17 : Dynamic sub-mergers functionality ................ OK *   * //
 // *   Test 18 : Event range processing ........................... OK *   * //
-// *   Test 19 : Event range, TPacketizer ......................... OK *   * //
+// *   Test 19 : Event range, TPacketizerAdaptive ................. OK *   * //
 // *   Test 20 : File-resident output: merge ...................... OK *   * //
 // *   Test 21 : File-resident output: merge w/ submergers ........ OK *   * //
 // *   Test 22 : File-resident output: create dataset ............. OK *   * //
@@ -599,7 +599,7 @@ Double_t ProofTest::gRefReal[PT_NUMTEST] = {
    0.276155,   // #4:  Dataset handling with H1 files
    5.355514,   // #5:  H1: chain processing
    2.414207,   // #6:  H1: file collection processing
-   3.381990,   // #7:  H1: file collection, TPacketizer 
+   3.381990,   // #7:  H1: file collection, TPacketizerAdaptive 
    3.227942,   // #8:  H1: by-name processing 
    3.944204,   // #9:  H1: multi dataset processing
    9.146988,   // #10: H1: multi dataset and entry list
@@ -611,7 +611,7 @@ Double_t ProofTest::gRefReal[PT_NUMTEST] = {
    0.349625,   // #16: Admin functionality
    0.989456,   // #17: Dynamic sub-mergers functionality
    11.23798,   // #18: Event range processing
-   6.087582,   // #19: Event range, TPacketizer
+   6.087582,   // #19: Event range, TPacketizerAdaptive
    2.489555,   // #20: File-resident output: merge
    0.180897,   // #21: File-resident output: merge w/ submergers
    1.417233,   // #22: File-resident output: create dataset
@@ -801,7 +801,7 @@ typedef struct ptoption {
    Int_t fTwo;
 } PT_Option_t;
 
-static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
+static PT_Packetizer_t gStd_Old = { "TPacketizerAdaptive", 1 };
 
 //_____________________________________________________________________________
 int stressProof(const char *url, const char *tests, Int_t nwrks,
@@ -1015,8 +1015,8 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
    testList->Add(new ProofTest("H1: chain processing", 5, &PT_H1Http, 0, "1", "h1analysis", kTRUE));
    // H1 analysis over HTTP (file collection)
    testList->Add(new ProofTest("H1: file collection processing", 6, &PT_H1FileCollection, 0, "1", "h1analysis", kTRUE));
-   // H1 analysis over HTTP: classic packetizer
-   testList->Add(new ProofTest("H1: file collection, TPacketizer", 7,
+   // H1 analysis over HTTP: adaptive packetizer
+   testList->Add(new ProofTest("H1: file collection, TPacketizerAdaptive", 7,
                                &PT_H1FileCollection, (void *)&gStd_Old, "1", "h1analysis", kTRUE));
    // H1 analysis over HTTP by dataset name
    testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet, 0, "1,4", "h1analysis", kTRUE));
@@ -1043,8 +1043,8 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
    // Test range chain and dataset processing EventProc
    testList->Add(new ProofTest("Event range processing", 18,
                                &PT_EventRange, 0, "1,11", "ProofEventProc,ProcFileElements", kTRUE));
-   // Test range chain and dataset processing EventProc with TPacketizer
-   testList->Add(new ProofTest("Event range, TPacketizer", 19,
+   // Test range chain and dataset processing EventProc with TPacketizerAdaptive
+   testList->Add(new ProofTest("Event range, TPacketizerAdaptive", 19,
                                &PT_EventRange, (void *)&gStd_Old, "1,11", "ProofEventProc,ProcFileElements", kTRUE));
    // Test TProofOutputFile technology for ntuple creation
    testList->Add(new ProofTest("File-resident output: merge", 20, &PT_POFNtuple, 0, "1", "ProofNtuple", kTRUE));
@@ -1883,7 +1883,7 @@ Int_t PT_CheckH1(TQueryResult *qr, Int_t irun = 0)
 }
 
 //_____________________________________________________________________________
-Int_t PT_CheckEvent(TQueryResult *qr, const char *pack = "TPacketizerAdaptive")
+Int_t PT_CheckEvent(TQueryResult *qr, const char *pack = "TPacketizer")
 {
    // Check the result of the EventProc analysis
 
@@ -2567,7 +2567,7 @@ Int_t PT_H1FileCollection(void *arg, RunTimes &tt)
    // Are we asked to change the packetizer strategy?
    if (arg) {
       PT_Packetizer_t *strategy = (PT_Packetizer_t *)arg;
-      if (strcmp(strategy->fName, "TPacketizerAdaptive")) {
+      if (strcmp(strategy->fName, "TPacketizer")) {
          gProof->SetParameter("PROOF_Packetizer", strategy->fName);
       } else {
          if (strategy->fType != 1)
@@ -3445,7 +3445,7 @@ Int_t PT_H1SimpleAsync(void *arg, RunTimes &tt)
    // Are we asked to change the packetizer strategy?
    if (arg) {
       PT_Packetizer_t *strategy = (PT_Packetizer_t *)arg;
-      if (strcmp(strategy->fName, "TPacketizerAdaptive")) {
+      if (strcmp(strategy->fName, "TPacketizer")) {
          gProof->SetParameter("PROOF_Packetizer", strategy->fName);
       } else {
          if (strategy->fType != 1)
@@ -3761,10 +3761,10 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
    AssertParallelUnzip();
 
    // Are we asked to change the packetizer strategy?
-   const char *pack = "TPacketizerAdaptive";
+   const char *pack = "TPacketizer";
    if (arg) {
       PT_Packetizer_t *strategy = (PT_Packetizer_t *)arg;
-      if (strcmp(strategy->fName, "TPacketizerAdaptive")) {
+      if (strcmp(strategy->fName, "TPacketizer")) {
          gProof->SetParameter("PROOF_Packetizer", strategy->fName);
          pack = strategy->fName;
       } else {

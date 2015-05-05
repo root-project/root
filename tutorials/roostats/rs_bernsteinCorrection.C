@@ -4,20 +4,20 @@
 // author: Kyle Cranmer
 // date March. 2009
 //
-// This tutorial shows usage of a the BernsteinCorrection utility in RooStats.  
-// The idea is that one has a distribution coming either from data or Monte Carlo 
-// (called "reality" in the macro) and a nominal model that is not sufficiently 
+// This tutorial shows usage of a the BernsteinCorrection utility in RooStats.
+// The idea is that one has a distribution coming either from data or Monte Carlo
+// (called "reality" in the macro) and a nominal model that is not sufficiently
 // flexible to take into account the real distribution.  One wants to take into
 // account the systematic associated with this imperfect modeling by augmenting
 // the nominal model with some correction term (in this case a polynomial).
 // The BernsteinCorrection utility will import into your workspace a corrected model
 // given by nominal(x) * poly_N(x), where poly_N is an n-th order polynomial in
 // the Bernstein basis.  The degree N of the polynomial is chosen by specifying the tolerance
-// one has in adding an extra term to the polynomial.  
+// one has in adding an extra term to the polynomial.
 // The Bernstein basis is nice because it only has positive-definite terms
-// and works well with PDFs.  
+// and works well with PDFs.
 // Finally, the macro makes a plot of:
-//  - the data (drawn from 'reality'), 
+//  - the data (drawn from 'reality'),
 //  - the best fit of the nominal model (blue)
 //  - and the best fit corrected model.
 /////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,6 @@
 #include "RooMinuit.h"
 #include "RooProfileLL.h"
 #include "RooWorkspace.h"
-#include "RooMsgService.h"
 
 #include "RooStats/BernsteinCorrection.h"
 
@@ -78,38 +77,48 @@ void rs_bernsteinCorrection(){
 
   RooWorkspace* wks = new RooWorkspace("myWorksspace");
 
-  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-
   wks->import(*data, Rename("data"));
   wks->import(nominal);
 
+  // use Minuit2
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2"); 
 
   // The tolerance sets the probability to add an unnecessary term.
   // lower tolerance will add fewer terms, while higher tolerance
   // will add more terms and provide a more flexible function.
-  Double_t tolerance = 0.05; 
+  Double_t tolerance = 0.05;
   BernsteinCorrection bernsteinCorrection(tolerance);
   Int_t degree = bernsteinCorrection.ImportCorrectedPdf(wks,"nominal","x","data");
 
-  cout << " Correction based on Bernstein Poly of degree " << degree << endl;
+  if (degree < 0) {
+     Error("rs_bernsteinCorrection","Bernstein correction failed ! ");
+     return;
+  }
 
+  cout << " Correction based on Bernstein Poly of degree " << degree << endl;
+  
 
   RooPlot* frame = x.frame();
   data->plotOn(frame);
   // plot the best fit nominal model in blue
-  nominal.fitTo(*data,PrintLevel(-1));
+  TString minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+  nominal.fitTo(*data,PrintLevel(0),Minimizer(minimType));
   nominal.plotOn(frame);
 
   // plot the best fit corrected model in red
-  RooAbsPdf* corrected = wks->pdf("corrected");  
-  corrected->fitTo(*data,PrintLevel(-1));
+  RooAbsPdf* corrected = wks->pdf("corrected");
+  if (!corrected) return;
+
+  // fit corrected model
+  corrected->fitTo(*data,PrintLevel(0),Minimizer(minimType) );
   corrected->plotOn(frame,LineColor(kRed));
 
   // plot the correction term (* norm constant) in dashed green
   // should make norm constant just be 1, not depend on binning of data
-  RooAbsPdf* poly = wks->pdf("poly");  
+  RooAbsPdf* poly = wks->pdf("poly");
+  if (poly) 
   poly->plotOn(frame,LineColor(kGreen), LineStyle(kDashed));
-  
+
   // this is a switch to check the sampling distribution
   // of -2 log LR for two comparisons:
   // the first is for n-1 vs. n degree polynomial corrections
@@ -117,7 +126,8 @@ void rs_bernsteinCorrection(){
   // Here we choose n to be the one chosen by the tolerance
   // critereon above, eg. n = "degree" in the code.
   // Setting this to true is takes about 10 min.
-  bool checkSamplingDist = false;
+  bool checkSamplingDist = true;
+  int numToyMC = 20;  // increse this value for sensible results 
 
   TCanvas* c1 = new TCanvas();
   if(checkSamplingDist) {
@@ -125,14 +135,15 @@ void rs_bernsteinCorrection(){
     c1->cd(1);
   }
   frame->Draw();
+  gPad->Update(); 
 
   if(checkSamplingDist) {
     // check sampling dist
+    ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(-1); 
     TH1F* samplingDist = new TH1F("samplingDist","",20,0,10);
     TH1F* samplingDistExtra = new TH1F("samplingDistExtra","",20,0,10);
-    int numToyMC = 1000;
     bernsteinCorrection.CreateQSamplingDist(wks,"nominal","x","data",samplingDist, samplingDistExtra, degree,numToyMC);
-    
+
     c1->cd(2);
     samplingDistExtra->SetLineColor(kRed);
     samplingDistExtra->Draw();

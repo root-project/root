@@ -70,6 +70,17 @@ TH1K::~TH1K()
    // Destructor.
 }
 
+//______________________________________________________________________________
+void TH1K::Copy(TObject &obj) const
+{
+   // Copy this histogram structure to newth1.
+   //
+   // Note that this function does not copy the list of associated functions.
+   // Use TObject::Clone to make a full copy of an histogram.
+
+   TH1::Copy(obj);
+   ((TH1K&)obj).fNIn = fNIn;
+}
 
 //______________________________________________________________________________
 Int_t TH1K::Fill(Double_t x)

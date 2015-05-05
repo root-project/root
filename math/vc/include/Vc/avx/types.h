@@ -77,8 +77,8 @@ namespace AVX
     template<> struct SseVectorType<m128i> { typedef m128i Type; };
     template<> struct SseVectorType<m128d> { typedef m128d Type; };
 
-    template<typename T> struct HasVectorDivisionHelper { enum { Value = 1 }; };
-    //template<> struct HasVectorDivisionHelper<unsigned int> { enum { Value = 0 }; };
+    template<typename T> struct HasVectorDivisionHelper { enum JustSomeName__ { Value = 1 }; };
+    //template<> struct HasVectorDivisionHelper<unsigned int> { enum JustSomeName__ { Value = 0 }; };
 
     template<typename T> struct VectorHelperSize;
 

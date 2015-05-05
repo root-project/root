@@ -160,9 +160,6 @@ bool RooDataHistSliceIter::operator!=(const TIterator &aIter) const
   // Returns true if position of this iterator differs from position
   // of iterator 'aIter'
 
-   if (nullptr == &aIter)
-      return false;
-
    if ((aIter.IsA() == RooDataHistSliceIter::Class())) {
       const RooDataHistSliceIter &iter(dynamic_cast<const RooDataHistSliceIter &>(aIter));
       return (_curStep != iter._curStep);

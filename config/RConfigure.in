@@ -27,6 +27,7 @@
 #@hascocoa@ R__HAS_COCOA    /**/
 #@hasvc@ R__HAS_VC    /**/
 #@usec++11@ R__USE_CXX11    /**/
+#@usec++14@ R__USE_CXX14    /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
 
 #endif

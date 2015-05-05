@@ -21,17 +21,17 @@ CC            = gcc
 # In the future, we may need "-mabi=n32" and "-mabi=64" for
 # specialisation on those ABIs (see also include/RConfig.h)
 CXXFLAGS      = -pipe -Wall -W -Woverloaded-virtual \
-                -fPIC -mabi=32 $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -W -fPIC -mabi=32 $(EXTRA_CFLAGS)
+                -fPIC -mabi=32 $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -pipe -Wall -W -fPIC -mabi=32 $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = -pipe -Wall -W -Woverloaded-virtual \
                 -fPIC -mabi=32 $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION 
+                -DG__STD_EXCEPTION  $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = -pipe -Wall -W -fPIC -mabi=32 $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION 
+                -DG__STD_EXCEPTION  $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

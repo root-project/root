@@ -15,7 +15,9 @@
 
 // NOT REVISED
 
+#if 0 // Not used!
 static const uchar unkn = '?'; // BLACK SQUARE (94) would be better
+#endif
 
 static const ushort greek_symbol_to_unicode[64] = {
 //
@@ -78,6 +80,7 @@ static const ushort symbol_to_unicode[96] = {
 };
 
 
+#if 0  // Not used!
 static const uchar unicode_to_symbol_00[32] = {
     0xA0, unkn, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7,
     0xA8, 0xA9, 0xD7, 0xAB, 0xAC, 0xAD, 0xAE, unkn,
@@ -91,6 +94,7 @@ static const uchar unicode_to_symbol_05[32] = {
     0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7,
     0xF8, 0xF9, 0xFA, unkn, unkn, unkn, unkn, unkn
 };
+#endif
 
 /*!
     \class QSymbolCodec qsymbolcodec.h

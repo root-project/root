@@ -39,11 +39,11 @@ endforeach()
 
 ROOT_LINKER_LIBRARY(Minuit2TestMnSim MnSim/GaussDataGen.cxx MnSim/GaussFcn.cxx MnSim/GaussFcn2.cxx LIBRARIES Minuit2)
 
-#input text files 
-configure_file(MnSim/paul.txt paul.txt @COPY_ONLY) 
-configure_file(MnSim/paul2.txt paul2.txt @COPY_ONLY) 
-configure_file(MnSim/paul3.txt paul3.txt @COPY_ONLY) 
-configure_file(MnSim/paul4.txt paul4.txt @COPY_ONLY) 
+#input text files
+configure_file(MnSim/paul.txt paul.txt COPYONLY)
+configure_file(MnSim/paul2.txt paul2.txt COPYONLY)
+configure_file(MnSim/paul3.txt paul3.txt COPYONLY)
+configure_file(MnSim/paul4.txt paul4.txt COPYONLY)
 
 foreach(file ${TestSourceMnSim})
   get_filename_component(testname ${file} NAME_WE)

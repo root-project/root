@@ -64,18 +64,33 @@
 #if defined(R__WIN32)
 #  define R__HAS_DECLSPEC_THREAD
 #endif
+
 #if __cplusplus >= 201103L
-#  if __GNUC__ <= 4 && __GNUC_MINOR__ < 80
-     // The C++11 thread_local keyword is supported in GCC only since 4.8
+
+// Note: it would be tempting to use __has_feature(cxx_thread_local) but despite
+// documentation claims it support for it ... it is in fact ineffective (return
+// a false negative).
+// Clang 3.4 also support SD-6 (feature test macros __cpp_*), but no thread local macro
+#  if defined(__clang__) && (__clang_major__ >= 3 && __clang_minor__ >= 3)
+     // thread_local was added in Clang 3.3
+     // Still requires libstdc++ from GCC 4.8
+     // For that __GLIBCXX__ isn't good enough
+#    define R__HAS_THREAD_LOCAL
+
+#  elif defined(__GNUG__) && (__GNUC__ <= 4 && __GNUC_MINOR__ < 80)
+    // The C++11 thread_local keyword is supported in GCC only since 4.8
 #    define R__HAS___THREAD
 #  else
 #    define R__HAS_THREAD_LOCAL
-#endif
+#  endif
 
 #endif
 
 
 #ifdef __cplusplus
+
+// Note that the order is relevant, more than one of the flag might be
+// on at the same time and we want to use 'best' option available.
 
 #ifdef __CINT__
 
@@ -210,7 +225,7 @@ public:
 // Available on all platforms
 template <int marker, typename T>
 T &TTHREAD_TLS_INIT() {
-   TTHREAD_TLS(T*) ptr(0);
+   TTHREAD_TLS(T*) ptr = NULL;
    TTHREAD_TLS(Bool_t) isInit(kFALSE);
    if (!isInit) {
       ptr = new T;
@@ -221,7 +236,7 @@ T &TTHREAD_TLS_INIT() {
 
 template <int marker, typename Array, typename T>
 Array &TTHREAD_TLS_INIT_ARRAY() {
-   TTHREAD_TLS(Array*) ptr(0);
+   TTHREAD_TLS(Array*) ptr = NULL;
    TTHREAD_TLS(Bool_t) isInit(kFALSE);
    if (!isInit) {
       ptr = new Array[sizeof(Array)/sizeof(T)];
@@ -232,7 +247,7 @@ Array &TTHREAD_TLS_INIT_ARRAY() {
 
 template <int marker, typename T, typename ArgType>
 T &TTHREAD_TLS_INIT(ArgType arg) {
-   TTHREAD_TLS(T*) ptr(0);
+   TTHREAD_TLS(T*) ptr = NULL;
    TTHREAD_TLS(Bool_t) isInit(kFALSE);
    if (!isInit) {
       ptr = new T(arg);

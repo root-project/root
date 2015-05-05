@@ -220,7 +220,7 @@ template<typename Vec> void testShift()
 {
     typedef typename Vec::EntryType T;
     const T step = std::max<T>(1, std::numeric_limits<T>::max() / 1000);
-    enum {
+    enum JustAnotherName__ {
         NShifts = sizeof(T) * 8
     };
     for (Vec x = std::numeric_limits<Vec>::min() + Vec::IndexesFromZero();

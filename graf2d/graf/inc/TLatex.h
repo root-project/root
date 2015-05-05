@@ -47,9 +47,9 @@ public:
       TLatexFormSize() : fWidth(0), fOver(0),fUnder(0) { } // constructeur par defaut
       TLatexFormSize(Double_t x, Double_t y1, Double_t y2) : fWidth(x), fOver(y1), fUnder(y2) { } // constructeur
       virtual ~TLatexFormSize() {} //destructeur
-      TLatexFormSize(const TLatexFormSize& form) 
+      TLatexFormSize(const TLatexFormSize& form)
          : fWidth(form.fWidth), fOver(form.fOver), fUnder(form.fUnder) { }
-      
+
       // definition of operators + and +=
       TLatexFormSize operator+(TLatexFormSize f)
          { return TLatexFormSize(f.Width()+fWidth,TMath::Max(f.Over(),fOver),TMath::Max(f.Under(),fUnder)); }
@@ -85,7 +85,7 @@ protected:
       Int_t         fPos;             //!Current position in array fTabSize;
       Bool_t        fItalic;          //!Currently inside #it operator
 
-      TLatex& operator=(const TLatex&); 
+      TLatex& operator=(const TLatex&);
 
       //Text analysis and painting
       TLatexFormSize Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t,Int_t length);
@@ -96,6 +96,8 @@ protected:
       void DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2, Double_t phimin, Double_t phimax, TextSpec_t spec);
 
       TLatexFormSize FirstParse(Double_t angle, Double_t size, const Char_t *text);
+
+      Int_t PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
 
       void Savefs(TLatexFormSize *fs);
       TLatexFormSize Readfs();

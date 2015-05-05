@@ -114,7 +114,7 @@ int gaujor(double *a, int l, int m, int n, double eps)
       if(i!=k){
 	w = *(a+i*n+k);
 	for(j=k+1; j<n; j++)
-	  *(a+i*n+j) = *(a+i*n+j) - w * *(a+k*n+j);
+	  *(a+i*n+j) = *(a+i*n+j) - w * (*(a+k*n+j));
       }
     }
   }

@@ -61,7 +61,15 @@ if(XROOTD_FOUND)
      message(STATUS "Setting OLDPACK TRUE")
   else()
      set(XROOTD_OLDPACK FALSE)
-     set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR} ${XROOTD_INCLUDE_DIR}/private)
+     find_path (XROOTD_INC_PRIV_DIR NAMES XrdClientConn.hh
+        HINTS ${searchpath}
+        PATH_SUFFIXES include/private/XrdClient include/xrootd/private/XrdClient
+     )
+     if (XROOTD_INC_PRIV_DIR)
+        set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR} ${XROOTD_INCLUDE_DIR}/private)
+     else()
+        set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/proof/xrdinc)
+     endif()
   endif()
 endif()
 

@@ -28,6 +28,7 @@
 #include <XrdCl/XrdClFile.hh>
 #include <XrdCl/XrdClXRootDResponses.hh>
 #include <XrdCl/XrdClDefaultEnv.hh>
+#include <XrdVersion.hh>
 #include <iostream>
 
 //------------------------------------------------------------------------------
@@ -125,14 +126,27 @@ TNetXNGFile::TNetXNGFile(const char *url,
 
    using namespace XrdCl;
 
+   // Remove any anchor from the url. It may have been used by the base TFile
+   // constructor to setup a TArchiveFile but we should not pass it to the xroot
+   // client as a part of the filename
+   {
+     TUrl urlnoanchor(url);
+     urlnoanchor.SetAnchor("");
+     fUrl = new URL(std::string(urlnoanchor.GetUrl()));
+   }
+
    fFile        = new File();
-   fUrl         = new URL(std::string(url));
    fInitCondVar = new XrdSysCondVar();
    fUrl->SetProtocol(std::string("root"));
-   fMode = ParseOpenMode(mode);
    fQueryReadVParams = 1;
    fReadvIorMax = 2097136;
    fReadvIovMax = 1024;
+
+   if (ParseOpenMode(mode, fOption, fMode, kTRUE)<0) {
+      Error("Open", "could not parse open mode %s", mode);
+      MakeZombie();
+      return;
+   }
 
    // Map ROOT and xrootd environment
    SetEnv();
@@ -162,7 +176,14 @@ TNetXNGFile::TNetXNGFile(const char *url,
    // Open the file synchronously
    status = fFile->Open(fUrl->GetURL(), fMode);
    if (!status.IsOK()) {
+#if XrdVNUMBER >= 40000
+      if( status.code == errRedirect )
+         fNewUrl = status.GetErrorMessage().c_str();
+      else
+         Error("Open", "%s", status.ToStr().c_str());
+#else
       Error("Open", "%s", status.ToStr().c_str());
+#endif
       MakeZombie();
       return;
    }
@@ -299,10 +320,13 @@ Int_t TNetXNGFile::ReOpen(Option_t *modestr)
    //             the file cannot be used anymore
 
    using namespace XrdCl;
-   OpenFlags::Flags mode = ParseOpenMode(modestr);
+   TString newOpt;
+   OpenFlags::Flags mode;
+
+   Int_t parseres = ParseOpenMode(modestr, newOpt, mode, kFALSE);
 
    // Only Read and Update are valid modes
-   if (mode != OpenFlags::Read && mode != OpenFlags::Update) {
+   if (parseres<0 || (mode != OpenFlags::Read && mode != OpenFlags::Update)) {
       Error("ReOpen", "mode must be either READ or UPDATE, not %s", modestr);
       return 1;
    }
@@ -314,6 +338,7 @@ Int_t TNetXNGFile::ReOpen(Option_t *modestr)
    }
 
    fFile->Close();
+   fOption = newOpt;
    fMode = mode;
 
    XRootDStatus st = fFile->Open(fUrl->GetURL(), fMode);
@@ -608,24 +633,36 @@ void TNetXNGFile::Seek(Long64_t offset, ERelativeTo position)
 }
 
 //______________________________________________________________________________
-XrdCl::OpenFlags::Flags TNetXNGFile::ParseOpenMode(Option_t *modestr)
+Int_t TNetXNGFile::ParseOpenMode(Option_t *in, TString &modestr,
+                                 XrdCl::OpenFlags::Flags &mode,
+                                 Bool_t assumeRead)
 {
-   // Parse an file open mode given as a string into an integer that the
-   // client can use
+   // Parse a file open mode given as a string into a canonically formatted
+   // output mode string and an integer code that the xroot client can use
    //
-   // param option: the file open mode as a string
-   // returns:      correctly parsed option mode
+   // param    in:         the file open mode as a string (in)
+   //          modestr:    open mode string after parsing (out)
+   //          mode:       correctly parsed option mode code (out)
+   //          assumeRead: if the open mode is not recognised assume read (in)
+   // returns:             0 in case the mode was successfully parsed,
+   //                     -1 in case of failure
 
    using namespace XrdCl;
-   OpenFlags::Flags mode = OpenFlags::Read;
-   TString mod = ToUpper(TString(modestr));
+   modestr = ToUpper(TString(in));
 
-   if (mod == "NEW" || mod == "CREATE")  mode = OpenFlags::New;
-   else if (mod == "RECREATE")           mode = OpenFlags::Delete;
-   else if (mod == "UPDATE")             mode = OpenFlags::Update;
-   else if (mod == "READ")               mode = OpenFlags::Read;
+   if (modestr == "NEW" || modestr == "CREATE")  mode = OpenFlags::New;
+   else if (modestr == "RECREATE")               mode = OpenFlags::Delete;
+   else if (modestr == "UPDATE")                 mode = OpenFlags::Update;
+   else if (modestr == "READ")                   mode = OpenFlags::Read;
+   else {
+      if (!assumeRead) {
+         return -1;
+      }
+      modestr = "READ";
+      mode = OpenFlags::Read;
+   }
 
-   return mode;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -787,6 +824,7 @@ void TNetXNGFile::SetEnv()
       env->PutString("ClientMonitorParam", val.Data());
 
    fQueryReadVParams = gEnv->GetValue("NetXNG.QueryReadVParams", 1);
+   env->PutInt( "MultiProtocol", gEnv->GetValue("TFile.CrossProtocolRedirects", 1));
 
    // Old style netrc file
    TString netrc;

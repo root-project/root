@@ -93,6 +93,20 @@ static void R__TObjArray_InsertAt(TObjArray *arr, TObject *obj, Int_t at)
    arr->AddAt( obj, at);
 }
 
+static void R__TObjArray_InsertAt(TObjArray *arr, std::vector<TStreamerArtificial*> &objs, Int_t at)
+{
+   // Slide by enough.
+   Int_t offset = objs.size();
+   Int_t last = arr->GetLast();
+   arr->AddAtAndExpand(arr->At(last),last+offset);
+   for(Int_t ind = last-1; ind >= at; --ind) {
+      arr->AddAt( arr->At(ind), ind+offset);
+   };
+   for(size_t ins = 0; ins < objs.size(); ++ins) {
+      arr->AddAt(objs[ins], at+ins);
+   }
+}
+
 static void R__TObjArray_InsertAfter(TObjArray *arr, TObject *newobj, TObject *oldobj)
 {
    // Slide by one.
@@ -205,15 +219,19 @@ TStreamerInfo::~TStreamerInfo()
 //______________________________________________________________________________
 namespace {
    // Makes sure kBuildOldUsed set once Build or BuildOld finishes
-   struct TPreventBuildOldGuard {
-      TPreventBuildOldGuard(TStreamerInfo* info): fInfo(info) {
+   // Makes sure kBuildRunning reset once Build finishes
+   struct TPreventRecursiveBuildGuard {
+      TPreventRecursiveBuildGuard(TStreamerInfo* info): fInfo(info) {
+         fInfo->SetBit(TStreamerInfo::kBuildRunning);
          fInfo->SetBit(TStreamerInfo::kBuildOldUsed);
       }
-      TPreventBuildOldGuard() {
+      ~TPreventRecursiveBuildGuard() {
          fInfo->ResetBit(TStreamerInfo::kBuildOldUsed);
+         fInfo->ResetBit(TStreamerInfo::kBuildRunning);
       }
       TStreamerInfo* fInfo;
    };
+
 }
 
 //______________________________________________________________________________
@@ -223,15 +241,22 @@ void TStreamerInfo::Build()
    // A list of TStreamerElement derived classes is built by scanning
    // one by one the list of data members of the analyzed class.
 
-   R__LOCKGUARD(gCINTMutex);
    // Did another thread already do the work?
+   if (fIsCompiled) return;
+
+   R__LOCKGUARD(gCINTMutex);
+
+   // Did another thread already do the work while we were waiting ..
+   if (fIsCompiled) return;
+
+   // Has Build already been run?
    if (fIsBuilt) return;
 
-   // This is used to avoid unwanted recursive call to Build
-   fIsBuilt = kTRUE;
+   // Are we recursing on ourself?
+   if (TestBit(TStreamerInfo::kBuildRunning)) return;
 
-   // This is used to avoid unwanted recursive call to BuildOld.
-   TPreventBuildOldGuard buildOldGuard(this);
+   // This is used to avoid unwanted recursive call to Build or BuildOld.
+   TPreventRecursiveBuildGuard buildGuard(this);
 
    if (fClass->GetCollectionProxy()) {
       TVirtualCollectionProxy *proxy = fClass->GetCollectionProxy();
@@ -244,6 +269,7 @@ void TStreamerInfo::Build()
       TStreamerElement* element = new TStreamerSTL("This", title.Data(), 0, fClass->GetName(), *proxy, 0);
       fElements->Add(element);
       Compile();
+      fIsBuilt = kTRUE;
       return;
    }
 
@@ -566,6 +592,7 @@ void TStreamerInfo::Build()
    // Make a more compact version.
    //
    Compile();
+   fIsBuilt = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -1091,13 +1118,9 @@ void TStreamerInfo::BuildEmulated(TFile *file)
    fClassVersion = -1;
    fCheckSum = 2001;
    TObjArray *elements = GetElements();
-   if (!elements) return;
-   Int_t ndata = elements->GetEntries();
-   if (ndata == 0) return;
-   TStreamerElement *element;
-   Int_t i;
-   for (i=0;i < ndata;i++) {
-      element = (TStreamerElement*)elements->UncheckedAt(i);
+   Int_t ndata = elements ? elements->GetEntries() : 0;
+   for (Int_t i=0;i < ndata;i++) {
+      TStreamerElement *element = (TStreamerElement*)elements->UncheckedAt(i);
       if (!element) break;
       int ty = element->GetType();
       if (ty < kChar || ty >kULong+kOffsetL)    continue;
@@ -1491,8 +1514,11 @@ namespace {
 
    // Makes sure kBuildOldUsed set once BuildOld finishes
    struct TBuildOldGuard {
-      TBuildOldGuard(TStreamerInfo* info): fInfo(info) {}
+      TBuildOldGuard(TStreamerInfo* info): fInfo(info) {
+         fInfo->SetBit(TStreamerInfo::kBuildRunning);
+      }
       ~TBuildOldGuard() {
+         fInfo->ResetBit(TStreamerInfo::kBuildRunning);
          fInfo->SetBit(TStreamerInfo::kBuildOldUsed);
       }
       TStreamerInfo* fInfo;
@@ -1505,7 +1531,14 @@ void TStreamerInfo::BuildOld()
    // rebuild the TStreamerInfo structure
 
    R__LOCKGUARD(gCINTMutex);
+
    if ( TestBit(kBuildOldUsed) ) return;
+
+   // Are we recursing on ourself?
+   if (TestBit(TStreamerInfo::kBuildRunning)) return;
+
+   // This is used to avoid unwanted recursive call to Build and make sure
+   // that we record the execution of BuildOld.
    TBuildOldGuard buildOldGuard(this);
 
    if (gDebug > 0) {
@@ -1514,11 +1547,15 @@ void TStreamerInfo::BuildOld()
 
    Bool_t wasCompiled = IsCompiled();
 
-   // This is used to avoid unwanted recursive call to Build
-   fIsBuilt = kTRUE;
-
    if (fClass->GetClassVersion() == fClassVersion) {
-      fClass->BuildRealData();
+      if (!fClass->GetClassInfo() || TClassEdit::IsSTLCont(GetName(), 0) || TClassEdit::IsSTLBitset(GetName()))
+      {
+         // Handle emulated classes and STL containers specially.
+         // in this case BuildRealData would call BuildOld for this same
+         // TStreamerInfo to be able to build the real data on it.
+      } else {
+         fClass->BuildRealData();
+      }
    }
    else {
       // This is to support the following case
@@ -1696,10 +1733,8 @@ void TStreamerInfo::BuildOld()
                }
                fNVirtualInfoLoc += infobase->fNVirtualInfoLoc;
             }
-            // FIXME: Presumably we're in emulated mode, but it still does not make any sense
-            // shouldn't it be element->SetNewType(-1) ?
             if (baseOffset < 0) {
-               baseOffset = 0;
+               element->SetNewType(-1);
             }
             element->SetOffset(baseOffset);
             offset += baseclass->Size();
@@ -1915,7 +1950,10 @@ void TStreamerInfo::BuildOld()
 
       if (newType > 0) {
          // Case of a numerical type
-         if (element->GetType() != newType) {
+         if (element->GetType() >= TStreamerInfo::kObject) {
+            // Old type was not a numerical type.
+            element->SetNewType(-2);
+         } else if (element->GetType() != newType) {
             element->SetNewType(newType);
             if (gDebug > 0) {
                // coverity[mixed_enums] - All the values of EDataType have the same semantic in EReadWrite
@@ -2250,7 +2288,7 @@ void TStreamerInfo::BuildOld()
       }
 
       if (element->GetNewType() == -2) {
-         Warning("BuildOld", "Cannot convert %s::%s from type:%s to type:%s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass->GetName());
+         Warning("BuildOld", "Cannot convert %s::%s from type:%s to type:%s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass ? newClass->GetName() : (dm ? dm->GetFullTypeName() : "unknown") );
       }
    }
 
@@ -2311,6 +2349,8 @@ void TStreamerInfo::Clear(Option_t *option)
    opt.ToLower();
 
    if (opt.Contains("build")) {
+      R__LOCKGUARD2(gCINTMutex);
+
       delete [] fComp;     fComp    = 0;
       delete [] fCompFull; fCompFull= 0;
       delete [] fCompOpt;  fCompOpt = 0;
@@ -2318,7 +2358,7 @@ void TStreamerInfo::Clear(Option_t *option)
       fNfulldata = 0;
       fNslots= 0;
       fSize = 0;
-      ResetBit(kIsCompiled);
+      ResetIsCompiled();
       ResetBit(kBuildOldUsed);
 
       if (fReadObjectWise) fReadObjectWise->fActions.clear();
@@ -4096,7 +4136,11 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
             break;
          }
       }
+
       TStreamerArtificial *newel;
+      typedef std::vector<TStreamerArtificial*> vec_t;
+      vec_t toAdd;
+
       if (rule->GetTarget()==0) {
          TString newName;
          newName.Form("%s_rule%d",fClass->GetName(),count);
@@ -4107,19 +4151,22 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
          newel->SetBit(TStreamerElement::kWholeObject);
          newel->SetReadFunc( rule->GetReadFunctionPointer() );
          newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
-         fElements->Add(newel);
+         toAdd.push_back(newel);
       } else {
+         toAdd.reserve(rule->GetTarget()->GetEntries());
          TObjString * objstr = (TObjString*)(rule->GetTarget()->At(0));
          if (objstr) {
             TString newName = objstr->String();
-            if ( fClass->GetDataMember( newName ) ) {
-               newel = new TStreamerArtificial(newName,"",
+            TString realDataName;
+            if ( TDataMember* dm = fClass->GetDataMember( newName ) ) {
+               TRealData::GetName(realDataName,dm);
+               newel = new TStreamerArtificial(realDataName,"",
                                                fClass->GetDataMemberOffset(newName),
                                                TStreamerInfo::kArtificial,
                                                fClass->GetDataMember( newName )->GetTypeName());
                newel->SetReadFunc( rule->GetReadFunctionPointer() );
                newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
-               fElements->Add(newel);
+               toAdd.push_back(newel);
             } else {
                // This would be a completely new member (so it would need to be cached)
                // TOBEDONE
@@ -4128,16 +4175,45 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
                objstr = (TObjString*)(rule->GetTarget()->At(other));
                if (objstr) {
                   newName = objstr->String();
-                  if ( fClass->GetDataMember( newName ) ) {
-                     newel = new TStreamerArtificial(newName,"",
+                  if ( TDataMember* dm = fClass->GetDataMember( newName ) ) {
+                     TRealData::GetName(realDataName,dm);
+                     newel = new TStreamerArtificial(realDataName,"",
                                                      fClass->GetDataMemberOffset(newName),
                                                      TStreamerInfo::kArtificial,
                                                      fClass->GetDataMember( newName )->GetTypeName());
-                     fElements->Add(newel);
+                     toAdd.push_back(newel);
                   }
                }
             }
          } // For each target of the rule
+      }
+      // Now find we with need to add them
+      TIter s_iter(rule->GetSource());
+      Int_t loc = -1;
+      while( TObjString *s = (TObjString*)s_iter() ) {
+         for(Int_t i = fElements->GetLast(); i >= 0 && (i+1) >= loc; --i) {
+            if (s->String() == fElements->UncheckedAt(i)->GetName()) {
+               if (loc == -1 || (i+1)>loc) {
+                  loc = i+1;
+               }
+            }
+         }
+      }
+      if (loc == -1) {
+         // Verify if the last one is not 'skipped'.
+         for(Int_t i = fElements->GetLast(); i >= 0 && (i+1) >= loc; --i) {
+            if ( ((TStreamerElement*)fElements->UncheckedAt(i))->GetNewType() != -2 ) {
+               break;
+            }
+            loc = i;
+         }
+      }
+      if (loc == -1) {
+         for(vec_t::iterator iter = toAdd.begin(); iter != toAdd.end(); ++iter) {
+            fElements->Add(*iter);
+         }
+      } else {
+         R__TObjArray_InsertAt(fElements, toAdd, loc);
       }
    } // None of the target of the rule are on file.
 }
@@ -4738,6 +4814,43 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
          ResetBit(kIsCompiled);
          ResetBit(kBuildOldUsed);
+         ResetBit(kBuildRunning);
+
+         if (R__b.GetParent() && R__b.GetVersionOwner() < 50000)
+         {
+            // In some older files, the type of the TStreamerElement was not
+            // as we (now) expect.
+            Int_t nobjects = fElements->GetEntriesFast();
+            TClass *basic = TStreamerBasicType::Class();
+            for (Int_t i = 0; i < nobjects; i++) {
+               TStreamerElement *el = (TStreamerElement*)fElements->UncheckedAt(i);
+               TStreamerElement *rel = 0;
+               if ( el->IsA() == basic ) {
+                  switch (el->GetType()) {
+                     default: break; /* nothing */
+                     case TStreamerInfo::kObject: /*61*/
+                        rel = new TStreamerObject(el->GetName(),el->GetTitle(),el->GetOffset(),el->GetTypeName());
+                        break;
+                     case TStreamerInfo::kAny: /*62*/
+                        rel = new TStreamerObjectAny(el->GetName(),el->GetTitle(),el->GetOffset(),el->GetTypeName());
+                        break;
+                     case TStreamerInfo::kObjectp: /* 63 */
+                        rel = new TStreamerObjectPointer(el->GetName(),el->GetTitle(),el->GetOffset(),el->GetTypeName());
+                        break;
+                     case TStreamerInfo::kObjectP: /* 64 */
+                        rel = new TStreamerObjectPointer(el->GetName(),el->GetTitle(),el->GetOffset(),el->GetTypeName());
+                        break;
+                     case TStreamerInfo::kTString: /* 65 */
+                        rel = new TStreamerObject(el->GetName(),el->GetTitle(),el->GetOffset(),el->GetTypeName());
+                        break;
+                  }
+                  if (rel) {
+                     (*fElements)[i] = rel;
+                     delete el;
+                  }
+               }
+            }
+         }
          return;
       }
       //====process old versions before automatic schema evolution

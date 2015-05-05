@@ -1,0 +1,1967 @@
+diff --git a/math/vc/cmake/OptimizeForArchitecture.cmake b/math/vc/cmake/OptimizeForArchitecture.cmake
+index e7e6d3a..5d227aa 100644
+--- a/math/vc/cmake/OptimizeForArchitecture.cmake
++++ b/math/vc/cmake/OptimizeForArchitecture.cmake
+@@ -73,6 +73,8 @@ macro(AutodetectHostArchitecture)
+          # Any recent Intel CPU except NetBurst
+          if(_cpu_model EQUAL 62)
+             set(TARGET_ARCHITECTURE "ivy-bridge")
++         elseif(_cpu_model EQUAL 60)
++            set(TARGET_ARCHITECTURE "haswell")
+          elseif(_cpu_model EQUAL 58)
+             set(TARGET_ARCHITECTURE "ivy-bridge")
+          elseif(_cpu_model EQUAL 47) # Xeon E7 4860
+@@ -142,7 +144,7 @@ macro(AutodetectHostArchitecture)
+ endmacro()
+ 
+ macro(OptimizeForArchitecture)
+-   set(TARGET_ARCHITECTURE "none" CACHE STRING "CPU architecture to optimize for. Using an incorrect setting here can result in crashes of the resulting binary because of invalid instructions used.\nSetting the value to \"auto\" will try to optimize for the architecture where cmake is called.\nOther supported values are: \"none\", \"generic\", \"core\", \"merom\" (65nm Core2), \"penryn\" (45nm Core2), \"nehalem\", \"westmere\", \"sandy-bridge\", \"ivy-bridge\", \"atom\", \"k8\", \"k8-sse3\", \"barcelona\", \"istanbul\", \"magny-cours\", \"bulldozer\", \"interlagos\", \"piledriver\", \"AMD 14h\", \"AMD 16h\".")
++   set(TARGET_ARCHITECTURE "none" CACHE STRING "CPU architecture to optimize for. Using an incorrect setting here can result in crashes of the resulting binary because of invalid instructions used.\nSetting the value to \"auto\" will try to optimize for the architecture where cmake is called.\nOther supported values are: \"none\", \"generic\", \"core\", \"merom\" (65nm Core2), \"penryn\" (45nm Core2), \"nehalem\", \"westmere\", \"sandy-bridge\", \"ivy-bridge\", \"haswell\", \"atom\", \"k8\", \"k8-sse3\", \"barcelona\", \"istanbul\", \"magny-cours\", \"bulldozer\", \"interlagos\", \"piledriver\", \"AMD 14h\", \"AMD 16h\".")
+    set(_force)
+    if(NOT _last_target_arch STREQUAL "${TARGET_ARCHITECTURE}")
+       message(STATUS "target changed from \"${_last_target_arch}\" to \"${TARGET_ARCHITECTURE}\"")
+@@ -188,6 +190,12 @@ macro(OptimizeForArchitecture)
+       list(APPEND _march_flag_list "corei7")
+       list(APPEND _march_flag_list "core2")
+       list(APPEND _available_vector_units_list "sse" "sse2" "sse3" "ssse3" "sse4.1" "sse4.2")
++   elseif(TARGET_ARCHITECTURE STREQUAL "haswell")
++      list(APPEND _march_flag_list "core-avx2")
++      list(APPEND _march_flag_list "core-avx-i")
++      list(APPEND _march_flag_list "corei7-avx")
++      list(APPEND _march_flag_list "core2")
++      list(APPEND _available_vector_units_list "sse" "sse2" "sse3" "ssse3" "sse4.1" "sse4.2" "avx" "avx2" "rdrnd" "f16c" "fma")
+    elseif(TARGET_ARCHITECTURE STREQUAL "ivy-bridge")
+       list(APPEND _march_flag_list "core-avx-i")
+       list(APPEND _march_flag_list "corei7-avx")
+diff --git a/math/vc/examples/finitediff/main.cpp b/math/vc/examples/finitediff/main.cpp
+index 042b071..ac5aabb 100644
+--- a/math/vc/examples/finitediff/main.cpp
++++ b/math/vc/examples/finitediff/main.cpp
+@@ -39,7 +39,7 @@
+ 
+ #define USE_SCALAR_SINCOS
+ 
+-enum {
++enum JustSomeName__ {
+   N = 10240000,
+   PrintStep = 1000000
+ };
+diff --git a/math/vc/examples/tsc.h b/math/vc/examples/tsc.h
+index b9526cc..0cde95e 100644
+--- a/math/vc/examples/tsc.h
++++ b/math/vc/examples/tsc.h
+@@ -43,7 +43,7 @@ class TimeStampCounter
+ inline void TimeStampCounter::Start()
+ {
+ #ifdef _MSC_VER
+-    unsigned int tmp;
++	unsigned int tmp;
+     m_start.a = __rdtscp(&tmp);
+ #else
+     asm volatile("rdtscp" : "=a"(m_start.b[0]), "=d"(m_start.b[1]) :: "ecx" );
+@@ -53,7 +53,7 @@ inline void TimeStampCounter::Start()
+ inline void TimeStampCounter::Stop()
+ {
+ #ifdef _MSC_VER
+-    unsigned int tmp;
++	unsigned int tmp;
+     m_end.a = __rdtscp(&tmp);
+ #else
+     asm volatile("rdtscp" : "=a"(m_end.b[0]), "=d"(m_end.b[1]) :: "ecx" );
+diff --git a/math/vc/include/Vc/avx/debug.h b/math/vc/include/Vc/avx/debug.h
+index b569d29..86ecaa0 100644
+--- a/math/vc/include/Vc/avx/debug.h
++++ b/math/vc/include/Vc/avx/debug.h
+@@ -45,7 +45,7 @@ class DebugStream
+     private:
+         template<typename T, typename V> static void printVector(V _x)
+         {
+-            enum { Size = sizeof(V) / sizeof(T) };
++            enum JustSomeName__ { Size = sizeof(V) / sizeof(T) };
+             union { V v; T m[Size]; } x = { _x };
+             std::cerr << '[' << std::setprecision(24) << x.m[0];
+             for (int i = 1; i < Size; ++i) {
+diff --git a/math/vc/include/Vc/avx/intrinsics.h b/math/vc/include/Vc/avx/intrinsics.h
+index 0796623..e531a7d 100644
+--- a/math/vc/include/Vc/avx/intrinsics.h
++++ b/math/vc/include/Vc/avx/intrinsics.h
+@@ -289,6 +289,16 @@ namespace AVX
+     AVX_TO_SSE_2(cmpgt_epi16)
+     AVX_TO_SSE_2(cmpgt_epi32)
+ 
++    // This code is AVX only (without AVX2). We never asked for AVX2 intrinsics. So go away... :)
++#if defined _mm256_srli_si256
++#undef _mm256_srli_si256
++#endif
++#if defined _mm256_slli_si256
++#undef _mm256_slli_si256
++#endif
++#if defined _mm256_blend_epi16
++#undef _mm256_blend_epi16
++#endif
+     static Vc_INTRINSIC m256i Vc_CONST _mm256_srli_si256(param256i a0, const int i) {
+         const m128i vLo = _mm256_castsi256_si128(a0);
+         const m128i vHi = _mm256_extractf128_si256(a0, 1);
+diff --git a/math/vc/include/Vc/avx/mask.h b/math/vc/include/Vc/avx/mask.h
+index dfa707b..51dfe4b 100644
+--- a/math/vc/include/Vc/avx/mask.h
++++ b/math/vc/include/Vc/avx/mask.h
+@@ -65,8 +65,8 @@ template<unsigned int VectorSize> class Mask<VectorSize, 32u>
+         Vc_ALWAYS_INLINE_L Mask(const Mask<VectorSize * 2, 32u> &m) Vc_ALWAYS_INLINE_R;
+         Vc_ALWAYS_INLINE_L Mask(const Mask<VectorSize / 2, 32u> &m) Vc_ALWAYS_INLINE_R;
+ 
+-        Vc_ALWAYS_INLINE bool operator==(const Mask &rhs) const { return 0 != _mm256_testc_ps(k, rhs.k); }
+-        Vc_ALWAYS_INLINE bool operator!=(const Mask &rhs) const { return 0 == _mm256_testc_ps(k, rhs.k); }
++        Vc_ALWAYS_INLINE bool operator==(const Mask &rhs) const { return _mm256_movemask_ps(k) == _mm256_movemask_ps(rhs.k); }
++        Vc_ALWAYS_INLINE bool operator!=(const Mask &rhs) const { return _mm256_movemask_ps(k) != _mm256_movemask_ps(rhs.k); }
+ 
+         Vc_ALWAYS_INLINE Mask operator!() const { return _mm256_andnot_ps(data(), _mm256_setallone_ps()); }
+ 
+@@ -137,8 +137,8 @@ template<unsigned int VectorSize> class Mask<VectorSize, 16u>
+         Vc_ALWAYS_INLINE Mask(const Mask<VectorSize / 2, 16u> *a) : k(avx_cast<m128>(
+                 _mm_packs_epi16(a[0].dataI(), a[1].dataI()))) {}
+ 
+-        Vc_ALWAYS_INLINE bool operator==(const Mask &rhs) const { return 0 != _mm_testc_si128(dataI(), rhs.dataI()); }
+-        Vc_ALWAYS_INLINE bool operator!=(const Mask &rhs) const { return 0 == _mm_testc_si128(dataI(), rhs.dataI()); }
++        Vc_ALWAYS_INLINE bool operator==(const Mask &rhs) const { return _mm_movemask_epi8(dataI()) == _mm_movemask_epi8(rhs.dataI()); }
++        Vc_ALWAYS_INLINE bool operator!=(const Mask &rhs) const { return _mm_movemask_epi8(dataI()) != _mm_movemask_epi8(rhs.dataI()); }
+ 
+         Vc_ALWAYS_INLINE Mask operator!() const { return _mm_andnot_ps(data(), _mm_setallone_ps()); }
+ 
+diff --git a/math/vc/include/Vc/avx/shuffle.h b/math/vc/include/Vc/avx/shuffle.h
+index ffd7f99..e44b9c2 100644
+--- a/math/vc/include/Vc/avx/shuffle.h
++++ b/math/vc/include/Vc/avx/shuffle.h
+@@ -114,7 +114,7 @@ namespace Vc
+         static Vc_ALWAYS_INLINE m256i Vc_CONST blend(param256i x, param256i y) {
+             return _mm256_castps_si256(blend<Dst0, Dst1, Dst2, Dst3, Dst4, Dst5, Dst6, Dst7>(_mm256_castsi256_ps(x), _mm256_castsi256_ps(y)));
+         }
+-        template<VecPos Dst> struct ScaleForBlend { enum { Value = Dst >= X4 ? Dst - X4 + Y0 : Dst }; };
++        template<VecPos Dst> struct ScaleForBlend { enum JustSomeName__ { Value = Dst >= X4 ? Dst - X4 + Y0 : Dst }; };
+         template<VecPos Dst0, VecPos Dst1, VecPos Dst2, VecPos Dst3, VecPos Dst4, VecPos Dst5, VecPos Dst6, VecPos Dst7>
+         static Vc_ALWAYS_INLINE m256 Vc_CONST permute(param256 x) {
+             VC_STATIC_ASSERT(Dst0 >= X0 && Dst0 <= X7, Incorrect_Range);
+diff --git a/math/vc/include/Vc/avx/types.h b/math/vc/include/Vc/avx/types.h
+index 298dfcc..f00e88c 100644
+--- a/math/vc/include/Vc/avx/types.h
++++ b/math/vc/include/Vc/avx/types.h
+@@ -77,8 +77,8 @@ namespace AVX
+     template<> struct SseVectorType<m128i> { typedef m128i Type; };
+     template<> struct SseVectorType<m128d> { typedef m128d Type; };
+ 
+-    template<typename T> struct HasVectorDivisionHelper { enum { Value = 1 }; };
+-    //template<> struct HasVectorDivisionHelper<unsigned int> { enum { Value = 0 }; };
++    template<typename T> struct HasVectorDivisionHelper { enum JustSomeName__ { Value = 1 }; };
++    //template<> struct HasVectorDivisionHelper<unsigned int> { enum JustSomeName__ { Value = 0 }; };
+ 
+     template<typename T> struct VectorHelperSize;
+ 
+diff --git a/math/vc/include/Vc/avx/vector.tcc b/math/vc/include/Vc/avx/vector.tcc
+index 8762901..4586aa6 100644
+--- a/math/vc/include/Vc/avx/vector.tcc
++++ b/math/vc/include/Vc/avx/vector.tcc
+@@ -1286,24 +1286,27 @@ template<typename VectorType, typename EntryType> struct VectorShift<32, 8, Vect
+ };
+ template<typename VectorType, typename EntryType> struct VectorShift<16, 8, VectorType, EntryType>
+ {
++    enum JustSomeName__ {
++        EntryTypeSizeof = sizeof(EntryType)
++    };
+     static Vc_INTRINSIC VectorType shifted(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
+     {
+         switch (amount) {
+         case  0: return v;
+-        case  1: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 1 * sizeof(EntryType)));
+-        case  2: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 2 * sizeof(EntryType)));
+-        case  3: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 3 * sizeof(EntryType)));
+-        case  4: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 4 * sizeof(EntryType)));
+-        case  5: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 5 * sizeof(EntryType)));
+-        case  6: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 6 * sizeof(EntryType)));
+-        case  7: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 7 * sizeof(EntryType)));
+-        case -1: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 1 * sizeof(EntryType)));
+-        case -2: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 2 * sizeof(EntryType)));
+-        case -3: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 3 * sizeof(EntryType)));
+-        case -4: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 4 * sizeof(EntryType)));
+-        case -5: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 5 * sizeof(EntryType)));
+-        case -6: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 6 * sizeof(EntryType)));
+-        case -7: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 7 * sizeof(EntryType)));
++        case  1: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 1 * EntryTypeSizeof));
++        case  2: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 2 * EntryTypeSizeof));
++        case  3: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 3 * EntryTypeSizeof));
++        case  4: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 4 * EntryTypeSizeof));
++        case  5: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 5 * EntryTypeSizeof));
++        case  6: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 6 * EntryTypeSizeof));
++        case  7: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 7 * EntryTypeSizeof));
++        case -1: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 1 * EntryTypeSizeof));
++        case -2: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 2 * EntryTypeSizeof));
++        case -3: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 3 * EntryTypeSizeof));
++        case -4: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 4 * EntryTypeSizeof));
++        case -5: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 5 * EntryTypeSizeof));
++        case -6: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 6 * EntryTypeSizeof));
++        case -7: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 7 * EntryTypeSizeof));
+         }
+         return _mm_setzero_si128();
+     }
+@@ -1316,15 +1319,18 @@ template<size_t SIMDWidth, size_t Size, typename VectorType, typename EntryType>
+ template<typename VectorType, typename EntryType> struct VectorRotate<32, 4, VectorType, EntryType>
+ {
+     typedef typename SseVectorType<VectorType>::Type SmallV;
++    enum JustSomeName__ {
++        EntryTypeSizeof = sizeof(EntryType)
++    };
+     static Vc_INTRINSIC VectorType rotated(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
+     {
+         const m128i vLo = avx_cast<m128i>(lo128(v));
+         const m128i vHi = avx_cast<m128i>(hi128(v));
+         switch (static_cast<unsigned int>(amount) % 4) {
+         case  0: return v;
+-        case  1: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * sizeof(EntryType))));
++        case  1: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * EntryTypeSizeof)));
+         case  2: return Mem::permute128<X1, X0>(v);
+-        case  3: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * sizeof(EntryType))));
++        case  3: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * EntryTypeSizeof)));
+         }
+         return _mm256_setzero_pd();
+     }
+@@ -1332,36 +1338,42 @@ template<typename VectorType, typename EntryType> struct VectorRotate<32, 4, Vec
+ template<typename VectorType, typename EntryType> struct VectorRotate<32, 8, VectorType, EntryType>
+ {
+     typedef typename SseVectorType<VectorType>::Type SmallV;
++    enum JustSomeName__ {
++        EntryTypeSizeof = sizeof(EntryType)
++    };
+     static Vc_INTRINSIC VectorType rotated(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
+     {
+         const m128i vLo = avx_cast<m128i>(lo128(v));
+         const m128i vHi = avx_cast<m128i>(hi128(v));
+         switch (static_cast<unsigned int>(amount) % 8) {
+         case  0: return v;
+-        case  1: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * sizeof(EntryType))));
+-        case  2: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 2 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 2 * sizeof(EntryType))));
+-        case  3: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 3 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 3 * sizeof(EntryType))));
++        case  1: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * EntryTypeSizeof)));
++        case  2: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 2 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 2 * EntryTypeSizeof)));
++        case  3: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 3 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 3 * EntryTypeSizeof)));
+         case  4: return Mem::permute128<X1, X0>(v);
+-        case  5: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * sizeof(EntryType))));
+-        case  6: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 2 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 2 * sizeof(EntryType))));
+-        case  7: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 3 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 3 * sizeof(EntryType))));
++        case  5: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * EntryTypeSizeof)));
++        case  6: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 2 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 2 * EntryTypeSizeof)));
++        case  7: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 3 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 3 * EntryTypeSizeof)));
+         }
+         return avx_cast<VectorType>(_mm256_setzero_ps());
+     }
+ };
+ template<typename VectorType, typename EntryType> struct VectorRotate<16, 8, VectorType, EntryType>
+ {
++    enum JustSomeName__ {
++        EntryTypeSizeof = sizeof(EntryType)
++    };
+     static Vc_INTRINSIC VectorType rotated(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
+     {
+         switch (static_cast<unsigned int>(amount) % 8) {
+         case  0: return v;
+-        case  1: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 1 * sizeof(EntryType)));
+-        case  2: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 2 * sizeof(EntryType)));
+-        case  3: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 3 * sizeof(EntryType)));
+-        case  4: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 4 * sizeof(EntryType)));
+-        case  5: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 5 * sizeof(EntryType)));
+-        case  6: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 6 * sizeof(EntryType)));
+-        case  7: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 7 * sizeof(EntryType)));
++        case  1: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 1 * EntryTypeSizeof));
++        case  2: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 2 * EntryTypeSizeof));
++        case  3: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 3 * EntryTypeSizeof));
++        case  4: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 4 * EntryTypeSizeof));
++        case  5: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 5 * EntryTypeSizeof));
++        case  6: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 6 * EntryTypeSizeof));
++        case  7: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 7 * EntryTypeSizeof));
+         }
+         return _mm_setzero_si128();
+     }
+diff --git a/math/vc/include/Vc/common/macros.h b/math/vc/include/Vc/common/macros.h
+index e721985..eb58753 100644
+--- a/math/vc/include/Vc/common/macros.h
++++ b/math/vc/include/Vc/common/macros.h
+@@ -23,10 +23,13 @@
+ 
+ #include <Vc/global.h>
+ 
+-#if VC_GCC && !defined(__OPTIMIZE__)
++#if defined(VC_GCC) && !defined(__OPTIMIZE__)
++#  if VC_GCC >= 0x40500
++#    pragma GCC diagnostic push
++#    define Vc_POP_GCC_DIAGNOSTIC__ 1
++#  endif
+ // GCC uses lots of old-style-casts in macros that disguise as intrinsics
+-#pragma GCC diagnostic push
+-#pragma GCC diagnostic ignored "-Wold-style-cast"
++#  pragma GCC diagnostic ignored "-Wold-style-cast"
+ #endif
+ 
+ #ifdef VC_MSVC
+@@ -178,22 +181,22 @@
+ #endif
+ 
+ #define unrolled_loop16(_it_, _start_, _end_, _code_) \
+-if (_start_ +  0 < _end_) { enum { _it_ = (_start_ +  0) < _end_ ? (_start_ +  0) : _start_ }; _code_ } \
+-if (_start_ +  1 < _end_) { enum { _it_ = (_start_ +  1) < _end_ ? (_start_ +  1) : _start_ }; _code_ } \
+-if (_start_ +  2 < _end_) { enum { _it_ = (_start_ +  2) < _end_ ? (_start_ +  2) : _start_ }; _code_ } \
+-if (_start_ +  3 < _end_) { enum { _it_ = (_start_ +  3) < _end_ ? (_start_ +  3) : _start_ }; _code_ } \
+-if (_start_ +  4 < _end_) { enum { _it_ = (_start_ +  4) < _end_ ? (_start_ +  4) : _start_ }; _code_ } \
+-if (_start_ +  5 < _end_) { enum { _it_ = (_start_ +  5) < _end_ ? (_start_ +  5) : _start_ }; _code_ } \
+-if (_start_ +  6 < _end_) { enum { _it_ = (_start_ +  6) < _end_ ? (_start_ +  6) : _start_ }; _code_ } \
+-if (_start_ +  7 < _end_) { enum { _it_ = (_start_ +  7) < _end_ ? (_start_ +  7) : _start_ }; _code_ } \
+-if (_start_ +  8 < _end_) { enum { _it_ = (_start_ +  8) < _end_ ? (_start_ +  8) : _start_ }; _code_ } \
+-if (_start_ +  9 < _end_) { enum { _it_ = (_start_ +  9) < _end_ ? (_start_ +  9) : _start_ }; _code_ } \
+-if (_start_ + 10 < _end_) { enum { _it_ = (_start_ + 10) < _end_ ? (_start_ + 10) : _start_ }; _code_ } \
+-if (_start_ + 11 < _end_) { enum { _it_ = (_start_ + 11) < _end_ ? (_start_ + 11) : _start_ }; _code_ } \
+-if (_start_ + 12 < _end_) { enum { _it_ = (_start_ + 12) < _end_ ? (_start_ + 12) : _start_ }; _code_ } \
+-if (_start_ + 13 < _end_) { enum { _it_ = (_start_ + 13) < _end_ ? (_start_ + 13) : _start_ }; _code_ } \
+-if (_start_ + 14 < _end_) { enum { _it_ = (_start_ + 14) < _end_ ? (_start_ + 14) : _start_ }; _code_ } \
+-if (_start_ + 15 < _end_) { enum { _it_ = (_start_ + 15) < _end_ ? (_start_ + 15) : _start_ }; _code_ } \
++if (_start_ +  0 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  0) < _end_ ? (_start_ +  0) : _start_ }; _code_ } \
++if (_start_ +  1 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  1) < _end_ ? (_start_ +  1) : _start_ }; _code_ } \
++if (_start_ +  2 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  2) < _end_ ? (_start_ +  2) : _start_ }; _code_ } \
++if (_start_ +  3 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  3) < _end_ ? (_start_ +  3) : _start_ }; _code_ } \
++if (_start_ +  4 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  4) < _end_ ? (_start_ +  4) : _start_ }; _code_ } \
++if (_start_ +  5 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  5) < _end_ ? (_start_ +  5) : _start_ }; _code_ } \
++if (_start_ +  6 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  6) < _end_ ? (_start_ +  6) : _start_ }; _code_ } \
++if (_start_ +  7 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  7) < _end_ ? (_start_ +  7) : _start_ }; _code_ } \
++if (_start_ +  8 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  8) < _end_ ? (_start_ +  8) : _start_ }; _code_ } \
++if (_start_ +  9 < _end_) { enum JustSomeName__ { _it_ = (_start_ +  9) < _end_ ? (_start_ +  9) : _start_ }; _code_ } \
++if (_start_ + 10 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 10) < _end_ ? (_start_ + 10) : _start_ }; _code_ } \
++if (_start_ + 11 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 11) < _end_ ? (_start_ + 11) : _start_ }; _code_ } \
++if (_start_ + 12 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 12) < _end_ ? (_start_ + 12) : _start_ }; _code_ } \
++if (_start_ + 13 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 13) < _end_ ? (_start_ + 13) : _start_ }; _code_ } \
++if (_start_ + 14 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 14) < _end_ ? (_start_ + 14) : _start_ }; _code_ } \
++if (_start_ + 15 < _end_) { enum JustSomeName__ { _it_ = (_start_ + 15) < _end_ ? (_start_ + 15) : _start_ }; _code_ } \
+ do {} while ( false )
+ 
+ #define for_all_vector_entries(_it_, _code_) \
+@@ -243,35 +246,35 @@ namespace Vc {
+ #define VC_STATIC_ASSERT(cond, msg) VC_STATIC_ASSERT_NC(cond, msg)
+ #endif // C++11/98
+ 
+-    template<int e, int center> struct exponentToMultiplier { enum {
++    template<int e, int center> struct exponentToMultiplier { enum Values__ {
+         X = exponentToMultiplier<e - 1, center>::X * ((e - center < 31) ? 2 : 1),
+         Value = (X == 0 ? 1 : X)
+     }; };
+-    template<int center> struct exponentToMultiplier<center,center> { enum { X = 1, Value = X }; };
+-    template<int center> struct exponentToMultiplier<   -1, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToMultiplier< -128, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToMultiplier< -256, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToMultiplier< -384, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToMultiplier< -512, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToMultiplier< -640, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToMultiplier< -768, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToMultiplier< -896, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToMultiplier<-1024, center> { enum { X = 0, Value = 1 }; };
+-
+-    template<int e, int center> struct exponentToDivisor { enum {
++    template<int center> struct exponentToMultiplier<center,center> { enum Values__ { X = 1, Value = X }; };
++    template<int center> struct exponentToMultiplier<   -1, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToMultiplier< -128, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToMultiplier< -256, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToMultiplier< -384, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToMultiplier< -512, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToMultiplier< -640, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToMultiplier< -768, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToMultiplier< -896, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToMultiplier<-1024, center> { enum Values__ { X = 0, Value = 1 }; };
++
++    template<int e, int center> struct exponentToDivisor { enum Values__ {
+         X = exponentToDivisor<e + 1, center>::X * ((center - e < 31) ? 2 : 1),
+         Value = (X == 0 ? 1 : X)
+     }; };
+-    template<int center> struct exponentToDivisor<center, center> { enum { X = 1, Value = X }; };
+-    template<int center> struct exponentToDivisor<     1, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToDivisor<   128, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToDivisor<   256, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToDivisor<   384, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToDivisor<   512, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToDivisor<   640, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToDivisor<   768, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToDivisor<   896, center> { enum { X = 0, Value = 1 }; };
+-    template<int center> struct exponentToDivisor<  1024, center> { enum { X = 0, Value = 1 }; };
++    template<int center> struct exponentToDivisor<center, center> { enum Values__ { X = 1, Value = X }; };
++    template<int center> struct exponentToDivisor<     1, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToDivisor<   128, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToDivisor<   256, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToDivisor<   384, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToDivisor<   512, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToDivisor<   640, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToDivisor<   768, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToDivisor<   896, center> { enum Values__ { X = 0, Value = 1 }; };
++    template<int center> struct exponentToDivisor<  1024, center> { enum Values__ { X = 0, Value = 1 }; };
+ #endif // VC_COMMON_MACROS_H_ONCE
+ 
+ #define _CAT_IMPL(a, b) a##b
+diff --git a/math/vc/include/Vc/common/memory.h b/math/vc/include/Vc/common/memory.h
+index fade134..49cc941 100644
+--- a/math/vc/include/Vc/common/memory.h
++++ b/math/vc/include/Vc/common/memory.h
+@@ -133,10 +133,10 @@ template<typename V, size_t Size1, size_t Size2> class Memory : public VectorAli
+ #elif defined(VC_CLANG)
+             __attribute__((aligned(__alignof(VectorAlignedBaseT<V>))))
+ #elif defined(VC_MSVC)
+-        VectorAlignedBaseT<V> _force_alignment;
++	    VectorAlignedBaseT<V> _force_alignment;
+             // __declspec(align(#)) accepts only numbers not __alignof nor just VectorAlignment
+-            // by putting VectorAlignedBaseT<V> here _force_alignment is aligned correctly.
+-           // the downside is that there's a lot of padding before m_mem (32 Bytes with SSE) :(
++	    // by putting VectorAlignedBaseT<V> here _force_alignment is aligned correctly.
++	    // the downside is that there's a lot of padding before m_mem (32 Bytes with SSE) :(
+ #endif
+             EntryType m_mem[Size1][PaddedSize2];
+         public:
+@@ -271,10 +271,10 @@ template<typename V, size_t Size1, size_t Size2> class Memory : public VectorAli
+ #elif defined(VC_CLANG)
+             __attribute__((aligned(__alignof(VectorAlignedBaseT<V>))))
+ #elif defined(VC_MSVC)
+-            VectorAlignedBaseT<V> _force_alignment;
++	    VectorAlignedBaseT<V> _force_alignment;
+             // __declspec(align(#)) accepts only numbers not __alignof nor just VectorAlignment
+-            // by putting VectorAlignedBaseT<V> here _force_alignment is aligned correctly.
+-            // the downside is that there's a lot of padding before m_mem (32 Bytes with SSE) :(
++	    // by putting VectorAlignedBaseT<V> here _force_alignment is aligned correctly.
++	    // the downside is that there's a lot of padding before m_mem (32 Bytes with SSE) :(
+ #endif
+             EntryType m_mem[PaddedSize];
+         public:
+diff --git a/math/vc/include/Vc/common/operators.h b/math/vc/include/Vc/common/operators.h
+index 561b484..6ca80de 100644
+--- a/math/vc/include/Vc/common/operators.h
++++ b/math/vc/include/Vc/common/operators.h
+@@ -6,12 +6,12 @@ namespace
+ template<typename Cond, typename T> struct EnableIfNeitherIntegerNorVector : public EnableIf<!CanConvertToInt<Cond>::Value, T> {};
+ template<typename Cond, typename T> struct EnableIfNeitherIntegerNorVector<Vector<Cond>, T>;
+ 
+-template<typename T> struct IsVector             { enum { Value = false }; };
+-template<typename T> struct IsVector<Vector<T> > { enum { Value =  true }; };
++template<typename T> struct IsVector             { enum JustSomeName__ { Value = false }; };
++template<typename T> struct IsVector<Vector<T> > { enum JustSomeName__ { Value =  true }; };
+ 
+ template<typename T0, typename T1, typename V0, typename V1> struct IsTypeCombinationOf
+ {
+-    enum {
++    enum JustSomeName__ {
+         Value = IsVector<V0>::Value ? (IsVector<V1>::Value ? ( // Vec × Vec
+                     (    IsEqualType<T0, V0>::Value && HasImplicitCast<T1, V1>::Value && !HasImplicitCast<T1, int>::Value) ||
+                     (HasImplicitCast<T0, V0>::Value &&     IsEqualType<T1, V1>::Value && !HasImplicitCast<T0, int>::Value) ||
+@@ -32,7 +32,7 @@ template<typename T0, typename T1, typename V0, typename V1> struct IsTypeCombin
+ 
+ template<typename T0, typename T1, typename V> struct IsVectorOperands
+ {
+-    enum {
++    enum JustSomeName__ {
+         Value = (HasImplicitCast<T0, V>::Value && !HasImplicitCast<T0, int>::Value && !IsEqualType<T0, V>::Value && IsEqualType<T1, V>::Value)
+             ||  (HasImplicitCast<T1, V>::Value && !HasImplicitCast<T1, int>::Value && !IsEqualType<T1, V>::Value && IsEqualType<T0, V>::Value)
+     };
+diff --git a/math/vc/include/Vc/common/types.h b/math/vc/include/Vc/common/types.h
+index 73565c4..5a32bc7 100644
+--- a/math/vc/include/Vc/common/types.h
++++ b/math/vc/include/Vc/common/types.h
+@@ -74,42 +74,42 @@ namespace
+     template<bool Test, typename T = void> struct EnableIf { typedef T Value; };
+     template<typename T> struct EnableIf<false, T> {};
+ 
+-    template<typename T> struct IsSignedInteger    { enum { Value = 0 }; };
+-    template<> struct IsSignedInteger<signed char> { enum { Value = 1 }; };
+-    template<> struct IsSignedInteger<short>       { enum { Value = 1 }; };
+-    template<> struct IsSignedInteger<int>         { enum { Value = 1 }; };
+-    template<> struct IsSignedInteger<long>        { enum { Value = 1 }; };
+-    template<> struct IsSignedInteger<long long>   { enum { Value = 1 }; };
++    template<typename T> struct IsSignedInteger    { enum JustSomeName__ { Value = 0 }; };
++    template<> struct IsSignedInteger<signed char> { enum JustSomeName__ { Value = 1 }; };
++    template<> struct IsSignedInteger<short>       { enum JustSomeName__ { Value = 1 }; };
++    template<> struct IsSignedInteger<int>         { enum JustSomeName__ { Value = 1 }; };
++    template<> struct IsSignedInteger<long>        { enum JustSomeName__ { Value = 1 }; };
++    template<> struct IsSignedInteger<long long>   { enum JustSomeName__ { Value = 1 }; };
+ 
+-    template<typename T> struct IsUnsignedInteger           { enum { Value = 0 }; };
+-    template<> struct IsUnsignedInteger<unsigned char>      { enum { Value = 1 }; };
+-    template<> struct IsUnsignedInteger<unsigned short>     { enum { Value = 1 }; };
+-    template<> struct IsUnsignedInteger<unsigned int>       { enum { Value = 1 }; };
+-    template<> struct IsUnsignedInteger<unsigned long>      { enum { Value = 1 }; };
+-    template<> struct IsUnsignedInteger<unsigned long long> { enum { Value = 1 }; };
++    template<typename T> struct IsUnsignedInteger           { enum JustSomeName__ { Value = 0 }; };
++    template<> struct IsUnsignedInteger<unsigned char>      { enum JustSomeName__ { Value = 1 }; };
++    template<> struct IsUnsignedInteger<unsigned short>     { enum JustSomeName__ { Value = 1 }; };
++    template<> struct IsUnsignedInteger<unsigned int>       { enum JustSomeName__ { Value = 1 }; };
++    template<> struct IsUnsignedInteger<unsigned long>      { enum JustSomeName__ { Value = 1 }; };
++    template<> struct IsUnsignedInteger<unsigned long long> { enum JustSomeName__ { Value = 1 }; };
+ 
+-    template<typename T> struct IsInteger { enum { Value = IsSignedInteger<T>::Value | IsUnsignedInteger<T>::Value }; };
++    template<typename T> struct IsInteger { enum JustSomeName__ { Value = IsSignedInteger<T>::Value | IsUnsignedInteger<T>::Value }; };
+ 
+-    template<typename T> struct IsReal { enum { Value = 0 }; };
+-    template<> struct IsReal<float>    { enum { Value = 1 }; };
+-    template<> struct IsReal<double>   { enum { Value = 1 }; };
++    template<typename T> struct IsReal { enum JustSomeName__ { Value = 0 }; };
++    template<> struct IsReal<float>    { enum JustSomeName__ { Value = 1 }; };
++    template<> struct IsReal<double>   { enum JustSomeName__ { Value = 1 }; };
+ 
+-    template<typename T, typename U> struct IsEqualType { enum { Value = 0 }; };
+-    template<typename T> struct IsEqualType<T, T> { enum { Value = 1 }; };
++    template<typename T, typename U> struct IsEqualType { enum JustSomeName__ { Value = 0 }; };
++    template<typename T> struct IsEqualType<T, T> { enum JustSomeName__ { Value = 1 }; };
+ 
+     template<typename T, typename List0, typename List1 = void, typename List2 = void, typename List3 = void, typename List4 = void, typename List5 = void, typename List6 = void>
+-        struct IsInTypelist { enum { Value = false }; };
+-    template<typename T, typename List1, typename List2, typename List3, typename List4, typename List5, typename List6> struct IsInTypelist<T, T, List1, List2, List3, List4, List5, List6> { enum { Value = true }; };
+-    template<typename T, typename List0, typename List2, typename List3, typename List4, typename List5, typename List6> struct IsInTypelist<T, List0, T, List2, List3, List4, List5, List6> { enum { Value = true }; };
+-    template<typename T, typename List0, typename List1, typename List3, typename List4, typename List5, typename List6> struct IsInTypelist<T, List0, List1, T, List3, List4, List5, List6> { enum { Value = true }; };
+-    template<typename T, typename List0, typename List1, typename List2, typename List4, typename List5, typename List6> struct IsInTypelist<T, List0, List1, List2, T, List4, List5, List6> { enum { Value = true }; };
+-    template<typename T, typename List0, typename List1, typename List2, typename List3, typename List5, typename List6> struct IsInTypelist<T, List0, List1, List2, List3, T, List5, List6> { enum { Value = true }; };
+-    template<typename T, typename List0, typename List1, typename List2, typename List3, typename List4, typename List6> struct IsInTypelist<T, List0, List1, List2, List3, List4, T, List6> { enum { Value = true }; };
+-    template<typename T, typename List0, typename List1, typename List2, typename List3, typename List4, typename List5> struct IsInTypelist<T, List0, List1, List2, List3, List4, List5, T> { enum { Value = true }; };
+-
+-    template<typename Arg0, typename Arg1, typename T0, typename T1> struct IsCombinationOf { enum { Value = false }; };
+-    template<typename Arg0, typename Arg1> struct IsCombinationOf<Arg0, Arg1, Arg0, Arg1> { enum { Value = true }; };
+-    template<typename Arg0, typename Arg1> struct IsCombinationOf<Arg0, Arg1, Arg1, Arg0> { enum { Value = true }; };
++        struct IsInTypelist { enum JustSomeName__ { Value = false }; };
++    template<typename T, typename List1, typename List2, typename List3, typename List4, typename List5, typename List6> struct IsInTypelist<T, T, List1, List2, List3, List4, List5, List6> { enum JustSomeName__ { Value = true }; };
++    template<typename T, typename List0, typename List2, typename List3, typename List4, typename List5, typename List6> struct IsInTypelist<T, List0, T, List2, List3, List4, List5, List6> { enum JustSomeName__ { Value = true }; };
++    template<typename T, typename List0, typename List1, typename List3, typename List4, typename List5, typename List6> struct IsInTypelist<T, List0, List1, T, List3, List4, List5, List6> { enum JustSomeName__ { Value = true }; };
++    template<typename T, typename List0, typename List1, typename List2, typename List4, typename List5, typename List6> struct IsInTypelist<T, List0, List1, List2, T, List4, List5, List6> { enum JustSomeName__ { Value = true }; };
++    template<typename T, typename List0, typename List1, typename List2, typename List3, typename List5, typename List6> struct IsInTypelist<T, List0, List1, List2, List3, T, List5, List6> { enum JustSomeName__ { Value = true }; };
++    template<typename T, typename List0, typename List1, typename List2, typename List3, typename List4, typename List6> struct IsInTypelist<T, List0, List1, List2, List3, List4, T, List6> { enum JustSomeName__ { Value = true }; };
++    template<typename T, typename List0, typename List1, typename List2, typename List3, typename List4, typename List5> struct IsInTypelist<T, List0, List1, List2, List3, List4, List5, T> { enum JustSomeName__ { Value = true }; };
++
++    template<typename Arg0, typename Arg1, typename T0, typename T1> struct IsCombinationOf { enum JustSomeName__ { Value = false }; };
++    template<typename Arg0, typename Arg1> struct IsCombinationOf<Arg0, Arg1, Arg0, Arg1> { enum JustSomeName__ { Value = true }; };
++    template<typename Arg0, typename Arg1> struct IsCombinationOf<Arg0, Arg1, Arg1, Arg0> { enum JustSomeName__ { Value = true }; };
+ 
+     namespace
+     {
+@@ -129,7 +129,7 @@ namespace
+         static yes test( To) { return yes(); }
+ #endif
+         static  no test(...) { return  no(); }
+-        enum {
++        enum JustSomeName__ {
+ #ifdef VC_MSVC
+             // I want to test whether implicit cast works. If it works MSVC thinks it should give a warning. Wrong. Shut up.
+ #pragma warning(suppress : 4257 4267)
+@@ -140,8 +140,8 @@ namespace
+ #if defined(VC_GCC) && VC_GCC < 0x40300
+     // GCC 4.1 is very noisy because of the float->int and double->int type trait tests. We get
+     // around this noise with a little specialization.
+-    template<> struct HasImplicitCast<float , int> { enum { Value = true }; };
+-    template<> struct HasImplicitCast<double, int> { enum { Value = true }; };
++    template<> struct HasImplicitCast<float , int> { enum JustSomeName__ { Value = true }; };
++    template<> struct HasImplicitCast<double, int> { enum JustSomeName__ { Value = true }; };
+ #endif
+ 
+ #ifdef VC_MSVC
+@@ -153,33 +153,33 @@ namespace
+     //
+     // Because the HasImplicitCast specializations can only be implemented after the Vector class
+     // was declared we have to write some nasty hacks.
+-    template<typename T1, typename T2> struct HasImplicitCast<_Vector<T1>, T2> { enum { Value = false }; };
++    template<typename T1, typename T2> struct HasImplicitCast<_Vector<T1>, T2> { enum JustSomeName__ { Value = false }; };
+ #if defined(VC_IMPL_Scalar)
+-    template<unsigned int VS, typename T2> struct HasImplicitCast<Vc::Scalar::Mask<VS>, T2> { enum { Value = false }; };
+-    template<unsigned int VS> struct HasImplicitCast<Vc::Scalar::Mask<VS>, Vc::Scalar::Mask<VS> > { enum { Value = true }; };
++    template<unsigned int VS, typename T2> struct HasImplicitCast<Vc::Scalar::Mask<VS>, T2> { enum JustSomeName__ { Value = false }; };
++    template<unsigned int VS> struct HasImplicitCast<Vc::Scalar::Mask<VS>, Vc::Scalar::Mask<VS> > { enum JustSomeName__ { Value = true }; };
+ #elif defined(VC_IMPL_SSE)
+-    template<unsigned int VS, typename T2> struct HasImplicitCast<Vc::SSE::Mask<VS>, T2> { enum { Value = false }; };
+-    template<unsigned int VS> struct HasImplicitCast<Vc::SSE::Mask<VS>, Vc::SSE::Mask<VS> > { enum { Value = true }; };
+-    template<typename T2> struct HasImplicitCast<Vc::SSE::Float8Mask, T2> { enum { Value = false }; };
+-    template<> struct HasImplicitCast<Vc::SSE::Float8Mask, Vc::SSE::Float8Mask> { enum { Value = true }; };
++    template<unsigned int VS, typename T2> struct HasImplicitCast<Vc::SSE::Mask<VS>, T2> { enum JustSomeName__ { Value = false }; };
++    template<unsigned int VS> struct HasImplicitCast<Vc::SSE::Mask<VS>, Vc::SSE::Mask<VS> > { enum JustSomeName__ { Value = true }; };
++    template<typename T2> struct HasImplicitCast<Vc::SSE::Float8Mask, T2> { enum JustSomeName__ { Value = false }; };
++    template<> struct HasImplicitCast<Vc::SSE::Float8Mask, Vc::SSE::Float8Mask> { enum JustSomeName__ { Value = true }; };
+ #elif defined(VC_IMPL_AVX)
+-    template<unsigned int VectorSize, size_t RegisterWidth, typename T2> struct HasImplicitCast<Vc::AVX::Mask<VectorSize, RegisterWidth>, T2> { enum { Value = false }; };
+-    template<unsigned int VectorSize, size_t RegisterWidth> struct HasImplicitCast<Vc::AVX::Mask<VectorSize, RegisterWidth>, Vc::AVX::Mask<VectorSize, RegisterWidth> > { enum { Value = true }; };
++    template<unsigned int VectorSize, size_t RegisterWidth, typename T2> struct HasImplicitCast<Vc::AVX::Mask<VectorSize, RegisterWidth>, T2> { enum JustSomeName__ { Value = false }; };
++    template<unsigned int VectorSize, size_t RegisterWidth> struct HasImplicitCast<Vc::AVX::Mask<VectorSize, RegisterWidth>, Vc::AVX::Mask<VectorSize, RegisterWidth> > { enum JustSomeName__ { Value = true }; };
+ #endif
+-    template<typename T> struct HasImplicitCast<_Vector<T>, _Vector<T> > { enum { Value = true }; };
+-    //template<> struct HasImplicitCast<_Vector<           int>, _Vector<  unsigned int>> { enum { Value = true }; };
+-    //template<> struct HasImplicitCast<_Vector<  unsigned int>, _Vector<           int>> { enum { Value = true }; };
+-    //template<> struct HasImplicitCast<_Vector<         short>, _Vector<unsigned short>> { enum { Value = true }; };
+-    //template<> struct HasImplicitCast<_Vector<unsigned short>, _Vector<         short>> { enum { Value = true }; };
+-    template<typename V, size_t Size1, size_t Size2, typename T2> struct HasImplicitCast<Vc::Memory<V, Size1, Size2>, T2> { enum { Value = false }; };
+-    template<typename V, size_t Size1, size_t Size2> struct HasImplicitCast<Vc::Memory<V, Size1, Size2>, Vc::Memory<V, Size1, Size2> > { enum { Value = true }; };
++    template<typename T> struct HasImplicitCast<_Vector<T>, _Vector<T> > { enum JustSomeName__ { Value = true }; };
++    //template<> struct HasImplicitCast<_Vector<           int>, _Vector<  unsigned int>> { enum JustSomeName__ { Value = true }; };
++    //template<> struct HasImplicitCast<_Vector<  unsigned int>, _Vector<           int>> { enum JustSomeName__ { Value = true }; };
++    //template<> struct HasImplicitCast<_Vector<         short>, _Vector<unsigned short>> { enum JustSomeName__ { Value = true }; };
++    //template<> struct HasImplicitCast<_Vector<unsigned short>, _Vector<         short>> { enum JustSomeName__ { Value = true }; };
++    template<typename V, size_t Size1, size_t Size2, typename T2> struct HasImplicitCast<Vc::Memory<V, Size1, Size2>, T2> { enum JustSomeName__ { Value = false }; };
++    template<typename V, size_t Size1, size_t Size2> struct HasImplicitCast<Vc::Memory<V, Size1, Size2>, Vc::Memory<V, Size1, Size2> > { enum JustSomeName__ { Value = true }; };
+ #undef _Vector
+ #endif
+ 
+     template<typename T> struct CanConvertToInt : public HasImplicitCast<T, int> {};
+-    template<> struct CanConvertToInt<bool>     { enum { Value = 0 }; };
+-    //template<> struct CanConvertToInt<float>    { enum { Value = 0 }; };
+-    //template<> struct CanConvertToInt<double>   { enum { Value = 0 }; };
++    template<> struct CanConvertToInt<bool>     { enum JustSomeName__ { Value = 0 }; };
++    //template<> struct CanConvertToInt<float>    { enum JustSomeName__ { Value = 0 }; };
++    //template<> struct CanConvertToInt<double>   { enum JustSomeName__ { Value = 0 }; };
+ 
+     enum TestEnum {};
+     VC_STATIC_ASSERT(CanConvertToInt<int>::Value == 1, CanConvertToInt_is_broken);
+@@ -202,8 +202,8 @@ namespace
+     VC_STATIC_ASSERT(HasImplicitCastTest3::Value ==  true, HasImplicitCast3_is_broken);
+     VC_STATIC_ASSERT(HasImplicitCastTest4::Value == false, HasImplicitCast4_is_broken);
+ 
+-    template<typename T> struct IsLikeInteger { enum { Value = !IsReal<T>::Value && CanConvertToInt<T>::Value }; };
+-    template<typename T> struct IsLikeSignedInteger { enum { Value = IsLikeInteger<T>::Value && !IsUnsignedInteger<T>::Value }; };
++    template<typename T> struct IsLikeInteger { enum JustSomeName__ { Value = !IsReal<T>::Value && CanConvertToInt<T>::Value }; };
++    template<typename T> struct IsLikeSignedInteger { enum JustSomeName__ { Value = IsLikeInteger<T>::Value && !IsUnsignedInteger<T>::Value }; };
+ } // anonymous namespace
+ 
+ #ifndef VC_CHECK_ALIGNMENT
+diff --git a/math/vc/include/Vc/common/undomacros.h b/math/vc/include/Vc/common/undomacros.h
+index ff9f35c..4f62379 100644
+--- a/math/vc/include/Vc/common/undomacros.h
++++ b/math/vc/include/Vc/common/undomacros.h
+@@ -102,8 +102,9 @@
+ #undef VC_ALIGNED_PARAMETER
+ #undef VC_OFFSETOF
+ 
+-#if VC_GCC && !defined(__OPTIMIZE__)
++#ifdef Vc_POP_GCC_DIAGNOSTIC__
+ #pragma GCC diagnostic pop
++#undef Vc_POP_GCC_DIAGNOSTIC__
+ #endif
+ 
+ #endif // VC_COMMON_UNDOMACROS_H
+diff --git a/math/vc/include/Vc/sse/casts.h b/math/vc/include/Vc/sse/casts.h
+index 6eb8305..38a8c2d 100644
+--- a/math/vc/include/Vc/sse/casts.h
++++ b/math/vc/include/Vc/sse/casts.h
+@@ -43,7 +43,7 @@ namespace SSE
+     template<> struct StaticCastHelper<int         , int         > { static Vc_ALWAYS_INLINE _M128I cast(const _M128I &v) { return v; } };
+     template<> struct StaticCastHelper<unsigned int, int         > { static Vc_ALWAYS_INLINE _M128I cast(const _M128I &v) { return v; } };
+     template<> struct StaticCastHelper<float       , unsigned int> { static Vc_ALWAYS_INLINE _M128I cast(const _M128  &v) {
+-        return _mm_castps_si128(_mm_blendv_ps(
++        return _mm_castps_si128(mm_blendv_ps(
+                 _mm_castsi128_ps(_mm_cvttps_epi32(v)),
+                 _mm_castsi128_ps(_mm_add_epi32(_mm_cvttps_epi32(_mm_sub_ps(v, _mm_set1_ps(1u << 31))), _mm_set1_epi32(1 << 31))),
+                 _mm_cmpge_ps(v, _mm_set1_ps(1u << 31))
+@@ -57,7 +57,7 @@ namespace SSE
+     template<> struct StaticCastHelper<double      , float       > { static Vc_ALWAYS_INLINE _M128  cast(const _M128D &v) { return _mm_cvtpd_ps(v); } };
+     template<> struct StaticCastHelper<int         , float       > { static Vc_ALWAYS_INLINE _M128  cast(const _M128I &v) { return _mm_cvtepi32_ps(v); } };
+     template<> struct StaticCastHelper<unsigned int, float       > { static Vc_ALWAYS_INLINE _M128  cast(const _M128I &v) {
+-        return _mm_blendv_ps(
++        return mm_blendv_ps(
+                 _mm_cvtepi32_ps(v),
+                 _mm_add_ps(_mm_cvtepi32_ps(_mm_sub_epi32(v, _mm_set1_epi32(1 << 31))), _mm_set1_ps(1u << 31)),
+                 _mm_castsi128_ps(_mm_cmplt_epi32(v, _mm_setzero_si128()))
+diff --git a/math/vc/include/Vc/sse/debug.h b/math/vc/include/Vc/sse/debug.h
+index 92e51a1..5aad8b7 100644
+--- a/math/vc/include/Vc/sse/debug.h
++++ b/math/vc/include/Vc/sse/debug.h
+@@ -45,7 +45,7 @@ class DebugStream
+     private:
+         template<typename T, typename V> static void printVector(V _x)
+         {
+-            enum { Size = sizeof(V) / sizeof(T) };
++            enum JustSomeName__ { Size = sizeof(V) / sizeof(T) };
+             union { V v; T m[Size]; } x = { _x };
+             std::cerr << '[' << std::setprecision(24) << x.m[0];
+             for (int i = 1; i < Size; ++i) {
+diff --git a/math/vc/include/Vc/sse/intrinsics.h b/math/vc/include/Vc/sse/intrinsics.h
+index 50731cb..33a4049 100644
+--- a/math/vc/include/Vc/sse/intrinsics.h
++++ b/math/vc/include/Vc/sse/intrinsics.h
+@@ -37,10 +37,6 @@ extern "C" {
+ 
+ #include "../common/fix_clang_emmintrin.h"
+ 
+-#if defined(__GNUC__) && !defined(VC_IMPL_SSE2)
+-#error "SSE Vector class needs at least SSE2"
+-#endif
+-
+ #include "const_data.h"
+ #include <cstdlib>
+ #include "macros.h"
+@@ -127,20 +123,16 @@ namespace SSE
+ extern "C" {
+ #include <pmmintrin.h>
+ }
+-#elif defined _PMMINTRIN_H_INCLUDED || defined _INCLUDED_PMM
+-#error "SSE3 was disabled but something includes <pmmintrin.h>. Please fix your code."
+-#else
+-// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
+-// compilers that include headers for SIMD intrinsics that are disabled via the command line?
+-// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
+-// enabled.
+-#define _INCLUDED_PMM 1
+ #endif
+ // SSSE3
+ #ifdef VC_IMPL_SSSE3
+ extern "C" {
+ #include <tmmintrin.h>
+ }
++#define mm_abs_epi8  _mm_abs_epi8
++#define mm_abs_epi16 _mm_abs_epi16
++#define mm_abs_epi32 _mm_abs_epi32
++#define mm_alignr_epi8 _mm_alignr_epi8
+ namespace ROOT {
+ namespace Vc
+ {
+@@ -160,20 +152,13 @@ namespace SSE
+ } // namespace SSE
+ } // namespace Vc
+ } // namespace ROOT
+-#elif defined _TMMINTRIN_H_INCLUDED || defined _TMMINTRIN_H
+-#error "SSSE3 was disabled but something includes <tmmintrin.h>. Please fix your code."
+ #else
+-// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
+-// compilers that include headers for SIMD intrinsics that are disabled via the command line?
+-// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
+-// enabled.
+-#define _TMMINTRIN_H 1
+ namespace ROOT {
+ namespace Vc
+ {
+ namespace SSE
+ {
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_abs_epi8 (__m128i a) {
++    static Vc_INTRINSIC __m128i Vc_CONST mm_abs_epi8 (__m128i a) {
+         __m128i negative = _mm_cmplt_epi8 (a, _mm_setzero_si128());
+         return _mm_add_epi8 (_mm_xor_si128(a, negative), _mm_and_si128(negative,  _mm_setone_epi8()));
+     }
+@@ -187,18 +172,18 @@ namespace SSE
+     //   a xor -1 -> -a - 1
+     //   -1 >> 31 -> 1
+     //   -a - 1 + 1 -> -a
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_abs_epi16(__m128i a) {
++    static Vc_INTRINSIC __m128i Vc_CONST mm_abs_epi16(__m128i a) {
+         __m128i negative = _mm_cmplt_epi16(a, _mm_setzero_si128());
+         return _mm_add_epi16(_mm_xor_si128(a, negative), _mm_srli_epi16(negative, 15));
+     }
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_abs_epi32(__m128i a) {
++    static Vc_INTRINSIC __m128i Vc_CONST mm_abs_epi32(__m128i a) {
+         __m128i negative = _mm_cmplt_epi32(a, _mm_setzero_si128());
+         return _mm_add_epi32(_mm_xor_si128(a, negative), _mm_srli_epi32(negative, 31));
+     }
+     static Vc_INTRINSIC __m128i Vc_CONST set1_epi8(int a) {
+         return _mm_set1_epi8(a);
+     }
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_alignr_epi8(__m128i a, __m128i b, const int s) {
++    static Vc_INTRINSIC __m128i Vc_CONST mm_alignr_epi8(__m128i a, __m128i b, const int s) {
+         switch (s) {
+             case  0: return b;
+             case  1: return _mm_or_si128(_mm_slli_si128(a, 15), _mm_srli_si128(b,  1));
+@@ -247,34 +232,60 @@ namespace SSE
+ extern "C" {
+ #include <smmintrin.h>
+ }
++namespace ROOT {
++namespace Vc
++{
++namespace SSE
++{
++#define mm_blendv_pd _mm_blendv_pd
++#define mm_blendv_ps _mm_blendv_ps
++#define mm_blendv_epi8 _mm_blendv_epi8
++#define mm_blend_epi16 _mm_blend_epi16
++#define mm_blend_ps _mm_blend_ps
++#define mm_blend_pd _mm_blend_pd
++
++#define mm_min_epi32 _mm_min_epi32
++#define mm_max_epi32 _mm_max_epi32
++#define mm_min_epu32 _mm_min_epu32
++#define mm_max_epu32 _mm_max_epu32
++//#define mm_min_epi16 _mm_min_epi16
++//#define mm_max_epi16 _mm_max_epi16
++#define mm_min_epu16 _mm_min_epu16
++#define mm_max_epu16 _mm_max_epu16
++#define mm_min_epi8  _mm_min_epi8
++#define mm_max_epi8  _mm_max_epi8
++
++#define mm_cvtepu16_epi32 _mm_cvtepu16_epi32
++#define mm_cvtepu8_epi16 _mm_cvtepu8_epi16
++#define mm_cvtepi8_epi16 _mm_cvtepi8_epi16
++#define mm_cvtepu16_epi32 _mm_cvtepu16_epi32
++#define mm_cvtepi16_epi32 _mm_cvtepi16_epi32
++#define mm_cvtepu8_epi32 _mm_cvtepu8_epi32
++#define mm_cvtepi8_epi32 _mm_cvtepi8_epi32
++#define mm_stream_load_si128 _mm_stream_load_si128
++// TODO
++} // namespace SSE
++} // namespace Vc
++} // namespace ROOT
+ #else
+-#if defined _SMMINTRIN_H_INCLUDED || defined _INCLUDED_SMM
+-#error "SSE4.1 was disabled but something includes <smmintrin.h>. Please fix your code."
+-#else
+-// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
+-// compilers that include headers for SIMD intrinsics that are disabled via the command line?
+-// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
+-// enabled.
+-#define _INCLUDED_SMM 1
+-#endif
+ namespace ROOT {
+ namespace Vc
+ {
+ namespace SSE
+ {
+-    static Vc_INTRINSIC __m128d _mm_blendv_pd(__m128d a, __m128d b, __m128d c) {
++    static Vc_INTRINSIC __m128d mm_blendv_pd(__m128d a, __m128d b, __m128d c) {
+         return _mm_or_pd(_mm_andnot_pd(c, a), _mm_and_pd(c, b));
+     }
+-    static Vc_INTRINSIC __m128  _mm_blendv_ps(__m128  a, __m128  b, __m128  c) {
++    static Vc_INTRINSIC __m128  mm_blendv_ps(__m128  a, __m128  b, __m128  c) {
+         return _mm_or_ps(_mm_andnot_ps(c, a), _mm_and_ps(c, b));
+     }
+-    static Vc_INTRINSIC __m128i _mm_blendv_epi8(__m128i a, __m128i b, __m128i c) {
++    static Vc_INTRINSIC __m128i mm_blendv_epi8(__m128i a, __m128i b, __m128i c) {
+         return _mm_or_si128(_mm_andnot_si128(c, a), _mm_and_si128(c, b));
+     }
+ 
+     // only use the following blend functions with immediates as mask and, of course, compiling
+     // with optimization
+-    static Vc_INTRINSIC __m128d _mm_blend_pd(__m128d a, __m128d b, const int mask) {
++    static Vc_INTRINSIC __m128d mm_blend_pd(__m128d a, __m128d b, const int mask) {
+         switch (mask) {
+         case 0x0:
+             return a;
+@@ -289,7 +300,7 @@ namespace SSE
+             return a; // should never be reached, but MSVC needs it else it warns about 'not all control paths return a value'
+         }
+     }
+-    static Vc_INTRINSIC __m128  _mm_blend_ps(__m128  a, __m128  b, const int mask) {
++    static Vc_INTRINSIC __m128  mm_blend_ps(__m128  a, __m128  b, const int mask) {
+         __m128i c;
+         switch (mask) {
+         case 0x0:
+@@ -346,7 +357,7 @@ namespace SSE
+         __m128 _c = _mm_castsi128_ps(c);
+         return _mm_or_ps(_mm_andnot_ps(_c, a), _mm_and_ps(_c, b));
+     }
+-    static Vc_INTRINSIC __m128i _mm_blend_epi16(__m128i a, __m128i b, const int mask) {
++    static Vc_INTRINSIC __m128i mm_blend_epi16(__m128i a, __m128i b, const int mask) {
+         __m128i c;
+         switch (mask) {
+         case 0x00:
+@@ -406,57 +417,57 @@ namespace SSE
+         return _mm_or_si128(_mm_andnot_si128(c, a), _mm_and_si128(c, b));
+     }
+ 
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_max_epi8 (__m128i a, __m128i b) {
+-        return _mm_blendv_epi8(b, a, _mm_cmpgt_epi8 (a, b));
++    static Vc_INTRINSIC __m128i Vc_CONST mm_max_epi8 (__m128i a, __m128i b) {
++        return mm_blendv_epi8(b, a, _mm_cmpgt_epi8 (a, b));
+     }
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_max_epi32(__m128i a, __m128i b) {
+-        return _mm_blendv_epi8(b, a, _mm_cmpgt_epi32(a, b));
++    static Vc_INTRINSIC __m128i Vc_CONST mm_max_epi32(__m128i a, __m128i b) {
++        return mm_blendv_epi8(b, a, _mm_cmpgt_epi32(a, b));
+     }
+-//X         static Vc_INTRINSIC __m128i Vc_CONST _mm_max_epu8 (__m128i a, __m128i b) {
+-//X             return _mm_blendv_epi8(b, a, _mm_cmpgt_epu8 (a, b));
++//X         static Vc_INTRINSIC __m128i Vc_CONST mm_max_epu8 (__m128i a, __m128i b) {
++//X             return mm_blendv_epi8(b, a, _mm_cmpgt_epu8 (a, b));
+ //X         }
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_max_epu16(__m128i a, __m128i b) {
+-        return _mm_blendv_epi8(b, a, _mm_cmpgt_epu16(a, b));
++    static Vc_INTRINSIC __m128i Vc_CONST mm_max_epu16(__m128i a, __m128i b) {
++        return mm_blendv_epi8(b, a, _mm_cmpgt_epu16(a, b));
+     }
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_max_epu32(__m128i a, __m128i b) {
+-        return _mm_blendv_epi8(b, a, _mm_cmpgt_epu32(a, b));
++    static Vc_INTRINSIC __m128i Vc_CONST mm_max_epu32(__m128i a, __m128i b) {
++        return mm_blendv_epi8(b, a, _mm_cmpgt_epu32(a, b));
+     }
+-//X         static Vc_INTRINSIC __m128i Vc_CONST _mm_min_epu8 (__m128i a, __m128i b) {
+-//X             return _mm_blendv_epi8(a, b, _mm_cmpgt_epu8 (a, b));
++//X         static Vc_INTRINSIC __m128i Vc_CONST mm_min_epu8 (__m128i a, __m128i b) {
++//X             return mm_blendv_epi8(a, b, _mm_cmpgt_epu8 (a, b));
+ //X         }
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_min_epu16(__m128i a, __m128i b) {
+-        return _mm_blendv_epi8(a, b, _mm_cmpgt_epu16(a, b));
++    static Vc_INTRINSIC __m128i Vc_CONST mm_min_epu16(__m128i a, __m128i b) {
++        return mm_blendv_epi8(a, b, _mm_cmpgt_epu16(a, b));
+     }
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_min_epu32(__m128i a, __m128i b) {
+-        return _mm_blendv_epi8(a, b, _mm_cmpgt_epu32(a, b));
++    static Vc_INTRINSIC __m128i Vc_CONST mm_min_epu32(__m128i a, __m128i b) {
++        return mm_blendv_epi8(a, b, _mm_cmpgt_epu32(a, b));
+     }
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_min_epi8 (__m128i a, __m128i b) {
+-        return _mm_blendv_epi8(a, b, _mm_cmpgt_epi8 (a, b));
++    static Vc_INTRINSIC __m128i Vc_CONST mm_min_epi8 (__m128i a, __m128i b) {
++        return mm_blendv_epi8(a, b, _mm_cmpgt_epi8 (a, b));
+     }
+-    static Vc_INTRINSIC __m128i Vc_CONST _mm_min_epi32(__m128i a, __m128i b) {
+-        return _mm_blendv_epi8(a, b, _mm_cmpgt_epi32(a, b));
++    static Vc_INTRINSIC __m128i Vc_CONST mm_min_epi32(__m128i a, __m128i b) {
++        return mm_blendv_epi8(a, b, _mm_cmpgt_epi32(a, b));
+     }
+-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepu8_epi16(__m128i epu8) {
++    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepu8_epi16(__m128i epu8) {
+         return _mm_unpacklo_epi8(epu8, _mm_setzero_si128());
+     }
+-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepi8_epi16(__m128i epi8) {
++    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepi8_epi16(__m128i epi8) {
+         return _mm_unpacklo_epi8(epi8, _mm_cmplt_epi8(epi8, _mm_setzero_si128()));
+     }
+-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepu16_epi32(__m128i epu16) {
++    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepu16_epi32(__m128i epu16) {
+         return _mm_unpacklo_epi16(epu16, _mm_setzero_si128());
+     }
+-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepi16_epi32(__m128i epu16) {
++    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepi16_epi32(__m128i epu16) {
+         return _mm_unpacklo_epi16(epu16, _mm_cmplt_epi16(epu16, _mm_setzero_si128()));
+     }
+-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepu8_epi32(__m128i epu8) {
+-        return _mm_cvtepu16_epi32(_mm_cvtepu8_epi16(epu8));
++    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepu8_epi32(__m128i epu8) {
++        return mm_cvtepu16_epi32(mm_cvtepu8_epi16(epu8));
+     }
+-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepi8_epi32(__m128i epi8) {
++    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepi8_epi32(__m128i epi8) {
+         const __m128i neg = _mm_cmplt_epi8(epi8, _mm_setzero_si128());
+         const __m128i epi16 = _mm_unpacklo_epi8(epi8, neg);
+         return _mm_unpacklo_epi16(epi16, _mm_unpacklo_epi8(neg, neg));
+     }
+-    static Vc_INTRINSIC Vc_PURE __m128i _mm_stream_load_si128(__m128i *mem) {
++    static Vc_INTRINSIC Vc_PURE __m128i mm_stream_load_si128(__m128i *mem) {
+         return _mm_load_si128(mem);
+     }
+ 
+@@ -474,14 +485,6 @@ namespace SSE
+ extern "C" {
+ #include <nmmintrin.h>
+ }
+-#elif defined _NMMINTRIN_H_INCLUDED || defined _INCLUDED_NMM
+-#error "SSE4.2 was disabled but something includes <nmmintrin.h>. Please fix your code."
+-#else
+-// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
+-// compilers that include headers for SIMD intrinsics that are disabled via the command line?
+-// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
+-// enabled.
+-#define _INCLUDED_NMM 1
+ #endif
+ 
+ namespace ROOT {
+diff --git a/math/vc/include/Vc/sse/mask.h b/math/vc/include/Vc/sse/mask.h
+index 5876b7d..6ba25a7 100644
+--- a/math/vc/include/Vc/sse/mask.h
++++ b/math/vc/include/Vc/sse/mask.h
+@@ -451,7 +451,7 @@ class Float8Mask
+ 
+         Vc_ALWAYS_INLINE Vc_PURE int count() const {
+ #ifdef VC_IMPL_POPCNT
+-        return _mm_popcnt_u32(toInt());
++		return _mm_popcnt_u32(toInt());
+ #else
+ //X             int tmp1 = _mm_movemask_ps(k[0]);
+ //X             int tmp2 = _mm_movemask_ps(k[1]);
+diff --git a/math/vc/include/Vc/sse/shuffle.h b/math/vc/include/Vc/sse/shuffle.h
+index a7cf34c..1813217 100644
+--- a/math/vc/include/Vc/sse/shuffle.h
++++ b/math/vc/include/Vc/sse/shuffle.h
+@@ -46,14 +46,17 @@ namespace Vc
+             return _mm_shuffle_pd(x, y, Dst0 + (Dst1 - Y0) * 2);
+         }
+ 
++#if !defined(VC_IMPL_SSE4_1) && !defined(VC_IMPL_AVX)
++#define Vc_MAKE_INTRINSIC__(name__) Vc::SSE::_VC_CAT(m,m,_,name__)
++#else
++#define Vc_MAKE_INTRINSIC__(name__) _VC_CAT(_,mm,_,name__)
++#endif
++
+         // blend<X0, Y1>([x0 x1], [y0, y1]) = [x0 y1]
+         template<VecPos Dst0, VecPos Dst1> static Vc_ALWAYS_INLINE __m128d Vc_CONST blend(__m128d x, __m128d y) {
+             VC_STATIC_ASSERT(Dst0 == X0 || Dst0 == Y0, Incorrect_Range);
+             VC_STATIC_ASSERT(Dst1 == X1 || Dst1 == Y1, Incorrect_Range);
+-#if !defined(VC_IMPL_SSE4_1) && !defined(VC_IMPL_AVX)
+-            using Vc::SSE::_mm_blend_pd;
+-#endif
+-            return _mm_blend_pd(x, y, (Dst0 / Y0) + (Dst1 / Y0) * 2);
++            return Vc_MAKE_INTRINSIC__(blend_pd)(x, y, (Dst0 / Y0) + (Dst1 / Y0) * 2);
+         }
+ 
+         // blend<X0, Y1>([x0 x1], [y0, y1]) = [x0 y1]
+@@ -62,10 +65,7 @@ namespace Vc
+             VC_STATIC_ASSERT(Dst1 == X1 || Dst1 == Y1, Incorrect_Range);
+             VC_STATIC_ASSERT(Dst2 == X2 || Dst2 == Y2, Incorrect_Range);
+             VC_STATIC_ASSERT(Dst3 == X3 || Dst3 == Y3, Incorrect_Range);
+-#if !defined(VC_IMPL_SSE4_1) && !defined(VC_IMPL_AVX)
+-            using Vc::SSE::_mm_blend_ps;
+-#endif
+-            return _mm_blend_ps(x, y,
++            return Vc_MAKE_INTRINSIC__(blend_ps)(x, y,
+                     (Dst0 / Y0) *  1 + (Dst1 / Y1) *  2 +
+                     (Dst2 / Y2) *  4 + (Dst3 / Y3) *  8);
+         }
+@@ -80,10 +80,7 @@ namespace Vc
+             VC_STATIC_ASSERT(Dst5 == X5 || Dst5 == Y5, Incorrect_Range);
+             VC_STATIC_ASSERT(Dst6 == X6 || Dst6 == Y6, Incorrect_Range);
+             VC_STATIC_ASSERT(Dst7 == X7 || Dst7 == Y7, Incorrect_Range);
+-#if !defined(VC_IMPL_SSE4_1) && !defined(VC_IMPL_AVX)
+-            using Vc::SSE::_mm_blend_epi16;
+-#endif
+-            return _mm_blend_epi16(x, y,
++            return Vc_MAKE_INTRINSIC__(blend_epi16)(x, y,
+                     (Dst0 / Y0) *  1 + (Dst1 / Y1) *  2 +
+                     (Dst2 / Y2) *  4 + (Dst3 / Y3) *  8 +
+                     (Dst4 / Y4) * 16 + (Dst5 / Y5) * 32 +
+diff --git a/math/vc/include/Vc/sse/vector.h b/math/vc/include/Vc/sse/vector.h
+index 9391026..b63f49f 100644
+--- a/math/vc/include/Vc/sse/vector.h
++++ b/math/vc/include/Vc/sse/vector.h
+@@ -499,16 +499,16 @@ template<> Vc_ALWAYS_INLINE Vc_PURE Vector<float8> Vector<float8>::broadcast4(co
+ 
+ template<typename T> class SwizzledVector : public Vector<T> {};
+ 
+-static Vc_ALWAYS_INLINE Vc_PURE int_v    min(const int_v    &x, const int_v    &y) { return _mm_min_epi32(x.data(), y.data()); }
+-static Vc_ALWAYS_INLINE Vc_PURE uint_v   min(const uint_v   &x, const uint_v   &y) { return _mm_min_epu32(x.data(), y.data()); }
++static Vc_ALWAYS_INLINE Vc_PURE int_v    min(const int_v    &x, const int_v    &y) { return mm_min_epi32(x.data(), y.data()); }
++static Vc_ALWAYS_INLINE Vc_PURE uint_v   min(const uint_v   &x, const uint_v   &y) { return mm_min_epu32(x.data(), y.data()); }
+ static Vc_ALWAYS_INLINE Vc_PURE short_v  min(const short_v  &x, const short_v  &y) { return _mm_min_epi16(x.data(), y.data()); }
+-static Vc_ALWAYS_INLINE Vc_PURE ushort_v min(const ushort_v &x, const ushort_v &y) { return _mm_min_epu16(x.data(), y.data()); }
++static Vc_ALWAYS_INLINE Vc_PURE ushort_v min(const ushort_v &x, const ushort_v &y) { return mm_min_epu16(x.data(), y.data()); }
+ static Vc_ALWAYS_INLINE Vc_PURE float_v  min(const float_v  &x, const float_v  &y) { return _mm_min_ps(x.data(), y.data()); }
+ static Vc_ALWAYS_INLINE Vc_PURE double_v min(const double_v &x, const double_v &y) { return _mm_min_pd(x.data(), y.data()); }
+-static Vc_ALWAYS_INLINE Vc_PURE int_v    max(const int_v    &x, const int_v    &y) { return _mm_max_epi32(x.data(), y.data()); }
+-static Vc_ALWAYS_INLINE Vc_PURE uint_v   max(const uint_v   &x, const uint_v   &y) { return _mm_max_epu32(x.data(), y.data()); }
++static Vc_ALWAYS_INLINE Vc_PURE int_v    max(const int_v    &x, const int_v    &y) { return mm_max_epi32(x.data(), y.data()); }
++static Vc_ALWAYS_INLINE Vc_PURE uint_v   max(const uint_v   &x, const uint_v   &y) { return mm_max_epu32(x.data(), y.data()); }
+ static Vc_ALWAYS_INLINE Vc_PURE short_v  max(const short_v  &x, const short_v  &y) { return _mm_max_epi16(x.data(), y.data()); }
+-static Vc_ALWAYS_INLINE Vc_PURE ushort_v max(const ushort_v &x, const ushort_v &y) { return _mm_max_epu16(x.data(), y.data()); }
++static Vc_ALWAYS_INLINE Vc_PURE ushort_v max(const ushort_v &x, const ushort_v &y) { return mm_max_epu16(x.data(), y.data()); }
+ static Vc_ALWAYS_INLINE Vc_PURE float_v  max(const float_v  &x, const float_v  &y) { return _mm_max_ps(x.data(), y.data()); }
+ static Vc_ALWAYS_INLINE Vc_PURE double_v max(const double_v &x, const double_v &y) { return _mm_max_pd(x.data(), y.data()); }
+ 
+diff --git a/math/vc/include/Vc/sse/vector.tcc b/math/vc/include/Vc/sse/vector.tcc
+index 8bc1f96..b893a61 100644
+--- a/math/vc/include/Vc/sse/vector.tcc
++++ b/math/vc/include/Vc/sse/vector.tcc
+@@ -190,25 +190,25 @@ template<typename Flags> struct LoadHelper<int, unsigned int, Flags> {
+ template<typename Flags> struct LoadHelper<int, unsigned short, Flags> {
+     static Vc_ALWAYS_INLINE Vc_PURE __m128i load(const unsigned short *mem, Flags)
+     {
+-        return _mm_cvtepu16_epi32( _mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
++        return mm_cvtepu16_epi32( _mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
+     }
+ };
+ template<typename Flags> struct LoadHelper<int, short, Flags> {
+     static Vc_ALWAYS_INLINE Vc_PURE __m128i load(const short *mem, Flags)
+     {
+-        return _mm_cvtepi16_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
++        return mm_cvtepi16_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
+     }
+ };
+ template<typename Flags> struct LoadHelper<int, unsigned char, Flags> {
+     static Vc_ALWAYS_INLINE Vc_PURE __m128i load(const unsigned char *mem, Flags)
+     {
+-        return _mm_cvtepu8_epi32(_mm_cvtsi32_si128(*reinterpret_cast<const int *>(mem)));
++        return mm_cvtepu8_epi32(_mm_cvtsi32_si128(*reinterpret_cast<const int *>(mem)));
+     }
+ };
+ template<typename Flags> struct LoadHelper<int, signed char, Flags> {
+     static Vc_ALWAYS_INLINE Vc_PURE __m128i load(const signed char *mem, Flags)
+     {
+-        return _mm_cvtepi8_epi32(_mm_cvtsi32_si128(*reinterpret_cast<const int *>(mem)));
++        return mm_cvtepi8_epi32(_mm_cvtsi32_si128(*reinterpret_cast<const int *>(mem)));
+     }
+ };
+ 
+@@ -216,13 +216,13 @@ template<typename Flags> struct LoadHelper<int, signed char, Flags> {
+ template<typename Flags> struct LoadHelper<unsigned int, unsigned short, Flags> {
+     static Vc_ALWAYS_INLINE Vc_PURE __m128i load(const unsigned short *mem, Flags)
+     {
+-        return _mm_cvtepu16_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
++        return mm_cvtepu16_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
+     }
+ };
+ template<typename Flags> struct LoadHelper<unsigned int, unsigned char, Flags> {
+     static Vc_ALWAYS_INLINE Vc_PURE __m128i load(const unsigned char *mem, Flags)
+     {
+-        return _mm_cvtepu8_epi32(_mm_cvtsi32_si128(*reinterpret_cast<const int *>(mem)));
++        return mm_cvtepu8_epi32(_mm_cvtsi32_si128(*reinterpret_cast<const int *>(mem)));
+     }
+ };
+ 
+@@ -236,13 +236,13 @@ template<typename Flags> struct LoadHelper<short, unsigned short, Flags> {
+ template<typename Flags> struct LoadHelper<short, unsigned char, Flags> {
+     static Vc_ALWAYS_INLINE Vc_PURE __m128i load(const unsigned char *mem, Flags)
+     {
+-        return _mm_cvtepu8_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
++        return mm_cvtepu8_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
+     }
+ };
+ template<typename Flags> struct LoadHelper<short, signed char, Flags> {
+     static Vc_ALWAYS_INLINE Vc_PURE __m128i load(const signed char *mem, Flags)
+     {
+-        return _mm_cvtepi8_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
++        return mm_cvtepi8_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
+     }
+ };
+ 
+@@ -250,7 +250,7 @@ template<typename Flags> struct LoadHelper<short, signed char, Flags> {
+ template<typename Flags> struct LoadHelper<unsigned short, unsigned char, Flags> {
+     static Vc_ALWAYS_INLINE Vc_PURE __m128i load(const unsigned char *mem, Flags)
+     {
+-        return _mm_cvtepu8_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
++        return mm_cvtepu8_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i *>(mem)));
+     }
+ };
+ 
+@@ -1389,79 +1389,91 @@ template<> Vc_ALWAYS_INLINE Vector<double> Vector<double>::Random()
+ // shifted / rotated {{{1
+ template<typename T> Vc_INTRINSIC Vc_PURE Vector<T> Vector<T>::shifted(int amount) const
+ {
++    enum JustSomeName__ {
++        EntryTypeSizeof = sizeof(EntryType)
++    };
+     switch (amount) {
+     case  0: return *this;
+-    case  1: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 1 * sizeof(EntryType)));
+-    case  2: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 2 * sizeof(EntryType)));
+-    case  3: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 3 * sizeof(EntryType)));
+-    case  4: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 4 * sizeof(EntryType)));
+-    case  5: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 5 * sizeof(EntryType)));
+-    case  6: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 6 * sizeof(EntryType)));
+-    case  7: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 7 * sizeof(EntryType)));
+-    case  8: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 8 * sizeof(EntryType)));
+-    case -1: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 1 * sizeof(EntryType)));
+-    case -2: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 2 * sizeof(EntryType)));
+-    case -3: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 3 * sizeof(EntryType)));
+-    case -4: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 4 * sizeof(EntryType)));
+-    case -5: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 5 * sizeof(EntryType)));
+-    case -6: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 6 * sizeof(EntryType)));
+-    case -7: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 7 * sizeof(EntryType)));
+-    case -8: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 8 * sizeof(EntryType)));
++    case  1: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 1 * EntryTypeSizeof));
++    case  2: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 2 * EntryTypeSizeof));
++    case  3: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 3 * EntryTypeSizeof));
++    case  4: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 4 * EntryTypeSizeof));
++    case  5: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 5 * EntryTypeSizeof));
++    case  6: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 6 * EntryTypeSizeof));
++    case  7: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 7 * EntryTypeSizeof));
++    case  8: return mm128_reinterpret_cast<VectorType>(_mm_srli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 8 * EntryTypeSizeof));
++    case -1: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 1 * EntryTypeSizeof));
++    case -2: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 2 * EntryTypeSizeof));
++    case -3: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 3 * EntryTypeSizeof));
++    case -4: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 4 * EntryTypeSizeof));
++    case -5: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 5 * EntryTypeSizeof));
++    case -6: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 6 * EntryTypeSizeof));
++    case -7: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 7 * EntryTypeSizeof));
++    case -8: return mm128_reinterpret_cast<VectorType>(_mm_slli_si128(mm128_reinterpret_cast<__m128i>(d.v()), 8 * EntryTypeSizeof));
+     }
+     return Zero();
+ }
+ template<> Vc_INTRINSIC Vc_PURE sfloat_v sfloat_v::shifted(int amount) const
+ {
++    enum JustSomeName__ {
++        EntryTypeSizeof = sizeof(EntryType)
++    };
+     switch (amount) {
+-    case -7: return M256::create(_mm_setzero_ps(), _mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 3 * sizeof(EntryType))));
+-    case -6: return M256::create(_mm_setzero_ps(), _mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 2 * sizeof(EntryType))));
+-    case -5: return M256::create(_mm_setzero_ps(), _mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 1 * sizeof(EntryType))));
++    case -7: return M256::create(_mm_setzero_ps(), _mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 3 * EntryTypeSizeof)));
++    case -6: return M256::create(_mm_setzero_ps(), _mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 2 * EntryTypeSizeof)));
++    case -5: return M256::create(_mm_setzero_ps(), _mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 1 * EntryTypeSizeof)));
+     case -4: return M256::create(_mm_setzero_ps(), d.v()[0]);
+-    case -3: return M256::create(_mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 3 * sizeof(EntryType))), _mm_castsi128_ps(_mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 1 * sizeof(EntryType))));
+-    case -2: return M256::create(_mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 2 * sizeof(EntryType))), _mm_castsi128_ps(_mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 2 * sizeof(EntryType))));
+-    case -1: return M256::create(_mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 1 * sizeof(EntryType))), _mm_castsi128_ps(_mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 3 * sizeof(EntryType))));
++    case -3: return M256::create(_mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 3 * EntryTypeSizeof)), _mm_castsi128_ps(mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 1 * EntryTypeSizeof)));
++    case -2: return M256::create(_mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 2 * EntryTypeSizeof)), _mm_castsi128_ps(mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 2 * EntryTypeSizeof)));
++    case -1: return M256::create(_mm_castsi128_ps(_mm_slli_si128(_mm_castps_si128(d.v()[0]), 1 * EntryTypeSizeof)), _mm_castsi128_ps(mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 3 * EntryTypeSizeof)));
+     case  0: return *this;
+-    case  1: return M256::create(_mm_castsi128_ps(_mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 1 * sizeof(EntryType))), _mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 1 * sizeof(EntryType))));
+-    case  2: return M256::create(_mm_castsi128_ps(_mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 2 * sizeof(EntryType))), _mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 2 * sizeof(EntryType))));
+-    case  3: return M256::create(_mm_castsi128_ps(_mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 3 * sizeof(EntryType))), _mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 3 * sizeof(EntryType))));
++    case  1: return M256::create(_mm_castsi128_ps(mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 1 * EntryTypeSizeof)), _mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 1 * EntryTypeSizeof)));
++    case  2: return M256::create(_mm_castsi128_ps(mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 2 * EntryTypeSizeof)), _mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 2 * EntryTypeSizeof)));
++    case  3: return M256::create(_mm_castsi128_ps(mm_alignr_epi8(_mm_castps_si128(d.v()[1]), _mm_castps_si128(d.v()[0]), 3 * EntryTypeSizeof)), _mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 3 * EntryTypeSizeof)));
+     case  4: return M256::create(d.v()[1], _mm_setzero_ps());
+-    case  5: return M256::create(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 1 * sizeof(EntryType))), _mm_setzero_ps());
+-    case  6: return M256::create(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 2 * sizeof(EntryType))), _mm_setzero_ps());
+-    case  7: return M256::create(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 3 * sizeof(EntryType))), _mm_setzero_ps());
++    case  5: return M256::create(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 1 * EntryTypeSizeof)), _mm_setzero_ps());
++    case  6: return M256::create(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 2 * EntryTypeSizeof)), _mm_setzero_ps());
++    case  7: return M256::create(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(d.v()[1]), 3 * EntryTypeSizeof)), _mm_setzero_ps());
+     }
+     return Zero();
+ }
+ template<typename T> Vc_INTRINSIC Vc_PURE Vector<T> Vector<T>::rotated(int amount) const
+ {
++    enum JustSomeName__ {
++        EntryTypeSizeof = sizeof(EntryType)
++    };
+     const __m128i v = mm128_reinterpret_cast<__m128i>(d.v());
+     switch (static_cast<unsigned int>(amount) % Size) {
+     case  0: return *this;
+-    case  1: return mm128_reinterpret_cast<VectorType>(_mm_alignr_epi8(v, v, 1 * sizeof(EntryType)));
+-    case  2: return mm128_reinterpret_cast<VectorType>(_mm_alignr_epi8(v, v, 2 * sizeof(EntryType)));
+-    case  3: return mm128_reinterpret_cast<VectorType>(_mm_alignr_epi8(v, v, 3 * sizeof(EntryType)));
++    case  1: return mm128_reinterpret_cast<VectorType>(mm_alignr_epi8(v, v, 1 * EntryTypeSizeof));
++    case  2: return mm128_reinterpret_cast<VectorType>(mm_alignr_epi8(v, v, 2 * EntryTypeSizeof));
++    case  3: return mm128_reinterpret_cast<VectorType>(mm_alignr_epi8(v, v, 3 * EntryTypeSizeof));
+              // warning "Immediate parameter to intrinsic call too large" disabled in VcMacros.cmake.
+              // ICC fails to see that the modulo operation (Size == sizeof(VectorType) / sizeof(EntryType))
+              // disables the following four calls unless sizeof(EntryType) == 2.
+-    case  4: return mm128_reinterpret_cast<VectorType>(_mm_alignr_epi8(v, v, 4 * sizeof(EntryType)));
+-    case  5: return mm128_reinterpret_cast<VectorType>(_mm_alignr_epi8(v, v, 5 * sizeof(EntryType)));
+-    case  6: return mm128_reinterpret_cast<VectorType>(_mm_alignr_epi8(v, v, 6 * sizeof(EntryType)));
+-    case  7: return mm128_reinterpret_cast<VectorType>(_mm_alignr_epi8(v, v, 7 * sizeof(EntryType)));
++    case  4: return mm128_reinterpret_cast<VectorType>(mm_alignr_epi8(v, v, 4 * EntryTypeSizeof));
++    case  5: return mm128_reinterpret_cast<VectorType>(mm_alignr_epi8(v, v, 5 * EntryTypeSizeof));
++    case  6: return mm128_reinterpret_cast<VectorType>(mm_alignr_epi8(v, v, 6 * EntryTypeSizeof));
++    case  7: return mm128_reinterpret_cast<VectorType>(mm_alignr_epi8(v, v, 7 * EntryTypeSizeof));
+     }
+     return Zero();
+ }
+ template<> Vc_INTRINSIC Vc_PURE sfloat_v sfloat_v::rotated(int amount) const
+ {
++    enum JustSomeName__ {
++        EntryTypeSizeof = sizeof(EntryType)
++    };
+     const __m128i v0 = sse_cast<__m128i>(d.v()[0]);
+     const __m128i v1 = sse_cast<__m128i>(d.v()[1]);
+     switch (static_cast<unsigned int>(amount) % Size) {
+     case  0: return *this;
+-    case  1: return M256::create(sse_cast<__m128>(_mm_alignr_epi8(v1, v0, 1 * sizeof(EntryType))), sse_cast<__m128>(_mm_alignr_epi8(v0, v1, 1 * sizeof(EntryType))));
+-    case  2: return M256::create(sse_cast<__m128>(_mm_alignr_epi8(v1, v0, 2 * sizeof(EntryType))), sse_cast<__m128>(_mm_alignr_epi8(v0, v1, 2 * sizeof(EntryType))));
+-    case  3: return M256::create(sse_cast<__m128>(_mm_alignr_epi8(v1, v0, 3 * sizeof(EntryType))), sse_cast<__m128>(_mm_alignr_epi8(v0, v1, 3 * sizeof(EntryType))));
++    case  1: return M256::create(sse_cast<__m128>(mm_alignr_epi8(v1, v0, 1 * EntryTypeSizeof)), sse_cast<__m128>(mm_alignr_epi8(v0, v1, 1 * EntryTypeSizeof)));
++    case  2: return M256::create(sse_cast<__m128>(mm_alignr_epi8(v1, v0, 2 * EntryTypeSizeof)), sse_cast<__m128>(mm_alignr_epi8(v0, v1, 2 * EntryTypeSizeof)));
++    case  3: return M256::create(sse_cast<__m128>(mm_alignr_epi8(v1, v0, 3 * EntryTypeSizeof)), sse_cast<__m128>(mm_alignr_epi8(v0, v1, 3 * EntryTypeSizeof)));
+     case  4: return M256::create(d.v()[1], d.v()[0]);
+-    case  5: return M256::create(sse_cast<__m128>(_mm_alignr_epi8(v0, v1, 1 * sizeof(EntryType))), sse_cast<__m128>(_mm_alignr_epi8(v1, v0, 1 * sizeof(EntryType))));
+-    case  6: return M256::create(sse_cast<__m128>(_mm_alignr_epi8(v0, v1, 2 * sizeof(EntryType))), sse_cast<__m128>(_mm_alignr_epi8(v1, v0, 2 * sizeof(EntryType))));
+-    case  7: return M256::create(sse_cast<__m128>(_mm_alignr_epi8(v0, v1, 3 * sizeof(EntryType))), sse_cast<__m128>(_mm_alignr_epi8(v1, v0, 3 * sizeof(EntryType))));
++    case  5: return M256::create(sse_cast<__m128>(mm_alignr_epi8(v0, v1, 1 * EntryTypeSizeof)), sse_cast<__m128>(mm_alignr_epi8(v1, v0, 1 * EntryTypeSizeof)));
++    case  6: return M256::create(sse_cast<__m128>(mm_alignr_epi8(v0, v1, 2 * EntryTypeSizeof)), sse_cast<__m128>(mm_alignr_epi8(v1, v0, 2 * EntryTypeSizeof)));
++    case  7: return M256::create(sse_cast<__m128>(mm_alignr_epi8(v0, v1, 3 * EntryTypeSizeof)), sse_cast<__m128>(mm_alignr_epi8(v1, v0, 3 * EntryTypeSizeof)));
+     }
+     return Zero();
+ }
+@@ -1471,19 +1483,19 @@ template<> inline Vc_PURE uint_v uint_v::sorted() const
+ {
+     __m128i x = data();
+     __m128i y = _mm_shuffle_epi32(x, _MM_SHUFFLE(2, 3, 0, 1));
+-    __m128i l = _mm_min_epu32(x, y);
+-    __m128i h = _mm_max_epu32(x, y);
++    __m128i l = mm_min_epu32(x, y);
++    __m128i h = mm_max_epu32(x, y);
+     x = _mm_unpacklo_epi32(l, h);
+     y = _mm_unpackhi_epi32(h, l);
+ 
+     // sort quads
+-    l = _mm_min_epu32(x, y);
+-    h = _mm_max_epu32(x, y);
++    l = mm_min_epu32(x, y);
++    h = mm_max_epu32(x, y);
+     x = _mm_unpacklo_epi32(l, h);
+     y = _mm_unpackhi_epi64(x, x);
+ 
+-    l = _mm_min_epu32(x, y);
+-    h = _mm_max_epu32(x, y);
++    l = mm_min_epu32(x, y);
++    h = mm_max_epu32(x, y);
+     return _mm_unpacklo_epi32(l, h);
+ }
+ template<> inline Vc_PURE ushort_v ushort_v::sorted() const
+@@ -1491,35 +1503,35 @@ template<> inline Vc_PURE ushort_v ushort_v::sorted() const
+     __m128i lo, hi, y, x = data();
+     // sort pairs
+     y = Mem::permute<X1, X0, X3, X2, X5, X4, X7, X6>(x);
+-    lo = _mm_min_epu16(x, y);
+-    hi = _mm_max_epu16(x, y);
+-    x = _mm_blend_epi16(lo, hi, 0xaa);
++    lo = mm_min_epu16(x, y);
++    hi = mm_max_epu16(x, y);
++    x = mm_blend_epi16(lo, hi, 0xaa);
+ 
+     // merge left and right quads
+     y = Mem::permute<X3, X2, X1, X0, X7, X6, X5, X4>(x);
+-    lo = _mm_min_epu16(x, y);
+-    hi = _mm_max_epu16(x, y);
+-    x = _mm_blend_epi16(lo, hi, 0xcc);
++    lo = mm_min_epu16(x, y);
++    hi = mm_max_epu16(x, y);
++    x = mm_blend_epi16(lo, hi, 0xcc);
+     y = _mm_srli_si128(x, 2);
+-    lo = _mm_min_epu16(x, y);
+-    hi = _mm_max_epu16(x, y);
+-    x = _mm_blend_epi16(lo, _mm_slli_si128(hi, 2), 0xaa);
++    lo = mm_min_epu16(x, y);
++    hi = mm_max_epu16(x, y);
++    x = mm_blend_epi16(lo, _mm_slli_si128(hi, 2), 0xaa);
+ 
+     // merge quads into octs
+     y = _mm_shuffle_epi32(x, _MM_SHUFFLE(1, 0, 3, 2));
+     y = _mm_shufflelo_epi16(y, _MM_SHUFFLE(0, 1, 2, 3));
+-    lo = _mm_min_epu16(x, y);
+-    hi = _mm_max_epu16(x, y);
++    lo = mm_min_epu16(x, y);
++    hi = mm_max_epu16(x, y);
+ 
+     x = _mm_unpacklo_epi16(lo, hi);
+     y = _mm_srli_si128(x, 8);
+-    lo = _mm_min_epu16(x, y);
+-    hi = _mm_max_epu16(x, y);
++    lo = mm_min_epu16(x, y);
++    hi = mm_max_epu16(x, y);
+ 
+     x = _mm_unpacklo_epi16(lo, hi);
+     y = _mm_srli_si128(x, 8);
+-    lo = _mm_min_epu16(x, y);
+-    hi = _mm_max_epu16(x, y);
++    lo = mm_min_epu16(x, y);
++    hi = mm_max_epu16(x, y);
+ 
+     return _mm_unpacklo_epi16(lo, hi);
+ }
+diff --git a/math/vc/include/Vc/sse/vectorhelper.h b/math/vc/include/Vc/sse/vectorhelper.h
+index 9050044..f8dc2a1 100644
+--- a/math/vc/include/Vc/sse/vectorhelper.h
++++ b/math/vc/include/Vc/sse/vectorhelper.h
+@@ -90,7 +90,7 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
+         OP2(xor_, VectorType::create(_mm_xor_ps(a[0], b[0]), _mm_xor_ps(a[1], b[1])))
+         OP2(and_, VectorType::create(_mm_and_ps(a[0], b[0]), _mm_and_ps(a[1], b[1])))
+         OP2(andnot_, VectorType::create(_mm_andnot_ps(a[0], b[0]), _mm_andnot_ps(a[1], b[1])))
+-        OP3(blend, VectorType::create(_mm_blendv_ps(a[0], b[0], c[0]), _mm_blendv_ps(a[1], b[1], c[1])))
++        OP3(blend, VectorType::create(mm_blendv_ps(a[0], b[0], c[0]), mm_blendv_ps(a[1], b[1], c[1])))
+     };
+ #undef OP0
+ #undef OP2
+@@ -120,7 +120,7 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
+             OP2(xor_, _mm_xor_ps(a, b))
+             OP2(and_, _mm_and_ps(a, b))
+             OP2(andnot_, _mm_andnot_ps(a, b))
+-            OP3(blend, _mm_blendv_ps(a, b, c))
++            OP3(blend, mm_blendv_ps(a, b, c))
+         };
+ 
+ 
+@@ -143,7 +143,7 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
+             OP2(xor_, _mm_xor_pd(a, b))
+             OP2(and_, _mm_and_pd(a, b))
+             OP2(andnot_, _mm_andnot_pd(a, b))
+-            OP3(blend, _mm_blendv_pd(a, b, c))
++            OP3(blend, mm_blendv_pd(a, b, c))
+         };
+ 
+         template<> struct VectorHelper<_M128I>
+@@ -168,7 +168,7 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
+             OP2(xor_, _mm_xor_si128(a, b))
+             OP2(and_, _mm_and_si128(a, b))
+             OP2(andnot_, _mm_andnot_si128(a, b))
+-            OP3(blend, _mm_blendv_epi8(a, b, c))
++            OP3(blend, mm_blendv_epi8(a, b, c))
+         };
+ 
+ #undef OP1
+@@ -226,8 +226,8 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
+                 const VectorType hh = mul(h1, h2);
+                 // ll < lh < hh for all entries is certain
+                 const VectorType lh_lt_v3 = cmplt(abs(lh), abs(v3)); // |lh| < |v3|
+-                const VectorType b = _mm_blendv_pd(v3, lh, lh_lt_v3);
+-                const VectorType c = _mm_blendv_pd(lh, v3, lh_lt_v3);
++                const VectorType b = mm_blendv_pd(v3, lh, lh_lt_v3);
++                const VectorType c = mm_blendv_pd(lh, v3, lh_lt_v3);
+                 v1 = add(add(ll, b), add(c, hh));
+             }
+ #endif
+@@ -464,9 +464,10 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
+             static Vc_ALWAYS_INLINE Vc_CONST VectorType shiftRight(VectorType a, int shift) {
+                 return CAT(_mm_srai_, SUFFIX)(a, shift);
+             }
+-            OP1(abs)
++            static Vc_INTRINSIC Vc_CONST VectorType abs(const VectorType a) { return mm_abs_epi32(a); }
+ 
+-            MINMAX
++            static Vc_INTRINSIC Vc_CONST VectorType min(const VectorType a, const VectorType b) { return mm_min_epi32(a, b); }
++            static Vc_INTRINSIC Vc_CONST VectorType max(const VectorType a, const VectorType b) { return mm_max_epi32(a, b); }
+             static Vc_ALWAYS_INLINE Vc_CONST EntryType min(VectorType a) {
+                 a = min(a, _mm_shuffle_epi32(a, _MM_SHUFFLE(1, 0, 3, 2)));
+                 // using lo_epi16 for speed here
+@@ -525,7 +526,8 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
+ #define SUFFIX epu32
+             static Vc_ALWAYS_INLINE Vc_CONST VectorType one() { return CAT(_mm_setone_, SUFFIX)(); }
+ 
+-            MINMAX
++            static Vc_INTRINSIC Vc_CONST VectorType min(const VectorType a, const VectorType b) { return mm_min_epu32(a, b); }
++            static Vc_INTRINSIC Vc_CONST VectorType max(const VectorType a, const VectorType b) { return mm_max_epu32(a, b); }
+             static Vc_ALWAYS_INLINE Vc_CONST EntryType min(VectorType a) {
+                 a = min(a, _mm_shuffle_epi32(a, _MM_SHUFFLE(1, 0, 3, 2)));
+                 // using lo_epi16 for speed here
+@@ -640,7 +642,7 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
+             static Vc_ALWAYS_INLINE void fma(VectorType &v1, VectorType v2, VectorType v3) {
+                 v1 = add(mul(v1, v2), v3); }
+ 
+-            OP1(abs)
++            static Vc_INTRINSIC Vc_CONST VectorType abs(const VectorType a) { return mm_abs_epi16(a); }
+ 
+             OPx(mul, mullo)
+             OP(min) OP(max)
+@@ -722,7 +724,8 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
+ //X                 return mul(a, set(b));
+ //X             }
+ #if !defined(USE_INCORRECT_UNSIGNED_COMPARE) || VC_IMPL_SSE4_1
+-            OP(min) OP(max)
++            static Vc_INTRINSIC Vc_CONST VectorType min(const VectorType a, const VectorType b) { return CAT(mm_min_, SUFFIX)(a, b); }
++            static Vc_INTRINSIC Vc_CONST VectorType max(const VectorType a, const VectorType b) { return CAT(mm_max_, SUFFIX)(a, b); }
+ #endif
+ #undef SUFFIX
+ #define SUFFIX epi16
+diff --git a/math/vc/include/Vc/sse/vectorhelper.tcc b/math/vc/include/Vc/sse/vectorhelper.tcc
+index 3d1a692..10c5afd 100644
+--- a/math/vc/include/Vc/sse/vectorhelper.tcc
++++ b/math/vc/include/Vc/sse/vectorhelper.tcc
+@@ -68,11 +68,11 @@ Vc_ALWAYS_INLINE void VectorHelper<_M128>::store(float *mem, const VectorType x,
+ }
+ Vc_ALWAYS_INLINE void VectorHelper<_M128>::store(float *mem, const VectorType x, const VectorType m, AlignedFlag)
+ {
+-    _mm_store_ps(mem, _mm_blendv_ps(_mm_load_ps(mem), x, m));
++    _mm_store_ps(mem, mm_blendv_ps(_mm_load_ps(mem), x, m));
+ }
+ Vc_ALWAYS_INLINE void VectorHelper<_M128>::store(float *mem, const VectorType x, const VectorType m, UnalignedFlag)
+ {
+-    _mm_storeu_ps(mem, _mm_blendv_ps(_mm_loadu_ps(mem), x, m));
++    _mm_storeu_ps(mem, mm_blendv_ps(_mm_loadu_ps(mem), x, m));
+ }
+ Vc_ALWAYS_INLINE void VectorHelper<_M128>::store(float *mem, const VectorType x, const VectorType m, StreamingAndAlignedFlag)
+ {
+@@ -129,13 +129,13 @@ Vc_ALWAYS_INLINE void VectorHelper<M256>::store(float *mem, VectorTypeArg x, Str
+ }
+ Vc_ALWAYS_INLINE void VectorHelper<M256>::store(float *mem, VectorTypeArg x, VectorTypeArg m, AlignedFlag)
+ {
+-    _mm_store_ps(mem, _mm_blendv_ps(_mm_load_ps(mem), x[0], m[0]));
+-    _mm_store_ps(mem + 4, _mm_blendv_ps(_mm_load_ps(mem + 4), x[1], m[1]));
++    _mm_store_ps(mem, mm_blendv_ps(_mm_load_ps(mem), x[0], m[0]));
++    _mm_store_ps(mem + 4, mm_blendv_ps(_mm_load_ps(mem + 4), x[1], m[1]));
+ }
+ Vc_ALWAYS_INLINE void VectorHelper<M256>::store(float *mem, VectorTypeArg x, VectorTypeArg m, UnalignedFlag)
+ {
+-    _mm_storeu_ps(mem, _mm_blendv_ps(_mm_loadu_ps(mem), x[0], m[0]));
+-    _mm_storeu_ps(mem + 4, _mm_blendv_ps(_mm_loadu_ps(mem + 4), x[1], m[1]));
++    _mm_storeu_ps(mem, mm_blendv_ps(_mm_loadu_ps(mem), x[0], m[0]));
++    _mm_storeu_ps(mem + 4, mm_blendv_ps(_mm_loadu_ps(mem + 4), x[1], m[1]));
+ }
+ Vc_ALWAYS_INLINE void VectorHelper<M256>::store(float *mem, VectorTypeArg x, VectorTypeArg m, StreamingAndAlignedFlag)
+ {
+@@ -190,11 +190,11 @@ Vc_ALWAYS_INLINE void VectorHelper<_M128D>::store(double *mem, const VectorType
+ }
+ Vc_ALWAYS_INLINE void VectorHelper<_M128D>::store(double *mem, const VectorType x, const VectorType m, AlignedFlag)
+ {
+-    _mm_store_pd(mem, _mm_blendv_pd(_mm_load_pd(mem), x, m));
++    _mm_store_pd(mem, mm_blendv_pd(_mm_load_pd(mem), x, m));
+ }
+ Vc_ALWAYS_INLINE void VectorHelper<_M128D>::store(double *mem, const VectorType x, const VectorType m, UnalignedFlag)
+ {
+-    _mm_storeu_pd(mem, _mm_blendv_pd(_mm_loadu_pd(mem), x, m));
++    _mm_storeu_pd(mem, mm_blendv_pd(_mm_loadu_pd(mem), x, m));
+ }
+ Vc_ALWAYS_INLINE void VectorHelper<_M128D>::store(double *mem, const VectorType x, const VectorType m, StreamingAndAlignedFlag)
+ {
+@@ -247,11 +247,11 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
+ }
+ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, const VectorType x, const VectorType m, AlignedFlag align)
+ {
+-    store(mem, _mm_blendv_epi8(load(mem, align), x, m), align);
++    store(mem, mm_blendv_epi8(load(mem, align), x, m), align);
+ }
+ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, const VectorType x, const VectorType m, UnalignedFlag align)
+ {
+-    store(mem, _mm_blendv_epi8(load(mem, align), x, m), align);
++    store(mem, mm_blendv_epi8(load(mem, align), x, m), align);
+ }
+ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, const VectorType x, const VectorType m, StreamingAndAlignedFlag)
+ {
+@@ -269,17 +269,17 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
+         y = Mem::permute<X1, X0, X3, X2, X5, X4, X7, X6>(x);
+         lo = _mm_min_epi16(x, y);
+         hi = _mm_max_epi16(x, y);
+-        x = _mm_blend_epi16(lo, hi, 0xaa);
++        x = mm_blend_epi16(lo, hi, 0xaa);
+ 
+         // merge left and right quads
+         y = Mem::permute<X3, X2, X1, X0, X7, X6, X5, X4>(x);
+         lo = _mm_min_epi16(x, y);
+         hi = _mm_max_epi16(x, y);
+-        x = _mm_blend_epi16(lo, hi, 0xcc);
++        x = mm_blend_epi16(lo, hi, 0xcc);
+         y = _mm_srli_si128(x, 2);
+         lo = _mm_min_epi16(x, y);
+         hi = _mm_max_epi16(x, y);
+-        x = _mm_blend_epi16(lo, _mm_slli_si128(hi, 2), 0xaa);
++        x = mm_blend_epi16(lo, _mm_slli_si128(hi, 2), 0xaa);
+ 
+         // merge quads into octs
+         y = _mm_shuffle_epi32(x, _MM_SHUFFLE(1, 0, 3, 2));
+@@ -307,8 +307,8 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
+         // x = [a b c d]
+         // y = [c d a b]
+         _M128I y = _mm_shuffle_epi32(x, _MM_SHUFFLE(1, 0, 3, 2));
+-        _M128I l = _mm_min_epi32(x, y); // min[ac bd ac bd]
+-        _M128I h = _mm_max_epi32(x, y); // max[ac bd ac bd]
++        _M128I l = mm_min_epi32(x, y); // min[ac bd ac bd]
++        _M128I h = mm_max_epi32(x, y); // max[ac bd ac bd]
+         if (IS_UNLIKELY(_mm_cvtsi128_si32(h) <= l[1])) { // l[0] < h[0] < l[1] < h[1]
+             return _mm_unpacklo_epi32(l, h);
+         }
+@@ -317,19 +317,19 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
+ 
+         // sort pairs
+         _M128I y = _mm_shuffle_epi32(x, _MM_SHUFFLE(2, 3, 0, 1));
+-        _M128I l = _mm_min_epi32(x, y);
+-        _M128I h = _mm_max_epi32(x, y);
++        _M128I l = mm_min_epi32(x, y);
++        _M128I h = mm_max_epi32(x, y);
+         x = _mm_unpacklo_epi32(l, h);
+         y = _mm_unpackhi_epi32(h, l);
+ 
+         // sort quads
+-        l = _mm_min_epi32(x, y);
+-        h = _mm_max_epi32(x, y);
++        l = mm_min_epi32(x, y);
++        h = mm_max_epi32(x, y);
+         x = _mm_unpacklo_epi32(l, h);
+         y = _mm_unpackhi_epi64(x, x);
+ 
+-        l = _mm_min_epi32(x, y);
+-        h = _mm_max_epi32(x, y);
++        l = mm_min_epi32(x, y);
++        h = mm_max_epi32(x, y);
+         return _mm_unpacklo_epi32(l, h);
+     }
+     template<> inline Vc_CONST _M128 SortHelper<_M128, 4>::sort(_M128 x)
+@@ -350,19 +350,19 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
+         return _mm_unpacklo_ps(l, h);
+ //X         _M128 k = _mm_cmpgt_ps(x, y);
+ //X         k = _mm_shuffle_ps(k, k, _MM_SHUFFLE(2, 2, 0, 0));
+-//X         x = _mm_blendv_ps(x, y, k);
++//X         x = mm_blendv_ps(x, y, k);
+ //X         y = _mm_shuffle_ps(x, x, _MM_SHUFFLE(1, 0, 3, 2));
+ //X         k = _mm_cmpgt_ps(x, y);
+ //X         k = _mm_shuffle_ps(k, k, _MM_SHUFFLE(1, 0, 1, 0));
+-//X         x = _mm_blendv_ps(x, y, k);
++//X         x = mm_blendv_ps(x, y, k);
+ //X         y = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 1, 2, 0));
+ //X         k = _mm_cmpgt_ps(x, y);
+ //X         k = _mm_shuffle_ps(k, k, _MM_SHUFFLE(0, 1, 1, 0));
+-//X         return _mm_blendv_ps(x, y, k);
++//X         return mm_blendv_ps(x, y, k);
+     }
+     template<> inline Vc_PURE M256 SortHelper<M256, 8>::sort(const M256 &_x)
+     {
+-        M256 x = _x;
++	    M256 x = _x;
+         typedef SortHelper<_M128, 4> H;
+ 
+         _M128 a, b, l, h;
+diff --git a/math/vc/include/Vc/version.h b/math/vc/include/Vc/version.h
+index 5662ea8..0fcfd27 100644
+--- a/math/vc/include/Vc/version.h
++++ b/math/vc/include/Vc/version.h
+@@ -20,8 +20,8 @@
+ #ifndef VC_VERSION_H
+ #define VC_VERSION_H
+ 
+-#define VC_VERSION_STRING "0.7.3-dev"
+-#define VC_VERSION_NUMBER 0x000707
++#define VC_VERSION_STRING "0.7.4-dev"
++#define VC_VERSION_NUMBER 0x000709
+ #define VC_VERSION_CHECK(major, minor, patch) ((major << 16) | (minor << 8) | (patch << 1))
+ #define VC_LIBRARY_ABI_VERSION 3
+ 
+diff --git a/math/vc/tests/CMakeLists.txt b/math/vc/tests/CMakeLists.txt
+index aedb89a..a655fb7 100644
+--- a/math/vc/tests/CMakeLists.txt
++++ b/math/vc/tests/CMakeLists.txt
+@@ -1,44 +1,33 @@
+ include(AddFileDependencies)
+-if(CMAKE_VERSION VERSION_GREATER 3.0.0)
+-  cmake_policy(SET CMP0042 OLD)
+-endif()
+ 
++add_custom_target(build_tests ALL VERBATIM)
+ 
+ add_definitions(-DCOMPILE_FOR_UNIT_TESTS) # -DVC_CHECK_ALIGNMENT)
+ if(Vc_COMPILER_IS_MSVC)
+    AddCompilerFlag("/wd4267") # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
+    AddCompilerFlag("/wd4723") # Disable warning "potential divide by 0" (suppress doesn't work)
+-   AddCompilerFlag("/wd4290") # Disable warning "C++ exception specification ignored except to indicate a function is not __declspec(nothrow)"
+ endif()
+ 
+ if(DEFINED Vc_INSIDE_ROOT)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "")  # Reset the ROOT default executable destination
+-   if(Vc_COMPILER_IS_MSVC)
+-      foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
+-         string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+-         set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} )
+-      endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
+-   endif()
+    set(Vc_TEST_TARGET_PREFIX "vc-")
+ else()
+    set(Vc_TEST_TARGET_PREFIX "")
+ endif()
+ 
+ set(CXX11_FLAG)
+-
+ if(NOT DEFINED Vc_INSIDE_ROOT)
+    set(_cxx11_flags "-std=c++11" "-std=c++0x")
+    if(Vc_COMPILER_IS_GCC AND WIN32)
+       # MinGW fails to compile POSIX code unless gnu++11 is used
+       set(_cxx11_flags "-std=gnu++11" "-std=gnu++0x")
+-    endif()
+-
+-foreach(_flag ${_cxx11_flags})
+-     string(REGEX REPLACE "[-+/:= ]" "_" _flag_esc "${_flag}")
+-     check_cxx_compiler_flag("${_flag}" check_cxx_compiler_flag_${_flag_esc})
+-     if(check_cxx_compiler_flag_${_flag_esc})
+-        set(CXX11_FLAG ${_flag})
+-        break()
++   endif()
++   foreach(_flag ${_cxx11_flags})
++      string(REGEX REPLACE "[-+/:= ]" "_" _flag_esc "${_flag}")
++      check_cxx_compiler_flag("${_flag}" check_cxx_compiler_flag_${_flag_esc})
++      if(check_cxx_compiler_flag_${_flag_esc})
++         set(CXX11_FLAG ${_flag})
++         break()
+       endif()
+    endforeach()
+ endif()
+@@ -78,10 +67,11 @@ macro(vc_add_test _name)
+       if(_disabled EQUAL -1)
+          file(GLOB _extra_deps "${CMAKE_SOURCE_DIR}/scalar/*.tcc" "${CMAKE_SOURCE_DIR}/scalar/*.h" "${CMAKE_SOURCE_DIR}/common/*.h")
+          add_file_dependencies(${_name}.cpp "${_extra_deps}")
+-         add_executable(${_target} ${_name}.cpp)
++         add_executable(${_target} EXCLUDE_FROM_ALL ${_name}.cpp)
+          target_link_libraries(${_target} Vc)
+          add_target_property(${_target} COMPILE_FLAGS "-DVC_IMPL=Scalar ${_extra_flags}")
+          add_target_property(${_target} LABELS "Scalar")
++         add_dependencies(build_tests ${_target})
+          add_dependencies(Scalar ${_target})
+          add_test(${Vc_TEST_TARGET_PREFIX}${_target} "${CMAKE_CURRENT_BINARY_DIR}/${_target}")
+          set_property(TEST ${Vc_TEST_TARGET_PREFIX}${_target} PROPERTY LABELS "Scalar")
+@@ -103,10 +93,11 @@ macro(vc_add_test _name)
+          if(_disabled EQUAL -1)
+             file(GLOB _extra_deps "${CMAKE_SOURCE_DIR}/sse/*.tcc" "${CMAKE_SOURCE_DIR}/sse/*.h" "${CMAKE_SOURCE_DIR}/common/*.h")
+             add_file_dependencies(${_name}.cpp "${_extra_deps}")
+-            add_executable(${_target} ${_name}.cpp)
++            add_executable(${_target} EXCLUDE_FROM_ALL ${_name}.cpp)
+             target_link_libraries(${_target} Vc)
+             add_target_property(${_target} COMPILE_FLAGS "${DVC_IMPL} ${_extra_flags}")
+             add_target_property(${_target} LABELS "SSE")
++            add_dependencies(build_tests ${_target})
+             add_dependencies(SSE ${_target})
+             add_test(${Vc_TEST_TARGET_PREFIX}${_target} "${CMAKE_CURRENT_BINARY_DIR}/${_target}")
+             set_property(TEST ${Vc_TEST_TARGET_PREFIX}${_target} PROPERTY LABELS "SSE")
+@@ -129,10 +120,11 @@ macro(vc_add_test _name)
+          if(_disabled EQUAL -1)
+             file(GLOB _extra_deps "${CMAKE_SOURCE_DIR}/avx/*.tcc" "${CMAKE_SOURCE_DIR}/avx/*.h" "${CMAKE_SOURCE_DIR}/common/*.h")
+             add_file_dependencies(${_name}.cpp "${_extra_deps}")
+-            add_executable(${_target} ${_name}.cpp)
++            add_executable(${_target} EXCLUDE_FROM_ALL ${_name}.cpp)
+             target_link_libraries(${_target} Vc)
+             add_target_property(${_target} COMPILE_FLAGS "${DVC_IMPL} ${_extra_flags}")
+             add_target_property(${_target} LABELS "AVX")
++            add_dependencies(build_tests ${_target})
+             add_dependencies(AVX ${_target})
+             add_test(${Vc_TEST_TARGET_PREFIX}${_target} "${CMAKE_CURRENT_BINARY_DIR}/${_target}")
+             set_property(TEST ${Vc_TEST_TARGET_PREFIX}${_target} PROPERTY LABELS "AVX")
+@@ -173,18 +165,20 @@ vc_add_test(swizzles)
+ if(USE_SSE2 AND NOT Vc_SSE_INTRINSICS_BROKEN)
+    list(FIND disabled_targets sse_blend _disabled)
+    if(_disabled EQUAL -1)
+-      add_executable(sse2_blend sse_blend.cpp)
++      add_executable(sse2_blend EXCLUDE_FROM_ALL sse_blend.cpp)
+       add_target_property(sse2_blend COMPILE_FLAGS "-DVC_IMPL=SSE2")
+       add_target_property(sse2_blend LABELS "SSE")
++      add_dependencies(build_tests sse2_blend)
+       add_dependencies(SSE sse2_blend)
+       add_test(${Vc_TEST_TARGET_PREFIX}sse2_blend "${CMAKE_CURRENT_BINARY_DIR}/sse2_blend")
+       set_property(TEST ${Vc_TEST_TARGET_PREFIX}sse2_blend PROPERTY LABELS "SSE")
+       target_link_libraries(sse2_blend Vc)
+ 
+       if(USE_SSE4_1)
+-         add_executable(sse4_blend sse_blend.cpp)
++         add_executable(sse4_blend EXCLUDE_FROM_ALL sse_blend.cpp)
+          add_target_property(sse4_blend COMPILE_FLAGS "-DVC_IMPL=SSE4_1")
+          add_target_property(sse4_blend LABELS "SSE")
++         add_dependencies(build_tests sse4_blend)
+          add_dependencies(SSE sse4_blend)
+          add_test(${Vc_TEST_TARGET_PREFIX}sse4_blend "${CMAKE_CURRENT_BINARY_DIR}/sse4_blend")
+          set_property(TEST ${Vc_TEST_TARGET_PREFIX}sse4_blend PROPERTY LABELS "SSE")
+@@ -193,9 +187,10 @@ if(USE_SSE2 AND NOT Vc_SSE_INTRINSICS_BROKEN)
+    endif()
+ endif()
+ 
+-add_executable(supportfunctions supportfunctions.cpp)
++add_executable(supportfunctions EXCLUDE_FROM_ALL supportfunctions.cpp)
+ target_link_libraries(supportfunctions Vc)
+ add_target_property(supportfunctions LABELS "other")
++add_dependencies(build_tests supportfunctions)
+ add_dependencies(other supportfunctions)
+ add_test(${Vc_TEST_TARGET_PREFIX}supportfunctions "${CMAKE_CURRENT_BINARY_DIR}/supportfunctions")
+ set_property(TEST ${Vc_TEST_TARGET_PREFIX}supportfunctions PROPERTY LABELS "other")
+@@ -289,10 +284,12 @@ if(TEST_OPERATOR_FAILURES)
+ endif()
+ 
+ # compile and link test for targets that need to link lots of stuff together
+-add_library(linkTestLibDynamic1 SHARED linkTestLib0.cpp linkTestLib1.cpp)
+-add_library(linkTestLibDynamic2 SHARED linkTestLib0.cpp linkTestLib1.cpp)
+-add_library(linkTestLibStatic STATIC linkTestLib2.cpp linkTestLib3.cpp)
+-add_executable(linkTest linkTest0.cpp linkTest1.cpp)
++add_library(linkTestLibDynamic1 SHARED EXCLUDE_FROM_ALL linkTestLib0.cpp linkTestLib1.cpp)
++add_library(linkTestLibDynamic2 SHARED EXCLUDE_FROM_ALL linkTestLib0.cpp linkTestLib1.cpp)
++add_library(linkTestLibStatic STATIC EXCLUDE_FROM_ALL linkTestLib2.cpp linkTestLib3.cpp)
++add_executable(linkTest EXCLUDE_FROM_ALL linkTest0.cpp linkTest1.cpp)
++add_dependencies(build_tests linkTest)
++add_dependencies(other linkTest)
+ target_link_libraries(linkTestLibDynamic1 Vc)
+ target_link_libraries(linkTestLibDynamic2 Vc)
+ add_target_property(linkTestLibDynamic1 COMPILE_FLAGS "-DPOSTFIX=A")
+@@ -301,7 +298,7 @@ target_link_libraries(linkTestLibStatic Vc)
+ target_link_libraries(linkTest Vc linkTestLibDynamic1 linkTestLibDynamic2 linkTestLibStatic)
+ 
+ # Use the following program to generate the sincos-reference-*.dat files
+-#add_executable(convert-sincos-reference convert-sincos-reference.cpp)
++#add_executable(convert-sincos-reference EXCLUDE_FROM_ALL convert-sincos-reference.cpp)
+ 
+ set(_deps)
+ foreach(fun sincos asin acos atan ln log2 log10)
+diff --git a/math/vc/tests/arithmetics.cpp b/math/vc/tests/arithmetics.cpp
+index 53596be..8bc3629 100644
+--- a/math/vc/tests/arithmetics.cpp
++++ b/math/vc/tests/arithmetics.cpp
+@@ -220,7 +220,7 @@ template<typename Vec> void testShift()
+ {
+     typedef typename Vec::EntryType T;
+     const T step = std::max<T>(1, std::numeric_limits<T>::max() / 1000);
+-    enum {
++    enum JustAnotherName__ {
+         NShifts = sizeof(T) * 8
+     };
+     for (Vec x = std::numeric_limits<Vec>::min() + Vec::IndexesFromZero();
+diff --git a/math/vc/tests/expandandmerge.cpp b/math/vc/tests/expandandmerge.cpp
+index 203ed17..f21e89e 100644
+--- a/math/vc/tests/expandandmerge.cpp
++++ b/math/vc/tests/expandandmerge.cpp
+@@ -22,7 +22,7 @@
+ 
+ using namespace Vc;
+ 
+-enum {
++enum JustAnotherName__ {
+     VectorSizeFactor = short_v::Size / int_v::Size
+ };
+ 
+diff --git a/math/vc/tests/linkTest0.cpp b/math/vc/tests/linkTest0.cpp
+index a1a6c96..3488757 100644
+--- a/math/vc/tests/linkTest0.cpp
++++ b/math/vc/tests/linkTest0.cpp
+@@ -1,3 +1,7 @@
++#include <Vc/global.h>
++#if !(defined VC_GCC && VC_GCC < 0x40400) && !defined VC_MSVC
++#include <x86intrin.h>
++#endif
+ #include <Vc/Vc>
+ #include <Vc/IO>
+ #include <Vc/support.h>
+diff --git a/math/vc/tests/mask.cpp b/math/vc/tests/mask.cpp
+index 230c284..6db4e02 100644
+--- a/math/vc/tests/mask.cpp
++++ b/math/vc/tests/mask.cpp
+@@ -288,6 +288,33 @@ void testFloat8GatherMask()
+ }
+ #endif
+ 
++template <typename V> void testCompareOperators()
++{
++    typedef typename V::Mask M;
++    const M a(true);
++    const M b(false);
++    VERIFY(!(a == b));
++
++    for_all_masks(V, k)
++    {
++        M randomMask;
++        do {
++            randomMask = V::Random() < V::Random();
++        } while (randomMask.isEmpty());
++        const M k2 = k ^ randomMask;
++
++        VERIFY( (k  == k )) << k;
++        VERIFY(!(k2 == k )) << k << k2;
++        VERIFY(!(k  == k2)) << k << k2;
++        VERIFY( (k2 == k2)) << k << k2;
++
++        VERIFY(!(k  != k )) << k;
++        VERIFY( (k  != k2)) << k << k2;
++        VERIFY( (k2 != k )) << k << k2;
++        VERIFY(!(k2 != k2)) << k << k2;
++    }
++}
++
+ int main(int argc, char **argv)
+ {
+     initTest(argc, argv);
+@@ -302,6 +329,7 @@ int main(int argc, char **argv)
+     testAllTypes(testZero);
+     testAllTypes(testCount);
+     testAllTypes(testFirstOne);
++    testAllTypes(testCompareOperators);
+     runTest(testBinaryOperators);
+ 
+ #ifdef VC_IMPL_SSE
+diff --git a/math/vc/tests/math.cpp b/math/vc/tests/math.cpp
+index 1ba9fa8..ec4b0be 100644
+--- a/math/vc/tests/math.cpp
++++ b/math/vc/tests/math.cpp
+@@ -120,7 +120,7 @@ static Array<Reference<T> > referenceData()
+ template<typename T> struct Denormals { static T *data; };/*{{{*/
+ template<> float  *Denormals<float >::data = 0;
+ template<> double *Denormals<double>::data = 0;
+-enum {
++enum NDenormalsEnum {
+     NDenormals = 64
+ };
+ /*}}}*/
+@@ -533,7 +533,7 @@ template<typename V> void testAtan2()/*{{{*/
+         COMPARE(Vc::atan2(-inf, V(T(-3.))), -Pi_2);
+ #ifndef _WIN32 // the Microsoft implementation of atan2 fails this test
+         const V Pi_4 = T(Vc_buildDouble(1, 0x921fb54442d18ull, -1));
+-        // If y is positive infinity (negative infinity) and x is negative infinity, +3*pi/4 (-3*pi/4) is returned.
++        // If y is positive infinity (negative infinity) and x is negative	infinity, +3*pi/4 (-3*pi/4) is returned.
+         COMPARE(Vc::atan2(+inf, -inf), T(+3.) * Pi_4);
+         COMPARE(Vc::atan2(-inf, -inf), T(-3.) * Pi_4);
+         // If y is positive infinity (negative infinity) and x is positive infinity, +pi/4 (-pi/4) is returned.
+@@ -619,7 +619,7 @@ template<typename Vec> void testNaN()/*{{{*/
+ template<typename Vec> void testRound()/*{{{*/
+ {
+     typedef typename Vec::EntryType T;
+-    enum {
++    enum JustAnotherName__ {
+         Count = (16 + Vec::Size) / Vec::Size
+     };
+     VectorMemoryHelper<Vec> mem1(Count);
+@@ -677,7 +677,7 @@ template<typename Vec> void testReduceMax()/*{{{*/
+ /*}}}*/
+ template<typename Vec> void testReduceProduct()/*{{{*/
+ {
+-    enum {
++    enum JustAnotherName__ {
+         Max = Vec::Size > 8 ? Vec::Size / 2 : Vec::Size
+     };
+     typedef typename Vec::EntryType T;
+diff --git a/math/vc/tests/sse_blend.cpp b/math/vc/tests/sse_blend.cpp
+index 97a802a..255e3c6 100644
+--- a/math/vc/tests/sse_blend.cpp
++++ b/math/vc/tests/sse_blend.cpp
+@@ -47,7 +47,7 @@ void blendpd()
+ #ifdef VC_IMPL_SSE4_1
+ #define blend _mm_blend_pd
+ #else
+-#define blend Vc::SSE::_mm_blend_pd
++#define blend Vc::SSE::mm_blend_pd
+ #endif
+     __m128d a = _mm_set_pd(11, 10);
+     __m128d b = _mm_set_pd(21, 20);
+@@ -63,7 +63,7 @@ void blendps()
+ #ifdef VC_IMPL_SSE4_1
+ #define blend _mm_blend_ps
+ #else
+-#define blend Vc::SSE::_mm_blend_ps
++#define blend Vc::SSE::mm_blend_ps
+ #endif
+     __m128 a = _mm_set_ps(13, 12, 11, 10);
+     __m128 b = _mm_set_ps(23, 22, 21, 20);
+@@ -91,12 +91,12 @@ void blendepi16()
+ #ifdef VC_IMPL_SSE4_1
+ #define blend _mm_blend_epi16
+ #else
+-#define blend Vc::SSE::_mm_blend_epi16
++#define blend Vc::SSE::mm_blend_epi16
+ #endif
+     __m128i a = _mm_set_epi16(17, 16, 15, 14, 13, 12, 11, 10);
+     __m128i b = _mm_set_epi16(27, 26, 25, 24, 23, 22, 21, 20);
+ 
+-#define CALL_2(_i, code) { enum { i = _i }; code } { enum { i = _i + 1 }; code }
++#define CALL_2(_i, code) { enum JustAnotherName__ { i = _i }; code } { enum JustAnotherName__ { i = _i + 1 }; code }
+ #define CALL_4(_i, code) CALL_2(_i, code) CALL_2(_i + 2, code)
+ #define CALL_8(_i, code) CALL_4(_i, code) CALL_4(_i + 4, code)
+ #define CALL_16(_i, code) CALL_8(_i, code) CALL_8(_i + 8, code)
+diff --git a/math/vc/tests/store.cpp b/math/vc/tests/store.cpp
+index aeb3792..58cdb13 100644
+--- a/math/vc/tests/store.cpp
++++ b/math/vc/tests/store.cpp
+@@ -26,7 +26,7 @@ using namespace Vc;
+ template<typename Vec> void alignedStore()
+ {
+     typedef typename Vec::EntryType T;
+-    enum {
++    enum JustAnotherName__ {
+         Count = 256 * 1024 / sizeof(T)
+     };
+ 
+@@ -48,7 +48,7 @@ template<typename Vec> void alignedStore()
+ template<typename Vec> void unalignedStore()
+ {
+     typedef typename Vec::EntryType T;
+-    enum {
++    enum JustAnotherName__ {
+         Count = 256 * 1024 / sizeof(T)
+     };
+ 
+@@ -70,7 +70,7 @@ template<typename Vec> void unalignedStore()
+ template<typename Vec> void streamingAndAlignedStore()
+ {
+     typedef typename Vec::EntryType T;
+-    enum {
++    enum JustAnotherName__ {
+         Count = 256 * 1024 / sizeof(T)
+     };
+ 
+@@ -92,7 +92,7 @@ template<typename Vec> void streamingAndAlignedStore()
+ template<typename Vec> void streamingAndUnalignedStore()
+ {
+     typedef typename Vec::EntryType T;
+-    enum {
++    enum JustAnotherName__ {
+         Count = 256 * 1024 / sizeof(T)
+     };
+ 
+@@ -126,7 +126,7 @@ template<typename Vec> void maskedStore()
+     const int count = 256 * 1024 / sizeof(T);
+     const int outerCount = count / Vec::Size;
+     Vc::Memory<Vec> array(count);
+-    array.setZero();
++	array.setZero();
+     const T nullValue = 0;
+     const T setValue = 170;
+     const Vec x(setValue);
+diff --git a/math/vc/tests/utils.cpp b/math/vc/tests/utils.cpp
+index f44a740..13e699e 100644
+--- a/math/vc/tests/utils.cpp
++++ b/math/vc/tests/utils.cpp
+@@ -154,7 +154,7 @@ void bzero(void *p, size_t n) { memset(p, 0, n); }
+ template<typename V> void Random()
+ {
+     typedef typename V::EntryType T;
+-    enum {
++    enum JustAnotherName__ {
+         NBits = 3,
+         NBins = 1 << NBits,                        // short int
+         TotalBits = sizeof(T) * 8,                 //    16  32
+@@ -200,7 +200,7 @@ template<typename V> void Random()
+ template<typename V, typename I> void FloatRandom()
+ {
+     typedef typename V::EntryType T;
+-    enum {
++    enum JustAnotherName__ {
+         NBins = 64,
+         NHistograms = 1,
+         Mean = 135791,

@@ -504,6 +504,10 @@ N: Yan Liu
 E: liuyan@fnal.gov
 D: TOracleResult
 
+N: Joa Ljungvall
+E: joa.ljungvall@csnsm.in2p3.fr
+D: original author of TGTextViewStream
+
 N: Jose Lo
 E: Jose.Lo@cern.ch
 D: SAX and DOM XML parser interfaces

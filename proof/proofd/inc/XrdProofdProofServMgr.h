@@ -121,7 +121,7 @@ public:
               int smi = -1, int smx = -1, int vmi = -1, int vmx = -1) {
               fName = n; fEnv = env; fUsers = usr; fGroups = grp;
               fSvnMin = smi; fSvnMax = smx; fVerMin = vmi; fVerMax = vmx; }
-   int Matches(const char *usr, const char *grp, int svn = -1, int ver = -1);
+   int Matches(const char *usr, const char *grp, int ver = -1);
    void Print(const char *what);
    static int     ToVersCode(int ver, bool hex = 0);       
 };

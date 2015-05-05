@@ -259,7 +259,11 @@ bool LikelihoodInterval::CreateMinimizer() {
       }
    }
 
-   // now do binding of NLL with a functor for Minimizer 
+   // now do binding of NLL with a functor for Minimizer
+   if (RooStats::IsNLLOffset() ) {
+      ccoutI(InputArguments) << "LikelihoodInterval: using nll offset - set all RooAbsReal to hide the offset  " << std::endl;
+      RooAbsReal::setHideOffset(kFALSE); // need to keep this false
+   }
    fFunctor = std::auto_ptr<RooFunctor>(new RooFunctor(nll, RooArgSet(), params )); 
 
    std::string minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();

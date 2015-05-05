@@ -252,7 +252,9 @@ int G__pragma()
     struct G__input_file store_ifile = G__ifile;
     G__ifile.filenum = -1;
     G__ifile.line_number = -1;
-    G__cpp_setupG__stream();
+    // Like G__cpp_setupG__stream() but initializing incsetups.
+    G__add_setup_func("G__stream",(G__incsetup)(&G__cpp_setupG__stream));
+    G__call_setup_funcs();
     G__ifile = store_ifile;
   }
 

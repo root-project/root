@@ -790,7 +790,23 @@ void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const D
    //*-*                  =====================================
    Int_t bin,i;
    ntimes *= stride;
-   for (i=0;i<ntimes;i+=stride) {
+   Int_t ifirst = 0; 
+   //If a buffer is activated, fill buffer
+   // (note that this function must not be called from TH2::BufferEmpty)
+   if (fBuffer) {
+      for (i=0;i<ntimes;i+=stride) {
+         if (!fBuffer) break; // buffer can be deleted in BufferFill when is empty
+         if (w) BufferFill(x[i],y[i],w[i]);
+         else BufferFill(x[i], y[i], 1.);
+      }
+      // fill the remaining entries if the buffer has been deleted 
+      if (i < ntimes && fBuffer==0) 
+         ifirst = i;  // start from i 
+      else
+         return;
+   }
+
+   for (i=ifirst;i<ntimes;i+=stride) {
       if (fYmin != fYmax) {
          if (y[i] <fYmin || y[i]> fYmax || TMath::IsNaN(y[i])) continue;
       }

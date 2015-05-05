@@ -383,20 +383,24 @@ void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       }
       if (fillsi == -3) {
          SetColor(5);
+         if (fAlpha == 1) PrintFast(17," q 0.002 w [] 0 d");
          WriteReal(ix1);
          WriteReal(iy1);
          WriteReal(ix2 - ix1);
          WriteReal(iy2 - iy1);
-         PrintFast(6," re f*");
+         if (fAlpha == 1) PrintFast(8," re b* Q");
+         else             PrintFast(6," re f*");
       }
    }
    if (fillis == 1) {
       SetColor(fFillColor);
+      if (fAlpha == 1) PrintFast(17," q 0.002 w [] 0 d");
       WriteReal(ix1);
       WriteReal(iy1);
       WriteReal(ix2 - ix1);
       WriteReal(iy2 - iy1);
-      PrintFast(6," re f*");
+      if (fAlpha == 1) PrintFast(8," re b* Q");
+      else             PrintFast(6," re f*");
    }
    if (fillis == 0) {
       SetColor(fLineColor);
@@ -1570,7 +1574,7 @@ void TPDF::PatternEncode()
    NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[1 0 0 1 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 98/YStep 4/Length 91/Filter/FlateDecode>>");
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 98 4]/XStep 98/YStep 4/Length 91/Filter/FlateDecode>>");
    PrintStr("@");
    fStream->write("stream",6); fNByte += 6;
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301P\241\034(\254\340\253\020m\250\020k\240\220\302e\244`\242\220\313ei\t\244r\200\272\215A\034\v \225\003\2241\202\310\030\201e\f!2\206@N0W \027@\200\001\0|c\024\357\n", 93);
@@ -1582,7 +1586,7 @@ void TPDF::PatternEncode()
    NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.75 0 0 0.75 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 96/YStep 4/Length 92/Filter/FlateDecode>>@");
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 96 4]/XStep 96/YStep 4/Length 92/Filter/FlateDecode>>@");
    PrintStr("@");
    fStream->write("stream",6); fNByte += 6;
    fStream->write("\r\nH\211$\2121\n\2000\024C\367\234\"G\370\277\025\321+\b\016\342\340P\334tP\252\240\213\3277\332!\204\274\227\v\316\2150\032\335J\356\025\023O\241Np\247\363\021f\317\344\214\234\215\v\002+\036h\033U\326/~\243Ve\231PL\370\215\027\343\032#\006\274\002\f\0\242`\025:\n", 94);
@@ -1594,7 +1598,7 @@ void TPDF::PatternEncode()
    NewObject(patternNb++);
    PrintStr("<</Type/Pattern/Matrix[0.5 0 0 0.5 20 28]/PatternType 1/Resources");
    WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 96/YStep 16/Length 93/Filter/FlateDecode>>@");
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 96 16]/XStep 96/YStep 16/Length 93/Filter/FlateDecode>>@");
    PrintStr("@");
    fStream->write("stream",6); fNByte += 6;
    fStream->write("\r\nH\211$\2121\n\2000\024C\367\234\"G\370\261(\366\n\202\20388\210\233\016J\025t\361\372\376\332!\204\274\227\033\342N\030\215\262\222g\303\304\313Q\347\360\240\370:f\317Y\f\\\214+**\360Dls'\177\306\274\032\257\344\256.\252\376\215\212\221\217\021\003>\001\006\0\317\243\025\254\n", 95);
@@ -2188,24 +2192,6 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t x = xx;
    Double_t y = yy;
 
-   // Text color
-   SetColor(Int_t(fTextColor));
-
-   // Clipping
-   PrintStr(" q");
-   Double_t x1 = XtoPDF(gPad->GetX1());
-   Double_t x2 = XtoPDF(gPad->GetX2());
-   Double_t y1 = YtoPDF(gPad->GetY1());
-   Double_t y2 = YtoPDF(gPad->GetY2());
-   WriteReal(x1);
-   WriteReal(y1);
-   WriteReal(x2 - x1);
-   WriteReal(y2 - y1);
-   PrintStr(" re W n");
-
-   // Start the text
-   if (!fCompress) PrintStr("@");
-
    // Font and text size
    Int_t font = abs(fTextFont)/10;
    if (font > kNumberOfFonts || font < 1) font = 1;
@@ -2224,6 +2210,24 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    }
    Double_t fontsize = 72*(ftsize)/2.54;
    if (fontsize <= 0) return;
+
+   // Text color
+   SetColor(Int_t(fTextColor));
+
+   // Clipping
+   PrintStr(" q");
+   Double_t x1 = XtoPDF(gPad->GetX1());
+   Double_t x2 = XtoPDF(gPad->GetX2());
+   Double_t y1 = YtoPDF(gPad->GetY1());
+   Double_t y2 = YtoPDF(gPad->GetY2());
+   WriteReal(x1);
+   WriteReal(y1);
+   WriteReal(x2 - x1);
+   WriteReal(y2 - y1);
+   PrintStr(" re W n");
+
+   // Start the text
+   if (!fCompress) PrintStr("@");
 
    // Text alignment
    Float_t tsizex = gPad->AbsPixeltoX(Int_t(tsize))-gPad->AbsPixeltoX(0);

@@ -7,6 +7,12 @@ ROOT_USE_PACKAGE(net/net)
 include_directories(${DCAP_INCLUDE_DIRS})
 add_definitions(-pthread)
 
+#--Supress warnings----------
+CHECK_CXX_COMPILER_FLAG("-Wno-ignored-qualifiers" CXX_HAS_Wno_ignored_qualifiers)
+if(CXX_HAS_Wno_ignored_qualifiers)
+  add_definitions(-Wno-ignored-qualifiers)
+endif()
+
 ROOT_GENERATE_DICTIONARY(G__DCache *.h LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(DCache LINKDEF LinkDef.h DEPENDENCIES Net RIO)
 ROOT_LINKER_LIBRARY(DCache *.cxx G__DCache.cxx LIBRARIES Core ${DCAP_LIBRARIES} DEPENDENCIES Net RIO)

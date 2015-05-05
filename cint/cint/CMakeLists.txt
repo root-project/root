@@ -28,7 +28,9 @@ elseif(ROOT_PLATFORM STREQUAL macosx)
   list(APPEND CINT_CXX_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/libstrm.cxx )
 elseif(ROOT_PLATFORM STREQUAL win32)
   list(APPEND CINT_CXX_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/config/winnt.cxx)
-  if(VC_MAJOR EQUAL 17)
+  if(VC_MAJOR EQUAL 18)
+    list(APPEND CINT_CXX_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/vc12strm.cxx)
+  elseif(VC_MAJOR EQUAL 17)
     list(APPEND CINT_CXX_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/vc11strm.cxx)
   elseif(VC_MAJOR EQUAL 16)
     list(APPEND CINT_CXX_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/vc10strm.cxx)
@@ -59,9 +61,7 @@ set_source_files_properties(loadfile_tmp.cxx  COMPILE_FLAGS "-UR__HAVE_CONFIG -D
 #---Generate and/or copy the iosenum headerfile to the include directory-------------------------------
 if(${CLANG_MAJOR} GREATER 2)
   set(IOSENUM_H ${PROJECT_SOURCE_DIR}/cint/iosenum/iosenum.${ROOT_ARCHITECTURE}3)
-elseif(${GCC_MAJOR} EQUAL 4)
-  set(IOSENUM_H ${PROJECT_SOURCE_DIR}/cint/iosenum/iosenum.${ROOT_ARCHITECTURE}3)
-elseif(${GCC_MAJOR} EQUAL 3)
+elseif(${GCC_MAJOR} GREATER 3)
   set(IOSENUM_H ${PROJECT_SOURCE_DIR}/cint/iosenum/iosenum.${ROOT_ARCHITECTURE}3)
 else()
   set(IOSENUM_H ${PROJECT_SOURCE_DIR}/cint/iosenum/iosenum.${ROOT_ARCHITECTURE})
@@ -114,6 +114,12 @@ foreach(_value ${CINT_SRCS})
   endif()
 endforeach()
 
+if(ROOT_PLATFORM STREQUAL win32 AND NOT (MSVC_VERSION LESS 1800))
+  # turn optimizations off for this file, otherwise we get a compilation error with
+  # Visual C++ 12 (2013) in Release mode (due to the /O2 flag):
+  # g__cfunc.c(835) : error C2099: initializer is not a constant
+  set_source_files_properties(src/g__cfunc.c COMPILE_FLAGS "-Od")
+endif()
 
 include_directories(src)
 if(MACOSX_TMPNAM_DEPRECATED)

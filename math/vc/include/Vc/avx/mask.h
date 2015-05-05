@@ -65,8 +65,8 @@ template<unsigned int VectorSize> class Mask<VectorSize, 32u>
         Vc_ALWAYS_INLINE_L Mask(const Mask<VectorSize * 2, 32u> &m) Vc_ALWAYS_INLINE_R;
         Vc_ALWAYS_INLINE_L Mask(const Mask<VectorSize / 2, 32u> &m) Vc_ALWAYS_INLINE_R;
 
-        Vc_ALWAYS_INLINE bool operator==(const Mask &rhs) const { return 0 != _mm256_testc_ps(k, rhs.k); }
-        Vc_ALWAYS_INLINE bool operator!=(const Mask &rhs) const { return 0 == _mm256_testc_ps(k, rhs.k); }
+        Vc_ALWAYS_INLINE bool operator==(const Mask &rhs) const { return _mm256_movemask_ps(k) == _mm256_movemask_ps(rhs.k); }
+        Vc_ALWAYS_INLINE bool operator!=(const Mask &rhs) const { return _mm256_movemask_ps(k) != _mm256_movemask_ps(rhs.k); }
 
         Vc_ALWAYS_INLINE Mask operator!() const { return _mm256_andnot_ps(data(), _mm256_setallone_ps()); }
 
@@ -137,8 +137,8 @@ template<unsigned int VectorSize> class Mask<VectorSize, 16u>
         Vc_ALWAYS_INLINE Mask(const Mask<VectorSize / 2, 16u> *a) : k(avx_cast<m128>(
                 _mm_packs_epi16(a[0].dataI(), a[1].dataI()))) {}
 
-        Vc_ALWAYS_INLINE bool operator==(const Mask &rhs) const { return 0 != _mm_testc_si128(dataI(), rhs.dataI()); }
-        Vc_ALWAYS_INLINE bool operator!=(const Mask &rhs) const { return 0 == _mm_testc_si128(dataI(), rhs.dataI()); }
+        Vc_ALWAYS_INLINE bool operator==(const Mask &rhs) const { return _mm_movemask_epi8(dataI()) == _mm_movemask_epi8(rhs.dataI()); }
+        Vc_ALWAYS_INLINE bool operator!=(const Mask &rhs) const { return _mm_movemask_epi8(dataI()) != _mm_movemask_epi8(rhs.dataI()); }
 
         Vc_ALWAYS_INLINE Mask operator!() const { return _mm_andnot_ps(data(), _mm_setallone_ps()); }
 

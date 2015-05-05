@@ -105,8 +105,6 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, 
 TPaletteAxis::~TPaletteAxis()
 {
    // Palette destructor.
-
-   if (fH) fH->GetListOfFunctions()->Remove(this);
 }
 
 
@@ -123,7 +121,7 @@ TPaletteAxis::TPaletteAxis(const TPaletteAxis &palette) : TPave(palette)
 TPaletteAxis& TPaletteAxis::operator=(const TPaletteAxis &orig)
 {
    // Assignment operator.
-   
+
    orig.Copy( *this );
    return *this;
 }
@@ -438,6 +436,7 @@ void TPaletteAxis::Paint(Option_t *)
       wmax = TMath::Power(10., wlmax);
       strncat(chopt, "G", 1);
    }
+   fAxis.ImportAxisAttributes(fH->GetZaxis());
    fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
 }
 

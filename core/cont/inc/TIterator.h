@@ -44,6 +44,7 @@ public:
    virtual void      Reset() = 0;
    TObject          *operator()() { return Next(); }
    virtual Bool_t    operator!=(const TIterator &) const;
+   Bool_t            operator==(const TIterator & other) const { return !(*this != other); }
    virtual TObject  *operator*() const;
 
    ClassDef(TIterator,0)  //Iterator abstract base class

@@ -1115,10 +1115,12 @@ Long64_t TTree::AutoSave(Option_t* option)
    //
    //   When large Trees are produced, it is safe to activate the AutoSave
    //   procedure. Some branches may have buffers holding many entries.
-   //   AutoSave is automatically called by TTree::Fill when the number of bytes
-   //   generated since the previous AutoSave is greater than fAutoSave bytes.
-   //   This function may also be invoked by the user, for example every
-   //   N entries.
+   //   If fAutoSave is negative, AutoSave is automatically called by
+   //   TTree::Fill when the number of bytes generated since the previous
+   //   AutoSave is greater than -fAutoSave bytes.
+   //   If fAutoSave is positive, AutoSave is automatically called by
+   //   TTree::Fill every N entries.
+   //   This function may also be invoked by the user.
    //   Each AutoSave generates a new key on the file.
    //   Once the key with the tree header has been written, the previous cycle
    //   (if any) is deleted.
@@ -7202,9 +7204,13 @@ void TTree::SetAutoFlush(Long64_t autof /* = -30000000 */ )
 void TTree::SetAutoSave(Long64_t autos)
 {
    //This function may be called at the start of a program to change
-   //the default value for fAutoSave(300000000, ie 300 MBytes).
+   //the default value for fAutoSave (and for SetAutoSave) is -300000000, ie 300 MBytes
    //When filling the Tree the branch buffers as well as the Tree header
-   //will be flushed to disk when more than fAutoSave bytes have been written to the file.
+   //will be flushed to disk when the watermark is reached.
+   //If fAutoSave is positive the watermark is reached when a multiple of fAutoSave
+   //entries have been written.
+   //If fAutoSave is negative the watermark is reached when -fAutoSave bytes
+   //have been written to the file.
    //In case of a program crash, it will be possible to recover the data in the Tree
    //up to the last AutoSave point.
 

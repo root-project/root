@@ -119,21 +119,25 @@ CINTS2       += $(MODDIRSD)/fakestrm.cxx
 endif
 ifeq ($(PLATFORM),win32)
 CINTS2       += $(MODDIRS)/config/winnt.cxx
-ifeq ($(VC_MAJOR),17)
-  CINTS2       += $(MODDIRSD)/vc11strm.cxx
+ifeq ($(VC_MAJOR),18)
+  CINTS2       += $(MODDIRSD)/vc12strm.cxx
 else
-  ifeq ($(VC_MAJOR),16)
-    CINTS2       += $(MODDIRSD)/vc10strm.cxx
+  ifeq ($(VC_MAJOR),17)
+    CINTS2       += $(MODDIRSD)/vc11strm.cxx
   else
-   ifeq ($(VC_MAJOR).$(VC_MINOR),13.10)
-      CINTS2       += $(MODDIRSD)/vc7strm.cxx
-   else
-    ifeq ($(find $(VC_MAJOR),13 12 11 10 9 8 7 6 5 4 3 2 1),)
-      CINTS2       += $(MODDIRSD)/vc7strm.cxx
+    ifeq ($(VC_MAJOR),16)
+      CINTS2       += $(MODDIRSD)/vc10strm.cxx
     else
-      CINTS2       += $(MODDIRSD)/iccstrm.cxx
+      ifeq ($(VC_MAJOR).$(VC_MINOR),13.10)
+        CINTS2       += $(MODDIRSD)/vc7strm.cxx
+      else
+        ifeq ($(find $(VC_MAJOR),13 12 11 10 9 8 7 6 5 4 3 2 1),)
+          CINTS2       += $(MODDIRSD)/vc7strm.cxx
+        else
+          CINTS2       += $(MODDIRSD)/iccstrm.cxx
+        endif
+      endif
     endif
-   endif
   endif
 endif
 endif
@@ -154,6 +158,10 @@ CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc3strm.cxx
 endif
 ifeq ($(GCC_MAJOR),4)
+CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
+CINTS2       += $(MODDIRSD)/gcc4strm.cxx
+endif
+ifeq ($(GCC_MAJOR),5)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc4strm.cxx
 endif
@@ -199,6 +207,9 @@ IOSENUMC     := $(CINTDIRIOSEN)/iosenum.cxx
 ifneq ($(CLANG_MAJOR),)
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
 else
+ifeq ($(GCC_MAJOR),5)
+IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
+else
 ifeq ($(GCC_MAJOR),4)
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
 else
@@ -206,6 +217,7 @@ ifeq ($(GCC_MAJOR),3)
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
 else
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)
+endif
 endif
 endif
 endif
@@ -340,6 +352,10 @@ $(call stripsrc,$(CINTDIRSD)/%strm.o):    CINTCXXFLAGS += -I$(CINTDIRL)/$(notdir
 ifeq ($(GCC_MAJOR),4)
 $(call stripsrc,$(CINTDIRSD)/gcc4strm.o): CINTCXXFLAGS += -Wno-strict-aliasing
 endif
+ifeq ($(GCC_MAJOR),5)
+$(call stripsrc,$(CINTDIRSD)/gcc4strm.o): CINTCXXFLAGS += -Wno-strict-aliasing
+endif
+
 
 $(MAKECINTO) $(CINTO): $(CINTCONF) $(ORDER_) $(CINTINCLUDES)
 

@@ -288,6 +288,33 @@ void testFloat8GatherMask()
 }
 #endif
 
+template <typename V> void testCompareOperators()
+{
+    typedef typename V::Mask M;
+    const M a(true);
+    const M b(false);
+    VERIFY(!(a == b));
+
+    for_all_masks(V, k)
+    {
+        M randomMask;
+        do {
+            randomMask = V::Random() < V::Random();
+        } while (randomMask.isEmpty());
+        const M k2 = k ^ randomMask;
+
+        VERIFY( (k  == k )) << k;
+        VERIFY(!(k2 == k )) << k << k2;
+        VERIFY(!(k  == k2)) << k << k2;
+        VERIFY( (k2 == k2)) << k << k2;
+
+        VERIFY(!(k  != k )) << k;
+        VERIFY( (k  != k2)) << k << k2;
+        VERIFY( (k2 != k )) << k << k2;
+        VERIFY(!(k2 != k2)) << k << k2;
+    }
+}
+
 int main(int argc, char **argv)
 {
     initTest(argc, argv);
@@ -302,6 +329,7 @@ int main(int argc, char **argv)
     testAllTypes(testZero);
     testAllTypes(testCount);
     testAllTypes(testFirstOne);
+    testAllTypes(testCompareOperators);
     runTest(testBinaryOperators);
 
 #ifdef VC_IMPL_SSE

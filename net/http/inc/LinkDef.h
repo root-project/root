@@ -9,7 +9,6 @@
 #pragma link C++ class TCivetweb;
 
 #pragma link C++ class TBufferJSON;
-#pragma link C++ class TTestObject+;
 
 #pragma link C++ class THttpCallArg;
 #pragma link C++ class THttpServer;

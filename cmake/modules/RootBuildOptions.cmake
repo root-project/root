@@ -81,7 +81,11 @@ if(all)
  set(minuit2_defvalue ON)
  set(table_defvalue ON)
  set(unuran_defvalue ON)
- set(vc_defvalue ON)
+ if(WIN32)
+   set(vc_defvalue OFF)
+ else()
+   set(vc_defvalue ON)
+ endif()
  set(vdt_defvalue ON)
 else()
  set(gdml_defvalue OFF)
@@ -114,6 +118,7 @@ ROOT_BUILD_OPTION(builtin_gsl OFF "Built the GSL library internally (downloading
 ROOT_BUILD_OPTION(builtin_cfitsio OFF "Built the FITSIO library internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_xrootd OFF "Built the XROOTD internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(cxx11 OFF "Build using C++11 compatible mode, requires gcc > 4.7.x or clang")
+ROOT_BUILD_OPTION(cxx14 OFF "Build using C++14 compatible mode, requires gcc > 4.9.x or clang")
 ROOT_BUILD_OPTION(libcxx OFF "Build using libc++, requires cxx11 option (MacOS X only, for the time being)")
 ROOT_BUILD_OPTION(castor ON "CASTOR support, requires libshift from CASTOR >= 1.5.2")
 ROOT_BUILD_OPTION(chirp ON "Chirp support (Condor remote I/O), requires libchirp_client")
@@ -209,14 +214,6 @@ endif()
 
 #---Avoid creating dependencies to 'non-statndard' header files -------------------------------
 include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
-
-#---Set all directories where to install parts of root up to now everything is installed ------
-#---according to the setting of CMAKE_INSTALL_DIR
-
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND NOT gnuinstall)
-  message(STATUS "Setting default installation prefix CMAKE_INSTALL_PREFIX to ${CMAKE_BINARY_DIR}/root")
-  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/root CACHE PATH "Default installation of ROOT" FORCE)
-endif()
 
 #---Add defines for CINT limits-----------------------------------------------------------------
 if(DEFINED CINTMAXSTRUCT)

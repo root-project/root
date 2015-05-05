@@ -1030,7 +1030,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    TCleanup clean(this);
 
    fSelectorClass = 0;
-   Int_t version = -1;
    TString wmsg;
    TRY {
       if (AssertSelector(selector_file) != 0 || !fSelector) {
@@ -1039,7 +1038,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
 
       fSelectorClass = fSelector->IsA();
-      version = fSelector->Version();
+      Int_t version = fSelector->Version();
       if (version == 0 && IsClient()) fSelector->GetOutputList()->Clear();
  
       fOutput = (THashList *) fSelector->GetOutputList();
@@ -1313,7 +1312,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             // Set the last entry
             TProofServ::SetLastEntry(entry);
 
-            if (version == 0) {
+            if (fSelector->Version() == 0) {
                PDB(kLoop,3)
                   Info("Process","Call ProcessCut(%lld)", entry);
                if (fSelector->ProcessCut(entry)) {
@@ -1460,7 +1459,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       MapOutputListToDataMembers();
 
       if (!fSelStatus->TestBit(TStatus::kNotOk)) {
-         if (version == 0) {
+         if (fSelector->Version() == 0) {
             PDB(kLoop,1) Info("Process","Call Terminate()");
             fSelector->Terminate();
          } else {
@@ -1597,7 +1596,7 @@ Long64_t TProofPlayer::Finalize(TQueryResult *)
    return -1;
 }
 //______________________________________________________________________________
-void TProofPlayer::MergeOutput()
+void TProofPlayer::MergeOutput(Bool_t)
 {
    // Merge output (may not be used in this class).
 
@@ -1819,6 +1818,36 @@ Int_t TProofPlayer::GetLearnEntries()
 
    if (fEvIter) return fEvIter->GetLearnEntries();
    return -1;
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::SetMerging(Bool_t on)
+{
+   // Switch on/off merge timer
+
+   if (on) {
+      if (!fMergeSTW) fMergeSTW = new TStopwatch();
+      PDB(kGlobal,1)
+         Info("SetMerging", "ON: mergers: %d", fProof->fMergersCount);
+      if (fNumMergers <= 0 && fProof->fMergersCount > 0)
+         fNumMergers = fProof->fMergersCount;
+   } else if (fMergeSTW) {
+      fMergeSTW->Stop();
+      Float_t rt = fMergeSTW->RealTime();
+      PDB(kGlobal,1)
+         Info("SetMerging", "OFF: rt: %f, mergers: %d", rt, fNumMergers);
+      if (fQuery) {
+         if (!fProof->TestBit(TProof::kIsClient) || fProof->IsLite()) {
+            // On the master (or in Lite()) we set the merging time and the numebr of mergers
+            fQuery->SetMergeTime(rt);
+            fQuery->SetNumMergers(fNumMergers);
+         } else {
+            // In a standard client we save the transfer-to-client time 
+            fQuery->SetRecvTime(rt);
+         }
+         PDB(kGlobal,2) fQuery->Print("F");
+      }
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -2212,8 +2241,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (dset->TestBit(TDSet::kEmpty))
          set->SetBit(TDSet::kEmpty);
 
-      const char *datapack = (fProof->IsLite()) ? "TPacketizer" : "TPacketizerAdaptive";
-      if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", datapack) != 0) {
+      if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", "TPacketizer") != 0) {
          Error("Process", "cannot init the packetizer");
          fExitStatus = kAborted;
          return -1;
@@ -2539,6 +2567,8 @@ Bool_t TProofPlayerRemote::JoinProcess(TList *workers)
          return kFALSE;
       }
    }
+
+   if (fProof->IsLite()) fProof->fNotIdle += workers->GetSize();
 
    PDB(kGlobal, 2)
       Info("Process", "Adding new workers to the packetizer");
@@ -2887,6 +2917,11 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          SetSelectorDataMembersFromOutputList();
 
          PDB(kLoop,1) Info("Finalize","Call Terminate()");
+         // This is the end of merging
+         SetMerging(kFALSE);
+         // We measure the merge time
+         fProof->fQuerySTW.Reset();
+         // Call Terminate now
          fSelector->Terminate();
 
          rv = fSelector->GetStatus();
@@ -3085,7 +3120,7 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
 }
 
 //______________________________________________________________________________
-void TProofPlayerRemote::MergeOutput()
+void TProofPlayerRemote::MergeOutput(Bool_t saveMemValues)
 {
    // Merge objects in output the lists.
 
@@ -3205,6 +3240,17 @@ void TProofPlayerRemote::MergeOutput()
       while ((obj = nxrm()))
          fOutput->Remove(obj);
       rmlist.SetOwner(kTRUE);
+   }
+
+   // If requested (typically in case of submerger to count possible side-effects in that process)
+   // save the measured memory usage
+   if (saveMemValues) {
+      TPerfStats::Stop();
+      // Save memory usage on master
+      Long_t vmaxmst, rmaxmst;
+      TPerfStats::GetMemValues(vmaxmst, rmaxmst);
+      TStatus *status = (TStatus *) fOutput->FindObject("PROOF_Status");
+      if (status) status->SetMemValues(vmaxmst, rmaxmst, kFALSE);
    }
 
    PDB(kOutput,1) fOutput->Print();
@@ -4167,9 +4213,11 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
    TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
    if (e == 0) {
-      PDB(kPacketizer,2) Info("GetNextPacket","%s: done!", slave->GetOrdinal());
+      PDB(kPacketizer,2) 
+         Info("GetNextPacket","%s: done!", slave->GetOrdinal());
    } else if (e == (TDSetElement*) -1) {
-      PDB(kPacketizer,2) Info("GetNextPacket","%s: waiting ...", slave->GetOrdinal());
+      PDB(kPacketizer,2)
+         Info("GetNextPacket","%s: waiting ...", slave->GetOrdinal());
    } else {
       PDB(kPacketizer,2)
          Info("GetNextPacket","%s (%s): '%s' '%s' '%s' %lld %lld",

@@ -53,6 +53,9 @@
 #pragma warning (disable: 4251)
 /* decorated name length exceeded, name was truncated */
 #pragma warning (disable: 4503)
+/* anachronism used : qualifiers on reference are ignored - in Vc*/
+#pragma warning (disable: 4227)
+
 
 /* function is hidden */
 #pragma warning (3: 4266)

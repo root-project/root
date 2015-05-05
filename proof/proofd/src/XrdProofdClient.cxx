@@ -25,7 +25,6 @@
 #include "XrdSys/XrdSysPriv.hh"
 
 #include "XrdProofdClient.h"
-#include "XrdProofdLauncher.h"
 #include "XrdProofdProtocol.h"
 #include "XrdProofdProofServ.h"
 #include "XrdProofdProofServMgr.h"
@@ -47,7 +46,6 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
    fIsValid = 0;
    fAskedToTouch = 0;
    fChangeOwn = changeown;
-   fLauncher = 0;
    fReconnectTimeOut = rtime;
 
    // Make sure the admin path exists
@@ -64,17 +62,12 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
 
    // We must have a valid sandbox
    if (fSandbox.IsValid()) fIsValid = 1;
-   
-   // The session launcher (we may have a plugin here, one day ...)
-   fLauncher = new XrdProofdLauncher(this);
 }
 
 //__________________________________________________________________________
 XrdProofdClient::~XrdProofdClient()
 {
    // Destructor
-
-   SafeDel(fLauncher);
 }
 
 //__________________________________________________________________________

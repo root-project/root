@@ -56,7 +56,7 @@ public:
    virtual void     SetLineStyle(Style_t lstyle) { fLineStyle = lstyle;}
    virtual void     SetLineWidth(Width_t lwidth) { fLineWidth = lwidth;}
 
-   ClassDef(TAttLine,1);  //Line attributes
+   ClassDef(TAttLine,2);  //Line attributes
 };
 
    enum ELineStyle { kSolid = 1, kDashed, kDotted, kDashDotted };

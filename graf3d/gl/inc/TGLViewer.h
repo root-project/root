@@ -44,6 +44,7 @@ class TGLCameraOverlay;
 class TGLContextIdentity;
 class TGLAutoRotator;
 class TTimer;
+class TImage;
 
 class TContextMenu;
 class TGedEditor;
@@ -56,6 +57,7 @@ class TGLViewer : public TVirtualViewer3D,
 {
    friend class TGLOutput;
    friend class TGLEventHandler;
+   friend class TGLAutoRotator;
 public:
 
    enum ECameraType { kCameraPerspXOZ,  kCameraPerspYOZ,  kCameraPerspXOY,
@@ -335,6 +337,10 @@ public:
    Bool_t SavePictureWidth (const TString &fileName, Int_t width, Bool_t pixel_object_scale=kTRUE);
    Bool_t SavePictureHeight(const TString &fileName, Int_t height, Bool_t pixel_object_scale=kTRUE);
    Bool_t SavePictureScale (const TString &fileName, Float_t scale, Bool_t pixel_object_scale=kTRUE);
+
+   // Methods returning screen image
+   TImage* GetPictureUsingBB();
+   TImage* GetPictureUsingFBO(Int_t w, Int_t h,Float_t pixel_object_scale=0);
 
    const char*  GetPictureFileName() const { return fPictureFileName.Data(); }
    void         SetPictureFileName(const TString& f) { fPictureFileName = f; }

@@ -58,6 +58,7 @@ TGeoNodeCache::TGeoNodeCache()
    fMPB         = 0;
    fNodeBranch  = 0;
    fInfoBranch  = 0;
+   fPWInfo      = 0;
    fNodeIdArray = 0;
    for (Int_t i=0; i<100; i++) fIdBranch[i] = 0;
 }
@@ -92,6 +93,7 @@ TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
    for (Int_t i=0; i<fGeoInfoStackSize; i++) {
       fInfoBranch[i] = 0;
    }   
+   fPWInfo      = 0;
    fMatrix = fMatrixBranch[0] = fMPB[0];
    fNodeBranch[0] = top;
    fNodeIdArray = 0;
@@ -119,6 +121,7 @@ TGeoNodeCache::~TGeoNodeCache()
    }   
    delete [] fInfoBranch;
    if (fNodeIdArray)  delete [] fNodeIdArray;
+   delete fPWInfo;
 }
 
 //_____________________________________________________________________________
@@ -147,6 +150,15 @@ void TGeoNodeCache::BuildInfoBranch()
       fInfoBranch[i] = new TGeoStateInfo();
    }   
 }
+
+//_____________________________________________________________________________
+TGeoStateInfo *TGeoNodeCache::GetMakePWInfo(Int_t nd)
+{
+// Get the PW info, if none create one
+   if (fPWInfo) return fPWInfo;
+   fPWInfo = new TGeoStateInfo(nd);
+   return fPWInfo;
+}   
 
 //_____________________________________________________________________________
 void TGeoNodeCache::CdNode(Int_t nodeid) {

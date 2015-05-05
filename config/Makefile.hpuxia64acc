@@ -23,15 +23,15 @@ HPUX_MINOR   := $(shell uname -r | cut -d'.' -f3)
 CXX           = aCC
 CC            = cc
 CXXFLAGS      = +DD64 -Aa +W740,749,829,863 -z +Z -DR__HPUX$(HPUX_MAJOR) \
-                $(EXTRA_CXXFLAGS)
-CFLAGS        = +DD64 -Ae +W863 -z +Z -DR__HPUX$(HPUX_MAJOR) $(EXTRA_CFLAGS)
+                $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = +DD64 -Ae +W863 -z +Z -DR__HPUX$(HPUX_MAJOR) $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CINTCXXFLAGS  = +DD64 -Aa +W829,863 -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
                 -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO \
-                -DG__64BIT $(EXTRA_CXXFLAGS)
+                -DG__64BIT $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
 CINTCFLAGS    = +DD64 -Ae +W863 -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
                 -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO \
                 -DG__ANSI -DG__64BIT -D__STDCPP__ \
-                $(EXTRA_CFLAGS)
+                $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 CPPPREP       = /opt/langtools/lbin/cpp.ansi -Z -D__STDCPP__ -E -C
 
 # Linker:

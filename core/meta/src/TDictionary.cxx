@@ -54,9 +54,23 @@ TDictionary::TDictionary(const TDictionary& dict):
 { }
 
 TDictionary::~TDictionary() {
+   // Destruct a TDictionary, delete the attribute map.
    if(fAttributeMap) {
       delete fAttributeMap;
    }
+}
+
+TDictionary &TDictionary::operator=(const TDictionary& dict)
+{
+  // Assignment op, cloning fAttributeMap.
+  TNamed::operator=(dict);
+
+  delete fAttributeMap;
+  fAttributeMap = 0;
+  if (dict.fAttributeMap)
+    fAttributeMap = ((TDictAttributeMap*)dict.fAttributeMap->Clone());
+
+  return *this;
 }
 
 void TDictionary::CreateAttributeMap()

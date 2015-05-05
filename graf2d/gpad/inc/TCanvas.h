@@ -246,7 +246,7 @@ public:
    static TCanvas   *MakeDefCanvas();
    static Bool_t     SupportAlpha();
 
-   ClassDef(TCanvas,7)  //Graphics canvas
+   ClassDef(TCanvas,8)  //Graphics canvas
 };
 
 #endif

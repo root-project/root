@@ -47,7 +47,7 @@ ClassImp(TEvePointSet);
 
 //______________________________________________________________________________
 TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
-   TEveElement(fMarkerColor),
+   TEveElement(),
    TPointSet3D(n_points),
    TEvePointSelectorConsumer(tv_type),
    TEveProjectable(),
@@ -60,6 +60,7 @@ TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
    // Constructor.
 
    fMarkerStyle = 20;
+   SetMainColorPtr(&fMarkerColor);
 
    // Override from TEveElement.
    fPickable = kTRUE;
@@ -67,7 +68,7 @@ TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
 
 //______________________________________________________________________________
 TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
-   TEveElement(fMarkerColor),
+   TEveElement(),
    TPointSet3D(n_points),
    TEvePointSelectorConsumer(tv_type),
    TEveProjectable(),
@@ -81,6 +82,7 @@ TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_t
 
    fMarkerStyle = 20;
    SetName(name);
+   SetMainColorPtr(&fMarkerColor);
 
    // Override from TEveElement.
    fPickable = kTRUE;
@@ -457,7 +459,7 @@ ClassImp(TEvePointSetArray);
 //______________________________________________________________________________
 TEvePointSetArray::TEvePointSetArray(const char* name,
                                      const char* title) :
-   TEveElement(fMarkerColor),
+   TEveElement(),
    TNamed(name, title),
 
    fBins(0), fDefPointSetCapacity(128), fNBins(0), fLastBin(-1),
@@ -466,6 +468,8 @@ TEvePointSetArray::TEvePointSetArray(const char* name,
    fQuantName()
 {
    // Constructor.
+
+   SetMainColorPtr(&fMarkerColor);
 }
 
 //______________________________________________________________________________

@@ -82,18 +82,18 @@ if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
       makeshared="/usr/vacpp/bin/makeC++SharedLib"
    fi
    if [ $LD = "xlC" ] || [ $LD = "xlC_r" ]; then
-      cmd="$makeshared -o $LIB -p 0 $OBJS $EXTRA $EXPLLNKCORE"
+      cmd="$makeshared -o $LIB -p 0 $OBJS $EXPLLNKCORE $EXTRA"
       echo $cmd
       $cmd
    fi
    if [ $LD = "g++" ]; then
-      cmd="$LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
+      cmd="$LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXPLLNKCORE $EXTRA"
       echo $cmd
       $cmd
    fi
 elif [ $PLATFORM = "alphaegcs" ] || [ $PLATFORM = "hpux" ] || \
      [ $PLATFORM = "solaris" ]   || [ $PLATFORM = "sgi" ]; then
-   cmd="$LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
+   cmd="$LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXPLLNKCORE $EXTRA"
    echo $cmd
    $cmd
 elif [ $PLATFORM = "lynxos" ]; then
@@ -103,10 +103,10 @@ elif [ $PLATFORM = "lynxos" ]; then
 elif [ $PLATFORM = "fbsd" ] || [ $PLATFORM = "obsd" ]; then
    if [ "x$MAJOR" = "x" ] ; then
       cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB \
-         `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE"
+         `lorder $OBJS | tsort -q` $EXPLLNKCORE $EXTRA"
    else
       cmd="$LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR \
-         `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE"
+         `lorder $OBJS | tsort -q` $EXPLLNKCORE $EXTRA"
    fi
    echo $cmd
    $cmd
@@ -128,11 +128,11 @@ elif [ $PLATFORM = "macosx" ]; then
    fi
    if [ $macosx_minor -ge 4 ]; then
       cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS \
-           -ldl $EXTRA $EXPLLNKCORE $VERSION"
+           -ldl $EXPLLNKCORE $EXTRA $VERSION"
    else
       cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS \
            `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-           -ldl $EXTRA $EXPLLNKCORE $VERSION"
+           -ldl $EXPLLNKCORE $EXTRA $VERSION"
    fi
    echo $cmd
    $cmd
@@ -146,11 +146,11 @@ elif [ $PLATFORM = "macosx" ]; then
        elif [ $macosx_minor -ge 3 ]; then
           cmd="$LD $LDFLAGS -bundle -undefined dynamic_lookup -o \
                 $BUNDLE $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-                -ldl $EXTRA $EXPLLNKCORE"
+                -ldl $EXPLLNKCORE $EXTRA"
        else
           cmd="$LD $LDFLAGS -bundle -undefined suppress -o $BUNDLE \
                $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-                -ldl $EXTRA $EXPLLNKCORE"
+                -ldl $EXPLLNKCORE $EXTRA"
        fi
        echo $cmd
        $cmd
@@ -165,7 +165,7 @@ elif [ $PLATFORM = "ios" ]; then
       LIBVERS=$LIB
    fi
    cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS \
-        -ldl $EXTRA $EXPLLNKCORE $VERSION"
+        -ldl $EXPLLNKCORE $EXTRA $VERSION"
    echo $cmd
    $cmd
    linkstat=$?
@@ -191,17 +191,17 @@ elif test "${LD#*wingcc_ld.sh}" != "$LD"; then
       LIB=`echo $LIB | sed "s/\/*.*\/.*\./&${MAJOR}.${MINOR}./"`
       LIBVERS=$LIB
    fi
-   cmd="$LD $VERSION $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
+   cmd="$LD $VERSION $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXPLLNKCORE $EXTRA"
    echo $cmd
    $cmd
 else
    if [ "x$MAJOR" = "x" ] ; then
-      cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
+      cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXPLLNKCORE $EXTRA"
       echo $cmd
       $cmd
    else
       cmd="$LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS \
-           -o $LIB.$MAJOR.$MINOR $OBJS $EXTRA $EXPLLNKCORE"
+           -o $LIB.$MAJOR.$MINOR $OBJS $EXPLLNKCORE $EXTRA"
       echo $cmd
       $cmd
    fi

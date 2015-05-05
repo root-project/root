@@ -758,7 +758,7 @@ namespace {
 
             hres = ppf->Load(wsz, STGM_READ);
             if (SUCCEEDED(hres)) {
-               hres = psl->Resolve(HWND_DESKTOP, SLR_ANY_MATCH);
+               hres = psl->Resolve(HWND_DESKTOP, SLR_ANY_MATCH | SLR_NO_UI | SLR_UPDATE);
                if (SUCCEEDED(hres)) {
                   strlcpy(szGotPath, pszShortcutFile,MAX_PATH);
                   hres = psl->GetPath(szGotPath, MAX_PATH, (WIN32_FIND_DATA *)&wfd,
@@ -1034,6 +1034,12 @@ fGUIThreadHandle(0), fGUIThreadId(0)
          while (buf[0] && GetFileAttributes(check_path.Data()) == INVALID_FILE_ATTRIBUTES) {
             while (--pLibName >= buf && *pLibName != '\\' && *pLibName != '/');
             *pLibName = 0;
+            if (strlen(buf) < 3) {
+               // prevent potential infinite loop in case it doesn't find the etc 
+               // subdirectory (i.e. when it reaches C:\)
+               buf[0] = 0;
+               break;
+            }
             check_path = buf;
             check_path += "\\etc";
          }

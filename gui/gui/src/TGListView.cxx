@@ -914,6 +914,23 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
 }
 
 //______________________________________________________________________________
+TList *TGLVContainer::GetSelectedEntries()
+{
+   // Get list of selected items in container.
+
+   TGFrameElement *el;
+   TIter next(fList);
+   TList *ret = new TList();
+
+   while ((el = (TGFrameElement *) next())) {
+      if (el->fFrame->IsActive()) {
+         ret->Add((TGLVEntry *)el->fFrame);
+      }
+   }
+   return ret;
+}
+
+//______________________________________________________________________________
 TList *TGLVContainer::GetSelectedItems()
 {
    // Get list of selected items in container.

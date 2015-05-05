@@ -12,7 +12,6 @@ set(TestSource
     testSortOrder.cxx
     stressTMath.cxx
     stressTF1.cxx
-    stressGoFTest.cxx
     testIntegration.cxx
     testRootFinder.cxx
     testSampleQuantiles.cxx
@@ -27,6 +26,7 @@ set(TestSource
     testSpecFuncBetaI.cxx 
     testSpecFuncSiCi.cxx 
     testIntegrationMultiDim.cxx
+    testTStatistic.cxx
     fit/testFit.cxx
     fit/testGraphFit.cxx
     fit/SparseDataComparer.cxx
@@ -37,12 +37,15 @@ set(TestSource
 if(ROOT_roofit_FOUND)
   list(APPEND TestSource fit/testRooFit.cxx)
   list(APPEND Libraries RooFit)
+  if(ROOT_mathmore_FOUND)
+    list(APPEND TestSource fit/testFitPerf.cxx)
+  endif()
+endif()
+ 
 if(ROOT_mathmore_FOUND)
-  list(APPEND TestSource fit/testFitPerf.cxx)
+  list(APPEND TestSource stressGoFTest.cxx)
   list(APPEND Libraries MathMore)
 endif()
-endif()
-
 
 if(ROOT_minuit2_FOUND)
   list(APPEND TestSource fit/testMinim.cxx)

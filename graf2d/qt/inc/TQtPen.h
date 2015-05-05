@@ -8,7 +8,6 @@
 #ifndef ROOT_TQtPen
 #define ROOT_TQtPen
 
-#include "Riostream.h"
 #include "TAttLine.h"
 
 #ifndef __CINT__

@@ -108,7 +108,7 @@ protected:
 
    TTimer       *fDispatchTimer;    //Dispatch pending events while processing
 
-   TTimer       *fProcTimeTimer;    //Notifies reaching of allowed max proc time 
+   TTimer       *fProcTimeTimer;    //Notifies reaching of allowed max proc time
    TStopwatch   *fProcTime;         //Packet proc time
 
    TString       fOutputFilePath;   //Path to file with (partial) results of the query
@@ -116,7 +116,7 @@ protected:
    Long_t        fSaveMemThreshold; //Threshold for saving output to file
    Bool_t        fSavePartialResults; //Whether to save the partial results
    Bool_t        fSaveResultsPerPacket; //Whether to save partial results after each packet
-   
+
    static THashList *fgDrawInputPars;  // List of input parameters to be kept on drawing actions
 
    void         *GetSender() { return this; }  //used to set gTQSender
@@ -125,7 +125,7 @@ protected:
 
    virtual void SetupFeedback();  // specialized setup
    
-   virtual void  MergeOutput();
+   virtual void  MergeOutput(Bool_t savememvalues = kFALSE);
 
 public:   // fix for broken compilers so TCleanup can call StopFeedback()
    virtual void StopFeedback();   // specialized teardown
@@ -228,6 +228,9 @@ public:
                           Bool_t abort = kFALSE, Int_t timeout = 0);
 
    virtual void      SetInitTime() { }
+
+   virtual void      SetMerging(Bool_t = kTRUE) { }
+
    Long64_t  GetCacheSize();
    Int_t     GetLearnEntries();
 
@@ -303,8 +306,11 @@ protected:
    ErrorHandlerFunc_t  fErrorHandler;  // Store previous handler when redirecting output
    Bool_t              fMergeTH1OneByOne;  // If kTRUE forces TH1 merge one-by-one [kTRUE]
    TH1                *fProcPackets;    //!Histogram with packets being processed (owned by TPerfStats)
-   TMessage           *fProcessMessage;  // Process message to replay when adding new workers dynamically
-   TString             fSelectorFileName;  // Current Selector's name, set by Process()
+   TMessage           *fProcessMessage; // Process message to replay when adding new workers dynamically
+   TString             fSelectorFileName; // Current Selector's name, set by Process()
+
+   TStopwatch         *fMergeSTW;      // Merging stop watch
+   Int_t               fNumMergers;    // Number of submergers
 
    virtual Bool_t  HandleTimer(TTimer *timer);
    Int_t           InitPacketizer(TDSet *dset, Long64_t nentries,
@@ -325,7 +331,7 @@ public:
                                            fFeedbackLists(0), fPacketizer(0),
                                            fMergeFiles(kFALSE), fDSet(0), fErrorHandler(0),
                                            fMergeTH1OneByOne(kTRUE), fProcPackets(0),
-                                           fProcessMessage(0)
+                                           fProcessMessage(0), fMergeSTW(0), fNumMergers(0) 
                                            { fProgressStatus = new TProofProgressStatus(); }
    virtual ~TProofPlayerRemote();   // Owns the fOutput list
    virtual Long64_t Process(TDSet *set, const char *selector,
@@ -350,7 +356,7 @@ public:
    Bool_t         HistoSameAxis(TH1 *h0, TH1 *h1);
    Int_t          AddOutputObject(TObject *obj);
    void           AddOutput(TList *out);   // Incorporate a list
-   virtual void   MergeOutput();
+   virtual void   MergeOutput(Bool_t savememvalues = kFALSE);
    void           Progress(Long64_t total, Long64_t processed); // *SIGNAL*
    void           Progress(TSlave*, Long64_t total, Long64_t processed)
                      { Progress(total, processed); }
@@ -371,6 +377,8 @@ public:
    Bool_t         IsClient() const;
 
    void           SetInitTime();
+
+   void           SetMerging(Bool_t on = kTRUE);
 
    ClassDef(TProofPlayerRemote,0)  // PROOF player running on master server
 };

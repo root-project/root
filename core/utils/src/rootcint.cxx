@@ -1785,11 +1785,11 @@ void WriteAuxFunctions(G__ClassInfo &cl)
 
       // Prefix the full class name with '::' except for the STL
       // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
+      // real class instead of the class in the namespace ROOTShadow::Shadow
       classname.insert(0,"::");
    }
 
-   (*dictSrcOut) << "namespace ROOT {" << std::endl;
+   (*dictSrcOut) << "namespace ROOTDict {" << std::endl;
 
    string args;
    if (HasDefaultConstructor(cl,&args)) {
@@ -1867,7 +1867,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       << "      ((" << classname.c_str() << "*)obj)->ResetAfterMerge(info);" << std::endl
       << "   }" << std::endl;
    }
-   (*dictSrcOut) << "} // end of namespace ROOT for class " << classname.c_str() << std::endl << std::endl;
+   (*dictSrcOut) << "} // end of namespace ROOTDict for class " << classname.c_str() << std::endl << std::endl;
 }
 
 //______________________________________________________________________________
@@ -2231,7 +2231,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          break;
       }
 
-      (*dictSrcOut) << "         int R__n=(&R__stl) ? int(R__stl.size()) : 0;" << std::endl
+      (*dictSrcOut) << "         int R__n=(true) ? int(R__stl.size()) : 0;" << std::endl
                     << "         R__b << R__n;" << std::endl
                     << "         if(R__n) {" << std::endl;
 
@@ -2411,21 +2411,21 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "const char *" << clsname.c_str() << "::ImplFileName()"  << std::endl << "{" << std::endl
-                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                 << "   return ::ROOTDict::GenerateInitInstanceLocal((const ::" << cl.Fullname()
                  << "*)0x0)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) <<"template <> ";
    (*dictSrcOut) << "int " << clsname.c_str() << "::ImplFileLine()" << std::endl << "{" << std::endl
-                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                 << "   return ::ROOTDict::GenerateInitInstanceLocal((const ::" << cl.Fullname()
                  << "*)0x0)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "void " << clsname.c_str() << "::Dictionary()" << std::endl << "{" << std::endl
-                 << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                 << "   fgIsA = ::ROOTDict::GenerateInitInstanceLocal((const ::" << cl.Fullname()
                  << "*)0x0)->GetClass();" << std::endl
                  << "}" << std::endl << std::endl
 
@@ -2433,7 +2433,7 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl;
-   (*dictSrcOut) << "   if (!fgIsA) { R__LOCKGUARD2(gCINTMutex); if(!fgIsA) {fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
+   (*dictSrcOut) << "   if (!fgIsA) { R__LOCKGUARD2(gCINTMutex); if(!fgIsA) {fgIsA = ::ROOTDict::GenerateInitInstanceLocal((const ::";
    (*dictSrcOut) << cl.Fullname() << "*)0x0)->GetClass();} }" << std::endl
                  << "   return fgIsA;" << std::endl
                  << "}" << std::endl << std::endl;
@@ -2459,14 +2459,14 @@ void WriteClassInit(G__ClassInfo &cl)
 
       // Prefix the full class name with '::' except for the STL
       // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
+      // real class instead of the class in the namespace ROOTShadow::Shadow
       csymbol.insert(0,"::");
    }
 
    int stl = TClassEdit::IsSTLCont(classname.c_str());
    bool bset = TClassEdit::IsSTLBitset(classname.c_str());
 
-   (*dictSrcOut) << "namespace ROOT {" << std::endl
+   (*dictSrcOut) << "namespace ROOTDict {" << std::endl
                  << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp);"
                  << std::endl;
 
@@ -2568,7 +2568,7 @@ void WriteClassInit(G__ClassInfo &cl)
 
 #if 0
    fprintf(fp, "#if defined R__NAMESPACE_TEMPLATE_IMP_BUG\n");
-   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *::ROOT::GenerateInitInstanceLocal< %s >(const %s*)\n   {\n",
+   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *::ROOTDict::GenerateInitInstanceLocal< %s >(const %s*)\n   {\n",
            cl.Fullname(), cl.Fullname() );
    fprintf(fp, "#else\n");
    fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *GenerateInitInstanceLocal< %s >(const %s*)\n   {\n",
@@ -2576,7 +2576,7 @@ void WriteClassInit(G__ClassInfo &cl)
    fprintf(fp, "#endif\n");
 #endif
 
-   (*dictSrcOut) << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol.c_str() << "*)" << std::endl
+   (*dictSrcOut) << "   static ROOT::TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol.c_str() << "*)" << std::endl
                  << "   {" << std::endl;
 
    if (NeedShadowClass(cl)) {
@@ -2589,7 +2589,7 @@ void WriteClassInit(G__ClassInfo &cl)
          std::string clfullname;
          shadowMaker->GetFullShadowName(cl, clfullname);
          (*dictSrcOut) << "      R__ASSERT(sizeof(" << csymbol.c_str() << ")"
-                       << " == sizeof(" << clfullname.c_str() << "));" << std::endl;
+                       << " == sizeof( " << clfullname.c_str() << "));" << std::endl;
       }
    }
 
@@ -2652,7 +2652,7 @@ void WriteClassInit(G__ClassInfo &cl)
       }
    }
    (*dictSrcOut) << "\"" << filename << "\", " << cl.LineNumber() << "," << std::endl
-                 << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
+                 << "                  typeid(" << csymbol.c_str() << "), ::ROOT::DefineBehavior(ptr, ptr)," << std::endl
       //   fprintf(fp, "                  (::ROOT::ClassInfo< %s >::ShowMembersFunc_t)&::ROOT::ShowMembers,%d);\n", classname.c_str(),cl.RootFlag());
                  << "                  ";
    delete [] filename;
@@ -2695,8 +2695,8 @@ void WriteClassInit(G__ClassInfo &cl)
       (*dictSrcOut) << "      instance.SetResetAfterMerge(&reset_" << mappedname.c_str() << ");" << std::endl;      
    }
    if (bset) {
-      (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
-                    << "Pushback" << "<TStdBitsetHelper< " << classname.c_str() << " > >()));" << std::endl;
+      (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo( ::ROOT::TCollectionProxyInfo::Generate( ::ROOT::TCollectionProxyInfo::"
+                    << "Pushback" << "< ::ROOT::TStdBitsetHelper< " << classname.c_str() << " > >()));" << std::endl;
 
       // (*dictSrcOut) << "      instance.SetStreamer(::ROOT::std_bitset_helper" << strchr(csymbol.c_str(),'<') << "::Streamer);\n";
       gNeedCollectionProxy = true;
@@ -2719,7 +2719,7 @@ void WriteClassInit(G__ClassInfo &cl)
          methodTCP="Insert";
          break;
       }
-      (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
+      (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo( ::ROOT::TCollectionProxyInfo::Generate( ::ROOT::TCollectionProxyInfo::"
                     << methodTCP << "< " << classname.c_str() << " >()));" << std::endl;
 
       gNeedCollectionProxy = true;
@@ -2755,7 +2755,7 @@ void WriteClassInit(G__ClassInfo &cl)
 
    if (!stl && !bset && !IsTemplateDouble32(cl) && !IsTemplateFloat16(cl)) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
-      (*dictSrcOut) << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
+      (*dictSrcOut) << "   ROOT::TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
                     << "   {\n      return GenerateInitInstanceLocal((" <<  csymbol.c_str() << "*)0);\n   }"
                     << std::endl;
    }
@@ -2771,12 +2771,12 @@ void WriteClassInit(G__ClassInfo &cl)
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
       (*dictSrcOut) <<  std::endl << "   // Dictionary for non-ClassDef classes" << std::endl
                     << "   static void " << mappedname.c_str() << "_Dictionary() {" << std::endl;
-      (*dictSrcOut) << "      ::ROOT::GenerateInitInstanceLocal((const " << csymbol.c_str();
+      (*dictSrcOut) << "      ::ROOTDict::GenerateInitInstanceLocal((const " << csymbol.c_str();
       (*dictSrcOut) << "*)0x0)->GetClass();" << std::endl
                     << "   }" << std::endl << std::endl;
    }
 
-   (*dictSrcOut) << "} // end of namespace ROOT" << std::endl << std::endl;
+   (*dictSrcOut) << "} // end of namespace ROOTDict" << std::endl << std::endl;
 }
 
 //______________________________________________________________________________
@@ -2811,7 +2811,7 @@ void WriteNamespaceInit(G__ClassInfo &cl)
       (*dictSrcOut) << "namespace " << right << " {" << std::endl;
    }
 
-   (*dictSrcOut) << "   namespace ROOT {" << std::endl;
+   (*dictSrcOut) << "   namespace ROOTDict {" << std::endl;
 
 #if !defined(R__SGI) && !defined(R__AIX)
    (*dictSrcOut) << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
@@ -3478,7 +3478,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 
       // Prefix the full class name with '::' except for the STL
       // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
+      // real class instead of the class in the namespace ROOTShadow::Shadow
       csymbol.insert(0,"::");
    }
 
@@ -3511,7 +3511,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       (*dictSrcOut) << "      TClass *R__cl = " << csymbol.c_str() << "::IsA();" << std::endl;
 #endif
    } else {
-      (*dictSrcOut) << "      TClass *R__cl  = ::ROOT::GenerateInitInstanceLocal((const " << csymbol.c_str() << "*)0x0)->GetClass();" << std::endl;
+      (*dictSrcOut) << "      TClass *R__cl  = ::ROOTDict::GenerateInitInstanceLocal((const " << csymbol.c_str() << "*)0x0)->GetClass();" << std::endl;
    }
    (*dictSrcOut) << "      if (R__cl || R__insp.IsA()) { }" << std::endl;
 
@@ -3684,7 +3684,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
    string mappedname = G__map_cpp_name((char*)classname.c_str());
 
    if (outside || cl.IsTmplt()) {
-      (*dictSrcOut) << "namespace ROOT {" << std::endl
+      (*dictSrcOut) << "namespace ROOTDict {" << std::endl
 
                     << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp)"
                     << std::endl << "   {" << std::endl;
@@ -3716,7 +3716,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
          string clnameNoDefArg = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
          string mappednameNoDefArg = G__map_cpp_name((char*)clnameNoDefArg.c_str());
 
-         (*dictSrcOut) <<  "   ::ROOT::" << mappednameNoDefArg.c_str() << "_ShowMembers(this, R__insp);" << std::endl;
+         (*dictSrcOut) <<  "   ::ROOTDict::" << mappednameNoDefArg.c_str() << "_ShowMembers(this, R__insp);" << std::endl;
       }
       (*dictSrcOut) << "}" << std::endl << std::endl;
 
@@ -5116,9 +5116,9 @@ int main(int argc, char **argv)
 
       WriteRegisterModule();
 
-      const char* shadowNSName="ROOT";
+      const char* shadowNSName="ROOTShadow";
       if (dict_type != kDictTypeCint)
-         shadowNSName = "ROOT::Reflex";
+         shadowNSName = "ROOTShadow::Reflex";
       G__ShadowMaker myShadowMaker((*dictSrcOut), shadowNSName, NeedShadowClass,
                                    dict_type==kDictTypeCint ? NeedTypedefShadowClass : 0);
       shadowMaker = &myShadowMaker;
@@ -5279,11 +5279,11 @@ int main(int argc, char **argv)
             if (forceLink) {
                if ((clRequest.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && clRequest.Linkage() != G__CPPLINK) {
                   if (NeedShadowClass(clRequest)) {
-                     (*dictSrcOut) << "namespace ROOT {" << std::endl
+                     (*dictSrcOut) << "namespace ROOTShadow {" << std::endl
                                    << "   namespace Shadow {" << std::endl;
                      // coverity[fun_call_w_exception] - that's just fine.
                      shadowMaker->WriteShadowClass(clRequest);
-                     (*dictSrcOut) << "   } // Of namespace ROOT::Shadow" << std::endl
+                     (*dictSrcOut) << "   } // Of namespace ROOTShadow::Shadow" << std::endl
                                    << "} // Of namespace ROOT" << std::endl << std::endl;
                   }
                   if (G__ShadowMaker::IsSTLCont(clRequest.Name()) == 0 ) {

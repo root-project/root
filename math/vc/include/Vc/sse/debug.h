@@ -45,7 +45,7 @@ class DebugStream
     private:
         template<typename T, typename V> static void printVector(V _x)
         {
-            enum { Size = sizeof(V) / sizeof(T) };
+            enum JustSomeName__ { Size = sizeof(V) / sizeof(T) };
             union { V v; T m[Size]; } x = { _x };
             std::cerr << '[' << std::setprecision(24) << x.m[0];
             for (int i = 1; i < Size; ++i) {

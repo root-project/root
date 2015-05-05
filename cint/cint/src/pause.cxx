@@ -1582,9 +1582,7 @@ static void G__remove_input_tmpfile(G__input_file& ftemp)
 #ifdef G__WIN32
    unlink(ftemp.name);
 #else
-   if (!&ftemp) { // FIXME: What could this possibly mean?
-      return;
-   }
+   (void)ftemp;
 #endif
 }
 

@@ -277,6 +277,7 @@ public:
    virtual   void     ReadDouble(Double_t   &d) = 0;
    virtual   void     ReadCharP(Char_t      *c) = 0;
    virtual   void     ReadTString(TString   &s) = 0;
+   virtual   void     ReadStdString(std::string &s) = 0;
 
    virtual   void     WriteBool(Bool_t       b) = 0;
    virtual   void     WriteChar(Char_t       c) = 0;
@@ -293,6 +294,7 @@ public:
    virtual   void     WriteDouble(Double_t   d) = 0;
    virtual   void     WriteCharP(const Char_t *c) = 0;
    virtual   void     WriteTString(const TString &s) = 0;
+   virtual   void     WriteStdString(const std::string &s) = 0;
 
    // Special basic ROOT objects and collections
    virtual   TProcessID *GetLastProcessID(TRefTable *reftable) const = 0;

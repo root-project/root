@@ -208,8 +208,8 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
                                dset->GetDirectory());
    if (dset->TestBit(TDSet::kEmpty))
       set->SetBit(TDSet::kEmpty);
-   fProof->SetParameter("PROOF_MaxSlavesPerNode", (Long_t) ((TProofLite *)fProof)->fNWorkers);
-   if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", "TPacketizerAdaptive") != 0) {
+   fProof->SetParameter("PROOF_MaxSlavesPerNode", (Long_t) 0);
+   if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", "TPacketizer") != 0) {
       Error("Process", "cannot init the packetizer");
       fExitStatus = kAborted;
       return -1;
@@ -261,7 +261,10 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
 
    // Broadcast main message
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
+   if (fProcessMessage) delete fProcessMessage;
+   fProcessMessage = new TMessage(kPROOF_PROCESS);
    mesg << set << fn << fInput << opt << num << fst << evl << sync << enl;
+   (*fProcessMessage) << set << fn << fInput << opt << num << fst << evl << sync << enl;
    Int_t nb = fProof->Broadcast(mesg);
    fProof->fNotIdle += nb;
 
@@ -380,6 +383,11 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
 
       PDB(kLoop,1) Info("Finalize","Call Terminate()");
       fOutput->Clear("nodelete");
+      // This is the end of merging
+      SetMerging(kFALSE);
+      // We measure the merge time
+      fProof->fQuerySTW.Reset();
+      // Call Terminate now
       fSelector->Terminate();
 
       rv = fSelector->GetStatus();

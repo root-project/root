@@ -126,7 +126,7 @@ public:
    }
    Double_t Derivative(Double_t x) const {
       Double_t dx=x-fX;
-      return (fB+2*fC*dx+3*fD*dx*dx);
+      return (fB+dx*(2*fC+3*fD*dx));      
    }
 
 private:
@@ -172,7 +172,7 @@ public:
    }
    Double_t Derivative(Double_t x) const{
       Double_t dx=x-fX;
-      return (fB+2*fC*dx+3*fD*dx*dx+4*fE*dx*dx*dx+5*fF*dx*dx*dx*dx);
+      return (fB+dx*(2*fC+dx*(3*fD+dx*(4*fE+dx*(5*fF)))));
    }
 
 private:

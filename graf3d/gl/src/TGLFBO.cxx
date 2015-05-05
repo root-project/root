@@ -34,6 +34,7 @@ ClassImp(TGLFBO);
 Bool_t TGLFBO::fgRescaleToPow2       = kTRUE; // For ATI.
 Bool_t TGLFBO::fgMultiSampleNAWarned = kFALSE;
 
+//______________________________________________________________________________
 TGLFBO::TGLFBO() :
    fFrameBuffer  (0),
    fColorTexture (0),
@@ -42,6 +43,8 @@ TGLFBO::TGLFBO() :
    fMSColorBuffer(0),
    fW (-1),
    fH (-1),
+   fReqW (-1),
+   fReqH (-1),
    fMSSamples  (0),
    fMSCoverageSamples (0),
    fWScale     (1),
@@ -72,6 +75,8 @@ void TGLFBO::Init(int w, int h, int ms_samples)
    {
       throw std::runtime_error(eh + "GL_EXT_framebuffer_object extension required for FBO.");
    }
+
+   fReqW = w; fReqH = h;
 
    fIsRescaled = kFALSE;
    if (fgRescaleToPow2)
@@ -327,4 +332,21 @@ UInt_t TGLFBO::CreateAndAttachColorTexture()
                              GL_TEXTURE_2D, id, 0);
 
    return id;
+}
+
+//______________________________________________________________________________
+Bool_t TGLFBO::GetRescaleToPow2()
+{
+   // Return state of fgRescaleToPow2 static member.
+
+   return fgRescaleToPow2;
+}
+
+//______________________________________________________________________________
+void TGLFBO::SetRescaleToPow2(Bool_t r)
+{
+   // Set state of fgRescaleToPow2 static member.
+   // Default is kTRUE as this works better on older hardware, especially ATI.
+
+   fgRescaleToPow2 = r;
 }

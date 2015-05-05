@@ -150,6 +150,10 @@ void TFFTComplexReal::Init( Option_t *flags, Int_t /*sign*/,const Int_t* /*kind*
 
    fFlags = flags;
 
+   if (fPlan)
+      fftw_destroy_plan((fftw_plan)fPlan);
+   fPlan = 0;
+
    if (fOut)
       fPlan = (void*)fftw_plan_dft_c2r(fNdim, fN,(fftw_complex*)fIn,(Double_t*)fOut, MapFlag(flags));
    else

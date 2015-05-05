@@ -298,16 +298,18 @@ namespace TMath {
 
    template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=0);
    template <typename Iterator> Double_t Mean(Iterator first, Iterator last);
-   template <typename Iterator, typename WeightIterator> Double_t Mean(Iterator first, Iterator last, WeightIterator w);
+   template <typename Iterator, typename WeightIterator> Double_t Mean(Iterator first, Iterator last, WeightIterator wfirst);
 
    template <typename T> Double_t GeomMean(Long64_t n, const T *a);
    template <typename Iterator> Double_t GeomMean(Iterator first, Iterator last);
 
-   template <typename T> Double_t RMS(Long64_t n, const T *a);
+   template <typename T> Double_t RMS(Long64_t n, const T *a, const Double_t *w=0);
    template <typename Iterator> Double_t RMS(Iterator first, Iterator last);
+   template <typename Iterator, typename WeightIterator> Double_t RMS(Iterator first, Iterator last, WeightIterator wfirst);
 
-   template <typename T> Double_t StdDev(Long64_t n, const T *a) { return RMS<T>(n,a); }
+   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = 0) { return RMS<T>(n,a,w); }
    template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); }
+   template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); }
 
    template <typename T> Double_t Median(Long64_t n, const T *a,  const Double_t *w=0, Long64_t *work=0);
 
@@ -806,15 +808,41 @@ Double_t TMath::RMS(Iterator first, Iterator last)
    return rms;
 }
 
+template <typename Iterator, typename WeightIterator>
+Double_t TMath::RMS(Iterator first, Iterator last, WeightIterator w)
+{
+   // Return the weighted Standard Deviation of an array defined by the iterators.
+   // Note that this function returns the sigma(standard deviation) and
+   // not the root mean square of the array.
+
+   // As in the unweighted case use the two pass algorithm
+
+   Double_t tot = 0;
+   Double_t sumw = 0;
+   Double_t sumw2 = 0;
+   Double_t mean = TMath::Mean(first,last,w);
+   while ( first != last ) {
+      Double_t x = Double_t(*first);
+      sumw += *w;
+      sumw2 += (*w) * (*w); 
+      tot += (*w) * (x - mean)*(x - mean);
+      ++first;
+      ++w;
+   }
+   // use the correction neff/(neff -1) for the unbiased formula
+   Double_t rms =  TMath::Sqrt(tot * sumw/ (sumw*sumw - sumw2) );
+   return rms;
+}
+
 
 template <typename T>
-Double_t TMath::RMS(Long64_t n, const T *a)
+Double_t TMath::RMS(Long64_t n, const T *a, const Double_t * w)
 {
    // Return the Standard Deviation of an array a with length n.
    // Note that this function returns the sigma(standard deviation) and
    // not the root mean square of the array.
 
-   return TMath::RMS(a, a+n);
+   return (w) ? TMath::RMS(a, a+n, w) : TMath::RMS(a, a+n);
 }
 
 template <typename Iterator, typename Element>

@@ -350,6 +350,7 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
 //_____________________________________________________________________________
 void TGeoPhysicalNode::cd() const
 {
+   if (GetNode(0) != gGeoManager->GetTopNode()) return;
    gGeoManager->cd(fName.Data());
 }
 
@@ -511,7 +512,7 @@ Bool_t TGeoPhysicalNode::IsMatchingState(TGeoNavigator *nav) const
       return kFALSE;
    }
    TGeoNode **branch = (TGeoNode **) cache->GetBranch();
-   for (Int_t i=0; i<=fLevel; i++)
+   for (Int_t i=1; i<=fLevel; i++)
       if (fNodes->At(i) != branch[i]) return kFALSE;
    return kTRUE;   
 }   

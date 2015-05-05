@@ -40,13 +40,17 @@
 class TDirectory;
 
 class TFileMergeInfo {
+private:
+   TFileMergeInfo(); // Not implemented.
+   TFileMergeInfo(const TFileMergeInfo&); // Not implemented.
+   TFileMergeInfo& operator=(const TFileMergeInfo&); // Not implemented.
 public:
    TDirectory  *fOutputDirectory;  // Target directory where the merged object will be written.
    Bool_t       fIsFirst;          // True if this is the first call to Merge for this series of object.
    TString      fOptions;          // Additional text based option being passed down to customize the merge.
    TObject     *fUserData;         // Place holder to pass extra information.  This object will be deleted at the end of each series of objects.
  
-   TFileMergeInfo(TDirectory *outputfile) : fOutputDirectory(outputfile), fIsFirst(kTRUE), fUserData(0) {}
+   TFileMergeInfo(TDirectory *outputfile) : fOutputDirectory(outputfile), fIsFirst(kTRUE), fOptions(), fUserData(0) {}
    virtual ~TFileMergeInfo() { delete fUserData; } ;
    
    void Reset() { fIsFirst = kTRUE; delete fUserData; fUserData = 0; }

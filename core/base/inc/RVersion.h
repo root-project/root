@@ -14,13 +14,13 @@
  *
 */
 
-#define ROOT_RELEASE "5.34/22"
-#define ROOT_RELEASE_DATE "Oct 10 2014"
-#define ROOT_RELEASE_TIME "15:29:14"
+#define ROOT_RELEASE "5.34/31"
+#define ROOT_RELEASE_DATE "Apr 23 2015"
+#define ROOT_RELEASE_TIME "18:36:13"
 #define ROOT_SVN_REVISION 49361
-#define ROOT_GIT_COMMIT "v5-34-21-104-gf821c17"
-#define ROOT_GIT_BRANCH "heads/v5-34-00-patches"
-#define ROOT_VERSION_CODE 336406
+#define ROOT_GIT_COMMIT "v5-34-30"
+#define ROOT_GIT_BRANCH "v5-34-30"
+#define ROOT_VERSION_CODE 336415
 #define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 #endif

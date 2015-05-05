@@ -37,10 +37,6 @@ extern "C" {
 
 #include "../common/fix_clang_emmintrin.h"
 
-#if defined(__GNUC__) && !defined(VC_IMPL_SSE2)
-#error "SSE Vector class needs at least SSE2"
-#endif
-
 #include "const_data.h"
 #include <cstdlib>
 #include "macros.h"
@@ -127,20 +123,16 @@ namespace SSE
 extern "C" {
 #include <pmmintrin.h>
 }
-#elif defined _PMMINTRIN_H_INCLUDED || defined _INCLUDED_PMM
-#error "SSE3 was disabled but something includes <pmmintrin.h>. Please fix your code."
-#else
-// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
-// compilers that include headers for SIMD intrinsics that are disabled via the command line?
-// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
-// enabled.
-#define _INCLUDED_PMM 1
 #endif
 // SSSE3
 #ifdef VC_IMPL_SSSE3
 extern "C" {
 #include <tmmintrin.h>
 }
+#define mm_abs_epi8  _mm_abs_epi8
+#define mm_abs_epi16 _mm_abs_epi16
+#define mm_abs_epi32 _mm_abs_epi32
+#define mm_alignr_epi8 _mm_alignr_epi8
 namespace ROOT {
 namespace Vc
 {
@@ -160,20 +152,13 @@ namespace SSE
 } // namespace SSE
 } // namespace Vc
 } // namespace ROOT
-#elif defined _TMMINTRIN_H_INCLUDED || defined _TMMINTRIN_H
-#error "SSSE3 was disabled but something includes <tmmintrin.h>. Please fix your code."
 #else
-// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
-// compilers that include headers for SIMD intrinsics that are disabled via the command line?
-// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
-// enabled.
-#define _TMMINTRIN_H 1
 namespace ROOT {
 namespace Vc
 {
 namespace SSE
 {
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_abs_epi8 (__m128i a) {
+    static Vc_INTRINSIC __m128i Vc_CONST mm_abs_epi8 (__m128i a) {
         __m128i negative = _mm_cmplt_epi8 (a, _mm_setzero_si128());
         return _mm_add_epi8 (_mm_xor_si128(a, negative), _mm_and_si128(negative,  _mm_setone_epi8()));
     }
@@ -187,18 +172,18 @@ namespace SSE
     //   a xor -1 -> -a - 1
     //   -1 >> 31 -> 1
     //   -a - 1 + 1 -> -a
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_abs_epi16(__m128i a) {
+    static Vc_INTRINSIC __m128i Vc_CONST mm_abs_epi16(__m128i a) {
         __m128i negative = _mm_cmplt_epi16(a, _mm_setzero_si128());
         return _mm_add_epi16(_mm_xor_si128(a, negative), _mm_srli_epi16(negative, 15));
     }
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_abs_epi32(__m128i a) {
+    static Vc_INTRINSIC __m128i Vc_CONST mm_abs_epi32(__m128i a) {
         __m128i negative = _mm_cmplt_epi32(a, _mm_setzero_si128());
         return _mm_add_epi32(_mm_xor_si128(a, negative), _mm_srli_epi32(negative, 31));
     }
     static Vc_INTRINSIC __m128i Vc_CONST set1_epi8(int a) {
         return _mm_set1_epi8(a);
     }
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_alignr_epi8(__m128i a, __m128i b, const int s) {
+    static Vc_INTRINSIC __m128i Vc_CONST mm_alignr_epi8(__m128i a, __m128i b, const int s) {
         switch (s) {
             case  0: return b;
             case  1: return _mm_or_si128(_mm_slli_si128(a, 15), _mm_srli_si128(b,  1));
@@ -247,34 +232,60 @@ namespace SSE
 extern "C" {
 #include <smmintrin.h>
 }
-#else
-#if defined _SMMINTRIN_H_INCLUDED || defined _INCLUDED_SMM
-#error "SSE4.1 was disabled but something includes <smmintrin.h>. Please fix your code."
-#else
-// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
-// compilers that include headers for SIMD intrinsics that are disabled via the command line?
-// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
-// enabled.
-#define _INCLUDED_SMM 1
-#endif
 namespace ROOT {
 namespace Vc
 {
 namespace SSE
 {
-    static Vc_INTRINSIC __m128d _mm_blendv_pd(__m128d a, __m128d b, __m128d c) {
+#define mm_blendv_pd _mm_blendv_pd
+#define mm_blendv_ps _mm_blendv_ps
+#define mm_blendv_epi8 _mm_blendv_epi8
+#define mm_blend_epi16 _mm_blend_epi16
+#define mm_blend_ps _mm_blend_ps
+#define mm_blend_pd _mm_blend_pd
+
+#define mm_min_epi32 _mm_min_epi32
+#define mm_max_epi32 _mm_max_epi32
+#define mm_min_epu32 _mm_min_epu32
+#define mm_max_epu32 _mm_max_epu32
+//#define mm_min_epi16 _mm_min_epi16
+//#define mm_max_epi16 _mm_max_epi16
+#define mm_min_epu16 _mm_min_epu16
+#define mm_max_epu16 _mm_max_epu16
+#define mm_min_epi8  _mm_min_epi8
+#define mm_max_epi8  _mm_max_epi8
+
+#define mm_cvtepu16_epi32 _mm_cvtepu16_epi32
+#define mm_cvtepu8_epi16 _mm_cvtepu8_epi16
+#define mm_cvtepi8_epi16 _mm_cvtepi8_epi16
+#define mm_cvtepu16_epi32 _mm_cvtepu16_epi32
+#define mm_cvtepi16_epi32 _mm_cvtepi16_epi32
+#define mm_cvtepu8_epi32 _mm_cvtepu8_epi32
+#define mm_cvtepi8_epi32 _mm_cvtepi8_epi32
+#define mm_stream_load_si128 _mm_stream_load_si128
+// TODO
+} // namespace SSE
+} // namespace Vc
+} // namespace ROOT
+#else
+namespace ROOT {
+namespace Vc
+{
+namespace SSE
+{
+    static Vc_INTRINSIC __m128d mm_blendv_pd(__m128d a, __m128d b, __m128d c) {
         return _mm_or_pd(_mm_andnot_pd(c, a), _mm_and_pd(c, b));
     }
-    static Vc_INTRINSIC __m128  _mm_blendv_ps(__m128  a, __m128  b, __m128  c) {
+    static Vc_INTRINSIC __m128  mm_blendv_ps(__m128  a, __m128  b, __m128  c) {
         return _mm_or_ps(_mm_andnot_ps(c, a), _mm_and_ps(c, b));
     }
-    static Vc_INTRINSIC __m128i _mm_blendv_epi8(__m128i a, __m128i b, __m128i c) {
+    static Vc_INTRINSIC __m128i mm_blendv_epi8(__m128i a, __m128i b, __m128i c) {
         return _mm_or_si128(_mm_andnot_si128(c, a), _mm_and_si128(c, b));
     }
 
     // only use the following blend functions with immediates as mask and, of course, compiling
     // with optimization
-    static Vc_INTRINSIC __m128d _mm_blend_pd(__m128d a, __m128d b, const int mask) {
+    static Vc_INTRINSIC __m128d mm_blend_pd(__m128d a, __m128d b, const int mask) {
         switch (mask) {
         case 0x0:
             return a;
@@ -289,7 +300,7 @@ namespace SSE
             return a; // should never be reached, but MSVC needs it else it warns about 'not all control paths return a value'
         }
     }
-    static Vc_INTRINSIC __m128  _mm_blend_ps(__m128  a, __m128  b, const int mask) {
+    static Vc_INTRINSIC __m128  mm_blend_ps(__m128  a, __m128  b, const int mask) {
         __m128i c;
         switch (mask) {
         case 0x0:
@@ -346,7 +357,7 @@ namespace SSE
         __m128 _c = _mm_castsi128_ps(c);
         return _mm_or_ps(_mm_andnot_ps(_c, a), _mm_and_ps(_c, b));
     }
-    static Vc_INTRINSIC __m128i _mm_blend_epi16(__m128i a, __m128i b, const int mask) {
+    static Vc_INTRINSIC __m128i mm_blend_epi16(__m128i a, __m128i b, const int mask) {
         __m128i c;
         switch (mask) {
         case 0x00:
@@ -406,57 +417,57 @@ namespace SSE
         return _mm_or_si128(_mm_andnot_si128(c, a), _mm_and_si128(c, b));
     }
 
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_max_epi8 (__m128i a, __m128i b) {
-        return _mm_blendv_epi8(b, a, _mm_cmpgt_epi8 (a, b));
+    static Vc_INTRINSIC __m128i Vc_CONST mm_max_epi8 (__m128i a, __m128i b) {
+        return mm_blendv_epi8(b, a, _mm_cmpgt_epi8 (a, b));
     }
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_max_epi32(__m128i a, __m128i b) {
-        return _mm_blendv_epi8(b, a, _mm_cmpgt_epi32(a, b));
+    static Vc_INTRINSIC __m128i Vc_CONST mm_max_epi32(__m128i a, __m128i b) {
+        return mm_blendv_epi8(b, a, _mm_cmpgt_epi32(a, b));
     }
-//X         static Vc_INTRINSIC __m128i Vc_CONST _mm_max_epu8 (__m128i a, __m128i b) {
-//X             return _mm_blendv_epi8(b, a, _mm_cmpgt_epu8 (a, b));
+//X         static Vc_INTRINSIC __m128i Vc_CONST mm_max_epu8 (__m128i a, __m128i b) {
+//X             return mm_blendv_epi8(b, a, _mm_cmpgt_epu8 (a, b));
 //X         }
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_max_epu16(__m128i a, __m128i b) {
-        return _mm_blendv_epi8(b, a, _mm_cmpgt_epu16(a, b));
+    static Vc_INTRINSIC __m128i Vc_CONST mm_max_epu16(__m128i a, __m128i b) {
+        return mm_blendv_epi8(b, a, _mm_cmpgt_epu16(a, b));
     }
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_max_epu32(__m128i a, __m128i b) {
-        return _mm_blendv_epi8(b, a, _mm_cmpgt_epu32(a, b));
+    static Vc_INTRINSIC __m128i Vc_CONST mm_max_epu32(__m128i a, __m128i b) {
+        return mm_blendv_epi8(b, a, _mm_cmpgt_epu32(a, b));
     }
-//X         static Vc_INTRINSIC __m128i Vc_CONST _mm_min_epu8 (__m128i a, __m128i b) {
-//X             return _mm_blendv_epi8(a, b, _mm_cmpgt_epu8 (a, b));
+//X         static Vc_INTRINSIC __m128i Vc_CONST mm_min_epu8 (__m128i a, __m128i b) {
+//X             return mm_blendv_epi8(a, b, _mm_cmpgt_epu8 (a, b));
 //X         }
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_min_epu16(__m128i a, __m128i b) {
-        return _mm_blendv_epi8(a, b, _mm_cmpgt_epu16(a, b));
+    static Vc_INTRINSIC __m128i Vc_CONST mm_min_epu16(__m128i a, __m128i b) {
+        return mm_blendv_epi8(a, b, _mm_cmpgt_epu16(a, b));
     }
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_min_epu32(__m128i a, __m128i b) {
-        return _mm_blendv_epi8(a, b, _mm_cmpgt_epu32(a, b));
+    static Vc_INTRINSIC __m128i Vc_CONST mm_min_epu32(__m128i a, __m128i b) {
+        return mm_blendv_epi8(a, b, _mm_cmpgt_epu32(a, b));
     }
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_min_epi8 (__m128i a, __m128i b) {
-        return _mm_blendv_epi8(a, b, _mm_cmpgt_epi8 (a, b));
+    static Vc_INTRINSIC __m128i Vc_CONST mm_min_epi8 (__m128i a, __m128i b) {
+        return mm_blendv_epi8(a, b, _mm_cmpgt_epi8 (a, b));
     }
-    static Vc_INTRINSIC __m128i Vc_CONST _mm_min_epi32(__m128i a, __m128i b) {
-        return _mm_blendv_epi8(a, b, _mm_cmpgt_epi32(a, b));
+    static Vc_INTRINSIC __m128i Vc_CONST mm_min_epi32(__m128i a, __m128i b) {
+        return mm_blendv_epi8(a, b, _mm_cmpgt_epi32(a, b));
     }
-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepu8_epi16(__m128i epu8) {
+    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepu8_epi16(__m128i epu8) {
         return _mm_unpacklo_epi8(epu8, _mm_setzero_si128());
     }
-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepi8_epi16(__m128i epi8) {
+    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepi8_epi16(__m128i epi8) {
         return _mm_unpacklo_epi8(epi8, _mm_cmplt_epi8(epi8, _mm_setzero_si128()));
     }
-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepu16_epi32(__m128i epu16) {
+    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepu16_epi32(__m128i epu16) {
         return _mm_unpacklo_epi16(epu16, _mm_setzero_si128());
     }
-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepi16_epi32(__m128i epu16) {
+    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepi16_epi32(__m128i epu16) {
         return _mm_unpacklo_epi16(epu16, _mm_cmplt_epi16(epu16, _mm_setzero_si128()));
     }
-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepu8_epi32(__m128i epu8) {
-        return _mm_cvtepu16_epi32(_mm_cvtepu8_epi16(epu8));
+    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepu8_epi32(__m128i epu8) {
+        return mm_cvtepu16_epi32(mm_cvtepu8_epi16(epu8));
     }
-    static Vc_INTRINSIC Vc_CONST __m128i _mm_cvtepi8_epi32(__m128i epi8) {
+    static Vc_INTRINSIC Vc_CONST __m128i mm_cvtepi8_epi32(__m128i epi8) {
         const __m128i neg = _mm_cmplt_epi8(epi8, _mm_setzero_si128());
         const __m128i epi16 = _mm_unpacklo_epi8(epi8, neg);
         return _mm_unpacklo_epi16(epi16, _mm_unpacklo_epi8(neg, neg));
     }
-    static Vc_INTRINSIC Vc_PURE __m128i _mm_stream_load_si128(__m128i *mem) {
+    static Vc_INTRINSIC Vc_PURE __m128i mm_stream_load_si128(__m128i *mem) {
         return _mm_load_si128(mem);
     }
 
@@ -474,14 +485,6 @@ namespace SSE
 extern "C" {
 #include <nmmintrin.h>
 }
-#elif defined _NMMINTRIN_H_INCLUDED || defined _INCLUDED_NMM
-#error "SSE4.2 was disabled but something includes <nmmintrin.h>. Please fix your code."
-#else
-// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
-// compilers that include headers for SIMD intrinsics that are disabled via the command line?
-// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
-// enabled.
-#define _INCLUDED_NMM 1
 #endif
 
 namespace ROOT {

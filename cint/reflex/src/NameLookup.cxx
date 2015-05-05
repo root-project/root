@@ -21,7 +21,7 @@
 #include "Reflex/internal/OwnedMember.h"
 
 #include <sstream>
-#include <string.h>
+#include <cstring>
 
 //______________________________________________________________________________
 Reflex::NameLookup::NameLookup(const std::string& name, const Scope& current):
@@ -240,7 +240,7 @@ Reflex::NameLookup::LookupInScope() {
 
          if (base) {
             size_t pos;
-            const std::string& name(base->SimpleName(pos));
+            const std::string name(base->SimpleName(pos));
 
             //fprintf(stderr, "Reflex::NameLookup::LookupInScope<T>: looking up '%s', considering subscope '%s' ...\n", fLookupName.c_str(), name.c_str());
             if (
@@ -276,7 +276,7 @@ Reflex::NameLookup::LookupInScope() {
 
             if (base) {
                size_t pos;
-               const std::string& name(base->SimpleName(pos));
+               const std::string name(base->SimpleName(pos));
 
                if (
                   (fLookupName[fPosNamePart] == name[pos]) &&

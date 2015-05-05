@@ -1233,8 +1233,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
    PyObject* TTreeGetAttr( ObjectProxy* self, PyObject* pyname )
    {
    // allow access to branches/leaves as if they are data members
-      const char* name = PyROOT_PyUnicode_AsString( pyname );
-      if ( ! name )
+      const char* name1 = PyROOT_PyUnicode_AsString( pyname );
+      if ( ! name1 )
          return 0;
 
    // get hold of actual tree
@@ -1245,6 +1245,10 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
          return 0;
       }
+
+   // deal with possible aliasing
+      const char* name = tree->GetAlias( name1 );
+      if ( ! name ) name = name1;
 
    // search for branch first (typical for objects)
       TBranch* branch = tree->GetBranch( name );
@@ -1271,7 +1275,9 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
 
       // try leaf, otherwise indicate failure by returning a typed null-object
-         if ( ! tree->GetLeaf( name ) )
+         TObjArray* leaves = branch->GetListOfLeaves();
+         if ( ! tree->GetLeaf( name ) &&
+              ! (leaves->GetSize() && ( leaves->First() == leaves->Last() ) ) )
             return BindRootObjectNoCast( NULL, klass );
       }
 
@@ -2077,21 +2083,33 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       PyObject* pyfullname = PyObject_GetAttr( pyclass, PyStrings::gName );
       TClass* klass = TClass::GetClass( PyROOT_PyUnicode_AsString( pyfullname ) );
       Py_DECREF( pyfullname );
-      TMethod* meth = klass->GetMethodAllAny( "begin" );
 
-      TClass* iklass = 0;
-      if ( meth ) {
-         Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
-         iklass = TClass::GetClass( meth->GetReturnTypeName() );
-         gErrorIgnoreLevel = oldl;
-      }
+      if (!klass->InheritsFrom(TCollection::Class())) {
+         // TCollection has a begin and end method so that they can be used in
+         // the C++ range expression.  However, unlike any other use of TIter,
+         // TCollection::begin must include the first iteration.  PyROOT is
+         // handling TIter as a special case (as it should) and also does this
+         // first iteration (via the first call to Next to get the first element)
+         // and thus using begin in this case lead to the first element being
+         // forgotten by PyROOT.
+         // i.e. Don't search for begin in TCollection since we can not use.'
 
-      if ( iklass && iklass->GetClassInfo() ) {
-         ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)StlSequenceIter;
-         Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter, METH_NOARGS );
-      } else if ( HasAttrDirect( pyclass, PyStrings::gGetItem ) && HasAttrDirect( pyclass, PyStrings::gLen ) ) {
-         Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
-         Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
+         TMethod* meth = klass->GetMethodAllAny( "begin" );
+
+         TClass* iklass = 0;
+         if ( meth ) {
+            Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
+            iklass = TClass::GetClass( meth->GetReturnTypeNormalizedName().c_str() );
+            gErrorIgnoreLevel = oldl;
+         }
+
+         if ( iklass && iklass->GetClassInfo() ) {
+            ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)StlSequenceIter;
+            Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter, METH_NOARGS );
+         } else if ( HasAttrDirect( pyclass, PyStrings::gGetItem ) && HasAttrDirect( pyclass, PyStrings::gLen ) ) {
+            Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
+            Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
+         }
       }
    }
 
@@ -2364,8 +2382,16 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( name == "Fitter" )    // really Fit::Fitter, allow call with python callable
       return Utility::AddToClass( pyclass, "FitFCN", new TFitterFitFCN );
 
-   if ( name == "TFile" )     // allow member-style access to entries in file
+   if ( name == "TFile" ) {
+   // TFile::Open really is a constructor, really
+      PyObject* attr = PyObject_GetAttrString( pyclass, (char*)"Open" );
+      if ( MethodProxy_Check( attr ) )
+         ((MethodProxy*)attr)->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsCreator;
+      Py_XDECREF( attr );
+
+   // allow member-style access to entries in file
       return Utility::AddToClass( pyclass, "__getattr__", TFileGetAttr, METH_O );
+   }
 
    if ( name.substr(0,8) == "TVector3" ) {
       Utility::AddToClass( pyclass, "__len__", (PyCFunction) ReturnThree, METH_NOARGS );

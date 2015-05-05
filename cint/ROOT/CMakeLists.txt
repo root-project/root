@@ -81,8 +81,10 @@ set(CINTDLLCXXFLAGS "${CINT_CXX_DEFINITIONS} -DG__HAVE_CONFIG -DG__NOMAKEINFO")
 set(CINTDLLCFLAGS "${CINT_C_DEFINITIONS} -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__SYSTYPES")
 
 if(MACOSX_TMPNAM_DEPRECATED OR CMAKE_COMPILER_IS_GNUCXX)
-  add_definitions(-Wno-deprecated-declarations)
+  ROOT_ADD_CXX_FLAG(_cxxflags -Wno-deprecated-declarations)
 endif()
+ROOT_ADD_CXX_FLAG(_cxxflags -Wno-ignored-qualifiers)
+add_definitions(${_cxxflags})
 
 set(IncludeDirs -I${CMAKE_SOURCE_DIR}/cint/cint/lib/dll_stl  -I${CMAKE_SOURCE_DIR}/cint/cint/lib -I${HEADER_OUTPUT_PATH})
 
@@ -91,10 +93,12 @@ foreach(_name ${CINTSTLDLLNAMES})
   set(LoaderName ${CMAKE_CURRENT_BINARY_DIR}/stlLoader_${_name}.cc)
   list(FIND CINTSTLDLLNAMES ${_name} _position)
   list(GET CINTSTLDLLHEADERS ${_position} InFileName)
+
   if(${_name} MATCHES map2)
-    set(AdditionalFlags "-DG__MAP2")
-  else()
-    set(AdditionalFlags "")
+    set(AdditionalFlags ${AdditionalFlags} "-DG__MAP2")
+  endif()
+  if(cxx14)
+    set(AdditionalFlags ${AdditionalFlags} "-DG__CXX14")
   endif()
 
   add_Custom_Command(OUTPUT ${OutFileName} 

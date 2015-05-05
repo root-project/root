@@ -1495,7 +1495,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
    timer.Start();
 
-   Int_t rc = 0;
+   Int_t rc = 0, lirc = 0;
    TString slb;
    TString *pslb = (fgLogToSysLog > 0) ? &slb : (TString *)0;
 
@@ -2050,12 +2050,12 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
       case kPROOF_LIB_INC_PATH:
          if (all) {
-            HandleLibIncPath(mess);
+            lirc = HandleLibIncPath(mess);
          } else {
             rc = -1;
          }
          // Notify the client
-         SendLogFile();
+         if (lirc > 0) SendLogFile();
          break;
 
       case kPROOF_REALTIMELOG:
@@ -4163,10 +4163,21 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
       Bool_t outok = (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted &&
                         fPlayer->GetOutputList()) ? kTRUE : kFALSE;
       if (outok) {
-         // Check if in controlled output sending mode
-         Int_t cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
-         if (TProof::GetParameter(input, "PROOF_ControlSendOutput", cso) != 0)
+         // Check if in controlled output sending mode or submerging
+         Int_t cso = 0;
+         Bool_t isSubMerging = kFALSE;
+
+         // Check if we are in merging mode (i.e. parameter PROOF_UseMergers exists)
+         Int_t nm = 0;
+         if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
+            isSubMerging = (nm >= 0) ? kTRUE : kFALSE;
+         }
+         if (!isSubMerging) {
             cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
+            if (TProof::GetParameter(input, "PROOF_ControlSendOutput", cso) != 0)
+               cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
+         }
+
          if (cso > 0) {
 
             // Control output sending mode: wait for the master to ask for the objects.
@@ -4185,18 +4196,16 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
                                      " sizes sent to master", fOrdinal.Data());
          } else {
 
-
             // Check if we are in merging mode (i.e. parameter PROOF_UseMergers exists)
-            Bool_t isInMergingMode = kFALSE;
-            if (!(TestBit(TProofServ::kHighMemory))) {
-               Int_t nm = 0;
-               if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
-                  isInMergingMode = (nm >= 0) ? kTRUE : kFALSE;
-               }
+            if (TestBit(TProofServ::kHighMemory)) {
+               if (isSubMerging)
+                  Info("HandleProcess", "submerging disabled because of high-memory case");
+               isSubMerging = kFALSE;
+            } else {
+               PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isSubMerging);
             }
-            PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isInMergingMode);
 
-            if (!IsMaster() && isInMergingMode) {
+            if (!IsMaster() && isSubMerging) {
                // Worker in merging mode.
                //----------------------------
                // First, it reports only the size of its output to the master
@@ -4648,6 +4657,9 @@ void TProofServ::ProcessNext(TString *slb)
       fPlayer->Process(dset, filename, opt, nentries, first);
    }
 
+   // This is the end of merging
+   fPlayer->SetMerging(kFALSE);
+
    // Return number of events processed
    Bool_t abort =
       (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
@@ -5065,19 +5077,21 @@ void TProofServ::HandleRetrieve(TMessage *mess, TString *slb)
 }
 
 //______________________________________________________________________________
-void TProofServ::HandleLibIncPath(TMessage *mess)
+Int_t TProofServ::HandleLibIncPath(TMessage *mess)
 {
    // Handle lib, inc search paths modification request
 
    TString type;
    Bool_t add;
    TString path;
+   Int_t rc = 1;
    (*mess) >> type >> add >> path;
+   if (mess->BufferSize() > mess->Length()) (*mess) >> rc;
 
    // Check type of action
    if ((type != "lib") && (type != "inc")) {
       Error("HandleLibIncPath","unknown action type: %s", type.Data());
-      return;
+      return rc;
    }
 
    // Separators can be either commas or blanks
@@ -5088,7 +5102,7 @@ void TProofServ::HandleLibIncPath(TMessage *mess)
    if (path.Length() > 0 && path != "-") {
       if (!(op = path.Tokenize(" "))) {
          Error("HandleLibIncPath","decomposing path %s", path.Data());
-         return;
+         return rc;
       }
    }
 
@@ -5188,6 +5202,8 @@ void TProofServ::HandleLibIncPath(TMessage *mess)
             fProof->RemoveIncludePath(path);
       }
    }
+   // Done
+   return rc;
 }
 
 //______________________________________________________________________________
@@ -6065,6 +6081,12 @@ Int_t TProofServ::HandleWorkerLists(TMessage *mess)
                   } else {
                      if (IsEndMaster())
                         PDB(kGlobal, 1) Info("HandleWorkerList", "%d workers could not be (re-)activated", nactmax - nactnew);
+                  }
+               } else if (ord == "restore") {
+                  if (nwc > 0) {
+                     PDB(kGlobal, 1) Info("HandleWorkerList","active worker(s) restored");
+                  } else {
+                     Error("HandleWorkerList", "some active worker(s) could not be restored; check logs");
                   }
                } else {
                   if (nactnew == (nact + nwc)) {
@@ -7292,9 +7314,9 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                      PDB(kSubmerger, 2) Info("HandleSubmerger","starting delayed merging on %s", fOrdinal.Data());
 
                      // Delayed merging if neccessary
-                     mergerPlayer->MergeOutput();
-                  
-                     PDB(kSubmerger, 2) mergerPlayer->GetOutputList()->Print();
+                     mergerPlayer->MergeOutput(kTRUE);
+
+                     PDB(kSubmerger, 2) mergerPlayer->GetOutputList()->Print("all");
 
                      PDB(kSubmerger, 2) Info("HandleSubmerger", "delayed merging on %s finished ", fOrdinal.Data());
                      PDB(kSubmerger, 2) Info("HandleSubmerger", "%s sending results to master ", fOrdinal.Data());

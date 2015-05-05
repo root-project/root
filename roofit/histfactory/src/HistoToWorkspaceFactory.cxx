@@ -704,6 +704,11 @@ namespace HistFactory{
   ///////////////////////////////////////////////
   RooWorkspace* HistoToWorkspaceFactory::MakeSingleChannelModel(vector<EstimateSummary> summary, vector<string> systToFix, bool doRatio)
   {
+
+     if (summary.empty() ) {
+        Error("MakeSingleChannelModel","vector of EstimateSummry is empty - return a nullptr");
+        return 0; 
+     }
     
     // to time the macro
     TStopwatch t;
@@ -868,6 +873,16 @@ namespace HistFactory{
 
     //    RooArgSet* constrainedParams= new RooArgSet("constrainedParams");
 
+     // check inputs (see JIRA-6890)
+     if (ch_names.empty() || chs.empty() ) {
+        Error("MakeCombinedModel","Input vectors are empty - return a nullptr");
+        return 0;
+     }
+     if (chs.size()  <  ch_names.size() ) {
+        Error("MakeCombinedModel","Input vector of workspace has an invalid size - return a nullptr");
+        return 0;
+     }
+     
     map<string, RooAbsPdf*> pdfMap;
     vector<RooAbsPdf*> models;
     stringstream ss;

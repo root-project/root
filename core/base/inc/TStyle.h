@@ -410,7 +410,7 @@ public:
    void             SavePrimitive(std::ostream &out, Option_t * = "");
    void             SaveSource(const char *filename, Option_t *option=0);
 
-   ClassDef(TStyle, 14);  //A collection of all graphics attributes
+   ClassDef(TStyle, 15);  //A collection of all graphics attributes
 };
 
 

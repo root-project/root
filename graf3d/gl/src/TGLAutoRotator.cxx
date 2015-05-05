@@ -11,8 +11,11 @@
 
 #include "TGLAutoRotator.h"
 
+#include "TGLPhysicalShape.h"
+#include "TGLLogicalShape.h"
 #include "TGLViewer.h"
 #include "TGLCamera.h"
+#include "TGLScene.h"
 
 #include "TMath.h"
 #include "TTimer.h"
@@ -21,7 +24,7 @@
 //______________________________________________________________________________
 //
 // Automatically rotates GL camera.
-//
+// 
 // W's are angular velocities.
 // ATheta -- Theta amplitude in units of Pi/2.
 // ADolly -- In/out amplitude in units of initial distance.
@@ -39,6 +42,8 @@ ClassImp(TGLAutoRotator);
 TGLAutoRotator::TGLAutoRotator(TGLViewer* v) :
    fViewer(v), fCamera(0),
    fTimer(new TTimer), fWatch(new TStopwatch),
+   fRotateScene(kFALSE),
+   fDeltaPhi(0.005),
    fDt    (0.01),
    fWPhi  (0.40),
    fWTheta(0.15), fATheta(0.5),
@@ -160,16 +165,20 @@ void TGLAutoRotator::Timeout()
    Double_t time = fWatch->RealTime();
    fWatch->Continue();
 
-   Double_t delta_p = fWPhi*fDt;
-   Double_t delta_t = fThetaA0*fWTheta*Cos(fWTheta*time)*fDt;
-   Double_t delta_d = fDollyA0*fWDolly*Cos(fWDolly*time)*fDt;
-   Double_t th      = fCamera->GetTheta();
+   if (fRotateScene) {
+      RotateScene();
+   } else {
+      Double_t delta_p = fWPhi*fDt;
+      Double_t delta_t = fThetaA0*fWTheta*Cos(fWTheta*time)*fDt;
+      Double_t delta_d = fDollyA0*fWDolly*Cos(fWDolly*time)*fDt;
+      Double_t th      = fCamera->GetTheta();
 
-   if (th + delta_t > 3.0 || th + delta_t < 0.1416)
-      delta_t = 0;
+      if (th + delta_t > 3.0 || th + delta_t < 0.1416)
+         delta_t = 0;
 
-   fCamera->RotateRad(delta_t, delta_p);
-   fCamera->RefCamTrans().MoveLF(1, -delta_d);
+      fCamera->RotateRad(delta_t, delta_p);
+      fCamera->RefCamTrans().MoveLF(1, -delta_d);
+   }
 
    fViewer->RequestDraw(TGLRnrCtx::kLODHigh);
 
@@ -271,5 +280,48 @@ void TGLAutoRotator::StartImageAutoSaveWithGUISettings()
    else
    {
       Warning("StartImageAutoSaveWithGUISettings", "Unsupported mode '%d'.", fImageGUIOutMode);
+   }
+}
+
+//______________________________________________________________________________
+void TGLAutoRotator::RotateScene()
+{
+   //"Scene rotation": either find a special object,
+   //which will be an axis of rotation (it's Z actually)
+   //or use a "global" Z axis.
+   TGLViewer::SceneInfoList_t & scenes = fViewer->fScenes;
+   TGLViewer::SceneInfoList_i sceneIter = scenes.begin();
+   
+   for (; sceneIter != scenes.end(); ++sceneIter) {
+     TGLScene::TSceneInfo *sceneInfo = dynamic_cast<TGLScene::TSceneInfo *>(*sceneIter);
+      if (sceneInfo) {
+         TGLPhysicalShape *axisShape = 0;
+         TGLScene::ShapeVec_i shapeIter = sceneInfo->fShapesOfInterest.begin();
+         for (; shapeIter != sceneInfo->fShapesOfInterest.end(); ++shapeIter) {
+            TGLPhysicalShape * const testShape = const_cast<TGLPhysicalShape *>(*shapeIter);
+            if (testShape && testShape->GetLogical()->ID()->TestBit(13)) {
+               axisShape = testShape;
+               break;
+            }
+         }
+         
+         TGLVector3 axis;
+         TGLVertex3 center;
+         
+         if (!axisShape) {
+            const TGLBoundingBox &bbox = sceneInfo->GetTransformedBBox();
+            axis = bbox.Axis(2);
+            center = bbox.Center();
+         } else {
+            axis = axisShape->BoundingBox().Axis(2);
+            center = axisShape->BoundingBox().Center();
+         }
+         
+         shapeIter = sceneInfo->fShapesOfInterest.begin();
+         for (; shapeIter != sceneInfo->fShapesOfInterest.end(); ++shapeIter) {
+            if (TGLPhysicalShape * const shape = const_cast<TGLPhysicalShape *>(*shapeIter))
+               shape->Rotate(center, axis, fDeltaPhi);
+         }
+      }
    }
 }

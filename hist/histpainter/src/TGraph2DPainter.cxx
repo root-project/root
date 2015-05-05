@@ -790,6 +790,7 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
 
    Double_t *xm = new Double_t[fNpoints];
    Double_t *ym = new Double_t[fNpoints];
+   Double_t *zm = new Double_t[fNpoints];
    Double_t hzmin = gCurrentHist->GetMinimum();
    Double_t hzmax = gCurrentHist->GetMaximum();
    Int_t    npd = 0;
@@ -799,7 +800,6 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
       if(fX[it] < fXmin || fX[it] > fXmax) continue;
       if(fY[it] < fYmin || fY[it] > fYmax) continue;
       if(fZ[it] < hzmin || fZ[it] > hzmax) continue;
-      npd++;
       temp1[0] = fX[it];
       temp1[1] = fY[it];
       temp1[2] = fZ[it];
@@ -811,18 +811,22 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
       if (Hoption.Logy) temp1[1] = TMath::Log10(temp1[1]);
       if (Hoption.Logz) temp1[2] = TMath::Log10(temp1[2]);
       view->WCtoNDC(temp1, &temp2[0]);
-      xm[it] = temp2[0];
-      ym[it] = temp2[1];
+      xm[npd] = temp2[0];
+      ym[npd] = temp2[1];
+      zm[npd] = fZ[it];
+      npd++;
    }
    if (markers0) {
       PaintPolyMarker0(npd,xm,ym);
    } else if (colors) {
-      for (it=0; it<fNpoints; it++) {
-         theColor = (Int_t)( ((fZ[it]-hzmin)/(hzmax-hzmin))*(ncolors-1) );
+      Int_t cols = fGraph2D->GetMarkerColor();
+      for (it=0; it<npd; it++) {
+         theColor = (Int_t)( ((zm[it]-hzmin)/(hzmax-hzmin))*(ncolors-1) );
          fGraph2D->SetMarkerColor(gStyle->GetColorPalette(theColor));
          fGraph2D->TAttMarker::Modify();
          gPad->PaintPolyMarker(1,&xm[it],&ym[it]);
       }
+      fGraph2D->SetMarkerColor(cols);
    } else {
       fGraph2D->SetMarkerStyle(fGraph2D->GetMarkerStyle());
       fGraph2D->SetMarkerSize(fGraph2D->GetMarkerSize());
@@ -832,6 +836,7 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
    }
    delete [] xm;
    delete [] ym;
+   delete [] zm;
 }
 
 
@@ -888,6 +893,7 @@ void TGraph2DPainter::PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y)
 
    fGraph2D->SetMarkerSize(fGraph2D->GetMarkerSize());
    Int_t mc = fGraph2D->GetMarkerColor();
+   Int_t ms = fGraph2D->GetMarkerStyle();
    for (Int_t i=0; i<n; i++) {
       fGraph2D->SetMarkerStyle(20);
       fGraph2D->SetMarkerColor(0);
@@ -898,6 +904,7 @@ void TGraph2DPainter::PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y)
       fGraph2D->TAttMarker::Modify();
       gPad->PaintPolyMarker(1,&x[i],&y[i]);
    }
+   fGraph2D->SetMarkerStyle(ms);
 }
 
 

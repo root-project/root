@@ -33,81 +33,6 @@ class TDataMember;
 class TJSONStackObj;
 
 
-#include "TNamed.h"
-#include "TArrayF.h"
-#include "TArrayL.h"
-#include "TObjString.h"
-#include "TClonesArray.h"
-
-class TTestObject : public TNamed {
-protected:
-   Int_t    fIntValue;
-   Float_t  fFloatValue;
-   Int_t    fIntArray[5];
-   Int_t    fInt2Array[3][4];
-   Int_t    fInt3Array[2][3][4];
-   TString  fStrValue;
-   TString *fStrPtr;
-   TArrayF  fArrayF;
-   TArrayL  fArrayL;
-   TClonesArray fNames;
-
-public:
-   TTestObject() : TNamed()
-   {
-      fIntValue    = 123;
-      fFloatValue  = 23.45;
-      for (int n = 0; n < 5; n++) fIntArray[n] = (n + 7) * 12;
-      for (int n1 = 0; n1 < 3; n1++)
-         for (int n2 = 0; n2 < 4; n2++)
-            fInt2Array[n1][n2] = (n1 + 1) * (n2 + 2);
-      for (int n0 = 0; n0 < 2; n0++)
-         for (int n1 = 0; n1 < 3; n1++)
-            for (int n2 = 0; n2 < 4; n2++)
-               fInt3Array[n0][n1][n2] = (n0 + 1) * (n1 + 2) * (n2 + 3);
-
-      fStrValue = "";
-      fStrPtr = 0;
-      fArrayF.Set(0);
-      fArrayL.Set(0);
-   }
-
-   TTestObject(const char *name, const char *title) :
-      TNamed(name, title)
-   {
-      fIntValue    = 123;
-      fFloatValue  = 23.45;
-      for (int n = 0; n < 5; n++) fIntArray[n] = (n + 7) * 12;
-      for (int n1 = 0; n1 < 3; n1++)
-         for (int n2 = 0; n2 < 4; n2++)
-            fInt2Array[n1][n2] = (n1 + 1) * (n2 + 2);
-
-      for (int n0 = 0; n0 < 2; n0++)
-         for (int n1 = 0; n1 < 3; n1++)
-            for (int n2 = 0; n2 < 4; n2++)
-               fInt3Array[n0][n1][n2] = (n0 + 1) * (n1 + 2) * (n2 + 3);
-
-      fStrValue = "string value";
-      fStrPtr = &fStrValue;
-      fArrayF.Set(10);
-      fArrayF.Reset(123);
-      fArrayL.Set(12);
-      fArrayL.Reset(77);
-
-      fNames.SetClass("TObjString", 10);
-      for (Int_t n = 0; n <= 10; n++) {
-         new(fNames[n]) TObjString(Form("str%d", n));
-         //fNames.Add(s);
-      }
-      printf("Num names %d\n", fNames.GetLast() + 1);
-   }
-
-
-   ClassDef(TTestObject, 1);
-
-};
-
-
 class TBufferJSON : public TBuffer {
 
 public:
@@ -273,6 +198,7 @@ public:
    virtual   void     ReadDouble(Double_t   &d);
    virtual   void     ReadCharP(Char_t      *c);
    virtual   void     ReadTString(TString   &s);
+   virtual   void     ReadStdString(std::string &s);
 
    virtual   void     WriteBool(Bool_t       b);
    virtual   void     WriteChar(Char_t       c);
@@ -288,7 +214,8 @@ public:
    virtual   void     WriteFloat(Float_t     f);
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
-   virtual   void     WriteTString(const TString  &s);
+   virtual   void     WriteTString(const TString &s);
+   virtual   void     WriteStdString(const std::string &s);
 
    virtual   Int_t    WriteClones(TClonesArray *a, Int_t nobjects);
 
@@ -301,15 +228,11 @@ public:
 
    virtual void       TagStreamerInfo(TVirtualStreamerInfo * /*info*/) {}
 
-   // abstract virtual methods from TBuffer, which should be redefined to
-   virtual Bool_t     CheckObject(const TObject * /*obj*/)
-   {
-      /*Error("CheckObject","useless");*/ return kTRUE;
-   }
-   virtual Bool_t     CheckObject(const void * /*ptr*/, const TClass * /*cl*/)
-   {
-      /*Error("CheckObject","useless");*/ return kTRUE;
-   }
+   virtual Bool_t     CheckObject(const TObject * /*obj*/);
+
+   virtual Bool_t     CheckObject(const void * /*ptr*/, const TClass * /*cl*/);
+
+   // abstract virtual methods from TBuffer, which should be redefined
 
    virtual Int_t      ReadBuf(void * /*buf*/, Int_t /*max*/)
    {
@@ -486,10 +409,7 @@ protected:
 
    // end redefined protected virtual functions
 
-   TString          JsonWriteAny(const void *obj, const TClass *cl);
-
    TString          JsonWriteMember(const void *ptr, TDataMember *member, TClass *memberClass);
-
 
    TJSONStackObj   *PushStack(Int_t inclevel = 0);
    TJSONStackObj   *PopStack();
@@ -497,6 +417,12 @@ protected:
 
    void             WorkWithClass(TStreamerInfo *info, const TClass *cl = 0);
    void             WorkWithElement(TStreamerElement *elem, Int_t comp_type);
+
+
+   void             JsonDisablePostprocessing();
+   Int_t            JsonSpecialClass(const TClass *cl) const;
+
+   void             JsonStartElement(const TStreamerElement *elem, const TClass *base_class = 0);
 
    void             PerformPostProcessing(TJSONStackObj *stack, const TStreamerElement *elem = 0);
 
@@ -514,15 +440,16 @@ protected:
    void              JsonWriteBasic(ULong_t value);
    void              JsonWriteBasic(ULong64_t value);
 
-   void              JsonWriteObject(const void *obj, const TClass *objClass);
+   void              JsonWriteConstChar(const char* value, Int_t len = -1);
+
+   void              JsonWriteObject(const void *obj, const TClass *objClass, Bool_t check_map = kTRUE);
 
    void              JsonStreamCollection(TCollection *obj, const TClass *objClass);
 
-   void              JsonStartElement();
-
    void              AppendOutput(const char *line0, const char *line1 = 0);
 
-   TString                   fOutBuffer;    //!  output buffer for json code
+   TString                   fOutBuffer;    //!  main output buffer for json code
+   TString                  *fOutput;       //!  current output buffer for json code
    TString                   fValue;        //!  buffer for current value
    std::map<const void *, unsigned>  fJsonrMap;   //!  map of recorded objects, used in JsonR to restore references
    unsigned                  fJsonrCnt;     //!  counter for all objects and arrays

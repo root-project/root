@@ -144,64 +144,68 @@ set(openglincdir ${OPENGL_INCLUDE_DIR})
 
 set(buildldap ${value${ldap}})
 set(ldaplibdir ${LDAP_LIBRARY_DIR})
-set(ldaplib ${LDAP_LIBRARY})
+string(REPLACE ";" " " ldaplib "${LDAP_LIBRARY}")
 set(ldapincdir ${LDAP_INCLUDE_DIR})
 
 set(buildmysql ${value${mysql}})
 set(mysqllibdir ${MYSQL_LIBRARY_DIR})
-set(mysqllib ${MYSQL_LIBRARY})
+string(REPLACE ";" " " mysqllib "${MYSQL_LIBRARY}")
 set(mysqlincdir ${MYSQL_INCLUDE_DIR})
 
 set(buildoracle ${value${oracle}})
 set(oraclelibdir ${ORACLE_LIBRARY_DIR})
-set(oraclelib ${ORACLE_LIBRARY})
+string(REPLACE ";" " " oraclelib "${ORACLE_LIBRARY}")
 set(oracleincdir ${ORACLE_INCLUDE_DIR})
 
 set(buildpgsql ${value${pgsql}})
 set(pgsqllibdir ${PGSQL_LIBRARY_DIR})
-set(pgsqllib ${PGSQL_LIBRARY})
+string(REPLACE ";" " " pgsqllib "${PGSQL_LIBRARY}")
 set(pgsqlincdir ${PGSQL_INCLUDE_DIR})
 
 set(buildsqlite ${value${sqlite}})
 set(sqlitelibdir ${SQLITE_LIBRARY_DIR})
-set(sqlitelib ${SQLITE_LIBRARY})
+string(REPLACE ";" " " sqlitelib "${SQLITE_LIBRARY}")
 set(sqliteincdir ${SQLITE_INCLUDE_DIR})
 
 set(buildsapdb ${value${sapdb}})
 set(sapdblibdir ${SAPDB_LIBRARY_DIR})
-set(sapdblib ${SAPDB_LIBRARY})
+string(REPLACE ";" " " sapdblib "${SAPDB_LIBRARY}")
 set(sapdbincdir ${SAPDB_INCLUDE_DIR})
 
 set(buildodbc ${value${odbc}})
 set(odbclibdir ${OCDB_LIBRARY_DIR})
-set(odbclib ${OCDB_LIBRARY})
+string(REPLACE ";" " " odbclib "${OCDB_LIBRARY}")
 set(odbcincdir ${OCDB_INCLUDE_DIR})
 
 set(buildqt ${value${qt}})
 set(buildqtpsi ${value${qtgsi}})
 set(qtlibdir ${QT_LIBRARY_DIR})
-set(qtlib ${QT_QT_LIBRARY})
+string(REPLACE ";" " " qtlib "${QT_QT_LIBRARY}")
 set(qtincdir ${QT_INCLUDE_DIR})
 set(qtvers ${QT_VERSION_MAJOR})
 set(qtmocexe ${QT_MOC_EXECUTABLE})
 
 set(buildrfio ${value${rfio}})
 set(shiftlibdir ${RFIO_LIBRARY_DIR})
-set(shiftlib ${RFIO_LIBRARY})
+string(REPLACE ";" " " shiftlib "${RFIO_LIBRARY}")
 set(shiftincdir ${RFIO_INCLUDE_DIR})
 set(shiftcflags)
 
 set(buildcastor ${value${castor}})
 set(castorlibdir ${CASTOR_LIBRARY_DIR})
-set(castorlib ${CASTOR_LIBRARY})
+string(REPLACE ";" " " castorlib "${CASTOR_LIBRARY}")
 set(castorincdir ${CASTOR_INCLUDE_DIR})
 set(castorcflags)
 
-
 set(builddavix ${value${davix}})
 set(davixlibdir ${DAVIX_LIBRARY_DIR})
-set(davixlib ${DAVIX_LIBRARY})
+string(REPLACE ";" " " davixlib "${DAVIX_LIBRARY}")
 set(davixincdir ${DAVIX_INCLUDE_DIR})
+if(davix)
+  set(useoldwebfile no)
+else()
+  set(useoldwebfile yes)
+endif()
 
 set(buildnetxng ${value${netxng}})
 if(netxng)
@@ -212,59 +216,59 @@ endif()
 
 set(builddcap ${value${dcap}})
 set(dcaplibdir ${DCAP_LIBRARY_DIR})
-set(dcaplib ${DCAP_LIBRARY})
+string(REPLACE ";" " " dcaplib "${DCAP_LIBRARY}")
 set(dcapincdir ${DCAP_INCLUDE_DIR})
 
 set(buildftgl ${value${builtin_ftgl}})
 set(ftgllibdir ${FTGL_LIBRARY_DIR})
-set(ftgllibs ${FTGL_LIBRARIES})
+string(REPLACE ";" " " ftgllibs "${FTGL_LIBRARIES}")
 set(ftglincdir ${FTGL_INCLUDE_DIR})
 
 set(buildglew ${value${builtin_glew}})
 set(glewlibdir ${GLEW_LIBRARY_DIR})
-set(glewlibs ${GLEW_LIBRARIES})
+string(REPLACE ";" " " glewlibs "${GLEW_LIBRARIES}")
 set(glewincdir ${GLEW_INCLUDE_DIR})
 
 set(buildgfal ${value${gfal}})
 set(gfallibdir ${GFAL_LIBRARY_DIR})
-set(gfallib ${GFAL_LIBRARY})
+string(REPLACE ";" " " gfallib "${GFAL_LIBRARY}")
 set(gfalincdir ${GFAL_INCLUDE_DIR})
 
 set(buildglite ${value${glite}})
 set(glitelibdir ${GLITE_LIBRARY_DIR})
-set(glitelib ${GLITE_LIBRARY})
+string(REPLACE ";" " " glitelib "${GLITE_LIBRARY}")
 set(gaw_cppflags)
 
 set(buildmemstat ${value${memstat}})
 
 set(buildbonjour ${value${bonjour}})
 set(dnssdlibdir ${BONJOUR_LIBRARY_DIR})
-set(dnssdlib ${BONJOUR_LIBRARY})
+string(REPLACE ";" " " dnssdlib "${BONJOUR_LIBRARY}")
 set(dnsdincdir ${BONJOUR_INCLUDE_DIR})
 set(bonjourcppflags)
 
 set(buildchirp ${value${chirp}})
 set(chirplibdir ${CHIRP_LIBRARY_DIR})
-set(chirplib ${CHIRP_LIBRARY})
+string(REPLACE ";" " " chirplib "${CHIRP_LIBRARY}")
 set(chirpincdir ${CHIRP_INCLUDE_DIR})
 
 set(buildhdfs ${value${hdfs}})
 set(hdfslibdir ${HDFS_LIBRARY_DIR})
-set(hdfslib ${HDFS_LIBRARY})
+string(REPLACE ";" " " hdfslib "${HDFS_LIBRARY}")
 set(hdfsincdir ${HDFS_INCLUDE_DIR})
 
 set(jniincdir ${Java_INCLUDE_DIRS})
-set(jvmlib ${Java_LIBRARIES})
+string(REPLACE ";" " " jvmlib "${Java_LIBRARIES}")
 set(jvmlibdir ${Java_LIBRARY_DIR})
 
 set(buildalien ${value${alien}})
 set(alienlibdir ${ALIEN_LIBRARY_DIR})
-set(alienlib ${ALIEN_LIBRARY})
+string(REPLACE ";" " " alienlib "${ALIEN_LIBRARY}")
 set(alienincdir ${ALIEN_INCLUDE_DIR})
 
 set(buildasimage ${value${asimage}})
 set(builtinafterimage ${builtin_afterimage})
-set(asextralib ${ASEXTRA_LIBRARIES})
+string(REPLACE ";" " " asextralib "${ASEXTRA_LIBRARIES}")
 set(asextralibdir)
 set(asjpegincdir ${JPEG_INCLUDE_DIR})
 set(aspngincdir ${PNG_INCLUDE_DIR})
@@ -276,43 +280,44 @@ set(asimagelibdir)
 
 set(buildpythia6 ${value${pythia6}})
 set(pythia6libdir ${PYTHIA6_LIBRARY_DIR})
-set(pythia6lib ${PYTHIA6_LIBRARY})
+string(REPLACE ";" " " pythia6lib "${PYTHIA6_LIBRARY}")
 set(pythia6cppflags)
+
 set(buildpythia8 ${value${pythia8}})
 set(pythia8libdir ${PYTHIA8_LIBRARY_DIR})
-set(pythia8lib ${PYTHIA8_LIBRARY})
+string(REPLACE ";" " " pythia8lib "${PYTHIA8_LIBRARY}")
 set(pythia8cppflags)
 
 set(buildfftw3 ${value${fftw3}})
 set(fftw3libdir ${FFTW_LIBRARY_DIR})
-set(fftw3lib ${FFTW_LIBRARY})
+string(REPLACE ";" " " fftw3lib "${FFTW_LIBRARY}")
 set(fftw3incdir ${FFTW_INCLUDE_DIR})
 
 set(buildfitsio ${value${fitsio}})
 set(fitsiolibdir ${FITSIO_LIBRARY_DIR})
-set(fitsiolib ${FITSIO_LIBRARY})
+string(REPLACE ";" " " fitsiolib "${FITSIO_LIBRARY}")
 set(fitsioincdir ${FITSIO_INCLUDE_DIR})
 
 set(buildgviz ${value${gviz}})
 set(gvizlibdir ${GVIZ_LIBRARY_DIR})
-set(gvizlib ${GVIZ_LIBRARY})
+string(REPLACE ";" " " gvizlib "${GVIZ_LIBRARY}")
 set(gvizincdir ${GVIZ_INCLUDE_DIR})
 set(gvizcflags)
 
 set(buildpython ${value${python}})
 set(pythonlibdir ${PYTHON_LIBRARY_DIR})
-set(pythonlib ${PYTHON_LIBRARY})
+string(REPLACE ";" " " pythonlib "${PYTHON_LIBRARY}")
 set(pythonincdir ${PYTHON_INCLUDE_DIR})
 set(pythonlibflags)
 
 set(buildruby ${value${ruby}})
 set(rubylibdir ${RUBY_LIBRARY_DIR})
-set(rubylib ${RUBY_LIBRARY})
+string(REPLACE ";" " " rubylib "${RUBY_LIBRARY}")
 set(rubyincdir ${RUBY_INCLUDE_DIR})
 
 set(buildxml ${value${xml}})
 set(xmllibdir ${LIBXML2_LIBRARY_DIR})
-set(xmllib ${LIBXML2_LIBRARIES})
+string(REPLACE ";" " " xmllib "${LIBXML2_LIBRARIES}")
 set(xmlincdir ${LIBXML2_INCLUDE_DIR})
 
 set(buildxrd ${value${xrootd}})
@@ -331,7 +336,7 @@ set(srputillibdir)
 set(srputillib)
 set(srputilincdir)
 
-set(afslib ${AFS_LIBRARY})
+string(REPLACE ";" " " afslib "${AFS_LIBRARY}")
 set(afslibdir ${AFS_LIBRARY_DIR})
 set(afsincdir ${AFS_INCLUDE_DIR})
 set(afsextracflags)
@@ -342,6 +347,7 @@ set(alloclibdir)
 
 set(buildkrb5 ${value${krb5}})
 set(krb5libdir ${KRB5_LIBRARY_DIR})
+string(REPLACE ";" " " krb5lib "${KRB5_LIBRARY}")
 set(krb5lib ${KRB5_LIBRARY})
 set(krb5incdir ${KRB5_INCLUDE_DIR})
 set(krb5init ${KRB5_INIT})
@@ -354,21 +360,21 @@ set(cryptolibdir)
 
 set(buildglobus ${value${globus}})
 set(globuslibdir ${GLOBUS_LIBRARY_DIR})
-set(globuslib ${GLOBUS_LIBRARY})
+string(REPLACE ";" " " globuslib "${GLOBUS_LIBRARY}")
 set(globusincdir ${GLOBUS_INCLUDE_DIR})
 set(buildxrdgsi)
 
 set(buildmonalisa ${value${monalisa}})
 set(monalisalibdir ${MONALISA_LIBRARY_DIR})
-set(monalisalib ${MONALISA_LIBRARY})
+string(REPLACE ";" " " monalisalib "${MONALISA_LIBRARY}")
 set(monalisaincdir ${MONALISA_INCLUDE_DIR})
 
-set(ssllib ${OPENSSL_LIBRARIES})
+string(REPLACE ";" " " ssllib "${OPENSSL_LIBRARIES}")
 set(ssllibdir)
 set(sslincdir ${OPENSSL_INCLUDE_DIR})
 set(sslshared)
 
-set(gsllibs ${GSL_LIBRARIES})
+string(REPLACE ";" " " gsllibs "${GSL_LIBRARIES}")
 set(gsllibdir)
 set(gslincdir ${GSL_INCLUDE_DIR})
 set(gslflags)
@@ -389,13 +395,13 @@ set(buildtmva ${value${tmva}})
 
 set(buildclarens ${value${clarens}})
 set(clarensincdir ${CLARENS_INCLUDE_DIR})
-set(clarenslibs ${CLARENS_LIBRARIES})
+string(REPLACE ";" " " clarenslibs "${CLARENS_LIBRARIES}")
 set(buildpeac ${value${peac}})
 
 
 set(cursesincdir ${CURSES_INCLUDE_DIR})
 set(curseslibdir)
-set(curseslib ${CURSES_LIBRARIES})
+string(REPLACE ";" " " curseslib "${CURSES_LIBRARIES}")
 set(curseshdr ${CURSES_HEADER_FILE})
 set(buildeditline ${value${editline}})
 set(cppunit)
@@ -419,6 +425,7 @@ set(haslzmacompression ${has${lzma}})
 set(hascocoa ${has${cocoa}})
 set(hasvc ${has${vc}})
 set(usec++11 ${has${cxx11}})
+set(usec++14 ${has${cxx14}})
 set(uselibc++ ${has${libcxx}})
 
 
@@ -435,7 +442,7 @@ get_filename_component(altld ${CMAKE_CXX_COMPILER} NAME)
 set(pythonvers ${PYTHON_VERSION})
 
 #---CINT Configuration---------------------------------------------------------------------------------------
-#configure_file(${PROJECT_SOURCE_DIR}/cmake/scripts/cint-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cint-config @ONLY)
+#configure_file(${PROJECT_SOURCE_DIR}/cmake/scripts/cint-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cint-config @ONLY NEWLINE_STYLE UNIX)
 
 #---Create the configcint.h header file and copy the file first to the cint/cint directory. Copy it to the 
 #   temporary include directory only if there is a change. Otherwise you have to recompile unneccessarily some files 
@@ -446,29 +453,29 @@ execute_process(COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/t
 #install(FILES ${HEADER_OUTPUT_PATH}/configcint.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
-configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/RConfigure.h)
+configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/RConfigure.h NEWLINE_STYLE UNIX)
 install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 #---Configure and install various files----------------------------------------------------------------------
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 
-configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/system.rootrc @ONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptions.h)
+configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/system.rootrc @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptions.h NEWLINE_STYLE UNIX)
 if(ruby)
   file(APPEND ${CMAKE_BINARY_DIR}/include/RConfigOptions.h "\#define R__RUBY_MAJOR ${RUBY_MAJOR_VERSION}\n\#define R__RUBY_MINOR ${RUBY_MINOR_VERSION}\n")
 endif()
 
-configure_file(${CMAKE_SOURCE_DIR}/config/Makefile-comp.in config/Makefile.comp)
-configure_file(${CMAKE_SOURCE_DIR}/config/Makefile.in config/Makefile.config)
-configure_file(${CMAKE_SOURCE_DIR}/config/mimes.unix.in ${CMAKE_BINARY_DIR}/etc/root.mimes)
+configure_file(${CMAKE_SOURCE_DIR}/config/Makefile-comp.in config/Makefile.comp NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/Makefile.in config/Makefile.config NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/mimes.unix.in ${CMAKE_BINARY_DIR}/etc/root.mimes NEWLINE_STYLE UNIX)
 
 #---Generate the ROOTConfig files to be used by CMake projects-----------------------------------------------
 ROOT_SHOW_OPTIONS(ROOT_ENABLED_OPTIONS)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
-               ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake @ONLY)
+               ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
-               ${CMAKE_BINARY_DIR}/ROOTUseFile.cmake @ONLY)
+               ${CMAKE_BINARY_DIR}/ROOTUseFile.cmake @ONLY NEWLINE_STYLE UNIX)
 
 #---Compiler flags (because user apps are a bit dependent on them...)----------------------------------------
 set(ROOT_COMPILER_FLAG_HINTS "#
@@ -476,11 +483,9 @@ set(ROOT_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\")
 set(ROOT_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS}\")")
 
 #---To be used from the binary tree--------------------------------------------------------------------------
-get_property(buildtree_include_dirs GLOBAL PROPERTY ROOT_INCLUDE_DIRS)
-list(REMOVE_DUPLICATES buildtree_include_dirs)
 set(ROOT_INCLUDE_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
-set(ROOT_INCLUDE_DIRS ${buildtree_include_dirs})
+set(ROOT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
 ")
 set(ROOT_LIBRARY_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
@@ -498,7 +503,7 @@ set(CMAKE_MODULE_PATH \${CMAKE_MODULE_PATH} ${CMAKE_MODULE_PATH})
 get_property(exported_targets GLOBAL PROPERTY ROOT_EXPORTED_TARGETS)
 export(TARGETS ${exported_targets} FILE ${PROJECT_BINARY_DIR}/ROOTConfig-targets.cmake)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
-               ${CMAKE_BINARY_DIR}/ROOTConfig.cmake @ONLY)
+               ${CMAKE_BINARY_DIR}/ROOTConfig.cmake @ONLY NEWLINE_STYLE UNIX)
 
 #---To be used from the install tree--------------------------------------------------------------------------
 # Need to calculate actual relative paths from CMAKEDIR to other locations
@@ -523,7 +528,7 @@ set(ROOT_MODULE_PATH_SETUP "
 set(CMAKE_MODULE_PATH \${CMAKE_MODULE_PATH}  \${_thisdir}/modules)
 ")
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
-               ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY)
+               ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY NEWLINE_STYLE UNIX)
 install(FILES ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake
               ${CMAKE_BINARY_DIR}/ROOTUseFile.cmake
               ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
@@ -541,27 +546,27 @@ endif()
 #---compiledata.h--------------------------------------------------------------------------------------------
 if(WIN32)
   # We cannot use the compiledata.sh script for windows
-  configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in include/compiledata.h)
+  configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in include/compiledata.h NEWLINE_STYLE UNIX)
 else()
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh include/compiledata.h "${CXX}" ""
        "${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}"
         "${CMAKE_CXX_FLAGS}" "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "${LibSuffix}" "${SYSLIBS}"
-        "${libdir}" "-lCore" "-Rint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
+        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
 endif()
 
-configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/genreflex.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex @ONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/genreflex-rootcint.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex-rootcint @ONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/root-help.el.in root-help.el @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/config/genreflex.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/genreflex-rootcint.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex-rootcint @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_SOURCE_DIR}/config/root-help.el.in root-help.el @ONLY NEWLINE_STYLE UNIX)
 if (XROOTD_FOUND AND XROOTD_NOMAIN)
-  configure_file(${CMAKE_SOURCE_DIR}/config/xproofd.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd @ONLY)
+  configure_file(${CMAKE_SOURCE_DIR}/config/xproofd.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd @ONLY NEWLINE_STYLE UNIX)
 endif()
 if(WIN32)
   set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
