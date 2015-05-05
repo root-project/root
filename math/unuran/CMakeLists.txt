@@ -14,6 +14,10 @@ set(UNR_UNTARDIR ${CMAKE_CURRENT_BINARY_DIR}/${UNR_TARNAME})
 if(NOT EXISTS ${UNR_UNTARDIR})
   execute_process( COMMAND cmake -E tar xzf ${UNR_TARGZFILE}
                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+  # This is necessary to replace the config.guess of unuran 1.8.0 as it does not allow to compile the 
+  # package on arm64.
+  execute_process( COMMAND cmake -E copy ${CMAKE_CURRENT_SOURCE_DIR}/config.guess_patch1 ${UNR_UNTARDIR}/autoconf/config.guess
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
 endif()
 
 if(WIN32)
