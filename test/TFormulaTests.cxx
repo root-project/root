@@ -13,7 +13,7 @@
 #include <v5/TFormula.h>
 #include <TRandom.h>
 #include <iostream>
-#include "TFormulaParceTests.h"
+#include "TFormulaParsingTests.h"
 
 using namespace std;
 
@@ -487,10 +487,10 @@ Bool_t TFormulaTests::Stress(Int_t n)
 
 bool TFormulaTests::Parser() {
    std::cout << "Test parsing of expression compatible with old TFormula" << std::endl;
-   TFormulaParceTests t;
+   TFormulaParsingTests t;
    int nfailed = t.runTests();
    if (nfailed != 0) {
-      std::cout << "ERROR - Parcing test of TFormula failed - number of failures is " << nfailed << std::endl;
+      std::cout << "ERROR - Parsing test of TFormula failed - number of failures is " << nfailed << std::endl;
       return false;
    }
    return true; 

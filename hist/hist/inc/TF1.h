@@ -355,6 +355,9 @@ public:
    virtual const char *GetParName(Int_t ipar) const {
       return (fFormula) ? fFormula->GetParName(ipar) : fParams->GetParName(ipar);
    }
+   virtual Int_t    GetParNumber(const char* name) const {
+      return (fFormula) ? fFormula->GetParNumber(name) : fParams->GetParNumber(name);
+   }
    virtual Double_t GetParError(Int_t ipar) const;
    virtual const Double_t *GetParErrors() const {return fParErrors.data();}
    virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax) const;

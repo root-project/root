@@ -149,12 +149,12 @@ public:
    Int_t          Compile(const char *expression="");
    virtual void   Copy(TObject &f1) const;
    virtual void   Clear(Option_t * option="");
-   Double_t       Eval(Double_t x);
+   Double_t       Eval(Double_t x);  
    Double_t       Eval(Double_t x, Double_t y);
    Double_t       Eval(Double_t x, Double_t y , Double_t z);
    Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t );
    Double_t       EvalPar(const Double_t *x, const Double_t *params=0);
-   TString        GetExpFormula() const { return fFormula; }
+   TString        GetExpFormula(Option_t *option="") const;
    const TObject *GetLinearPart(Int_t i) const;
    Int_t          GetNdim() const {return fNdim;}
    Int_t          GetNpar() const {return fNpar;}

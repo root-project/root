@@ -5,14 +5,14 @@
 // test of tformula neeeded to be run
 
 
-class TFormulaParceTests {
+class TFormulaParsingTests {
 
    
 bool verbose; 
 std::vector<int> failedTests; 
 public:
 
-TFormulaParceTests(bool _verbose = false) : verbose(_verbose) {}
+TFormulaParsingTests(bool _verbose = false) : verbose(_verbose) {}
 
 bool test1() {
    // test composition of functions
@@ -230,7 +230,48 @@ bool test11() {
    ok &= ( (f1.Eval(2) +1. ) == f2.Eval(2) );
    return ok;
 }
+bool test12() { 
+   // test parameters order 
+   bool ok = true; 
+   TFormula * f = 0; 
+   f = new TFormula("f","[2] + [3]*x + [0]*x^2 + [1]*x^3");
+   f->SetParameters(1,2,3,4);
+   double result = 3+4*2+1*4+2*8;
+   ok &= (f->Eval(2) == result); 
+   f = new TFormula("f","[b] + [c]*x + [d]*x^2 + [a]*x^3");
+   f->SetParameters(1,2,3,4);
+   result = 2+3*2+4*4+1*8;
+   ok &= (f->Eval(2) == result);
+   // change a parameter value
+   f->SetParName(2,"par2");
+   ok &= (f->Eval(2) == result);
+   return ok;
+}
 
+bool test13()  {
+   // test GetExpFormula
+   TFormula f("f","[2] + [0]*x + [1]*x*x");
+   f.SetParameters(1,2,3);
+   return (f.GetExpFormula() == TString("[2]+[0]*x+[1]*x*x"));
+}
+bool test14()  {
+   // test GetExpFormula
+   TFormula f("f","[2] + [0]*x + [1]*x*x");
+   f.SetParameters(1,2,3);
+   return (f.GetExpFormula("P") == TString("3.000000+1.000000*x+2.000000*x*x"));
+}
+bool test15()  {
+   // test GetExpFormula
+   TFormula f("f","[2] + [0]*x + [1]*x*x");
+   f.SetParameters(1,2,3);
+   return (f.GetExpFormula("CLING") == TString("p[2]+p[0]*x[0]+p[1]*x[0]*x[0] ") ); // need an extra white space
+}
+bool test16()  {
+   // test GetExpFormula
+   TFormula f("f","[2] + [0]*x + [1]*x*x");
+   f.SetParameters(1,2,3);
+   return (f.GetExpFormula("CLING P") == TString("3.000000+1.000000*x[0]+2.000000*x[0]*x[0] ") );
+}
 
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
@@ -260,11 +301,16 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test9() ) { PrintError(itest); }
    IncrTest(itest); if (!test10() ) { PrintError(itest); }
    IncrTest(itest); if (!test11() ) { PrintError(itest); }
+   IncrTest(itest); if (!test12() ) { PrintError(itest); }
+   IncrTest(itest); if (!test13() ) { PrintError(itest); }
+   IncrTest(itest); if (!test14() ) { PrintError(itest); }
+   IncrTest(itest); if (!test15() ) { PrintError(itest); }
+   IncrTest(itest); if (!test16() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
    if (failedTests.size() == 0)  
-      std::cout << "All TFormula Parcing tests PASSED !" << std::endl;
+      std::cout << "All TFormula Parsing tests PASSED !" << std::endl;
    else {
       Error("TFORMULA Tests","%d tests failed ",int(failedTests.size()) );
       std::cout << "failed tests are : ";
