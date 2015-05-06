@@ -315,7 +315,20 @@ bool test19() {
    ok &= (f1->EvalPar(xx,par) == f0->EvalPar(xx,par) );
    return ok; 
 }
-   
+
+bool test20() {
+   // test parameter order with more than 10 parameters
+   TF2 f2("f2","xygaus+xygaus(5)+xygaus(10)+[offset]");
+   double params[16] = {1,0,1,1,1, 2,-1,2,0,2, 2,1,3,-1,2, 10};
+   f2.SetParameters(params);
+   TF2 f0("f2",[](double *x, double *p){ return p[0]*TMath::Gaus(x[0],p[1],p[2])*TMath::Gaus(x[1],p[3],p[4]) +
+            p[5]*TMath::Gaus(x[0],p[6],p[7])*TMath::Gaus(x[1],p[8],p[9]) + 
+            p[10]*TMath::Gaus(x[0],p[11],p[12])*TMath::Gaus(x[1],p[13],p[14]) + p[15]; },
+      -10,10,-10,10,16);
+   double xx[2]={1,2};
+   //printf(" difference = %f , value %f \n", f2.Eval(1,2) - f0.EvalPar(xx,params), f2.Eval(1,2) );
+   return ( f2.Eval(1,2) == f0.EvalPar(xx,params) );
+}
 
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
@@ -353,6 +366,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test17() ) { PrintError(itest); }
    IncrTest(itest); if (!test18() ) { PrintError(itest); }
    IncrTest(itest); if (!test19() ) { PrintError(itest); }
+   IncrTest(itest); if (!test20() ) { PrintError(itest); }
 
    std::cout << ".\n";
     

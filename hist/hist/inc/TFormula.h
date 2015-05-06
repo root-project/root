@@ -74,6 +74,16 @@ public:
    }
 };
 
+// Functor defining the oarameter order
+struct TFormulaParamOrder {
+   bool operator() (const TString& a, const TString& b) const {
+      if (a.IsDigit() && b.IsDigit() ) 
+         return (a.Atoi() < b.Atoi() );     
+      
+      return a < b;
+   }
+};
+
 
 class TFormula : public TNamed
 {
@@ -104,7 +114,7 @@ protected:
 
    std::list<TFormulaFunction>         fFuncs;    //!
    std::map<TString,TFormulaVariable>  fVars;     //!  list of  variable names
-   std::map<TString,Int_t>             fParams;   //!  list of  parameter names
+   std::map<TString,Int_t,TFormulaParamOrder>   fParams;   //!  list of  parameter names
    std::map<TString,Double_t>          fConsts;   //!
    std::map<TString,TString>           fFunctionsShortcuts;  //!
    TString                        fFormula;
@@ -165,7 +175,9 @@ public:
    Double_t       GetParameter(Int_t param) const;
    Double_t*      GetParameters() const;
    void           GetParameters(Double_t *params) const;
-   Double_t       GetVariable(const TString &name);
+   Double_t       GetVariable(const char *name) const;
+   Int_t          GetVarNumber(const char *name) const;
+   TString        GetVarName(Int_t ivar) const;
    Bool_t         IsValid() const { return fReadyToExecute; }
    Bool_t         IsLinear() const { return TestBit(kLinear); }
    void           Print(Option_t *option = "") const;

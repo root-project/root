@@ -1723,18 +1723,50 @@ void TFormula::SetVariables(const pair<TString,Double_t> *vars, const Int_t size
    }
 }
 
-Double_t TFormula::GetVariable(const TString &name)
+Double_t TFormula::GetVariable(const char *name) const
 {
    //*-*
    //*-*    Returns variable value.
    //*-*
-   if(fVars.find(name) == fVars.end())
+   TString sname(name); 
+   if(fVars.find(sname) == fVars.end())
    {
-      Error("GetVariable","Variable %s is not defined.",name.Data());
+      Error("GetVariable","Variable %s is not defined.",sname.Data());
       return -1;
    }
-   return fVars[name].fValue;
+   return fVars.find(sname)->second.fValue;
 }
+Int_t TFormula::GetVarNumber(const char *name) const
+{
+   //*-*
+   //*-*    Returns variable number (positon in array) given its name 
+   //*-*
+   TString sname(name); 
+   if(fVars.find(sname) == fVars.end())
+   {
+      Error("GetVarNumber","Variable %s is not defined.",sname.Data());
+      return -1;
+   }
+   return fVars.find(sname)->second.fArrayPos;
+}
+
+TString TFormula::GetVarName(Int_t ivar) const
+{
+   //*-*
+   //*-*    Returns variable name given its position in the array
+   //*-*
+
+   if (ivar < 0 || ivar >= fNdim) return "";
+
+   // need to loop on the map to find corresponding variable
+   for ( auto & v : fVars) {
+      if (v.second.fArrayPos == ivar) return v.first;
+   }
+   Error("GetVarName","Variable with index %d not found !!",ivar);
+   //return TString::Format("x%d",ivar);
+   return TString(); 
+}
+
 void TFormula::SetVariable(const TString &name, Double_t value)
 {
    //*-*
@@ -1853,8 +1885,9 @@ const char * TFormula::GetParName(Int_t ipar) const
    for ( auto & p : fParams) {
       if (p.second == ipar) return p.first.Data();
    }
-   Warning("GetParName","Parameter with index not found !!");
-   return TString::Format("p%d",ipar);
+   Error("GetParName","Parameter with index %d not found !!",ipar);
+   //return TString::Format("p%d",ipar);
+   return TString();
 }
 Double_t* TFormula::GetParameters() const
 {
@@ -2257,17 +2290,21 @@ void TFormula::Print(Option_t *option) const
    if (opt.Contains("V") ) {
       if (fNdim > 0) {
          printf("List of  Variables: \n");
-         for ( map<TString,TFormulaVariable>::const_iterator it = fVars.begin(); it != fVars.end(); ++it) {
-            printf(" %20s =  %10f (%s)\n",it->first.Data(), fClingVariables[it->second.GetArrayPos()],it->second.GetName() );
+         for ( unsigned int ivar = 0; ivar < fClingVariables.size() ; ++ivar) {
+            if (opt.Contains("VV") )
+               printf("x[%d] : %20s =  %10f \n",ivar,GetVarName(ivar).Data(), fClingVariables[ivar] );
+            else
+               printf(" %20s =  %10f \n",GetVarName(ivar).Data(), fClingVariables[ivar]);
          }
       }
       if (fNpar > 0) {
          printf("List of  Parameters: \n");
-         for ( auto & it : fParams) {
+         // print with order passed to Cling function
+         for ( unsigned int ipar = 0; ipar < fClingParameters.size() ; ++ipar) {
             if (opt.Contains("VV") )
-               printf("p[%d] : %20s =  %10f \n",it.second,it.first.Data(), fClingParameters[it.second] );
+               printf("p[%d] : %20s =  %10f \n",ipar,GetParName(ipar), fClingParameters[ipar] );
             else
-               printf(" %20s =  %10f \n",it.first.Data(), fClingParameters[it.second] );
+               printf(" %20s =  %10f \n",GetParName(ipar), fClingParameters[ipar] );
          }
       }
       printf("Expression passed to Cling:\n");
