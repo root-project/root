@@ -205,6 +205,12 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
 
    const char *lastPos = TClassEdit::GetUnqualifiedName(enumName);
 
+   if (strchr(lastPos,'<')) {
+      // The unqualified name has template syntax, it can't possibly be an
+      // enum.
+      return nullptr;
+   }
+
    if (lastPos != enumName) {
       // We have a scope
       // All of this C gymnastic is to avoid allocations on the heap (see TClingLookupHelper__ExistingTypeCheck)
