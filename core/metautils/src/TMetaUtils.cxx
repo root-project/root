@@ -638,7 +638,7 @@ void ROOT::TMetaUtils::TNormalizedCtxtImpl::keepTypedef(const cling::LookupHelpe
    // if replace, replace occurrences of the canonical type by name.
    clang::QualType toSkip = lh.findType(name, cling::LookupHelper::WithDiagnostics);
    if (const clang::Type* T = toSkip.getTypePtr()) {
-      clang::TypedefType *tt = llvm::dyn_cast<clang::TypedefType>(T);
+      const clang::TypedefType *tt = llvm::dyn_cast<clang::TypedefType>(T);
       if (!tt) return;
       clang::Decl* D = tt->getDecl();
       fConfig.m_toSkip.insert(D);
