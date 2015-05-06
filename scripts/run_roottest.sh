@@ -283,7 +283,7 @@ else
     ./configure `cat config.status` > configure.log 2>&1
 fi
 result=$?
-if test $result != 0; then 
+if test $result != 0; then
    mainstatus=$failure
    error_handling $result "ROOT's configure failed!  See log file at $ROOTSYS/configure.log"
 fi
