@@ -72,6 +72,21 @@ namespace ROOT {
       inline double Chebyshev5(double x, double c0, double c1, double c2, double c3, double c4, double c5) {
          return c5*Chebyshev::T<5>(x) + Chebyshev4(x,c0,c1,c2,c3,c4);
       }
+      inline double Chebyshev6(double x, double c0, double c1, double c2, double c3, double c4, double c5, double c6) {
+         return c6*Chebyshev::T<6>(x) + Chebyshev5(x,c0,c1,c2,c3,c4,c5);
+      }
+      inline double Chebyshev7(double x, double c0, double c1, double c2, double c3, double c4, double c5, double c6, double c7) {
+         return c7*Chebyshev::T<7>(x) + Chebyshev6(x,c0,c1,c2,c3,c4,c5,c6);
+      }
+      inline double Chebyshev8(double x, double c0, double c1, double c2, double c3, double c4, double c5, double c6, double c7, double c8) {   
+         return c8*Chebyshev::T<8>(x) + Chebyshev7(x,c0,c1,c2,c3,c4,c5,c6,c7);
+      }
+      inline double Chebyshev9(double x, double c0, double c1, double c2, double c3, double c4, double c5, double c6, double c7, double c8, double c9) {
+         return c9*Chebyshev::T<9>(x) + Chebyshev8(x,c0,c1,c2,c3,c4,c5,c6,c7,c8);
+      }
+      inline double Chebyshev10(double x, double c0, double c1, double c2, double c3, double c4, double c5, double c6, double c7, double c8, double c9, double c10) {
+         return c10*Chebyshev::T<10>(x) + Chebyshev9(x,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9);
+      }
 
 
       // implementation of Chebyshev polynomial with run time parameter

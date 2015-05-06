@@ -633,7 +633,7 @@ void TFormula::HandlePolN(TString &formula)
       Bool_t defaultVariable = false;
       TString variable;
       Int_t openingBracketPos = formula.Index('(',polPos);
-      Bool_t defaultCounter = (openingBracketPos == kNPOS);
+      Bool_t defaultCounter = (openingBracketPos != polPos + TString("pol").Length());
       Bool_t defaultDegree = true;
       Int_t degree,counter;
       if(!defaultCounter)
@@ -690,6 +690,10 @@ void TFormula::HandlePolN(TString &formula)
          pattern = TString::Format("%spol%d(%d)",(defaultVariable ? "" : variable.Data()),degree,counter);
       }
 
+      if (!formula.Contains(pattern)) {
+         Error("HandlePolN","Error handling polynomial function - expression is %s - trying to replace %s with %s ", formula.Data(), pattern.Data(), replacement.Data() );
+         break;
+      }
       formula.ReplaceAll(pattern,replacement);
       polPos = formula.Index("pol");
    }
@@ -717,6 +721,18 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
    functions.insert(make_pair(make_pair("landau",1),make_pair("[0]*TMath::Landau({V0},[1],[2],false)","[0]*TMath::Landau({V0},[1],[2],true)")));
    functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
+   // chebyshev polynomial
+   functions.insert(make_pair(make_pair("cheb0" ,1),make_pair("ROOT::Math::Chebyshev0({V0},[0])","")));
+   functions.insert(make_pair(make_pair("cheb1" ,1),make_pair("ROOT::Math::Chebyshev1({V0},[0],[1])","")));
+   functions.insert(make_pair(make_pair("cheb2" ,1),make_pair("ROOT::Math::Chebyshev2({V0},[0],[1],[2])","")));
+   functions.insert(make_pair(make_pair("cheb3" ,1),make_pair("ROOT::Math::Chebyshev3({V0},[0],[1],[2],[3])","")));
+   functions.insert(make_pair(make_pair("cheb4" ,1),make_pair("ROOT::Math::Chebyshev4({V0},[0],[1],[2],[3],[4])","")));
+   functions.insert(make_pair(make_pair("cheb5" ,1),make_pair("ROOT::Math::Chebyshev5({V0},[0],[1],[2],[3],[4],[5])","")));
+   functions.insert(make_pair(make_pair("cheb6" ,1),make_pair("ROOT::Math::Chebyshev6({V0},[0],[1],[2],[3],[4],[5],[6])","")));
+   functions.insert(make_pair(make_pair("cheb7" ,1),make_pair("ROOT::Math::Chebyshev7({V0},[0],[1],[2],[3],[4],[5],[6],[7])","")));
+   functions.insert(make_pair(make_pair("cheb8" ,1),make_pair("ROOT::Math::Chebyshev8({V0},[0],[1],[2],[3],[4],[5],[6],[7],[8])","")));
+   functions.insert(make_pair(make_pair("cheb9" ,1),make_pair("ROOT::Math::Chebyshev9({V0},[0],[1],[2],[3],[4],[5],[6],[7],[8],[9])","")));
+   functions.insert(make_pair(make_pair("cheb10",1),make_pair("ROOT::Math::Chebyshev10({V0},[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10])","")));
    // 2-dimensional functions
    functions.insert(make_pair(make_pair("gaus",2),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)","")));
    functions.insert(make_pair(make_pair("landau",2),make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)","")));

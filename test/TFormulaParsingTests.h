@@ -3,6 +3,7 @@
 #include "TF3.h"
 #include "TFormula.h"
 #include "TGraph.h"
+#include "Math/ChebyshevPol.h"
 
 // test of tformula neeeded to be run
 
@@ -330,6 +331,23 @@ bool test20() {
    return ( f2.Eval(1,2) == f0.EvalPar(xx,params) );
 }
 
+bool test21() {
+   // test parsing polynomials (bug ROOT-7312)
+   TFormula f("f","pol2+gaus(3)");
+   f.SetParameters(1,2,3,1,0,1);
+   TF1 f0("f0",[](double *x, double *p){ return p[0]+x[0]*p[1]+x[0]*x[0]*p[2]+p[3]*TMath::Gaus(x[0],p[4],p[5]); },0,1,6);
+   f0.SetParameters(f.GetParameters() );
+   return (f.Eval(2) == f0.Eval(2) );
+}
+
+bool test22() {
+   // test chebyshev
+   TF1 f("f","cheb10+[offset]");
+   double p[12] = {1,1,1,1,1,1,1,1,1,1,1,10 };
+   f.SetParameters(p);
+   return (f.Eval(0.5) == ROOT::Math::ChebyshevN(10, 0.5, p ) + f.GetParameter("offset"));
+}
+
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);
@@ -367,6 +385,8 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test18() ) { PrintError(itest); }
    IncrTest(itest); if (!test19() ) { PrintError(itest); }
    IncrTest(itest); if (!test20() ) { PrintError(itest); }
+   IncrTest(itest); if (!test21() ) { PrintError(itest); }
+   IncrTest(itest); if (!test22() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
