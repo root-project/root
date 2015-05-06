@@ -296,6 +296,18 @@ TRInterface &TRInterface::Instance()
    return  *TRInterface::InstancePtr();
 }
 
+Bool_t TRInterface::IsInstalled(TString pkg)
+{
+    TString cmd="is.element('"+pkg+"', installed.packages()[,1])";
+    return fR->parseEval(cmd.Data());
+}
+
+Bool_t TRInterface::Require(TString pkg)
+{
+    TString cmd="require('"+pkg+"',quiet=TRUE)";
+    return fR->parseEval(cmd.Data());
+}
+
 
 #undef _POSIX_C_SOURCE
 #include <R_ext/eventloop.h>

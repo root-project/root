@@ -124,7 +124,8 @@ namespace ROOT {
 
          void Interactive();
          void ProcessEventsLoop();
-
+         Bool_t IsInstalled(TString pkg);
+         Bool_t Require(TString pkg);
          Binding operator[](const TString &name);
          static TRInterface &Instance();
          static TRInterface *InstancePtr();
