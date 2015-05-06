@@ -74,14 +74,10 @@ public:
    }
 };
 
-// Functor defining the oarameter order
+// Functor defining the parameter order
 struct TFormulaParamOrder {
-   bool operator() (const TString& a, const TString& b) const {
-      if (a.IsDigit() && b.IsDigit() ) 
-         return (a.Atoi() < b.Atoi() );     
-      
-      return a < b;
-   }
+   // comparison function
+   bool operator() (const TString& a, const TString& b) const;
 };
 
 
@@ -159,7 +155,7 @@ public:
    Int_t          Compile(const char *expression="");
    virtual void   Copy(TObject &f1) const;
    virtual void   Clear(Option_t * option="");
-   Double_t       Eval(Double_t x) const;  
+   Double_t       Eval(Double_t x) const;
    Double_t       Eval(Double_t x, Double_t y) const;
    Double_t       Eval(Double_t x, Double_t y , Double_t z) const;
    Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t ) const;

@@ -172,6 +172,37 @@ Bool_t TFormula::IsDefaultVariableName(const TString &name)
    return name == "x" || name == "z" || name == "y" || name == "t";
 }
 
+bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
+   // implement comparison used to set parameter orders in TFormula
+   // want p2 to be before p10 
+   
+   // strip first character in case you have (p0, p1, pN)  
+   if ( a[0] == 'p' && a.Length() > 1)  {
+      if ( b[0] == 'p' &&  b.Length() > 1)  {
+         // strip first character
+         TString lhs = a(1,a.Length()-1); 
+         TString rhs = b(1,b.Length()-1);
+         if (lhs.IsDigit() && rhs.IsDigit() )
+            return (lhs.Atoi() < rhs.Atoi() );
+      }
+      else {
+         return true;  // assume a(a numeric name) is always before b (an alphanumeric name) 
+      }
+   }
+   else {
+      if (  b[0] == 'p' &&  b.Length() > 1) 
+         // now b is numeric and a is not so return false
+         return false;
+      
+      // case both names are numeric
+      if (a.IsDigit() && b.IsDigit() ) 
+         return (a.Atoi() < b.Atoi() );
+
+   }
+   
+   return a < b;
+}
+
 TFormula::TFormula()
 {
    fName = "";
@@ -1135,7 +1166,8 @@ void TFormula::ExtractFunctors(TString &formula)
             param.Append(formula[i++]);
          }
          i++;
-
+         //rename parameter name XX to pXX
+         if (param.IsDigit() ) param.Insert(0,'p');
          DoAddParameter(param,0,false);
          TString replacement = TString::Format("{[%s]}",param.Data());
          formula.Replace(tmp,i - tmp, replacement,replacement.Length());
@@ -2306,21 +2338,17 @@ void TFormula::Print(Option_t *option) const
    if (opt.Contains("V") ) {
       if (fNdim > 0) {
          printf("List of  Variables: \n");
-         for ( unsigned int ivar = 0; ivar < fClingVariables.size() ; ++ivar) {
-            if (opt.Contains("VV") )
-               printf("x[%d] : %20s =  %10f \n",ivar,GetVarName(ivar).Data(), fClingVariables[ivar] );
-            else
-               printf(" %20s =  %10f \n",GetVarName(ivar).Data(), fClingVariables[ivar]);
+         assert(int(fClingVariables.size()) >= fNdim); 
+         for ( int ivar = 0; ivar < fNdim ; ++ivar) {
+            printf("Var%4d %20s =  %10f \n",ivar,GetVarName(ivar).Data(), fClingVariables[ivar]);
          }
       }
       if (fNpar > 0) {
          printf("List of  Parameters: \n");
+         assert(int(fClingParameters.size()) >= fNpar); 
          // print with order passed to Cling function
-         for ( unsigned int ipar = 0; ipar < fClingParameters.size() ; ++ipar) {
-            if (opt.Contains("VV") )
-               printf("p[%d] : %20s =  %10f \n",ipar,GetParName(ipar), fClingParameters[ipar] );
-            else
-               printf(" %20s =  %10f \n",GetParName(ipar), fClingParameters[ipar] );
+         for ( int ipar = 0; ipar < fNpar ; ++ipar) {
+            printf("Par%4d %20s =  %10f \n",ipar,GetParName(ipar), fClingParameters[ipar] );
          }
       }
       printf("Expression passed to Cling:\n");
