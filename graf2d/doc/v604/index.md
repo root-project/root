@@ -86,6 +86,7 @@
 ### TMathText
 
 - `\mu` is now working for Postscript output.
+- `\splitline` is now implemented.
 
 ### Cocoa backend
 

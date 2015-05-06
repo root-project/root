@@ -659,6 +659,18 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
          newText.Remove(i1,5);
       }
    }
+   if (newText.Contains("\\splitline")) {
+      Int_t len,i1,i2;
+      TString str;
+      while (newText.Contains("\\splitline")) {
+         len = newText.Length();
+         i1  = newText.Index("\\splitline");
+         str = newText(i1,len).Data();
+         i2  = str.Index("}{");
+         newText.Replace(i1+i2,2," \\atop ");
+         newText.Remove(i1,10);
+      }
+   }
 
    const Int_t length = newText.Length();
    const Char_t *text = newText.Data();
