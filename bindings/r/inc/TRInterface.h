@@ -27,6 +27,7 @@
 #ifndef ROOT_TThread
 #include<TThread.h>
 #endif
+
 /**
    @defgroup R R Interface for Statistical Computing
    \ref ROOTR was implemented using the
@@ -126,6 +127,7 @@ namespace ROOT {
          void ProcessEventsLoop();
          Bool_t IsInstalled(TString pkg);
          Bool_t Require(TString pkg);
+         Bool_t Install(TString pkg,TString repos="http://cran.r-project.org");
          Binding operator[](const TString &name);
          static TRInterface &Instance();
          static TRInterface *InstancePtr();

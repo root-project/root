@@ -308,6 +308,13 @@ Bool_t TRInterface::Require(TString pkg)
     return fR->parseEval(cmd.Data());
 }
 
+Bool_t TRInterface::Install(TString pkg,TString repos)
+{
+    TString cmd="install.packages('"+pkg+"',repos='"+repos+"',dependencies=TRUE)";
+    fR->parseEval(cmd.Data());
+    return IsInstalled(pkg);
+}
+
 
 #undef _POSIX_C_SOURCE
 #include <R_ext/eventloop.h>
