@@ -1,4 +1,6 @@
 #include "TF1.h"
+#include "TF2.h"
+#include "TF3.h"
 #include "TFormula.h"
 #include "TGraph.h"
 
@@ -273,6 +275,48 @@ bool test16()  {
    return (f.GetExpFormula("CLING P") == TString("3.000000+1.000000*x[0]+2.000000*x[0]*x[0] ") );
 }
 
+bool test17() {
+   // test Eval for TF1
+   TF1 * f1 = new TF1("f1","[0]*sin([1]*x)");
+   f1->SetParameters(2,3);
+   TF1 * f0 = new TF1("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]); },0,10,2);
+   f0->SetParameters(2,3);
+   bool ok = true; 
+   ok &= (f1->Eval(1.5) == f0->Eval(1.5) );
+   double xx[1] = {2.5};
+   ok &= (f1->EvalPar(xx) == f0->Eval(2.5) );
+   return ok;
+}
+
+bool test18() {
+   // test Eval for TF2
+   TF2 * f1 = new TF2("f2","[0]*sin([1]*x*y)");
+   f1->SetParameters(2,3);
+   TF2 * f0 = new TF2("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]*x[1]); },0,10,0,10,2);
+   f0->SetParameters(2,3);
+   bool ok = true; 
+   ok &= (f1->Eval(1.5,2.5) == f0->Eval(1.5,2.5) );
+   double par[2] = {3,4};
+   double xx[2] = {0.8,1.6};
+   ok &= (f1->EvalPar(xx,par) == f0->EvalPar(xx,par) );
+   return ok; 
+}
+
+bool test19() {
+   // test Eval for TF3
+   TF3 * f1 = new TF3("f3","[0]*sin([1]*x*y*z)");
+   f1->SetParameters(2,3);
+   TF3 * f0 = new TF3("f0",[](double *x, double *p){ return p[0]*sin(p[1]*x[0]*x[1]*x[2]); },0,10,0,10,0,10,2);
+   f0->SetParameters(2,3);
+   bool ok = true; 
+   ok &= (f1->Eval(1.5,2.5,3.5) == f0->Eval(1.5,2.5,3.5) );
+   double par[2] = {3,4};
+   double xx[3] = {0.8,1.6,2.2};
+   ok &= (f1->EvalPar(xx,par) == f0->EvalPar(xx,par) );
+   return ok; 
+}
+   
+
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);
@@ -306,6 +350,9 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test14() ) { PrintError(itest); }
    IncrTest(itest); if (!test15() ) { PrintError(itest); }
    IncrTest(itest); if (!test16() ) { PrintError(itest); }
+   IncrTest(itest); if (!test17() ) { PrintError(itest); }
+   IncrTest(itest); if (!test18() ) { PrintError(itest); }
+   IncrTest(itest); if (!test19() ) { PrintError(itest); }
 
    std::cout << ".\n";
     

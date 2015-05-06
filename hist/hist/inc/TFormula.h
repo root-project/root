@@ -124,7 +124,7 @@ protected:
    void   DoSetParameters(const Double_t * p, Int_t size);
    void   SetPredefinedParamNames(); 
 
-   Double_t       DoEval(const Double_t * x  = nullptr, const Double_t * p = nullptr);
+   Double_t       DoEval(const Double_t * x, const Double_t * p = nullptr) const;
 
    enum {
       kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction (it should be protected)
@@ -149,11 +149,11 @@ public:
    Int_t          Compile(const char *expression="");
    virtual void   Copy(TObject &f1) const;
    virtual void   Clear(Option_t * option="");
-   Double_t       Eval(Double_t x);  
-   Double_t       Eval(Double_t x, Double_t y);
-   Double_t       Eval(Double_t x, Double_t y , Double_t z);
-   Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t );
-   Double_t       EvalPar(const Double_t *x, const Double_t *params=0);
+   Double_t       Eval(Double_t x) const;  
+   Double_t       Eval(Double_t x, Double_t y) const;
+   Double_t       Eval(Double_t x, Double_t y , Double_t z) const;
+   Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t ) const;
+   Double_t       EvalPar(const Double_t *x, const Double_t *params=0) const;
    TString        GetExpFormula(Option_t *option="") const;
    const TObject *GetLinearPart(Int_t i) const;
    Int_t          GetNdim() const {return fNdim;}

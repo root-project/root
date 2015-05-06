@@ -2084,57 +2084,45 @@ void TFormula::SetParName(Int_t ipar, const char * name)
 
 
 }
-Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) 
+Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const 
 {
 
    return DoEval(x, params);
 }
-Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) 
+Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 {
    //*-*
    //*-*    Sets first 4  variables (e.g. x, y, z, t) and evaluate formula.
    //*-*
-   if(fNdim >= 1) fClingVariables[0] = x;
-   if(fNdim >= 2) fClingVariables[1] = y;
-   if(fNdim >= 3) fClingVariables[2] = z;
-   if(fNdim >= 4) fClingVariables[3] = t;
-   return DoEval();
+   double xxx[4] = {x,y,z,t};
+   return DoEval(xxx);
 }
-Double_t TFormula::Eval(Double_t x, Double_t y , Double_t z)
+Double_t TFormula::Eval(Double_t x, Double_t y , Double_t z) const
 {
    //*-*
    //*-*    Sets first 3  variables (e.g. x, y, z) and evaluate formula.
    //*-*
-
-   if(fNdim >= 1) fClingVariables[0] = x;
-   if(fNdim >= 2) fClingVariables[1] = y;
-   if(fNdim >= 3) fClingVariables[2] = z;
-   // if(fNdim >= 1) SetVariable("x",x);
-   // if(fNdim >= 2) SetVariable("y",y);
-   // if(fNdim >= 3) SetVariable("z",z);
-
-   return DoEval();
+   double xxx[3] = {x,y,z};
+   return DoEval(xxx);
 }
-Double_t TFormula::Eval(Double_t x, Double_t y)
+Double_t TFormula::Eval(Double_t x, Double_t y) const
 {
    //*-*
    //*-*    Sets first 2  variables (e.g. x and y) and evaluate formula.
    //*-*
-
-   if(fNdim >= 1) fClingVariables[0] = x;
-   if(fNdim >= 2) fClingVariables[1] = y;
-   return DoEval();
+   double xxx[2] = {x,y};
+   return DoEval(xxx);
 }
-Double_t TFormula::Eval(Double_t x)
+Double_t TFormula::Eval(Double_t x) const
 {
    //*-*
    //*-*    Sets first variable (e.g. x) and evaluate formula.
    //*-*
-
-   if(fNdim >= 1) fClingVariables[0] = x;
-   return DoEval();
+   //double xxx[1] = {x};
+   double * xxx = &x;
+   return DoEval(xxx);
 }
-Double_t TFormula::DoEval(const double * x, const double * params)
+Double_t TFormula::DoEval(const double * x, const double * params) const
 {
    //*-*
    //*-*    Evaluate formula.
@@ -2147,7 +2135,7 @@ Double_t TFormula::DoEval(const double * x, const double * params)
    if(!fReadyToExecute)
    {
       Error("Eval","Formula not ready to execute. Missing parameters/variables");
-      for(list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it)
+      for(auto it = fFuncs.begin(); it != fFuncs.end(); ++it)
       {
          TFormulaFunction fun = *it;
          if(!fun.fFound)
@@ -2155,39 +2143,29 @@ Double_t TFormula::DoEval(const double * x, const double * params)
             printf("%s is unknown.\n",fun.GetName());
          }
       }
-      return -1;
+      return TMath::QuietNaN();
    }
    // this is needed when reading from a file
    if (!fClingInitialized) {
-      // need to replace in cling the name of the pointer of this object
+      Error("Eval","Formula is not properly initialized - call TFormula::Compile");
+      return TMath::QuietNaN();
+#ifdef EVAL_IS_NOT_CONST      
+      // need to replace in cling the name of the pointer of this object 
       TString oldClingName = fClingName;
       fClingName.Replace(fClingName.Index("_0x")+1,fClingName.Length(), TString::Format("%p",this) );
       fClingInput.ReplaceAll(oldClingName, fClingName);
       InputFormulaIntoCling();
+#endif      
    }
 
-   // This is not needed (we can always use the default values)
-   // if(!fAllParametersSetted)
-   // {
-   //    Warning("Eval","Not all parameters are setted.");
-   //    for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it)
-   //    {
-   //       pair<TString,TFormulaVariable> param = *it;
-   //       if(!param.second.fFound)
-   //       {
-   //          printf("%s has default value %lf\n",param.first.Data(),param.second.GetInitialValue());
-   //       }
-   //    }
-
-   // }
    Double_t result = 0;
    void* args[2];
-   double * vars = (x) ? const_cast<double*>(x) : fClingVariables.data();
+   double * vars = (x) ? const_cast<double*>(x) : const_cast<double*>(fClingVariables.data());
    args[0] = &vars;
    if (fNpar <= 0)
       (*fFuncPtr)(0, 1, args, &result);
    else {
-      double * pars = (params) ? const_cast<double*>(params) : fClingParameters.data();
+      double * pars = (params) ? const_cast<double*>(params) : const_cast<double*>(fClingParameters.data());
       args[1] = &pars;
       (*fFuncPtr)(0, 2, args, &result);
    }

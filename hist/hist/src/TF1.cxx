@@ -1106,7 +1106,7 @@ void TF1::DrawF1(Double_t xmin, Double_t xmax, Option_t *option)
 //______________________________________________________________________________
 Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 {
-   // Evaluate this formula.
+   // Evaluate this function.
    //
    //   Computes the value of this function (general case for a 3-d function)
    //   at point x,y,z.
@@ -1115,11 +1115,12 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
    //   The parameters used will be the ones in the array params if params is given
    //    otherwise parameters will be taken from the stored data members fParams
 
+   if (fType == 0) return fFormula->Eval(x,y,z,t);
 
-  Double_t xx[4] = {x, y, z, t};
-  Double_t *pp = GetParameters();
+   Double_t xx[4] = {x, y, z, t};
+   Double_t *pp = GetParameters();
    ((TF1*)this)->InitArgs(xx,pp);
-
+   
    return ((TF1*)this)->EvalPar(xx,pp);
 }
 
