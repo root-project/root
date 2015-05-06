@@ -837,7 +837,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
       int num = TClassEdit::GetSplit(cl->GetName(),inside,nested);
       if ( num > 1 ) {
          std::string nam;
-         Value* newfValue = fValue;
+         Value* newfValue = nullptr;
          if ( inside[0].find("stdext::hash_") != std::string::npos )
             inside[0].replace(3,10,"::");
          if ( inside[0].find("__gnu_cxx::hash_") != std::string::npos )
