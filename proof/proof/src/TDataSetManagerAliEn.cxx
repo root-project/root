@@ -112,14 +112,14 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
    }
 
    if (gDebug >= 1) {
-      Info("GetGridResult", "AliEn find %s %s [regexp=%s]",
-         fBasePath.Data(), fFileName.Data(), fRegexpRaw.Data());
+      Info("GetGridResult", "AliEn find %s %s [regexp=%s] [archsubst=%d]",
+         fBasePath.Data(), fFileName.Data(), fRegexpRaw.Data(), fArchSubst);
    }
 
    fGridResult = gGrid->Query(fBasePath.Data(), fFileName.Data());
    if (!fGridResult) return NULL;
 
-   if (fRegexp || fArchSubst || (fAnchor != "")) {
+   if (fRegexp || fArchSubst || !fAnchor.IsNull() || !fQuery.IsNull()) {
 
       TPMERegexp *reArchSubst = NULL;
       TString substWith;
@@ -154,16 +154,24 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
          }
 
          if (reArchSubst) {
+            // Substitute file_name with containing_archive.zip#file_name
             reArchSubst->Substitute(tUrl, substWith, kFALSE);
             os->SetString(tUrl.Data());
          }
-         else if (fAnchor) {
-            if (fQuery) {
+         else if (!fAnchor.IsNull()) {
+            // Append anchor (and, possibly, query first)
+            if (!fQuery.IsNull()) {
                tUrl.Append("?");
                tUrl.Append(fQuery);
             }
             tUrl.Append("#");
             tUrl.Append(fAnchor);
+            os->SetString(tUrl.Data());
+         }
+         else if (!fQuery.IsNull()) {
+            // Append query only
+            tUrl.Append("?");
+            tUrl.Append(fQuery);
             os->SetString(tUrl.Data());
          }
       }
