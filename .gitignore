@@ -536,6 +536,7 @@ AutoDict_*.cxx
 
 # /root/io/transient/
 /root/io/transient/trans.root
+/root/io/transient/AtomTransient.root
 /root/io/transient/*.*log
 /root/io/transient/missingdict_rflx.cpp
 

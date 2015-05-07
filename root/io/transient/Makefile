@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log  missingdict_rflx.cpp
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log  missingdict_rflx.cpp AtomTransient.root
 
 #Set the list of target to make while testing
 TEST_TARGETS += transientTest missingdict
