@@ -11,7 +11,7 @@
 
 //____________________________________________________________________
 /*
-SamplingDistPlot : 
+SamplingDistPlot :
 
 This class provides simple and straightforward utilities to plot SamplingDistribution
 objects.
@@ -39,7 +39,7 @@ objects.
 #define IsNaN(a) TMath::IsNaN(a)
 
 
-/// ClassImp for building the THtml documentation of the class 
+/// ClassImp for building the THtml documentation of the class
 ClassImp(RooStats::SamplingDistPlot);
 
 using namespace RooStats;
@@ -85,7 +85,7 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
   fBins = nbins;
   fMarkerType = 20;
   fColor = 1;
-  
+
   SetXRange( min, max );
 }
 
@@ -94,7 +94,7 @@ SamplingDistPlot::~SamplingDistPlot() {
    // destructors - delete objects contained in the list
    fItems.Delete();
    fOtherItems.Delete();
-   if (fRooPlot) delete fRooPlot; 
+   if (fRooPlot) delete fRooPlot;
 }
 
 
@@ -112,7 +112,7 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    TString options(drawOptions);
    options.ToUpper();
 
-   Double_t xmin(TMath::Infinity()), xmax(-TMath::Infinity()); 
+   Double_t xmin(TMath::Infinity()), xmax(-TMath::Infinity());
    // remove cases where xmin and xmax are +/- inf
    for( unsigned int i=0; i < fSamplingDistr.size(); i++ ) {
       if( fSamplingDistr[i] < xmin  &&  fSamplingDistr[i] != -TMath::Infinity() ) {
@@ -128,7 +128,7 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
       xmax = 1.0;
    }
 
-   
+
    // add 1.5 bins left and right
    assert(fBins > 1);
    double binWidth = (xmax-xmin)/(fBins);
@@ -138,7 +138,7 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    if( !IsNaN(fXMax) ) xup = fXMax;
 
    fHist = new TH1F(samplingDist->GetName(), samplingDist->GetTitle(), fBins, xlow, xup);
-   fHist->SetDirectory(0);  // make the object managed by this class 
+   fHist->SetDirectory(0);  // make the object managed by this class
 
    if( fVarName.Length() == 0 ) fVarName = samplingDist->GetVarName();
    fHist->GetXaxis()->SetTitle(fVarName.Data());
@@ -191,7 +191,7 @@ Double_t SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribut
    TH1F *shaded = (TH1F*)fHist->Clone((string(samplingDist->GetName())+string("_shaded")).c_str());
    shaded->SetDirectory(0);
    shaded->SetFillStyle(fFillStyle++);
-   shaded->SetLineWidth(0);
+   shaded->SetLineWidth(1);
 
    for (int i=0; i<shaded->GetNbinsX(); ++i) {
       if (shaded->GetBinCenter(i) < minShaded || shaded->GetBinCenter(i) > maxShaded){
@@ -243,12 +243,12 @@ void SamplingDistPlot::SetSampleWeights(const SamplingDistribution* samplingDist
   if(samplingDist->GetSampleWeights().size() != 0){
     fIsWeighted = kTRUE;
     fSampleWeights = samplingDist->GetSampleWeights();
-  }  
+  }
 
   return;
 }
 
-void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions) 
+void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions)
 {
   // Add a generic object to this plot. The specified options will be
   // used to Draw() this object later. The caller transfers ownership
@@ -302,13 +302,13 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    if (fRooPlot) delete fRooPlot;
 
    bool dirStatus = RooPlot::addDirectoryStatus();
-   // make the RooPlot managed by this class 
+   // make the RooPlot managed by this class
    if (dirStatus) RooPlot::setAddDirectoryStatus(false);
    fRooPlot = xaxis.frame();
-   if (dirStatus) RooPlot::setAddDirectoryStatus(true);   
-   if (!fRooPlot) { 
+   if (dirStatus) RooPlot::setAddDirectoryStatus(true);
+   if (!fRooPlot) {
      oocoutE(this,InputArguments) << "invalid variable to plot" << std::endl;
-     return;      
+     return;
    }
    fRooPlot->SetTitle("");
    if( !IsNaN(theYMax) ) {
@@ -360,7 +360,7 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    fRooPlot->Draw();
 
    // apply this since gStyle does not work for RooPlot
-   if (gPad) { 
+   if (gPad) {
       gPad->SetLogx(fLogXaxis);
       gPad->SetLogy(fLogYaxis);
    }

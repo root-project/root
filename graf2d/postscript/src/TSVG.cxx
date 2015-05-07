@@ -264,6 +264,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       PrintFast(2,"/>");
    }
    if (fillis == 0) {
+      if (fLineWidth<=0) return;
       PrintStr("@");
       PrintFast(9,"<rect x=\"");
       WriteReal(ix1, kFALSE);
@@ -1058,6 +1059,7 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    fais = fasi = 0;
 
    if (nn > 0) {
+      if (fLineWidth<=0) return;
       n = nn;
    } else {
       n = -nn;

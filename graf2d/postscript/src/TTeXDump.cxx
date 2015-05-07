@@ -293,6 +293,7 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       PrintStr(");");
    }
    if (fillis == 0) {
+      if (fLineWidth<=0) return;
       SetColor(fLineColor);
       PrintStr("@");
       PrintStr("\\draw [c");
@@ -512,6 +513,7 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    Int_t fillsi = fFillStyle%1000;
 
    if (nn>0) {
+      if (fLineWidth<=0) return;
       SetColor(fLineColor);
       PrintStr("@");
       PrintStr("\\draw [c");

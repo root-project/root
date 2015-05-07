@@ -765,6 +765,7 @@ void TPostScript::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       PrintFast(3," bf");
    }
    if (fillis == 0) {
+      if (fLineWidth<=0) return;
       SetColor(fLineColor);
       WriteInteger(ix2 - ix1);
       WriteInteger(iy2 - iy1);
@@ -909,6 +910,7 @@ void TPostScript::DrawPolyLine(Int_t nn, TPoints *xy)
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    if (nn > 0) {
+      if (fLineWidth<=0) return;
       n = nn;
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
@@ -993,6 +995,7 @@ void TPostScript::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    if (nn > 0) {
+      if (fLineWidth<=0) return;
       n = nn;
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
@@ -1235,6 +1238,7 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
    Width_t linewidthsav = fLineWidth;
 
    if (nn > 0) {
+      if (fLineWidth<=0) return;
       n = nn;
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
@@ -1346,6 +1350,7 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    Width_t linewidthsav = fLineWidth;
 
    if (nn > 0) {
+      if (fLineWidth<=0) return;
       n = nn;
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
@@ -2521,8 +2526,10 @@ void TPostScript::SetLineWidth(Width_t linewidth)
 
    if ( linewidth == fLineWidth) return;
    fLineWidth = linewidth;
-   WriteInteger(Int_t(fLineScale*fLineWidth));
-   PrintFast(3," lw");
+   if (fLineWidth!=0) {
+      WriteInteger(Int_t(fLineScale*fLineWidth));
+      PrintFast(3," lw");
+   }
 }
 
 

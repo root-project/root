@@ -5195,7 +5195,7 @@ void THistPainter::PaintViolinPlot(Option_t *)
              hp->GetQuantiles(5, quantiles, prob);
              xpm[0] = hp->GetMean();
 
-             h2->SetLineWidth(0);
+             h2->SetLineWidth(1);
              h2->TAttLine::Modify();
              TAxis *ax = hp->GetXaxis();
              for(Int_t j=ax->GetFirst(); j<ax->GetLast(); ++j){

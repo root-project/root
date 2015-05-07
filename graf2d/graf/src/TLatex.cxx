@@ -1585,7 +1585,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             Analyse(x+GetHeight()*spec.fSize/2,y,spec,text+opSqrt+6,length-opSqrt-7);
 
             Short_t lineW = GetLineWidth();
-            SetLineWidth(0.);
+            SetLineWidth(1);
             Double_t dx = (y2-y3)/8;
             UInt_t a,d;
             GetTextAscentDescent(a, d, text);
@@ -2108,7 +2108,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    // Get current line attributes.
    Short_t lineW = GetLineWidth();
    Int_t lineC = GetLineColor();
-   if (size<0.04) SetLineWidth(0.);
+   if (size<0.04) SetLineWidth(1);
 
    TextSpec_t spec;
    spec.fAngle = angle;

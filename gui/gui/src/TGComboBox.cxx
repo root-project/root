@@ -784,7 +784,7 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    }
 
-   for (Int_t i = 1; i < 16; i++)
+   for (Int_t i = 0; i < 16; i++)
       AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i,
                TString::Format("%d",i), i, 0),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));

@@ -181,6 +181,7 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    }
 
    if (fillis == 0) {
+      if (fLineWidth<=0) return;
       fImage->DrawBox(ix1, iy1, ix2, iy2, linecol->AsHexString(), fLineWidth, TVirtualX::kHollow);
    }
 }
@@ -480,6 +481,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    Int_t dashSize = 0;
 
    if (line) {
+      if (fLineWidth<=0) return;
       // dash lines
       if (fLineStyle > 1) {
          TString st = gStyle->GetLineStyleString(fLineStyle);

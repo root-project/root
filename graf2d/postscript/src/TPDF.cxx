@@ -403,6 +403,7 @@ void TPDF::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       else             PrintFast(6," re f*");
    }
    if (fillis == 0) {
+      if (fLineWidth<=0) return;
       SetColor(fLineColor);
       WriteReal(ix1);
       WriteReal(iy1);
@@ -496,6 +497,7 @@ void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
    Width_t linewidthsav = fLineWidth;
 
    if (nn > 0) {
+      if (fLineWidth<=0) return;
       n = nn;
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
@@ -549,6 +551,7 @@ void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    Width_t linewidthsav = fLineWidth;
 
    if (nn > 0) {
+      if (fLineWidth<=0) return;
       n = nn;
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
@@ -890,6 +893,7 @@ void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
    Width_t linewidthsav = fLineWidth;
 
    if (nn > 0) {
+      if (fLineWidth<=0) return;
       n = nn;
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
@@ -976,6 +980,7 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    Width_t linewidthsav = fLineWidth;
 
    if (nn > 0) {
+      if (fLineWidth<=0) return;
       n = nn;
       SetLineStyle(fLineStyle);
       SetLineWidth(fLineWidth);
@@ -2153,8 +2158,10 @@ void TPDF::SetLineWidth(Width_t linewidth)
 
    if (linewidth == fLineWidth) return;
    fLineWidth = linewidth;
-   WriteReal(fLineScale*fLineWidth);
-   PrintFast(2," w");
+   if (fLineWidth!=0) {
+      WriteReal(fLineScale*fLineWidth);
+      PrintFast(2," w");
+   }
 }
 
 
