@@ -105,6 +105,18 @@ add_custom_target(move_headers DEPENDS ${stamp_file}
                                                         -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake)
 include_directories(${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
 
+#added search of R packages here to remove multiples searches
+if(r)
+FIND_PACKAGE(R REQUIRED)
+FIND_PACKAGE(Rcpp REQUIRED)
+FIND_PACKAGE(RInside REQUIRED)
+    if(${R_FOUND} AND ${RCPP_FOUND} AND ${RINSIDE_FOUND})
+        STRING(REGEX REPLACE "-I" "" RCPP_INCLUDE_DIR ${RCPP_INCLUDE_DIR})
+        STRING(REGEX REPLACE "-I" "" RINSIDE_INCLUDE_DIR  ${RINSIDE_INCLUDE_DIR})
+        STRING(REGEX REPLACE "-I" "" R_INCLUDE_DIR  ${R_INCLUDE_DIR})
+    endif()
+endif()
+
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
 add_subdirectory (interpreter)
