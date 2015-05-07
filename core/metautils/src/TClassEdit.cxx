@@ -386,7 +386,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          }
          continue;
       }
-      bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6);
+      bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6) || 0 == strcmp(" const",fElements[i].c_str()+fElements[i].length()-6)  || 0 == strcmp(">const",fElements[i].c_str()+fElements[i].length()-6);
       //NOTE: Should we also check the end of the type for 'const'?
       fElements[i] = TClassEdit::ShortType(fElements[i].c_str(),mode);
       if (mode&kResolveTypedef) {
@@ -1347,10 +1347,12 @@ static void ResolveTypedefProcessType(const char *tname,
                result += typeresult;
             }
          }
+      } else if (modified) {
+         result.replace(mod_start_of_type, string::npos,
+                        type);
       }
       if (modified) {
-         // result += type;
-         if (end_of_type != 0) {
+         if (end_of_type != 0 && end_of_type!=cursor) {
             result += std::string(tname,end_of_type,cursor-end_of_type);
          }
       }
@@ -1358,7 +1360,7 @@ static void ResolveTypedefProcessType(const char *tname,
       // no change needed.
       if (modified) {
          // result += type;
-         if (end_of_type != 0) {
+         if (end_of_type != 0 && end_of_type!=cursor) {
             result += std::string(tname,end_of_type,cursor-end_of_type);
          }
       }
@@ -1379,6 +1381,7 @@ static void ResolveTypedefImpl(const char *tname,
    // and G::H<I,J>::K or G might be a typedef.
 
    bool constprefix = false;
+   unsigned int constsuffix = 0;
 
    if (tname[cursor]==' ') {
       if (!modified) {
@@ -1394,6 +1397,26 @@ static void ResolveTypedefImpl(const char *tname,
          if (modified) result += "const ";
       }
       constprefix = true;
+
+   } else if (tname[len-1]=='t' && (6<len)) {
+      if (strncmp(tname+len-5,"const",5) == 0) {
+         switch(tname[len-6]) {
+            case '*':
+            case '&':
+            case ']':
+            case '>': constprefix = true; len -= 5; break;
+            case ' ': constprefix = true; len -= 6; break;
+            default: break; /* it is not a const keyword, nothing to do */
+         }
+         if (constprefix) {
+            if (!modified) {
+               modified = true;
+               result += string(tname,0,cursor);
+            }
+            constsuffix = len;
+            result += "const ";
+         }
+      }
    }
 
    // When either of those two is true, we should probably go to modified
@@ -1563,6 +1586,11 @@ static void ResolveTypedefImpl(const char *tname,
          default:
             end_of_type = 0;
       }
+   }
+
+   if (cursor==constsuffix && !end_of_type) {
+      // We had a const suffix, set the end of type to just before the const
+      end_of_type = constsuffix;
    }
 
    if (prevScope && modified) result += std::string(tname+prevScope,(end_of_type == 0 ? cursor : end_of_type)-prevScope);
