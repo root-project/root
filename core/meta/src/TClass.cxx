@@ -1290,7 +1290,7 @@ void TClass::Init(const char *name, Version_t cversion,
    // See also TCling::GenerateTClass() which will update fClassVersion after creation!
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
    fProperty       = -1;
-   fClassProperty  = -1;
+   fClassProperty  = 0;
 
    ResetInstanceCount();
 
