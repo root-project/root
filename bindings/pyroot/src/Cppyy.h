@@ -73,7 +73,8 @@ namespace Cppyy {
    Bool_t      IsSubtype( TCppType_t derived, TCppType_t base );
 
 // calculate offsets between declared and actual type, up-cast: direction > 0; down-cast: direction < 0
-   ptrdiff_t GetBaseOffset( TCppType_t derived, TCppType_t base, TCppObject_t address, int direction );
+   ptrdiff_t GetBaseOffset(
+      TCppType_t derived, TCppType_t base, TCppObject_t address, int direction, bool rerror = false );
 
 // method/function reflection information ------------------------------------
    TCppIndex_t  GetNumMethods( TCppScope_t scope );

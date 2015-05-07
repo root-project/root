@@ -558,8 +558,8 @@ Bool_t Cppyy::IsSubtype( TCppType_t derived, TCppType_t base )
 }
 
 // type offsets --------------------------------------------------------------
-ptrdiff_t Cppyy::GetBaseOffset(
-      TCppType_t derived, TCppType_t base, TCppObject_t address, int direction )
+ptrdiff_t Cppyy::GetBaseOffset( TCppType_t derived, TCppType_t base,
+      TCppObject_t address, int direction, bool rerror )
 {
 // calculate offsets between declared and actual type, up-cast: direction > 0; down-cast: direction < 0
    if ( derived == base || !(base && derived) )
@@ -572,18 +572,18 @@ ptrdiff_t Cppyy::GetBaseOffset(
       return (ptrdiff_t)0;
 
    Long_t offset = -1;
-   if ( cd->GetClassInfo() && cb->GetClassInfo() ) {
-      offset = gInterpreter->ClassInfo_GetBaseOffset(
-         cd->GetClassInfo(), cb->GetClassInfo(), (void*)address, direction > 0 );
-   }
-
-   if ( offset == -1 ) {
+   if ( ! (cd->GetClassInfo() && cb->GetClassInfo()) ) {
    // warn to allow diagnostics, return -1 to signal caller NOT to apply offset
       std::ostringstream msg;
       msg << "failed offset calculation between " << cb->GetName() << " and " << cd->GetName();
       PyErr_Warn( PyExc_RuntimeWarning, const_cast<char*>( msg.str().c_str() ) );
-      return 0;
+      return rerror ? (ptrdiff_t)offset : 0;
    }
+
+   offset = gInterpreter->ClassInfo_GetBaseOffset(
+      cd->GetClassInfo(), cb->GetClassInfo(), (void*)address, direction > 0 );
+   if ( offset == -1 )  // Cling error, treat silently
+      return rerror ? (ptrdiff_t)offset : 0;
 
    return (ptrdiff_t)(direction < 0 ? -offset : offset);
 }
@@ -674,7 +674,7 @@ std::string Cppyy::GetMethodResultType( TCppMethod_t method )
       TFunction* f = (TFunction*)method;
       if ( f->ExtraProperty() & kIsConstructor )
          return "constructor";
-      return f->GetReturnTypeName();
+      return f->GetReturnTypeNormalizedName();
    }
    return "<unknown>";
 }
