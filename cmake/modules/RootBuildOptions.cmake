@@ -163,6 +163,7 @@ ROOT_BUILD_OPTION(qt ${qt_defvalue} "Qt graphics backend, requires libqt >= 4.8"
 ROOT_BUILD_OPTION(qtgsi ${qtgsi_defvalue} "GSI's Qt integration, requires libqt >= 4.8")
 ROOT_BUILD_OPTION(roofit ${roofit_defvalue} "Build the libRooFit advanced fitting package")
 ROOT_BUILD_OPTION(ruby OFF "Ruby ROOT bindings, requires ruby >= 1.8")
+ROOT_BUILD_OPTION(r OFF "R ROOT bindings, requires R, Rcpp and RInside")
 ROOT_BUILD_OPTION(rfio ON "RFIO support, requires libshift from CASTOR >= 1.5.2")
 ROOT_BUILD_OPTION(rpath OFF "Set run-time library load path on executables and shared libraries (at installation area)")
 ROOT_BUILD_OPTION(sapdb ON "MaxDB/SapDB support, requires libsqlod and libsqlrte")

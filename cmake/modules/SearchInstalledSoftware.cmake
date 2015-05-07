@@ -760,6 +760,22 @@ if(chirp)
   endif()
 endif()
 
+#---Check for R/Rcpp/RInside--------------------------------------------------------------------
+#added search of R packages here to remove multiples searches
+if(r)
+FIND_PACKAGE(R REQUIRED)
+FIND_PACKAGE(Rcpp REQUIRED)
+FIND_PACKAGE(RInside REQUIRED)
+    if(${R_FOUND} AND ${RCPP_FOUND} AND ${RINSIDE_FOUND})
+        STRING(REGEX REPLACE "-I" "" RCPP_INCLUDE_DIR ${RCPP_INCLUDE_DIR})
+        STRING(REGEX REPLACE "-I" "" RINSIDE_INCLUDE_DIR  ${RINSIDE_INCLUDE_DIR})
+        STRING(REGEX REPLACE "-I" "" R_INCLUDE_DIR  ${R_INCLUDE_DIR})
+    else()
+        set(r OFF CACHE BOOL "" FORCE)
+    endif()
+endif()
+
+
 #---Check for hdfs--------------------------------------------------------------------
 if(hdfs)
   find_package(hdfs)
