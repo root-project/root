@@ -2986,6 +2986,7 @@ void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
    TIter next(fElements);
    TStreamerElement* element = (TStreamerElement*) next();
    for (; element; element = (TStreamerElement*) next()) {
+      if (element->IsTransient()) continue;
       TClass* cl = element->GetClassPointer();
       if (cl) {
          TVirtualStreamerInfo* si = 0;
