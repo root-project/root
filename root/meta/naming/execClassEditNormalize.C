@@ -71,6 +71,21 @@ bool test(const std::string &input,const char *expected)
 
 int execClassEditNormalize() {
 
+   if (!test("v3<Long_t const,int const>","v3<const long,const int>")) return 30;
+   if (!test("v3<const Long_t,int>","v3<const long,int>")) return 30;
+   if (!test("v3<Long_t const,int>","v3<const long,int>")) return 30;
+   if (!test("v3<Long_t,const int>","v3<long,const int>")) return 30;
+   if (!test("v3<Long_t,int const>","v3<long,const int>")) return 30;
+   if (!test("v3<Long_t,int>","v3<long,int>")) return 30;
+   if (!test("int const","const int")) return 29;
+   if (!test("Int_t const","const int")) return 28;
+   if (!test("const int","const int")) return 27;
+   if (!test("const Int_t","const int")) return 26;
+   if (!test("const string","const string")) return 25;
+   if (!test("string const","const string")) return 24;
+   if (!test("pair<string const,Data<int> >","pair<const string,Data<int> >")) return 23;
+   if (!test("pair<vector<int> const,Data<int> >","pair<const vector<int>,Data<int> >")) return 22;
+
     if (!test("edm::ValueMap<std::vector<edm::Ref<std::vector<reco::PFCandidate>,"
                            "reco::PFCandidate,"
                            "edm::refhelper::FindUsingAdvance<std::vector<reco::PFCandidate>,reco::PFCandidate> > > >"
