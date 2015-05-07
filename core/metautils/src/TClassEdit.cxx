@@ -836,8 +836,8 @@ const char *TClassEdit::GetUnqualifiedName(const char *original)
    {
       long depth = 0;
       for(auto cursor = original; *cursor != '\0'; ++cursor) {
-         if ( *cursor == '<') ++depth;
-         else if ( *cursor == '>') --depth;
+         if ( *cursor == '<' || *cursor == '(') ++depth;
+         else if ( *cursor == '>' || *cursor == ')' ) --depth;
          else if ( *cursor == ':' ) {
             if (depth==0 && *(cursor+1) == ':' && *(cursor+2) != '\0') {
                lastPos = cursor+2;
