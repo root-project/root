@@ -255,7 +255,7 @@ bool test13()  {
    // test GetExpFormula
    TFormula f("f","[2] + [0]*x + [1]*x*x");
    f.SetParameters(1,2,3);
-   return (f.GetExpFormula() == TString("[2]+[0]*x+[1]*x*x"));
+   return (f.GetExpFormula() == TString("[p2]+[p0]*x+[p1]*x*x"));
 }
 bool test14()  {
    // test GetExpFormula
@@ -348,6 +348,33 @@ bool test22() {
    return (f.Eval(0.5) == ROOT::Math::ChebyshevN(10, 0.5, p ) + f.GetParameter("offset"));
 }
 
+bool test23() {
+   // fix function compositions using pre-defined functions
+   bool ok = true; 
+   TF1 f1("f1","gaus");
+   TF1 f2("f2","[0]+f1");
+   TF1 f0("f0",[](double *x, double *p){ return p[0]+p[1]*TMath::Gaus(x[0],p[2],p[3]); },-3,3,4 );
+   f2.SetParameters(10,1,0,1);
+   f0.SetParameters(f2.GetParameters() );
+   ok &= (f2.Eval(1) == f0.Eval(1) );
+
+   TF1 f3("f3","f1+[0]");
+   // param order should be the same
+   f3.SetParameters( f2.GetParameters() );
+   ok &= (f2.Eval(1) == f0.Eval(1) );
+   return ok;
+}
+
+bool test24() {
+
+   // test I/O for parameter ordering 
+   TF2 f("f","xygaus");
+   f.SetParameters(10,0,1,-1,2);
+   TF2 * f2 = (TF2*) f.Clone();
+
+   return ( f.Eval(1,1) == f2->Eval(1,1) );
+}
+
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);
@@ -387,6 +414,8 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test20() ) { PrintError(itest); }
    IncrTest(itest); if (!test21() ) { PrintError(itest); }
    IncrTest(itest); if (!test22() ) { PrintError(itest); }
+   IncrTest(itest); if (!test23() ) { PrintError(itest); }
+   IncrTest(itest); if (!test24() ) { PrintError(itest); }
 
    std::cout << ".\n";
     

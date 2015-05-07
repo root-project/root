@@ -1271,7 +1271,7 @@ void TFormula::ExtractFunctors(TString &formula)
                   // start from higher number to avoid overlap
                   for (int jpar = f->GetNpar()-1; jpar >= 0; --jpar ) {
                      TString oldName = TString::Format("[%s]",f->GetParName(jpar));
-                     TString newName = TString::Format("[%d]",nparOffset+jpar);
+                     TString newName = TString::Format("[p%d]",nparOffset+jpar);
                      //std::cout << "replace - parameter " << f->GetParName(jpar) << " with " <<  newName << std::endl;
                      replacementFormula.ReplaceAll(oldName,newName);
                   }
@@ -1284,7 +1284,7 @@ void TFormula::ExtractFunctors(TString &formula)
                for (int jpar = 0; jpar < f->GetNpar(); ++jpar) {
                   if (nparOffset> 0) {
                      // parameter have an offset- so take this into accound
-                     TString newName = TString::Format("%d",nparOffset+jpar);
+                     TString newName = TString::Format("p%d",nparOffset+jpar);
                      SetParameter(newName,  f->GetParameter(jpar) );
                   }
                   else
@@ -1597,8 +1597,9 @@ void TFormula::ProcessFormula(TString &formula)
 }
 void TFormula::SetPredefinedParamNames() {
 
-   // set parameter names in case of numbers
+   // set parameter names only in case of pre-defined functions
    if (fNumber == 0) return;
+
    if (fNumber == 100) { // Gaussian
       SetParName(0,"Constant");
       SetParName(1,"Mean");
@@ -1624,10 +1625,19 @@ void TFormula::SetPredefinedParamNames() {
       SetParName(2,"Sigma");
       return;
    }
-   // if formula is a polynome, set parameter names
-   if (fNumber == (300+fNpar-1)) {
-      for (int i = 0; i < fNpar; i++) SetParName(i,Form("p%d",i));
-   }
+   // if formula is a polynomial (or chebyshev), set parameter names
+   // not needed anymore (p0 is assigned by default)
+   // if (fNumber == (300+fNpar-1) ) {
+   //    for (int i = 0; i < fNpar; i++) SetParName(i,TString::Format("p%d",i));
+   //    return;
+   // }
+
+   // // general case if parameters are digits (XX) change to pXX
+   // auto paramMap = fParams;  // need to copy the map because SetParName is going to modify it 
+   // for ( auto & p : paramMap) {
+   //    if (p.first.IsDigit() ) 
+   //        SetParName(p.second,TString::Format("p%s",p.first.Data()));
+   // }
 
    return;
 }
@@ -2109,8 +2119,15 @@ void TFormula::SetParName(Int_t ipar, const char * name)
       Error("SetParName","Parameter %d is not existing.",ipar);
       return;
    }
-   // replace also in fFormula the parameter name
-   if (!fFormula.IsNull() ) {
+
+   //replace also parameter name in formula expression
+   ReplaceParamName(fFormula, oldName, name); 
+
+}
+
+void TFormula::ReplaceParamName(TString & formula, const TString & oldName, const TString & name){
+      // replace in Formula expression the parameter name
+   if (!formula.IsNull() ) {
       bool found = false;
       for(list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it)
       {
@@ -2123,48 +2140,16 @@ void TFormula::SetParName(Int_t ipar, const char * name)
       }
       if(!found)
       {
-         Error("SetParName","Parameter %d is not defined.",ipar);
+         Error("SetParName","Parameter %s is not defined.",oldName.Data());
          return;
       }
       TString pattern = TString::Format("[%s]",oldName.Data());
-      TString replacement = TString::Format("[%s]",name);
-      fFormula.ReplaceAll(pattern,replacement);
+      TString replacement = TString::Format("[%s]",name.Data());
+      formula.ReplaceAll(pattern,replacement);
    }
-
-
-      // old code
-      /*
-      Bool_t found = false;
-      TString curName = TString::Format("%d",ipar);
-      for(list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it)
-      {
-         if(curName == it->GetName())
-         {
-            found = true;
-            it->fName = name;
-            break;
-         }
-      }
-      if(!found)
-      {
-         Error("SetParName","Parameter %d is not defined.",ipar);
-         return;
-      }
-      TString pattern = TString::Format("[%d]",ipar);
-      TString replacement = TString::Format("[%s]",name);
-      fFormula.ReplaceAll(pattern,replacement);
-   }
-
-   map<TString,TFormulaVariable>::iterator it = fParams.find(curName);
-   TFormulaVariable copy = it->second;
-   copy.fName = name;
-   fParams.erase(it);
-   fParams[name] = copy;
-      */
-
-
 
 }
+
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const 
 {
 
@@ -2264,6 +2249,11 @@ TString TFormula::GetExpFormula(Option_t *option) const
    TString opt(option);
    if (opt.IsNull() ) return fFormula;
    opt.ToUpper();
+
+   //  if (opt.Contains("N") ) {
+   //    TString formula = fFormula;
+   //    ReplaceParName(formula, ....) 
+   // }
 
    if (opt.Contains("CLING") ) {
       std::string clingFunc = fClingInput.Data();      

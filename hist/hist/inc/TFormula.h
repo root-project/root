@@ -126,6 +126,7 @@ protected:
    void   PreProcessFormula(TString &formula);
    void   ProcessFormula(TString &formula);
    Bool_t PrepareFormula(TString &formula);
+   void   ReplaceParamName(TString &formula, const TString & oldname, const TString & name);
    void   DoAddParameter(const TString &name, Double_t value, bool processFormula);
    void   DoSetParameters(const Double_t * p, Int_t size);
    void   SetPredefinedParamNames(); 
