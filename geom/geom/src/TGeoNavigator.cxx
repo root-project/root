@@ -578,6 +578,12 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
 // The current point must be on the boundary of fCurrentNode.
 
 // Extrapolate current point with estimated error.
+   // Backup branch of nodes
+   static TGeoNode **oldbranch = 0;
+   if (!oldbranch) oldbranch = new TGeoNode*[TGeoManager::GetMaxLevels()+1];
+   const TGeoNode **branch = (const TGeoNode**)fCache->GetBranch();
+   Int_t level = fLevel;
+   memcpy(oldbranch, branch, (fLevel+1)*sizeof(TGeoNode*));
    Double_t *tr = fGlobalMatrix->GetTranslation();
    Double_t trmax = 1.+TMath::Abs(tr[0])+TMath::Abs(tr[1])+TMath::Abs(tr[2]);
    Double_t extra = 100.*(trmax+fStep)*gTolerance;
@@ -602,9 +608,15 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
          printf("CrossBoundaryAndLocate: entered %s\n", GetPath());
       }   
       return current;   
-   }   
-     
-   if ((skipnode && current == skipnode) || current->GetVolume()->IsAssembly()) {
+   }
+   Bool_t same = kFALSE;
+   if (skipnode && current == skipnode && fLevel == level+1) {
+      same = kTRUE;
+      for (Int_t i=level; i>0; i--) {
+         if (branch[i] != oldbranch[i]) {same = kFALSE; break;}
+      }
+   }     
+   if (same || current->GetVolume()->IsAssembly()) {
       if (!fLevel) {
          fIsOutside = kTRUE;
          if (idebug>4) {
@@ -1629,6 +1641,8 @@ void TGeoNavigator::ResetState()
    fIsEntering = fIsExiting = kFALSE;
    fIsOnBoundary = kFALSE;
    fIsStepEntering = fIsStepExiting = kFALSE;
+   fSafety = 0.;
+   fStep = 0.;
 }
 
 //_____________________________________________________________________________
