@@ -31,6 +31,8 @@
 #pragma read sourceClass="TF1" targetClass="ROOT::v5::TF1Data";
 #pragma read sourceClass="TFormula" targetClass="ROOT::v5::TFormula";
 #pragma link C++ class TF1Parameters+;
+#pragma link C++ class TFormulaParamOrder+;
+#pragma link C++ class std::map<TString,int,TFormulaParamOrder>+;
 #pragma link C++ class TF12+;
 #pragma link C++ class TF2-;
 #pragma link C++ class TF3-;

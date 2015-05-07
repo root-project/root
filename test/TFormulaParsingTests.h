@@ -366,13 +366,16 @@ bool test23() {
 }
 
 bool test24() {
-
-   // test I/O for parameter ordering 
+   // test I/O for parameter ordering
+   bool ok = true; 
    TF2 f("f","xygaus");
    f.SetParameters(10,0,1,-1,2);
    TF2 * f2 = (TF2*) f.Clone();
-
-   return ( f.Eval(1,1) == f2->Eval(1,1) );
+   ok &= ( f.Eval(1,1) == f2->Eval(1,1) );
+   // test with copy
+   TF2 f3(f);
+   ok &= ( f.Eval(1,1) == f3.Eval(1,1) );
+   return ok;
 }
 
 void PrintError(int itest)  { 

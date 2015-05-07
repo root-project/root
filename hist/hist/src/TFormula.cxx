@@ -1172,6 +1172,7 @@ void TFormula::ExtractFunctors(TString &formula)
          TString replacement = TString::Format("{[%s]}",param.Data());
          formula.Replace(tmp,i - tmp, replacement,replacement.Length());
          fFuncs.push_back(TFormulaFunction(param));
+         //printf("found parameter %s \n",param.Data() );
          continue;
       }
       // case of strings
@@ -1860,9 +1861,12 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
          ipos = fParams.size();
          fParams[name] = ipos;
       }
-      if(ipos >= (int)fClingParameters.capacity())
+//     
+      if(ipos >= (int)fClingParameters.size())
       {
-         fClingParameters.reserve(2 * fClingParameters.capacity());
+         if(ipos >= (int)fClingParameters.capacity())            
+            fClingParameters.reserve( TMath::Max(int(fParams.size()), ipos+1));
+         fClingParameters.insert(fClingParameters.begin()+ipos,ipos+1-fClingParameters.size(),0.0);
       }
       fClingParameters[ipos] = value;
    }
@@ -2335,6 +2339,8 @@ void TFormula::Print(Option_t *option) const
       }
       if (fNpar > 0) {
          printf("List of  Parameters: \n");
+         if ( int(fClingParameters.size()) < fNpar)
+            Error("Print","Number of stored parameters in vector %lu in map %lu is different than fNpar %d",fClingParameters.size(), fParams.size(), fNpar);
          assert(int(fClingParameters.size()) >= fNpar); 
          // print with order passed to Cling function
          for ( int ipar = 0; ipar < fNpar ; ++ipar) {
@@ -2413,10 +2419,12 @@ void TFormula::Streamer(TBuffer &b)
          // case of formula contains only parameters
          if (fFormula.IsNull() ) return;
 
-         // store parameter values
+         // store parameter values, names and order 
          std::vector<double> parValues = fClingParameters;
+         auto paramMap = fParams;
+         fNpar = fParams.size();
          fClingParameters.clear();  // need to be reset before re-initializing it
-
+         
          FillDefaults();
 
          //std::cout << "Streamer::Reading preprocess the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
@@ -2438,7 +2446,15 @@ void TFormula::Streamer(TBuffer &b)
          }
          assert(fNpar == (int) parValues.size() );
          std::copy( parValues.begin(), parValues.end(), fClingParameters.begin() );
-
+         // restore parameter names and order
+         if (fParams.size() != paramMap.size() ) {
+            Warning("Streamer","number of parameters list found (%lu) is not same as the stored one (%lu) - use re-created list",fParams.size(),paramMap.size()) ;
+            //Print("v");
+         }
+         else 
+            //assert(fParams.size() == paramMap.size() );
+            fParams = paramMap;
+         
          // input formula into Cling
              // need to replace in cling the name of the pointer of this object
          // TString oldClingName = fClingName;

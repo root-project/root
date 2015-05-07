@@ -110,7 +110,7 @@ protected:
 
    std::list<TFormulaFunction>         fFuncs;    //!
    std::map<TString,TFormulaVariable>  fVars;     //!  list of  variable names
-   std::map<TString,Int_t,TFormulaParamOrder>   fParams;   //!  list of  parameter names
+   std::map<TString,Int_t,TFormulaParamOrder>   fParams;   //  list of  parameter names
    std::map<TString,Double_t>          fConsts;   //!
    std::map<TString,TString>           fFunctionsShortcuts;  //!
    TString                        fFormula;
@@ -194,6 +194,6 @@ public:
    void           SetVariable(const TString &name, Double_t value);
    void           SetVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
 
-   ClassDef(TFormula,9)
+   ClassDef(TFormula,10)
 };
 #endif
