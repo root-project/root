@@ -249,12 +249,13 @@ PyObject* PyROOT::TMemoryRegulator::ObjectEraseCallback( PyObject*, PyObject* py
 
    if ( ObjectProxy_Check( pyobj ) && pyobj->GetObject() != 0 ) {
    // get TObject pointer to the object
-      // WOKRHERE
-      TObject* object = 0;
-     //(TObject*)pyobj->ObjectIsA()->DynamicCast(
-      //   TObject::Class(), pyobj->GetObject() );
+      static Cppyy::TCppScope_t sTObjectScope = Cppyy::GetScope( "TObject" );
+      Cppyy::TCppType_t klass = pyobj->ObjectIsA();
+      if ( Cppyy::IsSubtype( klass, sTObjectScope) ) {
+         void* address = pyobj->GetObject();
+         TObject* object = (TObject*)((Long_t)address + \
+             Cppyy::GetBaseOffset( klass, sTObjectScope, address, 1 /* up-cast */ ) );
 
-      if ( object != 0 ) {
       // erase if tracked
          ObjectMap_t::iterator ppo = fgObjectTable->find( object );
          if ( ppo != fgObjectTable->end() ) {
