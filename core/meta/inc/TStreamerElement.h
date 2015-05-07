@@ -112,6 +112,7 @@ public:
    virtual Bool_t   HasCounter() const {return kFALSE;}
    virtual Bool_t   IsOldFormat(const char *newTypeName);
    virtual Bool_t   IsBase() const;
+   virtual Bool_t   IsTransient() const;
    virtual void     ls(Option_t *option="") const;
    virtual void     SetArrayDim(Int_t dim);
    virtual void     SetMaxIndex(Int_t dim, Int_t max);
