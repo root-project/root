@@ -188,13 +188,15 @@ void update (ItSource itSource, ItSource itSourceEnd,
             if (currentRepetition >= m_repetitions)
                 break;
 
+            double alpha = gaussDouble (m_alpha, m_alpha/2.0);
+
             auto itLocW = begin (localWeights);
             auto itLocWEnd = end (localWeights);
             auto itG = begin (gradients);
             auto itPrevG = begin (m_prevGradients);
             for (; itLocW != itLocWEnd; ++itLocW, ++itG, ++itPrevG)
             {
-                (*itG) *= m_alpha;
+                (*itG) *= alpha;
                 (*itG) += m_beta * (*itPrevG);
                 (*itLocW) += (*itG);
                 (*itPrevG) = (*itG);
