@@ -1,0 +1,475 @@
+
+#include "TMVA/NeuralNet.h"
+
+
+namespace TMVA
+{
+namespace NN
+{
+
+
+
+
+
+
+
+
+double gaussDouble (double mean, double sigma)
+{
+    static std::default_random_engine generator;
+    std::normal_distribution<double> distribution (mean, sigma);
+    return distribution (generator);
+}
+
+
+
+
+
+
+
+    LayerData::LayerData (const_iterator_type itInputBegin, const_iterator_type itInputEnd, ModeOutputValues eModeOutput)
+	: m_isInputLayer (true)
+	, m_hasWeights (false)
+	, m_hasGradients (false)
+	, m_eModeOutput (eModeOutput) 
+    {
+	m_itInputBegin = itInputBegin;
+	m_itInputEnd   = itInputEnd;
+	m_size = std::distance (itInputBegin, itInputEnd);
+	m_deltas.assign (m_size, 0);
+    }
+
+
+
+
+    LayerData::LayerData (size_t _size, 
+	       const_iterator_type itWeightBegin, 
+	       iterator_type itGradientBegin, 
+	       const_function_iterator_type itFunctionBegin, 
+	       const_function_iterator_type itInverseFunctionBegin,
+	       ModeOutputValues eModeOutput)
+	: m_size (_size)
+	, m_itConstWeightBegin   (itWeightBegin)
+	, m_itGradientBegin (itGradientBegin)
+	, m_itFunctionBegin (itFunctionBegin)
+	, m_itInverseFunctionBegin (itInverseFunctionBegin)
+	, m_isInputLayer (false)
+	, m_hasWeights (true)
+	, m_hasGradients (true)
+	, m_eModeOutput (eModeOutput) 
+    {
+	m_values.assign (_size, 0);
+	m_deltas.assign (_size, 0);
+	m_valueGradients.assign (_size, 0);
+    }
+
+
+
+
+    LayerData::LayerData (size_t _size, const_iterator_type itWeightBegin, 
+	       const_function_iterator_type itFunctionBegin, 
+	       ModeOutputValues eModeOutput)
+	: m_size (_size)
+	, m_itConstWeightBegin   (itWeightBegin)
+	, m_itFunctionBegin (itFunctionBegin)
+	, m_isInputLayer (false)
+	, m_hasWeights (true)
+	, m_hasGradients (false)
+	, m_eModeOutput (eModeOutput) 
+    {
+	m_values.assign (_size, 0);
+    }
+
+
+
+    typename LayerData::container_type LayerData::computeProbabilities ()
+    {
+	container_type probabilitiesContainer;
+	switch (m_eModeOutput)
+	{
+	case ModeOutputValues::SIGMOID:
+        {
+	    std::transform (begin (m_values), end (m_values), std::back_inserter (probabilitiesContainer), Sigmoid);
+	    break;
+        }
+	case ModeOutputValues::SOFTMAX:
+        {
+            double sum = 0;
+            probabilitiesContainer = m_values;
+            std::for_each (begin (probabilitiesContainer), end (probabilitiesContainer), [&sum](double& p){ p = std::exp (p); sum += p; });
+            if (sum != 0)
+                std::for_each (begin (probabilitiesContainer), end (probabilitiesContainer), [sum ](double& p){ p /= sum; });
+	    break;
+        }
+	case ModeOutputValues::DIRECT:
+	default:
+	    probabilitiesContainer.assign (begin (m_values), end (m_values));
+	}
+	return probabilitiesContainer;
+    }
+
+
+
+
+
+
+    Layer::Layer (size_t _numNodes, EnumFunction _activationFunction, ModeOutputValues eModeOutputValues) 
+	: m_numNodes (_numNodes) 
+	, m_eModeOutputValues (eModeOutputValues)
+    {
+	for (size_t iNode = 0; iNode < _numNodes; ++iNode)
+	{
+	    auto actFnc = Linear;
+	    auto invActFnc = InvLinear;
+	    m_activationFunction = EnumFunction::LINEAR;
+	    switch (_activationFunction)
+	    {
+	    case EnumFunction::ZERO:
+		actFnc = ZeroFnc;
+		invActFnc = ZeroFnc;
+		m_activationFunction = EnumFunction::ZERO;
+		break;
+	    case EnumFunction::LINEAR:
+		actFnc = Linear;
+		invActFnc = InvLinear;
+		m_activationFunction = EnumFunction::LINEAR;
+		break;
+	    case EnumFunction::TANH:
+		actFnc = Tanh;
+		invActFnc = InvTanh;
+		m_activationFunction = EnumFunction::TANH;
+		break;
+	    case EnumFunction::RELU:
+		actFnc = ReLU;
+		invActFnc = InvReLU;
+		m_activationFunction = EnumFunction::RELU;
+		break;
+	    case EnumFunction::SYMMRELU:
+		actFnc = SymmReLU;
+		invActFnc = InvSymmReLU;
+		m_activationFunction = EnumFunction::SYMMRELU;
+		break;
+	    case EnumFunction::TANHSHIFT:
+		actFnc = TanhShift;
+		invActFnc = InvTanhShift;
+		m_activationFunction = EnumFunction::TANHSHIFT;
+		break;
+	    case EnumFunction::SOFTSIGN:
+		actFnc = SoftSign;
+		invActFnc = InvSoftSign;
+		m_activationFunction = EnumFunction::SOFTSIGN;
+		break;
+	    case EnumFunction::SIGMOID:
+		actFnc = Sigmoid;
+		invActFnc = InvSigmoid;
+		m_activationFunction = EnumFunction::SIGMOID;
+		break;
+	    case EnumFunction::GAUSS:
+		actFnc = Gauss;
+		invActFnc = InvGauss;
+		m_activationFunction = EnumFunction::GAUSS;
+		break;
+	    case EnumFunction::GAUSSCOMPLEMENT:
+		actFnc = GaussComplement;
+		invActFnc = InvGaussComplement;
+		m_activationFunction = EnumFunction::GAUSSCOMPLEMENT;
+		break;
+	    case EnumFunction::DOUBLEINVERTEDGAUSS:
+		actFnc = DoubleInvertedGauss;
+		invActFnc = InvDoubleInvertedGauss;
+		m_activationFunction = EnumFunction::DOUBLEINVERTEDGAUSS;
+		break;
+	    }
+	    m_vecActivationFunctions.push_back (actFnc);
+	    m_vecInverseActivationFunctions.push_back (invActFnc);
+	}
+    }
+
+
+
+
+
+
+
+
+
+
+    Settings::Settings (TString name,
+                        size_t _convergenceSteps, size_t _batchSize, size_t _testRepetitions, 
+                        double _factorWeightDecay, bool isL1Regularization, double _dropFraction,
+                        size_t _dropRepetitions, MinimizerType _eMinimizerType, double _learningRate, 
+                        double _momentum, int _repetitions)
+        : m_timer (100, name)
+        , m_minProgress (0)
+        , m_maxProgress (100)
+        , m_convergenceSteps (_convergenceSteps)
+        , m_batchSize (_batchSize)
+        , m_testRepetitions (_testRepetitions)
+        , m_factorWeightDecay (_factorWeightDecay)
+        , count_E (0)
+        , count_dE (0)
+        , count_mb_E (0)
+        , count_mb_dE (0)
+        , m_isL1Regularization (isL1Regularization)
+        , m_dropFraction (_dropFraction)
+        , m_dropRepetitions (_dropRepetitions)
+        , fLearningRate (_learningRate)
+        , fMomentum (_momentum)
+        , fRepetitions (_repetitions)
+        , fMinimizerType (_eMinimizerType)
+        , fMonitoring (NULL)
+    {
+    }
+    
+Settings::~Settings () 
+{
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void ClassificationSettings::startTrainCycle () 
+{
+    create ("ROC", 100, 0, 1, 100, 0, 1);
+    create ("Significance", 100, 0, 1, 100, 0, 3);
+    create ("OutputSig", 100, 0, 1);
+    create ("OutputBkg", 100, 0, 1);
+    if (fMonitoring) fMonitoring->ProcessEvents ();
+}
+
+void ClassificationSettings::endTrainCycle (double /*error*/) 
+{
+    if (fMonitoring) fMonitoring->ProcessEvents ();
+}
+
+void ClassificationSettings::testSample (double /* error */, double output, double target, double weight)
+    {
+        m_output.push_back (output);
+        m_targets.push_back (target);
+        m_weights.push_back (weight);
+    }
+
+
+void ClassificationSettings::startTestCycle () 
+    {
+        m_output.clear ();
+        m_targets.clear ();
+        m_weights.clear ();
+    }
+
+    void ClassificationSettings::endTestCycle () 
+    {
+        if (m_output.empty ())
+            return;
+        double minVal = *std::min_element (begin (m_output), end (m_output));
+        double maxVal = *std::max_element (begin (m_output), end (m_output));
+        const size_t numBinsROC = 1000;
+        const size_t numBinsData = 100;
+
+        std::vector<double> truePositives (numBinsROC+1, 0);
+        std::vector<double> falsePositives (numBinsROC+1, 0);
+        std::vector<double> trueNegatives (numBinsROC+1, 0);
+        std::vector<double> falseNegatives (numBinsROC+1, 0);
+
+        std::vector<double> x (numBinsData, 0);
+        std::vector<double> datSig (numBinsData+1, 0);
+        std::vector<double> datBkg (numBinsData+1, 0);
+
+        double binSizeROC = (maxVal - minVal)/(double)numBinsROC;
+        double binSizeData = (maxVal - minVal)/(double)numBinsData;
+
+        double sumWeightsSig = 0.0;
+        double sumWeightsBkg = 0.0;
+
+        for (size_t b = 0; b < numBinsData; ++b)
+        {
+            double binData = minVal + b*binSizeData;
+            x.at (b) = binData;
+        }
+
+        if (fabs(binSizeROC) < 0.0001)
+            return;
+
+        for (size_t i = 0, iEnd = m_output.size (); i < iEnd; ++i)
+        {
+            double val = m_output.at (i);
+            double truth = m_targets.at (i);
+            double weight = m_weights.at (i);
+
+            bool isSignal = (truth > 0.5 ? true : false);
+
+            if (m_sumOfSigWeights != 0 && m_sumOfBkgWeights != 0)
+            {
+                if (isSignal)
+                    weight *= m_sumOfSigWeights;
+                else
+                    weight *= m_sumOfBkgWeights;
+            }
+
+            size_t binROC = (val-minVal)/binSizeROC;
+            size_t binData = (val-minVal)/binSizeData;
+
+            if (isSignal)
+            {
+                for (size_t n = 0; n <= binROC; ++n)
+                {
+                    truePositives.at (n) += weight;
+                }
+                for (size_t n = binROC+1; n < numBinsROC; ++n)
+                {
+                    falseNegatives.at (n) += weight;
+                }
+
+                datSig.at (binData) += weight;
+                sumWeightsSig += weight;
+            }
+            else
+            {
+                for (size_t n = 0; n <= binROC; ++n)
+                {
+                    falsePositives.at (n) += weight;
+                }
+                for (size_t n = binROC+1; n < numBinsROC; ++n)
+                {
+                    trueNegatives.at (n) += weight;
+                }
+
+                datBkg.at (binData) += weight;
+                sumWeightsBkg += weight;
+            }
+        }
+
+        std::vector<double> sigEff;
+        std::vector<double> backRej;
+
+        double bestSignificance = 0;
+        double bestCutSignificance = 0;
+
+	double numEventsScaleFactor = 1.0;
+	if (m_scaleToNumEvents > 0)
+	{
+	    size_t numEvents = m_output.size ();
+	    numEventsScaleFactor = double (m_scaleToNumEvents)/double (numEvents);
+	}
+
+        clear ("ROC");
+        clear ("Significance");
+
+        for (size_t i = 0; i < numBinsROC; ++i)
+        {
+            double tp = truePositives.at (i) * numEventsScaleFactor;
+            double fp = falsePositives.at (i) * numEventsScaleFactor;
+            double tn = trueNegatives.at (i) * numEventsScaleFactor;
+            double fn = falseNegatives.at (i) * numEventsScaleFactor;
+
+            double seff = (tp+fn == 0.0 ? 1.0 : (tp / (tp+fn)));
+	    double brej = (tn+fp == 0.0 ? 0.0 : (tn / (tn+fp)));
+
+            sigEff.push_back (seff);
+            backRej.push_back (brej);
+            
+//            m_histROC->Fill (seff, brej);
+            addPoint ("ROC", seff, brej); // x, y
+
+
+	    double currentCut = (i * binSizeROC)+minVal;
+
+            double sig = tp;
+            double bkg = fp;
+            double significance = sig / sqrt (sig + bkg);
+            if (significance > bestSignificance)
+            {
+                bestSignificance = significance;
+                bestCutSignificance = currentCut;
+            }
+
+	    addPoint ("Significance", currentCut, significance);
+//            m_histSignificance->Fill (currentCut, significance);
+        }
+
+        m_significances.push_back (bestSignificance);
+        static size_t testCycle = 0;
+
+        clear ("OutputSig");
+        clear ("OutputBkg");
+        for (size_t i = 0; i < numBinsData; ++i)
+        {
+            addPoint ("OutputSig", x.at (i), datSig.at (i)/sumWeightsSig);
+            addPoint ("OutputBkg", x.at (i), datBkg.at (i)/sumWeightsBkg);
+            // m_histOutputSignal->Fill (x.at (i), datSig.at (1)/sumWeightsSig);
+            // m_histOutputBackground->Fill (x.at (i), datBkg.at (1)/sumWeightsBkg);
+        }
+
+       
+        ++testCycle;
+
+        plot ("ROC", "", 2, kRed);
+        plot ("Significance", "", 3, kRed);
+        plot ("OutputSig", "", 4, kRed);
+        plot ("OutputBkg", "same", 4, kBlue);
+        if (fMonitoring) fMonitoring->ProcessEvents ();
+
+	m_cutValue = bestCutSignificance;
+    }
+
+
+
+    void ClassificationSettings::setWeightSums (double sumOfSigWeights, double sumOfBkgWeights) { m_sumOfSigWeights = sumOfSigWeights; m_sumOfBkgWeights = sumOfBkgWeights; }
+    void ClassificationSettings::setResultComputation (std::string _fileNameNetConfig, std::string _fileNameResult, std::vector<Pattern>* _resultPatternContainer)
+    {
+	m_pResultPatternContainer = _resultPatternContainer;
+	m_fileNameResult = _fileNameResult;
+	m_fileNameNetConfig = _fileNameNetConfig;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    size_t Net::numWeights (size_t numInputNodes, size_t trainingStartLayer) const 
+    {
+	size_t num (0);
+	size_t index (0);
+	size_t prevNodes (numInputNodes);
+	for (auto& layer : m_layers)
+	{
+	    if (index >= trainingStartLayer)
+		num += layer.numWeights (prevNodes);
+	    prevNodes = layer.numNodes ();
+	    ++index;
+	}
+	return num;
+    }
+
+
+
+    
+
+
+
+
+
+
+
+
+}; // namespace NN
+}; // namespace TMVA
+
