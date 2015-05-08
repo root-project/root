@@ -101,6 +101,10 @@ ifeq ($(findstring fftw3, $(shell root-config --features)),)
 endif
 
 
+ifeq (,$(wildcard $(ROOTSYS)/lib/libRtools.*))
+   TUTORIALSTESTS_VETO += r/%
+endif
+
 # I believe these fail due to CINT bugs:
 TUTORIALSTESTS_VETOCINT := hist/hbars unuran/unuranDemo unuran/unuranFoamTest
 TUTORIALSTESTS_VETOCINT := $(shell echo Failing because of CINT: $(TUTORIALSTESTS_VETOCINT))
