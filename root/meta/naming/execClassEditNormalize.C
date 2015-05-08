@@ -45,6 +45,9 @@ typedef multi_index_container< ComplexElement*,
 
 #include "cmsExample01.h"
 
+class cl { public: template <class T> class inner; };
+typedef cl cl_t;
+
 bool test(const std::string &input)
 {
    std::string output;
@@ -70,6 +73,11 @@ bool test(const std::string &input,const char *expected)
 }
 
 int execClassEditNormalize() {
+
+   if (!test("vector<cl2_t::inner<long const> const*const>","vector<const cl2_t::inner<const long>*const>")) return 55;
+   if (!test("cl2_t::inner<long const> const*const","const cl2_t::inner<const long>*const")) return 54;
+   if (!test("vector<cl_t::inner<long const> const*const>","vector<const cl::inner<const long>*const>")) return 53;
+   if (!test("cl_t::inner<long const> const*const","const cl::inner<const long>*const")) return 52;
 
    if (!test("RootPCtempObj<TObject * const *>","RootPCtempObj<TObject*const*>")) return 51;
    if (!test("RootPCtempObj<TObject*const*>","RootPCtempObj<TObject*const*>")) return 50;

@@ -70,4 +70,10 @@ Test 66 The result is correct: Wrapper<NS::Inner<int,Object> >
 Test 67 The result is correct: vector2<NS::Inner<int,Object> >
 Test 68 The result is correct: vector<NS::Inner<int,Object> >
 Test 69 The result is correct: RootPCtempObj<const TObject*const>
+Test 70 The result is correct: vector<const cl::inner<const long>*const>
+Test 71 The result is correct: const cl::inner<const long>*const
+Test 72 The result is correct: vector<const cl::inner<const long>*const>
+Test 73 The result is correct: const cl::inner<const long>*const
+Test 74 The result is correct: vector<const cl::inner<const long>*const>
+Test 75 The result is correct: const cl::inner<const long>*const
 (int) 0

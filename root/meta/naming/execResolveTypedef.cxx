@@ -40,6 +40,9 @@ public:
    value_t fTwo;
 };
 
+class cl { public: template <class T> class inner; };
+typedef cl cl_t;
+
 bool testing(const char *expected, const std::string &result)
 {
    static int count = 0;
@@ -186,6 +189,12 @@ int execResolveTypedef()
    testing("vector<NS::Inner<int,Object> >",output);
 
    testing("RootPCtempObj<const TObject*const>",TClassEdit::ResolveTypedef("RootPCtempObj<TObject const*const>"));
+   testing("vector<const cl::inner<const long>*const>",TClassEdit::ResolveTypedef("vector<cl_t::inner<long const> const*const>"));
+   testing("const cl::inner<const long>*const",TClassEdit::ResolveTypedef("cl_t::inner<long const> const*const"));
+   testing("vector<const cl::inner<const long>*const>",TClassEdit::ResolveTypedef("vector<cl_t::inner<const long> const*const>"));
+   testing("const cl::inner<const long>*const",TClassEdit::ResolveTypedef("cl_t::inner<const long> const*const"));
+   testing("vector<const cl::inner<const long>*const>",TClassEdit::ResolveTypedef("vector<const cl_t::inner<const long> *const>"));
+   testing("const cl::inner<const long>*const",TClassEdit::ResolveTypedef("const cl_t::inner<const long> *const"));
 
    // Add an example like pair<...::type_t,int>
 
