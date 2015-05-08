@@ -1,8 +1,3 @@
-# A ROOT Guide For Beginners {.unnumbered}
-
-![ ](figures/logo.png)
-
-"Diving Into ROOT"
 
 ***Abstact:***
 
