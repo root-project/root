@@ -47,6 +47,14 @@
 //         : Trees split and compression modes..................... using Event_8b.root
 //         : opened file with plugin class......................... TDavixFile
 //         : Trees split and compression modes..................... OK
+// Test  4 : Filename formats when adding files to TChain.......... using Event_8a.root and Event_8b.root
+//         : treename in chain..................................... OK
+//         : treename to AddFile................................... OK
+//         : treename in filenames, slash-suffix style............. OK
+//         : bad treename to AddFile, good in filename............. OK
+//         : treename and url query in filename.................... OK
+//         : treename given in url frag in filename................ OK
+//         : filename with a url query in Add...................... OK
 // ****************************************************************************
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -63,6 +71,7 @@
 #include <TCanvas.h>
 #include <TPostScript.h>
 #include <TTree.h>
+#include <TChain.h>
 #include <TTreeCache.h>
 #include <TSystem.h>
 #include <TApplication.h>
@@ -77,6 +86,7 @@ void stressIOPluginsForProto(const char *protoName = 0, int multithread = 0);
 void stressIOPlugins1();
 void stressIOPlugins2();
 void stressIOPlugins3();
+void stressIOPlugins4();
 void cleanup();
 
 int main(int argc, char **argv)
@@ -97,7 +107,7 @@ class TTree;
 //_______________________ common part_________________________
 
 Double_t ntotin=0, ntotout=0;
-TString gPfx;
+TString gPfx,gCurProtoName;
 
 void Bprint(Int_t id, const char *title)
 {
@@ -144,6 +154,7 @@ int setPath(const char *proto)
 {
    if (!proto) return -1;
    TString p(proto);
+   gCurProtoName = p;
    if (p == "root" || p == "xroot") {
       gPfx = p + "://eospublic.cern.ch//eos/opstest/dhsmith/StressIOPluginsTestFiles/";
       return 0;
@@ -217,6 +228,7 @@ void stressIOPluginsForProto(const char *protoName /*=0*/, int multithread /*=0*
    stressIOPlugins1();
    stressIOPlugins2();
    stressIOPlugins3();
+   stressIOPlugins4();
 
    cleanup();
 
@@ -393,6 +405,139 @@ void stressIOPlugins3()
    }
 }
 
+//_______________________________________________________________
+void stressIOPlugins4()
+{
+   Long64_t nent;
+   Bool_t tryquery = kTRUE;
+   Bool_t trywildcard = kFALSE;
+   Bool_t tryqueryInAdd = kFALSE;
+
+   const char *title = "Filename formats when adding files to TChain";
+   Bprint(4,title);
+   printf("using Event_8a.root and Event_8b.root\n");
+
+   if (gCurProtoName == "rfio") {
+      tryquery = kFALSE;
+   }
+
+   if (gCurProtoName == "xroot" || gCurProtoName == "root" || gCurProtoName == "rfio") {
+      trywildcard = kTRUE;
+   }
+
+   if (gCurProtoName == "http" || gCurProtoName == "https") {
+      tryqueryInAdd = kTRUE;
+   }
+
+   {
+      Bprint(0,"treename in chain");
+      TChain  mychain("T");
+      mychain.AddFile(gPfx + "Event_8a.root");
+      mychain.AddFile(gPfx + "Event_8b.root");
+      nent = mychain.GetEntries();
+      if (nent != 200) {
+         printf("FAILED\n");
+      } else {
+         printf("OK\n");
+      }
+   }
+   {
+      Bprint(0,"treename to AddFile");
+      TChain  mychain("nosuchtree");
+      mychain.AddFile(gPfx + "Event_8a.root", TChain::kBigNumber, "T");
+      mychain.AddFile(gPfx + "Event_8b.root", TChain::kBigNumber, "T");
+      nent = mychain.GetEntries();
+      if (nent != 200) {
+         printf("FAILED\n");
+      } else {
+         printf("OK\n");
+      }
+   }
+   {
+      Bprint(0,"treename in filenames, slash-suffix style");
+      TChain  mychain("nosuchtree");
+      mychain.AddFile(gPfx + "Event_8a.root/T");
+      mychain.AddFile(gPfx + "Event_8b.root/T");
+      nent = mychain.GetEntries();
+      if (nent != 200) {
+         printf("FAILED\n");
+      } else {
+         printf("OK\n");
+      }
+   }
+   {
+      Bprint(0,"bad treename to AddFile, good in filename");
+      TChain  mychain("nosuchtree");
+      mychain.AddFile(gPfx + "Event_8a.root/T", TChain::kBigNumber, "nosuchtree2");
+      mychain.AddFile(gPfx + "Event_8b.root/T", TChain::kBigNumber, "nosuchtree2");
+      nent = mychain.GetEntries();
+      if (nent != 200) {
+         printf("FAILED\n");
+      } else {
+         printf("OK\n");
+      }
+   }
+   if (tryquery) {
+      Bprint(0,"treename and url query in filename");
+      TChain  mychain("nosuchtree");
+      mychain.AddFile(gPfx + "Event_8a.root/T?myq=xyz");
+      mychain.AddFile(gPfx + "Event_8b.root/T?myq=xyz");
+      nent = mychain.GetEntries();
+      if (nent != 200) {
+         printf("FAILED\n");
+      } else {
+         printf("OK\n");
+      }
+   }
+   if (tryquery) {
+      Bprint(0,"treename given in url frag in filename");
+      TChain  mychain("nosuchtree");
+      mychain.AddFile(gPfx + "Event_8a.root?myq=xyz#T");
+      mychain.AddFile(gPfx + "Event_8b.root?myq=xyz#T");
+      nent = mychain.GetEntries();
+      if (nent != 200) {
+         printf("FAILED\n");
+      } else {
+         printf("OK\n");
+      }
+   }
+   if (tryqueryInAdd) {
+      Bprint(0,"filename with a url query in Add");
+      TChain  mychain("T");
+      mychain.AddFile(gPfx + "Event_8a.root?myq=xyz");
+      mychain.AddFile(gPfx + "Event_8b.root?myq=xyz");
+      nent = mychain.GetEntries();
+      if (nent != 200) {
+         printf("FAILED\n");
+      } else {
+         printf("OK\n");
+      }
+   }
+   if (trywildcard) {
+      Bprint(0,"wildcarded filename");
+      TChain  mychain("T");
+      mychain.Add(gPfx + "Event_8*ot");
+      nent = mychain.GetEntries();
+      if (nent != 200) {
+         printf("FAILED\n");
+      } else {
+         printf("OK\n");
+      }
+   }
+
+   if (trywildcard) {
+      Bprint(0,"wildcarded filename with treename");
+      TChain  mychain("nosuchtree");
+      mychain.Add(gPfx + "Event_8*.root/T");
+      nent = mychain.GetEntries();
+      if (nent != 200) {
+         printf("FAILED\n");
+      } else {
+         printf("OK\n");
+      }
+   }
+}
+      
 void cleanup()
 {
    TString psfname = TString::Format("stressIOPlugins-%d.ps", gSystem->GetPid());
