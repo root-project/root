@@ -188,7 +188,7 @@ void update (ItSource itSource, ItSource itSourceEnd,
             if (currentRepetition >= m_repetitions)
                 break;
 
-            double alpha = gaussDouble (m_alpha, m_alpha/2.0);
+            double alpha = gaussDouble (m_alpha, m_alpha/10.0);
 
             auto itLocW = begin (localWeights);
             auto itLocWEnd = end (localWeights);
