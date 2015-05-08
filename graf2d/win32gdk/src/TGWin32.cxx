@@ -21,9 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#  include <ft2build.h>
-#  include FT_FREETYPE_H
-#  include FT_GLYPH_H
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
 #include "TGWin32.h"
 #include <stdio.h>
 #include <string.h>
@@ -899,7 +899,9 @@ void TGWin32::CloseDisplay()
 
    // terminate server thread
    gPtr2VirtualX = 0;
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,00,00)
    gPtr2Interpreter = 0;
+#endif
    gVirtualX = TGWin32VirtualXProxy::RealObject();
    // Following the change in revision 47611,
    // gInterpreter is a read-only variable but its value
