@@ -1264,7 +1264,6 @@ static void ResolveTypedefImpl(const char *tname,
    // and G::H<I,J>::K or G might be a typedef.
 
    bool constprefix = false;
-   unsigned int constsuffix = 0;
 
    if (tname[cursor]==' ') {
       if (!modified) {
@@ -1281,25 +1280,6 @@ static void ResolveTypedefImpl(const char *tname,
       }
       constprefix = true;
 
-   } else if (tname[len-1]=='t' && (6<len)) {
-      if (strncmp(tname+len-5,"const",5) == 0) {
-         switch(tname[len-6]) {
-            case '*':
-            case '&':
-            case ']':
-            case '>': constprefix = true; len -= 5; break;
-            case ' ': constprefix = true; len -= 6; break;
-            default: break; /* it is not a const keyword, nothing to do */
-         }
-         if (constprefix) {
-            if (!modified) {
-               modified = true;
-               result += string(tname,0,cursor);
-            }
-            constsuffix = len;
-            result += "const ";
-         }
-      }
    }
 
    // When either of those two is true, we should probably go to modified
@@ -1415,37 +1395,65 @@ static void ResolveTypedefImpl(const char *tname,
          }
          case ' ': {
             end_of_type = cursor;
-            ++cursor;
             // let's see if we have 'long long' or 'unsigned int' or 'signed char' or what not.
-            while (cursor<len && tname[cursor] == ' ') ++cursor;
+            while ((cursor+1)<len && tname[cursor+1] == ' ') ++cursor;
 
-            if (cursor!=len && tname[cursor] != '*' && tname[cursor] != '&'
-                && !(strncmp(tname+cursor,"const",5) == 0 && ((cursor+5)==len || tname[cursor+5] == ' ' || tname[cursor+5] == '*' || tname[cursor+5] == '&')) ) {
+            auto next = cursor+1;
+            if (strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '['))
+            {
+               // A first const after the type needs to be move in the front.
+               if (!modified) {
+                  modified = true;
+                  result += string(tname,0,start_of_type);
+                  result += "const ";
+                  mod_start_of_type = start_of_type + 6;
+                  result += string(tname,start_of_type,end_of_type-start_of_type);
+               } else if (mod_start_of_type < result.length()) {
+                  result.insert(mod_start_of_type,"const ");
+                  mod_start_of_type += 6;
+               } else {
+                  result += "const ";
+                  mod_start_of_type = start_of_type + 6;
+                  result += string(tname,start_of_type,end_of_type-start_of_type);
+               }
+               cursor += 5;
+               end_of_type = cursor+1;
+               prevScope = end_of_type;
+               if (tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+                  break;
+               }
+            } else if (next!=len && tname[next] != '*' && tname[next] != '&') {
                // the type is not ended yet.
                end_of_type = 0;
                break;
             }
+            ++cursor;
             // Intentional fall through;
          }
          case '*':
          case '&': {
             if (tname[cursor] != ' ') end_of_type = cursor;
             // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
-            if (strncmp(tname+cursor,"const",5) == 0) {
-               if ((cursor+5)==len || tname[cursor+5] == ' ' || tname[cursor+5] == '*' || tname[cursor+5] == '&') {
-                  cursor += 5;
+            auto next = cursor+1;
+            if (strncmp(tname+next,"const",5) == 0) {
+               if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+                  next += 5;
                }
             }
-            while (cursor+1<len &&
-                   (tname[cursor+1] == ' ' || tname[cursor+1] == '*' || tname[cursor+1] == '&')) {
-               ++cursor;
+            while (next<len &&
+                   (tname[next] == ' ' || tname[next] == '*' || tname[next] == '&')) {
+               ++next;
                // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
-               if (strncmp(tname+cursor,"const",5) == 0) {
-                  if ((cursor+5)==len || tname[cursor+5] == ' ' || tname[cursor+5] == '*' || tname[cursor+5] == '&') {
-                     cursor += 5;
+               if (strncmp(tname+next,"const",5) == 0) {
+                  if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+                     next += 5;
                   }
                }
             }
+            cursor = next-1;
+//            if (modified && mod_start_of_type < result.length()) {
+//               result += string(tname,end_of_type,cursor-end_of_type);
+//            }
             break;
          }
          case ',': {
@@ -1469,11 +1477,6 @@ static void ResolveTypedefImpl(const char *tname,
          default:
             end_of_type = 0;
       }
-   }
-
-   if (cursor==constsuffix && !end_of_type) {
-      // We had a const suffix, set the end of type to just before the const
-      end_of_type = constsuffix;
    }
 
    if (prevScope && modified) result += std::string(tname+prevScope,(end_of_type == 0 ? cursor : end_of_type)-prevScope);
