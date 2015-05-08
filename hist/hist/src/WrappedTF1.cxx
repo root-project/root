@@ -30,13 +30,14 @@ WrappedTF1::WrappedTF1 ( TF1 & f  )  :
    fLinear(false),
    fPolynomial(false),
    fFunc(&f),
-   fX (),
-   fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
+   fX () 
+   //fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
 {
    // constructor from a TF1 function pointer.
 
    // init the pointers for CINT
-   if (fFunc->GetMethodCall() )  fFunc->InitArgs(fX, &fParams.front() );
+   //if (fFunc->GetMethodCall() )  fFunc->InitArgs(fX, &fParams.front() );
+   if (fFunc->GetMethodCall() )  fFunc->InitArgs(fX, 0 );
    // distinguish case of polynomial functions and linear functions
    if (fFunc->GetNumber() >= 300 && fFunc->GetNumber() < 310) {
       fLinear = true;
@@ -44,9 +45,9 @@ WrappedTF1::WrappedTF1 ( TF1 & f  )  :
    }
    // check that in case function is linear the linear terms are not zero
    if (fFunc->IsLinear() ) {
-      unsigned int ip = 0;
+      int ip = 0; 
       fLinear = true;
-      while (fLinear && ip < fParams.size() )  {
+      while (fLinear && ip < fFunc->GetNpar() )  { 
          fLinear &= (fFunc->GetLinearPart(ip) != 0) ;
          ip++;
       }
@@ -60,21 +61,21 @@ WrappedTF1::WrappedTF1(const WrappedTF1 & rhs) :
    fLinear(rhs.fLinear),
    fPolynomial(rhs.fPolynomial),
    fFunc(rhs.fFunc),
-   fX(),
-   fParams(rhs.fParams)
+   fX()
+   //fParams(rhs.fParams)
 {
    // copy constructor
-   fFunc->InitArgs(fX,&fParams.front()  );
+   fFunc->InitArgs(fX, 0 );
 }
 
 WrappedTF1 & WrappedTF1::operator = (const WrappedTF1 & rhs) {
    // assignment operator
    if (this == &rhs) return *this;  // time saving self-test
    fLinear = rhs.fLinear;
-   fPolynomial = rhs.fPolynomial;
-   fFunc = rhs.fFunc;
-   fFunc->InitArgs(fX, &fParams.front() );
-   fParams = rhs.fParams;
+   fPolynomial = rhs.fPolynomial; 
+   fFunc = rhs.fFunc; 
+   fFunc->InitArgs(fX, 0 );
+   //fParams = rhs.fParams;
    return *this;
 }
 
@@ -97,8 +98,8 @@ double WrappedTF1::DoDerivative( double  x  ) const {
    // return the function derivatives w.r.t. x
 
    // parameter are passed as non-const in Derivative
-   double * p =  (fParams.size() > 0) ? const_cast<double *>( &fParams.front()) : 0;
-   return  fFunc->Derivative(x,p,fgEps);
+   //double * p =  (fParams.size() > 0) ? const_cast<double *>( &fParams.front()) : 0;
+   return  fFunc->Derivative(x,(double *) 0,fgEps);
 }
 
 double WrappedTF1::DoParameterDerivative(double x, const double * p, unsigned int ipar ) const {
@@ -139,10 +140,10 @@ WrappedMultiTF1::WrappedMultiTF1 (TF1 & f, unsigned int dim  )  :
    fPolynomial(false), 
    fOwnFunc(false),
    fFunc(&f),
-   fDim(dim),
-   fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
-{
-   // constructor of WrappedMultiTF1
+   fDim(dim)
+   //fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
+{ 
+   // constructor of WrappedMultiTF1 
    // pass a dimension if dimension specified in TF1 does not correspond to real dimension
    // for example in case of multi-dimensional TF1 objects defined as TF1 (i.e. for functions with dims > 3 )
    if (fDim == 0) fDim = fFunc->GetNdim();
@@ -151,10 +152,10 @@ WrappedMultiTF1::WrappedMultiTF1 (TF1 & f, unsigned int dim  )  :
    // function is linear when is a TFormula created with "++"
    // hyperplane are not yet existing in TFormula
    if (fFunc->IsLinear() ) {
-      unsigned int ip = 0;
+      int ip = 0; 
       fLinear = true;
-      while (fLinear && ip < fParams.size() )  {
-         fLinear &= (fFunc->GetLinearPart(ip) != 0) ;
+      while (fLinear && ip < fFunc->GetNpar() )  { 
+         fLinear &= (fFunc->GetLinearPart(ip) != 0) ; 
          ip++;
       }
    }
@@ -173,8 +174,8 @@ WrappedMultiTF1::WrappedMultiTF1(const WrappedMultiTF1 & rhs) :
    fPolynomial(rhs.fPolynomial), 
    fOwnFunc(rhs.fOwnFunc),
    fFunc(rhs.fFunc),
-   fDim(rhs.fDim),
-   fParams(rhs.fParams)
+   fDim(rhs.fDim)
+   //fParams(rhs.fParams) 
 {
    // copy constructor
    if (fOwnFunc) SetAndCopyFunction(rhs.fFunc);
@@ -188,14 +189,7 @@ WrappedMultiTF1 & WrappedMultiTF1::operator= (const WrappedMultiTF1 & rhs) {
    fPolynomial = rhs.fPolynomial;  
    fOwnFunc = rhs.fOwnFunc;
    fDim = rhs.fDim;
-   fParams = rhs.fParams;
-
-   if (fOwnFunc) {
-      TF1 * oldFunc = fFunc; 
-      SetAndCopyFunction(rhs.fFunc);
-      delete oldFunc; 
-   }
-
+   //fParams = rhs.fParams;
    return *this;
 }
 

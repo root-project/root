@@ -2,13 +2,13 @@ typedef std::multimap<TObject*, TF1*>::iterator fPrevFitIter;
 typedef std::vector<TF1*>::iterator             fSystemFuncIter;
 
 enum EFitPanel {
-   kFP_FLIST, kFP_GAUS,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,
+   kFP_FLIST = 0, kFP_GAUS = 1,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,
    kFP_POL0,  kFP_POL1,  kFP_POL2,  kFP_POL3,  kFP_POL4,  kFP_POL5,
    kFP_POL6,  kFP_POL7,  kFP_POL8,  kFP_POL9,
    kFP_XYGAUS,kFP_XYEXP, kFP_XYLAN, kFP_XYLANN,
 // Above here -> All editable formulaes!
    kFP_USER,
-   kFP_NONE,  kFP_ADD,   kFP_CONV,  kFP_FILE,  kFP_PARS,  kFP_RBUST, kFP_EMPW1,
+   kFP_NONE,  kFP_ADD,   kFP_NORMADD,   kFP_CONV,  kFP_FILE,  kFP_PARS,  kFP_RBUST, kFP_EMPW1,
    kFP_INTEG, kFP_IMERR, kFP_USERG, kFP_ADDLS, kFP_ALLW1, kFP_IFITR, kFP_NOCHI,
    kFP_MLIST, kFP_MCHIS, kFP_MBINL, kFP_MUBIN, kFP_MUSER, kFP_MLINF, kFP_MUSR,
    kFP_DSAME, kFP_DNONE, kFP_DADVB, kFP_DNOST, kFP_PDEF,  kFP_PVER,  kFP_PQET,

@@ -87,17 +87,20 @@ public:
 
    /// get the parameter values (return values cached inside, those inside TF1 might be different)
    const double * Parameters() const {
-      return  (fParams.size() > 0) ? &fParams.front() : 0;
+  //return  (fParams.size() > 0) ? &fParams.front() : 0;
+      return  fFunc->GetParameters();
    }
 
    /// set parameter values (only the cached one in this class,leave unchanges those of TF1)
-   void SetParameters(const double * p) {
-      std::copy(p,p+fParams.size(),fParams.begin());
-   }
+   void SetParameters(const double * p) { 
+      //std::copy(p,p+fParams.size(),fParams.begin());
+      fFunc->SetParameters(p); 
+   } 
 
    /// return number of parameters
    unsigned int NPar() const {
-      return fParams.size();
+      // return fParams.size();
+      return fFunc->GetNpar(); 
    }
 
    /// return parameter name (from TF1)
@@ -132,6 +135,16 @@ private:
       if (fFunc->GetMethodCall() )  fFunc->InitArgs(x,p);  // needed for interpreted functions
       return fFunc->EvalPar(x,p);
    }
+
+   /// evaluate function using the cached parameter values (of TF1)
+   /// re-implement for better efficiency
+   double DoEval (const double* x) const { 
+      // no need to call InitArg for interpreted functions (done in ctor)
+
+      //const double * p = (fParams.size() > 0) ? &fParams.front() : 0;
+      return fFunc->EvalPar(x, 0 ); 
+   }
+
 
    /// evaluate the partial derivative with respect to the parameter
    double DoParameterDerivative(const double * x, const double * p, unsigned int ipar) const;
