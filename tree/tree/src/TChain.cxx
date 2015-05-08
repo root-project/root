@@ -253,20 +253,25 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    // -- Add a new file to this chain.
    //
    // Argument name may have either of two formats. The first:
-   //   //machine/path/file_name.root/subdir/tree_name
-   // machine and subdir/tree_name are optional. If subdir/tree_name is missing
-   // the chain name will be assumed.
-   // In the file name part (but not in preceding directories) wildcarding
-   // notation may be used, eg. specifying "xxx*.root" adds all files starting
-   // with xxx in the current file system directory.
-   // Argument name may also have the format of a url with protocol, eg.
-   //     http://machine/path/file_name.root
-   // or  http://machine/path/file_name.root/subdir/tree_name
-   // or  http://machine/path/file_name.root?#subdir/tree_name
-   // Wildcards are not supported in any of the url formats. In the second
-   // url example the file name of the root file must contain '.root'.
-   // The url may contain a query section, eg.
-   //     http://machine/path/file_name.root/subdir/tree_name?query
+   //   [//machine]/path/file_name.root[/tree_name]
+   //
+   // If tree_name is missing the chain name will be assumed.
+   // Wildcard treatment is triggered by the any of the special characters []*?
+   // which may be used in the file name, eg. specifying "xxx*.root" adds
+   // all files starting with xxx in the current file system directory.
+   //
+   // Alternatively name may have the format of a url, eg.
+   //     root://machine/path/file_name.root
+   // or  root://machine/path/file_name.root/tree_name
+   // or  root://machine/path/file_name.root/tree_name?query
+   //
+   // where "query" is to be interpreted by the remote server. Wildcards may be
+   // supported in urls, depending on the protocol plugin and the remote server.
+   // http or https urls can contain a query identifier without tree_name, but
+   // generally urls can not be written with them because of ambiguity with the
+   // wildcard character. (Also see the documentaiton for TChain::AddFile,
+   // which does not support wildcards but allows the url to contain query)
+   //
    // NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
    //
    //    A- if nentries <= 0, the file is connected and the tree header read
@@ -318,39 +323,16 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    // If nentries<=0 and wildcarding is not used, return 1 if the file
    // exists and contains the correct tree and 0 otherwise.
 
-   TString basename(name);
-   Int_t protosep = basename.Index("://");
+   TString basename, treename, query, suffix;
+   ParseTreeFilename(name, basename, treename, query, suffix, kTRUE);
 
-   // no processing needed here if a url is given or if there
-   // are no wildcards in the name
-   if ((protosep > 0 && basename.Index("/") > protosep) || !basename.MaybeWildcard()) {
+   // case with one single file
+   if (!basename.MaybeWildcard()) {
       return AddFile(name, nentries);
    }
 
    // wildcarding used in name
    Int_t nf = 0;
-
-   Int_t dotslashpos = -1;
-   {
-      Int_t next_dot = basename.Index(".root");
-      while(next_dot>=0) {
-         dotslashpos = next_dot;
-         next_dot = basename.Index(".root",dotslashpos+1);
-      }
-      if (dotslashpos>=0 && basename[dotslashpos+5]!='/') {
-         // We found the 'last' .root in the name and it is not followed by
-         // a '/', so the tree name is _not_ specified in the name.
-         dotslashpos = -1;
-      }
-   }
-   //Int_t dotslashpos = basename.Index(".root/");
-   TString behind_dot_root;
-   if (dotslashpos>=0) {
-      // Copy the tree name specification
-      behind_dot_root = basename(dotslashpos+6,basename.Length()-dotslashpos+6);
-      // and remove it from basename
-      basename.Remove(dotslashpos+5);
-   }
 
    Int_t slashpos = basename.Last('/');
    TString directory;
@@ -382,10 +364,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
       TObjString *obj;
       while ((obj = (TObjString*)next())) {
          file = obj->GetName();
-         if (behind_dot_root.Length() != 0)
-            nf += AddFile(TString::Format("%s/%s/%s",directory.Data(),file,behind_dot_root.Data()),nentries);
-         else
-            nf += AddFile(TString::Format("%s/%s",directory.Data(),file),nentries);
+         nf += AddFile(TString::Format("%s/%s%s",directory.Data(),file,suffix.Data()),nentries);
       }
       l.Delete();
    }
@@ -401,9 +380,18 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
 {
    // -- Add a new file to this chain.
    //
-   //    If tname is specified, the chain will load the tree named tname
-   //    from the file, otherwise the original treename specified in the
-   //    TChain constructor will be used.
+   //    Filename formats are similar to TChain::Add. Wildcards are not
+   //    applied. urls may also contain query and fragment identifiers
+   //    where the tree name can be specified in the url fragment.
+   //
+   //    eg.
+   //    root://machine/path/file_name.root?query#tree_name
+   //
+   //    If tree_name is given as a part of the file name it is used to
+   //    as the name of the tree to load from the file. Otherwise if tname
+   //    argument is specified the chain will load the tree named tname from
+   //    the file, otherwise the original treename specified in the TChain
+   //    constructor will be used.
    //
    // A. If nentries <= 0, the file is opened and the tree header read
    //    into memory to get the number of entries.
@@ -450,32 +438,17 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    const char *treename = GetName();
    if (tname && strlen(tname) > 0) treename = tname;
 
-   Int_t nch = strlen(name);
+   TString basename, tn, query, suffix;
+   ParseTreeFilename(name, basename, tn, query, suffix, kFALSE);
+
+   if (!tn.IsNull()) {
+      treename = tn.Data();
+   }
+
+   Int_t nch = basename.Length() + query.Length();
    char *filename = new char[nch+1];
-   strlcpy(filename,name,nch+1);
-
-   Bool_t isurl = kFALSE;
-   const char *protosep = strstr(name,"://");
-   if (protosep && protosep > name && strchr(name,'/') > protosep) {
-      isurl = kTRUE;
-   }
-
-   char *fragstr = 0;
-   const char *querysep = 0;
-   if (isurl) {
-      // fragment without a query is not recognised because some of the
-      // protocols allow # in the filename
-      char *pos = strchr(filename, '?');
-      if (pos) {
-         querysep = &name[pos - filename];
-         fragstr = strchr(pos+1, '#');
-         if (fragstr) {
-            // Remove query if empty and fragment from filename
-            if (fragstr == pos+1) *pos = 0;
-            *fragstr++ = 0;
-         }
-      }
-   }
+   strlcpy(filename,basename.Data(),nch+1);
+   strlcat(filename,query.Data(),nch+1);
 
    //Check enough space in fTreeOffset
    if (fNtrees+1 >= fTreeOffsetLen) {
@@ -484,48 +457,6 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
       for (Int_t i=0;i<=fNtrees;i++) trees[i] = fTreeOffset[i];
       delete [] fTreeOffset;
       fTreeOffset = trees;
-   }
-
-   if (fragstr) {
-      // Treename is given in the fragment
-      treename = fragstr;
-   } else {
-      // Treename may be given after the filename but before a query string
-      // Query is removed during the treename check and readded afterwards
-      if (querysep) {
-         filename[querysep - name] = '\0';
-      }
-      // Look for ".root"
-      char *dot = 0;
-      char *nextdot =  (char*)strstr(filename,".root");
-      while (nextdot) {
-         dot = nextdot;
-         nextdot = (char*)strstr(dot+1,".root");
-      }
-      Int_t fnnch = nch;
-      // Search for a slash between the .root and the end
-      if (dot) {
-         char *pos = dot + 5;
-         while (*pos) {
-            if (*pos == '/') {
-               treename = pos + 1;
-               *pos = 0;
-               Int_t tlen = strlen(treename);
-               if (querysep) {
-                  // Move treename to end of buffer to make room to readd query
-                  memmove(filename+nch-tlen, treename, tlen+1);
-                  treename = &filename[nch-tlen];
-               }
-               fnnch = treename - filename -1;
-               break;
-            }
-            pos++;
-         }
-      }
-      // Append any query back onto the filename
-      if (querysep) {
-         strlcat(filename,querysep,fnnch+1);
-      }
    }
 
    // Open the file to get the number of entries.
@@ -2070,6 +2001,111 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
       delete newTree->GetCurrentFile();
    }
    return nfiles;
+}
+
+//______________________________________________________________________________
+void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix, Bool_t wildcards) const
+{
+   // -- Get the tree url or filename and other information from the name
+   //
+   //    A treename and a url's query section is split off from name. The
+   //    splitting depends on whether the resulting filename is to be
+   //    subsequently treated for wildcards or not, since the question mark is
+   //    both the url query identifier and a wildcard. Wildcard matching is not
+   //    done in this method itself.
+   //
+   //    /a/path/file.root[/treename]
+   //    xxx://a/path/file.root[/treename][?query]
+   //    xxx://a/path/file.root[?query[#treename]]
+   //
+   //   Inputs:
+   //   name      - is the original name
+   //   wildcards - indicates if the resulting filename will be treated for
+   //               wildcards. For backwards compatibility, with most protocols
+   //               this flag suppresses the search for the url fragment
+   //               identifier and limits the query identifier search to cases
+   //               where the tree name is given as a trailing slash-separated
+   //               string at the end of the file name.
+   //   Outpus:
+   //   filename  - the url or filename to be opened or matched
+   //   treename  - the treename, which may be found as a trailing part of the
+   //               name or in a url fragment section. If not found this will
+   //               be empty.
+   //   query     - is the url query section, including the leading question
+   //               mark. If not found or the query section is only followed by
+   //               a fragment this will be empty.
+   //   suffix    - the portion of name which was removed to form filename.
+
+   Ssiz_t pIdx;
+   Bool_t isUrl = kFALSE;
+   Bool_t isUrlDoFull = kFALSE;
+   filename = name;
+   treename.Clear();
+   query.Clear();
+   suffix.Clear();
+
+   pIdx = filename.Index("://");
+   if (pIdx != kNPOS && pIdx > 0 && filename.Index("/") > pIdx) {
+      // filename has a url format "xxx://"
+      // decide if to do full search for url query and fragment identifiers
+      isUrl = kTRUE;
+      if (wildcards) {
+         TUrl url(name);
+         if (url.IsValid()) {
+            TString proto = url.GetProtocol();
+            if (proto == "http" || proto == "https") {
+               isUrlDoFull = kTRUE;
+            }
+         }
+      } else {
+         isUrlDoFull = kTRUE;
+      }
+   }
+
+   if (isUrlDoFull) {
+      pIdx = filename.Index("?");
+      if (pIdx != kNPOS) {
+         query = filename(pIdx,filename.Length()-pIdx);
+         suffix = filename(pIdx, filename.Length()-pIdx);
+         filename.Remove(pIdx);
+      }
+      pIdx = query.Index("#");
+      if (pIdx != kNPOS) {
+         treename = query(pIdx+1,query.Length()-pIdx-1);
+         query.Remove(pIdx);
+         if (query.Length() == 1) {
+            // was only followed by the fragment
+            query.Clear();
+         }
+      }
+   }
+
+   if (treename.IsNull()) {
+      Ssiz_t dotSlashPos = kNPOS;
+      pIdx = filename.Index(".root");
+      while(pIdx != kNPOS) {
+         dotSlashPos = pIdx;
+         pIdx = filename.Index(".root",dotSlashPos+1);
+      }
+      if (dotSlashPos != kNPOS && filename[dotSlashPos+5]!='/') {
+         // We found the 'last' .root in the name and it is not followed by
+         // a '/', so the tree name is _not_ specified in the name.
+         dotSlashPos = kNPOS;
+      }
+      if (dotSlashPos != kNPOS) {
+         // Copy the tree name specification and remove it from filename
+         treename = filename(dotSlashPos+6,filename.Length()-dotSlashPos-6);
+         suffix.Prepend(filename(dotSlashPos+5, filename.Length()-dotSlashPos-5));
+         filename.Remove(dotSlashPos+5);
+      }
+      if (isUrl && !isUrlDoFull) {
+         pIdx = treename.Index("?");
+         if (pIdx != kNPOS) {
+            query = treename(pIdx,treename.Length()-pIdx);
+            treename.Remove(pIdx);
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
