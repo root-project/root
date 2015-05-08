@@ -504,8 +504,8 @@ void stressIOPlugins4()
    if (tryqueryInAdd) {
       Bprint(0,"filename with a url query in Add");
       TChain  mychain("T");
-      mychain.AddFile(gPfx + "Event_8a.root?myq=xyz");
-      mychain.AddFile(gPfx + "Event_8b.root?myq=xyz");
+      mychain.Add(gPfx + "Event_8a.root?myq=xyz");
+      mychain.Add(gPfx + "Event_8b.root?myq=xyz");
       nent = mychain.GetEntries();
       if (nent != 200) {
          printf("FAILED\n");
