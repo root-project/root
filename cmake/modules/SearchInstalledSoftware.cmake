@@ -872,6 +872,34 @@ if (jemalloc)
   endif()
 endif()
 
+#---Check for TBB---------------------------------------------------------------------
+if(tbb)
+  if(builtin_tbb)
+    set(tbb_version 42_20140122)
+    ExternalProject_Add(
+      TBB
+      URL http://service-spi.web.cern.ch/service-spi/external/tarFiles/tbb${tbb_version}oss_src.tgz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND make CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
+                                       -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
+      INSTALL_COMMAND ""
+      BUILD_IN_SOURCE 1
+    )
+    set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
+  else()
+    message(STATUS "Looking for TBB")
+    find_package(TBB)
+    if(NOT TBB_FOUND)
+      message(STATUS "TBB not found. You can enable the option 'builtin_tbb' to build the library internally'")
+      message(STATUS "               For the time being switching off 'tbb' option")
+      set(tbb OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Report non implemented options---------------------------------------------------
 foreach(opt afs clarens glite pch peac sapdb srp geocad)
   if(${opt})
