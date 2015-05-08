@@ -98,6 +98,7 @@ namespace TMVA {
          kLD             ,
          kPlugins        ,
          kCategory       ,
+         kNN             ,
          kMaxMethod
       };
 
