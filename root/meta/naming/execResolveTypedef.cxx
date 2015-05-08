@@ -71,14 +71,14 @@ int execResolveTypedef()
    testing("const Long64_t*",TClassEdit::ResolveTypedef("const long long*"));
    testing("const Long64_t*",TClassEdit::ResolveTypedef("const Long64_t*"));
 
-   testing("const int*&",TClassEdit::ResolveTypedef("const int*&"));
+   testing("const int *&",TClassEdit::ResolveTypedef("const int *&"));
    testing("const int*&",TClassEdit::ResolveTypedef("const Int_t*&"));
    testing("const Long64_t*&",TClassEdit::ResolveTypedef("const long long*&"));
    testing("const Long64_t*&",TClassEdit::ResolveTypedef("const Long64_t*&"));
 
    testing("const int*const&",TClassEdit::ResolveTypedef("const int*const&"));
-   testing("const int*const&",TClassEdit::ResolveTypedef("const Int_t* const &"));
-   testing("const Long64_t*const&",TClassEdit::ResolveTypedef("const long long* const  &"));
+   testing("const int* const &",TClassEdit::ResolveTypedef("const Int_t* const &"));
+   testing("const Long64_t* const  &",TClassEdit::ResolveTypedef("const long long* const  &"));
    testing("const Long64_t*const&",TClassEdit::ResolveTypedef("const Long64_t*const&"));
 
 
@@ -184,6 +184,8 @@ int execResolveTypedef()
 
    TClassEdit::GetNormalizedName(output,"vector<NS::Inner<Int_t> >");
    testing("vector<NS::Inner<int,Object> >",output);
+
+   testing("RootPCtempObj<const TObject*const>",TClassEdit::ResolveTypedef("RootPCtempObj<TObject const*const>"));
 
    // Add an example like pair<...::type_t,int>
 

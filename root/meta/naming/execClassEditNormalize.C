@@ -71,12 +71,32 @@ bool test(const std::string &input,const char *expected)
 
 int execClassEditNormalize() {
 
-   if (!test("v3<Long_t const,int const>","v3<const long,const int>")) return 30;
-   if (!test("v3<const Long_t,int>","v3<const long,int>")) return 30;
-   if (!test("v3<Long_t const,int>","v3<const long,int>")) return 30;
-   if (!test("v3<Long_t,const int>","v3<long,const int>")) return 30;
-   if (!test("v3<Long_t,int const>","v3<long,const int>")) return 30;
-   if (!test("v3<Long_t,int>","v3<long,int>")) return 30;
+   if (!test("RootPCtempObj<TObject * const *>","RootPCtempObj<TObject*const*>")) return 51;
+   if (!test("RootPCtempObj<TObject*const*>","RootPCtempObj<TObject*const*>")) return 50;
+   if (!test("RootPCtempObj<TObject const*const>","RootPCtempObj<const TObject*const>")) return 49;
+   if (!test("RootPCtempObj<const TObject*const>","RootPCtempObj<const TObject*const>")) return 48;
+   if (!test("RootPCtempObj<TObject*const>","RootPCtempObj<TObject*const>")) return 47;
+   if (!test("TObject const*const","const TObject*const")) return 46;
+   if (!test("const TObject*const","const TObject*const")) return 45;
+   if (!test("TObject*const","TObject*const")) return 44;
+   if (!test("v3<Long_t const,int const>","v3<const long,const int>")) return 43;
+   if (!test("v3<const Long_t,int>","v3<const long,int>")) return 42;
+   if (!test("v3<Long_t const,int>","v3<const long,int>")) return 41;
+   if (!test("v3<Long_t,const int>","v3<long,const int>")) return 40;
+   if (!test("v3<Long_t,int const>","v3<long,const int>")) return 39;
+   if (!test("v3<Long_t,int>","v3<long,int>")) return 38;
+
+   if (!test("const int *const* const","const int*const*const")) return 37;
+   if (!test("const int **const","const int**const")) return 36;
+   if (!test("const int  * const","const int*const")) return 35;
+   if (!test("const int *const","const int*const")) return 34;
+
+   if (!test("int const*const* const","const int*const*const")) return 33;
+   if (!test("int const**const","const int**const")) return 32;
+   if (!test("int const * const","const int*const")) return 31;
+   if (!test("int const*const","const int*const")) return 30;
+
+
    if (!test("int const","const int")) return 29;
    if (!test("Int_t const","const int")) return 28;
    if (!test("const int","const int")) return 27;

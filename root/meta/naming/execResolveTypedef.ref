@@ -12,13 +12,13 @@ Test 9 The result is correct: const int*
 Test 10 The result is correct: const int*
 Test 11 The result is correct: const Long64_t*
 Test 12 The result is correct: const Long64_t*
-Test 13 The result is correct: const int*&
+Test 13 The result is correct: const int *&
 Test 14 The result is correct: const int*&
 Test 15 The result is correct: const Long64_t*&
 Test 16 The result is correct: const Long64_t*&
 Test 17 The result is correct: const int*const&
-Test 18 The result is correct: const int*const&
-Test 19 The result is correct: const Long64_t*const&
+Test 18 The result is correct: const int* const &
+Test 19 The result is correct: const Long64_t* const  &
 Test 20 The result is correct: const Long64_t*const&
 Test 21 The result is correct: int
 Test 22 The result is correct: const int
@@ -69,4 +69,5 @@ Test 65 The result is correct: NS::Inner<int,Object>
 Test 66 The result is correct: Wrapper<NS::Inner<int,Object> >
 Test 67 The result is correct: vector2<NS::Inner<int,Object> >
 Test 68 The result is correct: vector<NS::Inner<int,Object> >
+Test 69 The result is correct: RootPCtempObj<const TObject*const>
 (int) 0
