@@ -73,7 +73,8 @@ if(NOT ROOT_xml_FOUND)
                 histfactory/*.C)   # histfactory requires xml
 endif()
 
-if(${R_FOUND})
+# variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
+if(NOT ROOT_r_FOUND)
   set(r_veto  r/*.C)
 endif()
 
