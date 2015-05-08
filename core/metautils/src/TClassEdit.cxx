@@ -217,6 +217,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
         || 0 == fElements[narg-1].compare(0,6,"const*")
         || 0 == fElements[narg-1].compare(0,6,"const&")
         || 0 == fElements[narg-1].compare(0,6,"const[")
+        || 0 == fElements[narg-1].compare("const")
         )
        ) {
       if ((mode&1)==0) tailLoc = narg-1;
@@ -344,9 +345,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          }
          continue;
       }
-      bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6) || 0 == strcmp(" const",fElements[i].c_str()+fElements[i].length()-6)  || 0 == strcmp(">const",fElements[i].c_str()+fElements[i].length()-6);
-      //NOTE: Should we also check the end of the type for 'const'?
-      fElements[i] = TClassEdit::ShortType(fElements[i].c_str(),mode);
+      fElements[i] = TClassEdit::ShortType(fElements[i].c_str(),mode | TClassEdit::kKeepOuterConst);
       if (mode&kResolveTypedef) {
          // We 'just' need to check whether the outer type is a typedef or not;
          // this also will add the default template parameter if any needs to
@@ -357,15 +356,13 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
             if (!typeresult.empty()) fElements[i] = typeresult;
          }
       }
-      if (hasconst && !(mode & TClassEdit::kKeepOuterConst)) {
-         // if mode is set to keep the outer const, it will be kept
-         // and we do not need to put it back ...
-         // FIXME: why are passing a flag meant for the outer
-         // to the handling of the inner?
-         fElements[i] = "const " + fElements[i];
-      }
    }
 
+   unsigned int tailOffset = 0;
+   if (tailLoc && fElements[tailLoc].compare(0,5,"const") == 0) {
+      if (mode & kKeepOuterConst) answ += "const ";
+      tailOffset = 5;
+   }
    if (!fElements[0].empty()) {answ += fElements[0]; answ +="<";}
 
 #if 0
@@ -415,7 +412,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       answ += fElements[fNestedLocation];
    }
    // tail is not a type name, just [2], &, * etc.
-   if (tailLoc) answ += fElements[tailLoc];
+   if (tailLoc) answ += fElements[tailLoc].c_str()+tailOffset;
 }
 
 //______________________________________________________________________________
@@ -697,7 +694,7 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, const char *name)
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
-   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef);
+   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef | TClassEdit::kKeepOuterConst);
 
    // Depending on how the user typed their code, in particular typedef
    // declarations, we may end up with an explicit '::' being
@@ -787,8 +784,9 @@ static void R__FindTrailing(std::string &full,  /*modified*/
    const char *starloc = t + tlen - 1;
    bool hasconst = false;
    if ( (*starloc)=='t'
-       && (starloc-t) > 5 && 0 == strncmp((starloc-5),"const",5)
-       && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+       && (starloc-t) > 5 && 0 == strncmp((starloc-4),"const",5)
+       && ( (*(starloc-5)) == ' ' || (*(starloc-5)) == '*' || (*(starloc-5)) == '&'
+           || (*(starloc-5)) == '>' || (*(starloc-5)) == ']') ) {
       // we are ending on a const.
       starloc -= 4;
       if ((*starloc-1)==' ') {
@@ -805,13 +803,10 @@ static void R__FindTrailing(std::string &full,  /*modified*/
             isArray = ! ( (*starloc)=='[' );
          } else if ( (*(starloc-1))=='t' ) {
             if ( (starloc-1-t) > 5 && 0 == strncmp((starloc-5),"const",5)
-                && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+                && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&'
+                    || (*(starloc-6)) == '>' || (*(starloc-6)) == ']')) {
                // we have a const.
                starloc -= 5;
-               if ((*starloc-1)==' ') {
-                  // Take the space too.
-                  starloc--;
-               }
             } else {
                break;
             }
@@ -820,6 +815,11 @@ static void R__FindTrailing(std::string &full,  /*modified*/
          }
       }
       stars = starloc;
+      if ((*(starloc-1))==' ') {
+         // erase the space too.
+         starloc--;
+      }
+
       const unsigned int starlen = strlen(starloc);
       full.erase(tlen-starlen,starlen);
    } else if (hasconst) {
@@ -1391,7 +1391,12 @@ static void ResolveTypedefImpl(const char *tname,
             if ( (cursor+1) >= len) {
                return;
             }
-            break;
+            if (tname[cursor] != ' ') break;
+            if (modified) prevScope = cursor+1;
+            // If the 'current' character is a space we need to treat it,
+            // since this the next case statement, we can just fall through,
+            // otherwise we should need to do:
+            // --cursor; break;
          }
          case ' ': {
             end_of_type = cursor;
@@ -1399,7 +1404,7 @@ static void ResolveTypedefImpl(const char *tname,
             while ((cursor+1)<len && tname[cursor+1] == ' ') ++cursor;
 
             auto next = cursor+1;
-            if (strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '['))
+            if (strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ']'))
             {
                // A first const after the type needs to be move in the front.
                if (!modified) {
@@ -1413,7 +1418,7 @@ static void ResolveTypedefImpl(const char *tname,
                   mod_start_of_type += 6;
                } else {
                   result += "const ";
-                  mod_start_of_type = start_of_type + 6;
+                  mod_start_of_type += 6;
                   result += string(tname,start_of_type,end_of_type-start_of_type);
                }
                cursor += 5;
