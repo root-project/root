@@ -859,7 +859,7 @@ static void R__FindTrailing(std::string &full,  /*modified*/
    const char *starloc = t + tlen - 1;
    bool hasconst = false;
    if ( (*starloc)=='t'
-       && (starloc-t) > 5 && 0 == strncmp((starloc-4),"const",5)
+       && (starloc-t) > 4 && 0 == strncmp((starloc-4),"const",5)
        && ( (*(starloc-5)) == ' ' || (*(starloc-5)) == '*' || (*(starloc-5)) == '&'
            || (*(starloc-5)) == '>' || (*(starloc-5)) == ']') ) {
       // we are ending on a const.
@@ -930,87 +930,100 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
                : CleanType(type, cleantypeMode) );
 
    // We need to replace basic_string with string.
-   bool isString = false;
-   bool isStdString = false;
-   static const char* basic_string_std = "std::basic_string<char";
-   static const unsigned int basic_string_std_len = strlen(basic_string_std);
+   {
+      unsigned int const_offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;
+      bool isString = false;
+      bool isStdString = false;
+      static const char* basic_string_std = "std::basic_string<char";
+      static const unsigned int basic_string_std_len = strlen(basic_string_std);
 
-   if (full.compare(0,basic_string_std_len,basic_string_std) == 0
-       && full.size() > basic_string_std_len) {
-      isString = true;
-      isStdString = true;
-   } else if (full.compare(0,basic_string_std_len-5,basic_string_std+5) == 0
-              && full.size() > (basic_string_std_len-5)) {
-      // no std.
-      isString = true;
-   }
-   if (isString) {
-      size_t offset = isStdString ? basic_string_std_len : basic_string_std_len - 5;
-      if ( full[offset] == '>' ) {
-         // done.
-      } else if (full[offset] == ',') {
-         ++offset;
-         if (full.compare(offset, 5, "std::") == 0) {
-            offset += 5;
-         }
-         static const char* char_traits_s = "char_traits<char>";
-         static const unsigned int char_traits_len = strlen(char_traits_s);
-         if (full.compare(offset, char_traits_len, char_traits_s) == 0) {
-            offset += char_traits_len;
-            if ( full[offset] == '>') {
-               // done.
-            } else if (full[offset] == ' ' && full[offset+1] == '>') {
-               ++offset;
-               // done.
-            } else if (full[offset] == ',') {
-               ++offset;
-               if (full.compare(offset, 5, "std::") == 0) {
-                  offset += 5;
-               }
-               static const char* allocator_s = "allocator<char>";
-               static const unsigned int allocator_len = strlen(allocator_s);
-               if (full.compare(offset, allocator_len, allocator_s) == 0) {
-                  offset += allocator_len;
-                  if ( full[offset] == '>') {
-                     // done.
-                  } else if (full[offset] == ' ' && full[offset+1] == '>') {
-                     ++offset;
-                     // done.
-                  } else {
-                     // Not std::string
-                     isString = false;
+      if (full.compare(const_offset,basic_string_std_len,basic_string_std) == 0
+          && full.size() > basic_string_std_len) {
+         isString = true;
+         isStdString = true;
+      } else if (full.compare(const_offset,basic_string_std_len-5,basic_string_std+5) == 0
+                 && full.size() > (basic_string_std_len-5)) {
+         // no std.
+         isString = true;
+      }
+      if (isString) {
+         size_t offset = isStdString ? basic_string_std_len : basic_string_std_len - 5;
+         offset += const_offset;
+         if ( full[offset] == '>' ) {
+            // done.
+         } else if (full[offset] == ',') {
+            ++offset;
+            if (full.compare(offset, 5, "std::") == 0) {
+               offset += 5;
+            }
+            static const char* char_traits_s = "char_traits<char>";
+            static const unsigned int char_traits_len = strlen(char_traits_s);
+            if (full.compare(offset, char_traits_len, char_traits_s) == 0) {
+               offset += char_traits_len;
+               if ( full[offset] == '>') {
+                  // done.
+               } else if (full[offset] == ' ' && full[offset+1] == '>') {
+                  ++offset;
+                  // done.
+               } else if (full[offset] == ',') {
+                  ++offset;
+                  if (full.compare(offset, 5, "std::") == 0) {
+                     offset += 5;
                   }
+                  static const char* allocator_s = "allocator<char>";
+                  static const unsigned int allocator_len = strlen(allocator_s);
+                  if (full.compare(offset, allocator_len, allocator_s) == 0) {
+                     offset += allocator_len;
+                     if ( full[offset] == '>') {
+                        // done.
+                     } else if (full[offset] == ' ' && full[offset+1] == '>') {
+                        ++offset;
+                        // done.
+                     } else {
+                        // Not std::string
+                        isString = false;
+                     }
+                  }
+               } else {
+                  // Not std::string
+                  isString = false;
                }
             } else {
-               // Not std::string
+               // Not std::string.
                isString = false;
             }
          } else {
             // Not std::string.
             isString = false;
          }
-      } else {
-         // Not std::string.
-         isString = false;
-      }
-      if (isString) {
-         output.push_back(string());
-         if (isStdString && !(mode & kDropStd)) {
-            output.push_back("std::string");
-         } else {
-            output.push_back("string");
+         if (isString) {
+            output.push_back(string());
+            if (const_offset && (mode & kKeepOuterConst)) {
+               if (isStdString && !(mode & kDropStd)) {
+                  output.push_back("const std::string");
+               } else {
+                  output.push_back("const string");
+               }
+            } else {
+               if (isStdString && !(mode & kDropStd)) {
+                  output.push_back("std::string");
+               } else {
+                  output.push_back("string");
+               }
+            }
+            if (offset < full.length()) {
+               // Copy the trailing text.
+               // keep the '>' inside right for R__FindTrailing to work
+               string right( full.substr(offset) );
+               string stars;
+               R__FindTrailing(right, stars);
+               output.back().append(right.c_str()+1); // skip the '>'
+               output.push_back(stars);
+            } else {
+               output.push_back("");
+            }
+            return output.size();
          }
-         if (offset < full.length()) {
-            // Copy the trailing text.
-            string right( full.substr(offset+1) );
-            string stars;
-            R__FindTrailing(right, stars);
-            output.back().append(right);
-            output.push_back(stars);
-         } else {
-            output.push_back("");
-         }
-         return output.size();
       }
    }
 
