@@ -192,7 +192,6 @@ void TGeoBranchArray::AddLevel(Int_t dindex)
    }   
 */   
    fArray[fLevel] = fArray[fLevel-1]->GetVolume()->GetNode(dindex);
-   fMatrix.Multiply(fArray[fLevel]->GetMatrix());
 }
 
 //______________________________________________________________________________
