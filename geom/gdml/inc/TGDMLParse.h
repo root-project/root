@@ -138,8 +138,10 @@ private:
 
    const char*       ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node) ;
    TString           GetScale(const char* unit);
+   double            GetScaleVal(const char* unit);
    double            Evaluate(const char* evalline);
    const char*       NameShort(const char* name);
+   double            Value(const char *svalue) const;
 
    //'define' section
    XMLNodePointer_t  ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
