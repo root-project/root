@@ -385,7 +385,7 @@ const char* TGDMLParse::NameShort(const char* name)
    //string is reached, returning a string without any hex addresses.
    static TString stripped;
    stripped = name;
-   Int_t index = index = stripped.Index("0x");
+   Int_t index = stripped.Index("0x");
    if (index >= 0) stripped = stripped(0, index);
    return stripped.Data();
 }
@@ -2597,15 +2597,23 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    Double_t rmax2line = Value(rmax2)*retlunit;
    Double_t zline = Value(z)*retlunit;
    Double_t sphi = Value(startphi)*retaunit;
-   Double_t ephi = sphi + Value(deltaphi)*retaunit;
+   Double_t dphi = Value(deltaphi)*retaunit;
+   Double_t ephi = sphi + dphi;
 
-
-   TGeoConeSeg* cone = new TGeoConeSeg(NameShort(name), zline / 2,
+   TGeoShape *cone = 0;
+   if (dphi < 360.)
+      cone = new TGeoConeSeg(NameShort(name), zline / 2,
                                        rmin1line,
                                        rmax1line,
                                        rmin2line,
                                        rmax2line,
                                        sphi, ephi);
+   else
+      cone = new TGeoCone(NameShort(name), zline / 2,
+                                       rmin1line,
+                                       rmax1line,
+                                       rmin2line,
+                                       rmax2line);
 
    fsolmap[name.Data()] = cone;
 
