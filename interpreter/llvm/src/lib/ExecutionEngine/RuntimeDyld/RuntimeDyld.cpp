@@ -208,7 +208,7 @@ RuntimeDyldImpl::loadObjectImpl(const object::ObjectFile &Obj) {
         {
           GlobalSymbolTable[Name] = SymbolInfo(SectionID, SectOffset, Vis);
         } else {
-          if (SymType == object::SymbolRef::ST_Data || !IsCode) {
+          if (SymType == object::SymbolRef::ST_Data && !IsCode) {
             WeakDataSymbolTable[Name] = SymbolInfo(SectionID, SectOffset, Vis);
           } else {
             WeakFuncSymbolTable[Name] = SymbolInfo(SectionID, SectOffset, Vis);
