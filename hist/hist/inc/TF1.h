@@ -223,8 +223,8 @@ public:
       fParMax(std::vector<Double_t>(npar)),
       fParent(0), fHistogram(0),
       fMethodCall(0),
-      fFunctor(ROOT::Math::ParamFunctor(f)),
       fNormalized(false), fNormIntegral(0),
+      fFunctor(ROOT::Math::ParamFunctor(f)),
       fFormula(0),
       fParams(new TF1Parameters(npar) )
    {
@@ -295,8 +295,8 @@ public:
       fParMax(std::vector<Double_t>(npar)),
       fParent(0), fHistogram(0),
       fMethodCall(0),
-      fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) ),
       fNormalized(false), fNormIntegral(0),
+      fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) ),
       fFormula(0),
       fParams(new TF1Parameters(npar) )
    {

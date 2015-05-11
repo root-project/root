@@ -3272,13 +3272,12 @@ void TF1::Update()
        fNormIntegral = Integral(fXmin,fXmax);
        fNormalized = true;
    }
-   else {
+   else 
       fNormIntegral = 0;
    
    // std::vector<double>x(fNdim);
    // if ((fType == 1) && !fFunctor.Empty())  fFunctor(x.data(), (Double_t*)fParams);
 }
-
 
 //______________________________________________________________________________
 void TF1::RejectPoint(Bool_t reject)
