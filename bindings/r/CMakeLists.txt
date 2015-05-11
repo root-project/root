@@ -17,11 +17,6 @@ ROOT_USE_PACKAGE(hist/hist)
 
 if(${R_FOUND} AND ${RCPP_FOUND} AND ${RINSIDE_FOUND})
 
-FILE(WRITE ${CMAKE_BINARY_DIR}/include/compilerdata.h
-     "#define ROOT_INCLUDE_PATH ${R_INCLUDE_DIR}:${RCPP_INCLUDE_DIR}:${RINSIDE_INCLUDE_DIR}\n"
-     "#define RINCLUDEPATH \" ${R_INCLUDE_DIRS} ${RCPP_INCLUDE_DIRS} ${RINSIDE_INCLUDE_DIRS} \"\n"
-     "#define RLINKEDLIBS  \" ${R_LIBRARIES} ${RCPP_LIBRARIES} ${RINSIDE_LIBRARIES} \"\n"
-)
 
 add_definitions(-DUSE_ROOT_ERROR )
 
@@ -36,8 +31,8 @@ set(R_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInternalFunction.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRDataFrame.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/RExports.h
-              ${CMAKE_BINARY_DIR}/include/compilerdata.h              
               )
+
 set(RHIST_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRF1.h              
                   ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRGraph.h              
 )              
