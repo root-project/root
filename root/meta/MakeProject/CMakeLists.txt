@@ -31,6 +31,6 @@ ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-stltest
                   DEPENDS roottest-root-meta-MakeProject-stltest-create-examples)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-MakeProject-stltest2
-                  MACRO runstltest2.C+
+                  MACRO runstltest2.C
                   DEPENDS roottest-root-meta-MakeProject-stltest)
 

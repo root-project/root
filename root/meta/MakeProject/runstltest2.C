@@ -1,4 +1,4 @@
-
+R__LOAD_LIBRARY(stltest/stltest.so)
 #include "stltest/SillyStlEvent.h"
 #include "TTree.h"
 #include "TFile.h"
@@ -18,8 +18,8 @@ int test_event()
 int runstltest2()
 {
    TFile *_file0 = TFile::Open("stl_example.root");
-   int load_result = gSystem->Load("stltest/stltest.so");
-   if (load_result) {return load_result;}
+   //int load_result = gSystem->Load("stltest/stltest.so");
+   //if (load_result) {return load_result;}
    return test_event();
 }
 
