@@ -1,7 +1,7 @@
 // Reads the points from a file and produces a simple graph.
 int macro2(){
 
-    TCanvas* c=new TCanvas();
+    auto c=new TCanvas();
     c->SetGrid();
 
     TGraphErrors graph_expected("./macro2_input_expected.txt",

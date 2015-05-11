@@ -14,7 +14,7 @@ void macro7(){
     for (int i=0;i<500000;i++)
         bidi_h.Fill(rgen.Gaus(0,2),10-rgen.Exp(4),.1);
 
-    TCanvas* c=new TCanvas("Canvas","Canvas",800,800);
+    auto c=new TCanvas("Canvas","Canvas",800,800);
     c->Divide(2,2);
     c->cd(1);bidi_h.DrawClone("Cont1");
     c->cd(2);bidi_h.DrawClone("Colz");
@@ -22,7 +22,7 @@ void macro7(){
     c->cd(4);bidi_h.DrawClone("surf3");
 
     // Profiles and Projections
-    TCanvas* c2=new TCanvas("Canvas2","Canvas2",800,800);
+    auto c2=new TCanvas("Canvas2","Canvas2",800,800);
     c2->Divide(2,2);
     c2->cd(1);bidi_h.ProjectionX()->DrawClone();
     c2->cd(2);bidi_h.ProjectionY()->DrawClone();

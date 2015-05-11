@@ -18,7 +18,7 @@ should be provided - think for example of an integral or peak-search or
 a Fourier transformation applied to an input spectrum to obtain the
 actual measurement described by the model.
 
-One specialty of experimental physics are the inevitable errors
+One specialty of experimental physics are the inevitable uncertaintes
 affecting each measurement, and visualisation tools have to include
 these. In subsequent analysis, the statistical nature of the errors must
 be handled properly.
@@ -39,7 +39,7 @@ function.\label{f11}][f11]
 Quite often, the data volume to be analyzed is large - think of
 fine-granular measurements accumulated with the aid of computers. A
 usable tool therefore must contain easy-to-use and efficient methods for
-data handling.
+storing and handling data.
 
 In Quantum mechanics, models typically only predict the probability
 density function ("pdf") of measurements depending on a number of
@@ -80,11 +80,10 @@ interested in. You can even look at the code itself, since ROOT is a
 free, open-source product. Use these documents in parallel to this
 tutorial!
 
-The ROOT Data Analysis Framework itself is written in and heavily relys
-on the programming language `C++`, and therefore some knowledge about
-`C` and `C++` is required. Eventually, just profit from the immense
-available literature about `C++` if you do not have any idea of what
-object oriented programming could be.
+The ROOT Data Analysis Framework itself is written in and heavily relies
+on the `C++` programming language: some knowledge about `C++` is required. 
+Jus take advantage from the immense available literature about `C++` if you do 
+not have any idea of what this language is about.
 
 ROOT is available for many platforms (Linux, Mac OS X, Windows...), but
 in this guide we will implicitly assume that you are using Linux. The
@@ -97,7 +96,6 @@ need and follow the installation instructions.
 
 **Let's dive into ROOT!**
 
-[^1]: This guide was prepared for the ROOT IRMM Tutorial adapting "A
-    ROOT Guide for Students"
+[^1]: This guide is based on "A ROOT Guide for Students"
     <http://www-ekp.physik.uni-karlsruhe.de/~quast>, a document by D.
     Piparo, G. Quast and M. Zeise.
