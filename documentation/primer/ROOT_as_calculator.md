@@ -112,7 +112,6 @@ root [4] distribution(generator)
 Impressive isn't it?
 
 ## ROOT as function plotter ##
-
 Using one of ROOT's powerful classes, here `TF1` [^2], will allow us to
 display a function of one variable, *x*. Try the following:
 
@@ -168,48 +167,7 @@ read the "macro" `slits.C`, i.e. all the lines in the file will be
 executed one after the other.
 
 ``` {.cpp .numberLines}
- // Example drawing the interference pattern of light
- // falling on a grid with n slits and ratio r of slit
- // width over distance between slits.
-
- // function code in C
- double single(double *x, double *par) {
-   double const pi=4*atan(1.);
-   return pow(sin(pi*par[0]*x[0])/(pi*par[0]*x[0]),2);
- }
-
- double nslit0(double *x,double *par){
-   double const pi=4*atan(1.);
-   return pow(sin(pi*par[1]*x[0])/sin(pi*x[0]),2);
- }
-
- double nslit(double *x, double *par){
-   return single(x,par) * nslit0(x,par);
- }
-
- // This is the main program
- void slits() {
-   float r,ns;
-
-   // request user input
-   cout << "slit width / g ? ";
-   scanf("%f",&r);
-   cout << "# of slits ? ";
-   scanf("%f",&ns);
-   cout <<"interference pattern for "<< ns
-        <<" slits, width/distance: "<<r<<endl;
-
-   // define function and set options
-   TF1 *Fnslit  = new TF1("Fnslit",nslit,-5.001,5.,2);
-   Fnslit->SetNpx(500);
-
-   // set parameters, as read in above
-   Fnslit->SetParameter(0,r);
-   Fnslit->SetParameter(1,ns);
-
-   // draw the interference pattern for a grid with n slits
-   Fnslit->Draw();
- }
+@ROOT_INCLUDE_FILE macros/slits.C
 ```
 [f21]: figures/TF1_DoubleSlit.png "f21"
 <a name="f21"></a>
@@ -261,7 +219,7 @@ a line:
 root [1] .<command>
 ```
 
-To
+This is a selection of the most common commands.
 
 -   **quit root**, simply type `.q`
 
@@ -284,6 +242,8 @@ To
     code starting from your macro. One could decide to compile a macro
     in order to obtain better performance or to get nearer to the
     production environment.
+
+Use `.help` at the prompt to inspect the full list.
 
 ## Plotting Measurements ##
 
@@ -527,7 +487,7 @@ The most important among them are presented in the following:
     The `TROOT` object is essentially a container of several lists
     pointing to the main `ROOT` objects.
 
--   **[gStyle](http://root.cern.ch/htmldoc/html/TStyle.html)**: By default
+-   **[gStyle](http://root.cern.ch/root/htmldoc/TStyle.html)**: By default
     ROOT creates a default style that can be accessed via the `gStyle`
     pointer. This class includes functions to set some of the following
     object attributes.
@@ -543,7 +503,7 @@ The most important among them are presented in the following:
     -   Histogram Statistics and Titles
     -   etc ...
 
--   **[gSystem](http://root.cern.ch/htmldoc/html/TSystem.html)**: An
+-   **[gSystem](http://root.cern.ch/root/htmldoc/TSystem.html)**: An
     instance of a base class defining a generic interface to the
     underlying Operating System, in our case `TUnixSystem`.
 

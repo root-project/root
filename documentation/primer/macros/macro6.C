@@ -23,12 +23,12 @@ void macro6(){
     // Format Histograms
     int i=0;
     for (auto hist : {sig_h,bkg_h,gaus_h1,gaus_h2})
-        format_h(hist,i++); 
+        format_h(hist,1+i++);
 
     // Sum
     auto sum_h= new TH1F(*bkg_h);
     sum_h->Add(sig_h,1.);
-    sum_h->SetTitle("Exponential + Gaussian");
+    sum_h->SetTitle("Exponential + Gaussian;X variable;Y variable");
     format_h(sum_h,kBlue);
 
     auto c_sum= new TCanvas();

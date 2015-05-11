@@ -29,12 +29,12 @@ example of a function (model) fit to data points. Several standard methods are
 available, and a data analysis tool should provide easy access to more
 than one of them. Means to quantify the level of agreement between
 measurements and model must also be available.
-
+<!--
 [f11]: figures/examplefit.png "f11"
 <a name="f11"></a>
 
 ![Measured data points with error bars and fitted quadratic
-function.\label{f11}][f11]
+function.\label{f11}][f11]-->
 
 Quite often, the data volume to be analyzed is large - think of
 fine-granular measurements accumulated with the aid of computers. A

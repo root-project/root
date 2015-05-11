@@ -17,7 +17,7 @@ representing one possible version of the true experiment. If the
 simulation only deals with the final distributions observed in data, and
 does not perform a full simulation of the underlying physics and the
 experimental apparatus, the name "Toy Monte Carlo" is frequently used
-[^4]. Since the true values of all parameters are known in the
+[^5]. Since the true values of all parameters are known in the
 pseudo-data, the differences between the parameter estimates from the
 analysis procedure w.r.t. the true values can be determined, and it is
 also possible to check that the analysis procedure provides correct
@@ -47,70 +47,7 @@ higher than in the previous examples. The graphical output of the macro
 is shown in Figure [6.1](#f61):
 
 ``` {.cpp .numberLines}
- void format_line(TAttLine* line,int col,int sty){
-     line->SetLineWidth(5); line->SetLineColor(col);
-     line->SetLineStyle(sty);}
-
- double the_gausppar(double* vars, double* pars){
-     return pars[0]*TMath::Gaus(vars[0],pars[1],pars[2])+
-         pars[3]+pars[4]*vars[0]+pars[5]*vars[0]*vars[0];}
-
- int macro8(){
-     gStyle->SetOptTitle(0); gStyle->SetOptStat(0);
-     gStyle->SetOptFit(1111); gStyle->SetStatBorderSize(0);
-     gStyle->SetStatX(.89); gStyle->SetStatY(.89);
-
-     TF1 parabola("parabola","[0]+[1]*x+[2]*x**2",0,20);
-     format_line(&parabola,kBlue,2);
-
-     TF1 gaussian("gaussian","[0]*TMath::Gaus(x,[1],[2])",0,20);
-     format_line(&gaussian,kRed,2);
-
-     TF1 gausppar("gausppar",the_gausppar,-0,20,6);
-     double a=15; double b=-1.2; double c=.03;
-     double norm=4; double mean=7; double sigma=1;
-     gausppar.SetParameters(norm,mean,sigma,a,b,c);
-     gausppar.SetParNames("Norm","Mean","Sigma","a","b","c");
-     format_line(&gausppar,kBlue,1);
-
-     TH1F histo("histo","Signal plus background;X vals;Y Vals",
-                50,0,20);
-     histo.SetMarkerStyle(8);
-
-     // Fake the data
-     for (int i=1;i<=5000;++i) histo.Fill(gausppar.GetRandom());
-
-     // Reset the parameters before the fit and set
-     // by eye a peak at 6 with an area of more or less 50
-     gausppar.SetParameter(0,50);
-     gausppar.SetParameter(1,6);
-     int npar=gausppar.GetNpar();
-     for (int ipar=2;ipar<npar;++ipar)
-         gausppar.SetParameter(ipar,1);
-
-     // perform fit ...
-     TFitResultPtr frp = histo.Fit(&gausppar, "S");
-
-     // ... and retrieve fit results
-     frp->Print(); // print fit results
-     // get covariance Matrix an print it
-     TMatrixDSym covMatrix (frp->GetCovarianceMatrix());
-     covMatrix.Print();
-
-     // Set the values of the gaussian and parabola
-     for (int ipar=0;ipar<3;ipar++){
-         gaussian.SetParameter(ipar,
-                               gausppar.GetParameter(ipar));
-         parabola.SetParameter(ipar,
-                               gausppar.GetParameter(ipar+3));}
-
-     histo.GetYaxis()->SetRangeUser(0,250);
-     histo.DrawClone("PE");
-     parabola.DrawClone("Same"); gaussian.DrawClone("Same");
-     TLatex latex(2,220,
-                  "#splitline{Signal Peak over}{background}");
-     latex.DrawClone("Same");
- }
+@ROOT_INCLUDE_FILE macros/macro8.C
 ```
 
 Some step by step explanation is at this point necessary:
@@ -174,83 +111,7 @@ performed according to the selected method, and the pull is calculated
 and filled into a histogram. Here is the code:
 
 ``` {.cpp .numberLines}
- // Toy Monte Carlo example.
- // Check pull distribution to compare chi2 and binned
- // log-likelihood methods.
-
- pull( int n_toys = 10000,
-       int n_tot_entries = 100,
-       int nbins = 40,
-       bool do_chi2=true ){
-
-     TString method_prefix("Log-Likelihood ");
-     if (do_chi2)
-         method_prefix="#chi^{2} ";
-
-     // Create histo
-     TH1F* h4 = new TH1F(method_prefix+"h4",
-                         method_prefix+" Random Gauss",
-                         nbins,-4,4);
-     h4->SetMarkerStyle(21);
-     h4->SetMarkerSize(0.8);
-     h4->SetMarkerColor(kRed);
-
-     // Histogram for sigma and pull
-     TH1F* sigma = new TH1F(method_prefix+"sigma",
-                            method_prefix+"sigma from gaus fit",
-                            50,0.5,1.5);
-     TH1F* pull = new TH1F(method_prefix+"pull",
-                           method_prefix+"pull from gaus fit",
-                           50,-4.,4.);
-
-     // Make nice canvases
-     TCanvas* c0 = new TCanvas(method_prefix+"Gauss",
-                             method_prefix+"Gauss",0,0,320,240);
-     c0->SetGrid();
-
-     // Make nice canvases
-     TCanvas* c1 = new TCanvas(method_prefix+"Result",
-                             method_prefix+"Sigma-Distribution",
-                             0,300,600,400);
-     c0->cd();
-
-     float sig, mean;
-     for (int i=0; i<n_toys; i++){
-      // Reset histo contents
-         h4->Reset();
-      // Fill histo
-         for ( int j = 0; j<n_tot_entries; j++ )
-         h4->Fill(gRandom->Gaus());
-      // perform fit
-         if (do_chi2) h4->Fit("gaus","q"); // Chi2 fit
-         else h4->Fit("gaus","lq"); // Likelihood fit
-      // some control output on the way
-         if (!(i%100)){
-             h4->Draw("ep");
-             c0->Update();}
-
-      // Get sigma from fit
-         TF1 *fit = h4->GetFunction("gaus");
-         sig = fit->GetParameter(2);
-         mean= fit->GetParameter(1);
-         sigma->Fill(sig);
-         pull->Fill(mean/sig * sqrt(n_tot_entries));
-        } // end of toy MC loop
-      // print result
-         c1->cd();
-         pull->Draw();
- }
-
- void macro9(){
-     int n_toys=10000;
-     int n_tot_entries=100;
-     int n_bins=40;
-     cout << "Performing Pull Experiment with chi2 \n";
-     pull(n_toys,n_tot_entries,n_bins,true);
-     cout << "Performing Pull Experiment with Log Likelihood\n";
-     pull(n_toys,n_tot_entries,n_bins,false);
- }
-
+@ROOT_INCLUDE_FILE macros/macro9.C
 ```
 
 Your present knowledge of ROOT should be enough to understand all the
@@ -270,5 +131,5 @@ The answers to these questions are well beyond the scope of this guide.
 Basically all books about statistical methods provide a complete
 treatment of the aforementioned topics.
 
-[^4]: "Monte Carlo" simulation means that random numbers play a role here
+[^5]: "Monte Carlo" simulation means that random numbers play a role here
 which is as crucial as in games of pure chance in the Casino of Monte Carlo.
