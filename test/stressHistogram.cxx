@@ -6362,6 +6362,102 @@ bool testH3Integral()
    return iret;
 }
 
+bool testH1Buffer() {
+   
+   int iret = 0;
+   
+   TH1D * h1 = new TH1D("h1","h1",30,1,0); 
+   TH1D * h2 = new TH1D("h2","h2",30,0,0);
+   // fill the histograms
+   int nevt = 800;
+   double x = 0;
+   for (int i = 0; i < nevt ; ++i) {
+      x = gRandom->Gaus(0,1);
+      h1->Fill(x);
+      h2->Fill(x);
+   }
+   h2->BufferEmpty(); // empty buffer for h2
+
+   // now test that functions are consistent
+   iret |= (h1->GetMean() != h2->GetMean() );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram Mean = " << h1->GetMean() << "  " << h2->GetMean() << " -  " << iret << std::endl;
+   }
+   
+
+   // another fill will reset the histogram 
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   iret |= (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << iret << std::endl;
+   }
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   iret |= (h1->GetMaximum() != h2->GetMaximum() );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram maximum = " << h1->GetMaximum() << "  " << h2->GetMaximum() << " -  " << iret << std::endl;
+   }
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   iret |= (h1->GetMinimum() != h2->GetMinimum() );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram minimum = " << h1->GetMinimum() << "  " << h2->GetMinimum() << " - " << iret << std::endl;
+   }
+   
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   int i1 = h1->FindFirstBinAbove(10);
+   int i2 = h2->FindFirstBinAbove(10);
+   iret |= (i1 != i2 );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram first bin above  " << i1  << "  " << i2 << " - " << iret << std::endl;
+   }
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   i1 = h1->FindLastBinAbove(10);
+   i2 = h2->FindLastBinAbove(10);
+   iret |= (i1 != i2 );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram last bin above  " << i1  << "  " << i2 << " - " << iret << std::endl;
+   }
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   double v1 = h1->Interpolate(0.1);
+   double v2 = h2->Interpolate(0.1);
+   iret |= (v1 != v2 );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram interpolated value  " << v1  << "  " << v2 << " - " << iret << std::endl;
+   }
+   
+   if ( defaultEqualOptions & cmpOptPrint )
+      std::cout << "Buffer H1:\t" << (iret?"FAILED":"OK") << std::endl;
+
+   delete h1;
+   delete h2;
+   
+   return iret; 
+}
+
+bool testH2Buffer() {
+   int iret = 0;
+   return iret; 
+}
+bool testH3Buffer() {
+   int iret = 0;
+   return iret; 
+}
+
 bool testConversion1D()
 {
    const int nbins[3] = {50,11,12};
@@ -9696,6 +9792,15 @@ int stressHistogram()
                                            "Integral tests for Histograms....................................",
                                            integralTestPointer };
 
+   const unsigned int numberOfBufferTest = 3;
+   pointer2Test bufferTestPointer[numberOfBufferTest] = { testH1Buffer,
+                                                          testH2Buffer,
+                                                          testH3Buffer
+   };
+   struct TTestSuite bufferTestSuite = { numberOfBufferTest,
+                                           "Buffer tests for Histograms....................................",
+                                           bufferTestPointer };
+
    // Test 15
    // TH1-THn[Sparse] Conversions Tests
    const unsigned int numberOfConversions = 3;
@@ -9726,7 +9831,7 @@ int stressHistogram()
 
 
    // Combination of tests
-   const unsigned int numberOfSuits = 14;
+   const unsigned int numberOfSuits = 15;
    struct TTestSuite* testSuite[numberOfSuits];
    testSuite[ 0] = &rangeTestSuite;
    testSuite[ 1] = &rebinTestSuite;
@@ -9740,8 +9845,9 @@ int stressHistogram()
    testSuite[ 9] = &interpolationTestSuite;
    testSuite[10] = &scaleTestSuite;
    testSuite[11] = &integralTestSuite;
-   testSuite[12] = &conversionsTestSuite;
-   testSuite[13] = &fillDataTestSuite;
+   testSuite[12] = &bufferTestSuite;
+   testSuite[13] = &conversionsTestSuite;
+   testSuite[14] = &fillDataTestSuite;
 
    status = 0;
    for ( unsigned int i = 0; i < numberOfSuits; ++i ) {

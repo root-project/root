@@ -2323,6 +2323,7 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
    //  If the routine is called with the onlyPositive flag set an error will
    //  be produced in case of negative bin content and a NaN value returned
 
+   if (fBuffer) BufferEmpty();
 
    // delete previously computed integral (if any)
    if (fIntegral) delete [] fIntegral;
@@ -3488,6 +3489,8 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
    //find first bin with content > threshold for axis (1=x, 2=y, 3=z)
    //if no bins with content > threshold is found the function returns -1.
 
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+   
    if (axis != 1) {
       Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
@@ -3506,6 +3509,8 @@ Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis) const
    //find last bin with content > threshold for axis (1=x, 2=y, 3=z)
    //if no bins with content > threshold is found the function returns -1.
 
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+   
    if (axis != 1) {
       Warning("FindLastBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
@@ -4602,6 +4607,9 @@ Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t las
       Error("GetBinWithContent","function is only valid for 1-D histograms");
       return 0;
    }
+
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+   
    if (firstx <= 0) firstx = 1;
    if (lastx < firstx) lastx = fXaxis.GetNbins();
    Int_t binminx = 0;
@@ -4623,6 +4631,8 @@ Double_t TH1::Interpolate(Double_t x)
    // based on the two nearest bin centers
    // Andy Mastbaum 10/21/08
 
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+    
    Int_t xbin = FindBin(x);
    Double_t x0,x1,y0,y1;
 
@@ -6656,6 +6666,9 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
+   // empty the buffer before if it exists
+   if (fBuffer) BufferEmpty();
+
    Bool_t nonEqiX = kFALSE;
    Bool_t nonEqiY = kFALSE;
    Bool_t nonEqiZ = kFALSE;
@@ -7341,6 +7354,8 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
    // internal function compute integral and optionally the error  between the limits
    // specified by the bin number values working for all histograms (1D, 2D and 3D)
 
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+   
    Int_t nx = GetNbinsX() + 2;
    if (binx1 < 0) binx1 = 0;
    if (binx2 >= nx || binx2 < binx1) binx2 = nx - 1;
@@ -7443,9 +7458,13 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
       return -1;
    }
 
-   // use the BinData class
-   ROOT::Fit::BinData data1;
+   // empty the buffer. Probably we could add as an unbinned test
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+
+   // use the BinData class 
+   ROOT::Fit::BinData data1; 
    ROOT::Fit::BinData data2;
+   
    ROOT::Fit::FillData(data1, this, 0);
    ROOT::Fit::FillData(data2, h2, 0);
 
@@ -7552,6 +7571,9 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       Error("KolmogorovTest","Number of channels is different, %d and %d\n",ncx1,ncx2);
       return 0;
    }
+
+   // empty the buffer. Probably we could add as an unbinned test
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
 
    // Check consistency in channel edges
    Double_t difprec = 1e-5;
@@ -7838,6 +7860,10 @@ Double_t TH1::GetMaximum(Double_t maxval) const
    //      h->GetBinContent(h->GetMaximumBin())
 
    if (fMaximum != -1111) return fMaximum;
+
+   // empty the buffer
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+
    Int_t bin, binx, biny, binz;
    Int_t xfirst  = fXaxis.GetFirst();
    Int_t xlast   = fXaxis.GetLast();
@@ -7873,6 +7899,9 @@ Int_t TH1::GetMaximumBin() const
 Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
 {
    // Return location of bin with maximum value in the range.
+
+      // empty the buffer
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
 
    Int_t bin, binx, biny, binz;
    Int_t locm;
@@ -7916,6 +7945,10 @@ Double_t TH1::GetMinimum(Double_t minval) const
    //     h->GetBinContent(h->GetMinimumBin())
 
    if (fMinimum != -1111) return fMinimum;
+
+   // empty the buffer
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+
    Int_t bin, binx, biny, binz;
    Int_t xfirst  = fXaxis.GetFirst();
    Int_t xlast   = fXaxis.GetLast();
@@ -7952,6 +7985,9 @@ Int_t TH1::GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const
 {
    // Return location of bin with minimum value in the range.
 
+      // empty the buffer
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+   
    Int_t bin, binx, biny, binz;
    Int_t locm;
    Int_t xfirst  = fXaxis.GetFirst();
@@ -8264,6 +8300,9 @@ void TH1::Sumw2(Bool_t flag)
    }
 
    fSumw2.Set(fNcells);
+
+   // empty the buffer
+   if (fBuffer) BufferEmpty();
 
    if (fEntries > 0)
       for (Int_t i = 0; i < fNcells; ++i)
