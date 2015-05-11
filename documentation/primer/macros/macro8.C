@@ -40,12 +40,12 @@ int macro8(){
         gausppar.SetParameter(ipar,1);
 
     // perform fit ...
-    TFitResultPtr frp = histo.Fit(&gausppar, "S");
+    auto fitResPtr = histo.Fit(&gausppar, "S");
 
     // ... and retrieve fit results
-    frp->Print(); // print fit results
+    fitResPtr->Print(); // print fit results
     // get covariance Matrix an print it
-    TMatrixDSym covMatrix (frp->GetCovarianceMatrix());
+    TMatrixDSym covMatrix (fitResPtr->GetCovarianceMatrix());
     covMatrix.Print();
 
     // Set the values of the gaussian and parabola

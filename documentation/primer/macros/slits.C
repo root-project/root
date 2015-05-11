@@ -2,14 +2,14 @@
 // falling on a grid with n slits and ratio r of slit
 // width over distance between slits.
 
+auto pi = TMath::Pi();
+
 // function code in C
 double single(double *x, double *par) {
-  double const pi=4*atan(1.);
   return pow(sin(pi*par[0]*x[0])/(pi*par[0]*x[0]),2);
 }
 
 double nslit0(double *x,double *par){
-  double const pi=4*atan(1.);
   return pow(sin(pi*par[1]*x[0])/sin(pi*x[0]),2);
 }
 

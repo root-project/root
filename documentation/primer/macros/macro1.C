@@ -1,5 +1,5 @@
 // Builds a graph with errors, displays it and saves it as
-// image. First, include some header files 
+// image. First, include some header files
 // (not necessary for Cling)
 
 #include "TCanvas.h"
@@ -63,8 +63,6 @@ void macro1(){
     mycanvas->Print("graph_with_law.pdf");
 }
 
-#ifndef __CINT__
 int main(){
     macro1();
     }
-#endif
