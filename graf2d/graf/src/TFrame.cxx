@@ -75,6 +75,8 @@ void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //
    //  This member function is called when a TFrame object is clicked.
 
+   if (!gPad) return;
+
    if (!gPad->IsEditable()) return;
 
    TWbox::ExecuteEvent(event, px, py);

@@ -3315,6 +3315,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    the pixel position px,py.
    End_html */
 
+   if (!gPad) return;
+
    static Int_t bin, px1, py1, px2, py2, pyold;
    static TBox *zoombox;
    Double_t zbx1,zbx2,zby1,zby2;

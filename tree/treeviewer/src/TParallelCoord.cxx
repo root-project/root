@@ -418,6 +418,7 @@ void TParallelCoord::ExecuteEvent(Int_t /*entry*/, Int_t /*px*/, Int_t /*py*/)
 {
    // Execute the corresponding entry.
 
+   if (!gPad) return;
    gPad->SetCursor(kHand);
 }
 

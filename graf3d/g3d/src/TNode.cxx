@@ -376,6 +376,7 @@ void TNode::ExecuteEvent(Int_t, Int_t, Int_t)
    //  This member function must be implemented to realize the action
    //  corresponding to the mouse click on the object in the window
 
+   if (!gPad) return;
    gPad->SetCursor(kHand);
 }
 

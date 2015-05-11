@@ -266,6 +266,8 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //  if Middle button clicked, the line is moved parallel to itself
    //     until the button is released.
 
+   if (!gPad) return;
+
    Int_t i, d;
    Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
    const Int_t kMaxDiff = 10;

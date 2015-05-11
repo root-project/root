@@ -181,6 +181,7 @@ void TMarker3DBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    // This member function must be implemented to realize the action
    // corresponding to the mouse click on the object in the window
 
+   if (!gPad) return;
    if (gPad->GetView()) gPad->GetView()->ExecuteRotateView(event, px, py);
 }
 

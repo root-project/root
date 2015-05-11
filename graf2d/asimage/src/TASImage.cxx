@@ -1722,6 +1722,8 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    // Execute mouse events.
    static TBox *ZoomBox;
 
+   if (!gPad) return;
+
    if (IsEditable()) {
       gPad->ExecuteEvent(event, px, py);
       return;

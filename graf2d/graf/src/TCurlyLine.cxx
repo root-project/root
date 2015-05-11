@@ -189,6 +189,8 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //     until the button is released.
    //
 
+   if (!gPad) return;
+
    Int_t kMaxDiff = 20;
    static Int_t d1,d2,px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;

@@ -204,6 +204,8 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //
    //  NOTE that support for log scale is not implemented
 
+   if (!gPad) return;
+
    Int_t kMaxDiff = 10;
 
    Int_t i, dpx, dpy;

@@ -171,6 +171,8 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //  If Left button is clicked on a marker, the marker is moved to
    //  a new position when the mouse button is released.
 
+   if (!gPad) return;
+
    TPoint p;
    static Int_t pxold, pyold;
    static Bool_t ndcsav;

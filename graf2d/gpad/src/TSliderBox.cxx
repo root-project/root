@@ -59,6 +59,8 @@ void TSliderBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    // Interaction with a slider.
 
+   if (!gPad) return;
+
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
 
