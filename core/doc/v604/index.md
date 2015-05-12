@@ -72,7 +72,6 @@ Instead, write:
   }
 ```
 
-
 #### TClass
 
 Introduced new overload for calculating the TClass CheckSum:
@@ -106,3 +105,20 @@ Function calls through TMethodCall etc have been accelerated.
 #### llvm / clang
 
 llvm / clang were updated to r227800. This includes everything from the clang 3.6 release.
+
+### Dictionary Generation
+
+Detect usage of #pragma once for inlined headers.
+
+Turn on verbosity of genreflex if the VERBOSE environment variable is defined.
+
+Optimise forward declarations in rootmap files in order to make their interpretation faster.
+
+Propagate attributes specified in xml selection files to selected classes even when selected through typedefs.
+
+Optimise selection procedure caching selected declarations in the selection rules, therewith avoiding to query the AST twice.
+
+Include in the PCH all the STL and C headers to guarantee portability of binaries from SLC6 to CC7.
+
+
+

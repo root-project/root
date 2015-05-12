@@ -1,5 +1,10 @@
 ## I/O Libraries
 
+### I/O New functionalities
+
+- Support for forward_list and I/O of unordered stl containers.
+- Support for std::complex.
+
 ### I/O Behavior change.
 
 - The I/O now properly skip the content of base class onfile that have been removed from the in-memory class layout.
