@@ -1,3 +1,9 @@
+%
+% this file has been generated with the command:
+%      pandoc -D latex > template.tex
+% then it has ben modified to include the cover page. If the pandoc version
+% changes it migh be necessary to generate it again.ß
+%
 \documentclass[$if(fontsize)$$fontsize$,$endif$$if(lang)$$lang$,$endif$$if(papersize)$$papersize$,$endif$$for(classoption)$$classoption$$sep$,$endfor$]{$documentclass$}
 $if(fontfamily)$
 \usepackage{$fontfamily$}
@@ -161,6 +167,7 @@ $if(toc)$
 {
 
 % cover page
+\begin{titlepage}
 \begin{center}
 {\Huge \bf A ROOT Guide For Beginners}
 \end{center}
@@ -173,6 +180,8 @@ $if(toc)$
 \begin{center}
 {\Huge \bf ``Diving Into ROOT''}
 \end{center}
+\end{titlepage}
+
 
 \hypersetup{linkcolor=black}
 \setcounter{tocdepth}{$toc-depth$}
