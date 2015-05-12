@@ -1,3 +1,7 @@
+---------------------------------------
+
+**Abstract**
+
 ROOT is a software framework for data analysis and I/O: a powerful tool to cope
 with the demanding tasks typical of state of the art scientific data analysis.
 Among its prominent features are an advanced graphical user
