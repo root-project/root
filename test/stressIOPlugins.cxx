@@ -412,6 +412,7 @@ void stressIOPlugins4()
    Bool_t tryquery = kTRUE;
    Bool_t trywildcard = kFALSE;
    Bool_t tryqueryInAdd = kFALSE;
+   Bool_t tryziparchive = kFALSE;
 
    const char *title = "Filename formats when adding files to TChain";
    Bprint(4,title);
@@ -419,10 +420,12 @@ void stressIOPlugins4()
 
    if (gCurProtoName == "rfio") {
       tryquery = kFALSE;
+      trywildcard = kTRUE;
    }
 
-   if (gCurProtoName == "xroot" || gCurProtoName == "root" || gCurProtoName == "rfio") {
+   if (gCurProtoName == "xroot" || gCurProtoName == "root") {
       trywildcard = kTRUE;
+      tryziparchive = kTRUE;
    }
 
    if (gCurProtoName == "http" || gCurProtoName == "https") {
@@ -534,6 +537,33 @@ void stressIOPlugins4()
          printf("FAILED\n");
       } else {
          printf("OK\n");
+      }
+   }
+   if (tryziparchive) {
+      Bprint(0,"zip archive");
+      printf("using multi_8.zip\n");
+
+      Bprint(0,"sub-file name in fragment");
+      {
+         TChain  mychain("T");
+         mychain.Add(gPfx + "multi_8.zip#Event_8a.root");
+         nent = mychain.GetEntries();
+         if (nent != 100) {
+            printf("FAILED\n");
+         } else {
+            printf("OK\n");
+         }
+      }
+      Bprint(0,"sub-file index in query");
+      {
+         TChain  mychain("T");
+         mychain.AddFile(gPfx + "multi_8.zip?myq=xyz&zip=0");
+         nent = mychain.GetEntries();
+         if (nent != 100) {
+            printf("FAILED\n");
+         } else {
+            printf("OK\n");
+         }
       }
    }
 }
