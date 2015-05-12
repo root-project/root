@@ -2275,7 +2275,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    //Double_t *parameters = GetParameters();
    TF1_EvalWrapper wf1( this, 0, fgAbsValue );
    Double_t result = 0;
-
+   Int_t status = 0; 
    if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS ) {
       ROOT::Math::GaussIntegrator iod(epsabs, epsrel);
       iod.SetFunction(wf1);
@@ -2288,6 +2288,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
       else if (a == - TMath::Infinity() && b == TMath::Infinity() )
          result = iod.Integral();
       error = iod.Error();
+      status = iod.Status();
    }
    else {
       ROOT::Math::IntegratorOneDim iod(wf1, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), epsabs, epsrel);
@@ -2300,6 +2301,14 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
       else if (a == - TMath::Infinity() && b == TMath::Infinity() )
          result = iod.Integral();
       error = iod.Error();
+      status = iod.Status();
+   }
+   if (status != 0) {
+      std::string igName = ROOT::Math::IntegratorOneDim::GetName(ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType());
+      Warning("IntegralOneDim","Error found in integrating function %s in [%f,%f] using %s. Result = %f +/- %f  - status = %d",GetName(),a,b,igName.c_str(),result,error,status);
+      std::cout << "Function Parameters = { ";
+      for (int ipar = 0; ipar < GetNpar(); ++ipar) std::cout << GetParName(ipar) << "=" << GetParameter(ipar) << " ";
+      std::cout << "}\n";
    }
    return result;
 }
@@ -3267,8 +3276,7 @@ void TF1::Update()
    }
    if (fNormalized) {
        // need to compute the integral of the not-normalized function
-       fNormalized = false;  
-       // compute the integral
+       fNormalized = false;
        fNormIntegral = Integral(fXmin,fXmax);
        fNormalized = true;
    }

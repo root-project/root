@@ -69,8 +69,6 @@ void TF1NormSum::InitializeDataMembers(const std::vector <std::shared_ptr < TF1 
 
    for (unsigned int n=0; n < fNOfFunctions; n++)
    {
-      //normalize the functions if it is not already done
-      if (!fFunctions[n] -> IsEvalNormalized())  fFunctions[n]  -> SetNormalized(true);
       fNOfParams[n]       = fFunctions[n] -> GetNpar();
       fNOfNonCstParams[n] = fNOfParams[n];
       fCstIndexes[n]      = fFunctions[n] -> GetParNumber("Constant");//return -1 if there is no constant parameter
@@ -99,6 +97,8 @@ void TF1NormSum::InitializeDataMembers(const std::vector <std::shared_ptr < TF1 
             fParNames.push_back( fFunctions[n] -> GetParName(i) ); 
          }
       }
+      //normalize the functions if it is not already done (do at the end so constant parameter is not zero)
+      if (!fFunctions[n] -> IsEvalNormalized())  fFunctions[n]  -> SetNormalized(true);
    }
 
    FixDuplicateNames(fParNames.begin()+fNOfFunctions, fParNames.end());
