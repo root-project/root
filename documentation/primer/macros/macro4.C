@@ -31,7 +31,13 @@ void macro4(){
    auto c1 = new TCanvas();
    f2.SetLineWidth(1);
    f2.SetLineColor(kBlue-5);
-   f2.DrawClone("Surf1");
+   TF2   *f2c = (TF2*)f2.DrawClone("Surf1");
+   TAxis *Xaxis = f2c->GetXaxis();
+   TAxis *Yaxis = f2c->GetYaxis();
+   TAxis *Zaxis = f2c->GetZaxis();
+   Xaxis->SetTitle("X Title"); Xaxis->SetTitleOffset(1.5);
+   Yaxis->SetTitle("Y Title"); Yaxis->SetTitleOffset(1.5);
+   Zaxis->SetTitle("Z Title"); Zaxis->SetTitleOffset(1.5);
    dte.DrawClone("P0 Same");
    // Make the x and y projections
    auto c_p= new TCanvas("ProjCan",

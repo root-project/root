@@ -63,7 +63,7 @@ theoretical prediction.
 With ROOT you can profit from rather advanced plotting routines, like
 the ones implemented in the `TPolarGraph`, a class to draw graphs in
 polar coordinates. You can see the example macro in the following and the
-resulting Figure is [4.1](#f41):
+resulting Figure is [4.2](#f42):
 
 ``` {.cpp .numberLines}
 @ROOT_INCLUDE_FILE macros/macro3.C
@@ -72,10 +72,10 @@ resulting Figure is [4.1](#f41):
 A new element was added on line 4, the size of the canvas: it is
 sometimes optically better to show plots in specific canvas sizes.
 
-[f41]: figures/polar_graph.png "f41"
-<a name="f41"></a>
+[f42]: figures/polar_graph.png "f42"
+<a name="f42"></a>
 
-![The graph of a fan obtained with ROOT.\label{f41}][f41]
+![The graph of a fan obtained with ROOT.\label{f42}][f42]
 
 ## 2D Graphs ##
 
@@ -117,16 +117,20 @@ Let's go through the code, step by step to understand what is going on:
 
 -   Line *34*: The *Surf1* option draws the `TF2` objects (but also
     bi-dimensional histograms) as coloured surfaces with a wire-frame on
-    three-dimensional canvases. See Figure [4.2](#f42).
+    three-dimensional canvases. See Figure [4.3](#f43).
 
--   Line *37-43*: Here you learn how to create a canvas, partition it in
+-   Line *35-40*: Retrieve the axis pointer and define the axis titles.
+
+-   Line *41*: Draw the cloud of points on top of the coloured surface.
+
+-   Line *43-49*: Here you learn how to create a canvas, partition it in
     two sub-pads and access them. It is very handy to show multiple
     plots in the same window or image.
 
-[f42]: figures/fitted2dFunction.png "f42"
-<a name="f42"></a>
+[f43]: figures/fitted2dFunction.png "f43"
+<a name="f43"></a>
 
 ![A dataset fitted with a bidimensional function visualised as a colored
-surface.\label{f42}][f42]
+surface.\label{f43}][f43]
 
 [^3] https://root.cern.ch/drupal/content/rainbow-color-map
