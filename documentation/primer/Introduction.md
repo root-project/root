@@ -1,6 +1,6 @@
 # Motivation and Introduction #
 
-***Welcome to data analysis!*** [^1]
+***Welcome to data analysis!***
 
 Comparison of measurements to theoretical models is one of the standard
 tasks in experimental physics. In the most simple case, a "model" is
@@ -81,8 +81,8 @@ free, open-source product. Use these documents in parallel to this
 tutorial!
 
 The ROOT Data Analysis Framework itself is written in and heavily relies
-on the `C++` programming language: some knowledge about `C++` is required. 
-Jus take advantage from the immense available literature about `C++` if you do 
+on the `C++` programming language: some knowledge about `C++` is required.
+Jus take advantage from the immense available literature about `C++` if you do
 not have any idea of what this language is about.
 
 ROOT is available for many platforms (Linux, Mac OS X, Windows...), but
@@ -95,7 +95,3 @@ the ROOT source code to compile yourself. Just pick up the flavour you
 need and follow the installation instructions.
 
 **Let's dive into ROOT!**
-
-[^1]: This guide is based on "A ROOT Guide for Students"
-    <http://www-ekp.physik.uni-karlsruhe.de/~quast>, a document by D.
-    Piparo, G. Quast and M. Zeise.
