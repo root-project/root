@@ -7,56 +7,26 @@
 
 set(libname RInterface)
 
-ROOT_USE_PACKAGE(core)
-ROOT_USE_PACKAGE(core/rint)
-ROOT_USE_PACKAGE(core/thread)
-ROOT_USE_PACKAGE(math/matrix)
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(graf2d/gpad)
-ROOT_USE_PACKAGE(hist/hist)
+include_directories(${R_INCLUDE_DIRS})
 
-if(${R_FOUND} AND ${RCPP_FOUND} AND ${RINSIDE_FOUND})
-
-
-add_definitions(-DUSE_ROOT_ERROR )
-
-
-
-include_directories(${CMAKE_SOURCE_DIR}/bindings/r/inc ${RCPP_INCLUDE_DIR} ${RINSIDE_INCLUDE_DIR} ${R_INCLUDE_DIR})
-
-
-set(R_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface.h 
+set(R_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRObjectProxy.h 
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFunction.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInternalFunction.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRDataFrame.h
-              ${CMAKE_SOURCE_DIR}/bindings/r/inc/RExports.h
-              )
-
+              ${CMAKE_SOURCE_DIR}/bindings/r/inc/RExports.h)
 set(RHIST_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRF1.h              
-                  ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRGraph.h              
-)              
-
-set(ROI_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFile.h
-)              
-
-set(RGPAD_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRCanvas.h
-)
-
-set(RRINT_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRRint.h )
-
-
+                  ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRGraph.h)
+set(ROI_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRFile.h)
+set(RGPAD_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRCanvas.h)
+set(RRINT_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRRint.h)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
-
 ROOT_GENERATE_DICTIONARY(G__RInterface ${R_HEADERS} MODULE ${libname} LINKDEF LinkDef.h)
-# ROOT_GENERATE_ROOTMAP(RInterface LINKDEF LinkDef.h)
-
-ROOT_LINKER_LIBRARY(RInterface *.cxx G__RInterface.cxx LIBRARIES ${R_LIBRARIES}  ${RINSIDE_LIBRARIES} DEPENDENCIES Core Matrix Thread RIO readline)
-set_target_properties(RInterface PROPERTIES LINK_FLAGS ${RCPP_LIBRARIES})
+ROOT_LINKER_LIBRARY(RInterface *.cxx G__RInterface.cxx LIBRARIES ${R_LIBRARIES} DEPENDENCIES Core Matrix Thread RIO readline)
 
 ROOT_INSTALL_HEADERS()
-endif()
+
 
 
 
