@@ -41,8 +41,8 @@ foreach(_cpt ${R_FIND_COMPONENTS})
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   find_library(R_${_cpt}_LIBRARY
-               ${_cpt}.so ${_cpt}.dylib
-               HINTS ${_cpt_path}/libs)
+               lib${_cpt}.so lib${_cpt}.dylib
+               HINTS ${_cpt_path}/lib)
   if(R_${_cpt}_LIBRARY)
     mark_as_advanced(R_${_cpt}_LIBRARY)
     list(APPEND R_LIBRARIES ${R_${_cpt}_LIBRARY})
