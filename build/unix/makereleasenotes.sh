@@ -1,7 +1,7 @@
 #! /bin/sh
 
 PACKAGES="core io net sql tree proof hist interpreter bindings math roofit \
-          tmva geom montecarlo gui graf2d graf3d html misc tutorials"
+          tmva geom montecarlo gui graf2d graf3d html misc tutorials cmake"
 
 VERS="604"
 

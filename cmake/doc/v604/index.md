@@ -1,4 +1,4 @@
-## CMake infrastructure
+## Build, Configuration and Testing Infrastructure
 
 ### New functionalities
 
