@@ -177,7 +177,9 @@ Int_t TNetXNGSystem::GetPathInfo(const char *path, FileStat_t &buf)
 
    if (!st.IsOK()) {
 
-      Error("GetPathInfo", "Error: %s", st.GetErrorMessage().c_str());
+      if (gDebug > 1) {
+         Info("GetPathInfo", "Stat error: %s", st.GetErrorMessage().c_str());
+      }
       delete info;
       return 1;
 
