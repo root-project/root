@@ -891,6 +891,16 @@ void TTree::AddBranchToCache(const char*bname, Bool_t subbranches)
    // if subbranches is true all the branches of the subbranches are
    // also put to the cache.
 
+   if (GetTree() != this) {
+      if (!GetTree()) {
+         LoadTree(0);
+      }
+      if (GetTree()) {
+         GetTree()->AddBranchToCache(bname, subbranches);
+      }
+      return;
+   }
+
    TFile *f = GetCurrentFile();
    if (!f) return;
    TTreeCache *tc = GetReadCache(f,kTRUE);
@@ -903,6 +913,16 @@ void TTree::AddBranchToCache(TBranch *b, Bool_t subbranches)
    // Add branch b to the Tree cache.
    // if subbranches is true all the branches of the subbranches are
    // also put to the cache.
+
+   if (GetTree() != this) {
+      if (!GetTree()) {
+         LoadTree(0);
+      }
+      if (GetTree()) {
+         GetTree()->AddBranchToCache(b, subbranches);
+      }
+      return;
+   }
 
    TFile *f = GetCurrentFile();
    if (!f) return;
@@ -918,6 +938,16 @@ void TTree::DropBranchFromCache(const char*bname, Bool_t subbranches)
    // if subbranches is true all the branches of the subbranches are
    // also removed from the cache.
 
+   if (GetTree() != this) {
+      if (!GetTree()) {
+         LoadTree(0);
+      }
+      if (GetTree()) {
+         GetTree()->DropBranchFromCache(bname, subbranches);
+      }
+      return;
+   }
+
    TFile *f = GetCurrentFile();
    if (!f) return;
    TTreeCache *tc = GetReadCache(f,kTRUE);
@@ -930,6 +960,16 @@ void TTree::DropBranchFromCache(TBranch *b, Bool_t subbranches)
    // Remove the branch b from the Tree cache.
    // if subbranches is true all the branches of the subbranches are
    // also removed from the cache.
+
+   if (GetTree() != this) {
+      if (!GetTree()) {
+         LoadTree(0);
+      }
+      if (GetTree()) {
+         GetTree()->DropBranchFromCache(b, subbranches);
+      }
+      return;
+   }
 
    TFile *f = GetCurrentFile();
    if (!f) return;
@@ -5445,16 +5485,16 @@ TVirtualTreePlayer* TTree::GetPlayer()
 //______________________________________________________________________________
 TTreeCache *TTree::GetReadCache(TFile *file, Bool_t create /* = kFALSE */ )
 {
-   // Find and return the TTreeCache registered with the file and which we own.
-   // If create is true and there is no such cache: Create a new cache according
-   // to the autocache setting and return it. If create is true but no auto-
-   // cache is created return any default cache indicated by the file.
+   // Find and return the TTreeCache registered with the file and which may
+   // contain branches for us. If create is true and there is no cache:
+   // Create a new cache according to the autocache setting and return it.
 
    TTreeCache *pe = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
    if (pe && pe->GetTree() != this) pe = 0;
    if (create && !pe) {
       if (fCacheDoAutoInit) SetCacheSizeAux();
       pe = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
+      if (pe && pe->GetTree() != this) pe = 0;
    }
    return pe;
 }
@@ -7555,7 +7595,9 @@ void TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize /
    }
 
    TFile* file = GetCurrentFile();
-   if (!file) {
+   if (!file || GetTree() != this) {
+      // if there's no file or we are not a plain tree (e.g. if we're a TChain)
+      // do not create a cache, only record the size if one was given
       if (!autocache) fCacheSize = cacheSize;
       return;
    }
@@ -7578,8 +7620,12 @@ void TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize /
          cacheSize = GetCacheAutoSize();
 
       } else {
-         // update the cache to ensure it records the user has explcitly requested one
-         pf->SetAutoCreated(kFALSE);
+         // for consistency with non-autocache case the first request for a
+         // manually sized cache starts the learning phase
+         if (pf->IsAutoCreated()) {
+            pf->SetAutoCreated(kFALSE);
+            pf->StartLearningPhase();
+         }
       }
 
       // if we're using an automatically calculated size
@@ -7628,6 +7674,16 @@ void TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize /
 void TTree::SetCacheEntryRange(Long64_t first, Long64_t last)
 {
    //interface to TTreeCache to set the cache entry range
+
+   if (GetTree() != this) {
+      if (!GetTree()) {
+         LoadTree(0);
+      }
+      if (GetTree()) {
+         GetTree()->SetCacheEntryRange(first, last);
+      }
+      return;
+   }
 
    TFile *f = GetCurrentFile();
    if (!f) return;
@@ -8156,6 +8212,16 @@ void TTree::StartViewer()
 void TTree::StopCacheLearningPhase()
 {
    // stop the cache learning phase
+
+   if (GetTree() != this) {
+      if (!GetTree()) {
+         LoadTree(0);
+      }
+      if (GetTree()) {
+         GetTree()->StopCacheLearningPhase();
+      }
+      return;
+   }
 
    TFile *f = GetCurrentFile();
    if (!f) return;
