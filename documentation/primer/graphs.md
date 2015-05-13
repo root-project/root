@@ -136,7 +136,7 @@ surface.\label{f43}][f43]
 ## Multiple graphs ##
 
 The class `TMultigraph` allows to manipulate a set of graphs as a single entity.
-It is a collection of TGraph (or derived) objects. When drawn, the X and Y axis
+It is a collection of `TGraph` (or derived) objects. When drawn, the X and Y axis
 ranges are automatically computed such as all the graphs will be visible.
 
 ``` {.cpp .numberLines}
