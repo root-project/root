@@ -122,4 +122,29 @@ displayed as a symbol with error bar (lower two plots of Figure [5.5](#f55)).
 Correlations between the variables are quantified by the methods
 `Double_t GetCovariance()` and `Double_t GetCorrelationFactor()`.
 
+## Multiple histograms ##
+
+The class `THStack` allows to manipulate a set of histograms as a single entity.
+It is a collection of `TH1` (or derived) objects. When drawn, the X and Y axis
+ranges are automatically computed such as all the histograms will be visible.
+Several drawing option are available for both 1D and 2D histograms. The next
+macros shows how it looks for 2D histograms:
+
+``` {.cpp .numberLines}
+@ROOT_INCLUDE_FILE macros/hstack.C
+```
+
+- Line *4*: creates the stack.
+
+- Lines *4-18*: create two histograms to be added in the stack.
+
+- Lines *20-21*: add the histograms in the stack.
+
+- Line *23*: draws the stack as a lego plot. The color distinguish the two histograms [5.6](#f56).
+
+[f56]: figures/hstack.png "f56"
+<a name="f56"></a>
+
+![Two 2D histograms stack on top of each other.\label{f56}][f56]
+
 [^4]: To optimise the memory usage you might go for one byte (TH1C), short (TH1S), integer (TH1I) or double-precision (TH1D) bin-content.
