@@ -29,6 +29,7 @@
 #include "TClingTypeInfo.h"
 #include "TMetaUtils.h"
 #include "TClassEdit.h"
+#include "TError.h"
 
 #include "clang/AST/Attr.h"
 #include "clang/AST/ASTContext.h"
@@ -42,6 +43,8 @@
 
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/ADT/APSInt.h"
+#include "llvm/ADT/APFloat.h"
 
 using namespace clang;
 
@@ -296,7 +299,7 @@ int TClingDataMemberInfo::InternalNext()
    return 0;
 }
 
-long TClingDataMemberInfo::Offset() const
+long TClingDataMemberInfo::Offset()
 {
    using namespace clang;
 
@@ -316,12 +319,67 @@ long TClingDataMemberInfo::Offset() const
       return static_cast<long>(offset);
    }
    else if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
-      if (VD->getType()->isIntegralType(C) && VD->hasInit() &&
-          VD->checkInitIsICE()) {
+      if (VD->hasInit() && VD->checkInitIsICE()) {
          // FIXME: We might want in future to printout the reason why the eval
          // failed.
-         APValue* val = VD->evaluateValue();
-         return reinterpret_cast<long>(val->getInt().getRawData());
+         const APValue* val = VD->evaluateValue();
+         if (VD->getType()->isIntegralType(C)) {
+            return reinterpret_cast<long>(val->getInt().getRawData());
+         } else {
+            // The VD stores the init value; its lifetime should the lifetime of
+            // this offset.
+            switch (val->getKind()) {
+            case APValue::Int: {
+               if (val->getInt().isSigned())
+                  fConstInitVal.fLong = (long)val->getInt().getSExtValue();
+               else
+                  fConstInitVal.fLong = (long)val->getInt().getZExtValue();
+               return (long) &fConstInitVal.fLong;
+            }
+            case APValue::Float:
+               if (&val->getFloat().getSemantics()
+                   == &llvm::APFloat::IEEEsingle) {
+                  fConstInitVal.fFloat = val->getFloat().convertToFloat();
+                  return (long)&fConstInitVal.fFloat;
+               } else if (&val->getFloat().getSemantics()
+                          == &llvm::APFloat::IEEEdouble) {
+                  fConstInitVal.fDouble = val->getFloat().convertToDouble();
+                  return (long)&fConstInitVal.fDouble;
+               } else {
+                  Error("Offset()", "Unhandled float type case:");
+                  val->dump();
+                  return -1;
+               }
+            case APValue::LValue:
+               if (const Expr* E
+                   = val->getLValueBase().dyn_cast<const Expr*>()) {
+                  llvm::APSInt IntVal;
+                  clang::ASTContext &Context = VD->getASTContext();
+                  if (E->EvaluateAsInt(IntVal, Context)) {
+                     if (IntVal.isSigned())
+                        fConstInitVal.fLong = (long)IntVal.getSExtValue();
+                     else
+                        fConstInitVal.fLong = (long)IntVal.getZExtValue();
+                     fConstInitVal.fLong += val->getLValueOffset().getQuantity();
+                     return (long) &fConstInitVal.fLong;
+                  } else if (const StringLiteral* SL
+                             = dyn_cast<StringLiteral>(E)) {
+                     fConstInitVal.fLong = (long)SL->getString().data();
+                     fConstInitVal.fLong += val->getLValueOffset().getQuantity();
+                  }
+                  return (long) &fConstInitVal.fLong;
+               } else {
+                  Error("Offset()", "Unhandled lvalue case:");
+                  val->getLValueBase().dyn_cast<const ValueDecl*>()->dump();
+                  return -1;
+               }
+            default:
+               Error("Offset()", "Unhandled APValue case:");
+               val->dump();
+               return -1;
+            };
+            return 0;
+         }
       }
       return reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD)));
    }
