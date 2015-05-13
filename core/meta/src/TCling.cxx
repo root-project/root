@@ -1820,7 +1820,6 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    cling::Interpreter::CompilationResult compRes = cling::Interpreter::kSuccess;
    if (!strncmp(sLine.Data(), ".L", 2) || !strncmp(sLine.Data(), ".x", 2) ||
        !strncmp(sLine.Data(), ".X", 2)) {
-      cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
       // If there was a trailing "+", then CINT compiled the code above,
       // and we will need to strip the "+" before passing the line to cling.
       TString mod_line(sLine);
@@ -1854,6 +1853,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                }
                const char *function = gSystem->BaseName(fname);
                mod_line = function + arguments + io;
+               cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
                indent = fMetaProcessor->process(mod_line, compRes, &result);
             }
          }
@@ -1877,6 +1877,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          }
 
          fCurExecutingMacros.push_back(fname);
+         cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
          if (unnamedMacro) {
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
                                                         true /*ignoreOutmostBlock*/);
@@ -2636,6 +2637,7 @@ Int_t TCling::Load(const char* filename, Bool_t system)
          // For the non system libs, we'd like to be able to unload them.
          // FIXME: Here we lose the information about kLoadLibAlreadyLoaded case.
          cling::Interpreter::CompilationResult compRes;
+         cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
          fMetaProcessor->process(Form(".L %s", canonLib.c_str()), compRes, /*cling::Value*/0);
          if (compRes == cling::Interpreter::kSuccess)
             res = cling::DynamicLibraryManager::kLoadLibSuccess;
@@ -5904,6 +5906,7 @@ int TCling::LoadFile(const char* path) const
 {
    // Load a source file or library called path into the interpreter.
    cling::Interpreter::CompilationResult compRes;
+   cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
    fMetaProcessor->process(TString::Format(".L %s", path), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
@@ -6023,6 +6026,7 @@ int TCling::UnloadFile(const char* path) const
    }
    // Unload a shared library or a source file.
    cling::Interpreter::CompilationResult compRes;
+   cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
    fMetaProcessor->process(Form(".U %s", canonical.c_str()), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
