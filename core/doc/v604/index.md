@@ -88,6 +88,12 @@ calculated correctly or not.
 Implemented new gROOT->GetTutorialsDir() static method to return the actual location of the tutorials directory.
 This is $ROOTSYS/tutorials when not configuring with --prefix  or -Dgnuinstall for CMake.
 
+### TColor
+
+Add an enum to access the palette by name.
+
+Add new palettes `kBird`and `kCubehelix`.
+
 ### Interpreter Library
 
 Many, many bugs have been fixed; thanks to everyone who has reported them!

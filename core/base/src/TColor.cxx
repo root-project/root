@@ -1676,6 +1676,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    if ncolors = 55 and colors=0, a Rain Bow palette is used.
    if ncolors = 56 and colors=0, an Inverted Dark Body Radiator palette is used.
    if ncolors = 57 and colors=0, a monotonically increasing L value palette is used.
+   if ncolors = 58 and colors=0, a Cubehelix palette is used (Cf. Dave Green's ‘cubehelix’ colour scheme at http://www.mrao.cam.ac.uk/~dag/CUBEHELIX/)
 
    </pre>
    (see TColor::CreateGradientColorTable for more details)
@@ -1812,11 +1813,24 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       paletteType = 9;
       return;
    }
+   // Cubehelix
+   if (ncolors == 58 && colors == 0) {
+      TColor::InitializeColors();
+      if (paletteType == 10) return;
+      const Int_t nRGBs = 9;
+      Double_t stops[nRGBs] = { 0.0000, 0.1250, 0.2500, 0.3750, 0.5000, 0.6250, 0.7500, 0.8750, 1.0000};
+      Double_t red[nRGBs]   = { 0.0000, 0.0956, 0.0098, 0.2124, 0.6905, 0.9242, 0.7914, 0.7596, 1.0000};
+      Double_t green[nRGBs] = { 0.0000, 0.1147, 0.3616, 0.5041, 0.4577, 0.4691, 0.6905, 0.9237, 1.0000};
+      Double_t blue[nRGBs]  = { 0.0000, 0.2669, 0.3121, 0.1318, 0.2236, 0.6741, 0.9882, 0.9593, 1.0000};
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
+      paletteType = 10;
+      return;
+   }
 
    // set user defined palette
    fgPalette.Set(ncolors);
    if (colors)  for (i=0;i<ncolors;i++) fgPalette.fArray[i] = colors[i];
    else         for (i=0;i<ncolors;i++) fgPalette.fArray[i] = palette[i];
-   paletteType = 10;
+   paletteType = 11;
 }
 

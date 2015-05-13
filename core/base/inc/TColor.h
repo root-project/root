@@ -128,5 +128,8 @@ public:
    ClassDef(TColor,2)  //Color defined by RGB or HLS
 };
 
+   enum EColorPalette {kDeepSea=51,     kGreyScale=52, kDarkBodyRadiator=53,
+                       kBlueYellow= 54, kRainBow=55,   kInvertedDarkBodyRadiator=56,
+                       kBird=57,        kCubehelix=58};
 #endif
 
