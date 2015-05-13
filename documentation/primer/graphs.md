@@ -133,4 +133,25 @@ Let's go through the code, step by step to understand what is going on:
 ![A dataset fitted with a bidimensional function visualised as a colored
 surface.\label{f43}][f43]
 
+## Multiple graphs ##
+
+The class `TMultigraph` allows to manipulate a set of graphs as a single entity.
+It is a collection of TGraph (or derived) objects. When drawn, the X and Y axis
+ranges are automatically computed such as all the graphs will be visible.
+
+``` {.cpp .numberLines}
+@ROOT_INCLUDE_FILE macros/multigraph.C
+```
+- Line *6* creates the multigraph.
+
+- Line *9-28*: create two graphs with errors and add them in the multigraph.
+
+- Line *30-32*: draw the multigraph. The axis limits are computed automatically
+  to make sure all the graphs' points will be in range.
+
+[f44]: figures/multigraph.png "f44"
+<a name="f44"></a>
+
+![A set of graphs grouped in a multigraph.\label{f44}][f44]
+
 [^3] https://root.cern.ch/drupal/content/rainbow-color-map
