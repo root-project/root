@@ -35,7 +35,7 @@ Double_t fun2(Double_t *x, Double_t *par) {
 TCanvas *fit2a() {
    TCanvas *c = new TCanvas();
    gStyle->SetOptStat(kTRUE);
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    const Int_t npar = 15;
    Double_t f2params[npar] = {100,-3,3,-3,3,160,0,0.8,0,0.9,40,4,0.7,4,0.7};
    TF2 *f2 = new TF2("f2",fun2,-10,10,-10,10, npar);

@@ -7,7 +7,7 @@ TCanvas *earth(){
   //
   //Author: Olivier Couet (from an original macro sent by Ernst-Jan Buis)
 
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);
 
