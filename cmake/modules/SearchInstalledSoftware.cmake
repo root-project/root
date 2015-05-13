@@ -764,7 +764,7 @@ endif()
 #added search of R packages here to remove multiples searches
 if(r)
   message(STATUS "Looking for R")
-  find_package(R REQUIRED COMPONENTS Rcpp RInside)
+  find_package(R COMPONENTS Rcpp RInside)
   if(NOT R_FOUND)
     if(fail-on-missing)
        message(FATAL_ERROR "R installation not found and is required ('r' option enabled)")
