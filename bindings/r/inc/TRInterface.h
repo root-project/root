@@ -81,6 +81,16 @@ namespace ROOT {
                fInterface->Assign(fun, fName);
                return *this;
             }
+            
+            Binding &operator=(const TRDataFrame &df) {
+               fInterface->Assign(df, fName);
+               return *this;
+            }
+            
+            Binding &operator<<(const TRDataFrame &df) {
+               fInterface->Assign(df, fName);
+               return *this;
+            }
 
             template <class T> Binding &operator >>(T &var) {
                var = fInterface->Eval(fName).As<T>();
@@ -122,6 +132,7 @@ namespace ROOT {
             fR->assign<T>(var, name.Data());
          }
          void Assign(const TRFunction &fun, const TString &name);
+         void Assign(const TRDataFrame &df, const TString &name);
 
          void Interactive();
          void ProcessEventsLoop();
