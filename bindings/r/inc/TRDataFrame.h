@@ -61,19 +61,25 @@ public:
             if(found) fDf[fName.Data()]=var;
             else
             {
-                Rcpp::List nDf(size+1);
-                Rcpp::CharacterVector nnames(size+1);
-                for(i=0; i<size; i++) {
-                    nDf[i] = fDf[i] ;
-                    nnames[i] = names[i];
-                }
-                nDf[size]=var;
-                nnames[size]=fName.Data();
+                if(size==0)
+                {
+                    fDf=Rcpp::DataFrame::create(ROOT::R::Label[fName.Data()]=var);
+                }else
+                {
+                    Rcpp::List nDf(size+1);
+                    Rcpp::CharacterVector nnames(size+1);
+                    for(i=0; i<size; i++) {
+                        nDf[i] = fDf[i] ;
+                        nnames[i] = names[i];
+                    }
+                    nDf[size]=var;
+                    nnames[size]=fName.Data();
 
-                nDf.attr("class") = fDf.attr("class") ;
-                nDf.attr("row.names") = fDf.attr("row.names") ;
-                nDf.attr("names") = nnames ;
-                fDf=nDf;
+                    nDf.attr("class") = fDf.attr("class") ;
+                    nDf.attr("row.names") = fDf.attr("row.names") ;
+                    nDf.attr("names") = nnames ;
+                    fDf=nDf;
+                }
             }
             return *this;
         }
