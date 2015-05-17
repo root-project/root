@@ -2,17 +2,21 @@
 
 ## Storing ROOT Objects ##
 
-ROOT offers the possibility to write the instances of all the classes
-inheriting from the class `TObject` (basically all classes in ROOT) on
-disk, into what is referred to as *ROOT-file*, a file created by the
-`TFile` class. One says that the object is made "persistent" by storing
-it on disk. When reading the file back, the object can be restored to
-memory.
+ROOT offers the possibility to write instances of classes on
+disk, into a *ROOT-file* (see the `TFile` class for more details).
+One says that the object is made "persistent" by storing
+it on disk. When reading the file back, the object is reconstructed
+in memory. The requirement to be satisfied to perform I/O of instances
+of a certain class is that the ROOT type system is aware of the layout 
+in memory of that class.
+This topic is beyond the scope of this document: it is worth to mention
+that I/O can be performed out of the box for the almost complete set 
+of ROOT classes.
 
 We can explore this functionality with histograms and two simple macros.
 
 ``` {.cpp}
-@ROOT_INCLUDE_FILE macros/write_to_file.C
+@ROOT_INCLUDE_FILE macros/macro3.py
 ```
 
 Not bad, eh ? Especially for a language that does not foresees
@@ -38,15 +42,6 @@ Alternatively, you can use a simple macro to carry out the job:
 ``` {.cpp}
 @ROOT_INCLUDE_FILE macros/read_from_file.C
 ```
-
-Please note that the order of opening files for write access and
-creating objects determines whether the objects are stored or not. You
-can avoid this behaviour by using the `Write()` function as shown in the
-previous example.
-
-Although you could be tempted to access an object within a file also
-with the `Get` function and a C++ type cast, it is advisable to always
-use `GetObjectChecked`.
 
 ## N-tuples in ROOT ##
 
@@ -91,7 +86,7 @@ written by the macro above in an interactive session and use a
 `TBrowser` to interactively inspect it:
 
 ``` {.cpp}
-root[0] new TBrowser()
+root[0] TBrowser b
 ```
 You find the columns of your n-tuple written as *leafs*. Simply clicking
 on them you can obtain histograms of the variables!
@@ -256,7 +251,7 @@ section, offers an additional advantage in particular for very large
 data sets: on distributed systems or multi-core architectures, portions
 of data can be processed in parallel, thus significantly reducing the
 execution time. On modern computers with multi-core CPUs or
-hyper-threading enabled, this allows a much faster turnaround of
+hardware-threading enabled, this allows a much faster turnaround of
 analyses, since all the available CPU power is used.
 
 On distributed systems, a PROOF server and worker nodes have to be set
@@ -342,8 +337,8 @@ toolkit.
 ### Optimisation Regarding N-tuples ###
 
 ROOT automatically applies compression algorithms on n-tuples to reduce
-the memory consumption. A value that is in most cases only zero will
-consume only small space on your disk (but it has to be deflated on
+the memory consumption. A value that is in most cases the same will
+consume only small space on your disk (but it has to be decompressed on
 reading). Nevertheless, you should think about the design of your
 n-tuples and your analyses as soon as the processing time exceeds some
 minutes.

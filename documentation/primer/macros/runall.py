@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 macros = [\
-"slit.C",
+"slits.C",
 "write_ntuple_to_file_advanced.C",
 "write_ntuple_to_file.C",
 "write_to_file.C",
@@ -20,7 +20,12 @@ macros = [\
 "macro9.C",
 "read_from_file.C",
 "read_ntuple_from_file.C",
-"read_ntuple_with_chain.C"]
+"read_ntuple_with_chain.C",
+"TGraphFit.C"]
+
+pymacros = [\
+"TGraphFit.py",
+"macro3.py"]
 
 import os
 import sys
@@ -33,5 +38,14 @@ for mName in macros:
        print "Macro %s" %mName
        sys.exit(1)
 print "\n"+"-"*80+"\nAll macros ran successfully"
+
+for mName in pymacros:
+    command = "echo 1 | python %s" %mName
+    print "\n ******* Running %s" %mName
+    if 0 !=os.system(command):
+       print "Python macro %s" %mName
+       sys.exit(1)
+print "\n"+"-"*80+"\nAll Python macros ran successfully"
+
 sys.exit(0)
  
