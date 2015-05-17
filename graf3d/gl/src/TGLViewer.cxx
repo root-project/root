@@ -117,6 +117,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fAutoRotator(0),
 
    fStereo               (kFALSE),
+   fStereoQuadBuf        (kFALSE),
    fStereoZeroParallax   (0.03f),
    fStereoEyeOffsetFac   (1.0f),
    fStereoFrustumAsymFac (1.0f),
@@ -179,6 +180,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fAutoRotator(0),
 
    fStereo               (kFALSE),
+   fStereoQuadBuf        (kFALSE),
    fStereoZeroParallax   (0.03f),
    fStereoEyeOffsetFac   (1.0f),
    fStereoFrustumAsymFac (1.0f),
@@ -666,7 +668,15 @@ void TGLViewer::DoDrawStereo(Bool_t swap_buffers)
    MakeCurrent();
 
    // Draw left
-   glDrawBuffer(GL_BACK_LEFT);
+   if (fStereoQuadBuf)
+   {
+      glDrawBuffer(GL_BACK_LEFT);
+   }
+   else
+   {
+      glScissor(0, 0, fViewport.Width(), fViewport.Height());
+      glEnable(GL_SCISSOR_TEST);
+   }
    PreDraw();
    PreRender();
 
@@ -710,9 +720,20 @@ void TGLViewer::DoDrawStereo(Bool_t swap_buffers)
    PostDraw();
 
    // Draw right
-   glDrawBuffer(GL_BACK_RIGHT);
+   if (fStereoQuadBuf)
+   {
+      glDrawBuffer(GL_BACK_RIGHT);
+   }
+   else
+   {
+      glScissor(fViewport.Width(), 0, fViewport.Width(), fViewport.Height());
+   }
    PreDraw();
    PreRender();
+   if ( ! fStereoQuadBuf)
+   {
+      glViewport(fViewport.Width(), 0, fViewport.Width(), fViewport.Height());
+   }
 
    glTranslatef(-stereo_offset*left_vec[0], -stereo_offset*left_vec[1], -stereo_offset*left_vec[2]);
 
@@ -743,7 +764,15 @@ void TGLViewer::DoDrawStereo(Bool_t swap_buffers)
       SwapBuffers();
    }
 
-   glDrawBuffer(GL_BACK);
+   if (fStereoQuadBuf)
+   {
+      glDrawBuffer(GL_BACK);
+   }
+   else
+   {
+      glDisable(GL_SCISSOR_TEST);
+      glViewport(0, 0, fViewport.Width(), fViewport.Height());
+   }
 }
 
 //______________________________________________________________________________
@@ -1683,6 +1712,8 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, Int_t width, Int_t height)
    // Set viewer viewport (window area) with bottom/left at (x,y), with
    // dimensions 'width'/'height'
 
+   if (fStereo && ! fStereoQuadBuf) width /= 2;
+
    // Only process if changed
    if (fViewport.X() == x && fViewport.Y() == y &&
        fViewport.Width() == width && fViewport.Height() == height) {
@@ -1953,6 +1984,28 @@ void TGLViewer::SetAutoRotator(TGLAutoRotator* ar)
    fAutoRotator = ar;
 }
 
+//______________________________________________________________________________
+void TGLViewer::SetStereo(Bool_t stereo, Bool_t quad_buf)
+{
+   // Enable stereo rendering.
+   // If quad_buf is true rendering is done into separate left and right GL
+   // buffers. This requires hardware support. Otherwise left and right images
+   // get rendered into left and right half of the window.
+   // Note that mouse highlighting and selection will not work exactly right
+   // as image for each eye gets slightly shifted and there are two different
+   // directions through the mouse pointer, one for each eye.
+
+   if (stereo != fStereo)
+   {
+      fStereo = stereo;
+      fStereoQuadBuf = quad_buf;
+      if (fStereo)
+         SetViewport(fViewport.X(), fViewport.Y(),   fViewport.Width(), fViewport.Height());
+      else
+         SetViewport(fViewport.X(), fViewport.Y(), 2*fViewport.Width(), fViewport.Height());
+   }
+   RequestDraw(TGLRnrCtx::kLODHigh);
+}
 
 /**************************************************************************/
 // Guide methods
