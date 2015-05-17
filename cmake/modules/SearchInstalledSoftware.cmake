@@ -799,7 +799,7 @@ if(vc)
 endif()
 
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs chirp clarens glite hdfs pch peac sapdb srp)
+foreach(opt afs chirp glite hdfs pch sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)
