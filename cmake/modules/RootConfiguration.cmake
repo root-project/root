@@ -396,12 +396,6 @@ set(buildhttp ${value${http}})
 set(buildtable ${value${table}})
 set(buildtmva ${value${tmva}})
 
-set(buildclarens ${value${clarens}})
-set(clarensincdir ${CLARENS_INCLUDE_DIR})
-set(clarenslibs ${CLARENS_LIBRARIES})
-set(buildpeac ${value${peac}})
-
-
 set(cursesincdir ${CURSES_INCLUDE_DIR})
 set(curseslibdir)
 set(curseslib ${CURSES_LIBRARIES})

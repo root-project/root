@@ -918,7 +918,7 @@ if(tbb)
 endif()
 
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs clarens glite pch peac sapdb srp geocad)
+foreach(opt afs glite sapdb srp geocad)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)
