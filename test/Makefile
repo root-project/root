@@ -649,7 +649,7 @@ ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libProof.lib' '$(ROOTSYS)/lib/libThread.lib' $(OutPutOpt)$@
 		$(MT_EXE)
 else
-		$(LD) $(LDFLAGS) $(STRESSPROOFO) $(LIBS) -lProof -lProofPlayer -lThread $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $(STRESSPROOFO) $(LIBS) -lProof -lProofPlayer -lThread -lSessionViewer $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
