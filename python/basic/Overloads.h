@@ -112,7 +112,15 @@ public:
     std::string method(bool arg);
     std::string method2(int arg);
     std::string method3(bool arg);
+
+    std::string method4(int, double);
+    std::string method4(int, char);
 };
+
+
+//===========================================================================
+std::string global_builtin_overload(int, double);
+std::string global_builtin_overload(int, char);
 
 
 //===========================================================================

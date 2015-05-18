@@ -67,6 +67,13 @@ std::string MoreBuiltinOverloads::method(double) { return "double"; }
 std::string MoreBuiltinOverloads::method(bool)   { return "bool"; }
 std::string MoreBuiltinOverloads::method2(int)   { return "int"; }
 std::string MoreBuiltinOverloads::method3(bool)  { return "bool"; }
+std::string MoreBuiltinOverloads::method4(int, double)  { return "double"; }
+std::string MoreBuiltinOverloads::method4(int, char)    { return "char"; }
+
+
+//===========================================================================
+std::string global_builtin_overload(int, double) { return "double"; }
+std::string global_builtin_overload(int, char)   { return "char"; }
 
 
 //===========================================================================

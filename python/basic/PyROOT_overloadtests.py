@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_overloadtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/15/05
-# Last: 04/14/14
+# Last: 05/05/15
 
 """Overload unit tests for PyROOT package."""
 
@@ -205,6 +205,13 @@ class TestClassOVERLOADS:
 
         # do not allow 0.0 -> bool
         raises(ValueError, d.method3, 0.0)
+
+        # do not allow 0.0 -> char
+        assert d.method4(1, 1.) == "double"
+        assert d.method4(1, 1 ) == "char"
+
+        assert cppyy.gbl.global_builtin_overload(1, 1 ) == "char"
+        assert cppyy.gbl.global_builtin_overload(1, 1.) == "double"
 
 
 ## actual test run
