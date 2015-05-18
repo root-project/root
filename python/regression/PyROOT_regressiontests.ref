@@ -5,6 +5,7 @@ Calls on a TQClass instance ... ok
 Classes with iterators in a namespace ... ok
 Smart class that returns itself on dereference should not loop ... ok
 Direct access on the meta class ... ok
+Inspect TH1I ... ok
 Test the special role that gROOT plays vis-a-vis threading ... ok
 Test different import styles vis-a-vis threading ... ok
 Test various ways of preventing GUI thread startup ... ok

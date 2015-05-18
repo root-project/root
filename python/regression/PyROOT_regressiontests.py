@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 05/05/15
+# Last: 05/18/15
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -106,6 +106,13 @@ class Regression03OldCrashers( MyTestCase ):
       """Direct access on the meta class"""
 
       self.assertRaises( AttributeError, getattr, TObject.__class__, "nosuch" )
+
+   def test6InspectionOfTH1I( self ):
+      """Inspect TH1I"""
+
+    # access to data member fArray used to fail w/o error set; ROOT-7336
+      import inspect
+      inspect.getmembers(TH1I)
 
 
 ### Test the condition under which to (not) start the GUI thread =============
