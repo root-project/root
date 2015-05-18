@@ -347,26 +347,6 @@ long TClingDataMemberInfo::Offset()
                   return (long)&fConstInitVal.fDouble;
                }
                // else fall-through
-            case APValue::LValue:
-               if (const Expr* E
-                   = val->getLValueBase().dyn_cast<const Expr*>()) {
-                  llvm::APSInt IntVal;
-                  clang::ASTContext &Context = VD->getASTContext();
-                  if (E->EvaluateAsInt(IntVal, Context)) {
-                     if (IntVal.isSigned())
-                        fConstInitVal.fLong = (long)IntVal.getSExtValue();
-                     else
-                        fConstInitVal.fLong = (long)IntVal.getZExtValue();
-                     fConstInitVal.fLong += val->getLValueOffset().getQuantity();
-                     return (long) &fConstInitVal.fLong;
-                  } else if (const StringLiteral* SL
-                             = dyn_cast<StringLiteral>(E)) {
-                     fConstInitVal.fLong = (long)SL->getString().data();
-                     fConstInitVal.fLong += val->getLValueOffset().getQuantity();
-                  }
-                  return (long) &fConstInitVal.fLong;
-               }
-               // else fall-through
             default:
                ;// fall-through
             };
