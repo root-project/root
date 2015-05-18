@@ -99,7 +99,6 @@ private:
    Float_t             fProcTime;
    Double_t            fAvgRate;
    Double_t            fAvgMBRate;
-   Int_t               fSVNRev;
    Int_t               fRightInfo;
 
    TString             fSessionUrl;
