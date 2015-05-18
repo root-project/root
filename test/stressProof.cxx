@@ -131,6 +131,9 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TSelector.h"
+#include "TProofProgressDialog.h"
+#include "TProofProgressLog.h"
+#include "TProofProgressMemoryPlot.h"
 
 #include "proof/getProof.C"
 
