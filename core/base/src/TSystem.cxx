@@ -2965,15 +2965,15 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          pos = rel_inc.Index(includes,&len);
       }
    }
-   includes += " -I\"" + build_loc;
-   includes += "\" -I\"";
-   includes += WorkingDirectory();
-   if (includes[includes.Length()-1] == '\\') {
-      // The current directory is (most likely) the root of a windows drive and
-      // has a trailing \ which would espace the quote if left by itself.
-      includes += '\\';
-   }
-   includes += "\"";
+   //includes += " -I\"" + build_loc;
+   //includes += "\" -I\"";
+   //includes += WorkingDirectory();
+//   if (includes[includes.Length()-1] == '\\') {
+//      // The current directory is (most likely) the root of a windows drive and
+//      // has a trailing \ which would espace the quote if left by itself.
+//      includes += '\\';
+//   }
+//   includes += "\"";
    if (gEnv) {
       TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
       includes.Append(" ").Append(fromConfig).Append(" ");
