@@ -115,7 +115,7 @@ and filled into a histogram. Here is the code:
 
 Your present knowledge of ROOT should be enough to understand all the
 technicalities behind the macro. Note that the variable `pull` in line
-*59* is different from the definition above: instead of the parameter
+*61* is different from the definition above: instead of the parameter
 error on `mean`, the fitted standard deviation of the distribution
 divided by the square root of the number of entries,
 `sig/sqrt(n_tot_entries)`, is used.

@@ -201,7 +201,7 @@ stars. An alternative set of names for the markers is available.
 
 ### Arrows and Lines
 
-The macro line 55 shows how to define an arrow and draw it. The class
+The macro line *55* shows how to define an arrow and draw it. The class
 representing arrows is `TArrow`, which inherits from `TLine`. The
 constructors of lines and arrows always contain the coordinates of the
 endpoints. Arrows also foresee parameters to [specify
@@ -239,7 +239,7 @@ answers.
 
 ACLiC will create for you a compiled dynamic library for your macro,
 without any effort from your side, except the insertion of the
-appropriate header files in lines 5--11. In this example, they are
+appropriate header files in lines *5--11*. In this example, they are
 already included. To generate an object library from the macro code, from inside the
 interpreter type (please note the "+"):
 

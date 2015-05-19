@@ -16,7 +16,7 @@ of ROOT classes.
 We can explore this functionality with histograms and two simple macros.
 
 ``` {.cpp}
-@ROOT_INCLUDE_FILE macros/macro3.py
+@ROOT_INCLUDE_FILE macros/write_to_file.C
 ```
 
 Not bad, eh ? Especially for a language that does not foresees

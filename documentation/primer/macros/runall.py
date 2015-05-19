@@ -21,7 +21,8 @@ macros = [\
 "read_from_file.C",
 "read_ntuple_from_file.C",
 "read_ntuple_with_chain.C",
-"TGraphFit.C"]
+"TGraphFit.C",
+"multigraph.C"]
 
 pymacros = [\
 "TGraphFit.py",
