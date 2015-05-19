@@ -1272,7 +1272,11 @@ Int_t TH1::BufferEmpty(Int_t action)
    }
 
    // call DoFillN which will not put entries in the buffer as FillN does
-   DoFillN(nbentries,&fBuffer[2],&fBuffer[1],2);
+   // to avoid infinite loops
+   // caused by FindBin->ReBinAxis->GetBinCOntent->BufferEmpy
+   buffer = fBuffer; fBuffer = 0; 
+   DoFillN(nbentries,&buffer[2],&buffer[1],2);
+   fBuffer = buffer; 
 
    // if action == 1 - delete the buffer
    if (action > 0) {
