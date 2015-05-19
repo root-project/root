@@ -317,9 +317,15 @@ void TMVA::MethodCategory::InitCircularTree(const DataSetInfo& dsi)
 
    if(!hasAllExternalLinks) return;
 
-   fCatTree = new TTree(Form("Circ%s",GetMethodName().Data()),"Circlar Tree for categorization");
-   fCatTree->SetCircular(1);
-   fCatTree->SetDirectory(0);
+   {
+      // Rather than having TTree::TTree add to the current directory and then remove it, let
+      // make sure to not add it in the first place.
+      // The add-then-remove can lead to  a problem if gDirectory points to the same directory (for example
+      // gROOT) in the current thread and another one (and both try to add to the directory at the same time).
+      TDirectory::TContext ctxt(nullptr);
+      fCatTree = new TTree(Form("Circ%s",GetMethodName().Data()),"Circlar Tree for categorization");
+      fCatTree->SetCircular(1);
+   }
 
    for (viIt = vars.begin(); viIt != vars.end(); ++viIt) {
       const VariableInfo& vi = *viIt;
