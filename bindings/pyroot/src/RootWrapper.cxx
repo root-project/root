@@ -622,8 +622,10 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
 
 // locate class by ID, if possible, to prevent parsing scopes/templates anew
    PyObject* pyscope = GetScopeProxy( klass );
-   if ( pyscope )
+   if ( pyscope ) {
+      if ( parent ) PyObject_SetAttrString( parent, (char*)scope_name.c_str(), pyscope );
       return pyscope;
+   }
 
 // locate the parent, if necessary, for building the class if not specified
    std::string::size_type last = 0;

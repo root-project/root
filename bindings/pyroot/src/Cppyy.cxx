@@ -148,6 +148,7 @@ Cppyy::TCppScope_t Cppyy::GetScope( const std::string& sname )
    else
       scope_name = sname;
 
+   scope_name = ResolveName( scope_name );
    auto icr = g_name2classrefidx.find( scope_name );
    if ( icr != g_name2classrefidx.end() )
       return (TCppType_t)icr->second;
@@ -491,7 +492,7 @@ size_t Cppyy::GetFunctionArgTypeoffset()\
 
 
 // scope reflection information ----------------------------------------------
-Bool_t Cppyy::IsNamespace( TCppScope_t scope) {
+Bool_t Cppyy::IsNamespace( TCppScope_t scope ) {
 // Test if this scope represents a namespace.
    TClassRef& cr = type_from_handle( scope );
    if ( cr.GetClass() )
