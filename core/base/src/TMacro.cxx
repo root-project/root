@@ -52,6 +52,7 @@
 #include "TObjString.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include <sstream>
 
 ClassImp(TMacro)
 
@@ -230,6 +231,22 @@ TMD5 *TMacro::Checksum()
    md5->Final();
 
    return md5;
+}
+
+//______________________________________________________________________________
+Bool_t TMacro::Load() const
+{
+   // Load the macro into the interpreter.
+   // Return true in case the loading was successful.
+
+   std::stringstream ss;
+
+   TIter next(fLines);
+   TObjString *obj;
+   while ((obj = (TObjString*) next())) {
+      ss << obj->GetName() << std::endl;
+   }
+   return gInterpreter->LoadText(ss.str().c_str());
 }
 
 //______________________________________________________________________________
