@@ -211,6 +211,13 @@ void TEnvParser::Parse()
       if (state != 4)
          Char(c);
    }
+   // In case EOF is reach before '\n'
+   if (name.Length() > 0) {
+      KeyValue(name, value, type);
+      name.Clear();
+      value.Clear();
+      type.Clear();
+   }
 }
 
 //---- TReadEnvParser ----------------------------------------------------------
