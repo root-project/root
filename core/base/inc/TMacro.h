@@ -48,6 +48,7 @@ public:
    virtual void         Browse(TBrowser *b);
    virtual TMD5        *Checksum();
    virtual TObjString  *GetLineWith(const char *text) const;
+   virtual Bool_t       Load() const; //*MENU*
    virtual Long_t       Exec(const char *params = 0, Int_t* error = 0); //*MENU*
    TList               *GetListOfLines() const {return fLines;}
    virtual void         Paint(Option_t *option="");
