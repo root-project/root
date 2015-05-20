@@ -115,6 +115,28 @@ class Basic3PythonLanguageTestCase( MyTestCase ):
       gROOT.GetVersion._threaded = 1
       gROOT.GetVersion()
 
+   def test4ClassAndTypedefEquality( self ):
+      """Typedefs of the same class must point to the same python class"""
+
+      gInterpreter.Declare( """namespace PyABC {
+         struct SomeStruct {};
+         struct SomeOtherStruct {
+            typedef std::vector<const PyABC::SomeStruct*> StructContainer;
+         };
+      }""" )
+
+      import cppyy
+      PyABC = cppyy.gbl.PyABC
+
+      print cppyy.gbl.std.vector('const PyABC::SomeStruct*') 
+      print cppyy.gbl.std.vector('const PyABC::SomeStruct*') 
+      print PyABC.SomeOtherStruct.StructContainer
+      print PyABC.SomeOtherStruct.StructContainer
+      print PyABC.SomeOtherStruct.StructContainer
+      print PyABC.SomeOtherStruct.StructContainer
+
+      self.assert_( PyABC.SomeOtherStruct.StructContainer is cppyy.gbl.std.vector('const PyABC::SomeStruct*') )
+
 
 ### basic C++ argument basic (value/ref and compiled/interpreted) ============
 class Basic4ArgumentPassingTestCase( MyTestCase ):
