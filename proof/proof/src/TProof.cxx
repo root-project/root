@@ -8313,9 +8313,9 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
       if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
 
          // We need to change the name of the function to avoid problems when we load more packages
-         TString setup, setupfn;
+         TString setup;
          setup.Form("SETUP_%d_%x", gSystem->GetPid(), TString(pack).Hash());
-         setupfn.Form("%s/%s.C", gSystem->TempDirectory(), setup.Data());
+         // setupfn.Form("%s/%s.C", gSystem->TempDirectory(), setup.Data());
          TMacro setupmc("PROOF-INF/SETUP.C");
          TObjString *setupline = setupmc.GetLineWith("SETUP(");
          if (setupline) {
@@ -8327,9 +8327,8 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
             Warning("LoadPackageOnClient", "macro '%s/PROOF-INF/SETUP.C' does not contain a SETUP()"
                                            " function", pack);
          }
-         setupmc.SaveSource(setupfn.Data());
-         // Load the macro
-         if (gROOT->LoadMacro(setupfn.Data()) != 0) {
+
+         if (!setupmc.Load()) {
             // Macro could not be loaded
             Error("LoadPackageOnClient", "macro '%s/PROOF-INF/SETUP.C' could not be loaded:"
                                          " cannot continue", pack);
@@ -8400,8 +8399,6 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
                }
             }
          }
-         // Remove the temporary macro file
-         if (!gSystem->AccessPathName(setupfn.Data())) gSystem->Unlink(setupfn.Data());
       } else {
          PDB(kPackage, 1)
             Info("LoadPackageOnClient",
