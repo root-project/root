@@ -1,0 +1,6 @@
+
+string = mystring
+quotedstring = "my quoted string"
+int = 99
+double = 99.99
+nocrstring = mystring
