@@ -215,8 +215,29 @@ using namespace ROOT;
 namespace {
    static const std::string gInterpreterClassDef = "#undef ClassDef\n"
                 "#define ClassDef(name, id) \\\n"
-                "_ClassDefInterp_(name,id) \\\n"
+                "_ClassDefInterp_(name,id,virtual,) \\\n"
+                "static int DeclFileLine() { return __LINE__; } \n"
+                "#undef ClassDefNV\n"
+                "#define ClassDefNV(name, id) \\\n"
+                "_ClassDefInterp_(name,id,,) \\\n"
+                "static int DeclFileLine() { return __LINE__; }\n"
+                "#undef ClassDefOverride\n"
+                "#define ClassDefOverride(name, id) \\\n"
+                "_ClassDefInterp_(name,id,,override) \\\n"
                 "static int DeclFileLine() { return __LINE__; }\n";
+   static const std::string gNonInterpreterClassDef = "#define __ROOTCLING__ 1\n"
+               "#undef ClassDef\n"
+               "#define ClassDef(name,id) \\\n"
+               "_ClassDef_(name,id,virtual,) \\\n"
+               "static int DeclFileLine() { return __LINE__; }\n"
+               "#undef ClassDefNV\n"
+               "#define ClassDefNV(name, id)\\\n"
+               "_ClassDef_(name,id,,)\\\n"
+               "static int DeclFileLine() { return __LINE__; }\n"
+               "#undef ClassDefOverride\n"
+               "#define ClassDefOverride(name, id)\\\n"
+               "_ClassDef_(name,id,,override)\\\n"
+               "static int DeclFileLine() { return __LINE__; }\n";
 }
 
 R__EXTERN int optind;
@@ -1452,12 +1473,7 @@ void TCling::RegisterModule(const char* modulename,
    // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
    // This is used to give Sema the same view on ACLiC'ed files (which
    // are then #included through the dictionary) as rootcling had.
-   TString code = fromRootCling ? "" :
-      "#define __ROOTCLING__ 1\n"
-      "#undef ClassDef\n"
-      "#define ClassDef(name,id) \\\n"
-      "_ClassDef_(name,id,virtual,) \\\n"
-      "static int DeclFileLine() { return __LINE__; }\n";
+   TString code = fromRootCling ? "" : gNonInterpreterClassDef ;
    code += payloadCode;
 
    // We need to open the dictionary shared library, to resolve sylbols
@@ -4978,11 +4994,7 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
    // wrapper function so the parent context must be the global.
    Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                           SemaR.TUScope);
-   std::string code = "#define __ROOTCLING__ 1\n"
-      "#undef ClassDef\n"
-      "#define ClassDef(name,id) \\\n"
-      "_ClassDef_(name,id,virtual,) \\\n"
-      "static int DeclFileLine() { return __LINE__; }\n";
+   std::string code = gNonInterpreterClassDef ;
    if (!header) {
       // This is the complete header file content and not the
       // name of a header.
