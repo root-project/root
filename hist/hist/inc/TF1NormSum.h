@@ -17,16 +17,18 @@
 class TF1NormSum {
    
 protected:
+
+   // vector market as temp data member could probably be removed 
    
-   unsigned int fNOfFunctions;               // Number of functions to add
+   unsigned int fNOfFunctions;               //! Number of functions to add
    //int> p1(new int(5));
    std::vector < std::shared_ptr < TF1 > > fFunctions;     // Vector of size fNOfFunctions containing TF1 functions
-   std::vector < Double_t  > fCoeffs;        // Vector of size fNOfFunctions containing coefficients in front of each function
-   std::vector < Int_t     > fNOfParams;     // Vector of size fNOfFunctions containing number of parameters for each function (does not contai the coefficients!)
-   std::vector < Int_t     > fNOfNonCstParams;
-   std::vector < Double_t* > fParams;        // Vector of size [fNOfFunctions][fNOfNonCstParams] containing an array of (non constant) parameters
+   std::vector < Double_t  > fCoeffs;        // Vector of size afNOfFunctions containing coefficients in front of each function
+   std::vector < Int_t     > fNOfParams;     //! Vector of size fNOfFunctions containing number of parameters for each function (does not contain the coefficients!)
+   std::vector < Int_t     > fNOfNonCstParams;  // Vector of non-const parameter of each function
+   std::vector < Double_t* > fParams;        //! Vector of size [fNOfFunctions][fNOfNonCstParams] containing an array of (non constant) parameters
                                              // (non including coefficients) for each function
-   std::vector < Int_t     > fCstIndexes;
+   std::vector < Int_t     > fCstIndexes;    // vector with size of fNOfFunctions containing the indices of the constant parameters (the removed ones) 
    std::vector< TString >    fParNames;      // parameter names 
    
    void InitializeDataMembers(const std::vector <std::shared_ptr < TF1 >> &functions, const std::vector <Double_t> &coeffs); // acts as a constrcutor
@@ -41,6 +43,8 @@ public:
    TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax);
    
    double  operator()(double* x, double* p);
+
+   std::vector<double> GetParameters() const;
    
    void      SetParameters(const double* params);
    

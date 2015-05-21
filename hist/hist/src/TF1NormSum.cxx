@@ -254,6 +254,25 @@ double TF1NormSum::operator()(double* x, double* p)
    return sum;
 }
 
+//_________________________________________________________________   
+std::vector<double>  TF1NormSum::GetParameters() const {
+   // return array of parameters
+   std::vector<double> params(GetNpar() );
+   int offset = 0; 
+   for (unsigned int n=0; n<fNOfFunctions; n++)
+   {
+      params[n] = fCoeffs[n];   // copy the coefficients
+      if (n>0)    offset += fNOfNonCstParams[n-1];                      // offset to go along the list of parameters
+      int k = 0;
+      for (int j = 0; j < fNOfParams[n]; ++j) {
+         if (j != fCstIndexes[n]) {
+            params[k+fNOfFunctions+offset] = fFunctions[n]->GetParameter(j);
+            k++;
+         }
+      }
+   }
+   return params;
+}
 //_________________________________________________________________
 void TF1NormSum::SetParameters(const double* params)//params should have the size [fNOfFunctions][fNOfNonCstParams]
 {
