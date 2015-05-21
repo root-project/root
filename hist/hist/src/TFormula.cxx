@@ -1870,7 +1870,7 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
       {
          if(ipos >= (int)fClingParameters.capacity())            
             fClingParameters.reserve( TMath::Max(int(fParams.size()), ipos+1));
-         fClingParameters.insert(fClingParameters.begin()+ipos,ipos+1-fClingParameters.size(),0.0);
+         fClingParameters.insert(fClingParameters.end(),ipos+1-fClingParameters.size(),0.0);
       }
       fClingParameters[ipos] = value;
    }
