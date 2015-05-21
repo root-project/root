@@ -26,7 +26,7 @@
 using namespace std;
 
 
-void Convolution()
+void fitConvolution()
 {
 
    //tutorial for convolution of two functions

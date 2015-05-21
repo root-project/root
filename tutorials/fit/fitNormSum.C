@@ -42,29 +42,19 @@ void fitNormSum()
    TF1 *f_exp   = new TF1("MyExponential","expo",-5.,5.);
    
    // I.:
-  // f_exp-> SetParameters(0.,-0.3);
-   //f_cb -> SetParameters(1,2,3,0.3);
+   f_exp-> SetParameters(1.,-0.3);
+   f_cb -> SetParameters(1,2,3,0.3);
    
    // CONSTRUCTION OF THE TF1NORMSUM OBJECT ........................................
    // 1) :
-   //TF1NormSum *fnorm_exp_cb = new TF1NormSum("0.2*expo + MyCrystalBall",-5.,5.);
-   // 2) :
-   //TF1NormSum *fnorm_exp_cb = new TF1NormSum("0.2*expo + MyCrystalBall");
-   // 3) :
-   TF1NormSum *fnorm_exp_cb = new TF1NormSum(f_exp,f_cb,0.2,1);
+   TF1NormSum *fnorm_exp_cb = new TF1NormSum(f_exp,f_cb,1.e6,5e4);
    // 4) :
-   //const std::vector < TF1*     > functions  = {f_exp, f_cb};
-   //const std::vector < Double_t > coeffs     = {0.2,1};
-   //TF1NormSum *fnorm_exp_cb = new TF1NormSum(functions,coeffs);
-
-   // II. :
-   //fnorm_exp_cb -> SetParameters(1.,1.,-0.3,1,2,3,0.3);
    
    TF1   * f_sum = new TF1("fsum", *fnorm_exp_cb, -5., 5., fnorm_exp_cb->GetNpar());
    f_sum->Draw();
    
    // III.:
-   f_sum -> SetParameters(2e5, 8e5, -0.3, 1., 2., 3, 0.3);
+   f_sum->SetParameters( fnorm_exp_cb->GetParameters().data() );
   
    //HISTOGRAM TO FIT ..............................................................
    TH1F *h_sum = new TH1F("h_ExpCB", "Exponential Bkg + CrystalBall function", NBins, -5., 5.);
