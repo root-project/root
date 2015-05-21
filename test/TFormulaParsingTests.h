@@ -378,6 +378,19 @@ bool test24() {
    return ok;
 }
 
+bool test25() {
+   // fix parsing of operator^ (ROOT-7349)
+   bool ok = true; 
+   TF1 f1("f1","x^-2.5");
+   ok &= (f1.Eval(3.) == TMath::Power(3,-2.5) );
+
+   TF1 f2("f2","x^+2.5");
+   //TF1 f3("f3","std::pow(x,2.5)");  // this needed to be fixed
+   TF1 f3("f3","TMath::Power(x,2.5)");
+   ok &= (f2.Eval(3.) == f3.Eval(3) );
+   return ok;   
+}
+   
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);
@@ -419,6 +432,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test22() ) { PrintError(itest); }
    IncrTest(itest); if (!test23() ) { PrintError(itest); }
    IncrTest(itest); if (!test24() ) { PrintError(itest); }
+   IncrTest(itest); if (!test25() ) { PrintError(itest); }
 
    std::cout << ".\n";
     

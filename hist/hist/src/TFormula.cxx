@@ -1029,7 +1029,11 @@ void TFormula::HandleExponentiation(TString &formula)
          }
          temp--;
       }
-      while(temp < formula.Length() && !IsOperator(formula[temp]))
+      // handle cases x^-2 or x^+2
+      // so if first character is operator - or + continue
+      while(temp < formula.Length() && (
+            ( (temp-caretPos == 1) && (formula[temp] == '-' || formula[temp] == '+' ) ) ||
+              !IsOperator(formula[temp]) ) )
       {
          temp++;
       }
