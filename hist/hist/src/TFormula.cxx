@@ -172,6 +172,18 @@ Bool_t TFormula::IsDefaultVariableName(const TString &name)
    return name == "x" || name == "z" || name == "y" || name == "t";
 }
 
+
+Bool_t TFormula::IsScientificNotation(const TString & formula, int i)
+{
+   // check if the character at position i  is part of a scientific notation
+   if ( (formula[i] == 'e' || formula[i] == 'E')  &&  (i > 0 && i <  formula.Length()-1) )  {
+      // handle cases:  2e+3 2e-3 2e3 and 2.e+3
+      if ( (isdigit(formula[i-1]) || formula[i-1] == '.') && ( isdigit(formula[i+1]) || formula[i+1] == '+' || formula[i+1] == '-' ) )
+         return true;
+   }
+   return false; 
+}
+
 bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
    // implement comparison used to set parameter orders in TFormula
    // want p2 to be before p10 
@@ -1004,17 +1016,23 @@ void TFormula::HandleExponentiation(TString &formula)
          if (depth == 0) temp++;
       }
       // this in case of someting like sin(x+2)^2
-      temp--;  // go down one
-      assert(temp+1 >= 0);
-      while(temp >= 0 && !IsOperator(formula[temp]) && !IsBracket(formula[temp]) )
-      {
-         temp--;
+      do {
+         temp--;  // go down one
+         // handle scientific notation cases (1.e-2 ^ 3 )
+         if (temp>=2 && IsScientificNotation(formula, temp-1) ) temp-=3;
       }
+      while(temp >= 0 && !IsOperator(formula[temp]) && !IsBracket(formula[temp]) );
+      
+      assert(temp+1 >= 0);
       left = formula(temp + 1, caretPos - (temp + 1));
 
       // look now at the expression after the ^ operator
       temp = caretPos;
       temp++;
+      if (temp >= formula.Length() ) {
+         Error("HandleExponentiation","Invalid position of operator ^");
+         return;
+      }
       if(formula[temp] == '(')
       {
          Int_t depth = 1;
@@ -1029,13 +1047,16 @@ void TFormula::HandleExponentiation(TString &formula)
          }
          temp--;
       }
-      // handle cases x^-2 or x^+2
-      // so if first character is operator - or + continue
-      while(temp < formula.Length() && (
-            ( (temp-caretPos == 1) && (formula[temp] == '-' || formula[temp] == '+' ) ) ||
-              !IsOperator(formula[temp]) ) )
-      {
-         temp++;
+      else {
+         // handle case  first character is operator - or + continue
+         if (formula[temp] == '-' || formula[temp] == '+' ) temp++;
+         // handle cases x^-2 or x^+2
+         while(temp < formula.Length() && !IsOperator(formula[temp]) ) 
+         {
+            temp++;
+            // handle scientific notation cases (1.e-2 ^ 3 )
+            if (temp>=2 && IsScientificNotation(formula, temp) ) temp+=2;
+         }
       }
       right = formula(caretPos + 1, (temp - 1) - caretPos );
 
@@ -1187,11 +1208,8 @@ void TFormula::ExtractFunctors(TString &formula)
          } while(formula[i] != '\"');
       }
       // case of e or E for numbers in exponential notaton (e.g. 2.2e-3)
-      if ( (formula[i] == 'e' || formula[i] == 'E')  &&  (i > 0 && i <  formula.Length()-1) )  {
-         // handle cases:  2e+3 2e-3 2e3 and 2.e+3
-         if ( (isdigit(formula[i-1]) || formula[i-1] == '.') && ( isdigit(formula[i+1]) || formula[i+1] == '+' || formula[i+1] == '-' ) )
-            continue;
-      }
+      if (IsScientificNotation(formula, i) )
+         continue; 
 
       //std::cout << "investigating character : " << i << " " << formula[i] << " of formula " << formula << std::endl;
       // look for variable and function names. They  start in C++ with alphanumeric characters

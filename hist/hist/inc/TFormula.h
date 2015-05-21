@@ -105,7 +105,7 @@ private:
    void     HandleParametrizedFunctions(TString &formula);
    void     HandleExponentiation(TString &formula);
    void     HandleLinear(TString &formula);
-   Bool_t   IsDefaultVariableName(const TString &name);
+   static Bool_t   IsDefaultVariableName(const TString &name);
 protected:
 
    std::list<TFormulaFunction>         fFuncs;    //!
@@ -119,9 +119,10 @@ protected:
    Int_t                          fNumber;  //!
    std::vector<TObject*>          fLinearParts;  // vector of linear functions
 
-   Bool_t IsOperator(const char c);
-   Bool_t IsBracket(const char c);
-   Bool_t IsFunctionNameChar(const char c);
+   static Bool_t IsOperator(const char c);
+   static Bool_t IsBracket(const char c);
+   static Bool_t IsFunctionNameChar(const char c);
+   static Bool_t IsScientificNotation(const TString & formula, int ipos);
    void   ExtractFunctors(TString &formula);
    void   PreProcessFormula(TString &formula);
    void   ProcessFormula(TString &formula);
