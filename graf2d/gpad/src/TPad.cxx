@@ -4466,7 +4466,6 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    Int_t lenfil =  filename ? strlen(filename) : 0;
    const char *opt = option;
-   if (strstr(opt,"Title:")) opt = "pdf";
    Bool_t image = kFALSE;
 
    // Set the default option as "Postscript" (Should be a data member of TPad)
