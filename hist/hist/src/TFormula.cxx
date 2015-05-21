@@ -587,7 +587,8 @@ void TFormula::FillDefaults()
          {"tanh","TMath::TanH"}, {"asin","TMath::ASin"}, {"acos","TMath::ACos"},
          {"atan","TMath::ATan"}, {"atan2","TMath::ATan2"}, {"sqrt","TMath::Sqrt"},
          {"ceil","TMath::Ceil"}, {"floor","TMath::Floor"}, {"pow","TMath::Power"},
-         {"binomial","TMath::Binomial"},{"abs","TMath::Abs"} };
+         {"binomial","TMath::Binomial"},{"abs","TMath::Abs"},
+         {"min","TMath::Min"},{"max","TMath::Max"} };
 
    std::vector<TString> defvars2(10);
    for (int i = 0; i < 9; ++i)
@@ -2288,9 +2289,9 @@ TString TFormula::GetExpFormula(Option_t *option) const
    // }
 
    if (opt.Contains("CLING") ) {
-      std::string clingFunc = fClingInput.Data();      
+      std::string clingFunc = fClingInput.Data();
       std::size_t found = clingFunc.find("return");
-      std::size_t found2 = clingFunc.rfind(";"); 
+      std::size_t found2 = clingFunc.rfind(";");
       if (found == std::string::npos || found2 == std::string::npos) {
          Error("GetExpFormula","Invalid Cling expression - return default formula expression");
          return fFormula; 
