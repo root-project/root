@@ -2560,6 +2560,7 @@ if test "x$enable_cxx11" = "xyes"; then
         if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
             enable_libcxx="yes"
         fi
+        cxxversion=cxx11
         result "yes"
     fi
     fi
@@ -2588,6 +2589,7 @@ if test "x$enable_cxx14" = "xyes"; then
             enable_libcxx="yes"
         fi
         result "yes"
+        cxxversion=cxx14
     fi
 fi
 
@@ -7733,6 +7735,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@alloclib@|$alloclib|"           \
     -e "s|@altcc@|$altcc2|"                \
     -e "s|@altcxx@|$altcxx2|"              \
+    -e "s|@cxxversion@|$cxxversion|"       \
     -e "s|@altf77@|$altf772|"              \
     -e "s|@altld@|$altld2|"                \
     -e "s|@usercflags@|$usercflags|"       \
