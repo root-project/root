@@ -1025,6 +1025,7 @@ void TFormula::HandleExponentiation(TString &formula)
       
       assert(temp+1 >= 0);
       left = formula(temp + 1, caretPos - (temp + 1));
+      //std::cout << "left to replace is " << left << std::endl;
 
       // look now at the expression after the ^ operator
       temp = caretPos;
@@ -1051,11 +1052,16 @@ void TFormula::HandleExponentiation(TString &formula)
          // handle case  first character is operator - or + continue
          if (formula[temp] == '-' || formula[temp] == '+' ) temp++;
          // handle cases x^-2 or x^+2
-         while(temp < formula.Length() && !IsOperator(formula[temp]) ) 
+         // need to handle also cases x^sin(x+y)
+         Int_t depth = 0; 
+         while(temp < formula.Length() && ( (depth > 0) || !IsOperator(formula[temp]) ) ) 
          {
             temp++;
             // handle scientific notation cases (1.e-2 ^ 3 )
             if (temp>=2 && IsScientificNotation(formula, temp) ) temp+=2;
+            // for internal parenthesis
+            if (formula[temp] == '(') depth++;
+            if (depth > 0 && formula[temp] == ')') depth--;
          }
       }
       right = formula(caretPos + 1, (temp - 1) - caretPos );
@@ -1063,8 +1069,8 @@ void TFormula::HandleExponentiation(TString &formula)
       TString pattern = TString::Format("%s^%s",left.Data(),right.Data());
       TString replacement = TString::Format("pow(%s,%s)",left.Data(),right.Data());
 
-      // std::cout << "pattern : " << pattern << std::endl;
-      // std::cout << "replacement : " << replacement << std::endl;
+      //std::cout << "pattern : " << pattern << std::endl;
+      //std::cout << "replacement : " << replacement << std::endl;
       formula.ReplaceAll(pattern,replacement);
 
       caretPos = formula.Last('^');

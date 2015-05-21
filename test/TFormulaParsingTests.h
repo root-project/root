@@ -398,8 +398,16 @@ bool test25() {
    // tests with scientific notations
    auto ff = new TFormula("ff","x+2.e-2^1.2e-1");
    ok &= ( ff->Eval(1.) == (1. + std::pow(2.e-2,1.2e-1) ) );
-   
-   
+
+   ff = new TFormula("ff","x^-1.2e1");
+   ok &= ( ff->Eval(1.5) == std::pow(1.5,-1.2e1) ) ;
+
+   ff = new TFormula("ff","1.5e2^x");
+   ok &= ( ff->Eval(2) == std::pow(1.5e2,2) );
+
+   ff = new TFormula("ff","1.5e2^x^-1.1e-2");
+   ok &= ( ff->Eval(2.) == std::pow(1.5e2, std::pow(2,-1.1e-2) ) );
+
    return ok;   
 }
    
