@@ -190,7 +190,7 @@ Int_t  TRInterface::Eval(const TString &code, TRObjectProxy  &ans)
 // Parse R code and returns status of execution.
 // the RObject's response is saved in  ans
    SEXP fans;
-   Int_t rc;
+   Int_t rc = 0;
    try{ 
         rc = fR->parseEval(code.Data(), fans);
     } 
@@ -226,7 +226,7 @@ TRObjectProxy TRInterface::Eval(const TString &code)
 //The RObject result of execution is returned in TRObjectProxy
   
    SEXP ans;
-   int rc;
+   int rc = 0;
    try{
    rc = fR->parseEval(code.Data(), ans);
        } 
