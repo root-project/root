@@ -46,6 +46,11 @@ static int begin_request_handler(struct mg_connection *conn)
       arg.SetTopName(engine->GetTopName());
       arg.SetMethod(request_info->request_method); // method like GET or POST
 
+      TString header;
+      for (int n = 0; n < request_info->num_headers; n++)
+         header.Append(TString::Format("%s: %s\r\n", request_info->http_headers[n].name, request_info->http_headers[n].value));
+      arg.SetRequestHeader(header);
+
       const char* len = mg_get_header(conn, "Content-Length");
       Int_t ilen = len!=0 ? TString(len).Atoi() : 0;
 
