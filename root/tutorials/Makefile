@@ -212,4 +212,17 @@ math/testUnfold5b.log: math/testUnfold5a.log
 
 tree/cernstaff.log: tree/cernbuild.log
 
+# TMVA tutorials have mutual dependencies:
+tmva/TMVAClassificationApplication.log: tmva/TMVAClassification.log
+tmva/TMVAClassificationCategory.log: tmva/TMVAClassification.log
+tmva/TMVAClassificationCategoryApplication.log: tmva/TMVAClassification.log
+tmva/TMVAMulticlass.log: tmva/TMVAMultipleBackgroundExample.log
+tmva/TMVAMulticlassApplication.log: tmva/TMVAMulticlass.log tmva/TMVARegression.log
+tmva/TMVARegressionApplication.log: tmva/TMVARegression.log
 
+#$(addsuffix .log,$(filter tmva/%,$(TUTORIALSTESTS))): weights/TMVARegression_BDTG.weights.xml
+
+
+#weights/TMVARegression_BDTG.weights.xml: $(TUTDIR)/tmva/weights/TMVARegression_BDTG.weights.xml
+#	$(CMDECHO) mkdir -p $(dir $@)
+#	$(CMDECHO) cp -f $< $@
