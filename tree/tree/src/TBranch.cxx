@@ -2584,6 +2584,13 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
       if (fWriteBasket >= fMaxBaskets) {
          ExpandBasketArrays();
       }
+      if (reusebasket && reusebasket == fCurrentBasket) {
+         // The 'current' basket has Reset, so if we need it we will need
+         // to reload it.
+         fCurrentBasket    = 0;
+         fFirstBasketEntry = -1;
+         fNextBasketEntry  = -1;
+      }
       fBaskets.AddAtAndExpand(reusebasket,fWriteBasket);
       fBasketEntry[fWriteBasket] = fEntryNumber;
    } else {
