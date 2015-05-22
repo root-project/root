@@ -23,9 +23,9 @@ static int begin_request_handler(struct mg_connection *conn)
 
    TString filename;
 
-   Bool_t execres = kTRUE;
+   Bool_t execres = kTRUE, debug = engine->IsDebugMode();
 
-   if (serv->IsFileRequested(request_info->uri, filename)) {
+   if (!debug && serv->IsFileRequested(request_info->uri, filename)) {
       if ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS)) {
          Int_t length = 0;
          char *buf = THttpServer::ReadFileContent(filename.Data(), length);
@@ -56,7 +56,33 @@ static int begin_request_handler(struct mg_connection *conn)
                      else free(buf);
       }
 
-      execres = serv->ExecuteHttp(&arg);
+      if (debug) {
+         TString cont;
+         cont.Append("<title>Civetweb echo</title>");
+         cont.Append("<h1>Civetweb echo</h1>\n");
+
+         static int count = 0;
+
+         cont.Append(TString::Format("Request %d:<br/>\n<pre>\n", count++));
+         cont.Append(TString::Format("  Method   : %s\n", arg.GetMethod()));
+         cont.Append(TString::Format("  PathName : %s\n", arg.GetPathName()));
+         cont.Append(TString::Format("  FileName : %s\n", arg.GetFileName()));
+         cont.Append(TString::Format("  Query    : %s\n", arg.GetQuery()));
+         cont.Append(TString::Format("  PostData : %ld\n", arg.GetPostDataLength()));
+         cont.Append("</pre><p>\n");
+
+         cont.Append("Environment:<br/>\n<pre>\n");
+         for (int n = 0; n < request_info->num_headers; n++)
+            cont.Append(TString::Format("  %s = %s\n", request_info->http_headers[n].name, request_info->http_headers[n].value));
+         cont.Append("</pre><p>\n");
+
+         arg.SetContentType("text/html");
+
+         arg.SetContent(cont);
+
+      } else {
+         execres = serv->ExecuteHttp(&arg);
+      }
    }
 
    if (!execres || arg.Is404()) {
@@ -143,7 +169,8 @@ TCivetweb::TCivetweb() :
    THttpEngine("civetweb", "compact embedded http server"),
    fCtx(0),
    fCallbacks(0),
-   fTopName()
+   fTopName(),
+   fDebug(kFALSE)
 {
    // constructor
 }
@@ -206,6 +233,8 @@ Bool_t TCivetweb::Create(const char *args)
 
             const char *adomain = url.GetValueFromOptions("auth_domain");
             if (adomain != 0) auth_domain = adomain;
+
+            if (url.HasOption("debug")) fDebug = kTRUE;
          }
       }
    }
