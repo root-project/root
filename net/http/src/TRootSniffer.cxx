@@ -1027,9 +1027,13 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
 
    TList *args = method->GetListOfMethodArgs();
 
+   TList garbage;
+   garbage.SetOwner(kTRUE); // use as garbage collection
+   TObject *post_obj = 0; // object reconstructed from post request
+   TString call_args;
+
    TIter next(args);
    TMethodArg *arg = 0;
-   TString call_args;
    while ((arg = (TMethodArg *) next()) != 0) {
 
       if ((strcmp(arg->GetName(), "rest_url_opt") == 0) &&
@@ -1048,6 +1052,37 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
          sval = DecodeUrlOptionValue(val, kFALSE);
          val = sval.Data();
       }
+
+      // process several arguments which are specific for post requests
+      if ((val!=0) && (res_ptr!=0) && (*res_ptr!=0) && (res_length!=0) && (*res_length>0)) {
+         if ((strcmp(val,"_post_object_")==0) && url.HasOption("_post_class_")) {
+            TString clname = url.GetValueFromOptions("_post_class_");
+            TClass* arg_cl = gROOT->GetClass(clname, kTRUE, kTRUE);
+            if ((arg_cl!=0) && (arg_cl->GetBaseClassOffset(TObject::Class()) == 0) && (post_obj==0)) {
+               post_obj = (TObject*) arg_cl->New();
+               if (post_obj==0) {
+                  if (debug) debug->Append(TString::Format("Fail to create object of class %s\n", clname.Data()));
+               } else {
+                  if (debug) debug->Append(TString::Format("Reconstruct object of class %s from POST data\n", clname.Data()));
+                  TBufferFile buf(TBuffer::kRead, *res_length, *res_ptr, kFALSE);
+                  buf.MapObject(post_obj, arg_cl);
+                  post_obj->Streamer(buf);
+                  if (url.HasOption("_destroy_post_")) garbage.Add(post_obj);
+               }
+            }
+            sval.Form("(%s*)0x%lx", clname.Data(), (long unsigned) post_obj);
+            val = sval.Data();
+         } else
+         if (strcmp(val,"_post_data_")==0) {
+            sval.Form("(void*)0x%lx", (long unsigned) *res_ptr);
+            val = sval.Data();
+         } else
+         if (strcmp(val,"_post_length_")==0) {
+            sval.Form("%ld", (long) *res_length);
+            val = sval.Data();
+         }
+      }
+
       if (val == 0) val = arg->GetDefault();
 
       if (debug) debug->Append(TString::Format("  Argument:%s Type:%s Value:%s \n", arg->GetName(), arg->GetFullTypeName(), val ? val : "<missed>"));
@@ -1082,32 +1117,41 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
    TString res = "null";
    void *ret_obj = 0;
    TClass *ret_cl = 0;
+   TBufferFile *resbuf = 0;
+   if (reskind==2) {
+      resbuf = new TBufferFile(TBuffer::kWrite, 10000);
+      garbage.Add(resbuf);
+   }
 
    switch (call.ReturnType()) {
       case TMethodCall::kLong: {
             Long_t l(0);
             call.Execute(obj_ptr, l);
-            res.Form("%ld", l);
+            if (resbuf) resbuf->WriteLong(l);
+                   else res.Form("%ld", l);
             break;
          }
       case TMethodCall::kDouble : {
             Double_t d(0.);
             call.Execute(obj_ptr, d);
-            res.Form(TBufferJSON::GetFloatFormat(), d);
+            if (resbuf) resbuf->WriteDouble(d);
+                   else res.Form(TBufferJSON::GetFloatFormat(), d);
             break;
          }
       case TMethodCall::kString : {
             char *txt(0);
             call.Execute(obj_ptr, &txt);
-            if (txt != 0)
-               res.Form("\"%s\"", txt);
+            if (txt != 0) {
+               if (resbuf) resbuf->WriteString(txt);
+                      else res.Form("\"%s\"", txt);
+            }
             break;
          }
       case TMethodCall::kOther : {
             std::string ret_kind = method->GetReturnTypeNormalizedName();
             if ((ret_kind.length() > 0) && (ret_kind[ret_kind.length() - 1] == '*')) {
                ret_kind.resize(ret_kind.length() - 1);
-               ret_cl = gROOT->GetClass(ret_kind.c_str(), kFALSE, kTRUE);
+               ret_cl = gROOT->GetClass(ret_kind.c_str(), kTRUE, kTRUE);
             }
 
             if (ret_cl != 0) {
@@ -1117,6 +1161,7 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
             } else {
                call.Execute(obj_ptr);
             }
+
             break;
          }
       case TMethodCall::kNone : {
@@ -1140,24 +1185,32 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
    }
 
    if ((ret_obj != 0) && (ret_cl != 0)) {
-      if ((reskind == 2) && (res_ptr != 0) && (res_length != 0) && (ret_cl->GetBaseClassOffset(TObject::Class()) == 0)) {
+      if ((resbuf != 0) && (ret_cl->GetBaseClassOffset(TObject::Class()) == 0)) {
          TObject *obj = (TObject *) ret_obj;
-         TBufferFile *sbuf = new TBufferFile(TBuffer::kWrite, 100000);
-         sbuf->MapObject(obj);
-         obj->Streamer(*sbuf);
-
-         *res_ptr = malloc(sbuf->Length());
-         memcpy(*res_ptr, sbuf->Buffer(), sbuf->Length());
-         *res_length = sbuf->Length();
-         delete sbuf;
+         resbuf->MapObject(obj);
+         obj->Streamer(*resbuf);
       } else {
          res = TBufferJSON::ConvertToJSON(ret_obj, ret_cl, compact);
       }
    }
 
+   if ((resbuf != 0) && (resbuf->Length() > 0) && (res_ptr != 0) && (res_length != 0)) {
+      *res_ptr = malloc(resbuf->Length());
+      memcpy(*res_ptr, resbuf->Buffer(), resbuf->Length());
+      *res_length = resbuf->Length();
+   }
+
    if (debug) debug->Append(TString::Format("Result = %s\n", res.Data()));
 
    if ((reskind == 1) && res_str) *res_str = res;
+
+   if (url.HasOption("_destroy_result_") && (ret_obj != 0) && (ret_cl != 0)) {
+      ret_cl->Destructor(ret_obj);
+      if (debug) debug->Append("Destroy result object at the end\n");
+   }
+
+   // delete all garbage objects, but should be also done with any return
+   garbage.Delete();
 
    return kTRUE;
 }
@@ -1334,8 +1387,9 @@ Bool_t TRootSniffer::ProduceImage(Int_t kind, const char *path,
 Bool_t TRootSniffer::Produce(const char *path, const char *file,
                              const char *options, void *&ptr, Long_t &length, TString &str)
 {
-   // method to produce different kind of data
-   // Supported file (case sensitive):
+   // Method produce different kind of data out of object
+   // Parameter 'path' specifies object or object member
+   // Supported 'file' (case sensitive):
    //   "root.bin"  - binary data
    //   "root.png"  - png image
    //   "root.jpeg" - jpeg image
@@ -1343,6 +1397,7 @@ Bool_t TRootSniffer::Produce(const char *path, const char *file,
    //   "root.xml"  - xml representation
    //   "root.json" - json representation
    //   "exe.json"  - method execution with json reply
+   //   "exe.bin"   - method execution with binary reply
    //   "exe.txt"   - method execution with debug output
    //   "cmd.json"  - execution of registered commands
    // Result returned either as string or binary buffer,
