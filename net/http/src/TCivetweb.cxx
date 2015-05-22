@@ -42,8 +42,19 @@ static int begin_request_handler(struct mg_connection *conn)
       }
    } else {
       arg.SetPathAndFileName(request_info->uri); // path and file name
-      arg.SetQuery(request_info->query_string);  //! additional arguments
+      arg.SetQuery(request_info->query_string);  // query arguments
       arg.SetTopName(engine->GetTopName());
+      arg.SetMethod(request_info->request_method); // method like GET or POST
+
+      const char* len = mg_get_header(conn, "Content-Length");
+      Int_t ilen = len!=0 ? TString(len).Atoi() : 0;
+
+      if (ilen>0) {
+         void* buf = malloc(ilen);
+         Int_t iread = mg_read(conn, buf, ilen);
+         if (iread==ilen) arg.SetPostData(buf, ilen);
+                     else free(buf);
+      }
 
       execres = serv->ExecuteHttp(&arg);
    }
