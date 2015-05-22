@@ -3,6 +3,7 @@
 
 #include "THttpCallArg.h"
 
+#include <string.h>
 #include "RZip.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -26,6 +27,7 @@ THttpCallArg::THttpCallArg() :
    fPostDataLength(0),
    fCond(),
    fContentType(),
+   fRequestHeader(),
    fHeader(),
    fContent(),
    fZipping(0),
@@ -49,6 +51,46 @@ THttpCallArg::~THttpCallArg()
       free(fBinData);
       fBinData = 0;
    }
+}
+
+//______________________________________________________________________________
+TString THttpCallArg::AccessHeader(TString& buf, const char* name, const char* value)
+{
+   // method used to get or set http header in the string buffer
+   // Header has following format:
+   //   field1 : value1\r\n
+   //   field2 : value2\r\n
+   // Such format corresponds to header format in HTTP requests
+
+   if (name==0) return TString();
+
+   Int_t curr = 0;
+
+   while (curr < buf.Length()-2) {
+
+      Int_t next = buf.Index("\r\n", curr);
+      if (next == kNPOS) break; // should never happen
+
+      if (buf.Index(name, curr) != curr) {
+         curr = next + 2;
+         continue;
+      }
+
+      curr += strlen(name);
+      while (buf[curr]!=':') curr++;
+      curr++;
+      while (buf[curr]==' ') curr++;
+
+      if (value==0) return buf(curr, next-curr);
+      buf.Remove(curr, next-curr);
+      buf.Insert(curr, value);
+      return TString(value);
+   }
+
+   if (value==0) return TString();
+
+   buf.Append(TString::Format("%s: %s\r\n", name, value));
+   return TString(value);
 }
 
 //______________________________________________________________________________
@@ -96,6 +138,19 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
       if (fPathName == "/") fPathName.Clear();
       fFileName = rslash + 1;
    }
+}
+
+//______________________________________________________________________________
+TString THttpCallArg::GetHeader(const char* name)
+{
+   // return specified header
+
+   if ((name==0) || (*name==0)) return TString();
+
+   if (strcmp(name,"Content-Type")==0) return fContentType;
+   if (strcmp(name,"Content-Length")==0) return TString::Format("%ld", GetContentLength());
+
+   return AccessHeader(fHeader, name);
 }
 
 //______________________________________________________________________________

@@ -214,6 +214,16 @@ void *TFastCgi::run_func(void *args)
                  else free(buf);
       }
 
+      TString header;
+      for (char **envp = request.envp; *envp != NULL; envp++) {
+         TString entry = *envp;
+         for (Int_t n=0;n<entry.Length();n++)
+            if (entry[n] == '=') { entry[n] = ':'; break; }
+         header.Append(entry);
+         header.Append("\r\n");
+      }
+      arg.SetRequestHeader(header);
+
       if (engine->fDebugMode) {
          FCGX_FPrintF(request.out,
                       "Status: 200 OK\r\n"
