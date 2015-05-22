@@ -36,6 +36,7 @@ protected:
    TCondition fCond;            //! condition used to wait for processing
 
    TString fContentType;        //! type of content
+   TString fRequestHeader;      //! complete header, provided with request
    TString fHeader;             //! response header like ContentEncoding, Cache-Control and so on
    TString fContent;            //! text content (if any)
    Int_t   fZipping;            //! indicate if content should be zipped
@@ -47,6 +48,8 @@ protected:
    {
       return fBinData && fBinDataLength > 0;
    }
+
+   TString AccessHeader(TString& buf, const char* name, const char* value = 0);
 
 public:
 
@@ -93,6 +96,20 @@ public:
    }
 
    void SetPostData(void *data, Long_t length);
+
+   void SetRequestHeader(const char* h)
+   {
+      // set full set of request header
+
+      fRequestHeader = h ? h : "";
+   }
+
+   TString GetRequestHeader(const char* name)
+   {
+      // get named field from request header
+
+      return AccessHeader(fRequestHeader, name);
+   }
 
    const char *GetTopName() const
    {
@@ -190,17 +207,16 @@ public:
 
    void AddHeader(const char *name, const char *value)
    {
-      // Add name:value pair to reply header
-      // Same header can be specified only once
+      // Set name: value pair to reply header
 
-      fHeader.Append(TString::Format("%s: %s\r\n", name, value));
+      AccessHeader(fHeader, name, value);
    }
 
    void SetEncoding(const char *typ)
    {
       // Set Content-Encoding header like gzip
 
-      AddHeader("Content-Encoding", typ);
+      AccessHeader(fHeader, "Content-Encoding", typ);
    }
 
    void SetContent(const char *c)
@@ -234,6 +250,8 @@ public:
    {
       AddHeader(name, value);
    }
+
+   TString GetHeader(const char* name);
 
    // Fill http header
    void FillHttpHeader(TString &buf, const char *header = 0);
