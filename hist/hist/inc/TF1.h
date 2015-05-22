@@ -298,8 +298,8 @@ public:
    virtual   ~TF1();
    virtual void     AddParameter(const TString &name, Double_t value) { if (fFormula) fFormula->AddParameter(name,value); }
    //virtual void     AddParameters(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddParameters(pairs,size); }
-   virtual void     AddVariable(const TString &name, Double_t value) { if (fFormula) fFormula->AddVariable(name,value); }
-   virtual void     AddVariables(const std::pair<TString,Double_t> *pairs, Int_t size) { if (fFormula) fFormula->AddVariables(pairs,size); }
+   // virtual void     AddVariable(const TString &name, Double_t value = 0) { if (fFormula) fFormula->AddVariable(name,value); }
+   // virtual void     AddVariables(const TString *vars, Int_t size) { if (fFormula) fFormula->AddVariables(vars,size); }
    virtual Bool_t   AddToGlobalList(Bool_t on = kTRUE);
    virtual void     Browse(TBrowser *b);
    virtual void     Copy(TObject &f1) const;

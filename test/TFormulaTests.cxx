@@ -1,4 +1,3 @@
-#ifndef __CINT__
 #include <cassert>
 #include <vector>
 #include <algorithm>
@@ -122,7 +121,7 @@ Bool_t TFormulaTests::SetVar()
    vars[0] = SDpair("var",1);
    vars[1] = SDpair("var2",2);
    vars[2] = SDpair("var3",3); 
-   test->AddVariables(vars, 3);
+   test->SetVariables(vars, 3);
    for(Int_t i = 0 ; i < 3; ++i)
    {
       SDpair var = vars[i];
@@ -144,17 +143,17 @@ Bool_t TFormulaTests::AddVars()
 {
    Bool_t successful = true;
    TFormula *test = new TFormula("AddVarsTest","var1 + var2 + var3");
-   SDpair *vars = new SDpair[3];
-   vars[0] = SDpair("var",1);
-   vars[1] = SDpair("var2",2);
-   vars[2] = SDpair("var3",3); 
+   TString vars[] = {"var1","var2","var3"};
+   // SDpair *vars = new SDpair[3];
+   // vars[0] = SDpair("var",1);
+   // vars[1] = SDpair("var2",2);
+   // vars[2] = SDpair("var3",3); 
    test->AddVariables(vars, 3);
    for(Int_t i = 0; i < 3; ++i)
    {
-      SDpair var = vars[i];
-      if(test->GetVariable(var.first) != var.second)
+      if(test->GetVariable(vars[i]) != 0.0)
       {
-         printf("fail:%s\t%lf\n",var.first.Data(),var.second);
+         printf("fail:%s\t%lf\n",vars[i].Data(),test->GetVariable(vars[i]));
          successful = false;
       }
    }   
@@ -169,7 +168,7 @@ Bool_t TFormulaTests::SetVars()
    vars[0] = SDpair("var",1);
    vars[1] = SDpair("var2",2);
    vars[2] = SDpair("var3",3); 
-   test->AddVariables(vars, 3);
+   test->SetVariables(vars, 3);
    for(Int_t i = 0 ; i < 3; ++i)
    {
       SDpair v = vars[i];
@@ -501,6 +500,8 @@ bool TFormulaTests::Parser() {
 
 int main(int argc, char **argv)
 {
+   printf("strting .....\n");
+
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
    Int_t n = 200;
@@ -512,9 +513,15 @@ int main(int argc, char **argv)
 
 
 
-   //testFormula = "x_1- [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*ylandau(0)+zexpo(10)";
-   testFormula = "x - [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*landau(0)+expo(10)";
-   TFormulaTests * test = new TFormulaTests("TFtests",testFormula);
+   testFormula = "x- [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*landau(0)+expo(10)";
+   //testFormula = "x - [test]^(TMath::Sin(pi*y*TMath::DegToRad())) - pol2(0) + gausn(0)*landau(0)+expo(10)";
+
+   printf("creating formula .....\n");
+   TFormulaTests * test = new TFormulaTests("TFtests","");
+   test->AddVariable("var",0);
+   test->AddVariable("var1",0);
+   test->Compile(testFormula);
+      
 
 #ifdef LATER
 
@@ -559,7 +566,7 @@ int main(int argc, char **argv)
    return 0;
 }
 
-#endif
+
 
 
 

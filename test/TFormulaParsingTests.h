@@ -408,6 +408,13 @@ bool test25() {
    ff = new TFormula("ff","1.5e2^x^-1.1e-2");
    ok &= ( ff->Eval(2.) == std::pow(1.5e2, std::pow(2,-1.1e-2) ) );
 
+   // test same prelacements
+   ff = new TFormula("ff","pol10(3)+pol2");
+   std::vector<double> p = {1,2,3,4,5,6,7,8,9,10,11,12,13,14};
+   ff->SetParameters(p.data() );
+   double sum = 0; for (auto &a : p) { sum+= a;} 
+   ok &= ( ff->Eval(1.) == sum );
+
    return ok;   
 }
    
