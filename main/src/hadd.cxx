@@ -90,8 +90,8 @@ int main( int argc, char **argv )
       std::cout << "When -the -f option is specified, one can also specify the compression" <<std::endl;
       std::cout << "level of the target file. By default the compression level is 1, but" <<std::endl;
       std::cout << "if \"-f0\" is specified, the target file will not be compressed." <<std::endl;
-      std::cout << "if \"-f6\" is specified, the compression level 6 will be used." <<std::endl;
-      std::cout << "if Target and source files have different compression levels"<<std::endl;
+      std::cout << "if \"-f6\" is specified, the compression level 6 will be used.  See  TFile::SetCompressionSettings for the support range of value." <<std::endl;
+      std::cout << "if Target and source files have different compression settings"<<std::endl;
       std::cout << " a slower method is used"<<std::endl;
       return 1;
    }
@@ -148,14 +148,17 @@ int main( int argc, char **argv )
          }
          ++ffirst;
       } else if ( argv[a][0] == '-' ) {
-         char ft[4];
-         for( int j=0; j<=9; ++j ) {
-            snprintf(ft,4,"-f%d",j);
-            if (!strcmp(argv[a],ft)) {
-               force = kTRUE;
-               newcomp = j;
-               ++ffirst;
-               break;
+         char ft[6];
+         for ( int alg = 0; alg <= 2; ++alg ) {
+            for( int j=0; j<=9; ++j ) {
+               const int comp = (alg*100)+j;
+               snprintf(ft,6,"-f%d",comp);
+               if (!strcmp(argv[a],ft)) {
+                  force = kTRUE;
+                  newcomp = comp;
+                  ++ffirst;
+                  break;
+               }
             }
          }
          if (!force) {
