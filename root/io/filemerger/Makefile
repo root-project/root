@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog merged*.root a_*.root b_*.root input*.root freidt_merge.root mfile*.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog merged*.root a_*.root b_*.root input*.root freidt_merge.root mfile*.root mzfile*.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -81,5 +81,10 @@ mfile1-4.root: execMergeMulti mfile1.root mfile2.root mfile3.root mfile4.root
 	     && hadd -f mfile1-4.root mfile1-2.root mfile3-4.root ) > mfile1-4.log 2>&1  \
 	|| handleError.sh --log=mfile1-4.log --res=$$?
 
-execTestMultiMerge.log: mfile1-4.root
+mzfile1-4.root: execMergeMulti mfile1.root mfile2.root mfile3.root mfile4.root
+	$(CMDECHO) ( hadd -f206 mzfile1-2.root mfile1.root mfile2.root && hadd -f206 mzfile3-4.root mfile3.root mfile4.root \
+	     && hadd -f206 mzfile1-4.root mzfile1-2.root mzfile3-4.root ) > mzfile1-4.log 2>&1  \
+	|| handleError.sh --log=mzfile1-4.log --res=$$?
+
+execTestMultiMerge.log: mfile1-4.root mzfile1-4.root
 
