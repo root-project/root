@@ -215,7 +215,7 @@ tree/cernstaff.log: tree/cernbuild.log
 # TMVA tutorials have mutual dependencies:
 tmva/TMVAClassificationApplication.log: tmva/TMVAClassification.log
 tmva/TMVAClassificationCategory.log: tmva/TMVAClassification.log
-tmva/TMVAClassificationCategoryApplication.log: tmva/TMVAClassification.log
+tmva/TMVAClassificationCategoryApplication.log: tmva/TMVAClassificationCategory.log
 tmva/TMVAMulticlass.log: tmva/TMVAMultipleBackgroundExample.log
 tmva/TMVAMulticlassApplication.log: tmva/TMVAMulticlass.log tmva/TMVARegression.log
 tmva/TMVARegressionApplication.log: tmva/TMVARegression.log
