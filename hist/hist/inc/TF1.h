@@ -88,6 +88,8 @@ public:
    const Double_t *GetParameters() const {
       return fParameters.data();
    }
+   const std::vector<double> & ParamsVec() const { return fParameters; }
+   
    Int_t GetParNumber(const char * name) const;
 
    const char *GetParName(Int_t iparam) const {
@@ -351,7 +353,8 @@ public:
    virtual Double_t *GetParameters() const {
       return (fFormula) ? fFormula->GetParameters() : const_cast<Double_t*>(fParams->GetParameters());
    }
-   virtual void     GetParameters(Double_t *params) { if (fFormula) fFormula->GetParameters(params);}
+   virtual void     GetParameters(Double_t *params) { if (fFormula) fFormula->GetParameters(params);
+                                                      else std::copy(fParams->ParamsVec().begin(), fParams->ParamsVec().end(), params); }
    virtual const char *GetParName(Int_t ipar) const {
       return (fFormula) ? fFormula->GetParName(ipar) : fParams->GetParName(ipar);
    }
