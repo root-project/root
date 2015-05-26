@@ -7871,7 +7871,8 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       }
    }
    if (print_integral) {
-      snprintf(t,100,"%s  = %6.4g",gStringIntegral.Data(),h2->Integral());
+      snprintf(textstats,50,"%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
+      snprintf(t,100,textstats,fH->Integral());
       stats->AddText(t);
    }
    if (print_skew) {
