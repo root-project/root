@@ -49,7 +49,9 @@ protected:
       return fBinData && fBinDataLength > 0;
    }
 
-   TString AccessHeader(TString& buf, const char* name, const char* value = 0);
+   TString AccessHeader(TString& buf, const char* name, const char* value = 0, Bool_t doing_set = kFALSE);
+
+   TString CountHeader(const TString& buf, Int_t number = -1111) const;
 
 public:
 
@@ -102,6 +104,20 @@ public:
       // set full set of request header
 
       fRequestHeader = h ? h : "";
+   }
+
+   Int_t NumRequestHeader() const
+   {
+      // returns number of fields in request header
+
+      return CountHeader(fRequestHeader).Atoi();
+   }
+
+   TString GetRequestHeaderName(Int_t number) const
+   {
+      // returns field name in request header
+
+      return CountHeader(fRequestHeader, number);
    }
 
    TString GetRequestHeader(const char* name)
@@ -205,18 +221,29 @@ public:
       SetContentType("application/json");
    }
 
-   void AddHeader(const char *name, const char *value)
-   {
-      // Set name: value pair to reply header
+   void AddHeader(const char *name, const char *value);
 
-      AccessHeader(fHeader, name, value);
+   Int_t NumHeader() const
+   {
+      // returns number of fields in header
+
+      return CountHeader(fHeader).Atoi();
    }
+
+   TString GetHeaderName(Int_t number) const
+   {
+      // returns field name in header
+
+      return CountHeader(fHeader, number);
+   }
+
+   TString GetHeader(const char* name);
 
    void SetEncoding(const char *typ)
    {
       // Set Content-Encoding header like gzip
 
-      AccessHeader(fHeader, "Content-Encoding", typ);
+      AccessHeader(fHeader, "Content-Encoding", typ, kTRUE);
    }
 
    void SetContent(const char *c)
@@ -250,8 +277,6 @@ public:
    {
       AddHeader(name, value);
    }
-
-   TString GetHeader(const char* name);
 
    // Fill http header
    void FillHttpHeader(TString &buf, const char *header = 0);

@@ -68,7 +68,7 @@ static int begin_request_handler(struct mg_connection *conn)
 
          static int count = 0;
 
-         cont.Append(TString::Format("Request %d:<br/>\n<pre>\n", count++));
+         cont.Append(TString::Format("Request %d:<br/>\n<pre>\n", ++count));
          cont.Append(TString::Format("  Method   : %s\n", arg.GetMethod()));
          cont.Append(TString::Format("  PathName : %s\n", arg.GetPathName()));
          cont.Append(TString::Format("  FileName : %s\n", arg.GetFileName()));

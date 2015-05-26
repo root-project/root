@@ -54,7 +54,7 @@ THttpCallArg::~THttpCallArg()
 }
 
 //______________________________________________________________________________
-TString THttpCallArg::AccessHeader(TString& buf, const char* name, const char* value)
+TString THttpCallArg::AccessHeader(TString& buf, const char* name, const char* value, Bool_t doing_set)
 {
    // method used to get or set http header in the string buffer
    // Header has following format:
@@ -76,10 +76,16 @@ TString THttpCallArg::AccessHeader(TString& buf, const char* name, const char* v
          continue;
       }
 
+      if ((value==0) && doing_set) {
+         // special case - empty value means that field must be removed completely
+         buf.Remove(curr, next-curr+2);
+         return TString();
+      }
+
       curr += strlen(name);
-      while (buf[curr]!=':') curr++;
+      while ((curr < next) && (buf[curr] != ':')) curr++;
       curr++;
-      while (buf[curr]==' ') curr++;
+      while ((curr < next) && (buf[curr] == ' ')) curr++;
 
       if (value==0) return buf(curr, next-curr);
       buf.Remove(curr, next-curr);
@@ -91,6 +97,34 @@ TString THttpCallArg::AccessHeader(TString& buf, const char* name, const char* v
 
    buf.Append(TString::Format("%s: %s\r\n", name, value));
    return TString(value);
+}
+
+//______________________________________________________________________________
+TString THttpCallArg::CountHeader(const TString& buf, Int_t number) const
+{
+   // method used to counter number of headers or returns name of specified header
+
+   Int_t curr(0), cnt(0);
+
+   while (curr < buf.Length()-2) {
+
+      Int_t next = buf.Index("\r\n", curr);
+      if (next == kNPOS) break; // should never happen
+
+      if (cnt == number) {
+         // we should extract name of header
+         Int_t separ = curr + 1;
+         while ((separ < next) && (buf[separ] != ':')) separ++;
+         return buf(curr, separ-curr);
+      }
+
+      curr = next + 2;
+      cnt++;
+   }
+
+   // return total number of headers
+   if (number == -1111) return TString::Format("%d", cnt);
+   return TString();
 }
 
 //______________________________________________________________________________
@@ -145,12 +179,27 @@ TString THttpCallArg::GetHeader(const char* name)
 {
    // return specified header
 
-   if ((name==0) || (*name==0)) return TString();
+   if ((name == 0) || (*name == 0)) return TString();
 
-   if (strcmp(name,"Content-Type")==0) return fContentType;
-   if (strcmp(name,"Content-Length")==0) return TString::Format("%ld", GetContentLength());
+   if (strcmp(name,"Content-Type") == 0) return fContentType;
+   if (strcmp(name,"Content-Length") == 0) return TString::Format("%ld", GetContentLength());
 
    return AccessHeader(fHeader, name);
+}
+
+//______________________________________________________________________________
+void THttpCallArg::AddHeader(const char *name, const char *value)
+{
+   // Set name: value pair to reply header
+   // Content-Type field handled separately - one should use SetContentType() method
+   // Content-Length field cannot be set at all;
+
+   if ((name == 0) || (*name == 0) || (strcmp(name,"Content-Length") == 0)) return;
+
+   if (strcmp(name,"Content-Type") == 0)
+      SetContentType(value);
+   else
+      AccessHeader(fHeader, name, value, kTRUE);
 }
 
 //______________________________________________________________________________
