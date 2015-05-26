@@ -2,6 +2,7 @@ class Object {};
 
 class myClass : public Object {
 public:
+  myClass(): mTo{0} {}
    Object * const &front() const {return mTo;}
    Object *mTo;
 };
@@ -13,5 +14,4 @@ int ptrconst()
 {
    myClass m;
    return m.mTo != m.front();
-} 
-	
+}
