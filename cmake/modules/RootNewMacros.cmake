@@ -677,7 +677,7 @@ endmacro()
 #----------------------------------------------------------------------------
 # function ROOT_ADD_TEST( <name> COMMAND cmd [arg1... ]
 #                        [PRECMD cmd [arg1...]] [POSTCMD cmd [arg1...]]
-#                        [OUTPUT outfile] [ERROR errfile]
+#                        [OUTPUT outfile] [ERROR errfile] [INPUT infile]
 #                        [ENVIRONMENT var1=val1 var2=val2 ...
 #                        [DEPENDS test1 ...]
 #                        [TIMEOUT seconds]
@@ -690,7 +690,7 @@ endmacro()
 #
 function(ROOT_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR"
-                             "TIMEOUT;BUILD;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
+                            "TIMEOUT;BUILD;INPUT;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
                              "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS"
                             ${ARGN})
 
@@ -736,7 +736,11 @@ function(ROOT_ADD_TEST test)
     set(_command ${_command} -DPOST=${_post})
   endif()
 
-  #- Handle OUTPUT, ERROR, DEBUG arguments
+  #- Handle INPUT, OUTPUT, ERROR, DEBUG arguments
+  if(ARG_INPUT)
+    set(_command ${_command} -DIN=${ARG_INPUT})
+  endif()
+
   if(ARG_OUTPUT)
     set(_command ${_command} -DOUT=${ARG_OUTPUT})
   endif()
