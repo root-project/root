@@ -707,12 +707,20 @@ Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, con
    //     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()");
    // Here symbols '/->' separates item name from method to be executed
    //
+   // One could specify additional arguments in the command with
+   // syntax like %arg1%, %arg2% and so on. For example:
+   //     serv->RegisterCommand("/ResetHPX", "/hpx/->SetTitle(\"%arg1%\")");
+   //     serv->RegisterCommand("/RebinHPXPY", "/hpxpy/->Rebin2D(%arg1%,%arg2%)");
+   // Such parameter(s) will be requested when command clicked in the browser.
+   //
    // Once command is registered, one could specify icon which will appear in the browser:
-   //     serv->SetIcon("/ResetHPX", "/rootsys/icons/ed_execute.png");
+   //     serv->SetIcon("/ResetHPX", "rootsys/icons/ed_execute.png");
    //
    // One also can set extra property '_fastcmd', that command appear as
    // tool button on the top of the browser tree:
    //     serv->SetItemField("/ResetHPX", "_fastcmd", "true");
+   // Or it is equivalent to specifying extra argument when register command:
+   //     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()", "button;rootsys/icons/ed_delete.png");
 
    return fSniffer->RegisterCommand(cmdname, method, icon);
 }

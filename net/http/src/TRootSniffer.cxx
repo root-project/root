@@ -868,7 +868,7 @@ Bool_t TRootSniffer::ProduceJson(const char *path, const char *options,
 }
 
 //______________________________________________________________________________
-Bool_t TRootSniffer::ExecuteCmd(const char *path, const char * /*options*/,
+Bool_t TRootSniffer::ExecuteCmd(const char *path, const char *options,
                                 TString &res)
 {
    // execute command marked as _kind=='Command'
@@ -878,39 +878,62 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char * /*options*/,
 
    const char *kind = GetItemField(parent, obj, item_prop_kind);
    if ((kind == 0) || (strcmp(kind, "Command") != 0)) {
+      if (gDebug > 0) Info("ExecuteCmd", "Entry %s is not a command", path);
       res = "false";
       return kTRUE;
    }
 
-   const char *method = GetItemField(parent, obj, "method");
-   if ((method==0) || (strlen(method)==0)) {
+   const char *cmethod = GetItemField(parent, obj, "method");
+   if ((cmethod==0) || (strlen(cmethod)==0)) {
+      if (gDebug > 0) Info("ExecuteCmd", "Entry %s do not defines method for execution", path);
       res = "false";
       return kTRUE;
    }
 
-   if (gDebug > 0) Info("ExecuteCmd", "Executing command %s method:%s", path, method);
+   TString method = cmethod;
 
-   TString item_method;
+   const char *cnumargs = GetItemField(parent, obj, "_numargs");
+   Int_t numargs = cnumargs ? TString(cnumargs).Atoi() : 0;
+   if (numargs > 0) {
+      TUrl url;
+      url.SetOptions(options);
+      url.ParseOptions();
+
+      for (Int_t n=0; n<numargs;n++) {
+         TString argname = TString::Format("arg%d", n+1);
+         const char* argvalue = url.GetValueFromOptions(argname);
+         if (argvalue==0) {
+            if (gDebug > 0) Info("ExecuteCmd", "For command %s argument %s not specified in options %s", path, argname.Data(), options);
+            res = "false";
+            return kTRUE;
+         }
+
+         TString svalue = DecodeUrlOptionValue(argvalue, kTRUE);
+         argname = TString("%") + argname + TString("%");
+         method.ReplaceAll(argname, svalue);
+      }
+   }
+
+   if (gDebug > 0) Info("ExecuteCmd", "Executing command %s method:%s", path, method.Data());
+
    TObject *item_obj = 0;
-   const char *separ = strstr(method, "/->");
+   Ssiz_t separ = method.Index("/->");
 
-   if (strstr(method, "this->") == method) {
+   if (method.Index("this->") == 0) {
       // if command name started with this-> means method of sniffer will be executed
       item_obj = this;
-      separ = method + 3;
+      separ = 3;
    } else
-   if (separ != 0) {
-      TString itemname(method, separ - method);
-      item_obj = FindTObjectInHierarchy(itemname.Data());
+   if (separ != kNPOS) {
+      item_obj = FindTObjectInHierarchy(TString(method.Data(), separ).Data());
    }
 
    if (item_obj != 0) {
-      item_method.Form("((%s*)%lu)->%s", item_obj->ClassName(), (long unsigned) item_obj, separ + 3);
-      method = item_method.Data();
-      if (gDebug > 2) Info("ExecuteCmd", "Executing %s", method);
+      method = TString::Format("((%s*)%lu)->%s", item_obj->ClassName(), (long unsigned) item_obj, method.Data() + separ + 3);
+      if (gDebug > 2) Info("ExecuteCmd", "Executing %s", method.Data());
    }
 
-   Long_t v = gROOT->ProcessLineSync(method);
+   Long_t v = gROOT->ProcessLineSync(method.Data());
 
    res.Form("%ld", v);
 
@@ -921,7 +944,7 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char * /*options*/,
 Bool_t TRootSniffer::ProduceItem(const char *path, const char *options, TString &res)
 {
    // produce JSON for specified item
-   // contrary to h.json request, all fields for specified item without childs are stroed
+   // contrary to h.json request, only fields for specified item are stored
 
    TRootSnifferStoreJson store(res, strstr(options, "compact")!=0);
    ScanHierarchy("top", path, &store, kTRUE);
@@ -1720,12 +1743,20 @@ Bool_t TRootSniffer::RegisterCommand(const char *cmdname, const char *method, co
    //     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()");
    // Here symbols '/->' separates item name from method to be executed
    //
+   // One could specify additional arguments in the command with
+   // syntax like %arg1%, %arg2% and so on. For example:
+   //     serv->RegisterCommand("/ResetHPX", "/hpx/->SetTitle(\"%arg1%\")");
+   //     serv->RegisterCommand("/RebinHPXPY", "/hpxpy/->Rebin2D(%arg1%,%arg2%)");
+   // Such parameter(s) will be requested when command clicked in the browser.
+   //
    // Once command is registered, one could specify icon which will appear in the browser:
-   //     serv->SetIcon("/ResetHPX", "/rootsys/icons/ed_execute.png");
+   //     serv->SetIcon("/ResetHPX", "rootsys/icons/ed_execute.png");
    //
    // One also can set extra property '_fastcmd', that command appear as
    // tool button on the top of the browser tree:
    //     serv->SetItemField("/ResetHPX", "_fastcmd", "true");
+   // Or it is equivalent to specifying extra argument when register command:
+   //     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()", "button;rootsys/icons/ed_delete.png");
 
    CreateItem(cmdname, Form("command %s", method));
    SetItemField(cmdname, "_kind", "Command");
@@ -1737,6 +1768,14 @@ Bool_t TRootSniffer::RegisterCommand(const char *cmdname, const char *method, co
       if (*icon != 0) SetItemField(cmdname, "_icon", icon);
    }
    SetItemField(cmdname, "method", method);
+   Int_t numargs = 0;
+   do {
+      TString nextname = TString::Format("%sarg%d%s","%",numargs+1,"%");
+      if (strstr(method,nextname.Data())==0) break;
+      numargs++;
+   } while (numargs<100);
+   if (numargs>0)
+      SetItemField(cmdname, "_numargs", TString::Format("%d", numargs));
 
    return kTRUE;
 }
