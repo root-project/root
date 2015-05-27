@@ -40,7 +40,7 @@ function calls, can also be set using the methods of this class. All
 currently implemented minimisers are documented in the reference
 documentation of ROOT: have a look for example to the
 `ROOT::Math::Minimizer` class documentation.
-
+\newpage
 The complication level of the code below is intentionally a little
 higher than in the previous examples. The graphical output of the macro
 is shown in Figure [6.1](#f61):
@@ -63,22 +63,22 @@ Some step by step explanation is at this point necessary:
 
 -   Lines *20-25*: Define and initialise an instance of `TF1`.
 
--   Lines *27-32*: Define and fill a histogram.
+-   Lines *27-31*: Define and fill a histogram.
 
--   Lines *34-40*: For convenience, the same function as for the
+-   Lines *33-38*: For convenience, the same function as for the
     generation of the pseudo-data is used in the fit; hence, we need to
     reset the function parameters. This part of the code is very
     important for each fit procedure, as it sets the initial values of
     the fit.
 
--   Line *43*: A very simple command, well known by now: fit the
+-   Line *41*: A very simple command, well known by now: fit the
     function to the histogram.
 
--   Lines *45-49*: Retrieve the output from the fit. Here, we simply
+-   Lines *42-46*: Retrieve the output from the fit. Here, we simply
     print the fit result and access and print the covariance matrix of
     the parameters.
 
--   Lines *58-end*: Plot the pseudo-data, the fitted function and the
+-   Lines *54-end*: Plot the pseudo-data, the fitted function and the
     signal and background components at the best-fit values.
 
 [f61]: figures/functions.png "f61"

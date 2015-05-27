@@ -1,6 +1,6 @@
 // Create, Draw and fit a TGraph2DErrors
 void macro4(){
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    const double e = 0.3;
    const int nd = 500;
 

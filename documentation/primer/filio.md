@@ -7,10 +7,10 @@ disk, into a *ROOT-file* (see the `TFile` class for more details).
 One says that the object is made "persistent" by storing
 it on disk. When reading the file back, the object is reconstructed
 in memory. The requirement to be satisfied to perform I/O of instances
-of a certain class is that the ROOT type system is aware of the layout 
+of a certain class is that the ROOT type system is aware of the layout
 in memory of that class.
 This topic is beyond the scope of this document: it is worth to mention
-that I/O can be performed out of the box for the almost complete set 
+that I/O can be performed out of the box for the almost complete set
 of ROOT classes.
 
 We can explore this functionality with histograms and two simple macros.
@@ -36,7 +36,7 @@ TFile**     my_rootfile.root
   KEY: TH1F	my_histogram;1 My Title
 root [2] my_histogram->Draw()
 ```
-
+\newpage
 Alternatively, you can use a simple macro to carry out the job:
 
 ``` {.cpp}
@@ -196,6 +196,7 @@ by the method `TTree::MakeSelector`, as is shown in the little macro
 It opens the n-tuple `conductivity_experiment.root` from the example
 above and creates from it the header file `MySelector.h` and a template
 to insert your own analysis code, `MySelector.C`.
+\newpage
 
 ``` {.cpp}
 @ROOT_INCLUDE_FILE macros/makeMySelector.C

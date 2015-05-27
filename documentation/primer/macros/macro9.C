@@ -73,4 +73,4 @@ void macro9(){
     pull(n_toys,n_tot_entries,n_bins,true);
     cout << "Performing Pull Experiment with Log Likelihood\n";
     pull(n_toys,n_tot_entries,n_bins,false);
-    }
+}

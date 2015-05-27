@@ -2,7 +2,7 @@
 // together with its profiles and projections
 
 void macro7(){
-    gStyle->SetPalette(57);
+    gStyle->SetPalette(kBird);
     gStyle->SetOptStat(0);
     gStyle->SetOptTitle(0);
 
