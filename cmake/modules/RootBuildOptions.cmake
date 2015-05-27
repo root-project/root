@@ -90,11 +90,12 @@ else()
  set(vc_defvalue OFF)
 endif()
 
-# VC does not support yet Arm processors.
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+# VC does not support yet Arm and PPC processors.
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR
+    CMAKE_SYSTEM_PROCESSOR STREQUAL "ppc64le")
+   message(STATUS "A system not supported by Vc, ${CMAKE_SYSTEM_PROCESSOR}, was detected. Disabling Vc by default.")
    set(vc_defvalue OFF)
 endif()
-
 
 
 ROOT_BUILD_OPTION(afdsmgrd OFF "Dataset manager for PROOF-based analysis facilities")
