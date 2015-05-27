@@ -104,7 +104,8 @@ if(NOT ROOT_fftw3_FOUND)
                  roofit/rf210_angularconv.C
                  roofit/rf211_paramconv.C
                  roofit/rf512_wsfactory_oper.C
-                 fft/FFT.C)
+                 fft/FFT.C
+                 fit/fitConvolution.C)
 endif()
 
 if(NOT ROOT_opengl_FOUND)
