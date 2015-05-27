@@ -1,3 +1,4 @@
+ 
 
 #include "TMVA/NeuralNet.h"
 
@@ -241,11 +242,14 @@ Settings::~Settings ()
 
 void ClassificationSettings::startTrainCycle () 
 {
-    create ("ROC", 100, 0, 1, 100, 0, 1);
-    create ("Significance", 100, 0, 1, 100, 0, 3);
-    create ("OutputSig", 100, 0, 1);
-    create ("OutputBkg", 100, 0, 1);
-    if (fMonitoring) fMonitoring->ProcessEvents ();
+    if (fMonitoring)
+    {
+        create ("ROC", 100, 0, 1, 100, 0, 1);
+        create ("Significance", 100, 0, 1, 100, 0, 3);
+        create ("OutputSig", 100, 0, 1);
+        create ("OutputBkg", 100, 0, 1);
+        fMonitoring->ProcessEvents ();
+    }
 }
 
 void ClassificationSettings::endTrainCycle (double /*error*/) 
@@ -414,11 +418,14 @@ void ClassificationSettings::startTestCycle ()
        
         ++testCycle;
 
-        plot ("ROC", "", 2, kRed);
-        plot ("Significance", "", 3, kRed);
-        plot ("OutputSig", "", 4, kRed);
-        plot ("OutputBkg", "same", 4, kBlue);
-        if (fMonitoring) fMonitoring->ProcessEvents ();
+        if (fMonitoring)
+        {
+            plot ("ROC", "", 2, kRed);
+            plot ("Significance", "", 3, kRed);
+            plot ("OutputSig", "", 4, kRed);
+            plot ("OutputBkg", "same", 4, kBlue);
+            fMonitoring->ProcessEvents ();
+        }
 
 	m_cutValue = bestCutSignificance;
     }
