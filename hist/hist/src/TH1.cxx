@@ -873,17 +873,40 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
+   bool useMerge = (c1 == 1. &&  !this->TestBit(kIsAverage) && !h1->TestBit(kIsAverage) );
    try {
       CheckConsistency(this,h1);
+      useMerge = kFALSE;
    } catch(DifferentNumberOfBins&) {
-      Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());
-      return kFALSE;
+      if (useMerge)
+         Info("Add","Attempt to add histograms with different number of bins - trying to use TH1::Merge");
+      else { 
+         Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());      
+         return kFALSE;
+      }
    } catch(DifferentAxisLimits&) {
-      Warning("Add","Attempt to add histograms with different axis limits");
+      if (useMerge) 
+         Info("Add","Attempt to add histograms with different axis limits - trying to use TH1::Merge");
+      else 
+         Warning("Add","Attempt to add histograms with different axis limits");
    } catch(DifferentBinLimits&) {
-      Warning("Add","Attempt to add histograms with different bin limits");
-   } catch(DifferentLabels&) {
-      Warning("Add","Attempt to add histograms with different labels");
+      if (useMerge) 
+         Info("Add","Attempt to add histograms with different bin limits - trying to use TH1::Merge");
+      else 
+         Warning("Add","Attempt to add histograms with different bin limits");
+   } catch(DifferentLabels&) {      
+      // in case of different labels -
+      if (useMerge) 
+         Info("Add","Attempt to add histograms with different labels - trying to use TH1::Merge");
+      else 
+         Info("Warning","Attempt to add histograms with different labels");
+   }
+
+   if (useMerge) {
+      TList l;
+      l.Add(const_cast<TH1*>(h1));
+      auto iret = Merge(&l);
+      return (iret >= 0);
    }
 
    //    Create Sumw2 if h1 has Sumw2 set
@@ -1015,18 +1038,45 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    if (h1 == h2 && c2 < 0) {c2 = 0; normWidth = kTRUE;}
 
    if (h1 != h2) {
+      bool useMerge = (c1 == 1. && c2 == 1. &&  !this->TestBit(kIsAverage) && !h1->TestBit(kIsAverage) );
+      
       try {
          CheckConsistency(h1,h2);
          CheckConsistency(this,h1);
+         useMerge = kFALSE;
       } catch(DifferentNumberOfBins&) {
-         Error("Add","Attempt to add histograms with different number of bins");
-         return kFALSE;
+         if (useMerge)
+            Info("Add","Attempt to add histograms with different number of bins - trying to use TH1::Merge");
+         else {
+            Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());      
+            return kFALSE;
+         }
       } catch(DifferentAxisLimits&) {
-         Warning("Add","Attempt to add histograms with different axis limits");
+         if (useMerge) 
+            Info("Add","Attempt to add histograms with different axis limits - trying to use TH1::Merge");
+         else 
+            Warning("Add","Attempt to add histograms with different axis limits");
       } catch(DifferentBinLimits&) {
-         Warning("Add","Attempt to add histograms with different bin limits");
-      } catch(DifferentLabels&) {
-         Warning("Add","Attempt to add histograms with different labels");
+         if (useMerge) 
+            Info("Add","Attempt to add histograms with different bin limits - trying to use TH1::Merge");
+         else 
+            Warning("Add","Attempt to add histograms with different bin limits");
+      } catch(DifferentLabels&) {      
+         // in case of different labels -
+         if (useMerge) 
+            Info("Add","Attempt to add histograms with different labels - trying to use TH1::Merge");
+         else 
+            Info("Warning","Attempt to add histograms with different labels");
+      }
+
+      if (useMerge) {
+         TList l;
+         // why TList takes non-const pointers ????
+         l.Add(const_cast<TH1*>(h1));
+         l.Add(const_cast<TH1*>(h2));
+         Reset("ICE"); 
+         auto iret = Merge(&l);
+         return (iret >= 0);
       }
    }
 
