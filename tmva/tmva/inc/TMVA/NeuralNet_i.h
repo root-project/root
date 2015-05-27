@@ -25,8 +25,8 @@ static std::function<double(double)>  InvLinear = [](double /*value*/){ return 1
 static std::function<double(double)> SymmReLU = [](double value){ const double margin = 0.3; return value > margin ? value-margin : value < -margin ? value+margin : 0; };
 static std::function<double(double)> InvSymmReLU = [](double value){ const double margin = 0.3; return value > margin ? 1.0 : value < -margin ? 1.0 : 0; };
 
-static std::function<double(double)> ReLU = [](double value){ const double margin = 0.3; return value > margin ? value-margin : 0; };
-static std::function<double(double)> InvReLU = [](double value){ const double margin = 0.3; return value > margin ? 1.0 : 0; };
+static std::function<double(double)> ReLU = [](double value){ return value > 0 ? value : 0; };
+static std::function<double(double)> InvReLU = [](double value){ return value > 0 ? 1.0 : 0; };
 
 static std::function<double(double)> SoftPlus = [](double value){ return std::log (1.0+ std::exp (value)); };
 static std::function<double(double)> InvSoftPlus = [](double value){ return 1.0 / (1.0 + std::exp (-value)); };
@@ -178,8 +178,8 @@ void update (ItSource itSource, ItSource itSourceEnd,
             m_prevGradients.assign (weights.size (), 0);
 
 
-        double Ebase = fitnessFunction (passThrough, weights, gradients);
-        double Emin = Ebase;
+        double E = fitnessFunction (passThrough, weights, gradients);
+        double Emin = E;
 
         bool success = true;
         size_t currentRepetition = 0;
@@ -188,7 +188,8 @@ void update (ItSource itSource, ItSource itSourceEnd,
             if (currentRepetition >= m_repetitions)
                 break;
 
-            double alpha = gaussDouble (m_alpha, m_alpha/10.0);
+//            double alpha = gaussDouble (m_alpha, m_alpha/10.0);
+            double alpha = m_alpha;
 
             auto itLocW = begin (localWeights);
             auto itLocWEnd = end (localWeights);
@@ -204,21 +205,25 @@ void update (ItSource itSource, ItSource itSourceEnd,
             gradients.assign (numWeights, 0.0);
             double E = fitnessFunction (passThrough, localWeights, gradients);
 
-            if (E < Emin)
+            itLocW = begin (localWeights);
+            itLocWEnd = end (localWeights);
+            auto itW = begin (weights);
+            for (; itLocW != itLocWEnd; ++itLocW, ++itW)
             {
-                Emin = E;
-
-                itLocW = begin (localWeights);
-                itLocWEnd = end (localWeights);
-                auto itW = begin (weights);
-                for (; itLocW != itLocWEnd; ++itLocW, ++itW)
-                {
-                    (*itW) = (*itLocW);
-                }
+                (*itW) = (*itLocW);
             }
+
+            /* if (E < Emin) */
+            /* { */
+            /*     Emin = E; */
+            /*     std::cout << "."; */
+            /* } */
+            /* else */
+            /*     std::cout << "X"; */
+
             ++currentRepetition;
         }
-        return Emin;
+        return E;
     }
 
 
@@ -870,7 +875,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
             settings.addPoint ("trainErrors", cycleCount, trainError);
             settings.addPoint ("testErrors", cycleCount, testError);
             settings.plot ("trainErrors", "C", 1, kBlue);
-            settings.plot ("testErrors", "C", 1, kGreen);
+            settings.plot ("testErrors", "C", 1, kMagenta);
 
 
 
@@ -1198,6 +1203,84 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 	return sumError;
     }
 
+
+
+    template <typename ItPat, typename OutIterator>
+    void Net::initializeWeights (WeightInitializationStrategy eInitStrategy, 
+				     ItPat itPatternBegin, 
+				     ItPat itPatternEnd, 
+				     OutIterator itWeight)
+    {
+        if (eInitStrategy == WeightInitializationStrategy::XAVIER)
+        {
+            // input and output properties
+            int numInput = (*itPatternBegin).inputSize ();
+
+            // compute variance and mean of input and output
+            //...
+	
+
+            // compute the weights
+            for (auto& layer: layers ())
+            {
+                double nIn = numInput;
+                for (size_t iWeight = 0, iWeightEnd = layer.numWeights (numInput); iWeight < iWeightEnd; ++iWeight)
+                {
+                    (*itWeight) = NN::gaussDouble (0.0, sqrt (2.0/nIn)); // factor 2.0 for ReLU
+                    ++itWeight;
+                }
+                numInput = layer.numNodes ();
+            }
+            return;
+        }
+
+        if (eInitStrategy == WeightInitializationStrategy::TEST)
+        {
+            // input and output properties
+            int numInput = (*itPatternBegin).inputSize ();
+
+            // compute variance and mean of input and output
+            //...
+	
+
+            // compute the weights
+            for (auto& layer: layers ())
+            {
+//                double nIn = numInput;
+                for (size_t iWeight = 0, iWeightEnd = layer.numWeights (numInput); iWeight < iWeightEnd; ++iWeight)
+                {
+                    (*itWeight) = NN::gaussDouble (0.0, 0.1);
+                    ++itWeight;
+                }
+                numInput = layer.numNodes ();
+            }
+            return;
+        }
+
+        if (eInitStrategy == WeightInitializationStrategy::LAYERSIZE)
+        {
+            // input and output properties
+            int numInput = (*itPatternBegin).inputSize ();
+
+            // compute variance and mean of input and output
+            //...
+	
+
+            // compute the weights
+            for (auto& layer: layers ())
+            {
+                double nIn = numInput;
+                for (size_t iWeight = 0, iWeightEnd = layer.numWeights (numInput); iWeight < iWeightEnd; ++iWeight)
+                {
+                    (*itWeight) = NN::gaussDouble (0.0, sqrt (layer.numWeights (nIn))); // factor 2.0 for ReLU
+                    ++itWeight;
+                }
+                numInput = layer.numNodes ();
+            }
+            return;
+        }
+
+    }
 
 
     

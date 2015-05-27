@@ -138,6 +138,8 @@ namespace TMVA {
       double   fSumOfSigWeights_test;
       double   fSumOfBkgWeights_test;
       bool     fResume;
+      TString  fWeightInitializationStrategyString;
+      TMVA::NN::WeightInitializationStrategy fWeightInitializationStrategy;
 
       std::vector<std::shared_ptr<TMVA::NN::Settings>> fSettings;
 
