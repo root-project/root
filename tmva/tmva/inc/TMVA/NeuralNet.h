@@ -755,6 +755,10 @@ enum class ModeErrorFunction
     CROSSENTROPY_MUTUALEXCLUSIVE = 'M'
 };
 
+enum class WeightInitializationStrategy
+{
+    XAVIER, TEST, LAYERSIZE
+};
 
 
 
@@ -838,6 +842,14 @@ public:
         m_layers.clear ();
 	m_eErrorFunction = ModeErrorFunction::SUMOFSQUARES;
     }
+
+
+    template <typename ItPat, typename OutIterator>
+    void initializeWeights (WeightInitializationStrategy eInitStrategy, 
+			    ItPat itPatternBegin, 
+			    ItPat itPatternEnd, 
+			    OutIterator itWeight);
+
 
 private:
 

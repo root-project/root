@@ -145,15 +145,21 @@ void TMVA::MethodNN::DeclareOptions()
 
 //   DeclareOptionRef(fLayoutString="TANH|(N+30)*2,TANH|(N+30),LINEAR",    "Layout",    "neural network layout");
 // DeclareOptionRef(fLayoutString="RELU|(N+20)*2,RELU|(N+10)*2,LINEAR",    "Layout",    "neural network layout");
-   DeclareOptionRef(fLayoutString="SYMMRELU|(N+100)*2,LINEAR",    "Layout",    "neural network layout");
+   DeclareOptionRef(fLayoutString="SOFTSIGN|(N+100)*2,LINEAR",    "Layout",    "neural network layout");
 
 
-   DeclareOptionRef(fErrorStrategy="MUTUALEXCLUSIVE",    "ErrorStrategy",    "error strategy (regression: sum of squares; classification: crossentropy; multiclass: crossentropy/mutual exclusive cross entropy");
+   DeclareOptionRef(fErrorStrategy="CROSSENTROPY",    "ErrorStrategy",    "error strategy (regression: sum of squares; classification: crossentropy; multiclass: crossentropy/mutual exclusive cross entropy");
    AddPreDefVal(TString("CROSSENTROPY"));
    AddPreDefVal(TString("SUMOFSQUARES"));
    AddPreDefVal(TString("MUTUALEXCLUSIVE"));
 
-   DeclareOptionRef(fTrainingStrategy="LearningRate=1e-3,Momentum=0.3,Repetitions=3,ConvergenceSteps=15,BatchSize=20,TestRepetitions=7,WeightDecay=0.0,L1=false,DropFraction=0.4,DropRepetitions=5|LearningRate=1e-4,Momentum=0.3,Repetitions=3,ConvergenceSteps=15,BatchSize=70,TestRepetitions=7,WeightDecay=0.001,L1=true,DropFraction=0.0,DropRepetitions=5",    "TrainingStrategy",    "defines the training strategies");
+
+   DeclareOptionRef(fWeightInitializationStrategyString="XAVIER",    "WeightInitialization",    "Weight initialization strategy");
+   AddPreDefVal(TString("XAVIER"));
+   AddPreDefVal(TString("LAYERSIZE"));
+
+
+   DeclareOptionRef(fTrainingStrategy="LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,L1=false,DropFraction=0.4,DropRepetitions=5|LearningRate=1e-4,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=20,TestRepetitions=7,WeightDecay=0.001,L1=true,DropFraction=0.0,DropRepetitions=5",    "TrainingStrategy",    "defines the training strategies");
 
    DeclareOptionRef(fSumOfSigWeights_test=1000.0,    "SignalWeightsSum",    "Sum of weights of signal; Is used to compute the significance on the fly");
    DeclareOptionRef(fSumOfBkgWeights_test=1000.0,    "BackgroundWeightsSum",    "Sum of weights of background; Is used to compute the significance on the fly");
@@ -339,6 +345,16 @@ void TMVA::MethodNN::ProcessOptions()
    //                                                                                         block-delimiter  token-delimiter
    std::vector<std::map<TString,TString>> strategyKeyValues = ParseKeyValueString (fTrainingStrategy, TString ("|"), TString (","));
 
+
+   if (fWeightInitializationStrategyString == "XAVIER")
+       fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::XAVIER;
+   else if (fWeightInitializationStrategyString == "LAYERSIZE")
+       fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::LAYERSIZE;
+   else if (fWeightInitializationStrategyString == "TEST")
+       fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::TEST;
+   else
+       fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::XAVIER;
+
    // create settings
    if (fAnalysisType == Types::kClassification)
    {
@@ -479,10 +495,15 @@ void TMVA::MethodNN::Train()
 
         size_t numWeights = fNet.numWeights (inputSize);
         std::cout << "numWeights = " << numWeights << std::endl;
-        fWeights.resize (numWeights, 0.0);
+        //fWeights.resize (numWeights, 0.0);
 
         // initialize weights
-        TMVA::NN::gaussDistribution (fWeights, 0.1, 1.0/sqrt(inputSize));
+        //TMVA::NN::gaussDistribution (fWeights, 0.1, 1.0/sqrt(inputSize));
+        
+        fNet.initializeWeights (fWeightInitializationStrategy, 
+                                trainPattern.begin (),
+                                trainPattern.end (), 
+                                std::back_inserter (fWeights));
     }
 
 
