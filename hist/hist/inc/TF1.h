@@ -88,6 +88,8 @@ public:
    const Double_t *GetParameters() const {
       return fParameters.data();
    }
+   const std::vector<double> & ParamsVec() const { return fParameters; }
+   
    Int_t GetParNumber(const char * name) const;
 
    const char *GetParName(Int_t iparam) const {
@@ -298,8 +300,8 @@ public:
    virtual   ~TF1();
    virtual void     AddParameter(const TString &name, Double_t value) { if (fFormula) fFormula->AddParameter(name,value); }
    //virtual void     AddParameters(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddParameters(pairs,size); }
-   virtual void     AddVariable(const TString &name, Double_t value) { if (fFormula) fFormula->AddVariable(name,value); }
-   virtual void     AddVariables(const std::pair<TString,Double_t> *pairs, Int_t size) { if (fFormula) fFormula->AddVariables(pairs,size); }
+   // virtual void     AddVariable(const TString &name, Double_t value = 0) { if (fFormula) fFormula->AddVariable(name,value); }
+   // virtual void     AddVariables(const TString *vars, Int_t size) { if (fFormula) fFormula->AddVariables(vars,size); }
    virtual Bool_t   AddToGlobalList(Bool_t on = kTRUE);
    virtual void     Browse(TBrowser *b);
    virtual void     Copy(TObject &f1) const;
@@ -351,7 +353,8 @@ public:
    virtual Double_t *GetParameters() const {
       return (fFormula) ? fFormula->GetParameters() : const_cast<Double_t*>(fParams->GetParameters());
    }
-   virtual void     GetParameters(Double_t *params) { if (fFormula) fFormula->GetParameters(params);}
+   virtual void     GetParameters(Double_t *params) { if (fFormula) fFormula->GetParameters(params);
+                                                      else std::copy(fParams->ParamsVec().begin(), fParams->ParamsVec().end(), params); }
    virtual const char *GetParName(Int_t ipar) const {
       return (fFormula) ? fFormula->GetParName(ipar) : fParams->GetParName(ipar);
    }

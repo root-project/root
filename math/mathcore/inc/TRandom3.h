@@ -18,7 +18,7 @@
 //                                                                      //
 // TRandom3                                                             //
 //                                                                      //
-// random number generator class: Mersenne Twistor                      //
+// random number generator class: Mersenne Twister                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +42,7 @@ public:
    virtual  void      RndmArray(Int_t n, Double_t *array);
    virtual  void      SetSeed(UInt_t seed=0);
 
-   ClassDef(TRandom3,2)  //Random number generator: Mersenne Twistor
+   ClassDef(TRandom3,2)  //Random number generator: Mersenne Twister
 };
 
 R__EXTERN TRandom *gRandom;

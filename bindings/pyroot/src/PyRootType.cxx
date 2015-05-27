@@ -91,7 +91,6 @@ namespace {
       // filter for python specials and lookup qualified class or function
          std::string name = PyROOT_PyUnicode_AsString( pyname );
          if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
-
             attr = CreateScopeProxy( name, pyclass );
 
          // namespaces may have seen updates in their list of global functions, which
@@ -166,8 +165,14 @@ namespace {
          }
 
       // if failed, then the original error is likely to be more instructive
-         if ( ! attr )
+         if ( ! attr && etype )
             PyErr_Restore( etype, value, trace );
+         else if ( ! attr ) {
+            PyObject* sklass = PyObject_Str( pyclass );
+            PyErr_Format( PyExc_AttributeError, "%s has no attribute \'%s\'",
+               PyROOT_PyUnicode_AsString( sklass ), PyROOT_PyUnicode_AsString( pyname ) );
+            Py_DECREF( sklass );
+         }
 
       // attribute is cached, if found
       }

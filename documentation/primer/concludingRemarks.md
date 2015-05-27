@@ -14,7 +14,7 @@ examples in the sub-directory `tutorials/` of any ROOT installation.
 There are some powerful features of ROOT which were not treated in this
 document, e.g. packages named RooFit and RooStats providing an advanced
 framework for model building, fitting and statistical analysis. The ROOT
-class `TMVA` offers multi-variate analysis tools including an artificial
+namespace `TMVA` offers multi-variate analysis tools including an artificial
 neural network and many other advanced tools for classification
 problems. The remarkable ability of ROOT to handle large data volumes
 was already mentioned in this guide, implemented through the class

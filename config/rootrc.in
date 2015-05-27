@@ -372,13 +372,6 @@ ACLiC.Linkdef:          _linkdef
 #
 # Proof.CondorHome:     /opt/condor
 # Proof.CondorConfig:   /opt/condor/etc/condor_config
-#
-# PEAC.GmUrl:           http://somewhere:8080/clarens/
-# PEAC.LmUrl:           http://elsewhere:8080/clarens/
-
-# Certificate and key
-# Clarens.CertFile:     $(HOME)/.globus/usercert.pem
-# Clarens.KeyFile:      $(HOME)/.globus/userkey.pem
 
 # Variables related to authentication to rootd and proofd.
 #

@@ -52,6 +52,7 @@
 #include "TObjString.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include <sstream>
 
 ClassImp(TMacro)
 
@@ -233,6 +234,22 @@ TMD5 *TMacro::Checksum()
 }
 
 //______________________________________________________________________________
+Bool_t TMacro::Load() const
+{
+   // Load the macro into the interpreter.
+   // Return true in case the loading was successful.
+
+   std::stringstream ss;
+
+   TIter next(fLines);
+   TObjString *obj;
+   while ((obj = (TObjString*) next())) {
+      ss << obj->GetName() << std::endl;
+   }
+   return gInterpreter->LoadText(ss.str().c_str());
+}
+
+//______________________________________________________________________________
 Long_t TMacro::Exec(const char *params, Int_t* error)
 {
    // Execute this macro with params, if params is 0, default parameters
@@ -240,6 +257,13 @@ Long_t TMacro::Exec(const char *params, Int_t* error)
    // error is set to an TInterpreter::EErrorCode by TApplication::ProcessLine().
    // Returns the result of the macro (return value or value of the last
    // expression), cast to a Long_t.
+
+   if ( !gROOT->GetGlobalFunction(GetName(), 0, kTRUE) ) {
+      if (!Load()) {
+         if (error) *error = 1;
+         return 0;
+      }
+   }
 
    // if macro has been executed, look for global function with name
    // of macro and re-execute this global function, if not found then
@@ -259,27 +283,9 @@ Long_t TMacro::Exec(const char *params, Int_t* error)
       return ret;
    }
 
-   //the current implementation uses a file in the current directory.
-   //should be replaced by a direct execution from memory by CINT
-   TString fname = GetName();
-   fname += ".C";
-   FILE *fp = gSystem->TempFileName(fname);
-   SaveSource(fp);
-   //disable a possible call to gROOT->Reset from the executed script
-   gROOT->SetExecutingMacro(kTRUE);
-   //execute script in /tmp
-   TString exec = ".x " + fname;
-   TString p = params;
-   if (p == "") p = fParams;
-   if (p != "")
-      exec += "(" + p + ")";
-   Long_t ret = gROOT->ProcessLine(exec, error);
-   //enable gROOT->Reset
-   gROOT->SetExecutingMacro(kFALSE);
-   //delete the temporary file
-   gSystem->Unlink(fname);
-
-   return ret;
+   Error("Exec","Macro does not contains function named %s.",GetName());
+   if (error) *error = 1;
+   return 0;
 }
 
 //______________________________________________________________________________

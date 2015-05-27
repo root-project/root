@@ -98,6 +98,7 @@ protected:
 
    // Stereo
    Bool_t               fStereo;               //! use stereo rendering
+   Bool_t               fStereoQuadBuf;        //! draw quad buffer or left/right stereo in left/right half of window
    Float_t              fStereoZeroParallax;   //! position of zero-parallax plane: 0 - near clipping plane, 1 - far clipping plane
    Float_t              fStereoEyeOffsetFac;   //!
    Float_t              fStereoFrustumAsymFac; //!
@@ -288,7 +289,7 @@ public:
    Float_t GetStereoEyeOffsetFac()   const { return fStereoEyeOffsetFac;   }
    Float_t GetStereoFrustumAsymFac() const { return fStereoFrustumAsymFac; }
 
-   void SetStereo(Bool_t s)                { fStereo = s; }
+   void SetStereo(Bool_t stereo, Bool_t quad_buf=kTRUE);
    void SetStereoZeroParallax(Float_t f)   { fStereoZeroParallax   = f; }
    void SetStereoEyeOffsetFac(Float_t f)   { fStereoEyeOffsetFac   = f; }
    void SetStereoFrustumAsymFac(Float_t f) { fStereoFrustumAsymFac = f; }

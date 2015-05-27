@@ -76,12 +76,12 @@ Some lines now need a bit of clarification:
     statements is used to fill the histograms with different numbers of
     entries inside the loop.
 
--   line *32*: The sum of two histograms. A weight, which can be negative, can
+-   line *30*: The sum of two histograms. A weight, which can be negative, can
     be assigned to the added histogram.
 
--   line *43*: The division of two histograms is rather straightforward.
+-   line *41*: The division of two histograms is rather straightforward.
 
--   line *52* to *62*: When you draw two quantities and their ratios, it
+-   line *44* to *62*: When you draw two quantities and their ratios, it
     is much better if all the information is condensed in one single
     plot. These lines provide a skeleton to perform this operation.
 
@@ -140,7 +140,7 @@ macros shows how it looks for 2D histograms:
 
 - Lines *20-21*: add the histograms in the stack.
 
-- Line *23*: draws the stack as a lego plot. The color distinguish the two histograms [5.6](#f56).
+- Line *23*: draws the stack as a lego plot. The colour distinguish the two histograms [5.6](#f56).
 
 [f56]: figures/hstack.png "f56"
 <a name="f56"></a>

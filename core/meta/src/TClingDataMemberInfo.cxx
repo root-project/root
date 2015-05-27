@@ -345,40 +345,12 @@ long TClingDataMemberInfo::Offset()
                           == &llvm::APFloat::IEEEdouble) {
                   fConstInitVal.fDouble = val->getFloat().convertToDouble();
                   return (long)&fConstInitVal.fDouble;
-               } else {
-                  Error("Offset()", "Unhandled float type case:");
-                  val->dump();
-                  return -1;
                }
-            case APValue::LValue:
-               if (const Expr* E
-                   = val->getLValueBase().dyn_cast<const Expr*>()) {
-                  llvm::APSInt IntVal;
-                  clang::ASTContext &Context = VD->getASTContext();
-                  if (E->EvaluateAsInt(IntVal, Context)) {
-                     if (IntVal.isSigned())
-                        fConstInitVal.fLong = (long)IntVal.getSExtValue();
-                     else
-                        fConstInitVal.fLong = (long)IntVal.getZExtValue();
-                     fConstInitVal.fLong += val->getLValueOffset().getQuantity();
-                     return (long) &fConstInitVal.fLong;
-                  } else if (const StringLiteral* SL
-                             = dyn_cast<StringLiteral>(E)) {
-                     fConstInitVal.fLong = (long)SL->getString().data();
-                     fConstInitVal.fLong += val->getLValueOffset().getQuantity();
-                  }
-                  return (long) &fConstInitVal.fLong;
-               } else {
-                  Error("Offset()", "Unhandled lvalue case:");
-                  val->getLValueBase().dyn_cast<const ValueDecl*>()->dump();
-                  return -1;
-               }
+               // else fall-through
             default:
-               Error("Offset()", "Unhandled APValue case:");
-               val->dump();
-               return -1;
+               ;// fall-through
             };
-            return 0;
+            // fall-through
          }
       }
       return reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD)));

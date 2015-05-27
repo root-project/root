@@ -378,6 +378,46 @@ bool test24() {
    return ok;
 }
 
+bool test25() {
+   // fix parsing of operator^ (ROOT-7349)
+   bool ok = true; 
+   TF1 f1("f1","x^-2.5");
+   ok &= (f1.Eval(3.) == TMath::Power(3,-2.5) );
+
+   TF1 f2("f2","x^+2.5");
+   //TF1 f3("f3","std::pow(x,2.5)");  // this needed to be fixed
+   TF1 f3("f3","TMath::Power(x,2.5)");
+   ok &= (f2.Eval(3.) == f3.Eval(3) );
+
+   //cms test
+   TF1 t1("t1","(x<190)?(-18.7813+(((2.49368+(10.3321/(x^0.881126)))*exp(-((x^-1.66603)/0.074916)))-(-17.5757*exp(-((x^-1464.26)/-7.94004e+06))))):(1.09984+(0.394544*exp(-(x/562.407))))");
+   double x = 2;
+   double y =(x<190)?(-18.7813+(((2.49368+(10.3321/(std::pow(x,0.881126))))*exp(-((std::pow(x,-1.66603))/0.074916)))-(-17.5757*exp(-((std::pow(x,-1464.26))/-7.94004e+06))))):(1.09984+(0.394544*exp(-(x/562.407))));
+   ok &= (t1.Eval(2) == y );
+
+   // tests with scientific notations
+   auto ff = new TFormula("ff","x+2.e-2^1.2e-1");
+   ok &= ( ff->Eval(1.) == (1. + std::pow(2.e-2,1.2e-1) ) );
+
+   ff = new TFormula("ff","x^-1.2e1");
+   ok &= ( ff->Eval(1.5) == std::pow(1.5,-1.2e1) ) ;
+
+   ff = new TFormula("ff","1.5e2^x");
+   ok &= ( ff->Eval(2) == std::pow(1.5e2,2) );
+
+   ff = new TFormula("ff","1.5e2^x^-1.1e-2");
+   ok &= ( ff->Eval(2.) == std::pow(1.5e2, std::pow(2,-1.1e-2) ) );
+
+   // test same prelacements
+   ff = new TFormula("ff","pol10(3)+pol2");
+   std::vector<double> p = {1,2,3,4,5,6,7,8,9,10,11,12,13,14};
+   ff->SetParameters(p.data() );
+   double sum = 0; for (auto &a : p) { sum+= a;} 
+   ok &= ( ff->Eval(1.) == sum );
+
+   return ok;   
+}
+   
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);
@@ -419,6 +459,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test22() ) { PrintError(itest); }
    IncrTest(itest); if (!test23() ) { PrintError(itest); }
    IncrTest(itest); if (!test24() ) { PrintError(itest); }
+   IncrTest(itest); if (!test25() ) { PrintError(itest); }
 
    std::cout << ".\n";
     

@@ -182,7 +182,7 @@ This is a more complicated example than the ones we have seen before, so
 spend some time analysing it carefully, you should have understood it
 before continuing. Let us go through it in detail:
 
-Lines 6-19 define the necessary functions in `C++` code, split into
+Lines *7-18* define the necessary functions in `C++` code, split into
 three separate functions, as suggested by the problem considered. The
 full interference pattern is given by the product of a function
 depending on the ratio of the width and distance of the slits, and a
@@ -301,7 +301,7 @@ root [5] h.Draw();
 ```
 
 The first three lines of this example define a function, an exponential
-in this case, and set its parameters. In line 4 a histogram is
+in this case, and set its parameters. In line *3* a histogram is
 instantiated, with a name, a title, a certain number of bins (100 of
 them, equidistant, equally sized) in the range from 0 to 5.
 
@@ -314,7 +314,7 @@ random numbers. \label{f23}][f23]
 We use yet another new feature of ROOT to fill this histogram with data,
 namely pseudo-random numbers generated with the method `TF1::GetRandom`,
 which in turn uses an instance of the ROOT class `TRandom` created when
-ROOT is started. Data is entered in the histogram at line 5 using the
+ROOT is started. Data is entered in the histogram at line *4* using the
 method `TH1F::Fill` in a loop construct. As a result, the histogram is
 filled with 1000 random numbers distributed according to the defined
 function. The histogram is displayed using the method `TH1F::Draw()`.
@@ -323,8 +323,8 @@ of a quantum mechanical state, which are entered into the histogram,
 thus giving a visual impression of the probability density distribution.
 The plot is shown in Figure [2.3](#f23).
 
-Note that you will not obtain an identical plot when executing the above
-lines, depending on how the random number generator is initialised.
+Note that you will not obtain an identical plot when executing the lines
+above, depending on how the random number generator is initialised.
 
 The class `TH1F` does not contain a convenient input format from plain
 text files. The following lines of `C++` code do the job. One number per

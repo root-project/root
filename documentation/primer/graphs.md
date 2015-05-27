@@ -97,8 +97,9 @@ Mersenne Twister algorithm [@MersenneTwister].
 Let's go through the code, step by step to understand what is going on:
 
 -   Line *3*: This sets the palette colour code to a much nicer one than
-    the default. Comment this line to give it a try. See [^3] about colour
-    map choice.
+    the default. Comment this line to give it a try. 
+    [This article](https://root.cern.ch/drupal/content/rainbow-color-map)
+    gives more details about colour map choice.
 
 -   Line *7*: The instance of the random generator. You can then draw
     out of this instance random numbers distributed according to
