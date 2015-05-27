@@ -186,7 +186,19 @@ namespace Math {
   double chisquared_pdf(double x, double r, double x0 = 0);
 
 
-   double crystalball_pdf(double x, double alpha, double n, double mean, double sigma);
+  /**
+
+  Probability density function for the crystal ball function
+
+  See the definition at 
+  <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
+  Wikipedia</A>.
+
+  @ingroup PdfFunc
+
+  */
+   
+  double crystalball_pdf(double x, double alpha, double n, double sigma, double x0 = 0);
 
   /**
 

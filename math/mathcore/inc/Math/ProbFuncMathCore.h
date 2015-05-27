@@ -199,7 +199,18 @@ namespace Math {
    double chisquared_cdf(double x, double r, double x0 = 0);
 
 
-   double crystalball_cdf(double x, double alpha, int n, double mean, double sigma);
+   /**
+
+      Cumulative distribution for the Crystal Ball function
+      
+      See the definition of the Crystal Ball function at 
+      <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
+      Wikipedia</A>.
+      
+      @ingroup ProbFunc
+
+   */   
+   double crystalball_cdf(double x, double alpha, double n, double sigma, double x0 = 0);
 
    /**
 

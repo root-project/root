@@ -69,7 +69,7 @@ namespace Math {
    }
 
    
-   double crystalball_cdf(double x, double alpha, int n, double mean, double sigma)
+   double crystalball_cdf(double x, double alpha, double n, double sigma, double mean)
    {
       // parameters:
       // alpha : is non equal to zero, define the # of sigma from which it becomes a power-law function (from mean-alpha*sigma)
@@ -80,7 +80,7 @@ namespace Math {
          Error("crystalball_cdf","CrystalBall function not defined at alpha=0");
          return 0.;
       }
-      if (n==1)
+      if (n==1.0)
       {
          Error("crystalball_cdf","CrystalBall function not defined at n=1");
          return 0.;

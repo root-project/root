@@ -91,7 +91,7 @@ namespace Math {
 
    }
 
-   double crystalball_pdf(double x, double alpha, double n, double mean, double sigma) {
+   double crystalball_pdf(double x, double alpha, double n, double sigma, double mean) {
       if (sigma < 0.)     return 0.;
       double abs_alpha = std::abs(alpha);
       double A = std::pow(n/abs_alpha,n) * std::exp(-alpha*alpha/2.);

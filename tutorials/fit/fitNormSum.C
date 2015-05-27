@@ -38,12 +38,12 @@ void fitNormSum()
    Int_t NEvents = 1e6;
    Int_t NBins   = 1e3;
    
-   TF1 *f_cb    = new TF1("MyCrystalBall","ROOT::Math::crystalball_pdf(x,[0],[1],[2],[3])",-5.,5.);
+   TF1 *f_cb    = new TF1("MyCrystalBall","crystalball",-5.,5.);
    TF1 *f_exp   = new TF1("MyExponential","expo",-5.,5.);
    
    // I.:
    f_exp-> SetParameters(1.,-0.3);
-   f_cb -> SetParameters(1,2,3,0.3);
+   f_cb -> SetParameters(1,3,0.3,2,1.5);
    
    // CONSTRUCTION OF THE TF1NORMSUM OBJECT ........................................
    // 1) :
@@ -55,6 +55,10 @@ void fitNormSum()
    
    // III.:
    f_sum->SetParameters( fnorm_exp_cb->GetParameters().data() );
+   f_sum->SetParName(0,"NBackground");
+   f_sum->SetParName(1,"NSignal");
+   for (int i = 2; i < f_sum->GetNpar(); ++i) 
+      f_sum->SetParName(i,fnorm_exp_cb->GetParName(i) );
   
    //HISTOGRAM TO FIT ..............................................................
    TH1F *h_sum = new TH1F("h_ExpCB", "Exponential Bkg + CrystalBall function", NBins, -5., 5.);

@@ -769,6 +769,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
    functions.insert(make_pair(make_pair("landau",1),make_pair("[0]*TMath::Landau({V0},[1],[2],false)","[0]*TMath::Landau({V0},[1],[2],true)")));
    functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
+   functions.insert(make_pair(make_pair("crystalball",1),make_pair("[0]*ROOT::Math::crystalball_pdf({V0},[3],[4],[2],[1])","[0]*ROOT::Math::crystalball_pdf({V0},[3],[4],[2],[1])")));
    // chebyshev polynomial
    functions.insert(make_pair(make_pair("cheb0" ,1),make_pair("ROOT::Math::Chebyshev0({V0},[0])","")));
    functions.insert(make_pair(make_pair("cheb1" ,1),make_pair("ROOT::Math::Chebyshev1({V0},[0],[1])","")));
@@ -790,6 +791,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functionsNumbers["gaus"] = 100;
    functionsNumbers["landau"] = 400;
    functionsNumbers["expo"] = 200;
+   functionsNumbers["crystalball"] = 500;
 
    // replace old names xygaus -> gaus[x,y]
    formula.ReplaceAll("xygaus","gaus[x,y]");
@@ -1690,6 +1692,14 @@ void TFormula::SetPredefinedParamNames() {
       SetParName(0,"Constant");
       SetParName(1,"MPV");
       SetParName(2,"Sigma");
+      return;
+   }
+   if (fNumber == 500) { // crystal-ball
+      SetParName(0,"Constant");
+      SetParName(1,"Mean");
+      SetParName(2,"Sigma");
+      SetParName(3,"Alpha");
+      SetParName(4,"N");
       return;
    }
    // if formula is a polynomial (or chebyshev), set parameter names

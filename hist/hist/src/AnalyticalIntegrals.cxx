@@ -56,6 +56,17 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       else 
          result = amp*sigma*(ROOT::Math::landau_cdf(xmax,sigma,mean) - ROOT::Math::landau_cdf(xmin,sigma,mean));
    }
+   else if (num == 500) //crystal ball
+   {
+      double amp   = p[0];
+      double mean  = p[1];
+      double sigma = p[2];
+      double alpha = p[3];
+      double n     = p[4];
+      // crystal ball is normalized 
+      result = amp*(ROOT::Math::crystalball_cdf(xmax,alpha,n,sigma,mean) - ROOT::Math::crystalball_cdf(xmin,alpha,n,sigma,mean));
+   }
+
    else if (num >= 300 && num < 400)//polN
    {
       Int_t n = num - 300;
