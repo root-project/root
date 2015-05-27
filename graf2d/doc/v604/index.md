@@ -74,6 +74,7 @@
 - In `TPad::ShowGuidelines` the number of guide lines is limited to 15. Above
   that they become useless.
 - Print a warning if one of the pad limit is a NaN.
+- Fix https://sft.its.cern.ch/jira/browse/ROOT-6703.
 
 ### TCanvas
 
