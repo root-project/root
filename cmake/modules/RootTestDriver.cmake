@@ -111,7 +111,7 @@ if(CMD)
     if(CHECKOUT)
       set(_chkout OUTPUT_VARIABLE _outvar)
     else()
-      set(_chkout "")
+      set(_chkout OUTPUT_VARIABLE _outvar)
     endif()
 
     # log stderr
@@ -120,7 +120,7 @@ if(CMD)
     elseif(ERRREF)
       set(_chkerr ERROR_VARIABLE _errvar)
     else()
-      set(_chkerr "")
+      set(_chkerr ERROR_VARIABLE _errvar)
     endif()
 
     execute_process(COMMAND ${_cmd} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
