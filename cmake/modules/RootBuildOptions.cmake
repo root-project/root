@@ -195,6 +195,12 @@ if(DEFINED c++11)   # For backward compatibility
   set(cxx11 ${c++11} CACHE BOOL "" FORCE)
 endif()
 
+#---Avoid creating dependencies to 'non-statndard' header files -------------------------------
+include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
+
+#---Add Installation Variables------------------------------------------------------------------
+include(RootInstallDirs)
+
 #---General Build options----------------------------------------------------------------------
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
@@ -206,12 +212,9 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # the RPATH to be used when installing---------------------------------------------------------
 if(rpath)
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE) 
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
-
-#---Avoid creating dependencies to 'non-statndard' header files -------------------------------
-include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 
 #---Add defines for CINT limits-----------------------------------------------------------------
 if(DEFINED CINTMAXSTRUCT)
@@ -223,10 +226,6 @@ endif()
 if(DEFINED CINTLONGLINE)
   add_definitions(-DG__LONGLINE=${CINTLONGLINE})
 endif()
-
-#---Add Installation Variables------------------------------------------------------------------
-include(RootInstallDirs)
-
 
 
 
