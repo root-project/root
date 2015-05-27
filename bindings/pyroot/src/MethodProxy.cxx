@@ -490,15 +490,8 @@ namespace {
       MethodProxy::DispatchMap_t::iterator m = dispatchMap.find( sighash );
       if ( m != dispatchMap.end() ) {
          Int_t index = m->second;
-         PyObject* result = 0;
-
-         if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL ){
-            Py_BEGIN_ALLOW_THREADS
-            result = (*methods[ index ])( pymeth->fSelf, args, kwds, user );
-            Py_END_ALLOW_THREADS
-         } else
-            result = (*methods[ index ])( pymeth->fSelf, args, kwds, user );
-
+         PyObject* result = (*methods[ index ])( pymeth->fSelf, args, kwds, user,
+            (pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL) );
          result = HandleReturn( pymeth, result );
 
          if ( result != 0 )
@@ -516,14 +509,8 @@ namespace {
 
       std::vector< PyError_t > errors;
       for ( Int_t i = 0; i < nMethods; ++i ) {
-         PyObject* result = 0;
-
-         if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL ){
-            Py_BEGIN_ALLOW_THREADS
-            result = (*methods[i])( pymeth->fSelf, args, kwds, user );
-            Py_END_ALLOW_THREADS
-         } else
-            result = (*methods[i])( pymeth->fSelf, args, kwds, user );
+         PyObject* result = (*methods[i])( pymeth->fSelf, args, kwds, user,
+            (pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL) );
 
          if ( result == (PyObject*)TPyExceptionMagic ) {
             std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
