@@ -30,10 +30,11 @@ namespace ROOT {
 /**
    Class to Wrap a ROOT Function class (like TF1)  in a IParamFunction interface
    of one dimensions to be used in the ROOT::Math numerical algorithms
-   The parameter are stored in this wrapper class, so  the TF1 parameter values are not used for evaluating the function.
-   We use TF1 only for the function evaluation.
-   This allows for the copy of the wrapper function without the need to copy the TF1.
-   The wrapper does not own the TF1 pointer, so it assumes it exists during the wrapper lifetime
+   The wrapper does not own bby default the TF1 pointer, so it assumes it exists during the wrapper lifetime
+
+   The class from ROOT version 6.03  does not contain anymore a copy of the parameters. The parameters are 
+   stored in the TF1 class.    
+
 
    @ingroup CppFunctions
 */
