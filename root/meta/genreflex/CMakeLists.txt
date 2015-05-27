@@ -3,10 +3,8 @@ ROOTTEST_ADD_TESTDIRS()
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-unsupportedClasses
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/unsupportedClasses.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/unsupportedClasses_selection.xml -I ${CMAKE_CURRENT_SOURCE_DIR}
-                  PASSREGEX "^Error: Class array<int,3> has been selected but currently the support for its I/O is not yet available. Note that array<int,3>, even if not selected, will be available for interpreted code.
-Error: Class tuple<int,double,float> has been selected but currently the support for its I/O is not yet available. Note that tuple<int,double,float>, even if not selected, will be available for interpreted code.
-Error: Class chrono::duration<int,ratio<1,1> > has been selected but currently the support for its I/O is not yet available. Note that chrono::duration<int,ratio<1,1> >, even if not selected, will be available for interpreted code.
-Error: Class ratio<1,1> has been selected but currently the support for its I/O is not yet available. Note that ratio<1,1>, even if not selected, will be available for interpreted code.")
+                  ERRREF  unsupportedClasses.eref
+                  PASSRC 5)
 
 # These 3 tests will fail because a pragma once will be found in the inlined header
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-pragmaOnce1

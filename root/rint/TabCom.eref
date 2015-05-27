@@ -1,0 +1,15 @@
+input_line_10:2:3: error: use of undeclared identifier 'TObj'
+ (TObj)
+  ^
+ROOT_prompt_1:1:10: error: no member named 'k' in 'TObject'
+TObject::k
+~~~~~~~~~^
+ROOT_prompt_2:1:8: error: no member named 'GetListOfT' in 'TROOT'
+gROOT->GetListOfT
+~~~~~  ^
+ROOT_prompt_8:1:10: error: no member named 'fgPrivateM' in 'MyClass'
+MyClass::fgPrivateM
+~~~~~~~~~^
+ROOT_prompt_10:1:16: error: no member named 'SetTi' in 'TAxis'
+h->GetXaxis()->SetTi
+~~~~~~~~~~~~~  ^

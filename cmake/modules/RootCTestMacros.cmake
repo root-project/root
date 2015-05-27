@@ -50,7 +50,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
   elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")
     get_filename_component(realfp ${ARG_MACRO} REALPATH)
     if(DEFINED ARG_MACROARG)
-      set(realfp "${realf}(${ARG_MACROARG})") 
+      set(realfp "${realfp}(${ARG_MACROARG})")
     endif()
 
     set(command ${root_cmd} ${realfp})
@@ -107,6 +107,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 # function ROOTTEST_ADD_TEST(testname 
 #                            MACRO|EXEC macro_or_command   
 #                            [MACROARG args1 arg2 ...]
+#                            [INPUT infile]
 #                            [WILLFAIL]
 #                            [OUTREF stdout_reference]
 #                            [ERRREF stderr_reference]
@@ -120,7 +121,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 
 function(ROOTTEST_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
-                            "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
+                            "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT"
                             "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS" ${ARGN})
 
   # Setup macro test.
@@ -289,8 +290,14 @@ function(ROOTTEST_ADD_TEST test)
     set(errfile ERROR ${errfile})
   endif()
 
+  if(ARG_INPUT)
+    get_filename_component(infile_path ${ARG_INPUT} ABSOLUTE)
+    set(infile INPUT ${infile_path})
+  endif()
+
   ROOT_ADD_TEST(${test} COMMAND ${command}
                         OUTPUT ${logfile}
+                        ${infile}
                         ${errfile}
                         ${outcnv}
                         ${outcnvcmd}

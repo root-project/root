@@ -89,6 +89,15 @@ ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execBaseClass_v2
                   OUTREF execBaseClass_v2.ref
                   DEPENDS roottest-root-meta-evolution-execBaseClass_v1 )
 
+ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execMixedBaseClass_v1
+                  MACRO execMixedBaseClass_v1.cxx+
+                  OUTREF execMixedBaseClass_v1.ref)
+
+ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execMixedBaseClass_v2
+                  MACRO execMixedBaseClass_v2.cxx+
+                  OUTREF execMixedBaseClass_v2.ref
+                  DEPENDS roottest-root-meta-evolution-execMixedBaseClass_v1 )
+
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execReadOldCSC
                   COPY_TO_BUILDDIR cscdstarmb.root
                   MACRO execReadOldCSC.C

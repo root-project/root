@@ -1,5 +1,6 @@
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_ROOTTEST_NOROOTMAP OFF)
 ROOT_GENERATE_DICTIONARY(base_cling base.h MODULE base LINKDEF baseLinkDef.h)
 ROOT_LINKER_LIBRARY(base base_cling.cxx testobject.cpp testobjectderived.cpp TEST LIBRARIES Core RIO)
 

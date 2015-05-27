@@ -1,0 +1,5 @@
+Error: Class array<int,3> has been selected but currently the support for its I/O is not yet available. Note that array<int,3>, even if not selected, will be available for interpreted code.
+Error: Class tuple<int,double,float> has been selected but currently the support for its I/O is not yet available. Note that tuple<int,double,float>, even if not selected, will be available for interpreted code.
+Error: Class chrono::duration<int,ratio<1,1> > has been selected but currently the support for its I/O is not yet available. Note that chrono::duration<int,ratio<1,1> >, even if not selected, will be available for interpreted code.
+Error: Class ratio<1,1> has been selected but currently the support for its I/O is not yet available. Note that ratio<1,1>, even if not selected, will be available for interpreted code.
+Error: Class thread has been selected but currently the support for its I/O is not yet available. Note that thread, even if not selected, will be available for interpreted code.

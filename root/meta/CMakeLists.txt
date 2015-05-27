@@ -16,7 +16,7 @@ configure_file(templateAutoload.rootmap . COPYONLY)
 configure_file(typelist.v5.txt . COPYONLY)
 configure_file(typelist.v6.txt . COPYONLY)
 
-ROOTTEST_ADD_AUTOMACROS(DEPENDS TmpltInt0.C TmpltInt1.C TmpltFloat.C
+ROOTTEST_ADD_AUTOMACROS(DEPENDS ANSTmpltInt.C TmpltInt0.C TmpltInt1.C TmpltFloat.C
                                 TmpltNoSpec.C Event.cxx ${COMPILE_MACRO_TEST})
                                 
                                 
