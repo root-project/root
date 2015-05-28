@@ -14,3 +14,5 @@ the rule is associtated with the branch of the last of the rule's sources rather
 than the last of the object's data member.
 
 - Properly support TStreamerInfo written by ROOT v4.00.
+
+- Fix the ordering of the keys in a TFile being written; in particular fixing the result of GetKey and FindKey which were no longer returning the lastest cycle for a TFile being written since v5.34/11.
