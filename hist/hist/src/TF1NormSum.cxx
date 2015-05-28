@@ -1,8 +1,16 @@
+// @(#)root/hist:$Id$
+// Authors: L. Moneta, A. Flandi   08/2014
+//
+//
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2015  ROOT  Team, CERN/PH-SFT                        *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
 //
 //  TF1NormSum.cxx
-//  
 //
-//  Created by Aurélie Flandi on 27.08.14.
 //
 //
 #include "Riostream.h"

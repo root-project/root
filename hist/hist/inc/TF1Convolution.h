@@ -1,13 +1,22 @@
+// @(#)root/hist:$Id$
+// Author: L. Moneta May 2015
+
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2015  ROOT  Team, CERN/PH-SFT                        *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
+//
 //
 //  TF1Convolution.h
-//  
 //
 //  Created by Aurélie Flandi on 27.08.14.
 //
 //
 
-#ifndef ____TF1Convolution__
-#define ____TF1Convolution__
+#ifndef ROOT_TF1Convolution__
+#define ROOT_TF1Convolution__
 
 #include <iostream>
 #include "TF1.h"

@@ -769,7 +769,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
    functions.insert(make_pair(make_pair("landau",1),make_pair("[0]*TMath::Landau({V0},[1],[2],false)","[0]*TMath::Landau({V0},[1],[2],true)")));
    functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
-   functions.insert(make_pair(make_pair("crystalball",1),make_pair("[0]*ROOT::Math::crystalball_pdf({V0},[3],[4],[2],[1])","[0]*ROOT::Math::crystalball_pdf({V0},[3],[4],[2],[1])")));
+   functions.insert(make_pair(make_pair("crystalball",1),make_pair("[0]*ROOT::Math::crystalball_function({V0},[3],[4],[2],[1])","[0]*ROOT::Math::crystalball_pdf({V0},[3],[4],[2],[1])")));
    // chebyshev polynomial
    functions.insert(make_pair(make_pair("cheb0" ,1),make_pair("ROOT::Math::Chebyshev0({V0},[0])","")));
    functions.insert(make_pair(make_pair("cheb1" ,1),make_pair("ROOT::Math::Chebyshev1({V0},[0],[1])","")));

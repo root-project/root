@@ -3,11 +3,8 @@
 
 
 
-#include "Riostream.h"
-#include "TROOT.h"
-#include "TObject.h"
-#include "TMath.h"
 #include "Math/Math.h"
+#include "Math/Error.h"
 #include "Math/ProbFuncMathCore.h"
 #include "Math/SpecFuncMathCore.h"
 #include <stdio.h>
@@ -69,43 +66,88 @@ namespace Math {
    }
 
    
-   double crystalball_cdf(double x, double alpha, double n, double sigma, double mean)
+   double crystalball_cdf(double x, double alpha, double n, double sigma, double mean )
    {
+      if (n <= 1.) {
+         MATH_ERROR_MSG("crystalball_cdf","CrystalBall cdf not defined for n <=1");
+         return std::numeric_limits<double>::quiet_NaN();
+      }
+
+      double abs_alpha = std::abs(alpha);
+      double C = n/abs_alpha * 1./(n-1.) * std::exp(-alpha*alpha/2.);
+      double D = std::sqrt(M_PI/2.)*(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
+      double totIntegral = sigma*(C+D);
+
+      double integral = crystalball_integral(x,alpha,n,sigma,mean); 
+      return (alpha > 0) ? 1. - integral/totIntegral : integral/totIntegral; 
+   }
+   double crystalball_cdf_c(double x, double alpha, double n, double sigma, double mean )
+   {
+      if (n <= 1.) {
+         MATH_ERROR_MSG("crystalball_cdf_c","CrystalBall cdf not defined for n <=1");
+         return std::numeric_limits<double>::quiet_NaN();
+      }
+      double abs_alpha = std::abs(alpha);
+      double C = n/abs_alpha * 1./(n-1.) * std::exp(-alpha*alpha/2.);
+      double D = std::sqrt(M_PI/2.)*(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
+      double totIntegral = sigma*(C+D);
+
+      double integral = crystalball_integral(x,alpha,n,sigma,mean);      
+      return (alpha > 0) ? integral/totIntegral : 1. - (integral/totIntegral); 
+   }
+   double crystalball_integral(double x, double alpha, double n, double sigma, double mean)
+   {
+      // compute the integral of the crystal ball function (ROOT::Math::crystalball_function)
+      // If alpha > 0 the integral is the right tail integral.
+      // If alpha < 0 is the left tail integrals which are always finite for finite x.     
       // parameters:
       // alpha : is non equal to zero, define the # of sigma from which it becomes a power-law function (from mean-alpha*sigma)
       // n > 1 : is integrer, is the power of the low  tail
+      // add a value xmin for cases when n <=1 the integral diverges 
       if (sigma == 0)   return 0;
       if (alpha==0)
       {
-         Error("crystalball_cdf","CrystalBall function not defined at alpha=0");
+         MATH_ERROR_MSG("crystalball_integral","CrystalBall function not defined at alpha=0");
          return 0.;
       }
-      if (n==1.0)
-      {
-         Error("crystalball_cdf","CrystalBall function not defined at n=1");
-         return 0.;
-      }
-      if (n<=0)   Warning("crystalball_cdf","No physical meaning when n<=0");
+      bool useLog = (n == 1.0); 
+      if (n<=0)   MATH_WARN_MSG("crystalball_integral","No physical meaning when n<=0");
+
+      double z = (x-mean)/sigma;
+      if (alpha < 0 ) z = -z;
       
       double abs_alpha = std::abs(alpha);
-      double A = std::pow(n/abs_alpha,n) * std::exp(-alpha*alpha/2.);
-      double B = n/abs_alpha - abs_alpha;
-      double C = (n/abs_alpha) * (1./(n-1)) * std::exp(-alpha*alpha/2.);
-      double D = std::sqrt(M_PI/2.)*(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
-      double N = 1./(sigma*(C+D));
-      double z = (x-mean)/sigma;
+      
+      //double D = *(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
+      //double N = 1./(sigma*(C+D));
       double intgaus = 0.;
       double intpow  = 0.;
-      if (z <= -alpha)
+ 
+      const double sqrtpiover2 = std::sqrt(M_PI/2.);
+      const double sqrt2pi = std::sqrt( 2.*M_PI); 
+      const double oneoversqrt2 = 1./sqrt(2.);
+      if (z <= -abs_alpha)
       {
-         intpow  = - N*A*sigma/(-n+1)*std::pow(B-(alpha-mean/sigma),-n+1);//-int(infinity) =0 because alpha>0
+         double A = std::pow(n/abs_alpha,n) * std::exp(-0.5 * alpha*alpha);
+         double B = n/abs_alpha - abs_alpha;
+
+         if (!useLog) {
+            double C = (n/abs_alpha) * (1./(n-1)) * std::exp(-alpha*alpha/2.);
+            intpow  = C - A /(n-1.) * std::pow(B-z,-n+1) ;
+         }
+         else {
+            // for n=1 the primitive of 1/x is log(x)
+            intpow = -A * std::log( n / abs_alpha ) + A * std::log( B -z );
+         }
+         intgaus =  sqrtpiover2*(1.+ROOT::Math::erf(abs_alpha*oneoversqrt2));
       }
       else
       {
-         intgaus = std::sqrt(2*M_PI)*sigma*N*(ROOT::Math::gaussian_cdf(x, sigma, mean) - ROOT::Math::gaussian_cdf(mean-alpha*sigma, sigma, mean));//
-         intpow  = - N*A*sigma/(-n+1.)*std::pow(B-z,-n+1);
+         intgaus = ROOT::Math::gaussian_cdf_c(z, 1);
+         intgaus *= sqrt2pi;
+         intpow  =  0;  
       }
-      return intgaus + intpow;
+      return sigma * (intgaus + intpow);
    }
 
    

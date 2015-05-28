@@ -1,3 +1,12 @@
+// @(#)root/hist:$Id$
+// Authors: L. Moneta, A. Flandi 2015
+
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2015  ROOT  Team, CERN/PH-SFT                        *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
 //
 //  AnalyticalIntegrals.cxx
 //  
@@ -8,6 +17,8 @@
 
 #include <stdio.h>
 #include "TROOT.h"
+#include "TF1.h"
+#include "TFormula.h"
 #include "TMath.h"
 #include "AnalyticalIntegrals.h"
 #include "Math/DistFuncMathCore.h" //for cdf
@@ -63,8 +74,13 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       double sigma = p[2];
       double alpha = p[3];
       double n     = p[4];
-      // crystal ball is normalized 
-      result = amp*(ROOT::Math::crystalball_cdf(xmax,alpha,n,sigma,mean) - ROOT::Math::crystalball_cdf(xmin,alpha,n,sigma,mean));
+      
+      //printf("computing integral for CB in [%f,%f] for m=%f s = %f alpha = %f n = %f\n",xmin,xmax,mean,sigma,alpha,n);
+      if (alpha > 0) 
+         result = amp*( ROOT::Math::crystalball_integral(xmin,alpha,n,sigma,mean) -  ROOT::Math::crystalball_integral(xmax,alpha,n,sigma,mean) );
+      else {
+         result = amp*( ROOT::Math::crystalball_integral(xmax,alpha,n,sigma,mean) -  ROOT::Math::crystalball_integral(xmin,alpha,n,sigma,mean) );
+      }
    }
 
    else if (num >= 300 && num < 400)//polN

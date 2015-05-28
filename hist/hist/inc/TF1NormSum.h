@@ -1,3 +1,12 @@
+// @(#)root/hist:$Id$
+// Author: L. Moneta May 2015
+
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2015  ROOT  Team, CERN/PH-SFT                        *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
 //
 //  TF1NormSum.h
 //  
@@ -6,8 +15,8 @@
 //
 //
 
-#ifndef ____TF1NormSum__
-#define ____TF1NormSum__
+#ifndef ROOT_TF1NormSum__
+#define ROOT_TF1NormSum__
 
 #include <iostream>
 #include "TF1.h"
@@ -58,4 +67,4 @@ public:
    //ClassDef(TF1NormSum,1)
    
 };
-#endif /* defined(____TF1NormSum__) */
+#endif /* defined(ROOT_TF1NormSum__) */
