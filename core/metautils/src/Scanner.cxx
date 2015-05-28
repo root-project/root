@@ -808,16 +808,25 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       bool rcrdDeclNotAlreadySelected = fselectedRecordDecls.insert((RecordDecl*)recordDecl->getCanonicalDecl()).second;
 
       // Prompt a warning in case the class was selected twice
+      auto declSelRuleMapIt = fDeclSelRuleMap.find(recordDecl->getCanonicalDecl());
       if (!fFirstPass &&
           !rcrdDeclNotAlreadySelected &&
-          selected->HasAttributeName()){
+          selected->HasAttributeName() &&
+          declSelRuleMapIt != fDeclSelRuleMap.end() &&
+          declSelRuleMapIt->second != selected){
          const std::string& name_value = selected->GetAttributeName();
          std::string normName;
          TMetaUtils::GetNormalizedName(normName,
                                        recordDecl->getASTContext().getTypeDeclType(recordDecl),
                                        fInterpreter,
                                        fNormCtxt);
+
+         auto previouslyMatchingRule = declSelRuleMapIt->second;
+         int previouslineno = previouslyMatchingRule->GetLineNumber();
+
          std::stringstream message;
+         auto lineno = selected->GetLineNumber();
+         if (lineno > 1) message << "Selection file " << selected->GetSelFileName() << ", lines " << lineno << " and " << previouslineno << ". ";
          message << "Attempt to select with a named selection rule an already selected class. The name used in the selection is \""
                  << name_value << "\" while the class is \"" << normName << "\".";
          if (selected->GetAttributes().size() > 1){
@@ -825,6 +834,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          }
          ROOT::TMetaUtils::Warning(0,"%s\n", message.str().c_str());
       }
+
 
       fDeclSelRuleMap[recordDecl->getCanonicalDecl()]=selected;
 

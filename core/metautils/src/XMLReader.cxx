@@ -450,8 +450,11 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
  and for every tag extracts the atrributes. Here is done some error checking as well -
  mostly conserning missing or excessive closing tags, nesting problems, etc.
  */
-bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
+bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
 {
+
+   std::ifstream file(fileName);
+
    PopulateMap();
 
    int lineNum = 1;
@@ -520,7 +523,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                if (!IsStandaloneTag(tagStr)){ // if the class tag is not standalone, then it has (probably) some child nodes
                   inClass = true;
                }
-               csr = new ClassSelectionRule(fCount++, fInterp); // create new class selection rule
+               csr = new ClassSelectionRule(fCount++, fInterp, fileName.c_str(), lineNum); // create new class selection rule
                bsr = csr; // we could access it through the base class pointer
                break;
             }
@@ -686,7 +689,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                if (!IsStandaloneTag(tagStr)){
                   inField=true;
                }
-               vsr = new VariableSelectionRule(fCount++, fInterp); // the field is variable selection rule object
+               vsr = new VariableSelectionRule(fCount++, fInterp,fileName.c_str(),  lineNum); // the field is variable selection rule object
                bsrChild = vsr;
                break;
             }
@@ -712,7 +715,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                if (!IsStandaloneTag(tagStr)){
                   inMethod=true;
                }
-               fsr = new FunctionSelectionRule(fCount++, fInterp); // the method is function selection rule object
+               fsr = new FunctionSelectionRule(fCount++, fInterp,fileName.c_str(),  lineNum); // the method is function selection rule object
                bsrChild = fsr;
                break;
             }
@@ -751,7 +754,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   out.ClearSelectionRules();
                   return false;
                }
-               fsr = new FunctionSelectionRule(fCount++, fInterp);
+               fsr = new FunctionSelectionRule(fCount++, fInterp,fileName.c_str(), lineNum);
                bsr = fsr;
                break;
             }
@@ -763,7 +766,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   out.ClearSelectionRules();
                   return false;
                }
-               vsr = new VariableSelectionRule(fCount++, fInterp);
+               vsr = new VariableSelectionRule(fCount++, fInterp,fileName.c_str(), lineNum);
                bsr = vsr;
                break;
             }
@@ -788,7 +791,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   out.ClearSelectionRules();
                   return false;
                }
-               esr = new EnumSelectionRule(fCount++, fInterp);
+               esr = new EnumSelectionRule(fCount++, fInterp,fileName.c_str(), lineNum);
                bsr = esr;
                break;
             }

@@ -3700,7 +3700,7 @@ bool IsSupportedClassName(const char* name)
       "regex",
       "thread"};
    if ( unsupportedClassesNormNames.count(name) == 1) return false;
-   auto pos = find_if(uclNamePrfxes.begin(), 
+   auto pos = find_if(uclNamePrfxes.begin(),
                       uclNamePrfxes.end(),
                       [&](const std::string& str){return ROOT::TMetaUtils::BeginsWith(name,str);});
     return uclNamePrfxes.end() == pos;
@@ -3709,7 +3709,7 @@ bool IsSupportedClassName(const char* name)
 //______________________________________________________________________________
 int CheckForUnsupportedClasses(const RScanner::ClassColl_t &annotatedRcds)
 {
-   // Check if the list of selected classes contains any class which is not 
+   // Check if the list of selected classes contains any class which is not
    // supported. Return the number of unsupported classes in the selection.
 
    int nerrors = 0;
@@ -4410,7 +4410,7 @@ int RootCling(int argc,
          ROOT::TMetaUtils::Info(0, "Selection XML file\n");
 
          XMLReader xmlr(interp);
-         if (!xmlr.Parse(file, selectionRules)) {
+         if (!xmlr.Parse(linkdefFilename.c_str(), selectionRules)) {
             ROOT::TMetaUtils::Error(0, "Parsing XML file %s\n", linkdefFilename.c_str());
             return 1; // Return here to propagate the failure up to the build system
          } else {

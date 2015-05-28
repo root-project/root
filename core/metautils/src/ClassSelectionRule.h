@@ -49,11 +49,11 @@ public:
    ClassSelectionRule(ESelect sel=kYes):
    BaseSelectionRule(sel), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
 
-   ClassSelectionRule(long index, cling::Interpreter &interp):
-   BaseSelectionRule(index, interp), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
+   ClassSelectionRule(long index, cling::Interpreter &interp, const char* selFileName = "", long lineno = -1):
+   BaseSelectionRule(index, interp, selFileName, lineno), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
 
-   ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue, cling::Interpreter &interp):
-   BaseSelectionRule(index, sel, attributeName, attributeValue, interp), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
+   ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue, cling::Interpreter &interp, const char* selFileName = "", long lineno = -1):
+   BaseSelectionRule(index, sel, attributeName, attributeValue, interp, selFileName, lineno), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
 
    void Print(std::ostream &out) const;
 

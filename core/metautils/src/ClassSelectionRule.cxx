@@ -46,7 +46,7 @@ bool ClassSelectionRule::HasMethodSelectionRules() const
 
 void ClassSelectionRule::Print(std::ostream &out) const
 {
-   out<<"\t\tSelected: ";
+   out<<"\t\tSelected (line "<< GetLineNumber() <<"): ";
    switch(GetSelected()){
       case BaseSelectionRule::kYes: out<<"Yes"<<std::endl;
          break;
