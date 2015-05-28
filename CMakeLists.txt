@@ -30,6 +30,11 @@ if(insource)
                       "an out-of-source directory.")
 endif()
 
+# You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
+#   - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
+#   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
+list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
+
 # Check, if ROOTSYS is set.
 if(NOT DEFINED ROOTSYS)
   set(ROOTSYS $ENV{ROOTSYS})
@@ -38,20 +43,27 @@ if(NOT DEFINED ROOTSYS)
   endif()
 endif()
 
+#---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
+find_package(ROOT REQUIRED COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
+
 # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
-# If ROOT_SOURCE_DIR is not set, search for an installation.
 if(DEFINED ROOT_SOURCE_DIR)
-  find_package(ROOT REQUIRED)
-  get_filename_component(ROOT_INCLUDE_DIR "${ROOTSYS}/include" ABSOLUTE)
-  set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
-  set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
+  set(ROOT_root_CMD root.exe)
   set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex)
   set(ROOT_rootcint_CMD ${ROOTSYS}/bin/rootcint)
   set(ROOT_rootcling_CMD rootcling)
-else()
-  find_package(ROOT REQUIRED COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore
-                             HINTS ${ROOTSYS}/etc/cmake)
-  set(CMAKE_CXX_FLAGS ${ROOT_CXX_FLAGS})
+else()                       # testing using an installation
+  if(DEFINED ROOT_USE_FILE)
+    include(${ROOT_USE_FILE})
+  else()  #---If ROOT was built with the classic configure/make---
+    find_program(ROOT_root_CMD root.exe PATHS ${ROOTSYS}/bin)
+    find_program(ROOT_genreflex_CMD genreflex PATHS ${ROOTSYS}/bin)
+    find_program(ROOT_rootcint_CMD rootcint PATHS ${ROOTSYS}/bin)
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
+    include(RootNewMacros)
+  endif()
+  set(CMAKE_CXX_FLAGS ${ROOT_DEFINITIONS})
+  enable_testing()
 endif()
 
 get_filename_component(ROOT_BINARY_DIR  "${ROOTSYS}/bin" ABSOLUTE)
@@ -93,7 +105,6 @@ include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOU
 link_directories(${ROOT_LIBRARY_DIR})
 
 # Enable and setup CTest.
-include(RootNewMacros)
 include(RoottestCTest)
 include(RootCTestMacros)
 
