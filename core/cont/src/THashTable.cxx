@@ -98,6 +98,32 @@ void THashTable::Add(TObject *obj)
 }
 
 //______________________________________________________________________________
+void THashTable::AddBefore(const TObject *before, TObject *obj)
+{
+   // Add object to the hash table. Its position in the table will be
+   // determined by the value returned by its Hash() function.
+   // If and only if 'before' is in the same bucket as obj, obj is added
+   // in front of 'before' within the bucket's list.
+
+   if (IsArgNull("Add", obj)) return;
+
+   Int_t slot = GetHashValue(obj);
+   if (!fCont[slot]) {
+      fCont[slot] = new TList;
+      fUsedSlots++;
+   }
+   if (before && GetHashValue(before) == slot) {
+      fCont[slot]->AddBefore(before,obj);
+   } else {
+      fCont[slot]->Add(obj);
+   }
+   fEntries++;
+
+   if (fRehashLevel && AverageCollisions() > fRehashLevel)
+      Rehash(fEntries);
+}
+
+//______________________________________________________________________________
 void THashTable::AddAll(const TCollection *col)
 {
    // Add all objects from collection col to this collection.
