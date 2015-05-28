@@ -6362,13 +6362,14 @@ bool testH3Integral()
    return iret;
 }
 
+// test histogram buffer 
 bool testH1Buffer() {
-   
+
    int iret = 0;
-   
-   TH1D * h1 = new TH1D("h1","h1",30,1,0); 
+
+   TH1D * h1 = new TH1D("h1","h1",30,1,0);
    TH1D * h2 = new TH1D("h2","h2",30,0,0);
-   // fill the histograms
+   // fill the histograms                                                                                                                                 
    int nevt = 800;
    double x = 0;
    for (int i = 0; i < nevt ; ++i) {
@@ -6376,77 +6377,111 @@ bool testH1Buffer() {
       h1->Fill(x);
       h2->Fill(x);
    }
-   h2->BufferEmpty(); // empty buffer for h2
+   h2->BufferEmpty(); // empty buffer for h2                                                                                                              
 
-   // now test that functions are consistent
-   iret |= (h1->GetMean() != h2->GetMean() );
+   int pr = std::cout.precision(15);
+   double eps = TMath::Limits<double>::Epsilon();
+
+   bool itest = false;
+
+   // now test that functions are consistent                                                                                                              
+   //itest = (h1->GetMean() != h2->GetMean() );                                                                                                           
+   itest = equals(h1->GetMean(),h2->GetMean(),eps );
    if (defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Histogram Mean = " << h1->GetMean() << "  " << h2->GetMean() << " -  " << iret << std::endl;
+      std::cout << "Histogram Mean = " << h1->GetMean() << "  " << h2->GetMean() << " -  " << itest << std::endl;
    }
-   
+   iret |= itest;
 
-   // another fill will reset the histogram 
+   double s1[TH1::kNstat];
+   double s2[TH1::kNstat];
+   h1->GetStats(s1);
+   h1->GetStats(s2);
+   std::vector<std::string> snames = {"sumw","sumw2","sumwx","sumwx2"};
+   for (unsigned int i  =0; i < snames.size(); ++i) {
+     itest = equals(s1[i],s2[i],eps );
+     if (defaultEqualOptions & cmpOptDebug ) {
+       std::cout << "Statistics " << snames[i] << "  = " << s1[i] << "  " << s2[i] << " -  " << itest << std::endl;
+     }
+     iret |= itest;
+   }
+
+   // another fill will reset the histogram                                                                                                                       
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
    h2->Fill(x); h2->BufferEmpty();
-   iret |= (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
+   itest = (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
    if (defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << iret << std::endl;
+      std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
    }
 
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
    h2->Fill(x); h2->BufferEmpty();
-   iret |= (h1->GetMaximum() != h2->GetMaximum() );
+   itest = (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
    if (defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Histogram maximum = " << h1->GetMaximum() << "  " << h2->GetMaximum() << " -  " << iret << std::endl;
+      std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
    }
 
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
    h2->Fill(x); h2->BufferEmpty();
-   iret |= (h1->GetMinimum() != h2->GetMinimum() );
+   itest |= (h1->GetMaximum() != h2->GetMaximum() );
    if (defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Histogram minimum = " << h1->GetMinimum() << "  " << h2->GetMinimum() << " - " << iret << std::endl;
+      std::cout << "Histogram maximum = " << h1->GetMaximum() << "  " << h2->GetMaximum() << " -  " << itest << std::endl;
    }
-   
+   iret |= itest;
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   itest = (h1->GetMinimum() != h2->GetMinimum() );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram minimum = " << h1->GetMinimum() << "  " << h2->GetMinimum() << " - " << itest << std::endl;
+   }
+   iret |= itest;
+
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
    h2->Fill(x); h2->BufferEmpty();
    int i1 = h1->FindFirstBinAbove(10);
    int i2 = h2->FindFirstBinAbove(10);
-   iret |= (i1 != i2 );
+   itest = (i1 != i2 );
    if (defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Histogram first bin above  " << i1  << "  " << i2 << " - " << iret << std::endl;
+      std::cout << "Histogram first bin above  " << i1  << "  " << i2 << " - " << itest << std::endl;
    }
+   iret |= itest;
 
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
    h2->Fill(x); h2->BufferEmpty();
    i1 = h1->FindLastBinAbove(10);
    i2 = h2->FindLastBinAbove(10);
-   iret |= (i1 != i2 );
+   itest = (i1 != i2 );
    if (defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Histogram last bin above  " << i1  << "  " << i2 << " - " << iret << std::endl;
+      std::cout << "Histogram last bin above  " << i1  << "  " << i2 << " - " << itest << std::endl;
    }
+   iret |= itest;
 
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
    h2->Fill(x); h2->BufferEmpty();
    double v1 = h1->Interpolate(0.1);
    double v2 = h2->Interpolate(0.1);
-   iret |= (v1 != v2 );
+   itest = equals(v1,v2,eps);
    if (defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Histogram interpolated value  " << v1  << "  " << v2 << " - " << iret << std::endl;
+      std::cout << "Histogram interpolated value  " << v1  << "  " << v2 << " - " << itest << std::endl;
    }
-   
+   iret |= itest;
+
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Buffer H1:\t" << (iret?"FAILED":"OK") << std::endl;
 
+   std::cout.precision(pr);
+
    delete h1;
    delete h2;
-   
-   return iret; 
+
+   return iret;
 }
 
 bool testH2Buffer() {
@@ -10252,7 +10287,10 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
 
 int equals(Double_t n1, Double_t n2, double ERRORLIMIT)
 {
-   return fabs( n1 - n2 ) > ERRORLIMIT * fabs(n1);
+   if (n1 != 0) 
+      return fabs( n1 - n2 ) > ERRORLIMIT * fabs(n1);
+   else
+      return fabs(n2) > ERRORLIMIT;
 }
 
 int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
