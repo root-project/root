@@ -47,6 +47,8 @@
 // for I/O backward compatibility
 #include "v5/TF1Data.h"
 
+#include "AnalyticalIntegrals.h"
+
 //#include <iostream>
 
 Bool_t TF1::fgAbsValue    = kFALSE;
@@ -101,6 +103,7 @@ public:
       fX0(x0)
    {
       fFunc->InitArgs(fX, fPar);
+      if (par) fFunc->SetParameters(par);
    }
 
    ROOT::Math::IGenFunction * Clone()  const {
@@ -111,20 +114,21 @@ public:
    }
    // evaluate |f(x)|
    Double_t DoEval( Double_t x) const {
+      // use evaluation with stored parameters (i.e. pass zero)
       fX[0] = x;
-      Double_t fval = fFunc->EvalPar( fX, fPar);
+      Double_t fval = fFunc->EvalPar( fX, 0);
       if (fAbsVal && fval < 0)  return -fval;
       return fval;
    }
    // evaluate x * |f(x)|
    Double_t EvalFirstMom( Double_t x) {
       fX[0] = x;
-      return fX[0] * TMath::Abs( fFunc->EvalPar( fX, fPar) );
+      return fX[0] * TMath::Abs( fFunc->EvalPar( fX, 0) );
    }
    // evaluate (x - x0) ^n * f(x)
    Double_t EvalNMom( Double_t x) const  {
       fX[0] = x;
-      return TMath::Power( fX[0] - fX0, fN) * TMath::Abs( fFunc->EvalPar( fX, fPar) );
+      return TMath::Power( fX[0] - fX0, fN) * TMath::Abs( fFunc->EvalPar( fX, 0) );
    }
 
    TF1 * fFunc;
@@ -374,7 +378,8 @@ TF1::TF1():
    fNpfits(0), fNDF(0), fChisquare(0),
    fMinimum(-1111), fMaximum(-1111),
    fParent(0), fHistogram(0),
-   fMethodCall(0), fFormula(0), fParams(0)
+   fMethodCall(0), fNormalized(false), fNormIntegral(0),
+   fFormula(0), fParams(0)
 {
    // TF1 default constructor.
    SetFillStyle(0);
@@ -388,8 +393,8 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax) :
    fNpfits(0), fNDF(0), fChisquare(0),
    fMinimum(-1111), fMaximum(-1111),
    fParent(0), fHistogram(0),
-   fMethodCall(0), fFormula(0), fParams(0)
-
+   fMethodCall(0), fNormalized(false), fNormIntegral(0),
+   fFormula(0), fParams(0)
 {
    // F1 constructor using a formula definition
    //
@@ -441,7 +446,8 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim) 
    fParMin(std::vector<Double_t>(npar)),
    fParMax(std::vector<Double_t>(npar)),
    fParent(0), fHistogram(0),
-   fMethodCall(0), fFormula(0),
+   fMethodCall(0), fNormalized(false), fNormIntegral(0),
+   fFormula(0),
    fParams(new TF1Parameters(npar) )
 {
    // F1 constructor using name of an interpreted function.
@@ -490,6 +496,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fParMax(std::vector<Double_t>(npar)),
    fParent(0), fHistogram(0),
    fMethodCall(0),
+   fNormalized(false), fNormIntegral(0),
    fFunctor(ROOT::Math::ParamFunctor(fcn)),
    fFormula(0),
    fParams(new TF1Parameters(npar) )
@@ -523,6 +530,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
    fParMax(std::vector<Double_t>(npar)),
    fParent(0), fHistogram(0),
    fMethodCall(0),
+   fNormalized(false), fNormIntegral(0),
    fFunctor(ROOT::Math::ParamFunctor(fcn)),
    fFormula(0),
    fParams(new TF1Parameters(npar) )
@@ -556,6 +564,7 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    fParMax(std::vector<Double_t>(npar)),
    fParent(0), fHistogram(0),
    fMethodCall(0),
+   fNormalized(false), fNormIntegral(0),
    fFunctor(ROOT::Math::ParamFunctor(f)),
    fFormula(0),
    fParams(new TF1Parameters(npar) )
@@ -1150,7 +1159,10 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    if (fType == 0)
    {
       assert(fFormula);
-      return fFormula->EvalPar(x,params);
+      if (fNormalized && fNormIntegral != 0)
+         return fFormula->EvalPar(x,params)/fNormIntegral;
+      else 
+         return fFormula->EvalPar(x,params);
    }
    Double_t result = 0;
    if (fType == 1)  {
@@ -1160,11 +1172,19 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
          else        result = fFunctor((Double_t*)x,(Double_t*)fParams->GetParameters());
 
       }else          result = GetSave(x);
+      
+      if (fNormalized && fNormIntegral!=0)
+         result = result/fNormIntegral;
+        
       return result;
    }
    if (fType == 2) {
       if (fMethodCall) fMethodCall->Execute(result);
       else             result = GetSave(x);
+
+      if (fNormalized && fNormIntegral!=0)
+         result = result/fNormIntegral;
+
       return result;
    }
 
@@ -2172,8 +2192,15 @@ void TF1::InitStandardFunctions()
 //______________________________________________________________________________
 Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel)
 {
-   // use IntegralOneDim
+   // use IntegralOneDim or analytical integral
    Double_t error = 0;
+   if (TF1::GetNumber() > 0)
+   {
+      Double_t result = 0.;
+      result = AnalyticalIntegral(this, a, b);
+      // if it is a formula that havent been implmented in analytical integral a NaN is return
+      if (!TMath::IsNaN(result)) return result;
+   }
    return IntegralOneDim(a,b, epsrel, epsrel, error);
 }
 
@@ -2245,10 +2272,10 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    //      g->IntegralFast(n,x,w,0,10000) = 1.25331
    //      g->IntegralFast(n,x,w,0,100000)= 1.253
 
-   Double_t *parameters = GetParameters();
-   TF1_EvalWrapper wf1( this, parameters, fgAbsValue );
+   //Double_t *parameters = GetParameters();
+   TF1_EvalWrapper wf1( this, 0, fgAbsValue );
    Double_t result = 0;
-
+   Int_t status = 0; 
    if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS ) {
       ROOT::Math::GaussIntegrator iod(epsabs, epsrel);
       iod.SetFunction(wf1);
@@ -2261,6 +2288,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
       else if (a == - TMath::Infinity() && b == TMath::Infinity() )
          result = iod.Integral();
       error = iod.Error();
+      status = iod.Status();
    }
    else {
       ROOT::Math::IntegratorOneDim iod(wf1, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), epsabs, epsrel);
@@ -2273,6 +2301,14 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
       else if (a == - TMath::Infinity() && b == TMath::Infinity() )
          result = iod.Integral();
       error = iod.Error();
+      status = iod.Status();
+   }
+   if (status != 0) {
+      std::string igName = ROOT::Math::IntegratorOneDim::GetName(ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType());
+      Warning("IntegralOneDim","Error found in integrating function %s in [%f,%f] using %s. Result = %f +/- %f  - status = %d",GetName(),a,b,igName.c_str(),result,error,status);
+      std::cout << "Function Parameters = { ";
+      for (int ipar = 0; ipar < GetNpar(); ++ipar) std::cout << GetParName(ipar) << "=" << GetParameter(ipar) << " ";
+      std::cout << "}\n";
    }
    return result;
 }
@@ -3238,8 +3274,18 @@ void TF1::Update()
       fBeta.clear();
       fGamma.clear();
    }
+   if (fNormalized) {
+       // need to compute the integral of the not-normalized function
+       fNormalized = false;
+       fNormIntegral = Integral(fXmin,fXmax);
+       fNormalized = true;
+   }
+   else 
+      fNormIntegral = 0;
+   
+   // std::vector<double>x(fNdim);
+   // if ((fType == 1) && !fFunctor.Empty())  fFunctor(x.data(), (Double_t*)fParams);
 }
-
 
 //______________________________________________________________________________
 void TF1::RejectPoint(Bool_t reject)

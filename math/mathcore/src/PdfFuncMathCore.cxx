@@ -91,6 +91,17 @@ namespace Math {
 
    }
 
+   double crystalball_pdf(double x, double alpha, double n, double mean, double sigma) {
+      if (sigma < 0.)     return 0.;
+      double abs_alpha = std::abs(alpha);
+      double A = std::pow(n/abs_alpha,n) * std::exp(-alpha*alpha/2.);
+      double B = n/abs_alpha -abs_alpha;
+      double C = n/abs_alpha * 1./(n-1.) * std::exp(-alpha*alpha/2.);
+      double D = std::sqrt(M_PI/2.)*(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
+      double N = 1./(sigma*(C+D));
+      if ((x-mean)/sigma > -alpha)  return N*std::exp(-(x-mean)*(x-mean)/(2.*sigma*sigma));
+      else                          return N*A*std::pow(B-(x-mean)/sigma,-n);
+   }
 
 
    double exponential_pdf(double x, double lambda, double x0) {

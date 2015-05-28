@@ -1973,7 +1973,7 @@ void th2poly()
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    p->DrawClone("COL");
 
    TestReport1(C, "TH2Poly.(DrawClone() and remote file access)");
@@ -2145,7 +2145,7 @@ void options2d1()
    TCanvas *C = StartTest(800,600);
 
    gStyle->SetOptStat(0);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    gStyle->SetCanvasColor(33);
    gStyle->SetFrameFillColor(18);
    TF2 *f2 = new TF2("f2","xygaus + xygaus(5) + xylandau(10)",-4,4,-4,4);
@@ -2206,7 +2206,7 @@ void options2d3()
    C->Divide(2,2);
    gPad->SetGrid();
    C->SetFillColor(17);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    C->cd(1);
    gH2->Draw("cont4z"); pl3.DrawPaveLabel(x1,y1,x2,y2,"CONT4Z","brNDC");
    C->cd(2);
@@ -2237,7 +2237,7 @@ void options2d4()
    C->Divide(2,2);
    C->SetFillColor(17);
    C->cd(1);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    gH2->Draw("lego");     pl4.DrawPaveLabel(x1,y1,x2,y2,"LEGO","brNDC");
    C->cd(2);
    gH2->Draw("lego1");    pl4.DrawPaveLabel(x1,y1,x2,y2,"LEGO1","brNDC");
@@ -2265,7 +2265,7 @@ void options2d5()
    Float_t x1=0.67, y1=0.875, x2=0.85, y2=0.95;
    C->Divide(2,2);
    C->SetFillColor(17);
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    C->cd(1);
    gH2->Draw("surf1");   pl5.DrawPaveLabel(x1,y1,x2,y2,"SURF1","brNDC");
    C->cd(2);
@@ -2289,7 +2289,7 @@ void earth()
 
    TCanvas *C = StartTest(1000,800);
 
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);
    C->Divide(2,2);
@@ -2360,7 +2360,7 @@ void tgraph2d1()
        x = x+dx;
        y = -P;
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    dt->SetFillColor(0);
    dt->SetLineColor(1);
    dt->SetMarkerSize(1);
@@ -2401,7 +2401,7 @@ void tgraph2d2()
       ry[N]=2*Py*(r->Rndm(N))-Py;
       rz[N]=sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TGraph2D *dt = new TGraph2D( np, rx, ry, rz);
    dt->SetName("Graph2DA");
    dt->SetFillColor(0);
@@ -2442,7 +2442,7 @@ void tgraph2d3()
       ry[N]=2*Py*(r->Rndm(N))-Py;
       rz[N]=sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
    }
-   gStyle->SetPalette(57);
+   gStyle->SetPalette(kBird);
    TGraph2D *dt = new TGraph2D( np, rx, ry, rz);
    dt->SetName("Graph2DA");
    dt->SetFillColor(0);

@@ -199,6 +199,7 @@ namespace Math {
    double chisquared_cdf(double x, double r, double x0 = 0);
 
 
+   double crystalball_cdf(double x, double alpha, int n, double mean, double sigma);
 
    /**
 

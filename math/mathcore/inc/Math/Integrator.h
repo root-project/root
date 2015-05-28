@@ -153,9 +153,10 @@ public:
       SetFunction(f);
    }
 
-   /// destructor (will delete contained pointer)
+   /// destructor (will delete contained pointers)
    virtual ~IntegratorOneDim() {
       if (fIntegrator) delete fIntegrator;
+      if (fFunc) delete fFunc;
    }
 
    // disable copy constructur and assignment operator
@@ -185,7 +186,8 @@ public:
    void SetFunction  (const IGenFunction &f, bool copy = false) {
       if (!fIntegrator) return;
       if (copy) {
-         fFunc = std::auto_ptr<IGenFunction>(f.Clone() );
+         if (fFunc) delete fFunc; 
+         fFunc = f.Clone();
          fIntegrator->SetFunction(*fFunc);
          return;
       }
@@ -454,7 +456,7 @@ protected:
 private:
 
    VirtualIntegratorOneDim * fIntegrator;   // pointer to integrator interface class
-   std::auto_ptr<IGenFunction> fFunc;       // pointer to owned function
+   IGenFunction            * fFunc;         // pointer to owned function
 
 };
 

@@ -26,6 +26,7 @@ set(TestSource
     testSpecFuncBetaI.cxx 
     testSpecFuncSiCi.cxx 
     testIntegrationMultiDim.cxx
+    testAnalyticalIntegrals.cxx
     testTStatistic.cxx
     fit/testFit.cxx
     fit/testGraphFit.cxx

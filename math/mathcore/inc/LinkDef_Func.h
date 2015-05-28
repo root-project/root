@@ -24,6 +24,7 @@
 #pragma link C++ function ROOT::Math::breitwigner_pdf( double , double, double);
 #pragma link C++ function ROOT::Math::cauchy_pdf( double , double, double);
 #pragma link C++ function ROOT::Math::chisquared_pdf( double , double, double);
+#pragma link C++ function ROOT::Math::crystalball_pdf( double , double, double, double, double);
 #pragma link C++ function ROOT::Math::exponential_pdf( double , double, double);
 #pragma link C++ function ROOT::Math::fdistribution_pdf( double , double, double, double);
 #pragma link C++ function ROOT::Math::gamma_pdf( double , double, double, double);

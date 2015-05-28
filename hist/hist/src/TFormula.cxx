@@ -1976,10 +1976,10 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
 }
 Int_t TFormula::GetParNumber(const char * name) const {
    // return parameter index given a name (return -1 for not existing parameters)
+   // non need to print an error
    auto it = fParams.find(name);
    if(it == fParams.end())
    {
-      Error("GetParameter","Parameter %s is not defined.",name);
       return -1;
    }
    return it->second;
@@ -1991,6 +1991,12 @@ Double_t TFormula::GetParameter(const char * name) const
    //*-*
    //*-*    Returns parameter value given by string.
    //*-*
+   int i = GetParNumber(name);
+   if (i  == -1) {
+      Error("GetParameter","Parameter %s is not defined.",name);
+      return TMath::QuietNaN();
+   }
+      
    return GetParameter( GetParNumber(name) );
 }
 Double_t TFormula::GetParameter(Int_t param) const
@@ -2003,7 +2009,7 @@ Double_t TFormula::GetParameter(Int_t param) const
    if(param >=0 && param < (int) fClingParameters.size())
       return fClingParameters[param];
    Error("GetParameter","wrong index used - use GetParameter(name)");
-   return 0;
+   return TMath::QuietNaN(); 
 }
 const char * TFormula::GetParName(Int_t ipar) const
 {

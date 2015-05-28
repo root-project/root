@@ -31,6 +31,8 @@
 #include "Math/MinimizerOptions.h"
 #include "Fit/DataRange.h"
 
+
+
 #include <vector>
 #include <map>
 #include <utility>
@@ -59,6 +61,8 @@ class TGNumberEntryField;
 class TGStatusBar;
 class TAxis;
 class TF1;
+class TF1NormSum;
+class TF1Convolution;
 
 
 class TFitEditor : public TGMainFrame {
@@ -80,9 +84,11 @@ protected:
    TGTextButton        *fUserButton;       // opens a dialog for user-defined fit method
    TGRadioButton       *fNone;             // set no operation mode
    TGRadioButton       *fAdd;              // set addition mode
+   TGRadioButton       *fNormAdd;          // set normalized addition mode
    TGRadioButton       *fConv;             // set convolution mode
    TGLayoutHints       *fLayoutNone;       // layout hints of fNone radio button
    TGLayoutHints       *fLayoutAdd;        // layout hints of fAdd radio button
+   TGLayoutHints       *fLayoutNormAdd;    // layout hints of fNOrmAdd radio button
    TGLayoutHints       *fLayoutConv;       // layout hints of fConv radio button
    TGTextButton        *fSetParam;         // open set parameters dialog
    TGCheckButton       *fIntegral;         // switch on/off option 'integral'
@@ -122,7 +128,9 @@ protected:
    TAxis               *fXaxis;            // x-axis
    TAxis               *fYaxis;            // y-axis
    TAxis               *fZaxis;            // z-axis
-
+   TF1NormSum          *fSumFunc;          //! TF1NormSum object
+   TF1Convolution      *fConvFunc;         //! TF1Convolution object
+   
    // structure holding parameter value and limits
    struct FuncParamData_t {
       FuncParamData_t() {
@@ -207,6 +215,8 @@ public:
    void           FillFunctionList(Int_t selected = -1);
    void           FillMinMethodList(Int_t selected = -1);
    virtual void   DoAddition(Bool_t on);
+   virtual void   DoNormAddition(Bool_t on);
+   virtual void   DoConvolution(Bool_t on);
    virtual void   DoAdvancedOptions();
    virtual void   DoAllWeights1();
    virtual void   DoClose();

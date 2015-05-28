@@ -160,6 +160,8 @@ protected:
    TObject     *fParent;     //!Parent object hooking this function (if one)
    TH1         *fHistogram;  //!Pointer to histogram used for visualisation
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
+   Bool_t      fNormalized;  //Normalization option (false by default)
+   Double_t    fNormIntegral;//Integral of the function before being normalized
    ROOT::Math::ParamFunctor fFunctor;   //! Functor object to wrap any C++ callable object
    TFormula    *fFormula;    //Pointer to TFormula in case when user define formula
    TF1Parameters *fParams;   //Pointer to Function parameters object (exusts only for not-formula functions)
@@ -172,6 +174,8 @@ protected:
 
    //void CreateFromFunctor(const char *name, Int_t npar, Int_t ndim = 1);
    void DoInitialize();
+
+   void IntegrateForNormalization();
 
    virtual Double_t GetMinMaxNDim(Double_t * x , Bool_t findmax, Double_t epsilon = 0, Int_t maxiter = 0) const;
    virtual void GetRange(Double_t * xmin, Double_t * xmax) const;
@@ -219,6 +223,7 @@ public:
       fParMax(std::vector<Double_t>(npar)),
       fParent(0), fHistogram(0),
       fMethodCall(0),
+      fNormalized(false), fNormIntegral(0),
       fFunctor(ROOT::Math::ParamFunctor(f)),
       fFormula(0),
       fParams(new TF1Parameters(npar) )
@@ -239,6 +244,7 @@ public:
       fParMax(std::vector<Double_t>(npar)),
       fParent(0), fHistogram(0),
       fMethodCall(0),
+      fNormalized(false), fNormIntegral(0),
       fFunctor(ROOT::Math::ParamFunctor(f)),
       fFormula(0),
       fParams(new TF1Parameters(npar) )
@@ -268,6 +274,7 @@ public:
       fParMax(std::vector<Double_t>(npar)),
       fParent(0), fHistogram(0),
       fMethodCall(0),
+      fNormalized(false), fNormIntegral(0),
       fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) ),
       fFormula(0),
       fParams(new TF1Parameters(npar) )
@@ -288,6 +295,7 @@ public:
       fParMax(std::vector<Double_t>(npar)),
       fParent(0), fHistogram(0),
       fMethodCall(0),
+      fNormalized(false), fNormIntegral(0),
       fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) ),
       fFormula(0),
       fParams(new TF1Parameters(npar) )
@@ -395,6 +403,7 @@ public:
       return  IntegralMultiple(n,a,b,maxpts, epsrel, epsrel, relerr, nfnevl, ifail);
    }
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsrel, Double_t &relerr);
+   virtual Bool_t   IsEvalNormalized() const { return fNormalized; }
    /// return kTRUE if the point is inside the function range
    virtual Bool_t   IsInside(const Double_t *x) const { return !(  ( x[0] < fXmin) || ( x[0] > fXmax ) ); }
    virtual Bool_t   IsLinear() const { return (fFormula) ? fFormula->IsLinear() : false;}
@@ -414,6 +423,7 @@ public:
    virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void     SetNDF(Int_t ndf);
    virtual void     SetNumberFitPoints(Int_t npfits) {fNpfits = npfits;}
+   virtual void     SetNormalized(Bool_t flag) { fNormalized = flag; Update(); }
    virtual void     SetNpx(Int_t npx=100); // *MENU*
    virtual void     SetParameter(Int_t param, Double_t value) {
       (fFormula) ? fFormula->SetParameter(param,value) : fParams->SetParameter(param,value);
@@ -463,7 +473,7 @@ public:
    //static  TGraph  *CalcGaussLegendreSamplingPoints(Int_t num=21, Double_t eps=3.0e-11);
    static  void     CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps=3.0e-11);
 
-   ClassDef(TF1,8)  //The Parametric 1-D function
+   ClassDef(TF1,9)  //The Parametric 1-D function
 };
 
 inline Double_t TF1::operator()(Double_t x, Double_t y, Double_t z, Double_t t) const

@@ -47,10 +47,6 @@
 #undef PPD_SRV_NEWER
 #endif
 #define PPD_SRV_NEWER(v) (fProof && fProof->GetRemoteProtocol() > v)
-#ifdef PPD_SRV_NEWER_REV
-#undef PPD_SRV_NEWER_REV
-#endif
-#define PPD_SRV_NEWER_REV(r) (fSVNRev > r)
 
 Bool_t TProofProgressDialog::fgKeepDefault = kTRUE;
 Bool_t TProofProgressDialog::fgLogQueryDefault = kFALSE;
@@ -92,7 +88,6 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    fInitTime      = 0.;
    fAvgRate       = 0.;
    fAvgMBRate     = 0.;
-   fSVNRev        = -1;
    fRightInfo     = 0;
    fSpeedoEnabled = kFALSE;
    fSpeedo        = 0;
@@ -109,30 +104,6 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    // Have to save this information here, in case gProof is dead when
    // the logs are requested
    fSessionUrl = (proof && proof->GetManager()) ? proof->GetManager()->GetUrl() : "";
-
-   // SVN version run by the master
-   TSlave *mst = (TSlave *) proof->GetListOfActiveSlaves()->First();
-   if (mst) {
-      TString vrs = mst->GetROOTVersion();
-      Ssiz_t ib = vrs.Index("|"), from = ib + 2;
-      if (ib != kNPOS) {
-         TString svnr;
-         // Strip of also the 'r' in front of the number
-         // coverity[unchecked_value]
-         vrs.Tokenize(svnr, from, "|");
-         if (svnr.IsDigit()) {
-            if (gDebug)
-               Info("TProofProgressDialog", "svn revision run by the master: %s", svnr.Data());
-            fSVNRev = svnr.Atoi();
-         } else {
-            Info("TProofProgressDialog", "could not find svn revision run by the master");
-         }
-      } else if (gDebug) {
-         Info("TProofProgressDialog", "non-standard master version string:'%s'", vrs.Data());
-      }
-   } else {
-      Warning("TProofProgressDialog", "list of active workers is empty!");
-   }
 
    if (PPD_SRV_NEWER(25)) {
       fRatePoints = new TNtuple("RateNtuple","Rate progress info","tm:evr:mbr:act:tos:efs");

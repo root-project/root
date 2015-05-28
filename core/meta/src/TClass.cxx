@@ -2866,9 +2866,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (!loadedcl){
          if (TDataType* theDataType = gROOT->GetType(normalizedName.c_str())){
             // We have a typedef: we get the name of the underlying type
-            auto underlyingTypeName = theDataType->GetTypeName().Data();
+            auto underlyingTypeName = theDataType->GetTypeName();
             // We see if we can bootstrap a class with it
-            auto underlyingTypeDict = TClassTable::GetDictNorm(underlyingTypeName);
+            auto underlyingTypeDict = TClassTable::GetDictNorm(underlyingTypeName.Data());
             if (underlyingTypeDict){
                loadedcl = underlyingTypeDict();
             }
