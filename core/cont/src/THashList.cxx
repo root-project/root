@@ -119,7 +119,7 @@ void THashList::AddBefore(const TObject *before, TObject *obj)
    // Insert object before object before in the list.
 
    TList::AddBefore(before, obj);
-   fTable->Add(obj);
+   fTable->AddBefore(before, obj);
 }
 
 //______________________________________________________________________________
@@ -128,7 +128,7 @@ void THashList::AddBefore(TObjLink *before, TObject *obj)
    // Insert object before object before in the list.
 
    TList::AddBefore(before, obj);
-   fTable->Add(obj);
+   fTable->AddBefore(before->GetObject(), obj);
 }
 
 //______________________________________________________________________________
