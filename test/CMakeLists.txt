@@ -10,7 +10,7 @@ find_package(ROOT REQUIRED)
 
 #---Copy the CTestCustom.cmake file into the build directory---------------------------------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
-
+enable_testing()
 
 if(CMAKE_SYSTEM_NAME MATCHES Darwin)
   # To avoid to set ld_Library_path to locate the test libraries
@@ -21,8 +21,10 @@ include_directories(${ROOT_INCLUDE_DIRS})
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   include_directories(${ROOT_SOURCE_DIR}/tutorials)
   include_directories(${ROOT_SOURCE_DIR}/tmva/inc)
-else()
+else()                       # Testing using an installation (assuming access to ROOT CMake modules)
   include_directories(${ROOT_INCLUDE_DIRS}/../tutorials)
+  add_definitions(${ROOT_DEFINITIONS})
+  include(RootNewMacros)
 endif()
 
 #---environment-------------------------------------------------------------------------------
