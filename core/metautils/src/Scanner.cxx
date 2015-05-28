@@ -18,6 +18,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "llvm/Support/Path.h"
 
 #include "TClassEdit.h"
 
@@ -826,7 +827,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
          std::stringstream message;
          auto lineno = selected->GetLineNumber();
-         if (lineno > 1) message << "Selection file " << selected->GetSelFileName() << ", lines " << lineno << " and " << previouslineno << ". ";
+         std::string cleanFileName =  llvm::sys::path::filename(selected->GetSelFileName());
+         if (lineno > 1) message << "Selection file " << cleanFileName << ", lines " << lineno << " and " << previouslineno << ". ";
          message << "Attempt to select with a named selection rule an already selected class. The name used in the selection is \""
                  << name_value << "\" while the class is \"" << normName << "\".";
          if (selected->GetAttributes().size() > 1){
