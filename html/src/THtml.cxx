@@ -306,7 +306,7 @@ void THtml::TFileDefinition::NormalizePath(TString& filename) const
 
 TString THtml::TFileDefinition::MatchFileSysName(TString& filename, TFileSysEntry** fse) const
 {
-   TList* bucket = GetOwner()->GetLocalFiles()->GetEntries().GetListForObject(gSystem->BaseName(filename));
+   const TList* bucket = GetOwner()->GetLocalFiles()->GetEntries().GetListForObject(gSystem->BaseName(filename));
    TString filesysname;
    if (bucket) {
       TIter iFS(bucket);
@@ -624,7 +624,7 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
    out_fsname = included;
 
    TString incBase(gSystem->BaseName(included));
-   TList* bucket = GetOwner()->GetLocalFiles()->GetEntries().GetListForObject(incBase);
+   const TList* bucket = GetOwner()->GetLocalFiles()->GetEntries().GetListForObject(incBase);
    if (!bucket) return false;
 
    TString alldir(gSystem->DirName(included));

@@ -66,8 +66,8 @@ public:
    void          Delete(Option_t *option="");
    TObject      *FindObject(const char *name) const;
    TObject      *FindObject(const TObject *obj) const;
-   TList        *GetListForObject(const char *name) const;
-   TList        *GetListForObject(const TObject *obj) const;
+   const TList  *GetListForObject(const char *name) const;
+   const TList  *GetListForObject(const TObject *obj) const;
    TObject     **GetObjectRef(const TObject *obj) const;
    Int_t         GetRehashLevel() const { return fRehashLevel; }
    Int_t         GetSize() const { return fEntries; }
