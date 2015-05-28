@@ -37,6 +37,16 @@ int assertIntroTut()
          if (particlesMomentum[iParticle] > 40.0)
             hPosX->Fill(particlesPosX[iParticle]);
       }
+      // For testing purposes, re-run with begin / end (ROOT-7362)
+      for (auto i = particlesPosX.begin(), e = particlesPosX.end(); i != e; ++i) {
+         if (*i > 40.0)
+            hPosX->Fill(*i);
+      }
+      // For testing purposes, re-run with range-for
+      for (double i: particlesPosX) {
+         if (i > 40.0)
+            hPosX->Fill(i);
+      }
    }
 
    // Fit the histogram:
