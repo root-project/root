@@ -77,11 +77,12 @@ int main( int argc, char **argv )
 {
 
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
-      std::cout << "Usage: " << argv[0] << " [-f[0-9]] [-k] [-T] [-O] [-n maxopenedfiles] [-v [verbosity]] targetfile source1 [source2 source3 ...]" << std::endl;
+      std::cout << "Usage: " << argv[0] << " [-f[0-9]] [-k] [-T] [-O] [-a] [-n maxopenedfiles] [-v [verbosity]] targetfile source1 [source2 source3 ...]" << std::endl;
       std::cout << "This program will add histograms from a list of root files and write them" << std::endl;
       std::cout << "to a target root file. The target file is newly created and must not " << std::endl;
       std::cout << "exist, or if -f (\"force\") is given, must not be one of the source files." << std::endl;
       std::cout << "Supply at least two source files for this to make sense... ;-)" << std::endl;
+      std::cout << "If the option -a is used, hadd will append to the output." << std::endl;
       std::cout << "If the option -k is used, hadd will not exit on corrupt or non-existant input files but skip the offending files instead." << std::endl;
       std::cout << "If the option -T is used, Trees are not merged" <<std::endl;
       std::cout << "If the option -O is used, when merging TTree, the basket size is re-optimized" <<std::endl;
@@ -96,6 +97,7 @@ int main( int argc, char **argv )
       return 1;
    }
 
+   Bool_t append = kFALSE;
    Bool_t force = kFALSE;
    Bool_t skip_errors = kFALSE;
    Bool_t reoptimize = kFALSE;
@@ -109,6 +111,9 @@ int main( int argc, char **argv )
    for( int a = 1; a < argc; ++a ) {
       if ( strcmp(argv[a],"-T") == 0 ) {
          noTrees = kTRUE;
+         ++ffirst;
+      } else if ( strcmp(argv[a],"-a") == 0 ) {
+         append = kTRUE;
          ++ffirst;
       } else if ( strcmp(argv[a],"-f") == 0 ) {
          force = kTRUE;
@@ -204,7 +209,12 @@ int main( int argc, char **argv )
    if (maxopenedfiles > 0) {
       merger.SetMaxOpenedFiles(maxopenedfiles);
    }
-   if (!merger.OutputFile(targetname,force,newcomp) ) {
+   if (append) {
+      if (!merger.OutputFile(targetname,"UPDATE",newcomp)) {
+         std::cerr << "hadd error opening target file for update :" << argv[ffirst-1] << "." << std::endl;
+         exit(2);
+      }
+   } else if (!merger.OutputFile(targetname,force,newcomp) ) {
       std::cerr << "hadd error opening target file (does " << argv[ffirst-1] << " exist?)." << std::endl;
       if (!force) std::cerr << "Pass \"-f\" argument to force re-creation of output file." << std::endl;
       exit(1);
@@ -243,7 +253,9 @@ int main( int argc, char **argv )
       }
    }
    merger.SetNotrees(noTrees);
-   Bool_t status = merger.Merge();
+   Bool_t status;
+   if (append) status = merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kAll);
+   else status = merger.Merge();
 
    if (status) {
       if (verbosity == 1) {
