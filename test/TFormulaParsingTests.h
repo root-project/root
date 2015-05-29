@@ -425,8 +425,13 @@ bool test26() {
    ok &= (f.Eval(2) == 2);
    ok &= (f.Eval(-1) == -1);
    ok &= (f.Eval(-3) == 3);
+   TF1 f2("f2","x*TMath::Sign(1,x+2)");
+   ok &= (f2.Eval(2) == 2);
+   ok &= (f2.Eval(-1) == -1);
+   ok &= (f2.Eval(-3) == 3);
    return ok;
 }
+
 bool test27() {
    // test ssq function
    bool ok = true;  
