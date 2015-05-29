@@ -429,6 +429,9 @@ bool test26() {
    ok &= (f2.Eval(2) == 2);
    ok &= (f2.Eval(-1) == -1);
    ok &= (f2.Eval(-3) == 3);
+   TF1 f3("f3","TMath::SignBit(x-2)");
+   ok &= (f3.Eval(1) == 1);
+   ok &= (f3.Eval(3) == 0);
    return ok;
 }
 
