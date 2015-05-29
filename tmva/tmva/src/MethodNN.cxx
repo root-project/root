@@ -484,31 +484,32 @@ void TMVA::MethodNN::Train()
     }
     else // initialize weights and net
     {
-        std::cout << "initialize weights and net" << std::endl;
+//        std::cout << "initialize weights and net" << std::endl;
         size_t inputSize = GetNVariables (); //trainPattern.front ().input ().size ();
         size_t outputSize = fAnalysisType == Types::kClassification ? 1 : GetNTargets (); //trainPattern.front ().output ().size ();
 
-        std::cout << "input size = "  << inputSize << "   output size = " << outputSize << std::endl;
+//        std::cout << "input size = "  << inputSize << "   output size = " << outputSize << std::endl;
 
 
         // configure neural net
         auto itLayout = std::begin (fLayout), itLayoutEnd = std::end (fLayout)-1;
         for ( ; itLayout != itLayoutEnd; ++itLayout)
         {
-            std::cout << "  add layer (" << ((*itLayout).first) << " , " << ((char)(*itLayout).second) << ")"  << std::endl;
+//            std::cout << "  add layer (" << ((*itLayout).first) << " , " << ((char)(*itLayout).second) << ")"  << std::endl;
             fNet.addLayer (NN::Layer ((*itLayout).first, (*itLayout).second)); 
         }
-        std::cout << "add output layer" << std::endl;
+//        std::cout << "add output layer" << std::endl;
         fNet.addLayer (NN::Layer (outputSize, (*itLayout).second, NN::ModeOutputValues::SIGMOID)); 
         fNet.setErrorFunction (fModeErrorFunction); 
 
         size_t numWeights = fNet.numWeights (inputSize);
-        std::cout << "numWeights = " << numWeights << std::endl;
-        //fWeights.resize (numWeights, 0.0);
+//        std::cout << "numWeights = " << numWeights << std::endl;
+        Log() << kINFO 
+              << "Total number of Synapses = " 
+              << numWeights
+              << Endl;
 
         // initialize weights
-        //TMVA::NN::gaussDistribution (fWeights, 0.1, 1.0/sqrt(inputSize));
-        
         fNet.initializeWeights (fWeightInitializationStrategy, 
                                 trainPattern.begin (),
                                 trainPattern.end (), 
@@ -521,20 +522,20 @@ void TMVA::MethodNN::Train()
     int idxSetting = 0;
     for (auto itSettings = begin (fSettings), itSettingsEnd = end (fSettings); itSettings != itSettingsEnd; ++itSettings, ++idxSetting)
     {
-        std::cout << "settings" << std::endl;
+//        std::cout << "settings" << std::endl;
         std::shared_ptr<TMVA::NN::Settings> ptrSettings = *itSettings;
-        std::cout << "set monitoring" << std::endl;
+//        std::cout << "set monitoring" << std::endl;
         ptrSettings->setMonitoring (fMonitoring);
         ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()), (idxSetting+1)*100.0/(fSettings.size ()));
         double E = 0;
-        std::cout << "check minimizer type" << std::endl;
+//        std::cout << "check minimizer type" << std::endl;
         if ((*itSettings)->minimizerType () == TMVA::NN::MinimizerType::fSteepest)
         {
-            std::cout << "initialize minimizer" << std::endl;
+//            std::cout << "initialize minimizer" << std::endl;
             NN::Steepest minimizer ((*itSettings)->learningRate (), (*itSettings)->momentum (), (*itSettings)->repetitions ());
-            std::cout << "start the training" << std::endl;
+//            std::cout << "start the training" << std::endl;
             E = fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
-            std::cout << "training finished with E = " << E << std::endl;
+//            std::cout << "training finished with E = " << E << std::endl;
         }
         (*itSettings).reset ();
     }
@@ -612,7 +613,7 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
    void* nn = gTools().GetChild(wghtnode, "Weights");
    if (!nn)
    {
-       std::cout << "no node \"Weights\" in XML, use weightnode" << std::endl;
+//       std::cout << "no node \"Weights\" in XML, use weightnode" << std::endl;
       nn = wghtnode;
    }
    
@@ -624,7 +625,7 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
        return;
    }
 
-   std::cout << "read layout from XML" << std::endl;
+//   std::cout << "read layout from XML" << std::endl;
    void* ch = gTools().xmlengine().GetChild (xmlLayout);
    TString connection;
    UInt_t numNodes;
@@ -642,7 +643,7 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
       fNet.addLayer (NN::Layer (numNodes, (TMVA::NN::EnumFunction)activationFunction (0), (NN::ModeOutputValues)outputMode (0))); 
    }
 
-   std::cout << "read weights XML" << std::endl;
+//   std::cout << "read weights XML" << std::endl;
 
    void* xmlWeights  = NULL;
    xmlWeights = gTools().GetChild(wghtnode, "Synapses");
@@ -651,7 +652,7 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
 
    Int_t numWeights (0);
    gTools().ReadAttr (xmlWeights, "NumberSynapses", numWeights);
-   std::cout << "number synapses = " << numWeights << std::endl;
+//   std::cout << "number synapses = " << numWeights << std::endl;
    const char* content = gTools().GetContent (xmlWeights);
    std::stringstream sstr (content);
    for (Int_t iWeight = 0; iWeight<numWeights; ++iWeight) 
@@ -660,7 +661,7 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
        sstr >> weight;
        fWeights.push_back (weight);
    }
-   std::cout << std::endl;
+//   std::cout << std::endl;
 }
 
 
