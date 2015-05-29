@@ -763,13 +763,13 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 	    }
 
 
-            TString convText = Form( "<D^2> (train/test/epoch): %.4g/%.4g/%d", trainError, testError, (int)cycleCount);
-            double progress = maxConvergenceCount /(double)settings.convergenceSteps ();
+            TString convText = Form( "<D^2> (train/test/epoch/conv/maxConv): %.4g/%.4g/%d/%d/%d", trainError, testError, (int)cycleCount, (int)convergenceCount, (int)maxConvergenceCount);
+            double progress = 100*(double)maxConvergenceCount /(double)settings.convergenceSteps ();
             settings.cycle (progress, convText);
         }
 	while (true);
         TString convText = Form( "<D^2> (train/test/epoch): %.4g/%.4g/%d", trainError, testError, (int)cycleCount);
-        double progress = maxConvergenceCount /(double)settings.convergenceSteps ();
+        double progress = 100*(double)maxConvergenceCount /(double)settings.convergenceSteps ();
         settings.cycle (progress, convText);
 
         return testError;
