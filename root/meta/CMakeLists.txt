@@ -2,7 +2,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-execpragmasTest
                   MACRO execpragmasTest.C+
                   OUTREF execpragmasTest.ref)
 
-ROOTTEST_GENERATE_EXECUTABLE(loadernotapp loadernotapp.cxx LIBRARIES Hist)
+ROOTTEST_GENERATE_EXECUTABLE(loadernotapp loadernotapp.cxx LIBRARIES Core Hist)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-loadernotapp
                   EXEC loadernotapp
