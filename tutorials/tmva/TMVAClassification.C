@@ -123,6 +123,7 @@ int TMVAClassification( TString myMethodList = "" )
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
+   Use["NN"]              = 1; // improved implementation of a NN
    //
    // --- Support Vector Machine 
    Use["SVM"]             = 1;
@@ -420,6 +421,17 @@ int TMVAClassification( TString myMethodList = "" )
 
    if (Use["MLPBNN"])
       factory->BookMethod( TMVA::Types::kMLP, "MLPBNN", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:UseRegulator" ); // BFGS training with bayesian regulators
+
+   if (Use["NN"])
+   {
+       TString layoutString ("Layout=SOFTSIGN|50,RELU|20,LINEAR");
+       TString trainingStrategyString ("TrainingStrategy=LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=150,BatchSize=50,TestRepetitions=7,WeightDecay=0.001,L1=false,DropFraction=0.0,DropRepetitions=5");
+       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY");
+       nnOptions.Append (":"); nnOptions.Append (layoutString);
+       nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
+
+       factory->BookMethod( TMVA::Types::kNN, "NN", nnOptions ); // NN
+   }
 
    // CF(Clermont-Ferrand)ANN
    if (Use["CFMlpANN"])

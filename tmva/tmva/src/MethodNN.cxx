@@ -524,6 +524,7 @@ void TMVA::MethodNN::Train()
     {
 //        std::cout << "settings" << std::endl;
         std::shared_ptr<TMVA::NN::Settings> ptrSettings = *itSettings;
+        fNet.dropOutWeightFactor (fWeights, 1.0/(1.0 - ptrSettings->dropFraction ()));
 //        std::cout << "set monitoring" << std::endl;
         ptrSettings->setMonitoring (fMonitoring);
         ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()), (idxSetting+1)*100.0/(fSettings.size ()));
