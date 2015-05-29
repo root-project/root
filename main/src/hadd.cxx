@@ -77,7 +77,7 @@ int main( int argc, char **argv )
 {
 
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
-      std::cout << "Usage: " << argv[0] << " [-f[0-9]] [-k] [-T] [-O] [-n maxopenedfiles] [-v verbosity] targetfile source1 [source2 source3 ...]" << std::endl;
+      std::cout << "Usage: " << argv[0] << " [-f[0-9]] [-k] [-T] [-O] [-n maxopenedfiles] [-v [verbosity]] targetfile source1 [source2 source3 ...]" << std::endl;
       std::cout << "This program will add histograms from a list of root files and write them" << std::endl;
       std::cout << "to a target root file. The target file is newly created and must not " << std::endl;
       std::cout << "exist, or if -f (\"force\") is given, must not be one of the source files." << std::endl;
@@ -134,16 +134,30 @@ int main( int argc, char **argv )
          }
          ++ffirst;
       } else if ( strcmp(argv[a],"-v") == 0 ) {
-         if (a+1 >= argc) {
-            std::cerr << "Error: no verbosity level was provided after -v.\n";
+         if (a+1 == argc || argv[a+1][0] == '-') {
+            // Verbosity level was not specified use the default:
+            verbosity = 99;
+//         if (a+1 >= argc) {
+//            std::cerr << "Error: no verbosity level was provided after -v.\n";
          } else {
-            Long_t request = strtol(argv[a+1], 0, 10);
-            if (request < kMaxLong && request >= 0) {
-               verbosity = (Int_t)request;
-               ++a;
-               ++ffirst;
-            } else {
-               std::cerr << "Error: could not parse the verbosity level passed after -v: " << argv[a+1] << ". We will use the default value (99).\n";
+            Long_t request = -1;
+            for (char *c = argv[a+1]; *c != '\0'; ++c) {
+               if (!isdigit(*c)) {
+                  // Verbosity level was not specified use the default:
+                  request = 99;
+                  break;
+               }
+            }
+            if (request == 1) {
+               request = strtol(argv[a+1], 0, 10);
+               if (request < kMaxLong && request >= 0) {
+                  verbosity = (Int_t)request;
+                  ++a;
+                  ++ffirst;
+                  std::cerr << "Error: from " << argv[a+1] << " guess verbosity level : " << verbosity << "\n";
+               } else {
+                  std::cerr << "Error: could not parse the verbosity level passed after -v: " << argv[a+1] << ". We will use the default value (99).\n";
+               }
             }
          }
          ++ffirst;
@@ -192,7 +206,7 @@ int main( int argc, char **argv )
    }
    if (!merger.OutputFile(targetname,force,newcomp) ) {
       std::cerr << "hadd error opening target file (does " << argv[ffirst-1] << " exist?)." << std::endl;
-      std::cerr << "Pass \"-f\" argument to force re-creation of output file." << std::endl;
+      if (!force) std::cerr << "Pass \"-f\" argument to force re-creation of output file." << std::endl;
       exit(1);
    }
 
