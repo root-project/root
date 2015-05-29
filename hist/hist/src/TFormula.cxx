@@ -578,14 +578,17 @@ void TFormula::FillDefaults()
    // const pair<TString,Double_t> defconsts[] = { {"pi",TMath::Pi()}, {"sqrt2",TMath::Sqrt2()},
    //       {"infinity",TMath::Infinity()}, {"ln10",TMath::Ln10()},
    //       {"loge",TMath::LogE()}, {"true",1},{"false",0} };
-   const pair<TString,TString> funShortcuts[] = { {"sin","TMath::Sin" },
-         {"cos","TMath::Cos" }, {"exp","TMath::Exp"}, {"log","TMath::Log"}, {"log10","TMath::Log10"},
-         {"tan","TMath::Tan"}, {"sinh","TMath::SinH"}, {"cosh","TMath::CosH"},
-         {"tanh","TMath::TanH"}, {"asin","TMath::ASin"}, {"acos","TMath::ACos"},
-         {"atan","TMath::ATan"}, {"atan2","TMath::ATan2"}, {"sqrt","TMath::Sqrt"},
-         {"ceil","TMath::Ceil"}, {"floor","TMath::Floor"}, {"pow","TMath::Power"},
-         {"binomial","TMath::Binomial"},{"abs","TMath::Abs"},
-         {"min","TMath::Min"},{"max","TMath::Max"} };
+   const pair<TString,TString> funShortcuts[] =
+      { {"sin","TMath::Sin" },
+        {"cos","TMath::Cos" }, {"exp","TMath::Exp"}, {"log","TMath::Log"}, {"log10","TMath::Log10"},
+        {"tan","TMath::Tan"}, {"sinh","TMath::SinH"}, {"cosh","TMath::CosH"},
+        {"tanh","TMath::TanH"}, {"asin","TMath::ASin"}, {"acos","TMath::ACos"},
+        {"atan","TMath::ATan"}, {"atan2","TMath::ATan2"}, {"sqrt","TMath::Sqrt"},
+        {"ceil","TMath::Ceil"}, {"floor","TMath::Floor"}, {"pow","TMath::Power"},
+        {"binomial","TMath::Binomial"},{"abs","TMath::Abs"},
+        {"min","TMath::Min"},{"max","TMath::Max"},{"sign","TMath::Sign" },
+        {"sq","TMath::Power,2"}  // in this case needs to append ,2 at the end of the function
+      };
 
    std::vector<TString> defvars2(10);
    for (int i = 0; i < 9; ++i)
@@ -1376,13 +1379,15 @@ void TFormula::ProcessFormula(TString &formula)
 
    //std::cout << "Begin: formula is " << formula << " list of functors " << fFuncs.size() << std::endl;
 
+   // need to split into two loops - first the one to replace the functions then the variables 
+
    for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
    {
       TFormulaFunction & fun = *funcsIt;
 
       //std::cout << "fun is " << fun.GetName() << std::endl;
 
-      if(fun.fFound)
+      if(fun.fFound )
          continue;
       if(fun.IsFuncCall())
       {
@@ -1391,7 +1396,22 @@ void TFormula::ProcessFormula(TString &formula)
          {
             TString shortcut = it->first;
             TString full = it->second;
-            formula.ReplaceAll(shortcut,full);
+            // check if we need to append something at the end (e.g. case of sq -> pow(x,2) )
+            Ssiz_t ipos = full.First(',');
+            if (ipos == kNPOS )  
+               formula.ReplaceAll(shortcut,full);
+            else {
+               // find the first  the term
+               TString firstTerm =  full(0,ipos );
+               TString lastTerm =  full(ipos,full.Length() );
+               // add last term to the body
+               TString oldBody = fun.GetBody();
+               TString repBody = oldBody + lastTerm;
+               Ssiz_t i1 = formula.Index(shortcut); 
+               formula.Replace(i1, shortcut.Length(), firstTerm); 
+               Ssiz_t i2 = formula.Index(oldBody); 
+               formula.Replace(i2,oldBody.Length(), repBody ); 
+            }
             fun.fFound = true;
          }
          if(fun.fName.Contains("::")) // add support for nested namespaces
@@ -1438,7 +1458,15 @@ void TFormula::ProcessFormula(TString &formula)
             fun.fFound = false;
          }
       }
-      else
+   }
+
+   // second loop in case function is now a func.Call()
+   for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
+   {
+      TFormulaFunction & fun = *funcsIt;
+
+      //std::cout << "fun is " << fun.GetName() << std::endl;
+      if (!fun.IsFuncCall() )
       {
          TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
          if(old)
