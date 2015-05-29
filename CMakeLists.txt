@@ -43,16 +43,18 @@ if(NOT DEFINED ROOTSYS)
   endif()
 endif()
 
-#---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
-find_package(ROOT REQUIRED COMPONENTS RIO Net Hist Gpad Tree Rint Matrix MathCore)
-
 # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
+# If ROOT_SOURCE_DIR is not set, search for an installation.
 if(DEFINED ROOT_SOURCE_DIR)
-  set(ROOT_root_CMD root.exe)
+  find_package(ROOT REQUIRED)
+  get_filename_component(ROOT_INCLUDE_DIR "${ROOTSYS}/include" ABSOLUTE)
+  set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
+  set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
   set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex)
   set(ROOT_rootcint_CMD ${ROOTSYS}/bin/rootcint)
   set(ROOT_rootcling_CMD rootcling)
-else()                       # testing using an installation
+else()# testing using an installation
+  find_package(ROOT REQUIRED COMPONENTS RIO Net Hist Gpad Tree Rint Matrix MathCore)
   if(DEFINED ROOT_USE_FILE)
     include(${ROOT_USE_FILE})
   else()  #---If ROOT was built with the classic configure/make---
