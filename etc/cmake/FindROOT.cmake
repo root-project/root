@@ -59,6 +59,7 @@ execute_process(
   COMMAND ${ROOT_CONFIG_EXECUTABLE} --features
   OUTPUT_VARIABLE _root_options
   OUTPUT_STRIP_TRAILING_WHITESPACE)
+separate_arguments(_root_options)
 foreach(_opt ${_root_options})
   set(ROOT_${_opt}_FOUND TRUE)
 endforeach()
