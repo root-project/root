@@ -3678,12 +3678,52 @@ bool IsImplementationName(const std::string &filename)
 }
 
 //______________________________________________________________________________
-bool IsCorrectClingArgument(const std::string argument)
+bool IsCorrectClingArgument(const std::string& argument)
 {
    // Check if the argument is a sane cling argument. Performing the following checks:
    // 1) It does not start with "--".
    if (ROOT::TMetaUtils::BeginsWith(argument,"--")) return false;
    return true;
+}
+
+//______________________________________________________________________________
+bool IsSupportedClassName(const char* name)
+{
+   static const std::vector<std::string> uclNamePrfxes {
+      "array<",
+      "tuple<",
+      "chrono:",
+      "ratio<",
+      "unique_ptr<",
+      "shared_ptr<"};
+   static const std::set<std::string> unsupportedClassesNormNames{
+      "regex",
+      "thread"};
+   if ( unsupportedClassesNormNames.count(name) == 1) return false;
+   auto pos = find_if(uclNamePrfxes.begin(),
+                      uclNamePrfxes.end(),
+                      [&](const std::string& str){return ROOT::TMetaUtils::BeginsWith(name,str);});
+    return uclNamePrfxes.end() == pos;
+}
+
+//______________________________________________________________________________
+int CheckForUnsupportedClasses(const RScanner::ClassColl_t &annotatedRcds)
+{
+   // Check if the list of selected classes contains any class which is not
+   // supported. Return the number of unsupported classes in the selection.
+
+   int nerrors = 0;
+   for (auto&& aRcd : annotatedRcds){
+      auto clName = aRcd.GetNormalizedName();
+      if (!IsSupportedClassName(clName)){
+         std::cerr << "Error: Class " << clName << " has been selected but "
+               << "currently the support for its I/O is not yet available. Note that "
+               << clName << ", even if not selected, will be available for "
+               << "interpreted code.\n";
+         nerrors++;
+      }
+   }
+   return nerrors;
 }
 
 //______________________________________________________________________________
@@ -4370,7 +4410,7 @@ int RootCling(int argc,
          ROOT::TMetaUtils::Info(0, "Selection XML file\n");
 
          XMLReader xmlr(interp);
-         if (!xmlr.Parse(file, selectionRules)) {
+         if (!xmlr.Parse(linkdefFilename.c_str(), selectionRules)) {
             ROOT::TMetaUtils::Error(0, "Parsing XML file %s\n", linkdefFilename.c_str());
             return 1; // Return here to propagate the failure up to the build system
          } else {
@@ -4483,6 +4523,13 @@ int RootCling(int argc,
       ROOT::TMetaUtils::Warning(0, "Not all selection rules are used!\n");
    }
 
+   int rootclingRetCode(0);
+
+   if (!onepcm){
+      rootclingRetCode += CheckForUnsupportedClasses(scan.fSelectedClasses);
+      if (rootclingRetCode) return rootclingRetCode;
+   }
+
    // SELECTION LOOP
    // Check for error in the class layout before doing anything else.
    for (auto const & annRcd : scan.fSelectedClasses) {
@@ -4525,19 +4572,17 @@ int RootCling(int argc,
       }
    }
 
-   int rootclingRetCode(0);
-
    if (onepcm) {
       AnnotateAllDeclsForPCH(interp, scan);
    } else if (interpreteronly) {
-      rootclingRetCode = CheckClassesForInterpreterOnlyDicts(interp, scan);
+      rootclingRetCode += CheckClassesForInterpreterOnlyDicts(interp, scan);
       // generate an empty pcm nevertheless for consistency
       // Negate as true is 1 and true is returned in case of success.
 #ifndef ROOT_STAGE1_BUILD
       rootclingRetCode +=  FinalizeStreamerInfoWriting(interp);
 #endif
    } else {
-      rootclingRetCode = GenerateFullDict(splitDictStream,
+      rootclingRetCode += GenerateFullDict(splitDictStream,
                                  interp,
                                  scan,
                                  constructorTypes,

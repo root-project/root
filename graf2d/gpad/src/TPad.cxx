@@ -4471,7 +4471,6 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    Int_t lenfil =  filename ? strlen(filename) : 0;
    TString opt = (!option) ? opt_default : option;
-   if (strstr(opt,"Title:")) opt = "pdf";
    Bool_t image = kFALSE;
 
    if ( !lenfil )  {
@@ -5740,6 +5739,11 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
 
    //delete all existing Guidelines and create new invisible pad
    if (tmpGuideLinePad) {
+      if (object == tmpGuideLinePad) { // in case of funny button click combination.
+         tmpGuideLinePad->Delete();
+         tmpGuideLinePad = 0;
+         return;
+      }
       tmpGuideLinePad->Delete();
       tmpGuideLinePad = 0;
    }

@@ -61,18 +61,63 @@ root [10] TMath::Abs(geom_series - (1-TMath::Power(x,N-1))/(1-x))
 
 Here we made a step forward. We even declared variables and used a *for*
 control structure. Note that there are some subtle differences between
-Cling and the standard C++ language. You do not need the ";" at the end
+Cling and the standard `C++` language. You do not need the ";" at the end
 of line in interactive mode -- try the difference e.g. using the command
 at line `root [6]`.
 
-## ROOT as Function Plotter ##
+## Learn C++ at the ROOT prompt ##
+Behind the ROOT prompt there is an interpreter based on a real compiler toolkit:
+LLVM. It is therefore possible to exercise many features of `C++` and the
+standard library. For example in the following snippet we define a lambda
+function, a vector and we sort it in different ways:
+``` {.cpp}
+root [0] using doubles = std::vector<double>;
+root [1] auto pVec = [](const doubles& v){for (auto&& x:v) cout << x << endl;};
+root [2] doubles v{0,3,5,4,1,2};
+root [3] pVec(v);
+0
+3
+5
+4
+1
+2
+root [4] std::sort(v.begin(),v.end());
+root [5] pVec(v);
+0
+1
+2
+3
+4
+5
+root [6] std::sort(v.begin(),v.end(),[](double a, double b){return a>b;});
+root [7] pVec(v);
+5
+4
+3
+2
+1
+0
+```
+Or, if you prefer random number generation:
+``` {.cpp}
+root [0] std::default_random_engine generator;
+root [1] std::normal_distribution<double> distribution(0.,1.);
+root [2] distribution(generator)
+(std::normal_distribution<double>::result_type) -1.219658e-01
+root [3] distribution(generator)
+(std::normal_distribution<double>::result_type) -1.086818e+00
+root [4] distribution(generator)
+(std::normal_distribution<double>::result_type) 6.842899e-01
+```
+Impressive isn't it?
 
+## ROOT as function plotter ##
 Using one of ROOT's powerful classes, here `TF1` [^2], will allow us to
 display a function of one variable, *x*. Try the following:
 
 ``` {.cpp}
-root [11] TF1 *f1 = new TF1("f1","sin(x)/x",0.,10.);
-root [12] f1->Draw();
+root [11] TF1 f1("f1","sin(x)/x",0.,10.);
+root [12] f1.Draw();
 ```
 
 `f1` is a pointer to an instance of a TF1 class, the arguments are used
@@ -91,10 +136,10 @@ this is achieved with the method
 Here is an example:
 
 ``` {.cpp}
-root [13] TF1 *f1 = new TF1("f2","[0]*sin([1]*x)/x",0.,10.);
-root [14] f1->SetParameter(0,1);
-root [15] f1->SetParameter(1,1);
-root [16] f1->Draw();
+root [13] TF1 f2("f2","[0]*sin([1]*x)/x",0.,10.);
+root [14] f2.SetParameter(0,1);
+root [15] f2.SetParameter(1,1);
+root [16] f2.Draw();
 ```
 
 Of course, this version shows the same results as the initial one. Try
@@ -122,48 +167,7 @@ read the "macro" `slits.C`, i.e. all the lines in the file will be
 executed one after the other.
 
 ``` {.cpp .numberLines}
- // Example drawing the interference pattern of light
- // falling on a grid with n slits and ratio r of slit
- // width over distance between slits.
-
- // function code in C
- double single(double *x, double *par) {
-   double const pi=4*atan(1.);
-   return pow(sin(pi*par[0]*x[0])/(pi*par[0]*x[0]),2);
- }
-
- double nslit0(double *x,double *par){
-   double const pi=4*atan(1.);
-   return pow(sin(pi*par[1]*x[0])/sin(pi*x[0]),2);
- }
-
- double nslit(double *x, double *par){
-   return single(x,par) * nslit0(x,par);
- }
-
- // This is the main program
- void slits() {
-   float r,ns;
-
-   // request user input
-   cout << "slit width / g ? ";
-   scanf("%f",&r);
-   cout << "# of slits ? ";
-   scanf("%f",&ns);
-   cout <<"interference pattern for "<< ns
-        <<" slits, width/distance: "<<r<<endl;
-
-   // define function and set options
-   TF1 *Fnslit  = new TF1("Fnslit",nslit,-5.001,5.,2);
-   Fnslit->SetNpx(500);
-
-   // set parameters, as read in above
-   Fnslit->SetParameter(0,r);
-   Fnslit->SetParameter(1,ns);
-
-   // draw the interference pattern for a grid with n slits
-   Fnslit->Draw();
- }
+@ROOT_INCLUDE_FILE macros/slits.C
 ```
 [f21]: figures/TF1_DoubleSlit.png "f21"
 <a name="f21"></a>
@@ -178,7 +182,7 @@ This is a more complicated example than the ones we have seen before, so
 spend some time analysing it carefully, you should have understood it
 before continuing. Let us go through it in detail:
 
-Lines 6-19 define the necessary functions in `C++` code, split into
+Lines *7-18* define the necessary functions in `C++` code, split into
 three separate functions, as suggested by the problem considered. The
 full interference pattern is given by the product of a function
 depending on the ratio of the width and distance of the slits, and a
@@ -187,7 +191,7 @@ is the definition of the interface of these functions to make them
 usable for the ROOT class `TF1`: the first argument is the pointer to
 *x*, the second one points to the array of parameters.
 
-The main program starts in line 21 with the definition of a function
+The main program starts at line 21 with the definition of a function
 `slits()` of type `void`. After asking for user input, a ROOT function
 is defined using the C-type function given in the beginning. We can now
 use all methods of the `TF1` class to control the behaviour of our
@@ -200,7 +204,7 @@ instances.
 
 Here, we used a macro, some sort of lightweight program, that the
 interpreter distributed with ROOT, Cling, is able to execute. This is a
-rather extraordinary situation, since C++ is not natively an interpreted
+rather extraordinary situation, since `C++` is not natively an interpreted
 language! There is much more to say: chapter is indeed dedicated to
 macros.
 
@@ -215,7 +219,7 @@ a line:
 root [1] .<command>
 ```
 
-To
+This is a selection of the most common commands.
 
 -   **quit root**, simply type `.q`
 
@@ -234,10 +238,12 @@ To
     prompt.
 
 -   **compile a macro**, type `.L <file_name>+`; ROOT is able to manage
-    for you the C++ compiler behind the scenes and to produce machine
+    for you the `C++` compiler behind the scenes and to produce machine
     code starting from your macro. One could decide to compile a macro
     in order to obtain better performance or to get nearer to the
     production environment.
+
+Use `.help` at the prompt to inspect the full list.
 
 ## Plotting Measurements ##
 
@@ -247,8 +253,8 @@ the example here, we use data from the file `ExampleData.txt` in text
 format:
 
 ``` {.cpp}
-root [0] TGraphErrors *gr=new TGraphErrors("ExampleData.txt");
-root [1] gr->Draw("AP");
+root [0] TGraphErrors gr("ExampleData.txt");
+root [1] gr.Draw("AP");
 ```
 
 You should see the output shown in Figure [2.2](#f22).
@@ -267,9 +273,9 @@ comments about the type of data. The data itself consist of lines with
 four real numbers each, representing the x- and y- coordinates and their
 errors of each data point.
 
-The argument of the method `Draw("AP")` is important here. It tells the
-`TGraphPainter` class to show the axes and to plot markers at the *x*
-and *y* positions of the specified data points. Note that this simple
+The argument of the method `Draw("AP")` is important here. Behind the scenes,
+it tells the `TGraphPainter` class to show the axes and to plot markers at the
+*x* and *y* positions of the specified data points. Note that this simple
 example relies on the default settings of ROOT, concerning the size of
 the canvas holding the plot, the marker type and the line colours and
 thickness used and so on. In a well-written, complete example, all this
@@ -289,13 +295,13 @@ the entries in one histogram bin.
 root [0] TF1 efunc("efunc","exp([0]+[1]*x)",0.,5.);
 root [1] efunc.SetParameter(0,1);
 root [2] efunc.SetParameter(1,-1);
-root [3] TH1F* h=new TH1F("h","example histogram",100,0.,5.);
-root [4] for (int i=0;i<1000;i++) {h->Fill(efunc.GetRandom());}
-root [5] h->Draw();
+root [3] TH1F h("h","example histogram",100,0.,5.);
+root [4] for (int i=0;i<1000;i++) {h.Fill(efunc.GetRandom());}
+root [5] h.Draw();
 ```
 
 The first three lines of this example define a function, an exponential
-in this case, and set its parameters. In line 4 a histogram is
+in this case, and set its parameters. In line *3* a histogram is
 instantiated, with a name, a title, a certain number of bins (100 of
 them, equidistant, equally sized) in the range from 0 to 5.
 
@@ -308,7 +314,7 @@ random numbers. \label{f23}][f23]
 We use yet another new feature of ROOT to fill this histogram with data,
 namely pseudo-random numbers generated with the method `TF1::GetRandom`,
 which in turn uses an instance of the ROOT class `TRandom` created when
-ROOT is started. Data is entered in the histogram at line 5 using the
+ROOT is started. Data is entered in the histogram at line *4* using the
 method `TH1F::Fill` in a loop construct. As a result, the histogram is
 filled with 1000 random numbers distributed according to the defined
 function. The histogram is displayed using the method `TH1F::Draw()`.
@@ -317,20 +323,20 @@ of a quantum mechanical state, which are entered into the histogram,
 thus giving a visual impression of the probability density distribution.
 The plot is shown in Figure [2.3](#f23).
 
-Note that you will not obtain an identical plot when executing the above
-lines, depending on how the random number generator is initialised.
+Note that you will not obtain an identical plot when executing the lines
+above, depending on how the random number generator is initialised.
 
 The class `TH1F` does not contain a convenient input format from plain
-text files. The following lines of C++ code do the job. One number per
+text files. The following lines of `C++` code do the job. One number per
 line stored in the text file "expo.dat" is read in via an input stream
 and filled in the histogram until end of file is reached.
 
 ``` {.cpp}
-root [1] TH1F* h=new TH1F("h","example histogram",100,0.,5.);
+root [1] TH1F h("h","example histogram",100,0.,5.);
 root [2] ifstream inp; double x;
 root [3] inp.open("expo.dat");
-root [4] while (inp >> x) { h->Fill(x); }
-root [5] h->Draw();
+root [4] while (inp >> x) { h.Fill(x); }
+root [5] h.Draw();
 root [6] inp.close();
 ```
 
@@ -403,7 +409,7 @@ Using ROOT's interactive capabilities is useful for a first exploration
 of possibilities. Other ROOT classes you will encounter in this tutorial
 have such graphical interfaces. We will not comment further on this,
 just be aware of the existence of ROOT's interactive features and use
-them if you find convenient. Some trial-and-error is certainly necessary
+them if you find them convenient. Some trial-and-error is certainly necessary
 to find your way through the huge number of menus and parameter
 settings.
 
@@ -474,21 +480,14 @@ already implicitly introduced (for example in the section
 [Configure ROOT at start-up](#configure-root-at-start-up)).
 The most important among them are presented in the following:
 
--   **[gROOT](http://root.cern.ch/root/html/TROOT.html)**: the `gROOT`
+-   **[gROOT](http://root.cern.ch/root/htmldoc/TROOT.html)**: the `gROOT`
     variable is the entry point to the ROOT system. Technically it is an
     instance of the `TROOT` class. Using the `gROOT` pointer one has
     access to basically every object created in a ROOT based program.
     The `TROOT` object is essentially a container of several lists
     pointing to the main `ROOT` objects.
 
--   **[gRandom](http://root.cern.ch/root/html/TRandom3.html)**: the
-    gRandom variable is a variable that points to a random number
-    generator instance of the type `TRandom3`. Such a variable is useful
-    to access in every point of a program the same random number
-    generator, in order to achieve a good quality of the random
-    sequence.
-
--   **[gStyle](http://root.cern.ch/root/html/TStyle.html)**: By default
+-   **[gStyle](http://root.cern.ch/root/htmldoc/TStyle.html)**: By default
     ROOT creates a default style that can be accessed via the `gStyle`
     pointer. This class includes functions to set some of the following
     object attributes.
@@ -504,13 +503,18 @@ The most important among them are presented in the following:
     -   Histogram Statistics and Titles
     -   etc ...
 
--   **[gSystem](http://root.cern.ch/root/html/TSystem.html)**: An
+-   **[gSystem](http://root.cern.ch/root/htmldoc/TSystem.html)**: An
     instance of a base class defining a generic interface to the
     underlying Operating System, in our case `TUnixSystem`.
+
+-   **[gInterpreter](http://root.cern.ch/htmldoc/html/TInterpreter.html)**: The
+    entry point for the ROOT interpreter. Technically an abstraction level
+    over a singleton instance of `TCling`.
 
 At this point you have already learnt quite a bit about some basic
 features of ROOT.
 
 ***Please move on to become an expert!***
 
-[^2]: All ROOT classes start with the letter T.
+[^2]: All ROOT classes' names start with the letter T. A notable exception is
+RooFit. In this context all classes' names are of the form Roo*.

@@ -100,6 +100,7 @@ if(builtin_lzma)
   else()
     if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
       set(LZMA_CFLAGS "-Wno-format-nonliteral")
+      set(LZMA_LDFLAGS "-Qunused-arguments")
     elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
       set(LZMA_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179")
     endif()
@@ -108,7 +109,8 @@ if(builtin_lzma)
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
       URL_MD5 3e44c766c3fb4f19e348e646fcd5778a
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --with-pic --disable-shared CFLAGS=${LZMA_CFLAGS}
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --with-pic --disable-shared --quiet
+                        CFLAGS=${LZMA_CFLAGS} LDFLAGS=${LZMA_LDFLAGS}
       BUILD_IN_SOURCE 1)
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
@@ -760,6 +762,23 @@ if(chirp)
   endif()
 endif()
 
+#---Check for R/Rcpp/RInside--------------------------------------------------------------------
+#added search of R packages here to remove multiples searches
+if(r)
+  message(STATUS "Looking for R")
+  find_package(R COMPONENTS Rcpp RInside)
+  if(NOT R_FOUND)
+    if(fail-on-missing)
+       message(FATAL_ERROR "R installation not found and is required ('r' option enabled)")
+    else()
+       message(STATUS "R installation not found. Set variable R_DIR to point to your R installation")
+       message(STATUS "For the time being switching OFF 'r' option")
+       set(r OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+
 #---Check for hdfs--------------------------------------------------------------------
 if(hdfs)
   find_package(hdfs)
@@ -872,8 +891,36 @@ if (jemalloc)
   endif()
 endif()
 
+#---Check for TBB---------------------------------------------------------------------
+if(tbb)
+  if(builtin_tbb)
+    set(tbb_version 42_20140122)
+    ExternalProject_Add(
+      TBB
+      URL http://service-spi.web.cern.ch/service-spi/external/tarFiles/tbb${tbb_version}oss_src.tgz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND make CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
+                                       -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
+      INSTALL_COMMAND ""
+      BUILD_IN_SOURCE 1
+    )
+    set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
+  else()
+    message(STATUS "Looking for TBB")
+    find_package(TBB)
+    if(NOT TBB_FOUND)
+      message(STATUS "TBB not found. You can enable the option 'builtin_tbb' to build the library internally'")
+      message(STATUS "               For the time being switching off 'tbb' option")
+      set(tbb OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs clarens glite pch peac sapdb srp geocad)
+foreach(opt afs glite sapdb srp geocad)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)

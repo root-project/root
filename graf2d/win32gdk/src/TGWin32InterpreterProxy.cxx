@@ -26,6 +26,7 @@
 #include "TROOT.h"
 #include "TGWin32.h"
 
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,00,00)
 
 ////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
@@ -130,3 +131,5 @@ RETURN_METHOD_ARG1(Interpreter,Bool_t,SetErrorMessages,Bool_t,enable)
 VOID_METHOD_ARG1(Interpreter,SetProcessLineLock,Bool_t,lock,1)
 RETURN_METHOD_ARG1(Interpreter,const char*,TypeName,const char*,s)
 //Bool_t TGWin32InterpreterProxy::CheckClassInfo(const char* name) { return RealObject()->CheckClassInfo(name); }
+
+#endif

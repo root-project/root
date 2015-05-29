@@ -46,8 +46,10 @@ double MultiNumGradFunction::DoDerivative (const double * x, unsigned int icoord
    // step size can be changes using SetDerivPrecision()
 
    static double kPrecision = std::sqrt ( std::numeric_limits<double>::epsilon() );
-   double x0 = x[icoord];
-   double step = std::max( fgEps* std::abs(x0), 8.0*kPrecision*(std::abs(x0) + kPrecision) );
+   double x0 = std::abs(x[icoord]);
+   //double step = (x0 > 0) ? kPrecision * x0 : kPrecision;
+   // this seems to work better than above
+   double step = (x0>0) ? std::max( fgEps* x0, 8.0*kPrecision*(x0 + kPrecision) ) : kPrecision;
    return ROOT::Math::Derivator::Eval(*fFunc, x, icoord, step);
 }
 

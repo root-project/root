@@ -9,6 +9,7 @@
 #   CMD   Command to be executed for the test.
 #   PRE   Command to be executed before the test command.
 #   POST  Command to be executed after the test command.
+#   IN    File to be used as input
 #   OUT   File to collect stdout and stderr.
 #   ENV   Environment VAR1=Value1;VAR2=Value2.
 #   CWD   Current working directory.
@@ -104,14 +105,16 @@ endif()
 
 if(CMD)
   #---Execute the actual test ------------------------------------------------------------------------
-  string (REPLACE ";" " " _strcmd "${_cmd}")
-  if(OUT)
+  if(IN)
+    set(_input INPUT_FILE ${IN})
+  endif()
 
+  if(OUT)
     # log stdout
     if(CHECKOUT)
       set(_chkout OUTPUT_VARIABLE _outvar)
     else()
-      set(_chkout "")
+      set(_chkout OUTPUT_VARIABLE _outvar2)
     endif()
 
     # log stderr
@@ -120,10 +123,10 @@ if(CMD)
     elseif(ERRREF)
       set(_chkerr ERROR_VARIABLE _errvar)
     else()
-      set(_chkerr "")
+      set(_chkerr ERROR_VARIABLE _errvar2)
     endif()
 
-    execute_process(COMMAND ${_cmd} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
+    execute_process(COMMAND ${_cmd} ${_input} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
 
     string(REGEX REPLACE "([.]*)[;][-][e][;]([^;]+)([.]*)" "\\1;-e '\\2\\3'" res "${_cmd}")
     string(REPLACE ";" " " res "${res}")
@@ -131,11 +134,11 @@ if(CMD)
     message("cd ${CWD}")
     message("${res}")
     message("-- BEGIN TEST OUTPUT --")
-    message("${_outvar}")
+    message("${_outvar}${_outvar2}")
     message("-- END TEST OUTPUT --")
-    if(_errvar)
+    if(_errvar OR _errvar2)
       message("-- BEGIN TEST ERROR --")
-      message("${_errvar}")
+      message("${_errvar}${_errvar2}")
       message("-- END TEST ERROR --")
     endif()
 

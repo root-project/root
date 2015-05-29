@@ -90,7 +90,7 @@ protected:
    };
 
    TTree       *fTree;            //! pointer to Tree
-   Short_t     fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
+   Int_t        fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
    Int_t       fNdata[kMAXCODES]; //! This caches the physical number of element in the leaf or datamember.
    Int_t       fNcodes;           //  Number of leaves referenced in formula
    Bool_t      fHasCast;          //  Record whether the formula contain a cast operation or not

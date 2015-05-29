@@ -428,4 +428,8 @@ INSTALLDATA    := cp -dpR
 INSTALLDIR     := mkdir -p
 RSYNC          := rsync -au
 
+BUILDR         := @buildr@
+RLIBS          := @rlibs@
+RFLAGS         := @rflags@
+
 ROOTDRPMREL    := 1

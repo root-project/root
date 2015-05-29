@@ -41,9 +41,10 @@
 //   referenced by the list are put in the cache.                       //
 //                                                                      //
 //  The learning period is started or restarted when:
-//     - A TTree automatically creates a cache
-//     - TTree::SetCacheSize is called for the first time.
-//     - TTree::SetCacheSize is called a second time with a different size.
+//     - TTree automatically creates a cache. This feature can be
+//       controlled with an env. variable or the TTreeCache.Size option.
+//     - TTree::SetCacheSize is called with a non-zero size and a cache
+//       did not previously exist
 //     - TTreeCache::StartLearningPhase is called.
 //     - TTree[Cache]::SetEntryRange is called
 //          * and the learning is not yet finished

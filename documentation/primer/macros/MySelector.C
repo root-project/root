@@ -68,7 +68,6 @@ Bool_t MySelector::Process(Long64_t entry)
    //
    // The return value is currently not used.
 
-
    return kTRUE;
 }
 

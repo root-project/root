@@ -26,6 +26,8 @@
 #include "TInterpreter.h"
 #endif
 
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,00,00)
+
 #ifndef ROOT_TGWin32ProxyBase
 #include "TGWin32ProxyBase.h"
 #endif
@@ -115,5 +117,7 @@ public:
    static TInterpreter *RealObject();
    static TInterpreter *ProxyObject();
 };
+
+#endif
 
 #endif

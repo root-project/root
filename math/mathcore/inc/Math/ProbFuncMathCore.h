@@ -23,6 +23,7 @@
 #ifndef ROOT_Math_ProbFuncMathCore
 #define ROOT_Math_ProbFuncMathCore
 
+
 namespace ROOT {
 namespace Math {
 
@@ -199,6 +200,49 @@ namespace Math {
    double chisquared_cdf(double x, double r, double x0 = 0);
 
 
+   /**
+
+      Cumulative distribution for the Crystal Ball distribution function
+      
+      See the definition of the Crystal Ball function at 
+      <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
+      Wikipedia</A>.
+      
+      The distribution is defined only for n > 1 when the integral converges 
+
+      @ingroup ProbFunc
+
+   */   
+   double crystalball_cdf(double x, double alpha, double n, double sigma, double x0 = 0);
+   
+   /**
+
+      Complement of the Cumulative distribution for the Crystal Ball distribution
+      
+      See the definition of the Crystal Ball function at 
+      <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
+      Wikipedia</A>.
+      
+      The distribution is defined only for n > 1 when the integral converges 
+
+      @ingroup ProbFunc
+
+   */   
+   double crystalball_cdf_c(double x, double alpha, double n, double sigma, double x0 = 0);
+   
+   /**
+      Integral of the not-normalized Crystal Ball function
+      
+      See the definition of the Crystal Ball function at 
+      <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
+      Wikipedia</A>.
+      
+      see ROOT::Math::crystalball_function for the function evaluation. 
+
+      @ingroup ProbFunc
+
+   */   
+   double crystalball_integral(double x, double alpha, double n, double sigma, double x0 = 0);
 
    /**
 

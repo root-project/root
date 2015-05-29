@@ -2021,8 +2021,6 @@ void TBranch::ResetAddress()
 
    //  Reset last read entry number, we have will had new user object now.
    fReadEntry = -1;
-   fFirstBasketEntry = -1;
-   fNextBasketEntry  = -1;
 
    for (Int_t i = 0; i < fNleaves; ++i) {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
@@ -2583,6 +2581,13 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
       ++fWriteBasket;
       if (fWriteBasket >= fMaxBaskets) {
          ExpandBasketArrays();
+      }
+      if (reusebasket && reusebasket == fCurrentBasket) {
+         // The 'current' basket has Reset, so if we need it we will need
+         // to reload it.
+         fCurrentBasket    = 0;
+         fFirstBasketEntry = -1;
+         fNextBasketEntry  = -1;
       }
       fBaskets.AddAtAndExpand(reusebasket,fWriteBasket);
       fBasketEntry[fWriteBasket] = fEntryNumber;

@@ -29,6 +29,7 @@
 #include "TClingTypeInfo.h"
 #include "TMetaUtils.h"
 #include "TClassEdit.h"
+#include "TError.h"
 
 #include "clang/AST/Attr.h"
 #include "clang/AST/ASTContext.h"
@@ -42,6 +43,8 @@
 
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/ADT/APSInt.h"
+#include "llvm/ADT/APFloat.h"
 
 using namespace clang;
 
@@ -296,7 +299,7 @@ int TClingDataMemberInfo::InternalNext()
    return 0;
 }
 
-long TClingDataMemberInfo::Offset() const
+long TClingDataMemberInfo::Offset()
 {
    using namespace clang;
 
@@ -316,12 +319,39 @@ long TClingDataMemberInfo::Offset() const
       return static_cast<long>(offset);
    }
    else if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
-      if (VD->getType()->isIntegralType(C) && VD->hasInit() &&
-          VD->checkInitIsICE()) {
+      if (VD->hasInit() && VD->checkInitIsICE()) {
          // FIXME: We might want in future to printout the reason why the eval
          // failed.
-         APValue* val = VD->evaluateValue();
-         return reinterpret_cast<long>(val->getInt().getRawData());
+         const APValue* val = VD->evaluateValue();
+         if (VD->getType()->isIntegralType(C)) {
+            return reinterpret_cast<long>(val->getInt().getRawData());
+         } else {
+            // The VD stores the init value; its lifetime should the lifetime of
+            // this offset.
+            switch (val->getKind()) {
+            case APValue::Int: {
+               if (val->getInt().isSigned())
+                  fConstInitVal.fLong = (long)val->getInt().getSExtValue();
+               else
+                  fConstInitVal.fLong = (long)val->getInt().getZExtValue();
+               return (long) &fConstInitVal.fLong;
+            }
+            case APValue::Float:
+               if (&val->getFloat().getSemantics()
+                   == &llvm::APFloat::IEEEsingle) {
+                  fConstInitVal.fFloat = val->getFloat().convertToFloat();
+                  return (long)&fConstInitVal.fFloat;
+               } else if (&val->getFloat().getSemantics()
+                          == &llvm::APFloat::IEEEdouble) {
+                  fConstInitVal.fDouble = val->getFloat().convertToDouble();
+                  return (long)&fConstInitVal.fDouble;
+               }
+               // else fall-through
+            default:
+               ;// fall-through
+            };
+            // fall-through
+         }
       }
       return reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD)));
    }

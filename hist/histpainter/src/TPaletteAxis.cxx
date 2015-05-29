@@ -158,6 +158,8 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    // Check if mouse on the axis region.
 
+   if (!gPad) return;
+
    static Int_t kmode = 0;
    Int_t plxmin = gPad->XtoAbsPixel(fX1);
    Int_t plxmax = gPad->XtoAbsPixel(fX2);

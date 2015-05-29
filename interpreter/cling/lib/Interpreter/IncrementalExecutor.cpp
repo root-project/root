@@ -50,6 +50,9 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& diags):
 #endif
 {
 
+  // MSVC doesn't support m_AtExitFuncsSpinLock=ATOMIC_FLAG_INIT; in the class definition
+  std::atomic_flag_clear( &m_AtExitFuncsSpinLock );
+
   // No need to protect this access of m_AtExitFuncs, since nobody
   // can use this object yet.
   m_AtExitFuncs.reserve(256);
@@ -64,6 +67,12 @@ std::unique_ptr<TargetMachine>
   IncrementalExecutor::CreateHostTargetMachine() const {
   // TODO: make this configurable.
   Triple TheTriple(sys::getProcessTriple());
+#ifdef _WIN32
+  /*
+	* MCJIT works on Windows, but currently only through ELF object format.
+	*/
+  TheTriple.setObjectFormat(llvm::Triple::ELF);
+#endif
   std::string Error;
   const Target *TheTarget
     = TargetRegistry::lookupTarget(TheTriple.getTriple(), Error);

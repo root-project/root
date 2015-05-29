@@ -6362,6 +6362,137 @@ bool testH3Integral()
    return iret;
 }
 
+// test histogram buffer 
+bool testH1Buffer() {
+
+   int iret = 0;
+
+   TH1D * h1 = new TH1D("h1","h1",30,1,0);
+   TH1D * h2 = new TH1D("h2","h2",30,0,0);
+   // fill the histograms                                                                                                                                 
+   int nevt = 800;
+   double x = 0;
+   for (int i = 0; i < nevt ; ++i) {
+      x = gRandom->Gaus(0,1);
+      h1->Fill(x);
+      h2->Fill(x);
+   }
+   h2->BufferEmpty(); // empty buffer for h2                                                                                                              
+
+   int pr = std::cout.precision(15);
+   double eps = TMath::Limits<double>::Epsilon();
+
+   bool itest = false;
+
+   // now test that functions are consistent                                                                                                              
+   //itest = (h1->GetMean() != h2->GetMean() );                                                                                                           
+   itest = equals(h1->GetMean(),h2->GetMean(),eps );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram Mean = " << h1->GetMean() << "  " << h2->GetMean() << " -  " << itest << std::endl;
+   }
+   iret |= itest;
+
+   double s1[TH1::kNstat];
+   double s2[TH1::kNstat];
+   h1->GetStats(s1);
+   h1->GetStats(s2);
+   std::vector<std::string> snames = {"sumw","sumw2","sumwx","sumwx2"};
+   for (unsigned int i  =0; i < snames.size(); ++i) {
+     itest = equals(s1[i],s2[i],eps );
+     if (defaultEqualOptions & cmpOptDebug ) {
+       std::cout << "Statistics " << snames[i] << "  = " << s1[i] << "  " << s2[i] << " -  " << itest << std::endl;
+     }
+     iret |= itest;
+   }
+
+   // another fill will reset the histogram                                                                                                                       
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   itest = (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
+   }
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   itest = (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
+   }
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   itest |= (h1->GetMaximum() != h2->GetMaximum() );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram maximum = " << h1->GetMaximum() << "  " << h2->GetMaximum() << " -  " << itest << std::endl;
+   }
+   iret |= itest;
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   itest = (h1->GetMinimum() != h2->GetMinimum() );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram minimum = " << h1->GetMinimum() << "  " << h2->GetMinimum() << " - " << itest << std::endl;
+   }
+   iret |= itest;
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   int i1 = h1->FindFirstBinAbove(10);
+   int i2 = h2->FindFirstBinAbove(10);
+   itest = (i1 != i2 );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram first bin above  " << i1  << "  " << i2 << " - " << itest << std::endl;
+   }
+   iret |= itest;
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   i1 = h1->FindLastBinAbove(10);
+   i2 = h2->FindLastBinAbove(10);
+   itest = (i1 != i2 );
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram last bin above  " << i1  << "  " << i2 << " - " << itest << std::endl;
+   }
+   iret |= itest;
+
+   x = gRandom->Uniform(-3,3);
+   h1->Fill(x);
+   h2->Fill(x); h2->BufferEmpty();
+   double v1 = h1->Interpolate(0.1);
+   double v2 = h2->Interpolate(0.1);
+   itest = equals(v1,v2,eps);
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram interpolated value  " << v1  << "  " << v2 << " - " << itest << std::endl;
+   }
+   iret |= itest;
+
+   if ( defaultEqualOptions & cmpOptPrint )
+      std::cout << "Buffer H1:\t" << (iret?"FAILED":"OK") << std::endl;
+
+   std::cout.precision(pr);
+
+   delete h1;
+   delete h2;
+
+   return iret;
+}
+
+bool testH2Buffer() {
+   int iret = 0;
+   return iret; 
+}
+bool testH3Buffer() {
+   int iret = 0;
+   return iret; 
+}
+
 bool testConversion1D()
 {
    const int nbins[3] = {50,11,12};
@@ -9696,6 +9827,15 @@ int stressHistogram()
                                            "Integral tests for Histograms....................................",
                                            integralTestPointer };
 
+   const unsigned int numberOfBufferTest = 3;
+   pointer2Test bufferTestPointer[numberOfBufferTest] = { testH1Buffer,
+                                                          testH2Buffer,
+                                                          testH3Buffer
+   };
+   struct TTestSuite bufferTestSuite = { numberOfBufferTest,
+                                           "Buffer tests for Histograms....................................",
+                                           bufferTestPointer };
+
    // Test 15
    // TH1-THn[Sparse] Conversions Tests
    const unsigned int numberOfConversions = 3;
@@ -9726,7 +9866,7 @@ int stressHistogram()
 
 
    // Combination of tests
-   const unsigned int numberOfSuits = 14;
+   const unsigned int numberOfSuits = 15;
    struct TTestSuite* testSuite[numberOfSuits];
    testSuite[ 0] = &rangeTestSuite;
    testSuite[ 1] = &rebinTestSuite;
@@ -9740,8 +9880,9 @@ int stressHistogram()
    testSuite[ 9] = &interpolationTestSuite;
    testSuite[10] = &scaleTestSuite;
    testSuite[11] = &integralTestSuite;
-   testSuite[12] = &conversionsTestSuite;
-   testSuite[13] = &fillDataTestSuite;
+   testSuite[12] = &bufferTestSuite;
+   testSuite[13] = &conversionsTestSuite;
+   testSuite[14] = &fillDataTestSuite;
 
    status = 0;
    for ( unsigned int i = 0; i < numberOfSuits; ++i ) {
@@ -10146,7 +10287,10 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
 
 int equals(Double_t n1, Double_t n2, double ERRORLIMIT)
 {
-   return fabs( n1 - n2 ) > ERRORLIMIT * fabs(n1);
+   if (n1 != 0) 
+      return fabs( n1 - n2 ) > ERRORLIMIT * fabs(n1);
+   else
+      return fabs(n2) > ERRORLIMIT;
 }
 
 int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)

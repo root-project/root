@@ -58,7 +58,7 @@ namespace TMVA{
       void SetMultiClassStyle( TObjArray* hists ); 
       // set frame styles
       void SetFrameStyle( TH1* frame, Float_t scale = 1.0 );
-      void SetTMVAStyle(); ;
+      void SetTMVAStyle();
       void DestroyCanvases();
       // set style and remove existing canvas'
       void Initialize( Bool_t useTMVAStyle = kTRUE );

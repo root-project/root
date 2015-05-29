@@ -186,6 +186,8 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //
    // This member function is called when an axis is clicked with the locator
 
+   if (!gPad) return;
+
    if (fSelected) fSelected->ExecuteEvent(event,px,py);
 
    // Execute action corresponding to the mouse event

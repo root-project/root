@@ -127,8 +127,9 @@ public:
    T& operator[](size_t idx) { return At(idx); }
 
    Iterator_t begin() {
-      // Return an iterator to the 0th TTree entry.
-      return Iterator_t(0, this);
+      // Return an iterator to the 0th TTree entry or an empty iterator if the
+      // array is empty.
+      return IsEmpty() ? Iterator_t() : Iterator_t(0, this);
    }
    Iterator_t end() const { return Iterator_t(); }
 

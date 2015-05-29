@@ -728,6 +728,8 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
    until the button is released.
    End_Html */
 
+   if (!gPad) return;
+
    Int_t i, d;
    Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
    const Int_t kMaxDiff =  10;//3;

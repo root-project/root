@@ -67,6 +67,11 @@ private:
    unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.
    mutable std::string fIoType;
    mutable std::string fIoName;
+   union {
+      float fFloat;
+      double fDouble;
+      long fLong;
+   } fConstInitVal; // Result of VarDecl::evaluateValue()
    inline void CheckForIoTypeAndName () const;
 
 public:
@@ -121,7 +126,7 @@ public:
    int                MaxIndex(int dim) const;
    int                InternalNext();
    bool               Next() { return InternalNext(); }
-   long               Offset() const;
+   long               Offset();
    long               Property() const;
    long               TypeProperty() const;
    int                TypeSize() const;

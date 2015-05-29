@@ -10,7 +10,7 @@ find_package(ROOT REQUIRED)
 
 #---Copy the CTestCustom.cmake file into the build directory---------------------------------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
-
+enable_testing()
 
 if(CMAKE_SYSTEM_NAME MATCHES Darwin)
   # To avoid to set ld_Library_path to locate the test libraries
@@ -22,8 +22,10 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   include_directories(${ROOT_SOURCE_DIR}/tutorials)
   include_directories(${ROOT_SOURCE_DIR}/tmva/inc)
   set(ROOT_root_CMD ${ROOT_BINARY_DIR}/root.exe)
-else()
+else()                       # Testing using an installation (assuming access to ROOT CMake modules)
   include_directories(${ROOT_INCLUDE_DIRS}/../tutorials)
+  add_definitions(${ROOT_DEFINITIONS})
+  include(RootNewMacros)
 endif()
 
 #---environment-------------------------------------------------------------------------------
@@ -274,3 +276,13 @@ endif()
 #--TestTformula------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(TFormulaTests TFormulaTests.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")
+
+#--TBB basic test----------------------------------------------------------------------------------
+if(ROOT_tbb_FOUND)
+  include_directories(${TBB_INCLUDE_DIRS})
+  ROOT_EXECUTABLE(testTBB testTBB.cxx LIBRARIES ${TBB_LIBRARIES})
+  ROOT_ADD_TEST(test-TBB COMMAND testTBB FAILREGEX "FAILED|Error in")
+  if(builtin_tbb)
+    add_dependencies(testTBB TBB)
+  endif()
+endif()

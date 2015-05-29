@@ -104,8 +104,8 @@ static bool R__match_filename(const char *srcname,const char *filename)
 
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType = 0);
 
-BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp)
-   : fIndex(index), fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp)
+BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp, const char* selFileName, long lineno)
+   : fIndex(index),fLineNumber(lineno),fSelFileName(selFileName),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp)
 {
    fAttributes.insert(AttributesMap_t::value_type(attributeName, attributeValue));
 }

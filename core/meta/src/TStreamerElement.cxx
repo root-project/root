@@ -430,6 +430,25 @@ Bool_t TStreamerElement::IsBase() const
 }
 
 //______________________________________________________________________________
+Bool_t TStreamerElement::IsTransient() const
+{
+   // Return kTRUE if the element represent an entity that is not written
+   // to the disk (transient members, cache allocator/deallocator, etc.)
+
+   if (fType == TVirtualStreamerInfo::kArtificial) {
+      // if (((const TStreamerArtificial*)this)->GetWriteFunc() == 0)
+         return kTRUE;
+   }
+   if (fType == TVirtualStreamerInfo::kCacheNew) return kTRUE;
+   if (fType == TVirtualStreamerInfo::kCacheDelete) return kTRUE;
+   if (fType == TVirtualStreamerInfo::kCache) return kTRUE;
+   if (fType == TVirtualStreamerInfo::kMissing) return kTRUE;
+   if (TVirtualStreamerInfo::kSkip <= fType && fType < TVirtualStreamerInfo::kSkip) return kTRUE;
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 void TStreamerElement::ls(Option_t *) const
 {
    // Print the content of the element.

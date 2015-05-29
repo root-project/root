@@ -128,5 +128,26 @@ public:
    ClassDef(TColor,2)  //Color defined by RGB or HLS
 };
 
+   enum EColorPalette {kDeepSea=51,          kGreyScale=52,    kDarkBodyRadiator=53,
+                       kBlueYellow= 54,      kRainBow=55,      kInvertedDarkBodyRadiator=56,
+                       kBird=57,             kCubehelix=58,    kGreenRedViolet=59,
+                       kBlueRedYellow=60,    kOcean=61,        kColorPrintableOnGrey=62,
+                       kAlpine=63,           kAquamarine=64,   kArmy=65,
+                       kAtlantic=66,         kAurora=67,       kAvocado=68,
+                       kBeach=69,            kBlackBody=70,    kBlueGreenYellow=71,
+                       kBrownCyan=72,        kCMYK=73,         kCandy=74,
+                       kCherry=75,           kCoffee=76,       kDarkRainBow=77,
+                       kDarkTerrain=78,      kFall=79,         kFruitPunch=80,
+                       kFuchsia=81,          kGreyYellow=82,   kGreenBrownTerrain=83,
+                       kGreenPink=84,        kIsland=85,       kLake=86,
+                       kLightTemperature=87, kLightTerrain=88, kMint=89,
+                       kNeon=90,             kPastel=91,       kPearl=92,
+                       kPigeon=93,           kPlum=94,         kRedBlue=95,
+                       kRose=96,             kRust=97,         kSandyTerrain=98,
+                       kSienna=99,           kSolar=100,       kSouthWest=101,
+                       kStarryNight=102,     kSunset=103,      kTemperatureMap=104,
+                       kThermometer=105,     kValentine=106,   kVisibleSpectrum=107,
+                       kWaterMelon=108,      kCool=109,        kCopper=110,
+                       kGistEarth=111};
 #endif
 

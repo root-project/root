@@ -20,6 +20,19 @@
 //  with the class name in the TClassTable singleton object.            //
 //  For a description of all dictionary classes see TDictionary.        //
 //                                                                      //
+//  The name of the class as registered in the TClass object and in the //
+//  list of class is the "normalized name" and is defined as:           //
+//                                                                      //
+//  The name of the type as accessible from the global scope to which   //
+//  a 'using namespace std;' has been applied to and with:              //
+//     - all typedefs desugared except for Double32_t, Float16_t,       //
+//       Long64_t, ULong64_t and std::string.                           //
+//     - default template parameters removed for STL collections and    //
+//       added for any other class templates instances.                 //
+//     - Fully qualified both for the class name itself and all of its  //
+//       component, except that, at least for moment, all 'std::' are   //
+//       stripped.                                                      //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 //*-*x7.5 macros/layout_class
@@ -1290,7 +1303,7 @@ void TClass::Init(const char *name, Version_t cversion,
    // See also TCling::GenerateTClass() which will update fClassVersion after creation!
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
    fProperty       = -1;
-   fClassProperty  = -1;
+   fClassProperty  = 0;
 
    ResetInstanceCount();
 
@@ -2853,9 +2866,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (!loadedcl){
          if (TDataType* theDataType = gROOT->GetType(normalizedName.c_str())){
             // We have a typedef: we get the name of the underlying type
-            auto underlyingTypeName = theDataType->GetTypeName().Data();
+            auto underlyingTypeName = theDataType->GetTypeName();
             // We see if we can bootstrap a class with it
-            auto underlyingTypeDict = TClassTable::GetDictNorm(underlyingTypeName);
+            auto underlyingTypeDict = TClassTable::GetDictNorm(underlyingTypeName.Data());
             if (underlyingTypeDict){
                loadedcl = underlyingTypeDict();
             }

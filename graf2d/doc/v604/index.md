@@ -29,6 +29,7 @@
 - Fix an issue with transparent pads.
 - Implement transparent colors using TiKZ "opacity".
 - Implement `TStyle::SetLineScalePS()` to control le global basic line width.
+- Offer 0 as line width option. Useful to make a line invisible.
 
 ### TPostScript
 
@@ -36,6 +37,7 @@
 - With `TMathtext`, only the fonts really used are now loaded in the PostScript
   file. Typically it reduces the file size by a factor 10 (compare to the previous
   implementation) for normal plots with math formulae and greek characters.
+- Offer 0 as line width option. Useful to make a line invisible.
 
 ### TPDF
 
@@ -49,12 +51,14 @@
   A way to bypass this issue was to turn off the anti-aliasing in the previewer
   but then the rest of the document does not look nice. This problem is now bypassed
   with a fix in both PDF and PostScript output.
+- Offer 0 as line width option. Useful to make a line invisible.
 
 ### TSVG
 
 - Use float numbers instead of integer to describe graphics paths to avoid
   rounding problems.
 - Implement missing math symbols.
+- Offer 0 as line width option. Useful to make a line invisible.
 
 ### TASImage
 
@@ -62,13 +66,15 @@
   image and the fist image in case of infinite loop. (Fernando Hueso González
   <f.gonzalez@hzdr.de>).
 
+### TPadPainter
+- Offer 0 as line width option. Useful to make a line invisible.
+
 ### TPad
 
 - In `TPad::ShowGuidelines` the number of guide lines is limited to 15. Above
   that they become useless.
 - Print a warning if one of the pad limit is a NaN.
-- In `Pad::Print()`, make sure the file format is "pdf" when the option "Title:"
-  is present.
+- Fix https://sft.its.cern.ch/jira/browse/ROOT-6703.
 
 ### TCanvas
 

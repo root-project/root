@@ -97,13 +97,16 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials
+                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CMAKE_BINARY_DIR}/LICENSE
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
-                   COMMENT "Moving directorties such as etc, icons, fonts, etc. to build area")
+                   COMMENT "Moving directories such as etc, icons, fonts, etc. to build area")
 add_custom_target(move_headers DEPENDS ${stamp_file}
                                COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
                                                         -DCOMPONENTS="headers"
                                                         -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake)
 include_directories(${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
+
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
@@ -195,7 +198,11 @@ include(RootConfiguration)
 #---Installation of project-wise artifacts-------------------------------------------------------
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
-  install(DIRECTORY README DESTINATION ${CMAKE_INSTALL_DOCDIR} PATTERN ".svn" EXCLUDE)
+  if(gnuinstall)
+    install(DIRECTORY README/ DESTINATION ${CMAKE_INSTALL_DOCDIR} PATTERN ".svn" EXCLUDE)
+  else()
+    install(DIRECTORY README DESTINATION ${CMAKE_INSTALL_DOCDIR} PATTERN ".svn" EXCLUDE)
+  endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
                          PATTERN ".svn" EXCLUDE
                          REGEX system.rootrc EXCLUDE

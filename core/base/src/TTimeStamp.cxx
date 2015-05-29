@@ -716,7 +716,7 @@ void TTimeStamp::Set(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate)
 //______________________________________________________________________________
 void TTimeStamp::NormalizeNanoSec()
 {
-   // Ensure that the fNanoSec field is in range [0,99999999].
+   // Ensure that the fNanoSec field is in range [0,999999999].
 
    const Int_t kNsPerSec = 1000000000;
    // deal with negative values

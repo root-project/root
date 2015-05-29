@@ -20,7 +20,7 @@ server the baskets for too many branches.
 The default behavior can be changed by either updating one of the rootrc files
 or by setting environment variables.  The rootrc files, both the global and the
 local ones, now support the following the resource variable TTreeCache.Size
-which set the default ize factor for auto sizing TTreeCache for TTrees. The
+which set the default size factor for auto sizing TTreeCache for TTrees. The
 estimated cluster size for the TTree and this factor is used to give the cache
 size. If option is set to zero auto cache creation is disabled and the default
 cache size is the historical one (equivalent to factor 1.0). If set to
@@ -36,6 +36,17 @@ the branches.  It can be overridden by the environment variable ROOT_TTREECACHE_
 In particular the default can be set back to the same as in version 5 by
 setting TTreeCache.Size (or ROOT_TTREECACHE_SIZE) and TTreeCache.Prefill
 (or ROOT_TTREECACHE_PREFILL) both to zero.
+
+TTree methods which are expected to modify a cache, like AddBranchToCache, will
+attempt to setup a cache of default size if one does not exist, irrespective of
+whether the auto cache creation is enabled. Additionally several methods giving
+control of the cache have changed return type from void to Int_t, to be able to
+return a code to indicate if there was an error.
+
+Usually TTree::SetCacheSize will no longer reset the list of branches to be
+cached (either set or previously learnt) nor restart the learning phase.
+The learning phase is restarted when a new cache is created, e.g. after having
+removed a cache with SetCacheSize(0).
 
 ### TSelectorDraw
 

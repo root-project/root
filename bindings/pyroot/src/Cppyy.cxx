@@ -148,6 +148,7 @@ Cppyy::TCppScope_t Cppyy::GetScope( const std::string& sname )
    else
       scope_name = sname;
 
+   scope_name = ResolveName( scope_name );
    auto icr = g_name2classrefidx.find( scope_name );
    if ( icr != g_name2classrefidx.end() )
       return (TCppType_t)icr->second;
@@ -491,7 +492,7 @@ size_t Cppyy::GetFunctionArgTypeoffset()\
 
 
 // scope reflection information ----------------------------------------------
-Bool_t Cppyy::IsNamespace( TCppScope_t scope) {
+Bool_t Cppyy::IsNamespace( TCppScope_t scope ) {
 // Test if this scope represents a namespace.
    TClassRef& cr = type_from_handle( scope );
    if ( cr.GetClass() )
@@ -572,11 +573,18 @@ ptrdiff_t Cppyy::GetBaseOffset( TCppType_t derived, TCppType_t base,
       return (ptrdiff_t)0;
 
    Long_t offset = -1;
-   if ( ! (cd->GetClassInfo() && cb->GetClassInfo()) ) {
-   // warn to allow diagnostics, return -1 to signal caller NOT to apply offset
-      std::ostringstream msg;
-      msg << "failed offset calculation between " << cb->GetName() << " and " << cd->GetName();
-      PyErr_Warn( PyExc_RuntimeWarning, const_cast<char*>( msg.str().c_str() ) );
+   if ( ! (cd->GetClassInfo() && cb->GetClassInfo()) ) {    // gInterpreter requirement
+   // would like to warn, but can't quite determine error from intentional
+   // hiding by developers, so only cover the case where we really should have
+   // had a class info, but apparently don't:
+      if ( cd->IsLoaded() ) {
+      // warn to allow diagnostics
+         std::ostringstream msg;
+         msg << "failed offset calculation between " << cb->GetName() << " and " << cd->GetName();
+         PyErr_Warn( PyExc_RuntimeWarning, const_cast<char*>( msg.str().c_str() ) );
+      }
+
+   // return -1 to signal caller NOT to apply offset
       return rerror ? (ptrdiff_t)offset : 0;
    }
 

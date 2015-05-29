@@ -369,7 +369,9 @@
 #   define R__VISUAL_CPLUSPLUS
 #   define NEED_STRING
 #   define NEED_STRCASECMP
-#   define NEED_SNPRINTF
+#   if _MSC_VER < 1900
+#     define NEED_SNPRINTF
+#   endif
 #   define ANSICPP
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */

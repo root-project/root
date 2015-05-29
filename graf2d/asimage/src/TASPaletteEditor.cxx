@@ -959,6 +959,8 @@ void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event,
 {
    static Int_t oldX;
 
+   if (!gPad) return;
+
    switch(event) {
       case kMouseMotion:
          gPad->SetCursor(kMove);

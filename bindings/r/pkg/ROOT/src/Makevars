@@ -1,0 +1,65 @@
+# -*- mode: Makefile; tab-width: 8 -*- 
+#
+# Makevars for ROOT 
+#
+# Copyright (C) 2014 Omar Andres Zapata Mesa <andresete.chaos@gmail.com>
+
+all: 	$(SHLIB) ALLLIBS
+
+INSTDIR =	../inst/lib/
+
+CORELIB = Core$(DYLIB_EXT)
+RINTLIB = Rint$(DYLIB_EXT)
+HISTLIB = Hist$(DYLIB_EXT)
+GRAFLIB = Graf$(DYLIB_EXT)
+RIOLIB  = RIO$(DYLIB_EXT)
+
+####################
+#Compilation Flags #
+####################
+ROOTFLAGS=`root-config --cflags`
+RFLAGS=`R CMD config --cppflags` -fPIC
+RCPPINCL=`$(R_HOME)/bin/Rscript -e 'Rcpp:::CxxFlags()'`
+RINSIDEINCL=`$(R_HOME)/bin/Rscript -e 'RInside:::CxxFlags()'`
+
+
+##################
+#Linking Flags   #
+##################
+RCPPLIBS=`$(R_HOME)/bin/Rscript -e 'Rcpp:::LdFlags()'`
+RINSIDELIBS=`$(R_HOME)/bin/Rscript -e  'RInside:::LdFlags()'`
+ROOTLIBS=`root-config --glibs` 
+
+ALLCXXFLAGS = $(ROOTFLAGS) $(RFLAGS) $(RCPPINCL) $(RINSIDEINCL)
+
+ALLLDFLAGS = $(SHLIB_CXXLDFLAGS) $(RCPPLIBS) $(RINSIDELIBS) $(ROOTLIBS)
+
+ALLLIBS: $(CORELIB) $(HISTLIB) $(RINTLIB) $(GRAFLIB) $(RIOLIB)
+		-@if test ! -e $(INSTDIR)$(R_ARCH); then mkdir -p $(INSTDIR)$(R_ARCH); fi
+		cp $(CORELIB) $(INSTDIR)$(R_ARCH)
+		cp $(HISTLIB) $(INSTDIR)$(R_ARCH)
+		cp $(RINTLIB) $(INSTDIR)$(R_ARCH)
+		cp $(GRAFLIB) $(INSTDIR)$(R_ARCH)
+		cp $(RIOLIB)  $(INSTDIR)$(R_ARCH)
+
+$(CORELIB):
+		$(SHLIB_CXXLD) $(ALLCXXFLAGS) Core.cxx -o  $(CORELIB)   $(ALL_LIBS) $(ALLLDFLAGS)
+
+$(RINTLIB):
+		$(SHLIB_CXXLD) $(ALLCXXFLAGS) Rint.cxx -o  $(RINTLIB)   $(ALL_LIBS) $(ALLLDFLAGS)
+		
+$(HISTLIB): 
+		$(SHLIB_CXXLD) $(ALLCXXFLAGS) Hist.cxx -o  $(HISTLIB)  $(ALL_LIBS) $(ALLLDFLAGS)
+
+$(GRAFLIB): 
+		$(SHLIB_CXXLD) $(ALLCXXFLAGS) Graf.cxx -o  $(GRAFLIB)  $(ALL_LIBS) $(ALLLDFLAGS)
+
+$(RIOLIB):
+		$(SHLIB_CXXLD) $(ALLCXXFLAGS) RIO.cxx -o  $(RIOLIB)  $(ALL_LIBS) $(ALLLDFLAGS)
+
+		
+.PHONY: 	all clean ALLLIBS
+
+clean:
+		rm -f $(OBJECTS) $(SHLIB) $(HISTLIB) $(GRAFLIB) $(RINTLIB) $(RIO)
+

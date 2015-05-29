@@ -111,7 +111,7 @@ static inline Int_t ExtractChar( PyObject* pyobject, const char* tname, Int_t lo
       else
          PyErr_Format( PyExc_TypeError, "%s expected, got string of size " PY_SSIZE_T_FORMAT,
              tname, PyROOT_PyUnicode_GET_SIZE( pyobject ) );
-   } else {
+   } else if ( ! PyFloat_Check( pyobject ) ) {    // don't allow truncating conversion
       lchar = PyLong_AsLong( pyobject );
       if ( lchar == -1 && PyErr_Occurred() )
          ; // empty, as error already set
@@ -120,7 +120,9 @@ static inline Int_t ExtractChar( PyObject* pyobject, const char* tname, Int_t lo
             "integer to character: value %d not in range [%d,%d]", lchar, low, high );
          lchar = -1;
       }
-   }
+   } else
+      PyErr_SetString( PyExc_TypeError, "char or small int type expected" );
+
    return lchar;
 }
 

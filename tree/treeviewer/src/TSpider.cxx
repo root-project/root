@@ -677,6 +677,7 @@ void TSpider::ExecuteEvent(Int_t /*event*/,Int_t /*px*/, Int_t /*py*/)
 {
    // Execute the corresponding event.
 
+   if (!gPad) return;
    gPad->SetCursor(kHand);
 }
 

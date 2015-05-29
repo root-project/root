@@ -7,12 +7,12 @@
 //
 // Random number generator class based on
 //   M. Matsumoto and T. Nishimura,
-//   Mersenne Twistor: A 623-diminsionally equidistributed
+//   Mersenne Twister: A 623-diminsionally equidistributed
 //   uniform pseudorandom number generator
 //   ACM Transactions on Modeling and Computer Simulation,
 //   Vol. 8, No. 1, January 1998, pp 3--30.
 //
-// For more information see the Mersenne Twistor homepage
+// For more information see the Mersenne Twister homepage
 //   http://www.math.keio.ac.jp/~matumoto/emt.html
 //
 // Advantage: large period 2**19937-1
@@ -68,7 +68,7 @@ TRandom3::TRandom3(UInt_t seed)
 // In this case the seed is guaranteed to be unique in space and time.
 
    SetName("Random3");
-   SetTitle("Random number generator: Mersenne Twistor");
+   SetTitle("Random number generator: Mersenne Twister");
    SetSeed(seed);
 }
 
@@ -85,7 +85,7 @@ Double_t TRandom3::Rndm(Int_t)
 {
 //  Machine independent random number generator.
 //  Produces uniformly-distributed floating points in (0,1)
-//  Method: Mersenne Twistor
+//  Method: Mersenne Twister
 
    UInt_t y;
 

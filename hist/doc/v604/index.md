@@ -78,6 +78,7 @@ The equivalent correct code is now
   reported in ROOT-7124.
 - Use `GeyStdDev` instead of `GetRMS`. The stat box now shows `Std Dev` instead
   of `RMS`.
+- The Stats Format was ignored when painting the pave stats for 2D histograms.
 
 ### TGraph2D
 

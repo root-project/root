@@ -1,6 +1,6 @@
 # Motivation and Introduction #
 
-***Welcome to data analysis!*** [^1]
+***Welcome to data analysis!***
 
 Comparison of measurements to theoretical models is one of the standard
 tasks in experimental physics. In the most simple case, a "model" is
@@ -18,7 +18,7 @@ should be provided - think for example of an integral or peak-search or
 a Fourier transformation applied to an input spectrum to obtain the
 actual measurement described by the model.
 
-One specialty of experimental physics are the inevitable errors
+One specialty of experimental physics are the inevitable uncertaintes
 affecting each measurement, and visualisation tools have to include
 these. In subsequent analysis, the statistical nature of the errors must
 be handled properly.
@@ -29,17 +29,17 @@ example of a function (model) fit to data points. Several standard methods are
 available, and a data analysis tool should provide easy access to more
 than one of them. Means to quantify the level of agreement between
 measurements and model must also be available.
-
+<!--
 [f11]: figures/examplefit.png "f11"
 <a name="f11"></a>
 
 ![Measured data points with error bars and fitted quadratic
-function.\label{f11}][f11]
+function.\label{f11}][f11]-->
 
 Quite often, the data volume to be analyzed is large - think of
 fine-granular measurements accumulated with the aid of computers. A
 usable tool therefore must contain easy-to-use and efficient methods for
-data handling.
+storing and handling data.
 
 In Quantum mechanics, models typically only predict the probability
 density function ("pdf") of measurements depending on a number of
@@ -80,11 +80,10 @@ interested in. You can even look at the code itself, since ROOT is a
 free, open-source product. Use these documents in parallel to this
 tutorial!
 
-The ROOT Data Analysis Framework itself is written in and heavily relys
-on the programming language `C++`, and therefore some knowledge about
-`C` and `C++` is required. Eventually, just profit from the immense
-available literature about `C++` if you do not have any idea of what
-object oriented programming could be.
+The ROOT Data Analysis Framework itself is written in and heavily relies
+on the `C++` programming language: some knowledge about `C++` is required.
+Jus take advantage from the immense available literature about `C++` if you do
+not have any idea of what this language is about.
 
 ROOT is available for many platforms (Linux, Mac OS X, Windows...), but
 in this guide we will implicitly assume that you are using Linux. The
@@ -96,8 +95,3 @@ the ROOT source code to compile yourself. Just pick up the flavour you
 need and follow the installation instructions.
 
 **Let's dive into ROOT!**
-
-[^1]: This guide was prepared for the ROOT IRMM Tutorial adapting "A
-    ROOT Guide for Students"
-    <http://www-ekp.physik.uni-karlsruhe.de/~quast>, a document by D.
-    Piparo, G. Quast and M. Zeise.

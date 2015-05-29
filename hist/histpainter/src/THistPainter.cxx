@@ -1274,7 +1274,7 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol1->Fill(px,5*py);
    }
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    hcol1->Draw("COLZ");
    return c1;
 }
@@ -1295,7 +1295,7 @@ Begin_Macro(source)
       hcol2->Fill(px,5*py);
    }
    hcol2->Fill(0.,0.,-200.);
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    hcol2->Draw("COLZ");
    return c1;
 }
@@ -1327,7 +1327,7 @@ Begin_Macro(source)
    }
    hcol21->SetBit(TH1::kNoStats);
    hcol22->SetBit(TH1::kNoStats);
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    c1->cd(1); hcol21->Draw("COLZ");
    c1->cd(2); hcol22->Draw("COLZ0");
    hcol22->SetMaximum(100);
@@ -1348,7 +1348,7 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol1->Fill(px,py);
    }
-   gStyle->SetPalette(54);
+   gStyle->SetPalette(57);
    hcol1->Draw("COLZPOL");
    return c1;
 }
@@ -1580,7 +1580,7 @@ Begin_Macro(source)
       hcontz->Fill(px-1,5*py);
       hcontz->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    hcontz->Draw("CONTZ");
    return c1;
 }
@@ -1604,7 +1604,7 @@ Begin_Macro(source)
       hcont1->Fill(px-1,5*py);
       hcont1->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    hcont1->Draw("CONT1Z");
    return c1;
 }
@@ -1670,7 +1670,7 @@ Begin_Macro(source)
       hcont4->Fill(px-1,5*py);
       hcont4->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    hcont4->Draw("CONT4Z");
    return c1;
 }
@@ -1873,7 +1873,7 @@ Begin_Macro(source)
       hlego2->Fill(px-1,5*py);
       hlego2->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    hlego2->Draw("LEGO2Z");
    return c2;
 }
@@ -1959,6 +1959,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
+   gStyle->SetPalette(57);
    TH2F *hsurf1 = new TH2F("hsurf1","Option SURF1 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -1982,6 +1983,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
+   gStyle->SetPalette(57);
    TH2F *hsurf2 = new TH2F("hsurf2","Option SURF2 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2005,6 +2007,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
+   gStyle->SetPalette(57);
    TH2F *hsurf3 = new TH2F("hsurf3","Option SURF3 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2048,6 +2051,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
+   gStyle->SetPalette(57);
    TH2F *hsurf5 = new TH2F("hsurf4","Option SURF5 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2072,6 +2076,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",600,400);
+   gStyle->SetPalette(57);
    TH2F *hsurf7 = new TH2F("hsurf3","Option SURF7 example ",30,-4,4,30,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
@@ -2103,7 +2108,7 @@ Begin_Macro(source)
          hsc->SetBinContent(bx, by, exp(-x*x)*exp(-y*y));
       }
    }
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    hsc->Draw("surf2");
    hsc->Draw("CONT1 SAME");
    return c20;
@@ -2187,7 +2192,7 @@ Begin_Macro(source)
       hscc->Fill(px-1,5*py);
       hscc->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    c4->cd(1); hscc->Draw("SURF1 CYL");
    c4->cd(2); TH2F *hspc = (TH2F*) hscc->DrawClone("SURF1 POL");
    hspc->SetTitle("Polar coordinates");
@@ -2366,7 +2371,7 @@ Begin_Macro(source)
    Double_t fy[] = {0.01, -0.5, -0.5, 3};
    Double_t fw[] = {3, 1, 1, 1.5};
    h2p->FillN(4, fx, fy, fw);
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    h2p->Draw("col");
    return ch2p1;
 }
@@ -2439,7 +2444,7 @@ Begin_Macro(source)
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    p->Draw("COLZ L");
    return ch2p2;
 }
@@ -2881,11 +2886,11 @@ The supported options are:
 
 <table border=0>
 
-<tr><th valign=top>GLBOX" </th><td>
+<tr><th valign=top>"GLBOX" </th><td>
 TH3 as a set of boxes, size of box is proportional to bin content.
 </td></tr>
 
-<tr><th valign=top>GLBOX1"</th><td>
+<tr><th valign=top>"GLBOX1"</th><td>
 The same as "glbox", but spheres are drawn instead of boxes.
 </td></tr>
 
@@ -2909,7 +2914,7 @@ The supported option is:
 
 <table border=0>
 
-<tr><th valign=top>GLTF3" </th><td>
+<tr><th valign=top>"GLTF3" </th><td>
 Draw a TF3.
 </td></tr>
 
@@ -3314,6 +3319,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    This function is called when a histogram is clicked with the locator at
    the pixel position px,py.
    End_html */
+
+   if (!gPad) return;
 
    static Int_t bin, px1, py1, px2, py2, pyold;
    static TBox *zoombox;
@@ -5195,7 +5202,7 @@ void THistPainter::PaintViolinPlot(Option_t *)
              hp->GetQuantiles(5, quantiles, prob);
              xpm[0] = hp->GetMean();
 
-             h2->SetLineWidth(0);
+             h2->SetLineWidth(1);
              h2->TAttLine::Modify();
              TAxis *ax = hp->GetXaxis();
              for(Int_t j=ax->GetFirst(); j<ax->GetLast(); ++j){
@@ -7979,7 +7986,8 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       }
    }
    if (print_integral) {
-      snprintf(t,100,"%s  = %6.4g",gStringIntegral.Data(),h2->Integral());
+      snprintf(textstats,50,"%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
+      snprintf(t,100,textstats,fH->Integral());
       stats->AddText(t);
    }
    if (print_skew) {

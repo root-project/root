@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include <algorithm>
-#include <cassert>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -26,9 +25,6 @@
 #include "TPad.h"
 
 namespace {
-
-//All asserts were commented, since ROOT's build system does not
-//use -DNDEBUG for gpad module (with --build=release).
 
 //Typedef is fine, but let's pretend we look cool and modern:
 using size_type = std::vector<TPoint>::size_type;
@@ -355,6 +351,8 @@ void TPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
    // Paint a simple line.
 
+   if (GetLineWidth()<=0) return;
+
    const Int_t px1 = gPad->XtoPixel(x1);
    const Int_t px2 = gPad->XtoPixel(x2);
    const Int_t py1 = gPad->YtoPixel(y1);
@@ -368,6 +366,8 @@ void TPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2
 {
    // Paint a simple line in normalized coordinates.
 
+   if (GetLineWidth()<=0) return;
+
    const Int_t px1 = gPad->UtoPixel(u1);
    const Int_t py1 = gPad->VtoPixel(v1);
    const Int_t px2 = gPad->UtoPixel(u2);
@@ -380,6 +380,8 @@ void TPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2
 void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
    // Paint a simple box.
+
+   if (GetLineWidth()<=0 && mode == TVirtualPadPainter::kHollow) return;
 
    Int_t px1 = gPad->XtoPixel(x1);
    Int_t px2 = gPad->XtoPixel(x2);
@@ -398,14 +400,12 @@ void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EB
 //______________________________________________________________________________
 void TPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t *ys)
 {
-   //Paint filled area.
+   // Paint filled area.
+
    if (nPoints < 3) {
       ::Error("TPadPainter::DrawFillArea", "invalid number of points %d", nPoints);
       return;
    }
-
-   //assert(xs != nullptr && "DrawFillArea, parameter 'xs' is null");
-   //assert(ys != nullptr && "DrawFillArea, parameter 'ys' is null");
 
    DrawFillAreaAux(gPad, nPoints, xs, ys);
 }
@@ -414,14 +414,12 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t
 //______________________________________________________________________________
 void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *ys)
 {
-   //Paint filled area.
+   // Paint filled area.
+
    if (nPoints < 3) {
       ::Error("TPadPainter::DrawFillArea", "invalid number of points %d", nPoints);
       return;
    }
-
-   //assert(xs != nullptr && "DrawFillArea, parameter 'xs' is null");
-   //assert(ys != nullptr && "DrawFillArea, parameter 'ys' is null");
 
    DrawFillAreaAux(gPad, nPoints, xs, ys);
 }
@@ -429,13 +427,14 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
 //______________________________________________________________________________
 void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
 {
+   // Paint Polyline.
+
+   if (GetLineWidth()<=0) return;
+
    if (n < 2) {
       ::Error("TPadPainter::DrawPolyLine", "invalid number of points");
       return;
    }
-
-   //assert(xs != nullptr && "DrawPolyLine, parameter 'xs' is null");
-   //assert(ys != nullptr && "DrawPolyLine, parameter 'ys' is null");
 
    DrawPolyLineAux(gPad, n, xs, ys);
 }
@@ -444,14 +443,14 @@ void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
 //______________________________________________________________________________
 void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 {
-   //Paint polyline.
+   // Paint polyline.
+
+   if (GetLineWidth()<=0) return;
+
    if (n < 2) {
       ::Error("TPadPainter::DrawPolyLine", "invalid number of points");
       return;
    }
-
-   //assert(xs != nullptr && "DrawPolyLine, parameter 'xs' is null");
-   //assert(ys != nullptr && "DrawPolyLine, parameter 'ys' is null");
 
    DrawPolyLineAux(gPad, n, xs, ys);
 }
@@ -460,14 +459,14 @@ void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 //______________________________________________________________________________
 void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 {
-   //Paint polyline in normalized coordinates.
+   // Paint polyline in normalized coordinates.
+
+   if (GetLineWidth()<=0) return;
+
    if (n < 2) {
       ::Error("TPadPainter::DrawPolyLineNDC", "invalid number of points %d", n);
       return;
    }
-
-   //assert(u != nullptr && "DrawPolyLineNDC, parameter 'u' is null");
-   //assert(v != nullptr && "DrawPolyLineNDC, parameter 'v' is null");
 
    std::vector<TPoint> xy(n);
 
@@ -483,7 +482,8 @@ void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 //______________________________________________________________________________
 void TPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
 {
-   //Paint polymarker.
+   // Paint polymarker.
+
    if (n < 1) {
       ::Error("TPadPainter::DrawPolyMarker", "invalid number of points %d", n);
       return;
@@ -496,7 +496,8 @@ void TPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
 //______________________________________________________________________________
 void TPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
 {
-   //Paint polymarker.
+   // Paint polymarker.
+
    if (n < 1) {
       ::Error("TPadPainter::DrawPolyMarker", "invalid number of points %d", n);
       return;
@@ -509,7 +510,8 @@ void TPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
 //______________________________________________________________________________
 void TPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode mode)
 {
-   //Paint text.
+   // Paint text.
+
    const Int_t px = gPad->XtoPixel(x);
    const Int_t py = gPad->YtoPixel(y);
    const Double_t angle = GetTextAngle();
@@ -521,7 +523,8 @@ void TPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode m
 //______________________________________________________________________________
 void TPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode)
 {
-   //That's a special version working with wchar_t and required by TMathText (who uses utf-8(?))
+   // Special version working with wchar_t and required by TMathText.
+
    const Int_t px = gPad->XtoPixel(x);
    const Int_t py = gPad->YtoPixel(y);
    const Double_t angle = GetTextAngle();
@@ -534,6 +537,7 @@ void TPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMod
 void TPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode)
 {
    // Paint text in normalized coordinates.
+
    const Int_t px = gPad->UtoPixel(u);
    const Int_t py = gPad->VtoPixel(v);
    const Double_t angle = GetTextAngle();
@@ -545,10 +549,7 @@ void TPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMod
 //______________________________________________________________________________
 void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const
 {
-   // Save the image displayed in the canvas pointed by "pad" into a
-   // binary file.
-   //assert(pad != nullptr && "SaveImage, parameter 'pad' is null");
-   //assert(fileName != nullptr && "SaveImage, parameter 'fileName' is null");
+   // Save the image displayed in the canvas pointed by "pad" into a binary file.
 
    if (gVirtualX->InheritsFrom("TGCocoa") && !gROOT->IsBatch() &&
       pad->GetCanvas() && pad->GetCanvas()->GetCanvasID() != -1) {
@@ -570,7 +571,7 @@ void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) 
             if (unsigned char *argb = (unsigned char *)image->GetArgbArray()) {
                //Ohhh.
                if (sizeof(UInt_t) == 4) {
-                  //I know for sure the data returned from TGCocoa::GetColorBits,
+                  //For sure the data returned from TGCocoa::GetColorBits,
                   //it's 4 * w * h bytes with what TASImage considers to be argb.
                   std::copy(pixelData.get(), pixelData.get() + 4 * w * h, argb);
                } else {
@@ -635,10 +636,6 @@ void ConvertPoints(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y,
    if (!nPoints)
       return;
 
-   //assert(pad != 0 && "ConvertPoints, parameter 'pad' is null");
-   //assert(x != 0 && "ConvertPoints, parameter 'x' is null");
-   //assert(y != 0 && "ConvertPoints, parameter 'y' is null");
-
    dst.resize(nPoints);
 
    for (unsigned i = 0; i < nPoints; ++i) {
@@ -651,9 +648,6 @@ void ConvertPoints(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y,
 inline void MergePointsX(std::vector<TPoint> &points, unsigned nMerged, SCoord_t yMin,
                          SCoord_t yMax, SCoord_t yLast)
 {
-   //assert(points.size() != 0 &&
-   //         "MergePointsX, parameter 'points' is an empty vector, should contain at least 1 point already");
-   //assert(nMerged > 1 && "MergePointsX, nothing to merge");
 
    const auto firstPointX = points.back().fX;
    const auto firstPointY = points.back().fY;
@@ -675,11 +669,7 @@ inline void MergePointsX(std::vector<TPoint> &points, unsigned nMerged, SCoord_t
 inline size_type MergePointsInplaceY(std::vector<TPoint> &dst, size_type nMerged, SCoord_t xMin,
                                      SCoord_t xMax, SCoord_t xLast, size_type first)
 {
-   //assert(nMerged > 1 && "MergePointsInplaceY, nothing to merge");
-   //assert(first < dst.size() && "MergePointsInplaceY, parameter 'first' is out of range");
-   //assert(dst.size() - first >= nMerged && "MergePointsInplaceY, invalid index 'first + nMerged'");
-
-   //Indices below are _valid_ - see asserts above.
+   //Indices below are _valid_.
 
    const TPoint &firstPoint = dst[first];//This point is never updated.
 
@@ -712,10 +702,6 @@ void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, 
    //I'm using 'pad' pointer to get rid of this damned gPad.
    //Unfortunately, TPadPainter itself still has to use it.
    //But at least this code does not have to be fixed.
-
-   //assert(pad != nullptr && "ConvertPointsAndMergePassX, parameter 'pad' is null");
-   //assert(x != nullptr && "ConvertPointsAndMergePassX, parameter 'x' is null");
-   //assert(y != nullptr && "ConvertPointsAndMergePassX, parameter 'y' is null");
 
    //The "first" pass along X axis.
    TPoint currentPoint;
@@ -760,8 +746,6 @@ void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, 
 //______________________________________________________________________________
 void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst)
 {
-   //assert(dst.size() != 0 && "ConvertPointsAndMergeInplacePassY, nothing to merge");
-
    //This pass is a bit more complicated, since we have
    //to 'compact' in-place.
 
@@ -828,11 +812,6 @@ void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoint
    if (!nPoints)
       return;
 
-   //assert(pad != nullptr && "ConvertPointsAndMerge, parameter 'pad' is null");
-   //assert(threshold != 0 && "ConvertPointsAndMerge, parameter 'threshold' must be > 0");
-   //assert(x != nullptr && "ConvertPointsAndMerge, parameter 'x' is null");
-   //assert(y != nullptr && "ConvertPointsAndMerge, parameter 'y' is null");
-
    dst.clear();
    dst.reserve(threshold);
 
@@ -848,11 +827,6 @@ void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoint
 template<class T>
 void DrawFillAreaAux(TVirtualPad *pad, Int_t nPoints, const T *xs, const T *ys)
 {
-   //assert(pad != nullptr && "DrawFillAreaAux, parameter 'pad' is null");
-   //assert(nPoints > 2 && "DrawFillAreaAux, invalid number of points");
-   //assert(xs != nullptr && "DrawFillAreaAux, parameter 'xs' is null");
-   //assert(ys != nullptr && "DrawFillAreaAux, parameter 'ys' is null");
-
    std::vector<TPoint> xy;
 
    const Int_t threshold = Int_t(TMath::Min(pad->GetWw() * pad->GetAbsWNDC(),
@@ -881,12 +855,7 @@ void DrawFillAreaAux(TVirtualPad *pad, Int_t nPoints, const T *xs, const T *ys)
 template<typename T>
 void DrawPolyLineAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys)
 {
-   //assert(pad != nullptr && "DrawPolyLineAux, parameter 'pad' is null");
-   //assert(nPoints > 1 && "DrawPolyLineAux, invalid number of points");
-   //assert(xs != nullptr && "DrawPolyLineAux, parameter 'xs' is null");
-   //assert(ys != nullptr && "DrawPolyLineAux, parameter 'ys' is null");
-
-   std::vector<TPoint> xy;
+  std::vector<TPoint> xy;
 
    const Int_t threshold = Int_t(TMath::Min(pad->GetWw() * pad->GetAbsWNDC(),
                                             pad->GetWh() * pad->GetAbsHNDC())) * 2;
@@ -910,11 +879,6 @@ void DrawPolyLineAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *y
 template<class T>
 void DrawPolyMarkerAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys)
 {
-   //assert(pad != nullptr && "DrawPolyMarkerAux, parameter 'pad' is null");
-   //assert(nPoints != 0 && "DrawPolyMarkerAux, invalid number of points");
-   //assert(xs != nullptr && "DrawPolyMarkerAux, parameter 'xs' is null");
-   //assert(ys != nullptr && "DrawPolyMarkerAux, parameter 'ys' is null");
-
    std::vector<TPoint> xy(nPoints);
 
    for (unsigned i = 0; i < nPoints; ++i) {

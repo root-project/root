@@ -30,12 +30,17 @@ namespace ROOT {
 /**
    Class to Wrap a ROOT Function class (like TF1)  in a IParamMultiFunction interface
    of multi-dimensions to be used in the ROOT::Math numerical algorithm
-   The parameter are stored in this wrapper class, so the TF1 parameter values are not used for evaluating the function.
-   This allows for the copy of the wrapper function without the need to copy the TF1.
    This wrapper class does not own the TF1 pointer, so it assumes it exists during the wrapper lifetime.
+   The class copy the TF1 pointer only when it owns it 
+
+   The class from ROOT version 6.03 does not contain anymore a copy of the parameters. The parameters are 
+   stored in the TF1 class.    
 
    @ingroup CppFunctions
 */
+
+//LM note: are there any issues when cloning the class for the parameters that are not copied anymore ??      
+
 class WrappedMultiTF1 : public ROOT::Math::IParamMultiGradFunction {
 
 public:
@@ -85,19 +90,22 @@ public:
 
    /** @name interface inherited from IParamFunction */
 
-   /// get the parameter values (return values cached inside, those inside TF1 might be different)
+   /// get the parameter values (return values from TF1)
    const double * Parameters() const {
-      return  (fParams.size() > 0) ? &fParams.front() : 0;
+  //return  (fParams.size() > 0) ? &fParams.front() : 0;
+      return  fFunc->GetParameters();
    }
 
    /// set parameter values (only the cached one in this class,leave unchanges those of TF1)
-   void SetParameters(const double * p) {
-      std::copy(p,p+fParams.size(),fParams.begin());
-   }
+   void SetParameters(const double * p) { 
+      //std::copy(p,p+fParams.size(),fParams.begin());
+      fFunc->SetParameters(p); 
+   } 
 
    /// return number of parameters
    unsigned int NPar() const {
-      return fParams.size();
+      // return fParams.size();
+      return fFunc->GetNpar(); 
    }
 
    /// return parameter name (from TF1)
@@ -120,7 +128,7 @@ public:
    const TF1 * GetFunction() const { return fFunc; }
 
    /// method to set a new function pointer and copy it inside. 
-   /// By calling this method the clas manages now the passed TF1 pointer
+   /// By calling this method the class manages now the passed TF1 pointer
    void SetAndCopyFunction(const TF1 * f = 0);
    
    
@@ -133,6 +141,16 @@ private:
       return fFunc->EvalPar(x,p);
    }
 
+   /// evaluate function using the cached parameter values (of TF1)
+   /// re-implement for better efficiency
+   double DoEval (const double* x) const { 
+      // no need to call InitArg for interpreted functions (done in ctor)
+
+      //const double * p = (fParams.size() > 0) ? &fParams.front() : 0;
+      return fFunc->EvalPar(x, 0 ); 
+   }
+
+
    /// evaluate the partial derivative with respect to the parameter
    double DoParameterDerivative(const double * x, const double * p, unsigned int ipar) const;
 
@@ -142,7 +160,7 @@ private:
    bool fOwnFunc;                 // flag to indicate we own the TF1 function pointer
    TF1 * fFunc;                   // pointer to ROOT function
    unsigned int fDim;             // cached value of dimension
-   std::vector<double> fParams;   // cached vector with parameter values
+   //std::vector<double> fParams;   // cached vector with parameter values
 
    static double fgEps;          // epsilon used in derivative calculation h ~ eps |p|
 };

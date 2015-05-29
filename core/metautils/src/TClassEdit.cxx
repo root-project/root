@@ -221,6 +221,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
         || 0 == fElements[narg-1].compare(0,6,"const*")
         || 0 == fElements[narg-1].compare(0,6,"const&")
         || 0 == fElements[narg-1].compare(0,6,"const[")
+        || 0 == fElements[narg-1].compare("const")
         )
        ) {
       if ((mode&1)==0) tailLoc = narg-1;
@@ -386,9 +387,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          }
          continue;
       }
-      bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6);
-      //NOTE: Should we also check the end of the type for 'const'?
-      fElements[i] = TClassEdit::ShortType(fElements[i].c_str(),mode);
+      fElements[i] = TClassEdit::ShortType(fElements[i].c_str(),mode | TClassEdit::kKeepOuterConst);
       if (mode&kResolveTypedef) {
          // We 'just' need to check whether the outer type is a typedef or not;
          // this also will add the default template parameter if any needs to
@@ -399,15 +398,13 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
             if (!typeresult.empty()) fElements[i] = typeresult;
          }
       }
-      if (hasconst && !(mode & TClassEdit::kKeepOuterConst)) {
-         // if mode is set to keep the outer const, it will be kept
-         // and we do not need to put it back ...
-         // FIXME: why are passing a flag meant for the outer
-         // to the handling of the inner?
-         fElements[i] = "const " + fElements[i];
-      }
    }
 
+   unsigned int tailOffset = 0;
+   if (tailLoc && fElements[tailLoc].compare(0,5,"const") == 0) {
+      if (mode & kKeepOuterConst) answ += "const ";
+      tailOffset = 5;
+   }
    if (!fElements[0].empty()) {answ += fElements[0]; answ +="<";}
 
 #if 0
@@ -457,7 +454,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       answ += fElements[fNestedLocation];
    }
    // tail is not a type name, just [2], &, * etc.
-   if (tailLoc) answ += fElements[tailLoc];
+   if (tailLoc) answ += fElements[tailLoc].c_str()+tailOffset;
 }
 
 //______________________________________________________________________________
@@ -776,7 +773,7 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
-   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef);
+   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef | TClassEdit::kKeepOuterConst);
 
    // Depending on how the user typed their code, in particular typedef
    // declarations, we may end up with an explicit '::' being
@@ -839,8 +836,8 @@ const char *TClassEdit::GetUnqualifiedName(const char *original)
    {
       long depth = 0;
       for(auto cursor = original; *cursor != '\0'; ++cursor) {
-         if ( *cursor == '<') ++depth;
-         else if ( *cursor == '>') --depth;
+         if ( *cursor == '<' || *cursor == '(') ++depth;
+         else if ( *cursor == '>' || *cursor == ')' ) --depth;
          else if ( *cursor == ':' ) {
             if (depth==0 && *(cursor+1) == ':' && *(cursor+2) != '\0') {
                lastPos = cursor+2;
@@ -862,8 +859,9 @@ static void R__FindTrailing(std::string &full,  /*modified*/
    const char *starloc = t + tlen - 1;
    bool hasconst = false;
    if ( (*starloc)=='t'
-       && (starloc-t) > 5 && 0 == strncmp((starloc-5),"const",5)
-       && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+       && (starloc-t) > 4 && 0 == strncmp((starloc-4),"const",5)
+       && ( (*(starloc-5)) == ' ' || (*(starloc-5)) == '*' || (*(starloc-5)) == '&'
+           || (*(starloc-5)) == '>' || (*(starloc-5)) == ']') ) {
       // we are ending on a const.
       starloc -= 4;
       if ((*starloc-1)==' ') {
@@ -880,13 +878,10 @@ static void R__FindTrailing(std::string &full,  /*modified*/
             isArray = ! ( (*starloc)=='[' );
          } else if ( (*(starloc-1))=='t' ) {
             if ( (starloc-1-t) > 5 && 0 == strncmp((starloc-5),"const",5)
-                && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+                && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&'
+                    || (*(starloc-6)) == '>' || (*(starloc-6)) == ']')) {
                // we have a const.
                starloc -= 5;
-               if ((*starloc-1)==' ') {
-                  // Take the space too.
-                  starloc--;
-               }
             } else {
                break;
             }
@@ -895,6 +890,11 @@ static void R__FindTrailing(std::string &full,  /*modified*/
          }
       }
       stars = starloc;
+      if ((*(starloc-1))==' ') {
+         // erase the space too.
+         starloc--;
+      }
+
       const unsigned int starlen = strlen(starloc);
       full.erase(tlen-starlen,starlen);
    } else if (hasconst) {
@@ -930,87 +930,100 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
                : CleanType(type, cleantypeMode) );
 
    // We need to replace basic_string with string.
-   bool isString = false;
-   bool isStdString = false;
-   static const char* basic_string_std = "std::basic_string<char";
-   static const unsigned int basic_string_std_len = strlen(basic_string_std);
+   {
+      unsigned int const_offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;
+      bool isString = false;
+      bool isStdString = false;
+      static const char* basic_string_std = "std::basic_string<char";
+      static const unsigned int basic_string_std_len = strlen(basic_string_std);
 
-   if (full.compare(0,basic_string_std_len,basic_string_std) == 0
-       && full.size() > basic_string_std_len) {
-      isString = true;
-      isStdString = true;
-   } else if (full.compare(0,basic_string_std_len-5,basic_string_std+5) == 0
-              && full.size() > (basic_string_std_len-5)) {
-      // no std.
-      isString = true;
-   }
-   if (isString) {
-      size_t offset = isStdString ? basic_string_std_len : basic_string_std_len - 5;
-      if ( full[offset] == '>' ) {
-         // done.
-      } else if (full[offset] == ',') {
-         ++offset;
-         if (full.compare(offset, 5, "std::") == 0) {
-            offset += 5;
-         }
-         static const char* char_traits_s = "char_traits<char>";
-         static const unsigned int char_traits_len = strlen(char_traits_s);
-         if (full.compare(offset, char_traits_len, char_traits_s) == 0) {
-            offset += char_traits_len;
-            if ( full[offset] == '>') {
-               // done.
-            } else if (full[offset] == ' ' && full[offset+1] == '>') {
-               ++offset;
-               // done.
-            } else if (full[offset] == ',') {
-               ++offset;
-               if (full.compare(offset, 5, "std::") == 0) {
-                  offset += 5;
-               }
-               static const char* allocator_s = "allocator<char>";
-               static const unsigned int allocator_len = strlen(allocator_s);
-               if (full.compare(offset, allocator_len, allocator_s) == 0) {
-                  offset += allocator_len;
-                  if ( full[offset] == '>') {
-                     // done.
-                  } else if (full[offset] == ' ' && full[offset+1] == '>') {
-                     ++offset;
-                     // done.
-                  } else {
-                     // Not std::string
-                     isString = false;
+      if (full.compare(const_offset,basic_string_std_len,basic_string_std) == 0
+          && full.size() > basic_string_std_len) {
+         isString = true;
+         isStdString = true;
+      } else if (full.compare(const_offset,basic_string_std_len-5,basic_string_std+5) == 0
+                 && full.size() > (basic_string_std_len-5)) {
+         // no std.
+         isString = true;
+      }
+      if (isString) {
+         size_t offset = isStdString ? basic_string_std_len : basic_string_std_len - 5;
+         offset += const_offset;
+         if ( full[offset] == '>' ) {
+            // done.
+         } else if (full[offset] == ',') {
+            ++offset;
+            if (full.compare(offset, 5, "std::") == 0) {
+               offset += 5;
+            }
+            static const char* char_traits_s = "char_traits<char>";
+            static const unsigned int char_traits_len = strlen(char_traits_s);
+            if (full.compare(offset, char_traits_len, char_traits_s) == 0) {
+               offset += char_traits_len;
+               if ( full[offset] == '>') {
+                  // done.
+               } else if (full[offset] == ' ' && full[offset+1] == '>') {
+                  ++offset;
+                  // done.
+               } else if (full[offset] == ',') {
+                  ++offset;
+                  if (full.compare(offset, 5, "std::") == 0) {
+                     offset += 5;
                   }
+                  static const char* allocator_s = "allocator<char>";
+                  static const unsigned int allocator_len = strlen(allocator_s);
+                  if (full.compare(offset, allocator_len, allocator_s) == 0) {
+                     offset += allocator_len;
+                     if ( full[offset] == '>') {
+                        // done.
+                     } else if (full[offset] == ' ' && full[offset+1] == '>') {
+                        ++offset;
+                        // done.
+                     } else {
+                        // Not std::string
+                        isString = false;
+                     }
+                  }
+               } else {
+                  // Not std::string
+                  isString = false;
                }
             } else {
-               // Not std::string
+               // Not std::string.
                isString = false;
             }
          } else {
             // Not std::string.
             isString = false;
          }
-      } else {
-         // Not std::string.
-         isString = false;
-      }
-      if (isString) {
-         output.push_back(string());
-         if (isStdString && !(mode & kDropStd)) {
-            output.push_back("std::string");
-         } else {
-            output.push_back("string");
+         if (isString) {
+            output.push_back(string());
+            if (const_offset && (mode & kKeepOuterConst)) {
+               if (isStdString && !(mode & kDropStd)) {
+                  output.push_back("const std::string");
+               } else {
+                  output.push_back("const string");
+               }
+            } else {
+               if (isStdString && !(mode & kDropStd)) {
+                  output.push_back("std::string");
+               } else {
+                  output.push_back("string");
+               }
+            }
+            if (offset < full.length()) {
+               // Copy the trailing text.
+               // keep the '>' inside right for R__FindTrailing to work
+               string right( full.substr(offset) );
+               string stars;
+               R__FindTrailing(right, stars);
+               output.back().append(right.c_str()+1); // skip the '>'
+               output.push_back(stars);
+            } else {
+               output.push_back("");
+            }
+            return output.size();
          }
-         if (offset < full.length()) {
-            // Copy the trailing text.
-            string right( full.substr(offset+1) );
-            string stars;
-            R__FindTrailing(right, stars);
-            output.back().append(right);
-            output.push_back(stars);
-         } else {
-            output.push_back("");
-         }
-         return output.size();
       }
    }
 
@@ -1347,10 +1360,12 @@ static void ResolveTypedefProcessType(const char *tname,
                result += typeresult;
             }
          }
+      } else if (modified) {
+         result.replace(mod_start_of_type, string::npos,
+                        type);
       }
       if (modified) {
-         // result += type;
-         if (end_of_type != 0) {
+         if (end_of_type != 0 && end_of_type!=cursor) {
             result += std::string(tname,end_of_type,cursor-end_of_type);
          }
       }
@@ -1358,7 +1373,7 @@ static void ResolveTypedefProcessType(const char *tname,
       // no change needed.
       if (modified) {
          // result += type;
-         if (end_of_type != 0) {
+         if (end_of_type != 0 && end_of_type!=cursor) {
             result += std::string(tname,end_of_type,cursor-end_of_type);
          }
       }
@@ -1394,6 +1409,7 @@ static void ResolveTypedefImpl(const char *tname,
          if (modified) result += "const ";
       }
       constprefix = true;
+
    }
 
    // When either of those two is true, we should probably go to modified
@@ -1505,41 +1521,74 @@ static void ResolveTypedefImpl(const char *tname,
             if ( (cursor+1) >= len) {
                return;
             }
-            break;
+            if (tname[cursor] != ' ') break;
+            if (modified) prevScope = cursor+1;
+            // If the 'current' character is a space we need to treat it,
+            // since this the next case statement, we can just fall through,
+            // otherwise we should need to do:
+            // --cursor; break;
          }
          case ' ': {
             end_of_type = cursor;
-            ++cursor;
             // let's see if we have 'long long' or 'unsigned int' or 'signed char' or what not.
-            while (cursor<len && tname[cursor] == ' ') ++cursor;
+            while ((cursor+1)<len && tname[cursor+1] == ' ') ++cursor;
 
-            if (cursor!=len && tname[cursor] != '*' && tname[cursor] != '&'
-                && !(strncmp(tname+cursor,"const",5) == 0 && ((cursor+5)==len || tname[cursor+5] == ' ' || tname[cursor+5] == '*' || tname[cursor+5] == '&')) ) {
+            auto next = cursor+1;
+            if (strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ']'))
+            {
+               // A first const after the type needs to be move in the front.
+               if (!modified) {
+                  modified = true;
+                  result += string(tname,0,start_of_type);
+                  result += "const ";
+                  mod_start_of_type = start_of_type + 6;
+                  result += string(tname,start_of_type,end_of_type-start_of_type);
+               } else if (mod_start_of_type < result.length()) {
+                  result.insert(mod_start_of_type,"const ");
+                  mod_start_of_type += 6;
+               } else {
+                  result += "const ";
+                  mod_start_of_type += 6;
+                  result += string(tname,start_of_type,end_of_type-start_of_type);
+               }
+               cursor += 5;
+               end_of_type = cursor+1;
+               prevScope = end_of_type;
+               if (tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+                  break;
+               }
+            } else if (next!=len && tname[next] != '*' && tname[next] != '&') {
                // the type is not ended yet.
                end_of_type = 0;
                break;
             }
+            ++cursor;
             // Intentional fall through;
          }
          case '*':
          case '&': {
             if (tname[cursor] != ' ') end_of_type = cursor;
             // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
-            if (strncmp(tname+cursor,"const",5) == 0) {
-               if ((cursor+5)==len || tname[cursor+5] == ' ' || tname[cursor+5] == '*' || tname[cursor+5] == '&') {
-                  cursor += 5;
+            auto next = cursor+1;
+            if (strncmp(tname+next,"const",5) == 0) {
+               if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+                  next += 5;
                }
             }
-            while (cursor+1<len &&
-                   (tname[cursor+1] == ' ' || tname[cursor+1] == '*' || tname[cursor+1] == '&')) {
-               ++cursor;
+            while (next<len &&
+                   (tname[next] == ' ' || tname[next] == '*' || tname[next] == '&')) {
+               ++next;
                // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
-               if (strncmp(tname+cursor,"const",5) == 0) {
-                  if ((cursor+5)==len || tname[cursor+5] == ' ' || tname[cursor+5] == '*' || tname[cursor+5] == '&') {
-                     cursor += 5;
+               if (strncmp(tname+next,"const",5) == 0) {
+                  if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+                     next += 5;
                   }
                }
             }
+            cursor = next-1;
+//            if (modified && mod_start_of_type < result.length()) {
+//               result += string(tname,end_of_type,cursor-end_of_type);
+//            }
             break;
          }
          case ',': {

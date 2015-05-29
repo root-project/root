@@ -73,6 +73,7 @@ if(all)
  set(qtgsi_defvalue ON)
  set(roofit_defvalue ON)
  set(minuit2_defvalue ON)
+ set(r_defvalue ON)
  set(table_defvalue ON)
  set(unuran_defvalue ON)
  set(vc_defvalue ON)
@@ -83,16 +84,18 @@ else()
  set(qtgsi_defvalue OFF)
  set(roofit_defvalue OFF)
  set(minuit2_defvalue OFF)
+ set(r_defvalue OFF)
  set(table_defvalue OFF)
  set(unuran_defvalue OFF)
  set(vc_defvalue OFF)
 endif()
 
-# VC does not support yet Arm processors.
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+# VC does not support yet Arm and PPC processors.
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR
+    CMAKE_SYSTEM_PROCESSOR STREQUAL "ppc64le")
+   message(STATUS "A system not supported by Vc, ${CMAKE_SYSTEM_PROCESSOR}, was detected. Disabling Vc by default.")
    set(vc_defvalue OFF)
 endif()
-
 
 
 ROOT_BUILD_OPTION(afdsmgrd OFF "Dataset manager for PROOF-based analysis facilities")
@@ -113,13 +116,13 @@ ROOT_BUILD_OPTION(builtin_gsl OFF "Built the GSL library internally (downloading
 ROOT_BUILD_OPTION(builtin_cfitsio OFF "Built the FITSIO library internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_xrootd OFF "Built the XROOTD internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_llvm ON "Built the LLVM internally")
+ROOT_BUILD_OPTION(builtin_tbb OFF "Built the TBB internally")
 ROOT_BUILD_OPTION(cxx11 ON "Build using C++11 compatible mode, requires gcc > 4.7.x or clang")
 ROOT_BUILD_OPTION(cxx14 OFF "Build using C++14 compatible mode, requires gcc > 4.9.x or clang")
 ROOT_BUILD_OPTION(libcxx OFF "Build using libc++, requires cxx11 option (MacOS X only, for the time being)")
 ROOT_BUILD_OPTION(castor ON "CASTOR support, requires libshift from CASTOR >= 1.5.2")
 ROOT_BUILD_OPTION(ccache OFF "Enable ccache usage for speeding up builds")
 ROOT_BUILD_OPTION(chirp ON "Chirp support (Condor remote I/O), requires libchirp_client")
-ROOT_BUILD_OPTION(clarens ON "Clarens RPC support, optionally used by PROOF")
 ROOT_BUILD_OPTION(cling ON "Enable new CLING C++ interpreter")
 ROOT_BUILD_OPTION(cocoa ${cocoa_defvalue} "Use native Cocoa/Quartz graphics backend (MacOS X only)")
 ROOT_BUILD_OPTION(davix ${davix_defvalue} "DavIx library for HTTP/WEBDAV access")
@@ -152,7 +155,6 @@ ROOT_BUILD_OPTION(odbc ON "ODBC support, requires libiodbc or libodbc")
 ROOT_BUILD_OPTION(opengl ON "OpenGL support, requires libGL and libGLU")
 ROOT_BUILD_OPTION(oracle ON "Oracle support, requires libocci")
 ROOT_BUILD_OPTION(pch ON)
-ROOT_BUILD_OPTION(peac ON "PEAC, PROOF Enabled Analysis Center, requires Clarens")
 ROOT_BUILD_OPTION(pgsql ON "PostgreSQL support, requires libpq")
 ROOT_BUILD_OPTION(pythia6 ON "Pythia6 EG support, requires libPythia6")
 ROOT_BUILD_OPTION(pythia6_nolink OFF "Delayed linking of Pythia6 library")
@@ -162,6 +164,7 @@ ROOT_BUILD_OPTION(qt ${qt_defvalue} "Qt graphics backend, requires libqt >= 4.8"
 ROOT_BUILD_OPTION(qtgsi ${qtgsi_defvalue} "GSI's Qt integration, requires libqt >= 4.8")
 ROOT_BUILD_OPTION(roofit ${roofit_defvalue} "Build the libRooFit advanced fitting package")
 ROOT_BUILD_OPTION(ruby OFF "Ruby ROOT bindings, requires ruby >= 1.8")
+ROOT_BUILD_OPTION(r ${r_defvalue} "R ROOT bindings, requires R, Rcpp and RInside")
 ROOT_BUILD_OPTION(rfio ON "RFIO support, requires libshift from CASTOR >= 1.5.2")
 ROOT_BUILD_OPTION(rpath OFF "Set run-time library load path on executables and shared libraries (at installation area)")
 ROOT_BUILD_OPTION(sapdb ON "MaxDB/SapDB support, requires libsqlod and libsqlrte")
@@ -172,6 +175,7 @@ ROOT_BUILD_OPTION(sqlite ON "SQLite support, requires libsqlite3")
 ROOT_BUILD_OPTION(srp ON "SRP support, requires SRP source tree")
 ROOT_BUILD_OPTION(ssl ON "SSL encryption support, requires openssl")
 ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guidelines")
+ROOT_BUILD_OPTION(tbb OFF "TBB multi-threading support, requires TBB")
 ROOT_BUILD_OPTION(table ${table_defvalue} "Build libTable contrib library")
 ROOT_BUILD_OPTION(tcmalloc OFF "Using the tcmalloc allocator")
 ROOT_BUILD_OPTION(thread ON "Using thread library (cannot be disabled)")
@@ -192,6 +196,12 @@ option(all "Enable all optional components" OFF)
 option(testing "Enable testing with CTest" OFF)
 option(roottest "Include roottest, if roottest exists in root or if it is a sibling directory." OFF)
 
+#---Avoid creating dependencies to 'non-statndard' header files -------------------------------
+include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
+
+#---Add Installation Variables------------------------------------------------------------------
+include(RootInstallDirs)
+
 #---General Build options----------------------------------------------------------------------
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
@@ -203,15 +213,8 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # the RPATH to be used when installing---------------------------------------------------------
 if(rpath)
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
   set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
-
-#---Avoid creating dependencies to 'non-statndard' header files -------------------------------
-include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
-
-#---Add Installation Variables------------------------------------------------------------------
-include(RootInstallDirs)
-
 
 

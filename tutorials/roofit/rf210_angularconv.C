@@ -109,6 +109,9 @@ void rf210_angularconv()
   // Generate some events
   RooDataSet* data_cpsi = Mcpsi.generate(cpsi,10000) ;
 
+  // set psi constant to exclude to be a parameter of the fit
+  psi.setConstant(true);
+
   // Fit convoluted model as function of cos(psi)
   Mcpsi.fitTo(*data_cpsi) ;
   

@@ -279,8 +279,8 @@ void TPolyMarker3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    // Execute action corresponding to one event.
 
-   if (gPad->GetView())
-      gPad->GetView()->ExecuteRotateView(event, px, py);
+   if (!gPad) return;
+   if (gPad->GetView()) gPad->GetView()->ExecuteRotateView(event, px, py);
 }
 
 //______________________________________________________________________________

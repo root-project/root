@@ -73,6 +73,8 @@ void TLink::ExecuteEvent(Int_t event, Int_t, Int_t)
    //  If mouse is clicked on a link text, the object pointed by the link
    //  is Inspected
 
+   if (!gPad) return;
+
    if (event == kMouseMotion)
       gPad->SetCursor(kHand);
 

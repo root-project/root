@@ -782,7 +782,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
             continue;
          case TStreamerInfo::kArtificial:
 #if 0
-            ROOT::TSchemaRule::WriteFuncPtr_t writefunc = ((TStreamerArtificialElement*)aElement)->GetWriteFunc();
+            ROOT::TSchemaRule::WriteFuncPtr_t writefunc = ((TStreamerArtificial*)aElement)->GetWriteFunc();
             if (writefunc) {
                DOLOOP( writefunc(arr[k]+eoffset, b) );
             }

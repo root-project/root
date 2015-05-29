@@ -5,9 +5,7 @@ void read_ntuple_from_file(){
 
     // Open a file, save the ntuple and close the file
     TFile in_file("conductivity_experiment.root");
-    TNtuple* my_tuple = (TNtuple*) in_file.GetObjectChecked(
-                                   "cond_data",
-                                   "TNtuple");
+    TNtuple* my_tuple;in_file.GetObject("cond_data",my_tuple);
     float pot,cur,temp,pres; float* row_content;
 
     cout << "Potential\tCurrent\tTemperature\tPressure\n";

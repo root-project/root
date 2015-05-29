@@ -217,6 +217,8 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //  This member function must be implemented to realize the action
    //  corresponding to the mouse click on the object in the window
 
+   if (!gPad) return;
+
    static Int_t px1, py1, pxold, pyold, Size, height, width;
    static Bool_t resize,turn;
    Int_t dx, dy;

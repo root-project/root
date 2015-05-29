@@ -351,7 +351,7 @@ void stress2()
 
    Bool_t OK = kTRUE;
    //Long64_t lastgood = 12383; //9428;
-   Long64_t lastgood = 9529;  // changes for new TFormula
+   Long64_t lastgood = 9789;  // changes for new TFormula
    if (last <lastgood-200 || last > lastgood+200 || comp <2.0 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {

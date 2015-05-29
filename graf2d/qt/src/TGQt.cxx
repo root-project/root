@@ -19,7 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #if defined(HAVE_CONFIG) || defined (R__HAVE_CONFIG)
-# include "config.h"
+# include "RConfigure.h"
 #endif
 #ifdef R__QTWIN32
 #include <process.h>

@@ -155,7 +155,7 @@ void TEveViewer::SetGLViewer(TGLViewer* viewer, TGFrame* frame)
 }
 
 //______________________________________________________________________________
-TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo)
+TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo, Bool_t quad_buf)
 {
    // Spawn new GLViewer and adopt it.
 
@@ -164,7 +164,7 @@ TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo)
    TGCompositeFrame* cf = GetGUICompositeFrame();
 
    TGLFormat *form = 0;
-   if (stereo)
+   if (stereo && quad_buf)
    {
       form = new TGLFormat;
       form->SetStereo(kTRUE);
@@ -191,7 +191,7 @@ TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo)
    SetGLViewer(v, v->GetFrame());
 
    if (stereo)
-      v->SetStereo(kTRUE);
+      v->SetStereo(kTRUE, quad_buf);
 
    if (fEveFrame == 0)
       PreUndock();

@@ -937,7 +937,7 @@ void TPie::Paint(Option_t *option)
                arc->SetLineStyle(fPieSlices[i]->GetLineStyle());
                arc->SetLineWidth(fPieSlices[i]->GetLineWidth());
             } else {
-               arc->SetLineWidth(0);
+               arc->SetLineWidth(1);
                arc->SetLineColor(TColor::GetColorDark((fPieSlices[i]->GetFillColor())));
             }
          }
@@ -977,7 +977,7 @@ void TPie::Paint(Option_t *option)
          arc->SetLineStyle(fPieSlices[i]->GetLineStyle());
          arc->SetLineWidth(fPieSlices[i]->GetLineWidth());
       } else {
-         arc->SetLineWidth(0);
+         arc->SetLineWidth(1);
          arc->SetLineColor(fPieSlices[i]->GetFillColor());
       }
 

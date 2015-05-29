@@ -5,6 +5,9 @@
 void write_ntuple_to_file_advanced(
    const std::string& outputFileName="conductivity_experiment.root"
    ,unsigned int numDataPoints=1000000){
+
+   TFile ofile(outputFileName.c_str(),"RECREATE");
+
    // Initialise the TNtuple
    TTree cond_data("cond_data", "Example N-Tuple");
 
@@ -25,8 +28,7 @@ void write_ntuple_to_file_advanced(
       // write to ntuple
       cond_data.Fill();}
 
-   // Open a file, save the ntuple and close the file
-   TFile ofile(outputFileName.c_str(),"RECREATE");
+   // Save the ntuple and close the file
    cond_data.Write();
    ofile.Close();
 }

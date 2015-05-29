@@ -73,7 +73,7 @@ c1.cd(1); //change to pad 1 of canvas c1
 
 These parts of a well-written macro are pretty standard, and you should
 remember to include pieces of code like in the examples above to make
-sure your output always comes out as you had intended.
+sure your plots always look as you had intended.
 
 Below, in section [Interpretation and Compilation](#interpretation-and-compilation), some more code fragments
 will be shown, allowing you to use the system compiler to compile macros for
@@ -101,74 +101,7 @@ statements for header files, they will only become important at the end
 in section [Interpretation and Compilation](#interpretation-and-compilation).
 
 ``` {.cpp .numberLines}
- // Builds a graph with errors, displays it and saves it
- // as image. First, include some header files
- // (not necessary for Cling)
-
- #include "TCanvas.h"
- #include "TROOT.h"
- #include "TGraphErrors.h"
- #include "TF1.h"
- #include "TLegend.h"
- #include "TArrow.h"
- #include "TLatex.h"
-
- void macro1(){
-     // The values and the errors on the Y axis
-    const int n_points=10;
-    double x_vals[n_points]=
-            {1,2,3,4,5,6,7,8,9,10};
-    double y_vals[n_points]=
-            {6,12,14,20,22,24,35,45,44,53};
-    double y_errs[n_points]=
-            {5,5,4.7,4.5,4.2,5.1,2.9,4.1,4.8,5.43};
-
-    // Instance of the graph
-    TGraphErrors graph(n_points,x_vals,y_vals,NULL,y_errs);
-    graph.SetTitle("Measurement XYZ;lenght [cm];Arb.Units");
-
-    // Make the plot looks better
-    graph.SetMarkerStyle(kOpenCircle);
-    graph.SetMarkerColor(kBlue);
-    graph.SetLineColor(kBlue);
-
-    // The canvas on which we'll draw the graph
-    TCanvas* mycanvas = new TCanvas();
-
-    // Draw the graph !
-    graph.DrawClone("APE");
-
-    // Define a linear function
-    TF1 f("Linear law","[0]+x*[1]",.5,10.5);
-    // Let's make the function line nicer
-    f.SetLineColor(kRed); f.SetLineStyle(2);
-    // Fit it to the graph and draw it
-    graph.Fit(&f);
-    f.DrawClone("Same");
-
-    // Build and Draw a legend
-    TLegend leg(.1,.7,.3,.9,"Lab. Lesson 1");
-    leg.SetFillColor(0);
-    graph.SetFillColor(0);
-    leg.AddEntry(&graph,"Exp. Points");
-    leg.AddEntry(&f,"Th. Law");
-    leg.DrawClone("Same");
-
-    // Draw an arrow on the canvas
-    TArrow arrow(8,8,6.2,23,0.02,"|>");
-    arrow.SetLineWidth(2);
-    arrow.DrawClone();
-
-    // Add some text to the plot
-    TLatex text(8.2,7.5,"#splitline{Maximum}{Deviation}");
-    text.DrawClone();
-
-    mycanvas->Print("graph_with_law.pdf");
- }
-
- int main(){
-     macro1();
-     }
+@ROOT_INCLUDE_FILE macros/macro1.C
 ```
 
 Let's comment it in detail:
@@ -179,8 +112,8 @@ Let's comment it in detail:
 
 -   Line *24-25*: instance of the `TGraphErrors` class. The constructor
     takes the number of points and the pointers to the arrays of
-    \$x\$\~values, \$y\$\~values, \$x\$\~errors (in this case none,
-    represented by the NULL pointer) and \$y\$\~errors. The second line
+    x values, y values, x errors (in this case none,
+    represented by the NULL pointer) and y errors. The second line
     defines in one shot the title of the graph and the titles of the two
     axes, separated by a ";".
 
@@ -268,7 +201,7 @@ stars. An alternative set of names for the markers is available.
 
 ### Arrows and Lines
 
-The macro line 55 shows how to define an arrow and draw it. The class
+The macro line *55* shows how to define an arrow and draw it. The class
 representing arrows is `TArrow`, which inherits from `TLine`. The
 constructors of lines and arrows always contain the coordinates of the
 endpoints. Arrows also foresee parameters to [specify
@@ -306,7 +239,7 @@ answers.
 
 ACLiC will create for you a compiled dynamic library for your macro,
 without any effort from your side, except the insertion of the
-appropriate header files in lines 5--11. In this example, they are
+appropriate header files in lines *5--11*. In this example, they are
 already included. To generate an object library from the macro code, from inside the
 interpreter type (please note the "+"):
 
@@ -347,13 +280,13 @@ int main() {
 To create a stand-alone program from a macro called `ExampleMacro.C`, simply type
 
 ``` {.cpp}
- > g++ -o ExampleMacro.exe ExampleMacro.C `root-config --cflags --libs`
+ > g++ -o ExampleMacro ExampleMacro.C `root-config --cflags --libs`
 ```
 
 and execute it by typing
 
 ``` {.cpp}
-> ./ExampleMacro.exe
+> ./ExampleMacro
 ```
 
 This procedure will, however, not give access to the ROOT graphics, as
@@ -385,11 +318,11 @@ int main(int argc, char** argv) {
 Compile the code with
 
 ``` {.cpp}
- > g++ -o ExampleMacro_GUI.exe ExampleMacro_GUI `root-config --cflags --libs`
+ > g++ -o ExampleMacro_GUI ExampleMacro_GUI `root-config --cflags --libs`
 ```
 
 and execute the program with
 
 ``` {.cpp}
-> ./ExampleMacro_GUI.exe
+> ./ExampleMacro_GUI
 ```

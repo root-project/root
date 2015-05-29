@@ -247,6 +247,8 @@ void TPave::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //
    //  This member function is called when a PAVE object is clicked.
 
+   if (!gPad) return;
+
    if (!gPad->IsEditable()) return;
 
    TBox::ExecuteEvent(event, px, py);

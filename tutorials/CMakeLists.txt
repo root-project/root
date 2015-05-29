@@ -73,6 +73,11 @@ if(NOT ROOT_xml_FOUND)
                 histfactory/*.C)   # histfactory requires xml
 endif()
 
+# variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
+if(NOT ROOT_r_FOUND)
+  set(r_veto  r/*.C)
+endif()
+
 if(WIN32)
   set(histfactory_veto histfactory/*.C
                        roostats/StandardFrequentistDiscovery.C) # histfactory doesn't work on Windows
@@ -99,7 +104,8 @@ if(NOT ROOT_fftw3_FOUND)
                  roofit/rf210_angularconv.C
                  roofit/rf211_paramconv.C
                  roofit/rf512_wsfactory_oper.C
-                 fft/FFT.C)
+                 fft/FFT.C
+                 fit/fitConvolution.C)
 endif()
 
 if(NOT ROOT_opengl_FOUND)
@@ -153,7 +159,8 @@ set(extra_veto
   tree/copytree.C
   tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
   tree/h1chain.C
-  http/*.C)
+  http/*.C
+  r/rootlogon.C)
 
 set(all_veto hsimple.C
              ${extra_veto}
@@ -163,11 +170,12 @@ set(all_veto hsimple.C
              ${unuran_veto}
              ${xml_veto}
              ${fitsio_veto}
-	     ${tmva_veto}
+             ${tmva_veto}
              ${mathmore_veto}
              ${fftw3_veto}
              ${opengl_veto}
              ${gviz_veto}
+             ${r_veto}
              ${histfactory_veto})
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
@@ -202,7 +210,8 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  hist/hlabels1.C
                  hist/hlabels2.C
                  tree/h1analysis.C
-                 math/chi2test.C )
+                 math/chi2test.C
+                 r/SimpleFitting.C)
 #---Dependencies------------------------------------------------------
 set(math-testUnfold5d-depends tutorial-math-testUnfold5c)
 set(math-testUnfold5c-depends tutorial-math-testUnfold5b)

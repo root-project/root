@@ -2317,10 +2317,11 @@ void TGX11::SetLineWidth(Width_t width )
    // width   : line width in pixels
 
    if (fLineWidth == width) return;
+   fLineWidth = width;
+
    if (width == 1) gLineWidth = 0;
    else            gLineWidth = width;
 
-   fLineWidth = gLineWidth;
    if (gLineWidth < 0) return;
 
    XSetLineAttributes((Display*)fDisplay, *gGCline, gLineWidth,

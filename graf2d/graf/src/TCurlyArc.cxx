@@ -159,6 +159,8 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //  if Middle button clicked, the line is moved parallel to itself
    //     until the button is released.
 
+   if (!gPad) return;
+
    Int_t kMaxDiff = 10;
    const Int_t np = 10;
    const Double_t pi = TMath::Pi();

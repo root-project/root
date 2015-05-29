@@ -30,10 +30,11 @@ namespace ROOT {
 /**
    Class to Wrap a ROOT Function class (like TF1)  in a IParamFunction interface
    of one dimensions to be used in the ROOT::Math numerical algorithms
-   The parameter are stored in this wrapper class, so  the TF1 parameter values are not used for evaluating the function.
-   We use TF1 only for the function evaluation.
-   This allows for the copy of the wrapper function without the need to copy the TF1.
-   The wrapper does not own the TF1 pointer, so it assumes it exists during the wrapper lifetime
+   The wrapper does not own bby default the TF1 pointer, so it assumes it exists during the wrapper lifetime
+
+   The class from ROOT version 6.03  does not contain anymore a copy of the parameters. The parameters are 
+   stored in the TF1 class.    
+
 
    @ingroup CppFunctions
 */
@@ -80,17 +81,21 @@ public:
 
    /// get the parameter values (return values cachen inside, those inside TF1 might be different)
    const double * Parameters() const {
-      return  (fParams.size() > 0) ? &fParams.front() : 0;
+      //return  (fParams.size() > 0) ? &fParams.front() : 0;
+      return fFunc->GetParameters();
    }
 
-   /// set parameter values (only the cached one in this class,leave unchanges those of TF1)
-   void SetParameters(const double * p) {
-      std::copy(p,p+fParams.size(),fParams.begin());
-   }
+    /// set parameter values
+   /// need to call also SetParameters in TF1 in ace some other operations (re-normalizations) are needed
+   void SetParameters(const double * p) { 
+      //std::copy(p,p+fParams.size(),fParams.begin());
+      fFunc->SetParameters(p); 
+   } 
 
-   /// return number of parameters
-   unsigned int NPar() const {
-      return fParams.size();
+   /// return number of parameters 
+   unsigned int NPar() const { 
+      //return fParams.size();
+      return fFunc->GetNpar(); 
    }
 
    /// return parameter name (this is stored in TF1)
@@ -127,14 +132,14 @@ private:
       return fFunc->EvalPar(fX,p);
    }
 
-   /// evaluate function using the cached parameter values of this class (not of TF1)
+   /// evaluate function using the cached parameter values (of TF1)
    /// re-implement for better efficiency
    double DoEval (double x) const {
       // no need to call InitArg for interpreted functions (done in ctor)
       // use EvalPar since it is much more efficient than Eval
-      fX[0] = x;
-      const double * p = (fParams.size() > 0) ? &fParams.front() : 0;
-      return fFunc->EvalPar(fX, p );
+      fX[0] = x;  
+      //const double * p = (fParams.size() > 0) ? &fParams.front() : 0;
+      return fFunc->EvalPar(fX, 0 ); 
    }
 
    /// return the function derivatives w.r.t. x
@@ -147,7 +152,7 @@ private:
    bool fPolynomial;             // flag for polynomial functions
    TF1 * fFunc;                  // pointer to ROOT function
    mutable double fX[1];         //! cached vector for x value (needed for TF1::EvalPar signature)
-   std::vector<double> fParams;  //  cached vector with parameter values
+   //std::vector<double> fParams;  //  cached vector with parameter values
 
    static double fgEps;          // epsilon used in derivative calculation h ~ eps |x|
 };

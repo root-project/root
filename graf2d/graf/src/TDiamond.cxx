@@ -120,6 +120,8 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //                        +---------+
    //                            pBot
 
+   if (!gPad) return;
+
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
 
