@@ -2391,7 +2391,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
                return expFormula;                   
             }
             TString parName = expFormula(i+1,j-i-1);
-            TString replacement = TString::Format("%f",GetParameter(parName));
+            TString replacement = TString::Format("%g",GetParameter(parName));
             expFormula.Replace(i,j-i+1, replacement );
             i += replacement.Length();
          }
