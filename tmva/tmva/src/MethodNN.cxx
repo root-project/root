@@ -152,6 +152,7 @@ void TMVA::MethodNN::DeclareOptions()
    AddPreDefVal(TString("CROSSENTROPY"));
    AddPreDefVal(TString("SUMOFSQUARES"));
    AddPreDefVal(TString("MUTUALEXCLUSIVE"));
+   AddPreDefVal(TString("CHECKGRADIENTS"));
 
 
    DeclareOptionRef(fWeightInitializationStrategyString="XAVIER",    "WeightInitialization",    "Weight initialization strategy");
@@ -333,6 +334,10 @@ void TMVA::MethodNN::ProcessOptions()
    // process user options
 //   MethodBase::ProcessOptions();
 
+   if (fErrorStrategy == "CHECKGRADIENTS") 
+       return checkGradients ();
+
+
    
    if (IgnoreEventsWithNegWeightsInTraining()) {
       Log() << kINFO 
@@ -434,13 +439,15 @@ void TMVA::MethodNN::Train()
         const std::vector<Float_t>& values  = event->GetValues  ();
         if (fAnalysisType == Types::kClassification)
         {
-            double outputValue = event->GetClass () == 0 ? 0.2 : 0.8;
+            double outputValue = event->GetClass () == 0 ? 0.1 : 0.9;
             trainPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
+            trainPattern.back ().addInput (1.0); // bias node
         }
         else
         {
             const std::vector<Float_t>& targets = event->GetTargets ();
             trainPattern.push_back (Pattern (values.begin  (), values.end (), targets.begin (), targets.end (), event->GetWeight ()));
+            trainPattern.back ().addInput (1.0); // bias node
         }
     }
 
@@ -450,13 +457,15 @@ void TMVA::MethodNN::Train()
         const std::vector<Float_t>& values  = event->GetValues  ();
         if (fAnalysisType == Types::kClassification)
         {
-            double outputValue = event->GetClass () == 0 ? 0.2 : 0.8;
+            double outputValue = event->GetClass () == 0 ? 0.1 : 0.9;
             testPattern.push_back (Pattern (values.begin  (), values.end (), outputValue, event->GetWeight ()));
+            testPattern.back ().addInput (1.0); // bias node
         }
         else
         {
             const std::vector<Float_t>& targets = event->GetTargets ();
             testPattern.push_back (Pattern (values.begin  (), values.end (), targets.begin (), targets.end (), event->GetWeight ()));
+            testPattern.back ().addInput (1.0); // bias node
         }
     }
 
@@ -803,5 +812,119 @@ void  TMVA::MethodNN::WriteMonitoringHistosToFile( void ) const
 
    Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
    BaseDir()->cd();
+}
+
+
+
+
+void TMVA::MethodNN::checkGradients ()
+{
+    size_t inputSize = 1;
+    size_t outputSize = 1;
+
+    fNet.clear ();
+
+    fNet.addLayer (NN::Layer (30, NN::EnumFunction::SOFTSIGN)); 
+    fNet.addLayer (NN::Layer (30, NN::EnumFunction::SOFTSIGN)); 
+    fNet.addLayer (NN::Layer (outputSize, NN::EnumFunction::LINEAR, NN::ModeOutputValues::SIGMOID)); 
+    fNet.setErrorFunction (NN::ModeErrorFunction::CROSSENTROPY);
+//    net.setErrorFunction (ModeErrorFunction::SUMOFSQUARES);
+
+    size_t numWeights = fNet.numWeights (inputSize);
+    std::vector<double> weights (numWeights);
+    //weights.at (0) = 1000213.2;
+
+    std::vector<Pattern> pattern;
+    for (size_t iPat = 0, iPatEnd = 10; iPat < iPatEnd; ++iPat)
+    {
+        std::vector<double> input;
+        std::vector<double> output;
+        for (size_t i = 0; i < inputSize; ++i)
+        {
+            input.push_back (TMVA::NN::gaussDouble (0.1, 4));
+        }
+        for (size_t i = 0; i < outputSize; ++i)
+        {
+            output.push_back (TMVA::NN::gaussDouble (0, 3));
+        }
+        pattern.push_back (Pattern (input,output));
+    }
+
+
+    NN::Settings settings (/*_convergenceSteps*/ 15, /*_batchSize*/ 1, /*_testRepetitions*/ 7, /*_factorWeightDecay*/ 0, /*isL1*/ false);
+
+    size_t improvements = 0;
+    size_t worsenings = 0;
+    size_t smallDifferences = 0;
+    size_t largeDifferences = 0;
+    for (size_t iTest = 0; iTest < 1000; ++iTest)
+    {
+        TMVA::NN::uniform (weights, 0.7);
+        std::vector<double> gradients (numWeights, 0);
+        NN::Batch batch (begin (pattern), end (pattern));
+        NN::DropContainer dropContainer;
+        std::tuple<NN::Settings&, NN::Batch&, NN::DropContainer&> settingsAndBatch (settings, batch, dropContainer);
+        double E = fNet (settingsAndBatch, weights, gradients);
+        std::vector<double> changedWeights;
+        changedWeights.assign (weights.begin (), weights.end ());
+
+        int changeWeightPosition = TMVA::NN::randomInt (numWeights);
+        double dEdw = gradients.at (changeWeightPosition);
+        while (dEdw == 0.0)
+        {
+            changeWeightPosition = TMVA::NN::randomInt (numWeights);
+            dEdw = gradients.at (changeWeightPosition);
+        }
+
+        const double gamma = 0.01;
+        double delta = gamma*dEdw;
+        changedWeights.at (changeWeightPosition) += delta;
+        if (dEdw == 0.0)
+        {
+            std::cout << "dEdw == 0.0 ";
+            continue;
+        }
+        
+        assert (dEdw != 0.0);
+        double Echanged = fNet (settingsAndBatch, changedWeights);
+
+//	double difference = fabs((E-Echanged) - delta*dEdw);
+        double difference = fabs ((E+delta - Echanged)/E);
+	bool direction = (E-Echanged)>0 ? true : false;
+//	bool directionGrad = delta>0 ? true : false;
+        bool isOk = difference < 0.3 && difference != 0;
+
+	if (direction)
+	    ++improvements;
+	else
+	    ++worsenings;
+
+	if (isOk)
+	    ++smallDifferences;
+	else
+	    ++largeDifferences;
+
+        if (true || !isOk)
+        {
+	    if (!direction)
+		std::cout << "=================" << std::endl;
+            std::cout << "E = " << E << " Echanged = " << Echanged << " delta = " << delta << "   pos=" << changeWeightPosition << "   dEdw=" << dEdw << "  difference= " << difference << "  dirE= " << direction << std::endl;
+        }
+        if (isOk)
+        {
+        }
+        else
+        {
+//            for_each (begin (weights), end (weights), [](double w){ std::cout << w << ", "; });
+//            std::cout << std::endl;
+//            assert (isOk);
+        }
+    }
+    std::cout << "improvements = " << improvements << std::endl;
+    std::cout << "worsenings = " << worsenings << std::endl;
+    std::cout << "smallDifferences = " << smallDifferences << std::endl;
+    std::cout << "largeDifferences = " << largeDifferences << std::endl;
+
+    std::cout << "check gradients done" << std::endl;
 }
 
