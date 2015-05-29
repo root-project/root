@@ -48,12 +48,19 @@ namespace TMath {
    inline Bool_t   Even(Long_t a);
    inline Bool_t   Odd(Long_t a);
 
+   // SignBit
+   template<typename Integer>
+   inline Bool_t SignBit(Integer a);
+   inline Bool_t SignBit(Float_t a);
+   inline Bool_t SignBit(Double_t a);
+   inline Bool_t SignBit(LongDouble_t a);
+
    // Sign
    template<typename T1, typename T2>
    inline T1 Sign( T1 a, T2 b);
    inline Float_t  Sign(Float_t a, Float_t b);
    inline Double_t Sign(Double_t a, Double_t b);
-   inline Double_t Sign(LongDouble_t a, LongDouble_t b);
+   inline LongDouble_t Sign(LongDouble_t a, LongDouble_t b);
    
    // Min, Max of two scalars
    inline Short_t   Min(Short_t a, Short_t b);
@@ -125,11 +132,28 @@ inline Double_t TMath::Abs(Double_t d)
 inline LongDouble_t TMath::Abs(LongDouble_t d)
 { return std::abs(d); }
 
+
+//---- Sign Bit--------------------------------------------------------------------
+
+template<typename Integer>
+inline Bool_t TMath::SignBit( Integer a)
+   { return (a < 0); }
+
+inline Bool_t TMath::SignBit(Float_t a)
+   { return std::signbit(a);  }
+
+inline Bool_t TMath::SignBit(Double_t a)
+   { return std::signbit(a);  }
+
+inline Bool_t TMath::SignBit(LongDouble_t a)
+   { return std::signbit(a);  }
+
+
 //---- Sign --------------------------------------------------------------------
 
 template<typename T1, typename T2>
 inline T1 TMath::Sign( T1 a, T2 b)
-   { return (b >= 0) ? Abs(a) : -Abs(a); } 
+   { return (SignBit(b)) ? - Abs(a) : Abs(a); } 
 
 inline Float_t TMath::Sign(Float_t a, Float_t b)
    { return std::copysign(a,b);  }
@@ -137,7 +161,7 @@ inline Float_t TMath::Sign(Float_t a, Float_t b)
 inline Double_t TMath::Sign(Double_t a, Double_t b)
    { return std::copysign(a,b);  }
 
-inline Double_t TMath::Sign(LongDouble_t a, LongDouble_t b)
+inline LongDouble_t TMath::Sign(LongDouble_t a, LongDouble_t b)
    { return std::copysign(a,b);  }
 
 
