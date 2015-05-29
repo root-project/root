@@ -6337,7 +6337,11 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
    Int_t dot = srcname.Last('.');
    if (dot != kNPOS) {
       srcname.Remove(dot);
-      srcname += "*";
+      // We need to remove the files created during load to avoid crashes
+      // when we reuse the same code
+      srcname += "_*";
+      gSystem->Exec(TString::Format("%s %s", kRM, srcname.Data()));
+      srcname.ReplaceAll("_*", "*");
    } else {
       assertfile = kTRUE;
    }
