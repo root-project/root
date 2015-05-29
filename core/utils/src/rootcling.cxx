@@ -3962,7 +3962,7 @@ int RootCling(int argc,
 
    std::vector<std::string> clingArgs;
    clingArgs.push_back(argv[0]);
-   clingArgs.push_back("-I.");
+   clingArgs.push_back("-iquote.");
 
    // Is this needed at all or just historical?
    if (! IsPointerTClassCopy<std::vector<int>::iterator>::kVal) {
