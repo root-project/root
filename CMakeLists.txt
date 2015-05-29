@@ -44,7 +44,7 @@ if(NOT DEFINED ROOTSYS)
 endif()
 
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
-find_package(ROOT REQUIRED COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
+find_package(ROOT REQUIRED COMPONENTS RIO Net Hist Gpad Tree Rint Matrix MathCore)
 
 # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
 if(DEFINED ROOT_SOURCE_DIR)
