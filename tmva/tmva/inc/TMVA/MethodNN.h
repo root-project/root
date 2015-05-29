@@ -117,6 +117,8 @@ namespace TMVA {
 
    private:
 
+      void checkGradients ();
+
       // the option handling methods
       void DeclareOptions();
       void ProcessOptions();
