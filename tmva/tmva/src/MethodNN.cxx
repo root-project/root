@@ -553,6 +553,7 @@ Double_t TMVA::MethodNN::GetMvaValue( Double_t* /*errLower*/, Double_t* /*errUpp
 
     const std::vector<Float_t>& inputValues = GetEvent ()->GetValues ();
     std::vector<double> input (inputValues.begin (), inputValues.end ());
+    input.push_back (1.0); // bias node
     std::vector<double> output = fNet.compute (input, fWeights);
     if (output.empty ())
         return 0.0;
