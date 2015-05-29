@@ -145,7 +145,7 @@ inline TH1F* Monitoring::getHistogram (const TH1F* /*dummy*/, std::string histoN
         return it->second;
     std::cout << "new 1D histogram " << histoName << std::endl;
     TH1F* histogram = m_histos1D.insert (std::make_pair (histoName, new TH1F (histoName.c_str (), histoName.c_str (), bins, min, max))).first->second;
-    int numPads = m_histos1D.size () + m_histos2D.size ();
+//    int numPads = m_histos1D.size () + m_histos2D.size ();
     return histogram;
 }
 
@@ -157,7 +157,7 @@ inline TH2F* Monitoring::getHistogram (const TH2F* /*dummy*/, std::string histoN
         return it->second;
     std::cout << "new 2D histogram " << histoName << std::endl;
     TH2F* histogram = m_histos2D.insert (std::make_pair (histoName, new TH2F (histoName.c_str (), histoName.c_str (), bins, min, max, bins2, min2, max2))).first->second;
-    int numPads = m_histos1D.size () + m_histos2D.size ();
+//    int numPads = m_histos1D.size () + m_histos2D.size ();
     return histogram;
 }
 

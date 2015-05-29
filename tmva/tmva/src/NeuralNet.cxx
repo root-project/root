@@ -23,6 +23,12 @@ double gaussDouble (double mean, double sigma)
 }
 
 
+int randomInt (int maxValue)
+{
+    static std::default_random_engine generator;
+    std::uniform_int_distribution<int> distribution(0,maxValue-1);
+    return distribution(generator);
+}
 
 
 

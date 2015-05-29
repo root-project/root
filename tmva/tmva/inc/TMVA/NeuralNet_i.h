@@ -52,11 +52,29 @@ static std::function<double(double)> InvDoubleInvertedGauss = [](double value)
 
 
 double gaussDouble (double mean, double sigma);
-/* { */
-/*     static std::default_random_engine generator; */
-/*     std::normal_distribution<double> distribution (mean, sigma); */
-/*     return distribution (generator); */
-/* } */
+
+
+int randomInt (int maxValue);
+
+
+template <typename T>
+T uniformFromTo (T from, T to)
+{
+    return from + (rand ()* (to - from)/RAND_MAX);
+}
+
+
+
+template <typename Container, typename T>
+void uniform (Container& container, T maxValue)
+{
+    for (auto it = begin (container), itEnd = end (container); it != itEnd; ++it)
+    {
+//        (*it) = uniformFromTo (-1.0*maxValue, 1.0*maxValue);
+        (*it) = TMVA::NN::uniformFromTo (-1.0*maxValue, 1.0*maxValue);
+    }
+}
+
 
 
 template <typename ItSource, typename ItWeight, typename ItTarget>
@@ -179,7 +197,7 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
         double E = fitnessFunction (passThrough, weights, gradients);
-        double Emin = E;
+//        double Emin = E;
 
         bool success = true;
         size_t currentRepetition = 0;
@@ -203,7 +221,7 @@ void update (ItSource itSource, ItSource itSourceEnd,
                 (*itPrevG) = (*itG);
             }
             gradients.assign (numWeights, 0.0);
-            double E = fitnessFunction (passThrough, localWeights, gradients);
+            E = fitnessFunction (passThrough, localWeights, gradients);
 
             itLocW = begin (localWeights);
             itLocWEnd = end (localWeights);
@@ -394,7 +412,7 @@ double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTru
 
 
 template <typename ItProbability, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-    double crossEntropy (ItProbability itProbabilityBegin, ItProbability itProbabilityEnd, ItTruth itTruthBegin, ItTruth itTruthEnd, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc itInvActFnc, double patternWeight) 
+    double crossEntropy (ItProbability itProbabilityBegin, ItProbability itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight) 
 {
     bool hasDeltas = (itDelta != itDeltaEnd);
     
@@ -435,7 +453,7 @@ template <typename ItProbability, typename ItTruth, typename ItDelta, typename I
 
 
 template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-double softMaxCrossEntropy (ItOutput itProbabilityBegin, ItOutput itProbabilityEnd, ItTruth itTruthBegin, ItTruth itTruthEnd, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc itInvActFnc, double patternWeight) 
+    double softMaxCrossEntropy (ItOutput itProbabilityBegin, ItOutput itProbabilityEnd, ItTruth itTruthBegin, ItTruth itTruthEnd, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight) 
 {
     double errorSum = 0.0;
 
@@ -489,163 +507,6 @@ double weightDecay (double error, ItWeight itWeight, ItWeight itWeightEnd, doubl
 
 
 
-    /* LayerData::LayerData (const_iterator_type itInputBegin, const_iterator_type itInputEnd, ModeOutputValues eModeOutput) */
-    /*     : m_isInputLayer (true) */
-    /*     , m_hasWeights (false) */
-    /*     , m_hasGradients (false) */
-    /*     , m_eModeOutput (eModeOutput)  */
-    /* { */
-    /*     m_itInputBegin = itInputBegin; */
-    /*     m_itInputEnd   = itInputEnd; */
-    /*     m_size = std::distance (itInputBegin, itInputEnd); */
-    /*     m_deltas.assign (m_size, 0); */
-    /* } */
-
-
-
-
-    /* LayerData::LayerData (size_t _size,  */
-    /*            const_iterator_type itWeightBegin,  */
-    /*            iterator_type itGradientBegin,  */
-    /*            const_function_iterator_type itFunctionBegin,  */
-    /*            const_function_iterator_type itInverseFunctionBegin, */
-    /*            ModeOutputValues eModeOutput) */
-    /*     : m_size (_size) */
-    /*     , m_itConstWeightBegin   (itWeightBegin) */
-    /*     , m_itGradientBegin (itGradientBegin) */
-    /*     , m_itFunctionBegin (itFunctionBegin) */
-    /*     , m_itInverseFunctionBegin (itInverseFunctionBegin) */
-    /*     , m_isInputLayer (false) */
-    /*     , m_hasWeights (true) */
-    /*     , m_hasGradients (true) */
-    /*     , m_eModeOutput (eModeOutput)  */
-    /* { */
-    /*     m_values.assign (_size, 0); */
-    /*     m_deltas.assign (_size, 0); */
-    /*     m_valueGradients.assign (_size, 0); */
-    /* } */
-
-
-
-
-    /* LayerData::LayerData (size_t _size, const_iterator_type itWeightBegin,  */
-    /*            const_function_iterator_type itFunctionBegin,  */
-    /*            ModeOutputValues eModeOutput) */
-    /*     : m_size (_size) */
-    /*     , m_itConstWeightBegin   (itWeightBegin) */
-    /*     , m_itFunctionBegin (itFunctionBegin) */
-    /*     , m_isInputLayer (false) */
-    /*     , m_hasWeights (true) */
-    /*     , m_hasGradients (false) */
-    /*     , m_eModeOutput (eModeOutput)  */
-    /* { */
-    /*     m_values.assign (_size, 0); */
-    /* } */
-
-
-
-    /* typename LayerData::container_type LayerData::computeProbabilities () */
-    /* { */
-    /*     container_type probabilitiesContainer; */
-    /*     switch (m_eModeOutput) */
-    /*     { */
-    /*     case ModeOutputValues::SIGMOID: */
-    /*     { */
-    /*         std::transform (begin (m_values), end (m_values), std::back_inserter (probabilitiesContainer), Sigmoid); */
-    /*         break; */
-    /*     } */
-    /*     case ModeOutputValues::SOFTMAX: */
-    /*     { */
-    /*         double sum = 0; */
-    /*         probabilitiesContainer = m_values; */
-    /*         std::for_each (begin (probabilitiesContainer), end (probabilitiesContainer), [&sum](double& p){ p = std::exp (p); sum += p; }); */
-    /*         if (sum != 0) */
-    /*             std::for_each (begin (probabilitiesContainer), end (probabilitiesContainer), [sum ](double& p){ p /= sum; }); */
-    /*         break; */
-    /*     } */
-    /*     case ModeOutputValues::DIRECT: */
-    /*     default: */
-    /*         probabilitiesContainer.assign (begin (m_values), end (m_values)); */
-    /*     } */
-    /*     return probabilitiesContainer; */
-    /* } */
-
-
-
-
-
-
-    /* Layer::Layer (size_t _numNodes, EnumFunction _activationFunction, ModeOutputValues eModeOutputValues)  */
-    /*     : m_numNodes (_numNodes)  */
-    /*     , m_eModeOutputValues (eModeOutputValues) */
-    /* { */
-    /*     for (size_t iNode = 0; iNode < _numNodes; ++iNode) */
-    /*     { */
-    /*         auto actFnc = Linear; */
-    /*         auto invActFnc = InvLinear; */
-    /*         m_activationFunction = EnumFunction::LINEAR; */
-    /*         switch (_activationFunction) */
-    /*         { */
-    /*         case EnumFunction::ZERO: */
-    /*     	actFnc = ZeroFnc; */
-    /*     	invActFnc = ZeroFnc; */
-    /*     	m_activationFunction = EnumFunction::ZERO; */
-    /*     	break; */
-    /*         case EnumFunction::LINEAR: */
-    /*     	actFnc = Linear; */
-    /*     	invActFnc = InvLinear; */
-    /*     	m_activationFunction = EnumFunction::LINEAR; */
-    /*     	break; */
-    /*         case EnumFunction::TANH: */
-    /*     	actFnc = Tanh; */
-    /*     	invActFnc = InvTanh; */
-    /*     	m_activationFunction = EnumFunction::TANH; */
-    /*     	break; */
-    /*         case EnumFunction::RELU: */
-    /*     	actFnc = ReLU; */
-    /*     	invActFnc = InvReLU; */
-    /*     	m_activationFunction = EnumFunction::RELU; */
-    /*     	break; */
-    /*         case EnumFunction::SYMMRELU: */
-    /*     	actFnc = SymmReLU; */
-    /*     	invActFnc = InvSymmReLU; */
-    /*     	m_activationFunction = EnumFunction::SYMMRELU; */
-    /*     	break; */
-    /*         case EnumFunction::TANHSHIFT: */
-    /*     	actFnc = TanhShift; */
-    /*     	invActFnc = InvTanhShift; */
-    /*     	m_activationFunction = EnumFunction::TANHSHIFT; */
-    /*     	break; */
-    /*         case EnumFunction::SOFTSIGN: */
-    /*     	actFnc = SoftSign; */
-    /*     	invActFnc = InvSoftSign; */
-    /*     	m_activationFunction = EnumFunction::SOFTSIGN; */
-    /*     	break; */
-    /*         case EnumFunction::SIGMOID: */
-    /*     	actFnc = Sigmoid; */
-    /*     	invActFnc = InvSigmoid; */
-    /*     	m_activationFunction = EnumFunction::SIGMOID; */
-    /*     	break; */
-    /*         case EnumFunction::GAUSS: */
-    /*     	actFnc = Gauss; */
-    /*     	invActFnc = InvGauss; */
-    /*     	m_activationFunction = EnumFunction::GAUSS; */
-    /*     	break; */
-    /*         case EnumFunction::GAUSSCOMPLEMENT: */
-    /*     	actFnc = GaussComplement; */
-    /*     	invActFnc = InvGaussComplement; */
-    /*     	m_activationFunction = EnumFunction::GAUSSCOMPLEMENT; */
-    /*     	break; */
-    /*         case EnumFunction::DOUBLEINVERTEDGAUSS: */
-    /*     	actFnc = DoubleInvertedGauss; */
-    /*     	invActFnc = InvDoubleInvertedGauss; */
-    /*     	m_activationFunction = EnumFunction::DOUBLEINVERTEDGAUSS; */
-    /*     	break; */
-    /*         } */
-    /*         m_vecActivationFunctions.push_back (actFnc); */
-    /*         m_vecInverseActivationFunctions.push_back (invActFnc); */
-    /*     } */
-    /* } */
 
 
 
@@ -724,7 +585,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
     template <typename WeightsType>
         void Net::dropOutWeightFactor (const DropContainer& dropContainer, WeightsType& weights, double factor)
     {
-        return;
+//        return;
 	// reduce weights because of dropped nodes
 	// if dropOut enabled
 	if (dropContainer.empty ())
@@ -737,13 +598,13 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 	{
 	    auto& layer = *itLayer;
 	    auto& nextLayer = *(itLayer+1);
-	    // in the first and last layer, all the nodes are always on
-	    if (itLayer == begin (m_layers)) // is first layer
-	    {
-		itDrop += layer.numNodes ();
-		itWeight += layer.numNodes () * nextLayer.numNodes ();
-		continue;
-	    }
+	    /* // in the first and last layer, all the nodes are always on */
+	    /* if (itLayer == begin (m_layers)) // is first layer */
+	    /* { */
+	    /*     itDrop += layer.numNodes (); */
+	    /*     itWeight += layer.numNodes () * nextLayer.numNodes (); */
+	    /*     continue; */
+	    /* } */
 
 	    auto itLayerDrop = itDrop;
 	    for (size_t i = 0, iEnd = layer.numNodes (); i < iEnd; ++i)
@@ -798,7 +659,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
             ++cycleCount;
 
 	    // shuffle training pattern
-            std::random_shuffle (begin (trainPattern), end (trainPattern));
+//            std::random_shuffle (begin (trainPattern), end (trainPattern));
 	    double dropFraction = settings.dropFraction ();
 
 	    // if dropOut enabled
@@ -825,7 +686,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 		    // shuffle 
 		    std::random_shuffle (end (dropContainer)-layer.numNodes (), end (dropContainer)); // shuffle enabled and disabled markers
 		}
-		dropOutWeightFactor (dropContainer, weights, 1.0/dropFraction);
+		if (dropOutChangeCount > 0)
+                    dropOutWeightFactor (dropContainer, weights, 1.0/dropFraction);
 	    }
 
 	    // execute training cycle
@@ -1023,7 +885,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
     }
 
     template <typename Weights, typename PassThrough, typename OutContainer>
-        double Net::operator() (PassThrough& settingsAndBatch, const Weights& weights, ModeOutput eFetch, OutContainer& outputContainer) const
+        double Net::operator() (PassThrough& settingsAndBatch, const Weights& weights, ModeOutput /*eFetch*/, OutContainer& outputContainer) const
     {
 	std::vector<double> nothing; // empty gradients; no backpropagation is done, just forward
 	double error = forward_backward(m_layers, settingsAndBatch, std::begin (weights), std::begin (nothing), std::end (nothing), 1000, outputContainer, true);
@@ -1197,6 +1059,10 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 		update (prevLayerData, currLayerData, settings.factorWeightDecay ()/sumWeights, settings.isL1 ());
 	    }
 	}
+        
+        double batchSize = std::distance (std::begin (batch), std::end (batch));
+        for (auto it = itGradientBegin; it != itGradientEnd; ++it)
+            (*it) /= batchSize;
 
 
 	sumError /= sumWeights;
@@ -1208,7 +1074,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
     template <typename ItPat, typename OutIterator>
     void Net::initializeWeights (WeightInitializationStrategy eInitStrategy, 
 				     ItPat itPatternBegin, 
-				     ItPat itPatternEnd, 
+                                 ItPat /*itPatternEnd*/, 
 				     OutIterator itWeight)
     {
         if (eInitStrategy == WeightInitializationStrategy::XAVIER)
