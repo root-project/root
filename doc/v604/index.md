@@ -21,7 +21,7 @@ The following people have contributed to this new version:
  Kyle Cranmer, NYU, RooStats,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/Alice,\
- Lukasz Janyst, CERN/IT,
+ Lukasz Janyst, CERN/IT,\
  Christopher Jones, Fermilab, CMS,\
  Wim Lavrijsen, LBNL, PyRoot,\
  Sergey Linev, GSI, http,\
