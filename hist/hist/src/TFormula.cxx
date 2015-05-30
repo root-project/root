@@ -587,9 +587,9 @@ void TFormula::FillDefaults()
         {"ceil","TMath::Ceil"}, {"floor","TMath::Floor"}, {"pow","TMath::Power"},
         {"binomial","TMath::Binomial"},{"abs","TMath::Abs"},
         {"min","TMath::Min"},{"max","TMath::Max"},{"sign","TMath::Sign" },
-        {"sq","TMath::Power,2"}  // in this case needs to append ,2 at the end of the function
+        {"sq","TMath::Sq"}  
       };
-
+   
    std::vector<TString> defvars2(10);
    for (int i = 0; i < 9; ++i)
       defvars2[i] = TString::Format("x[%d]",i);
@@ -1379,15 +1379,13 @@ void TFormula::ProcessFormula(TString &formula)
 
    //std::cout << "Begin: formula is " << formula << " list of functors " << fFuncs.size() << std::endl;
 
-   // need to split into two loops - first the one to replace the functions then the variables 
-
    for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
    {
       TFormulaFunction & fun = *funcsIt;
 
       //std::cout << "fun is " << fun.GetName() << std::endl;
 
-      if(fun.fFound )
+      if(fun.fFound)
          continue;
       if(fun.IsFuncCall())
       {
@@ -1396,23 +1394,27 @@ void TFormula::ProcessFormula(TString &formula)
          {
             TString shortcut = it->first;
             TString full = it->second;
-            // check if we need to append something at the end (e.g. case of sq -> pow(x,2) )
-            Ssiz_t ipos = full.First(',');
-            if (ipos == kNPOS )  
-               formula.ReplaceAll(shortcut,full);
-            else {
-               // find the first  the term
-               TString firstTerm =  full(0,ipos );
-               TString lastTerm =  full(ipos,full.Length() );
-               // add last term to the body
-               TString oldBody = fun.GetBody();
-               TString repBody = oldBody + lastTerm;
-               Ssiz_t i1 = formula.Index(shortcut); 
-               formula.Replace(i1, shortcut.Length(), firstTerm); 
-               Ssiz_t i2 = formula.Index(oldBody); 
-               formula.Replace(i2,oldBody.Length(), repBody ); 
+            //std::cout << " functor " << fun.GetName() << " found - replace " <<  shortcut << " with " << full << " in " << formula << std::endl;
+            // replace all functors
+            Ssiz_t index = formula.Index(shortcut,0);
+            while ( index != kNPOS) {
+               // check that function is not in a namespace and is not in other characters
+               //std::cout << "analyzing " << shortcut << " in " << formula << std::endl;
+               Ssiz_t i2 = index + shortcut.Length();
+               if ( (index > 0) && (isalpha( formula[index-1] )  || formula[index-1] == ':' )) {
+                  index = formula.Index(shortcut,i2);
+                  continue;
+               }
+               if (i2 < formula.Length()  && formula[i2] != '(') {
+                  index = formula.Index(shortcut,i2);
+                  continue;
+               }
+               // now replace the string
+               formula.Replace(index, shortcut.Length(), full);
+               Ssiz_t inext = index + full.Length(); 
+               index = formula.Index(shortcut,inext);
+               fun.fFound = true;
             }
-            fun.fFound = true;
          }
          if(fun.fName.Contains("::")) // add support for nested namespaces
          {
@@ -1458,15 +1460,7 @@ void TFormula::ProcessFormula(TString &formula)
             fun.fFound = false;
          }
       }
-   }
-
-   // second loop in case function is now a func.Call()
-   for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
-   {
-      TFormulaFunction & fun = *funcsIt;
-
-      //std::cout << "fun is " << fun.GetName() << std::endl;
-      if (!fun.IsFuncCall() )
+      else
       {
          TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
          if(old)

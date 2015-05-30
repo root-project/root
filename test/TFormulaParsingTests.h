@@ -443,6 +443,16 @@ bool test27() {
    f1.SetParameter(0,3); f2.SetParameter(0,3);
    ok &= (f1.Eval(2) == f2.Eval(2));
    ok &= (f1.Eval(-4) == f2.Eval(-4));
+   // test nested expressions and conflict with sqrt
+   TF1 f3("f3","sqrt(1.+sq(x))");
+   ok &= (f3.Eval(2) == sqrt(5) );
+   TF1 f4("f4","sq(1.+std::sqrt(x))");
+   ok &= (f4.Eval(2) == TMath::Sq(1.+sqrt(2)) );
+   TF1 f5("f5","sqrt(((TMath::Sign(1,[0])*sq([0]/x))+(sq([1])*(x^([3]-1))))+sq([2]))");
+   auto func = [](double *x, double *p){ return TMath::Sqrt(((TMath::Sign(1,p[0])*TMath::Sq(p[0]/x[0]))+(TMath::Sq(p[1])*(TMath::Power(x[0],(p[3]-1)))))+TMath::Sq(p[2])); };
+   TF1 f6("f6",func,-10,10,4);
+   f5.SetParameters(-1,2,3,4); f6.SetParameters(f5.GetParameters());
+   ok &= (f5.Eval(2) == f6.Eval(2) );
    return ok;
 }
    
