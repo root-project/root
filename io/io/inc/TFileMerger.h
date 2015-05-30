@@ -81,7 +81,8 @@ public:
       kAllIncremental = kIncremental | kAll, // Merge incrementally all type of objects.
 
       kOnlyListed     = BIT(4),        // Only the objects specified in fObjectNames list
-      kSkipListed     = BIT(5)         // Skip objects specified in fObjectNames list
+      kSkipListed     = BIT(5),        // Skip objects specified in fObjectNames list
+      kKeepCompression= BIT(6)         // Keep compression level unchanged for each input files
    };
    TFileMerger(Bool_t isLocal = kTRUE, Bool_t histoOneGo = kTRUE);
    virtual ~TFileMerger();

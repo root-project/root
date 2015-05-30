@@ -353,6 +353,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    //   kNonResetable : merge only the objects without a MergeAfterReset member function.
    //   kOnlyListed   : merge only objects listed in fObjectNames
    //   kSkipListed   : skip merging of objects listed in fObjectNames
+   //   kKeepCompression : Keep compression level of the buffer as it is in each the original input files.
    Bool_t status = kTRUE;
    Bool_t onlyListed = kFALSE;
    if (fPrintLevel > 0) {
@@ -380,7 +381,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
 
    TFileMergeInfo info(target);
 
-   if ((fFastMethod && !fCompressionChange)) {
+   if (fFastMethod && ((type&kKeepCompression) || !fCompressionChange) ) {
       info.fOptions.Append(" fast");
    }
 
