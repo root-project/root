@@ -96,8 +96,9 @@ endif
 
 ifeq ($(findstring fftw3, $(shell root-config --features)),)
   TUTORIALSTESTS_VETO += roofit/rf208_convolution roofit/rf210_angularconv \
-     roofit/rf211_paramconv roofit/rf512_wsfactory_oper.log \
-     roofit/rf512_wsfactory_oper
+     roofit/rf211_paramconv roofit/rf512_wsfactory_oper \
+     roofit/rf512_wsfactory_oper \
+     fit/fitConvolution
 endif
 
 
