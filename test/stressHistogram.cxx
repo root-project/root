@@ -6209,6 +6209,7 @@ bool testH1Integral()
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Integral H1:\t" << (iret?"FAILED":"OK") << std::endl;
 
+   delete h1;
    return iret;
 }
 
@@ -6269,6 +6270,8 @@ bool testH2Integral()
 
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Integral H2:\t" << (iret?"FAILED":"OK") << std::endl;
+   
+   delete h2; 
    return iret;
 
 }
@@ -6359,6 +6362,8 @@ bool testH3Integral()
 
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Integral H3:\t" << (iret?"FAILED":"OK") << std::endl;
+
+   delete h3;
    return iret;
 }
 
@@ -6491,6 +6496,83 @@ bool testH2Buffer() {
 bool testH3Buffer() {
    int iret = 0;
    return iret; 
+}
+
+bool testH1Extend() {
+
+   TH1D * h1 = new TH1D("h1","h1",10,0,10);
+   TH1D * h0 = new TH1D("h0","h0",10,0,20);
+   h1->SetCanExtend(TH1::kXaxis);
+   for (int i = 0; i < nEvents; ++i) {
+      double x = gRandom->Gaus(10,3);
+      if (x <= 0 || x >= 20) continue; // do not want overflow in h0
+      h1->Fill(x);
+      h0->Fill(x);
+   }
+   bool ret = equals("testh1extend", h1, h0, cmpOptStats, 1E-10);
+   delete h1;
+   return ret; 
+
+}
+
+bool testH2Extend() {
+
+   TRandom2 r; // sometime test fails is using gRandom t.b.i.
+   TH2D * h1 = new TH2D("h1","h1",10,0,10,10,0,10);
+   TH2D * h2 = new TH2D("h2","h0",10,0,10,10,0,20);
+   h1->SetCanExtend(TH1::kYaxis);
+   for (int i = 0; i < nEvents; ++i) {
+      double x = r.Uniform(-1,11);
+      double y = r.Gaus(10,3);
+      if (y <= 0 || y >= 20) continue; // do not want overflow in h0
+      h1->Fill(x,y);
+      h2->Fill(x,y);
+   }
+   bool ret = equals("testh2extend", h1, h2, cmpOptStats, 1E-10);
+   delete h1;
+   return ret; 
+
+}
+bool testProfileExtend() {
+
+   TProfile::Approximate(true);
+   TProfile * h1 = new TProfile("h1","h1",10,0,10);
+   TProfile * h0 = new TProfile("h0","h0",10,0,20);
+   h1->SetCanExtend(TH1::kXaxis);
+   for (int i = 0; i < nEvents; ++i) {
+      double x = gRandom->Gaus(10,3);
+      double y = gRandom->Gaus(10+2*x,1); 
+      if (x <= 0 || x >= 20) continue; // do not want overflow in h0
+      h1->Fill(x,y);
+      h0->Fill(x,y);
+   }
+   bool ret = equals("testProfileextend", h1, h0, cmpOptStats, 1E-10);
+   delete h1;
+   TProfile::Approximate(false);
+   return ret; 
+
+}
+
+bool testProfile2Extend() {
+
+   TRandom2 r; // sometime test fails is using gRandom t.b.i.
+   TProfile2D::Approximate(true);
+   TProfile2D * h1 = new TProfile2D("h1","h1",10,0,10,10,0,10);
+   TProfile2D * h2 = new TProfile2D("h2","h0",10,0,10,10,0,20);
+   h1->SetCanExtend(TH1::kYaxis);
+   for (int i = 0; i < 10*nEvents; ++i) {
+      double x = r.Uniform(-1,11);
+      double y = r.Gaus(10,3);
+      double z = r.Gaus(10+2*(x+y),1); 
+      if (y <= 0 || y >= 20) continue; // do not want overflow in h0
+      h1->Fill(x,y,z);
+      h2->Fill(x,y,z);
+   }
+   bool ret = equals("testprofile2extend", h1, h2, cmpOptStats, 1E-10);
+   delete h1;
+   TProfile2D::Approximate(false);
+   return ret; 
+
 }
 
 bool testConversion1D()
@@ -9833,8 +9915,18 @@ int stressHistogram()
                                                           testH3Buffer
    };
    struct TTestSuite bufferTestSuite = { numberOfBufferTest,
-                                           "Buffer tests for Histograms....................................",
+                                           "Buffer tests for Histograms......................................",
                                            bufferTestPointer };
+
+   const unsigned int numberOfExtendTest = 4;
+   pointer2Test extendTestPointer[numberOfExtendTest] = { testH1Extend,
+                                                          testH2Extend,
+                                                          testProfileExtend,
+                                                          testProfile2Extend
+   };
+   struct TTestSuite extendTestSuite = { numberOfExtendTest,
+                                           "Extend axis tests for Histograms.................................",
+                                           extendTestPointer };
 
    // Test 15
    // TH1-THn[Sparse] Conversions Tests
@@ -9866,7 +9958,7 @@ int stressHistogram()
 
 
    // Combination of tests
-   const unsigned int numberOfSuits = 15;
+   const unsigned int numberOfSuits = 16;
    struct TTestSuite* testSuite[numberOfSuits];
    testSuite[ 0] = &rangeTestSuite;
    testSuite[ 1] = &rebinTestSuite;
@@ -9881,8 +9973,9 @@ int stressHistogram()
    testSuite[10] = &scaleTestSuite;
    testSuite[11] = &integralTestSuite;
    testSuite[12] = &bufferTestSuite;
-   testSuite[13] = &conversionsTestSuite;
-   testSuite[14] = &fillDataTestSuite;
+   testSuite[13] = &extendTestSuite;
+   testSuite[14] = &conversionsTestSuite;
+   testSuite[15] = &fillDataTestSuite;
 
    status = 0;
    for ( unsigned int i = 0; i < numberOfSuits; ++i ) {
