@@ -430,7 +430,7 @@ T* TProfileHelper::ExtendAxis(T* p, Double_t x, TAxis *axis)
 // Ex: h->GetXaxis()->SetCanExtend(kTRUE)
 
 
-   if (!p->CanExtendAllAxes()) return 0;
+   if (!axis->CanExtend()) return 0;
    if (axis->GetXmin() >= axis->GetXmax()) return 0;
    if (axis->GetNbins() <= 0) return 0;
 
