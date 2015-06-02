@@ -21,13 +21,16 @@
 #include "BaseSelectionRule.h"
 
 #include <iostream>
-#include <string.h>
+#include <sstream>
+#include <string>
+
 
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclTemplate.h"
+#include "llvm/Support/Path.h"
 
 #ifdef _WIN32
 #include "process.h"
@@ -149,6 +152,21 @@ void BaseSelectionRule::SetAttributeValue(const std::string& attributeName, cons
    if (attributeName == "name" || pos> -1){
       while(std::isspace(*localAttributeValue.begin())) localAttributeValue.erase(localAttributeValue.begin());
       while(std::isspace(*localAttributeValue.rbegin()))localAttributeValue.erase(localAttributeValue.length()-1);
+
+      if (ROOT::TMetaUtils::BeginsWith(localAttributeValue,"std::") &&
+          ROOT::TMetaUtils::EndsWith(localAttributeValue,"iterator")){
+         auto lineno = GetLineNumber();
+         std::string cleanFileName =  llvm::sys::path::filename(GetSelFileName());
+         std::stringstream message;
+         message << "Warning: ";
+         if (lineno > -1 ) message << cleanFileName << ":" << lineno << " ";
+         message << "A selection rule is aiming to selectd a std iterator with the "
+                 << attributeName << " " << attributeValue << ":"
+                 << " ROOT6 does not need dictionaries of iterators for interactivity.";
+         std::cerr << message.str() << std::endl;
+      }
+
+
    }
    fAttributes.insert(AttributesMap_t::value_type(attributeName, localAttributeValue));
 
