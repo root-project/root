@@ -579,6 +579,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          arg->Set404();
       } else {
          const char *rootjsontag = "\"$$$root.json$$$\"";
+         const char *hjsontag = "\"$$$h.json$$$\"";
 
          arg->fContent = fDrawPageCont;
 
@@ -589,16 +590,26 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->fContent.ReplaceAll("=\"jsrootsys/", repl);
          }
 
+         if (arg->fContent.Index(hjsontag) != kNPOS) {
+            TString h_json;
+            TRootSnifferStoreJson store(h_json, kTRUE);
+            const char *topname = fTopName.Data();
+            if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
+            fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store, kTRUE);
+
+            arg->fContent.ReplaceAll(hjsontag, h_json);
+         }
+
          if (arg->fContent.Index(rootjsontag) != kNPOS) {
             TString str;
             void *bindata = 0;
             Long_t bindatalen = 0;
             if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=3", bindata, bindatalen, str)) {
                arg->fContent.ReplaceAll(rootjsontag, str);
-               arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
-               if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
             }
          }
+         arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+         if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
          arg->SetContentType("text/html");
       }
       return;
