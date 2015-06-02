@@ -45,6 +45,8 @@ static int begin_request_handler(struct mg_connection *conn)
       arg.SetQuery(request_info->query_string);  // query arguments
       arg.SetTopName(engine->GetTopName());
       arg.SetMethod(request_info->request_method); // method like GET or POST
+      if (request_info->remote_user!=0)
+         arg.SetUserName(request_info->remote_user);
 
       TString header;
       for (int n = 0; n < request_info->num_headers; n++)
@@ -74,6 +76,9 @@ static int begin_request_handler(struct mg_connection *conn)
          cont.Append(TString::Format("  FileName : %s\n", arg.GetFileName()));
          cont.Append(TString::Format("  Query    : %s\n", arg.GetQuery()));
          cont.Append(TString::Format("  PostData : %ld\n", arg.GetPostDataLength()));
+         if (arg.GetUserName())
+         cont.Append(TString::Format("  User     : %s\n", arg.GetUserName()));
+
          cont.Append("</pre><p>\n");
 
          cont.Append("Environment:<br/>\n<pre>\n");

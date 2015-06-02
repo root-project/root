@@ -28,6 +28,7 @@ protected:
    TString fMethod;             //! request method like GET or POST
    TString fPathName;           //! item path
    TString fFileName;           //! file name
+   TString fUserName;           //! authenticated user name (if any)
    TString fQuery;              //! additional arguments
 
    void *fPostData;              //! binary data received with post request
@@ -88,6 +89,13 @@ public:
       // set request file name
 
       fFileName = f;
+   }
+
+   void SetUserName(const char *n)
+   {
+      // set name of authenticated user
+
+      fUserName = n;
    }
 
    void SetQuery(const char *q)
@@ -174,6 +182,13 @@ public:
       // returns file name from request URL
 
       return fFileName.Data();
+   }
+
+   const char *GetUserName() const
+   {
+      // return authenticated user name (0 - when no authentication)
+
+      return fUserName.Length() > 0 ? fUserName.Data() : 0;
    }
 
    const char *GetQuery() const

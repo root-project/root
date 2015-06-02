@@ -499,7 +499,14 @@ void THttpServer::ProcessRequests()
 
       if (arg == 0) break;
 
-      ProcessRequest(arg);
+      fSniffer->SetCurrentCallArg(arg);
+
+      try {
+         ProcessRequest(arg);
+         fSniffer->SetCurrentCallArg(0);
+      } catch (...) {
+         fSniffer->SetCurrentCallArg(0);
+      }
 
       arg->fCond.Signal();
    }
@@ -517,6 +524,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    // Process single http request
    // Depending from requested path and filename different actions will be performed.
    // In most cases information is provided by TRootSniffer class
+
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
 
@@ -611,10 +619,6 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    void* bindata(0);
    Long_t bindatalen(0);
-   if (arg->IsPostMethod()) {
-      bindata = arg->GetPostData();
-      bindatalen = arg->GetPostDataLength();
-   }
 
    if ((filename == "h.xml") || (filename == "get.xml"))  {
 
@@ -647,8 +651,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    } else
 
    if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen, arg->fContent)) {
-      if ((bindata != 0) && (bindata != arg->GetPostData()))
-         arg->SetBinData(bindata, bindatalen);
+      if (bindata != 0) arg->SetBinData(bindata, bindatalen);
 
       // define content type base on extension
       arg->SetContentType(GetMimeType(filename.Data()));
@@ -690,6 +693,16 @@ Bool_t THttpServer::Unregister(TObject *obj)
    // See TRootSniffer::UnregisterObject() for more details
 
    return fSniffer->UnregisterObject(obj);
+}
+
+//______________________________________________________________________________
+void THttpServer::Restrict(const char *path, const char* options)
+{
+   // Restrict access to specified object
+   //
+   // See TRootSniffer::Restrict() for more details
+
+   fSniffer->Restrict(path, options);
 }
 
 //______________________________________________________________________________

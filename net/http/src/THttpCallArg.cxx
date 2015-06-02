@@ -22,6 +22,7 @@ THttpCallArg::THttpCallArg() :
    fMethod(),
    fPathName(),
    fFileName(),
+   fUserName(),
    fQuery(),
    fPostData(0),
    fPostDataLength(0),
