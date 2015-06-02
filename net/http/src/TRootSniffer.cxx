@@ -1126,13 +1126,18 @@ Bool_t TRootSniffer::ExecuteCmd(const char *path, const char *options,
 }
 
 //______________________________________________________________________________
-Bool_t TRootSniffer::ProduceItem(const char *path, const char *options, TString &res)
+Bool_t TRootSniffer::ProduceItem(const char *path, const char *options, TString &res, Bool_t asjson)
 {
-   // produce JSON for specified item
+   // produce JSON/XML for specified item
    // contrary to h.json request, only fields for specified item are stored
 
-   TRootSnifferStoreJson store(res, strstr(options, "compact")!=0);
-   ScanHierarchy("top", path, &store, kTRUE);
+   if (asjson) {
+      TRootSnifferStoreJson store(res, strstr(options, "compact")!=0);
+      ScanHierarchy("top", path, &store, kTRUE);
+   } else {
+      TRootSnifferStoreXml store(res, strstr(options, "compact")!=0);
+      ScanHierarchy("top", path, &store, kTRUE);
+   }
    return res.Length() > 0;
 }
 
@@ -1660,7 +1665,10 @@ Bool_t TRootSniffer::Produce(const char *path, const char *file,
       return ExecuteCmd(path, options, str);
 
    if (strcmp(file, "item.json") == 0)
-      return ProduceItem(path, options, str);
+      return ProduceItem(path, options, str, kTRUE);
+
+   if (strcmp(file, "item.xml") == 0)
+      return ProduceItem(path, options, str, kFALSE);
 
    return kFALSE;
 }

@@ -236,7 +236,7 @@ public:
 
    Bool_t ExecuteCmd(const char *path, const char *options, TString &res);
 
-   Bool_t ProduceItem(const char *path, const char *options, TString &res);
+   Bool_t ProduceItem(const char *path, const char *options, TString &res, Bool_t asjson = kTRUE);
 
    Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str);
 
