@@ -108,7 +108,6 @@ public:
 
    // Utility routines.  Most belongs in TMetaUtils and should be shared with rootcling.cxx
    std::string GetClassName(clang::DeclContext* DC) const;
-   void DumpDecl(clang::Decl* D, const char* msg) const;
    bool GetDeclName(clang::Decl* D, std::string& name) const;
    bool GetDeclQualName(clang::Decl* D, std::string& qual_name) const;
    bool GetFunctionPrototype(clang::Decl* D, std::string& prototype) const;

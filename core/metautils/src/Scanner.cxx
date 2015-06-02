@@ -639,8 +639,6 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
 
    bool ret = true;
 
-   DumpDecl(N, "");
-
    const ClassSelectionRule *selected = fSelectionRules.IsDeclSelected(N);
    if (selected) {
 
@@ -1044,27 +1042,6 @@ std::string RScanner::GetClassName(clang::DeclContext* DC) const
       ret = N->getNameAsString().c_str();
 
    return ret;
-}
-
-//______________________________________________________________________________
-void RScanner::DumpDecl(clang::Decl* D, const char* msg) const
-{
-   if (fVerboseLevel > 3) {
-      return;
-   }
-   std::string name;
-
-   if (!D) {
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) printf("\nDEBUG - DECL is NULL: %s", msg);
-#endif
-      return;
-   }
-
-   GetDeclName(D, name);
-#ifdef SELECTION_DEBUG
-   if (fVerboseLevel > 3) std::cout<<"\n\n"<<name<<" -> "<<D->getDeclKindName()<<": "<<msg;
-#endif
 }
 
 //______________________________________________________________________________
