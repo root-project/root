@@ -12,20 +12,22 @@ The expression is therefore compiled using Clang/LLVVM which will give execution
 
 ### TF1
 
-- Change of its inheritance structure. =TF1= has not anymore =TFormula= as a base class, so this code
+- Change of its inheritance structure. `TF1` has not anymore `TFormula` as a base class, so this code
 
 
-    ``` {.cpp}
-    TF1 * f1 = new TF1("f1","f1","sin(x)",0,10);
-	TFormula * formula = (TFormula *) f1;
-	```
+``` {.cpp}
+TF1 * f1 = new TF1("f1","f1","sin(x)",0,10);
+TFormula * formula = (TFormula *) f1;
+```
 
 **it is not valid anymore.**
 The equivalent correct code is now
-  ``` {.cpp}
-    TF1 * f1 = new TF1("f1","f1","sin(x)",0,10);
-	TFormula * formula = f1->GetFormula();
-	```
+
+
+``` {.cpp}
+TF1 * f1 = new TF1("f1","f1","sin(x)",0,10);
+TFormula * formula = f1->GetFormula();
+```
 
 
 ### TGraph2DPainter
@@ -70,7 +72,7 @@ The equivalent correct code is now
        return c1;
 }
     ```
-    ![COLZ0 plot example](colzo.png "COLZ0 plot example")
+    ![COLZ0 plot example](colz0.png "COLZ0 plot example")
 - The parameter `gStyle->SetHistTopMargin()` was ignored when plotting a 2D histogram
   using the option `E`. This can be seen plotting the histogram with `"LEGO E"`.
 - `GetObjectInfo` did not display the right value form `"Sum"` for histograms plotted
