@@ -45,6 +45,11 @@
          if (typeof arg == 'function') { func = arg; arg = name; }
 
          if ((arg==null) || (typeof arg != 'string')) arg = name;
+
+         // special handling of first versions with menu support
+         if (($.ui.version.indexOf("1.10")==0) || ($.ui.version.indexOf("1.9")==0))
+            name = '<a href="#">' + name + '</a>';
+
          this.code += "<li cnt='" + this.cnt + "' arg='" + arg + "'>" + name + close_tag;
          if (typeof func == 'function') this.funcs[this.cnt] = func; // keep call-back function
 
