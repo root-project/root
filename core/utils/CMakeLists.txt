@@ -138,6 +138,12 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND cmake -E copy
                                   ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/assert.h
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/assert.h
+                   COMMAND cmake -E copy
+                                  ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/stdlib.h
+                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/stdlib.h
+                   COMMAND cmake -E copy
+                                  ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/wchar.h
+                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/wchar.h
                    ${copy_commands}
                    COMMAND cmake -E touch ${stamp_file}
                    DEPENDS ${files_to_copy}
