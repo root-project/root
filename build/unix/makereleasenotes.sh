@@ -1,6 +1,6 @@
 #! /bin/sh
 
-VERS="604"
+VERS="606"
 ROOTSRCDIR=`dirname $0` # .../build/unix
 ROOTSRCDIR=`dirname $ROOTSRCDIR` # .../build
 ROOTSRCDIR=`dirname $ROOTSRCDIR` # ...
