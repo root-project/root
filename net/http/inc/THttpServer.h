@@ -111,6 +111,9 @@ public:
    /** Unregister object */
    Bool_t Unregister(TObject *obj);
 
+   /** Restrict access to specified object */
+   void Restrict(const char *path, const char* options);
+
    Bool_t RegisterCommand(const char *cmdname, const char *method, const char *icon = 0);
 
    Bool_t Hide(const char *fullname, Bool_t hide = kTRUE);
