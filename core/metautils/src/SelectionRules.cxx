@@ -1512,7 +1512,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
 //             if (IsSelectionXMLFile()) std::cout<<"Warning - ";
 //             else std::cout<<"Error   - ";
 
-            std::cout<<"Warning - ";
+            std::cout<<"Warning: ";
             if (file_name_value.length()) {
                std::cout<< "unused file name rule: \n";
                //std::cout<< file_name_value << '\n';
@@ -1544,7 +1544,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
             } else {
                name.clear();
             }
-            std::cout<<"Warning - unused variable rule: "<<name<<std::endl;
+            std::cout<<"Warning: unused variable rule: "<<name<<std::endl;
             if (name.length() == 0) {
                it->PrintAttributes(std::cout,3);
             }
@@ -1605,10 +1605,10 @@ ROOT::TMetaUtils::Warning("SelectionRules::AreAllSelectionRulesUsed",
             }
 
             if (IsSelectionXMLFile()){
-               std::cout<<"Warning - unused enum rule: "<<name<<std::endl;
+               std::cout<<"Warning: unused enum rule: "<<name<<std::endl;
             }
             else {
-               std::cout<<"Error - unused enum rule: "<<name<<std::endl;
+               std::cout<<"Error: unused enum rule: "<<name<<std::endl;
             }
             if (name.length() == 0) {
                it->PrintAttributes(std::cout,3);
