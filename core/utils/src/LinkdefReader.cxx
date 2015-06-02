@@ -100,7 +100,7 @@ void LinkdefReader::PopulateCppMap()
 
 LinkdefReader::LinkdefReader(cling::Interpreter &interp,
                              ROOT::TMetaUtils::RConstructorTypes &IOConstructorTypes):
-   fLine(1), fCount(0), fIOConstructorTypesPtr(&IOConstructorTypes), fInterp(interp)
+   fLine(1), fCount(0), fSelectionRules(nullptr), fIOConstructorTypesPtr(&IOConstructorTypes), fInterp(interp)
 {
    PopulatePragmaMap();
    PopulateCppMap();

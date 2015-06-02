@@ -2555,55 +2555,6 @@ void AdjustRootMapNames(std::string &rootmapFileName,
 }
 
 //______________________________________________________________________________
-int CreateRootMapFile(const std::string &rootmapFileName,
-                      const std::string &rootmapLibName,
-                      const std::list<std::string> &classesNames,
-                      const std::list<std::string> &nsNames)
-{
-
-   // Create the rootmap file from the selected classes and namespaces
-   std::ofstream rootmapFile(rootmapFileName.c_str());
-   if (!rootmapFile) {
-      ROOT::TMetaUtils::Error(0, "Opening new rootmap file %s\n", rootmapFileName.c_str());
-      return 1;
-   }
-
-
-   // Preamble
-   rootmapFile << "#--Begin " << rootmapFileName << std::endl;
-
-   // The number used to have the same alignment of ROOT5
-   const int alignment = 49;
-
-   // Loop on selected classes and insert them in the rootmap
-   std::string thisClassName;
-   for (std::list<std::string>::const_iterator classNameIt = classesNames.begin();
-         classNameIt != classesNames.end(); ++classNameIt) {
-      thisClassName = *classNameIt;
-      ManipForRootmap(thisClassName);
-      rootmapFile << "Library." << thisClassName << ": "
-                  << std::setw(alignment - thisClassName.size()) << rootmapLibName
-                  << std::endl;
-   }
-
-   // Same for namespaces
-   std::string thisNsName;
-   for (std::list<std::string>::const_iterator nsNameIt = nsNames.begin();
-         nsNameIt != nsNames.end(); ++nsNameIt) {
-      thisNsName = *nsNameIt ;
-      ManipForRootmap(thisNsName);
-      rootmapFile << "Library." << thisNsName << ": "
-                  << std::setw(alignment - thisClassName.size()) << rootmapLibName
-                  << std::endl;
-   }
-
-   rootmapFile << "#--End " << rootmapFileName << std::endl;
-   rootmapFile << "#--Final End" << std::endl;
-
-   return 0;
-}
-
-//______________________________________________________________________________
 bool IsHeaderName(const std::string &filename)
 {
    return llvm::sys::path::extension(filename) == ".h" ||
@@ -2782,6 +2733,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
 
 }
 
+//______________________________________________________________________________
 std::pair<std::string,std::string> GetExternalNamespaceAndContainedEntities(const std::string line)
 {
    // Performance is not critical here.
@@ -3932,9 +3884,6 @@ int RootCling(int argc,
    bool writeEmptyRootPCM = false;
    bool selSyntaxOnly = false;
 
-   // Temporary to decide if the new format is to be used
-   bool useNewRmfFormat = true;
-
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
    std::list<std::string> diagnosticPragmas = {"#pragma clang diagnostic ignored \"-Wdeprecated-declarations\""};
@@ -3961,13 +3910,6 @@ int RootCling(int argc,
             // name for the rootmap file
             rootmapFileName = argv[ic + 1];
             ic += 2;
-            continue;
-         }
-
-         if (strcmp("-oldRmfFormat", argv[ic]) == 0) {
-            // Generate old style rootmap files
-            useNewRmfFormat = false;
-            ic += 1;
             continue;
          }
 
@@ -4714,36 +4656,30 @@ int RootCling(int argc,
                              rootmapLibName.c_str());
 
       tmpCatalog.addFileName(rootmapFileName);
-      if (useNewRmfFormat) {
-         std::unordered_set<std::string> headersToIgnore;
-         if (inlineInputHeader) {
-            for (int index = 0; index < argc; ++index) {
-               if (*argv[index] != '-' && IsHeaderName(argv[index])) {
-                  headersToIgnore.insert(argv[index]);
-               }
+      std::unordered_set<std::string> headersToIgnore;
+      if (inlineInputHeader) {
+         for (int index = 0; index < argc; ++index) {
+            if (*argv[index] != '-' && IsHeaderName(argv[index])) {
+               headersToIgnore.insert(argv[index]);
             }
          }
-
-         std::list<std::string> typedefsRootmapLines;
-         ExtractTypedefAutoloadKeys(typedefsRootmapLines,
-                                    scan.fSelectedTypedefs,
-                                    interp);
-
-         rootclingRetCode = CreateNewRootMapFile(rootmapFileName,
-                                             rootmapLibName,
-                                             classesDefsList,
-                                             classesNamesForRootmap,
-                                             nsNames,
-                                             typedefsRootmapLines,
-                                             enumNames,
-                                             headersClassesMap,
-                                             headersToIgnore);
-      } else {
-         rootclingRetCode = CreateRootMapFile(rootmapFileName,
-                                          rootmapLibName,
-                                          classesNamesForRootmap,
-                                          nsNames);
       }
+
+      std::list<std::string> typedefsRootmapLines;
+      ExtractTypedefAutoloadKeys(typedefsRootmapLines,
+                                 scan.fSelectedTypedefs,
+                                 interp);
+
+      rootclingRetCode = CreateNewRootMapFile(rootmapFileName,
+                                          rootmapLibName,
+                                          classesDefsList,
+                                          classesNamesForRootmap,
+                                          nsNames,
+                                          typedefsRootmapLines,
+                                          enumNames,
+                                          headersClassesMap,
+                                          headersToIgnore);
+
       if (0 != rootclingRetCode) return 1;
    }
 
@@ -4904,7 +4840,6 @@ namespace genreflex {
                        const std::vector<std::string> &preprocUndefines,
                        const std::vector<std::string> &warnings,
                        const std::string &rootmapFileName,
-                       bool newRmfFormat,
                        const std::string &rootmapLibName,
                        const std::string &capaFileName,
                        bool interpreteronly,
@@ -4957,10 +4892,6 @@ namespace genreflex {
          argvVector.push_back(string2charptr("-rmf"));
          argvVector.push_back(string2charptr(newRootmapFileName));
       }
-
-      // Switch for the new format
-      if (!newRmfFormat)
-         argvVector.push_back(string2charptr("-oldRmfFormat"));
 
       // RootMap Lib filename
       if (!newRootmapLibName.empty()) {
@@ -5055,7 +4986,6 @@ namespace genreflex {
                            const std::vector<std::string> &preprocUndefines,
                            const std::vector<std::string> &warnings,
                            const std::string &rootmapFileName,
-                           bool newRmfFormat,
                            const std::string &rootmapLibName,
                            const std::string &capaFileName,
                            bool interpreteronly,
@@ -5094,7 +5024,6 @@ namespace genreflex {
                                           preprocUndefines,
                                           warnings,
                                           rootmapFileName,
-                                          newRmfFormat,
                                           rootmapLibName,
                                           capaFileName,
                                           interpreteronly,
@@ -5201,7 +5130,6 @@ int GenReflex(int argc, char **argv)
                        ROOTMAPLIB,
                        PCMFILENAME,
                        DEEP,
-                       OLDRMFFORMAT,
                        DEBUG,
                        VERBOSE,
                        QUIET,
@@ -5523,14 +5451,6 @@ int GenReflex(int argc, char **argv)
          ""
       },
 
-      {
-         OLDRMFFORMAT, // Option which is not meant for the user: deprecated
-         NOTYPE ,
-         "" , "oldRmfFormat",
-         ROOT::option::Arg::None,
-         ""
-      },
-
       {0, 0, 0, 0, 0, 0}
    };
 
@@ -5630,10 +5550,6 @@ int GenReflex(int argc, char **argv)
       return 1;
    }
 
-   bool newRmfFormat = true;
-   if (options[OLDRMFFORMAT])
-      newRmfFormat = false;
-
    bool interpreteronly = false;
    if (options[INTERPRETERONLY])
       interpreteronly = true;
@@ -5706,7 +5622,6 @@ int GenReflex(int argc, char **argv)
                                     preprocUndefines,
                                     warnings,
                                     rootmapFileName,
-                                    newRmfFormat,
                                     rootmapLibName,
                                     capaFileName,
                                     interpreteronly,
@@ -5728,7 +5643,6 @@ int GenReflex(int argc, char **argv)
                                         preprocUndefines,
                                         warnings,
                                         rootmapFileName,
-                                        newRmfFormat,
                                         rootmapLibName,
                                         capaFileName,
                                         interpreteronly,
