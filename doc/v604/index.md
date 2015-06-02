@@ -1,10 +1,10 @@
 % ROOT Version 6.04/00 Release Notes
-% Apr 2015
+% 2 June 2015
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.04/00 will be released end of May, 2015.
+ROOT version 6.04/00 was released on 2 June, 2015.
 
 For more information, see:
 
