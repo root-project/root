@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash -x -e
 
 VERS="604"
 ROOTSRCDIR=`dirname $0` # .../build/unix
