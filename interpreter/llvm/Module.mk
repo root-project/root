@@ -42,8 +42,10 @@ LLVMGOODO    := $(LLVMDIRO)/$(notdir $(LLVMGOODS))
 LLVMVERSION  := $(shell echo $(subst rc,,$(subst svn,,$(subst PACKAGE_VERSION=,,\
 	$(shell grep 'PACKAGE_VERSION=' $(LLVMDIRS)/configure)))))
 LLVMRES      := etc/cling/lib/clang/$(LLVMVERSION)/include/stddef.h
-LLVMRESEXTRA := etc/cling/lib/clang/$(LLVMVERSION)/include/assert.h
-LLVMDEP      := $(LLVMLIB) $(LLVMRES) $(LLVMRESEXTRA)
+LLVMRESEXTRA := $(addprefix etc/cling/lib/clang/$(LLVMVERSION)/include/, assert.h stdlib.h unistd.h)
+LLVMSYSEXTRA := $(wildcard $(addprefix /usr/include/, wchar.h bits/stat.h))
+LLVMSYSEXTRA := $(patsubst /usr/include/%,etc/cling/lib/clang/$(LLVMVERSION)/include/%,$(LLVMSYSEXTRA))
+LLVMDEP      := $(LLVMLIB) $(LLVMRES) $(LLVMRESEXTRA) $(LLVMSYSEXTRA)
 
 ROOT_NOCLANG := "ROOT_NOCLANG=yes"
 ifeq ($(LLVMDEV),)
@@ -86,6 +88,9 @@ $(LLVMRES): $(LLVMLIB)
 		@cp $(LLVMDIRI)/lib/clang/$(LLVMVERSION)/include/* $(dir $(LLVMRES))
 
 $(LLVMRESEXTRA): $(dir $(firstword $(LLVMRESEXTRA)))%: $(MODDIR)/ROOT/%
+		@mkdir -p $(dir $@)
+		@cp $< $@
+$(LLVMSYSEXTRA): $(dir $(firstword $(LLVMSYSEXTRA)))%: /usr/include/%
 		@mkdir -p $(dir $@)
 		@cp $< $@
 
