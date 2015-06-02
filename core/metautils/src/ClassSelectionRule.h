@@ -57,12 +57,12 @@ public:
 
    void Print(std::ostream &out) const;
 
-   void AddFieldSelectionRule(VariableSelectionRule field); //adds entry to the filed selections list
+   void AddFieldSelectionRule(const VariableSelectionRule& field); //adds entry to the filed selections list
    bool HasFieldSelectionRules() const;
    //const std::list<VariableSelectionRule>& getFieldSelectionRules(); //gets the field selections list
    const std::list<VariableSelectionRule>& GetFieldSelectionRules() const; //gets the field selections list
 
-   void AddMethodSelectionRule(FunctionSelectionRule method); //adds entry to the method selections list
+   void AddMethodSelectionRule(const FunctionSelectionRule& method); //adds entry to the method selections list
    bool HasMethodSelectionRules() const;
    //const std::list<FunctionSelectionRule>& getMethodSelectionRules(); //gets the method selections list
    const std::list<FunctionSelectionRule>& GetMethodSelectionRules() const; //gets the method selections list
