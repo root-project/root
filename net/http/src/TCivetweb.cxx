@@ -57,7 +57,7 @@ static int begin_request_handler(struct mg_connection *conn)
       Int_t ilen = len!=0 ? TString(len).Atoi() : 0;
 
       if (ilen>0) {
-         void* buf = malloc(ilen);
+         void* buf = malloc(ilen+1); // one byte more for null-termination
          Int_t iread = mg_read(conn, buf, ilen);
          if (iread==ilen) arg.SetPostData(buf, ilen);
                      else free(buf);
