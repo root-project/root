@@ -1,67 +1,22 @@
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">
 <!--  this file used by THttpServer to display single element -->
 <html lang="en">
    <head>
       <meta http-equiv="X-UA-Compatible" content="IE=Edge">
       <title>Draw of single element</title>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js?2d&onload=CreateGui"></script>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js?gui"></script>
    </head>
 
    <script type='text/javascript'>
 
+      function GetCachedHierarchy() { return "$$$h.json$$$"; }
+
       function GetCachedObject() { return "$$$root.json$$$"; }
-
-      function CreateGui() {
-         // analyze URL options
-         var drawopt = JSROOT.GetUrlOption("opt");
-
-         var monitor = JSROOT.GetUrlOption("monitoring");
-         if (monitor == "") monitor = 3000; else
-         if (monitor != null) monitor = parseInt(monitor);
-
-         var objpainter = null;
-         var req_url = 'root.json.gz?compact=3';
-
-         function draw_function(obj) {
-            if (!obj) {
-                if (!objpainter) $('#drawing').append("<h3>Can not get object from the server</h3>");
-                return;
-             }
-             document.body.style.cursor = 'wait';
-             objpainter = JSROOT.redraw('drawing', obj, drawopt);
-             document.body.style.cursor = 'auto';
-         }
-
-         function get_function() {
-            var req = JSROOT.NewHttpRequest(req_url, 'object', draw_function);
-            // submit request
-            req.send(null);
-         }
-
-         var obj = GetCachedObject();
-
-         if (typeof obj != 'object') {
-            get_function();
-         } else
-         if (obj['_typename'] == 'TFolder') {
-            // special case - seems to be it is item in the sniffer
-            req_url = 'item.json.gz?compact=3';
-            get_function();
-         } else {
-            obj = JSROOT.JSONR_unref(obj);
-            draw_function(obj);
-         }
-
-         if (monitor!=null)
-            setInterval(get_function, monitor);
-
-         JSROOT.RegisterForResize('drawing');
-      }
 
    </script>
 
    <body>
-      <div id="drawing" style="position:absolute; left:1px; top:1px; bottom:1px; right:1px">
+      <div id="drawGUI">
          loading scripts...
       </div>
    </body>
