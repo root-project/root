@@ -208,7 +208,7 @@ void *TFastCgi::run_func(void *args)
       int len = 0;
       if (inp_length!=0) len = strtol(inp_length, NULL, 10);
       if (len>0) {
-         void* buf = malloc(len);
+         void* buf = malloc(len+1); // one myte more for null-termination
          int nread = FCGX_GetStr((char*) buf, len, request.in);
          if (nread>0) arg.SetPostData(buf, nread);
                  else free(buf);

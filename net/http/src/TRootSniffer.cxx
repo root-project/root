@@ -1267,6 +1267,17 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
 
       // process several arguments which are specific for post requests
       if ((val!=0) && (fCurrentArg!=0) && (fCurrentArg->GetPostData()!=0)) {
+         if (strcmp(val,"_post_object_xml_")==0) {
+            // post data has extra 0 at the end and can be used as null-terminated string
+            post_obj = TBufferXML::ConvertFromXML((const char*) fCurrentArg->GetPostData());
+            if (post_obj == 0) {
+               sval = "0";
+            } else {
+               sval.Form("(%s*)0x%lx", post_obj->ClassName(), (long unsigned) post_obj);
+               if (url.HasOption("_destroy_post_")) garbage.Add(post_obj);
+            }
+            val = sval.Data();
+         } else
          if ((strcmp(val,"_post_object_")==0) && url.HasOption("_post_class_")) {
             TString clname = url.GetValueFromOptions("_post_class_");
             TClass* arg_cl = gROOT->GetClass(clname, kTRUE, kTRUE);

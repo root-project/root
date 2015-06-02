@@ -132,8 +132,12 @@ TString THttpCallArg::CountHeader(const TString& buf, Int_t number) const
 void THttpCallArg::SetPostData(void *data, Long_t length)
 {
    // set data, posted with the request
+   // buffer should be allocated with malloc(length+1) call,
+   // while last byte will be set to 0
+   // Than one could use post data as null-terminated string
 
    if (fPostData) free(fPostData);
+   if (data!=0) *(((char*) data) + length) = 0;
    fPostData = data;
    fPostDataLength = length;
 }
