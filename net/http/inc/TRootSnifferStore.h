@@ -15,6 +15,8 @@
 class TDataMember;
 class TFolder;
 
+/** Abstract interface for storage of hierarchy scan in TRootSniffer */
+
 class TRootSnifferStore : public TObject {
 protected:
    void         *fResPtr;       //! pointer on found item
@@ -64,6 +66,8 @@ public:
 
 // ========================================================================
 
+/** Storage of hierarchy scan in TRootSniffer in XML format */
+
 class TRootSnifferStoreXml : public TRootSnifferStore {
 protected:
    TString *fBuf;          //! output buffer
@@ -92,6 +96,7 @@ public:
 
 // ========================================================================
 
+/** Storage of hierarchy scan in TRootSniffer in JSON format */
 
 class TRootSnifferStoreJson : public TRootSnifferStore {
 protected:
@@ -111,5 +116,6 @@ public:
 
    ClassDef(TRootSnifferStoreJson, 0) // json results store of objects sniffer
 };
+
 
 #endif
