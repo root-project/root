@@ -33,12 +33,14 @@
 
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0) ;
 
-void SelectionRules::AddClassSelectionRule(ClassSelectionRule& classSel)
+void SelectionRules::AddClassSelectionRule(const ClassSelectionRule& classSel)
 {
    fRulesCounter++;
-   if (!classSel.HasInterpreter()) classSel.SetInterpreter(fInterp);
-   if (classSel.GetIndex() < 0) classSel.SetIndex( fRulesCounter );
    fClassSelectionRules.push_front(classSel);
+   if (!classSel.HasInterpreter())
+      fClassSelectionRules.begin()->SetInterpreter(fInterp);
+   if (classSel.GetIndex() < 0)
+      fClassSelectionRules.begin()->SetIndex(fRulesCounter);
 }
 
 bool SelectionRules::HasClassSelectionRules() const
@@ -51,12 +53,14 @@ const std::list<ClassSelectionRule>& SelectionRules::GetClassSelectionRules() co
    return fClassSelectionRules;
 }
 
-void SelectionRules::AddFunctionSelectionRule(FunctionSelectionRule& funcSel)
+void SelectionRules::AddFunctionSelectionRule(const FunctionSelectionRule& funcSel)
 {
    fRulesCounter++;
-   if (!funcSel.HasInterpreter()) funcSel.SetInterpreter(fInterp);
-   if (funcSel.GetIndex() < 0) funcSel.SetIndex( fRulesCounter );
    fFunctionSelectionRules.push_back(funcSel);
+   if (!funcSel.HasInterpreter())
+      fFunctionSelectionRules.begin()->SetInterpreter(fInterp);
+   if (funcSel.GetIndex() < 0)
+      fFunctionSelectionRules.begin()->SetIndex(fRulesCounter);
 }
 
 bool SelectionRules::HasFunctionSelectionRules() const
@@ -69,12 +73,14 @@ const std::list<FunctionSelectionRule>& SelectionRules::GetFunctionSelectionRule
    return fFunctionSelectionRules;
 }
 
-void SelectionRules::AddVariableSelectionRule( VariableSelectionRule& varSel)
+void SelectionRules::AddVariableSelectionRule(const  VariableSelectionRule& varSel)
 {
    fRulesCounter++;
-   if (!varSel.HasInterpreter()) varSel.SetInterpreter(fInterp);
-   if (varSel.GetIndex() < 0) varSel.SetIndex( fRulesCounter );
    fVariableSelectionRules.push_back(varSel);
+   if (!varSel.HasInterpreter())
+      fVariableSelectionRules.begin()->SetInterpreter(fInterp);
+   if (varSel.GetIndex() < 0)
+      fVariableSelectionRules.begin()->SetIndex(fRulesCounter);
 }
 
 bool SelectionRules::HasVariableSelectionRules() const
@@ -87,12 +93,14 @@ const std::list<VariableSelectionRule>& SelectionRules::GetVariableSelectionRule
    return fVariableSelectionRules;
 }
 
-void SelectionRules::AddEnumSelectionRule(EnumSelectionRule& enumSel)
+void SelectionRules::AddEnumSelectionRule(const EnumSelectionRule& enumSel)
 {
    fRulesCounter++;
-   if (!enumSel.HasInterpreter()) enumSel.SetInterpreter(fInterp);
-   if (enumSel.GetIndex() < 0) enumSel.SetIndex( fRulesCounter );
    fEnumSelectionRules.push_back(enumSel);
+   if (!enumSel.HasInterpreter())
+      fEnumSelectionRules.begin()->SetInterpreter(fInterp);
+   if (enumSel.GetIndex() < 0)
+      fEnumSelectionRules.begin()->SetIndex( fRulesCounter );
 }
 
 bool SelectionRules::HasEnumSelectionRules() const
@@ -283,28 +291,28 @@ bool SelectionRules::GetDeep() const
    return fIsDeep;
 }
 
-const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::RecordDecl *D) const
+const ClassSelectionRule *SelectionRules::IsDeclSelected(const clang::RecordDecl *D) const
 {
    std::string qual_name;
    GetDeclQualName(D,qual_name);
    return IsClassSelected(D, qual_name);
 }
 
-const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::TypedefNameDecl *D) const
+const ClassSelectionRule *SelectionRules::IsDeclSelected(const clang::TypedefNameDecl *D) const
 {
    std::string qual_name;
    GetDeclQualName(D,qual_name);
    return IsClassSelected(D, qual_name);
 }
 
-const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::NamespaceDecl *D) const
+const ClassSelectionRule *SelectionRules::IsDeclSelected(const clang::NamespaceDecl *D) const
 {
    std::string qual_name;
    GetDeclQualName(D,qual_name);
    return IsNamespaceSelected(D, qual_name);
 }
 
-const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) const
+const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::EnumDecl *D) const
 {
    // Currently rootcling does not need any information on enums, except
    // for the PCM / proto classes that register them to build TEnums without
@@ -344,7 +352,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) cons
    return 0;
 }
 
-const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const
+const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::VarDecl* D) const
 {
    std::string qual_name;  // fully qualified name of the Decl
    GetDeclQualName(D, qual_name);
@@ -356,7 +364,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const
 
 }
 
-const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FieldDecl* /* D */) const
+const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::FieldDecl* /* D */) const
 {
    // Currently rootcling does not need any information about fields.
    return 0;
@@ -369,7 +377,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FieldDecl* /* D *
 #endif
 }
 
-const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FunctionDecl* D) const
+const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::FunctionDecl* D) const
 {
    // Implement a simple matching for functions
    std::string qual_name;  // fully qualified name of the Decl
@@ -380,7 +388,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FunctionDecl* D) 
       return IsFunSelected(D, qual_name);
 }
 
-const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
+const BaseSelectionRule *SelectionRules::IsDeclSelected(const clang::Decl *D) const
 {
    if (!D) {
       return 0;
@@ -435,9 +443,9 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
 }
 
 
-bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string& qual_name) const
+bool SelectionRules::GetDeclName(const clang::Decl* D, std::string& name, std::string& qual_name) const
 {
-   clang::NamedDecl* N = llvm::dyn_cast<clang::NamedDecl> (D);
+   const clang::NamedDecl* N = llvm::dyn_cast<clang::NamedDecl> (D);
 
    if (N) {
       // the identifier is NULL for some special methods like constructors, destructors and operators
@@ -456,13 +464,13 @@ bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string&
    }
 }
 
-inline void SelectionRules::GetDeclQualName(clang::Decl* D, std::string& qual_name) const{
-      clang::NamedDecl* N = static_cast<clang::NamedDecl*> (D);
+inline void SelectionRules::GetDeclQualName(const clang::Decl* D, std::string& qual_name) const{
+      const clang::NamedDecl* N = static_cast<const clang::NamedDecl*> (D);
       llvm::raw_string_ostream stream(qual_name);
       N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
    }
 
-bool SelectionRules::GetFunctionPrototype(clang::FunctionDecl* F, std::string& prototype) const {
+bool SelectionRules::GetFunctionPrototype(const clang::FunctionDecl* F, std::string& prototype) const {
 
    if (!F) {
       return false;
@@ -508,18 +516,18 @@ bool SelectionRules::GetFunctionPrototype(clang::FunctionDecl* F, std::string& p
 }
 
 
-bool SelectionRules::IsParentClass(clang::Decl* D) const
+bool SelectionRules::IsParentClass(const clang::Decl* D) const
 {
-   clang::DeclContext *ctx = D->getDeclContext();
+   const clang::DeclContext *ctx = D->getDeclContext();
 
    if (ctx->isRecord()){
-      clang::Decl *parent = llvm::dyn_cast<clang::Decl> (ctx);
+      const clang::Decl *parent = llvm::dyn_cast<clang::Decl> (ctx);
       if (!parent) {
          return false;
       }
       else {
          //TagDecl has methods to understand of what kind is the Decl - class, struct or union
-         clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (parent);
+         const clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (parent);
 
          if (T) {
             if (T->isClass()||T->isStruct()) {
@@ -540,18 +548,18 @@ bool SelectionRules::IsParentClass(clang::Decl* D) const
 }
 
 
-bool SelectionRules::IsParentClass(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const
+bool SelectionRules::IsParentClass(const clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const
 {
-   clang::DeclContext *ctx = D->getDeclContext();
+   const clang::DeclContext *ctx = D->getDeclContext();
 
    if (ctx->isRecord()){
-      clang::Decl *parent = llvm::dyn_cast<clang::Decl> (ctx);
+      const clang::Decl *parent = llvm::dyn_cast<clang::Decl> (ctx);
       if (!parent) {
          return false;
       }
       else {
          //TagDecl has methods to understand of what kind is the Decl
-         clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (parent);
+         const clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (parent);
 
          if (T) {
             if (T->isClass()|| T->isStruct()) {
@@ -572,13 +580,13 @@ bool SelectionRules::IsParentClass(clang::Decl* D, std::string& parent_name, std
    }
 }
 
-bool SelectionRules::GetParentName(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const
+bool SelectionRules::GetParentName(const clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const
 {
-   clang::DeclContext *ctx = D->getDeclContext();
+   const clang::DeclContext *ctx = D->getDeclContext();
 
    if (ctx->isRecord()){
       //DEBUG std::cout<<"\n\tDeclContext is Record";
-      clang::Decl *parent = llvm::dyn_cast<clang::Decl> (ctx);
+      const clang::Decl *parent = llvm::dyn_cast<clang::Decl> (ctx);
       if (!parent) {
          return false;
       }
@@ -630,9 +638,9 @@ bool SelectionRules::GetParentName(clang::Decl* D, std::string& parent_name, std
 // which is for the selection.xml file case). If noName is true than we just continue -
 // this means that the current class selection rule isn't applicable for this class.
 
-const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, const std::string& qual_name) const
+const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl* D, const std::string& qual_name) const
 {
-   clang::NamespaceDecl* N = llvm::dyn_cast<clang::NamespaceDecl> (D); //TagDecl has methods to understand of what kind is the Decl
+   const clang::NamespaceDecl* N = llvm::dyn_cast<clang::NamespaceDecl> (D); //TagDecl has methods to understand of what kind is the Decl
    if (N==0) {
       std::cout<<"\n\tCouldn't cast Decl to NamespaceDecl";
       return 0;
@@ -729,10 +737,10 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, co
 }
 
 
-const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_name) const
+const ClassSelectionRule *SelectionRules::IsClassSelected(const clang::Decl* D, const std::string& qual_name) const
 {
-   clang::TagDecl* tagDecl = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
-   clang::TypedefNameDecl* typeDefNameDecl = llvm::dyn_cast<clang::TypedefNameDecl> (D);
+   const clang::TagDecl* tagDecl = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
+   const clang::TypedefNameDecl* typeDefNameDecl = llvm::dyn_cast<clang::TypedefNameDecl> (D);
 
    if (!tagDecl && !typeDefNameDecl) { // Ill posed
       ROOT::TMetaUtils::Error("SelectionRules::IsClassSelected",
@@ -840,7 +848,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
 
 }
 
-const BaseSelectionRule *SelectionRules::IsVarSelected(clang::VarDecl* D, const std::string& qual_name) const
+const BaseSelectionRule *SelectionRules::IsVarSelected(const clang::VarDecl* D, const std::string& qual_name) const
 {
    std::list<VariableSelectionRule>::const_iterator it = fVariableSelectionRules.begin();
    std::list<VariableSelectionRule>::const_iterator it_end =  fVariableSelectionRules.end();
@@ -864,7 +872,7 @@ const BaseSelectionRule *SelectionRules::IsVarSelected(clang::VarDecl* D, const 
    return selector;
 }
 
-const BaseSelectionRule *SelectionRules::IsFunSelected(clang::FunctionDecl *D, const std::string &qual_name) const
+const BaseSelectionRule *SelectionRules::IsFunSelected(const clang::FunctionDecl *D, const std::string &qual_name) const
 {
 
    if (fFunctionSelectionRules.size() == 0 ||
@@ -893,7 +901,7 @@ const BaseSelectionRule *SelectionRules::IsFunSelected(clang::FunctionDecl *D, c
    return selector;
 }
 
-const BaseSelectionRule *SelectionRules::IsEnumSelected(clang::EnumDecl* D, const std::string& qual_name) const
+const BaseSelectionRule *SelectionRules::IsEnumSelected(const clang::EnumDecl* D, const std::string& qual_name) const
 {
    const BaseSelectionRule *selector = 0;
 
@@ -914,7 +922,7 @@ const BaseSelectionRule *SelectionRules::IsEnumSelected(clang::EnumDecl* D, cons
    return selector;
 }
 
-const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D, const std::string& qual_name) const
+const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(const clang::VarDecl* D, const std::string& qual_name) const
 {
 
 
@@ -972,7 +980,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D,
    }
 }
 
-const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDecl* D, const std::string& qual_name) const
+const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(const clang::FunctionDecl* D, const std::string& qual_name) const
 {
 
    if (fFunctionSelectionRules.size() == 0 ||
@@ -1032,7 +1040,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDec
    }
 }
 
-const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(clang::EnumDecl* D, const std::string& qual_name) const
+const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(const clang::EnumDecl* D, const std::string& qual_name) const
 {
    std::list<VariableSelectionRule>::const_iterator it;
    std::list<VariableSelectionRule>::const_iterator it_end;
@@ -1105,13 +1113,13 @@ const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(clang::EnumDecl* 
 // of anything better)
 //
 
-const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& qual_name) const
+const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(const clang::Decl* D, const std::string& qual_name) const
 {
    std::list<FunctionSelectionRule>::const_iterator it = fFunctionSelectionRules.begin();
    std::list<FunctionSelectionRule>::const_iterator it_end = fFunctionSelectionRules.end();
    std::string prototype;
 
-   if (clang::FunctionDecl* F = llvm::dyn_cast<clang::FunctionDecl> (D))
+   if (const clang::FunctionDecl* F = llvm::dyn_cast<clang::FunctionDecl> (D))
       GetFunctionPrototype(F, prototype);
    prototype = qual_name + prototype;
 
@@ -1325,7 +1333,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
 
 }
 
-const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& str_name) const
+const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, const std::string& str_name) const
 {
    std::string parent_name;
    std::string parent_qual_name;
@@ -1404,7 +1412,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const 
                         members = it->GetFieldSelectionRules();
                      }
                      else {
-                        if (clang::FunctionDecl* F = llvm::dyn_cast<clang::FunctionDecl> (D)){
+                        if (const clang::FunctionDecl* F = llvm::dyn_cast<clang::FunctionDecl> (D)){
                            GetFunctionPrototype(F, prototype);
                            prototype = str_name + prototype;
                         }
