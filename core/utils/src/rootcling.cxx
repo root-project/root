@@ -3984,6 +3984,13 @@ int RootCling(int argc,
             continue;
          }
 
+         if (strcmp("-failOnWarnings", argv[ic]) == 0) {
+            // Fail on Warnings and Errors
+            ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kThrowOnWarning;
+            ic += 1;
+            continue;
+         }
+
          if (strcmp("-pipe", argv[ic]) != 0 && strcmp("-pthread", argv[ic]) != 0) {
             // filter out undesirable options
             if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
@@ -4848,6 +4855,7 @@ namespace genreflex {
                        bool writeEmptyRootPCM,
                        bool selSyntaxOnly,
                        const std::vector<std::string> &headersNames,
+                       bool failOnWarnings,
                        const std::string &ofilename)
    {
 
@@ -4941,6 +4949,10 @@ namespace genreflex {
       if (selSyntaxOnly)
          argvVector.push_back(string2charptr("-selSyntaxOnly"));
 
+      // Fail on warnings
+      if (failOnWarnings)
+         argvVector.push_back(string2charptr("-failOnWarnings"));
+
       // Clingargs
       AddToArgVector(argvVector, includes, "-I");
       AddToArgVector(argvVector, preprocDefines, "-D");
@@ -4994,6 +5006,7 @@ namespace genreflex {
                            bool writeEmptyRootPCM,
                            bool selSyntaxOnly,
                            const std::vector<std::string> &headersNames,
+                           bool failOnWarnings,
                            const std::string &outputDirName_const = "")
    {
       // Get the right ofilenames and invoke several times rootcling
@@ -5032,6 +5045,7 @@ namespace genreflex {
                                           writeEmptyRootPCM,
                                           selSyntaxOnly,
                                           namesSingleton,
+                                          failOnWarnings,
                                           ofilenameFullPath);
          if (returnCode != 0)
             return returnCode;
@@ -5136,6 +5150,7 @@ int GenReflex(int argc, char **argv)
                        SILENT,
                        WRITEEMPTYROOTPCM,
                        HELP,
+                       FAILONWARNINGS,
                        CAPABILITIESFILENAME,
                        SELSYNTAXONLY,
                        INTERPRETERONLY,
@@ -5395,6 +5410,14 @@ int GenReflex(int argc, char **argv)
       },
 
       {
+         FAILONWARNINGS,
+         NOTYPE,
+         "", "fail_on_warnings",
+         ROOT::option::Arg::None,
+         "--fail_on_warnings\tFail on warnings and errors.\n"
+      },
+
+      {
          SELSYNTAXONLY,
          NOTYPE,
          "", "selSyntaxOnly",
@@ -5567,6 +5590,11 @@ int GenReflex(int argc, char **argv)
       selSyntaxOnly = true;
    }
 
+   bool failOnWarnings = false;
+   if (options[FAILONWARNINGS]) {
+      failOnWarnings = true;
+   }
+
    // Add the .so extension to the rootmap lib if not there
    if (!rootmapLibName.empty() && !ROOT::TMetaUtils::EndsWith(rootmapLibName, gLibraryExtension)) {
       rootmapLibName += gLibraryExtension;
@@ -5630,6 +5658,7 @@ int GenReflex(int argc, char **argv)
                                     writeEmptyRootPCM,
                                     selSyntaxOnly,
                                     headersNames,
+                                    failOnWarnings,
                                     ofileName);
    } else {
       // Here ofilename is either "" or a directory: this is irrelevant.
@@ -5651,6 +5680,7 @@ int GenReflex(int argc, char **argv)
                                         writeEmptyRootPCM,
                                         selSyntaxOnly,
                                         headersNames,
+                                        failOnWarnings,
                                         ofileName);
    }
 
@@ -5677,12 +5707,19 @@ int main(int argc, char **argv)
    // 2) GenReflex
    // The default is rootcling
 
+   int retVal = 0;
+
    if (std::string::npos != exeName.find("rootcling")) {
-      return RootCling(argc, argv);
+      retVal = RootCling(argc, argv);
    } else if (std::string::npos != exeName.find("genreflex")) {
-      return GenReflex(argc, argv);
+      retVal = GenReflex(argc, argv);
    } else { //default
-      return RootCling(argc, argv);
+      retVal = RootCling(argc, argv);
    }
 
+   auto nerrors = ROOT::TMetaUtils::GetNumberOfWarningsAndErrors();
+   if (nerrors > 0){
+      ROOT::TMetaUtils::Info(0,"Problems have been detected during the generation of the dictionary.\n");
+   }
+   return nerrors + retVal;
 }

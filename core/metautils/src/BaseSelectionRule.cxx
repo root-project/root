@@ -158,12 +158,11 @@ void BaseSelectionRule::SetAttributeValue(const std::string& attributeName, cons
          auto lineno = GetLineNumber();
          std::string cleanFileName =  llvm::sys::path::filename(GetSelFileName());
          std::stringstream message;
-         message << "Warning: ";
          if (lineno > -1 ) message << cleanFileName << ":" << lineno << " ";
          message << "A selection rule is aiming to selectd a std iterator with the "
                  << attributeName << " " << attributeValue << ":"
-                 << " ROOT6 does not need dictionaries of iterators for interactivity.";
-         std::cerr << message.str() << std::endl;
+                 << " ROOT6 does not need dictionaries of iterators for interactivity.\n";
+         ROOT::TMetaUtils::Warning("",message.str().c_str());
       }
 
 

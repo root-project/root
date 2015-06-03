@@ -1408,13 +1408,9 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const 
                            GetFunctionPrototype(F, prototype);
                            prototype = str_name + prototype;
                         }
-                        else
-                           std::cout << "Warning: could not cast Decl to FunctionDecl\n";
-
-#ifdef SELECTION_DEBUG
-                        std::cout<<"\tIn isMemberSelected (DC)"<<std::endl;
-#endif
-
+                        else{
+                           ROOT::TMetaUtils::Warning("","Warning: could not cast Decl to FunctionDecl\n");
+                        }
                         members = it->GetMethodSelectionRules();
                      }
                      mem_it = members.begin();
@@ -1489,69 +1485,53 @@ void SelectionRules::SetSelectionFileType(ESelectionFileTypes fileType)
 }
 
 bool SelectionRules::AreAllSelectionRulesUsed() const {
-   if (!fClassSelectionRules.empty()) {
-      for(std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
-          it != fClassSelectionRules.end(); ++it) {
-         if (BaseSelectionRule::kNo!=it->GetSelected() && !it->GetMatchFound() /* && !GetHasFileNameRule() */ ) {
+      for(auto&& rule : fClassSelectionRules){
+         if (BaseSelectionRule::kNo!=rule.GetSelected() && !rule.GetMatchFound() /* && !GetHasFileNameRule() */ ) {
             std::string name;
-            if (it->GetAttributeValue("pattern", name)) {
+            if (rule.GetAttributeValue("pattern", name)) {
                // keep it
-            } else if (it->GetAttributeValue("name", name)) {
+            } else if (rule.GetAttributeValue("name", name)) {
                // keept it
             } else {
                name.clear();
             }
             std::string file_name_value;
-            if (!it->GetAttributeValue("file_name", file_name_value)) file_name_value.clear();
+            if (!rule.GetAttributeValue("file_name", file_name_value)) file_name_value.clear();
 
-            if (file_name_value.length()) {
+            if (!file_name_value.empty()) {
                // don't complain about defined_in rules
                continue;
             }
-// For the time being a warning
-//             if (IsSelectionXMLFile()) std::cout<<"Warning - ";
-//             else std::cout<<"Error   - ";
 
-            std::cout<<"Warning: ";
-            if (file_name_value.length()) {
-               std::cout<< "unused file name rule: \n";
-               //std::cout<< file_name_value << '\n';
-               it->PrintAttributes(std::cout,1);
+            const char* attrName = nullptr;
+            const char* attrVal = nullptr;
+            if (!file_name_value.empty()) {
+               attrName = "file name";
+               attrVal = file_name_value.c_str();
             } else {
-               std::cout<< "unused class rule: ";
-               if (name.length() > 0) {
-                  std::cout << name << '\n';
-                  //if (name == "*") {
-                  //   it->DebugPrint();
-                  //}
-               } else {
-                  it->PrintAttributes(std::cout,1);
-               }
+                  attrName = "class";
+               if (!name.empty()) attrVal = name.c_str();
             }
+            ROOT::TMetaUtils::Warning(0,"Unused %s rule: %s\n", attrName, attrVal);
          }
       }
-   }
 
-   if (!fVariableSelectionRules.empty()) {
-      for(std::list<VariableSelectionRule>::const_iterator it = fVariableSelectionRules.begin();
-          it != fVariableSelectionRules.end(); ++it) {
-         if (!it->GetMatchFound() && !GetHasFileNameRule()) {
+      for(auto&& rule : fVariableSelectionRules){
+         if (!rule.GetMatchFound() && !GetHasFileNameRule()) {
             std::string name;
-            if (it->GetAttributeValue("pattern", name)) {
+            if (rule.GetAttributeValue("pattern", name)) {
                // keep it
-            } else if (it->GetAttributeValue("name", name)) {
+            } else if (rule.GetAttributeValue("name", name)) {
                // keept it
             } else {
                name.clear();
             }
-            std::cout<<"Warning: unused variable rule: "<<name<<std::endl;
-            if (name.length() == 0) {
-               it->PrintAttributes(std::cout,3);
+            ROOT::TMetaUtils::Warning("","Unused variable rule: %s\n",name.c_str());
+            if (name.empty()) {
+               rule.PrintAttributes(std::cout,3);
             }
          }
       }
-   }
-
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
@@ -1591,31 +1571,24 @@ ROOT::TMetaUtils::Warning("SelectionRules::AreAllSelectionRulesUsed",
 
 
 #if Enums_rules_becomes_useful_for_rootcling
-   if (!fEnumSelectionRules.empty()) {
-      for(std::list<EnumSelectionRule>::const_iterator it = fEnumSelectionRules.begin();
-          it != fEnumSelectionRules.end(); ++it) {
-         if (!it->GetMatchFound() && !GetHasFileNameRule()) {
+      for(auto&& rule : fEnumSelectionRules){
+         if (!rule.GetMatchFound() && !GetHasFileNameRule()) {
             std::string name;
-            if (it->GetAttributeValue("pattern", name)) {
+            if (rule.GetAttributeValue("pattern", name)) {
                // keep it
-            } else if (it->GetAttributeValue("name", name)) {
+            } else if (rule.GetAttributeValue("name", name)) {
                // keept it
             } else {
                name.clear();
             }
 
-            if (IsSelectionXMLFile()){
-               std::cout<<"Warning: unused enum rule: "<<name<<std::endl;
-            }
-            else {
-               std::cout<<"Error: unused enum rule: "<<name<<std::endl;
-            }
-            if (name.length() == 0) {
-               it->PrintAttributes(std::cout,3);
+            ROOT::TMetaUtils::Warning("","Unused enum rule: %s\n",name.c_str());
+
+            if (name.empty()){
+               rule.PrintAttributes(std::cout,3);
             }
          }
       }
-   }
 #endif
    return true;
 }
