@@ -40,6 +40,7 @@
 #include "TObjString.h"
 #include "TRegexp.h"
 #include "TProofServ.h"
+#include "TSystem.h"
 
 #include "TError.h"
 
@@ -952,7 +953,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
    }
 
    // Point to the key
-   TKey *key = dd->GetKey(on);
+   TKey *key = dd->GetKey(gSystem->BaseName(on));
    if (key == 0) {
       Error("Load", "Cannot find tree \"%s\" in %s", tn, fn);
       return (TTree*)0;
