@@ -403,6 +403,22 @@ Bool_t TProofDraw::CompileVariables()
    // Compiles each variable from fTreeDrawArgsParser for the tree fTree.
    // Return kFALSE if any of the variable is not compilable.
 
+   // Set aliases, if any
+   TNamed *nms = (TNamed *) fInput->FindObject("PROOF_ListOfAliases");
+   if (nms) {
+      TString names = nms->GetTitle(), n, na;
+      Ssiz_t from = 0;
+      while(names.Tokenize(n, from, ",")) {
+         if (!n.IsNull()) {
+            na.Form("alias:%s", n.Data());
+            TNamed *nm = (TNamed *) fInput->FindObject(na);
+            if (na) fTree->SetAlias(n.Data(), nm->GetTitle());
+         }
+      }
+   }
+   PDB(kDraw,2)
+      if (fTree->GetListOfAliases()) fTree->GetListOfAliases()->Print();
+
    fDimension = fTreeDrawArgsParser.GetDimension();
    fMultiplicity = 0;
    fObjEval = kFALSE;
