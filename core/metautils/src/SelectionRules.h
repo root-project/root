@@ -66,30 +66,43 @@ public:
       }
 
    void AddClassSelectionRule(const ClassSelectionRule& classSel);
-   bool HasClassSelectionRules() const;
-   const std::list<ClassSelectionRule>& GetClassSelectionRules() const;
+   bool HasClassSelectionRules() const { return !fClassSelectionRules.empty(); }
+   const std::list<ClassSelectionRule>& GetClassSelectionRules() const {
+      return fClassSelectionRules;
+   }
 
    void AddFunctionSelectionRule(const FunctionSelectionRule& funcSel);
-   bool HasFunctionSelectionRules() const;
-   const std::list<FunctionSelectionRule>& GetFunctionSelectionRules() const;
+   bool HasFunctionSelectionRules() const {
+      return !fFunctionSelectionRules.empty();
+   }
+   const std::list<FunctionSelectionRule>& GetFunctionSelectionRules() const {
+      return fFunctionSelectionRules;
+   }
 
    void AddVariableSelectionRule(const VariableSelectionRule& varSel);
-   bool HasVariableSelectionRules() const;
-   const std::list<VariableSelectionRule>& GetVariableSelectionRules() const;
+
+   bool HasVariableSelectionRules() const {
+      return !fVariableSelectionRules.empty();
+   }
+   const std::list<VariableSelectionRule>& GetVariableSelectionRules() const {
+      return fVariableSelectionRules;
+   }
 
    void AddEnumSelectionRule(const EnumSelectionRule& enumSel);
-   bool HasEnumSelectionRules() const;
-   const std::list<EnumSelectionRule>& GetEnumSelectionRules() const;
+   bool HasEnumSelectionRules() const { return !fEnumSelectionRules.empty(); }
+   const std::list<EnumSelectionRule>& GetEnumSelectionRules() const {
+      return fEnumSelectionRules;
+   }
 
    void PrintSelectionRules() const; // print all selection rules
 
    void ClearSelectionRules(); // clear all selection rules
 
-   void SetHasFileNameRule(bool file_rule);
-   bool GetHasFileNameRule() const;
+   void SetHasFileNameRule(bool file_rule) { fHasFileNameRule = file_rule; }
+   bool GetHasFileNameRule() const { return fHasFileNameRule; }
 
    void SetDeep(bool deep);
-   bool GetDeep() const;
+   bool GetDeep() const { return fIsDeep; }
 
    // These method are called from clr-scan and return true if the Decl selected, false otherwise
    //const BaseSelectionRule  *IsDeclSelected(clang::Decl* D) const;
@@ -146,9 +159,15 @@ public:
    // gets the function prototype if the Decl (if it is global function or method)
    bool GetFunctionPrototype(const clang::FunctionDecl* F, std::string& prototype) const;
 
-   bool IsSelectionXMLFile() const;
-   bool IsLinkdefFile() const;
-   void SetSelectionFileType(ESelectionFileTypes fileType);
+   bool IsSelectionXMLFile() const {
+      return fSelectionFileType == kSelectionXMLFile;
+   }
+   bool IsLinkdefFile() const {
+      return fSelectionFileType == kLinkdefFile;
+   }
+   void SetSelectionFileType(ESelectionFileTypes fileType) {
+      fSelectionFileType = fileType;
+   }
 
    // returns true if all selection rules are used at least once
    bool AreAllSelectionRulesUsed() const;

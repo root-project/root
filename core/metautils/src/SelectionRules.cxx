@@ -43,16 +43,6 @@ void SelectionRules::AddClassSelectionRule(const ClassSelectionRule& classSel)
       fClassSelectionRules.begin()->SetIndex(fRulesCounter);
 }
 
-bool SelectionRules::HasClassSelectionRules() const
-{
-   return !fClassSelectionRules.empty();
-}
-
-const std::list<ClassSelectionRule>& SelectionRules::GetClassSelectionRules() const
-{
-   return fClassSelectionRules;
-}
-
 void SelectionRules::AddFunctionSelectionRule(const FunctionSelectionRule& funcSel)
 {
    fRulesCounter++;
@@ -61,16 +51,6 @@ void SelectionRules::AddFunctionSelectionRule(const FunctionSelectionRule& funcS
       fFunctionSelectionRules.begin()->SetInterpreter(fInterp);
    if (funcSel.GetIndex() < 0)
       fFunctionSelectionRules.begin()->SetIndex(fRulesCounter);
-}
-
-bool SelectionRules::HasFunctionSelectionRules() const
-{
-   return !fFunctionSelectionRules.empty();
-}
-
-const std::list<FunctionSelectionRule>& SelectionRules::GetFunctionSelectionRules() const
-{
-   return fFunctionSelectionRules;
 }
 
 void SelectionRules::AddVariableSelectionRule(const  VariableSelectionRule& varSel)
@@ -83,16 +63,6 @@ void SelectionRules::AddVariableSelectionRule(const  VariableSelectionRule& varS
       fVariableSelectionRules.begin()->SetIndex(fRulesCounter);
 }
 
-bool SelectionRules::HasVariableSelectionRules() const
-{
-   return !fVariableSelectionRules.empty();
-}
-
-const std::list<VariableSelectionRule>& SelectionRules::GetVariableSelectionRules() const
-{
-   return fVariableSelectionRules;
-}
-
 void SelectionRules::AddEnumSelectionRule(const EnumSelectionRule& enumSel)
 {
    fRulesCounter++;
@@ -101,16 +71,6 @@ void SelectionRules::AddEnumSelectionRule(const EnumSelectionRule& enumSel)
       fEnumSelectionRules.begin()->SetInterpreter(fInterp);
    if (enumSel.GetIndex() < 0)
       fEnumSelectionRules.begin()->SetIndex( fRulesCounter );
-}
-
-bool SelectionRules::HasEnumSelectionRules() const
-{
-   return !fEnumSelectionRules.empty();
-}
-
-const std::list<EnumSelectionRule>& SelectionRules::GetEnumSelectionRules() const
-{
-   return fEnumSelectionRules;
 }
 
 void SelectionRules::PrintSelectionRules() const
@@ -201,29 +161,10 @@ void SelectionRules::PrintSelectionRules() const
 
 void SelectionRules::ClearSelectionRules()
 {
-   if (!fClassSelectionRules.empty()) {
-      fClassSelectionRules.clear();
-   }
-   if (!fFunctionSelectionRules.empty()) {
-      fFunctionSelectionRules.clear();
-   }
-   if (!fVariableSelectionRules.empty()) {
-      fVariableSelectionRules.clear();
-   }
-   if (!fEnumSelectionRules.empty()) {
-      fEnumSelectionRules.clear();
-   }
-}
-
-void SelectionRules::SetHasFileNameRule(bool file_rule)
-{
-   fHasFileNameRule = file_rule;
-}
-
-bool SelectionRules::GetHasFileNameRule() const
-{
-   if (fHasFileNameRule) return true;
-   else return false;
+   fClassSelectionRules.clear();
+   fFunctionSelectionRules.clear();
+   fVariableSelectionRules.clear();
+   fEnumSelectionRules.clear();
 }
 
 void SelectionRules::SetDeep(bool deep)
@@ -284,11 +225,6 @@ void SelectionRules::SetDeep(bool deep)
 
       //SetSelectionXMLFile(true);
 //    }
-}
-
-bool SelectionRules::GetDeep() const
-{
-   return fIsDeep;
 }
 
 const ClassSelectionRule *SelectionRules::IsDeclSelected(const clang::RecordDecl *D) const
@@ -1472,24 +1408,6 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, 
    else {
       return 0;
    }
-}
-
-bool SelectionRules::IsSelectionXMLFile() const
-{
-   if (fSelectionFileType == kSelectionXMLFile) return true;
-   else return false;
-}
-
-bool SelectionRules::IsLinkdefFile() const
-{
-   if (fSelectionFileType == kLinkdefFile) return true;
-   else return false;
-}
-
-void SelectionRules::SetSelectionFileType(ESelectionFileTypes fileType)
-{
-   fSelectionFileType = fileType;
-   return;
 }
 
 bool SelectionRules::AreAllSelectionRulesUsed() const {
