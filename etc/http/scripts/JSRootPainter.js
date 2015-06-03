@@ -4768,10 +4768,10 @@
             if (!nostat) funcpainter = JSROOT.Painter.drawPaveText(this.divid, func);
          } else if (func['_typename'] == 'TF1') {
             var is_pad = this.root_pad() != null;
-//            if ((!is_pad && !func.TestBit(kNotDraw))
-//                  || (is_pad && func.TestBit(EStatusBits.kObjInCanvas)))
-            if (is_pad || !func.TestBit(kNotDraw))
+
+            if (!(is_pad && func.TestBit(EStatusBits.kObjInCanvas)) && !func.TestBit(kNotDraw))
                funcpainter = JSROOT.Painter.drawFunction(this.divid, func);
+
          } else if (func['_typename'] == 'TPaletteAxis') {
             funcpainter = JSROOT.Painter.drawPaletteAxis(this.divid, func);
          }
