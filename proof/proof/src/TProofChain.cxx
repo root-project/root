@@ -157,6 +157,9 @@ Long64_t TProofChain::Draw(const char *varexp, const TCut &selection,
    // Fill drawing attributes
    FillDrawAttributes(gProof);
 
+   // Add alias information, if any
+   AddAliases();
+
    Long64_t rv = fSet->Draw(varexp, selection, option, nentries, firstentry);
    return rv;
 }
@@ -187,8 +190,42 @@ Long64_t TProofChain::Draw(const char *varexp, const char *selection,
    // Fill drawing attributes
    FillDrawAttributes(gProof);
 
+   // Add alias information, if any
+   AddAliases();
+
    Long64_t rv = fSet->Draw(varexp, selection, option, nentries, firstentry);
    return rv;
+}
+
+//______________________________________________________________________________
+void TProofChain::AddAliases()
+{
+   // Aliases are added to the input list. The names are comma-separated in the 
+   // TNamed 'PROOF_ListOfAliases'. For each name, there is an trey named 'alias:<name>'.
+
+   TList *al = fChain->GetListOfAliases();
+   if (al && al->GetSize() > 0) {
+      TIter nxa(al);
+      TNamed *nm = 0, *nmo = 0;
+      TString names, nma;
+      while ((nm = (TNamed *)nxa())) {
+         names += nm->GetName();
+         names += ",";
+         nma.Form("alias:%s", nm->GetName());
+         nmo = (TNamed *)((gProof->GetInputList()) ? gProof->GetInputList()->FindObject(nma) : 0);
+         if (nmo) {
+            nmo->SetTitle(nm->GetTitle());
+         } else {
+            gProof->AddInput(new TNamed(nma.Data(), nm->GetTitle()));
+         }
+      }
+      nmo = (TNamed *)((gProof->GetInputList()) ? gProof->GetInputList()->FindObject("PROOF_ListOfAliases") : 0);
+      if (nmo) {
+         nmo->SetTitle(names.Data());
+      } else {
+         gProof->AddInput(new TNamed("PROOF_ListOfAliases", names.Data()));
+      }
+   }
 }
 
 //______________________________________________________________________________
