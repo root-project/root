@@ -773,6 +773,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functions.insert(make_pair(make_pair("landau",1),make_pair("[0]*TMath::Landau({V0},[1],[2],false)","[0]*TMath::Landau({V0},[1],[2],true)")));
    functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
    functions.insert(make_pair(make_pair("crystalball",1),make_pair("[0]*ROOT::Math::crystalball_function({V0},[3],[4],[2],[1])","[0]*ROOT::Math::crystalball_pdf({V0},[3],[4],[2],[1])")));
+   functions.insert(make_pair(make_pair("breitwigner",1),make_pair("[0]*ROOT::Math::breitwigner_pdf({V0},[2],[1])","[0]*ROOT::Math::breitwigner_pdf({V0},[2],[4],[1])")));
    // chebyshev polynomial
    functions.insert(make_pair(make_pair("cheb0" ,1),make_pair("ROOT::Math::Chebyshev0({V0},[0])","")));
    functions.insert(make_pair(make_pair("cheb1" ,1),make_pair("ROOT::Math::Chebyshev1({V0},[0],[1])","")));
@@ -1722,6 +1723,12 @@ void TFormula::SetPredefinedParamNames() {
       SetParName(2,"Sigma");
       SetParName(3,"Alpha");
       SetParName(4,"N");
+      return;
+   }
+   if (fNumber == 600) { // breit-wigner
+      SetParName(0,"Constant");
+      SetParName(1,"Mean");
+      SetParName(2,"Gamma");
       return;
    }
    // if formula is a polynomial (or chebyshev), set parameter names
