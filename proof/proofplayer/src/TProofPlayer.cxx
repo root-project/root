@@ -4257,6 +4257,7 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
       fgDrawInputPars->Add(new TObjString("PROOF_MarkerSize"));
       fgDrawInputPars->Add(new TObjString("PROOF_FillColor"));
       fgDrawInputPars->Add(new TObjString("PROOF_FillStyle"));
+      fgDrawInputPars->Add(new TObjString("PROOF_ListOfAliases"));
    }
 
    TString selector, objname;
@@ -4275,7 +4276,9 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    while ((o = nxi())) {
       savedInput->Add(o);
       TString n(o->GetName());
-      if (fgDrawInputPars && !fgDrawInputPars->FindObject(o->GetName())) fInput->Remove(o);
+      if (fgDrawInputPars &&
+          !fgDrawInputPars->FindObject(o->GetName()) &&
+          !n.BeginsWith("alias:")) fInput->Remove(o);
    }
 
    fInput->Add(varexpobj);

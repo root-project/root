@@ -37,6 +37,7 @@ public:
    enum { kOwnsChain   = BIT(19) };
 
 private:
+   void           AddAliases();
    void           FillDrawAttributes(TProof *p);
 
 protected:
