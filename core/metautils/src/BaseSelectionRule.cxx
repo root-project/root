@@ -144,6 +144,7 @@ void BaseSelectionRule::SetAttributeValue(const std::string& attributeName, cons
    int pos = attributeName.find("pattern");
    int pos_file = attributeName.find("file_pattern");
 
+
    if (pos > -1) {
       if (pos_file > -1) // if we have file_pattern
          ProcessPattern(attributeValue, fFileSubPatterns);

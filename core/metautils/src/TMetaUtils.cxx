@@ -59,10 +59,15 @@
 #include "TMetaUtils.h"
 
 int ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
-// std::vector<ROOT::TMetaUtils::RConstructorType> gIoConstructorTypes;
+
+static unsigned int gNumberOfWarningsAndErrors = 0;
 
 namespace ROOT {
 namespace TMetaUtils {
+
+unsigned int GetNumberOfWarningsAndErrors(){return gNumberOfWarningsAndErrors;}
+
+
 //______________________________________________________________________________
 class TNormalizedCtxtImpl {
    using DeclsCont_t = TNormalizedCtxt::Config_t::SkipCollection;
@@ -2630,7 +2635,7 @@ void ROOT::TMetaUtils::LevelPrint(bool prefix, int level, const char *location, 
       type = "Info";
    if (level >= ROOT::TMetaUtils::kNote)
       type = "Note";
-   if (level >= ROOT::TMetaUtils::kWarning)
+   if (level >= ROOT::TMetaUtils::kThrowOnWarning)
       type = "Warning";
    if (level >= ROOT::TMetaUtils::kError)
       type = "Error";
@@ -2649,6 +2654,12 @@ void ROOT::TMetaUtils::LevelPrint(bool prefix, int level, const char *location, 
    }
 
    fflush(stderr);
+
+   if (ROOT::TMetaUtils::gErrorIgnoreLevel == ROOT::TMetaUtils::kThrowOnWarning ||
+       ROOT::TMetaUtils::gErrorIgnoreLevel > ROOT::TMetaUtils::kError){
+      gNumberOfWarningsAndErrors++;
+   }
+
 }
 
 //______________________________________________________________________________
