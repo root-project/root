@@ -19,6 +19,7 @@ The following people have contributed to this new version:
  Cristina Cristescu, CERN/SFT,\
  Olivier Couet, CERN/SFT,\
  Kyle Cranmer, NYU, RooStats,\
+ Aurelie Flandi, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/Alice,\
  Lukasz Janyst, CERN/IT,\
@@ -39,6 +40,6 @@ The following people have contributed to this new version:
  Vassil Vassilev, CERN/SFT \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
  Yue Shi Lai, MIT,\
- Maciej Zimnoch
+ Maciej Zimnoch, GSOC 
 
 

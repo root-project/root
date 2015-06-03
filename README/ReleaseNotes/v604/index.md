@@ -19,6 +19,7 @@ The following people have contributed to this new version:
  Cristina Cristescu, CERN/SFT,\
  Olivier Couet, CERN/SFT,\
  Kyle Cranmer, NYU, RooStats,\
+ Aurelie Flandi, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/Alice,\
  Lukasz Janyst, CERN/IT,\
@@ -39,7 +40,7 @@ The following people have contributed to this new version:
  Vassil Vassilev, CERN/SFT \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
  Yue Shi Lai, MIT,\
- Maciej Zimnoch
+ Maciej Zimnoch, GSOC
 
 
 ## Core Libraries
@@ -444,10 +445,17 @@ The expression is therefore compiled using Clang/LLVVM which will give execution
     Some of the TFormula member funtions available in version 5, such as =Analyze= and =AnalyzeFunction= are not available in the new TFormula class.
     On the other hand formula expressions which were valid in version 5 are still valid in TFormula version 6
 -  TFormula is not anymore a base class for TF1.
+-  The new TFormula allows to defines the parameter names directly in the syntax. Example:
+
+``` {.cpp}
+TFormula f("f","f1","[constant]+[slope]*x");
+```
+
+-  New pre-defined functions are provided, as: `crystalball` for the Crystal-Ball function, `cheb0,1,...10` for the Chebyshev polynomials
 
 ### TF1
 
-- Change of its inheritance structure. `TF1` has not anymore `TFormula` as a base class, so this code
+-  Change of its inheritance structure. `TF1` has not anymore `TFormula` as a base class, so this code
 
 
 ``` {.cpp}
@@ -463,6 +471,20 @@ The equivalent correct code is now
 TF1 * f1 = new TF1("f1","f1","sin(x)",0,10);
 TFormula * formula = f1->GetFormula();
 ```
+
+-   Allow possibility to automatically normalize itself. If the function `TF1::SetNormalized(true)` is called, when evaluated, the function will return its value divided by its integral computed in
+the function range.
+
+### TF1NormSum
+
+-   New helper class computing the normalized sum of TF1 objects. It is a functor class which can be used as input to a global TF1 for fitting a sum of normalized components. This is useful for
+example in signal plus background fit, where one can fit directly the number of signal and background events, without the need to use something like `TF1::IntegralError`.
+See the tutorial `tutorials/fit/fitNormSum.C` as an example on how to use the `TF1NormSum` and perform such a fit.
+
+### TF1Convolution
+
+-   Another helper functor class for performing numerical convolution of functions, expressed as TF1 objects, using Fast Fourier Transform. The class requires the FFTW package installed in
+ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how to create a TF1 based on the convolution of two others TF1 objects and used it to fit some data.
 
 
 ### TGraph2DPainter
@@ -572,6 +594,11 @@ TFormula * formula = f1->GetFormula();
 ### TGTextViewostream
 
 - A new `TGTextViewostream` class has been added. It is a text viewer widget and is a specialization of `TGTextView` and `std::ostream`. It uses a `TGTextViewStreamBuf`, which inherits from `std::streambuf`, allowing to stream text directly to the text view in a `cout` - like fashion. A new tutorial showing how to use the `TGTextViewostream` widget has also been added.
+
+### FitPanel
+
+-   Add the functionality for composing function using convolution and for normalized sums using the new `TF1NormSum` and `TF1Convolution` classes.
+
 
 ## 2D Graphics Libraries
 
