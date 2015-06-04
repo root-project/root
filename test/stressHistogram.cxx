@@ -6372,9 +6372,13 @@ bool testH1Buffer() {
 
    int iret = 0;
 
-   TH1D * h1 = new TH1D("h1","h1",30,1,0);
-   TH1D * h2 = new TH1D("h2","h2",30,0,0);
-   // fill the histograms                                                                                                                                 
+   TH1D * h1 = new TH1D("h1","h1",30,-3,3);
+   TH1D * h2 = new TH1D("h2","h2",30,-3,3);
+
+   // this activate the buffer for the histogram
+   h1->SetBuffer(1000);
+
+   // fill the histograms   
    int nevt = 800;
    double x = 0;
    for (int i = 0; i < nevt ; ++i) {
@@ -6382,7 +6386,7 @@ bool testH1Buffer() {
       h1->Fill(x);
       h2->Fill(x);
    }
-   h2->BufferEmpty(); // empty buffer for h2                                                                                                              
+   //h2->BufferEmpty(); // empty buffer for h2                                                                                                              
 
    int pr = std::cout.precision(15);
    double eps = TMath::Limits<double>::Epsilon();
@@ -6400,7 +6404,7 @@ bool testH1Buffer() {
    double s1[TH1::kNstat];
    double s2[TH1::kNstat];
    h1->GetStats(s1);
-   h1->GetStats(s2);
+   h2->GetStats(s2);
    std::vector<std::string> snames = {"sumw","sumw2","sumwx","sumwx2"};
    for (unsigned int i  =0; i < snames.size(); ++i) {
      itest = equals(s1[i],s2[i],eps );
@@ -6413,7 +6417,7 @@ bool testH1Buffer() {
    // another fill will reset the histogram                                                                                                                       
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
-   h2->Fill(x); h2->BufferEmpty();
+   h2->Fill(x); //h2->BufferEmpty();
    itest = (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
    if (defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
@@ -6421,15 +6425,7 @@ bool testH1Buffer() {
 
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
-   h2->Fill(x); h2->BufferEmpty();
-   itest = (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
-   if (defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
-   }
-
-   x = gRandom->Uniform(-3,3);
-   h1->Fill(x);
-   h2->Fill(x); h2->BufferEmpty();
+   h2->Fill(x); //h2->BufferEmpty();
    itest |= (h1->GetMaximum() != h2->GetMaximum() );
    if (defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Histogram maximum = " << h1->GetMaximum() << "  " << h2->GetMaximum() << " -  " << itest << std::endl;
@@ -6438,7 +6434,7 @@ bool testH1Buffer() {
 
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
-   h2->Fill(x); h2->BufferEmpty();
+   h2->Fill(x); //h2->BufferEmpty();
    itest = (h1->GetMinimum() != h2->GetMinimum() );
    if (defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Histogram minimum = " << h1->GetMinimum() << "  " << h2->GetMinimum() << " - " << itest << std::endl;
@@ -6447,7 +6443,7 @@ bool testH1Buffer() {
 
    x = gRandom->Uniform(-3,3);
    h1->Fill(x);
-   h2->Fill(x); h2->BufferEmpty();
+   h2->Fill(x); //h2->BufferEmpty();
    int i1 = h1->FindFirstBinAbove(10);
    int i2 = h2->FindFirstBinAbove(10);
    itest = (i1 != i2 );
@@ -6478,23 +6474,171 @@ bool testH1Buffer() {
    }
    iret |= itest;
 
+
+   iret |= equals("testh1buffer",h1,h2,cmpOptStats,eps);
+
+   std::cout.precision(pr);
+
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Buffer H1:\t" << (iret?"FAILED":"OK") << std::endl;
+
+   delete h1;
+
+
+   return iret;
+}
+
+// test histogram buffer with weights
+bool testH1BufferWeights() {
+
+   int iret = 0;
+
+   TH1D * h1 = new TH1D("h1","h1",30,-5,5);
+   TH1D * h2 = new TH1D("h2","h2",30,-5,5);
+
+   // set the buffer
+   h1->SetBuffer(1000);
+   
+   // fill the histograms     
+   int nevt = 800;
+   double x,w = 0;
+   for (int i = 0; i < nevt ; ++i) {
+      x = gRandom->Gaus(0,1);
+      w = gRandom->Gaus(1,0.1);
+      h1->Fill(x,w);
+      h2->Fill(x,w);
+   }
+
+   int pr = std::cout.precision(15);
+   double eps = TMath::Limits<double>::Epsilon();
+
+   bool itest = false;
+
+   double s1[TH1::kNstat];
+   double s2[TH1::kNstat];
+   h1->GetStats(s1);
+   h2->GetStats(s2);
+   std::vector<std::string> snames = {"sumw","sumw2","sumwx","sumwx2"};
+   for (unsigned int i  =0; i < snames.size(); ++i) {
+     itest = equals(s1[i],s2[i],eps );
+     if (defaultEqualOptions & cmpOptDebug ) {
+       std::cout << "Statistics " << snames[i] << "  = " << s1[i] << "  " << s2[i] << " -  " << itest << std::endl;
+     }
+     iret |= itest;
+   }
+
+   // another fill will reset the histogram                                                                                                                       
+   x = gRandom->Uniform(-3,3);
+   w = 2; 
+   h1->Fill(x,w);
+   h2->Fill(x,w); 
+   itest = (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
+   }
+   iret |= itest; 
+
+
+   iret |= equals("testh1bufferweight",h1,h2,cmpOptStats,eps);
 
    std::cout.precision(pr);
 
    delete h1;
-   delete h2;
+
+   if ( defaultEqualOptions & cmpOptPrint )
+      std::cout << "Buffer Weighted H1:\t" << (iret?"FAILED":"OK") << std::endl;
+
+
 
    return iret;
 }
 
 bool testH2Buffer() {
+   
    int iret = 0;
+
+   TH2D * h1 = new TH2D("h1","h1",10,-5,5,10,-5,5);
+   TH2D * h2 = new TH2D("h2","h2",10,-5,5,10,-5,5);
+
+   // set the buffer
+   h1->SetBuffer(1000);
+   
+   // fill the histograms     
+   int nevt = 800;
+   double x,y = 0;
+   for (int i = 0; i < nevt ; ++i) {
+      x = gRandom->Gaus(0,2);
+      y = gRandom->Gaus(1,3);
+      h1->Fill(x,y);
+      h2->Fill(x,y);
+   }
+
+   bool itest = (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
+   }
+   iret |= itest; 
+
+   // test adding an extra fill
+   x = gRandom->Uniform(-3,3);
+   y = gRandom->Uniform(-3,3);
+   double w = 2; 
+   h1->Fill(x,y,w);
+   h2->Fill(x,y,w); 
+
+   iret |= equals("testh2buffer",h1,h2,cmpOptStats,1.E-15);
+
+   if ( defaultEqualOptions & cmpOptPrint )
+      std::cout << "Buffer H2:\t" << (iret?"FAILED":"OK") << std::endl;
+
+   delete h1;
+   
    return iret; 
 }
 bool testH3Buffer() {
+   
    int iret = 0;
+
+   TH3D * h1 = new TH3D("h1","h1",4,-5,5,4,-5,5,4,-5,5);
+   TH3D * h2 = new TH3D("h2","h2",4,-5,5,4,-5,5,4,-5,5);
+
+   // set the buffer
+   h1->SetBuffer(10000);
+   
+   // fill the histograms     
+   int nevt = 8000;
+   double x,y,z = 0;
+   for (int i = 0; i < nevt ; ++i) {
+      x = gRandom->Gaus(0,2);
+      y = gRandom->Gaus(1,3);
+      z = gRandom->Uniform(-5,5);
+      h1->Fill(x,y,z);
+      h2->Fill(x,y,z);
+   }
+
+   bool itest = (h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights());
+   if (defaultEqualOptions & cmpOptDebug ) {
+      std::cout << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights() << " -  " << itest << std::endl;
+   }
+   iret |= itest; 
+
+   // test adding extra fills with weights
+   for (int i = 0; i < nevt ; ++i) {
+      x = gRandom->Uniform(-3,3);
+      y = gRandom->Uniform(-3,3);
+      z = gRandom->Uniform(-5,5);
+      double w = 2;
+      h1->Fill(x,y,z,w);
+      h2->Fill(x,y,z,w);
+   }      
+
+   iret |= equals("testh2buffer",h1,h2,cmpOptStats,1.E-15);
+
+   if ( defaultEqualOptions & cmpOptPrint )
+      std::cout << "Buffer H3:\t" << (iret?"FAILED":"OK") << std::endl;
+
+   delete h1;
+
    return iret; 
 }
 
@@ -9909,8 +10053,9 @@ int stressHistogram()
                                            "Integral tests for Histograms....................................",
                                            integralTestPointer };
 
-   const unsigned int numberOfBufferTest = 3;
+   const unsigned int numberOfBufferTest = 4;
    pointer2Test bufferTestPointer[numberOfBufferTest] = { testH1Buffer,
+                                                          testH1BufferWeights,
                                                           testH2Buffer,
                                                           testH3Buffer
    };

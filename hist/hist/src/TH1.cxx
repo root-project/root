@@ -1300,7 +1300,11 @@ Int_t TH1::BufferEmpty(Int_t action)
    }
 
    // call DoFillN which will not put entries in the buffer as FillN does
-   DoFillN(nbentries,&fBuffer[2],&fBuffer[1],2);
+   // set fBuffer to zero to avoid re-emptying the buffer from functions called
+   // by DoFillN (e.g Sumw2)
+   buffer = fBuffer; fBuffer = 0; 
+   DoFillN(nbentries,&buffer[2],&buffer[1],2);
+   fBuffer = buffer; 
 
    // if action == 1 - delete the buffer
    if (action > 0) {
