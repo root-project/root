@@ -245,7 +245,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
                     -I${CMAKE_BINARY_DIR}/include)
-  else()
+  elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
     set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc)
   endif()
   foreach( d ${incdirs})
