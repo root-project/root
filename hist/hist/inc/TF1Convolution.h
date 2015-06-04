@@ -44,25 +44,25 @@ class TF1Convolution
    Bool_t   fFlagGraph; //tells if the graph is already done or not
    
    
-   Double_t MakeNumConv(Double_t t);
-   Double_t MakeFFTConv(Double_t t);
-   void     InitializeDataMembers(TF1* function1, TF1* function2);
-   void     MakeGraphConv();
+   Double_t EvalNumConv(Double_t t);
+   Double_t EvalFFTConv(Double_t t);
+   void     InitializeDataMembers(TF1* function1, TF1* function2, Bool_t useFFT);
+   void     MakeFFTConv();
    
    public:
    
-   TF1Convolution(TF1* function1, TF1* function2);
-   TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Double_t xmax);
-   TF1Convolution(TString formula);
-   TF1Convolution(TString formula1, TString formula2);
+   TF1Convolution(TF1* function1, TF1* function2, Bool_t useFFT = true);
+   TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Double_t xmax, Bool_t useFFT = true);
+   TF1Convolution(TString formula, Double_t xmin = 1., Double_t xmax = 0., Bool_t useFFT = true);
+   TF1Convolution(TString formula1, TString formula2, Double_t xmin = 1., Double_t xmax = 0., Bool_t useFFT = true);
    
    void     SetParameters(Double_t* p);
    void     SetParameters(Double_t p0,    Double_t p1,    Double_t p2=0., Double_t p3=0.,
                           Double_t p4=0., Double_t p5=0., Double_t p6=0., Double_t p7=0.);
    void     SetRange(Double_t a, Double_t b);
-   void     SetRange(Double_t percentage);
+   void     SetExtraRange(Double_t percentage);
    void     SetNofPointsFFT(Int_t n);
-   void     SetNumConv(Bool_t flag){fFlagFFT=!flag;}
+   void     SetNumConv(Bool_t flag = true){fFlagFFT=!flag;}
    
    Int_t    GetNpar() const {return (fNofParams1+fNofParams2);}
    Double_t GetXmin() const {return fXmin;}

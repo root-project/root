@@ -44,7 +44,7 @@ using namespace std;
 ClassImp(TFormula)
 //______________________________________________________________________________
 /******************************************************************************
-Begin_Htnl
+Begin_Html
 <h1>The  F O R M U L A  class</h1>
 
 <p>This is a new version of the TFormula class based on Cling.
