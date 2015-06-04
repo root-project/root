@@ -2018,6 +2018,7 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
    fState      = kFALSE;
    fTitleId    = -1;
    fTextColor  = GetForeground();
+   fTitleData  = 0;
 
    Int_t hotchar;
    if (s && (hotchar = s->GetHotChar()) != 0)

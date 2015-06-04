@@ -1407,7 +1407,7 @@ void TGNumberEntryField::IncreaseNumber(EStepSize step,
          rmag = (!logstep) ? 1. : (odd ? 3. : 10. / 3.);
          break;
       case kNSSMedium:
-         rmag = (!logstep) ? 10. : 10.;
+         rmag = 10.;
          break;
       case kNSSLarge:
          rmag = (!logstep) ? 100. : (odd ? 30. : 100. / 3.);

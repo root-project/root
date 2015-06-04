@@ -394,10 +394,10 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    int margin;                        // Space between left margin and 1st col
    int availWidth=0;                  // Part of lineWidth still available
    int maxTableWidth;                 // Amount of lineWidth available to table
-   int fromAbove[HTML_MAX_COLUMNS+1]; // Cell above extends thru this row
-   int min0span[HTML_MAX_COLUMNS+1];  // Min for colspan=0 cells
-   int max0span[HTML_MAX_COLUMNS+1];  // Max for colspan=0 cells
-   int reqW[HTML_MAX_COLUMNS+1];      // Requested width for each column
+   int fromAbove[HTML_MAX_COLUMNS+1]={0}; // Cell above extends thru this row
+   int min0span[HTML_MAX_COLUMNS+1]={0};  // Min for colspan=0 cells
+   int max0span[HTML_MAX_COLUMNS+1]={0};  // Max for colspan=0 cells
+   int reqW[HTML_MAX_COLUMNS+1]={0};      // Requested width for each column
    int hasbg;
 
    // colMin[A][B] is the absolute minimum width of all columns between
@@ -1145,14 +1145,14 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    int defaultVAlign;       // Default vertical alignment for the current row
    const char *zAlign;      // Value of the ALIGN= attribute of the <TABLE>
 #define N (HTML_MAX_COLUMNS+1)
-   int y[N];                // Top edge of each cell's content
-   int x[N];                // Left edge of each cell's content
-   int w[N];                // Width of each cell's content
-   int ymax[N];             // Bottom edge of cell's content if valign=top
-   TGHtmlElement *apElem[N]; // The <td> or <th> for each cell in a row
-   // int firstRow[N];         // First row on which a cell appears
-   int lastRow[N];          // Row to which each cell span's
-   int valign[N];           // Vertical alignment for each cell
+   int y[N]={0};            // Top edge of each cell's content
+   int x[N]={0};            // Left edge of each cell's content
+   int w[N]={0};            // Width of each cell's content
+   int ymax[N]={0};         // Bottom edge of cell's content if valign=top
+   TGHtmlElement *apElem[N]={0}; // The <td> or <th> for each cell in a row
+   // int firstRow[N]={0};     // First row on which a cell appears
+   int lastRow[N]={0};      // Row to which each cell span's
+   int valign[N]={0};       // Vertical alignment for each cell
    TGHtmlLayoutContext savedContext;  // Saved copy of the original pLC
    TGHtmlLayoutContext cellContext;   // Used to render a single cell
 #ifdef TABLE_TRIM_BLANK

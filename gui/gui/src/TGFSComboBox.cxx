@@ -72,6 +72,7 @@ TGTreeLBEntry::TGTreeLBEntry(const TGWindow *p, TGString *text,
 
    fPic    = pic;
    fSelPic = 0;
+   fTWidth = 0;
    fText   = text;
    fPath   = path;
 

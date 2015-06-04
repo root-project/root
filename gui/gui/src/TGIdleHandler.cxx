@@ -25,7 +25,7 @@
 ClassImp(TGIdleHandler)
 
 //______________________________________________________________________________
-TGIdleHandler::TGIdleHandler(TGWindow *w)
+TGIdleHandler::TGIdleHandler(TGWindow *w) : fWindow(0)
 {
    // Create idle handler.
 
@@ -42,7 +42,7 @@ TGIdleHandler::~TGIdleHandler()
 {
    // Delete idle handler.
 
-   if (fWindow->GetClient())
+   if (fWindow && fWindow->GetClient())
       fWindow->GetClient()->RemoveIdleHandler(this);
 }
 
@@ -52,5 +52,5 @@ Bool_t TGIdleHandler::HandleEvent()
    // Handle the idle event. Returns true if the event has been handled,
    // false otherwise.
 
-   return fWindow->HandleIdleEvent(this);
+   return (fWindow) ? fWindow->HandleIdleEvent(this) : kFALSE;
 }

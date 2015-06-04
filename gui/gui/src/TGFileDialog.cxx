@@ -97,7 +97,10 @@ void TGFileInfo::SetMultipleSelection(Bool_t option)
 //______________________________________________________________________________
 TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
                            EFileDialogMode dlg_type, TGFileInfo *file_info) :
-   TGTransientFrame(p, main, 10, 10, kVerticalFrame)
+   TGTransientFrame(p, main, 10, 10, kVerticalFrame), fTbfname(0), fName(0),
+   fTypes(0), fTreeLB(0), fCdup(0), fNewf(0), fList(0), fDetails(0), fCheckB(0),
+   fPcdup(0), fPnewf(0), fPlist(0), fPdetails(0), fOk(0), fCancel(0), fFv(0),
+   fFc(0), fFileInfo(0)
 {
    // Create a file selection dialog. Depending on the dlg_type it can be
    // used for opening or saving a file.

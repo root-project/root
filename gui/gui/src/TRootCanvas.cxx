@@ -1499,9 +1499,9 @@ void TRootCanvas::ShowEditor(Bool_t show)
                      ((TGedEditor *)fEditor)->MapWindow();
                   }
                   browser->StopEmbedding("Pad Editor");
-                  fEditor->SetGlobal(kFALSE);
-                  gROOT->GetListOfCleanups()->Remove((TGedEditor *)fEditor);
                   if (fEditor) {
+                     fEditor->SetGlobal(kFALSE);
+                     gROOT->GetListOfCleanups()->Remove((TGedEditor *)fEditor);
                      ((TGedEditor *)fEditor)->SetCanvas(fCanvas);
                      ((TGedEditor *)fEditor)->SetModel(fCanvas, fCanvas, kButton1Down);
                   }

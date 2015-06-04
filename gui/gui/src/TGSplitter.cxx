@@ -73,6 +73,7 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    fLeft = kTRUE;
    fMax = fMin = 0;
    fStartX = 0;
+   fFrame = 0;
 
    if (!fSplitterPic)
       Error("TGVSplitter", "splitterv.xpm not found");
@@ -87,7 +88,6 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    }
 
    fSplitCursor = gVirtualX->CreateCursor(kArrowHor);
-   fFrame = 0;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
@@ -262,11 +262,14 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    // Create a horizontal splitter.
 
    fSplitCursor = kNone;
-
-   fSplitterPic = fClient->GetPicture("splitterh.xpm");
-
-   if (!fSplitterPic)
-      Error("TGHSplitter", "splitterh.xpm not found");
+   fSplitterPic = 0;
+   fSplitCursor = 0;
+   fFrame = 0;
+   fFrameHeight = h;
+   fFrameWidth = w;
+   fAbove = kTRUE;
+   fMax = fMin = 0;
+   fStartY = 0;
 
    if (p && !p->InheritsFrom(TGCompositeFrame::Class())) {
       Error("TGHSplitter", "parent must inherit from a TGCompositeFrame");
@@ -277,13 +280,12 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
       return;
    }
 
+   fSplitterPic = fClient->GetPicture("splitterh.xpm");
+
+   if (!fSplitterPic)
+      Error("TGHSplitter", "splitterh.xpm not found");
+
    fSplitCursor = gVirtualX->CreateCursor(kArrowVer);
-   fFrame = 0;
-   fFrameHeight = h;
-   fFrameWidth = w;
-   fAbove = kTRUE;
-   fMax = fMin = 0;
-   fStartY = 0;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |

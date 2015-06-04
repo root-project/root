@@ -312,6 +312,7 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
    // all the list items. It will be shown through a TGViewPort (which is
    // created by the TGCanvas).
 
+   fXp = fYp = fX0 = fY0 = fXf = fYf = fXDND = fYDND = 0;
    fViewPort = 0;
    fBdown = kFALSE;
    fMsgWindow  = p;
@@ -355,6 +356,7 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    // all the list items. It will be shown through a TGViewPort (which is
    // created by the TGCanvas).
 
+   fXp = fYp = fX0 = fY0 = fXf = fYf = fXDND = fYDND = 0;
    fViewPort = 0;
    fBdown = kFALSE;
    fMsgWindow  = p->GetViewPort();
