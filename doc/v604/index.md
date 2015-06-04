@@ -1,10 +1,10 @@
 % ROOT Version 6.04/00 Release Notes
-% Apr 2015
+% 2 June 2015
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.04/00 will be released end of May, 2015.
+ROOT version 6.04/00 was released on 2 June, 2015.
 
 For more information, see:
 
@@ -21,7 +21,7 @@ The following people have contributed to this new version:
  Kyle Cranmer, NYU, RooStats,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/Alice,\
- Lukasz Janyst, CERN/IT,
+ Lukasz Janyst, CERN/IT,\
  Christopher Jones, Fermilab, CMS,\
  Wim Lavrijsen, LBNL, PyRoot,\
  Sergey Linev, GSI, http,\

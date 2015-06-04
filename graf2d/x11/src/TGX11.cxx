@@ -2623,12 +2623,14 @@ void TGX11::SetOpacity(Int_t percent)
    // create opaque counter parts
    MakeOpaqueColors(percent, orgcolors, ncolors);
 
-   // put opaque colors in image
-   for (y = 0; y < (int) gCws->fHeight; y++) {
-      for (x = 0; x < (int) gCws->fWidth; x++) {
-         ULong_t pixel = XGetPixel(image, x, y);
-         Int_t idx = FindColor(pixel, orgcolors, ncolors);
-         XPutPixel(image, x, y, gCws->fNewColors[idx]);
+   if (gCws->fNewColors) {
+      // put opaque colors in image
+      for (y = 0; y < (int) gCws->fHeight; y++) {
+         for (x = 0; x < (int) gCws->fWidth; x++) {
+            ULong_t pixel = XGetPixel(image, x, y);
+            Int_t idx = FindColor(pixel, orgcolors, ncolors);
+            XPutPixel(image, x, y, gCws->fNewColors[idx]);
+         }
       }
    }
 

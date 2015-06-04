@@ -57,6 +57,7 @@ public:
    THashTable(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);
    virtual       ~THashTable();
    void          Add(TObject *obj);
+   void          AddBefore(const TObject *before, TObject *obj);
    virtual void  AddAll(const TCollection *col);
    Float_t       AverageCollisions() const;
    void          Clear(Option_t *option="");

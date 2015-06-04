@@ -48,6 +48,12 @@ public:
    : fName(name),fBody(""),fNargs(0),fFound(false),fFuncCall(false){}
    Bool_t operator<(const TFormulaFunction &rhv) const
    {
+      // order by length - first the longer ones to avoid replacing wrong functions 
+      if ( fName.Length() > rhv.fName.Length() )
+         return true;
+      else if ( fName.Length() > rhv.fName.Length() )
+         return false;
+      // case of equal length
       return fName < rhv.fName && fBody < rhv.fBody;
    }
    Bool_t operator==(const TFormulaFunction &rhv) const

@@ -18,9 +18,9 @@
 #include "ClassSelectionRule.h"
 #include <iostream>
 
-void ClassSelectionRule::AddFieldSelectionRule(VariableSelectionRule field)
+void ClassSelectionRule::AddFieldSelectionRule(const VariableSelectionRule& field)
 {
-  fFieldSelectionRules.push_back(field);
+  fFieldSelectionRules.emplace_back(field);
 }
 
 bool ClassSelectionRule::HasFieldSelectionRules() const
@@ -34,9 +34,9 @@ const std::list<VariableSelectionRule>& ClassSelectionRule::GetFieldSelectionRul
   return fFieldSelectionRules;
 }
 
-void ClassSelectionRule::AddMethodSelectionRule(FunctionSelectionRule method)
+void ClassSelectionRule::AddMethodSelectionRule(const FunctionSelectionRule& method)
 {
-  fMethodSelectionRules.push_back(method);
+  fMethodSelectionRules.emplace_back(method);
 }
 
 bool ClassSelectionRule::HasMethodSelectionRules() const
@@ -46,7 +46,7 @@ bool ClassSelectionRule::HasMethodSelectionRules() const
 
 void ClassSelectionRule::Print(std::ostream &out) const
 {
-   out<<"\t\tSelected: ";
+   out<<"\t\tSelected (line "<< GetLineNumber() <<"): ";
    switch(GetSelected()){
       case BaseSelectionRule::kYes: out<<"Yes"<<std::endl;
          break;

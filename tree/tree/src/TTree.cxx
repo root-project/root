@@ -765,7 +765,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
    //        be able to choose to not do this like we
    //        can with a histogram.
    fDirectory = gDirectory;
-   fDirectory->Append(this);
+   if (fDirectory) fDirectory->Append(this);
 
    fBranches.SetOwner(kTRUE);
 

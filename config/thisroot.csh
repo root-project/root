@@ -18,7 +18,7 @@ set thisfile="`/usr/sbin/lsof +p $$ | grep -oE '/.*thisroot.csh'  `"
 if ( "$thisfile" == "" ) then
 #   set thisfile=/does/not/exist
 endif
-if ( "$thisfile" == "" && -e ${thisfile} ) then
+if ( "$thisfile" != "" && -e ${thisfile} ) then
    # We found it, didn't we.
    set thisroot="`dirname ${thisfile}`"
 else if ("$ARGS" != "") then

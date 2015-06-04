@@ -78,6 +78,10 @@ void TMVAClassificationCategoryApplication()
    // we'll later on use only the "signal" events for the test in this example.
    //
    TString fname = TString(gSystem->DirName(__FILE__) ) + "/data/";
+   // if directory data not found try using tutorials dir
+   if (gSystem->AccessPathName( fname )) {
+      fname = TString(gROOT->GetTutorialsDir()) + "/tmva/data/";
+   }
    if (UseOffsetMethod) fname += "toy_sigbkg_categ_offset.root";
    else                 fname += "toy_sigbkg_categ_varoff.root";
    std::cout << "--- TMVAClassificationApp    : Accessing " << fname << "!" << std::endl;

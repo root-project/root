@@ -37,11 +37,11 @@ void fitConvolution()
    for (int i=0;i<1e6;i++)
    {
       Double_t x = gRandom->Exp(1./0.3);//gives a alpha of -0.3 in the exp
-      x += gRandom->Gaus(0.,1.);
+      x += gRandom->Gaus(0.,3.);
       h_ExpGauss->Fill(x);//probability density function of the addition of two variables is the convolution of 2 dens. functions
    }
 
-   TF1Convolution *f_conv = new TF1Convolution("expo","gaus");
+   TF1Convolution *f_conv = new TF1Convolution("expo","gaus",-1,6,true);
    f_conv->SetRange(-1.,6.);
    f_conv->SetNofPointsFFT(1000);
    TF1   *f = new TF1("f",*f_conv, 0., 5., f_conv->GetNpar());

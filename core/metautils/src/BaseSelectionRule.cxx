@@ -104,8 +104,8 @@ static bool R__match_filename(const char *srcname,const char *filename)
 
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType = 0);
 
-BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp)
-   : fIndex(index), fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp)
+BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp, const char* selFileName, long lineno)
+   : fIndex(index),fLineNumber(lineno),fSelFileName(selFileName),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp)
 {
    fAttributes.insert(AttributesMap_t::value_type(attributeName, attributeValue));
 }
@@ -139,16 +139,27 @@ bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std:
 
 void BaseSelectionRule::SetAttributeValue(const std::string& attributeName, const std::string& attributeValue)
 {
-   fAttributes.insert(AttributesMap_t::value_type(attributeName, attributeValue));
+
+   std::string localAttributeValue(attributeValue);
 
    int pos = attributeName.find("pattern");
    int pos_file = attributeName.find("file_pattern");
 
+   // Strip trailing spaces from the name or pattern
+   if (attributeName == "name" || pos> -1){
+      while(std::isspace(*localAttributeValue.begin())) localAttributeValue.erase(localAttributeValue.begin());
+      while(std::isspace(*localAttributeValue.rbegin()))localAttributeValue.erase(localAttributeValue.length()-1);
+   }
+   fAttributes.insert(AttributesMap_t::value_type(attributeName, localAttributeValue));
+
    if (pos > -1) {
       if (pos_file > -1) // if we have file_pattern
-         ProcessPattern(attributeValue, fFileSubPatterns);
-      else ProcessPattern(attributeValue, fSubPatterns); // if we have pattern and proto_pattern
+         ProcessPattern(localAttributeValue, fFileSubPatterns);
+      else ProcessPattern(localAttributeValue, fSubPatterns); // if we have pattern and proto_pattern
    }
+
+
+
 }
 
 const BaseSelectionRule::AttributesMap_t& BaseSelectionRule::GetAttributes() const

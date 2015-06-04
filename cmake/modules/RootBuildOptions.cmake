@@ -90,11 +90,12 @@ else()
  set(vc_defvalue OFF)
 endif()
 
-# VC does not support yet Arm processors.
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+# VC does not support yet Arm and PPC processors.
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR
+    CMAKE_SYSTEM_PROCESSOR STREQUAL "ppc64le")
+   message(STATUS "A system not supported by Vc, ${CMAKE_SYSTEM_PROCESSOR}, was detected. Disabling Vc by default.")
    set(vc_defvalue OFF)
 endif()
-
 
 
 ROOT_BUILD_OPTION(afdsmgrd OFF "Dataset manager for PROOF-based analysis facilities")
@@ -195,6 +196,12 @@ option(all "Enable all optional components" OFF)
 option(testing "Enable testing with CTest" OFF)
 option(roottest "Include roottest, if roottest exists in root or if it is a sibling directory." OFF)
 
+#---Avoid creating dependencies to 'non-statndard' header files -------------------------------
+include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
+
+#---Add Installation Variables------------------------------------------------------------------
+include(RootInstallDirs)
+
 #---General Build options----------------------------------------------------------------------
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
@@ -206,15 +213,8 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # the RPATH to be used when installing---------------------------------------------------------
 if(rpath)
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_FULL_LIBDIR}")
   set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
-
-#---Avoid creating dependencies to 'non-statndard' header files -------------------------------
-include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
-
-#---Add Installation Variables------------------------------------------------------------------
-include(RootInstallDirs)
-
 
 

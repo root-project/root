@@ -44,7 +44,7 @@ data points.
 9   44  4.8
 10  53  5.43
 ```
-
+\newpage
 ![](figures/graph_with_expectation.png)
 
 ``` {.cpp}
@@ -97,7 +97,7 @@ Mersenne Twister algorithm [@MersenneTwister].
 Let's go through the code, step by step to understand what is going on:
 
 -   Line *3*: This sets the palette colour code to a much nicer one than
-    the default. Comment this line to give it a try. 
+    the default. Comment this line to give it a try.
     [This article](https://root.cern.ch/drupal/content/rainbow-color-map)
     gives more details about colour map choice.
 
@@ -133,6 +133,8 @@ Let's go through the code, step by step to understand what is going on:
 
 ![A dataset fitted with a bidimensional function visualised as a colored
 surface.\label{f43}][f43]
+
+\newpage
 
 ## Multiple graphs ##
 

@@ -22,178 +22,6 @@
 #include <string.h>
 #include <fstream>
 
-#ifdef COMPILED_WITH_DABC
-extern "C" unsigned long crc32(unsigned long crc, const unsigned char *buf, unsigned int buflen);
-extern "C" unsigned long R__memcompress(char *tgt, unsigned long tgtsize, char *src, unsigned long srcsize);
-
-unsigned long R__crc32(unsigned long crc, const unsigned char *buf, unsigned int buflen)
-{
-   return crc32(crc, buf, buflen);
-}
-#else
-#include "RZip.h"
-#endif
-
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THttpCallArg                                                         //
-//                                                                      //
-// Contains arguments for single HTTP call                              //
-// Must be used in THttpEngine to process incoming http requests        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-//______________________________________________________________________________
-THttpCallArg::THttpCallArg() :
-   TObject(),
-   fTopName(),
-   fPathName(),
-   fFileName(),
-   fQuery(),
-   fCond(),
-   fContentType(),
-   fHeader(),
-   fContent(),
-   fZipping(0),
-   fBinData(0),
-   fBinDataLength(0)
-{
-   // constructor
-}
-
-//______________________________________________________________________________
-THttpCallArg::~THttpCallArg()
-{
-   // destructor
-
-   if (fBinData) {
-      free(fBinData);
-      fBinData = 0;
-   }
-}
-
-//______________________________________________________________________________
-void THttpCallArg::SetBinData(void *data, Long_t length)
-{
-   // set binary data, which will be returned as reply body
-
-   if (fBinData) free(fBinData);
-   fBinData = data;
-   fBinDataLength = length;
-
-   // string content must be cleared in any case
-   fContent.Clear();
-}
-
-//______________________________________________________________________________
-void THttpCallArg::SetPathAndFileName(const char *fullpath)
-{
-   // set complete path of requested http element
-   // For instance, it could be "/folder/subfolder/get.bin"
-   // Here "/folder/subfolder/" is element path and "get.bin" requested file.
-   // One could set path and file name separately
-
-   fPathName.Clear();
-   fFileName.Clear();
-
-   if (fullpath == 0) return;
-
-   const char *rslash = strrchr(fullpath, '/');
-   if (rslash == 0) {
-      fFileName = fullpath;
-   } else {
-      while ((fullpath != rslash) && (*fullpath == '/')) fullpath++;
-      fPathName.Append(fullpath, rslash - fullpath);
-      if (fPathName == "/") fPathName.Clear();
-      fFileName = rslash + 1;
-   }
-}
-
-//______________________________________________________________________________
-void THttpCallArg::FillHttpHeader(TString &hdr, const char *kind)
-{
-   // fill HTTP header
-
-   if (kind == 0) kind = "HTTP/1.1";
-
-   if ((fContentType.Length() == 0) || Is404()) {
-      hdr.Form("%s 404 Not Found\r\n"
-               "Content-Length: 0\r\n"
-               "Connection: close\r\n\r\n", kind);
-   } else {
-      hdr.Form("%s 200 OK\r\n"
-               "Content-Type: %s\r\n"
-               "Connection: keep-alive\r\n"
-               "Content-Length: %ld\r\n"
-               "%s\r\n",
-               kind,
-               GetContentType(),
-               GetContentLength(),
-               fHeader.Data());
-   }
-}
-
-//______________________________________________________________________________
-Bool_t THttpCallArg::CompressWithGzip()
-{
-   // compress reply data with gzip compression
-
-   char *objbuf = (char *) GetContent();
-   Long_t objlen = GetContentLength();
-
-   unsigned long objcrc = R__crc32(0, NULL, 0);
-   objcrc = R__crc32(objcrc, (const unsigned char *) objbuf, objlen);
-
-   // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
-   Int_t buflen = 10 + objlen + 8;
-   if (buflen < 512) buflen = 512;
-
-   void *buffer = malloc(buflen);
-
-   char *bufcur = (char *) buffer;
-
-   *bufcur++ = 0x1f;  // first byte of ZIP identifier
-   *bufcur++ = 0x8b;  // second byte of ZIP identifier
-   *bufcur++ = 0x08;  // compression method
-   *bufcur++ = 0x00;  // FLAG - empty, no any file names
-   *bufcur++ = 0;    // empty timestamp
-   *bufcur++ = 0;    //
-   *bufcur++ = 0;    //
-   *bufcur++ = 0;    //
-   *bufcur++ = 0;    // XFL (eXtra FLags)
-   *bufcur++ = 3;    // OS   3 means Unix
-   //strcpy(bufcur, "item.json");
-   //bufcur += strlen("item.json")+1;
-
-   char dummy[8];
-   memcpy(dummy, bufcur - 6, 6);
-
-   // R__memcompress fills first 6 bytes with own header, therefore just overwrite them
-   unsigned long ziplen = R__memcompress(bufcur - 6, objlen + 6, objbuf, objlen);
-
-   memcpy(bufcur - 6, dummy, 6);
-
-   bufcur += (ziplen - 6); // jump over compressed data (6 byte is extra ROOT header)
-
-   *bufcur++ = objcrc & 0xff;    // CRC32
-   *bufcur++ = (objcrc >> 8) & 0xff;
-   *bufcur++ = (objcrc >> 16) & 0xff;
-   *bufcur++ = (objcrc >> 24) & 0xff;
-
-   *bufcur++ = objlen & 0xff;  // original data length
-   *bufcur++ = (objlen >> 8) & 0xff;  // original data length
-   *bufcur++ = (objlen >> 16) & 0xff;  // original data length
-   *bufcur++ = (objlen >> 24) & 0xff;  // original data length
-
-   SetBinData(buffer, bufcur - (char *) buffer);
-
-   SetEncoding("gzip");
-
-   return kTRUE;
-}
-
-// ====================================================================
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -671,7 +499,14 @@ void THttpServer::ProcessRequests()
 
       if (arg == 0) break;
 
-      ProcessRequest(arg);
+      fSniffer->SetCurrentCallArg(arg);
+
+      try {
+         ProcessRequest(arg);
+         fSniffer->SetCurrentCallArg(0);
+      } catch (...) {
+         fSniffer->SetCurrentCallArg(0);
+      }
 
       arg->fCond.Signal();
    }
@@ -689,6 +524,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    // Process single http request
    // Depending from requested path and filename different actions will be performed.
    // In most cases information is provided by TRootSniffer class
+
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
 
@@ -743,6 +579,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          arg->Set404();
       } else {
          const char *rootjsontag = "\"$$$root.json$$$\"";
+         const char *hjsontag = "\"$$$h.json$$$\"";
 
          arg->fContent = fDrawPageCont;
 
@@ -753,16 +590,26 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->fContent.ReplaceAll("=\"jsrootsys/", repl);
          }
 
+         if (arg->fContent.Index(hjsontag) != kNPOS) {
+            TString h_json;
+            TRootSnifferStoreJson store(h_json, kTRUE);
+            const char *topname = fTopName.Data();
+            if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
+            fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store, kTRUE);
+
+            arg->fContent.ReplaceAll(hjsontag, h_json);
+         }
+
          if (arg->fContent.Index(rootjsontag) != kNPOS) {
             TString str;
             void *bindata = 0;
             Long_t bindatalen = 0;
             if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=3", bindata, bindatalen, str)) {
                arg->fContent.ReplaceAll(rootjsontag, str);
-               arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
-               if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
             }
          }
+         arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+         if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
          arg->SetContentType("text/html");
       }
       return;
@@ -780,6 +627,9 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       filename.Resize(filename.Length() - 3);
       iszip = kTRUE;
    }
+
+   void* bindata(0);
+   Long_t bindatalen(0);
 
    if ((filename == "h.xml") || (filename == "get.xml"))  {
 
@@ -811,7 +661,9 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       arg->SetJson();
    } else
 
-   if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), arg->fBinData, arg->fBinDataLength, arg->fContent)) {
+   if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen, arg->fContent)) {
+      if (bindata != 0) arg->SetBinData(bindata, bindatalen);
+
       // define content type base on extension
       arg->SetContentType(GetMimeType(filename.Data()));
    } else {
@@ -855,6 +707,16 @@ Bool_t THttpServer::Unregister(TObject *obj)
 }
 
 //______________________________________________________________________________
+void THttpServer::Restrict(const char *path, const char* options)
+{
+   // Restrict access to specified object
+   //
+   // See TRootSniffer::Restrict() for more details
+
+   fSniffer->Restrict(path, options);
+}
+
+//______________________________________________________________________________
 Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, const char *icon)
 {
    // Register command which can be executed from web interface
@@ -869,12 +731,20 @@ Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, con
    //     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()");
    // Here symbols '/->' separates item name from method to be executed
    //
+   // One could specify additional arguments in the command with
+   // syntax like %arg1%, %arg2% and so on. For example:
+   //     serv->RegisterCommand("/ResetHPX", "/hpx/->SetTitle(\"%arg1%\")");
+   //     serv->RegisterCommand("/RebinHPXPY", "/hpxpy/->Rebin2D(%arg1%,%arg2%)");
+   // Such parameter(s) will be requested when command clicked in the browser.
+   //
    // Once command is registered, one could specify icon which will appear in the browser:
-   //     serv->SetIcon("/ResetHPX", "/rootsys/icons/ed_execute.png");
+   //     serv->SetIcon("/ResetHPX", "rootsys/icons/ed_execute.png");
    //
    // One also can set extra property '_fastcmd', that command appear as
    // tool button on the top of the browser tree:
    //     serv->SetItemField("/ResetHPX", "_fastcmd", "true");
+   // Or it is equivalent to specifying extra argument when register command:
+   //     serv->RegisterCommand("/ResetHPX", "/hpx/->Reset()", "button;rootsys/icons/ed_delete.png");
 
    return fSniffer->RegisterCommand(cmdname, method, icon);
 }

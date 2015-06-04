@@ -122,6 +122,8 @@ displayed as a symbol with error bar (lower two plots of Figure [5.5](#f55)).
 Correlations between the variables are quantified by the methods
 `Double_t GetCovariance()` and `Double_t GetCorrelationFactor()`.
 
+\newpage
+
 ## Multiple histograms ##
 
 The class `THStack` allows to manipulate a set of histograms as a single entity.

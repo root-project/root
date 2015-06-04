@@ -1469,10 +1469,12 @@ public:
 
       buffer[parser.op_count] = option;
       int idx = buffer[parser.op_count].desc->index;
-      if (options[idx])
-        options[idx].append(buffer[parser.op_count]);
-      else
-        options[idx] = buffer[parser.op_count];
+      if (options){
+        if (options[idx])
+          options[idx].append(buffer[parser.op_count]);
+        else
+          options[idx] = buffer[parser.op_count];
+      }
       ++parser.op_count;
     }
     return true; // NOTE: an option that is discarded because of a full buffer is not fatal

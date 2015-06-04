@@ -57,6 +57,8 @@ public:
 
 private:
    long                   fIndex;                  // Index indicating the ordering of the rules.
+   long                   fLineNumber=-1;          // Line number of the selection file where the rule is located
+   std::string            fSelFileName="";         // Name of the selection file
    AttributesMap_t        fAttributes;             // list of the attributes of the selection/exclusion rule
    ESelect                fIsSelected;             // selected/vetoed/don't care
    std::list<std::string> fSubPatterns;            // a list of subpatterns, generated form a pattern/proto_pattern attribute
@@ -67,35 +69,38 @@ private:
    cling::Interpreter *fInterp;
 
    // Cached for performance
-   std::string fName;
-   std::string fPattern;
-   std::string fProtoName;
-   std::string fProtoPattern;
-   std::string fFileName;
-   std::string fFilePattern;
-   std::string fNArgsToKeep;
-   bool fHasNameAttribute;
-   bool fHasProtoNameAttribute;
-   bool fHasPatternAttribute;
-   bool fHasProtoPatternAttribute;
-   bool fHasFileNameAttribute;
-   bool fHasFilePatternAttribute;
-   bool fHasFromTypedefAttribute;
-   bool fIsFromTypedef;
+   std::string fName = "";
+   std::string fPattern = "";
+   std::string fProtoName = "";
+   std::string fProtoPattern = "";
+   std::string fFileName = "";
+   std::string fFilePattern = "";
+   std::string fNArgsToKeep = "";
+   bool fHasNameAttribute = false;
+   bool fHasProtoNameAttribute = false;
+   bool fHasPatternAttribute = false;
+   bool fHasProtoPatternAttribute = false;
+   bool fHasFileNameAttribute = false;
+   bool fHasFilePatternAttribute = false;
+   bool fHasFromTypedefAttribute = false;
+   bool fIsFromTypedef = false;
 
 public:
 
    BaseSelectionRule(ESelect sel) : fIndex(-1),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(NULL),fRequestedType(NULL),fInterp(NULL) {}
 
-   BaseSelectionRule(long index, cling::Interpreter &interp) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp) {}
+   BaseSelectionRule(long index, cling::Interpreter &interp, const char* selFileName = "", long lineno=-1) : fIndex(index),fLineNumber(lineno),fSelFileName(selFileName),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp) {}
 
-   BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp);
+   BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp, const char* selFileName = "",long lineno=-1);
 
    virtual void DebugPrint() const;
    virtual void Print(std::ostream &out) const = 0;
 
    long    GetIndex() const { return fIndex; }
    void    SetIndex(long index) { fIndex=index; }
+
+   long    GetLineNumber() const { return fLineNumber; }
+   const char* GetSelFileName() const { return fSelFileName.c_str(); }
 
    bool    HasAttributeWithName(const std::string& attributeName) const; // returns true if there is an attribute with the specified name
 

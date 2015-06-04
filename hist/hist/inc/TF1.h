@@ -334,7 +334,8 @@ public:
    virtual TH1     *GetHistogram() const;
    virtual TH1     *CreateHistogram() { return DoCreateHistogram(fXmin, fXmax); }
    virtual TFormula *GetFormula() { return fFormula;}
-   virtual TString  GetExpFormula() const { return (fFormula) ? fFormula->GetExpFormula() : ""; }
+   virtual const TFormula *GetFormula() const { return fFormula;}
+   virtual TString  GetExpFormula(Option_t *option="") const { return (fFormula) ? fFormula->GetExpFormula(option) : ""; }
    virtual const TObject *GetLinearPart(Int_t i) const { return (fFormula) ? fFormula->GetLinearPart(i) : nullptr;}
    virtual Double_t GetMaximum(Double_t xmin=0, Double_t xmax=0, Double_t epsilon = 1.E-10, Int_t maxiter = 100, Bool_t logx = false) const;
    virtual Double_t GetMinimum(Double_t xmin=0, Double_t xmax=0, Double_t epsilon = 1.E-10, Int_t maxiter = 100, Bool_t logx = false) const;
@@ -427,18 +428,22 @@ public:
    virtual void     SetNpx(Int_t npx=100); // *MENU*
    virtual void     SetParameter(Int_t param, Double_t value) {
       (fFormula) ? fFormula->SetParameter(param,value) : fParams->SetParameter(param,value);
+      Update();
    }
    virtual void     SetParameter(const TString &name, Double_t value) {
       (fFormula) ? fFormula->SetParameter(name,value) : fParams->SetParameter(name,value);
+      Update();
    }
    virtual void     SetParameters(const Double_t *params) {
       (fFormula) ? fFormula->SetParameters(params) : fParams->SetParameters(params);
+      Update(); 
    }
    virtual void     SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0,
                                      Double_t p5=0,Double_t p6=0,Double_t p7=0,Double_t p8=0,
                                      Double_t p9=0,Double_t p10=0) {
       if (fFormula) fFormula->SetParameters(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10);
       else          fParams->SetParameters(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10);
+      Update();
    } // *MENU*
    virtual void     SetParName(Int_t ipar, const char *name);
    virtual void     SetParNames(const char *name0="p0",const char *name1="p1",const char *name2="p2",

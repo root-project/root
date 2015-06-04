@@ -84,6 +84,12 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
    fScale = 10;
    fMove = 0;
 
+   fPos = fSmin = fSmax = 0.0;
+   fRelPos = 0;
+   fVmin = fVmax = 0.0;
+   fPressPoint = 0;
+   fPressSmin = fPressSmax = 0.0;
+
    fReversedScale = reversed;
    fMarkEnds = mark_ends;
 
@@ -215,6 +221,7 @@ TGDoubleVSlider::TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t
 {
    // Create a vertical slider widget.
 
+   fYp = 0;
    fSliderPic = fClient->GetPicture("sliderv.xpm");
 
    if (!fSliderPic)
@@ -408,6 +415,7 @@ TGDoubleHSlider::TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t
 {
    // Create horizontal slider widget.
 
+   fXp = 0;
    fSliderPic = fClient->GetPicture("sliderh.xpm");
 
    if (!fSliderPic)

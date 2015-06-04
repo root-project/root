@@ -165,7 +165,7 @@ enable_gsl_shared=no
 enable_http=no
 enable_qt=no
 enable_qtgsi=no
-enable_r=yes
+enable_r=no
 enable_roofit=no
 enable_minuit2=no
 enable_rpath=no
@@ -200,7 +200,7 @@ if test "x$ENABLEALL" = "xyes"; then
     enable_unuran=yes
     enable_vc=yes
     enable_vdt=yes
-    enable_r=yes
+    #enable_r=yes
 fi
 
 # Remove old log file

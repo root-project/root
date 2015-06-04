@@ -33,7 +33,7 @@ void testAnalyticalIntegrals()
    ROOT::Math::Integrator ig; 
 
    TCanvas * c1 = new TCanvas("pol3","pol3",800,1000);
-   c1->Divide(2,3);
+   c1->Divide(3,3);
    int ipad = 0;
    {
       TF1 *f = new TF1("TRY","pol3",-5.,5.);
@@ -61,7 +61,6 @@ void testAnalyticalIntegrals()
       c1->cd(++ipad);
       f ->Draw();
 
-
       ROOT::Math::WrappedTF1 wf(*f);
 
       double anaInt = f->Integral(-5.,5.);
@@ -74,16 +73,42 @@ void testAnalyticalIntegrals()
          Error("TestAnalyticalIntegral","Different integral value for %s num = %f ana = %f diff = %f",f->GetTitle(),numInt,anaInt,numInt-anaInt);
 
    }  
+   {
+      TF1 *f  = new TF1("MyCrystalBall","crystalball",-5.,5.);
+      f -> SetParameters(2,1,0.5,2.,0.9);
+      c1->cd(++ipad);
+      f ->Draw();
 
-#ifdef LATER
-   TF1 *f_cb  = new TF1("MyCrystalBall","ROOT::Math::crystalball_pdf(x,[0],[1],[2],[3])",-5.,5.);
-   f_cb -> SetParameters(1,3,3.,0.3);
-   c1->cd(++ipad);
-   f_cb->Draw();
-   cout<<"num int cb "<<f_cb->Integral(-TMath::Infinity(),TMath::Infinity())<<endl;
-   cout<<"ana int cb "<<ROOT::Math::crystalball_cdf(TMath::Infinity(),1,3,3.,0.3)<<endl;
-#endif
+      ROOT::Math::WrappedTF1 wf(*f);
 
+      double anaInt = f->Integral(-5.,5.);
+      double numInt = ig.Integral(wf,-5.,5.);
+
+      std::cout<<"analytical integral for " << f->GetTitle()  << " = " << anaInt << std::endl;
+      std::cout<<"numerical  integral for " << f->GetTitle()  << " = " << numInt << std::endl;
+
+      if (!TMath::AreEqualAbs(numInt, anaInt, 1.E-8))
+         Error("TestAnalyticalIntegral","Different integral value for %s num = %f ana = %f diff = %f",f->GetTitle(),numInt,anaInt,numInt-anaInt);
+      
+   }
+   {
+      // CB with alpha < 0
+      TF1 *f  = new TF1("MyCrystalBall","crystalball",-5.,5.);
+      f -> SetParameters(2,-1,0.5,-2.,0.9);
+      c1->cd(++ipad);
+      f ->Draw();
+
+      ROOT::Math::WrappedTF1 wf(*f);
+
+      double anaInt = f->Integral(-5.,5.);
+      double numInt = ig.Integral(wf,-5.,5.);
+
+      std::cout<<"analytical integral for " << f->GetTitle()  << " = " << anaInt << std::endl;
+      std::cout<<"numerical  integral for " << f->GetTitle()  << " = " << numInt << std::endl;
+
+      if (!TMath::AreEqualAbs(numInt, anaInt, 1.E-8))
+         Error("TestAnalyticalIntegral","Different integral value for %s num = %f ana = %f diff = %f",f->GetTitle(),numInt,anaInt,numInt-anaInt);
+   }
    {
       TF1 *f  = new TF1("MyGauss","gaus",-5.,5.);
       f -> SetParameters(2.,0.,0.3);

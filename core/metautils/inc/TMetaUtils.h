@@ -108,13 +108,14 @@ typedef void (*CallWriteStreamer_t)(const AnnotatedRecordDecl &cl,
                                     std::ostream& dictStream,
                                     bool isAutoStreamer);
 
-const int kInfo     =      0;
-const int kNote     =    500;
-const int kWarning  =   1000;
-const int kError    =   2000;
-const int kSysError =   3000;
-const int kFatal    =   4000;
-const int kMaxLen   =   1024;
+const int kInfo            =      0;
+const int kNote            =    500;
+const int kThrowOnWarning  =    999;
+const int kWarning         =   1000;
+const int kError           =   2000;
+const int kSysError        =   3000;
+const int kFatal           =   4000;
+const int kMaxLen          =   1024;
 
 // Classes ---------------------------------------------------------------------
 class TNormalizedCtxtImpl;
@@ -296,6 +297,9 @@ public:
 typedef std::list<RConstructorType> RConstructorTypes;
 
 // Functions -------------------------------------------------------------------
+
+//_____________________________________________________________________________
+unsigned int GetNumberOfWarningsAndErrors();
 
 //______________________________________________________________________________
 int extractAttrString(clang::Attr* attribute, std::string& attrString);

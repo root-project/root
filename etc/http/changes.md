@@ -1,6 +1,17 @@
 # JSROOT changelog
 
 ## Changes in master
+1. Try to provide workaround for websites where require.js already loaded.
+   This makes problem by direct loading of jquery and jquery-ui 
+2. Provide workaround for older version of jquery-ui 
+3. Prompt for input of command arguments
+4. After command execution one could automatically reload hierarchy (_hreload property) or
+   update view of displayed object (_update_item property)    
+5. Use HiearchyPainter for implementing draw.htm. This let us handle
+   all different kinds of extra attributes in central place 
+
+
+## Changes in 3.5
 1. Fix error in vertical text alignment
 2. Many improvements in TPaletteAxis drawing - draw label, avoid too large ticks.
 3. Fix error with col drawing - bin with maximum value got wrong color  

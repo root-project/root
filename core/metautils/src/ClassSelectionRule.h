@@ -49,20 +49,20 @@ public:
    ClassSelectionRule(ESelect sel=kYes):
    BaseSelectionRule(sel), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
 
-   ClassSelectionRule(long index, cling::Interpreter &interp):
-   BaseSelectionRule(index, interp), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
+   ClassSelectionRule(long index, cling::Interpreter &interp, const char* selFileName = "", long lineno = -1):
+   BaseSelectionRule(index, interp, selFileName, lineno), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
 
-   ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue, cling::Interpreter &interp):
-   BaseSelectionRule(index, sel, attributeName, attributeValue, interp), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
+   ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue, cling::Interpreter &interp, const char* selFileName = "", long lineno = -1):
+   BaseSelectionRule(index, sel, attributeName, attributeValue, interp, selFileName, lineno), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
 
    void Print(std::ostream &out) const;
 
-   void AddFieldSelectionRule(VariableSelectionRule field); //adds entry to the filed selections list
+   void AddFieldSelectionRule(const VariableSelectionRule& field); //adds entry to the filed selections list
    bool HasFieldSelectionRules() const;
    //const std::list<VariableSelectionRule>& getFieldSelectionRules(); //gets the field selections list
    const std::list<VariableSelectionRule>& GetFieldSelectionRules() const; //gets the field selections list
 
-   void AddMethodSelectionRule(FunctionSelectionRule method); //adds entry to the method selections list
+   void AddMethodSelectionRule(const FunctionSelectionRule& method); //adds entry to the method selections list
    bool HasMethodSelectionRules() const;
    //const std::list<FunctionSelectionRule>& getMethodSelectionRules(); //gets the method selections list
    const std::list<FunctionSelectionRule>& GetMethodSelectionRules() const; //gets the method selections list

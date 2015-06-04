@@ -135,6 +135,7 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
    fTip         = 0;
    fGroup       = 0;
    fStyle       = 0;
+   fTWidth = fTHeight = 0;
 
    fNormGC   = norm;
    fState    = kButtonUp;

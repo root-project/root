@@ -120,7 +120,9 @@ ClassImp(TGFontDialog)
 TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
                            FontProp_t *fontProp, const TString &sample,
                            char **fontList, Bool_t wait) :
-              TGTransientFrame(p, t, 100, 100)
+   TGTransientFrame(p, t, 100, 100), fFontNames(0), fFontSizes(0), fFontStyles(0),
+   fTextAligns(0), fColorSelect(0), fFontProp(0), fItalic(0), fBold(0), fSize(0),
+   fTextAlign(0), fTextColor(0), fNumberOfFonts(0)
 {
    // Create font dialog. When closed via OK button fontProp is set to
    // the newly selected font. If closed via Cancel button or WM close box

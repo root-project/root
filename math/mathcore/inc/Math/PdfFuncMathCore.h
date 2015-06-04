@@ -186,7 +186,26 @@ namespace Math {
   double chisquared_pdf(double x, double r, double x0 = 0);
 
 
-   double crystalball_pdf(double x, double alpha, double n, double mean, double sigma);
+  /**
+
+  Crystal ball function
+
+  See the definition at 
+  <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
+  Wikipedia</A>.
+
+  It is not really a pdf since it is not normalized
+
+  @ingroup PdfFunc
+
+  */
+   
+  double crystalball_function(double x, double alpha, double n, double sigma, double x0 = 0);
+
+   /** 
+       pdf definition of the crystal_ball which is defined only for n > 1 otehrwise integral is diverging
+    */
+  double crystalball_pdf(double x, double alpha, double n, double sigma, double x0 = 0);
 
   /**
 

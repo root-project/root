@@ -44,7 +44,7 @@ using namespace std;
 ClassImp(TFormula)
 //______________________________________________________________________________
 /******************************************************************************
-Begin_Htnl
+Begin_Html
 <h1>The  F O R M U L A  class</h1>
 
 <p>This is a new version of the TFormula class based on Cling.
@@ -578,15 +578,18 @@ void TFormula::FillDefaults()
    // const pair<TString,Double_t> defconsts[] = { {"pi",TMath::Pi()}, {"sqrt2",TMath::Sqrt2()},
    //       {"infinity",TMath::Infinity()}, {"ln10",TMath::Ln10()},
    //       {"loge",TMath::LogE()}, {"true",1},{"false",0} };
-   const pair<TString,TString> funShortcuts[] = { {"sin","TMath::Sin" },
-         {"cos","TMath::Cos" }, {"exp","TMath::Exp"}, {"log","TMath::Log"}, {"log10","TMath::Log10"},
-         {"tan","TMath::Tan"}, {"sinh","TMath::SinH"}, {"cosh","TMath::CosH"},
-         {"tanh","TMath::TanH"}, {"asin","TMath::ASin"}, {"acos","TMath::ACos"},
-         {"atan","TMath::ATan"}, {"atan2","TMath::ATan2"}, {"sqrt","TMath::Sqrt"},
-         {"ceil","TMath::Ceil"}, {"floor","TMath::Floor"}, {"pow","TMath::Power"},
-         {"binomial","TMath::Binomial"},{"abs","TMath::Abs"},
-         {"min","TMath::Min"},{"max","TMath::Max"} };
-
+   const pair<TString,TString> funShortcuts[] =
+      { {"sin","TMath::Sin" },
+        {"cos","TMath::Cos" }, {"exp","TMath::Exp"}, {"log","TMath::Log"}, {"log10","TMath::Log10"},
+        {"tan","TMath::Tan"}, {"sinh","TMath::SinH"}, {"cosh","TMath::CosH"},
+        {"tanh","TMath::TanH"}, {"asin","TMath::ASin"}, {"acos","TMath::ACos"},
+        {"atan","TMath::ATan"}, {"atan2","TMath::ATan2"}, {"sqrt","TMath::Sqrt"},
+        {"ceil","TMath::Ceil"}, {"floor","TMath::Floor"}, {"pow","TMath::Power"},
+        {"binomial","TMath::Binomial"},{"abs","TMath::Abs"},
+        {"min","TMath::Min"},{"max","TMath::Max"},{"sign","TMath::Sign" },
+        {"sq","TMath::Sq"}  
+      };
+   
    std::vector<TString> defvars2(10);
    for (int i = 0; i < 9; ++i)
       defvars2[i] = TString::Format("x[%d]",i);
@@ -769,6 +772,8 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
    functions.insert(make_pair(make_pair("landau",1),make_pair("[0]*TMath::Landau({V0},[1],[2],false)","[0]*TMath::Landau({V0},[1],[2],true)")));
    functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
+   functions.insert(make_pair(make_pair("crystalball",1),make_pair("[0]*ROOT::Math::crystalball_function({V0},[3],[4],[2],[1])","[0]*ROOT::Math::crystalball_pdf({V0},[3],[4],[2],[1])")));
+   functions.insert(make_pair(make_pair("breitwigner",1),make_pair("[0]*ROOT::Math::breitwigner_pdf({V0},[2],[1])","[0]*ROOT::Math::breitwigner_pdf({V0},[2],[4],[1])")));
    // chebyshev polynomial
    functions.insert(make_pair(make_pair("cheb0" ,1),make_pair("ROOT::Math::Chebyshev0({V0},[0])","")));
    functions.insert(make_pair(make_pair("cheb1" ,1),make_pair("ROOT::Math::Chebyshev1({V0},[0],[1])","")));
@@ -790,6 +795,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functionsNumbers["gaus"] = 100;
    functionsNumbers["landau"] = 400;
    functionsNumbers["expo"] = 200;
+   functionsNumbers["crystalball"] = 500;
 
    // replace old names xygaus -> gaus[x,y]
    formula.ReplaceAll("xygaus","gaus[x,y]");
@@ -1389,8 +1395,27 @@ void TFormula::ProcessFormula(TString &formula)
          {
             TString shortcut = it->first;
             TString full = it->second;
-            formula.ReplaceAll(shortcut,full);
-            fun.fFound = true;
+            //std::cout << " functor " << fun.GetName() << " found - replace " <<  shortcut << " with " << full << " in " << formula << std::endl;
+            // replace all functors
+            Ssiz_t index = formula.Index(shortcut,0);
+            while ( index != kNPOS) {
+               // check that function is not in a namespace and is not in other characters
+               //std::cout << "analyzing " << shortcut << " in " << formula << std::endl;
+               Ssiz_t i2 = index + shortcut.Length();
+               if ( (index > 0) && (isalpha( formula[index-1] )  || formula[index-1] == ':' )) {
+                  index = formula.Index(shortcut,i2);
+                  continue;
+               }
+               if (i2 < formula.Length()  && formula[i2] != '(') {
+                  index = formula.Index(shortcut,i2);
+                  continue;
+               }
+               // now replace the string
+               formula.Replace(index, shortcut.Length(), full);
+               Ssiz_t inext = index + full.Length(); 
+               index = formula.Index(shortcut,inext);
+               fun.fFound = true;
+            }
          }
          if(fun.fName.Contains("::")) // add support for nested namespaces
          {
@@ -1690,6 +1715,20 @@ void TFormula::SetPredefinedParamNames() {
       SetParName(0,"Constant");
       SetParName(1,"MPV");
       SetParName(2,"Sigma");
+      return;
+   }
+   if (fNumber == 500) { // crystal-ball
+      SetParName(0,"Constant");
+      SetParName(1,"Mean");
+      SetParName(2,"Sigma");
+      SetParName(3,"Alpha");
+      SetParName(4,"N");
+      return;
+   }
+   if (fNumber == 600) { // breit-wigner
+      SetParName(0,"Constant");
+      SetParName(1,"Mean");
+      SetParName(2,"Gamma");
       return;
    }
    // if formula is a polynomial (or chebyshev), set parameter names
@@ -2381,7 +2420,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
                return expFormula;                   
             }
             TString parName = expFormula(i+1,j-i-1);
-            TString replacement = TString::Format("%f",GetParameter(parName));
+            TString replacement = TString::Format("%g",GetParameter(parName));
             expFormula.Replace(i,j-i+1, replacement );
             i += replacement.Length();
          }

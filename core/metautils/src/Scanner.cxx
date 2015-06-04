@@ -18,6 +18,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "llvm/Support/Path.h"
 
 #include "TClassEdit.h"
 
@@ -638,8 +639,6 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
 
    bool ret = true;
 
-   DumpDecl(N, "");
-
    const ClassSelectionRule *selected = fSelectionRules.IsDeclSelected(N);
    if (selected) {
 
@@ -808,16 +807,26 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       bool rcrdDeclNotAlreadySelected = fselectedRecordDecls.insert((RecordDecl*)recordDecl->getCanonicalDecl()).second;
 
       // Prompt a warning in case the class was selected twice
+      auto declSelRuleMapIt = fDeclSelRuleMap.find(recordDecl->getCanonicalDecl());
       if (!fFirstPass &&
           !rcrdDeclNotAlreadySelected &&
-          selected->HasAttributeName()){
+          selected->HasAttributeName() &&
+          declSelRuleMapIt != fDeclSelRuleMap.end() &&
+          declSelRuleMapIt->second != selected){
          const std::string& name_value = selected->GetAttributeName();
          std::string normName;
          TMetaUtils::GetNormalizedName(normName,
                                        recordDecl->getASTContext().getTypeDeclType(recordDecl),
                                        fInterpreter,
                                        fNormCtxt);
+
+         auto previouslyMatchingRule = declSelRuleMapIt->second;
+         int previouslineno = previouslyMatchingRule->GetLineNumber();
+
          std::stringstream message;
+         auto lineno = selected->GetLineNumber();
+         std::string cleanFileName =  llvm::sys::path::filename(selected->GetSelFileName());
+         if (lineno > 1) message << "Selection file " << cleanFileName << ", lines " << lineno << " and " << previouslineno << ". ";
          message << "Attempt to select with a named selection rule an already selected class. The name used in the selection is \""
                  << name_value << "\" while the class is \"" << normName << "\".";
          if (selected->GetAttributes().size() > 1){
@@ -825,6 +834,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          }
          ROOT::TMetaUtils::Warning(0,"%s\n", message.str().c_str());
       }
+
 
       fDeclSelRuleMap[recordDecl->getCanonicalDecl()]=selected;
 
@@ -1032,27 +1042,6 @@ std::string RScanner::GetClassName(clang::DeclContext* DC) const
       ret = N->getNameAsString().c_str();
 
    return ret;
-}
-
-//______________________________________________________________________________
-void RScanner::DumpDecl(clang::Decl* D, const char* msg) const
-{
-   if (fVerboseLevel > 3) {
-      return;
-   }
-   std::string name;
-
-   if (!D) {
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) printf("\nDEBUG - DECL is NULL: %s", msg);
-#endif
-      return;
-   }
-
-   GetDeclName(D, name);
-#ifdef SELECTION_DEBUG
-   if (fVerboseLevel > 3) std::cout<<"\n\n"<<name<<" -> "<<D->getDeclKindName()<<": "<<msg;
-#endif
 }
 
 //______________________________________________________________________________

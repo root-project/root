@@ -7,6 +7,9 @@
 # ROOT_LIBRARIES      Most common libraries
 # ROOT_<name>_LIBRARY Full path to the library <name>
 # ROOT_LIBRARY_DIR    PATH to the library directory
+# ROOT_DEFINITIONS    Compiler definitions
+# ROOT_CXX_FLAGS      Compiler flags to used by client packages
+# ROOT_C_FLAGS        Compiler flags to used by client packages
 #
 # Updated by K. Smith (ksmith37@nd.edu) to properly handle
 #  dependencies in ROOT_GENERATE_DICTIONARY
@@ -49,9 +52,20 @@ endforeach()
 list(REMOVE_DUPLICATES ROOT_LIBRARIES)
 
 execute_process(
+    COMMAND ${ROOT_CONFIG_EXECUTABLE} --cflags
+    OUTPUT_VARIABLE __cflags
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(REGEX MATCHALL "-(D|U)[^ ]*" ROOT_DEFINITIONS "${__cflags}")
+string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_CXX_FLAGS "${__cflags}")
+string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_C_FLAGS "${__cflags}")
+
+set(ROOT_USE_FILE ${CMAKE_CURRENT_LIST_DIR}/RootUseFile.cmake)
+
+execute_process(
   COMMAND ${ROOT_CONFIG_EXECUTABLE} --features
   OUTPUT_VARIABLE _root_options
   OUTPUT_STRIP_TRAILING_WHITESPACE)
+separate_arguments(_root_options)
 foreach(_opt ${_root_options})
   set(ROOT_${_opt}_FOUND TRUE)
 endforeach()
