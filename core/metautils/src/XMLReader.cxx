@@ -469,7 +469,7 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
    bool inMethod = false;
    bool inField = false;
 
-   BaseSelectionRule *bsr; // Pointer to the base class, in it is written information about the current sel. rule
+   BaseSelectionRule *bsr = 0; // Pointer to the base class, in it is written information about the current sel. rule
    BaseSelectionRule *bsrChild = 0; // The same but keeps information for method or field children of a class
    std::unique_ptr<ClassSelectionRule> csr;
    std::unique_ptr<FunctionSelectionRule> fsr;
