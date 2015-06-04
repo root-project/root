@@ -989,7 +989,8 @@ GContext_t TGX11::CreateGC(Drawable_t id, GCValues_t *gval)
 
    GC gc = XCreateGC(fDisplay, (Drawable) id, xmask, &xgval);
 
-   if (gval->fMask & kGCFont) MapGCFont((GContext_t)gc, gval->fFont);
+   if (gval && (gval->fMask & kGCFont))
+      MapGCFont((GContext_t)gc, gval->fFont);
 
    return (GContext_t) gc;
 }
@@ -1007,7 +1008,8 @@ void TGX11::ChangeGC(GContext_t gc, GCValues_t *gval)
 
    XChangeGC(fDisplay, (GC) gc, xmask, &xgval);
 
-   if (gval->fMask & kGCFont) MapGCFont((GContext_t)gc, gval->fFont);
+   if (gval && (gval->fMask & kGCFont))
+      MapGCFont((GContext_t)gc, gval->fFont);
 }
 
 //______________________________________________________________________________
