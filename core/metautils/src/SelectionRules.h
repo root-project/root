@@ -154,7 +154,7 @@ public:
    bool GetDeclName(const clang::Decl* D, std::string& name, std::string& qual_name) const;
 
    // gets the qualname of the decl, no checks performed
-   inline void GetDeclQualName(const clang::Decl* D, std::string& qual_name) const;
+   void GetDeclQualName(const clang::Decl* D, std::string& qual_name) const;
 
    // gets the function prototype if the Decl (if it is global function or method)
    bool GetFunctionPrototype(const clang::FunctionDecl* F, std::string& prototype) const;

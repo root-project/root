@@ -383,27 +383,25 @@ bool SelectionRules::GetDeclName(const clang::Decl* D, std::string& name, std::s
 {
    const clang::NamedDecl* N = llvm::dyn_cast<clang::NamedDecl> (D);
 
-   if (N) {
-      // the identifier is NULL for some special methods like constructors, destructors and operators
-      if (N->getIdentifier()) {
-         name = N->getNameAsString();
-      }
-      else if (N->isCXXClassMember()) { // for constructors, destructors, operator=, etc. methods
-         name =  N->getNameAsString(); // we use this (unefficient) method to Get the name in that case
-      }
-      llvm::raw_string_ostream stream(qual_name);
-      N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
-      return true;
-   }
-   else {
+   if (!N)
       return false;
+
+   // the identifier is NULL for some special methods like constructors, destructors and operators
+   if (N->getIdentifier()) {
+      name = N->getNameAsString();
    }
+   else if (N->isCXXClassMember()) { // for constructors, destructors, operator=, etc. methods
+      name =  N->getNameAsString(); // we use this (unefficient) method to Get the name in that case
+   }
+   llvm::raw_string_ostream stream(qual_name);
+   N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
+   return true;
 }
 
-inline void SelectionRules::GetDeclQualName(const clang::Decl* D, std::string& qual_name) const{
-      const clang::NamedDecl* N = static_cast<const clang::NamedDecl*> (D);
-      llvm::raw_string_ostream stream(qual_name);
-      N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
+void SelectionRules::GetDeclQualName(const clang::Decl* D, std::string& qual_name) const{
+   const clang::NamedDecl* N = static_cast<const clang::NamedDecl*> (D);
+   llvm::raw_string_ostream stream(qual_name);
+   N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
    }
 
 bool SelectionRules::GetFunctionPrototype(const clang::FunctionDecl* F, std::string& prototype) const {
@@ -454,86 +452,34 @@ bool SelectionRules::GetFunctionPrototype(const clang::FunctionDecl* F, std::str
 
 bool SelectionRules::IsParentClass(const clang::Decl* D) const
 {
-   const clang::DeclContext *ctx = D->getDeclContext();
-
-   if (ctx->isRecord()){
-      const clang::Decl *parent = llvm::dyn_cast<clang::Decl> (ctx);
-      if (!parent) {
-         return false;
-      }
-      else {
-         //TagDecl has methods to understand of what kind is the Decl - class, struct or union
-         const clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (parent);
-
-         if (T) {
-            if (T->isClass()||T->isStruct()) {
-               return true;
-            }
-            else {
-               return false;
-            }
-         }
-         else {
-            return false;
-         }
-      }
-   }
-   else {
-      return false;
-   }
+   //TagDecl has methods to understand of what kind is the Decl - class, struct or union
+   if (const clang::TagDecl* T
+       = llvm::dyn_cast<clang::TagDecl>(D->getDeclContext()))
+      return T->isClass() || T->isStruct();
+   return false;
 }
 
 
 bool SelectionRules::IsParentClass(const clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const
 {
-   const clang::DeclContext *ctx = D->getDeclContext();
-
-   if (ctx->isRecord()){
-      const clang::Decl *parent = llvm::dyn_cast<clang::Decl> (ctx);
-      if (!parent) {
-         return false;
-      }
-      else {
-         //TagDecl has methods to understand of what kind is the Decl
-         const clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (parent);
-
-         if (T) {
-            if (T->isClass()|| T->isStruct()) {
-               GetDeclName(parent, parent_name, parent_qual_name);
-               return true;
-            }
-            else {
-               return false;
-            }
-         }
-         else {
-            return false;
-         }
-      }
-   }
-   else {
-      return false;
-   }
-}
-
-bool SelectionRules::GetParentName(const clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const
-{
-   const clang::DeclContext *ctx = D->getDeclContext();
-
-   if (ctx->isRecord()){
-      //DEBUG std::cout<<"\n\tDeclContext is Record";
-      const clang::Decl *parent = llvm::dyn_cast<clang::Decl> (ctx);
-      if (!parent) {
-         return false;
-      }
-      else {
+   if (const clang::TagDecl* parent
+       = llvm::dyn_cast<clang::TagDecl>(D->getDeclContext())) {
+      if (parent->isClass()|| parent->isStruct()) {
          GetDeclName(parent, parent_name, parent_qual_name);
          return true;
       }
    }
-   else {
-      return false;
+   return false;
+}
+
+bool SelectionRules::GetParentName(const clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const
+{
+   if (const clang::RecordDecl* parent
+       = llvm::dyn_cast<clang::RecordDecl>(D->getDeclContext())) {
+      GetDeclName(parent, parent_name, parent_qual_name);
+      return true;
    }
+   return false;
 }
 
 /* This is the method that crashes
@@ -1411,53 +1357,53 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(const clang::Decl* D, 
 }
 
 bool SelectionRules::AreAllSelectionRulesUsed() const {
-      for(auto&& rule : fClassSelectionRules){
-         if (BaseSelectionRule::kNo!=rule.GetSelected() && !rule.GetMatchFound() /* && !GetHasFileNameRule() */ ) {
-            std::string name;
-            if (rule.GetAttributeValue("pattern", name)) {
-               // keep it
-            } else if (rule.GetAttributeValue("name", name)) {
-               // keept it
-            } else {
-               name.clear();
-            }
-            std::string file_name_value;
-            if (!rule.GetAttributeValue("file_name", file_name_value)) file_name_value.clear();
+   for(auto&& rule : fClassSelectionRules){
+      if (BaseSelectionRule::kNo!=rule.GetSelected() && !rule.GetMatchFound() /* && !GetHasFileNameRule() */ ) {
+         std::string name;
+         if (rule.GetAttributeValue("pattern", name)) {
+            // keep it
+         } else if (rule.GetAttributeValue("name", name)) {
+            // keept it
+         } else {
+            name.clear();
+         }
+         std::string file_name_value;
+         if (!rule.GetAttributeValue("file_name", file_name_value)) file_name_value.clear();
 
-            if (!file_name_value.empty()) {
-               // don't complain about defined_in rules
-               continue;
-            }
+         if (!file_name_value.empty()) {
+            // don't complain about defined_in rules
+            continue;
+         }
 
-            const char* attrName = nullptr;
-            const char* attrVal = nullptr;
-            if (!file_name_value.empty()) {
-               attrName = "file name";
-               attrVal = file_name_value.c_str();
-            } else {
-                  attrName = "class";
-               if (!name.empty()) attrVal = name.c_str();
-            }
-            ROOT::TMetaUtils::Warning(0,"Unused %s rule: %s\n", attrName, attrVal);
+         const char* attrName = nullptr;
+         const char* attrVal = nullptr;
+         if (!file_name_value.empty()) {
+            attrName = "file name";
+            attrVal = file_name_value.c_str();
+         } else {
+            attrName = "class";
+            if (!name.empty()) attrVal = name.c_str();
+         }
+         ROOT::TMetaUtils::Warning(0,"Unused %s rule: %s\n", attrName, attrVal);
+      }
+   }
+
+   for(auto&& rule : fVariableSelectionRules){
+      if (!rule.GetMatchFound() && !GetHasFileNameRule()) {
+         std::string name;
+         if (rule.GetAttributeValue("pattern", name)) {
+            // keep it
+         } else if (rule.GetAttributeValue("name", name)) {
+            // keept it
+         } else {
+            name.clear();
+         }
+         ROOT::TMetaUtils::Warning("","Unused variable rule: %s\n",name.c_str());
+         if (name.empty()) {
+            rule.PrintAttributes(std::cout,3);
          }
       }
-
-      for(auto&& rule : fVariableSelectionRules){
-         if (!rule.GetMatchFound() && !GetHasFileNameRule()) {
-            std::string name;
-            if (rule.GetAttributeValue("pattern", name)) {
-               // keep it
-            } else if (rule.GetAttributeValue("name", name)) {
-               // keept it
-            } else {
-               name.clear();
-            }
-            ROOT::TMetaUtils::Warning("","Unused variable rule: %s\n",name.c_str());
-            if (name.empty()) {
-               rule.PrintAttributes(std::cout,3);
-            }
-         }
-      }
+   }
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
@@ -1497,24 +1443,24 @@ ROOT::TMetaUtils::Warning("SelectionRules::AreAllSelectionRulesUsed",
 
 
 #if Enums_rules_becomes_useful_for_rootcling
-      for(auto&& rule : fEnumSelectionRules){
-         if (!rule.GetMatchFound() && !GetHasFileNameRule()) {
-            std::string name;
-            if (rule.GetAttributeValue("pattern", name)) {
-               // keep it
-            } else if (rule.GetAttributeValue("name", name)) {
-               // keept it
-            } else {
-               name.clear();
-            }
+   for(auto&& rule : fEnumSelectionRules){
+      if (!rule.GetMatchFound() && !GetHasFileNameRule()) {
+         std::string name;
+         if (rule.GetAttributeValue("pattern", name)) {
+            // keep it
+         } else if (rule.GetAttributeValue("name", name)) {
+            // keept it
+         } else {
+            name.clear();
+         }
 
-            ROOT::TMetaUtils::Warning("","Unused enum rule: %s\n",name.c_str());
+         ROOT::TMetaUtils::Warning("","Unused enum rule: %s\n",name.c_str());
 
-            if (name.empty()){
-               rule.PrintAttributes(std::cout,3);
-            }
+         if (name.empty()){
+            rule.PrintAttributes(std::cout,3);
          }
       }
+   }
 #endif
    return true;
 }
@@ -1522,26 +1468,22 @@ ROOT::TMetaUtils::Warning("SelectionRules::AreAllSelectionRulesUsed",
 bool SelectionRules::SearchNames(cling::Interpreter &interp)
 {
    // std::cout<<"Searching Names In Selection Rules:"<<std::endl;
-   if (!fClassSelectionRules.empty()) {
-      for(std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin(),
+   for(std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin(),
           end = fClassSelectionRules.end();
-          it != end;
-          ++it)
-      {
-         if (it->HasAttributeWithName("name")) {
-            std::string name_value;
-            it->GetAttributeValue("name", name_value);
-            // In Class selection rules, we should be interested in scopes.
-            const clang::Type *typeptr = 0;
-            const clang::CXXRecordDecl *target
-               = ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), interp,
-                                               true /*diag*/, &typeptr);
-            if (target) {
-               it->SetCXXRecordDecl(target,typeptr);
-            }
+       it != end;
+       ++it) {
+      if (it->HasAttributeWithName("name")) {
+         std::string name_value;
+         it->GetAttributeValue("name", name_value);
+         // In Class selection rules, we should be interested in scopes.
+         const clang::Type *typeptr = 0;
+         const clang::CXXRecordDecl *target
+            = ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), interp,
+                                            true /*diag*/, &typeptr);
+         if (target) {
+            it->SetCXXRecordDecl(target,typeptr);
          }
       }
-
    }
    return true;
 }
