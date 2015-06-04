@@ -84,7 +84,7 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
    fScale = 10;
    fMove = 0;
 
-	fPos = fSmin = fSmax = 0.0;
+   fPos = fSmin = fSmax = 0.0;
    fRelPos = 0;
    fVmin = fVmax = 0.0;
    fPressPoint = 0;
