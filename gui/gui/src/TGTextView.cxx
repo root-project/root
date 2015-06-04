@@ -899,9 +899,6 @@ Bool_t TGTextView::HandleDoubleClick(Event_t *event)
 {
    // handle double click
 
-   if (event->fWindow != fCanvas->GetId()) {
-      return kFALSE;
-   }
    return kFALSE;
 }
 

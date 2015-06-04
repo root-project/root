@@ -65,6 +65,7 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    fActive       = kFALSE;
    fText         = text;
    fBorderWidth  = 0;
+   fTWidth       = 0;
    fNormGC       = norm;
    fFontStruct   = font;
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable;

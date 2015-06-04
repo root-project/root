@@ -441,6 +441,7 @@ TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
 
    fSortType  = kSortByName;
    fFilter    = 0;
+   fMtime     = 0;
    fDirectory = gSystem->WorkingDirectory();
    fRefresh   = new TViewUpdateTimer(this, 1000);
    gSystem->AddTimer(fRefresh);
@@ -475,6 +476,7 @@ TGFileContainer::TGFileContainer(TGCanvas *p, UInt_t options, ULong_t back) :
 
    fSortType  = kSortByName;
    fFilter    = 0;
+   fMtime     = 0;
    fDirectory = gSystem->WorkingDirectory();
    fRefresh   = new TViewUpdateTimer(this, 1000);
    gSystem->AddTimer(fRefresh);

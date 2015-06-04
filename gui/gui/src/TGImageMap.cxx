@@ -416,6 +416,7 @@ TGImageMap::TGImageMap(const TGWindow *p, const TGPicture *pic) :
    fListOfRegions   = new TList;
    fTrash           = new TList;
    fMainTip         = 0;
+   fLastVisited     = 0;
    fNavMode = kNavRegions;
 
    SetDisabledPicture(fPic);
@@ -441,6 +442,7 @@ TGImageMap::TGImageMap(const TGWindow *p, const TString &pic) :
    fListOfRegions   = new TList;
    fTrash           = new TList;
    fMainTip         = 0;
+   fLastVisited     = 0;
    fNavMode = kNavRegions;
 
    SetDisabledPicture(fPic);

@@ -112,6 +112,7 @@ TGTextLBEntry::TGTextLBEntry(const TGWindow *p, TGString *s, Int_t id,
    fTextChanged = kTRUE;
    fFontStruct  = font;
    fNormGC      = norm;
+   fTWidth      = 0;
 
    int max_ascent, max_descent;
 
@@ -237,6 +238,7 @@ TGLineLBEntry::TGLineLBEntry(const TGWindow *p, Int_t id, const char *str,
    gVirtualX->GetFontProperties(GetDefaultFontStruct(),
                                 max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
+   fLineLength = 0;
 
    Resize(fTWidth, fTHeight + 1);
    fEditDisabled = kEditDisable | kEditDisableGrab;
@@ -485,6 +487,7 @@ TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fMsgWindow  = p;
    fMultiSelect = kFALSE;
    fChangeStatus = kFALSE;
+   fListBox = 0;
 
    SetWindowName();
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable | kEditDisableKeyEnable;

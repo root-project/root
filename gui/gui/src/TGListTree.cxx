@@ -351,6 +351,9 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fBdown       = kFALSE;
    fUserControlled = kFALSE;
    fEventHandled   = kFALSE;
+   fExposeTop = fExposeBottom = 0;
+   fDropItem = 0;
+   fLastEventState = 0;
 
    fGrayPixel   = GetGrayPixel();
    fFont        = GetDefaultFontStruct();
@@ -411,6 +414,9 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fBdown       = kFALSE;
    fUserControlled = kFALSE;
    fEventHandled   = kFALSE;
+   fExposeTop = fExposeBottom = 0;
+   fDropItem = 0;
+   fLastEventState = 0;
 
    fGrayPixel   = GetGrayPixel();
    fFont        = GetDefaultFontStruct();

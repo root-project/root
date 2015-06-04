@@ -49,6 +49,7 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
    UInt_t type = wtype;
    fId = 0;
    fParent = 0;
+   fNeedRedraw = kFALSE;
 
    if (!p && gClient) {
       p = gClient->GetRoot();
@@ -66,7 +67,6 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
                                      depth, clss, visual, attr, type);
          fClient->RegisterWindow(this);
       }
-      fNeedRedraw = kFALSE;
 
       // name will be used in SavePrimitive methods
       fgCounter++;
