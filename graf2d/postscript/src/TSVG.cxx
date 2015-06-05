@@ -452,10 +452,7 @@ void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
 
    ixd0 = XtoSVG(xy[0].GetX());
    iyd0 = YtoSVG(xy[0].GetY());
-   if( n <= 1) {
-      if( n == 0) return;
-      return;
-   }
+   if( n <= 1) return;
 
    PrintFast(2," m");
    idx = 0;
@@ -527,10 +524,7 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 
    ixd0 = UtoSVG(xy[0].GetX());
    iyd0 = VtoSVG(xy[0].GetY());
-   if( n <= 1) {
-      if( n == 0) return;
-      return;
-   }
+   if( n <= 1) return;
 
    idx = 0;
    idy = 0;
