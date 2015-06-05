@@ -3027,7 +3027,9 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
          // first let's see if it is a data member:
          int found = 0;
          const clang::CXXRecordDecl *parent_clxx = llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext());
-         const clang::FieldDecl *index1 = GetDataMemberFromAll(*parent_clxx, current );
+         const clang::FieldDecl *index1 = 0;
+         if (parent_clxx)
+            index1 = GetDataMemberFromAll(*parent_clxx, current );
          if ( index1 ) {
             if ( IsFieldDeclInt(index1) ) {
                found = 1;
