@@ -4273,6 +4273,7 @@ int RootCling(int argc,
 
             bool isSelectionFile = IsSelectionFile(argv[i]);
 
+            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             std::string header(isSelectionFile ? argv[i] : GetRelocatableHeaderName(argv[i], currentDirectory));
             // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
             // use directly argv.
