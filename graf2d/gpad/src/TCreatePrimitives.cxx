@@ -614,15 +614,8 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    switch (event) {
 
    case kButton1Down:
-      if (npoints > 0) {
-         pxnew = px;
-         pynew = py;
-      }
-      else
-      {
-         pxnew = px;
-         pynew = py;
-      }
+      pxnew = px;
+      pynew = py;
       npoints++;
       if (fgPolyLine) {
          fgPolyLine->Set(fgPolyLine->GetN() +1);
