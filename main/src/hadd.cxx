@@ -77,7 +77,7 @@ int main( int argc, char **argv )
 {
 
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
-      std::cout << "Usage: " << argv[0] << " [-f[0-9]] [-k] [-T] [-O] [-a] [-n maxopenedfiles] [-v [verbosity]] targetfile source1 [source2 source3 ...]" << std::endl;
+      std::cout << "Usage: " << argv[0] << " [-f[fk][0-9]] [-k] [-T] [-O] [-a] [-n maxopenedfiles] [-v [verbosity]] targetfile source1 [source2 source3 ...]" << std::endl;
       std::cout << "This program will add histograms from a list of root files and write them" << std::endl;
       std::cout << "to a target root file. The target file is newly created and must not " << std::endl;
       std::cout << "exist, or if -f (\"force\") is given, must not be one of the source files." << std::endl;
@@ -88,8 +88,12 @@ int main( int argc, char **argv )
       std::cout << "If the option -O is used, when merging TTree, the basket size is re-optimized" <<std::endl;
       std::cout << "If the option -v is used, explicitly set the verbosity level; 0 request no output, 99 is the default" <<std::endl;
       std::cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, use 0 to request to use the system maximum." << std::endl;
-      std::cout << "When -the -f option is specified, one can also specify the compression" <<std::endl;
-      std::cout << "level of the target file. By default the compression level is 1, but" <<std::endl;
+      std::cout << "When -the -f option is specified, one can also specify the compression level of the target file.\n"
+                   "By default the compression level is 1, but" <<std::endl;
+      std::cout << "if \"-fk\" is specified, the target file contain the baskets with the same compression as in the input files \n"
+                   "  unless -O is specified.  The meta data will be compressed using the compression level specified in the first\n"
+                   "  input or the compression setting specified follow fk (206 when using -fk206 for example)" <<std::endl;
+      std::cout << "if \"-ff\" is specified, the compression level use is the one specified in the first input." <<std::endl;
       std::cout << "if \"-f0\" is specified, the target file will not be compressed." <<std::endl;
       std::cout << "if \"-f6\" is specified, the compression level 6 will be used.  See  TFile::SetCompressionSettings for the support range of value." <<std::endl;
       std::cout << "if Target and source files have different compression settings"<<std::endl;
@@ -102,12 +106,14 @@ int main( int argc, char **argv )
    Bool_t skip_errors = kFALSE;
    Bool_t reoptimize = kFALSE;
    Bool_t noTrees = kFALSE;
+   Bool_t keepCompressionAsIs = kFALSE;
+   Bool_t useFirstInputCompression = kFALSE;
    Int_t maxopenedfiles = 0;
    Int_t verbosity = 99;
 
    int outputPlace = 0;
    int ffirst = 2;
-   Int_t newcomp = 1;
+   Int_t newcomp = -1;
    for( int a = 1; a < argc; ++a ) {
       if ( strcmp(argv[a],"-T") == 0 ) {
          noTrees = kTRUE;
@@ -167,15 +173,32 @@ int main( int argc, char **argv )
          }
          ++ffirst;
       } else if ( argv[a][0] == '-' ) {
-         char ft[6];
-         for ( int alg = 0; alg <= 2; ++alg ) {
+         if (force && argv[a][1] == 'f') {
+            // Bad argument
+            std::cerr << "Error: Using option " << argv[a] << " more than once is not supported.\n";
+            ++ffirst;
+         }
+         const char *prefix = "";
+         if (argv[a][1] == 'f' && argv[a][2] == 'k') {
+            force = kTRUE;
+            keepCompressionAsIs = kTRUE;
+            prefix = "k";
+         }
+         if (argv[a][1] == 'f' && argv[a][2] == 'f') {
+            force = kTRUE;
+            useFirstInputCompression = kTRUE;
+            if (argv[a][3] != '\0') {
+               std::cerr << "Error: option -ff should not have any suffix: " << argv[a] << " (suffix has been ignored)\n";
+            }
+         }
+         char ft[7];
+         for ( int alg = 0; !useFirstInputCompression && alg <= 2; ++alg ) {
             for( int j=0; j<=9; ++j ) {
                const int comp = (alg*100)+j;
-               snprintf(ft,6,"-f%d",comp);
+               snprintf(ft,7,"-f%s%d",prefix,comp);
                if (!strcmp(argv[a],ft)) {
                   force = kTRUE;
                   newcomp = comp;
-                  ++ffirst;
                   break;
                }
             }
@@ -183,8 +206,8 @@ int main( int argc, char **argv )
          if (!force) {
             // Bad argument
             std::cerr << "Error: option " << argv[a] << " is not a supported option.\n";
-            ++ffirst;
          }
+         ++ffirst;
       } else if (!outputPlace) {
          outputPlace = a;
       }
@@ -208,6 +231,39 @@ int main( int argc, char **argv )
    merger.SetPrintLevel(verbosity - 1);
    if (maxopenedfiles > 0) {
       merger.SetMaxOpenedFiles(maxopenedfiles);
+   }
+   if (newcomp == -1) {
+      if (useFirstInputCompression || keepCompressionAsIs) {
+         // grab from the first file.
+         TFile *firstInput = nullptr;
+         if (argv[ffirst] && argv[ffirst][0]=='@') {
+            std::ifstream indirect_file(argv[ffirst]+1);
+            if( ! indirect_file.is_open() ) {
+               std::cerr<< "hadd could not open indirect file " << (argv[ffirst]+1) << std::endl;
+               return 1;
+            }
+            std::string line;
+            while( indirect_file ){
+               if( std::getline(indirect_file, line) && line.length() ) {
+                  firstInput = TFile::Open(line.c_str());
+                  break;
+               }
+            }
+         } else {
+            firstInput = TFile::Open(argv[ffirst]);
+         }
+         if (firstInput && !firstInput->IsZombie())
+            newcomp = firstInput->GetCompressionSettings();
+         else
+            newcomp = 1;
+         delete firstInput;
+      } else newcomp = 1; // default compression level.
+   }
+   if (verbosity > 1) {
+      if (keepCompressionAsIs && !reoptimize)
+         std::cout << "hadd compression setting for meta data: " << newcomp << '\n';
+      else
+         std::cout << "hadd compression setting for all ouput: " << newcomp << '\n';
    }
    if (append) {
       if (!merger.OutputFile(targetname,"UPDATE",newcomp)) {
@@ -246,7 +302,7 @@ int main( int argc, char **argv )
    if (reoptimize) {
       merger.SetFastMethod(kFALSE);
    } else {
-      if (merger.HasCompressionChange()) {
+      if (!keepCompressionAsIs && merger.HasCompressionChange()) {
          // Don't warn if the user any request re-optimization.
          std::cout <<"hadd Sources and Target have different compression levels"<<std::endl;
          std::cout <<"hadd merging will be slower"<<std::endl;
