@@ -1840,6 +1840,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
                     deplib, ((TObjString*)tokens->At(0))->GetName());
             if ((ret = Load(deplib, "", system)) < 0) {
                delete tokens;
+               delete [] path;
                return ret;
             }
          }
