@@ -718,7 +718,7 @@ ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp
    const clang::CXXRecordDecl *result
       = llvm::dyn_cast_or_null<clang::CXXRecordDecl>
       (lh.findScope(name,
-                    diagnose ? cling::LookupHelper::NoDiagnostics
+                    diagnose ? cling::LookupHelper::WithDiagnostics
                     : cling::LookupHelper::NoDiagnostics,
                     resultType));
    if (!result) {
@@ -726,7 +726,7 @@ ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp
       std_name += name;
       result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>
          (lh.findScope(std_name,
-                       diagnose ? cling::LookupHelper::NoDiagnostics
+                       diagnose ? cling::LookupHelper::WithDiagnostics
                        : cling::LookupHelper::NoDiagnostics,
                        resultType));
    }
