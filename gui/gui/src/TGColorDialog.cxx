@@ -1476,8 +1476,10 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                      *fRetColor = TColor::RGB2Pixel(atoi(fRtb->GetString()),
                                                     atoi(fGtb->GetString()),
                                                     atoi(fBtb->GetString()));
-                     if ((fRetTColor = gROOT->GetColor(TColor::GetColor(*fRetColor)))) {};
-                     fRetTColor->SetAlpha(TMath::Max((Double_t)0, TMath::Min((Double_t)1, atof(fAlb->GetString()))));
+                     if ((fRetTColor = gROOT->GetColor(TColor::GetColor(*fRetColor)))) {
+                        fRetTColor->SetAlpha(TMath::Max((Double_t)0, TMath::Min((Double_t)1,
+                                             atof(fAlb->GetString()))));
+                     }
                      CloseWindow();
                      break;
                   case kCDLG_CANCEL:
