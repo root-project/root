@@ -55,16 +55,14 @@ if(DEFINED ROOT_SOURCE_DIR)
   set(ROOT_rootcling_CMD rootcling)
 else()# testing using an installation
   find_package(ROOT REQUIRED COMPONENTS RIO Net Hist Gpad Tree Rint Matrix MathCore)
-  if(DEFINED ROOT_USE_FILE)
-    include(${ROOT_USE_FILE})
-  else()  #---If ROOT was built with the classic configure/make---
+  include(${ROOT_USE_FILE})
+  if(DEFINED ROOT_CONFIG_EXECUTABLE) #---If ROOT was built with the classic configure/make---
     find_program(ROOT_root_CMD root.exe PATHS ${ROOTSYS}/bin)
     find_program(ROOT_genreflex_CMD genreflex PATHS ${ROOTSYS}/bin)
     find_program(ROOT_rootcint_CMD rootcint PATHS ${ROOTSYS}/bin)
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
     include(RootNewMacros)
   endif()
-  set(CMAKE_CXX_FLAGS ${ROOT_DEFINITIONS})
   enable_testing()
 endif()
 
@@ -95,12 +93,11 @@ set(CMAKE_ROOTTEST_DICT ON)
 # Set the CMake module path. Here are all the custom CMake modules.
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOTTEST_DIR}/cmake/modules")
 
-# Find GCCXML.
-find_package(GCCXML REQUIRED)
-
 # Find python.
-find_package(PythonInterp)
-find_program(python_cmd ${PYTHON_EXECUTABLE})
+if(ROOT_python_FOUND)
+  find_package(PythonInterp)
+  find_package(PythonLibs)
+endif()
 
 # Setup standard includes / links.
 include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})

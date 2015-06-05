@@ -19,7 +19,7 @@ if(ROOT_cintex_FOUND)
                 FAILREGEX "Test failed"
                 DEPENDS cling-cintex-build)
   ROOT_ADD_TEST(cling-cintex-pycintex
-                COMMAND  ${python_cmd} ${CINTEXTEST_DIR}/test_PyCintex_basics.py - -b
+                COMMAND  ${PYTHON_EXECUTABLE} ${CINTEXTEST_DIR}/test_PyCintex_basics.py - -b
                 FAILREGEX "Test failed"
                 DEPENDS cling-cintex-build)
 

@@ -58,7 +58,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
   # Add python script to CTest.
   elseif(ARG_MACRO MATCHES "[.]py")
     get_filename_component(realfp ${ARG_MACRO} REALPATH)
-    set(command ${python_cmd} ${realfp} ${PYROOT_EXTRAFLAGS})
+    set(command ${PYTHON_EXECUTABLE} ${realfp} ${PYROOT_EXTRAFLAGS})
 
   elseif(DEFINED ARG_MACRO)
     set(command ${root_cmd} ${ARG_MACRO})
