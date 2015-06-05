@@ -15,7 +15,7 @@
 #  dependencies in ROOT_GENERATE_DICTIONARY
 
 find_program(ROOT_CONFIG_EXECUTABLE root-config
-  PATHS $ENV{ROOTSYS}/bin)
+  HINTS $ENV{ROOTSYS}/bin)
 
 execute_process(
     COMMAND ${ROOT_CONFIG_EXECUTABLE} --prefix
@@ -77,8 +77,8 @@ find_package_handle_standard_args(ROOT DEFAULT_MSG ROOT_CONFIG_EXECUTABLE
 mark_as_advanced(ROOT_CONFIG_EXECUTABLE)
 
 include(CMakeParseArguments)
-find_program(ROOTCINT_EXECUTABLE rootcint PATHS $ENV{ROOTSYS}/bin)
-find_program(GENREFLEX_EXECUTABLE genreflex PATHS $ENV{ROOTSYS}/bin)
+find_program(ROOTCINT_EXECUTABLE rootcint HINTS $ENV{ROOTSYS}/bin)
+find_program(GENREFLEX_EXECUTABLE genreflex HINTS $ENV{ROOTSYS}/bin)
 find_package(GCCXML)
 
 #----------------------------------------------------------------------------
@@ -105,7 +105,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
         endif()
       endforeach()
     else()
-      find_file(headerFile ${fp} PATHS ${incdirs})
+      find_file(headerFile ${fp} HINTS ${incdirs})
       set(headerfiles ${headerfiles} ${headerFile})
       unset(headerFile CACHE)
     endif()
@@ -113,7 +113,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get LinkDef.h file------------------------------------
   set(linkdefs)
   foreach( f ${ARG_LINKDEF})
-    find_file(linkFile ${f} PATHS ${incdirs})
+    find_file(linkFile ${f} HINTS ${incdirs})
     set(linkdefs ${linkdefs} ${linkFile})
     unset(linkFile CACHE)
   endforeach()
