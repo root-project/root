@@ -727,14 +727,15 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
          }
       }
       if ((start == special) && (special < end)) {
-
          // Handle the special character.
+         LayoutChunk_t *newchunk = 0;
 
          chunk = 0;
          if (*special == '\t') {
             newX = curX + fTabWidth;
             newX -= newX % fTabWidth;
-            NewChunk(layout, &maxChunks, start, 1, curX, newX, baseline)->fNumDisplayChars = -1;
+            newchunk = NewChunk(layout, &maxChunks, start, 1, curX, newX, baseline);
+            if (newchunk) newchunk->fNumDisplayChars = -1;
             start++;
             if ((start < end) && ((wrapLength <= 0) || (newX <= wrapLength))) {
 
@@ -745,7 +746,8 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
                continue;
             }
          } else {
-            NewChunk(layout, &maxChunks, start, 1, curX, 1000000000, baseline)->fNumDisplayChars = -1;
+            newchunk = NewChunk(layout, &maxChunks, start, 1, curX, 1000000000, baseline);
+            if (newchunk) newchunk->fNumDisplayChars = -1;
             start++;
             goto wrapLine;
          }
