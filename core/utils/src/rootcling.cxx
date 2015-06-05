@@ -636,7 +636,7 @@ bool InheritsFromTSelector(const clang::RecordDecl *cl,
                            const cling::Interpreter &interp)
 {
    static const clang::CXXRecordDecl *TObject_decl
-      = ROOT::TMetaUtils::ScopeSearch("TSelector", interp, true /*diag*/, 0);
+      = ROOT::TMetaUtils::ScopeSearch("TSelector", interp, false /*diag*/, 0);
 
    return ROOT::TMetaUtils::IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl, nullptr, interp);
 }
