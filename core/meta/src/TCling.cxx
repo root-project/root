@@ -3025,6 +3025,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
             cl->fState = TClass::kForwardDeclared;
          }
       }
+      delete info;
       return;
    }
    cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transfering ownership here.
