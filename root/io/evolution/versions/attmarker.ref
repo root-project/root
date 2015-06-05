@@ -1,4 +1,5 @@
 hadd Target file: result.root
+hadd compression setting for all ouput: 1
 hadd Source file 1: hsimple14.root
 hadd Source file 2: hsimple20.root
 hadd Target path: result.root:/
