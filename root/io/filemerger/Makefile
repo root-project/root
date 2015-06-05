@@ -64,7 +64,7 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-notmergeable.log:
+notmergeable.log: freidt_CDMeson_0000.root freidt_CDMeson_0001.root $(ROOT_CORE)
 	$(CMDECHO) hadd -f freidt_merge.root  freidt_CDMeson_0000.root freidt_CDMeson_0001.root > notmergeable.log 2>&1
 
 notmergeable: notmergeable.log
@@ -74,14 +74,14 @@ ifneq ($(ClingWorkAroundMissingAutoLoading),)
 execFileMerger.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
 endif
 
-mfile1.root mfile2.root mfile3.root mfile4.root: execMergeMulti
+mfile1.root mfile2.root mfile3.root mfile4.root: execMergeMulti.success
 
-mfile1-4.root: execMergeMulti mfile1.root mfile2.root mfile3.root mfile4.root
+mfile1-4.root: execMergeMulti.success mfile1.root mfile2.root mfile3.root mfile4.root
 	$(CMDECHO) ( hadd -f mfile1-2.root mfile1.root mfile2.root && hadd -f mfile3-4.root mfile3.root mfile4.root \
 	     && hadd -f mfile1-4.root mfile1-2.root mfile3-4.root ) > mfile1-4.log 2>&1  \
 	|| handleError.sh --log=mfile1-4.log --res=$$?
 
-mzfile1-4.root: execMergeMulti mfile1.root mfile2.root mfile3.root mfile4.root
+mzfile1-4.root: execMergeMulti.success mfile1.root mfile2.root mfile3.root mfile4.root
 	$(CMDECHO) ( hadd -f206 mzfile1-2.root mfile1.root mfile2.root && hadd -f206 mzfile3-4.root mfile3.root mfile4.root \
 	     && hadd -f206 mzfile1-4.root mzfile1-2.root mzfile3-4.root ) > mzfile1-4.log 2>&1  \
 	|| handleError.sh --log=mzfile1-4.log --res=$$?
