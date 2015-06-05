@@ -297,6 +297,7 @@ AutoDict_*.cxx
 /root/io/filemerger/b_file_2.root
 /root/io/filemerger/input*.root
 /root/io/filemerger/merged*.root
+/root/io/filemerger/hsimple*.root
 
 # /root/io/float16/
 /root/io/float16/*.root

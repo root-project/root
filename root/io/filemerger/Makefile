@@ -1,7 +1,8 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog merged*.root a_*.root b_*.root input*.root freidt_merge.root mfile*.root mzfile*.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog merged*.root a_*.root b_*.root input*.root freidt_merge.root mfile*.root mzfile*.root \
+     hsimple*.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -86,5 +87,33 @@ mzfile1-4.root: execMergeMulti.success mfile1.root mfile2.root mfile3.root mfile
 	     && hadd -f206 mzfile1-4.root mzfile1-2.root mzfile3-4.root ) > mzfile1-4.log 2>&1  \
 	|| handleError.sh --log=mzfile1-4.log --res=$$?
 
-execTestMultiMerge.log: mfile1-4.root mzfile1-4.root
+execTestMultiMerge.log: mfile1-4.root mzfile1-4.root hsimple.root hsimple9.root hsimple9x2.root hsimple209.root hsimpleK.root hsimpleK202.root hsimpleF.root
+
+hsimple.root: $(ROOT_LOC)/tutorials/hsimple.C
+	$(CMDECHO) ! $(CALLROOTEXE) -b -l -q $(ROOT_LOC)/tutorials/hsimple.C > hsimple.log 2>&1
+
+hsimple9.root: hsimple.root
+	$(CMDECHO) hadd -f9 hsimple9.root hsimple.root > hsimple9.log 2>&1  \
+     || handleError.sh --log=hsimple9.log --res=$$?
+
+hsimple9x2.root: hsimple.root
+	$(CMDECHO) ( hadd -f9 hsimple9x2.root hsimple.root && hadd -f9 -a hsimple9x2.root hsimple.root )  > hsimple9x2.log 2>&1  \
+     || handleError.sh --log=hsimple9x2.log --res=$$?
+
+hsimple209.root: hsimple.root
+	$(CMDECHO) hadd -f209 hsimple209.root hsimple.root > hsimple209.log 2>&1  \
+		|| handleError.sh --log=hsimple209.log --res=$$?
+
+hsimpleK.root: hsimple.root hsimple9.root hsimple209.root hsimple9x2.root
+	$(CMDECHO) hadd -fk hsimpleK.root hsimple209.root hsimple.root hsimple9.root hsimple9x2.root > hsimpleK.log 2>&1  \
+		|| handleError.sh --log=hsimpleK.log --res=$$?
+
+hsimpleK202.root: hsimple.root hsimple9.root hsimple209.root hsimple9x2.root
+	$(CMDECHO) hadd -fk202 hsimpleK202.root hsimple209.root hsimple.root hsimple9.root hsimple9x2.root > hsimpleK202.log 2>&1  \
+		|| handleError.sh --log=hsimpleK202.log --res=$$?
+
+hsimpleF.root: hsimple.root hsimple9.root hsimple209.root hsimple9x2.root
+	$(CMDECHO) hadd -ff hsimpleF.root hsimple9.root hsimple209.root hsimple.root hsimple9x2.root > hsimpleF.log 2>&1  \
+		|| handleError.sh --log=hsimpleF.log --res=$$?
+
 
