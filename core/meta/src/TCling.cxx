@@ -1473,7 +1473,7 @@ void TCling::RegisterModule(const char* modulename,
    // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
    // This is used to give Sema the same view on ACLiC'ed files (which
    // are then #included through the dictionary) as rootcling had.
-   TString code = fromRootCling ? "" : gNonInterpreterClassDef ;
+   TString code = gNonInterpreterClassDef;
    code += payloadCode;
 
    // We need to open the dictionary shared library, to resolve sylbols
@@ -1719,7 +1719,7 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
-   if (!fromRootCling && !hasHeaderParsingOnDemand) {
+   if (!hasHeaderParsingOnDemand) {
       // __ROOTCLING__ might be pulled in through PCH
       fInterpreter->declare("#ifdef __ROOTCLING__\n"
                             "#undef __ROOTCLING__\n"
