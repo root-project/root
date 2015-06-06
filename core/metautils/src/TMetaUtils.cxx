@@ -711,24 +711,22 @@ const clang::FunctionDecl* ROOT::TMetaUtils::ClassInfo__HasMethod(const clang::D
 //______________________________________________________________________________
 const clang::CXXRecordDecl *
 ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp,
-                              bool diagnose, const clang::Type** resultType)
+                              bool /*diagnose*/, const clang::Type** resultType)
 {
    // Return the scope corresponding to 'name' or std::'name'
    const cling::LookupHelper& lh = interp.getLookupHelper();
+   // We have many bogus diagnostics if we allow diagnostics here. Suppress.
+   // FIXME: silence them in the callers.
    const clang::CXXRecordDecl *result
       = llvm::dyn_cast_or_null<clang::CXXRecordDecl>
-      (lh.findScope(name,
-                    diagnose ? cling::LookupHelper::WithDiagnostics
-                    : cling::LookupHelper::NoDiagnostics,
-                    resultType));
+      (lh.findScope(name, cling::LookupHelper::NoDiagnostics, resultType));
    if (!result) {
       std::string std_name("std::");
       std_name += name;
+      // We have many bogus diagnostics if we allow diagnostics here. Suppress.
+      // FIXME: silence them in the callers.
       result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>
-         (lh.findScope(std_name,
-                       diagnose ? cling::LookupHelper::WithDiagnostics
-                       : cling::LookupHelper::NoDiagnostics,
-                       resultType));
+         (lh.findScope(std_name, cling::LookupHelper::NoDiagnostics, resultType));
    }
    return result;
 }
