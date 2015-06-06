@@ -1060,42 +1060,41 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
    // return true if we can find an constructor calleable without any arguments
    // or with one the IOCtor special types.
 
-   bool result = false;
-
    if (cl->isAbstract()) return false;
 
-   for(RConstructorTypes::const_iterator ctorTypeIt=ctorTypes.begin();
-       ctorTypeIt!=ctorTypes.end();++ctorTypeIt){
+   for (RConstructorTypes::const_iterator ctorTypeIt = ctorTypes.begin();
+        ctorTypeIt!=ctorTypes.end(); ++ctorTypeIt) {
       std::string proto( ctorTypeIt->GetName() );
-      int extra = (proto.size()==0) ? 0 : 1;
-      if (extra==0) {
-         // Looking for default constructor
-         result = true;
-      } else {
+      bool defaultCtor = proto.empty();
+      if (!defaultCtor) {
+         // I/O constructors take pointers to ctorTypes
          proto += " *";
       }
 
-      result = ROOT::TMetaUtils::CheckConstructor(cl,*ctorTypeIt);
-      if (result && extra) {
+      if (!ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt))
+         continue;
+
+      if (defaultCtor) {
+         arg.clear();
+      } else {
          arg = "( (";
          arg += proto;
          arg += ")0 )";
       }
 
       // Check for private operator new
-      if (result) {
-         const char *name = "operator new";
-         proto = "size_t";
-         const clang::CXXMethodDecl *method
-            = GetMethodWithProto(cl,name,proto.c_str(), interp,
-                                 cling::LookupHelper::NoDiagnostics);
-         if (method && method->getAccess() != clang::AS_public) {
-            result = false;
-         }
-         if (result) return true;
+      const clang::CXXMethodDecl *method
+         = GetMethodWithProto(cl, "operator new", "size_t", interp,
+                              cling::LookupHelper::NoDiagnostics);
+      if (method && method->getAccess() != clang::AS_public) {
+         // The non-public op new is not going to improve for other c'tors.
+         return false;
       }
+
+      // This one looks good!
+      return true;
    }
-   return result;
+   return false;
 }
 
 //______________________________________________________________________________
