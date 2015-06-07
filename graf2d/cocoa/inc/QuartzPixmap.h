@@ -33,6 +33,10 @@
 
 @interface QuartzPixmap : NSObject<X11Drawable> {
 @private
+   //32-bit Obj-C requires i-var to be declared (for a synthesized prop.).
+   unsigned       fID;
+   //
+
    unsigned       fWidth;
    unsigned       fHeight;
    // TODO: std::vector can be an i-var in Objective-C++,
@@ -87,6 +91,12 @@
 //TODO: split image and mask image?
 
 @interface QuartzImage : NSObject<X11Drawable> {
+@private
+   //32-bit Obj-C requires i-var to be declared (for a synthesized prop.).
+   BOOL fIsStippleMask;
+   unsigned fID;
+   //
+
    unsigned       fWidth;
    unsigned       fHeight;
    CGImageRef     fImage;
