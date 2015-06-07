@@ -38,6 +38,11 @@
 
 @interface QuartzWindow : NSWindow<X11Window, NSWindowDelegate> {
 @private
+   // 32-bit build requires explicit i-vars for synthesized props.
+   QuartzWindow *fMainWindow;
+   BOOL fHasFocus;
+   //
+   
    QuartzView *fContentView;
    BOOL fDelayedTransient;
    QuartzImage *fShapeCombineMask;
