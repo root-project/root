@@ -110,17 +110,17 @@ bool showAboutInfo = false;
 //          "initWithImage:text:, unexpected background image sizes");
 
 
-   self = [super initWithFrame : CGRectMake(0, 0, pixelWidth, pixelHeight)];
+   self = [super initWithFrame : NSMakeRect(0, 0, pixelWidth, pixelHeight)];
 
    if (self) {
       //Let's create our child views.
       backgroundImage = [image retain];
 
-      CGRect scrollRect = CGRectMake(110., 25., 455., 80.);
+      NSRect scrollRect = NSMakeRect(110., 25., 455., 80.);
       scrollView = [[NSScrollView alloc] initWithFrame : scrollRect];
       [self addSubview : scrollView];
 
-      scrollRect.origin = CGPoint();
+      scrollRect.origin = NSPoint();
       textView = [[NSTextView alloc] initWithFrame : scrollRect];
       [textView setEditable : NO];
 
@@ -131,7 +131,7 @@ bool showAboutInfo = false;
 
 
       if (about) {
-         [textView setTextContainerInset : CGSizeMake(0., scrollRect.size.height)];
+         [textView setTextContainerInset : NSMakeSize(0., scrollRect.size.height)];
          [textView scrollPoint : NSMakePoint(0., scrollRect.size.height)];
       }
 
@@ -179,12 +179,12 @@ bool showAboutInfo = false;
 #pragma unused(rect)
    assert(backgroundImage != nil && "drawRect:, backgroundImage is nil");
 
-   CGRect frame = self.frame;
-   frame.origin = CGPoint();
+   NSRect frame = self.frame;
+   frame.origin = NSPoint();
 
-   const CGSize imageSize = backgroundImage.size;
+   const NSSize imageSize = backgroundImage.size;
    [backgroundImage drawInRect : frame
-                    fromRect : CGRectMake(0., 0., imageSize.width, imageSize.height)
+                    fromRect : NSMakeRect(0., 0., imageSize.width, imageSize.height)
                     operation : NSCompositeSourceOver
                     fraction : 1.];
 
@@ -800,7 +800,7 @@ bool CreateSplashscreen(bool about)
 
    //2. Splash-screen ('panel' + its content view).
    NSScopeGuard<ROOTSplashScreenPanel> splashGuard([[ROOTSplashScreenPanel alloc]
-                                                    initWithContentRect : CGRectMake(0, 0, pixelWidth, pixelHeight)
+                                                    initWithContentRect : NSMakeRect(0, 0, pixelWidth, pixelHeight)
                                                     styleMask : NSNonactivatingPanelMask
                                                     backing : NSBackingStoreBuffered
                                                     defer : NO]);
@@ -835,9 +835,9 @@ void SetSplashscreenPosition()
    //TODO: check with a secondary display.
    if (NSScreen * const screen = [NSScreen mainScreen]) {
       const NSRect screenFrame = screen.frame;
-      const CGSize splashSize = splashScreen.frame.size;
+      const NSSize splashSize = splashScreen.frame.size;
 
-      const CGPoint origin = CGPointMake(screenFrame.origin.x + screenFrame.size.width / 2 - splashSize.width / 2,
+      const NSPoint origin = NSMakePoint(screenFrame.origin.x + screenFrame.size.width / 2 - splashSize.width / 2,
                                          screenFrame.origin.y + screenFrame.size.height / 2 - splashSize.height / 2);
 
       [splashScreen setFrameOrigin : origin];
