@@ -603,14 +603,15 @@ void ClipToShapeMask(NSView<X11Window> *view, CGContextRef ctx)
    } else {
       NSRect clipRect = view.frame;
       //More complex case: 'self' is a child view, we have to create a subimage from shape mask.
-      clipRect.origin = NSPointToCGPoint([view.fParentView convertPoint : clipRect.origin
-                                         toView : [view window].contentView]);
+      clipRect.origin = [view.fParentView convertPoint : clipRect.origin
+                         toView : [view window].contentView];
       clipRect.origin.y = X11::LocalYROOTToCocoa((NSView<X11Window> *)[view window].contentView,
                                                   clipRect.origin.y + clipRect.size.height);
 
       if (AdjustCropArea(topLevelParent.fShapeCombineMask, clipRect)) {
          const Util::CFScopeGuard<CGImageRef>
-            clipImageGuard(CGImageCreateWithImageInRect(topLevelParent.fShapeCombineMask.fImage, clipRect));
+            clipImageGuard(CGImageCreateWithImageInRect(topLevelParent.fShapeCombineMask.fImage,
+                                                        NSRectToCGRect(clipRect)));
          clipRect.origin = NSPoint();
          CGContextClipToMask(ctx, NSRectToCGRect(clipRect), clipImageGuard.Get());
       } else {
@@ -759,9 +760,9 @@ NSPoint GetCursorHotStop(NSImage *image, ECursor cursor)
    const NSSize imageSize = image.size;
 
    if (cursor == kArrowRight)
-      return CGPointMake(imageSize.width, imageSize.height / 2);
+      return NSMakePoint(imageSize.width, imageSize.height / 2);
 
-   return CGPointMake(imageSize.width / 2, imageSize.height / 2);
+   return NSMakePoint(imageSize.width / 2, imageSize.height / 2);
 }
 
 //TGTextView/TGHtml is a very special window: it's a TGCompositeFrame,
@@ -1047,7 +1048,7 @@ void print_mask_info(ULong_t mask)
                                 NSMiniaturizableWindowMask | NSResizableWindowMask;
 
    NSRect contentRect = glView.frame;
-   contentRect.origin = CGPointZero;
+   contentRect.origin = NSPoint();
 
    self = [super initWithContentRect : contentRect styleMask : styleMask
                              backing : NSBackingStoreBuffered defer : NO];
