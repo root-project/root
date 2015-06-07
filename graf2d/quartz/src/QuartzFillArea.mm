@@ -49,11 +49,11 @@ struct GradientFactory {
              "GradientFactory::CreateGradient, parameter 'colorSpace' is null");
       assert(extendedColor != nullptr &&
              "GradientFactory::CreateGradient, parameter 'extendedColor' is null");
-      SRC compStart = extendedColor->GetColors();
-      SRC compEnd = compStart + extendedColor->GetNumberOfSteps() * 4;//TODO: this assumes RGBA.
+      const SRC *compStart = extendedColor->GetColors();
+      const SRC *compEnd = compStart + extendedColor->GetNumberOfSteps() * 4;//TODO: this assumes RGBA.
       const std::vector<DST> convertedComponents(compStart, compEnd);
-      SRC posStart = extendedColor->GetColorPositions();
-      SRC posEnd = posStart + extendedColor->GetNumberOfSteps();
+      const SRC *posStart = extendedColor->GetColorPositions();
+      const SRC *posEnd = posStart + extendedColor->GetNumberOfSteps();
       const std::vector<DST> convertedPositions(posStart, posEnd);
 
       return CGGradientCreateWithColorComponents(colorSpace,
