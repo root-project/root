@@ -72,9 +72,9 @@ struct GradientFactory<DST, DST> {
              "GradientFactory::CreateGradient, parameter 'colorSpace' is null");
       assert(extendedColor != nullptr &&
              "GradientFactory::CreateGradient, parameter 'extendedColor' is null");
-      return CGGradientCreateWithColorComponents(colorSpace,
-                                                 extendedColor->GetColors(),
-                                                 extendedColor->GetColorPositions(),
+      const DST *comps = extendedColor->GetColors();
+      const DST *pos = extendedColor->GetColorPositions();
+      return CGGradientCreateWithColorComponents(colorSpace, comps, pos,
                                                  extendedColor->GetNumberOfSteps());
    }
 };
