@@ -43,12 +43,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 }
 }
 
-@implementation ROOTOpenGLView {
-   BOOL            fIsOverlapped;
-
-   NSOpenGLPixelFormat *fPixelFormat;
-   BOOL fUpdateContext;
-}
+@implementation ROOTOpenGLView
 
 @synthesize fOpenGLContext;
 @synthesize fUpdateContext;

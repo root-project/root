@@ -22,7 +22,11 @@
 //                                       //
 ///////////////////////////////////////////
 
-@interface ROOTOpenGLView : QuartzView
+@interface ROOTOpenGLView : QuartzView {
+@private
+   NSOpenGLPixelFormat *fPixelFormat;
+   BOOL fUpdateContext;
+}
 
 - (id) initWithFrame : (NSRect) frameRect pixelFormat : (NSOpenGLPixelFormat *) format;
 
