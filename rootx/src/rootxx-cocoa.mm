@@ -69,15 +69,17 @@ bool showAboutInfo = false;
 //with a background (ROOT's logo) + scrollview and textview to show info
 //about contributors.
 
-@interface ROOTSplashScreenView : NSView
-@end
-
-@implementation ROOTSplashScreenView {
+@interface ROOTSplashScreenView : NSView {
+@private
    NSImage *backgroundImage;
    NSScrollView *scrollView;
    NSTextView *textView;
    NSMutableDictionary *versionTextAttributes;
 }
+
+@end
+
+@implementation ROOTSplashScreenView
 
 //_________________________________________________________________
 - (id) initWithImage : (NSImage *) image text : (NSAttributedString *) textToScroll aboutMode : (BOOL) about
