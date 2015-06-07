@@ -40,7 +40,7 @@ Float_t SecondHand::fgSecondHandY[] = { 0.78, 0.73, 0.68, 0.73 };
 TDatime *ClockHand::fgTime = new TDatime;
 
 
-TPolygon::TPolygon(Int_t n, Float_t *x, Float_t *y) : TPolyLine(n+1,x,y)
+TPolygon::TPolygon(Int_t n, Float_t *x, Float_t *y) : TPolyLine(n+1,x,y), fPad(0)
 {
    // Create filled polygon. Polygon will be added to current pad.
 
