@@ -2444,7 +2444,7 @@ void print_mask_info(ULong_t mask)
          continue;
 
       //TODO: equal test is not good :) I have a baaad feeling about this ;)
-      if (CGRectEqualToRect(sibling.frame, self.frame)) {
+      if (NSEqualRects(sibling.frame, self.frame)) {
          [sibling setOverlapped : NO];
          //
          [sibling setHidden : NO];
@@ -2623,7 +2623,7 @@ void print_mask_info(ULong_t mask)
    //In case of TBrowser, setFrame started infinite recursion:
    //HandleConfigure for embedded main frame emits signal, slot
    //calls layout, layout calls setFrame -> HandleConfigure and etc. etc.
-   if (CGRectEqualToRect(newFrame, self.frame))
+   if (NSEqualRects(newFrame, self.frame))
       return;
 
    [super setFrame : newFrame];
