@@ -2414,7 +2414,7 @@ void print_mask_info(ULong_t mask)
       if ([sibling isHidden])
          continue;
 
-      if (CGRectEqualToRect(sibling.frame, self.frame)) {
+      if (NSEqualRects(sibling.frame, self.frame)) {
          [sibling setOverlapped : YES];
          [sibling setHidden : YES];
       }

@@ -163,6 +163,31 @@
 @class QuartzImage;
 
 @interface QuartzView : NSView<X11Window> {
+@protected
+   // 32-bit build requires explicit i-vars
+   // declared for synthesized props.
+   unsigned fID;
+   CGContextRef fContext;
+   long fEventMask;
+   int fClass;
+   int fDepth;
+   int fBitGravity;
+   int fWinGravity;
+   unsigned long fBackgroundPixel;
+   BOOL fOverrideRedirect;
+
+   BOOL fHasFocus;
+   QuartzView *fParentView;
+
+   int fPassiveGrabButton;
+   unsigned fPassiveGrabEventMask;
+   unsigned fPassiveGrabKeyModifiers;
+   unsigned fActiveGrabEventMask;
+   BOOL fPassiveGrabOwnerEvents;
+   BOOL fSnapshotDraw;
+   ECursor fCurrentCursor;
+   BOOL fIsDNDAware;
+
    // TODO: std::unique_ptr (with deleter) can
    // perfectly be an i-var, removing the manual
    // memory management and raw pointer.
@@ -176,7 +201,6 @@
 
    ROOT::MacOSX::X11::PointerGrab fCurrentGrabType;
 
-   unsigned         fActiveGrabEventMask;
    BOOL             fActiveGrabOwnerEvents;
 }
 
