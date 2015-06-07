@@ -55,17 +55,13 @@ namespace X11 = ROOT::MacOSX::X11;
 namespace Util = ROOT::MacOSX::Util;
 namespace Quartz = ROOT::Quartz;
 
-@implementation QuartzPixmap {
-@private
-   unsigned       fWidth;
-   unsigned       fHeight;
-   unsigned char *fData;
-   CGContextRef   fContext;
-
-   unsigned       fScaleFactor;
-}
+@implementation QuartzPixmap
 
 @synthesize fID;
+
+// TODO: std::vector can be an i-var in Objective-C++,
+// this will simplify and clear the error handling and
+// memory management: fData does not have to be a raw pointer.
 
 //______________________________________________________________________________
 - (id) initWithW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor
@@ -473,12 +469,7 @@ namespace Quartz = ROOT::Quartz;
 
 @end
 
-@implementation QuartzImage {
-   unsigned       fWidth;
-   unsigned       fHeight;
-   CGImageRef     fImage;
-   unsigned char *fImageData;
-}
+@implementation QuartzImage
 
 @synthesize fIsStippleMask;
 @synthesize fID;

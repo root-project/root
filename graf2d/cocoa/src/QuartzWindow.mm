@@ -33,7 +33,6 @@
 #include "RConfigure.h"
 #include "X11Colors.h"
 #include "X11Buffer.h"
-#include "X11Events.h"
 #include "TGWindow.h"
 #include "TGClient.h"
 #include "TSystem.h"
@@ -994,13 +993,7 @@ void print_mask_info(ULong_t mask)
 #endif
 
 
-@implementation QuartzWindow {
-@private
-   QuartzView *fContentView;
-   BOOL fDelayedTransient;
-   QuartzImage *fShapeCombineMask;
-   BOOL fIsDeleted;
-}
+@implementation QuartzWindow
 
 @synthesize fMainWindow;
 @synthesize fHasFocus;
@@ -1558,10 +1551,7 @@ void print_mask_info(ULong_t mask)
 
 #pragma mark - Passive key grab info.
 
-@implementation PassiveKeyGrab {
-   unichar fKeyCode;
-   NSUInteger fModifiers;
-}
+@implementation PassiveKeyGrab
 
 //______________________________________________________________________________
 - (id) initWithKey : (unichar) keyCode modifiers : (NSUInteger) modifiers
@@ -1676,18 +1666,7 @@ void print_mask_info(ULong_t mask)
 //QuartzView is a children view (also is a content view for a top-level QuartzWindow).
 //
 
-@implementation QuartzView {
-   QuartzPixmap   *fBackBuffer;
-   NSMutableArray *fPassiveKeyGrabs;
-   BOOL            fIsOverlapped;
-
-   NSMutableDictionary   *fX11Properties;
-   QuartzImage           *fBackgroundPixmap;
-
-   X11::PointerGrab fCurrentGrabType;
-   unsigned         fActiveGrabEventMask;
-   BOOL             fActiveGrabOwnerEvents;
-}
+@implementation QuartzView
 
 @synthesize fID;
 @synthesize fContext;

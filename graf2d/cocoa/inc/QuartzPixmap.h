@@ -31,7 +31,18 @@
 //                                                   //
 ///////////////////////////////////////////////////////
 
-@interface QuartzPixmap : NSObject<X11Drawable>
+@interface QuartzPixmap : NSObject<X11Drawable> {
+@private
+   unsigned       fWidth;
+   unsigned       fHeight;
+   // TODO: std::vector can be an i-var in Objective-C++,
+   // this will simplify and clear the error handling and
+   // memory management.
+   unsigned char *fData;
+   CGContextRef   fContext;
+
+   unsigned       fScaleFactor;
+}
 
 - (id) initWithW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor;
 - (BOOL) resizeW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor;
@@ -75,7 +86,13 @@
 
 //TODO: split image and mask image?
 
-@interface QuartzImage : NSObject<X11Drawable>
+@interface QuartzImage : NSObject<X11Drawable> {
+   unsigned       fWidth;
+   unsigned       fHeight;
+   CGImageRef     fImage;
+   // TODO: replace with std::vector i-var.
+   unsigned char *fImageData;
+}
 
 - (id) initWithW : (unsigned) width H : (unsigned) height data : (unsigned char *) data;
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height bitmapMask : (unsigned char *) mask;
