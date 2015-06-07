@@ -138,7 +138,7 @@ NSPoint ConvertPointFromBaseToScreen(NSWindow *window, NSPoint windowPoint)
 
    NSRect tmpRect = {};
    tmpRect.origin = windowPoint;
-   tmpRect.size = CGSizeMake(1., 1.);//This is strange size :) But if they require rect, 0,0 - will not work?
+   tmpRect.size = NSMakeSize(1., 1.);//This is strange size :) But if they require rect, 0,0 - will not work?
    tmpRect = [window convertRectToScreen : tmpRect];
 
    return tmpRect.origin;
@@ -154,7 +154,7 @@ NSPoint ConvertPointFromScreenToBase(NSPoint screenPoint, NSWindow *window)
 
    NSRect tmpRect = {};
    tmpRect.origin = screenPoint;
-   tmpRect.size = CGSizeMake(1., 1.);
+   tmpRect.size = NSMakeSize(1., 1.);
    tmpRect = [window convertRectFromScreen : tmpRect];
 
    return tmpRect.origin;
@@ -595,23 +595,24 @@ void ClipToShapeMask(NSView<X11Window> *view, CGContextRef ctx)
    //a top-level window. In ROOT it does not :( Say hello to visual artifacts.
 
    //Attach clip mask to the context.
-   NSRect clipRect = view.frame;
    if (!view.fParentView) {
       //'view' is a top-level view.
-      clipRect = CGRectMake(0, 0, topLevelParent.fShapeCombineMask.fWidth,
-                                  topLevelParent.fShapeCombineMask.fHeight);
+      const CGRect clipRect = CGRectMake(0, 0, topLevelParent.fShapeCombineMask.fWidth,
+                                               topLevelParent.fShapeCombineMask.fHeight);
       CGContextClipToMask(ctx, clipRect, topLevelParent.fShapeCombineMask.fImage);
    } else {
+      NSRect clipRect = view.frame;
       //More complex case: 'self' is a child view, we have to create a subimage from shape mask.
-      clipRect.origin = [view.fParentView convertPoint : clipRect.origin toView : [view window].contentView];
+      clipRect.origin = NSPointToCGPoint([view.fParentView convertPoint : clipRect.origin
+                                         toView : [view window].contentView]);
       clipRect.origin.y = X11::LocalYROOTToCocoa((NSView<X11Window> *)[view window].contentView,
                                                   clipRect.origin.y + clipRect.size.height);
 
       if (AdjustCropArea(topLevelParent.fShapeCombineMask, clipRect)) {
          const Util::CFScopeGuard<CGImageRef>
             clipImageGuard(CGImageCreateWithImageInRect(topLevelParent.fShapeCombineMask.fImage, clipRect));
-         clipRect.origin = CGPointZero;
-         CGContextClipToMask(ctx, clipRect, clipImageGuard.Get());
+         clipRect.origin = NSPoint();
+         CGContextClipToMask(ctx, NSRectToCGRect(clipRect), clipImageGuard.Get());
       } else {
          //View is invisible.
          CGRect rect = {};
