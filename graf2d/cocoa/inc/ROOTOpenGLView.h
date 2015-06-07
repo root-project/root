@@ -24,11 +24,15 @@
 
 @interface ROOTOpenGLView : QuartzView {
 @private
-   NSOpenGLPixelFormat *fPixelFormat;
+   // Explicit i-vars are required for 32-bit build.
+   NSOpenGLContext *fOpenGLContext;
    BOOL fUpdateContext;
+   //
+   NSOpenGLPixelFormat *fPixelFormat;
 }
 
 - (id) initWithFrame : (NSRect) frameRect pixelFormat : (NSOpenGLPixelFormat *) format;
+- (void) dealloc;
 
 //GL-view does not own GL-context, different GL contexts can be attached to the same view
 //(though ROOT never does this). View has to know about GL-context only to notify it about
