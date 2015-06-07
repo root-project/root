@@ -854,7 +854,7 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
                break;
             }
             recIt->origin = NSPointToCGPoint([view.fParentView convertPoint :
-                                              recIt->origin toView : view]);
+                                              NSPointFromCGPoint(recIt->origin) toView : view]);
          }
       }
    }
