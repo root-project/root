@@ -191,7 +191,7 @@ bool showAboutInfo = false;
    //Let's now draw a version.
    if (versionTextAttributes) {
       if (NSString * const version = [NSString stringWithFormat : @"Version %s", ROOT_RELEASE])
-         [version drawAtPoint : CGPointMake(frame.size.width - 90., 5.) withAttributes : versionTextAttributes];
+         [version drawAtPoint : NSMakePoint(frame.size.width - 90., 5.) withAttributes : versionTextAttributes];
    }
 }
 
