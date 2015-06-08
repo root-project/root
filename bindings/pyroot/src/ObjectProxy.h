@@ -18,7 +18,6 @@
 
 // ROOT
 #include "DllImport.h"
-#include "TInterpreterValue.h"
 
 
 namespace PyROOT {
@@ -40,8 +39,6 @@ namespace PyROOT {
       // Retrieve a pointer to the held C++ object.
          if ( fObject && ( fFlags & kIsReference ) )
             return *(reinterpret_cast< void** >( const_cast< void* >( fObject ) ));
-         else if ( fObject && ( fFlags & kIsValue ) )
-            return ((TInterpreterValue*)fObject)->GetAsPointer();
          else
             return const_cast< void* >( fObject );          // may be null
       }

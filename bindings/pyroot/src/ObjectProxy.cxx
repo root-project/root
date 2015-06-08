@@ -42,13 +42,13 @@ namespace PyROOT {
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
 // Destroy the held C++ object, if owned; does not deallocate the proxy.
    if ( gROOT && !gROOT->TestBit( TObject::kInvalidObject ) ) {
-      if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
-         if ( ! (pyobj->fFlags & ObjectProxy::kIsValue) )
-            Cppyy::Destruct( pyobj->ObjectIsA(), pyobj->GetObject() );
-         else
-            delete (TInterpreterValue*)pyobj->fObject;
-      } else if ( pyobj->fFlags & ObjectProxy::kIsValue )
-         delete (TInterpreterValue*)pyobj->fObject;
+      if ( pyobj->fFlags & ObjectProxy::kIsValue ) {
+         Cppyy::CallDestructor( pyobj->ObjectIsA(), pyobj->GetObject() );
+         Cppyy::Deallocate(  pyobj->ObjectIsA(), pyobj->GetObject() );
+      }
+      else if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
+         Cppyy::Destruct( pyobj->ObjectIsA(), pyobj->GetObject() );
+      }
    }
    pyobj->fObject = NULL;
 }

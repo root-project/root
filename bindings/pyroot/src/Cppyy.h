@@ -33,8 +33,9 @@ namespace Cppyy {
 
 // memory management ---------------------------------------------------------
    TCppObject_t Allocate( TCppType_t type );
-   void         Deallocate( TCppType_t type, TCppObject_t self );
-   void         Destruct( TCppType_t type, TCppObject_t self );
+   void         Deallocate( TCppType_t type, TCppObject_t instance );
+   TCppObject_t Construct( TCppType_t type );
+   void         Destruct( TCppType_t type, TCppObject_t instance );
 
 // method/function dispatching -----------------------------------------------
    void         CallV( TCppMethod_t method, TCppObject_t self, void* args );
@@ -46,9 +47,11 @@ namespace Cppyy {
    Long64_t     CallLL( TCppMethod_t method, TCppObject_t self, void* args );
    Float_t      CallF( TCppMethod_t method, TCppObject_t self, void* args );
    Double_t     CallD( TCppMethod_t method, TCppObject_t self, void* args );
+   LongDouble_t CallLD( TCppMethod_t method, TCppObject_t self, void* args );
    void*        CallR( TCppMethod_t method, TCppObject_t self, void* args );
    Char_t*      CallS( TCppMethod_t method, TCppObject_t self, void* args );
-   TCppObject_t CallConstructor( TCppMethod_t method, TCppType_t klass, void* args );
+   TCppObject_t CallConstructor( TCppMethod_t method, TCppType_t type, void* args );
+   void         CallDestructor( TCppType_t type, TCppObject_t self );
    TCppObject_t CallO( TCppMethod_t method, TCppObject_t self, void* args, TCppType_t result_type );
 
    TCppMethPtrGetter_t GetMethPtrGetter( TCppScope_t scope, TCppIndex_t imeth );

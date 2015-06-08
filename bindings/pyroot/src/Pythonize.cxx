@@ -479,7 +479,8 @@ namespace {
          return 0;
       }
 
-      PyObject* nseq = BindCppObject( Cppyy::Allocate( self->ObjectIsA() ), self->ObjectIsA() );
+      PyObject* nseq = BindCppObject(
+         Cppyy::Construct( self->ObjectIsA() ), self->ObjectIsA() );
 
       for ( Long_t i = 0; i < imul; ++i ) {
          PyObject* result = CallPyObjMethod( nseq, "extend", (PyObject*)self );

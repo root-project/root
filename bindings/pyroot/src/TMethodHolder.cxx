@@ -529,7 +529,7 @@ PyObject* PyROOT::TMethodHolder::Call(
 
 // calculate offset (the method expects 'this' to be an object of fScope)
    ptrdiff_t offset = 0;
-   if ( derived && derived != fScope ) // 
+   if ( derived && derived != fScope )
       offset = Cppyy::GetBaseOffset( derived, fScope, object, 1 /* up-cast */ );
 
 // actual call; recycle self instead of returning new object for same address objects
