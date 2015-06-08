@@ -380,13 +380,10 @@ void TColor::InitializeColors()
    initializes the GUI colors).
    End_html */
 
-   if (fgInitDone)
-      return;
+   if (fgInitDone) return;
    fgInitDone = kTRUE;
+
    if (gROOT->GetListOfColors()->First() == 0) {
-      TColor *s0;
-      Float_t r, g, b, h, l, s;
-      Int_t   i;
 
       new TColor(kWhite,1,1,1,"background");
       new TColor(kBlack,0,0,0,"black");
@@ -456,12 +453,14 @@ void TColor::InitializeColors()
       //   Fixing the saturation and lightness we can scan through the
       //   spectrum of visible light by using "hue" alone.
       //   In Root hue takes values from 0 to 360.
+      Int_t   i;
       Float_t  saturation = 1;
       Float_t  lightness = 0.5;
       Float_t  maxHue = 280;
       Float_t  minHue = 0;
       Int_t    maxPretty = 50;
       Float_t  hue;
+      Float_t r=0., g=0., b=0., h, l, s;
 
       for (i=0 ; i<maxPretty ; i++) {
          hue = maxHue-(i+1)*((maxHue-minHue)/maxPretty);
@@ -470,6 +469,7 @@ void TColor::InitializeColors()
       }
 
       // Initialize special colors for x3d
+      TColor *s0;
       for (i = 1; i < 8; i++) {
          s0 = gROOT->GetColor(i);
          if (s0) s0->GetRGB(r,g,b);

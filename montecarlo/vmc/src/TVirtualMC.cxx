@@ -32,6 +32,7 @@ TMCThreadLocal TVirtualMC* TVirtualMC::fgMC=0;
 TVirtualMC::TVirtualMC(const char *name, const char *title,
                        Bool_t /*isRootGeometrySupported*/)
   : TNamed(name,title),
+    fApplication(0),
     fStack(0),
     fDecayer(0),
     fRandom(0),

@@ -46,22 +46,24 @@ ClassImp(PyROOT::TPyROOTApplication)
 
 //- constructors/destructor --------------------------------------------------
 PyROOT::TPyROOTApplication::TPyROOTApplication(
-   const char* acn, int* argc, char** argv, Bool_t bLoadLibs ) :
+   const char* acn, int* argc, char** argv, Bool_t /*bLoadLibs*/ ) :
       TApplication( acn, argc, argv )
 {
-// Create a TApplication derived for use with interactive ROOT from python. A
-// set of standard, often used libs is loaded if bLoadLibs is true (default).
-
-   if ( bLoadLibs )   // note that this section could be programmed in python
-   {
-   // follow TRint to minimize differences with root.exe (note: changed <pair>
-   // to <utility> for Cling, which is correct)
-      ProcessLine( "#include <iostream>", kTRUE );
-      ProcessLine( "#include <string>",   kTRUE ); // for std::string iostream.
-      ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
-      ProcessLine( "#include <utility>",  kTRUE ); //  core ROOT dicts and CINT won't be able
-                                                   //  to properly unload these files
-   }
+// The following code is redundant with ROOT6 and the PCH: the headers are
+// available to the interpreter.
+// // Create a TApplication derived for use with interactive ROOT from python. A
+// // set of standard, often used libs is loaded if bLoadLibs is true (default).
+//
+//    if ( bLoadLibs )   // note that this section could be programmed in python
+//    {
+//    // follow TRint to minimize differences with root.exe (note: changed <pair>
+//    // to <utility> for Cling, which is correct)
+//       ProcessLine( "#include <iostream>", kTRUE );
+//       ProcessLine( "#include <string>",   kTRUE ); // for std::string iostream.
+//       ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
+//       ProcessLine( "#include <utility>",  kTRUE ); //  core ROOT dicts and CINT won't be able
+//                                                    //  to properly unload these files
+//    }
 
 #ifdef WIN32
    // switch win32 proxy main thread id
