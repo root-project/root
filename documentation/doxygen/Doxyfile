@@ -800,8 +800,8 @@ INPUT                  = ../../core/base/ \
                          ../../tree \
                          ../../sql/ \
                          ../../gui/gui/ \
-                         ../../gui/fitpanel/ \
-                         ../../gui/ged/ \
+                         ../../gui/fitpanel/
+#                         ../../gui/ged/ \
 
 
 # This tag can be used to specify the character encoding of the source files
