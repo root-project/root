@@ -385,7 +385,7 @@ void TColor::InitializeColors()
    fgInitDone = kTRUE;
    if (gROOT->GetListOfColors()->First() == 0) {
       TColor *s0;
-      Float_t r, g, b, h, l, s;
+      Float_t r=0., g=0., b=0., h, l, s;
       Int_t   i;
 
       new TColor(kWhite,1,1,1,"background");
