@@ -13,10 +13,15 @@
 #ifndef ROOT_QuartzPixmap
 #define ROOT_QuartzPixmap
 
+#include <vector>
+
 #include <Cocoa/Cocoa.h>
 
 #ifndef ROOT_CocoaGuiTypes
 #include "CocoaGuiTypes.h"
+#endif
+#ifndef ROOT_CocoaUtils
+#include "CocoaUtils.h"
 #endif
 #ifndef ROOT_X11Drawable
 #include "X11Drawable.h"
@@ -39,11 +44,9 @@
 
    unsigned       fWidth;
    unsigned       fHeight;
-   // TODO: std::vector can be an i-var in Objective-C++,
-   // this will simplify and clear the error handling and
-   // memory management.
-   unsigned char *fData;
-   CGContextRef   fContext;
+
+   std::vector<unsigned char> fData;
+   ROOT::MacOSX::Util::CFScopeGuard<CGContextRef> fContext;
 
    unsigned       fScaleFactor;
 }
@@ -96,12 +99,11 @@
    BOOL fIsStippleMask;
    unsigned fID;
    //
-
    unsigned       fWidth;
    unsigned       fHeight;
-   CGImageRef     fImage;
-   // TODO: replace with std::vector i-var.
-   unsigned char *fImageData;
+
+   ROOT::MacOSX::Util::CFScopeGuard<CGImageRef> fImage;
+   std::vector<unsigned char> fImageData;
 }
 
 - (id) initWithW : (unsigned) width H : (unsigned) height data : (unsigned char *) data;
@@ -111,7 +113,6 @@
 - (id) initFromImage : (QuartzImage *) image;
 - (id) initFromImageFlipped : (QuartzImage *) image;
 
-- (void) dealloc;
 @property (nonatomic, readonly) BOOL fIsStippleMask;
 - (CGImageRef) fImage;
 

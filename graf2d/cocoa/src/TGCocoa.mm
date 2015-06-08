@@ -813,6 +813,8 @@ Window_t TGCocoa::CreateWindow(Window_t parentID, Int_t x, Int_t y, UInt_t w, UI
       //Can throw:
       QuartzWindow * const newWindow = X11::CreateTopLevelWindow(x, y, w, h, border,
                                                                  depth, clss, visual, attr, wtype);
+      //Something like unique_ptr would perfectly solve the problem with raw pointer + a separate
+      //guard for this pointer, but it requires move semantics.
       const Util::NSScopeGuard<QuartzWindow> winGuard(newWindow);
       const Window_t result = fPimpl->RegisterDrawable(newWindow);//Can throw.
       newWindow.fID = result;
