@@ -693,6 +693,7 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
   // Create and draw a TH2 with the error contours in parameters var1 and v2 at up to 6 'sigma' settings
   // where 'sigma' is calculated as n*n*errorLevel
 
+
   RooArgList* params = _fcn->GetFloatParamList() ;
   RooArgList* paramSave = (RooArgList*) params->snapshot() ;
 
@@ -723,7 +724,7 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
   frame->addObject(point) ;
 
   // remember our original value of ERRDEF
-  Double_t errdef= _theFitter->Config().MinimizerOptions().ErrorDef();
+  Double_t errdef= _theFitter->GetMinimizer()->ErrorDef();
 
   Double_t n[6] ;
   n[0] = n1 ; n[1] = n2 ; n[2] = n3 ; n[3] = n4 ; n[4] = n5 ; n[5] = n6 ;
@@ -731,8 +732,9 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 
   for (Int_t ic = 0 ; ic<6 ; ic++) {
     if(n[ic] > 0) {
-      // set the value corresponding to an n1-sigma contour
-      _theFitter->Config().MinimizerOptions().SetErrorDef(n[ic]*n[ic]*errdef);
+
+       // set the value corresponding to an n1-sigma contour
+       _theFitter->GetMinimizer()->SetErrorDef(n[ic]*n[ic]*errdef);
 
       // calculate and draw the contour
       Double_t *xcoor = new Double_t[npoints+1];
