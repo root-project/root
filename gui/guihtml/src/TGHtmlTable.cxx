@@ -253,7 +253,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
             break;
 
          case Html_Text:
-            substr.Append(((TGHtmlTextElement *)p)->fZText, -1);
+            substr.Append(((TGHtmlTextElement *)p)->fZText);
             break;
 
          case Html_Space:
