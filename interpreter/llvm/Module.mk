@@ -123,10 +123,10 @@ $(LLVMDEPO): $(LLVMDEPS)
 			LLVM_CFLAGS="-m32"; \
 		fi; \
 		if [ $(ARCH) = "macosx64" ]; then \
-			LLVM_CFLAGS="-m64"; \
-		fi; \
-		if [ $(ARCH) = "macosx64" && x$(GCC_MAJOR) != "x" ]; then \
+         LLVM_CFLAGS="-m64"; \
+         if [ x$(GCC_MAJOR) != "x" ]; then \
 			LLVM_CFLAGS="-m64 -fno-omit-frame-pointer"; \
+         fi;
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
 			LLVM_CFLAGS="-arch i386 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
