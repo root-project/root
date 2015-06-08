@@ -4557,17 +4557,19 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
    Int_t nx  = fXaxis.GetNbins()+2;
    Int_t ny  = fYaxis.GetNbins()+2;
 
-   if (GetDimension() < 2) {
+   if (GetDimension() == 1) {
       binx = binglobal%nx;
-      biny = -1;
-      binz = -1;
+      biny = 0;
+      binz = 0;
+      return;
    }
-   if (GetDimension() < 3) {
+   if (GetDimension() == 2) {
       binx = binglobal%nx;
       biny = ((binglobal-binx)/nx)%ny;
-      binz = -1;
+      binz = 0;
+      return;
    }
-   if (GetDimension() < 4) {
+   if (GetDimension() == 3) {
       binx = binglobal%nx;
       biny = ((binglobal-binx)/nx)%ny;
       binz = ((binglobal-binx)/nx -biny)/ny;
