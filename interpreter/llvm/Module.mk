@@ -125,7 +125,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		if [ $(ARCH) = "macosx64" ]; then \
 			LLVM_CFLAGS="-m64"; \
 		fi; \
-		if [ $(ARCH) = "macosx64" && x$$(GCC_MAJOR) != "x" ]; then \
+		if [ $(ARCH) = "macosx64" && "x$$(GCC_MAJOR)" != "x" ]; then \
 			LLVM_CFLAGS="-m64 -fno-omit-frame-pointer"; \
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
