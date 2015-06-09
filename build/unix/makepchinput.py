@@ -8,6 +8,7 @@
 # Author: Axel Naumann <axel@cern.ch>, 2014-10-16
 # Translated to Python by Danilo Piparo, 2015-04-22
 
+from __future__ import print_function
 import sys
 import os
 import glob
@@ -410,7 +411,7 @@ def writeFiles(contentFileNamePairs):
 #-------------------------------------------------------------------------------
 def printModulesMessageOnScreen(selModules):
    modulesList = sorted(list(selModules))
-   print "\nGenerating PCH for %s\n" %" ".join(modulesList)
+   print ("\nGenerating PCH for %s\n" %" ".join(modulesList))
 
 #-------------------------------------------------------------------------------
 def makePCHInput():
