@@ -4591,7 +4591,6 @@ void TPad::Print(const char *filenam, Option_t *option)
 
       TPad *padsav = (TPad*)gPad;
       cd();
-      TVirtualPS *psave = gVirtualPS;
 
       if (!gVirtualPS) {
          // Plugin Postscript/SVG driver
@@ -4614,7 +4613,6 @@ void TPad::Print(const char *filenam, Option_t *option)
       if (!gSystem->AccessPathName(psname)) Info("Print", "SVG file %s has been created", psname.Data());
 
       delete gVirtualPS;
-      gVirtualPS = psave;
       gVirtualPS = 0;
       padsav->cd();
 
@@ -4633,7 +4631,6 @@ void TPad::Print(const char *filenam, Option_t *option)
 
       TPad *padsav = (TPad*)gPad;
       cd();
-      TVirtualPS *psave = gVirtualPS;
 
       if (!gVirtualPS) {
          // Plugin Postscript/SVG driver
@@ -4657,7 +4654,6 @@ void TPad::Print(const char *filenam, Option_t *option)
       if (!gSystem->AccessPathName(psname)) Info("Print", "TeX file %s has been created", psname.Data());
 
       delete gVirtualPS;
-      gVirtualPS = psave;
       gVirtualPS = 0;
       padsav->cd();
 
