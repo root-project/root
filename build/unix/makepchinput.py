@@ -13,7 +13,6 @@ import sys
 import os
 import glob
 import shutil
-from sets import Set
 
 #-------------------------------------------------------------------------------
 def removeFiles(filesList):
@@ -440,7 +439,7 @@ def makePCHInput():
 
    # Loop over the dictionaries, ROOT modules
    dictNames = getDictNames(modules)
-   selModules = Set([])
+   selModules = set([])
    allIncPathsList = []
    for dictName in dictNames:
       dirName = getDirName(dictName)
