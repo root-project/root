@@ -100,6 +100,12 @@ $(LLVMLIB): $(LLVMDEPO) $(FORCELLVMTARGET)
 $(LLVMGOODO): $(LLVMGOODS) $(LLVMLIB)
 		@cp $(LLVMGOODS) $(LLVMGOODO)
 
+ifeq ($(CXX14),yes)
+LLVM_CXX_VERSION=--enable-cxx1y
+else
+LLVM_CXX_VERSION=--enable-cxx11
+endif
+
 $(LLVMDEPO): $(LLVMDEPS)
 		$(MAKEDIR)
 		@(LLVMCC="$(CC)" && \
@@ -120,10 +126,13 @@ $(LLVMDEPO): $(LLVMDEPS)
 			LLVM_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "macosx" ]; then \
-			LLVM_CFLAGS="-m32"; \
+			LLVM_CFLAGS="-m32 -Wno-unused-private-field"; \
 		fi; \
 		if [ $(ARCH) = "macosx64" ]; then \
-			LLVM_CFLAGS="-m64"; \
+			LLVM_CFLAGS="-m64 -Wno-unused-private-field"; \
+		fi; \
+		if [ $(ARCH) = "macosx64" -a x$(GCC_MAJOR) != "x" ]; then \
+			LLVM_CFLAGS="$$LLVM_CFLAGS -fno-omit-frame-pointer"; \
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
 			LLVM_CFLAGS="-arch i386 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
@@ -164,7 +173,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		echo "*** Configuring LLVM in $(dir $@) ..."; \
 		mkdir -p $(dir $@) && \
 		cd $(dir $@)  && \
-		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure --enable-cxx11 \
+		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure $(LLVM_CXX_VERSION) \
 		$$LLVM_HOST \
 		$$LLVM_TARGET \
 		$$LLVM_BUILD \
