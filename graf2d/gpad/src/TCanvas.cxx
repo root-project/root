@@ -137,7 +137,14 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
 {
    // Canvas default constructor.
 
-   fPainter = 0;
+   fPainter      = 0;
+   fWindowTopX   = 0;
+   fWindowTopY   = 0;
+   fWindowWidth  = 0;
+   fWindowHeight = 0;
+   fCw           = 0;
+   fCh           = 0;
+
    fUseGL = gStyle->GetCanvasPreferGL();
 
    if (!build || TClass::IsCallingNew() != TClass::kRealNew) {
