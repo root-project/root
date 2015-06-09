@@ -748,3 +748,4 @@ Changes will be part of the future v6.04/02.
  - Fix unloading of code [ROOT-7290]
  - Fix template instantiations in cling internals [ROOT-7364]
  - Forget erroneous decls in case of errors [ROOT-7295]
+ - Work around binutils issue (ld crash building llvm) on MacOSX with GCC (pull requests 64-66)
