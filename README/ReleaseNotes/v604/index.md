@@ -727,3 +727,22 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 - Support link to jemalloc and tcmalloc allocators.
 
 - Careful suppression of known and understood warnings, e.g. coming from external packages.
+
+\
+\
+\
+
+
+# Patch Releases
+
+## HEAD of v6-04-00-patches (future v6.04/02)
+
+### Proof
+ - Add support for aliases [ROOT-7392]
+ - Fix issue with trees in sub-directories causing stressProof test #29 to fail
+
+### Interpreter
+
+ - Fix unloading of code [ROOT-7290]
+ - Fix template instantiations in cling internals [ROOT-7364]
+ - Forget erroneous decls in case of errors [ROOT-7295]
