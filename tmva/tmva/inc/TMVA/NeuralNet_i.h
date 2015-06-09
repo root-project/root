@@ -192,12 +192,9 @@ void update (ItSource itSource, ItSource itSourceEnd,
 	size_t numWeights = weights.size ();
 	std::vector<double> gradients (numWeights, 0.0);
 	std::vector<double> localWeights (begin (weights), end (weights));
+        double E = 1e10;
         if (m_prevGradients.empty ())
             m_prevGradients.assign (weights.size (), 0);
-
-
-        double E = fitnessFunction (passThrough, weights, gradients);
-//        double Emin = E;
 
         bool success = true;
         size_t currentRepetition = 0;
@@ -205,6 +202,9 @@ void update (ItSource itSource, ItSource itSourceEnd,
         {
             if (currentRepetition >= m_repetitions)
                 break;
+
+            gradients.assign (numWeights, 0.0);
+            E = fitnessFunction (passThrough, localWeights, gradients);
 
 //            double alpha = gaussDouble (m_alpha, m_alpha/10.0);
             double alpha = m_alpha;
@@ -215,29 +215,17 @@ void update (ItSource itSource, ItSource itSourceEnd,
             auto itPrevG = begin (m_prevGradients);
             for (; itLocW != itLocWEnd; ++itLocW, ++itG, ++itPrevG)
             {
-                (*itG) *= alpha;
-                (*itG) += m_beta * (*itPrevG);
+                double currGrad = (*itG);
+                double prevGrad = (*itPrevG);
+                currGrad *= alpha;
+                
+                (*itPrevG) = m_beta * (prevGrad + currGrad);
+                (*itG) = currGrad + prevGrad;
+
                 (*itLocW) += (*itG);
-                (*itPrevG) = (*itG);
-            }
-            gradients.assign (numWeights, 0.0);
-            E = fitnessFunction (passThrough, localWeights, gradients);
-
-            itLocW = begin (localWeights);
-            itLocWEnd = end (localWeights);
-            auto itW = begin (weights);
-            for (; itLocW != itLocWEnd; ++itLocW, ++itW)
-            {
-                (*itW) = (*itLocW);
             }
 
-            /* if (E < Emin) */
-            /* { */
-            /*     Emin = E; */
-            /*     std::cout << "."; */
-            /* } */
-            /* else */
-            /*     std::cout << "X"; */
+            std::copy (std::begin (localWeights), std::end (localWeights), std::begin (weights));
 
             ++currentRepetition;
         }
@@ -273,8 +261,8 @@ void update (ItSource itSource, ItSource itSourceEnd,
         for (size_t i = 0; i < m_repetitions; ++i)
         {
             std::vector<double> tmpWeights (weights);
-            double alpha = gaussDouble (m_alpha, m_beta);
-            double beta  = gaussDouble (m_alpha, m_beta);
+            double alpha = std::pow (m_alpha, (1.0 + i));
+            double beta = m_beta;
             auto itGradient = begin (gradients);
             auto itPrevGradient = begin (m_prevGradients);
             std::for_each (begin (tmpWeights), end (tmpWeights), [alpha,beta,&itGradient,&itPrevGradient](double& w) 
@@ -386,7 +374,7 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth itTruthEnd, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc itInvActFnc, double patternWeight) 
+    double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth itTruthEnd, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc itInvActFnc, double patternWeight) 
 {
     double errorSum = 0.0;
 
