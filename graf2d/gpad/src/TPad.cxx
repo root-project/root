@@ -4722,16 +4722,18 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
 
       // Create a new Postscript, PDF or image file
-      gVirtualPS->SetName(psname);
+      if (gVirtualPS) gVirtualPS->SetName(psname);
       const Ssiz_t titlePos = opt.Index("Title:");
       if (titlePos != kNPOS) {
-         gVirtualPS->SetTitle(opt.Data()+titlePos+6);
+         if (gVirtualPS) gVirtualPS->SetTitle(opt.Data()+titlePos+6);
          opt.Replace(titlePos,opt.Length(),"pdf");
       }
-      gVirtualPS->Open(psname,pstype);
-      gVirtualPS->SetBit(kPrintingPS);
+      if (gVirtualPS) gVirtualPS->Open(psname,pstype);
+      if (gVirtualPS) gVirtualPS->SetBit(kPrintingPS);
       if (!copenb) {
-         if (!strstr(opt,"pdf") || image) gVirtualPS->NewPage();
+         if (!strstr(opt,"pdf") || image) {
+            if (gVirtualPS) gVirtualPS->NewPage();
+         }
          Paint();
       }
       if (noScreen) GetCanvas()->SetBatch(kFALSE);
