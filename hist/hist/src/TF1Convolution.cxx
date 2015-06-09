@@ -209,8 +209,9 @@ void TF1Convolution::MakeFFTConv()
    TVirtualFFT *fft1 = TVirtualFFT::FFT(1, &fNofPoints, "R2C K");
    TVirtualFFT *fft2 = TVirtualFFT::FFT(1, &fNofPoints, "R2C K");
    if (fft1 == nullptr || fft2 == nullptr) {
-      Warning("MakeFFTConv","Cannot use FFT, probably FFTW# package is not available. Switch to numerical convolution");
-      fFlagFFT = false; 
+      Warning("MakeFFTConv","Cannot use FFT, probably FFTW package is not available. Switch to numerical convolution");
+      fFlagFFT = false;
+      return;
    }
 
    // apply a shift in order to have the second function centered around middle of the range of the convolution

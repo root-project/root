@@ -179,6 +179,12 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
 
 VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMultiDim::Type type , double absTol, double relTol, unsigned int ncall) {
    // create concrete class for multidimensional integration
+
+#ifndef R__HAS_MATHMORE
+   // when Mathmore is not built only possible type is ADAPTIVE. There is no other choice 
+   type = IntegrationMultiDim::kADAPTIVE;
+#endif   
+   
    if (type == IntegrationMultiDim::kDEFAULT) type = GetType(IntegratorMultiDimOptions::DefaultIntegrator().c_str());
    if (absTol <= 0) absTol = IntegratorMultiDimOptions::DefaultAbsTolerance();
    if (relTol <= 0) relTol = IntegratorMultiDimOptions::DefaultRelTolerance();
@@ -186,14 +192,11 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
    unsigned int size = IntegratorMultiDimOptions::DefaultWKSize();
 
 
-#ifndef R__HAS_MATHMORE
-   // default type is Adaptive when Mathmore is not built
-   type = IntegrationMultiDim::kADAPTIVE;
-#endif
-
    // no need for PM in the adaptive  case using Genz method (class is in MathCore)
    if (type == IntegrationMultiDim::kADAPTIVE)
       return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall, size);
+   
+   // use now plugin-manager for creating the GSL integrator
 
    VirtualIntegratorMultiDim * ig = 0;
 
@@ -204,11 +207,12 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
    MATH_ERROR_MSG("IntegratorMultiDim::CreateIntegrator","Integrator type is not available in MathCore");
 #endif
 
-#else  // use ROOT PM
-
-   TPluginHandler *h;
+#else  // use ROOT Plugin-Manager to instantiate GSLMCIntegrator
+   
+   const char * pluginName = "GSLMCIntegrator";
+   TPluginHandler *h = nullptr;
    //gDebug = 3;
-   if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", "GSLMCIntegrator"))) {
+   if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", pluginName))) {
       if (h->LoadPlugin() == -1) {
          MATH_WARN_MSG("IntegratorMultiDim::CreateIntegrator","Error loading GSL MC multidim integrator - use adaptive method");
          return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall);
