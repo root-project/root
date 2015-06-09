@@ -1417,6 +1417,7 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
          TObject *obj = (TObject *) ret_obj;
          resbuf->MapObject(obj);
          obj->Streamer(*resbuf);
+         if (fCurrentArg) fCurrentArg->SetExtraHeader("RootClassName", ret_cl->GetName());
       } else {
          res = TBufferJSON::ConvertToJSON(ret_obj, ret_cl, compact);
       }
@@ -1487,6 +1488,7 @@ Bool_t TRootSniffer::ProduceBinary(const char *path, const char * /*query*/, voi
    sbuf->SetParent(fMemFile);
    sbuf->MapObject(obj);
    obj->Streamer(*sbuf);
+   if (fCurrentArg) fCurrentArg->SetExtraHeader("RootClassName", obj_cl->GetName());
 
    // produce actual version of streamer info
    delete fSinfo;
