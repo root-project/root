@@ -33,6 +33,7 @@
 
 #include <typeinfo>
 #include <string>
+#include <locale.h>
 
 #include "Compression.h"
 
@@ -140,7 +141,8 @@ TBufferJSON::TBufferJSON() :
    fExpectedChain(kFALSE),
    fCompact(0),
    fSemicolon(" : "),
-   fArraySepar(", ")
+   fArraySepar(", "),
+   fNumericLocale()
 {
    // Creates buffer object to serialize data into json.
 
@@ -153,6 +155,15 @@ TBufferJSON::TBufferJSON() :
    fOutBuffer.Capacity(10000);
    fValue.Capacity(1000);
    fOutput = &fOutBuffer;
+
+   // checks if setlocale(LC_NUMERIC) returns others than "C"
+   // in this case locale will be changed and restored at the end of object conversion
+
+   char* loc = setlocale(LC_NUMERIC, 0);
+   if ((loc!=0) && (strcmp(loc,"C")!=0)) {
+      fNumericLocale = loc;
+      setlocale(LC_NUMERIC, "C");
+   }
 }
 
 //______________________________________________________________________________
@@ -161,6 +172,9 @@ TBufferJSON::~TBufferJSON()
    // destroy buffer
 
    fStack.Delete();
+
+   if (fNumericLocale.Length()>0)
+      setlocale(LC_NUMERIC, fNumericLocale.Data());
 }
 
 //______________________________________________________________________________
@@ -225,6 +239,7 @@ TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member,
       return TBufferJSON::ConvertToJSON(ptr, mcl, compact);
 
    TBufferJSON buf;
+
    buf.SetCompact(compact);
 
    return buf.JsonWriteMember(ptr, member, mcl);
