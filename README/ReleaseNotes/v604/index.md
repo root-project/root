@@ -735,7 +735,9 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 
 # Patch Releases
 
-## HEAD of v6-04-00-patches (future v6.04/02)
+## HEAD of the v6-04-00-patches branch
+
+Changes will be part of the future v6.04/02.
 
 ### Proof
  - Add support for aliases [ROOT-7392]
