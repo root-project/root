@@ -286,7 +286,7 @@ void TF1NormSum::SetParameters(const double* params)//params should have the siz
 {
    // Initialize array of all parameters.
    // double *params must contains first an array of the coefficients, then an array of the parameters.
-   
+
    for (unsigned int n=0; n<fNOfFunctions; n++)                         //initialization of the coefficients
    {
       fCoeffs[n] = params[n];
@@ -312,18 +312,24 @@ void TF1NormSum::SetParameters(const double* params)//params should have the siz
          }
          else
          {
-            noncstparams[n][k] = params[k+fNOfFunctions+offset];
+            noncstparams[n][k] = params[k+fNOfFunctions+offset]; 
             totalparams[n][i]  = params[k+fNOfFunctions+offset];
             //std::cout << " params " << k+fNOfFunctions+offset << " = " << params[k+fNOfFunctions+offset] << std::endl;
             k++;
          }
       }
       fParams[n]    =  noncstparams[n].data();                          // fParams doesn't take the coefficients, and neither the cst parameters
-      fFunctions[n] -> SetParameters(totalparams[n].data());
+      // check if function has really changed the parameters
+      bool equalParams = true;
+      for (int l = 0; l < fFunctions[n]->GetNpar(); ++l)
+         equalParams &= (fFunctions[n]->GetParameter(l) == totalparams[n][l]);
+      
+      if (!equalParams) fFunctions[n] -> SetParameters(totalparams[n].data());
       
       fixedvalue = 1.;
       if (fFunctions[n] -> GetNumber() == 200)  fixedvalue = 0.;        // if this is an exponential, the fixed value is zero
-      fFunctions[n] -> FixParameter(fCstIndexes[n], fixedvalue);
+      if (!equalParams && fFunctions[n]->GetParameter(fCstIndexes[n]) != fixedvalue) 
+         fFunctions[n] -> FixParameter(fCstIndexes[n], fixedvalue);
       // fFunctions[n]->Print();
       //std::cout << "coeff " << n << " : " << fCoeffs[n] << std::endl;
       

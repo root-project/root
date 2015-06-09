@@ -170,6 +170,8 @@ void TCanvas::Constructor()
       if ((*gThreadXAR)("CANV", 2, arr, 0)) return;
    }
 
+   Init();
+
    fCanvas    = 0;
    fCanvasID  = -1;
    fCanvasImp = 0;

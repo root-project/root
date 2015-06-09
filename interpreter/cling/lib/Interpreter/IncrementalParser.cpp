@@ -343,13 +343,7 @@ namespace cling {
       ParseResult = kSuccessWithWarnings;
     }
 
-    if (ParseResult != kSuccess) {
-      // Now that we have captured the error, reset the Diags.
-      Diags.Reset(/*soft=*/true);
-      Diags.getClient()->clear();
-    }
-
-    // Empty transaction send it back to the pool.
+    // Empty transaction, send it back to the pool.
     if (T->empty()) {
       assert((!m_Consumer->getTransaction()
               || (m_Consumer->getTransaction() == T))
@@ -371,8 +365,15 @@ namespace cling {
 
   void IncrementalParser::commitTransaction(ParseResultTransaction PRT) {
     Transaction* T = PRT.getPointer();
-    if (!T)
+    if (!T) {
+      if (PRT.getInt() != kSuccess) {
+        // Nothing has been emitted to Codegen, reset the Diags.
+        DiagnosticsEngine& Diags = getCI()->getSema().getDiagnostics();
+        Diags.Reset(/*soft=*/true);
+        Diags.getClient()->clear();
+      }
       return;
+    }
 
     assert(T->isCompleted() && "Transaction not ended!?");
     assert(T->getState() != Transaction::kCommitted
@@ -397,6 +398,11 @@ namespace cling {
           T->setModule(std::move(M));
         }
       }
+      // Module has been released from Codegen, reset the Diags now.
+      DiagnosticsEngine& Diags = getCI()->getSema().getDiagnostics();
+      Diags.Reset(/*soft=*/true);
+      Diags.getClient()->clear();
+
       rollbackTransaction(T);
 
       if (MustStartNewModule) {
@@ -441,8 +447,8 @@ namespace cling {
       Transaction* nestedT = beginTransaction(CompilationOptions());
       // Pull all template instantiations in that came from the consumers.
       getCI()->getSema().PerformPendingInstantiations();
-      ParseResultTransaction PRT = endTransaction(nestedT);
-      commitTransaction(PRT);
+      ParseResultTransaction nestedPRT = endTransaction(nestedT);
+      commitTransaction(nestedPRT);
       m_Consumer->setTransaction(prevConsumerT);
     }
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
@@ -551,6 +557,13 @@ namespace cling {
         T->setModule(std::move(M));
       }
 
+      if (T->getIssuedDiags() != Transaction::kNone) {
+        // Module has been released from Codegen, reset the Diags now.
+        DiagnosticsEngine& Diags = getCI()->getSema().getDiagnostics();
+        Diags.Reset(/*soft=*/true);
+        Diags.getClient()->clear();
+      }
+
       // Create a new module.
       std::string ModuleName;
       {
@@ -595,6 +608,7 @@ namespace cling {
 
     if (!T->getParent()) {
       // Remove from the queue
+      assert(T == m_Transactions.back() && "Out of order transaction removal");
       m_Transactions.pop_back();
       if (!m_Transactions.empty())
         m_Transactions.back()->setNext(0);

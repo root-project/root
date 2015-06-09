@@ -1729,8 +1729,11 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
       if (!filename.EndsWith(".txt", TString::kIgnoreCase)
           && !filename.EndsWith(".html", TString::kIgnoreCase)) {
          // copy to outdir, who know whether it's needed...
-         if (gSystem->CopyFile(filename, outfile, kTRUE) == -1)
+         if (gSystem->CopyFile(filename, outfile, kTRUE) == -1) {
+            Error("CreateModuleIndex", "Cannot copy file %s to %s",
+                  filename.Data(), outfile.Data());
             continue;
+         }
          continue;
       }
 

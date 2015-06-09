@@ -137,7 +137,7 @@ Bool_t PyROOT::TConst##name##RefConverter::SetArg(                            \
       return kFALSE;                                                          \
    para.fValue.f##name = val;                                                 \
    para.fRef = &para.fValue.f##name;                                          \
-   para.fTypeCode = 'V';                                                      \
+   para.fTypeCode = 'r';                                                      \
    return kTRUE;                                                              \
 }
 
@@ -150,8 +150,7 @@ Bool_t PyROOT::TConst##name##RefConverter::SetArg(                            \
    if ( val == (type)-1 && PyErr_Occurred() )                                 \
       return kFALSE;                                                          \
    para.fValue.fLong = val;                                                   \
-   para.fRef = &para.fValue.fLong;                                            \
-   para.fTypeCode = 'V';                                                      \
+   para.fTypeCode = 'l';                                                      \
    return kTRUE;                                                              \
 }
 
@@ -231,7 +230,7 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
 
 #if PY_VERSION_HEX < 0x03000000
    para.fValue.fVoidp = (void*)&((PyIntObject*)pyobject)->ob_ival;
-   para.fTypeCode = 'v';
+   para.fTypeCode = 'V';
    return kTRUE;
 #else
    (void)para;
@@ -262,7 +261,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
    if ( TCustomInt_CheckExact( pyobject ) ) {
 #if PY_VERSION_HEX < 0x03000000
       para.fValue.fVoidp = (void*)&((PyIntObject*)pyobject)->ob_ival;
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'V';
       return kTRUE;
 #else
       PyErr_SetString( PyExc_NotImplementedError, "int pass-by-ref not implemented in p3" );
@@ -273,7 +272,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
 // alternate, pass pointer from buffer
    int buflen = Utility::GetBuffer( pyobject, 'i', sizeof(int), para.fValue.fVoidp );
    if ( para.fValue.fVoidp && buflen ) {
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'V';
       return kTRUE;
    };
 
@@ -355,6 +354,21 @@ Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
 }
 
 //____________________________________________________________________________
+Bool_t PyROOT::TFloatConverter::SetArg(
+      PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
+{
+// convert <pyobject> to C++ double, set arg for call
+   Double_t val = PyFloat_AsDouble( pyobject );
+   if ( val == -1.0 && PyErr_Occurred() )
+      return kFALSE;
+   para.fValue.fFloat = val;
+   para.fTypeCode = 'f';
+   return kTRUE;
+}
+
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,      Float_t,      Double_t,     PyFloat_FromDouble, PyFloat_AsDouble )
+
+//____________________________________________________________________________
 Bool_t PyROOT::TDoubleConverter::SetArg(
       PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
 {
@@ -367,8 +381,21 @@ Bool_t PyROOT::TDoubleConverter::SetArg(
    return kTRUE;
 }
 
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,      Float_t,      Double_t,     PyFloat_FromDouble, PyFloat_AsDouble )
 PYROOT_IMPLEMENT_BASIC_CONVERTER( Double,     Double_t,     Double_t,     PyFloat_FromDouble, PyFloat_AsDouble )
+
+//____________________________________________________________________________
+Bool_t PyROOT::TLongDoubleConverter::SetArg(
+      PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
+{
+// convert <pyobject> to C++ double, set arg for call
+   Double_t val = PyFloat_AsDouble( pyobject );
+   if ( val == -1.0 && PyErr_Occurred() )
+      return kFALSE;
+   para.fValue.fLongDouble = val;
+   para.fTypeCode = 'D';
+   return kTRUE;
+}
+
 PYROOT_IMPLEMENT_BASIC_CONVERTER( LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
 //____________________________________________________________________________
@@ -378,14 +405,14 @@ Bool_t PyROOT::TDoubleRefConverter::SetArg(
 // convert <pyobject> to C++ double&, set arg for call
    if ( TCustomFloat_CheckExact( pyobject ) ) {
       para.fValue.fVoidp = (void*)&((PyFloatObject*)pyobject)->ob_fval;
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'V';
       return kTRUE;
    }
 
 // alternate, pass pointer from buffer
    int buflen = Utility::GetBuffer( pyobject, 'd', sizeof(double), para.fValue.fVoidp );
    if ( para.fValue.fVoidp && buflen ) {
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'V';
       return kTRUE;
    }
 
@@ -489,7 +516,7 @@ Bool_t PyROOT::TCStringConverter::SetArg(
 
 // set the value and declare success
    para.fValue.fVoidp = (void*)fBuffer.c_str();
-   para.fTypeCode = 'v';
+   para.fTypeCode = 'p';
    return kTRUE;
 }
 
@@ -547,7 +574,7 @@ namespace {
          if ( ! para.fValue.fVoidp || buflen == 0 )
             return kFALSE;
       }
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'p';
       return kTRUE;
    }
 
@@ -630,13 +657,13 @@ Bool_t PyROOT::TVoidArrayConverter::SetArg(
 
    // set pointer (may be null) and declare success
       para.fValue.fVoidp = ((ObjectProxy*)pyobject)->GetObject();
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'p';
       return kTRUE;
    }
 
 // handle special cases
    if ( GetAddressSpecialCase( pyobject, para.fValue.fVoidp ) ) {
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'p';
       return kTRUE;
    }
 
@@ -645,7 +672,7 @@ Bool_t PyROOT::TVoidArrayConverter::SetArg(
 
 // ok if buffer exists (can't perform any useful size checks)
    if ( para.fValue.fVoidp && buflen != 0 ) {
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'p';
       return kTRUE;
    }
 
@@ -701,6 +728,14 @@ Bool_t PyROOT::T##name##ArrayConverter::SetArg(                              \
       PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )       \
 {                                                                            \
    return CArraySetArg( pyobject, para, code, sizeof(type) );                \
+}                                                                            \
+                                                                             \
+Bool_t PyROOT::T##name##ArrayRefConverter::SetArg(                           \
+      PyObject* pyobject, TParameter& para, TCallContext* ctxt )             \
+{                                                                            \
+   Bool_t result = T##name##ArrayConverter::SetArg( pyobject, para, ctxt );  \
+   para.fTypeCode = 'V';                                                     \
+   return result;                                                            \
 }                                                                            \
                                                                              \
 PyObject* PyROOT::T##name##ArrayConverter::FromMemory( void* address )       \
@@ -763,12 +798,15 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       fBuffer = type( PyROOT_PyUnicode_AsString( pyobject ),                  \
                       PyROOT_PyUnicode_GET_SIZE( pyobject ) );                \
       para.fValue.fVoidp = &fBuffer;                                          \
-      para.fTypeCode = 'v';                                                   \
+      para.fTypeCode = 'V';                                                   \
       return kTRUE;                                                           \
    }                                                                          \
                                                                               \
-   if ( ! ( PyInt_Check( pyobject ) || PyLong_Check( pyobject ) ) )           \
-      return TCppObjectConverter::SetArg( pyobject, para, ctxt );             \
+   if ( ! ( PyInt_Check( pyobject ) || PyLong_Check( pyobject ) ) ) {         \
+      Bool_t result = TCppObjectConverter::SetArg( pyobject, para, ctxt );    \
+      para.fTypeCode = 'V';                                                   \
+      return result;                                                          \
+   }                                                                          \
    return kFALSE;                                                             \
 }                                                                             \
                                                                               \
@@ -800,7 +838,7 @@ Bool_t PyROOT::TCppObjectConverter::SetArg(
 // convert <pyobject> to C++ instance*, set arg for call
    if ( ! ObjectProxy_Check( pyobject ) ) {
       if ( GetAddressSpecialCase( pyobject, para.fValue.fVoidp ) ) {
-         para.fTypeCode = 'v';    // allow special cases such as NULL
+         para.fTypeCode = 'p';      // allow special cases such as NULL
          return kTRUE;
       }
 
@@ -822,13 +860,13 @@ Bool_t PyROOT::TCppObjectConverter::SetArg(
       }
 
    // set pointer (may be null) and declare success
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'p';
       return kTRUE;
 
    } else if ( ! TClass::GetClass( Cppyy::GetFinalName( fClass ).c_str() )->GetClassInfo() ) {
    // assume "user knows best" to allow anonymous pointer passing
       para.fValue.fVoidp = pyobj->GetObject();
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'p';
       return kTRUE;
    }
 
@@ -876,6 +914,64 @@ Bool_t PyROOT::TCppObjectConverter::ToMemory( PyObject* value, void* address )
    return kFALSE;
 }
 
+// TODO: CONSOLIDATE ValueCpp, RefCpp, and CppObject ...
+
+//____________________________________________________________________________
+Bool_t PyROOT::TValueCppObjectConverter::SetArg(
+      PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
+{
+// convert <pyobject> to C++ instance, set arg for call
+   if ( ! ObjectProxy_Check( pyobject ) )
+      return kFALSE;
+
+   ObjectProxy* pyobj = (ObjectProxy*)pyobject;
+   if ( pyobj->ObjectIsA() && Cppyy::IsSubtype( pyobj->ObjectIsA(), fClass ) ) {
+   // calculate offset between formal and actual arguments
+      para.fValue.fVoidp = pyobj->GetObject();
+      if ( ! para.fValue.fVoidp )
+         return kFALSE;
+
+      if ( pyobj->ObjectIsA() != fClass ) {
+         para.fValue.fLong += Cppyy::GetBaseOffset(
+            pyobj->ObjectIsA(), fClass, para.fValue.fVoidp, 1 /* up-cast */ );
+      }
+
+      para.fTypeCode = 'V';
+      return kTRUE;
+   }
+
+   return kFALSE;
+}
+
+//____________________________________________________________________________
+Bool_t PyROOT::TRefCppObjectConverter::SetArg(
+      PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
+{
+// convert <pyobject> to C++ instance&, set arg for call
+   if ( ! ObjectProxy_Check( pyobject ) )
+      return kFALSE;
+
+   ObjectProxy* pyobj = (ObjectProxy*)pyobject;
+   if ( pyobj->ObjectIsA() && Cppyy::IsSubtype( pyobj->ObjectIsA(), fClass ) ) {
+   // calculate offset between formal and actual arguments
+      para.fValue.fVoidp = pyobj->GetObject();
+      if ( pyobj->ObjectIsA() != fClass ) {
+         para.fValue.fLong += Cppyy::GetBaseOffset(
+            pyobj->ObjectIsA(), fClass, para.fValue.fVoidp, 1 /* up-cast */ );
+      }
+
+      para.fTypeCode = 'V';
+      return kTRUE;
+   } else if ( ! TClass::GetClass( Cppyy::GetFinalName( fClass ).c_str() )->GetClassInfo() ) {
+   // assume "user knows best" to allow anonymous reference passing
+      para.fValue.fVoidp = pyobj->GetObject();
+      para.fTypeCode = 'V';
+      return kTRUE;
+   }
+
+   return kFALSE;
+}
+
 //____________________________________________________________________________
 Bool_t PyROOT::TCppObjectPtrConverter::SetArg(
       PyObject* pyobject, TParameter& para, TCallContext* ctxt )
@@ -891,7 +987,7 @@ Bool_t PyROOT::TCppObjectPtrConverter::SetArg(
 
    // set pointer (may be null) and declare success
       para.fValue.fVoidp = &((ObjectProxy*)pyobject)->fObject;
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'p';
       return kTRUE;
    }
 
@@ -943,11 +1039,9 @@ Bool_t PyROOT::TCppObjectArrayConverter::SetArg(
       return kFALSE;              // should not happen
 
    if ( Cppyy::IsSubtype( ((ObjectProxy*)first)->ObjectIsA(), fClass ) ) {
-   // no memory policies supported
-
-   // set pointer (may be null) and declare success
+   // no memory policies supported; set pointer (may be null) and declare success
       para.fValue.fVoidp = ((ObjectProxy*)first)->fObject;
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'p';
       return kTRUE;
    }
 
@@ -987,7 +1081,7 @@ Bool_t PyROOT::TSTLIteratorConverter::SetArg(
 // just set the pointer value, no check
    ObjectProxy* pyobj = (ObjectProxy*)pyobject;
    para.fValue.fVoidp = pyobj->GetObject();
-   para.fTypeCode = 'v';
+   para.fTypeCode = 'V';
    return kTRUE;
 }
 // -- END CLING WORKAROUND
@@ -999,7 +1093,7 @@ Bool_t PyROOT::TVoidPtrRefConverter::SetArg(
 // convert <pyobject> to C++ void*&, set arg for call
    if ( ObjectProxy_Check( pyobject ) ) {
       para.fValue.fVoidp = &((ObjectProxy*)pyobject)->fObject;
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'V';
       return kTRUE;
    }
 
@@ -1014,7 +1108,7 @@ Bool_t PyROOT::TVoidPtrPtrConverter::SetArg(
    if ( ObjectProxy_Check( pyobject ) ) {
    // this is a ROOT object, take and set its address
       para.fValue.fVoidp = &((ObjectProxy*)pyobject)->fObject;
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'p';
       return kTRUE;
    }
 
@@ -1023,7 +1117,7 @@ Bool_t PyROOT::TVoidPtrPtrConverter::SetArg(
 
 // ok if buffer exists (can't perform any useful size checks)
    if ( para.fValue.fVoidp && buflen != 0 ) {
-      para.fTypeCode = 'v';
+      para.fTypeCode = 'p';
       return kTRUE;
    }
 
@@ -1047,7 +1141,7 @@ Bool_t PyROOT::TPyObjectConverter::SetArg(
 {
 // by definition: set and declare success
    para.fValue.fVoidp = pyobject;
-   para.fTypeCode = 'v';
+   para.fTypeCode = 'p';
    return kTRUE;
 }
 
@@ -1123,8 +1217,8 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
       realType = TClassEdit::CleanType( realType.substr( 0, realType.rfind("(") ).c_str(), 1 );
 // -- CLING WORKAROUND
 
-//-- still nothing? try pointer instead of ref or array (for builtins)
-   if ( cpd == "&" || cpd == "[]" ) {
+//-- still nothing? try pointer instead of array (for builtins)
+   if ( cpd == "[]" ) {
       h = gConvFactories.find( realType + "*" );
       if ( h != gConvFactories.end() )
          return (h->second)( size );
@@ -1147,11 +1241,11 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
       else if ( cpd == "*" && size <= 0 )
          result = new TCppObjectConverter( klass, control );
       else if ( cpd == "&" )
-         result = new TStrictCppObjectConverter( klass, control );
+         result = new TRefCppObjectConverter( klass );
       else if ( cpd == "[]" || size > 0 )
          result = new TCppObjectArrayConverter( klass, size, kFALSE );
       else if ( cpd == "" )               // by value
-         result = new TStrictCppObjectConverter( klass, kTRUE );
+         result = new TValueCppObjectConverter( klass, kTRUE );
 
    } else if ( Cppyy::IsEnum( realType ) ) {
    // special case (Cling): represent enums as unsigned integers
@@ -1241,13 +1335,19 @@ namespace {
    PYROOT_ARRAY_CONVERTER_FACTORY( NonConstCString )
    PYROOT_ARRAY_CONVERTER_FACTORY( NonConstUCString )
    PYROOT_ARRAY_CONVERTER_FACTORY( BoolArray )
+   PYROOT_BASIC_CONVERTER_FACTORY( BoolArrayRef )
    PYROOT_ARRAY_CONVERTER_FACTORY( ShortArray )
+   PYROOT_ARRAY_CONVERTER_FACTORY( ShortArrayRef )
    PYROOT_ARRAY_CONVERTER_FACTORY( UShortArray )
+   PYROOT_ARRAY_CONVERTER_FACTORY( UShortArrayRef )
    PYROOT_ARRAY_CONVERTER_FACTORY( IntArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( UIntArray )
+   PYROOT_ARRAY_CONVERTER_FACTORY( UIntArrayRef )
    PYROOT_ARRAY_CONVERTER_FACTORY( LongArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( ULongArray )
+   PYROOT_ARRAY_CONVERTER_FACTORY( ULongArrayRef )
    PYROOT_ARRAY_CONVERTER_FACTORY( FloatArray )
+   PYROOT_ARRAY_CONVERTER_FACTORY( FloatArrayRef )
    PYROOT_ARRAY_CONVERTER_FACTORY( DoubleArray )
    PYROOT_BASIC_CONVERTER_FACTORY( VoidArray )
    PYROOT_BASIC_CONVERTER_FACTORY( LongLongArray )
@@ -1305,15 +1405,21 @@ namespace {
 
    // pointer/array factories
       NFp_t( "bool*",                     &CreateBoolArrayConverter          ),
+      NFp_t( "bool&",                     &CreateBoolArrayRefConverter       ),
       NFp_t( "const unsigned char*",      &CreateCStringConverter            ),
       NFp_t( "unsigned char*",            &CreateNonConstUCStringConverter   ),
       NFp_t( "short*",                    &CreateShortArrayConverter         ),
+      NFp_t( "short&",                    &CreateShortArrayRefConverter      ),
       NFp_t( "unsigned short*",           &CreateUShortArrayConverter        ),
+      NFp_t( "unsigned short&",           &CreateUShortArrayRefConverter     ),
       NFp_t( "int*",                      &CreateIntArrayConverter           ),
       NFp_t( "unsigned int*",             &CreateUIntArrayConverter          ),
+      NFp_t( "unsigned int&",             &CreateUIntArrayRefConverter       ),
       NFp_t( "long*",                     &CreateLongArrayConverter          ),
       NFp_t( "unsigned long*",            &CreateULongArrayConverter         ),
+      NFp_t( "unsigned long&",            &CreateULongArrayRefConverter      ),
       NFp_t( "float*",                    &CreateFloatArrayConverter         ),
+      NFp_t( "float&",                    &CreateFloatArrayRefConverter      ),
       NFp_t( "double*",                   &CreateDoubleArrayConverter        ),
       NFp_t( "long long*",                &CreateLongLongArrayConverter      ),
       NFp_t( "Long64_t*",                 &CreateLongLongArrayConverter      ),

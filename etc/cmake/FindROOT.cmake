@@ -7,13 +7,15 @@
 # ROOT_LIBRARIES      Most common libraries
 # ROOT_<name>_LIBRARY Full path to the library <name>
 # ROOT_LIBRARY_DIR    PATH to the library directory
-# ROOT_DEFINITIONS    Compiler definitions and flags
+# ROOT_DEFINITIONS    Compiler definitions
+# ROOT_CXX_FLAGS      Compiler flags to used by client packages
+# ROOT_C_FLAGS        Compiler flags to used by client packages
 #
 # Updated by K. Smith (ksmith37@nd.edu) to properly handle
 #  dependencies in ROOT_GENERATE_DICTIONARY
 
 find_program(ROOT_CONFIG_EXECUTABLE root-config
-  PATHS $ENV{ROOTSYS}/bin)
+  HINTS $ENV{ROOTSYS}/bin)
 
 execute_process(
     COMMAND ${ROOT_CONFIG_EXECUTABLE} --prefix
@@ -51,14 +53,19 @@ list(REMOVE_DUPLICATES ROOT_LIBRARIES)
 
 execute_process(
     COMMAND ${ROOT_CONFIG_EXECUTABLE} --cflags
-    OUTPUT_VARIABLE ROOT_DEFINITIONS
+    OUTPUT_VARIABLE __cflags
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_DEFINITIONS ${ROOT_DEFINITIONS})
+string(REGEX MATCHALL "-(D|U)[^ ]*" ROOT_DEFINITIONS "${__cflags}")
+string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_CXX_FLAGS "${__cflags}")
+string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_C_FLAGS "${__cflags}")
+
+set(ROOT_USE_FILE ${CMAKE_CURRENT_LIST_DIR}/RootUseFile.cmake)
 
 execute_process(
   COMMAND ${ROOT_CONFIG_EXECUTABLE} --features
   OUTPUT_VARIABLE _root_options
   OUTPUT_STRIP_TRAILING_WHITESPACE)
+separate_arguments(_root_options)
 foreach(_opt ${_root_options})
   set(ROOT_${_opt}_FOUND TRUE)
 endforeach()
@@ -70,8 +77,8 @@ find_package_handle_standard_args(ROOT DEFAULT_MSG ROOT_CONFIG_EXECUTABLE
 mark_as_advanced(ROOT_CONFIG_EXECUTABLE)
 
 include(CMakeParseArguments)
-find_program(ROOTCINT_EXECUTABLE rootcint PATHS $ENV{ROOTSYS}/bin)
-find_program(GENREFLEX_EXECUTABLE genreflex PATHS $ENV{ROOTSYS}/bin)
+find_program(ROOTCINT_EXECUTABLE rootcint HINTS $ENV{ROOTSYS}/bin)
+find_program(GENREFLEX_EXECUTABLE genreflex HINTS $ENV{ROOTSYS}/bin)
 find_package(GCCXML)
 
 #----------------------------------------------------------------------------
@@ -98,7 +105,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
         endif()
       endforeach()
     else()
-      find_file(headerFile ${fp} PATHS ${incdirs})
+      find_file(headerFile ${fp} HINTS ${incdirs})
       set(headerfiles ${headerfiles} ${headerFile})
       unset(headerFile CACHE)
     endif()
@@ -106,7 +113,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get LinkDef.h file------------------------------------
   set(linkdefs)
   foreach( f ${ARG_LINKDEF})
-    find_file(linkFile ${f} PATHS ${incdirs})
+    find_file(linkFile ${f} HINTS ${incdirs})
     set(linkdefs ${linkdefs} ${linkFile})
     unset(linkFile CACHE)
   endforeach()

@@ -59,10 +59,15 @@
 #include "TMetaUtils.h"
 
 int ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
-// std::vector<ROOT::TMetaUtils::RConstructorType> gIoConstructorTypes;
+
+static unsigned int gNumberOfWarningsAndErrors = 0;
 
 namespace ROOT {
 namespace TMetaUtils {
+
+unsigned int GetNumberOfWarningsAndErrors(){return gNumberOfWarningsAndErrors;}
+
+
 //______________________________________________________________________________
 class TNormalizedCtxtImpl {
    using DeclsCont_t = TNormalizedCtxt::Config_t::SkipCollection;
@@ -706,24 +711,22 @@ const clang::FunctionDecl* ROOT::TMetaUtils::ClassInfo__HasMethod(const clang::D
 //______________________________________________________________________________
 const clang::CXXRecordDecl *
 ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp,
-                              bool diagnose, const clang::Type** resultType)
+                              bool /*diagnose*/, const clang::Type** resultType)
 {
    // Return the scope corresponding to 'name' or std::'name'
    const cling::LookupHelper& lh = interp.getLookupHelper();
+   // We have many bogus diagnostics if we allow diagnostics here. Suppress.
+   // FIXME: silence them in the callers.
    const clang::CXXRecordDecl *result
       = llvm::dyn_cast_or_null<clang::CXXRecordDecl>
-      (lh.findScope(name,
-                    diagnose ? cling::LookupHelper::NoDiagnostics
-                    : cling::LookupHelper::NoDiagnostics,
-                    resultType));
+      (lh.findScope(name, cling::LookupHelper::NoDiagnostics, resultType));
    if (!result) {
       std::string std_name("std::");
       std_name += name;
+      // We have many bogus diagnostics if we allow diagnostics here. Suppress.
+      // FIXME: silence them in the callers.
       result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>
-         (lh.findScope(std_name,
-                       diagnose ? cling::LookupHelper::NoDiagnostics
-                       : cling::LookupHelper::NoDiagnostics,
-                       resultType));
+         (lh.findScope(std_name, cling::LookupHelper::NoDiagnostics, resultType));
    }
    return result;
 }
@@ -1075,42 +1078,41 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
    // return true if we can find an constructor calleable without any arguments
    // or with one the IOCtor special types.
 
-   bool result = false;
-
    if (cl->isAbstract()) return false;
 
-   for(RConstructorTypes::const_iterator ctorTypeIt=ctorTypes.begin();
-       ctorTypeIt!=ctorTypes.end();++ctorTypeIt){
+   for (RConstructorTypes::const_iterator ctorTypeIt = ctorTypes.begin();
+        ctorTypeIt!=ctorTypes.end(); ++ctorTypeIt) {
       std::string proto( ctorTypeIt->GetName() );
-      int extra = (proto.size()==0) ? 0 : 1;
-      if (extra==0) {
-         // Looking for default constructor
-         result = true;
-      } else {
+      bool defaultCtor = proto.empty();
+      if (!defaultCtor) {
+         // I/O constructors take pointers to ctorTypes
          proto += " *";
       }
 
-      result = ROOT::TMetaUtils::CheckConstructor(cl,*ctorTypeIt);
-      if (result && extra) {
+      if (!ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt))
+         continue;
+
+      if (defaultCtor) {
+         arg.clear();
+      } else {
          arg = "( (";
          arg += proto;
          arg += ")0 )";
       }
 
       // Check for private operator new
-      if (result) {
-         const char *name = "operator new";
-         proto = "size_t";
-         const clang::CXXMethodDecl *method
-            = GetMethodWithProto(cl,name,proto.c_str(), interp,
-                                 cling::LookupHelper::NoDiagnostics);
-         if (method && method->getAccess() != clang::AS_public) {
-            result = false;
-         }
-         if (result) return true;
+      const clang::CXXMethodDecl *method
+         = GetMethodWithProto(cl, "operator new", "size_t", interp,
+                              cling::LookupHelper::NoDiagnostics);
+      if (method && method->getAccess() != clang::AS_public) {
+         // The non-public op new is not going to improve for other c'tors.
+         return false;
       }
+
+      // This one looks good!
+      return true;
    }
-   return result;
+   return false;
 }
 
 //______________________________________________________________________________
@@ -2641,7 +2643,7 @@ void ROOT::TMetaUtils::LevelPrint(bool prefix, int level, const char *location, 
       type = "Info";
    if (level >= ROOT::TMetaUtils::kNote)
       type = "Note";
-   if (level >= ROOT::TMetaUtils::kWarning)
+   if (level >= ROOT::TMetaUtils::kThrowOnWarning)
       type = "Warning";
    if (level >= ROOT::TMetaUtils::kError)
       type = "Error";
@@ -2660,6 +2662,12 @@ void ROOT::TMetaUtils::LevelPrint(bool prefix, int level, const char *location, 
    }
 
    fflush(stderr);
+
+   if (ROOT::TMetaUtils::gErrorIgnoreLevel == ROOT::TMetaUtils::kThrowOnWarning ||
+       ROOT::TMetaUtils::gErrorIgnoreLevel > ROOT::TMetaUtils::kError){
+      gNumberOfWarningsAndErrors++;
+   }
+
 }
 
 //______________________________________________________________________________
@@ -3016,7 +3024,9 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
          // first let's see if it is a data member:
          int found = 0;
          const clang::CXXRecordDecl *parent_clxx = llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext());
-         const clang::FieldDecl *index1 = GetDataMemberFromAll(*parent_clxx, current );
+         const clang::FieldDecl *index1 = 0;
+         if (parent_clxx)
+            index1 = GetDataMemberFromAll(*parent_clxx, current );
          if ( index1 ) {
             if ( IsFieldDeclInt(index1) ) {
                found = 1;

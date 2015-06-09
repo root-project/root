@@ -4766,16 +4766,13 @@
 
          if (func['_typename'] == 'TPaveText' || func['_typename'] == 'TPaveStats') {
             if (!nostat) funcpainter = JSROOT.Painter.drawPaveText(this.divid, func);
-         } else
-
-         if (func['_typename'] == 'TF1') {
+         } else if (func['_typename'] == 'TF1') {
             var is_pad = this.root_pad() != null;
-            if ((!is_pad && !func.TestBit(kNotDraw))
-                  || (is_pad && func.TestBit(EStatusBits.kObjInCanvas)))
-               funcpainter = JSROOT.Painter.drawFunction(this.divid, func);
-         } else
 
-         if (func['_typename'] == 'TPaletteAxis') {
+            if (!(is_pad && func.TestBit(EStatusBits.kObjInCanvas)) && !func.TestBit(kNotDraw))
+               funcpainter = JSROOT.Painter.drawFunction(this.divid, func);
+
+         } else if (func['_typename'] == 'TPaletteAxis') {
             funcpainter = JSROOT.Painter.drawPaletteAxis(this.divid, func);
          }
       }
@@ -7630,19 +7627,36 @@
 
    JSROOT.HierarchyPainter.prototype.ExecuteCommand = function(itemname, callback) {
       // execute item marked as 'Command'
+      // If command requires additional arguments, they could be specified as extra arguments
+      // Or they will be requested interactive
 
       var hitem = this.Find(itemname);
       var url = itemname + "/cmd.json";
+      var pthis = this;
+
+      if ('_numargs' in hitem)
+         for (var n=0;n<hitem._numargs;n++) {
+            var argname = "arg" + (n+1);
+            var argvalue = null;
+            if (n+2<arguments.length) argvalue = arguments[n+2];
+            if ((argvalue==null) && (typeof callback == 'object'))
+               argvalue = prompt("Input argument " + argname + " for command " + hitem._name,"");
+            if (argvalue==null) return;
+            url += ((n==0) ? "?" : "&") + argname + "=" + argvalue;
+         }
+
       if ((callback!=null) && (typeof callback == 'object')) {
          callback.css('background','yellow');
          if (hitem && hitem._title) callback.attr('title', "Executing " + hitem._title);
       }
       var req = JSROOT.NewHttpRequest(url, 'text', function(res) {
-         if (typeof callback=='function') return callback(res);
-         if ((callback!=null) && (typeof callback == 'object')) {
+         if (typeof callback == 'function') return callback(res);
+         if ((callback != null) && (typeof callback == 'object')) {
             var col = ((res!=null) && (res!='false')) ? 'green' : 'red';
             if (hitem && hitem._title) callback.attr('title', hitem._title + " lastres=" + res);
             callback.animate({ backgroundColor: col}, 2000, function() { callback.css('background', ''); });
+            if ((col == 'green') && ('_hreload' in hitem)) pthis.reload();
+            if ((col == 'green') && ('_update_item' in hitem)) pthis.display(hitem._update_item,"update");
          }
       });
       req.send();
@@ -7834,7 +7848,6 @@
 
       var allitems = [], options = [], hpainter = this;
 
-
       // first collect items
       mdi.ForEachPainter(function(p) {
          var itemname = p.GetItemName();
@@ -8024,6 +8037,13 @@
             req = 'item.json.gz?compact=3';
       }
 
+      if ((itemname==null) && (item!=null) && ('_cached_draw_object' in this) && (req.indexOf("root.json.gz")==0)) {
+         // special handling for drawGUI when cashed
+         var obj = this['_cached_draw_object'];
+         delete this['_cached_draw_object'];
+         return JSROOT.CallBack(callback, item, obj);
+      }
+
       if (url.length > 0) url += "/";
       url += req;
 
@@ -8068,19 +8088,25 @@
             return false;
          }
 
-         var scripts = "";
+         var scripts = "", modules = "";
+
+         function updateList(lst, newitems) {
+            if (newitems==null) return lst;
+            var arr = newitems.split(";");
+            for (var n in arr)
+               if (lst.indexOf(arr[n])<0) lst+=arr[n]+";";
+            return lst;
+         }
 
          painter.ForEach(function(item) {
-            if (!('_autoload' in item)) return;
-            var arr = item['_autoload'].split(";");
-            for (var n in arr)
-               if (scripts.indexOf(arr[n])<0) scripts += arr[n] + ";";
+            if ('_prereq' in item) modules = updateList(modules, item['_prereq']);
+            if ('_autoload' in item) scripts = updateList(scripts, item['_autoload']);
          });
 
          if (scripts.length > 0) scripts = "user:" + scripts;
 
          // use AssertPrerequisites, while it protect us from race conditions
-         JSROOT.AssertPrerequisites(scripts, function() {
+         JSROOT.AssertPrerequisites(modules + scripts, function() {
 
             painter.ForEach(function(item) {
                if (!('_drawfunc' in item)) return;
@@ -8089,7 +8115,7 @@
                var drawopt = item['_drawopt'];
                if (JSROOT.canDraw(typename) && (drawopt==null)) return;
                var func = JSROOT.findFunction(item['_drawfunc']);
-               if (func) JSROOT.addDrawFunc(typename, func, drowopt);
+               if (func) JSROOT.addDrawFunc(typename, func, drawopt);
 
                if (item['_drawscript'] != null)
                   JSROOT.addDrawFunc(typename, { script:item['_drawscript'], func: item['_drawfunc']} , drawopt);
@@ -8341,12 +8367,13 @@
 
    JSROOT.BuildNobrowserGUI = function() {
       var myDiv = d3.select('#simpleGUI');
-      var online = false;
+      var online = false, drawing = false;
 
       if (myDiv.empty()) {
-         myDiv = d3.select('#onlineGUI');
-         if (myDiv.empty()) return alert('no div for simple nobrowser gui found');
          online = true;
+         myDiv = d3.select('#onlineGUI');
+         if (myDiv.empty()) { myDiv = d3.select('#drawGUI'); drawing = true; }
+         if (myDiv.empty()) return alert('no div for simple nobrowser gui found');
       }
 
       JSROOT.Painter.readStyleFromURL();
@@ -8366,7 +8393,14 @@
          if (typeof h0 != 'object') h0 = "";
       }
 
-      hpainter.StartGUI(h0, function() {});
+      hpainter.StartGUI(h0, function() {
+         if (!drawing) return;
+         var func = JSROOT.findFunction('GetCachedObject');
+         var obj = (typeof func == 'function') ? JSROOT.JSONR_unref(func()) : null;
+         if (obj!=null) hpainter['_cached_draw_object'] = obj;
+         var opt = JSROOT.GetUrlOption("opt");
+         hpainter.display("", opt);
+      });
    }
 
    // ================================================================

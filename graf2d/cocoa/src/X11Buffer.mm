@@ -853,7 +853,8 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
                assert(fClippedRegion.size() == 1 && "ClipOverlaps, internal logic error");
                break;
             }
-            recIt->origin = [view.fParentView convertPoint : recIt->origin toView : view];
+            recIt->origin = NSPointToCGPoint([view.fParentView convertPoint :
+                                              NSPointFromCGPoint(recIt->origin) toView : view]);
          }
       }
    }

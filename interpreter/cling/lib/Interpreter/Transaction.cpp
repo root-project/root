@@ -43,7 +43,7 @@ namespace cling {
     m_IssuedDiags = kNone;
     m_Opts = CompilationOptions();
     m_Module = 0;
-    m_ExeUnload = {0};
+    m_ExeUnload = {(void*)(size_t)-1};
     m_WrapperFD = 0;
     m_Next = 0;
     //m_Sema = S;
@@ -60,7 +60,7 @@ namespace cling {
         delete (*m_NestedTransactions)[i];
       }
     if (getExecutor())
-      getExecutor()->unloadFromJIT(getExeUnloadHandle());
+      getExecutor()->unloadFromJIT(m_Module.get(), getExeUnloadHandle());
   }
 
   NamedDecl* Transaction::containsNamedDecl(llvm::StringRef name) const {
@@ -109,27 +109,6 @@ namespace cling {
     }
     if (!m_NestedTransactions->size())
       m_NestedTransactions.reset(0);
-  }
-
-  void Transaction::reset() {
-    assert((empty() || getState() == kRolledBack)
-           && "The transaction must be empty.");
-    // When we unload we want to clear the containers.
-    if (!empty()) {
-      m_DeserializedDeclQueue.clear();
-      m_DeclQueue.clear();
-      m_MacroDirectiveInfoQueue.clear();
-    }
-    if (Transaction* parent = getParent())
-      parent->removeNestedTransaction(this);
-    m_Parent = 0;
-    m_State = kCollecting;
-    m_IssuedDiags = kNone;
-    m_Opts = CompilationOptions();
-    m_NestedTransactions.reset(0); // FIXME: leaks the nested transactions.
-    m_Module = 0;
-    m_WrapperFD = 0;
-    m_Next = 0;
   }
 
   void Transaction::append(DelayCallInfo DCI) {

@@ -360,8 +360,9 @@ Int_t FileSize(const char *filename)
    // Return the size of the file "filename".
 
    FileStat_t fs;
-   gSystem->GetPathInfo(filename, fs);
-   return (Int_t)fs.fSize;
+   if (gSystem->GetPathInfo(filename, fs) == 0)
+      return (Int_t)fs.fSize;
+   return 0;
 }
 
 //______________________________________________________________________________

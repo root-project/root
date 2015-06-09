@@ -120,7 +120,7 @@ root [11] TF1 f1("f1","sin(x)/x",0.,10.);
 root [12] f1.Draw();
 ```
 
-`f1` is a pointer to an instance of a TF1 class, the arguments are used
+`f1` is an instance of a TF1 class, the arguments are used
 in the constructor; the first one of type string is a name to be entered
 in the internal ROOT memory management system, the second string type
 parameter defines the function, here `sin(x)/x`, and the two parameters

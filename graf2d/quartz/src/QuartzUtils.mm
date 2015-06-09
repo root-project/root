@@ -17,6 +17,14 @@ namespace ROOT {
 namespace Quartz {
 
 //______________________________________________________________________________
+CGStateGuard::CGStateGuard(MacOSX::Util::CFScopeGuard<CGContextRef> &ctx)
+               : fCtx(ctx.Get())
+{
+   assert(fCtx != 0 && "CGStateGuard, ctx parameter is null");
+   CGContextSaveGState(fCtx);
+}
+
+//______________________________________________________________________________
 CGStateGuard::CGStateGuard(CGContextRef ctx)
                : fCtx(ctx)
 {

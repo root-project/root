@@ -68,6 +68,12 @@ namespace PyROOT {
       virtual Bool_t ToMemory( PyObject*, void* );                            \
    private:                                                                   \
       Py_ssize_t fSize;                                                       \
+   };                                                                         \
+                                                                              \
+   class T##name##RefConverter : public T##name##Converter {                  \
+   public:                                                                    \
+      using T##name##Converter::T##name##Converter;                           \
+      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );\
    }
 
 // converters for built-ins
@@ -83,8 +89,8 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_CONVERTER( LongLong );
    PYROOT_DECLARE_BASIC_CONVERTER( ULongLong );
    PYROOT_DECLARE_BASIC_CONVERTER( Double );
-   PYROOT_DECLARE_BASIC_CONVERTER2( Float, Double );
-   PYROOT_DECLARE_BASIC_CONVERTER2( LongDouble, Double );
+   PYROOT_DECLARE_BASIC_CONVERTER( Float );
+   PYROOT_DECLARE_BASIC_CONVERTER( LongDouble );
 
    PYROOT_DECLARE_REF_CONVERTER( Int );
    PYROOT_DECLARE_REF_CONVERTER( Long );
@@ -182,6 +188,25 @@ namespace PyROOT {
       virtual Bool_t GetAddressSpecialCase( PyObject*, void*& ) { return kFALSE; }
    };
 
+   class TValueCppObjectConverter : public TStrictCppObjectConverter {
+   public:
+      using TStrictCppObjectConverter::TStrictCppObjectConverter;
+
+   public:
+      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+   };
+
+   class TRefCppObjectConverter : public TConverter  {
+   public:
+      TRefCppObjectConverter( Cppyy::TCppType_t klass ) : fClass( klass ) {}
+
+   public:
+      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+
+   protected:
+      Cppyy::TCppType_t fClass;
+   };
+
    class TCppObjectPtrConverter : public TCppObjectConverter {
    public:
       using TCppObjectConverter::TCppObjectConverter;
@@ -232,7 +257,7 @@ namespace PyROOT {
    public:                                                                    \
       T##name##Converter( Bool_t keepControl = kTRUE );                       \
    public:                                                                    \
-   virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );   \
+      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );\
       virtual PyObject* FromMemory( void* address );                          \
       virtual Bool_t ToMemory( PyObject* value, void* address );              \
    private:                                                                   \

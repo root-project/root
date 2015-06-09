@@ -183,13 +183,9 @@ TString::TString(TString &&s)
 {
    // Move constructor.
 
-   if (!s.IsLong()) {
-      fRep.fRaw = s.fRep.fRaw;
-      s.Init(0,0);
-   } else {
-      fRep.fRaw = s.fRep.fRaw;
-      s.Init(0,0);
-   }
+   // Short or long, all data is in fRaw.
+   fRep.fRaw = s.fRep.fRaw;
+   s.Init(0,0);
 }
 
 //______________________________________________________________________________

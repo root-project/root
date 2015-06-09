@@ -15,7 +15,8 @@ TRootSnifferStore::TRootSnifferStore() :
    fResPtr(0),
    fResClass(0),
    fResMember(0),
-   fResNumChilds(-1)
+   fResNumChilds(-1),
+   fResRestrict(0)
 {
    // normal constructor
 }
@@ -28,7 +29,7 @@ TRootSnifferStore::~TRootSnifferStore()
 
 //______________________________________________________________________________
 void TRootSnifferStore::SetResult(void *_res, TClass *_rescl,
-                                  TDataMember *_resmemb, Int_t _res_chld)
+                                  TDataMember *_resmemb, Int_t _res_chld, Int_t _restr)
 {
    // set pointer on found element, class and number of childs
 
@@ -36,6 +37,7 @@ void TRootSnifferStore::SetResult(void *_res, TClass *_rescl,
    fResClass = _rescl;
    fResMember = _resmemb;
    fResNumChilds = _res_chld;
+   fResRestrict = _restr;
 }
 
 // =================================================================================

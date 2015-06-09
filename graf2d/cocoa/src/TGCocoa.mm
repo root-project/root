@@ -544,7 +544,7 @@ X11::Rectangle TGCocoa::GetDisplayGeometry()const
       NSArray * const screens = [NSScreen screens];
       assert(screens != nil && screens.count != 0 && "GetDisplayGeometry, no screens found");
 
-      CGRect frame = [(NSScreen *)[screens objectAtIndex : 0] frame];
+      NSRect frame = [(NSScreen *)[screens objectAtIndex : 0] frame];
       CGFloat xMin = frame.origin.x, xMax = xMin + frame.size.width;
       CGFloat yMin = frame.origin.y, yMax = yMin + frame.size.height;
 
@@ -813,6 +813,8 @@ Window_t TGCocoa::CreateWindow(Window_t parentID, Int_t x, Int_t y, UInt_t w, UI
       //Can throw:
       QuartzWindow * const newWindow = X11::CreateTopLevelWindow(x, y, w, h, border,
                                                                  depth, clss, visual, attr, wtype);
+      //Something like unique_ptr would perfectly solve the problem with raw pointer + a separate
+      //guard for this pointer, but it requires move semantics.
       const Util::NSScopeGuard<QuartzWindow> winGuard(newWindow);
       const Window_t result = fPimpl->RegisterDrawable(newWindow);//Can throw.
       newWindow.fID = result;
@@ -991,7 +993,7 @@ void TGCocoa::ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y)
       view.fParentView = nil;
 
       NSRect frame = view.frame;
-      frame.origin = CGPointZero;
+      frame.origin = NSPoint();
 
       NSUInteger styleMask = NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
       if (!view.fOverrideRedirect)
@@ -1571,8 +1573,8 @@ void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t wMin, UInt_t hMin, UInt_t wMax
    assert(!fPimpl->IsRootWindow(wid) && "SetWMSizeHints, called for root window");
 
    const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
-   const NSRect minRect = [NSWindow frameRectForContentRect : CGRectMake(0., 0., wMin, hMin) styleMask : styleMask];
-   const NSRect maxRect = [NSWindow frameRectForContentRect : CGRectMake(0., 0., wMax, hMax) styleMask : styleMask];
+   const NSRect minRect = [NSWindow frameRectForContentRect : NSMakeRect(0., 0., wMin, hMin) styleMask : styleMask];
+   const NSRect maxRect = [NSWindow frameRectForContentRect : NSMakeRect(0., 0., wMax, hMax) styleMask : styleMask];
 
    QuartzWindow * const qw = fPimpl->GetWindow(wid).fQuartzWindow;
    [qw setMinSize : minRect.size];
@@ -1866,7 +1868,7 @@ void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
    if (!drawable.fIsPixmap) {
       QuartzView * const view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
       if (view.fParentView) {
-         const CGPoint origin = [view.fParentView convertPoint : view.frame.origin toView : nil];
+         const NSPoint origin = [view.fParentView convertPoint : view.frame.origin toView : nil];
          patternPhase.width = origin.x;
          patternPhase.height = origin.y;
       }
@@ -1962,7 +1964,7 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
 
    if (!drawable.fIsPixmap) {
       QuartzView * const view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
-      const CGPoint origin = [view convertPoint : view.frame.origin toView : nil];
+      const NSPoint origin = [view convertPoint : view.frame.origin toView : nil];
       patternPhase.width = origin.x;
       patternPhase.height = origin.y;
    }
@@ -2264,7 +2266,7 @@ void TGCocoa::ClearAreaAux(Window_t windowID, Int_t x, Int_t y, UInt_t w, UInt_t
 
       CGSize patternPhase = {};
       if (view.fParentView) {
-         const CGPoint origin = [view.fParentView convertPoint : view.frame.origin toView : nil];
+         const NSPoint origin = [view.fParentView convertPoint : view.frame.origin toView : nil];
          patternPhase.width = origin.x;
          patternPhase.height = origin.y;
       }
@@ -4145,7 +4147,7 @@ void TGCocoa::Warp(Int_t ix, Int_t iy, Window_t winID)
                                                  newCursorPosition);
    }
 
-   CGWarpMouseCursorPosition(newCursorPosition);
+   CGWarpMouseCursorPosition(NSPointToCGPoint(newCursorPosition));
 }
 
 //______________________________________________________________________________
@@ -4441,7 +4443,7 @@ bool TGCocoa::MakeProcessForeground()
       //TransformProcessType fails with paramErr (looks like process is _already_ foreground),
       //why is it a paramErr - I've no idea.
       if (res1 != noErr && res1 != paramErr) {
-         Error("MakeProcessForeground", "TransformProcessType failed with code %d", res1);
+         Error("MakeProcessForeground", "TransformProcessType failed with code %d", int(res1));
          return false;
       }
 #ifdef MAC_OS_X_VERSION_10_9

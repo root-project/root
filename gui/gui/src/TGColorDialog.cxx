@@ -1005,7 +1005,7 @@ void TGColorPick::DrawHScursor(Int_t onoff)
       if (y < 0) { h += y; y = 0; }
 
       if (x + w > width) w = width - x;
-      if (y + h > width) h = height - y;
+      if (y + h > height) h = height - y;
 
       gVirtualX->PutImage(fId, GetBckgndGC()(), fHSimage, x, y,
                           fColormapRect.fX + x, fColormapRect.fY + y, w, h);
@@ -1054,10 +1054,15 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    Int_t i;
 
    fRetc = retc;
-   fRetColor = color;
-   if((fRetTColor = gROOT->GetColor(TColor::GetColor(*color)))) {};
+   fRetColor = 0;
+   fRetTColor = 0;
+   fInitColor = 0;
+   if (color) {
+      fRetColor = color;
+      fRetTColor = gROOT->GetColor(TColor::GetColor(*color));
+      fInitColor = *fRetColor;
+   }
    fWaitFor = wait;
-   fInitColor = *fRetColor;
 
    if (fRetc) *fRetc = kMBCancel;
 
@@ -1471,8 +1476,10 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                      *fRetColor = TColor::RGB2Pixel(atoi(fRtb->GetString()),
                                                     atoi(fGtb->GetString()),
                                                     atoi(fBtb->GetString()));
-                     if ((fRetTColor = gROOT->GetColor(TColor::GetColor(*fRetColor)))) {};
-                     fRetTColor->SetAlpha(TMath::Max((Double_t)0, TMath::Min((Double_t)1, atof(fAlb->GetString()))));
+                     if ((fRetTColor = gROOT->GetColor(TColor::GetColor(*fRetColor)))) {
+                        fRetTColor->SetAlpha(TMath::Max((Double_t)0, TMath::Min((Double_t)1,
+                                             atof(fAlb->GetString()))));
+                     }
                      CloseWindow();
                      break;
                   case kCDLG_CANCEL:

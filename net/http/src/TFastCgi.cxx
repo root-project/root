@@ -197,11 +197,32 @@ void *TFastCgi::run_func(void *args)
 
       const char *inp_path = FCGX_GetParam("PATH_INFO", request.envp);
       const char *inp_query = FCGX_GetParam("QUERY_STRING", request.envp);
+      const char *inp_method = FCGX_GetParam("REQUEST_METHOD", request.envp);
+      const char *inp_length = FCGX_GetParam("CONTENT_LENGTH", request.envp);
 
       THttpCallArg arg;
       if (inp_path != 0) arg.SetPathAndFileName(inp_path);
       if (inp_query != 0) arg.SetQuery(inp_query);
+      if (inp_method != 0) arg.SetMethod(inp_method);
       if (engine->fTopName.Length() > 0) arg.SetTopName(engine->fTopName.Data());
+      int len = 0;
+      if (inp_length!=0) len = strtol(inp_length, NULL, 10);
+      if (len>0) {
+         void* buf = malloc(len+1); // one myte more for null-termination
+         int nread = FCGX_GetStr((char*) buf, len, request.in);
+         if (nread>0) arg.SetPostData(buf, nread);
+                 else free(buf);
+      }
+
+      TString header;
+      for (char **envp = request.envp; *envp != NULL; envp++) {
+         TString entry = *envp;
+         for (Int_t n=0;n<entry.Length();n++)
+            if (entry[n] == '=') { entry[n] = ':'; break; }
+         header.Append(entry);
+         header.Append("\r\n");
+      }
+      arg.SetRequestHeader(header);
 
       if (engine->fDebugMode) {
          FCGX_FPrintF(request.out,
@@ -209,40 +230,19 @@ void *TFastCgi::run_func(void *args)
                       "Content-type: text/html\r\n"
                       "\r\n"
                       "<title>FastCGI echo</title>"
-                      "<h1>FastCGI echo</h1>\n"
-                      "Request number %d<p>\n", count);
+                      "<h1>FastCGI echo</h1>\n");
 
-         char *contentLength = FCGX_GetParam("CONTENT_LENGTH", request.envp);
-         int len = 0;
-
-         if (contentLength != NULL)
-            len = strtol(contentLength, NULL, 10);
-
-         if (len <= 0) {
-            FCGX_FPrintF(request.out, "No data from standard input.<p>\n");
-         } else {
-            int i, ch;
-
-            FCGX_FPrintF(request.out, "Standard input:<br/>\n<pre>\n");
-            for (i = 0; i < len; i++) {
-               if ((ch = FCGX_GetChar(request.in)) < 0) {
-                  FCGX_FPrintF(request.out,
-                               "Error: Not enough bytes received on standard input<p>\n");
-                  break;
-               }
-               FCGX_PutChar(ch, request.out);
-            }
-            FCGX_FPrintF(request.out, "\n</pre><p>\n");
-         }
-
-         FCGX_FPrintF(request.out, "PATHNAME: %s<p>\n", arg.GetPathName());
-         FCGX_FPrintF(request.out, "FILENAME: %s<p>\n", arg.GetFileName());
-         FCGX_FPrintF(request.out, "QUERY:    %s<p>\n", arg.GetQuery());
-         FCGX_FPrintF(request.out, "<p>\n");
+         FCGX_FPrintF(request.out, "Request %d:<br/>\n<pre>\n", count);
+         FCGX_FPrintF(request.out, "  Method   : %s\n", arg.GetMethod());
+         FCGX_FPrintF(request.out, "  PathName : %s\n", arg.GetPathName());
+         FCGX_FPrintF(request.out, "  FileName : %s\n", arg.GetFileName());
+         FCGX_FPrintF(request.out, "  Query    : %s\n", arg.GetQuery());
+         FCGX_FPrintF(request.out, "  PostData : %ld\n", arg.GetPostDataLength());
+         FCGX_FPrintF(request.out, "</pre><p>\n");
 
          FCGX_FPrintF(request.out, "Environment:<br/>\n<pre>\n");
          for (char **envp = request.envp; *envp != NULL; envp++) {
-            FCGX_FPrintF(request.out, "%s\n", *envp);
+            FCGX_FPrintF(request.out, "  %s\n", *envp);
          }
          FCGX_FPrintF(request.out, "</pre><p>\n");
 

@@ -69,21 +69,21 @@ private:
    cling::Interpreter *fInterp;
 
    // Cached for performance
-   std::string fName;
-   std::string fPattern;
-   std::string fProtoName;
-   std::string fProtoPattern;
-   std::string fFileName;
-   std::string fFilePattern;
-   std::string fNArgsToKeep;
-   bool fHasNameAttribute;
-   bool fHasProtoNameAttribute;
-   bool fHasPatternAttribute;
-   bool fHasProtoPatternAttribute;
-   bool fHasFileNameAttribute;
-   bool fHasFilePatternAttribute;
-   bool fHasFromTypedefAttribute;
-   bool fIsFromTypedef;
+   std::string fName = "";
+   std::string fPattern = "";
+   std::string fProtoName = "";
+   std::string fProtoPattern = "";
+   std::string fFileName = "";
+   std::string fFilePattern = "";
+   std::string fNArgsToKeep = "";
+   bool fHasNameAttribute = false;
+   bool fHasProtoNameAttribute = false;
+   bool fHasPatternAttribute = false;
+   bool fHasProtoPatternAttribute = false;
+   bool fHasFileNameAttribute = false;
+   bool fHasFilePatternAttribute = false;
+   bool fHasFromTypedefAttribute = false;
+   bool fIsFromTypedef = false;
 
 public:
 

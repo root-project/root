@@ -158,6 +158,7 @@ namespace TMath {
    template<typename T>
    inline Int_t    Nint(T x);
 
+   inline Double_t Sq(Double_t x);
    inline Double_t Sqrt(Double_t x);
    inline Double_t Exp(Double_t x);
    inline Double_t Ldexp(Double_t x, Int_t exp);
@@ -456,6 +457,9 @@ inline Double_t TMath::ATan2(Double_t y, Double_t x)
      if (y >  0) return  Pi()/2;
      else        return -Pi()/2;
    }
+
+inline Double_t TMath::Sq(Double_t x)
+   { return x*x; }
 
 inline Double_t TMath::Sqrt(Double_t x)
    { return sqrt(x); }

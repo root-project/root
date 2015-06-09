@@ -33,7 +33,6 @@
 #include "RConfigure.h"
 #include "X11Colors.h"
 #include "X11Buffer.h"
-#include "X11Events.h"
 #include "TGWindow.h"
 #include "TGClient.h"
 #include "TSystem.h"
@@ -139,7 +138,7 @@ NSPoint ConvertPointFromBaseToScreen(NSWindow *window, NSPoint windowPoint)
 
    NSRect tmpRect = {};
    tmpRect.origin = windowPoint;
-   tmpRect.size = CGSizeMake(1., 1.);//This is strange size :) But if they require rect, 0,0 - will not work?
+   tmpRect.size = NSMakeSize(1., 1.);//This is strange size :) But if they require rect, 0,0 - will not work?
    tmpRect = [window convertRectToScreen : tmpRect];
 
    return tmpRect.origin;
@@ -155,7 +154,7 @@ NSPoint ConvertPointFromScreenToBase(NSPoint screenPoint, NSWindow *window)
 
    NSRect tmpRect = {};
    tmpRect.origin = screenPoint;
-   tmpRect.size = CGSizeMake(1., 1.);
+   tmpRect.size = NSMakeSize(1., 1.);
    tmpRect = [window convertRectFromScreen : tmpRect];
 
    return tmpRect.origin;
@@ -596,23 +595,25 @@ void ClipToShapeMask(NSView<X11Window> *view, CGContextRef ctx)
    //a top-level window. In ROOT it does not :( Say hello to visual artifacts.
 
    //Attach clip mask to the context.
-   NSRect clipRect = view.frame;
    if (!view.fParentView) {
       //'view' is a top-level view.
-      clipRect = CGRectMake(0, 0, topLevelParent.fShapeCombineMask.fWidth,
-                                  topLevelParent.fShapeCombineMask.fHeight);
+      const CGRect clipRect = CGRectMake(0, 0, topLevelParent.fShapeCombineMask.fWidth,
+                                               topLevelParent.fShapeCombineMask.fHeight);
       CGContextClipToMask(ctx, clipRect, topLevelParent.fShapeCombineMask.fImage);
    } else {
+      NSRect clipRect = view.frame;
       //More complex case: 'self' is a child view, we have to create a subimage from shape mask.
-      clipRect.origin = [view.fParentView convertPoint : clipRect.origin toView : [view window].contentView];
+      clipRect.origin = [view.fParentView convertPoint : clipRect.origin
+                         toView : [view window].contentView];
       clipRect.origin.y = X11::LocalYROOTToCocoa((NSView<X11Window> *)[view window].contentView,
                                                   clipRect.origin.y + clipRect.size.height);
 
       if (AdjustCropArea(topLevelParent.fShapeCombineMask, clipRect)) {
          const Util::CFScopeGuard<CGImageRef>
-            clipImageGuard(CGImageCreateWithImageInRect(topLevelParent.fShapeCombineMask.fImage, clipRect));
-         clipRect.origin = CGPointZero;
-         CGContextClipToMask(ctx, clipRect, clipImageGuard.Get());
+            clipImageGuard(CGImageCreateWithImageInRect(topLevelParent.fShapeCombineMask.fImage,
+                                                        NSRectToCGRect(clipRect)));
+         clipRect.origin = NSPoint();
+         CGContextClipToMask(ctx, NSRectToCGRect(clipRect), clipImageGuard.Get());
       } else {
          //View is invisible.
          CGRect rect = {};
@@ -759,9 +760,9 @@ NSPoint GetCursorHotStop(NSImage *image, ECursor cursor)
    const NSSize imageSize = image.size;
 
    if (cursor == kArrowRight)
-      return CGPointMake(imageSize.width, imageSize.height / 2);
+      return NSMakePoint(imageSize.width, imageSize.height / 2);
 
-   return CGPointMake(imageSize.width / 2, imageSize.height / 2);
+   return NSMakePoint(imageSize.width / 2, imageSize.height / 2);
 }
 
 //TGTextView/TGHtml is a very special window: it's a TGCompositeFrame,
@@ -994,13 +995,7 @@ void print_mask_info(ULong_t mask)
 #endif
 
 
-@implementation QuartzWindow {
-@private
-   QuartzView *fContentView;
-   BOOL fDelayedTransient;
-   QuartzImage *fShapeCombineMask;
-   BOOL fIsDeleted;
-}
+@implementation QuartzWindow
 
 @synthesize fMainWindow;
 @synthesize fHasFocus;
@@ -1053,7 +1048,7 @@ void print_mask_info(ULong_t mask)
                                 NSMiniaturizableWindowMask | NSResizableWindowMask;
 
    NSRect contentRect = glView.frame;
-   contentRect.origin = CGPointZero;
+   contentRect.origin = NSPoint();
 
    self = [super initWithContentRect : contentRect styleMask : styleMask
                              backing : NSBackingStoreBuffered defer : NO];
@@ -1558,10 +1553,7 @@ void print_mask_info(ULong_t mask)
 
 #pragma mark - Passive key grab info.
 
-@implementation PassiveKeyGrab {
-   unichar fKeyCode;
-   NSUInteger fModifiers;
-}
+@implementation PassiveKeyGrab
 
 //______________________________________________________________________________
 - (id) initWithKey : (unichar) keyCode modifiers : (NSUInteger) modifiers
@@ -1676,18 +1668,7 @@ void print_mask_info(ULong_t mask)
 //QuartzView is a children view (also is a content view for a top-level QuartzWindow).
 //
 
-@implementation QuartzView {
-   QuartzPixmap   *fBackBuffer;
-   NSMutableArray *fPassiveKeyGrabs;
-   BOOL            fIsOverlapped;
-
-   NSMutableDictionary   *fX11Properties;
-   QuartzImage           *fBackgroundPixmap;
-
-   X11::PointerGrab fCurrentGrabType;
-   unsigned         fActiveGrabEventMask;
-   BOOL             fActiveGrabOwnerEvents;
-}
+@implementation QuartzView
 
 @synthesize fID;
 @synthesize fContext;
@@ -2433,7 +2414,7 @@ void print_mask_info(ULong_t mask)
       if ([sibling isHidden])
          continue;
 
-      if (CGRectEqualToRect(sibling.frame, self.frame)) {
+      if (NSEqualRects(sibling.frame, self.frame)) {
          [sibling setOverlapped : YES];
          [sibling setHidden : YES];
       }
@@ -2463,7 +2444,7 @@ void print_mask_info(ULong_t mask)
          continue;
 
       //TODO: equal test is not good :) I have a baaad feeling about this ;)
-      if (CGRectEqualToRect(sibling.frame, self.frame)) {
+      if (NSEqualRects(sibling.frame, self.frame)) {
          [sibling setOverlapped : NO];
          //
          [sibling setHidden : NO];
@@ -2642,7 +2623,7 @@ void print_mask_info(ULong_t mask)
    //In case of TBrowser, setFrame started infinite recursion:
    //HandleConfigure for embedded main frame emits signal, slot
    //calls layout, layout calls setFrame -> HandleConfigure and etc. etc.
-   if (CGRectEqualToRect(newFrame, self.frame))
+   if (NSEqualRects(newFrame, self.frame))
       return;
 
    [super setFrame : newFrame];

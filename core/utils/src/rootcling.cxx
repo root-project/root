@@ -636,7 +636,7 @@ bool InheritsFromTSelector(const clang::RecordDecl *cl,
                            const cling::Interpreter &interp)
 {
    static const clang::CXXRecordDecl *TObject_decl
-      = ROOT::TMetaUtils::ScopeSearch("TSelector", interp, true /*diag*/, 0);
+      = ROOT::TMetaUtils::ScopeSearch("TSelector", interp, false /*diag*/, 0);
 
    return ROOT::TMetaUtils::IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl, nullptr, interp);
 }
@@ -2555,55 +2555,6 @@ void AdjustRootMapNames(std::string &rootmapFileName,
 }
 
 //______________________________________________________________________________
-int CreateRootMapFile(const std::string &rootmapFileName,
-                      const std::string &rootmapLibName,
-                      const std::list<std::string> &classesNames,
-                      const std::list<std::string> &nsNames)
-{
-
-   // Create the rootmap file from the selected classes and namespaces
-   std::ofstream rootmapFile(rootmapFileName.c_str());
-   if (!rootmapFile) {
-      ROOT::TMetaUtils::Error(0, "Opening new rootmap file %s\n", rootmapFileName.c_str());
-      return 1;
-   }
-
-
-   // Preamble
-   rootmapFile << "#--Begin " << rootmapFileName << std::endl;
-
-   // The number used to have the same alignment of ROOT5
-   const int alignment = 49;
-
-   // Loop on selected classes and insert them in the rootmap
-   std::string thisClassName;
-   for (std::list<std::string>::const_iterator classNameIt = classesNames.begin();
-         classNameIt != classesNames.end(); ++classNameIt) {
-      thisClassName = *classNameIt;
-      ManipForRootmap(thisClassName);
-      rootmapFile << "Library." << thisClassName << ": "
-                  << std::setw(alignment - thisClassName.size()) << rootmapLibName
-                  << std::endl;
-   }
-
-   // Same for namespaces
-   std::string thisNsName;
-   for (std::list<std::string>::const_iterator nsNameIt = nsNames.begin();
-         nsNameIt != nsNames.end(); ++nsNameIt) {
-      thisNsName = *nsNameIt ;
-      ManipForRootmap(thisNsName);
-      rootmapFile << "Library." << thisNsName << ": "
-                  << std::setw(alignment - thisClassName.size()) << rootmapLibName
-                  << std::endl;
-   }
-
-   rootmapFile << "#--End " << rootmapFileName << std::endl;
-   rootmapFile << "#--Final End" << std::endl;
-
-   return 0;
-}
-
-//______________________________________________________________________________
 bool IsHeaderName(const std::string &filename)
 {
    return llvm::sys::path::extension(filename) == ".h" ||
@@ -2782,6 +2733,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
 
 }
 
+//______________________________________________________________________________
 std::pair<std::string,std::string> GetExternalNamespaceAndContainedEntities(const std::string line)
 {
    // Performance is not critical here.
@@ -3932,9 +3884,6 @@ int RootCling(int argc,
    bool writeEmptyRootPCM = false;
    bool selSyntaxOnly = false;
 
-   // Temporary to decide if the new format is to be used
-   bool useNewRmfFormat = true;
-
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
    std::list<std::string> diagnosticPragmas = {"#pragma clang diagnostic ignored \"-Wdeprecated-declarations\""};
@@ -3961,13 +3910,6 @@ int RootCling(int argc,
             // name for the rootmap file
             rootmapFileName = argv[ic + 1];
             ic += 2;
-            continue;
-         }
-
-         if (strcmp("-oldRmfFormat", argv[ic]) == 0) {
-            // Generate old style rootmap files
-            useNewRmfFormat = false;
-            ic += 1;
             continue;
          }
 
@@ -4038,6 +3980,13 @@ int RootCling(int argc,
          if (strcmp("-selSyntaxOnly", argv[ic]) == 0) {
             // validate the selection grammar w/o creating the dictionary
             selSyntaxOnly = true;
+            ic += 1;
+            continue;
+         }
+
+         if (strcmp("-failOnWarnings", argv[ic]) == 0) {
+            // Fail on Warnings and Errors
+            ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kThrowOnWarning;
             ic += 1;
             continue;
          }
@@ -4714,36 +4663,30 @@ int RootCling(int argc,
                              rootmapLibName.c_str());
 
       tmpCatalog.addFileName(rootmapFileName);
-      if (useNewRmfFormat) {
-         std::unordered_set<std::string> headersToIgnore;
-         if (inlineInputHeader) {
-            for (int index = 0; index < argc; ++index) {
-               if (*argv[index] != '-' && IsHeaderName(argv[index])) {
-                  headersToIgnore.insert(argv[index]);
-               }
+      std::unordered_set<std::string> headersToIgnore;
+      if (inlineInputHeader) {
+         for (int index = 0; index < argc; ++index) {
+            if (*argv[index] != '-' && IsHeaderName(argv[index])) {
+               headersToIgnore.insert(argv[index]);
             }
          }
-
-         std::list<std::string> typedefsRootmapLines;
-         ExtractTypedefAutoloadKeys(typedefsRootmapLines,
-                                    scan.fSelectedTypedefs,
-                                    interp);
-
-         rootclingRetCode = CreateNewRootMapFile(rootmapFileName,
-                                             rootmapLibName,
-                                             classesDefsList,
-                                             classesNamesForRootmap,
-                                             nsNames,
-                                             typedefsRootmapLines,
-                                             enumNames,
-                                             headersClassesMap,
-                                             headersToIgnore);
-      } else {
-         rootclingRetCode = CreateRootMapFile(rootmapFileName,
-                                          rootmapLibName,
-                                          classesNamesForRootmap,
-                                          nsNames);
       }
+
+      std::list<std::string> typedefsRootmapLines;
+      ExtractTypedefAutoloadKeys(typedefsRootmapLines,
+                                 scan.fSelectedTypedefs,
+                                 interp);
+
+      rootclingRetCode = CreateNewRootMapFile(rootmapFileName,
+                                          rootmapLibName,
+                                          classesDefsList,
+                                          classesNamesForRootmap,
+                                          nsNames,
+                                          typedefsRootmapLines,
+                                          enumNames,
+                                          headersClassesMap,
+                                          headersToIgnore);
+
       if (0 != rootclingRetCode) return 1;
    }
 
@@ -4904,7 +4847,6 @@ namespace genreflex {
                        const std::vector<std::string> &preprocUndefines,
                        const std::vector<std::string> &warnings,
                        const std::string &rootmapFileName,
-                       bool newRmfFormat,
                        const std::string &rootmapLibName,
                        const std::string &capaFileName,
                        bool interpreteronly,
@@ -4913,6 +4855,7 @@ namespace genreflex {
                        bool writeEmptyRootPCM,
                        bool selSyntaxOnly,
                        const std::vector<std::string> &headersNames,
+                       bool failOnWarnings,
                        const std::string &ofilename)
    {
 
@@ -4957,10 +4900,6 @@ namespace genreflex {
          argvVector.push_back(string2charptr("-rmf"));
          argvVector.push_back(string2charptr(newRootmapFileName));
       }
-
-      // Switch for the new format
-      if (!newRmfFormat)
-         argvVector.push_back(string2charptr("-oldRmfFormat"));
 
       // RootMap Lib filename
       if (!newRootmapLibName.empty()) {
@@ -5010,6 +4949,10 @@ namespace genreflex {
       if (selSyntaxOnly)
          argvVector.push_back(string2charptr("-selSyntaxOnly"));
 
+      // Fail on warnings
+      if (failOnWarnings)
+         argvVector.push_back(string2charptr("-failOnWarnings"));
+
       // Clingargs
       AddToArgVector(argvVector, includes, "-I");
       AddToArgVector(argvVector, preprocDefines, "-D");
@@ -5055,7 +4998,6 @@ namespace genreflex {
                            const std::vector<std::string> &preprocUndefines,
                            const std::vector<std::string> &warnings,
                            const std::string &rootmapFileName,
-                           bool newRmfFormat,
                            const std::string &rootmapLibName,
                            const std::string &capaFileName,
                            bool interpreteronly,
@@ -5064,6 +5006,7 @@ namespace genreflex {
                            bool writeEmptyRootPCM,
                            bool selSyntaxOnly,
                            const std::vector<std::string> &headersNames,
+                           bool failOnWarnings,
                            const std::string &outputDirName_const = "")
    {
       // Get the right ofilenames and invoke several times rootcling
@@ -5094,7 +5037,6 @@ namespace genreflex {
                                           preprocUndefines,
                                           warnings,
                                           rootmapFileName,
-                                          newRmfFormat,
                                           rootmapLibName,
                                           capaFileName,
                                           interpreteronly,
@@ -5103,6 +5045,7 @@ namespace genreflex {
                                           writeEmptyRootPCM,
                                           selSyntaxOnly,
                                           namesSingleton,
+                                          failOnWarnings,
                                           ofilenameFullPath);
          if (returnCode != 0)
             return returnCode;
@@ -5201,13 +5144,13 @@ int GenReflex(int argc, char **argv)
                        ROOTMAPLIB,
                        PCMFILENAME,
                        DEEP,
-                       OLDRMFFORMAT,
                        DEBUG,
                        VERBOSE,
                        QUIET,
                        SILENT,
                        WRITEEMPTYROOTPCM,
                        HELP,
+                       FAILONWARNINGS,
                        CAPABILITIESFILENAME,
                        SELSYNTAXONLY,
                        INTERPRETERONLY,
@@ -5467,6 +5410,14 @@ int GenReflex(int argc, char **argv)
       },
 
       {
+         FAILONWARNINGS,
+         NOTYPE,
+         "", "fail_on_warnings",
+         ROOT::option::Arg::None,
+         "--fail_on_warnings\tFail on warnings and errors.\n"
+      },
+
+      {
          SELSYNTAXONLY,
          NOTYPE,
          "", "selSyntaxOnly",
@@ -5520,14 +5471,6 @@ int GenReflex(int argc, char **argv)
          STRING ,
          "" , "no_templatetypedefs" ,
          ROOT::option::FullArg::None,
-         ""
-      },
-
-      {
-         OLDRMFFORMAT, // Option which is not meant for the user: deprecated
-         NOTYPE ,
-         "" , "oldRmfFormat",
-         ROOT::option::Arg::None,
          ""
       },
 
@@ -5630,10 +5573,6 @@ int GenReflex(int argc, char **argv)
       return 1;
    }
 
-   bool newRmfFormat = true;
-   if (options[OLDRMFFORMAT])
-      newRmfFormat = false;
-
    bool interpreteronly = false;
    if (options[INTERPRETERONLY])
       interpreteronly = true;
@@ -5649,6 +5588,11 @@ int GenReflex(int argc, char **argv)
    bool selSyntaxOnly = false;
    if (options[SELSYNTAXONLY]) {
       selSyntaxOnly = true;
+   }
+
+   bool failOnWarnings = false;
+   if (options[FAILONWARNINGS]) {
+      failOnWarnings = true;
    }
 
    // Add the .so extension to the rootmap lib if not there
@@ -5706,7 +5650,6 @@ int GenReflex(int argc, char **argv)
                                     preprocUndefines,
                                     warnings,
                                     rootmapFileName,
-                                    newRmfFormat,
                                     rootmapLibName,
                                     capaFileName,
                                     interpreteronly,
@@ -5715,6 +5658,7 @@ int GenReflex(int argc, char **argv)
                                     writeEmptyRootPCM,
                                     selSyntaxOnly,
                                     headersNames,
+                                    failOnWarnings,
                                     ofileName);
    } else {
       // Here ofilename is either "" or a directory: this is irrelevant.
@@ -5728,7 +5672,6 @@ int GenReflex(int argc, char **argv)
                                         preprocUndefines,
                                         warnings,
                                         rootmapFileName,
-                                        newRmfFormat,
                                         rootmapLibName,
                                         capaFileName,
                                         interpreteronly,
@@ -5737,6 +5680,7 @@ int GenReflex(int argc, char **argv)
                                         writeEmptyRootPCM,
                                         selSyntaxOnly,
                                         headersNames,
+                                        failOnWarnings,
                                         ofileName);
    }
 
@@ -5763,12 +5707,19 @@ int main(int argc, char **argv)
    // 2) GenReflex
    // The default is rootcling
 
+   int retVal = 0;
+
    if (std::string::npos != exeName.find("rootcling")) {
-      return RootCling(argc, argv);
+      retVal = RootCling(argc, argv);
    } else if (std::string::npos != exeName.find("genreflex")) {
-      return GenReflex(argc, argv);
+      retVal = GenReflex(argc, argv);
    } else { //default
-      return RootCling(argc, argv);
+      retVal = RootCling(argc, argv);
    }
 
+   auto nerrors = ROOT::TMetaUtils::GetNumberOfWarningsAndErrors();
+   if (nerrors > 0){
+      ROOT::TMetaUtils::Info(0,"Problems have been detected during the generation of the dictionary.\n");
+   }
+   return nerrors + retVal;
 }

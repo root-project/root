@@ -1473,7 +1473,7 @@ void TCling::RegisterModule(const char* modulename,
    // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
    // This is used to give Sema the same view on ACLiC'ed files (which
    // are then #included through the dictionary) as rootcling had.
-   TString code = fromRootCling ? "" : gNonInterpreterClassDef ;
+   TString code = gNonInterpreterClassDef;
    code += payloadCode;
 
    // We need to open the dictionary shared library, to resolve sylbols
@@ -1484,20 +1484,22 @@ void TCling::RegisterModule(const char* modulename,
    if (dyLibName) {
       // We were able to determine the library name.
       void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
-#ifdef R__WIN32
       if (!dyLibHandle) {
+#ifdef R__WIN32
          char dyLibError[1000];
          FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), dyLibError,
                        sizeof(dyLibError), NULL);
+         {
 #else
-      const char* dyLibError = dlerror();
-      if (dyLibError) {
+         const char* dyLibError = dlerror();
+         if (dyLibError) {
 #endif
-         if (gDebug > 0) {
-            ::Info("TCling::RegisterModule",
-                   "Cannot open shared library %s for dictionary %s:\n  %s",
-                   dyLibName, modulename, dyLibError);
+            if (gDebug > 0) {
+               ::Info("TCling::RegisterModule",
+                      "Cannot open shared library %s for dictionary %s:\n  %s",
+                      dyLibName, modulename, dyLibError);
+            }
          }
          dyLibName = 0;
       } else {
@@ -1717,7 +1719,7 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
-   if (!fromRootCling && !hasHeaderParsingOnDemand) {
+   if (!hasHeaderParsingOnDemand) {
       // __ROOTCLING__ might be pulled in through PCH
       fInterpreter->declare("#ifdef __ROOTCLING__\n"
                             "#undef __ROOTCLING__\n"
@@ -3023,6 +3025,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
             cl->fState = TClass::kForwardDeclared;
          }
       }
+      delete info;
       return;
    }
    cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transfering ownership here.

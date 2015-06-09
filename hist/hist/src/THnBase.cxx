@@ -1122,11 +1122,8 @@ THnBase* THnBase::RebinBase(const Int_t* group) const
       Long64_t idxh = h->GetBin(bins, kTRUE /*allocate*/);
 
       if (wantErrors) {
-         Double_t err2 = 0.;
-         if (haveErrors) {
-            err2 = GetBinError2(i);
-         } else err2 = v;
-         h->AddBinError2(idxh, err2);
+         // wantErrors == haveErrors, thus:
+         h->AddBinError2(idxh, GetBinError2(i));
       }
 
       // only _after_ error calculation, or sqrt(v) is taken into account!

@@ -20,6 +20,9 @@
 #ifndef ROOT_X11Drawable
 #include "X11Drawable.h"
 #endif
+#ifndef ROOT_X11Events
+#include "X11Events.h"
+#endif
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
 #endif
@@ -33,7 +36,18 @@
 @class ROOTOpenGLView;
 @class QuartzImage;
 
-@interface QuartzWindow : NSWindow<X11Window, NSWindowDelegate>
+@interface QuartzWindow : NSWindow<X11Window, NSWindowDelegate> {
+@private
+   // 32-bit build requires explicit i-vars for synthesized props.
+   QuartzWindow *fMainWindow;
+   BOOL fHasFocus;
+   //
+   
+   QuartzView *fContentView;
+   BOOL fDelayedTransient;
+   QuartzImage *fShapeCombineMask;
+   BOOL fIsDeleted;
+}
 
 //In Obj-C you do not have to declared everything in an interface declaration.
 //I do declare all methods here, just for clarity.
@@ -128,7 +142,11 @@
 //                                                          //
 //////////////////////////////////////////////////////////////
 
-@interface PassiveKeyGrab : NSObject
+@interface PassiveKeyGrab : NSObject {
+@private
+   unichar fKeyCode;
+   NSUInteger fModifiers;
+}
 - (unichar)    fKeyCode;
 - (NSUInteger) fModifiers;
 - (id) initWithKey : (unichar) keyCode modifiers : (NSUInteger) modifiers;
@@ -144,7 +162,47 @@
 
 @class QuartzImage;
 
-@interface QuartzView : NSView<X11Window>
+@interface QuartzView : NSView<X11Window> {
+@protected
+   // 32-bit build requires explicit i-vars
+   // declared for synthesized props.
+   unsigned fID;
+   CGContextRef fContext;
+   long fEventMask;
+   int fClass;
+   int fDepth;
+   int fBitGravity;
+   int fWinGravity;
+   unsigned long fBackgroundPixel;
+   BOOL fOverrideRedirect;
+
+   BOOL fHasFocus;
+   QuartzView *fParentView;
+
+   int fPassiveGrabButton;
+   unsigned fPassiveGrabEventMask;
+   unsigned fPassiveGrabKeyModifiers;
+   unsigned fActiveGrabEventMask;
+   BOOL fPassiveGrabOwnerEvents;
+   BOOL fSnapshotDraw;
+   ECursor fCurrentCursor;
+   BOOL fIsDNDAware;
+
+   // TODO: std::unique_ptr (with deleter) can
+   // perfectly be an i-var, removing the manual
+   // memory management and raw pointer.
+
+   QuartzPixmap   *fBackBuffer;
+   NSMutableArray *fPassiveKeyGrabs;
+   BOOL            fIsOverlapped;
+
+   NSMutableDictionary   *fX11Properties;
+   QuartzImage           *fBackgroundPixmap;
+
+   ROOT::MacOSX::X11::PointerGrab fCurrentGrabType;
+
+   BOOL             fActiveGrabOwnerEvents;
+}
 
 //Life-cycle.
 - (id) initWithFrame : (NSRect) frame windowAttributes : (const SetWindowAttributes_t *) attr;
