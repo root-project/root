@@ -458,6 +458,7 @@ protected:
    Int_t                     fCompact;       //!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
    TString                   fSemicolon;     //!  depending from compression level, " : " or ":"
    TString                   fArraySepar;    //!  depending from compression level, ", " or ","
+   TString                   fNumericLocale; //!  stored value of setlocale(LC_NUMERIC), which should be recovered at the end
 
    static const char *fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
