@@ -168,7 +168,9 @@ TPad::TPad()
    fXtoPixelk    = 0.;
    fYtoAbsPixelk = 0.;
    fYtoPixel     = 0.;
-   fYtoPixelk   = 0.;
+   fYtoPixelk    = 0.;
+   fXUpNDC       = 0.;
+   fYUpNDC       = 0.;
 
    fFixedAspectRatio = kFALSE;
    fAspectRatio      = 0.;
