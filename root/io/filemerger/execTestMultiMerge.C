@@ -29,7 +29,7 @@ int testMergedFile(const char *filename, Int_t compSetting, Long64_t fileSize)
    return 0;
 }
 
-int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Long64_t fileSize)
+int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Long64_t fileSize, UInt_t tolerance = 0)
 {
    fprintf(stdout,"Checking %s\n",filename);
    TFile *file = TFile::Open(filename);
@@ -42,8 +42,8 @@ int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Lo
       Error("testSimpleFile","Compression level of %s should have been %d but is %d\n",file->GetName(), 206, file->GetCompressionSettings() );
       return 3;
    }
-   if (file->GetSize() != fileSize) {
-      Error("testSimpleFile","Disk size of %s should have been %lld but is %lld\n",file->GetName(), fileSize, file->GetSize() );
+   if (abs(file->GetSize()-fileSize) > tolerance) {
+      Error("testSimpleFile","Disk size of %s should have been %lld but is %lld (tolerance %u bytes)\n",file->GetName(), fileSize, file->GetSize(), tolerance);
       return 4;
    }
 
@@ -74,7 +74,7 @@ int execTestMultiMerge()
    if (!result) result = testSimpleFile("hsimple9x2.root",2*25000,9,851108);
    if (!result) result = testSimpleFile("hsimple209.root",25000,209,393974);
    if (!result) result = testSimpleFile("hsimpleK.root",5*25000,209,1917248);
-   if (!result) result = testSimpleFile("hsimpleK202.root",5*25000,202,1938626);
+   if (!result) result = testSimpleFile("hsimpleK202.root",5*25000,202,1938626,16);
    if (!result) result = testSimpleFile("hsimpleF.root",5*25000,9,2108423);
    return result;
 }
