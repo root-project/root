@@ -3420,7 +3420,7 @@ void TPad::CopyBackgroundPixmap(Int_t x, Int_t y)
 
 
 //______________________________________________________________________________
-void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
+void TPad::PaintFillArea(Int_t, Float_t *, Float_t *, Option_t *)
 {
    Warning("TPad::PaintFillArea", "Float_t signature is obsolete. Use Double_t signature.");
 }
