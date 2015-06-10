@@ -478,9 +478,9 @@ void TXTRU::Print(Option_t *option) const
       nz    = fNzAlloc;
    }
 
-   const char *name;
+   const char *name = 0;
    Float_t *p=0;
-   Int_t   nlimit;
+   Int_t   nlimit = 0;
    Bool_t  print_vtx = opt.Contains("xy");
    Bool_t  print_z   = opt.Contains("z");
 
