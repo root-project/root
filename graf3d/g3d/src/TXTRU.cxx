@@ -479,7 +479,7 @@ void TXTRU::Print(Option_t *option) const
    }
 
    const char *name;
-   Float_t *p;
+   Float_t *p=0;
    Int_t   nlimit;
    Bool_t  print_vtx = opt.Contains("xy");
    Bool_t  print_z   = opt.Contains("z");
