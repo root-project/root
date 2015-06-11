@@ -1,10 +1,7 @@
 {
    gErrorIgnoreLevel = kWarning;
-#ifdef ClingWorkAroundNoDotInclude
-   gInterpreter->AddIncludePath(".");
-#else
-gROOT->ProcessLine(".include .");
-#endif
-gROOT->ProcessLine(".L script.C+");
+   gInterpreter->AddIncludePath("nest/subdir1");
+   gROOT->ProcessLine(".include nest/subdir2");
+   gROOT->ProcessLine(".L script.C++");
 }
 
