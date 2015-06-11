@@ -2568,23 +2568,23 @@ fi
 # needs gcc > 4.9.x or clang
 usecxx14="undef"
 if test "x$enable_cxx14" = "xyes"; then
-message "Checking whether c++14 mode is supported"
-check_cxxopt -std=c++1y
-if test $cxxopt_result -eq 0 ; then
-enable_cxx14="no"
-result "no"
-result "`basename $0`: c++14 mode is requested but the current compiler does not support it."
-exit 1
-else
-usecxx11="define"
-usecxx14="define"
-# on OS X libcxx is required for C++11 support with clang
-# so turn the option on when using clang
-if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
-enable_libcxx="yes"
-fi
-result "yes"
-fi
+    message "Checking whether c++14 mode is supported"
+    check_cxxopt -std=c++1y
+    if test $cxxopt_result -eq 0 ; then
+        enable_cxx14="no"
+        result "no"
+        result "`basename $0`: c++14 mode is requested but the current compiler does not support it."
+        exit 1
+    else
+        usecxx11="define"
+        usecxx14="define"
+        # on OS X libcxx is required for C++11 support with clang
+        # so turn the option on when using clang
+        if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
+            enable_libcxx="yes"
+        fi
+        result "yes"
+    fi
 fi
 
 ######################################################################
