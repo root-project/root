@@ -27,7 +27,12 @@ FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 # i.e. OSX 10.7 we will take clang as default
 APPLE_CLANG  := $(shell clang -v 2>&1 | sed -n "s/.*based on LLVM //p" | cut -d . -f 1)
 ifeq ($(APPLE_CLANG),)
+# if OSX > 9 always use clang
+ifeq ($(subst $(MACOSX_MINOR),,123456789),123456789)
+APPLE_CLANG  := 3
+else
 APPLE_CLANG  := 1
+endif
 endif
 
 ifeq ($(subst $(APPLE_CLANG),,12),12)
