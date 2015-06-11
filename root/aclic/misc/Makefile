@@ -65,8 +65,8 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-relpath.log: runrelpath.C $(ROOTCORELIBS)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runrelpath.C 2>&1 | grep -v -e 'creating shared library' -e '_cint.cxx\W*$$' -e 'Creating library' -e '^script_C_ACLiC_dict.cxx\W*$$' > relpath.log
+relpath.log: runrelpath.C $(ROOTCORELIBS) script.h script.C
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runrelpath.C > relpath.log 2>&1 || handleError.sh --result=$$? --log=relpath.log
 
 relpath.success: relpath.log
 	$(SuccessTestDiff) && touch $@

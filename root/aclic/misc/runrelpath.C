@@ -1,4 +1,5 @@
 {
+   gErrorIgnoreLevel = kWarning;
 #ifdef ClingWorkAroundNoDotInclude
    gInterpreter->AddIncludePath(".");
 #else
