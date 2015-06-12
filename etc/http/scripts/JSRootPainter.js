@@ -8019,39 +8019,57 @@
 
       return null;
    }
+   
+   JSROOT.MarkAsStreamerInfo = function(h,item,obj) {
+      // this function used on THttpServer to mark streamer infos list 
+      // as fictional TStreamerInfoList class, which has special draw function
+      if ((obj!=null) && (obj['_typename']=='TList'))
+         obj['_typename'] = 'TStreamerInfoList';
+   }
 
    JSROOT.HierarchyPainter.prototype.GetOnlineItem = function(item, itemname, callback) {
       // method used to request object from the http server
 
-      var url = itemname, h_get = false, req = 'root.json.gz?compact=3';
+      var url = itemname, h_get = false, req = '';
 
       if (item != null) {
          var top = item;
          while ((top!=null) && (!('_online' in top))) top = top._parent;
          url = this.itemFullName(item, top);
+
          if ('_doing_expand' in item) {
             h_get = true;
             req  = 'h.json?compact=3';
          } else
-         if (item._kind.indexOf("ROOT.")!=0)
-            req = 'item.json.gz?compact=3';
+         if ('_make_request' in item) {
+            var func = JSROOT.findFunction(item['_make_request']);
+            if (typeof func == 'function') req = func(this, item);
+         }
+         
+         if ((req.length==0) && (item._kind.indexOf("ROOT.")!=0))
+           req = 'item.json.gz?compact=3';
       }
-
-      if ((itemname==null) && (item!=null) && ('_cached_draw_object' in this) && (req.indexOf("root.json.gz")==0)) {
+      
+      if ((itemname==null) && (item!=null) && ('_cached_draw_object' in this) && (req.length == 0)) {
          // special handling for drawGUI when cashed
          var obj = this['_cached_draw_object'];
          delete this['_cached_draw_object'];
          return JSROOT.CallBack(callback, item, obj);
       }
 
+      if (req.length == 0) req = 'root.json.gz?compact=3';
+      
       if (url.length > 0) url += "/";
       url += req;
+      
+      var pthis = this;
 
       var itemreq = JSROOT.NewHttpRequest(url, 'object', function(obj) {
 
-         if ((item != null) && (obj != null) && !h_get &&
-             (item._name === "StreamerInfo") && (obj['_typename'] === 'TList'))
-            obj['_typename'] = 'TStreamerInfoList';
+         if ('_after_request' in item) {
+            var func = JSROOT.findFunction(item['_after_request']);
+            if (typeof func == 'function') req = func(pthis, item, obj);
+         }
 
          JSROOT.CallBack(callback, item, obj);
       });
