@@ -1,5 +1,9 @@
+ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execBrowseNonAccessibleType
+                  OUTREF execBrowseNonAccessibleType.ref
+                  MACRO execBrowseNonAccessibleType.C)
+
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-RunMyClass
-                  MACRO RunMyClass.C+) 
+                  MACRO RunMyClass.C+)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-runclassref
                   MACRO runclassref.C

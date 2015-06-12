@@ -47,9 +47,10 @@ execProperties.success: EXTRA_DIFFOPTS += -w
 
 execInterpClassNew.log: classlib_cxx.$(DllSuf)
 
-execReadTmplt.clog: execTmpltD.success execTmpltD32.success 
+execReadTmplt.clog: execTmpltD.success execTmpltD32.success
 
 execState.log: libState_cxx.$(DllSuf)
 
 execSimpleVector.log: libsimpleVector_dictrflx.$(DllSuf)
 
+execBrowseNonAccessibleType.log: execBrowseNonAccessibleType.C
