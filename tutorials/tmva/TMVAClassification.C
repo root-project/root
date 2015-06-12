@@ -422,17 +422,34 @@ int TMVAClassification( TString myMethodList = "" )
    if (Use["MLPBNN"])
       factory->BookMethod( TMVA::Types::kMLP, "MLPBNN", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:UseRegulator" ); // BFGS training with bayesian regulators
 
+
+   // improved neural network implementation 
    if (Use["NN"])
    {
-       TString layoutString ("Layout=SOFTSIGN|50,RELU|20,LINEAR");
-       TString trainingStrategyString ("TrainingStrategy=LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=150,BatchSize=50,TestRepetitions=7,WeightDecay=0.001,L1=false,DropFraction=0.0,DropRepetitions=5");
-       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY");
+//       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
+       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+
+       TString training0 ("LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=150,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,L1=false,DropConfig=0.2+0.4+0.0,DropRepetitions=10");
+       TString training1 ("LearningRate=1e-2,Momentum=0.1,Repetitions=3,ConvergenceSteps=150,BatchSize=20,TestRepetitions=7,WeightDecay=0.001,L1=true");
+       TString training2 ("LearningRate=1e-3,Momentum=0.1,Repetitions=3,ConvergenceSteps=150,BatchSize=40,TestRepetitions=7,WeightDecay=0.0,L1=false");
+
+       TString trainingStrategyString ("TrainingStrategy=");
+       trainingStrategyString += training0 + "|" + training1 + "|" + training2;
+
+
+//       TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CROSSENTROPY");
+       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:WeightInitialization=XAVIERUNIFORM");
+//       TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CHECKGRADIENTS");
        nnOptions.Append (":"); nnOptions.Append (layoutString);
        nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
 
+       std::cout << "book NN" << std::endl;
        factory->BookMethod( TMVA::Types::kNN, "NN", nnOptions ); // NN
+       std::cout << "book NN finished" << std::endl;
    }
 
+
+   
    // CF(Clermont-Ferrand)ANN
    if (Use["CFMlpANN"])
       factory->BookMethod( TMVA::Types::kCFMlpANN, "CFMlpANN", "!H:!V:NCycles=2000:HiddenLayers=N+1,N"  ); // n_cycles:#nodes:#nodes:...  
