@@ -52,6 +52,7 @@ static std::function<double(double)> InvDoubleInvertedGauss = [](double value)
 
 
 double gaussDouble (double mean, double sigma);
+double uniformDouble (double minValue, double maxValue);
 
 
 int randomInt (int maxValue);
@@ -206,8 +207,8 @@ void update (ItSource itSource, ItSource itSourceEnd,
             gradients.assign (numWeights, 0.0);
             E = fitnessFunction (passThrough, localWeights, gradients);
 
-//            double alpha = gaussDouble (m_alpha, m_alpha/10.0);
-            double alpha = m_alpha;
+            double alpha = gaussDouble (m_alpha, m_alpha/2.0);
+//            double alpha = m_alpha;
 
             auto itLocW = begin (localWeights);
             auto itLocWEnd = end (localWeights);
@@ -570,14 +571,36 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 
 
 
-    template <typename WeightsType>
-        void Net::dropOutWeightFactor (WeightsType& weights, double factor)
+    template <typename WeightsType, typename DropProbabilities>
+        void Net::dropOutWeightFactor (WeightsType& weights,
+                                       const DropProbabilities& drops, 
+                                       bool inverse)
     {
-        std::for_each (std::begin (weights), std::end (weights), [factor](double& w) 
-                           { 
-                               w *= factor;
-                           }
-                );
+        auto itWeight = std::begin (weights);        auto itWeightEnd = std::end (weights);
+        auto itDrop = std::begin (drops);
+        auto itDropEnd = std::end (drops);
+        for (const auto& layer : layers ())
+        {
+            if (itDrop == itDropEnd)
+                break;
+
+            double dropFraction = *itDrop;
+            double p = 1.0 - dropFraction;
+            if (inverse)
+            {
+                p = 1.0/p;
+            }
+            size_t numNodes = layer.numNodes ();
+            for (size_t iNode = 0; iNode < numNodes; ++iNode)
+            {
+                if (itWeight == itWeightEnd)
+                    break;
+                
+                *itWeight *= p;
+                ++itWeight;
+            }
+            ++itDrop;
+        }
     }
 
 
@@ -605,38 +628,26 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 
 	DropContainer dropContainer;
 	DropContainer dropContainerTest;
-        double dropFraction = settings.dropFraction ();
+        const std::vector<double>& dropFractions = settings.dropFractions ();
+        bool isWeightsForDrop = true;
 
         settings.startTraining ();
         // until convergence
         do
         {
-//            std::cout << "train cycle " << cycleCount << std::endl;
             ++cycleCount;
 
-	    // shuffle training pattern
-//            std::random_shuffle (begin (trainPattern), end (trainPattern));
-
 	    // if dropOut enabled
-            if (dropFraction > 0 && dropOutChangeCount % settings.dropRepetitions () == 0)
+            size_t dropIndex = 0;
+            if (!dropFractions.empty () && dropOutChangeCount % settings.dropRepetitions () == 0)
 	    {
-		/* if (dropOutChangeCount > 0) */
-		/*     dropOutWeightFactor (dropContainer, weights, dropFraction); */
-
 		// fill the dropOut-container
 		dropContainer.clear ();
 		for (auto itLayer = begin (m_layers), itLayerEnd = end (m_layers); itLayer != itLayerEnd; ++itLayer)
 		{
 		    auto& layer = *itLayer;
-		    // in the first and last layer, all the nodes are always on
-//		    if (itLayer == begin (m_layers) || itLayer == end (m_layers)-1) // is first layer or is last layer
-		    /* if (itLayer == end (m_layers)-1) // is first layer or is last layer */
-		    /* { */
-		    /*     dropContainer.insert (end (dropContainer), layer.numNodes (), true); */
-		    /*     continue; */
-		    /* } */
 		    // how many nodes have to be dropped
-		    size_t numDrops = settings.dropFraction () * layer.numNodes ();
+		    size_t numDrops = dropFractions.at (dropIndex) * layer.numNodes ();
                     if (numDrops >= layer.numNodes ()) // maintain at least one node
                         numDrops = layer.numNodes () - 1;
 		    dropContainer.insert (end (dropContainer), layer.numNodes ()-numDrops, true); // add the markers for the nodes which are enabled
@@ -644,8 +655,6 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 		    // shuffle 
 		    std::random_shuffle (end (dropContainer)-layer.numNodes (), end (dropContainer)); // shuffle enabled and disabled markers
 		}
-		/* if (dropOutChangeCount > 0) */
-                /*     dropOutWeightFactor (dropContainer, weights, 1.0/dropFraction); */
 	    }
 
 	    // execute training cycle
@@ -657,7 +666,11 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 	    // check if we execute a test
             if (testCycleCount % settings.testRepetitions () == 0)
             {
-                dropOutWeightFactor (weights, 1.0 - dropFraction);
+                if (isWeightsForDrop)
+                {
+                    dropOutWeightFactor (weights, dropFractions);
+                    isWeightsForDrop = false;
+                }
 
                 testError = 0;
                 double weightSum = 0;
@@ -683,7 +696,11 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 
 		settings.computeResult (*this, weights);
 
-                dropOutWeightFactor (weights, 1.0/(1.0 - dropFraction));
+                if (!isWeightsForDrop)
+                {
+                    dropOutWeightFactor (weights, dropFractions, true); // inverse
+                    isWeightsForDrop = true;
+                }
             }
             ++testCycleCount;
 	    ++dropOutChangeCount;
@@ -715,6 +732,11 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 
 	    if (convergenceCount >= settings.convergenceSteps () || testError <= 0)
 	    {
+                if (isWeightsForDrop)
+                {
+                    dropOutWeightFactor (weights, dropFractions);
+                    isWeightsForDrop = false;
+                }
 		break;
 	    }
 
@@ -728,7 +750,6 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
         double progress = 100*(double)maxConvergenceCount /(double)settings.convergenceSteps ();
         settings.cycle (progress, convText);
 
-        dropOutWeightFactor (weights, 1.0 - dropFraction);
         return testError;
     }
 
@@ -1057,6 +1078,32 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
             return;
         }
 
+        if (eInitStrategy == WeightInitializationStrategy::XAVIERUNIFORM)
+        {
+            // input and output properties
+            int numInput = (*itPatternBegin).inputSize ();
+
+            // compute variance and mean of input and output
+            //...
+	
+
+            // compute the weights
+            for (auto& layer: layers ())
+            {
+                double nIn = numInput;
+                double minVal = -sqrt(2.0/nIn);
+                double maxVal = sqrt (2.0/nIn);
+                for (size_t iWeight = 0, iWeightEnd = layer.numWeights (numInput); iWeight < iWeightEnd; ++iWeight)
+                {
+                    
+                    (*itWeight) = NN::uniformDouble (minVal, maxVal); // factor 2.0 for ReLU
+                    ++itWeight;
+                }
+                numInput = layer.numNodes ();
+            }
+            return;
+        }
+        
         if (eInitStrategy == WeightInitializationStrategy::TEST)
         {
             // input and output properties
