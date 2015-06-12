@@ -2525,7 +2525,9 @@ ASTReader::ReadControlBlock(ModuleFile &F,
     }
 
     case TARGET_OPTIONS: {
-      bool Complain = (ClientLoadCapabilities & ARR_ConfigurationMismatch)==0;
+      // Work around ROOT-6966
+      //bool Complain = (ClientLoadCapabilities & ARR_ConfigurationMismatch)==0;
+      bool Complain = false;
       if (Listener && &F == *ModuleMgr.begin() &&
           ParseTargetOptions(Record, Complain, *Listener) &&
           !DisableValidation && !AllowConfigurationMismatch)
