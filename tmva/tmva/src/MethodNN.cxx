@@ -429,7 +429,7 @@ void TMVA::MethodNN::ProcessOptions()
    //     ptrSettings = std::make_unique <MulticlassSettings> ((*itSetting).convergenceSteps, (*itSetting).batchSize, 
    //                                                          (*itSetting).testRepetitions, (*itSetting).factorWeightDecay,
    //                                                          (*itSetting).isL1, (*itSetting).dropFraction, (*itSetting).dropRepetitions,
-   //                                                          fScaleToNumEvents);
+   //                                                          fScaleToNumEvents); 
    // }
    // else if (fAnalysisType == Types::kRegression)
    // {
@@ -557,7 +557,7 @@ void TMVA::MethodNN::Train()
 //        std::cout << "set monitoring" << std::endl;
         ptrSettings->setMonitoring (fMonitoring);
         ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()), (idxSetting+1)*100.0/(fSettings.size ()));
-        double E = 0;
+//        double E = 0;
 //        std::cout << "check minimizer type" << std::endl;
         if ((*itSettings)->minimizerType () == TMVA::NN::MinimizerType::fSteepest)
         {
@@ -565,7 +565,7 @@ void TMVA::MethodNN::Train()
             NN::Steepest minimizer ((*itSettings)->learningRate (), (*itSettings)->momentum (), (*itSettings)->repetitions ());
 //            NN::SteepestThreaded minimizer ((*itSettings)->learningRate (), (*itSettings)->momentum (), (*itSettings)->repetitions ());
 //            std::cout << "start the training" << std::endl;
-            E = fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
+            /*E =*/fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
 //            std::cout << "training finished with E = " << E << std::endl;
         }
         (*itSettings).reset ();
