@@ -637,26 +637,36 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
 {
    // scans object properties
    // here such fields as _autoload or _icon properties depending on class or object name could be assigned
-   // By default properties, coded in the Class title are scanned
+   // By default properties, coded in the Class title are scanned. Example:
+   //   ClassDef(UserClassName, 1) //  class comments *SNIFF*  _field1=value _field2="string value"
+   // Here *SNIFF* mark is important. After it all expressions like field=value are parsed
+   // One could use double quotes to code string values with spaces.
+   // Fields separated from each other with spaces
 
    TClass* cl = obj ? obj->IsA() : 0;
 
-   const char* title = cl ? cl->GetTitle() : "";
-
-   const char* pos = strstr(title, "*JSROOT* ");
+   const char* pos = strstr(cl ? cl->GetTitle() : "", "*SNIFF*");
    if (pos==0) return;
 
-   TUrl url;
-   url.SetOptions(pos+9);
-
-   const char* opt = url.GetValueFromOptions("_autoload");
-   if (opt!=0) rec.SetField("_autoload", opt);
-
-   opt = url.GetValueFromOptions("_make_request");
-   if (opt!=0) rec.SetField("_make_request", opt);
-
-   opt = url.GetValueFromOptions("_after_request");
-   if (opt!=0) rec.SetField("_after_request", opt);
+   pos += 7;
+   while (*pos != 0) {
+     if (*pos == ' ') { pos++; continue; }
+     // first locate identifier
+     const char* pos0 = pos;
+     while ((*pos != 0) && (*pos != '=')) pos++;
+     if (*pos == 0) return;
+     TString name(pos0, pos-pos0);
+     pos++;
+     Bool_t quotes = (*pos == '\"');
+     if (quotes) pos++;
+     pos0 = pos;
+     // then value with or without quotes
+     while ((*pos != 0) && (*pos != (quotes ? '\"' : ' '))) pos++;
+     TString value(pos0, pos-pos0);
+     rec.SetField(name, value);
+     if (quotes) pos++;
+     pos++;
+   }
 }
 
 //_____________________________________________________________________
