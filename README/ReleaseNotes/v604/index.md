@@ -749,3 +749,4 @@ Changes will be part of the future v6.04/02.
  - Fix template instantiations in cling internals [ROOT-7364]
  - Forget erroneous decls in case of errors [ROOT-7295]
  - Work around binutils issue (ld crash building llvm) on MacOSX with GCC (pull requests 64-66)
+ - Work around MacOS X builds being version specific [ROOT-6966]
