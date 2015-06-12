@@ -7179,8 +7179,6 @@
    }
 
    JSROOT.RawTextPainter.prototype.Draw = function() {
-      var frame = d3.select("#" + this.divid);
-
       var txt = this.txt.value;
       if (txt==null) txt = "<undefined>";
 
@@ -7191,7 +7189,16 @@
          for (var i in arr)
             txt += "<pre>" + arr[i] + "</pre>";
       }
-      frame.html("<div style='overflow:auto;max-height:" + frame.style('height') + "'>" + txt + "</div>");
+
+      var frame = d3.select("#" + this.divid);
+      var main = frame.select("div");
+      if (main.empty())
+         main = frame.append("div")
+                     .style('max-width','100%')
+                     .style('max-height','100%')
+                     .style('overflow','auto');
+
+      main.html(txt);
 
       // (re) set painter to first child element
       this.SetDivId(this.divid);
@@ -8030,7 +8037,7 @@
    JSROOT.HierarchyPainter.prototype.GetOnlineItem = function(item, itemname, callback) {
       // method used to request object from the http server
 
-      var url = itemname, h_get = false, req = '';
+      var url = itemname, h_get = false, req = '', pthis = this;
 
       if (item != null) {
          var top = item;
@@ -8043,7 +8050,7 @@
          } else
          if ('_make_request' in item) {
             var func = JSROOT.findFunction(item['_make_request']);
-            if (typeof func == 'function') req = func(this, item);
+            if (typeof func == 'function') req = func(pthis, item, url);
          }
 
          if ((req.length==0) && (item._kind.indexOf("ROOT.")!=0))
@@ -8061,8 +8068,6 @@
 
       if (url.length > 0) url += "/";
       url += req;
-
-      var pthis = this;
 
       var itemreq = JSROOT.NewHttpRequest(url, 'object', function(obj) {
 
@@ -8264,6 +8269,11 @@
       if (withbrowser) {
          d3.select("#" + this.frameid).html("");
          delete this.h;
+      } else {
+         // when only display cleared, try to clear all browser items
+         this.ForEach(function(item) {
+            if (('clear' in item) && (typeof item['clear']=='function')) item.clear();
+         });
       }
    }
 
