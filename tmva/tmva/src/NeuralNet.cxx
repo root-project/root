@@ -23,6 +23,15 @@ double gaussDouble (double mean, double sigma)
 }
 
 
+double uniformDouble (double minValue, double maxValue)
+{
+    static std::default_random_engine generator;
+    std::uniform_real_distribution<double> distribution(minValue, maxValue);
+    return distribution(generator);
+}
+
+
+    
 int randomInt (int maxValue)
 {
     static std::default_random_engine generator;
@@ -203,8 +212,8 @@ int randomInt (int maxValue)
 
     Settings::Settings (TString name,
                         size_t _convergenceSteps, size_t _batchSize, size_t _testRepetitions, 
-                        double _factorWeightDecay, bool isL1Regularization, double _dropFraction,
-                        size_t _dropRepetitions, MinimizerType _eMinimizerType, double _learningRate, 
+                        double _factorWeightDecay, bool isL1Regularization,
+                        MinimizerType _eMinimizerType, double _learningRate, 
                         double _momentum, int _repetitions)
         : m_timer (100, name)
         , m_minProgress (0)
@@ -218,8 +227,6 @@ int randomInt (int maxValue)
         , count_mb_E (0)
         , count_mb_dE (0)
         , m_isL1Regularization (isL1Regularization)
-        , m_dropFraction (_dropFraction)
-        , m_dropRepetitions (_dropRepetitions)
         , fLearningRate (_learningRate)
         , fMomentum (_momentum)
         , fRepetitions (_repetitions)

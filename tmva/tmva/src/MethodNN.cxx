@@ -157,6 +157,7 @@ void TMVA::MethodNN::DeclareOptions()
 
    DeclareOptionRef(fWeightInitializationStrategyString="XAVIER",    "WeightInitialization",    "Weight initialization strategy");
    AddPreDefVal(TString("XAVIER"));
+   AddPreDefVal(TString("XAVIERUNIFORM"));
    AddPreDefVal(TString("LAYERSIZE"));
 
 
@@ -327,6 +328,31 @@ bool fetchValue (const std::map<TString,TString>& keyValueMap, TString key, bool
     return false;
 }
 
+template <>
+std::vector<double> fetchValue (const std::map<TString,TString>& keyValueMap, TString key, std::vector<double> defaultValue)
+{
+    TString parseString (fetchValue (keyValueMap, key));
+    if (parseString == "")
+        return defaultValue;
+    parseString.ToUpper ();
+    std::vector<double> values;
+
+    const TString tokenDelim ("+");
+    TObjArray* tokenStrings = parseString.Tokenize (tokenDelim);
+    TIter nextToken (tokenStrings);
+    TObjString* tokenString = (TObjString*)nextToken ();
+    for (; tokenString != NULL; tokenString = (TObjString*)nextToken ())
+    {
+        std::stringstream sstr;
+        double currentValue;
+        sstr << tokenString->GetString ().Data ();
+        sstr >> currentValue;
+        values.push_back (currentValue);
+    }
+    return values;
+}
+
+
 
 //_______________________________________________________________________
 void TMVA::MethodNN::ProcessOptions()
@@ -353,6 +379,8 @@ void TMVA::MethodNN::ProcessOptions()
 
    if (fWeightInitializationStrategyString == "XAVIER")
        fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::XAVIER;
+   if (fWeightInitializationStrategyString == "XAVIERUNIFORM")
+       fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::XAVIERUNIFORM;
    else if (fWeightInitializationStrategyString == "LAYERSIZE")
        fWeightInitializationStrategy = TMVA::NN::WeightInitializationStrategy::LAYERSIZE;
    else if (fWeightInitializationStrategyString == "TEST")
@@ -375,22 +403,23 @@ void TMVA::MethodNN::ProcessOptions()
            int testRepetitions = fetchValue (block, "TestRepetitions", 7);
            double factorWeightDecay = fetchValue (block, "WeightDecay", 0.0);
            bool isL1 = fetchValue (block, "isL1", false);
-           double dropFraction = fetchValue (block, "DropFraction", 0.0);
-           int dropRepetitions = fetchValue (block, "DropRepetitions", 7);
            double learningRate = fetchValue (block, "LearningRate", 1e-5);
            double momentum = fetchValue (block, "Momentum", 0.3);
            int repetitions = fetchValue (block, "Repetitions", 3);
-           
+           std::vector<double> dropConfig;
+           dropConfig = fetchValue (block, "DropConfig", dropConfig);
+           int dropRepetitions = fetchValue (block, "DropRepetitions", 3);
 
            std::shared_ptr<TMVA::NN::ClassificationSettings> ptrSettings = make_shared <TMVA::NN::ClassificationSettings> (
                GetName  (),
                convergenceSteps, batchSize, 
                testRepetitions, factorWeightDecay,
-               isL1, dropFraction, dropRepetitions,
-               fScaleToNumEvents, TMVA::NN::MinimizerType::fSteepest, learningRate, 
+               isL1, fScaleToNumEvents, TMVA::NN::MinimizerType::fSteepest, learningRate, 
                momentum, repetitions);
 
-
+           if (dropRepetitions > 0 && !dropConfig.empty ())
+               ptrSettings->setDropOut (std::begin (dropConfig), std::end (dropConfig), dropRepetitions);
+           
            ptrSettings->setWeightSums (fSumOfSigWeights_test, fSumOfBkgWeights_test);
            fSettings.push_back (ptrSettings);
        }
@@ -524,7 +553,7 @@ void TMVA::MethodNN::Train()
     {
 //        std::cout << "settings" << std::endl;
         std::shared_ptr<TMVA::NN::Settings> ptrSettings = *itSettings;
-        fNet.dropOutWeightFactor (fWeights, 1.0/(1.0 - ptrSettings->dropFraction ()));
+//        fNet.dropOutWeightFactor (fWeights, 1.0/(1.0 - ptrSettings->dropFraction ()));
 //        std::cout << "set monitoring" << std::endl;
         ptrSettings->setMonitoring (fMonitoring);
         ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()), (idxSetting+1)*100.0/(fSettings.size ()));
@@ -534,6 +563,7 @@ void TMVA::MethodNN::Train()
         {
 //            std::cout << "initialize minimizer" << std::endl;
             NN::Steepest minimizer ((*itSettings)->learningRate (), (*itSettings)->momentum (), (*itSettings)->repetitions ());
+//            NN::SteepestThreaded minimizer ((*itSettings)->learningRate (), (*itSettings)->momentum (), (*itSettings)->repetitions ());
 //            std::cout << "start the training" << std::endl;
             E = fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
 //            std::cout << "training finished with E = " << E << std::endl;
