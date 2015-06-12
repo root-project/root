@@ -499,7 +499,7 @@ public:
 
 
     template <typename Iterator>
-        void setDropOut (Iterator begin, Iterator end, size_t dropRepetitions) { m_dropOut.assign (begin, end); m_dropRepetitions = dropRepetitions; }
+        void setDropOut (Iterator begin, Iterator end, size_t _dropRepetitions) { m_dropOut.assign (begin, end); m_dropRepetitions = _dropRepetitions; }
 
     size_t dropRepetitions () const { return m_dropRepetitions; }
     const std::vector<double>& dropFractions () const { return m_dropOut; }
@@ -625,12 +625,10 @@ public:
     ClassificationSettings (TString name,
                             size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
 			    double _factorWeightDecay = 1e-5, bool _isL1Regularization = false, 
-			    double _dropFraction = 0.0, size_t _dropRepetitions = 7,
 			    size_t _scaleToNumEvents = 0, MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
                             double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3)
         : Settings (name, _convergenceSteps, _batchSize, _testRepetitions, _factorWeightDecay, 
-                    _isL1Regularization, _dropFraction, _dropRepetitions,
-                    _eMinimizerType, _learningRate, _momentum, _repetitions)
+                    _isL1Regularization, _eMinimizerType, _learningRate, _momentum, _repetitions)
         , m_ams ()
         , m_sumOfSigWeights (0)
         , m_sumOfBkgWeights (0)
@@ -786,8 +784,10 @@ public:
     void setErrorFunction (ModeErrorFunction eErrorFunction) { m_eErrorFunction = eErrorFunction; }
     
 
-    template <typename WeightsType>
-        void dropOutWeightFactor (WeightsType& weights, double factor);
+    template <typename WeightsType, typename DropProbabilities>
+        void dropOutWeightFactor (WeightsType& weights,
+                                       const DropProbabilities& drops, 
+                                       bool inverse = false);
 
     template <typename Minimizer>
     double train (std::vector<double>& weights, 

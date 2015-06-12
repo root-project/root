@@ -576,7 +576,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
                                        const DropProbabilities& drops, 
                                        bool inverse)
     {
-        auto itWeight = std::begin (weights);        auto itWeightEnd = std::end (weights);
+        auto itWeight = std::begin (weights);
+        auto itWeightEnd = std::end (weights);
         auto itDrop = std::begin (drops);
         auto itDropEnd = std::end (drops);
         for (const auto& layer : layers ())
