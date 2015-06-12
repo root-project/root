@@ -238,6 +238,8 @@ public:
 
    Bool_t ProduceItem(const char *path, const char *options, TString &res, Bool_t asjson = kTRUE);
 
+   Bool_t ProduceMulti(const char *path, const char *options, void *&ptr, Long_t &length, TString &str, Bool_t asjson = kTRUE);
+
    Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str);
 
    ClassDef(TRootSniffer, 0) // Sniffer of ROOT objects
