@@ -57,6 +57,8 @@ public:
    void AddToParent(const char* name);
    void RemoveFromParent(Ssiz_t startingAt);
 
+   virtual Bool_t IsTreatingNonAccessibleTypes() {return kTRUE;}
+
    template <class T>
    void InspectMember(const T& obj, const char* name, Bool_t isTransient) {
       Ssiz_t len = GetParentLen();
