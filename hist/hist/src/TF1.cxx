@@ -2197,13 +2197,14 @@ Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel)
    if (GetNumber() > 0)
    {
       Double_t result = 0.;
-      if (gDebug) 
-         Info("computing analytical integral for %s \n",GetName() );
+      if (gDebug) {
+         Info("computing analytical integral for function %s with number %d",GetName(), GetNumber() );
+      }
       result = AnalyticalIntegral(this, a, b);
       // if it is a formula that havent been implmented in analytical integral a NaN is return
       if (!TMath::IsNaN(result)) return result;
       if (gDebug) 
-         Warning("analytical integral not available for %s - with number %d  compute numerical integral \n",GetName(),GetNumber());
+         Warning("analytical integral not available for %s - with number %d  compute numerical integral",GetName(),GetNumber());
    }
    return IntegralOneDim(a,b, epsrel, epsrel, error);
 }
