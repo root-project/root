@@ -8019,9 +8019,9 @@
 
       return null;
    }
-   
+
    JSROOT.MarkAsStreamerInfo = function(h,item,obj) {
-      // this function used on THttpServer to mark streamer infos list 
+      // this function used on THttpServer to mark streamer infos list
       // as fictional TStreamerInfoList class, which has special draw function
       if ((obj!=null) && (obj['_typename']=='TList'))
          obj['_typename'] = 'TStreamerInfoList';
@@ -8045,11 +8045,11 @@
             var func = JSROOT.findFunction(item['_make_request']);
             if (typeof func == 'function') req = func(this, item);
          }
-         
+
          if ((req.length==0) && (item._kind.indexOf("ROOT.")!=0))
            req = 'item.json.gz?compact=3';
       }
-      
+
       if ((itemname==null) && (item!=null) && ('_cached_draw_object' in this) && (req.length == 0)) {
          // special handling for drawGUI when cashed
          var obj = this['_cached_draw_object'];
@@ -8058,15 +8058,15 @@
       }
 
       if (req.length == 0) req = 'root.json.gz?compact=3';
-      
+
       if (url.length > 0) url += "/";
       url += req;
-      
+
       var pthis = this;
 
       var itemreq = JSROOT.NewHttpRequest(url, 'object', function(obj) {
 
-         if ('_after_request' in item) {
+         if (!h_get && ('_after_request' in item)) {
             var func = JSROOT.findFunction(item['_after_request']);
             if (typeof func == 'function') req = func(pthis, item, obj);
          }
