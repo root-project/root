@@ -5110,7 +5110,6 @@ int GenReflex(int argc, char **argv)
                        SILENT,
                        WRITEEMPTYROOTPCM,
                        HELP,
-                       SELSYNTAXONLY,
                        FAILONWARNINGS,
                        CAPABILITIESFILENAME,
                        INTERPRETERONLY,
@@ -5377,14 +5376,6 @@ int GenReflex(int argc, char **argv)
          "--fail_on_warnings\tFail on warnings and errors.\n"
       },
 
-      {
-         SELSYNTAXONLY,
-         NOTYPE,
-         "", "selSyntaxOnly",
-         ROOT::option::Arg::None,
-         "--selSyntaxOnly\tValidate selection file w/o generating the dictionary.\n"
-      },
-
       // Left intentionally empty not to be shown in the help, like in the first genreflex
       {
          INCLUDE,
@@ -5556,11 +5547,6 @@ int GenReflex(int argc, char **argv)
    bool writeEmptyRootPCM = false;
    if (options[WRITEEMPTYROOTPCM])
       writeEmptyRootPCM = true;
-
-   bool selSyntaxOnly = false;
-   if (options[SELSYNTAXONLY]) {
-      selSyntaxOnly = true;
-   }
 
    bool failOnWarnings = false;
    // Leave the infrastructure in place but as reqy
