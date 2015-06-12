@@ -1947,7 +1947,7 @@
 
    JSROOT.TF1Painter.prototype.CreateDummyHisto = function() {
       var xmin = 0, xmax = 0, ymin = 0, ymax = 0;
-      if (this.tf1['fNsave'] > 0) {
+      if (this.tf1['fSave'].length > 0) {
          // in the case where the points have been saved, useful for example
          // if we don't have the user's function
          var nb_points = this.tf1['fNpx'];
@@ -2016,7 +2016,7 @@
 
       var pthis = this;
 
-      if (this.tf1['fNsave'] > 0) {
+      if (this.tf1['fSave'].length > 0) {
          // in the case where the points have been saved, useful for example
          // if we don't have the user's function
          var nb_points = this.tf1['fNpx'];
