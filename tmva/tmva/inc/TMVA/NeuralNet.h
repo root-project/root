@@ -491,21 +491,26 @@ public:
 
     Settings (TString name,
               size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
-	      double _factorWeightDecay = 1e-5, bool _isL1Regularization = false, double _dropFraction = 0.0,
-	      size_t _dropRepetitions = 7, MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
+	      double _factorWeightDecay = 1e-5, bool _isL1Regularization = false,
+              MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
               double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3);
     
     virtual ~Settings ();
 
+
+    template <typename Iterator>
+        void setDropOut (Iterator begin, Iterator end, size_t dropRepetitions) { m_dropOut.assign (begin, end); m_dropRepetitions = dropRepetitions; }
+
+    size_t dropRepetitions () const { return m_dropRepetitions; }
+    const std::vector<double>& dropFractions () const { return m_dropOut; }
+
+    
     void setMonitoring (std::shared_ptr<Monitoring> ptrMonitoring) { fMonitoring = ptrMonitoring; }
 
     size_t convergenceSteps () const { return m_convergenceSteps; }
     size_t batchSize () const { return m_batchSize; }
     size_t testRepetitions () const { return m_testRepetitions; }
     double factorWeightDecay () const { return m_factorWeightDecay; }
-
-    size_t dropRepetitions () const { return m_dropRepetitions; }
-    double dropFraction () const { return m_dropFraction; }
 
     double learningRate () const { return fLearningRate; }
     double momentum () const { return fMomentum; }
@@ -572,8 +577,8 @@ public:
 
     bool m_isL1Regularization;
 
-    double m_dropFraction;
     double m_dropRepetitions;
+    std::vector<double> m_dropOut;
 
     double fLearningRate;
     double fMomentum;
@@ -757,7 +762,7 @@ enum class ModeErrorFunction
 
 enum class WeightInitializationStrategy
 {
-    XAVIER, TEST, LAYERSIZE
+    XAVIER, TEST, LAYERSIZE, XAVIERUNIFORM
 };
 
 
