@@ -773,9 +773,10 @@ void FillData(BinData & dv, const THnBase * s1, TF1 * func)
    // data.
    ROOT::Fit::DataOptions& dopt = dv.Opt();
    dopt.fUseEmpty = true;
-   // when using sparse data need to set option bin volume
+   // when using sparse data need to set option to use normalized bin volume, because sparse bins are merged together
    //if (!dopt.fIntegral) dopt.fBinVolume = true;
-   dopt.fBinVolume = true;
+   dopt.fBinVolume = true; 
+   dopt.fNormBinVolume = true;
 
    // Get the sparse data
    ROOT::Fit::SparseData d(ndim, &xmin[0], &xmax[0]);
