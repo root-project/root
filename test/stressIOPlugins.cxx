@@ -87,6 +87,7 @@ void stressIOPlugins1();
 void stressIOPlugins2();
 void stressIOPlugins3();
 void stressIOPlugins4();
+void stressIOPlugins5();
 void cleanup();
 
 int main(int argc, char **argv)
@@ -229,6 +230,7 @@ void stressIOPluginsForProto(const char *protoName /*=0*/, int multithread /*=0*
    stressIOPlugins2();
    stressIOPlugins3();
    stressIOPlugins4();
+   stressIOPlugins5();
 
    cleanup();
 
@@ -567,7 +569,57 @@ void stressIOPlugins4()
       }
    }
 }
-      
+
+//_______________________________________________________________
+void stressIOPlugins5()
+{
+   Bool_t tryziparchive = kFALSE;
+   const char *title = "Read content from a zip archive";
+   Bprint(5,title);
+
+   if (gCurProtoName == "xroot" || gCurProtoName == "root") {
+      tryziparchive = kTRUE;
+   }
+
+   if (!tryziparchive) {
+      printf("skipping\n");
+      return;
+   }
+
+   TFile *hfile = openTestFile("multi_8.zip?&zip=1","find tree");
+   if (!hfile) {
+      printf("FAILED\n");
+      return;
+   }
+   TTree *tree = 0;
+   hfile->GetObject("T",tree);
+   if (!tree) {
+      printf("FAILED\n");
+      delete hfile;
+      return;
+   }
+   tree->SetCacheSize(0);
+   Int_t nentries = (Int_t)tree->GetEntries();
+   if (nentries != 100) {
+      printf("FAILED\n");
+      delete hfile;
+      return;
+   } else {
+      printf("OK\n");
+   }
+   Event *event = 0;
+   tree->SetBranchAddress("event",&event);
+   tree->GetEntry(0);
+   Bprint(0,"read event (no cache)");
+   if (!event || event->GetNtrack() != 603) {
+      printf("FAILED\n");
+   } else {
+      printf("OK\n");
+   }
+   delete event;
+   delete hfile;
+}
+
 void cleanup()
 {
    TString psfname = TString::Format("stressIOPlugins-%d.ps", gSystem->GetPid());
