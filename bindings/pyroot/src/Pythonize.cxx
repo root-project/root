@@ -48,6 +48,7 @@
 #include <stdio.h>
 #include <string.h>     // only needed for Cling TMinuit workaround
 
+
 // temp (?)
 static inline TClass* OP2TCLASS( PyROOT::ObjectProxy* pyobj ) {
    return TClass::GetClass( Cppyy::GetFinalName( pyobj->ObjectIsA() ).c_str());
@@ -1383,7 +1384,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          if ( branch->IsA() == TBranchElement::Class() || branch->IsA() == TBranchObject::Class() ) {
             TClass* klass = TClass::GetClass( branch->GetClassName() );
             if ( klass && branch->GetAddress() )
-               return BindCppObjectNoCast( *(char**)branch->GetAddress(), Cppyy::GetScope( branch->GetClassName() ) );
+               return BindCppObjectNoCast( *(void**)branch->GetAddress(), Cppyy::GetScope( branch->GetClassName() ) );
 
          // try leaf, otherwise indicate failure by returning a typed null-object
             TObjArray* leaves = branch->GetListOfLeaves();
@@ -1421,12 +1422,12 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             delete pcnv;
 
             return value;
-         } else {
+         } else if ( leaf->GetValuePointer() ) {
          // value types
             TConverter* pcnv = CreateConverter( leaf->GetTypeName() );
             PyObject* value = 0;
             if ( leaf->IsA() == TLeafElement::Class() || leaf->IsA() == TLeafObject::Class() )
-               value = pcnv->FromMemory( (void*)*(char**)leaf->GetValuePointer() );
+               value = pcnv->FromMemory( (void*)*(void**)leaf->GetValuePointer() );
             else
                value = pcnv->FromMemory( (void*)leaf->GetValuePointer() );
             delete pcnv;
@@ -1490,7 +1491,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       virtual PyCallable* Clone() { return new TTreeBranch( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
       {
       // acceptable signatures:
       //   ( const char*, void*, const char*, Int_t = 32000 )
@@ -1616,7 +1617,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       virtual PyCallable* Clone() { return new TTreeSetBranchAddress( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* /* ctxt */ )
       {
       // acceptable signature:
       //   ( const char*, void* )
@@ -1837,7 +1838,7 @@ namespace {
       virtual PyCallable* Clone() { return new TF1InitWithPyFunc( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
+         ObjectProxy*& self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
       {
       // expected signature: ( char* name, pyfunc, double xmin, double xmax, int npar = 0 )
          int argc = PyTuple_GET_SIZE( args );
@@ -1934,7 +1935,7 @@ namespace {
    };
 
 //- TFunction behavior ---------------------------------------------------------
-   PyObject* TFunctionCall( ObjectProxy* self, PyObject* args ) {
+   PyObject* TFunctionCall( ObjectProxy*& self, PyObject* args ) {
       return TFunctionHolder( Cppyy::gGlobalScope, (Cppyy::TCppMethod_t)self->GetObject() ).Call( self, args, 0 );
    }
 
@@ -1955,7 +1956,7 @@ namespace {
       virtual PyCallable* Clone() { return new TMinuitSetFCN( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );
@@ -2038,7 +2039,7 @@ namespace {
       virtual PyCallable* Clone() { return new TMinuitFitterSetFCN( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );
@@ -2105,7 +2106,7 @@ namespace {
       virtual PyCallable* Clone() { return new TFitterFitFCN( *this ); }
 
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
+         ObjectProxy*& self, PyObject* args, PyObject* /* kwds */, TCallContext* /* ctxt */ )
       {
       // expected signature: ( self, pyfunc, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false )
          int argc = PyTuple_GET_SIZE( args );

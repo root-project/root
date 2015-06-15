@@ -38,7 +38,7 @@ namespace PyROOT {
 
    public:
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
 
       virtual Bool_t Initialize();
       virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );

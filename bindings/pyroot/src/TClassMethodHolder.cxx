@@ -8,7 +8,7 @@
 
 //- public members --------------------------------------------------------------
 PyObject* PyROOT::TClassMethodHolder::Call(
-      ObjectProxy*, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+      ObjectProxy*&, PyObject* args, PyObject* kwds, TCallContext* ctxt )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
