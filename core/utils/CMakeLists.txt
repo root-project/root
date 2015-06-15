@@ -103,6 +103,16 @@ foreach(file  multimap  multiset)
   install(FILES ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/cint)
 endforeach()
 
+# These headers do not have complete include guards on all platforms we
+# support. This means that the PCH cannot provide their representation at
+# runtime and clang will hit disk, triggering a possible incompatibility
+# of that file in build-time versus run-time (different length etc).
+# Capture their build-time version here, and inject it into runtime.
+foreach(file wchar.h bits/stat.h)
+  if(EXISTS /usr/include/${file})
+    list(APPEND copy_commands /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include)
+  endif()
+endforeach()
 
 foreach( file llvm/ADT/IntrusiveRefCntPtr.h
               llvm/ADT/StringRef.h
