@@ -240,12 +240,13 @@ void TGLEmbeddedOculusViewer::DoDrawStereo(Bool_t swap_buffers)
 {
    // Create static instance of oculus interface, which takes care of everything
    // e.g. setup new window, head-tracking and interaction with oculus rift SDK
-   static OculusInterface oi(fCamera);
    
    MakeCurrent();
 
    if (!fIsPrinting) PreDraw();
    PreRender();
+   
+   static OculusInterface oi(fCamera);
 
    oi.begin();
  
@@ -284,12 +285,13 @@ void TGLSAOculusViewer::DoDrawStereo(Bool_t swap_buffers)
 {
    // Create static instance of oculus interface, which takes care of everything
    // e.g. setup new window, head-tracking and interaction with oculus rift SDK
-   static OculusInterface oi(fCamera);
    
    MakeCurrent();
 
    if (!fIsPrinting) PreDraw();
    PreRender();
+   
+   static OculusInterface oi(fCamera);
 
    oi.begin();
  
