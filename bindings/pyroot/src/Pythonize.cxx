@@ -26,6 +26,8 @@
 #include "TCollection.h"
 #include "TDirectory.h"
 #include "TError.h"
+#include "TFile.h"
+#include "TKey.h"
 #include "TObject.h"
 #include "TObjArray.h"
 #include "TSeqCollection.h"
@@ -2169,6 +2171,25 @@ namespace {
       return result;
    }
 
+// This is done for TFile, but Get() is really defined in TDirectoryFile and its base
+// TDirectory suffers from a similar problem. Nevertheless, the TFile case is by far
+// the most common, so we'll leave it at this until someone asks for one of the bases
+// to be pythonized.
+   PyObject* TFileGet( PyObject* self, PyObject* namecycle )
+   {
+   // Pythonization of TFile::Get that raises AttributeError on failure.
+      ObjectProxy* key = (ObjectProxy*)CallPyObjMethod( self, "GetKey", namecycle );
+      if ( !key )
+         return nullptr;
+
+      void* addr = ((TFile*)((ObjectProxy*)self)->GetObject())->GetObjectChecked(
+         PyROOT_PyUnicode_AsString( namecycle ), ((TKey*)key->GetObject())->GetClassName() );
+
+      Cppyy::TCppType_t klass =
+         (Cppyy::TCppType_t)Cppyy::GetScope( ((TKey*)key->GetObject())->GetClassName() );
+      return BindCppObjectNoCast( addr, klass, kFALSE );
+   }
+
 //- simplistic len() functions -------------------------------------------------
    PyObject* ReturnThree( ObjectProxy*, PyObject* ) {
       return PyInt_FromLong( 3 );
@@ -2537,7 +2558,10 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Py_XDECREF( attr );
 
    // allow member-style access to entries in file
-      return Utility::AddToClass( pyclass, "__getattr__", TFileGetAttr, METH_O );
+      Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TFileGetAttr, METH_O );
+      Utility::AddToClass( pyclass, "Get",         (PyCFunction) TFileGet,     METH_O );
+
+      return kTRUE;
    }
 
    if ( name.substr(0,8) == "TVector3" ) {
