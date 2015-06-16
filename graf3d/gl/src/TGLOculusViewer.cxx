@@ -159,7 +159,7 @@ class OculusInterface {
       // Fix perspective, which is fucked up by the TGLPerspectiveCamera in PreRender
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
-      gluPerspective(reinterpret_cast<TGLPerspectiveCamera*>(fCamera)->GetFOV(), vp.Aspect(), 1.0, 1000.0);
+      gluPerspective(reinterpret_cast<TGLPerspectiveCamera*>(fCamera)->GetFOV(), 1.0, 1.0, 1000.0);
       
       // Load Modelview and reset previous camera position from PreRender by loading identity
       glMatrixMode(GL_MODELVIEW);
