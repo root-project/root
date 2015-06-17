@@ -45,6 +45,16 @@ The following people have contributed to this new version:
 ## Core Libraries
 
 
+### TDirectory::TContext
+
+We added a default constructor to TDirectory::TContext which record the current directory
+and will restore it at destruction time and does not change the current directory.
+
+The constructor for TDirectory::TContext that takes a single TDirectory pointer as
+an argument was changed to set gDirectory to zero when being passed a null pointer;
+previously it was interpreting a null pointer as a request to *not* change the current
+directory - this behavior is now implement by the default constructor.
+
 ## I/O Libraries
 
 ### hadd
