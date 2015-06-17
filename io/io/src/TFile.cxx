@@ -1283,7 +1283,7 @@ TList *TFile::GetStreamerInfoList()
 
    TList *list = 0;
    if (fSeekInfo) {
-      TDirectory::TContext ctx(gDirectory,this); // gFile and gDirectory used in ReadObj
+      TDirectory::TContext ctxt(this); // gFile and gDirectory used in ReadObj
       TKey *key = new TKey(this);
       char *buffer = new char[fNbytesInfo+1];
       char *buf    = buffer;
