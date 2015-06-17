@@ -572,7 +572,7 @@ void TDirectory::Delete(const char *namecycle)
      Info("Delete","Call for this = %s namecycle = %s",
                GetName(), (namecycle ? namecycle : "null"));
 
-   TDirectory::TContext ctxt(gDirectory, this);
+   TDirectory::TContext ctxt(this);
    Short_t  cycle;
    char     name[kMaxLen];
    DecodeNameCycle(namecycle, name, cycle, kMaxLen);
@@ -1084,7 +1084,7 @@ Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_
    TString cmd;
    cmd.Form("TFile::Open(\"%s\",\"recreate\");",fname.Data());
    {
-      TContext ctxt(0); // The TFile::Open will change the current directory.
+      TContext ctxt; // The TFile::Open will change the current directory.
       TDirectory *local = (TDirectory*)gROOT->ProcessLine(cmd);
       if (!local) return 0;
       nbytes = obj->Write();

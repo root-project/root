@@ -6059,7 +6059,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
 
    const char *options = info ? info->fOptions.Data() : "";
    if (info && info->fIsFirst && info->fOutputDirectory && info->fOutputDirectory->GetFile() != GetCurrentFile()) {
-      TDirectory::TContext ctxt(gDirectory,info->fOutputDirectory);
+      TDirectory::TContext ctxt(info->fOutputDirectory);
       TTree *newtree = CloneTree(-1, options);
       if (newtree) {
          newtree->Write();

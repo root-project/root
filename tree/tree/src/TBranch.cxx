@@ -1401,7 +1401,7 @@ TFile* TBranch::GetFile(Int_t mode)
 
    // Open file (new file if mode = 1)
    {
-      TDirectory::TContext ctxt(0);
+      TDirectory::TContext ctxt;
       if (mode) file = TFile::Open(bFileName, "recreate");
       else      file = TFile::Open(bFileName);
    }

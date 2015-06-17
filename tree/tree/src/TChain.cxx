@@ -464,7 +464,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    if (nentries <= 0) {
       TFile* file;
       {
-         TDirectory::TContext ctxt(0);
+         TDirectory::TContext ctxt;
          file = TFile::Open(filename);
       }
       if (!file || file->IsZombie()) {
@@ -1449,7 +1449,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    // FIXME: We leak memory here, we've just lost the open file
    //        if we did not delete it above.
    {
-      TDirectory::TContext ctxt(0);
+      TDirectory::TContext ctxt;
       fFile = TFile::Open(element->GetTitle());
       if (fFile) fFile->SetBit(kMustCleanup);
    }
@@ -1662,7 +1662,7 @@ void TChain::Lookup(Bool_t force)
       if (!stg || !stg->Matches(eurl)) {
          SafeDelete(stg);
          {
-            TDirectory::TContext ctxt(0);
+            TDirectory::TContext ctxt;
             stg = TFileStager::Open(eurl);
          }
          if (!stg) {

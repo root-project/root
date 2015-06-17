@@ -536,7 +536,7 @@ void TTreeCloner::CopyProcessIds()
 
    TIter next(fromfile->GetListOfKeys());
    TKey *key;
-   TDirectory::TContext cur(gDirectory,fromfile);
+   TDirectory::TContext cur(fromfile);
    while ((key = (TKey*)next())) {
       if (!strcmp(key->GetClassName(),"TProcessID")) {
          TProcessID *pid = (TProcessID*)key->ReadObjectAny(0);
