@@ -1236,7 +1236,7 @@ bool TCling::LoadPCM(TString pcmFileName,
          gDebug = 0;
       }
 
-      TDirectory::TContext ctxt(0);
+      TDirectory::TContext ctxt;
 
       TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
 

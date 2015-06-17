@@ -107,7 +107,7 @@ TMemStat::TMemStat(Option_t* option, Int_t buffersize, Int_t maxcalls): fIsActiv
    _GET_CALLER_FRAME_ADDR;
 
    //preserve context. When exiting will restore the current directory
-   TDirectory::TContext context(gDirectory);
+   TDirectory::TContext context;
 
    Bool_t useBuiltin = kTRUE;
    // Define string in a scope, so that the deletion of it will be not recorded by YAMS
