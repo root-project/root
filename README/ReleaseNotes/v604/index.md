@@ -739,6 +739,21 @@ ROOT. The tutorial `tutorials/fit/fitConvolution.C` provides an example on how t
 
 Changes will be part of the future v6.04/02.
 
+
+### Core
+
+#### TDirectory::TContext
+
+Fixed a thread safety issue in TMVA by updating TDirectory::TContext.
+
+We added a default constructor to TDirectory::TContext which record the current directory
+and will restore it at destruction time and does not change the current directory.
+
+The constructor for TDirectory::TContext that takes a single TDirectory pointer as
+an argument was changed to set gDirectory to zero when being passed a null pointer;
+previously it was interpreting a null pointer as a request to *not* change the current
+directory - this behavior is now implement by the default constructor.
+
 ### Proof
  - Add support for aliases [ROOT-7392]
  - Fix issue with trees in sub-directories causing stressProof test #29 to fail
