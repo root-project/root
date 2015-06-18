@@ -4281,6 +4281,25 @@ int RootCling(int argc,
       interp.declare(definesUndefinesStr.str());
 #endif
 
+   class IgnoringPragmaHandler: public clang::PragmaNamespace {
+   public:
+      IgnoringPragmaHandler(const char* pragma):
+         clang::PragmaNamespace(pragma) {}
+      void HandlePragma(clang::Preprocessor &PP,
+                        clang::PragmaIntroducerKind Introducer,
+                        clang::Token &tok) {
+         PP.DiscardUntilEndOfDirective();
+      }
+   };
+
+   // Ignore these #pragmas to suppress "unknown pragma" warnings.
+   // See LinkdefReader.cxx.
+   clang::Preprocessor& PP = interp.getCI()->getPreprocessor();
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("link"));
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("extra_include"));
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("read"));
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("create"));
+
    if (!interpreterDeclarations.empty() &&
        interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {
       ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);

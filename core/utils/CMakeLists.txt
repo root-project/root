@@ -11,6 +11,11 @@ if(NOT MSVC)
 else()
   set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-DNOMINMAX -D_XKEYCHECK_H")
 endif()
+CHECK_CXX_COMPILER_FLAG("-fno-rtti" CXX_HAS_fno_rtti)
+if(CXX_HAS_fno_rtti)
+  set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-fno-rtti")
+endif()
+
 ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           src/TModuleGenerator.cxx src/rootcling.cxx src/rootclingTCling.cxx
                           ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
@@ -65,8 +70,13 @@ add_custom_command(OUTPUT rootcling_tmp.cxx
 if(WIN32)
   set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX -DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
 else()
-  set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
+  if(CXX_HAS_fno_rtti)
+    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling -fno-rtti")
+  else()
+    set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=${CMAKE_BINARY_DIR}/etc/cling")
+  endif()
 endif()
+
 ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
                               src/TModuleGenerator.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
                               ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
