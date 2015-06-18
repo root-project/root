@@ -742,6 +742,8 @@ Changes will be part of the future v6.04/02.
 
 ### Core
 
+ - Fixed support for dictionary for class with inlined namespace.
+
 #### TDirectory::TContext
 
 Fixed a thread safety issue in TMVA by updating TDirectory::TContext.
