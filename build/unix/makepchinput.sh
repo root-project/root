@@ -7,6 +7,8 @@
 # Copyright (c) 2014 Rene Brun and Fons Rademakers
 # Author: Axel Naumann <axel@cern.ch>, 2014-10-16
 
+# Usage: $0 <root-srcdir> "module0 module1 ... moduleN" header0 header1 ... headerN -- cxxflag0 cxxflag1 ...
+
 srcdir=$1
 shift
 modules=$1
@@ -55,8 +57,17 @@ done
 echo '#pragma clang diagnostic pop' >> $allheaders
 echo '#undef _BACKWARD_BACKWARD_WARNING_H' >> $allheaders
 
-while ! [ "x$1" = "x" ]; do
+while ! [ "x$1" = "x" -o "x$1" = "x--" ]; do
     echo '#include "'$1'"' >> $allheaders
+    shift
+done
+
+if [ "x$1" = "x--" ]; then
+    shift
+fi
+
+while ! [ "x$1" = "x" ]; do
+    echo "$1" >> $cppflags.tmp
     shift
 done
 
