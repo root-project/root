@@ -141,32 +141,6 @@ static bool CheckDefinition(const clang::CXXRecordDecl *cl, const clang::CXXReco
 }
 
 //______________________________________________________________________________
-static int WriteNamespaceHeader(std::ostream &out, const clang::DeclContext *ctxt)
-{
-   // Write all the necessary opening part of the namespace and
-   // return the number of closing brackets needed
-   // For example for Space1::Space2
-   // we write: namespace Space1 { namespace Space2 {
-   // and return 2.
-
-   int closing_brackets = 0;
-
-   //fprintf(stderr,"DEBUG: in WriteNamespaceHeader for %s with %s\n",
-   //    cl.Fullname(),namespace_obj.Fullname());
-   if (ctxt && ctxt->isNamespace()) {
-      closing_brackets = WriteNamespaceHeader(out,ctxt->getParent());
-      for (int indent = 0; indent < closing_brackets; ++indent) {
-         out << "   ";
-      }
-      const clang::NamespaceDecl *ns = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
-      out << "namespace " << ns->getNameAsString() << " {" << std::endl;
-      closing_brackets++;
-   }
-
-   return closing_brackets;
-}
-
-//______________________________________________________________________________
 static clang::NestedNameSpecifier* ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt,
                                                          clang::NestedNameSpecifier *scope,
                                                          const clang::Type *instance)
@@ -2073,13 +2047,21 @@ bool ROOT::TMetaUtils::GetNameWithinNamespace(std::string &fullname,
    ROOT::TMetaUtils::GetQualifiedName(fullname,*cl);
    clsname = fullname;
 
-   const clang::NamedDecl *ctxt = llvm::dyn_cast<clang::NamedDecl>(cl->getEnclosingNamespaceContext());
-   if (ctxt && ctxt!=cl) {
-      const clang::NamespaceDecl *nsdecl = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
-      if (nsdecl == 0 || !nsdecl->isAnonymousNamespace()) {
-         ROOT::TMetaUtils::GetQualifiedName(nsname,*nsdecl);
-         clsname.erase (0, nsname.size() + 2);
-         return true;
+   // Inline namespace are stripped from the normalized name, we need to
+   // strip it from the prefix we want to remove.
+   auto ctxt = cl->getEnclosingNamespaceContext();
+   while(ctxt && ctxt!=cl && ctxt->isInlineNamespace()) {
+      ctxt = ctxt->getParent();
+   }
+   if (ctxt) {
+      const clang::NamedDecl *namedCtxt = llvm::dyn_cast<clang::NamedDecl>(ctxt);
+      if (namedCtxt && namedCtxt!=cl) {
+         const clang::NamespaceDecl *nsdecl = llvm::dyn_cast<clang::NamespaceDecl>(namedCtxt);
+         if (nsdecl != 0 && !nsdecl->isAnonymousNamespace()) {
+            ROOT::TMetaUtils::GetQualifiedName(nsname,*nsdecl);
+            clsname.erase (0, nsname.size() + 2);
+            return true;
+         }
       }
    }
    return false;
@@ -2096,9 +2078,37 @@ const clang::DeclContext *GetEnclosingSpace(const clang::RecordDecl &cl)
 }
 
 //______________________________________________________________________________
+int ROOT::TMetaUtils::WriteNamespaceHeader(std::ostream &out, const clang::DeclContext *ctxt)
+{
+   // Write all the necessary opening part of the namespace and
+   // return the number of closing brackets needed
+   // For example for Space1::Space2
+   // we write: namespace Space1 { namespace Space2 {
+   // and return 2.
+
+   int closing_brackets = 0;
+
+   //fprintf(stderr,"DEBUG: in WriteNamespaceHeader for %s with %s\n",
+   //    cl.Fullname(),namespace_obj.Fullname());
+   if (ctxt && ctxt->isNamespace()) {
+      closing_brackets = WriteNamespaceHeader(out,ctxt->getParent());
+      for (int indent = 0; indent < closing_brackets; ++indent) {
+         out << "   ";
+      }
+      const clang::NamespaceDecl *ns = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
+      if (ns->isInline())
+         out << "inline ";
+      out << "namespace " << ns->getNameAsString() << " {" << std::endl;
+      closing_brackets++;
+   }
+
+   return closing_brackets;
+}
+
+//______________________________________________________________________________
 int ROOT::TMetaUtils::WriteNamespaceHeader(std::ostream &out, const clang::RecordDecl *cl)
 {
-   return ::WriteNamespaceHeader(out, GetEnclosingSpace(*cl));
+   return WriteNamespaceHeader(out, GetEnclosingSpace(*cl));
 }
 
 //______________________________________________________________________________
