@@ -14,13 +14,13 @@ shift
 modules=$1
 shift
 
-# Remove leftover files from old versions of this script.
-rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h all.h cppflags.txt include/allLinkDef.h etc/allDict.cxx etc/allDict.cxx.h
-
 outdir=etc/dictpch
 allheaders=$outdir/allHeaders.h
 alllinkdefs=$outdir/allLinkDefs.h
 cppflags=$outdir/allCppflags.txt
+
+# Remove leftover files from old versions of this script.
+rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h all.h cppflags.txt include/allLinkDef.h etc/allDict.cxx etc/allDict.cxx.h $cppflags.tmp $allheaders $alllinkdefs $cppflags
 
 mkdir -p $outdir
 rm -f $allheaders $alllinkdefs
@@ -67,7 +67,11 @@ if [ "x$1" = "x--" ]; then
 fi
 
 while ! [ "x$1" = "x" ]; do
-    echo "$1" >> $cppflags.tmp
+    case $1 in
+        -Wno*) echo "$1" >> $cppflags.tmp ;;
+        -W*) ;;
+        *) echo "$1" >> $cppflags.tmp ;;
+    esac
     shift
 done
 
