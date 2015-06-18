@@ -39,7 +39,7 @@ void httpcontrol()
 
    // enable monitoring and
    // specify items to draw when page is opened
-   serv->SetItemField("/","_monitoring","2000");
+   serv->SetItemField("/","_monitoring","5000");
    serv->SetItemField("/","_layout","grid2x2");
    serv->SetItemField("/","_drawitem","[hpxpy,hpx,Debug]");
    serv->SetItemField("/","_drawopt","col");
