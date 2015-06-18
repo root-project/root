@@ -29,6 +29,14 @@ public:
    std::atomic<vector<Wrapper<int> >*> fAtom; //!
 };
 
+namespace Geant {
+   inline namespace cxx {
+      class GeantTrack {
+         ClassDef(GeantTrack,1);
+      };
+   }
+}
+
 #endif
 
 #ifdef __ROOTCLING__
@@ -37,5 +45,6 @@ public:
 #pragma link C++ class vector<Wrapper<int> >+;
 #pragma link C++ class atomic<vector<Wrapper<int> >*>;
 #pragma link C++ class Container<int>+;
+#pragma link C++ class Geant::cxx::GeantTrack+;
 #endif
 
