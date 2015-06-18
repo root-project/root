@@ -38,12 +38,18 @@ def removeLeftOvers():
 def getParams():
    """
    Extract parameters from the commandline, which looks like
-   makePCHInput.py ZZZ XXX YYY
+   makePCHInput.py ZZZ XXX YYY -- CXXFLAGS
    """
    argv = sys.argv
    rootSrcDir, modules = argv[1:3]
-   clingetpchList = argv[3:]
-   return rootSrcDir, modules, clingetpchList
+   posDelim = argv.index('--')
+   clingetpchList = argv[3:posDelim]
+   cxxflags = argv[posDelim + 1:]
+   print (', '.join(cxxflags))
+   cxxflagsNoW = [flag for flag in cxxflags if flag[0:2] != '-W' or flag[0:4] == '-Wno']
+   print (', '.join(cxxflagsNoW))
+
+   return rootSrcDir, modules, clingetpchList, cxxflagsNoW
 
 #-------------------------------------------------------------------------------
 def getGuardedStlInclude(headerName):
@@ -296,8 +302,8 @@ def getIncludeLinesFromDict(dictFileName):
 #-------------------------------------------------------------------------------
 def getIncludePathsFromDict(dictFileName):
    """
-   Search for the headers after the line
-   'static const char* headers[]'
+   Search for the include paths after the line
+   'static const char* includePaths[]'
    Return them as list
    """
    incPathsPart=[]
@@ -420,7 +426,7 @@ def makePCHInput():
       * etc/dictpch/allHeaders.h
       * etc/dictpch/allCppflags.txt
    """
-   rootSrcDir, modules, clingetpchList = getParams()
+   rootSrcDir, modules, clingetpchList, cxxflags = getParams()
 
    removeLeftOvers()
 
@@ -456,7 +462,7 @@ def makePCHInput():
 
    copyLinkDefs(rootSrcDir, outdir)
 
-   cppFlagsContent = getCppFlags(rootSrcDir,allIncPathsList)
+   cppFlagsContent = getCppFlags(rootSrcDir,allIncPathsList) + '\n'.join(cxxflags) + '\n'
 
    writeFiles(((allHeadersContent, allHeadersFilename),
                (allLinkdefsContent, allLinkdefsFilename),
