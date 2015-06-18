@@ -44,6 +44,10 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 
+### Dictionary generation
+
+Fixed the dictionary generation in the case of class inside a namespace
+marked inlined.
 
 ### TDirectory::TContext
 
