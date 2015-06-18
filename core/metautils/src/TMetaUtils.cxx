@@ -147,24 +147,24 @@ static int WriteNamespaceHeader(std::ostream &out, const clang::DeclContext *ctx
    // return the number of closing brackets needed
    // For example for Space1::Space2
    // we write: namespace Space1 { namespace Space2 {
-      // and return 2.
+   // and return 2.
 
-      int closing_brackets = 0;
+   int closing_brackets = 0;
 
-      //fprintf(stderr,"DEBUG: in WriteNamespaceHeader for %s with %s\n",
-      //    cl.Fullname(),namespace_obj.Fullname());
-      if (ctxt && ctxt->isNamespace()) {
-         closing_brackets = WriteNamespaceHeader(out,ctxt->getParent());
-         for (int indent = 0; indent < closing_brackets; ++indent) {
-            out << "   ";
-         }
-         const clang::NamespaceDecl *ns = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
-         out << "namespace " << ns->getNameAsString() << " {" << std::endl;
-         closing_brackets++;
-         }
-
-         return closing_brackets;
+   //fprintf(stderr,"DEBUG: in WriteNamespaceHeader for %s with %s\n",
+   //    cl.Fullname(),namespace_obj.Fullname());
+   if (ctxt && ctxt->isNamespace()) {
+      closing_brackets = WriteNamespaceHeader(out,ctxt->getParent());
+      for (int indent = 0; indent < closing_brackets; ++indent) {
+         out << "   ";
       }
+      const clang::NamespaceDecl *ns = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
+      out << "namespace " << ns->getNameAsString() << " {" << std::endl;
+      closing_brackets++;
+   }
+
+   return closing_brackets;
+}
 
 //______________________________________________________________________________
 static clang::NestedNameSpecifier* ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt,
