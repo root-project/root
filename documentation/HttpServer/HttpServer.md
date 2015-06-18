@@ -12,7 +12,7 @@ To start the http server, at any time, create an instance of the [THttpServer](h
 
     serv = new THttpServer("http:8080");
 
-This will start a civetweb-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (IE9, Firefox, Chrome, Opera) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
+This will start a [civetweb](https://github.com/bel2125/civetweb)-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (IE9, Firefox, Chrome, Opera) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
 
 There is a [snapshot (frozen copy)](https://root.cern.ch/js/3.5/httpserver.C/) of such server, running in [tutorials/http/httpserver.C](https://root.cern.ch/gitweb?p=root.git;a=blob_plain;f=tutorials/http/httpserver.C;hb=HEAD) macro from ROOT tutorial.
 
@@ -73,11 +73,33 @@ It is recommended not to use special symbols in domain or user names. Several us
 
 After that, the web browser will automatically request to input a name/password for the domain "domain_name"
 
+Based on authorized accounts, one could restrict or enable access to some elements in the server objects hierarchy, using THttpServer::Restrict() method.
+
+For instance, one could hide complete folder from 'guest' account:
+
+    root [6]  serv->Restrict("/Folder",  "hidden=guest");
+     
+Or one could hide from all but 'admin' account:  
+
+    root [7]  serv->Restrict("/Folder",  "visible=admin");
+    
+Hidden folders or objects can not be accessed via http protocol.
+
+By default server runs in readonly mode and do not allow methods execution via 'exe.json' or 'exe.bin' requests. To allow such action, one could either grant generic access for all or one could allow to execute only special method:
+
+    root [8]  serv->Restrict("/Folder/histo1",  "allow=all");
+    root [9]  serv->Restrict("/Folder/histo1",  "allow_method=GetTitle");
+
+One could provide several options for the same item, separating them with '&' sign:
+
+    root [10]  serv->Restrict("/Folder/histo1",  "allow_method=GetTitle&hide=guest");
+ 
+Complete list of supported options could be found in [TRootSniffer:Restrict()](https://root.cern.ch/root/html/TRootSniffer.html#TRootSniffer:Restrict) method documentation.
+
 
 ## Using FastCGI interface
 
-FastCGI is a protocol for interfacing interactive programs with a web server like
-Apache, lighttpd, Microsoft ISS and many others.
+[FastCGI](http://en.wikipedia.org/wiki/FastCGI) is a protocol for interfacing interactive programs with a web server like Apache, lighttpd, Microsoft ISS and many others.
 
 When starting THttpServer, one could specify:
 
@@ -97,15 +119,15 @@ All user access will be ruled by the main web server - for the moment one cannot
 ### Configure fastcgi with Apcahe2
 
 First of all, one should compile and install [mod_fastcgi](http://www.fastcgi.com) module.
-Than *mod_fastcgi* should be specified in httpd.conf to load it when Apache server is started.
+Then *mod_fastcgi* should be specified in httpd.conf to load it when Apache server is started.
 Finally in host configuration file one should have following lines:
 
      <IfModule mod_fastcgi.c>
-        FastCgiExternalServer "/srv/www/htdocs/root.app" -host your_host_name:9000
+        FastCgiExternalServer "/srv/www/htdocs/root.app" -host rootapp_host_name:9000
      </IfModule>
 
 Here is supposed that directory "/srv/www/htdocs" is root directory for web server.
-Than one should be able to open address  
+Than one should be able to open address:  
      
      http://apache_host_name/root.app/ 
   
@@ -124,9 +146,9 @@ An example of configuration file for *lighttpd* server is:
          ))
     )
 
-Be aware, that with *lighttpd* here one should specify IP address of the host, where ROOT application is running. Address of the ROOT application will be following:
+Be aware, that with *lighttpd* one should specify IP address of the host, where ROOT application is running. Address of the ROOT application will be following:
 
-    http://lighttpd_hostname/root.app/
+    http://lighttpd_host_name/root.app/
 
 
 
@@ -144,10 +166,10 @@ The first method is to configure an asynchronous timer for the server, like for 
 
     serv->SetTimer(100, kFALSE);
 
-Then, the timer will be activated even without any gSystem->ProcessEvents() method call. The main advantage of such method is that the application code can be used as it is. The disadvantage - there is no control when the communication between the server and the application is performed. It could happen just in-between of **`TH1::Fill()`** calls and an histogram object may be incomplete.
+Then, the timer will be activated even without any gSystem->ProcessEvents() method call. The main advantage of such method is that the application code can be used without any modifications. But there is no control when access to the application data is performed. It could happen just in-between of **`TH1::Fill()`** calls and an histogram object may be incomplete. Therefore such method is not recommended. 
 
 
-### Explicit call of THttpServer::ProcessRequests() method
+### Regular calls of THttpServer::ProcessRequests() method
 
 The second method is preferable - one just inserts in the application regular calls of the THttpServer::ProcessRequests() method, like:
 
@@ -185,15 +207,18 @@ Then, its representation will look like:
 
 The following requests can be performed:
 
-  - `root.bin`  - binary data produced by object streaming with TBufferFile
-  - `root.json` - ROOT JSON representation for object and objects members
-  - `root.xml`  - ROOT XML representation
-  - `root.png`  - PNG image (if object drawing implemented)
-  - `root.gif`  - GIF image
-  - `root.jpeg` - JPEG image
-  - `exe.json`  - method execution in the object
-  - `cmd.json`  - command execution
-  - `item.json` - item (object) properties, specified on the server
+  - `root.bin`   - binary data produced by object streaming with TBufferFile
+  - `root.json`  - ROOT JSON representation for object and objects members
+  - `root.xml`   - ROOT XML representation
+  - `root.png`   - PNG image (if object drawing implemented)
+  - `root.gif`   - GIF image
+  - `root.jpeg`  - JPEG image
+  - `exe.json`   - method execution in the object
+  - `exe.bin`    - method execution, return result in binary form
+  - `cmd.json`   - command execution
+  - `item.json`  - item (object) properties, specified on the server
+  - `multi.json` - perform several requests at once
+  - `multi.bin`  - perform several requests at once, return result in binary form
 
 All data will be automatically zipped if '.gz' extension is appended. Like:
 
@@ -204,39 +229,27 @@ If the access to the server is restricted with htdigest, it is recommended to us
     [shell] curl --user "accout:password" http://localhost:8080/Objects/subfolder/obj/root.json --digest -o root.json
 
 
-### Access to object data in JSON format
+### Objects data access in JSON format
 
-Request `root.json` implemented with [TBufferJSON](https://root.cern.ch/root/html/TBufferJSON.html) class.
-TBufferJSON generates such object representation, which could be directly used in [JSROOT](https://root.cern.ch/js/) for drawing.
-`root.json` returns either complete object or just object member like:
+Request `root.json` implemented with [TBufferJSON](https://root.cern.ch/root/html/TBufferJSON.html) class. TBufferJSON generates such object representation, which could be directly used in [JSROOT](https://root.cern.ch/js/) for drawing. `root.json` request returns either complete object or just object member like:
 
     [shell] wget http://localhost:8080/Objects/subfolder/obj/fTitle/root.json
 
 The result will be: "title".
 
-For the `root.json` request one could specify the 'compact' parameter,
-which allow to reduce the number of spaces and new lines without data lost.
-This parameter can have values from '0' (no compression) till '3' (no spaces and new lines at all).
+For the `root.json` request one could specify the 'compact' parameter, which allow to reduce the number of spaces and new lines without data lost. This parameter can have values from '0' (no compression) till '3' (no spaces and new lines at all).
 
-Usage of `root.json` request is about as efficient as binary `root.bin` request.
-Comparison of different request methods with TH1 object shown in the table:
+Usage of `root.json` request is about as efficient as binary `root.bin` request. Comparison of different request methods with TH1 object shown in the table:
 
-+-------------------------+------------+
 | Request                 |    Size    |
-+-------------------------+------------+
+| :---------------------- | :--------- |
 | root.bin                | 1658 bytes |
-+-------------------------+------------+
 | root.bin.gz             |  782 bytes |
-+-------------------------+------------+
 | root.json               | 7555 bytes |
-+-------------------------+------------+
 | root.json?compact=3     | 5381 bytes |
-+-------------------------+------------+
 | root.json.gz?compact=3  | 1207 bytes |
-+-------------------------+------------+
 
-One should remember that json always includes names of the data fields which are not present in the binary representation.
-Even then, the size difference is negligible.
+One should remember that JSON representation always includes names of the data fields which are not present in the binary representation. Even then the size difference is negligible.
 
 `root.json` used in JSROOT to request objects from THttpServer.
 
@@ -257,8 +270,7 @@ For all such requests one could specify following parameters:
 
 ### Methods execution
 
-By default THttpServer starts in monitoring (read-only) mode and therefore forbid any methods execution.
-One could specify read-write mode when server is started:
+By default THttpServer starts in monitoring (read-only) mode and therefore forbid any methods execution. One could specify read-write mode when server is started:
 
     serv = new THttpServer("http:8080;rw");
 
@@ -266,22 +278,40 @@ Or one could disable read-only mode with the call:
 
     serv->SetReadOnly(kFALSE);
 
-'exe.json' accepts following parameters:
+Or one could allow access to the folder, object or specific object methods with:
 
+    serv->Restrict("/Histograms", "allow=admin"); // allow full access for user with 'admin' accout 
+    serv->Restrict("/Histograms/hist1", "allow=all"); // allow full access for all users 
+    serv->Restrict("/Histograms/hist1", "allow_method=Rebin"); // allow only Rebin method 
+    
+'exe.json' accepts following parameters:
    - `method` - name of method to execute
    - `prototype` - method prototype (see [TClass::GetMethodWithPrototype](https://root.cern.ch/root/html/TClass.html#TClass:GetMethodWithPrototype) for details)
    - `compact` - compact parameter, used to compress return value
-   - `_ret_object_` - name of the object which should be returned as result of method execution (used in TTree::Draw call)
+   - `_ret_object_` - name of the object which should be returned as result of method execution (used together with remote TTree::Draw call)
 
 Example of retrieving object title:
 
-    [shell] wget 'http://localhost:8080/Objects/subfolder/obj/exe.json?method=GetTitle' -O title.txt
+    [shell] wget 'http://localhost:8080/Objects/subfolder/obj/exe.json?method=GetTitle' -O title.json
 
 Example of TTree::Draw method execution:
 
     [shell] wget 'http://localhost:8080/Files/job1.root/ntuple/exe.json?method=Draw&prototype="Option_t*"&opt="px:py>>h1"&_ret_object_=h1' -O exe.json
 
-To get debug information about command execution, one could submit 'exe.txt' request with same arguments.
+One also used `exe.bin` method - in this case results of method execution will be returned in binary format. 
+In case when method returns temporary object, which should be delete at the end of command execution, one should specify `_destroy_result_` parameter in the URL string:
+
+    [shell] wget 'http://localhost:8080/Objects/subfolder/obj/exe.json?method=Clone&_destroy_result_' -O clone.json
+
+If method required object as argument, it could be posted in binary or XML format as POST request. If binary form is used, one should specify following parameters:
+ 
+    [shell] wget 'http://localhost:8080/hist/exe.json?method=Add&h1=_post_object_&_post_class_=TH1I&c1=10' --post-file=h.bin -O res.json
+
+Here is important to specify post object class, which is not stored in the binary buffer. When used XML form (produced with [TBufferXML::ConvertToXML](https://root.cern.ch/root/html/TBufferXML.html#TBufferXML:ConvertToXML)) method, only string with XML code could be specified:
+
+    [shell] wget 'http://localhost:8080/hist/exe.json?method=Add&h1=_post_object_xml_&c1=10' --post-file=h.xml -O res.json
+
+To get debug information about command execution, one could submit `exe.txt` request with same arguments.
 
 
 ### Commands execution
@@ -294,4 +324,28 @@ It can be invoked with `cmd.json` request like:
 
     [shell] wget http://localhost:8080/Folder/Start/cmd.json -O result.txt
 
-If command fails, `false` will be returned, otherwise result of gROOT->ProcessLineSync() execution
+If command fails, `false` will be returned, otherwise result of gROOT->ProcessLineSync() execution.
+
+
+### Performing multiple requests at once
+
+To minimize traffic between sever and client, one could submit several requests at once. This is especially useful when big number of small objects should be requestsed simultaneosely. For this purposes `multi.bin` or `multi.json` requests could be used.
+Both require string as POST data which format as:
+
+    subfolder/item1/root.json\n
+    subfolder/item2/root.json\n
+    subfolder/item1/exe.json?method=GetTitle\n
+
+If such requests saved in 'req.txt' file, one could submit it with command:
+
+    [shell] wget http://localhost:8080/multi.json?number=3 --post-file=req.txt -O result.json
+
+For `multi.json` request one could use only requests, returning JSON format (like `root.json` or `exe.json`). Result will be JSON array.
+For `multi.bin` any kind of requests can be used. It returns binary buffer with following content:
+
+    [size1 (little endian), 4 bytes] + [request1 result, size1 bytes]
+    [size2 (little endian), 4 bytes] + [request2 result, size2 bytes]  
+    [size3 (little endian), 4 bytes] + [request3 result, size3 bytes]  
+
+While POST data in request used to transfer list of multiple reqeusts, it is not possible to submit
+such kind of requests, which themselvs require data from POST block.  
