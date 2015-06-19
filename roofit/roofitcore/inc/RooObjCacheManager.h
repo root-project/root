@@ -34,7 +34,7 @@ class RooObjCacheManager : public RooCacheManager<RooAbsCacheElement> {
 
 public:
 
-  RooObjCacheManager(RooAbsArg* owner=0, Int_t maxSize=10, Bool_t clearCacheOnServerRedirect=kTRUE, Bool_t allowOptimize=kFALSE) ;
+  RooObjCacheManager(RooAbsArg* owner=0, Int_t maxSize=2, Bool_t clearCacheOnServerRedirect=kTRUE, Bool_t allowOptimize=kFALSE) ;
   RooObjCacheManager(const RooObjCacheManager& other, RooAbsArg* owner=0) ;
   virtual ~RooObjCacheManager() ;
   
