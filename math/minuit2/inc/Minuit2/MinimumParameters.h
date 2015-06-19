@@ -22,15 +22,16 @@ class MinimumParameters {
 
 public:
 
-  MinimumParameters(unsigned int n) :
-   fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(n))) {}
+   MinimumParameters(unsigned int n, double fval = 0) :
+      fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(n,fval))) {}
 
   /** takes the Parameter vector */
   MinimumParameters(const MnAlgebraicVector& avec, double fval) :
-   fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(avec, fval)))  {}
+     fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(avec, fval)))  {}
 
   /** takes the Parameter vector plus step size x1 - x0 = dirin */
-  MinimumParameters(const MnAlgebraicVector& avec, const MnAlgebraicVector& dirin, double fval) : fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(avec, dirin, fval)))  {}
+  MinimumParameters(const MnAlgebraicVector& avec, const MnAlgebraicVector& dirin, double fval) :
+     fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(avec, dirin, fval)))  {}
 
   ~MinimumParameters() {}
 

@@ -27,19 +27,23 @@ class BasicMinimumState {
 
 public:
 
-  BasicMinimumState(unsigned int n) :
-    fParameters(MinimumParameters(n)), fError(MinimumError(n)),
-    fGradient(FunctionGradient(n)), fEDM(0.), fNFcn(0) {}
+   // constructor without parameter values but with function value, edm and nfcn
+   BasicMinimumState(unsigned int n, double fval, double edm, int nfcn) :
+      fParameters(MinimumParameters(n,fval)), fError(MinimumError(n)),
+    fGradient(FunctionGradient(n)), fEDM(edm), fNFcn(nfcn) {}
+   
   BasicMinimumState(const MinimumParameters& states, const MinimumError& err,
-                    const FunctionGradient& grad, double edm, int nfcn) :
-    fParameters(states), fError(err), fGradient(grad), fEDM(edm), fNFcn(nfcn) {}
+                    const FunctionGradient& grad, double edm, int nfcn) :     
+     fParameters(states), fError(err), fGradient(grad), fEDM(edm), fNFcn(nfcn) {}
 
-  BasicMinimumState(const MinimumParameters& states, double edm, int nfcn) : fParameters(states), fError(MinimumError(states.Vec().size())), fGradient(FunctionGradient(states.Vec().size())), fEDM(edm), fNFcn(nfcn) {}
+   BasicMinimumState(const MinimumParameters& states, double edm, int nfcn) : fParameters(states), fError(MinimumError(states.Vec().size())),
+                                                                              fGradient(FunctionGradient(states.Vec().size())), fEDM(edm), fNFcn(nfcn)
+   {}
 
   ~BasicMinimumState() {}
 
   BasicMinimumState(const BasicMinimumState& state) :
-    fParameters(state.fParameters), fError(state.fError), fGradient(state.fGradient), fEDM(state.fEDM), fNFcn(state.fNFcn) {}
+     fParameters(state.fParameters), fError(state.fError), fGradient(state.fGradient), fEDM(state.fEDM), fNFcn(state.fNFcn) {}
 
   BasicMinimumState& operator=(const BasicMinimumState& state) {
     fParameters = state.fParameters;
@@ -67,6 +71,7 @@ public:
   double Fval() const {return fParameters.Fval();}
   double Edm() const {return fEDM;}
   int NFcn() const {return fNFcn;}
+
 
   bool IsValid() const {
     if(HasParameters() && HasCovariance())

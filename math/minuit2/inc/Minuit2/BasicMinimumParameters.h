@@ -25,7 +25,7 @@ class BasicMinimumParameters {
 
 public:
 
-  BasicMinimumParameters(unsigned int n) : fParameters(MnAlgebraicVector(n)), fStepSize(MnAlgebraicVector(n)), fFVal(0.), fValid(false), fHasStep(false) {}
+  BasicMinimumParameters(unsigned int n, double fval) : fParameters(MnAlgebraicVector(n)), fStepSize(MnAlgebraicVector(n)), fFVal(fval), fValid(false), fHasStep(false) {}
 
   BasicMinimumParameters(const MnAlgebraicVector& avec, double fval) :
     fParameters(avec), fStepSize(avec.size()), fFVal(fval), fValid(true), fHasStep(false) {}
