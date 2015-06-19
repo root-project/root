@@ -159,21 +159,43 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 
-template <bool isL1, typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient, typename ItWeight>
+
+template <EnumRegularization Regularization>
+    inline double computeRegularization (double weight, const double& factorWeightDecay)
+{
+    return 0;
+}
+
+// L1 regularization
+template <>
+    inline double computeRegularization<EnumRegularization::L1> (double weight, const double& factorWeightDecay)
+{
+    return weight == 0.0 ? 0.0 : std::copysign (factorWeightDecay, weight);
+}
+
+// L2 regularization
+template <>
+    inline double computeRegularization<EnumRegularization::L2> (double weight, const double& factorWeightDecay)
+{
+    return factorWeightDecay * weight;
+}
+
+
+template <EnumRegularization Regularization, typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient, typename ItWeight>
 void update (ItSource itSource, ItSource itSourceEnd, 
 	     ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
 	     ItTargetGradient itTargetGradientBegin, 
 	     ItGradient itGradient, 
 	     ItWeight itWeight, double weightDecay)
 {
+    // ! the factor weightDecay has to be already scaled by 1/n where n is the number of weights
     while (itSource != itSourceEnd)
     {
         auto itTargetDelta = itTargetDeltaBegin;
         auto itTargetGradient = itTargetGradientBegin;
         while (itTargetDelta != itTargetDeltaEnd)
         {
-            //                                                                                       L1 regularization                   L2 regularization
-	    (*itGradient) -= + (*itTargetDelta) * (*itSource) * (*itTargetGradient) + (isL1 ? std::copysign (weightDecay,(*itWeight)) : (*itWeight) * weightDecay);
+	    (*itGradient) -= + (*itTargetDelta) * (*itSource) * (*itTargetGradient) + computeRegularization<Regularization>(*itWeight,weightDecay);
             ++itTargetDelta; ++itTargetGradient; ++itGradient; ++itWeight;
         }
         ++itSource; 
@@ -214,6 +236,7 @@ void update (ItSource itSource, ItSource itSourceEnd,
             auto itLocWEnd = end (localWeights);
             auto itG = begin (gradients);
             auto itPrevG = begin (m_prevGradients);
+            double maxGrad = 0.0;
             for (; itLocW != itLocWEnd; ++itLocW, ++itG, ++itPrevG)
             {
                 double currGrad = (*itG);
@@ -224,6 +247,15 @@ void update (ItSource itSource, ItSource itSourceEnd,
                 (*itG) = currGrad + prevGrad;
 
                 (*itLocW) += (*itG);
+                
+                if (std::fabs (currGrad) > maxGrad)
+                    maxGrad = currGrad;
+            }
+
+            if (maxGrad > 100)
+            {
+                m_alpha /= 2;
+                std::cout << "learning rate reduced to " << m_alpha << std::endl;
             }
 
             std::copy (std::begin (localWeights), std::end (localWeights), std::begin (weights));
@@ -375,7 +407,7 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-    double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth itTruthEnd, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc itInvActFnc, double patternWeight) 
+double sumOfSquares (ItOutput itOutputBegin, ItOutput itOutputEnd, ItTruth itTruthBegin, ItTruth itTruthEnd, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc itInvActFnc, double patternWeight) 
 {
     double errorSum = 0.0;
 
@@ -401,7 +433,7 @@ template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvA
 
 
 template <typename ItProbability, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-    double crossEntropy (ItProbability itProbabilityBegin, ItProbability itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight) 
+double crossEntropy (ItProbability itProbabilityBegin, ItProbability itProbabilityEnd, ItTruth itTruthBegin, ItTruth /*itTruthEnd*/, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight) 
 {
     bool hasDeltas = (itDelta != itDeltaEnd);
     
@@ -442,7 +474,7 @@ template <typename ItProbability, typename ItTruth, typename ItDelta, typename I
 
 
 template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvActFnc>
-    double softMaxCrossEntropy (ItOutput itProbabilityBegin, ItOutput itProbabilityEnd, ItTruth itTruthBegin, ItTruth itTruthEnd, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight) 
+double softMaxCrossEntropy (ItOutput itProbabilityBegin, ItOutput itProbabilityEnd, ItTruth itTruthBegin, ItTruth itTruthEnd, ItDelta itDelta, ItDelta itDeltaEnd, ItInvActFnc /*itInvActFnc*/, double patternWeight) 
 {
     double errorSum = 0.0;
 
@@ -475,20 +507,37 @@ template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvA
 
 
 
-template <typename ItWeight>
-double weightDecay (double error, ItWeight itWeight, ItWeight itWeightEnd, double factorWeightDecay)
-{
 
-    // weight decay (regularization)
-    double w = 0;
-    double sumW = 0;
-    for (; itWeight != itWeightEnd; ++itWeight)
+
+template <typename ItWeight>
+    double weightDecay (double error, ItWeight itWeight, ItWeight itWeightEnd, double factorWeightDecay, EnumRegularization eRegularization)
+{
+    if (eRegularization == EnumRegularization::L1)
     {
-	double weight = (*itWeight);
-	w += weight*weight;
-        sumW += fabs (weight);
+        // weight decay (regularization)
+        double w = 0;
+        size_t n = 0;
+        for (; itWeight != itWeightEnd; ++itWeight, ++n)
+        {
+            double weight = (*itWeight);
+            w += std::fabs (weight);
+        }
+        return error + 0.5 * w * factorWeightDecay / n;
     }
-    return error + 0.5 * w * factorWeightDecay / sumW;
+    else if (eRegularization == EnumRegularization::L2)
+    {
+        // weight decay (regularization)
+        double w = 0;
+        size_t n = 0;
+        for (; itWeight != itWeightEnd; ++itWeight, ++n)
+        {
+            double weight = (*itWeight);
+            w += weight*weight;
+        }
+        return error + 0.5 * w * factorWeightDecay / n;
+    }
+    else
+        return error;
 }
 
 
@@ -535,23 +584,31 @@ void backward (LAYERDATA& prevLayerData, LAYERDATA& currLayerData)
 
 
 template <typename LAYERDATA>
-void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double weightDecay, bool isL1)
+void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double factorWeightDecay, EnumRegularization regularization)
 {
-    if (weightDecay != 0.0) // has weight regularization
-	if (isL1)  // L1 regularization ( sum(|w|) )
+    // ! the "factorWeightDecay" has already to be scaled by 1/n where n is the number of weights
+    if (factorWeightDecay != 0.0) // has weight regularization
+	if (regularization == EnumRegularization::L1)  // L1 regularization ( sum(|w|) )
 	{
-	    update<true> (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
+	    update<EnumRegularization::L1> (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
 			  currLayerData.deltasBegin (), currLayerData.deltasEnd (), 
 			  currLayerData.valueGradientsBegin (), currLayerData.gradientsBegin (), 
-			  currLayerData.weightsBegin (), weightDecay);
+			  currLayerData.weightsBegin (), factorWeightDecay);
 	}
-	else // L2 regularization ( sum(w^2) )
+	else if (regularization == EnumRegularization::L2) // L2 regularization ( sum(w^2) )
 	{
-	    update<false> (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
+	    update<EnumRegularization::L2> (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
 			   currLayerData.deltasBegin (), currLayerData.deltasEnd (), 
 			   currLayerData.valueGradientsBegin (), currLayerData.gradientsBegin (), 
-			   currLayerData.weightsBegin (), weightDecay);
+			   currLayerData.weightsBegin (), factorWeightDecay);
 	}
+	else 
+	{
+            update (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
+                    currLayerData.deltasBegin (), currLayerData.deltasEnd (), 
+                    currLayerData.valueGradientsBegin (), currLayerData.gradientsBegin ());
+	}
+    
     else
     { // no weight regularization
 	update (prevLayerData.valuesBegin (), prevLayerData.valuesEnd (), 
@@ -630,9 +687,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 	DropContainer dropContainer;
 	DropContainer dropContainerTest;
         const std::vector<double>& dropFractions = settings.dropFractions ();
-        bool isWeightsForDrop = true;
-
-        settings.startTraining ();
+        bool isWeightsForDrop = false;
+        
         // until convergence
         do
         {
@@ -644,8 +700,11 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 	    {
 		// fill the dropOut-container
 		dropContainer.clear ();
-		for (auto itLayer = begin (m_layers), itLayerEnd = end (m_layers); itLayer != itLayerEnd; ++itLayer)
+		for (auto itLayer = begin (m_layers), itLayerEnd = end (m_layers); itLayer != itLayerEnd; ++itLayer, ++dropIndex)
 		{
+                    if (dropFractions.size () < dropIndex+1)
+                        break;
+                    
 		    auto& layer = *itLayer;
 		    // how many nodes have to be dropped
 		    size_t numDrops = dropFractions.at (dropIndex) * layer.numNodes ();
@@ -656,6 +715,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 		    // shuffle 
 		    std::random_shuffle (end (dropContainer)-layer.numNodes (), end (dropContainer)); // shuffle enabled and disabled markers
 		}
+                isWeightsForDrop = true;
 	    }
 
 	    // execute training cycle
@@ -795,23 +855,6 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 
 
 
-
-    /* size_t Net::numWeights (size_t numInputNodes, size_t trainingStartLayer) const  */
-    /* { */
-    /*     size_t num (0); */
-    /*     size_t index (0); */
-    /*     size_t prevNodes (numInputNodes); */
-    /*     for (auto& layer : m_layers) */
-    /*     { */
-    /*         if (index >= trainingStartLayer) */
-    /*     	num += layer.numWeights (prevNodes); */
-    /*         prevNodes = layer.numNodes (); */
-    /*         ++index; */
-    /*     } */
-    /*     return num; */
-    /* } */
-
-
     template <typename Weights>
         std::vector<double> Net::compute (const std::vector<double>& input, const Weights& weights) const
     {
@@ -901,7 +944,31 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
         Settings& settings = std::get<0>(settingsAndBatch);
         Batch& batch = std::get<1>(settingsAndBatch);
 	DropContainer& drop = std::get<2>(settingsAndBatch);
-	
+
+        /* EnumRegularization eRegularization = settings.regularization (); */
+        /* if (eRegularization == EnumRegularization::L1MAX && */
+        /*     settings.factorWeightDecay () > 0.0) */
+        /* { */
+	/*     size_t numNodesPrev = (*batch.begin ()).input ().size (); */
+        /*     size_t _numWeights = numWeights (numNodesPrev); */
+        /*     auto itCurrWeight = itWeightBegin; */
+        /*     auto itCurrWeightEnd = itCurrWeight; */
+        /*     std::advance (itCurrWeightEnd, _numWeights); */
+        /*     double accum = std::accumulate (itCurrWeight, itCurrWeightEnd, (double)0.0, [](double currSum, const double& w) */
+        /*                                   { */
+        /*                                       return currSum + std::fabs (w); */
+        /*                                   }); */
+        /*     if (accum > settings.factorWeightDecay ()) */
+        /*     { */
+        /*         double factor = settings.factorWeightDecay ()/accum; */
+        /*         std::for_each (itCurrWeight, itCurrWeightEnd, [factor](double& w) */
+        /*                        { */
+        /*                            w *= factor; */
+        /*                        }); */
+        /*     } */
+        /* } */
+
+        
 	bool usesDropOut = !drop.empty ();
 
 	std::vector<std::vector<std::function<double(double)> > > activationFunctionsDropOut;
@@ -943,46 +1010,62 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 
 	double sumError = 0.0;
 	double sumWeights = 0.0;	// -------------
-	for (const Pattern& pattern : batch)
-	{
-	    assert (_layers.back ().numNodes () == pattern.output ().size ());
-	    size_t totalNumWeights = 0;
-	    std::vector<LayerData> layerData;
-            layerData.reserve (_layers.size ()+1);
-	    ItWeight itWeight = itWeightBegin;
-	    ItGradient itGradient = itGradientBegin;
-	    typename Pattern::const_iterator itInputBegin = pattern.beginInput ();
-	    typename Pattern::const_iterator itInputEnd = pattern.endInput ();
-	    layerData.push_back (LayerData (itInputBegin, itInputEnd));
-	    size_t numNodesPrev = pattern.input ().size ();
-	    auto itActFncLayer = begin (activationFunctionsDropOut);
-	    auto itInvActFncLayer = begin (inverseActivationFunctionsDropOut);
-	    for (auto& layer: _layers)
-	    {
-		const std::vector<std::function<double(double)> >& actFnc = usesDropOut ? (*itActFncLayer) : layer.activationFunctions ();
-		const std::vector<std::function<double(double)> >& invActFnc = usesDropOut ? (*itInvActFncLayer) : layer.inverseActivationFunctions ();
-		if (usesDropOut)
-		{
-		    ++itActFncLayer;
-		    ++itInvActFncLayer;
-		}
-		if (itGradientBegin == itGradientEnd)
-		    layerData.push_back (LayerData (layer.numNodes (), itWeight, 
-						    begin (actFnc),
-						    layer.modeOutputValues ()));
-		else
-		    layerData.push_back (LayerData (layer.numNodes (), itWeight, itGradient, 
-						    begin (actFnc), begin (invActFnc),
-						    layer.modeOutputValues ()));
-		size_t _numWeights = layer.numWeights (numNodesPrev);
-		totalNumWeights += _numWeights;
-		itWeight += _numWeights;
-		itGradient += _numWeights;
-		numNodesPrev = layer.numNodes ();
-//                std::cout << layerData.back () << std::endl;
-	    }
-	    
 
+        // ----------- create layer data -----------------
+        const Pattern& firstPattern = *batch.begin ();
+        assert (_layers.back ().numNodes () == firstPattern.output ().size ());
+        size_t totalNumWeights = 0;
+        std::vector<LayerData> layerData;
+        layerData.reserve (_layers.size ()+1);
+        ItWeight itWeight = itWeightBegin;
+        ItGradient itGradient = itGradientBegin;
+        typename Pattern::const_iterator itInputBegin = firstPattern.beginInput ();
+        typename Pattern::const_iterator itInputEnd = firstPattern.endInput ();
+        layerData.push_back (LayerData (itInputBegin, itInputEnd));
+        size_t numNodesPrev = firstPattern.input ().size ();
+        auto itActFncLayer = begin (activationFunctionsDropOut);
+        auto itInvActFncLayer = begin (inverseActivationFunctionsDropOut);
+        for (auto& layer: _layers)
+        {
+            const std::vector<std::function<double(double)> >& actFnc = usesDropOut ? (*itActFncLayer) : layer.activationFunctions ();
+            const std::vector<std::function<double(double)> >& invActFnc = usesDropOut ? (*itInvActFncLayer) : layer.inverseActivationFunctions ();
+            if (itGradientBegin == itGradientEnd)
+                layerData.push_back (LayerData (layer.numNodes (), itWeight, 
+                                                begin (actFnc),
+                                                layer.modeOutputValues ()));
+            else
+                layerData.push_back (LayerData (layer.numNodes (), itWeight, itGradient, 
+                                                begin (actFnc), begin (invActFnc),
+                                                layer.modeOutputValues ()));
+            size_t _numWeights = layer.numWeights (numNodesPrev);
+            totalNumWeights += _numWeights;
+            itWeight += _numWeights;
+            itGradient += _numWeights;
+            numNodesPrev = layer.numNodes ();
+//                std::cout << layerData.back () << std::endl;
+            if (usesDropOut)
+            {
+                ++itActFncLayer;
+                ++itInvActFncLayer;
+            }
+        }
+	assert (totalNumWeights > 0);
+
+	for (const Pattern& _pattern : batch)
+	{
+            bool isFirst = true;
+            for (auto& _layerData: layerData)
+            {
+                _layerData.clear ();
+                if (isFirst)
+                {
+                    itInputBegin = _pattern.beginInput ();
+                    itInputEnd = _pattern.endInput ();
+                    _layerData.setInput (itInputBegin, itInputEnd);
+                    isFirst = false;
+                }
+            }
+            
 	    // --------- forward -------------
 //            std::cout << "forward" << std::endl;
 	    bool doTraining (true);
@@ -1013,10 +1096,11 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 	    // ------------- error computation -------------
 	    // compute E and the deltas of the computed output and the true output 
 	    itWeight = itWeightBegin;
-	    double error = errorFunction (layerData.back (), pattern.output (), 
+	    double error = errorFunction (layerData.back (), _pattern.output (), 
 					  itWeight, itWeight + totalNumWeights, 
-					  pattern.weight (), settings.factorWeightDecay ());
-	    sumWeights += fabs (pattern.weight ());
+					  _pattern.weight (), settings.factorWeightDecay (),
+                                          settings.regularization ());
+	    sumWeights += fabs (_pattern.weight ());
 	    sumError += error;
 
 	    if (!doTraining) // no training
@@ -1035,7 +1119,15 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 		LayerData& prevLayerData = layerData.at (idxLayer-1);
 
 		backward (prevLayerData, currLayerData);
-		update (prevLayerData, currLayerData, settings.factorWeightDecay ()/sumWeights, settings.isL1 ());
+
+                // the factorWeightDecay has to be scaled by 1/n where n is the number of weights (synapses)
+                // because L1 and L2 regularization
+                //
+                //  http://neuralnetworksanddeeplearning.com/chap3.html#overfitting_and_regularization
+                //
+                // L1 : -factorWeightDecay*sgn(w)/numWeights
+                // L2 : -factorWeightDecay/numWeights
+		update (prevLayerData, currLayerData, settings.factorWeightDecay ()/totalNumWeights, settings.regularization ());
 	    }
 	}
         
@@ -1158,7 +1250,13 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 
 
     template <typename Container, typename ItWeight>
-        double Net::errorFunction (LayerData& layerData, Container truth, ItWeight itWeight, ItWeight itWeightEnd, double patternWeight, double factorWeightDecay) const
+        double Net::errorFunction (LayerData& layerData,
+                                   Container truth,
+                                   ItWeight itWeight,
+                                   ItWeight itWeightEnd,
+                                   double patternWeight,
+                                   double factorWeightDecay,
+                                   EnumRegularization eRegularization) const
     {
 	double error (0);
 	switch (m_eErrorFunction)
@@ -1194,8 +1292,10 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double we
 	    break;
 	}
 	}
-	if (factorWeightDecay != 0)
-	    error = weightDecay (error, itWeight, itWeightEnd, factorWeightDecay);
+	if (factorWeightDecay != 0 && eRegularization != EnumRegularization::NONE)
+        {
+            error = weightDecay (error, itWeight, itWeightEnd, factorWeightDecay, eRegularization);
+        }
 	return error;
     } 
 

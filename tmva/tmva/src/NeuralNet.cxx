@@ -10,11 +10,6 @@ namespace NN
 
 
 
-
-
-
-
-
 double gaussDouble (double mean, double sigma)
 {
     static std::default_random_engine generator;
@@ -40,6 +35,12 @@ int randomInt (int maxValue)
 }
 
 
+double studenttDouble (double distributionParameter)
+{
+    static std::default_random_engine generator;
+    std::student_t_distribution<double> distribution (distributionParameter);
+    return distribution (generator);
+}
 
 
 
@@ -212,7 +213,7 @@ int randomInt (int maxValue)
 
     Settings::Settings (TString name,
                         size_t _convergenceSteps, size_t _batchSize, size_t _testRepetitions, 
-                        double _factorWeightDecay, bool isL1Regularization,
+                        double _factorWeightDecay, EnumRegularization eRegularization,
                         MinimizerType _eMinimizerType, double _learningRate, 
                         double _momentum, int _repetitions)
         : m_timer (100, name)
@@ -226,7 +227,7 @@ int randomInt (int maxValue)
         , count_dE (0)
         , count_mb_E (0)
         , count_mb_dE (0)
-        , m_isL1Regularization (isL1Regularization)
+        , m_regularization (eRegularization)
         , fLearningRate (_learningRate)
         , fMomentum (_momentum)
         , fRepetitions (_repetitions)
