@@ -196,7 +196,8 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
   _curWgtErrHi(other._curWgtErrHi),
   _curWgtErr(other._curWgtErr),
   _cache(0),
-  _cacheOwner(0)
+  _cacheOwner(0),
+  _forcedUpdate(kFALSE)
 {
   // Regular copy ctor
 
@@ -250,7 +251,8 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
   _curWgtErrHi(0),
   _curWgtErr(0),
   _cache(0),
-  _cacheOwner(0)
+  _cacheOwner(0),
+  _forcedUpdate(kFALSE)
 {
   TIterator* iter = _varsww.createIterator() ;
   RooAbsArg* arg ;
@@ -292,7 +294,8 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
   _curWgtErrLo(other._curWgtErrLo),
   _curWgtErrHi(other._curWgtErrHi),
   _curWgtErr(other._curWgtErr),
-  _cache(0)
+  _cache(0),
+  _forcedUpdate(kFALSE)
 {
   // Clone ctor, must connect internal storage to given new external set of vars
   vector<RealVector*>::const_iterator oiter = other._realStoreList.begin() ;
@@ -369,7 +372,8 @@ RooVectorDataStore::RooVectorDataStore(const char *name, const char *title, RooA
   _curWgtErrLo(0),
   _curWgtErrHi(0),
   _curWgtErr(0),
-  _cache(0)
+  _cache(0),
+  _forcedUpdate(kFALSE)
 {
   TIterator* iter = _varsww.createIterator() ;
   RooAbsArg* arg ;
