@@ -254,7 +254,7 @@ RooLinkedList::Pool* RooLinkedList::_pool = 0;
 
 //_____________________________________________________________________________
 RooLinkedList::RooLinkedList(Int_t htsize) : 
-  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _useNptr(kFALSE)
+  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _useNptr(kTRUE)
 {
   if (!_pool) _pool = new Pool;
   _pool->acquire();
@@ -398,6 +398,9 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
   // Insert object into collection with given reference count value
 
   if (!arg) return ;
+
+  // Only use RooAbsArg::namePtr() in lookup-by-name if all elements have it
+  if (!dynamic_cast<RooAbsArg*>(arg)) _useNptr = kFALSE;
   
   // Add to hash table 
   if (_htableName) {
@@ -581,12 +584,36 @@ TObject* RooLinkedList::find(const char* name) const
   // If no such object is found, return null pointer.
 
   
-  if (_htableName) return _htableName->find(name) ;
+  if (_htableName) {
+    RooAbsArg* a = (RooAbsArg*) _htableName->find(name) ;
+    // RooHashTable::find could return false negative if element was renamed to 'name'.
+    // The list search means it won't return false positive, so can return here.
+    if (a) return a;
+    if (_useNptr) {
+      // See if it might have been renamed
+      const TNamed* nptr= RooNameReg::known(name);
+      //cout << "RooLinkedList::find: possibly renamed '" << name << "', kRenamedArg=" << (nptr&&nptr->TestBit(RooNameReg::kRenamedArg)) << endl;
+      if (nptr && nptr->TestBit(RooNameReg::kRenamedArg)) {
+        RooLinkedListElem* ptr = _first ;
+        while(ptr) {
+          if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
+            return ptr->_arg ;
+          }
+          ptr = ptr->_next ;
+        }
+      }
+      return 0 ;
+    }
+    //cout << "RooLinkedList::find: possibly renamed '" << name << "'" << endl;
+  }
 
   RooLinkedListElem* ptr = _first ;
 
-  if (_useNptr) {
-    const TNamed* nptr = RooNameReg::instance().constPtr(name) ;
+  // The penalty for RooNameReg lookup seems to be outweighted by the faster search
+  // when the size list is longer than ~7, but let's be a bit conservative.
+  if (_useNptr && _size>9) {
+    const TNamed* nptr= RooNameReg::known(name);
+    if (!nptr) return 0;
     
     while(ptr) {
       if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
@@ -611,15 +638,19 @@ RooAbsArg* RooLinkedList::findArg(const RooAbsArg* arg) const
 {
   // Return pointer to object with given name in collection.
   // If no such object is found, return null pointer.
-  
-  // WVE this will find the wrong entry if the name changed!
-  // if (_htableLink) {
-  //   return (RooAbsArg*) _htableLink->find(arg) ;
-  // }
+
+  if (_htableName) {
+    RooAbsArg* a = (RooAbsArg*) _htableName->findArg(arg) ;
+    if (a) return a;
+    //cout << "RooLinkedList::findArg: possibly renamed '" << arg->GetName() << "', kRenamedArg=" << arg->namePtr()->TestBit(RooNameReg::kRenamedArg) << endl;
+    // See if it might have been renamed
+    if (!arg->namePtr()->TestBit(RooNameReg::kRenamedArg)) return 0;
+  }
   
   RooLinkedListElem* ptr = _first ;
+  const TNamed* nptr = arg->namePtr();
   while(ptr) {
-    if (((RooAbsArg*)(ptr->_arg))->namePtr() == arg->namePtr()) {
+    if (((RooAbsArg*)(ptr->_arg))->namePtr() == nptr) {
       return (RooAbsArg*) ptr->_arg ;
     }
     ptr = ptr->_next ;
