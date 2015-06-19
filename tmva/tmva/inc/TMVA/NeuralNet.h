@@ -62,12 +62,22 @@ enum class EnumFunction
 
 
 
+enum class EnumRegularization
+{
+    NONE, L1, L2, L1MAX
+};
 
 
-
+enum class ModeOutputValues
+{
+    DIRECT = 'd',
+    SIGMOID = 's',
+    SOFTMAX = 'S'
+};
 
 
 class Net;
+
 
 
 
@@ -80,18 +90,19 @@ typedef std::vector<char> DropContainer;
 class Batch 
 {
 public:
-    
+    typedef typename std::vector<Pattern>::const_iterator const_iterator;
+
     Batch (typename std::vector<Pattern>::const_iterator itBegin, typename std::vector<Pattern>::const_iterator itEnd)
 	: m_itBegin (itBegin)
 	, m_itEnd (itEnd)
     {}
 
-    typename std::vector<Pattern>::const_iterator begin () const { return m_itBegin; }
-    typename std::vector<Pattern>::const_iterator end   () const { return m_itEnd; }
+    const_iterator begin () const { return m_itBegin; }
+    const_iterator end   () const { return m_itEnd; }
 
 private:
-    typename std::vector<Pattern>::const_iterator m_itBegin;
-    typename std::vector<Pattern>::const_iterator m_itEnd;
+    const_iterator m_itBegin;
+    const_iterator m_itEnd;
 };
 
 
@@ -128,7 +139,7 @@ void update (ItSource itSource, ItSource itSourceEnd,
 
 
 
-template <bool isL1, typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient, typename ItWeight>
+template <EnumRegularization Regularization, typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient, typename ItWeight>
 void update (ItSource itSource, ItSource itSourceEnd, 
 	     ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
 	     ItTargetGradient itTargetGradientBegin, 
@@ -174,14 +185,16 @@ public:
 
     size_t m_repetitions;
 
-    Steepest (double learningRate = 1e-4, double momentum = 0.5, size_t repetitions = 10) 
+    Steepest (double learningRate = 1e-4, 
+              double momentum = 0.5, 
+              size_t repetitions = 10) 
 	: m_repetitions (repetitions)
         , m_alpha (learningRate)
         , m_beta (momentum)
     {}
 
     template <typename Function, typename Weights, typename PassThrough>
-        inline double operator() (Function& fitnessFunction, Weights& weights, PassThrough& passThrough);
+        double operator() (Function& fitnessFunction, Weights& weights, PassThrough& passThrough);
 
 
     double m_alpha;
@@ -279,16 +292,10 @@ template <typename ItOutput, typename ItTruth, typename ItDelta, typename ItInvA
 
 
 template <typename ItWeight>
-    double weightDecay (double error, ItWeight itWeight, ItWeight itWeightEnd, double factorWeightDecay);
+    double weightDecay (double error, ItWeight itWeight, ItWeight itWeightEnd, double factorWeightDecay, EnumRegularization eRegularization);
 
 
 
-enum class ModeOutputValues
-{
-    DIRECT = 'd',
-    SIGMOID = 's',
-    SOFTMAX = 'S'
-};
 
 
 
@@ -365,6 +372,19 @@ public:
     {}
 
 
+    void setInput (const_iterator_type itInputBegin, const_iterator_type itInputEnd)
+    {
+        m_isInputLayer = true;
+        m_itInputBegin = itInputBegin;
+        m_itInputEnd = itInputEnd;
+    }
+
+    void clear ()
+    {
+        m_values.assign (m_values.size (), 0.0);
+        m_deltas.assign (m_deltas.size (), 0.0);
+    }
+
     const_iterator_type valuesBegin () const { return m_isInputLayer ? m_itInputBegin : begin (m_values); }
     const_iterator_type valuesEnd   () const { return m_isInputLayer ? m_itInputEnd   : end (m_values); }
     
@@ -423,12 +443,10 @@ private:
 
     ModeOutputValues m_eModeOutput;
 
-//    friend std::ostream& operator<< (std::ostream& ostr, LayerData const& data);
 };
 
 
 
-//std::ostream& operator<< (std::ostream& ostr, LayerData const& data);
 
 
 // defines the layout of a layer
@@ -481,7 +499,7 @@ template <typename LAYERDATA>
 
 
 template <typename LAYERDATA>
-    void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double weightDecay, bool isL1);
+    void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double weightDecay, EnumRegularization regularization);
 
 
 
@@ -491,7 +509,7 @@ public:
 
     Settings (TString name,
               size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
-	      double _factorWeightDecay = 1e-5, bool _isL1Regularization = false,
+	      double _factorWeightDecay = 1e-5, TMVA::NN::EnumRegularization _regularization = TMVA::NN::EnumRegularization::NONE,
               MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
               double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3);
     
@@ -547,7 +565,7 @@ public:
     virtual void computeResult (const Net& /* net */, std::vector<double>& /* weights */) {}
 
 
-    bool isL1 () const { return m_isL1Regularization; }
+    EnumRegularization regularization () const { return m_regularization; }
 
 
     void pads (int numPads) { if (fMonitoring) fMonitoring->pads (numPads); }
@@ -575,7 +593,7 @@ public:
     size_t count_mb_E;
     size_t count_mb_dE;
 
-    bool m_isL1Regularization;
+    EnumRegularization m_regularization;
 
     double m_dropRepetitions;
     std::vector<double> m_dropOut;
@@ -587,11 +605,6 @@ public:
 
 protected:
     std::shared_ptr<Monitoring> fMonitoring;
-
- 
-private:    
-//    DataXYMap dataXY;
-
 
 };
 
@@ -624,11 +637,11 @@ class ClassificationSettings : public Settings
 public:
     ClassificationSettings (TString name,
                             size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
-			    double _factorWeightDecay = 1e-5, bool _isL1Regularization = false, 
+			    double _factorWeightDecay = 1e-5, EnumRegularization _regularization = EnumRegularization::NONE, 
 			    size_t _scaleToNumEvents = 0, MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
                             double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3)
         : Settings (name, _convergenceSteps, _batchSize, _testRepetitions, _factorWeightDecay, 
-                    _isL1Regularization, _eMinimizerType, _learningRate, _momentum, _repetitions)
+                    _regularization, _eMinimizerType, _learningRate, _momentum, _repetitions)
         , m_ams ()
         , m_sumOfSigWeights (0)
         , m_sumOfBkgWeights (0)
@@ -786,8 +799,8 @@ public:
 
     template <typename WeightsType, typename DropProbabilities>
         void dropOutWeightFactor (WeightsType& weights,
-                                       const DropProbabilities& drops, 
-                                       bool inverse = false);
+                                  const DropProbabilities& drops, 
+                                  bool inverse = false);
 
     template <typename Minimizer>
     double train (std::vector<double>& weights, 
@@ -834,7 +847,13 @@ public:
 
 
     template <typename Container, typename ItWeight>
-        double errorFunction (LayerData& layerData, Container truth, ItWeight itWeight, ItWeight itWeightEnd, double patternWeight, double factorWeightDecay) const;
+        double errorFunction (LayerData& layerData,
+                              Container truth,
+                              ItWeight itWeight,
+                              ItWeight itWeightEnd,
+                              double patternWeight,
+                              double factorWeightDecay,
+                              EnumRegularization eRegularization) const;
 
 
     const std::vector<Layer>& layers () const { return m_layers; }
