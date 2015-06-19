@@ -526,17 +526,25 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 		     << " (" << dset->numEntries() << " dataset entries)" << endl;
 
       
+      // *** START HERE
       // WVE HACK determine if we have a RooRealSumPdf and then treat it like a binned likelihood
       RooAbsPdf* binnedPdf = 0 ;
+      Bool_t binnedL = kFALSE ;
       if (pdf->getAttribute("BinnedLikelihood") && pdf->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
 	// Simplest case: top-level of component is a RRSP
 	binnedPdf = pdf ;
+	binnedL = kTRUE ;
       } else if (pdf->IsA()->InheritsFrom(RooProdPdf::Class())) {
 	// Default case: top-level pdf is a product of RRSP and other pdfs
 	RooFIter iter = ((RooProdPdf*)pdf)->pdfList().fwdIterator() ;
 	RooAbsArg* component ;
 	while ((component = iter.next())) {
 	  if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+	    binnedPdf = (RooAbsPdf*) component ;
+	    binnedL = kTRUE ;
+	  }
+	  if (component->getAttribute("MAIN_MEASUREMENT")) {
+	    // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to be passed to the slave calculator
 	    binnedPdf = (RooAbsPdf*) component ;
 	  }
 	}
@@ -546,12 +554,13 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       // and omitting them reduces model complexity and associated handling/cloning times
       if (_splitRange && rangeName) {
 	_gofArray[n] = create(type->GetName(),type->GetName(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-			      Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange,(binnedPdf?kTRUE:kFALSE));
+			      Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange,binnedL);
       } else {
 	_gofArray[n] = create(type->GetName(),type->GetName(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange,(binnedPdf?kTRUE:kFALSE));
+			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange,binnedL);
       }
       _gofArray[n]->setSimCount(_nGof);
+      // *** END HERE
 
       // Fill per-component split mode with Bulk Partition for now so that Auto will map to bulk-splitting of all components
       if (_mpinterl==RooFit::Hybrid) {
