@@ -45,6 +45,8 @@
 #include "TMVA/NeuralNet.h"
 #include "TMVA/Monitoring.h"
 
+#include <algorithm>
+#include <iostream>
 
 REGISTER_METHOD(NN)
 
@@ -161,7 +163,7 @@ void TMVA::MethodNN::DeclareOptions()
    AddPreDefVal(TString("LAYERSIZE"));
 
 
-   DeclareOptionRef(fTrainingStrategy="LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,L1=false,DropFraction=0.4,DropRepetitions=5|LearningRate=1e-4,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=20,TestRepetitions=7,WeightDecay=0.001,L1=true,DropFraction=0.0,DropRepetitions=5",    "TrainingStrategy",    "defines the training strategies");
+   DeclareOptionRef(fTrainingStrategy="LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,Renormalize=L2,DropConfig=0.0,DropRepetitions=5|LearningRate=1e-4,Momentum=0.3,Repetitions=3,ConvergenceSteps=50,BatchSize=20,TestRepetitions=7,WeightDecay=0.001,Renormalize=L2,DropFraction=0.0,DropRepetitions=5",    "TrainingStrategy",    "defines the training strategies");
 
    DeclareOptionRef(fSumOfSigWeights_test=1000.0,    "SignalWeightsSum",    "Sum of weights of signal; Is used to compute the significance on the fly");
    DeclareOptionRef(fSumOfBkgWeights_test=1000.0,    "BackgroundWeightsSum",    "Sum of weights of background; Is used to compute the significance on the fly");
@@ -402,7 +404,7 @@ void TMVA::MethodNN::ProcessOptions()
            int batchSize = fetchValue (block, "BatchSize", 30);
            int testRepetitions = fetchValue (block, "TestRepetitions", 7);
            double factorWeightDecay = fetchValue (block, "WeightDecay", 0.0);
-           bool isL1 = fetchValue (block, "isL1", false);
+           TString regularization = fetchValue (block, "Regularization", TString ("NONE"));
            double learningRate = fetchValue (block, "LearningRate", 1e-5);
            double momentum = fetchValue (block, "Momentum", 0.3);
            int repetitions = fetchValue (block, "Repetitions", 3);
@@ -410,15 +412,25 @@ void TMVA::MethodNN::ProcessOptions()
            dropConfig = fetchValue (block, "DropConfig", dropConfig);
            int dropRepetitions = fetchValue (block, "DropRepetitions", 3);
 
+           TMVA::NN::EnumRegularization eRegularization = TMVA::NN::EnumRegularization::NONE;
+           if (regularization == "L1")
+               eRegularization = TMVA::NN::EnumRegularization::L1;
+           else if (regularization == "L2")
+               eRegularization = TMVA::NN::EnumRegularization::L2;
+           else if (regularization == "L1MAX")
+               eRegularization = TMVA::NN::EnumRegularization::L1MAX;
+           
            std::shared_ptr<TMVA::NN::ClassificationSettings> ptrSettings = make_shared <TMVA::NN::ClassificationSettings> (
                GetName  (),
                convergenceSteps, batchSize, 
                testRepetitions, factorWeightDecay,
-               isL1, fScaleToNumEvents, TMVA::NN::MinimizerType::fSteepest, learningRate, 
+               eRegularization, fScaleToNumEvents, TMVA::NN::MinimizerType::fSteepest, learningRate, 
                momentum, repetitions);
 
            if (dropRepetitions > 0 && !dropConfig.empty ())
+           {
                ptrSettings->setDropOut (std::begin (dropConfig), std::end (dropConfig), dropRepetitions);
+           }
            
            ptrSettings->setWeightSums (fSumOfSigWeights_test, fSumOfBkgWeights_test);
            fSettings.push_back (ptrSettings);
@@ -513,26 +525,26 @@ void TMVA::MethodNN::Train()
     }
     else // initialize weights and net
     {
-//        std::cout << "initialize weights and net" << std::endl;
         size_t inputSize = GetNVariables (); //trainPattern.front ().input ().size ();
         size_t outputSize = fAnalysisType == Types::kClassification ? 1 : GetNTargets (); //trainPattern.front ().output ().size ();
 
-//        std::cout << "input size = "  << inputSize << "   output size = " << outputSize << std::endl;
-
-
         // configure neural net
-        auto itLayout = std::begin (fLayout), itLayoutEnd = std::end (fLayout)-1;
+        auto itLayout = std::begin (fLayout), itLayoutEnd = std::end (fLayout)-1; // all layers except the last one
         for ( ; itLayout != itLayoutEnd; ++itLayout)
         {
-//            std::cout << "  add layer (" << ((*itLayout).first) << " , " << ((char)(*itLayout).second) << ")"  << std::endl;
             fNet.addLayer (NN::Layer ((*itLayout).first, (*itLayout).second)); 
+            Log() << kINFO 
+                  << "Add Layer with " << (*itLayout).first << " nodes." 
+                  << Endl;
         }
-//        std::cout << "add output layer" << std::endl;
+
         fNet.addLayer (NN::Layer (outputSize, (*itLayout).second, NN::ModeOutputValues::SIGMOID)); 
+        Log() << kINFO 
+              << "Add Layer with " << outputSize << " nodes." 
+              << Endl << Endl;
         fNet.setErrorFunction (fModeErrorFunction); 
 
         size_t numWeights = fNet.numWeights (inputSize);
-//        std::cout << "numWeights = " << numWeights << std::endl;
         Log() << kINFO 
               << "Total number of Synapses = " 
               << numWeights
@@ -549,26 +561,20 @@ void TMVA::MethodNN::Train()
     // loop through settings 
     // and create "settings" and minimizer 
     int idxSetting = 0;
-    for (auto itSettings = begin (fSettings), itSettingsEnd = end (fSettings); itSettings != itSettingsEnd; ++itSettings, ++idxSetting)
+    for (auto itSettings = std::begin (fSettings), itSettingsEnd = std::end (fSettings); itSettings != itSettingsEnd; ++itSettings, ++idxSetting)
     {
-//        std::cout << "settings" << std::endl;
         std::shared_ptr<TMVA::NN::Settings> ptrSettings = *itSettings;
-//        fNet.dropOutWeightFactor (fWeights, 1.0/(1.0 - ptrSettings->dropFraction ()));
-//        std::cout << "set monitoring" << std::endl;
         ptrSettings->setMonitoring (fMonitoring);
         ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()), (idxSetting+1)*100.0/(fSettings.size ()));
-//        double E = 0;
-//        std::cout << "check minimizer type" << std::endl;
-        if ((*itSettings)->minimizerType () == TMVA::NN::MinimizerType::fSteepest)
+        if (ptrSettings->minimizerType () == TMVA::NN::MinimizerType::fSteepest)
         {
-//            std::cout << "initialize minimizer" << std::endl;
-            NN::Steepest minimizer ((*itSettings)->learningRate (), (*itSettings)->momentum (), (*itSettings)->repetitions ());
-//            NN::SteepestThreaded minimizer ((*itSettings)->learningRate (), (*itSettings)->momentum (), (*itSettings)->repetitions ());
-//            std::cout << "start the training" << std::endl;
+            std::cout << "--------------------------------------------------- retrieve " << ptrSettings->dropFractions ().size () << std::endl;
+            std::copy (ptrSettings->dropFractions ().begin (), ptrSettings->dropFractions ().end (), std::ostream_iterator<double>(std::cout, " - "));
+            std::cout << std::endl << std::endl;
+            NN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
             /*E =*/fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
-//            std::cout << "training finished with E = " << E << std::endl;
         }
-        (*itSettings).reset ();
+        ptrSettings.reset ();
     }
     fMonitoring = 0;
 }
@@ -884,7 +890,7 @@ void TMVA::MethodNN::checkGradients ()
     }
 
 
-    NN::Settings settings (/*_convergenceSteps*/ 15, /*_batchSize*/ 1, /*_testRepetitions*/ 7, /*_factorWeightDecay*/ 0, /*isL1*/ false);
+    NN::Settings settings (TString ("checkGradients"), /*_convergenceSteps*/ 15, /*_batchSize*/ 1, /*_testRepetitions*/ 7, /*_factorWeightDecay*/ 0, /*regularization*/ TMVA::NN::EnumRegularization::NONE);
 
     size_t improvements = 0;
     size_t worsenings = 0;
