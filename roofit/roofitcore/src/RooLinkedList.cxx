@@ -50,6 +50,7 @@ namespace RooLinkedListImplDetails {
 	_sz(sz), _free(capacity()),
 	_chunk(new RooLinkedListElem[_free]), _freelist(_chunk)
       {
+	//cout << "RLLID::Chunk ctor(" << this << ") of size " << _free << " list elements" << endl ;
 	// initialise free list
 	for (Int_t i = 0; i < _free; ++i)
 	  _chunk[i]._next = (i + 1 < _free) ? &_chunk[i + 1] : 0;
@@ -108,7 +109,7 @@ namespace RooLinkedListImplDetails {
     private:
       enum {
 	minsz = 7, ///< minimum chunk size (just below 1 << minsz bytes)
-	maxsz = 20, ///< maximum chunk size (just below 1 << maxsz bytes)
+	maxsz = 18, ///< maximum chunk size (just below 1 << maxsz bytes)
 	szincr = 1 ///< size class increment (sz = 1 << (minsz + k * szincr))
       };
       /// a chunk of memory in the pool
@@ -262,7 +263,8 @@ RooLinkedList::RooLinkedList(Int_t htsize) :
 //_____________________________________________________________________________
 RooLinkedList::RooLinkedList(const RooLinkedList& other) :
   TObject(other), _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), 
-  _name(other._name), _useNptr(other._useNptr)
+  //_name(other._name), 
+  _useNptr(other._useNptr)
 {
   // Copy constructor
   if (!_pool) _pool = new Pool;
@@ -831,10 +833,11 @@ void RooLinkedList::Streamer(TBuffer &R__b)
       Add(arg) ;      
     }
 
-    if (v>1) {
-      R__b >> _name ;
+    if (v>1 && v<4) {
+      TString name ;
+      R__b >> name ;
     }
-
+    
   } else {
     R__b.WriteVersion(RooLinkedList::IsA());
     TObject::Streamer(R__b);
@@ -845,8 +848,8 @@ void RooLinkedList::Streamer(TBuffer &R__b)
       R__b << ptr->_arg ;
       ptr = ptr->_next ;
     } 
-
-    R__b << _name ;
+    
+    //R__b << _name ;
   }
 }
 
