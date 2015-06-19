@@ -24,7 +24,7 @@ The following people have contributed to this new version:
  Lukasz Janyst, CERN/IT,\
  Christopher Jones, Fermilab, CMS,\
  Wim Lavrijsen, LBNL, PyRoot,\
- Sergey Linev, GSI, http,\
+ Sergey Linev, GSI, http, JSROOT, \
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
@@ -106,6 +106,32 @@ New options:
 
 ## Networking Libraries
 
+### THttpServer
+
+Support of POST HTTP requests. For example, ROOT objects can be send with POST request and used as arguments of 
+objects method execution in exe.bin and exe.json requests. Request and response HTTP headers are now directely accessible in THttpCallArg class
+
+When command is registered with THttpServer::RegisterCommand() method,
+one could configure additional arguments which should be submitted when 
+command is executed with cmd.json requests
+
+Introduce restriction rules for objects access with THttpServer::Restrict() method.
+Up to now general read-only flag was applied - either
+everything read-only or everything is fully accessible.
+Now one could restrict access to different parts of
+objects hierarchy or even fully 'hide' them from the client.
+Restriction based on user account name, which is applied
+when htdigest authentication is configured.
+One also able to allow execution of selected methods.
+
+Implement multi.bin and multi.json requests.
+One could request many items with single HTTP request.
+Let optimize communication between server and client.
+
+With *SNIFF* tag in ClassDef() comments one could expose different properties,
+which than exposed by the TRootSniffer to the client with h.json requests.
+Such possibility ease implementation of client-side code for custom classes.
+
 
 ## GUI Libraries
 
@@ -121,6 +147,10 @@ New options:
 
 ## JavaScript ROOT
 
+- support registered in THttpServer commands with arguments.
+- provide workaround for websites using require.js and older jquery-ui
+- support custom requests to remote objects, demonstrated in httptextlog.C tutorial
+- rewrite draw.htm (page for individual object drawing) to support all custom features as main gui does
 
 ## Tutorials
 
