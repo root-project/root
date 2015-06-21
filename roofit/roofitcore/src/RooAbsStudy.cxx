@@ -103,7 +103,7 @@ void RooAbsStudy::storeDetailedOutput(TNamed& object)
 
     if (!_detailData) {
       _detailData = new RooLinkedList ;
-      //_detailData->SetName(TString::Format("%s_detailed_data_list",GetName())) ;
+      _detailData->SetName(TString::Format("%s_detailed_data_list",GetName())) ;
       //cout << "RooAbsStudy::ctor() detailData name = " << _detailData->GetName() << endl ;
     }
 
