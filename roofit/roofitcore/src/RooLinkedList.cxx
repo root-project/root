@@ -263,7 +263,7 @@ RooLinkedList::RooLinkedList(Int_t htsize) :
 //_____________________________________________________________________________
 RooLinkedList::RooLinkedList(const RooLinkedList& other) :
   TObject(other), _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), 
-  //_name(other._name), 
+  _name(other._name), 
   _useNptr(other._useNptr)
 {
   // Copy constructor
@@ -864,9 +864,8 @@ void RooLinkedList::Streamer(TBuffer &R__b)
       Add(arg) ;      
     }
 
-    if (v>1 && v<4) {
-      TString name ;
-      R__b >> name ;
+    if (v>1 ) {
+      R__b >> _name ;
     }
     
   } else {
@@ -880,7 +879,7 @@ void RooLinkedList::Streamer(TBuffer &R__b)
       ptr = ptr->_next ;
     } 
     
-    //R__b << _name ;
+    R__b << _name ;
   }
 }
 
