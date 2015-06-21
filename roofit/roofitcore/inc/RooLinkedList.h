@@ -82,11 +82,16 @@ public:
   void Print(const char* opt) const ;
   void Sort(Bool_t ascend=kTRUE) ;
   
-  const char* GetName() const { return "" ; /*_name.Data() ; */ }
-  void SetName(const char* /*name*/) { /*_name = name ; */ }
-  void useNptr(Bool_t flag) { _useNptr = flag ; }
+  // const char* GetName() const { return "" ; /*_name.Data() ; */ }
+  // void SetName(const char* /*name*/) { /*_name = name ; */ }
+  const char* GetName() const { return _name.Data() ;  }
+  void SetName(const char* name) { _name = name ;  }
+
+   void useNptr(Bool_t flag) { _useNptr = flag ; }
    // needed for using it in THashList/THashTable
-  ULong_t  Hash() const { return TString().Hash(); }
+
+   ULong_t  Hash() const { return _name.Hash(); }
+   //ULong_t  Hash() const { return TString().Hash(); }
 
 protected:  
 
@@ -108,7 +113,7 @@ protected:
   RooHashTable*       _htableName ; //! Hash table by name 
   RooHashTable*       _htableLink ; //! Hash table by link pointer
 
-  //TString             _name ; 
+  TString             _name ; 
   Bool_t              _useNptr ; //!
 
 private:
@@ -120,7 +125,7 @@ private:
   /// shared memory pool for allocation of RooLinkedListElems
   static Pool* _pool; //!
 
-  ClassDef(RooLinkedList,4) // Doubly linked list for storage of RooAbsArg objects
+  ClassDef(RooLinkedList,3) // Doubly linked list for storage of RooAbsArg objects
 };
 
 
