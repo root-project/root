@@ -200,7 +200,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 
 all-$(MODNAME): $(LLVMLIB)
 
-clean-llvm:
+clean-$(MODNAME):
 		-@(if [ -d $(LLVMDIRO) ]; then \
 			cd $(LLVMDIRO); \
 			$(MAKE) clean ONLY_TOOLS=clang NOCLING=1 $(ROOT_NOCLANG); \
