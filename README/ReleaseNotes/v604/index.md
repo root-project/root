@@ -79,7 +79,7 @@ TString, a std::string or a std::string_view.   Usage example:
 ``` {.cpp}
 // With SetName(std::string_view)
 std::string str; …
-obj.SetName( std );
+obj.SetName( str );
 obj.SetName( {str.data()+pos, len} );
 ```
 
