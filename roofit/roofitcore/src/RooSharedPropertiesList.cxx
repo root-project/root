@@ -43,6 +43,7 @@ ClassImp(RooSharedPropertiesList)
 RooSharedPropertiesList::RooSharedPropertiesList() 
 {
   // Constructor
+   _propList.setHashTableSize(1000);
 } 
 
 
@@ -87,38 +88,25 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
     return prop ;
   }
 
-  // Find property with identical uuid in list
-  RooFIter iter = _propList.fwdIterator() ;
+  //std::cout << "REGISTER properties " << prop->asString() << " - list size = " << _propList.GetSize() << std::endl;
   RooSharedProperties* tmp ;
-  while((tmp=(RooSharedProperties*)iter.next())) {
-    if (tmp != prop && *tmp==*prop) {
-      // Found another instance of object with identical UUID 
-
-      // Delete incoming instance, increase ref count of already stored instance
-      // cout << "RooSharedProperties::reg deleting incoming prop " << prop << " recycling existing prop " << tmp << endl ;
-
-      // Check if prop is in _propList
-      if (_propList.FindObject(prop)) {
-	// cout << "incoming object to be deleted is in proplist!!" << endl ;
-      } else {
-	// cout << "deleting prop object " << prop << endl ;
-	if (canDeleteIncoming) delete prop ;
-      }
-
-      // delete prop ;
-      //_propList.Add(tmp) ;
-      tmp->increaseRefCount() ;
-
-      // Return pointer to already-stored instance
-      return tmp ;
-    }
-  }
-
   
-  // cout << "RooSharedProperties::reg storing incoming prop " << prop << endl ;
+  std::map<std::string, RooSharedProperties *>::iterator it; 
+
+  it = _newPropList.find( std::string(prop->asString()) ); 
+  if (it != _newPropList.end() ) {
+     tmp = it->second; 
+     if (tmp != prop) { 
+        // found another instance with same UUID
+        if (canDeleteIncoming) delete prop; 
+     }
+     tmp->increaseRefCount(); 
+     return tmp;
+  }
   prop->setInSharedList() ;
   prop->increaseRefCount() ;
-  _propList.Add(prop) ;
+  _newPropList[ std::string(prop->asString()) ] = prop; 
+
   return prop ;
 }
 
@@ -134,6 +122,10 @@ void RooSharedPropertiesList::unregisterProperties(RooSharedProperties* prop)
 
   if (prop->refCount()==0) {
     _propList.Remove(prop) ;
+
+    std::map<std::string, RooSharedProperties *>::iterator it; 
+    it = _newPropList.find( std::string(prop->asString()) ); 
+    if (it != _newPropList.end() )  _newPropList.erase(it);
     
     // We own object if ref-counted list. If count drops to zero, delete object
     delete prop ;

@@ -1474,22 +1474,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
    int nesting = 0;
    // We should probably unwind the namespace to properly nest it.
    if (classname != "ROOT") {
-      string right = classname;
-      int pos = right.find(":");
-      if (pos == 0) {
-         right = right.substr(2);
-         pos = right.find(":");
-      }
-      while (pos >= 0) {
-         string left = right.substr(0, pos);
-         right = right.substr(pos + 2);
-         pos = right.find(":");
-         ++nesting;
-         dictStream << "namespace " << left << " {" << std::endl;
-      }
-
-      ++nesting;
-      dictStream << "namespace " << right << " {" << std::endl;
+      nesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream,cl);
    }
 
    dictStream << "   namespace ROOT {" << std::endl;
@@ -4237,6 +4222,25 @@ int RootCling(int argc,
    if (!definesUndefinesStr.str().empty())
       interp.declare(definesUndefinesStr.str());
 #endif
+
+   class IgnoringPragmaHandler: public clang::PragmaNamespace {
+   public:
+      IgnoringPragmaHandler(const char* pragma):
+         clang::PragmaNamespace(pragma) {}
+      void HandlePragma(clang::Preprocessor &PP,
+                        clang::PragmaIntroducerKind Introducer,
+                        clang::Token &tok) {
+         PP.DiscardUntilEndOfDirective();
+      }
+   };
+
+   // Ignore these #pragmas to suppress "unknown pragma" warnings.
+   // See LinkdefReader.cxx.
+   clang::Preprocessor& PP = interp.getCI()->getPreprocessor();
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("link"));
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("extra_include"));
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("read"));
+   PP.AddPragmaHandler(new IgnoringPragmaHandler("create"));
 
    if (!interpreterDeclarations.empty() &&
        interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {

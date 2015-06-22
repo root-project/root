@@ -103,9 +103,12 @@ namespace Math {
       if (z  > - abs_alpha)
          return std::exp(- 0.5 * z * z);
       else {
-         double A = std::pow(n/abs_alpha,n) * std::exp(-0.5*abs_alpha*abs_alpha);
-         double B = n/abs_alpha -abs_alpha;
-         return A / std::pow(B-z,n);
+         //double A = std::pow(n/abs_alpha,n) * std::exp(-0.5*abs_alpha*abs_alpha);
+         double nDivAlpha = n/abs_alpha;
+         double AA =  std::exp(-0.5*abs_alpha*abs_alpha);
+         double B = nDivAlpha -abs_alpha;
+         double arg = nDivAlpha/(B-z);
+         return AA * std::pow(arg,n);
       }
    }
    double crystalball_pdf(double x, double alpha, double n, double sigma, double mean) {

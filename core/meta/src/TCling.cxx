@@ -1236,7 +1236,7 @@ bool TCling::LoadPCM(TString pcmFileName,
          gDebug = 0;
       }
 
-      TDirectory::TContext ctxt(0);
+      TDirectory::TContext ctxt;
 
       TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
 
@@ -2195,6 +2195,19 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "fName", &fName);
       // R__insp.InspectMember(fName, "fName.");
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "*fClass", &fClass);
+
+      // If the class has a custom streamer and the type of the filed is a
+      // private enum, struct or class, skip it.
+      if (!insp.IsTreatingNonAccessibleTypes()){
+         auto iFiledQtype = iField->getType();
+         if (auto tagDecl = iFiledQtype->getAsTagDecl()){
+            auto declAccess = tagDecl->getAccess();
+            if (declAccess == AS_private || declAccess == AS_protected) {
+               continue;
+            }
+         }
+      }
+
       insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), fieldName.c_str(), cobj + fieldOffset, isTransient);
 
       if (!ispointer) {

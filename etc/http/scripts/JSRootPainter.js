@@ -1947,7 +1947,7 @@
 
    JSROOT.TF1Painter.prototype.CreateDummyHisto = function() {
       var xmin = 0, xmax = 0, ymin = 0, ymax = 0;
-      if (this.tf1['fNsave'] > 0) {
+      if (this.tf1['fSave'].length > 0) {
          // in the case where the points have been saved, useful for example
          // if we don't have the user's function
          var nb_points = this.tf1['fNpx'];
@@ -2016,7 +2016,7 @@
 
       var pthis = this;
 
-      if (this.tf1['fNsave'] > 0) {
+      if (this.tf1['fSave'].length > 0) {
          // in the case where the points have been saved, useful for example
          // if we don't have the user's function
          var nb_points = this.tf1['fNpx'];
@@ -7179,8 +7179,6 @@
    }
 
    JSROOT.RawTextPainter.prototype.Draw = function() {
-      var frame = d3.select("#" + this.divid);
-
       var txt = this.txt.value;
       if (txt==null) txt = "<undefined>";
 
@@ -7191,7 +7189,16 @@
          for (var i in arr)
             txt += "<pre>" + arr[i] + "</pre>";
       }
-      frame.html("<div style='overflow:auto;max-height:" + frame.style('height') + "'>" + txt + "</div>");
+
+      var frame = d3.select("#" + this.divid);
+      var main = frame.select("div");
+      if (main.empty())
+         main = frame.append("div")
+                     .style('max-width','100%')
+                     .style('max-height','100%')
+                     .style('overflow','auto');
+
+      main.html(txt);
 
       // (re) set painter to first child element
       this.SetDivId(this.divid);
@@ -8020,38 +8027,54 @@
       return null;
    }
 
+   JSROOT.MarkAsStreamerInfo = function(h,item,obj) {
+      // this function used on THttpServer to mark streamer infos list
+      // as fictional TStreamerInfoList class, which has special draw function
+      if ((obj!=null) && (obj['_typename']=='TList'))
+         obj['_typename'] = 'TStreamerInfoList';
+   }
+
    JSROOT.HierarchyPainter.prototype.GetOnlineItem = function(item, itemname, callback) {
       // method used to request object from the http server
 
-      var url = itemname, h_get = false, req = 'root.json.gz?compact=3';
+      var url = itemname, h_get = false, req = '', pthis = this;
 
       if (item != null) {
          var top = item;
          while ((top!=null) && (!('_online' in top))) top = top._parent;
          url = this.itemFullName(item, top);
+
          if ('_doing_expand' in item) {
             h_get = true;
             req  = 'h.json?compact=3';
          } else
-         if (item._kind.indexOf("ROOT.")!=0)
-            req = 'item.json.gz?compact=3';
+         if ('_make_request' in item) {
+            var func = JSROOT.findFunction(item['_make_request']);
+            if (typeof func == 'function') req = func(pthis, item, url);
+         }
+
+         if ((req.length==0) && (item._kind.indexOf("ROOT.")!=0))
+           req = 'item.json.gz?compact=3';
       }
 
-      if ((itemname==null) && (item!=null) && ('_cached_draw_object' in this) && (req.indexOf("root.json.gz")==0)) {
+      if ((itemname==null) && (item!=null) && ('_cached_draw_object' in this) && (req.length == 0)) {
          // special handling for drawGUI when cashed
          var obj = this['_cached_draw_object'];
          delete this['_cached_draw_object'];
          return JSROOT.CallBack(callback, item, obj);
       }
 
+      if (req.length == 0) req = 'root.json.gz?compact=3';
+
       if (url.length > 0) url += "/";
       url += req;
 
       var itemreq = JSROOT.NewHttpRequest(url, 'object', function(obj) {
 
-         if ((item != null) && (obj != null) && !h_get &&
-             (item._name === "StreamerInfo") && (obj['_typename'] === 'TList'))
-            obj['_typename'] = 'TStreamerInfoList';
+         if (!h_get && ('_after_request' in item)) {
+            var func = JSROOT.findFunction(item['_after_request']);
+            if (typeof func == 'function') req = func(pthis, item, obj);
+         }
 
          JSROOT.CallBack(callback, item, obj);
       });
@@ -8246,6 +8269,11 @@
       if (withbrowser) {
          d3.select("#" + this.frameid).html("");
          delete this.h;
+      } else {
+         // when only display cleared, try to clear all browser items
+         this.ForEach(function(item) {
+            if (('clear' in item) && (typeof item['clear']=='function')) item.clear();
+         });
       }
    }
 

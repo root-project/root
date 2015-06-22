@@ -847,7 +847,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          {
             SetBit(kNormalized,1);
          }
-         TString *variables = 0;
+         std::vector<TString> variables;
          Int_t dim = 0;
          TString varList = "";
          Bool_t defaultVariable = false;
@@ -858,7 +858,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          if(openingBracketPos > formula.Length() || formula[openingBracketPos] != '[')
          {
             dim = 1;
-            variables = new TString[dim];
+            variables.resize(dim);
             variables[0] = "x";
             defaultVariable = true;
          }
@@ -868,7 +868,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             closingBracketPos = formula.Index(']',openingBracketPos);
             varList = formula(openingBracketPos+1,closingBracketPos - openingBracketPos - 1);
             dim = varList.CountChar(',') + 1;
-            variables = new TString[dim];
+            variables.resize(dim);
             Int_t Nvar = 0;
             TString varName = "";
             for(Int_t i = 0 ; i < varList.Length(); ++i)

@@ -3650,7 +3650,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       }
    } else {
       // import from a root file
-      TDirectory::TContext ctxt(0);
+      TDirectory::TContext ctxt;
       // in case a web file is specified, use the cacheread option to cache
       // this file in the cache directory
       TFile *f = 0;

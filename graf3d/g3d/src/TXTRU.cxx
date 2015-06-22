@@ -478,9 +478,9 @@ void TXTRU::Print(Option_t *option) const
       nz    = fNzAlloc;
    }
 
-   const char *name;
-   Float_t *p;
-   Int_t   nlimit;
+   const char *name = 0;
+   Float_t *p=0;
+   Int_t   nlimit = 0;
    Bool_t  print_vtx = opt.Contains("xy");
    Bool_t  print_z   = opt.Contains("z");
 
@@ -493,7 +493,6 @@ void TXTRU::Print(Option_t *option) const
       case 3: p = fScale; name = "scale"; nlimit = nz;  break;
       case 4: p = fX0;    name = "x0";    nlimit = nz;  break;
       case 5: p = fY0;    name = "y0";    nlimit = nz;  break;
-      default: continue;
       }
       if (ixyz<=1 && !print_vtx) continue;
       if (ixyz>=2 && !print_z) continue;

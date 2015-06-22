@@ -3378,8 +3378,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          zoombox = new TBox(zbx1, zby1, zbx2, zby2);
          Int_t ci = TColor::GetColor("#7d7dff");
          TColor *zoomcolor = gROOT->GetColor(ci);
-         if (!TCanvas::SupportAlpha()) zoombox->SetFillStyle(3002);
-         else                          zoomcolor->SetAlpha(0.5);
+         if (!TCanvas::SupportAlpha() || !zoomcolor) zoombox->SetFillStyle(3002);
+         else                                        zoomcolor->SetAlpha(0.5);
          zoombox->SetFillColor(ci);
          zoombox->Draw();
          gPad->Modified();
@@ -8494,7 +8494,7 @@ void THistPainter::PaintSurface(Option_t *)
       for (Int_t col=0;col<nbcol;col++) {
          acol = gROOT->GetColor(col+icol1);
          TColor::HLStoRGB(hue,.4+col*dcol,satur,r,g,b);
-         acol->SetRGB(r,g,b);
+         if (acol) acol->SetRGB(r,g,b);
       }
       fLego->Spectrum(nbcol, fmin, fmax, icol1, 1, irep);
       fLego->SetSurfaceFunction(&TPainter3dAlgorithms::GouraudFunction);

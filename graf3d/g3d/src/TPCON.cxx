@@ -129,13 +129,11 @@ void TPCON::MakeTableOfCoSin() const
    const Double_t ragrad  = pi/180.0;
 
    Int_t n = GetNumberOfDivisions () + 1;
-   if (fCoTab)
-      delete [] fCoTab; // Delete the old tab if any
-      fCoTab = new Double_t [n];
+   if (fCoTab) delete [] fCoTab; // Delete the old tab if any
+   fCoTab = new Double_t [n];
    if (!fCoTab ) return;
 
-   if (fSiTab)
-      delete [] fSiTab; // Delete the old tab if any
+   if (fSiTab) delete [] fSiTab; // Delete the old tab if any
    fSiTab = new Double_t [n];
    if (!fSiTab ) return;
 

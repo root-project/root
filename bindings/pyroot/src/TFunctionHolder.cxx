@@ -33,7 +33,7 @@ PyObject* PyROOT::TFunctionHolder::PreProcessArgs(
 
 //____________________________________________________________________________
 PyObject* PyROOT::TFunctionHolder::Call(
-      ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+      ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {

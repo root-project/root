@@ -836,7 +836,7 @@ TGeoVolume *TGeoVolume::Import(const char *filename, const char *name, Option_t 
    // import from a gdml file
    } else {
    // import from a root file
-      TDirectory::TContext ctxt(0);
+      TDirectory::TContext ctxt;
       TFile *f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          printf("Error: TGeoVolume::Import : Cannot open file %s\n", filename);

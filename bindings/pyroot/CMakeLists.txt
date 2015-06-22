@@ -14,15 +14,12 @@ endif()
 if(WIN32)
   set(ROOTULIBS -include:_G__cpp_setupG__Net
                 -include:_G__cpp_setupG__IO
-                -include:_G__cpp_setupG__Hist
-                -include:_G__cpp_setupG__Graf
-                -include:_G__cpp_setupG__G3D
-                -include:_G__cpp_setupG__GPad
                 -include:_G__cpp_setupG__Tree
                 -include:_G__cpp_setupG__Thread
-                -include:_G__cpp_setupG__Matrix)
+                -include:_G__cpp_setupG__MathCore)
 endif()
-ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES RIO Net Hist Graf Graf3d Gpad Tree Matrix Thread ${PYTHON_LIBRARIES})
+ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES})
+
 if(WIN32)
   add_custom_command(TARGET PyROOT POST_BUILD
                      COMMAND link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT
@@ -47,4 +44,3 @@ endforeach()
 
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()
-

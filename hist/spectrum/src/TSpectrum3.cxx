@@ -2384,8 +2384,10 @@ decon_in-&gt;Draw(&quot;&quot;);  </span></p>
          }
       }
    }
-   if (lhx == -1 || lhy == -1 || lhz == -1)
+   if (lhx == -1 || lhy == -1 || lhz == -1) {
+      delete [] working_space;
       return ("Zero response data");
+   }
 
 //calculate ht*y and write into p
    for (i3 = 0; i3 < ssizez; i3++) {

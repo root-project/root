@@ -82,9 +82,16 @@ public:
   void Print(const char* opt) const ;
   void Sort(Bool_t ascend=kTRUE) ;
   
-  const char* GetName() const { return _name.Data() ; }
-  void SetName(const char* name) { _name = name ; }
-  void useNptr(Bool_t flag) { _useNptr = flag ; }
+  // const char* GetName() const { return "" ; /*_name.Data() ; */ }
+  // void SetName(const char* /*name*/) { /*_name = name ; */ }
+  const char* GetName() const { return _name.Data() ;  }
+  void SetName(const char* name) { _name = name ;  }
+
+   void useNptr(Bool_t flag) { _useNptr = flag ; }
+   // needed for using it in THashList/THashTable
+
+   ULong_t  Hash() const { return _name.Hash(); }
+   //ULong_t  Hash() const { return TString().Hash(); }
 
 protected:  
 

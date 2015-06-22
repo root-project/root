@@ -153,7 +153,8 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
 
   // Use name in argument, if supplied
   if (name) {
-    SetName(name) ;
+    TNamed::SetName(name) ;
+    _namePtr = (TNamed*) RooNameReg::instance().constPtr(name) ;
   } else {
     // Same name, Ddon't recalculate name pointer (expensive)
     TNamed::SetName(other.GetName()) ;
@@ -370,6 +371,11 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
     setOperMode(ADirty) ;
   }
 
+
+  // LM: use hash tables for larger lists
+  if (_serverList.GetSize() > 999 && _serverList.getHashTableSize() == 0) _serverList.setHashTableSize(1000);
+  if (server._clientList.GetSize() > 999 && server._clientList.getHashTableSize() == 0) server._clientList.setHashTableSize(1000);
+  if (server._clientListValue.GetSize() >  999 && server._clientListValue.getHashTableSize() == 0) server._clientListValue.setHashTableSize(1000);
 
   // Add server link to given server
   _serverList.Add(&server) ;
@@ -2291,7 +2297,8 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
 
   // Adjust name of head node if requested
   if (newname) {
-    head->SetName(newname) ;
+    head->TNamed::SetName(newname) ;
+    head->_namePtr = (TNamed*) RooNameReg::instance().constPtr(newname) ;
   }
 
   // Return the head
@@ -2361,7 +2368,12 @@ void RooAbsArg::wireAllCaches()
 void RooAbsArg::SetName(const char* name) 
 {
   TNamed::SetName(name) ;
-  _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+  TNamed* newPtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+  if (newPtr != _namePtr) {
+    //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << endl;
+    _namePtr = newPtr;
+    _namePtr->SetBit(RooNameReg::kRenamedArg);
+  }
 }
 
 
@@ -2371,7 +2383,12 @@ void RooAbsArg::SetName(const char* name)
 void RooAbsArg::SetNameTitle(const char *name, const char *title)
 {
   TNamed::SetNameTitle(name,title) ;
-  _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+  TNamed* newPtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+  if (newPtr != _namePtr) {
+    //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << endl;
+    _namePtr = newPtr;
+    _namePtr->SetBit(RooNameReg::kRenamedArg);
+  }
 }
 
 

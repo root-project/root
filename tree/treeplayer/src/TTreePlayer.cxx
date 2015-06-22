@@ -2136,7 +2136,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
 
    nentries = GetEntriesToProcess(firstentry, nentries);
 
-   TDirectory::TContext ctxt(0);
+   TDirectory::TContext ctxt;
 
    fTree->SetNotify(selector);
 

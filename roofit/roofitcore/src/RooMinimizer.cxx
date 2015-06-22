@@ -694,6 +694,7 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
   // where 'sigma' is calculated as n*n*errorLevel
 
 
+
   RooArgList* params = _fcn->GetFloatParamList() ;
   RooArgList* paramSave = (RooArgList*) params->snapshot() ;
 
@@ -723,7 +724,16 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
   TMarker *point= new TMarker(var1.getVal(), var2.getVal(), 8);
   frame->addObject(point) ;
 
-  // remember our original value of ERRDEF
+  // check first if a inimizer is available. If not means
+  // the minimization is not done , so do it 
+  if (_theFitter->GetMinimizer()==0) {
+     coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!"
+                         << endl ;
+     return frame;
+  }
+
+  
+  // remember our original value of ERRDEF  
   Double_t errdef= _theFitter->GetMinimizer()->ErrorDef();
 
   Double_t n[6] ;

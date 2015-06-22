@@ -138,6 +138,33 @@ namespace {
     }
     Paths.push_back(buff);
   }
+
+  static bool is_dll(const char *filename) {
+    bool is_dll = false;
+    HANDLE hFile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    HANDLE hFileMapping = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (hFileMapping == INVALID_HANDLE_VALUE) {
+      CloseHandle(hFile);
+      return false;
+    }
+    LPVOID lpFileBase = MapViewOfFile(hFileMapping, FILE_MAP_READ, 0, 0, 0);
+    if (lpFileBase == NULL) {
+      CloseHandle(hFileMapping);
+      CloseHandle(hFile);
+      return false;
+    }
+    PIMAGE_DOS_HEADER pDOSHeader = static_cast<PIMAGE_DOS_HEADER>(lpFileBase);
+    if (pDOSHeader->e_magic == IMAGE_DOS_SIGNATURE) {
+      PIMAGE_NT_HEADERS pNTHeader = reinterpret_cast<PIMAGE_NT_HEADERS>((PBYTE)lpFileBase + pDOSHeader->e_lfanew);
+      if ((pNTHeader->Signature == IMAGE_NT_SIGNATURE) &&
+          ((pNTHeader->FileHeader.Characteristics & IMAGE_FILE_DLL)))
+        is_dll = true;
+    }
+    UnmapViewOfFile(lpFileBase);
+    CloseHandle(hFileMapping);
+    CloseHandle(hFile);
+    return is_dll;
+  }
 #else
 # error "Unsupported platform."
 #endif
@@ -174,7 +201,7 @@ namespace cling {
       (Magic == file_magic::elf_shared_object)
 #endif
 #elif defined(LLVM_ON_WIN32)
-      (Magic == file_magic::pecoff_executable)
+      (Magic == file_magic::pecoff_executable || is_dll(LibName.str().c_str()))
 #else
 # error "Unsupported platform."
 #endif

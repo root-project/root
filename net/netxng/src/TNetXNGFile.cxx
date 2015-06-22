@@ -359,7 +359,7 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Int_t length)
    // param length: number of bytes to be read
    // returns:      kTRUE in case of failure
 
-   return ReadBuffer(buffer, fOffset, length);
+   return ReadBuffer(buffer, GetRelOffset(), length);
 }
 
 //______________________________________________________________________________
@@ -381,7 +381,7 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
       return kTRUE;
 
    // Try to read from cache
-   fOffset = position;
+   SetOffset(position);
    Int_t status;
    if ((status = ReadBufferViaCache(buffer, length))) {
       if (status == 2)
@@ -391,7 +391,7 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
 
    // Read the data
    uint32_t bytesRead = 0;
-   XRootDStatus st = fFile->Read(position, length, buffer, bytesRead);
+   XRootDStatus st = fFile->Read(fOffset, length, buffer, bytesRead);
    if (gDebug > 0)
       Info("ReadBuffer", "%s bytes read: %d", st.ToStr().c_str(), bytesRead);
 

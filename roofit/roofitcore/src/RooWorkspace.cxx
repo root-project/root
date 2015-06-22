@@ -658,6 +658,8 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
   iter->Reset() ;
 
+  if (cloneSet2->getSize()+_allOwnedNodes.getSize() > 999) _allOwnedNodes.setHashTableSize(1000);
+
   RooArgSet recycledNodes ;
   RooArgSet nodesToBeDeleted ;
   while((node=(RooAbsArg*)iter->Next())) {
@@ -712,6 +714,14 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Release working copy
+  // no need to do a safe list since it was generated from a snapshot 
+  // just take ownership and delte elements by hand
+  cloneSet->releaseOwnership() ;
+  RooFIter cloneSet_iter = cloneSet->fwdIterator() ;
+  RooAbsArg* cloneNode ;
+  while ((cloneNode=(RooAbsArg*)cloneSet_iter.next())) {
+     delete cloneNode;
+  }
   delete cloneSet ;
 
   // Reconnect any nodes that need to be
