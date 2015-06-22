@@ -888,7 +888,7 @@ void TMVA::MethodNN::checkGradients ()
     fNet.clear ();
 
     fNet.setInputSize (inputSize);
-    fNet.addLayer (NN::Layer (30, NN::EnumFunction::SOFTSIGN)); 
+    fNet.addLayer (NN::Layer (100, NN::EnumFunction::SOFTSIGN)); 
     fNet.addLayer (NN::Layer (30, NN::EnumFunction::SOFTSIGN)); 
     fNet.addLayer (NN::Layer (outputSize, NN::EnumFunction::LINEAR, NN::ModeOutputValues::SIGMOID)); 
     fNet.setErrorFunction (NN::ModeErrorFunction::CROSSENTROPY);

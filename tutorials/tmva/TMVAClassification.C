@@ -427,25 +427,29 @@ int TMVAClassification( TString myMethodList = "" )
    if (Use["NN"])
    {
 //       TString layoutString ("Layout=TANH|(N+100)*2,LINEAR");
-       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+//       TString layoutString ("Layout=SOFTSIGN|100,SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+//       TString layoutString ("Layout=RELU|300,RELU|100,RELU|30,RELU|10,LINEAR");
+//       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|30,SOFTSIGN|20,SOFTSIGN|10,LINEAR");
+//       TString layoutString ("Layout=TANH|50,TANH|30,TANH|20,TANH|10,LINEAR");
+//       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
+       TString layoutString ("Layout=TANH|50,TANH|50,LINEAR");
 
-       TString training0 ("LearningRate=1e-1,Momentum=0.3,Repetitions=3,ConvergenceSteps=150,BatchSize=30,TestRepetitions=7,WeightDecay=0.0,L1=false,DropConfig=0.2+0.4+0.0,DropRepetitions=10");
-       TString training1 ("LearningRate=1e-2,Momentum=0.1,Repetitions=3,ConvergenceSteps=150,BatchSize=20,TestRepetitions=7,WeightDecay=0.001,L1=true");
-       TString training2 ("LearningRate=1e-3,Momentum=0.1,Repetitions=3,ConvergenceSteps=150,BatchSize=40,TestRepetitions=7,WeightDecay=0.0,L1=false");
+       TString training0 ("LearningRate=1e-1,Momentum=0.5,Repetitions=1,ConvergenceSteps=100,BatchSize=30,TestRepetitions=7,WeightDecay=0.001,Regularization=NONE,DropConfig=0.2+0.4+0.3,DropRepetitions=2");
+       TString training1 ("LearningRate=1e-2,Momentum=0.9,Repetitions=1,ConvergenceSteps=20,BatchSize=40,TestRepetitions=7,WeightDecay=0.01,Regularization=L2");
+       TString training2 ("LearningRate=1e-2,Momentum=0.3,Repetitions=1,ConvergenceSteps=50,BatchSize=40,TestRepetitions=7,WeightDecay=0.01,Regularization=L2");
+       TString training3 ("LearningRate=1e-3,Momentum=0.1,Repetitions=1,ConvergenceSteps=200,BatchSize=100,TestRepetitions=7,WeightDecay=0.0001,Regularization=L1");
 
        TString trainingStrategyString ("TrainingStrategy=");
-       trainingStrategyString += training0 + "|" + training1 + "|" + training2;
+       trainingStrategyString += training0 + "|" + training1 + "|" + training2 + "|" + training3;
 
-
+      
 //       TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CROSSENTROPY");
-       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:WeightInitialization=XAVIERUNIFORM");
+       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=G:WeightInitialization=XAVIERUNIFORM");
 //       TString nnOptions ("!H:V:VarTransform=Normalize:ErrorStrategy=CHECKGRADIENTS");
        nnOptions.Append (":"); nnOptions.Append (layoutString);
        nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
 
-       std::cout << "book NN" << std::endl;
        factory->BookMethod( TMVA::Types::kNN, "NN", nnOptions ); // NN
-       std::cout << "book NN finished" << std::endl;
    }
 
 
