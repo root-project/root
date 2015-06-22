@@ -789,13 +789,23 @@ public:
 
     Net () 
 	: m_eErrorFunction (ModeErrorFunction::SUMOFSQUARES)
+	, m_sizeInput (0)
     {
     }
 
+    Net (const Net& other)
+        : m_eErrorFunction (other.m_eErrorFunction)
+        , m_sizeInput (other.m_sizeInput)
+        , m_layers (other.m_layers)
+    {
+    }
+
+    void setInputSize (size_t sizeInput) { m_sizeInput = sizeInput; }
     void addLayer (Layer& layer) { m_layers.push_back (layer); }
     void addLayer (Layer&& layer) { m_layers.push_back (layer); }
     void setErrorFunction (ModeErrorFunction eErrorFunction) { m_eErrorFunction = eErrorFunction; }
     
+    size_t inputSize () const { return m_sizeInput; }
 
     template <typename WeightsType, typename DropProbabilities>
         void dropOutWeightFactor (WeightsType& weights,
@@ -879,6 +889,7 @@ private:
 
     std::vector<Layer> m_layers;
     ModeErrorFunction m_eErrorFunction;
+    size_t m_sizeInput;
 
 };
 
