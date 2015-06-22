@@ -527,7 +527,8 @@ void TMVA::MethodNN::Train()
     {
         size_t inputSize = GetNVariables (); //trainPattern.front ().input ().size ();
         size_t outputSize = fAnalysisType == Types::kClassification ? 1 : GetNTargets (); //trainPattern.front ().output ().size ();
-
+        fNet.setInputSize (inputSize + 1); // num vars + bias node
+        
         // configure neural net
         auto itLayout = std::begin (fLayout), itLayoutEnd = std::end (fLayout)-1; // all layers except the last one
         for ( ; itLayout != itLayoutEnd; ++itLayout)
@@ -565,12 +566,30 @@ void TMVA::MethodNN::Train()
     {
         std::shared_ptr<TMVA::NN::Settings> ptrSettings = *itSettings;
         ptrSettings->setMonitoring (fMonitoring);
+        Log() << kINFO
+              << "Training with learning rate = " << ptrSettings->learningRate ()
+              << ", momentum = " << ptrSettings->momentum ()
+              << ", repetitions = " << ptrSettings->repetitions ()
+              << Endl;
+
         ptrSettings->setProgressLimits ((idxSetting)*100.0/(fSettings.size ()), (idxSetting+1)*100.0/(fSettings.size ()));
+
+        const std::vector<double>& dropConfig = ptrSettings->dropFractions ();
+        if (!dropConfig.empty ())
+        {
+            Log () << kINFO << "Drop configuration" << Endl
+                   << "    drop repetitions = " << ptrSettings->dropRepetitions () << Endl;
+        }
+        int idx = 0;
+        for (auto f : dropConfig)
+        {
+            Log () << kINFO << "    Layer " << idx << " = " << f << Endl;
+            ++idx;
+        }
+        Log () << kINFO << Endl;
+        
         if (ptrSettings->minimizerType () == TMVA::NN::MinimizerType::fSteepest)
         {
-            std::cout << "--------------------------------------------------- retrieve " << ptrSettings->dropFractions ().size () << std::endl;
-            std::copy (ptrSettings->dropFractions ().begin (), ptrSettings->dropFractions ().end (), std::ostream_iterator<double>(std::cout, " - "));
-            std::cout << std::endl << std::endl;
             NN::Steepest minimizer (ptrSettings->learningRate (), ptrSettings->momentum (), ptrSettings->repetitions ());
             /*E =*/fNet.train (fWeights, trainPattern, testPattern, minimizer, *ptrSettings.get ());
         }
@@ -630,6 +649,7 @@ void TMVA::MethodNN::AddWeightsXMLTo( void* parent ) const
 
 
    void* weightsxml = gTools().xmlengine().NewChild(nn, 0, "Synapses");
+   gTools().xmlengine().NewAttr (weightsxml, 0, "InputSize", gTools().StringFromInt((int)fNet.inputSize ()));
    gTools().xmlengine().NewAttr (weightsxml, 0, "NumberSynapses", gTools().StringFromInt((int)fWeights.size ()));
    std::stringstream s("");
    s.precision( 16 );
@@ -662,6 +682,8 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
        return;
    }
 
+
+   
 //   std::cout << "read layout from XML" << std::endl;
    void* ch = gTools().xmlengine().GetChild (xmlLayout);
    TString connection;
@@ -688,8 +710,11 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
        return;
 
    Int_t numWeights (0);
+   Int_t inputSize (0);
    gTools().ReadAttr (xmlWeights, "NumberSynapses", numWeights);
-//   std::cout << "number synapses = " << numWeights << std::endl;
+   gTools().ReadAttr (xmlWeights, "InputSize", inputSize);
+   fNet.setInputSize (inputSize);
+
    const char* content = gTools().GetContent (xmlWeights);
    std::stringstream sstr (content);
    for (Int_t iWeight = 0; iWeight<numWeights; ++iWeight) 
@@ -698,7 +723,6 @@ void TMVA::MethodNN::ReadWeightsFromXML( void* wghtnode )
        sstr >> weight;
        fWeights.push_back (weight);
    }
-//   std::cout << std::endl;
 }
 
 
@@ -863,6 +887,7 @@ void TMVA::MethodNN::checkGradients ()
 
     fNet.clear ();
 
+    fNet.setInputSize (inputSize);
     fNet.addLayer (NN::Layer (30, NN::EnumFunction::SOFTSIGN)); 
     fNet.addLayer (NN::Layer (30, NN::EnumFunction::SOFTSIGN)); 
     fNet.addLayer (NN::Layer (outputSize, NN::EnumFunction::LINEAR, NN::ModeOutputValues::SIGMOID)); 

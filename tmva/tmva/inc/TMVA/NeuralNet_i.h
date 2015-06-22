@@ -633,10 +633,14 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
                                        const DropProbabilities& drops, 
                                        bool inverse)
     {
+	if (drops.empty () || weights.empty ())
+	    return;
+
         auto itWeight = std::begin (weights);
         auto itWeightEnd = std::end (weights);
         auto itDrop = std::begin (drops);
         auto itDropEnd = std::end (drops);
+	size_t numNodes = inputSize ();
         for (const auto& layer : layers ())
         {
             if (itDrop == itDropEnd)
@@ -648,8 +652,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             {
                 p = 1.0/p;
             }
-            size_t numNodes = layer.numNodes ();
-            for (size_t iNode = 0; iNode < numNodes; ++iNode)
+	    size_t numWeights = layer.numWeights (numNodes);
+            for (size_t iWeight = 0; iWeight < numWeights; ++iWeight)
             {
                 if (itWeight == itWeightEnd)
                     break;
@@ -657,6 +661,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
                 *itWeight *= p;
                 ++itWeight;
             }
+            numNodes = layer.numNodes ();
             ++itDrop;
         }
     }
@@ -1022,7 +1027,7 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         typename Pattern::const_iterator itInputBegin = firstPattern.beginInput ();
         typename Pattern::const_iterator itInputEnd = firstPattern.endInput ();
         layerData.push_back (LayerData (itInputBegin, itInputEnd));
-        size_t numNodesPrev = firstPattern.input ().size ();
+        size_t numNodesPrev = inputSize ();
         auto itActFncLayer = begin (activationFunctionsDropOut);
         auto itInvActFncLayer = begin (inverseActivationFunctionsDropOut);
         for (auto& layer: _layers)
