@@ -463,6 +463,7 @@ public:
    virtual Int_t           MakeCode(const char* filename = 0);
    virtual Int_t           MakeProxy(const char* classname, const char* macrofilename = 0, const char* cutfilename = 0, const char* option = 0, Int_t maxUnrolling = 3);
    virtual Int_t           MakeSelector(const char* selector = 0);
+   virtual Int_t           MakeSelectorReader(const char *selector = 0);
    Bool_t                  MemoryFull(Int_t nbytes);
    virtual Long64_t        Merge(TCollection* list, Option_t* option = "");
    virtual Long64_t        Merge(TCollection* list, TFileMergeInfo *info);

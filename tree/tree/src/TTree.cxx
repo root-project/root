@@ -6011,6 +6011,46 @@ Int_t TTree::MakeSelector(const char* selector)
    return MakeClass(selector, "selector");
 }
 
+
+//______________________________________________________________________________
+Int_t TTree::MakeSelectorReader(const char* selector)
+{
+   // Generate skeleton selector class for this tree using the TTreeReaderValue
+   // and TTreeReaderArray classes.
+   //
+   // The following files are produced: selector.h and selector.C.
+   // If selector is 0, the selector will be called "nameoftree".
+   //
+   // The generated code in selector.h includes the following:
+   //    - Identification of the original Tree and Input file name
+   //    - Definition of selector class (data and functions)
+   //    - The following class functions:
+   //       - constructor and destructor
+   //       - void    Begin(TTree *tree)
+   //       - void    SlaveBegin(TTree *tree)
+   //       - void    Init(TTree *tree)
+   //       - Bool_t  Notify()
+   //       - Bool_t  Process(Long64_t entry)
+   //       - void    Terminate()
+   //       - void    SlaveTerminate()
+   //
+   // The class selector derives from TSelector.
+   // The generated code in selector.C includes empty functions defined above.
+   //
+   // To use this function:
+   //    - connect your Tree file (eg: TFile f("myfile.root");)
+   //    - T->MakeSelector("myselect");
+   // where T is the name of the Tree in file myfile.root
+   // and myselect.h, myselect.C the name of the files created by this function.
+   // In a ROOT session, you can do:
+   //    root > T->Process("myselect.C")
+      
+   GetPlayer();
+   if (!fPlayer) return 0;
+   return fPlayer->MakeSelectorReader(selector, 3);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if adding nbytes to memory we are still below MaxVirtualsize.
 
