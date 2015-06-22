@@ -252,13 +252,18 @@ void update (ItSource itSource, ItSource itSourceEnd,
                     maxGrad = currGrad;
             }
 
-            if (maxGrad > 100)
+            if (maxGrad > 10)
             {
                 m_alpha /= 2;
                 std::cout << "learning rate reduced to " << m_alpha << std::endl;
+                std::for_each (weights.begin (), weights.end (), [maxGrad](double& w)
+                               {
+                                   w /= maxGrad;
+                               });
+                m_prevGradients.clear ();
             }
-
-            std::copy (std::begin (localWeights), std::end (localWeights), std::begin (weights));
+            else
+                std::copy (std::begin (localWeights), std::end (localWeights), std::begin (weights));
 
             ++currentRepetition;
         }
@@ -652,8 +657,8 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
             {
                 p = 1.0/p;
             }
-	    size_t numWeights = layer.numWeights (numNodes);
-            for (size_t iWeight = 0; iWeight < numWeights; ++iWeight)
+	    size_t _numWeights = layer.numWeights (numNodes);
+            for (size_t iWeight = 0; iWeight < _numWeights; ++iWeight)
             {
                 if (itWeight == itWeightEnd)
                     break;

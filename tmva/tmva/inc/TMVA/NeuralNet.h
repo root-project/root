@@ -790,6 +790,7 @@ public:
     Net () 
 	: m_eErrorFunction (ModeErrorFunction::SUMOFSQUARES)
 	, m_sizeInput (0)
+        , m_layers ()
     {
     }
 
@@ -887,10 +888,9 @@ public:
 
 private:
 
-    std::vector<Layer> m_layers;
     ModeErrorFunction m_eErrorFunction;
     size_t m_sizeInput;
-
+    std::vector<Layer> m_layers;
 };
 
 
