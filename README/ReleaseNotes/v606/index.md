@@ -94,6 +94,10 @@ New options:
 
 ## 2D Graphics Libraries
 
+### THistPainter
+
+Improve the algorithm to compute the lower limit of an axis in log scale when its
+real lower limit is 0. The problem was reported in ROOT-7414.
 
 ## 3D Graphics Libraries
 
@@ -108,11 +112,11 @@ New options:
 
 ### THttpServer
 
-Support of POST HTTP requests. For example, ROOT objects can be send with POST request and used as arguments of 
+Support of POST HTTP requests. For example, ROOT objects can be send with POST request and used as arguments of
 objects method execution in exe.bin and exe.json requests. Request and response HTTP headers are now directely accessible in THttpCallArg class
 
 When command is registered with THttpServer::RegisterCommand() method,
-one could configure additional arguments which should be submitted when 
+one could configure additional arguments which should be submitted when
 command is executed with cmd.json requests
 
 Introduce restriction rules for objects access with THttpServer::Restrict() method.
