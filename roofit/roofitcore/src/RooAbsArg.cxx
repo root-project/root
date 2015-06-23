@@ -738,15 +738,14 @@ Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg*
   // Test whether we depend on (ie, are served by) any object in the
   // specified collection. Uses the dependsOn(RooAbsArg&) member function.
 
-  Bool_t result(kFALSE);
   RooFIter sIter = serverList.fwdIterator();
   RooAbsArg* server ;
-  while ((!result && (server=sIter.next()))) {
+  while ((server=sIter.next())) {
     if (dependsOn(*server,ignoreArg,valueOnly)) {
-      result= kTRUE;
+      return kTRUE;
     }
   }
-  return result;
+  return kFALSE;
 }
 
 
@@ -1090,11 +1089,14 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
 
 
   // Cyclic recursion protection
-  static RooLinkedList callStack ;
-  if (callStack.findArg(this)) {
-    return kFALSE ;
-  } else {
-    callStack.Add(this) ;
+  static std::set<const RooAbsArg*> callStack;
+  {
+    std::set<const RooAbsArg*>::iterator it = callStack.lower_bound(this);
+    if (it != callStack.end() && this == *it) {
+      return kFALSE;
+    } else {
+      callStack.insert(it, this);
+    }
   }
 
   // Do not recurse into newset if not so specified
@@ -1119,7 +1121,7 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
     ret |= server->recursiveRedirectServers(newSet,mustReplaceAll,nameChange,recurseInNewSet) ;
   }
 
-  callStack.Remove(this) ;
+  callStack.erase(this);
   return ret ;
 }
 
