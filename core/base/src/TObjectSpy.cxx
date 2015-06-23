@@ -11,7 +11,7 @@
 
 #include "TObjectSpy.h"
 #include "TROOT.h"
-
+#include "TVirtualMutex.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -36,6 +36,7 @@ TObjectSpy::TObjectSpy(TObject *obj, Bool_t fixMustCleanupBit) :
    // kMustCleanup bit set. If the object has been deleted during a
    // RecusiveRemove() operation, GetObject() will return 0.
 
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
    if (fObj && !fObj->TestBit(kMustCleanup)) {
       if (fixMustCleanupBit) {
@@ -54,6 +55,7 @@ TObjectSpy::~TObjectSpy()
 
    if (fObj && fResetMustCleanupBit)
       fObj->SetBit(kMustCleanup, kFALSE);
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
@@ -99,6 +101,7 @@ TObjectRefSpy::TObjectRefSpy(TObject *&obj, Bool_t fixMustCleanupBit) :
    // kMustCleanup bit set. If the object has been deleted during a
    // RecusiveRemove() operation, GetObject() will return 0.
 
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
    if (fObj && !fObj->TestBit(kMustCleanup)) {
       if (fixMustCleanupBit) {
@@ -117,6 +120,7 @@ TObjectRefSpy::~TObjectRefSpy()
 
    if (fObj && fResetMustCleanupBit)
       fObj->SetBit(kMustCleanup, kFALSE);
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
