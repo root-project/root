@@ -174,6 +174,8 @@ static int begin_request_handler(struct mg_connection *conn)
 //////////////////////////////////////////////////////////////////////////
 
 
+ClassImp(TCivetweb)
+
 //______________________________________________________________________________
 TCivetweb::TCivetweb() :
    THttpEngine("civetweb", "compact embedded http server"),
