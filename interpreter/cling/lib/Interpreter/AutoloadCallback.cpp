@@ -207,7 +207,7 @@ namespace cling {
         return true;
 
       // Now that we will read the full enum, unload the forward decl.
-      TransactionUnloader Unloader(m_Sema, 0);
+      TransactionUnloader Unloader(m_Sema, 0, 0);
       Unloader.UnloadDecl(D);
       return true;
     }
