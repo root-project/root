@@ -19,6 +19,24 @@ There is a [snapshot (frozen copy)](https://root.cern.ch/js/3.5/httpserver.C/) o
 <iframe width="800" height="500" src="https://root.cern.ch/js/3.5/httpserver.C/?layout=simple&item=Canvases/c1">
 </iframe>
 
+One could specify several options when creating http server. They could be add as additional URL parameters to the constructor arguments like:
+
+    serv = new THttpServer("http:8080?loopback&thrds=2");
+
+Following parameters are supported:
+
+   - thrds=N   - number of threads used by the civetweb (default is 5)
+   - top=name  - configure top name, visible in the web browser
+   - auth_file=filename  - authentication file name, created with htdigets utility
+   - auth_domain=domain   - authentication domain
+   - loopback  - bind specified port to loopback 127.0.0.1 address
+   - debug  - enable debug mode, server always returns html page with request info
+
+If necessary, one could bind http server to specific IP address like:
+
+    new THttpServer("http:192.168.1.17:8080")
+
+
 
 ## Registering objects
 
@@ -78,11 +96,11 @@ Based on authorized accounts, one could restrict or enable access to some elemen
 For instance, one could hide complete folder from 'guest' account:
 
     root [6]  serv->Restrict("/Folder",  "hidden=guest");
-     
-Or one could hide from all but 'admin' account:  
+
+Or one could hide from all but 'admin' account:
 
     root [7]  serv->Restrict("/Folder",  "visible=admin");
-    
+
 Hidden folders or objects can not be accessed via http protocol.
 
 By default server runs in readonly mode and do not allow methods execution via 'exe.json' or 'exe.bin' requests. To allow such action, one could either grant generic access for all or one could allow to execute only special method:
@@ -127,10 +145,10 @@ Finally in host configuration file one should have following lines:
      </IfModule>
 
 Here is supposed that directory "/srv/www/htdocs" is root directory for web server.
-Than one should be able to open address:  
-     
-     http://apache_host_name/root.app/ 
-  
+Than one should be able to open address:
+
+     http://apache_host_name/root.app/
+
 
 ### Configure fastcgi with lighttpd
 
@@ -344,8 +362,8 @@ For `multi.json` request one could use only requests, returning JSON format (lik
 For `multi.bin` any kind of requests can be used. It returns binary buffer with following content:
 
     [size1 (little endian), 4 bytes] + [request1 result, size1 bytes]
-    [size2 (little endian), 4 bytes] + [request2 result, size2 bytes]  
-    [size3 (little endian), 4 bytes] + [request3 result, size3 bytes]  
+    [size2 (little endian), 4 bytes] + [request2 result, size2 bytes]
+    [size3 (little endian), 4 bytes] + [request3 result, size3 bytes]
 
 While POST data in request used to transfer list of multiple reqeusts, it is not possible to submit
-such kind of requests, which themselvs require data from POST block.  
+such kind of requests, which themselvs require data from POST block.
