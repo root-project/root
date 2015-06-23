@@ -566,8 +566,7 @@ RooArgSet* RooAbsArg::getParameters(const RooAbsData* set, Bool_t stripDisconnec
 
 void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t stripDisconnected) const
 {
-  RooArgSet parList("parameters") ;
-
+  // INTERNAL helper function for getParameters()
   RooFIter siter = serverMIterator() ;
   RooAbsArg* server ;
 
@@ -609,13 +608,12 @@ void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t st
 RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset, Bool_t stripDisconnected) const
 {
 
-  RooArgSet parList("parameters") ;
+  RooArgSet* parList = new RooArgSet("parameters");
 
-  addParameters(parList,nset,stripDisconnected) ;
+  addParameters(*parList, nset, stripDisconnected);
 
-  RooArgList tmp(parList) ;
-  tmp.sort() ;
-  return new RooArgSet(tmp) ;
+  parList->sort();
+  return parList;
 }
 
 
