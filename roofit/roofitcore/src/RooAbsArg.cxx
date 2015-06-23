@@ -2034,7 +2034,8 @@ void RooAbsArg::registerCache(RooAbsCache& cache)
 void RooAbsArg::unRegisterCache(RooAbsCache& cache)
 {
   // Unregister a RooAbsCache. Called from the RooAbsCache destructor
-  std::remove(_cacheList.begin(), _cacheList.end(), &cache);
+  _cacheList.erase(std::remove(_cacheList.begin(), _cacheList.end(), &cache),
+	  _cacheList.end());
 }
 
 
