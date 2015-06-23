@@ -768,3 +768,4 @@ directory - this behavior is now implement by the default constructor.
  - Work around binutils issue (ld crash building llvm) on MacOSX with GCC (pull requests 64-66)
  - Work around MacOS X builds being version specific [ROOT-6966]
  - Handle relocation of ROOT and non-PCH-able glibc headers.
+ - Fix parsing of definition for forward declared enums [ROOT-7419]
