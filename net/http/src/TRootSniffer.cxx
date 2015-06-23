@@ -382,6 +382,8 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+ClassImp(TRootSniffer)
+
 //______________________________________________________________________________
 TRootSniffer::TRootSniffer(const char *name, const char *objpath) :
    TNamed(name, "sniffer of root objects"),
