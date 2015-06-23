@@ -769,3 +769,4 @@ directory - this behavior is now implement by the default constructor.
  - Work around MacOS X builds being version specific [ROOT-6966]
  - Handle relocation of ROOT and non-PCH-able glibc headers.
  - Fix parsing of definition for forward declared enums [ROOT-7419]
+ - Pass CXXFLAGS to the PCH generator, to ensure platform consistency.
