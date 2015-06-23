@@ -721,7 +721,7 @@ Usage:
          */
          TCHAR *filename = argv[arg];
          TCHAR path[2048];
-         size_t i = strlen(filename);
+         __int64 i = (__int64)strlen(filename);
          i--;
          while( filename[i] != '\\' && filename[i] != '/'  && i >=0) i--;
          do
