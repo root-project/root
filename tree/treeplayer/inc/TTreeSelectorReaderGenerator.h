@@ -28,9 +28,26 @@
 #include "TString.h"
 #endif
 
+class TBranch;
+class TLeaf;
 class TTree;
 
 namespace ROOT {
+   
+   class TTreeReaderDescriptor : public TObject {
+   public:
+      enum ReaderType { kValue, kArray };
+      ReaderType fType;
+      TString fDataType;
+      TString fName;
+      TString fBranchName;
+      
+      TTreeReaderDescriptor(ReaderType type, TString dataType, TString name, TString branchName) : 
+         fType(type),
+         fDataType(dataType),
+         fName(name),
+         fBranchName(branchName) { }
+   };
 
    class TTreeSelectorReaderGenerator
    {
@@ -38,8 +55,12 @@ namespace ROOT {
       TString  fClassname;     // Class name of the selector
       UInt_t   fMaxUnrolling;  // Depth of unrolling for non-split classes
       TList    fListOfHeaders; // List of included headers
+      TList    fListOfReaders; // List of readers
       
       void   AddHeader(TClass *cl);
+      void   AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName);
+      UInt_t AnalyzeOldBranch(TBranch *branch, UInt_t level);
+      UInt_t AnalyzeOldLeaf(TLeaf *leaf);
       
       void   AnalyzeTree(TTree *tree);
       void   WriteSelector();

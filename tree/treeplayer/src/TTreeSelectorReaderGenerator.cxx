@@ -14,6 +14,10 @@
 
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TError.h"
+#include "TLeaf.h"
+#include "TLeafC.h"
+#include "TLeafObject.h"
 #include "TTree.h"
 #include "TVirtualCollectionProxy.h"
 
@@ -138,6 +142,138 @@ namespace ROOT {
       }
    }
    
+   
+   void TTreeSelectorReaderGenerator::AddReader(TTreeReaderDescriptor::ReaderType type, TString dataType, TString name, TString branchName)
+   {
+      fListOfReaders.Add( new TTreeReaderDescriptor(type, dataType, name, branchName) );
+      printf("Added reader: TTreeReader%s<%s> %s (branch: %s)\n", type == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array",
+                                                                  dataType.Data(),
+                                                                  name.Data(),
+                                                                  branchName.Data());
+   }
+   
+   UInt_t TTreeSelectorReaderGenerator::AnalyzeOldBranch(TBranch *branch, UInt_t level)
+   {
+      // Analyze branch and add the variables found.
+      // The number of analyzed sub-branches is returned.
+      
+      UInt_t extraLookedAt = 0;
+      TString prefix;
+
+      TString branchName = branch->GetName();
+
+      TObjArray *leaves = branch->GetListOfLeaves();
+      Int_t nleaves = leaves ? leaves->GetEntriesFast() : 0;
+      
+      if (nleaves>1) {
+         // TODO: implement this
+      } else {
+         TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(0);
+         extraLookedAt += AnalyzeOldLeaf(leaf);
+      }
+      
+      return extraLookedAt;
+   }
+   
+   UInt_t TTreeSelectorReaderGenerator::AnalyzeOldLeaf(TLeaf *leaf)
+   {
+      // Analyze the leaf and add the variables found.
+      
+      if (leaf->IsA()==TLeafObject::Class()) {
+         Error("AnalyzeOldLeaf","TLeafObject not supported yet");
+         return 0;
+      }
+      
+      TString leafTypeName = leaf->GetTypeName();
+      Int_t pos = leafTypeName.Last('_');
+      if (pos != -1) leafTypeName.Remove(pos);
+      
+      // Analyze dimensions
+      UInt_t dim = 0;
+      std::vector<Int_t> maxDim;
+      
+      TString dimensions;
+      TString temp = leaf->GetName();
+      pos = temp.Index("[");
+      if (pos != -1) {
+         if (pos) temp.Remove(0, pos);
+         dimensions.Append(temp);
+      }
+      temp = leaf->GetTitle();
+      pos = temp.Index("[");
+      if (pos != -1) {
+         if (pos) temp.Remove(0, pos);
+         dimensions.Append(temp);
+      }
+
+      Int_t dimlen = dimensions.Length();
+
+      if (dimlen) {
+         const char *current = dimensions.Data();
+
+         Int_t index;
+         Int_t scanindex ;
+         while (current) {
+            current++;
+            if (current[0] == ']') {
+               maxDim.push_back(-1); // maxDim[dim] = -1; // Loop over all elements;
+            } else {
+               scanindex = sscanf(current,"%d",&index);
+               if (scanindex) {
+                  maxDim.push_back(index); // maxDim[dim] = index;
+               } else {
+                  maxDim.push_back(-2); // maxDim[dim] = -2; // Index is calculated via a variable.
+               }
+            }
+            dim ++;
+            current = (char*)strstr( current, "[" );
+         }
+      }
+      
+      if (dim == 0 && leaf->IsA() == TLeafC::Class()) {
+         dim = 1; // For C style strings
+      }
+      
+      TTreeReaderDescriptor::ReaderType type;
+      TString dataType;
+      switch (dim) {
+         case 0: {
+            type = TTreeReaderDescriptor::ReaderType::kValue;
+            dataType = leafTypeName;
+            break;
+         }
+         case 1: {
+            type = TTreeReaderDescriptor::ReaderType::kArray;
+            dataType = leafTypeName;
+            break;
+         }
+         default: {
+            // TODO: transform this
+            /*type = "TArrayProxy<";
+            for(Int_t ind = dim - 2; ind > 0; --ind) {
+               type += "TMultiArrayType<";
+            }
+            type += "TArrayType<";
+            type += leaf->GetTypeName();
+            type += ",";
+            type += maxDim[dim-1];
+            type += "> ";
+            for(Int_t ind = dim - 2; ind > 0; --ind) {
+               type += ",";
+               type += maxDim[ind];
+               type += "> ";
+            }
+            type += ">";*/
+            break;
+         }
+      }
+      
+      
+      AddReader(type, dataType, leaf->GetName(), leaf->GetBranch()->GetName());
+      
+      return 0;
+   }
+   
    void TTreeSelectorReaderGenerator::AnalyzeTree(TTree *tree)
    {
       // Analyze tree.
@@ -166,13 +302,13 @@ namespace ROOT {
          if (branch->GetListOfBranches()->GetEntries() == 0) { // Branch is non-splitted
             
             if (cl) { // Non-split object
-               
+               // TODO: implement this
             } else { // Top-level RAW type
-               
+               AnalyzeOldBranch(branch, 0);
             }
          
          } else { // Branch is splitted
-            
+            // TODO: implement this
          }
       }
       
