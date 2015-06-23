@@ -200,12 +200,15 @@ TCivetweb::~TCivetweb()
 Bool_t TCivetweb::Create(const char *args)
 {
    // Creates embedded civetweb server
-   // As argument, http port should be specified in form "8090"
-   // One could provide extra parameters after '?' (like URL parameters)
+   // As main argument, http port should be specified like "8090".
+   // Or one can provide combination of ipaddress and portnumber like 127.0.0.1:8090
+   // Extra parameters like in URL string could be specified after '?' mark:
    //    thrds=N   - there N is number of threads used by the civetweb (default is 5)
-   //    top=name  - configure top name, visible at the web browser
+   //    top=name  - configure top name, visible in the web browser
    //    auth_file=filename  - authentication file name, created with htdigets utility
    //    auth_domain=domain   - authentication domain
+   //    loopback  - bind specified port to loopback 127.0.0.1 address
+   //    debug  - enable debug mode, server always returns html page with request info
 
    fCallbacks = malloc(sizeof(struct mg_callbacks));
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
@@ -220,7 +223,7 @@ Bool_t TCivetweb::Create(const char *args)
 
       // first extract port number
       sport = "";
-      while ((*args != 0) && (*args >= '0') && (*args <= '9'))
+      while ((*args != 0) && (*args != '?'))
          sport.Append(*args++);
 
       // than search for extra parameters
@@ -245,11 +248,14 @@ Bool_t TCivetweb::Create(const char *args)
             if (adomain != 0) auth_domain = adomain;
 
             if (url.HasOption("debug")) fDebug = kTRUE;
+
+            if (url.HasOption("loopback") && (sport.Index(":")==kNPOS))
+               sport = TString("127.0.0.1:") + sport;
          }
       }
    }
 
-   const char *options[100];
+   const char *options[10];
    int op(0);
 
    Info("Create", "Starting HTTP server on port %s", sport.Data());
