@@ -132,6 +132,15 @@ With *SNIFF* tag in ClassDef() comments one could expose different properties,
 which than exposed by the TRootSniffer to the client with h.json requests.
 Such possibility ease implementation of client-side code for custom classes.
 
+Allow to bind http port with loopback address.
+This restrict access to http server only from localhost.
+One could either specify 'loopback' option in constructor:
+    new THttpServer("http:8080?loopback")
+or in clear text specify IP address to which http socket should be bind:
+    new THttpServer("http:127.0.0.1:8080")
+If host has several network interfaces, one could select one for binding:
+    new THttpServer("http:192.168.1.17:8080")
+
 
 ## GUI Libraries
 
