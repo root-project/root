@@ -1570,6 +1570,15 @@
       if (value && (value > draw_g.property('text_factor'))) draw_g.property('text_factor', value);
    }
 
+   JSROOT.TObjectPainter.prototype.GetBoundarySizes = function(elem) {
+      // getBBox does not work in mozilla when object is not displayed or not visisble :(
+      // getBoundingClientRect() returns wrong sizes for MathJax
+      // are there good solution?
+      var box = elem.getBoundingClientRect(); // works always, but returns sometimes wrong results
+      if (parseInt(box.width) > 0) box = elem.getBBox(); // works only for visisble
+      return { width : parseInt(box.width), height : parseInt(box.height) };
+   }
+
    JSROOT.TObjectPainter.prototype.FinishTextDrawing = function(draw_g) {
 
       if (!draw_g) draw_g = this.draw_g;
@@ -1620,10 +1629,9 @@
          fo_g.append(function() { return vvv.node(); });
 
          if (fo_g.property('_scale')) {
-            var box = fo_g.node().getBBox(); // .getBoundingClientRect();
-            var real_w = parseInt(box.width), real_h = parseInt(box.height);
-            painter.TextScaleFactor(1.*real_w / parseInt(fo_g.attr('width')), draw_g);
-            painter.TextScaleFactor(1.*real_h / parseInt(fo_g.attr('height')), draw_g);
+            var box = painter.GetBoundarySizes(fo_g.node());
+            painter.TextScaleFactor(1.* box.width / parseInt(fo_g.attr('width')), draw_g);
+            painter.TextScaleFactor(1.* box.height / parseInt(fo_g.attr('height')), draw_g);
          }
       });
 
@@ -1639,29 +1647,28 @@
          var fo_g = d3.select(this);
          // only direct parent
          if (fo_g.node().parentNode !== draw_g.node()) return;
-         var box = fo_g.node().getBBox(); // .getBoundingClientRect();
-         var real_w = parseInt(box.width), real_h = parseInt(box.height);
+         var box = painter.GetBoundarySizes(fo_g.node());
          var align = fo_g.property('_align');
          var rotate = fo_g.property('_rotate');
          var fo_w = parseInt(fo_g.attr('width')), fo_h = parseInt(fo_g.attr('height'));
          var fo_x = parseInt(fo_g.attr('x')), fo_y = parseInt(fo_g.attr('y'));
 
          if (fo_g.property('_scale')) {
-            if (align[0] == 'middle') fo_x += (fo_w - real_w)/2; else
-            if (align[0] == 'end')    fo_x += (fo_w - real_w);
-            if (align[1] == 'middle') fo_y += (fo_h - real_h)/2; else
-            if (align[1] == 'top' && !rotate) fo_y += (fo_h - real_h); else
-            if (align[1] == 'bottom' && rotate) fo_y += (fo_h - real_h);
+            if (align[0] == 'middle') fo_x += (fo_w - box.width)/2; else
+            if (align[0] == 'end')    fo_x += (fo_w - box.width);
+            if (align[1] == 'middle') fo_y += (fo_h - box.height)/2; else
+            if (align[1] == 'top' && !rotate) fo_y += (fo_h - box.height); else
+            if (align[1] == 'bottom' && rotate) fo_y += (fo_h - box.height);
          } else {
-            if (align[0] == 'middle') fo_x -= real_w/2; else
-            if (align[0] == 'end')    fo_x -= real_w;
-            if (align[1] == 'middle') fo_y -= real_h/2; else
-            if (align[1] == 'bottom' && !rotate) fo_y -= real_h; else
-            if (align[1] == 'top' && rotate) fo_y -= real_h;
+            if (align[0] == 'middle') fo_x -= box.width/2; else
+            if (align[0] == 'end')    fo_x -= box.width;
+            if (align[1] == 'middle') fo_y -= box.height/2; else
+            if (align[1] == 'bottom' && !rotate) fo_y -= box.height; else
+            if (align[1] == 'top' && rotate) fo_y -= box.height;
          }
 
          fo_g.attr('x', fo_x).attr('y', fo_y)  // use x/y while transform used for rotation
-             .attr('width', real_w+10).attr('height', real_h+10)  // width and height required by Chrome
+             .attr('width', box.width+10).attr('height', box.height+10)  // width and height required by Chrome
              .attr('visibility', null);
       });
 
@@ -1733,16 +1740,15 @@
          if (middleline) txt.attr("dominant-baseline", "middle");
          if ((!scale) && (h==-270)) txt.attr("transform", "rotate(270, 0, 0)");
 
-         var box = txt.node().getBBox(); // .getBoundingClientRect();
-         var real_w = parseInt(box.width), real_h = parseInt(box.height);
+         var box = this.GetBoundarySizes(txt.node());
 
          if (scale) txt.classed('hidden_text',true).attr('opacity','0'); // hide rescale elements
 
-         if (real_w > draw_g.property('max_text_width')) draw_g.property('max_text_width', real_w);
-         if ((w>0) && scale) this.TextScaleFactor(real_w / w, draw_g);
-         if ((h>0) && scale) this.TextScaleFactor(real_h / h, draw_g);
+         if (box.width > draw_g.property('max_text_width')) draw_g.property('max_text_width', box.width);
+         if ((w>0) && scale) this.TextScaleFactor(1.*box.width / w, draw_g);
+         if ((h>0) && scale) this.TextScaleFactor(1.*box.height / h, draw_g);
 
-         return real_w;
+         return box.width;
       }
 
       w = Math.round(w); h = Math.round(h);
@@ -7234,7 +7240,9 @@
       this.h = null; // hierarchy
       this.files_monitoring = (frameid == null); // by default files monitored when nobrowser option specified
 
-      JSROOT.hpainter = this;
+      // remember only very first instance
+      if (JSROOT.hpainter == null)
+         JSROOT.hpainter = this;
    }
 
    JSROOT.HierarchyPainter.prototype = Object.create(JSROOT.TBasePainter.prototype);
@@ -7814,8 +7822,8 @@
                } else {
                   var frame = mdi.FindFrame(itemname, true);
                   d3.select(frame).html("");
-                  painter = h.draw(d3.select(frame).attr("id"), obj, drawopt);
                   mdi.ActivateFrame(frame);
+                  painter = h.draw(d3.select(frame).attr("id"), obj, drawopt);
                   h.enable_dropping(frame, itemname);
                }
             }
