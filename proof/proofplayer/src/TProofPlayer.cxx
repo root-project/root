@@ -1204,14 +1204,11 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       TPair *currentElem = 0;
       // The event loop on the worker
       Long64_t fst = -1, num;
-      TEntryList *enl = 0;
-      TEventList *evl = 0;
       Long_t maxproctime = -1;
       Bool_t newrun = kFALSE;
-      while ((fEvIter->GetNextPacket(fst, num, &enl, &evl) != -1) &&
+      while ((fEvIter->GetNextPacket(fst, num) != -1) &&
               !fSelStatus->TestBit(TStatus::kNotOk) &&
               fSelector->GetAbort() == TSelector::kContinue) {
-
          // This is needed by the inflate infrastructure to calculate
          // sleeping times
          SetBit(TProofPlayer::kIsProcessing);
@@ -1296,21 +1293,9 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             if (!(!fSelStatus->TestBit(TStatus::kNotOk) &&
                    fSelector->GetAbort() == TSelector::kContinue)) break;
 
-            // Set entry number; if data iteration we may need to test the entry or event lists
-            if (fEvIter->TestBit(TEventIter::kData)) {
-               if (enl){
-                  entry = enl->GetEntry(fst);
-               } else if (evl) {
-                  entry = evl->GetEntry(fst);
-               } else {
-                  entry = fst;
-               }
-               fst++;
-            } else {
-               entry = fst++;
-            }
-            // Pre-event processing
-            fEvIter->PreProcessEvent(entry);
+            // Get the netry number, taking into account entry or event lists
+            entry = fEvIter->GetEntryNumber(fst);
+            fst++;
 
             // Set the last entry
             TProofServ::SetLastEntry(entry);
