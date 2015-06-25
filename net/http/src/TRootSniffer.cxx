@@ -23,6 +23,7 @@
 #include "TLeaf.h"
 #include "TClass.h"
 #include "TMethod.h"
+#include "TFunction.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TDataMember.h"
@@ -1249,7 +1250,9 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
 
    const char *method_name = url.GetValueFromOptions("method");
    TString prototype = DecodeUrlOptionValue(url.GetValueFromOptions("prototype"), kTRUE);
+   TString funcname = DecodeUrlOptionValue(url.GetValueFromOptions("func"), kTRUE);
    TMethod *method = 0;
+   TFunction *func = 0;
    if (method_name != 0) {
       if (prototype.Length() == 0) {
          if (debug) debug->Append(TString::Format("Search for any method with name \'%s\'\n", method_name));
@@ -1260,23 +1263,43 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
       }
    }
 
-   if (method == 0) {
+   if (method != 0) {
+      if (debug) debug->Append(TString::Format("Method: %s\n", method->GetPrototype()));
+   } else {
+      if (funcname.Length() > 0) {
+         if (prototype.Length() == 0) {
+            if (debug) debug->Append(TString::Format("Search for any function with name \'%s\'\n", funcname.Data()));
+            func = gROOT->GetGlobalFunction(funcname);
+         } else {
+            if (debug) debug->Append(TString::Format("Search for function \'%s\' with prototype \'%s\'\n", funcname.Data(), prototype.Data()));
+            func = gROOT->GetGlobalFunctionWithPrototype(funcname, prototype);
+         }
+      }
+
+      if (func != 0) {
+         if (debug) debug->Append(TString::Format("Function: %s\n", func->GetPrototype()));
+      }
+   }
+
+   if ((method == 0) && (func==0)) {
       if (debug) debug->Append("Method not found\n");
       return debug != 0;
    }
 
-   if (debug) debug->Append(TString::Format("Method: %s\n", method->GetPrototype()));
-
    if ((fReadOnly && (fCurrentRestrict == 0)) || (fCurrentRestrict == 1)) {
-      if (fCurrentAllowedMethods.Index(method_name) == kNPOS) {
+      if ((method!=0) && (fCurrentAllowedMethods.Index(method_name) == kNPOS)) {
          if (debug) debug->Append("Server runs in read-only mode, method cannot be executed\n");
+         return debug != 0;
+      } else
+      if ((func!=0) && (fCurrentAllowedMethods.Index(funcname) == kNPOS)) {
+         if (debug) debug->Append("Server runs in read-only mode, function cannot be executed\n");
          return debug != 0;
       } else {
          if (debug) debug->Append("For that special method server allows access even read-only mode is specified\n");
       }
    }
 
-   TList *args = method->GetListOfMethodArgs();
+   TList *args = method ? method->GetListOfMethodArgs() : func->GetListOfMethodArgs();
 
    TList garbage;
    garbage.SetOwner(kTRUE); // use as garbage collection
@@ -1304,8 +1327,13 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
          val = sval.Data();
       }
 
-      // process several arguments which are specific for post requests
+      if ((val!=0) && (strcmp(val,"_this_")==0)) {
+         // special case - object itself is used as argument
+         sval.Form("(%s*)0x%lx", obj_cl->GetName(), (long unsigned) obj_ptr);
+         val = sval.Data();
+      } else
       if ((val!=0) && (fCurrentArg!=0) && (fCurrentArg->GetPostData()!=0)) {
+         // process several arguments which are specific for post requests
          if (strcmp(val,"_post_object_xml_")==0) {
             // post data has extra 0 at the end and can be used as null-terminated string
             post_obj = TBufferXML::ConvertFromXML((const char*) fCurrentArg->GetPostData());
@@ -1363,11 +1391,20 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
       }
    }
 
-   if (debug) debug->Append(TString::Format("Calling obj->%s(%s);\n", method_name, call_args.Data()));
+   TMethodCall *call = 0;
 
-   TMethodCall call(obj_cl, method_name, call_args.Data());
+   if (method!=0) {
+      call = new TMethodCall(obj_cl, method_name, call_args.Data());
+      if (debug) debug->Append(TString::Format("Calling obj->%s(%s);\n", method_name, call_args.Data()));
 
-   if (!call.IsValid()) {
+   } else {
+      call = new TMethodCall(funcname.Data(), call_args.Data());
+      if (debug) debug->Append(TString::Format("Calling %s(%s);\n", funcname.Data(), call_args.Data()));
+   }
+
+   garbage.Add(call);
+
+   if (!call->IsValid()) {
       if (debug) debug->Append("Fail: invalid TMethodCall\n");
       return debug != 0;
    }
@@ -1385,24 +1422,33 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
       garbage.Add(resbuf);
    }
 
-   switch (call.ReturnType()) {
+   switch (call->ReturnType()) {
       case TMethodCall::kLong: {
             Long_t l(0);
-            call.Execute(obj_ptr, l);
+            if (method)
+               call->Execute(obj_ptr, l);
+            else
+               call->Execute(l);
             if (resbuf) resbuf->WriteLong(l);
                    else res.Form("%ld", l);
             break;
          }
       case TMethodCall::kDouble : {
             Double_t d(0.);
-            call.Execute(obj_ptr, d);
+            if (method)
+               call->Execute(obj_ptr, d);
+            else
+               call->Execute(d);
             if (resbuf) resbuf->WriteDouble(d);
                    else res.Form(TBufferJSON::GetFloatFormat(), d);
             break;
          }
       case TMethodCall::kString : {
             char *txt(0);
-            call.Execute(obj_ptr, &txt);
+            if (method)
+               call->Execute(obj_ptr, &txt);
+            else
+               call->Execute(0, &txt); // here 0 is artificial, there is no proper signature
             if (txt != 0) {
                if (resbuf) resbuf->WriteString(txt);
                       else res.Form("\"%s\"", txt);
@@ -1410,7 +1456,7 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
             break;
          }
       case TMethodCall::kOther : {
-            std::string ret_kind = method->GetReturnTypeNormalizedName();
+            std::string ret_kind = func ? func->GetReturnTypeNormalizedName() : method->GetReturnTypeNormalizedName();
             if ((ret_kind.length() > 0) && (ret_kind[ret_kind.length() - 1] == '*')) {
                ret_kind.resize(ret_kind.length() - 1);
                ret_cl = gROOT->GetClass(ret_kind.c_str(), kTRUE, kTRUE);
@@ -1418,16 +1464,25 @@ Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t res
 
             if (ret_cl != 0) {
                Long_t l(0);
-               call.Execute(obj_ptr, l);
+               if (method)
+                  call->Execute(obj_ptr, l);
+               else
+                  call->Execute(l);
                if (l != 0) ret_obj = (void *) l;
             } else {
-               call.Execute(obj_ptr);
+               if (method)
+                  call->Execute(obj_ptr);
+               else
+                  call->Execute();
             }
 
             break;
          }
       case TMethodCall::kNone : {
-            call.Execute(obj_ptr);
+            if (method)
+               call->Execute(obj_ptr);
+            else
+               call->Execute();
             break;
          }
    }
