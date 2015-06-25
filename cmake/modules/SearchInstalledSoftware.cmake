@@ -509,16 +509,33 @@ endif()
 
 #---Check for FFTW3-------------------------------------------------------------------
 if(fftw3)
-  message(STATUS "Looking for FFTW3")
-  find_package(FFTW)
-  if(NOT FFTW_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "FFTW3 libraries not found and they are required (fftw3 option enabled)")
-    else()
-      message(STATUS "FFTW3 not found. Switching off fftw3 option")
-      set(fftw3 OFF CACHE BOOL "" FORCE)
+  if(NOT builtin_fftw3)
+    message(STATUS "Looking for FFTW3")
+    find_package(FFTW)
+    if(NOT FFTW_FOUND)
+      if(fail-on-missing)
+        message(FATAL_ERROR "FFTW3 libraries not found and they are required (fftw3 option enabled)")
+      else()
+        message(STATUS "FFTW3 not found. Set [environment] variable FFTW_DIR to point to your FFTW3 installation")
+        message(STATUS "                 Alternatively, you can also enable the option 'builtin_fftw3' to build FFTW3 internally'")
+        message(STATUS "                 For the time being switching OFF 'fftw3' option")
+        set(fftw3 OFF CACHE BOOL "" FORCE)
+      endif()
     endif()
   endif()
+endif()
+if(builtin_fftw3)
+  set(FFTW_VERSION 3.1.2)
+  message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
+  ExternalProject_Add(
+    FFTW3
+    URL http://service-spi.web.cern.ch/service-spi/external/tarFiles/fftw-${FFTW_VERSION}.tar.gz
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
+    BUILD_IN_SOURCE 1 )
+  set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
+  set(fftw3 ON CACHE BOOL "" FORCE)
 endif()
 
 #---Check for fitsio-------------------------------------------------------------------
@@ -580,8 +597,8 @@ endif()
 
 #---Check for Xrootd support---------------------------------------------------------
 if(xrootd)
-  message(STATUS "Looking for XROOTD")
   if(NOT builtin_xrootd)
+    message(STATUS "Looking for XROOTD")
     find_package(XROOTD)
     if(NOT XROOTD_FOUND)
       message(STATUS "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation")
