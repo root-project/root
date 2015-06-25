@@ -2965,9 +2965,6 @@
       return (this.pavetext['fName'] == "stats") && (this.pavetext['_typename'] == 'TPaveStats');
    }
 
-   JSROOT.Format = function(value, fmt) {
-   }
-
    JSROOT.TPavePainter.prototype.Format = function(value, fmt)
    {
       // method used to convert value to string according specified format
@@ -2983,7 +2980,8 @@
          if (!fmt) fmt = JSROOT.gStyle.FitFormat;
       } else
       if (fmt=="entries") {
-         return (value < 1e7) ? value.toFixed(0) : value.toExponential(7);
+         if (value < 1e9) return value.toFixed(0);
+         fmt = "14.7g";
       } else
       if (fmt=="last") {
          fmt = this['lastformat'];
@@ -3031,9 +3029,15 @@
          return value.toExponential(prec);
       }
 
-      var sg = value.toFixed(prec)
+      var sg = value.toFixed(prec);
 
       if (significance) {
+
+         // when using fixed representation, one could get 0.0
+         if ((value!=0) && (Number(sg)==0.) && (prec>0)) {
+            prec = 40; sg = value.toFixed(prec);
+         }
+
          var l = 0;
          while ((l<sg.length) && (sg.charAt(l) == '0' || sg.charAt(l) == '-' || sg.charAt(l) == '.')) l++;
 
@@ -5582,7 +5586,7 @@
                   var parerr = "";
                   if (f1.fParErrors!=null) {
                      parerr = stat.Format(f1.fParErrors[n],"last");
-                     if (parerr=="0" || parerr=="0.0") parerr = stat.Format(f1.fParErrors[n],"4.2g");
+                     if ((Number(parerr)==0.0) && (f1.fParErrors[n]!=0.0)) parerr = stat.Format(f1.fParErrors[n],"4.2g");
                   }
 
                   if ((print_ferrors > 0) && (parerr.length>0))
