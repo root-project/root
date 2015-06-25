@@ -272,7 +272,7 @@ Bool_t TCivetweb::Create(const char *args)
 
       // first extract port number
       sport = "";
-      while ((*args != 0) && (*args != '?'))
+      while ((*args != 0) && (*args != '?') && (*args != '/'))
          sport.Append(*args++);
 
       // than search for extra parameters
