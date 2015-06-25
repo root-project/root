@@ -743,6 +743,7 @@ Changes will be part of the future v6.04/02.
 ### Core
 
  - Fixed support for dictionary for class with inlined namespace.
+ - Do not treat Mac OSX's "cl_kernels" dylinker entry as a library [ROOT-7436]
 
 #### TDirectory::TContext
 
