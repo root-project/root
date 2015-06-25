@@ -16,6 +16,7 @@ if(NOT ssl)
 else()
   set(ssllib ${OPENSSL_LIBRARIES})
   add_definitions(-DR__SSL)
+  include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
 
 if(NOT ssl OR NOT CRYPTLIBS)
