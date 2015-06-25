@@ -25,6 +25,7 @@
 #include "TFormula.h"
 #include <cassert>
 #include <iostream>
+#include <unordered_map>
 
 using namespace std;
 
@@ -137,9 +138,13 @@ End_Html
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 // prefix used for function name passed to Cling
-static const TString gNamePrefix = "T__";
+static const TString gNamePrefix = "TFormula__";
 // function index number used to append in cling name to avoid a clash
 static std::atomic<unsigned int> gFormulaAtomicIndex(0);
+
+// static map of function pointers and expressions
+//static std::unordered_map<std::string,  TInterpreter::CallFuncIFacePtr_t::Generic_t> gClingFunctions = std::unordered_map<TString,  TInterpreter::CallFuncIFacePtr_t::Generic_t>();
+static std::unordered_map<std::string,  void *> gClingFunctions = std::unordered_map<std::string,  void * >();
 
 Bool_t TFormula::IsOperator(const char c)
 {
@@ -321,8 +326,7 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   
    if (!fFormula.IsNull() ) { 
       PreProcessFormula(fFormula);
 
-      fClingInput = fFormula;
-      PrepareFormula(fClingInput);
+      PrepareFormula(fFormula);
    }
 
 }
@@ -353,8 +357,7 @@ TFormula::TFormula(const TFormula &formula) : TNamed(formula.GetName(),formula.G
    }
 
    PreProcessFormula(fFormula);
-   fClingInput = fFormula;
-   PrepareFormula(fClingInput);
+   PrepareFormula(fFormula);
 }
 
 TFormula& TFormula::operator=(const TFormula &rhs)
@@ -396,9 +399,8 @@ Int_t TFormula::Compile(const char *expression)
    // prepare the formula for Cling
    printf("compile: processing formula %s\n",fFormula.Data() );
    PreProcessFormula(fFormula);
-   fClingInput = fFormula;
    // pass formula in CLing
-   bool ret = PrepareFormula(fClingInput);
+   bool ret = PrepareFormula(fFormula);
 
    return (ret) ? 0 : 1;      
 }
@@ -1155,12 +1157,17 @@ void TFormula::PreProcessFormula(TString &formula)
 }
 Bool_t TFormula::PrepareFormula(TString &formula)
 {
+   // prepare the formula to be executed
+   // normally is called with fFormula
+   
    fFuncs.clear();
    fReadyToExecute = false;
    ExtractFunctors(formula);
 
    // update the expression with the new formula
    fFormula = formula;
+   // save formula to parse variable and parameters for Cling
+   fClingInput = formula; 
    // replace all { and }
    fFormula.ReplaceAll("{","");
    fFormula.ReplaceAll("}","");
@@ -1171,7 +1178,8 @@ Bool_t TFormula::PrepareFormula(TString &formula)
    fFuncs.sort();
    fFuncs.unique();
 
-   ProcessFormula(formula);
+   // use inputFormula for Cling
+   ProcessFormula(fClingInput);
 
    // for pre-defined functions (need after processing)
    if (fNumber != 0) SetPredefinedParamNames();
@@ -1377,7 +1385,7 @@ void TFormula::ProcessFormula(TString &formula)
    //*-*    it inputs C++ code of formula into cling, and sets flag that formula is ready to evaluate.
    //*-*
 
-   //std::cout << "Begin: formula is " << formula << " list of functors " << fFuncs.size() << std::endl;
+   // std::cout << "Begin: formula is " << formula << " list of functors " << fFuncs.size() << std::endl;
 
    for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
    {
@@ -1599,55 +1607,66 @@ void TFormula::ProcessFormula(TString &formula)
       }
       Bool_t hasBoth = hasVariables && hasParameters;
       Bool_t inputIntoCling = (formula.Length() > 0);
-      TString argumentsPrototype =
-         TString::Format("%s%s%s",(hasVariables ? "Double_t *x" : ""), (hasBoth ? "," : ""),
+      if (inputIntoCling) {
+
+         // save copy of inputFormula in a std::strig for the unordered map
+         // and also formula is same as FClingInput typically and it will be modified 
+         std::string inputFormula = std::string(formula); 
+
+         
+         // valid input formula - try to put into Cling
+         TString argumentsPrototype =
+            TString::Format("%s%s%s",(hasVariables ? "Double_t *x" : ""), (hasBoth ? "," : ""),
                         (hasParameters  ? "Double_t *p" : ""));
 
-      // hack for function names created with ++ in doing linear fitter. In this case use a different name
-      // shuld make to all the case where special operator character are use din the name
-      if (fClingName.Contains("++") )
-         fClingName = gNamePrefix + TString("linearFunction_of_") + fClingName;
-      else
-         fClingName = gNamePrefix + fName;
 
-      fClingName.ReplaceAll(" ",""); // remove also white space from function name;
-      // remova also parenthesis
-      fClingName.ReplaceAll("(","_");
-      fClingName.ReplaceAll(")","_");
-      // remove also operators
-      fClingName.ReplaceAll("++","_and_"); // for linear function
-      fClingName.ReplaceAll("+","_plus_");
-      fClingName.ReplaceAll("-","_minus_");
-      fClingName.ReplaceAll("*","_times_");
-      fClingName.ReplaceAll("/","_div_");
+         // set the name for Cling using the hash_function
+         fClingName = gNamePrefix; 
 
-      // Add also an increasing index to function name to make it unique.
-      fClingName = TString::Format("%s__id%d",fClingName.Data(),  gFormulaAtomicIndex++);
+         // check if formula exist already in the map
+         R__LOCKGUARD2(gROOTMutex);
 
-      TString oldClingInput = fClingInput; 
-      fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(),argumentsPrototype.Data(),formula.Data());
+         auto funcit = gClingFunctions.find(inputFormula);
 
-      // check in case of a change if need to re-initialize
-      if (fClingInitialized) {
-         if (oldClingInput == fClingInput)
+         if (funcit != gClingFunctions.end() ) {
+            fFuncPtr = (  TInterpreter::CallFuncIFacePtr_t::Generic_t) funcit->second;
+            fClingInitialized = true; 
             inputIntoCling = false;
-         else
-            fClingInitialized = false;
-      }
+         }
+         
+         // set the cling name using hash of the static formulae map
+         auto hasher = gClingFunctions.hash_function();
+         fClingName = TString::Format("%s__id%zu",gNamePrefix.Data(),(unsigned long) hasher(inputFormula) );
 
-      //std::cout << "cling input " << fClingInput << std::endl;
+         fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(),argumentsPrototype.Data(),inputFormula.c_str());
 
-      if(inputIntoCling)
-      {
-         InputFormulaIntoCling();
-      }
-      else
-      {
-         fAllParametersSetted = true;
-         fClingInitialized = true;
-      }
+         // this is not needed (maybe can be re-added in case of recompilation of identical expressions
+         // // check in case of a change if need to re-initialize
+         // if (fClingInitialized) {
+         //    if (oldClingInput == fClingInput)
+         //       inputIntoCling = false;
+         //    else
+         //       fClingInitialized = false;
+         // }
 
+
+         if(inputIntoCling) {
+            InputFormulaIntoCling();
+            if (fClingInitialized) {
+               // if Cling has been succesfully initialized
+               // dave function ptr in the static map 
+               R__LOCKGUARD2(gROOTMutex);
+               gClingFunctions.insert ( std::make_pair ( inputFormula, (void*) fFuncPtr) );
+            }
+            
+         }
+         else {
+            fAllParametersSetted = true;
+            fClingInitialized = true;
+         }
+      }
    }
+      
 
    // IN case of a Cling Error check components wich are not found in Cling
    // check that all formula components arematched otherwise emit an error
@@ -2540,8 +2559,7 @@ void TFormula::Streamer(TBuffer &b)
 
          //std::cout << "Streamer::after pre-process the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
 
-         fClingInput = fFormula;
-         PrepareFormula(fClingInput);
+         PrepareFormula(fFormula);
 
          //std::cout << "Streamer::after prepared " << fClingInput << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
 
