@@ -6,9 +6,18 @@
 #include "../civetweb/civetweb.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "THttpServer.h"
 #include "TUrl.h"
+
+TCivetweb* TCivetweb::fTemp = 0;
+
+static int log_message_handler(const struct mg_connection *conn, const char *message)
+{
+   return TCivetweb::ProcessLogMessage(mg_get_request_info((struct mg_connection *)conn)->user_data, message);
+}
+
 
 static int begin_request_handler(struct mg_connection *conn)
 {
@@ -182,7 +191,8 @@ TCivetweb::TCivetweb() :
    fCtx(0),
    fCallbacks(0),
    fTopName(),
-   fDebug(kFALSE)
+   fDebug(kFALSE),
+   fStartError(kFALSE)
 {
    // constructor
 }
@@ -196,6 +206,43 @@ TCivetweb::~TCivetweb()
    if (fCallbacks != 0) free(fCallbacks);
    fCtx = 0;
    fCallbacks = 0;
+}
+
+//______________________________________________________________________________
+Int_t TCivetweb::ProcessLogMessage(void *instance, const char* message)
+{
+   // static method to process log messages from civetweb server
+   // introduced to resolve civetweb problem, that messages cannot be delivered directly
+   // during mg_start() call
+
+   TCivetweb* engine = (TCivetweb*) instance;
+
+   if (engine==0) engine = fTemp;
+
+   if (engine) return engine->ProcessLog(message);
+
+   // provide debug output
+   if (gDebug>0) printf("<TCivetweb::Log> %s\n",message);
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TCivetweb::ProcessLog(const char* message)
+{
+   // process civetweb log message, used to detect critical errors
+
+   Bool_t critical = kFALSE;
+
+   if ((strstr(message,"cannot bind to")!=0) &&
+       (strstr(message,"(Address already in use)")!=0)) {
+      fStartError = kTRUE;
+      critical = kTRUE;
+   }
+
+   if (critical || (gDebug>0)) Error("Log", message);
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -215,10 +262,10 @@ Bool_t TCivetweb::Create(const char *args)
    fCallbacks = malloc(sizeof(struct mg_callbacks));
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
    ((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
-
+   ((struct mg_callbacks *) fCallbacks)->log_message = log_message_handler;
    TString sport = "8080";
    TString num_threads = "5";
-   TString auth_file, auth_domain;
+   TString auth_file, auth_domain, log_file;
 
    // extract arguments
    if ((args != 0) && (strlen(args) > 0)) {
@@ -240,6 +287,9 @@ Bool_t TCivetweb::Create(const char *args)
             const char *top = url.GetValueFromOptions("top");
             if (top != 0) fTopName = top;
 
+            const char *log = url.GetValueFromOptions("log");
+            if (log != 0) log_file = log;
+
             Int_t thrds = url.GetIntValueFromOptions("thrds");
             if (thrds > 0) num_threads.Form("%d", thrds);
 
@@ -257,7 +307,7 @@ Bool_t TCivetweb::Create(const char *args)
       }
    }
 
-   const char *options[10];
+   const char *options[20];
    int op(0);
 
    Info("Create", "Starting HTTP server on port %s", sport.Data());
@@ -274,10 +324,22 @@ Bool_t TCivetweb::Create(const char *args)
       options[op++] = auth_domain.Data();
    }
 
+   if (log_file.Length() > 0) {
+      options[op++] = "error_log_file";
+      options[op++] = log_file.Data();
+   }
+
    options[op++] = 0;
+
+   // workaround for civetweb
+   if (fTemp==0) fTemp = this;
 
    // Start the web server.
    fCtx = mg_start((struct mg_callbacks *) fCallbacks, this, options);
+
+   if (fTemp==this) fTemp = 0;
+
+   if (fStartError) return kFALSE;
 
    return kTRUE;
 }
