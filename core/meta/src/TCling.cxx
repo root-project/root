@@ -2581,6 +2581,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || !strncmp(filename, "/System/Library/Frameworks/", 27)
        || !strncmp(filename, "/System/Library/PrivateFrameworks/", 34)
        || !strncmp(filename, "/System/Library/CoreServices/", 29)
+       || !strcmp(filename, "cl_kernels") // yepp, no directory
        || strstr(filename, "/usr/lib/libSystem")
        || strstr(filename, "/usr/lib/libstdc++")
        || strstr(filename, "/usr/lib/libicucore")
