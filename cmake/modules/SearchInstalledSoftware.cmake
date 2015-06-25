@@ -532,6 +532,7 @@ if(builtin_fftw3)
     URL http://service-spi.web.cern.ch/service-spi/external/tarFiles/fftw-${FFTW_VERSION}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
+    BUILD_COMMAND make CFLAGS=-fPIC
     BUILD_IN_SOURCE 1 )
   set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)

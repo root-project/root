@@ -34,14 +34,16 @@ find_library(FASTCGI_LIBRARY NAMES fcgi PATHS
 mark_as_advanced(FASTCGI_INCLUDE_DIR FASTCGI_LIBRARY)
 
 if(FASTCGI_INCLUDE_DIR AND FASTCGI_LIBRARY)
-include_directories(${FASTCGI_INCLUDE_DIR})
+  include_directories(${FASTCGI_INCLUDE_DIR})
 endif()
 
-include_directories(${OPENSSL_INCLUDE_DIR})
+if(ssl)
+  include_directories(${OPENSSL_INCLUDE_DIR})
+endif()
 
 if(NOT FASTCGI_INCLUDE_DIR OR NOT FASTCGI_LIBRARY)
-set(FASTCGI_LIBRARY "")
-add_definitions(-DHTTP_WITHOUT_FASTCGI)
+  set(FASTCGI_LIBRARY "")
+  add_definitions(-DHTTP_WITHOUT_FASTCGI)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__RHTTP ${headers} MODULE RHTTP LINKDEF LinkDef.h)

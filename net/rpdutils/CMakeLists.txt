@@ -28,7 +28,9 @@ if(shadowpw)
   add_definitions(-DR__SHADOWPW)
 endif()
 
-include_directories(${OPENSSL_INCLUDE_DIR})
+if(ssl)
+  include_directories(${OPENSSL_INCLUDE_DIR})
+endif()
 
 #---static library needed for rootd and proofd --------------------------------------------
 add_library(rpdutil STATIC ${rpdutilsrcs})
