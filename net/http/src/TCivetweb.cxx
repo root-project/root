@@ -240,7 +240,7 @@ Int_t TCivetweb::ProcessLog(const char* message)
       critical = kTRUE;
    }
 
-   if (critical || (gDebug>0)) Error("Log", message);
+   if (critical || (gDebug>0)) Error("Log", "%s", message);
 
    return 0;
 }
