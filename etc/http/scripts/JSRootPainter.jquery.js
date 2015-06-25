@@ -680,11 +680,10 @@
       var cnt = -1;
       var active = $('#' + topid).tabs("option", "active");
 
-      $('#' + topid + ' .tabs_draw').each(function() {
-         // check if only_visible specified
-         if (only_visible && (cnt++ != active)) return;
-
-         userfunc($(this).get(0));
+      $('#' + topid + '> .tabs_draw').each(function() {
+         cnt++;
+         if (!only_visible || (cnt == active))
+            userfunc($(this).get(0));
       });
    }
 
