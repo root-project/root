@@ -39,6 +39,8 @@ endif()
 
 if(ssl)
   include_directories(${OPENSSL_INCLUDE_DIR})
+else()
+  set(OPENSSL_LIBRARIES)
 endif()
 
 if(NOT FASTCGI_INCLUDE_DIR OR NOT FASTCGI_LIBRARY)
