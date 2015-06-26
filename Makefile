@@ -1049,6 +1049,9 @@ endif
 	-@(mv -f tutorials/mlp/mlpHiggs.root tutorials/mlp/mlpHiggs.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/quadp/stock.root tutorials/quadp/stock.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/proof/ntprndm.root tutorials/proof/ntprndm.root- >/dev/null 2>&1;true)
+	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_offset.root tutorials/tmva/data/toy_sigbkg_categ_offset.root- >/dev/null 2>&1;true)
+	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_varoff.root tutorials/tmva/data/toy_sigbkg_categ_varoff.root- >/dev/null 2>&1;true)
+	-@(mv -f tutorials/tmva/tmva_logo.gif tutorials/tmva/tmva_logo.gif- >/dev/null 2>&1;true)
 	@(find tutorials -name "files" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true)
@@ -1063,10 +1066,13 @@ endif
 	-@(mv -f tutorials/mlp/mlpHiggs.root- tutorials/mlp/mlpHiggs.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/proof/ntprndm.root- tutorials/proof/ntprndm.root >/dev/null 2>&1;true)
+	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_offset.root- tutorials/tmva/data/toy_sigbkg_categ_offset.root >/dev/null 2>&1;true)
+	-@(mv -f tutorials/tmva/data/toy_sigbkg_categ_varoff.root- tutorials/tmva/data/toy_sigbkg_categ_varoff.root >/dev/null 2>&1;true)
+	-@(mv -f tutorials/tmva/tmva_logo.gif- tutorials/tmva/tmva_logo.gif >/dev/null 2>&1;true)
 	@rm -f $(ROOTA) $(PROOFSERVA) $(ROOTALIB)
 	@rm -f README/ChangeLog build/dummy.d
-	@rm -rf README/ReleaseNotes
 	@rm -f etc/gitinfo.txt
+	@(find README/ReleaseNotes -name *.html -exec rm -f {} \; >/dev/null 2>&1;true)
 	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -path '*/interpreter/llvm/src' -prune -o -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
 	-@([ -d test ] && (cd test && $(MAKE) distclean); true)

@@ -100,6 +100,8 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+ClassImp(THttpServer)
+
 //______________________________________________________________________________
 THttpServer::THttpServer(const char *engine) :
    TNamed("http", "ROOT http server"),

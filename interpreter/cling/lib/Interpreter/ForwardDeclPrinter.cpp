@@ -150,7 +150,7 @@ namespace cling {
     return Out();
   }
 
-  void ForwardDeclPrinter::prettyPrintAttributes(Decl *D, std::string extra) {
+  void ForwardDeclPrinter::prettyPrintAttributes(Decl *D) {
 
     if (D->getSourceRange().isInvalid())
       return;
@@ -170,14 +170,20 @@ namespace cling {
     }
 
     SourceLocation spellingLoc = m_SMgr.getSpellingLoc(D->getLocStart());
-    // Get the include location.
+    // Walk up the include chain.
     PresumedLoc PLoc = m_SMgr.getPresumedLoc(spellingLoc);
-    SourceLocation InclLoc = PLoc.getIncludeLoc();
+    llvm::SmallVector<PresumedLoc, 16> PLocs;
+    while (true) {
+      if (!m_SMgr.getPresumedLoc(PLoc.getIncludeLoc()).isValid())
+        break;
+      PLocs.push_back(PLoc);
+      PLoc = m_SMgr.getPresumedLoc(PLoc.getIncludeLoc());
+    }
 
-    if (!m_SMgr.getPresumedLoc(InclLoc).isValid() /* declared in dictionary payload*/)
+    if (PLocs.empty() /* declared in dictionary payload*/)
        return;
 
-    clang::SourceLocation includeLoc = m_SMgr.getSpellingLoc(InclLoc);
+    clang::SourceLocation includeLoc = m_SMgr.getSpellingLoc(PLocs[PLocs.size() - 1].getIncludeLoc());
     bool invalid = true;
     const char* includeText = m_SMgr.getCharacterData(includeLoc, &invalid);
     assert(!invalid && "Invalid source data");
@@ -195,8 +201,6 @@ namespace cling {
 //    assert ( file.length() != 0 && "Filename Should not be blank");
     Out() << " __attribute__((annotate(\"$clingAutoload$"
           << llvm::StringRef(includeText, includeEnd - includeText);
-    if (!extra.empty())
-      Out() << " " << extra;
     Out() << "\"))) ";
   }
 
@@ -260,7 +264,7 @@ namespace cling {
     if (!m_Policy.SuppressSpecifiers && D->isModulePrivate())
       Out() << "__module_private__ ";
     Out() << "enum ";
-    prettyPrintAttributes(D,std::to_string(D->isFixed()));
+    prettyPrintAttributes(D);
     if (D->isScoped()) {
       if (D->isScopedUsingClassTag())
         Out() << "class ";

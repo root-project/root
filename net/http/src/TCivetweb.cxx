@@ -6,9 +6,24 @@
 #include "../civetweb/civetweb.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "THttpServer.h"
 #include "TUrl.h"
+
+static int log_message_handler(const struct mg_connection *conn, const char *message)
+{
+   TCivetweb* engine = (TCivetweb*) mg_get_request_info((struct mg_connection *)conn)->user_data;
+
+   if (engine) return engine->ProcessLog(message);
+
+   // provide debug output
+   if ((gDebug>0) || (strstr(message,"cannot bind to")!=0))
+      fprintf(stderr, "Error in <TCivetweb::Log> %s\n",message);
+
+   return 0;
+}
+
 
 static int begin_request_handler(struct mg_connection *conn)
 {
@@ -174,6 +189,8 @@ static int begin_request_handler(struct mg_connection *conn)
 //////////////////////////////////////////////////////////////////////////
 
 
+ClassImp(TCivetweb)
+
 //______________________________________________________________________________
 TCivetweb::TCivetweb() :
    THttpEngine("civetweb", "compact embedded http server"),
@@ -197,30 +214,43 @@ TCivetweb::~TCivetweb()
 }
 
 //______________________________________________________________________________
+Int_t TCivetweb::ProcessLog(const char* message)
+{
+   // process civetweb log message, can be used to detect critical errors
+
+   if (gDebug>0) Error("Log", "%s", message);
+
+   return 0;
+}
+
+//______________________________________________________________________________
 Bool_t TCivetweb::Create(const char *args)
 {
    // Creates embedded civetweb server
-   // As argument, http port should be specified in form "8090"
-   // One could provide extra parameters after '?' (like URL parameters)
+   // As main argument, http port should be specified like "8090".
+   // Or one can provide combination of ipaddress and portnumber like 127.0.0.1:8090
+   // Extra parameters like in URL string could be specified after '?' mark:
    //    thrds=N   - there N is number of threads used by the civetweb (default is 5)
-   //    top=name  - configure top name, visible at the web browser
+   //    top=name  - configure top name, visible in the web browser
    //    auth_file=filename  - authentication file name, created with htdigets utility
    //    auth_domain=domain   - authentication domain
+   //    loopback  - bind specified port to loopback 127.0.0.1 address
+   //    debug  - enable debug mode, server always returns html page with request info
 
    fCallbacks = malloc(sizeof(struct mg_callbacks));
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
    ((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
-
+   ((struct mg_callbacks *) fCallbacks)->log_message = log_message_handler;
    TString sport = "8080";
    TString num_threads = "5";
-   TString auth_file, auth_domain;
+   TString auth_file, auth_domain, log_file;
 
    // extract arguments
    if ((args != 0) && (strlen(args) > 0)) {
 
       // first extract port number
       sport = "";
-      while ((*args != 0) && (*args >= '0') && (*args <= '9'))
+      while ((*args != 0) && (*args != '?') && (*args != '/'))
          sport.Append(*args++);
 
       // than search for extra parameters
@@ -235,6 +265,9 @@ Bool_t TCivetweb::Create(const char *args)
             const char *top = url.GetValueFromOptions("top");
             if (top != 0) fTopName = top;
 
+            const char *log = url.GetValueFromOptions("log");
+            if (log != 0) log_file = log;
+
             Int_t thrds = url.GetIntValueFromOptions("thrds");
             if (thrds > 0) num_threads.Form("%d", thrds);
 
@@ -245,11 +278,14 @@ Bool_t TCivetweb::Create(const char *args)
             if (adomain != 0) auth_domain = adomain;
 
             if (url.HasOption("debug")) fDebug = kTRUE;
+
+            if (url.HasOption("loopback") && (sport.Index(":")==kNPOS))
+               sport = TString("127.0.0.1:") + sport;
          }
       }
    }
 
-   const char *options[100];
+   const char *options[20];
    int op(0);
 
    Info("Create", "Starting HTTP server on port %s", sport.Data());
@@ -266,11 +302,16 @@ Bool_t TCivetweb::Create(const char *args)
       options[op++] = auth_domain.Data();
    }
 
+   if (log_file.Length() > 0) {
+      options[op++] = "error_log_file";
+      options[op++] = log_file.Data();
+   }
+
    options[op++] = 0;
 
    // Start the web server.
    fCtx = mg_start((struct mg_callbacks *) fCallbacks, this, options);
 
-   return kTRUE;
+   return fCtx != 0;
 }
 

@@ -61,7 +61,7 @@ etc/allDict.h
 core/base/src/RGitCommit.h
 
 # /core/lzma/src/
-/core/lzma/src/xz-5.0.3
+/core/lzma/src/xz-5.2.1
 
 # /core/metautils/src/
 /core/metautils/src/stlLoader_set.cc

@@ -11,6 +11,8 @@
 
 //________________________________________________________________________
 //
+// TBufferJSON
+//
 // Class for serializing object into JavaScript Object Notation (JSON) format.
 // It creates such object representation, which can be directly
 // used in JavaScript ROOT (JSROOT) for drawing.
@@ -68,7 +70,7 @@
 #define FULong64   "%llu"
 #endif
 
-ClassImp(TBufferJSON);
+ClassImp(TBufferJSON)
 
 
 const char *TBufferJSON::fgFloatFmt = "%e";

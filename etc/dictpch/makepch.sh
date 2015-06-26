@@ -36,7 +36,7 @@ else
     rootbuild=-rootbuild
 fi
 
-cxxflags="-D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DROOT_PCH -I$rootdir/include -I$rootdir/etc -I$rootdir/$cfgdir -I$rootdir/etc/cling `cat $rootdir/$cppflags`"
+cxxflags="-pthread -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DROOT_PCH -I$rootdir/include -I$rootdir/etc -I$rootdir/$cfgdir -I$rootdir/etc/cling `cat $rootdir/$cppflags`"
 
 if ! [ "x$1" = "x" ]; then
     cxxflags="$cxxflags $1"

@@ -172,6 +172,7 @@ TMVA::Event::Event( const Event& event )
 TMVA::Event::~Event()
 {
    // Event destructor
+   delete fValuesDynamic;
 }
 //____________________________________________________________
 void TMVA::Event::SetVariableArrangement( std::vector<UInt_t>* const m ) const {

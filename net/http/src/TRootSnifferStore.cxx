@@ -8,6 +8,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+ClassImp(TRootSnifferStore)
 
 //______________________________________________________________________________
 TRootSnifferStore::TRootSnifferStore() :
@@ -49,6 +50,8 @@ void TRootSnifferStore::SetResult(void *_res, TClass *_rescl,
 // Used to store scanned objects hierarchy in XML form                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+ClassImp(TRootSnifferStoreXml)
 
 //______________________________________________________________________________
 void TRootSnifferStoreXml::CreateNode(Int_t lvl, const char *nodename)
@@ -121,11 +124,13 @@ void TRootSnifferStoreXml::CloseNode(Int_t lvl, Int_t numchilds)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TRootSnifferStoreXml                                                 //
+// TRootSnifferStoreJson                                                //
 //                                                                      //
 // Used to store scanned objects hierarchy in JSON form                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+ClassImp(TRootSnifferStoreJson)
 
 //______________________________________________________________________________
 void TRootSnifferStoreJson::CreateNode(Int_t lvl, const char *nodename)
