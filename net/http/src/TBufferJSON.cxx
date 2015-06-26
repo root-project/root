@@ -841,7 +841,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
             for (Int_t k = 1; k < stack->fValues.GetLast(); k += 2) {
                fValue.Append(separ);
                separ = fArraySepar.Data();
-
+               fJsonrCnt++; // account each entry in map, can conflict with objects inside values
                fValue.Append("{");
                fValue.Append("\"first\"");
                fValue.Append(fSemicolon);
