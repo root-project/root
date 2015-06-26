@@ -40,22 +40,22 @@
 
 ClassImp(TBranchRef)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TBranchRef::TBranchRef(): TBranch(), fRequestedEntry(-1), fRefTable(0)
 {
-   // Default constructor.
-
    fReadLeaves = (ReadLeaves_t)&TBranchRef::ReadLeavesImpl;
    fFillLeaves = (FillLeaves_t)&TBranchRef::FillLeavesImpl;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor called by TTree::BranchRef.
+
 TBranchRef::TBranchRef(TTree *tree)
     : TBranch(), fRequestedEntry(-1), fRefTable(0)
 {
-   // Main constructor called by TTree::BranchRef.
-
    if (!tree) return;
    SetName("TRefTable");
    SetTitle("List of branch numbers with referenced objects");
@@ -83,39 +83,39 @@ TBranchRef::TBranchRef(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Typical destructor.
+
 TBranchRef::~TBranchRef()
 {
-   // Typical destructor.
-
    delete fRefTable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear entries in the TRefTable.
+
 void TBranchRef::Clear(Option_t *option)
 {
-  // Clear entries in the TRefTable.
-
    if (fRefTable) fRefTable->Clear(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the branch basket with the referenced objects parent numbers.
+
 Int_t TBranchRef::Fill()
 {
-  // Fill the branch basket with the referenced objects parent numbers.
-
    Int_t nbytes = TBranch::Fill();
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called by TRefTable::Notify, itself called by
+/// TRef::GetObject.
+/// The function reads the branch containing the object referenced
+/// by the TRef.
+
 Bool_t TBranchRef::Notify()
 {
-   // This function is called by TRefTable::Notify, itself called by
-   // TRef::GetObject.
-   // The function reads the branch containing the object referenced
-   // by the TRef.
-
    if (!fRefTable) fRefTable = new TRefTable(this,100);
    UInt_t uid = fRefTable->GetUID();
    TProcessID* context = fRefTable->GetUIDContext();
@@ -155,65 +155,66 @@ Bool_t TBranchRef::Notify()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the TRefTable branch.
+
 void TBranchRef::Print(Option_t *option) const
 {
-  // Print the TRefTable branch.
-
    TBranch::Print(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function called by TBranch::GetEntry overloads TBranch::ReadLeaves.
+
 void TBranchRef::ReadLeavesImpl(TBuffer &b)
 {
-   // This function called by TBranch::GetEntry overloads TBranch::ReadLeaves.
-
    if (!fRefTable) fRefTable = new TRefTable(this,100);
    fRefTable->ReadBuffer(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function called by TBranch::Fill overloads TBranch::FillLeaves.
+
 void TBranchRef::FillLeavesImpl(TBuffer &b)
 {
-   // This function called by TBranch::Fill overloads TBranch::FillLeaves.
-
    if (!fRefTable) fRefTable = new TRefTable(this,100);
    fRefTable->FillBuffer(b);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///    Existing buffers are deleted
+///    Entries, max and min are reset
+///    TRefTable is cleared.
+
 void TBranchRef::Reset(Option_t *option)
 {
-  //    Existing buffers are deleted
-  //    Entries, max and min are reset
-  //    TRefTable is cleared.
-
    TBranch::Reset(option);
    if (!fRefTable) fRefTable = new TRefTable(this,100);
    fRefTable->Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset a Branch after a Merge operation (drop data but keep customizations)
+/// TRefTable is cleared.
+
 void TBranchRef::ResetAfterMerge(TFileMergeInfo *info)
 {
-   // Reset a Branch after a Merge operation (drop data but keep customizations)
-   // TRefTable is cleared.
-
    TBranch::ResetAfterMerge(info);
    if (!fRefTable) fRefTable = new TRefTable(this,100);
    fRefTable->Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- Set the current parent branch.
+///
+/// This function is called by TBranchElement::GetEntry()
+/// and TBranchElement::Fill() when reading or writing
+/// branches that may contain referenced objects.
+///
+
 Int_t TBranchRef::SetParent(const TObject* object, Int_t branchID)
 {
-   // -- Set the current parent branch.
-   //
-   // This function is called by TBranchElement::GetEntry()
-   // and TBranchElement::Fill() when reading or writing
-   // branches that may contain referenced objects.
-   //
    if (!fRefTable) {
       fRefTable = new TRefTable(this, 100);
    }

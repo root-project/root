@@ -27,21 +27,21 @@
 
 ClassImp(TEveTrackProjectedGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTrackProjectedGL::TEveTrackProjectedGL() : TEveTrackGL(), fM(0)
 {
-   // Constructor.
-
    // fDLCache = kFALSE; // Disable display list.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveTrackProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    TEveTrackGL::SetModel(obj);
    fM = DynCast<TEveTrackProjected>(obj);
    return kTRUE;
@@ -49,11 +49,11 @@ Bool_t TEveTrackProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw track with GL.
+
 void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
-   // Draw track with GL.
-
    // printf("TEveTrackProjectedGL::DirectDraw Style %d, LOD %d\n", flags.Style(), flags.LOD());
    if (fM->Size() == 0)
       return;

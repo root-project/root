@@ -25,7 +25,8 @@
  *                                                                                *
  **********************************************************************************/
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 Base Class for all classes that need option parsing
 End_Html */
@@ -62,7 +63,9 @@ ClassImp(TMVA::Configurable)
 #pragma warning ( disable : 4355 )
 #endif
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::Configurable::Configurable( const TString& theOption)
    : fOptions                    ( theOption ),
      fLooseOptionCheckingEnabled ( kTRUE ),
@@ -72,24 +75,25 @@ TMVA::Configurable::Configurable( const TString& theOption)
      fReferenceFile              ( "None" ),
      fLogger                     ( new MsgLogger(this) )
 {
-   // constructor
    fListOfOptions.SetOwner();
 
    // check if verbosity "V" set in option
    if (gTools().CheckForVerboseOption( theOption )) Log().SetMinType( kVERBOSE );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default destructur
+
 TMVA::Configurable::~Configurable()
 {
-   // default destructur
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// splits the option string at ':' and fills the list 'loo' with the primitive strings
+
 void TMVA::Configurable::SplitOptions(const TString& theOpt, TList& loo) const
 {
-   // splits the option string at ':' and fills the list 'loo' with the primitive strings
    TString splitOpt(theOpt);
    loo.SetOwner();
    while (splitOpt.Length()>0) {
@@ -105,22 +109,23 @@ void TMVA::Configurable::SplitOptions(const TString& theOpt, TList& loo) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// resets the IsSet falg for all declare options
+/// to be called before options are read from stream
+
 void TMVA::Configurable::ResetSetFlag() 
 {
-   // resets the IsSet falg for all declare options
-   // to be called before options are read from stream
-
    TListIter decOptIt(&fListOfOptions); // declared options
    while (OptionBase* decOpt = (OptionBase*) decOptIt()) { // loop over declared options
       decOpt->fIsSet = kFALSE;
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// options parser
+
 void TMVA::Configurable::ParseOptions() 
 {
-   // options parser
    Log() << kVERBOSE << "Parsing option string: " << Endl;
    TString optionsWithoutTilde(fOptions);
    optionsWithoutTilde.ReplaceAll(TString("~"),TString(""));
@@ -262,10 +267,11 @@ void TMVA::Configurable::ParseOptions()
    if (gConfig().WriteOptionsReference()) WriteOptionsReferenceToFile();
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks for unused options in option string
+
 void TMVA::Configurable::CheckForUnusedOptions() const 
 {
-   // checks for unused options in option string
    TString theOpt(fOptions);
    theOpt = theOpt.Strip(TString::kLeading, ':');
    
@@ -290,11 +296,11 @@ void TMVA::Configurable::CheckForUnusedOptions() const
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prints out the options set in the options string and the defaults
+
 void TMVA::Configurable::PrintOptions() const 
 {
-   // prints out the options set in the options string and the defaults
-
    Log() << kVERBOSE << "The following options are set:" << Endl;
 
    TListIter optIt( &fListOfOptions );
@@ -314,11 +320,11 @@ void TMVA::Configurable::PrintOptions() const
    if (!found) Log() << kVERBOSE << "    <none>" << Endl;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write options to output stream (e.g. in writing the MVA weight files
+
 void TMVA::Configurable::WriteOptionsToStream( std::ostream& o, const TString& prefix ) const 
 {
-   // write options to output stream (e.g. in writing the MVA weight files
-
    TListIter optIt( &fListOfOptions );
    o << prefix << "# Set by User:" << std::endl;
    while (OptionBase * opt = (OptionBase *) optIt()) 
@@ -330,10 +336,11 @@ void TMVA::Configurable::WriteOptionsToStream( std::ostream& o, const TString& p
    o << prefix << "##" << std::endl;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write options to XML file
+
 void TMVA::Configurable::AddOptionsXMLTo( void* parent ) const 
 {
-   // write options to XML file
    if (!parent) return;
    void* opts = gTools().AddChild(parent, "Options");
    TListIter optIt( &fListOfOptions );
@@ -359,7 +366,8 @@ void TMVA::Configurable::AddOptionsXMLTo( void* parent ) const
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::Configurable::ReadOptionsFromXML( void* node )
 {
    void* opt = gTools().GetChild(node);
@@ -388,11 +396,11 @@ void TMVA::Configurable::ReadOptionsFromXML( void* node )
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write complete options to output stream
+
 void TMVA::Configurable::WriteOptionsReferenceToFile()
 {
-   // write complete options to output stream
-
    TString dir = gConfig().GetIONames().fOptionsReferenceFileDir;
    gSystem->MakeDirectory( dir );
    fReferenceFile = dir + "/" + GetConfigName() + "_optionsRef.txt";
@@ -414,11 +422,11 @@ void TMVA::Configurable::WriteOptionsReferenceToFile()
    Log() << kVERBOSE << "Wrote options reference file: \"" << fReferenceFile << "\"" << Endl;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read option back from the weight file
+
 void TMVA::Configurable::ReadOptionsFromStream(std::istream& istr)
 {
-   // read option back from the weight file
-
    // first set the IsSet flag of all declared options to false
    // that is only necessary in our factory, when we test right
    // after the training

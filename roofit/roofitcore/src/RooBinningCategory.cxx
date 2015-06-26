@@ -41,43 +41,45 @@ ClassImp(RooBinningCategory)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with input function to be mapped and name and index of default
+/// output state of unmapped values
+
 RooBinningCategory::RooBinningCategory(const char *name, const char *title, RooAbsRealLValue& inputVar, 
 					   const char* binningName, const char* catTypeName) :
   RooAbsCategory(name, title), _inputVar("inputVar","Input category",this,inputVar), _bname(binningName)
 {
-  // Constructor with input function to be mapped and name and index of default
-  // output state of unmapped values
-
   initialize(catTypeName) ;
 
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooBinningCategory::RooBinningCategory(const RooBinningCategory& other, const char *name) :
   RooAbsCategory(other,name), _inputVar("inputVar",this,other._inputVar), _bname(other._bname)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooBinningCategory::~RooBinningCategory() 
 {
-  // Destructor
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Iterator over all bins in input variable and define corresponding state labels
+
 void RooBinningCategory::initialize(const char* catTypeName)
 {
-  // Iterator over all bins in input variable and define corresponding state labels
-
   Int_t nbins = ((RooAbsRealLValue&)_inputVar.arg()).getBinning(_bname.Length()>0?_bname.Data():0).numBins() ;
   for (Int_t i=0 ; i<nbins ; i++) {
     string name = catTypeName!=0 ? Form("%s%d",catTypeName,i)
@@ -90,10 +92,11 @@ void RooBinningCategory::initialize(const char* catTypeName)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return the value of the mapping function
+
 RooCatType RooBinningCategory::evaluate() const
 {
-  // Calculate and return the value of the mapping function
   Int_t ibin = ((RooAbsRealLValue&)_inputVar.arg()).getBin(_bname.Length()>0?_bname.Data():0) ;
   const RooCatType* cat = lookupType(ibin) ;
   if (!cat) {
@@ -109,16 +112,16 @@ RooCatType RooBinningCategory::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about this threshold category to the specified stream. In addition to the info
+/// from RooAbsCategory::printStream() we add:
+///
+///  Standard : input category
+///     Shape : default value
+///   Verbose : list of thresholds
+
 void RooBinningCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
-  // Print info about this threshold category to the specified stream. In addition to the info
-  // from RooAbsCategory::printStream() we add:
-  //
-  //  Standard : input category
-  //     Shape : default value
-  //   Verbose : list of thresholds
-
    RooAbsCategory::printMultiline(os,content,verbose,indent);
 
    if (verbose) {

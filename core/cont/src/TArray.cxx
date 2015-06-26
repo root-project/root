@@ -27,22 +27,22 @@
 
 ClassImp(TArray)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate an out-of-bounds error. Always returns false.
+
 Bool_t TArray::OutOfBoundsError(const char *where, Int_t i) const
 {
-   // Generate an out-of-bounds error. Always returns false.
-
    ::Error(where, "index %d out of bounds (size: %d, this: 0x%lx)", i, fN, (Long_t)this);
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read TArray object from buffer. Simplified version of
+/// TBuffer::ReadObject (does not keep track of multiple
+/// references to same array).
+
 TArray *TArray::ReadArray(TBuffer &b, const TClass *clReq)
 {
-   // Read TArray object from buffer. Simplified version of
-   // TBuffer::ReadObject (does not keep track of multiple
-   // references to same array).
-
    R__ASSERT(b.IsReading());
 
    // Make sure ReadArray is initialized
@@ -77,13 +77,13 @@ TArray *TArray::ReadArray(TBuffer &b, const TClass *clReq)
    return a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write TArray object to buffer. Simplified version of
+/// TBuffer::WriteObject (does not keep track of multiple
+/// references to the same array).
+
 void TArray::WriteArray(TBuffer &b, const TArray *a)
 {
-   // Write TArray object to buffer. Simplified version of
-   // TBuffer::WriteObject (does not keep track of multiple
-   // references to the same array).
-
    R__ASSERT(b.IsWriting());
 
    // Make sure WriteMap is initialized
@@ -109,11 +109,11 @@ void TArray::WriteArray(TBuffer &b, const TArray *a)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write TArray or derived object to buffer.
+
 TBuffer &operator<<(TBuffer &buf, const TArray *obj)
 {
-   // Write TArray or derived object to buffer.
-
    TArray::WriteArray(buf, obj);
    return buf;
 }

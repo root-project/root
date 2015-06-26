@@ -149,22 +149,22 @@ private:
 ClassImp(TX11GLManager)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TX11GLManager::TX11GLImpl::TX11GLImpl() : fDpy(0), fNextFreeContext(0)
 {
-   // Constructor.
-
    fDpy = reinterpret_cast<Display *>(gVirtualX->GetDisplay());
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+/// Destroys only GL contexts and XImages pixmaps and windows must be
+/// closed through gVirtualX
+
 TX11GLManager::TX11GLImpl::~TX11GLImpl()
 {
-   // Destructor.
-   // Destroys only GL contexts and XImages pixmaps and windows must be
-   // closed through gVirtualX
-
    for (SizeType_t i = 0,  e = fGLContexts.size(); i < e; ++i) {
       TGLContext_t &ctx = fGLContexts[i];
 
@@ -183,30 +183,30 @@ TX11GLManager::TX11GLImpl::~TX11GLImpl()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TX11GLManager::TX11GLManager() : fPimpl(new TX11GLImpl)
 {
-   // Constructor.
-
    gGLManager = this;
    gROOT->GetListOfSpecials()->Add(this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TX11GLManager::~TX11GLManager()
 {
-   // Destructor.
-
    delete fPimpl;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to find correct visual.
+
 Int_t TX11GLManager::InitGLWindow(Window_t winID)
 {
-   // Try to find correct visual.
-
    XVisualInfo *visInfo = glXChooseVisual(
                                           fPimpl->fDpy, DefaultScreen(fPimpl->fDpy),
                                           const_cast<Int_t *>(dblBuff)
@@ -251,11 +251,12 @@ Int_t TX11GLManager::InitGLWindow(Window_t winID)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Context creation requires Display * and XVisualInfo
+/// (was saved for such winInd).
+
 Int_t TX11GLManager::CreateGLContext(Int_t winInd)
 {
-   // Context creation requires Display * and XVisualInfo
-   // (was saved for such winInd).
    GLXContext glxCtx = glXCreateContext(fPimpl->fDpy, fPimpl->fGLWindows[winInd], None, True);
 
    if (!glxCtx) {
@@ -284,20 +285,21 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make GL context current.
+
 Bool_t TX11GLManager::MakeCurrent(Int_t ctxInd)
 {
-   // Make GL context current.
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
    return glXMakeCurrent(fPimpl->fDpy, gVirtualX->GetWindowID(ctx.fWindowIndex), ctx.fGLXContext);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Swaps buffers or copy pixmap.
+
 void TX11GLManager::Flush(Int_t ctxInd)
 {
-   // Swaps buffers or copy pixmap.
-
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
    Window winID = gVirtualX->GetWindowID(ctx.fWindowIndex);
 
@@ -318,11 +320,11 @@ void TX11GLManager::Flush(Int_t ctxInd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GL pixmap.
+
 Bool_t TX11GLManager::CreateGLPixmap(TGLContext_t &ctx)
 {
-   // Create GL pixmap.
-
    // Create new x11 pixmap and XImage.
    Pixmap x11Pix = XCreatePixmap(fPimpl->fDpy, gVirtualX->GetWindowID(ctx.fWindowIndex), ctx.fW,
                                  ctx.fH, fPimpl->fGLWindows[ctx.fWindowIndex]->depth);
@@ -364,11 +366,11 @@ Bool_t TX11GLManager::CreateGLPixmap(TGLContext_t &ctx)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Attach off screen device.
+
 Bool_t TX11GLManager::AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Attach off screen device.
-
    // Create pixmap and XImage for GL context ctxInd.
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
    TGLContext_t newCtx;
@@ -390,11 +392,11 @@ Bool_t TX11GLManager::AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize off screen devive.
+
 Bool_t TX11GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Resize off screen devive.
-
    // Create a new pixmap and a new XImage if needed.
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
 
@@ -428,31 +430,31 @@ Bool_t TX11GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Selects off-screen device to make it accessible by gVirtualX.
+
 void TX11GLManager::SelectOffScreenDevice(Int_t ctxInd)
 {
-   // Selects off-screen device to make it accessible by gVirtualX.
-
    gVirtualX->SelectWindow(fPimpl->fGLContexts[ctxInd].fPixmapIndex);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Selection-rotation support for TPad/TCanvas.
+
 void TX11GLManager::MarkForDirectCopy(Int_t ctxInd, Bool_t dir)
 {
-   // Selection-rotation support for TPad/TCanvas.
-
    if (fPimpl->fGLContexts[ctxInd].fPixmapIndex != -1)
       fPimpl->fGLContexts[ctxInd].fDirect = dir;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GL buffer is read info buffer, after that lines are reordered
+/// into XImage, XImage copied into pixmap.
+
 void TX11GLManager::ReadGLBuffer(Int_t ctxInd)
 {
-   // GL buffer is read info buffer, after that lines are reordered
-   // into XImage, XImage copied into pixmap.
-
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
 
    if (ctx.fPixmapIndex != -1 && ctx.fXImage) {
@@ -480,11 +482,11 @@ void TX11GLManager::ReadGLBuffer(Int_t ctxInd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes GLX context and frees pixmap and image (if any).
+
 void TX11GLManager::DeleteGLContext(Int_t ctxInd)
 {
-   // Deletes GLX context and frees pixmap and image (if any).
-
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
 
    // Free GL context.
@@ -512,20 +514,20 @@ void TX11GLManager::DeleteGLContext(Int_t ctxInd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns an index suitable for gVirtualX.
+
 Int_t TX11GLManager::GetVirtualXInd(Int_t ctxInd)
 {
-   // Returns an index suitable for gVirtualX.
-
    return fPimpl->fGLContexts[ctxInd].fPixmapIndex;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the current dimensions of a GL pixmap.
+
 void TX11GLManager::ExtractViewport(Int_t ctxInd, Int_t *viewport)
 {
-   // Returns the current dimensions of a GL pixmap.
-
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
 
    if (ctx.fPixmapIndex != -1) {
@@ -537,50 +539,52 @@ void TX11GLManager::ExtractViewport(Int_t ctxInd, Int_t *viewport)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a single object.
+
 void TX11GLManager::PaintSingleObject(TVirtualGLPainter *p)
 {
-   // Paint a single object.
-
    p->Paint();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print viewer.
+
 void TX11GLManager::PrintViewer(TVirtualViewer3D *vv)
 {
-   // Print viewer.
-
    vv->PrintObjects();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select manipulator.
+
 Bool_t TX11GLManager::SelectManip(TVirtualGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox)
 {
-   // Select manipulator.
-
    return manip->Select(*camera, *rect, *sceneBox);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pan objects.
+
 void TX11GLManager::PanObject(TVirtualGLPainter *o, Int_t x, Int_t y)
 {
-   // Pan objects.
-
    return o->Pan(x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Analog of TObject::DistancetoPrimitive
+
 Bool_t TX11GLManager::PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
-   //Analog of TObject::DistancetoPrimitive
    return plot->PlotSelected(px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Analog of TObject::GetObjectInfo
+
 char *TX11GLManager::GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
-   //Analog of TObject::GetObjectInfo
    return plot->GetPlotInfo(px, py);
 }

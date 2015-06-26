@@ -42,7 +42,9 @@ static const Int_t fgUNINITIALIZED = -1;
 
 ClassImp(TMVA::TSynapse);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::TSynapse::TSynapse()
   : fWeight( 0 ),
     fLearnRate( 0 ),
@@ -52,63 +54,68 @@ TMVA::TSynapse::TSynapse()
     fPreNeuron( NULL ),
     fPostNeuron( NULL )
 {
-   // constructor
    fWeight     = fgUNINITIALIZED;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::TSynapse::~TSynapse()
 {
-   // destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set synapse weight
+
 void TMVA::TSynapse::SetWeight(Double_t weight)
 {
-   // set synapse weight
    fWeight = weight;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get output of pre-neuron weighted by synapse weight
+
 Double_t TMVA::TSynapse::GetWeightedValue()
 {
-   // get output of pre-neuron weighted by synapse weight
    if (fPreNeuron == NULL)
       Log() << kFATAL << "<GetWeightedValue> synapse not connected to neuron" << Endl;
 
    return (fWeight * fPreNeuron->GetActivationValue());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get error field of post-neuron weighted by synapse weight
+
 Double_t TMVA::TSynapse::GetWeightedDelta()
 {
-   // get error field of post-neuron weighted by synapse weight
-
    if (fPostNeuron == NULL)
       Log() << kFATAL << "<GetWeightedDelta> synapse not connected to neuron" << Endl;
 
    return fWeight * fPostNeuron->GetDelta();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// adjust the weight based on the error field all ready calculated by CalculateDelta
+
 void TMVA::TSynapse::AdjustWeight()
 {
-   // adjust the weight based on the error field all ready calculated by CalculateDelta
    Double_t wDelta = fDelta / fCount;
    fWeight += -fLearnRate * wDelta;
    InitDelta();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate/adjust the error field for this synapse
+
 void TMVA::TSynapse::CalculateDelta()
 {
-   // calculate/adjust the error field for this synapse
    fDelta += fPostNeuron->GetDelta() * fPreNeuron->GetActivationValue();
    fCount++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::MsgLogger& TMVA::TSynapse::Log() const
 {
    TTHREAD_TLS_DECL_ARG(MsgLogger,logger,"TSynapse");  //! message logger, static to save resources

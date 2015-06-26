@@ -42,56 +42,56 @@ ClassImp(RooListProxy)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with proxy name, description and pointer to ownder of
+/// the RooListProxy. The default strategy for value/shape dirty flag
+/// propagation of the list contents to the list owner is controlled
+/// by the defValueServer and defShapeServer flags.
+
 RooListProxy::RooListProxy(const char* inName, const char* /*desc*/, RooAbsArg* owner, 
 			 Bool_t defValueServer, Bool_t defShapeServer) :
   RooArgList(inName), _owner(owner), 
   _defValueServer(defValueServer), 
   _defShapeServer(defShapeServer)
 {
-  // Constructor with proxy name, description and pointer to ownder of
-  // the RooListProxy. The default strategy for value/shape dirty flag
-  // propagation of the list contents to the list owner is controlled
-  // by the defValueServer and defShapeServer flags.
-
   _owner->registerProxy(*this) ;
   _iter = createIterator() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor with name of proxy, pointer to owner of this proxy and
+/// reference to list proxy to be copied
+
 RooListProxy::RooListProxy(const char* inName, RooAbsArg* owner, const RooListProxy& other) : 
   RooArgList(other,inName), _owner(owner),  
   _defValueServer(other._defValueServer), 
   _defShapeServer(other._defShapeServer)
 {
-  // Copy constructor with name of proxy, pointer to owner of this proxy and
-  // reference to list proxy to be copied
-
   _owner->registerProxy(*this) ;
   _iter = createIterator() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooListProxy::~RooListProxy()
 {
-  // Destructor
-
   if (_owner) _owner->unRegisterProxy(*this) ;
   delete _iter ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to list with explicitl directives on value and shape dirty flag propagation
+/// of inserted object to list owner
+
 Bool_t RooListProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeServer, Bool_t silent)
 {
-  // Add object to list with explicitl directives on value and shape dirty flag propagation
-  // of inserted object to list owner
-
   Bool_t ret=RooArgList::add(var,silent) ;
   if (ret && _owner) {
     _owner->addServer((RooAbsArg&)var,valueServer,shapeServer) ;
@@ -101,21 +101,21 @@ Bool_t RooListProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeS
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reimplementation of standard RooArgList::add()
+
 Bool_t RooListProxy::add(const RooAbsArg& var, Bool_t silent) 
 {
-  // Reimplementation of standard RooArgList::add()
-
   return add(var,_defValueServer,_defShapeServer,silent) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reimplementation of standard RooArgList::addOwned()
+
 Bool_t RooListProxy::addOwned(RooAbsArg& var, Bool_t silent)
 {
-  // Reimplementation of standard RooArgList::addOwned()
-
   Bool_t ret=RooArgList::addOwned(var,silent) ;
   if (ret) {
     _owner->addServer((RooAbsArg&)var,_defValueServer,_defShapeServer) ;
@@ -124,11 +124,11 @@ Bool_t RooListProxy::addOwned(RooAbsArg& var, Bool_t silent)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reimplementation of standard RooArgList::replace()
+
 Bool_t RooListProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2) 
 {
-  // Reimplementation of standard RooArgList::replace()
-
   Bool_t ret=RooArgList::replace(var1,var2) ;
   if (ret) {
     _owner->removeServer((RooAbsArg&)var1) ;
@@ -140,11 +140,11 @@ Bool_t RooListProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reimplementation of standard RooArgList::remove()
+
 Bool_t RooListProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNameOnly) 
 {
-  // Reimplementation of standard RooArgList::remove()
-
   Bool_t ret=RooArgList::remove(var,silent,matchByNameOnly) ;
   if (ret) {
     _owner->removeServer((RooAbsArg&)var) ;
@@ -154,11 +154,11 @@ Bool_t RooListProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByN
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reimplementation of standard RooArgList::removeAll()
+
 void RooListProxy::removeAll() 
 {
-  // Reimplementation of standard RooArgList::removeAll()
-
   TIterator* iter = createIterator() ;
   RooAbsArg* arg ;
   while ((arg=(RooAbsArg*)iter->Next())) {
@@ -172,11 +172,11 @@ void RooListProxy::removeAll()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reimplementation of standard RooArgList assignment operator
+
 RooListProxy& RooListProxy::operator=(const RooArgList& other) 
 {
-  // Reimplementation of standard RooArgList assignment operator
-
   RooArgList::operator=(other) ;
   return *this ;
 }
@@ -184,13 +184,13 @@ RooListProxy& RooListProxy::operator=(const RooArgList& other)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal function that implements consequences of a server redirect on the
+/// owner. If the list contains any element with names identical to those in newServerList
+/// replace them with the instance in newServerList
+
 Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange, Bool_t factoryInitMode) 
 {
-  // Internal function that implements consequences of a server redirect on the
-  // owner. If the list contains any element with names identical to those in newServerList
-  // replace them with the instance in newServerList
-
   if (getSize()==0) {
     if (factoryInitMode) {
       TIterator* iter = newServerList.createIterator() ;
@@ -218,12 +218,12 @@ Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the name of the proxy, and if requested a summary of
+/// the contained elements as well
+
 void RooListProxy::print(ostream& os, Bool_t addContents) const 
 { 
-  // Print the name of the proxy, and if requested a summary of
-  // the contained elements as well
-
   if (!addContents) {
     os << name() << "=" ; printStream(os,kValue,kInline) ; 
   } else {

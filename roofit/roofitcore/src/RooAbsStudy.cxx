@@ -39,27 +39,30 @@ ClassImp(RooAbsStudy)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsStudy::RooAbsStudy(const char* name, const char* title) : TNamed(name,title), _storeDetails(0), _summaryData(0), _detailData(0), _ownDetailData(kTRUE)
 {  
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsStudy::RooAbsStudy(const RooAbsStudy& other) : TNamed(other), _storeDetails(other._storeDetails), _summaryData(other._summaryData), 
 						     _detailData(0), _ownDetailData(other._ownDetailData)
 {  
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsStudy::~RooAbsStudy() 
 {
-  // Destructor
   if (_summaryData) delete _summaryData ;
   if (_ownDetailData && _detailData) {
     _detailData->Delete() ;
@@ -70,7 +73,8 @@ RooAbsStudy::~RooAbsStudy()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooAbsStudy::registerSummaryOutput(const RooArgSet& allVars, const RooArgSet& varsWithError, const RooArgSet& varsWithAsymError) 
 {
   if (_summaryData) {
@@ -84,7 +88,8 @@ void RooAbsStudy::registerSummaryOutput(const RooArgSet& allVars, const RooArgSe
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooAbsStudy::storeSummaryOutput(const RooArgSet& vars) 
 {
   if (!_summaryData) {
@@ -96,7 +101,8 @@ void RooAbsStudy::storeSummaryOutput(const RooArgSet& vars)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooAbsStudy::storeDetailedOutput(TNamed& object) 
 {
   if (_storeDetails) {
@@ -117,7 +123,8 @@ void RooAbsStudy::storeDetailedOutput(TNamed& object)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooAbsStudy::aggregateSummaryOutput(TList* chunkList)
 {
   if (!chunkList) return ;

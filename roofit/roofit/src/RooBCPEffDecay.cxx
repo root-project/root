@@ -39,7 +39,9 @@ ClassImp(RooBCPEffDecay)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title, 
 			       RooRealVar& t, RooAbsCategory& tag,
 			       RooAbsReal& tau, RooAbsReal& dm,
@@ -61,7 +63,6 @@ RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title,
   _genB0Frac(0),
   _type(type)
 {
-  // Constructor
   switch(type) {
   case SingleSided:
     _basisExp = declareBasis("exp(-@0/@1)",RooArgList(tau,dm)) ;
@@ -83,7 +84,9 @@ RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooBCPEffDecay::RooBCPEffDecay(const RooBCPEffDecay& other, const char* name) : 
   RooAbsAnaConvPdf(other,name), 
   _absLambda("absLambda",this,other._absLambda),
@@ -102,25 +105,25 @@ RooBCPEffDecay::RooBCPEffDecay(const RooBCPEffDecay& other, const char* name) :
   _basisSin(other._basisSin),
   _basisCos(other._basisCos)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooBCPEffDecay::~RooBCPEffDecay()
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// B0    : _tag = +1 
+/// B0bar : _tag = -1 
+
 Double_t RooBCPEffDecay::coefficient(Int_t basisIndex) const 
 {
-  // B0    : _tag = +1 
-  // B0bar : _tag = -1 
-
   if (basisIndex==_basisExp) {
     //exp term: (1 -/+ dw)(1+a^2)/2 
     return (1 - _tag*_delMistag)*(1+_absLambda*_absLambda)/2 ;
@@ -144,7 +147,8 @@ Double_t RooBCPEffDecay::coefficient(Int_t basisIndex) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (rangeName) return 0 ;
@@ -155,7 +159,8 @@ Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVa
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const 
 {
   switch(code) {
@@ -182,7 +187,8 @@ Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooBCPEffDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   if (staticInitOK) {
@@ -194,7 +200,8 @@ Int_t RooBCPEffDecay::getGenerator(const RooArgSet& directVars, RooArgSet &gener
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooBCPEffDecay::initGenerator(Int_t code)
 {
   if (code==2) {
@@ -208,10 +215,11 @@ void RooBCPEffDecay::initGenerator(Int_t code)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate mix-state dependent
+
 void RooBCPEffDecay::generateEvent(Int_t code)
 {
-  // Generate mix-state dependent
   if (code==2) {
     Double_t rand = RooRandom::uniform() ;
     _tag = (rand<=_genB0Frac) ? 1 : -1 ;

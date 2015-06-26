@@ -38,12 +38,12 @@
 
 ClassImp(TGMimeTypes)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a mime type cache. Read the mime types file "filename" and
+/// built a list of mime types.
+
 TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
 {
-   // Create a mime type cache. Read the mime types file "filename" and
-   // built a list of mime types.
-
    char     line[1024]   = {0};
    char     mime[1024]   = {0};
    char     pattern[256] = {0};
@@ -141,17 +141,19 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
    fChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete mime type pool.
+
 TGMimeTypes::~TGMimeTypes()
 {
-   // Delete mime type pool.
-
    if (fChanged) SaveMimes();
    fList->Delete();
    delete fList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TGMimeTypes::TGMimeTypes(const TGMimeTypes& gmt) :
    TObject(gmt),
    fClient(gmt.fClient),
@@ -159,14 +161,13 @@ TGMimeTypes::TGMimeTypes(const TGMimeTypes& gmt) :
    fChanged(gmt.fChanged),
    fList(gmt.fList)
 {
-   // Copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TGMimeTypes& TGMimeTypes::operator=(const TGMimeTypes& gmt)
 {
-   // Assignment operator
-
    if(this!=&gmt) {
       TObject::operator=(gmt);
       fClient=gmt.fClient;
@@ -178,11 +179,11 @@ TGMimeTypes& TGMimeTypes::operator=(const TGMimeTypes& gmt)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a filename find the matching mime type object.
+
 TGMime *TGMimeTypes::Find(const char *filename)
 {
-   // Given a filename find the matching mime type object.
-
    if (!filename) return 0;
 
    TString fn = filename;
@@ -196,11 +197,11 @@ TGMime *TGMimeTypes::Find(const char *filename)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return icon belonging to mime type of filename.
+
 const TGPicture *TGMimeTypes::GetIcon(const char *filename, Bool_t small_icon)
 {
-   // Return icon belonging to mime type of filename.
-
    TGMime *mime;
    const TGPicture *mypic = 0;
 
@@ -218,11 +219,11 @@ const TGPicture *TGMimeTypes::GetIcon(const char *filename, Bool_t small_icon)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return in action the mime action string belonging to filename.
+
 Bool_t TGMimeTypes::GetAction(const char *filename, char *action)
 {
-   // Return in action the mime action string belonging to filename.
-
    TGMime *mime;
 
    action[0] = 0;
@@ -233,11 +234,11 @@ Bool_t TGMimeTypes::GetAction(const char *filename, char *action)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return in type the mime type belonging to filename.
+
 Bool_t TGMimeTypes::GetType(const char *filename, char *type)
 {
-   // Return in type the mime type belonging to filename.
-
    TGMime *mime;
 
    memset(type, 0, strlen(type));
@@ -248,11 +249,11 @@ Bool_t TGMimeTypes::GetType(const char *filename, char *type)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print list of mime types.
+
 void TGMimeTypes::Print(Option_t *) const
 {
-   // Print list of mime types.
-
    TGMime *m;
    TIter next(fList);
 
@@ -268,11 +269,11 @@ void TGMimeTypes::Print(Option_t *) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save mime types in user's mime type file.
+
 void TGMimeTypes::SaveMimes()
 {
-   // Save mime types in user's mime type file.
-
    TString filename;
 #ifdef WIN32
    filename.Form("%s\\.root.mimes", gSystem->HomeDirectory());
@@ -308,12 +309,12 @@ void TGMimeTypes::SaveMimes()
    fChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a mime type to the list of mime types.
+
 void TGMimeTypes::AddType(const char *type, const char *pattern, const char *icon,
                           const char *sicon, const char *action)
 {
-   // Add a mime type to the list of mime types.
-
    TGMime *mime = new TGMime;
 
    mime->fType    = type;
@@ -329,10 +330,10 @@ void TGMimeTypes::AddType(const char *type, const char *pattern, const char *ico
    fChanged = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete mime object.
+
 TGMime::~TGMime()
 {
-   // Delete mime object.
-
    delete fReg;
 }

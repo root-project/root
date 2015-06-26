@@ -93,11 +93,11 @@ ClassImp(TGraphQQ)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default constructor
+
 TGraphQQ::TGraphQQ()
 {
-   //default constructor
-
    fF   = 0;
    fY0  = 0;
    fNy0 = 0;
@@ -109,13 +109,13 @@ TGraphQQ::TGraphQQ()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Creates a quantile-quantile plot of dataset x.
+///Theoretical distribution function can be defined later by SetFunction method
+
 TGraphQQ::TGraphQQ(Int_t n, Double_t *x)
    : TGraph(n)
 {
-   //Creates a quantile-quantile plot of dataset x.
-   //Theoretical distribution function can be defined later by SetFunction method
-
    fNy0 = 0;
    fXq1 = 0.;
    fXq2 = 0.;
@@ -131,12 +131,12 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x)
    delete [] index;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Creates a quantile-quantile plot of dataset x against function f
+
 TGraphQQ::TGraphQQ(Int_t n, Double_t *x, TF1 *f)
    : TGraph(n)
 {
-   //Creates a quantile-quantile plot of dataset x against function f
-
    fNy0 = 0;
 
    Int_t *index = new Int_t[n];
@@ -150,12 +150,12 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x, TF1 *f)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Creates a quantile-quantile plot of dataset x against dataset y
+///Parameters nx and ny are respective array sizes
+
 TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
 {
-   //Creates a quantile-quantile plot of dataset x against dataset y
-   //Parameters nx and ny are respective array sizes
-
    fNy0 = 0;
    fXq1 = 0.;
    fXq2 = 0.;
@@ -200,11 +200,11 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destroys a TGraphQQ
+
 TGraphQQ::~TGraphQQ()
 {
-   //Destroys a TGraphQQ
-
    if (fY0)
       delete [] fY0;
    if (fF)
@@ -212,11 +212,11 @@ TGraphQQ::~TGraphQQ()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Computes quantiles of theoretical distribution function
+
 void TGraphQQ::MakeFunctionQuantiles()
 {
-   //Computes quantiles of theoretical distribution function
-
    if (!fF) return;
    TString s = fF->GetTitle();
    Double_t pk;
@@ -267,12 +267,12 @@ void TGraphQQ::MakeQuantiles()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute quartiles
+/// a quartile is a 25 per cent or 75 per cent quantile
+
 void TGraphQQ::Quartiles()
 {
-   // compute quartiles
-   // a quartile is a 25 per cent or 75 per cent quantile
-
    Double_t prob[]={0.25, 0.75};
    Double_t x[2];
    Double_t y[2];
@@ -294,12 +294,12 @@ void TGraphQQ::Quartiles()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Sets the theoretical distribution function (density!)
+///and computes its quantiles
+
 void TGraphQQ::SetFunction(TF1 *f)
 {
-   //Sets the theoretical distribution function (density!)
-   //and computes its quantiles
-
    fF = f;
    MakeFunctionQuantiles();
 }

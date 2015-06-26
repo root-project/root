@@ -251,12 +251,12 @@ public:
    void    SetEditable(Bool_t) { }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a canvas container.
+
 TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
    : TGCompositeFrame(gClient, id, p)
 {
-   // Create a canvas container.
-
    fCanvas = c;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
@@ -268,12 +268,12 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
    fEditDisabled = kEditDisable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Directly handle scroll mouse buttons (4 and 5), only pass buttons
+/// 1, 2 and 3 on to the TCanvas.
+
 Bool_t TRootContainer::HandleButton(Event_t *event)
 {
-   // Directly handle scroll mouse buttons (4 and 5), only pass buttons
-   // 1, 2 and 3 on to the TCanvas.
-
    TGViewPort *vp = (TGViewPort*)fParent;
    UInt_t page = vp->GetHeight()/4;
    Int_t newpos;
@@ -298,11 +298,12 @@ Bool_t TRootContainer::HandleButton(Event_t *event)
 
 ClassImp(TRootCanvas)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a basic ROOT canvas.
+
 TRootCanvas::TRootCanvas(TCanvas *c, const char *name, UInt_t width, UInt_t height)
    : TGMainFrame(gClient->GetRoot(), width, height), TCanvasImp(c)
 {
-   // Create a basic ROOT canvas.
    CreateCanvas(name);
 
    ShowToolBar(kFALSE);
@@ -311,11 +312,12 @@ TRootCanvas::TRootCanvas(TCanvas *c, const char *name, UInt_t width, UInt_t heig
    Resize(width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a basic ROOT canvas.
+
 TRootCanvas::TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TGMainFrame(gClient->GetRoot(), width, height), TCanvasImp(c)
 {
-   // Create a basic ROOT canvas.
    CreateCanvas(name);
 
    ShowToolBar(kFALSE);
@@ -325,11 +327,11 @@ TRootCanvas::TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t 
    SetWMPosition(x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the actual canvas.
+
 void TRootCanvas::CreateCanvas(const char *name)
 {
-   // Create the actual canvas.
-
    fButton    = 0;
    fAutoFit   = kTRUE;   // check also menu entry
    fEditor    = 0;
@@ -613,12 +615,12 @@ void TRootCanvas::CreateCanvas(const char *name)
    SetDNDTarget(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete ROOT basic canvas. Order is significant. Delete in reverse
+/// order of creation.
+
 TRootCanvas::~TRootCanvas()
 {
-   // Delete ROOT basic canvas. Order is significant. Delete in reverse
-   // order of creation.
-
    delete fToolTip;
    if (fIconPic) gClient->FreePicture(fIconPic);
    if (fEditor && !fEmbedded) delete fEditor;
@@ -664,10 +666,11 @@ TRootCanvas::~TRootCanvas()
    delete fHelpMenu;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called via TCanvasImp interface by TCanvas.
+
 void TRootCanvas::Close()
 {
-   // Called via TCanvasImp interface by TCanvas.
    TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
    if(gged && gged->GetCanvas() == fCanvas) {
       if (fEmbedded) {
@@ -680,11 +683,11 @@ void TRootCanvas::Close()
    gVirtualX->CloseWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Really delete the canvas and this GUI.
+
 void TRootCanvas::ReallyDelete()
 {
-   // Really delete the canvas and this GUI.
-
    TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
    if(gged && gged->GetCanvas() == fCanvas) {
       if (fEmbedded) {
@@ -708,36 +711,36 @@ void TRootCanvas::ReallyDelete()
       fCanvas->Destructor(); // will in turn delete this object
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// In case window is closed via WM we get here.
+
 void TRootCanvas::CloseWindow()
 {
-   // In case window is closed via WM we get here.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return width of canvas container.
+
 UInt_t TRootCanvas::GetCwidth() const
 {
-   // Return width of canvas container.
-
    return fCanvasContainer->GetWidth();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return height of canvas container.
+
 UInt_t TRootCanvas::GetCheight() const
 {
-   // Return height of canvas container.
-
    return fCanvasContainer->GetHeight();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gets the size and position of the window containing the canvas. This
+/// size includes the menubar and borders.
+
 UInt_t TRootCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
-   // Gets the size and position of the window containing the canvas. This
-   // size includes the menubar and borders.
-
    gVirtualX->GetWindowSize(fId, x, y, w, h);
 
    Window_t childdum;
@@ -747,19 +750,19 @@ UInt_t TRootCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
    return fEditorFrame->GetWidth();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text in status bar.
+
 void TRootCanvas::SetStatusText(const char *txt, Int_t partidx)
 {
-   // Set text in status bar.
-
    fStatusBar->SetText(txt, partidx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle menu and other command generated by the user.
+
 Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Handle menu and other command generated by the user.
-
    TRootHelpDialog *hd;
    TList *lc;
 
@@ -1252,11 +1255,11 @@ again:
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called by TCanvas ctor to get window indetifier.
+
 Int_t TRootCanvas::InitWindow()
 {
-   // Called by TCanvas ctor to get window indetifier.
-
    if (fCanvas->OpaqueMoving())
       fOptionMenu->CheckEntry(kOptionMoveOpaque);
    if (fCanvas->OpaqueResizing())
@@ -1265,11 +1268,11 @@ Int_t TRootCanvas::InitWindow()
    return fCanvasID;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of canvas container. Units in pixels.
+
 void TRootCanvas::SetCanvasSize(UInt_t w, UInt_t h)
 {
-   // Set size of canvas container. Units in pixels.
-
    // turn off autofit, we want to stay at the given size
    fAutoFit = kFALSE;
    fOptionMenu->UnCheckEntry(kOptionAutoResize);
@@ -1283,19 +1286,19 @@ void TRootCanvas::SetCanvasSize(UInt_t w, UInt_t h)
    fCanvas->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set canvas position (units in pixels).
+
 void TRootCanvas::SetWindowPosition(Int_t x, Int_t y)
 {
-   // Set canvas position (units in pixels).
-
    Move(x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of canvas (units in pixels).
+
 void TRootCanvas::SetWindowSize(UInt_t w, UInt_t h)
 {
-   // Set size of canvas (units in pixels).
-
    Resize(w, h);
 
    // Make sure the change of size is really done.
@@ -1306,29 +1309,29 @@ void TRootCanvas::SetWindowSize(UInt_t w, UInt_t h)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Put canvas window on top of the window stack.
+
 void TRootCanvas::RaiseWindow()
 {
-   // Put canvas window on top of the window stack.
-
    gVirtualX->RaiseWindow(GetId());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change title on window.
+
 void TRootCanvas::SetWindowTitle(const char *title)
 {
-   // Change title on window.
-
    SetWindowName(title);
    SetIconName(title);
    fToolDock->SetWindowName(Form("ToolBar: %s", title));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fit canvas container to current window size.
+
 void TRootCanvas::FitCanvas()
 {
-   // Fit canvas container to current window size.
-
    if (!fAutoFit) {
       int opt = fCanvasContainer->GetOptions();
       int oopt = opt;
@@ -1341,11 +1344,11 @@ void TRootCanvas::FitCanvas()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the canvas.
+
 void TRootCanvas::PrintCanvas()
 {
-   // Print the canvas.
-
    Int_t ret = 0;
    Bool_t pname = kTRUE;
    char *printer, *printCmd;
@@ -1401,11 +1404,11 @@ void TRootCanvas::PrintCanvas()
    delete [] printCmd;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display a tooltip with infos about the primitive below the cursor.
+
 void TRootCanvas::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
-   // Display a tooltip with infos about the primitive below the cursor.
-
    fToolTip->Hide();
    if (!fCanvas->GetShowToolTips() || selected == 0 ||
        event != kMouseMotion || fButton != 0)
@@ -1432,20 +1435,20 @@ void TRootCanvas::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
    fToolTip->Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show or hide menubar.
+
 void TRootCanvas::ShowMenuBar(Bool_t show)
 {
-   // Show or hide menubar.
-
    if (show)  ShowFrame(fMenuBar);
    else       HideFrame(fMenuBar);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show or hide statusbar.
+
 void TRootCanvas::ShowStatusBar(Bool_t show)
 {
-   // Show or hide statusbar.
-
    UInt_t dh = fClient->GetDisplayHeight();
    UInt_t ch = fCanvas->GetWindowHeight();
 
@@ -1466,11 +1469,11 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
    Resize(GetWidth(), h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show or hide side frame.
+
 void TRootCanvas::ShowEditor(Bool_t show)
 {
-   // Show or hide side frame.
-
    TVirtualPad *savedPad = 0;
    savedPad = (TVirtualPad *) gPad;
    gPad = Canvas();
@@ -1546,11 +1549,11 @@ void TRootCanvas::ShowEditor(Bool_t show)
    if (savedPad) gPad = savedPad;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create embedded editor.
+
 void TRootCanvas::CreateEditor()
 {
-   // Create embedded editor.
-
    fEditorFrame->SetEditDisabled(kEditEnable);
    fEditorFrame->SetEditable();
    gPad = Canvas();
@@ -1566,11 +1569,11 @@ void TRootCanvas::CreateEditor()
    if (show == 0) gEnv->SetValue("Canvas.ShowEditor","false");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show or hide toolbar.
+
 void TRootCanvas::ShowToolBar(Bool_t show)
 {
-   // Show or hide toolbar.
-
    if (show && !fToolBar) {
 
       fToolBar = new TGToolBar(fToolDock, 60, 20, kHorizontalFrame);
@@ -1641,62 +1644,62 @@ void TRootCanvas::ShowToolBar(Bool_t show)
    Resize(GetWidth(), h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable tooltip info.
+
 void TRootCanvas::ShowToolTips(Bool_t show)
 {
-   // Enable or disable tooltip info.
-
    if (show)
       fViewMenu->CheckEntry(kViewToolTips);
    else
       fViewMenu->UnCheckEntry(kViewToolTips);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if the editor is shown.
+
 Bool_t TRootCanvas::HasEditor() const
 {
-   // Returns kTRUE if the editor is shown.
-
    return (fEditor) && fViewMenu->IsEntryChecked(kViewEditor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if the menu bar is shown.
+
 Bool_t TRootCanvas::HasMenuBar() const
 {
-   // Returns kTRUE if the menu bar is shown.
-
    return (fMenuBar) && fMenuBar->IsMapped();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if the status bar is shown.
+
 Bool_t TRootCanvas::HasStatusBar() const
 {
-   // Returns kTRUE if the status bar is shown.
-
    return (fStatusBar) && fStatusBar->IsMapped();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if the tool bar is shown.
+
 Bool_t TRootCanvas::HasToolBar() const
 {
-   // Returns kTRUE if the tool bar is shown.
-
    return (fToolBar) && fToolBar->IsMapped();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if the tooltips are enabled.
+
 Bool_t TRootCanvas::HasToolTips() const
 {
-   // Returns kTRUE if the tooltips are enabled.
-
    return (fCanvas) && fCanvas->GetShowToolTips();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Keep the same canvas size while docking/undocking toolbar.
+
 void TRootCanvas::AdjustSize()
 {
-   // Keep the same canvas size while docking/undocking toolbar.
-
    UInt_t h = GetHeight();
    UInt_t dh = fToolBar->GetHeight();
    UInt_t sh = fHorizontal1->GetHeight();
@@ -1719,11 +1722,11 @@ void TRootCanvas::AdjustSize()
    Resize(GetWidth(), h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button events in the canvas container.
+
 Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
 {
-   // Handle mouse button events in the canvas container.
-
    Int_t button = event->fCode;
    Int_t x = event->fX;
    Int_t y = event->fY;
@@ -1766,11 +1769,11 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button double click events in the canvas container.
+
 Bool_t TRootCanvas::HandleContainerDoubleClick(Event_t *event)
 {
-   // Handle mouse button double click events in the canvas container.
-
    Int_t button = event->fCode;
    Int_t x = event->fX;
    Int_t y = event->fY;
@@ -1785,10 +1788,11 @@ Bool_t TRootCanvas::HandleContainerDoubleClick(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle configure (i.e. resize) event.
+
 Bool_t TRootCanvas::HandleContainerConfigure(Event_t *)
 {
-   // Handle configure (i.e. resize) event.
    if (fAutoFit) {
       fCanvas->Resize();
       fCanvas->Update();
@@ -1806,11 +1810,11 @@ Bool_t TRootCanvas::HandleContainerConfigure(Event_t *)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle keyboard events in the canvas container.
+
 Bool_t TRootCanvas::HandleContainerKey(Event_t *event)
 {
-   // Handle keyboard events in the canvas container.
-
    static EGEventType previous_event = kOtherEvent;
    static UInt_t previous_keysym = 0;
 
@@ -1906,11 +1910,11 @@ Bool_t TRootCanvas::HandleContainerKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in the canvas container.
+
 Bool_t TRootCanvas::HandleContainerMotion(Event_t *event)
 {
-   // Handle mouse motion event in the canvas container.
-
    Int_t x = event->fX;
    Int_t y = event->fY;
 
@@ -1928,11 +1932,11 @@ Bool_t TRootCanvas::HandleContainerMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle expose events.
+
 Bool_t TRootCanvas::HandleContainerExpose(Event_t *event)
 {
-   // Handle expose events.
-
    if (event->fCount == 0) {
       fCanvas->Flush();
    }
@@ -1940,11 +1944,11 @@ Bool_t TRootCanvas::HandleContainerExpose(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle enter/leave events. Only leave is activated at the moment.
+
 Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
 {
-   // Handle enter/leave events. Only leave is activated at the moment.
-
    Int_t x = event->fX;
    Int_t y = event->fY;
 
@@ -1956,10 +1960,11 @@ Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drop events.
+
 Bool_t TRootCanvas::HandleDNDDrop(TDNDData *data)
 {
-   // Handle drop events.
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
    static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
 
@@ -2014,12 +2019,12 @@ Bool_t TRootCanvas::HandleDNDDrop(TDNDData *data)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle dragging position events.
+
 Atom_t TRootCanvas::HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
                                       Int_t /*xroot*/, Int_t /*yroot*/)
 {
-   // Handle dragging position events.
-
    TPad *pad = fCanvas->Pick(x, y, 0);
    if (pad) {
       pad->cd();
@@ -2030,11 +2035,11 @@ Atom_t TRootCanvas::HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
    return action;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drag enter events.
+
 Atom_t TRootCanvas::HandleDNDEnter(Atom_t *typelist)
 {
-   // Handle drag enter events.
-
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
    static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
    Atom_t ret = kNone;
@@ -2047,20 +2052,20 @@ Atom_t TRootCanvas::HandleDNDEnter(Atom_t *typelist)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drag leave events.
+
 Bool_t TRootCanvas::HandleDNDLeave()
 {
-   // Handle drag leave events.
-
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot handling tab switching in the browser, to properly set the canvas
+/// and the model to the editor.
+
 void TRootCanvas::Activated(Int_t id)
 {
-   // Slot handling tab switching in the browser, to properly set the canvas
-   // and the model to the editor.
-
    if (fEmbedded) {
       TGTab *sender = (TGTab *)gTQSender;
       if (sender) {
@@ -2077,11 +2082,11 @@ void TRootCanvas::Activated(Int_t id)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a canvas container as a C++ statement(s) on output stream out.
+
 void TRootContainer::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save a canvas container as a C++ statement(s) on output stream out.
-
    out << std::endl << "   // canvas container" << std::endl;
    out << "   Int_t canvasID = gVirtualX->InitWindow((ULong_t)"
        << GetParent()->GetParent()->GetName() << "->GetId());" << std::endl;

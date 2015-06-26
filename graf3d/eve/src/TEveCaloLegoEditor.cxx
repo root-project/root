@@ -25,7 +25,8 @@
 
 ClassImp(TEveCaloLegoEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -129,7 +130,8 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    MakeRebinFrame();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void  TEveCaloLegoEditor::MakeRebinFrame()
 {
    fRebinFrame = CreateEditorTabSubFrame("Rebin");
@@ -153,11 +155,11 @@ void  TEveCaloLegoEditor::MakeRebinFrame()
    fRebinFrame->AddFrame(fPixelsPerBin, new TGLayoutHints(kLHintsTop, 4, 2, 1, 2));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function. Creates TGComboBox with fixed size TGLabel.
+
 TGComboBox* TEveCaloLegoEditor::MakeLabeledCombo(const char* name, Int_t off)
 {
-   // Helper function. Creates TGComboBox with fixed size TGLabel.
-
    UInt_t labelW = 60;
    UInt_t labelH = 20;
    TGHorizontalFrame* hf = new TGHorizontalFrame(this);
@@ -176,11 +178,11 @@ TGComboBox* TEveCaloLegoEditor::MakeLabeledCombo(const char* name, Int_t off)
    return combo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveCaloLegoEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveCaloLego*>(obj);
 
    fGridColor->SetColor(TColor::Number2Pixel(fM->GetGridColor() < 0 ? 0 : fM->GetGridColor()), kFALSE);
@@ -200,96 +202,98 @@ void TEveCaloLegoEditor::SetModel(TObject* obj)
    fNormalizeRebin->SetState(fM->GetNormalizeRebin() ? kButtonDown : kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for GridColor.
+
 void TEveCaloLegoEditor::DoGridColor(Pixel_t pixel)
 {
-   // Slot for GridColor.
-
    fM->SetGridColor(Color_t(TColor::GetColor(pixel)));
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for FontColor.
+
 void TEveCaloLegoEditor::DoFontColor(Pixel_t pixel)
 {
-   // Slot for FontColor.
-
    fM->SetFontColor(Color_t(TColor::GetColor(pixel)));
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for PlaneColor.
+
 void TEveCaloLegoEditor::DoPlaneColor(Pixel_t pixel)
 {
-   // Slot for PlaneColor.
-
    fM->SetPlaneColor(Color_t(TColor::GetColor(pixel)));
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting limit in pixels in which cell value is rendered.
+
 void TEveCaloLegoEditor::DoCell2DTextMin()
 {
-   // Slot for setting limit in pixels in which cell value is rendered.
-
    fM->SetDrawNumberCellPixels((Int_t)fCell2DTextMin->GetValue());
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for projection.
+
 void TEveCaloLegoEditor::DoProjection()
 {
-   // Slot for projection.
-
    fM->SetProjection((TEveCaloLego::EProjection_e)fProjection->GetSelected());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for projection.
+
 void TEveCaloLegoEditor::Do2DMode()
 {
-   // Slot for projection.
-
    fM->Set2DMode((TEveCaloLego::E2DMode_e)f2DMode->GetSelected());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for projection.
+
 void TEveCaloLegoEditor::DoBoxMode()
 {
-   // Slot for projection.
-
    fM->SetBoxMode((TEveCaloLego::EBoxMode_e)fBoxMode->GetSelected());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Transparency.
+
 void TEveCaloLegoEditor::DoTransparency()
 {
-   // Slot for Transparency.
-
    fM->SetPlaneTransparency((Char_t)(fTransparency->GetNumber()));
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for PixelsPerBin.
+
 void TEveCaloLegoEditor::DoPixelsPerBin()
 {
-   // Slot for PixelsPerBin.
-
    fM->SetPixelsPerBin((Int_t)fPixelsPerBin->GetValue());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TEveCaloLegoEditor::DoAutoRebin()
 {
    fM->SetAutoRebin(fAutoRebin->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TEveCaloLegoEditor::DoNormalize()
 {
    fM->SetNormalizeRebin(fNormalizeRebin->IsOn());

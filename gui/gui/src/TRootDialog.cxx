@@ -34,13 +34,13 @@ extern TGTextEntry *gBlinkingEntry;
 
 ClassImp(TRootDialog)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a method argument prompt dialog.
+
 TRootDialog::TRootDialog(TRootContextMenu *cmenu, const TGWindow *main,
     const char *title, Bool_t okB, Bool_t cancelB, Bool_t applyB,
     Bool_t helpB) : TGTransientFrame(gClient->GetRoot(), main, 200, 100)
 {
-   // Create a method argument prompt dialog.
-
    fMenu   = cmenu;
 
    fOk     = okB;
@@ -60,22 +60,22 @@ TRootDialog::TRootDialog(TRootContextMenu *cmenu, const TGWindow *main,
    AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the dialog.
+
 TRootDialog::~TRootDialog()
 {
-   // Delete the dialog.
-
    fWidgets->Delete();
    delete fWidgets;
    delete fL1;
    delete fL2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a label and text input field.
+
 void TRootDialog::Add(const char *argname, const char *value, const char *type)
 {
-   // Add a label and text input field.
-
    TGLabel      *l = new TGLabel(this, argname);
    TString svalue(value);
    // keep double backslashes (e.g. in case of LateX formatting, like \\gamma)
@@ -95,12 +95,12 @@ void TRootDialog::Add(const char *argname, const char *value, const char *type)
    fWidgets->Add(new TObjString(type));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get parameter string (called by contextmenu after OK or Apply has
+/// been selected).
+
 const char *TRootDialog::GetParameters()
 {
-   // Get parameter string (called by contextmenu after OK or Apply has
-   // been selected).
-
    static TString params;
    TString param;
 
@@ -163,11 +163,11 @@ const char *TRootDialog::GetParameters()
    return params.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Popup dialog.
+
 void TRootDialog::Popup()
 {
-   // Popup dialog.
-
    //--- create the OK, Apply and Cancel buttons
 
    UInt_t  nb = 0, width = 0, height = 0;
@@ -247,20 +247,20 @@ void TRootDialog::Popup()
    fClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when closed via window manager action.
+
 void TRootDialog::CloseWindow()
 {
-   // Called when closed via window manager action.
-
    // Send Cancel button message to context menu eventhandler
    SendMessage(fMenu, MK_MSG(kC_COMMAND, kCM_BUTTON), 3, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Tab keyboard navigation in this dialog.
+
 void TRootDialog::TabPressed()
 {
-   // Handle Tab keyboard navigation in this dialog.
-
    Bool_t setNext = kFALSE;
    TGTextEntry *entry;
    TIter next(fWidgets);
@@ -289,11 +289,11 @@ void TRootDialog::TabPressed()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The key press event handler in this dialog.
+
 Bool_t TRootDialog::HandleKey(Event_t* event)
 {
-   // The key press event handler in this dialog.
-
    char   tmp[10];
    UInt_t keysym;
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);

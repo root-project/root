@@ -43,12 +43,12 @@ ClassImp(RooDataHistSliceIter)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct an iterator over all bins of RooDataHist 'hist' in the slice defined
+/// by the values of the arguments in 'sliceArg'
+
 RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceArg) : _hist(&hist), _sliceArg(&sliceArg)
 {
-  // Construct an iterator over all bins of RooDataHist 'hist' in the slice defined
-  // by the values of the arguments in 'sliceArg'
-
   // Calculate base index (for 0th bin) for slice    
   RooAbsArg* sliceArgInt = hist.get()->find(sliceArg.GetName()) ;
   dynamic_cast<RooAbsLValue&>(*sliceArgInt).setBin(0) ;
@@ -79,7 +79,9 @@ RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceAr
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooDataHistSliceIter::RooDataHistSliceIter(const RooDataHistSliceIter& other) : 
   TIterator(other), 
   _hist(other._hist), 
@@ -89,34 +91,35 @@ RooDataHistSliceIter::RooDataHistSliceIter(const RooDataHistSliceIter& other) :
   _nStep(other._nStep), 
   _curStep(other._curStep)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooDataHistSliceIter::~RooDataHistSliceIter() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy
+
 const TCollection* RooDataHistSliceIter::GetCollection() const 
 {
-  // Dummy
   return 0 ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Iterator increment operator
+
 TObject* RooDataHistSliceIter::Next() 
 {  
-  // Iterator increment operator
-
   if (_curStep==_nStep) {
     return 0 ;
   }
@@ -132,20 +135,21 @@ TObject* RooDataHistSliceIter::Next()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset iterator position to beginning
+
 void RooDataHistSliceIter::Reset() 
 {
-  // Reset iterator position to beginning
   _curStep=0 ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Iterator dereference operator, not functional for this iterator
+
 TObject *RooDataHistSliceIter::operator*() const
 {
-  // Iterator dereference operator, not functional for this iterator
-
    Int_t step = _curStep == 0 ? _curStep : _curStep - 1;
    // Select appropriate entry in RooDataHist 
    _hist->get(_baseIndex + step*_stepSize) ;
@@ -154,12 +158,12 @@ TObject *RooDataHistSliceIter::operator*() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if position of this iterator differs from position
+/// of iterator 'aIter'
+
 bool RooDataHistSliceIter::operator!=(const TIterator &aIter) const
 {
-  // Returns true if position of this iterator differs from position
-  // of iterator 'aIter'
-
    if ((aIter.IsA() == RooDataHistSliceIter::Class())) {
       const RooDataHistSliceIter &iter(dynamic_cast<const RooDataHistSliceIter &>(aIter));
       return (_curStep != iter._curStep);

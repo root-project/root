@@ -71,7 +71,11 @@ ClassImp(RooRealMPFE)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct front-end object for object 'arg' whose evaluation will be calculated
+/// asynchronously in a separate process. If calcInline is true the value of 'arg'
+/// is calculate synchronously in the current process.
+
 RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Bool_t calcInline) : 
   RooAbsReal(name,title),
   _state(Initialize),
@@ -86,9 +90,6 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, B
   _updateMaster(0),
   _retrieveDispatched(kFALSE), _evalCarry(0.)
 {  
-  // Construct front-end object for object 'arg' whose evaluation will be calculated
-  // asynchronously in a separate process. If calcInline is true the value of 'arg'
-  // is calculate synchronously in the current process.
 #ifdef _WIN32
   _inlineMode = kTRUE;
 #endif
@@ -99,7 +100,10 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, B
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor. Initializes in clean state so that upon eval
+/// this instance will create its own server processes
+
 RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) : 
   RooAbsReal(other, name),
   _state(Initialize),
@@ -115,31 +119,28 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _updateMaster(0),
   _retrieveDispatched(kFALSE), _evalCarry(other._evalCarry)
 {
-  // Copy constructor. Initializes in clean state so that upon eval
-  // this instance will create its own server processes
-
   initVars() ;
   _sentinel.add(*this) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooRealMPFE::~RooRealMPFE() 
 {
-  // Destructor
-
   if (_state==Client) standby();
   _sentinel.remove(*this);
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize list of variables of front-end argument 'arg'
+
 void RooRealMPFE::initVars()
 {
-  // Initialize list of variables of front-end argument 'arg'
-
   // Empty current lists
   _vars.removeAll() ;
   _saveVars.removeAll() ;
@@ -173,12 +174,12 @@ Double_t RooRealMPFE::getCarry() const
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the remote process and message passing
+/// pipes between current process and remote process
+
 void RooRealMPFE::initialize() 
 {
-  // Initialize the remote process and message passing
-  // pipes between current process and remote process
-
   // Trivial case: Inline mode 
   if (_inlineMode) {
     _state = Inline ;
@@ -218,12 +219,12 @@ void RooRealMPFE::initialize()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Server loop of remote processes. This function will return
+/// only when an incoming TERMINATE message is received.
+
 void RooRealMPFE::serverLoop() 
 {
-  // Server loop of remote processes. This function will return
-  // only when an incoming TERMINATE message is received.
-
 #ifndef _WIN32
   int msg ;
 
@@ -393,14 +394,14 @@ void RooRealMPFE::serverLoop()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Client-side function that instructs server process to start
+/// asynchronuous (re)calculation of function value. This function
+/// returns immediately. The calculated value can be retrieved
+/// using getVal()
+
 void RooRealMPFE::calculate() const 
 {
-  // Client-side function that instructs server process to start
-  // asynchronuous (re)calculation of function value. This function
-  // returns immediately. The calculated value can be retrieved
-  // using getVal()
-
 
   // Start asynchronous calculation of arg value
   if (_state==Initialize) {
@@ -497,14 +498,14 @@ void RooRealMPFE::calculate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If value needs recalculation and calculation has not beed started
+/// with a call to calculate() start it now. This function blocks
+/// until remote process has finished calculation and returns
+/// remote value
+
 Double_t RooRealMPFE::getValV(const RooArgSet* /*nset*/) const 
 {
-  // If value needs recalculation and calculation has not beed started
-  // with a call to calculate() start it now. This function blocks
-  // until remote process has finished calculation and returns
-  // remote value
-  
 
   if (isValueDirty()) {
     // Cache is dirty, no calculation has been started yet
@@ -526,13 +527,13 @@ Double_t RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send message to server process to retrieve output value
+/// If error were logged use logEvalError() on remote side
+/// transfer those errors to the local eval error queue.
+
 Double_t RooRealMPFE::evaluate() const
 {
-  // Send message to server process to retrieve output value
-  // If error were logged use logEvalError() on remote side
-  // transfer those errors to the local eval error queue.
-
   // Retrieve value of arg
   Double_t return_value = 0;
   if (_state==Inline) {
@@ -607,13 +608,13 @@ Double_t RooRealMPFE::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate remote server process and return front-end class
+/// to standby mode. Calls to calculate() or evaluate() after
+/// this call will automatically recreated the server process.
+
 void RooRealMPFE::standby()
 {
-  // Terminate remote server process and return front-end class
-  // to standby mode. Calls to calculate() or evaluate() after
-  // this call will automatically recreated the server process.
-
 #ifndef _WIN32
   if (_state==Client) {
     if (_pipe->good()) {
@@ -648,12 +649,12 @@ void RooRealMPFE::standby()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Intercept call to optimize constant term in test statistics
+/// and forward it to object on server side.
+
 void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTracking) 
 {
-  // Intercept call to optimize constant term in test statistics
-  // and forward it to object on server side.
-
 #ifndef _WIN32
   if (_state==Client) {
 
@@ -674,12 +675,12 @@ void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTr
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Control verbose messaging related to inter process communication
+/// on both client and server side
+
 void RooRealMPFE::setVerbose(Bool_t clientFlag, Bool_t serverFlag) 
 {
-  // Control verbose messaging related to inter process communication
-  // on both client and server side
-
 #ifndef _WIN32
   if (_state==Client) {
     int msg = Verbose ;
@@ -692,12 +693,12 @@ void RooRealMPFE::setVerbose(Bool_t clientFlag, Bool_t serverFlag)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Control verbose messaging related to inter process communication
+/// on both client and server side
+
 void RooRealMPFE::applyNLLWeightSquared(Bool_t flag) 
 {
-  // Control verbose messaging related to inter process communication
-  // on both client and server side
-
 #ifndef _WIN32
   if (_state==Client) {
     int msg = ApplyNLLW2 ;
@@ -710,7 +711,8 @@ void RooRealMPFE::applyNLLWeightSquared(Bool_t flag)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooRealMPFE::doApplyNLLW2(Bool_t flag) 
 {
   RooNLLVar* nll = dynamic_cast<RooNLLVar*>(_arg.absArg()) ;
@@ -720,12 +722,12 @@ void RooRealMPFE::doApplyNLLW2(Bool_t flag)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Control verbose messaging related to inter process communication
+/// on both client and server side
+
 void RooRealMPFE::enableOffsetting(Bool_t flag) 
 {
-  // Control verbose messaging related to inter process communication
-  // on both client and server side
-
 #ifndef _WIN32
   if (_state==Client) {
     int msg = EnableOffset ;

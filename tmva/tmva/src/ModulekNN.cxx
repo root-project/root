@@ -37,44 +37,49 @@
 // TMVA
 #include "TMVA/MsgLogger.h"
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TMVA::kNN::Event::Event()
    :fVar(),
     fWeight(-1.0),
     fType(-1)
 {
-   // default constructor
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::kNN::Event::Event(const VarVec &var, const Double_t weight, const Short_t type)
    :fVar(var),
     fWeight(weight),
     fType(type)
 {
-   // constructor
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::kNN::Event::Event(const VarVec &var, const Double_t weight, const Short_t type, const VarVec &tvec)
    :fVar(var),
     fTgt(tvec),
     fWeight(weight),
     fType(type)
 {
-   // constructor
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::kNN::Event::~Event()
 {
-   // destructor
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// compute distance
+
 TMVA::kNN::VarType TMVA::kNN::Event::GetDist(const Event &other) const
 {
-   // compute distance
    const UInt_t nvar = GetNVar();
 
    if (nvar != other.GetNVar()) {
@@ -90,35 +95,40 @@ TMVA::kNN::VarType TMVA::kNN::Event::GetDist(const Event &other) const
    return sum;
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::kNN::Event::SetTargets(const VarVec &tvec)
 {
    fTgt = tvec;
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 const TMVA::kNN::VarVec& TMVA::kNN::Event::GetTargets() const
 {
    return fTgt;
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 const TMVA::kNN::VarVec& TMVA::kNN::Event::GetVars() const
 {
    return fVar;
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// print
+
 void TMVA::kNN::Event::Print() const
 {
-   // print
    Print(std::cout);
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// print
+
 void TMVA::kNN::Event::Print(std::ostream& os) const
 {
-   // print
    Int_t dp = os.precision();
    os << "Event: ";
    for (UInt_t ivar = 0; ivar != GetNVar(); ++ivar) {
@@ -141,37 +151,41 @@ void TMVA::kNN::Event::Print(std::ostream& os) const
    os << std::setprecision(dp);
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// streamer
+
 std::ostream& TMVA::kNN::operator<<(std::ostream& os, const TMVA::kNN::Event& event)
 {
-   // streamer
    event.Print(os);
    return os;
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TMVA::kNN::ModulekNN::ModulekNN()
    :fDimn(0),
     fTree(0),
     fLogger( new MsgLogger("ModulekNN") )
 {
-   // default constructor
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::kNN::ModulekNN::~ModulekNN()
 {
-   // destructor
    if (fTree) {
       delete fTree; fTree = 0;
    }
    delete fLogger;
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// clean up
+
 void TMVA::kNN::ModulekNN::Clear()
 {
-   // clean up
    fDimn = 0;
 
    if (fTree) {
@@ -185,10 +199,11 @@ void TMVA::kNN::ModulekNN::Clear()
    fVar.clear();
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// add an event to tree
+
 void TMVA::kNN::ModulekNN::Add(const Event &event)
 {
-   // add an event to tree
    if (fTree) {
       Log() << kFATAL << "<Add> Cannot add event: tree is already built" << Endl;
       return;
@@ -217,10 +232,11 @@ void TMVA::kNN::ModulekNN::Add(const Event &event)
    }
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// fill the tree
+
 Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, const std::string &option)
 {
-   // fill the tree
    if (fTree) {
       Log() << kFATAL << "ModulekNN::Fill - tree has already been created" << Endl;
       return kFALSE;
@@ -316,14 +332,14 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
    return kTRUE;
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// find in tree
+/// if tree has been filled then search for nfind closest events
+/// if metic (fVarScale map) is computed then rescale event variables
+/// using previsouly computed width of variable distribution
+
 Bool_t TMVA::kNN::ModulekNN::Find(Event event, const UInt_t nfind, const std::string &option) const
 {
-   // find in tree
-   // if tree has been filled then search for nfind closest events
-   // if metic (fVarScale map) is computed then rescale event variables
-   // using previsouly computed width of variable distribution
-
    if (!fTree) {
       Log() << kFATAL << "ModulekNN::Find() - tree has not been filled" << Endl;
       return kFALSE;
@@ -364,10 +380,11 @@ Bool_t TMVA::kNN::ModulekNN::Find(Event event, const UInt_t nfind, const std::st
    return kTRUE;
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// find in tree
+
 Bool_t TMVA::kNN::ModulekNN::Find(const UInt_t nfind, const std::string &option) const
 {
-   // find in tree
    if (fCount.empty() || !fTree) {
       return kFALSE;
    }
@@ -417,13 +434,13 @@ Bool_t TMVA::kNN::ModulekNN::Find(const UInt_t nfind, const std::string &option)
    return kFALSE;
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Optimize() balances binary tree for first odepth levels
+/// for each depth we split sorted depth % dimension variables
+/// into 2^odepth parts
+
 TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t odepth)
 {
-   // Optimize() balances binary tree for first odepth levels
-   // for each depth we split sorted depth % dimension variables
-   // into 2^odepth parts
-
    if (fVar.empty() || fDimn != fVar.size()) {
       Log() << kWARNING << "<Optimize> Cannot build a tree" << Endl;
       return 0;
@@ -509,14 +526,14 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
    return tree;
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// compute scale factor for each variable (dimension) so that
+/// distance is computed uniformely along each dimension
+/// compute width of interval that includes (100 - 2*ifrac)% of events
+/// below, assume that in fVar each vector of values is sorted
+
 void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
 {
-   // compute scale factor for each variable (dimension) so that
-   // distance is computed uniformely along each dimension
-   // compute width of interval that includes (100 - 2*ifrac)% of events
-   // below, assume that in fVar each vector of values is sorted
-
    if (ifrac == 0) {
       return;
    }
@@ -597,12 +614,12 @@ void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
    }
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// scale each event variable so that rms of variables is approximately 1.0
+/// this allows comparisons of variables with distinct scales and units
+
 const TMVA::kNN::Event TMVA::kNN::ModulekNN::Scale(const Event &event) const
 {
-   // scale each event variable so that rms of variables is approximately 1.0
-   // this allows comparisons of variables with distinct scales and units
-
    if (fVarScale.empty()) {
       return event;
    }
@@ -632,17 +649,19 @@ const TMVA::kNN::Event TMVA::kNN::ModulekNN::Scale(const Event &event) const
    return Event(vvec, event.GetWeight(), event.GetType(), event.GetTargets());
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// print
+
 void TMVA::kNN::ModulekNN::Print() const
 {
-   // print
    Print(std::cout);
 }
 
-//-------------------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// print
+
 void TMVA::kNN::ModulekNN::Print(std::ostream &os) const
 {
-   // print
    os << "----------------------------------------------------------------------"<< std::endl;
    os << "Printing knn result" << std::endl;
    os << fkNNEvent << std::endl;

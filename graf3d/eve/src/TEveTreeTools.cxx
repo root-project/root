@@ -30,22 +30,22 @@
 
 ClassImp(TEveSelectorToEventList)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveSelectorToEventList::TEveSelectorToEventList(TEventList* evl, const char* sel) :
    TSelectorDraw(), fEvList(evl)
 {
-   // Constructor.
-
    fInput.Add(new TNamed("varexp", ""));
    fInput.Add(new TNamed("selection", sel));
    SetInputList(&fInput);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process entry.
+
 Bool_t TEveSelectorToEventList::Process(Long64_t entry)
 {
-   // Process entry.
-
    if(GetSelect()->EvalInstance(0) != 0)
       fEvList->Enter(entry);
    return kTRUE;
@@ -64,7 +64,8 @@ Bool_t TEveSelectorToEventList::Process(Long64_t entry)
 ClassImp(TEvePointSelector)
 ClassImp(TEvePointSelectorConsumer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEvePointSelector::TEvePointSelector(TTree* t,
                                      TEvePointSelectorConsumer* c,
                                      const char* vexp, const char* sel) :
@@ -82,11 +83,11 @@ TEvePointSelector::TEvePointSelector(TTree* t,
    SetInputList(&fInput);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process the tree, select points matching 'selection'.
+
 Long64_t TEvePointSelector::Select(const char* selection)
 {
-   // Process the tree, select points matching 'selection'.
-
    TString var(fVarexp);
    if (fSubIdExp.IsNull()) {
       fSubIdNum = 0;
@@ -115,21 +116,21 @@ Long64_t TEvePointSelector::Select(const char* selection)
    return fSelectedRows;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process tree 't', select points matching 'selection'.
+
 Long64_t TEvePointSelector::Select(TTree* t, const char* selection)
 {
-   // Process tree 't', select points matching 'selection'.
-
    fTree = t;
    return Select(selection);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Callback from tree-player after a chunk of data has been processed.
+/// This is forwarded to the current point-consumer.
+
 void TEvePointSelector::TakeAction()
 {
-   // Callback from tree-player after a chunk of data has been processed.
-   // This is forwarded to the current point-consumer.
-
    fSelectedRows += fNfill;
    // printf("TEvePointSelector::TakeAction nfill=%d, nall=%lld\n", fNfill, fSelectedRows);
    if (fConsumer) {

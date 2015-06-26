@@ -43,19 +43,19 @@ ClassImp(RooRealBinding)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a lightweight function binding of RooAbsReal func to
+/// variables 'vars'.  Use the provided nset as normalization set to
+/// be passed to RooAbsReal::getVal() If rangeName is not null, use
+/// the range of with that name as range associated with the
+/// variables of this function binding. If clipInvalid is true,
+/// values requested to the function binding that are outside the
+/// defined range of the variables are clipped to fit in the defined
+/// range.
+
 RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid, const TNamed* rangeName) :
   RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName), _funcSave(0)
 {
-  // Construct a lightweight function binding of RooAbsReal func to
-  // variables 'vars'.  Use the provided nset as normalization set to
-  // be passed to RooAbsReal::getVal() If rangeName is not null, use
-  // the range of with that name as range associated with the
-  // variables of this function binding. If clipInvalid is true,
-  // values requested to the function binding that are outside the
-  // defined range of the variables are clipped to fit in the defined
-  // range.
-
   // allocate memory
   _vars= new RooAbsRealLValue*[getDimension()];
   if(0 == _vars) {
@@ -79,20 +79,20 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a lightweight function binding of RooAbsReal func to
+/// variables 'vars'.  Use the provided nset as normalization set to
+/// be passed to RooAbsReal::getVal() If rangeName is not null, use
+/// the range of with that name as range associated with the
+/// variables of this function binding. If clipInvalid is true,
+/// values requested to the function binding that are outside the
+/// defined range of the variables are clipped to fit in the defined
+/// range.
+
 RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nset) :
   RooAbsFunc(other), _func(other._func), _nset(nset?nset:other._nset), _xvecValid(other._xvecValid),
   _clipInvalid(other._clipInvalid), _xsave(0), _rangeName(other._rangeName), _funcSave(other._funcSave)
 {
-  // Construct a lightweight function binding of RooAbsReal func to
-  // variables 'vars'.  Use the provided nset as normalization set to
-  // be passed to RooAbsReal::getVal() If rangeName is not null, use
-  // the range of with that name as range associated with the
-  // variables of this function binding. If clipInvalid is true,
-  // values requested to the function binding that are outside the
-  // defined range of the variables are clipped to fit in the defined
-  // range.
-
   // allocate memory
   _vars= new RooAbsRealLValue*[getDimension()];
 
@@ -102,22 +102,22 @@ RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nse
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooRealBinding::~RooRealBinding() 
 {
-  // Destructor
-
   if(0 != _vars) delete[] _vars;
   if (_xsave) delete[] _xsave ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save value of all variables
+
 void RooRealBinding::saveXVec() const
 {
-  // Save value of all variables
-
   if (!_xsave) {
     _xsave = new Double_t[getDimension()] ;    
     RooArgSet* comps = _func->getComponents() ;
@@ -146,12 +146,12 @@ void RooRealBinding::saveXVec() const
   } 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore value of all variables to previously
+/// saved values by saveXVec()
+
 void RooRealBinding::restoreXVec() const
 {
-  // Restore value of all variables to previously
-  // saved values by saveXVec()
-
   if (!_xsave) {
     return ;
   }
@@ -172,12 +172,12 @@ void RooRealBinding::restoreXVec() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load the vector of variable values into the RooRealVars associated
+/// as variables with the bound RooAbsReal function
+
 void RooRealBinding::loadValues(const Double_t xvector[]) const 
 {
-  // Load the vector of variable values into the RooRealVars associated
-  // as variables with the bound RooAbsReal function
-
   _xvecValid = kTRUE ;
   const char* range = RooNameReg::instance().constStr(_rangeName) ;
   for(UInt_t index= 0; index < _dimension; index++) {
@@ -191,11 +191,11 @@ void RooRealBinding::loadValues(const Double_t xvector[]) const
 }  
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the bound RooAbsReal at the variable values provided in xvector
+
 Double_t RooRealBinding::operator()(const Double_t xvector[]) const 
 {
-  // Evaluate the bound RooAbsReal at the variable values provided in xvector
-
   assert(isValid());
   _ncall++ ;
   loadValues(xvector);
@@ -204,43 +204,46 @@ Double_t RooRealBinding::operator()(const Double_t xvector[]) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return lower limit on i-th variable 
+
 Double_t RooRealBinding::getMinLimit(UInt_t index) const 
 {
-  // Return lower limit on i-th variable 
   assert(isValid());
 
   return _vars[index]->getMin(RooNameReg::str(_rangeName));
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return upper limit on i-th variable 
+
 Double_t RooRealBinding::getMaxLimit(UInt_t index) const 
 {
-  // Return upper limit on i-th variable 
-
   assert(isValid());
   return _vars[index]->getMax(RooNameReg::str(_rangeName));
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return name of function
+
 const char* RooRealBinding::getName() const 
 { 
-  // Return name of function
-
   return _func->GetName() ; 
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::list<Double_t>* RooRealBinding::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
 {
   return _func->plotSamplingHint(obs,xlo,xhi) ; 
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::list<Double_t>* RooRealBinding::binBoundaries(Int_t index) const
 {
   return _func->binBoundaries(*_vars[index],getMinLimit(index),getMaxLimit(index));

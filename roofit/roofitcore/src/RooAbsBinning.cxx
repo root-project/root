@@ -37,58 +37,60 @@ ClassImp(RooAbsBinning)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsBinning::RooAbsBinning(const char* name) : TNamed(name,name)
 {
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsBinning::~RooAbsBinning() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print binning name
+
 void RooAbsBinning::printName(ostream& os) const 
 {
-  // Print binning name
-
   os << GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print binning title
+
 void RooAbsBinning::printTitle(ostream& os) const 
 {
-  // Print binning title
-
   os << GetTitle() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print binning class name
+
 void RooAbsBinning::printClassName(ostream& os) const 
 {
-  // Print binning class name
-
   os << IsA()->GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print binning arguments (the RooAbsReal objects represening
+/// the variable bin boundaries for parameterized binning implementations
+
 void RooAbsBinning::printArgs(ostream& os) const 
 {
-  // Print binning arguments (the RooAbsReal objects represening
-  // the variable bin boundaries for parameterized binning implementations
-
   os << "[ " ;    
   if (lowBoundFunc()) {
     os << "lowerBound=" << lowBoundFunc()->GetName() ;
@@ -104,10 +106,11 @@ void RooAbsBinning::printArgs(ostream& os) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print binning value, i.e the bin boundary positions
+
 void RooAbsBinning::printValue(ostream &os) const
 {
-  // Print binning value, i.e the bin boundary positions
   Int_t n = numBins() ;
   os << "B(" ;
   
@@ -125,11 +128,11 @@ void RooAbsBinning::printValue(ostream &os) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Custom streamer implementing schema evolution between V1 and V2 persistent binnings
+
 void RooAbsBinning::Streamer(TBuffer &R__b)
 {
-  // Custom streamer implementing schema evolution between V1 and V2 persistent binnings
-
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }

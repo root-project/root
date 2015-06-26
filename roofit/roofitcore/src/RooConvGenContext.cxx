@@ -45,21 +45,21 @@ ClassImp(RooConvGenContext)
 ;
   
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for specialized generator context for analytical convolutions. 
+/// 
+/// Builds a generator for the physics PDF convoluted with the truth model
+/// and a generator for the resolution model as PDF. Events are generated
+/// by sampling events from the p.d.f and smearings from the resolution model
+/// and adding these to obtain a distribution of events consistent with the
+/// convolution of these two. The advantage of this procedure is so that
+/// both p.d.f and resolution model can take advantage of any internal
+/// generators that may be defined.
+
 RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArgSet &vars, 
 	 			     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdfVarsOwned(0), _modelVarsOwned(0)
 {
-  // Constructor for specialized generator context for analytical convolutions. 
-  // 
-  // Builds a generator for the physics PDF convoluted with the truth model
-  // and a generator for the resolution model as PDF. Events are generated
-  // by sampling events from the p.d.f and smearings from the resolution model
-  // and adding these to obtain a distribution of events consistent with the
-  // convolution of these two. The advantage of this procedure is so that
-  // both p.d.f and resolution model can take advantage of any internal
-  // generators that may be defined.
-
   cxcoutI(Generation) << "RooConvGenContext::ctor() setting up special generator context for analytical convolution p.d.f. " << model.GetName() 
 		      << " for generation of observable(s) " << vars << endl ;
 
@@ -115,21 +115,21 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for specialized generator context for numerical convolutions. 
+/// 
+/// Builds a generator for the physics PDF convoluted with the truth model
+/// and a generator for the resolution model as PDF. Events are generated
+/// by sampling events from the p.d.f and smearings from the resolution model
+/// and adding these to obtain a distribution of events consistent with the
+/// convolution of these two. The advantage of this procedure is so that
+/// both p.d.f and resolution model can take advantage of any internal
+/// generators that may be defined.
+
 RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet &vars, 
 	 			     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
-  // Constructor for specialized generator context for numerical convolutions. 
-  // 
-  // Builds a generator for the physics PDF convoluted with the truth model
-  // and a generator for the resolution model as PDF. Events are generated
-  // by sampling events from the p.d.f and smearings from the resolution model
-  // and adding these to obtain a distribution of events consistent with the
-  // convolution of these two. The advantage of this procedure is so that
-  // both p.d.f and resolution model can take advantage of any internal
-  // generators that may be defined.
-
   cxcoutI(Generation) << "RooConvGenContext::ctor() setting up special generator context for numeric convolution p.d.f. " << model.GetName() 
 			<< " for generation of observable(s) " << vars << endl ;
 
@@ -155,21 +155,21 @@ RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for specialized generator context for FFT numerical convolutions.
+/// 
+/// Builds a generator for the physics PDF convoluted with the truth model
+/// and a generator for the resolution model as PDF. Events are generated
+/// by sampling events from the p.d.f and smearings from the resolution model
+/// and adding these to obtain a distribution of events consistent with the
+/// convolution of these two. The advantage of this procedure is so that
+/// both p.d.f and resolution model can take advantage of any internal
+/// generators that may be defined.
+
 RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet &vars, 
 	 			     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
-  // Constructor for specialized generator context for FFT numerical convolutions.
-  // 
-  // Builds a generator for the physics PDF convoluted with the truth model
-  // and a generator for the resolution model as PDF. Events are generated
-  // by sampling events from the p.d.f and smearings from the resolution model
-  // and adding these to obtain a distribution of events consistent with the
-  // convolution of these two. The advantage of this procedure is so that
-  // both p.d.f and resolution model can take advantage of any internal
-  // generators that may be defined.
-
   cxcoutI(Generation) << "RooConvGenContext::ctor() setting up special generator context for fft convolution p.d.f. " << model.GetName() 
 			<< " for generation of observable(s) " << vars << endl ;
 
@@ -206,11 +206,11 @@ RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooConvGenContext::~RooConvGenContext()
 {
-  // Destructor
-
   // Destructor. Delete all owned subgenerator contexts
   delete _pdfGen ;
   delete _modelGen ;
@@ -224,12 +224,12 @@ RooConvGenContext::~RooConvGenContext()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Attach given set of arguments to internal clones of
+/// pdf and resolution model
+
 void RooConvGenContext::attach(const RooArgSet& args) 
 {
-  // Attach given set of arguments to internal clones of
-  // pdf and resolution model
-
   // Find convolution variable in input and output sets
   RooRealVar* cvModel = (RooRealVar*) _modelVars->find(_convVarName) ;
   RooRealVar* cvPdf   = (RooRealVar*) _pdfVars->find(_convVarName) ;
@@ -249,12 +249,12 @@ void RooConvGenContext::attach(const RooArgSet& args)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time initialization of generator context, attaches
+/// the context to the supplied event container
+
 void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
 {
-  // One-time initialization of generator context, attaches
-  // the context to the supplied event container
-
   // Find convolution variable in input and output sets
   _cvModel = (RooRealVar*) _modelVars->find(_convVarName) ;
   _cvPdf   = (RooRealVar*) _pdfVars->find(_convVarName) ;
@@ -278,11 +278,11 @@ void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate a single event 
+
 void RooConvGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
-  // Generate a single event 
-
   while(1) {
 
     // Generate pdf and model data
@@ -303,25 +303,25 @@ void RooConvGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the traversal order for events in the prototype dataset
+/// The argument is a array of integers with a size identical
+/// to the number of events in the prototype dataset. Each element
+/// should contain an integer in the range 1-N.
+
 void RooConvGenContext::setProtoDataOrder(Int_t* lut)
 {
-  // Set the traversal order for events in the prototype dataset
-  // The argument is a array of integers with a size identical
-  // to the number of events in the prototype dataset. Each element
-  // should contain an integer in the range 1-N.
-
   RooAbsGenContext::setProtoDataOrder(lut) ;
   _modelGen->setProtoDataOrder(lut) ;
   _pdfGen->setProtoDataOrder(lut) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the details of this generator context
+
 void RooConvGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
 {
-  // Print the details of this generator context
-
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
   os << indent << "--- RooConvGenContext ---" << endl ;
   os << indent << "List of component generators" << endl ;

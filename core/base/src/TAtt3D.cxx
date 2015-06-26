@@ -22,10 +22,10 @@
 
 ClassImp(TAtt3D)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set total size of this 3D object (used by X3D interface).
+
 void TAtt3D::Sizeof3D() const
 {
-   // Set total size of this 3D object (used by X3D interface).
-
    return;
 }

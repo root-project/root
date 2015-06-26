@@ -27,7 +27,9 @@
 
 ClassImp(TGLSelectRecordBase);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGLSelectRecordBase::TGLSelectRecordBase() :
    fN     (0),
    fItems (0),
@@ -35,10 +37,11 @@ TGLSelectRecordBase::TGLSelectRecordBase() :
    fMaxZ  (0),
    fPos   (0)
 {
-   // Default constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from raw GL-select record.
+
 TGLSelectRecordBase::TGLSelectRecordBase(UInt_t* data) :
    fN     (data[0]),
    fItems (0),
@@ -46,12 +49,12 @@ TGLSelectRecordBase::TGLSelectRecordBase(UInt_t* data) :
    fMaxZ  ((Float_t)data[2] / 0x7fffffff),
    fPos   (0)
 {
-   // Constructor from raw GL-select record.
-
    CopyItems(&data[3]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGLSelectRecordBase::TGLSelectRecordBase(const TGLSelectRecordBase& rec) :
    fN     (rec.fN),
    fItems (0),
@@ -59,24 +62,22 @@ TGLSelectRecordBase::TGLSelectRecordBase(const TGLSelectRecordBase& rec) :
    fMaxZ  (rec.fMaxZ),
    fPos   (rec.fPos)
 {
-   // Copy constructor.
-
    CopyItems(rec.fItems);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLSelectRecordBase::~TGLSelectRecordBase()
 {
-   // Destructor.
-
    delete [] fItems;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy operator.
+
 TGLSelectRecordBase& TGLSelectRecordBase::operator=(const TGLSelectRecordBase& rec)
 {
-   // Copy operator.
-
    if (this != &rec)
    {
       fN      = rec.fN;
@@ -88,11 +89,11 @@ TGLSelectRecordBase& TGLSelectRecordBase::operator=(const TGLSelectRecordBase& r
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy data from names. fN must already be set.
+
 void TGLSelectRecordBase::CopyItems(UInt_t* items)
 {
-   // Copy data from names. fN must already be set.
-
    delete [] fItems;
    if (fN > 0) {
       fItems = new UInt_t[fN];
@@ -102,22 +103,22 @@ void TGLSelectRecordBase::CopyItems(UInt_t* items)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the record from raw buffer.
+
 void TGLSelectRecordBase::SetRawOnly(UInt_t* data)
 {
-   // Setup the record from raw buffer.
-
    fN     = data[0];
    fMinZ  = (Float_t)data[1] / 0x7fffffff;
    fMaxZ  = (Float_t)data[2] / 0x7fffffff;
    CopyItems(&data[3]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the record from raw buffer.
+
 void TGLSelectRecordBase::Set(UInt_t* data)
 {
-   // Setup the record from raw buffer.
-
    fN     = data[0];
    fMinZ  = (Float_t)data[1] / 0x7fffffff;
    fMaxZ  = (Float_t)data[2] / 0x7fffffff;
@@ -125,11 +126,11 @@ void TGLSelectRecordBase::Set(UInt_t* data)
    CopyItems(&data[3]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reinitalize all data to null values.
+
 void TGLSelectRecordBase::Reset()
 {
-   // Reinitalize all data to null values.
-
    delete [] fItems;
    fN     = 0;
    fItems = 0;
@@ -152,7 +153,9 @@ void TGLSelectRecordBase::Reset()
 
 ClassImp(TGLSelectRecord);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGLSelectRecord::TGLSelectRecord() :
    TGLSelectRecordBase(),
    fTransparent (kFALSE),
@@ -165,10 +168,11 @@ TGLSelectRecord::TGLSelectRecord() :
    fHighlight   (kFALSE),
    fSecSelRes   (kNone)
 {
-   // Default constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from raw GL-select record.
+
 TGLSelectRecord::TGLSelectRecord(UInt_t* data) :
    TGLSelectRecordBase(data),
    fTransparent (kFALSE),
@@ -181,10 +185,11 @@ TGLSelectRecord::TGLSelectRecord(UInt_t* data) :
    fHighlight   (kFALSE),
    fSecSelRes   (kNone)
 {
-   // Constructor from raw GL-select record.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGLSelectRecord::TGLSelectRecord(const TGLSelectRecord& rec) :
    TGLSelectRecordBase(rec),
    fTransparent (rec.fTransparent),
@@ -197,20 +202,20 @@ TGLSelectRecord::TGLSelectRecord(const TGLSelectRecord& rec) :
    fHighlight   (rec.fHighlight),
    fSecSelRes   (kNone)
 {
-   // Copy constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLSelectRecord::~TGLSelectRecord()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy operator.
+
 TGLSelectRecord& TGLSelectRecord::operator=(const TGLSelectRecord& rec)
 {
-   // Copy operator.
-
    if (this != &rec)
    {
       TGLSelectRecordBase::operator=(rec);
@@ -227,12 +232,12 @@ TGLSelectRecord& TGLSelectRecord::operator=(const TGLSelectRecord& rec)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the record from raw buffer.
+/// Non-core members are reset.
+
 void TGLSelectRecord::Set(UInt_t* data)
 {
-   // Setup the record from raw buffer.
-   // Non-core members are reset.
-
    TGLSelectRecordBase::Set(data);
    fTransparent = kFALSE;
    fSceneInfo   = 0;
@@ -245,11 +250,11 @@ void TGLSelectRecord::Set(UInt_t* data)
    fSecSelRes   = kNone;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reinitalize all data to null values.
+
 void TGLSelectRecord::Reset()
 {
-   // Reinitalize all data to null values.
-
    TGLSelectRecordBase::Reset();
    fTransparent = kFALSE;
    fSceneInfo   = 0;
@@ -262,11 +267,11 @@ void TGLSelectRecord::Reset()
    fSecSelRes   = kNone;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print contents of the select record to stdout.
+
 void TGLSelectRecord::Print()
 {
-   // Print contents of the select record to stdout.
-
    printf("SelectRecord   N=%d, miZ=%.4f, maxZ=%.4f\n"
           "    sceneinfo=%p, pshp=%p, transp=%d, mult=%d, hilite=%d\n"
           "    tobj=%p (name='%s'), spec=%p\n",
@@ -276,13 +281,13 @@ void TGLSelectRecord::Print()
           fSpecific);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the records imply the same selection result, that is,
+/// their secondary members are all equal.
+
 Bool_t TGLSelectRecord::AreSameSelectionWise(const TGLSelectRecord& r1,
                                              const TGLSelectRecord& r2)
 {
-   // Check if the records imply the same selection result, that is,
-   // their secondary members are all equal.
-
    return r1.fSceneInfo == r2.fSceneInfo && r1.fPhysShape == r2.fPhysShape &&
           r1.fObject    == r2.fObject    && r1.fSpecific  == r2.fSpecific;
 }
@@ -299,41 +304,45 @@ Bool_t TGLSelectRecord::AreSameSelectionWise(const TGLSelectRecord& r1,
 
 ClassImp(TGLOvlSelectRecord);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGLOvlSelectRecord::TGLOvlSelectRecord() :
    TGLSelectRecordBase(),
    fOvlElement (0)
 {
-   // Default constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from raw GL-select record.
+
 TGLOvlSelectRecord::TGLOvlSelectRecord(UInt_t* data) :
    TGLSelectRecordBase(data),
    fOvlElement (0)
 {
-   // Constructor from raw GL-select record.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGLOvlSelectRecord::TGLOvlSelectRecord(const TGLOvlSelectRecord& rec) :
    TGLSelectRecordBase(rec),
    fOvlElement (rec.fOvlElement)
 {
-   // Copy constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLOvlSelectRecord::~TGLOvlSelectRecord()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy operator.
+
 TGLOvlSelectRecord& TGLOvlSelectRecord::operator=(const TGLOvlSelectRecord& rec)
 {
-   // Copy operator.
-
    if (this != &rec)
    {
       TGLSelectRecordBase::operator=(rec);
@@ -342,21 +351,21 @@ TGLOvlSelectRecord& TGLOvlSelectRecord::operator=(const TGLOvlSelectRecord& rec)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the record from raw buffer.
+/// Non-core members are reset.
+
 void TGLOvlSelectRecord::Set(UInt_t* data)
 {
-   // Setup the record from raw buffer.
-   // Non-core members are reset.
-
    TGLSelectRecordBase::Set(data);
    fOvlElement = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reinitalize all data to null values.
+
 void TGLOvlSelectRecord::Reset()
 {
-   // Reinitalize all data to null values.
-
    TGLSelectRecordBase::Reset();
    fOvlElement = 0;
 }

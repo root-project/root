@@ -32,11 +32,12 @@
 
 ClassImp(TMVA::GeneticGenes)
    
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor:
+/// set the factors of this individual
+
 TMVA::GeneticGenes::GeneticGenes( std::vector<Double_t> & f  ) 
 {
-   // Constructor:
-   // set the factors of this individual
    fFactors = f;
    fFitness = 0;
 }

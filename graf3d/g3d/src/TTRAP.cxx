@@ -48,11 +48,11 @@ ClassImp(TTRAP)
 //                  face at +DZ in z
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRAP shape default constructor
+
 TTRAP::TTRAP()
 {
-   // TRAP shape default constructor
-
    fH1     = 0.;
    fBl1    = 0.;
    fTl1    = 0.;
@@ -64,13 +64,13 @@ TTRAP::TTRAP()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRAP shape normal constructor
+
 TTRAP::TTRAP(const char *name, const char *title, const char *material, Float_t dz, Float_t theta, Float_t phi,
              Float_t h1, Float_t bl1, Float_t tl1, Float_t alpha1, Float_t h2,
              Float_t bl2, Float_t tl2, Float_t alpha2) : TBRIK(name, title,material,theta,phi,dz)
 {
-   // TRAP shape normal constructor
-
    fH1     = h1;
    fBl1    = bl1;
    fTl1    = tl1;
@@ -82,17 +82,18 @@ TTRAP::TTRAP(const char *name, const char *title, const char *material, Float_t 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRAP shape default destructor
+
 TTRAP::~TTRAP()
 {
-   // TRAP shape default destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TRAP points
+
 void TTRAP::SetPoints(Double_t *points) const
 {
-   // Create TRAP points
-
    const Float_t pi = Float_t (TMath::Pi());
    Float_t alpha1 = fAlpha1    * pi/180.0;
    Float_t alpha2 = fAlpha2    * pi/180.0;

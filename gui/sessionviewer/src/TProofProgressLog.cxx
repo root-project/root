@@ -39,12 +39,12 @@ const UInt_t kDefaultActive = BIT(18); // If the log element is active by defaul
 
 ClassImp(TProofProgressLog)
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a window frame for log messages.
+
 TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) :
    TGTransientFrame(gClient->GetRoot(), gClient->GetRoot(), w, h)
 {
-   // Create a window frame for log messages.
-
    fDialog = d;
    if (fDialog) fSessionUrl = fDialog->fSessionUrl;
    fSessionIdx = 0;
@@ -52,12 +52,12 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    Init(w, h);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a window frame for log messages.
+
 TProofProgressLog::TProofProgressLog(const char *url, Int_t idx, Int_t w, Int_t h) :
    TGTransientFrame(gClient->GetRoot(), gClient->GetRoot(), w, h)
 {
-   // Create a window frame for log messages.
-
    fDialog = 0;
    fSessionUrl = url;
    fSessionIdx = (idx > 0) ? -idx : idx;
@@ -65,11 +65,11 @@ TProofProgressLog::TProofProgressLog(const char *url, Int_t idx, Int_t w, Int_t 
    Init(w, h);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init window frame for log messages.
+
 void TProofProgressLog::Init(Int_t w, Int_t h)
 {
-   // Init window frame for log messages.
-
    fProofLog = 0;
    fFullText = kFALSE;
    fTextType = kStd;
@@ -242,11 +242,11 @@ void TProofProgressLog::Init(Int_t w, Int_t h)
    Popup();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TProofProgressLog::~TProofProgressLog()
 {
-   // Destructor
-
    // Cleanup the log object
    SafeDelete(fProofLog);
 
@@ -258,46 +258,46 @@ TProofProgressLog::~TProofProgressLog()
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show log window.
+
 void TProofProgressLog::Popup()
 {
-   // Show log window.
-
    MapWindow();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear log window.
+
 void TProofProgressLog::Clear(Option_t *)
 {
-   // Clear log window.
-
    if (fText)
       fText->Clear();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a text buffer in the window.
+
 void TProofProgressLog::LoadBuffer(const char *buffer)
 {
-   // Load a text buffer in the window.
-
    if (fText)
       fText->LoadBuffer(buffer);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a file in the window.
+
 void TProofProgressLog::LoadFile(const char *file)
 {
-   // Load a file in the window.
-
    if (fText)
       fText->LoadFile(file);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add text to the window.
+
 void TProofProgressLog::AddBuffer(const  char *buffer)
 {
-   // Add text to the window.
-
    if (fText) {
       TGText txt;
       txt.LoadBuffer(buffer);
@@ -305,20 +305,20 @@ void TProofProgressLog::AddBuffer(const  char *buffer)
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle close button or when closed via window manager action.
+
 void TProofProgressLog::CloseWindow()
 {
-   // Handle close button or when closed via window manager action.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build the list of workers. For this, extract the logs and take the names
+/// of TProofLogElements
+
 void TProofProgressLog::BuildLogList(Bool_t create)
 {
-   // Build the list of workers. For this, extract the logs and take the names
-   // of TProofLogElements
-
    // Set title
    TString title;
    title.Form("PROOF - Processing logs for session 'undefined'");
@@ -382,12 +382,12 @@ void TProofProgressLog::BuildLogList(Bool_t create)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display logs. 'grep' is set to kTRUE if it is invoked by pressing the
+/// 'Filter' button.
+
 void TProofProgressLog::DoLog(Bool_t grep)
 {
-   // Display logs. 'grep' is set to kTRUE if it is invoked by pressing the
-   // 'Filter' button.
-
    Clear();
 
    if (!fGrepText) {
@@ -514,11 +514,11 @@ void TProofProgressLog::DoLog(Bool_t grep)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load/append a log msg in the log frame, if open
+
 void TProofProgressLog::LogMessage(const char *msg, Bool_t all)
 {
-   // Load/append a log msg in the log frame, if open
-
    if (all) {
       // load buffer
       LoadBuffer(msg);
@@ -528,12 +528,12 @@ void TProofProgressLog::LogMessage(const char *msg, Bool_t all)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Save the logs to a file
+///Only the name of the file is taken, no expansion
+
 void TProofProgressLog::SaveToFile()
 {
-   //Save the logs to a file
-   //Only the name of the file is taken, no expansion
-
    if (!fProofLog) DoLog();
 
    // File name: the default is <session-tag>.log
@@ -565,11 +565,11 @@ void TProofProgressLog::SaveToFile()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the view of grep filters according to the value of checkboxes
+
 void TProofProgressLog::SetGrepView()
 {
-   // Sets the view of grep filters according to the value of checkboxes
-
    if (fGrepCheckCmd->IsOn()) {
       fGrepLabel->SetText("Pipe log through command:");
       fGrepCheckInv->SetDisabledAndSelected(kFALSE);
@@ -594,11 +594,11 @@ void TProofProgressLog::SetGrepView()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Enable/disable the line number entry
+
 void TProofProgressLog::NoLineEntry()
 {
-   //Enable/disable the line number entry
-
    if (fAllLines->IsOn()){
       //disable the line number entry
       fLinesFrom->SetState(kFALSE);
@@ -609,11 +609,11 @@ void TProofProgressLog::NoLineEntry()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///actions of select all/clear all button
+
 void TProofProgressLog::Select(Int_t id, Bool_t all)
 {
-   //actions of select all/clear all button
-
    Int_t nen = fLogList->GetNumberOfEntries();
    Bool_t sel = id ? 0 : 1;
 
@@ -630,11 +630,11 @@ void TProofProgressLog::Select(Int_t id, Bool_t all)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rebuild the log info for a new entered session
+
 void TProofProgressLog::Rebuild()
 {
-   // Rebuild the log info for a new entered session
-
    // Check if we need to remake the TProofLog object
    Bool_t sameurl = kFALSE;
    TUrl url(fUrlText->GetText());

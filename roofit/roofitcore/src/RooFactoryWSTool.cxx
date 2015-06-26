@@ -144,7 +144,8 @@ static char *strtok_r(char *s1, const char *s2, char **lasts)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws), _errorCount(0), _autoClassPostFix("")
 
 {
@@ -153,20 +154,21 @@ RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws), _errorCount
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooFactoryWSTool::~RooFactoryWSTool() 
 {
-  // Destructor
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Low-level factory interface for creating a RooRealVar with a given range and initial value
+
 RooRealVar* RooFactoryWSTool::createVariable(const char* name, Double_t xmin, Double_t xmax)
 {
-  // Low-level factory interface for creating a RooRealVar with a given range and initial value
-
   // First check if variable already exists
   if (_ws->var(name)) {
     coutE(ObjectHandling) << "RooFactoryWSTool::createFactory() ERROR: variable with name '" << name << "' already exists" << endl ;
@@ -185,12 +187,12 @@ RooRealVar* RooFactoryWSTool::createVariable(const char* name, Double_t xmin, Do
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Low-level factory interface for creating a RooCategory with a given list of state names. The State name list
+/// can be of the form 'name1,name2,name3' or of the form 'name1=id1,name2=id2,name3=id3'
+
 RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stateNameList) 
 {
-  // Low-level factory interface for creating a RooCategory with a given list of state names. The State name list
-  // can be of the form 'name1,name2,name3' or of the form 'name1=id1,name2=id2,name3=id3'
-
   // Create variable
   RooCategory cat(name,name) ;
 
@@ -226,14 +228,14 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Low-level factory interface for creating a RooAbsPdf of a given class with a given list of input variables
+/// The variable list varList should be of the form "a,b,c" where the interpretation of the argument is
+/// dependent on the p.d.f. Set and List arguments can be passed by substituting a single argument with
+/// the form (a,b,c), i.e. one can set varList to "x,(a0,a1,a2)" to pass a RooAbsReal and a RooArgSet as arguments.
+
 RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objName, const char* varList) 
 {
-  // Low-level factory interface for creating a RooAbsPdf of a given class with a given list of input variables
-  // The variable list varList should be of the form "a,b,c" where the interpretation of the argument is
-  // dependent on the p.d.f. Set and List arguments can be passed by substituting a single argument with
-  // the form (a,b,c), i.e. one can set varList to "x,(a0,a1,a2)" to pass a RooAbsReal and a RooArgSet as arguments.
-  
   // Find class in ROOT class table
   TClass* tc = resolveClassName(className) ;
   if (!tc) {
@@ -438,7 +440,8 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 vector<string> RooFactoryWSTool::ctorArgs(const char* /*className*/) 
 {
   return vector<string>() ;
@@ -447,10 +450,10 @@ vector<string> RooFactoryWSTool::ctorArgs(const char* /*className*/)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, Bool_t recursiveCoefs)
 {
-
   // Spec list is of form a*A,b*B,c*C,D [ *d]
 
   RooArgList pdfList ;
@@ -489,10 +492,10 @@ RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, Bool
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specList)
 {
-
   // Spec list is of form a*A,b*B,c*C,D [ *d]
 
   RooArgList amplList ;
@@ -531,7 +534,8 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList) 
 {
   _of = this ;
@@ -598,7 +602,8 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexCat, const char* pdfMap)
 {
   map<string,RooAbsPdf*> theMap ;
@@ -646,10 +651,10 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList) 
 {
-
   RooArgList sumlist1 ;
   RooArgList sumlist2 ;
 
@@ -701,7 +706,8 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList) 
 {
   return (RooProduct*) createArg("RooProduct",objName,Form("{%s}",pdfList)) ;
@@ -711,112 +717,112 @@ RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process high-level object creation syntax
+/// Accepted forms of syntax are
+///
+///
+/// Creating variables
+///
+/// x[-10,10]             -  Create variable x with given range and put it in workspace
+/// x[3,-10,10]           -  Create variable x with given range and initial value and put it in workspace
+/// x[3]                  -  Create variable x with given constant value
+///
+/// <numeric literal>     - Numeric literal expressions (0.5, -3 etc..) are converted to a RooConst(<numeric literal>) 
+///                         where ever a RooAbsReal or RooAbsArg argument is expected
+///
+/// Creating categories
+///
+/// c[lep,kao,nt1,nt2]    -  Create category c with given state names
+/// tag[B0=1,B0bar=-1]    -  Create category tag with given state names and index assignments
+///
+///
+/// Creating functions and p.d.f.s
+///
+/// MyPdf::g(x,m,s)       - Create p.d.f or function of type MyPdf with name g with argument x,m,s
+///                         Interpretation and number of arguments are mapped to the constructor arguments of the class 
+///                         (after the name and title).
+///
+/// MyPdf(x,m,s)          - As above, but with an implicitly defined (unique) object name
+/// 
+///
+/// Creating sets and lists (to be used as inputs above)
+///
+/// {a,b,c}               - Create RooArgSet or RooArgList (as determined by context) from given contents
+///
+///
+///
+/// Objects that are not created, are assumed to exist in the workspace
+/// Object creation expressions as shown above can be nested, e.g. one can do
+///
+///   RooGaussian::g(x[-10,10],m[0],3) 
+///
+/// to create a p.d.f and its variables in one go. This nesting can be applied recursively e.g.
+///
+///   SUM::model( f[0.5,0,1] * RooGaussian::g( x[-10,10], m[0], 3] ),
+///                            RooChebychev::c( x, {a0[0.1],a1[0.2],a2[-0.3]} ))
+///
+/// creates the sum of a Gaussian and a Chebychev and all its variables
+///
+///
+/// A seperate series of operator meta-type exists to simplify the construction of composite expressions
+/// meta-types in all capitals (SUM) create p.d.f.s, meta types in lower case (sum) create
+/// functions.
+///
+///
+/// SUM::name(f1*pdf1,f2*pdf2,pdf3]  -- Create sum p.d.f name with value f1*pdf1+f2*pdf2+(1-f1-f2)*pdf3
+/// RSUM::name(f1*pdf1,f2*pdf2,pdf3] -- Create recursive sum p.d.f. name with value f1*pdf1 + (1-f1)(f2*pdf2 + (1-f2)pdf3)
+/// ASUM::name(f1*amp1,f2*amp2,amp3] -- Create sum p.d.f. name with value f1*amp1+f2*amp2+(1-f1-f2)*amp3 where amplX are amplitudes of type RooAbsReal
+/// sum::name(a1,a2,a3]              -- Create sum function with value a1+a2+a3
+/// sum::name(a1*b1,a2*b2,a3*b 3]    -- Create sum function with value a1*b1+a2*b2+a3*b3
+///
+/// PROD::name(pdf1,pdf2]            -- Create product of p.d.f with 'name' with given input p.d.fs
+/// PROD::name(pdf1|x,pdf2]          -- Create product of conditional p.d.f. pdf1 given x and pdf2
+/// prod::name(a,b,c]                -- Create production function with value a*b*c
+///
+/// SIMUL::name(cat,a=pdf1,b=pdf2]   -- Create simultaneous p.d.f index category cat. Make pdf1 to state a, pdf2 to state b
+///
+/// EXPR::name('expr',var,...]       -- Create an generic p.d.f that interprets the given expression 
+/// expr::name('expr',var,...]       -- Create an generic function that interprets the given expression 
+///
+///
+/// The functionality of high level object creation tools like RooSimWSTool, RooCustomizer and RooClassFactory
+/// is also interfaced through meta-types in the factory
+///
+///
+/// Interface to RooSimWSTool
+///
+/// SIMCLONE::name( modelPdf, $ParamSplit(...), 
+///                 $ParamSplitConstrained(...), $Restrict(...) ]            -- Clone-and-customize modelPdf according to ParamSplit and ParamSplitConstrained()
+///                                                                             specifications and return a RooSimultaneous p.d.f. of all built clones
+///
+/// MSIMCLONE::name( masterIndex, 
+///                  $AddPdf(mstate1, modelPdf1, $ParamSplit(...)), 
+///                  $AddPdf(mstate2,modelPdf2),...) ]                       -- Clone-and-customize multiple models (modelPdf1,modelPdf2) according to ParamSplit and 
+///                                                                             ParamSplitConstrained() specifications and return a RooSimultaneous p.d.f. of all built clones,
+///                                                                             using the specified master index to map prototype p.d.f.s to master states
+/// Interface to RooCustomizer
+///
+/// EDIT::name( orig, substNode=origNode), ... ]                             -- Create a clone of input object orig, with the specified replacements operations executed
+/// EDIT::name( orig, origNode=$REMOVE(), ... ]                              -- Create clone of input removing term origNode from all PROD() terms that contained it
+/// EDIT::name( orig, origNode=$REMOVE(prodname,...), ... ]                  -- As above, but restrict removal of origNode to PROD term(s) prodname,...
+///
+///
+/// Interface to RooClassFactory
+///
+/// CEXPR::name('expr',var,...]       -- Create an custom compiled p.d.f that evaluates the given expression 
+/// cexpr::name('expr',var,...]       -- Create an custom compiled function that evaluates the given expression 
+///
+///
+/// $MetaType(...)        - Meta argument that does not result in construction of an object but is used logically organize 
+///                         input arguments in certain operator p.d.f. constructions. The defined meta arguments are context dependent.
+///
+///                         The only meta argument that is defined globally is $Alias(typeName,aliasName) to  
+///                         define aliases for type names. For the definition of meta arguments in operator p.d.f.s
+///                         see the definitions below
+
 RooAbsArg* RooFactoryWSTool::process(const char* expr) 
 {
-  // Process high-level object creation syntax
-  // Accepted forms of syntax are
-  //
-  //
-  // Creating variables
-  //
-  // x[-10,10]             -  Create variable x with given range and put it in workspace
-  // x[3,-10,10]           -  Create variable x with given range and initial value and put it in workspace
-  // x[3]                  -  Create variable x with given constant value
-  //
-  // <numeric literal>     - Numeric literal expressions (0.5, -3 etc..) are converted to a RooConst(<numeric literal>) 
-  //                         where ever a RooAbsReal or RooAbsArg argument is expected
-  //
-  // Creating categories
-  //
-  // c[lep,kao,nt1,nt2]    -  Create category c with given state names
-  // tag[B0=1,B0bar=-1]    -  Create category tag with given state names and index assignments
-  //
-  //
-  // Creating functions and p.d.f.s
-  //
-  // MyPdf::g(x,m,s)       - Create p.d.f or function of type MyPdf with name g with argument x,m,s
-  //                         Interpretation and number of arguments are mapped to the constructor arguments of the class 
-  //                         (after the name and title).
-  //
-  // MyPdf(x,m,s)          - As above, but with an implicitly defined (unique) object name
-  // 
-  //
-  // Creating sets and lists (to be used as inputs above)
-  //
-  // {a,b,c}               - Create RooArgSet or RooArgList (as determined by context) from given contents
-  //
-  //
-  //
-  // Objects that are not created, are assumed to exist in the workspace
-  // Object creation expressions as shown above can be nested, e.g. one can do
-  //
-  //   RooGaussian::g(x[-10,10],m[0],3) 
-  //
-  // to create a p.d.f and its variables in one go. This nesting can be applied recursively e.g.
-  //
-  //   SUM::model( f[0.5,0,1] * RooGaussian::g( x[-10,10], m[0], 3] ),
-  //                            RooChebychev::c( x, {a0[0.1],a1[0.2],a2[-0.3]} ))
-  //
-  // creates the sum of a Gaussian and a Chebychev and all its variables
-  //
-  //
-  // A seperate series of operator meta-type exists to simplify the construction of composite expressions
-  // meta-types in all capitals (SUM) create p.d.f.s, meta types in lower case (sum) create
-  // functions.
-  //
-  //
-  // SUM::name(f1*pdf1,f2*pdf2,pdf3]  -- Create sum p.d.f name with value f1*pdf1+f2*pdf2+(1-f1-f2)*pdf3
-  // RSUM::name(f1*pdf1,f2*pdf2,pdf3] -- Create recursive sum p.d.f. name with value f1*pdf1 + (1-f1)(f2*pdf2 + (1-f2)pdf3)
-  // ASUM::name(f1*amp1,f2*amp2,amp3] -- Create sum p.d.f. name with value f1*amp1+f2*amp2+(1-f1-f2)*amp3 where amplX are amplitudes of type RooAbsReal
-  // sum::name(a1,a2,a3]              -- Create sum function with value a1+a2+a3
-  // sum::name(a1*b1,a2*b2,a3*b 3]    -- Create sum function with value a1*b1+a2*b2+a3*b3
-  //
-  // PROD::name(pdf1,pdf2]            -- Create product of p.d.f with 'name' with given input p.d.fs
-  // PROD::name(pdf1|x,pdf2]          -- Create product of conditional p.d.f. pdf1 given x and pdf2
-  // prod::name(a,b,c]                -- Create production function with value a*b*c
-  //
-  // SIMUL::name(cat,a=pdf1,b=pdf2]   -- Create simultaneous p.d.f index category cat. Make pdf1 to state a, pdf2 to state b
-  //
-  // EXPR::name('expr',var,...]       -- Create an generic p.d.f that interprets the given expression 
-  // expr::name('expr',var,...]       -- Create an generic function that interprets the given expression 
-  //
-  //
-  // The functionality of high level object creation tools like RooSimWSTool, RooCustomizer and RooClassFactory
-  // is also interfaced through meta-types in the factory
-  //
-  //
-  // Interface to RooSimWSTool
-  //
-  // SIMCLONE::name( modelPdf, $ParamSplit(...), 
-  //                 $ParamSplitConstrained(...), $Restrict(...) ]            -- Clone-and-customize modelPdf according to ParamSplit and ParamSplitConstrained()
-  //                                                                             specifications and return a RooSimultaneous p.d.f. of all built clones
-  //
-  // MSIMCLONE::name( masterIndex, 
-  //                  $AddPdf(mstate1, modelPdf1, $ParamSplit(...)), 
-  //                  $AddPdf(mstate2,modelPdf2),...) ]                       -- Clone-and-customize multiple models (modelPdf1,modelPdf2) according to ParamSplit and 
-  //                                                                             ParamSplitConstrained() specifications and return a RooSimultaneous p.d.f. of all built clones,
-  //                                                                             using the specified master index to map prototype p.d.f.s to master states
-  // Interface to RooCustomizer
-  //
-  // EDIT::name( orig, substNode=origNode), ... ]                             -- Create a clone of input object orig, with the specified replacements operations executed
-  // EDIT::name( orig, origNode=$REMOVE(), ... ]                              -- Create clone of input removing term origNode from all PROD() terms that contained it
-  // EDIT::name( orig, origNode=$REMOVE(prodname,...), ... ]                  -- As above, but restrict removal of origNode to PROD term(s) prodname,...
-  //
-  //
-  // Interface to RooClassFactory
-  //
-  // CEXPR::name('expr',var,...]       -- Create an custom compiled p.d.f that evaluates the given expression 
-  // cexpr::name('expr',var,...]       -- Create an custom compiled function that evaluates the given expression 
-  //
-  //
-  // $MetaType(...)        - Meta argument that does not result in construction of an object but is used logically organize 
-  //                         input arguments in certain operator p.d.f. constructions. The defined meta arguments are context dependent.
-  //
-  //                         The only meta argument that is defined globally is $Alias(typeName,aliasName) to  
-  //                         define aliases for type names. For the definition of meta arguments in operator p.d.f.s
-  //                         see the definitions below
-
 
 //   cout << "RooFactoryWSTool::process() " << expr << endl ;
 
@@ -871,17 +877,17 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a single high-level expression or list of
+/// expressions. The returned string a the reduced expression where
+/// all inline object creations have been executed and substituted
+/// with the name of the created object
+///
+/// e.g. 'RooGaussian::g(x,m,s)' --> 'g'
+///      '{x(-10,10),s}          --> '{x,s}'
+
 std::string RooFactoryWSTool::processExpression(const char* token) 
 {
-  // Process a single high-level expression or list of
-  // expressions. The returned string a the reduced expression where
-  // all inline object creations have been executed and substituted
-  // with the name of the created object
-  //
-  // e.g. 'RooGaussian::g(x,m,s)' --> 'g'
-  //      '{x(-10,10),s}          --> '{x,s}'
-
   // Delegate handling to list processor if token starts with {, otherwise
   // call single expression processor
   if (string(token).find("$Alias(")==0) {
@@ -899,16 +905,16 @@ std::string RooFactoryWSTool::processExpression(const char* token)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a single composite expression 
+///
+/// e.g. 'A=RooGaussian::g[x,m,s]' --> 'A=g'
+/// e.g. 'f[0,1]*RooGaussian::g[x,m,s]' --> 'f*g'
+/// e.g. 'RooGaussian::g(x,y,s)|x' --> g|x'
+/// e.g. '$MetaArg(RooGaussian::g[x,m,s],blah)' --> '$MetaArg(g,blah)'
+
 std::string RooFactoryWSTool::processCompositeExpression(const char* token) 
 {
-  // Process a single composite expression 
-  //
-  // e.g. 'A=RooGaussian::g[x,m,s]' --> 'A=g'
-  // e.g. 'f[0,1]*RooGaussian::g[x,m,s]' --> 'f*g'
-  // e.g. 'RooGaussian::g(x,y,s)|x' --> g|x'
-  // e.g. '$MetaArg(RooGaussian::g[x,m,s],blah)' --> '$MetaArg(g,blah)'
-
   // Allocate and fill work buffer
    const size_t bufBaseSize = strlen(token)+1;
   char* buf_base = new char[bufBaseSize] ;
@@ -964,16 +970,16 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a single high-level expression. The returned string a the reduced
+/// expression where all inline object creations have been executed and substituted
+/// with the name of the created object
+///
+/// e.g. 'RooGaussian::g(x,m,s)' --> 'g'
+/// e.g. 'x[-10,10]' --> 'x'
+
 std::string RooFactoryWSTool::processSingleExpression(const char* arg) 
 {
-  // Process a single high-level expression. The returned string a the reduced
-  // expression where all inline object creations have been executed and substituted
-  // with the name of the created object
-  //
-  // e.g. 'RooGaussian::g(x,m,s)' --> 'g'
-  // e.g. 'x[-10,10]' --> 'x'
-
   // Handle empty strings here
   if (strlen(arg)==0) {
     return string("") ;
@@ -1114,15 +1120,15 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a list of high-level expression. The returned string a the reduced
+/// expression list where all inline object creations have been executed and substituted
+/// with the name of the created object
+///
+/// E.g.   '{x(-10,10),s}  --> '{x,s}'
+
 string RooFactoryWSTool::processListExpression(const char* arg) 
 {
-  // Process a list of high-level expression. The returned string a the reduced
-  // expression list where all inline object creations have been executed and substituted
-  // with the name of the created object
-  //
-  // E.g.   '{x(-10,10),s}  --> '{x,s}'
-
   // Allocate and fill work buffer
   const size_t bufSize = strlen(arg)+1;
   char* buf = new char[bufSize] ;
@@ -1188,10 +1194,11 @@ string RooFactoryWSTool::processListExpression(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse token
+
 string RooFactoryWSTool::processAliasExpression(const char* token) 
 {
-  // Parse token
   vector<string> args = splitFunctionArgs(token) ;
   if (args.size()!=2) {
     coutE(ObjectHandling) << "RooFactorWSTool::processAliasExpression() ERROR $Alias() takes exactly two arguments, " << args.size() << " args found" << endl ;
@@ -1208,10 +1215,10 @@ string RooFactoryWSTool::processAliasExpression(const char* token)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TClass* RooFactoryWSTool::resolveClassName(const char* className) 
 {
-
   // First do recursive alias expansion
   while (true) {
     map<string,string>::iterator item = _typeAliases.find(className) ;
@@ -1241,7 +1248,8 @@ TClass* RooFactoryWSTool::resolveClassName(const char* className)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 string RooFactoryWSTool::varTag(string& func, vector<string>& args)
 {
   string ret ;
@@ -1260,19 +1268,19 @@ string RooFactoryWSTool::varTag(string& func, vector<string>& args)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Glue function between high-level syntax and low-level factory call to createVariable:
+/// Process a parsed call to create a variable named 'func'
+/// 
+/// If initial token is non-numeric, a RooCategory will be created, and the args are interpreted
+/// as either state names or 'name=id' assignments. Otherwise a RooRealvar is created and the
+/// arg list is interpreted as follows:
+/// If list has two args, these are interpreted as xmin,xmax
+/// If list has three args, these are interpreted as xinit,xmin,xmax
+/// If list has one arg, this is interpreted as xinit and the variable is set as constant
+
 string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
 {  
-  // Glue function between high-level syntax and low-level factory call to createVariable:
-  // Process a parsed call to create a variable named 'func'
-  // 
-  // If initial token is non-numeric, a RooCategory will be created, and the args are interpreted
-  // as either state names or 'name=id' assignments. Otherwise a RooRealvar is created and the
-  // arg list is interpreted as follows:
-  // If list has two args, these are interpreted as xmin,xmax
-  // If list has three args, these are interpreted as xinit,xmin,xmax
-  // If list has one arg, this is interpreted as xinit and the variable is set as constant
-
 
   // Determine if first arg is numeric
   string first = *(args.begin()) ;
@@ -1333,16 +1341,16 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
 }
       
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Glue function between high-level syntax and low-level factory call to createArg:
+/// Process a parsed call to create a p.d.f named func
+///
+/// The func arg is interpreted as ClassName::ObjectName and the arglist is passed
+/// verbatim to createArg. The received arglist is expected to be fully reduced (i.e.
+/// all inline object creations must have been compiled)
+
 string RooFactoryWSTool::processCreateArg(string& func, vector<string>& args)
 {  
-  // Glue function between high-level syntax and low-level factory call to createArg:
-  // Process a parsed call to create a p.d.f named func
-  //
-  // The func arg is interpreted as ClassName::ObjectName and the arglist is passed
-  // verbatim to createArg. The received arglist is expected to be fully reduced (i.e.
-  // all inline object creations must have been compiled)
-
   // Allocate and fill work buffer
   char buf[BUFFER_SIZE] ;
   strlcpy(buf,func.c_str(),BUFFER_SIZE) ;
@@ -1386,10 +1394,11 @@ string RooFactoryWSTool::processCreateArg(string& func, vector<string>& args)
       
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Concatenate list of args into comma separated string
+
 std::string RooFactoryWSTool::processMetaArg(std::string& func, std::vector<std::string>& args) 
 {
-  // Concatenate list of args into comma separated string
   char pargs[BUFFER_SIZE] ;
   pargs[0] = 0 ;
   vector<string>::iterator iter = args.begin() ;
@@ -1409,10 +1418,11 @@ std::string RooFactoryWSTool::processMetaArg(std::string& func, std::vector<std:
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate and fill work buffer
+
 vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr) 
 {
-  // Allocate and fill work buffer
   const size_t bufSize = strlen(funcExpr)+1;
   char* buf = new char[bufSize] ;
   strlcpy(buf,funcExpr,bufSize) ;
@@ -1483,12 +1493,12 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform basic syntax on given factory expression. If function returns
+/// true syntax errors are found.
+
 Bool_t RooFactoryWSTool::checkSyntax(const char* arg) 
 {
-  // Perform basic syntax on given factory expression. If function returns
-  // true syntax errors are found.
-  
   // Count parentheses
   Int_t nParentheses(0), nBracket(0), nAccolade(0) ;
   const char* ptr = arg ;
@@ -1518,7 +1528,8 @@ Bool_t RooFactoryWSTool::checkSyntax(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooFactoryWSTool::checkIndex(UInt_t idx) 
 {
   if (idx>_of->_args.size()-1) {
@@ -1528,11 +1539,11 @@ void RooFactoryWSTool::checkIndex(UInt_t idx)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooAbsArg reference found in workspace
+
 RooAbsArg& RooFactoryWSTool::asARG(const char* arg) 
   {
-  // CINT constructor interface, return constructor string argument #idx as RooAbsArg reference found in workspace
-
   // If arg is a numeric string, make a RooConst() of it here
   if (arg[0]=='.' || arg[0]=='+' || arg[0] == '-' || isdigit(arg[0])) {
     return RooConst(atof(arg)) ;
@@ -1548,11 +1559,11 @@ RooAbsArg& RooFactoryWSTool::asARG(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooAbsReal reference found in workspace
+
 RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooAbsReal reference found in workspace
-
   // If arg is a numeric string, make a RooConst() of it here
   if (arg[0]=='.' || arg[0]=='+' || arg[0] == '-' || isdigit(arg[0])) {
     return RooConst(atof(arg)) ;
@@ -1571,11 +1582,11 @@ RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooAbsRealLValue reference found in workspace
+
 RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooAbsRealLValue reference found in workspace
-
   // If arg is a numeric string, throw error as lvalue is required
   if (arg[0]=='.' || arg[0]=='+' || arg[0] == '-' || isdigit(arg[0])) {
     throw string(Form("Numeric literal provided for argument (%s), but lvalue is required",arg)) ;
@@ -1594,11 +1605,11 @@ RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooRealVar reference found in workspace
+
 RooRealVar& RooFactoryWSTool::asVAR(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooRealVar reference found in workspace
-
   RooRealVar* var = ws().var(arg) ;
   if (!var) {
     throw string(Form("RooRealVar named %s not found",arg)) ;
@@ -1609,11 +1620,11 @@ RooRealVar& RooFactoryWSTool::asVAR(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooAbsPdf reference found in workspace
+
 RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooAbsPdf reference found in workspace
-
   RooAbsPdf* pdf = ws().pdf(arg) ;
   if (!pdf) {
     throw string(Form("RooAbsPdf named %s not found",arg)) ;
@@ -1624,11 +1635,11 @@ RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooResolutionModel reference found in workspace
+
 RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooResolutionModel reference found in workspace
-
   RooAbsArg* rarg = ws().arg(arg) ;
   if (!rarg) {
     throw string(Form("RooResolutionModel named %s not found",arg)) ;
@@ -1643,11 +1654,11 @@ RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooAbsCategory reference found in workspace
+
 RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooAbsCategory reference found in workspace
-
   RooAbsArg* rarg = ws().arg(arg) ;
   if (!rarg) {
     throw string(Form("RooAbsCategory named %s not found",arg)) ;
@@ -1661,11 +1672,11 @@ RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooAbsCategoryLValue reference found in workspace
+
 RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooAbsCategoryLValue reference found in workspace
-
   RooAbsArg* rarg = ws().arg(arg) ;
   if (!rarg) {
     throw string(Form("RooAbsCategoryLValue named %s not found",arg)) ;
@@ -1680,11 +1691,11 @@ RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooCategory reference found in workspace
+
 RooCategory& RooFactoryWSTool::asCAT(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooCategory reference found in workspace
-
   RooCategory* cat = ws().cat(arg) ;
   if (!cat) {
     throw string(Form("RooCategory named %s not found",arg)) ;
@@ -1696,11 +1707,11 @@ RooCategory& RooFactoryWSTool::asCAT(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooArgSet of objects found in workspace
+
 RooArgSet RooFactoryWSTool::asSET(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooArgSet of objects found in workspace
-
   char tmp[BUFFER_SIZE] ;
   strlcpy(tmp,arg,BUFFER_SIZE) ;
 
@@ -1740,11 +1751,11 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooArgList of objects found in workspace
+
 RooArgList RooFactoryWSTool::asLIST(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooArgList of objects found in workspace
-
   char tmp[BUFFER_SIZE] ;
   strlcpy(tmp,arg,BUFFER_SIZE) ;
 
@@ -1772,11 +1783,11 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooAbsData object found in workspace
+
 RooAbsData& RooFactoryWSTool::asDATA(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooAbsData object found in workspace
-
   RooAbsData* data = ws().data(arg) ;
   if (!data) {
       throw string(Form("RooAbsData named %s not found",arg)) ;    
@@ -1786,11 +1797,11 @@ RooAbsData& RooFactoryWSTool::asDATA(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooDataHist object found in workspace
+
 RooDataHist& RooFactoryWSTool::asDHIST(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooDataHist object found in workspace
-
   RooAbsData* data = ws().data(arg) ;
   if (!data) {
     throw string(Form("RooAbsData named %s not found",arg)) ;    
@@ -1803,11 +1814,11 @@ RooDataHist& RooFactoryWSTool::asDHIST(const char* arg)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as RooDataSet object found in workspace
+
 RooDataSet& RooFactoryWSTool::asDSET(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as RooDataSet object found in workspace
-
   RooAbsData* data = ws().data(arg) ;
   if (!data) {
     throw string(Form("RooAbsData named %s not found",arg)) ;    
@@ -1821,7 +1832,8 @@ RooDataSet& RooFactoryWSTool::asDSET(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TObject& RooFactoryWSTool::asOBJ(const char* arg)
 {
   TObject* obj = ws().obj(arg) ;
@@ -1833,11 +1845,11 @@ TObject& RooFactoryWSTool::asOBJ(const char* arg)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as const char* 
+
 const char* RooFactoryWSTool::asSTRING(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as const char* 
-
   static vector<string> cbuf(10) ;
   static unsigned int cbuf_idx = 0 ;
 
@@ -1863,34 +1875,36 @@ const char* RooFactoryWSTool::asSTRING(const char* arg)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as Int_t
+
 Int_t RooFactoryWSTool::asINT(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as Int_t
-
   return atoi(arg) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CINT constructor interface, return constructor string argument #idx as Double_t
+
 Double_t RooFactoryWSTool::asDOUBLE(const char* arg) 
 {
-  // CINT constructor interface, return constructor string argument #idx as Double_t
-
   return atof(arg) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register foreign special objects in factory
+
 void RooFactoryWSTool::registerSpecial(const char* typeName, RooFactoryWSTool::IFace* iface) 
 {
-  // Register foreign special objects in factory
   hooks()[typeName] = iface ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::map<std::string,RooFactoryWSTool::IFace*>& RooFactoryWSTool::hooks() 
 {
   if (_hooks) return *_hooks ;
@@ -1900,10 +1914,11 @@ std::map<std::string,RooFactoryWSTool::IFace*>& RooFactoryWSTool::hooks()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Concatenate list of args into comma separated string
+
 std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instName, std::vector<std::string> args)
 {
-  // Concatenate list of args into comma separated string
   char pargs[BUFFER_SIZE] ;
   pargs[0] = 0 ;
   vector<string>::iterator iter = args.begin() ;

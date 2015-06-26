@@ -85,13 +85,13 @@ public:
 //   ClassDef(TPacketizerUnit::TSlaveStat, 0);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor
+
 TPacketizerUnit::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
                             : fLastProcessed(0),
                               fRate(0), fTimeInstant(0), fCircLvl(5)
 {
-   // Main constructor
-
    // Initialize the circularity ntple for speed calculations
    fCircNtp = new TNtupleD("Speed Circ Ntp", "Circular process info","tm:ev");
    fCircNtp->SetDirectory(0);
@@ -102,19 +102,19 @@ TPacketizerUnit::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
    fStatus = new TProofProgressStatus();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TPacketizerUnit::TSlaveStat::~TSlaveStat()
 {
-   // Destructor
-
    SafeDelete(fCircNtp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the circular ntple
+
 void TPacketizerUnit::TSlaveStat::UpdatePerformance(Double_t time)
 {
-   // Update the circular ntple
-
    Double_t ttot = time;
    Double_t *ar = fCircNtp->GetArgs();
    Int_t ne = fCircNtp->GetEntries();
@@ -140,12 +140,12 @@ void TPacketizerUnit::TSlaveStat::UpdatePerformance(Double_t time)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the status info to the 'st'.
+/// return the difference (*st - *fStatus)
+
 TProofProgressStatus *TPacketizerUnit::TSlaveStat::AddProcessed(TProofProgressStatus *st)
 {
-   // Update the status info to the 'st'.
-   // return the difference (*st - *fStatus)
-
    if (st) {
       // The entriesis not correct in 'st'
       Long64_t lastEntries = st->GetEntries() - fStatus->GetEntries();
@@ -167,13 +167,13 @@ TProofProgressStatus *TPacketizerUnit::TSlaveStat::AddProcessed(TProofProgressSt
 
 ClassImp(TPacketizerUnit)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
                                  TProofProgressStatus *st)
                 : TVirtualPacketizer(input, st)
 {
-   // Constructor
-
    PDB(kPacketizer,1) Info("TPacketizerUnit", "enter (num %lld)", num);
 
    // Init pointer members
@@ -259,11 +259,11 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    PDB(kPacketizer,1) Info("TPacketizerUnit", "return");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign work to be done to this packetizer
+
 Int_t TPacketizerUnit::AssignWork(TDSet *, Long64_t, Long64_t num)
 {
-   // Assign work to be done to this packetizer
-
    if (num < 0) {
       Error("AssignWork", "assigned a negative number (%lld) of cycles - protocol error?", num);
       return -1;
@@ -294,11 +294,11 @@ Int_t TPacketizerUnit::AssignWork(TDSet *, Long64_t, Long64_t num)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TPacketizerUnit::~TPacketizerUnit()
 {
-   // Destructor.
-
    if (fWrkStats)
       fWrkStats->DeleteValues();
    SafeDelete(fWrkStats);
@@ -307,22 +307,22 @@ TPacketizerUnit::~TPacketizerUnit()
    SafeDelete(fStopwatch);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current time
+
 Double_t TPacketizerUnit::GetCurrentTime()
 {
-   // Get current time
-
    Double_t retValue = fStopwatch->RealTime();
    fStopwatch->Continue();
    return retValue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Estimation of the current rate; just summing the current rates of
+/// the active workers
+
 Float_t TPacketizerUnit::GetCurrentRate(Bool_t &all)
 {
-   // Get Estimation of the current rate; just summing the current rates of
-   // the active workers
-
    all = kTRUE;
    // Loop over the workers
    Float_t currate = 0.;
@@ -343,11 +343,11 @@ Float_t TPacketizerUnit::GetCurrentRate(Bool_t &all)
    return currate;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next packet
+
 TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
 {
-   // Get next packet
-
    if (!fValid)
       return 0;
 
@@ -581,11 +581,11 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    return elem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds new workers. Returns the number of workers added, or -1 on failure.
+
 Int_t TPacketizerUnit::AddWorkers(TList *workers)
 {
-   // Adds new workers. Returns the number of workers added, or -1 on failure.
-
    if (!workers) {
       Error("AddWorkers", "Null list of new workers!");
       return -1;

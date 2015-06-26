@@ -39,7 +39,9 @@
 #include "TMVA/MsgLogger.h"
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::ClassInfo::ClassInfo( const TString& name ) 
    : fName( name ),
      fWeight( "" ),
@@ -48,13 +50,13 @@ TMVA::ClassInfo::ClassInfo( const TString& name )
      fCorrMatrix( 0 ),
      fLogger( new MsgLogger("ClassInfo", kINFO) )
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::ClassInfo::~ClassInfo() 
 {
-   // destructor
    if (fCorrMatrix) delete fCorrMatrix;
    delete fLogger;
 }

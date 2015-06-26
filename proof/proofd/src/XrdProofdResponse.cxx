@@ -68,10 +68,11 @@
       return 0; \
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send()
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:1")
 
    CHECKLINK;
@@ -89,10 +90,11 @@ int XrdProofdResponse::Send()
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send(XResponseType rcode)
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:2")
 
    CHECKLINK;
@@ -111,10 +113,11 @@ int XrdProofdResponse::Send(XResponseType rcode)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send(const char *msg)
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:3")
 
    CHECKLINK;
@@ -138,10 +141,11 @@ int XrdProofdResponse::Send(const char *msg)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send(XResponseType rcode, void *data, int dlen)
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:4")
 
    CHECKLINK;
@@ -165,10 +169,11 @@ int XrdProofdResponse::Send(XResponseType rcode, void *data, int dlen)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send(XResponseType rcode, int info, char *data)
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:5")
 
    CHECKLINK;
@@ -206,11 +211,12 @@ int XrdProofdResponse::Send(XResponseType rcode, int info, char *data)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
                             void *data, int dlen )
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:6")
 
    CHECKLINK;
@@ -248,11 +254,12 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
                             kXR_int32 cid, void *data, int dlen )
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:7")
 
    CHECKLINK;
@@ -295,11 +302,12 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
                             int info )
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:8")
 
    CHECKLINK;
@@ -329,11 +337,12 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int16 int2, kXR_int16 int3,
                             void *data, int dlen )
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::SendI:1")
 
    CHECKLINK;
@@ -378,10 +387,11 @@ int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int16 int2, kXR_int16 int3,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int32 int2, void *data, int dlen )
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::SendI:2")
 
    CHECKLINK;
@@ -423,10 +433,11 @@ int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int32 int2, void *data, int dle
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::SendI(kXR_int32 int1, void *data, int dlen )
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::SendI:3")
 
    CHECKLINK;
@@ -465,10 +476,11 @@ int XrdProofdResponse::SendI(kXR_int32 int1, void *data, int dlen )
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send(void *data, int dlen)
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:9")
 
    CHECKLINK;
@@ -492,10 +504,11 @@ int XrdProofdResponse::Send(void *data, int dlen)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send(XErrorCode ecode, const char *msg)
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:11")
 
    CHECKLINK;
@@ -524,10 +537,11 @@ int XrdProofdResponse::Send(XErrorCode ecode, const char *msg)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Send method
+
 int XrdProofdResponse::Send(XPErrorCode ecode, const char *msg)
 {
-   // Auxilliary Send method
    XPDLOC(RSP, "Response::Send:12")
 
    CHECKLINK;
@@ -556,13 +570,14 @@ int XrdProofdResponse::Send(XPErrorCode ecode, const char *msg)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method actually sending the buffer(s) over the link.
+/// The link is closed in case of error, because we cannot use it anymore
+/// and the counter part needs to reconnect.
+/// Return 0 on success, -1 on failure.
+
 int XrdProofdResponse::LinkSend(const char *buff, int len, XrdOucString &emsg)
 {
-   // Method actually sending the buffer(s) over the link.
-   // The link is closed in case of error, because we cannot use it anymore
-   // and the counter part needs to reconnect.
-   // Return 0 on success, -1 on failure.
    XPDLOC(RSP, "Response::LinkSend:1")
 
    XrdSysMutexHelper mxh(fMutex);
@@ -588,14 +603,15 @@ int XrdProofdResponse::LinkSend(const char *buff, int len, XrdOucString &emsg)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method actually sending the buffer(s) over the link.
+/// Functionality a la 'writev' is simulated by segmenting the sending.
+/// This allows to avoid a recovery problem with 'writev'.
+/// Return 0 on success, -1 on failure.
+
 int XrdProofdResponse::LinkSend(const struct iovec *iov,
                                 int iocnt, int, XrdOucString &emsg)
 {
-   // Method actually sending the buffer(s) over the link.
-   // Functionality a la 'writev' is simulated by segmenting the sending.
-   // This allows to avoid a recovery problem with 'writev'.
-   // Return 0 on success, -1 on failure.
    XPDLOC(RSP, "Response::LinkSend:2")
 
    int rc = 0;
@@ -622,11 +638,11 @@ int XrdProofdResponse::LinkSend(const struct iovec *iov,
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Set method
+
 void XrdProofdResponse::Set(unsigned char *stream)
 {
-   // Auxilliary Set method
-
    XrdSysMutexHelper mh(fMutex);
 
    fResp.streamid[0] = stream[0];
@@ -635,11 +651,11 @@ void XrdProofdResponse::Set(unsigned char *stream)
    SetTrsid();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Set method
+
 void XrdProofdResponse::Set(unsigned short sid)
 {
-   // Auxilliary Set method
-
    unsigned char stream[2];
 
    {  XrdSysMutexHelper mh(fMutex);
@@ -652,20 +668,20 @@ void XrdProofdResponse::Set(unsigned short sid)
    SetTrsid();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get stream ID (to be able to restore it later
+
 void XrdProofdResponse::GetSID(unsigned short &sid)
 {
-   // Get stream ID (to be able to restore it later
-
    XrdSysMutexHelper mh(fMutex);
    memcpy((void *)&sid, (void *)&fResp.streamid[0], sizeof(sid));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the stream id
+
 void XrdProofdResponse::Set(ServerResponseHeader *resp)
 {
-   // Fill the stream id
-
    if (resp) {
       XrdSysMutexHelper mh(fMutex);
       resp->streamid[0] = fResp.streamid[0];
@@ -673,21 +689,22 @@ void XrdProofdResponse::Set(ServerResponseHeader *resp)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the link to be used by this response
+
 void XrdProofdResponse::Set(XrdLink *l)
 {
-   // Set the link to be used by this response
-
    {  XrdSysMutexHelper mh(fMutex);
       fLink = l;
       memcpy((void *)&fSID, (void *)&fResp.streamid[0], sizeof(fSID));
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary set method
+
 void XrdProofdResponse::SetTraceID()
 {
-   // Auxilliary set method
    XPDLOC(RSP, "Response::SetTraceID")
 
    {  XrdSysMutexHelper mh(fMutex);
@@ -705,11 +722,11 @@ void XrdProofdResponse::SetTraceID()
    TRACE(DBG,"trace set to '"<<fTraceID<<"'")
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary Set method
+
 void XrdProofdResponse::SetTrsid()
 {
-   // Auxilliary Set method
-
    static char hv[] = "0123456789abcdef";
 
    int i;

@@ -62,10 +62,11 @@
 
 ClassImp(TGeoPhysicalNode)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoPhysicalNode::TGeoPhysicalNode() : TNamed()
 {
-// Default constructor
    fLevel        = 0;
    fMatrices     = 0;
    fNodes        = 0;
@@ -76,10 +77,11 @@ TGeoPhysicalNode::TGeoPhysicalNode() : TNamed()
    SetAligned(kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TGeoPhysicalNode::TGeoPhysicalNode(const char *path) : TNamed(path,"")
 {
-// Constructor
    if (!path[0]) {
       Error("ctor", "path not valid");
       return;
@@ -95,7 +97,9 @@ TGeoPhysicalNode::TGeoPhysicalNode(const char *path) : TNamed(path,"")
    SetAligned(kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeoPhysicalNode::TGeoPhysicalNode(const TGeoPhysicalNode& gpn) :
   TNamed(gpn),
   TAttLine(gpn),
@@ -104,13 +108,13 @@ TGeoPhysicalNode::TGeoPhysicalNode(const TGeoPhysicalNode& gpn) :
   fNodes(gpn.fNodes),
   fMatrixOrig(gpn.fMatrixOrig)
 {
-   //copy constructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoPhysicalNode& TGeoPhysicalNode::operator=(const TGeoPhysicalNode& gpn)
 {
-   //assignment operator
    if(this!=&gpn) {
       TNamed::operator=(gpn);
       TAttLine::operator=(gpn);
@@ -122,10 +126,11 @@ TGeoPhysicalNode& TGeoPhysicalNode::operator=(const TGeoPhysicalNode& gpn)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoPhysicalNode::~TGeoPhysicalNode()
 {
-// Destructor
    if (fMatrices) {
       fMatrices->Delete();
       delete fMatrices;
@@ -134,18 +139,19 @@ TGeoPhysicalNode::~TGeoPhysicalNode()
    if (fMatrixOrig) delete fMatrixOrig;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Align a physical node with a new relative matrix/shape.
+/// Example: /TOP_1/A_1/B_1/C_1
+///    node->Align(transl_1, box) will perform:
+///    - change RELATIVE translation of C_1 node (with respect to its
+///      container volume B) to transl_1
+///    - change the shape of the C volume
+/// *NOTE* The operations will affect ONLY the LAST node in the branch. All
+///   volumes/nodes in the branch represented by this physical node are
+///   CLONED so the operation does not affect other possible replicas.
+
 Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t check, Double_t ovlp)
 {
-   // Align a physical node with a new relative matrix/shape.
-   // Example: /TOP_1/A_1/B_1/C_1
-   //    node->Align(transl_1, box) will perform:
-   //    - change RELATIVE translation of C_1 node (with respect to its
-   //      container volume B) to transl_1
-   //    - change the shape of the C volume
-   // *NOTE* The operations will affect ONLY the LAST node in the branch. All
-   //   volumes/nodes in the branch represented by this physical node are
-   //   CLONED so the operation does not affect other possible replicas.
    if (!newmat && !newshape) return kFALSE;
    if (TGeoManager::IsLocked()) {
       Error("Align", "Not performed. Geometry in LOCKED mode !");
@@ -347,77 +353,86 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoPhysicalNode::cd() const
 {
    if (GetNode(0) != gGeoManager->GetTopNode()) return;
    gGeoManager->cd(fName.Data());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this node.
+
 void TGeoPhysicalNode::Draw(Option_t * /*option*/)
 {
-// Draw this node.
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return parent at LEVUP generation
+
 TGeoNode *TGeoPhysicalNode::GetMother(Int_t levup) const
 {
-// Return parent at LEVUP generation
    Int_t ind = fLevel-levup;
    if (ind<0) return 0;
    return (TGeoNode*)fNodes->UncheckedAt(ind);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return global matrix for node at LEVEL.
+
 TGeoHMatrix *TGeoPhysicalNode::GetMatrix(Int_t level) const
 {
-// Return global matrix for node at LEVEL.
    if (level<0) return (TGeoHMatrix*)fMatrices->UncheckedAt(fLevel);
    if (level>fLevel) return 0;
    return (TGeoHMatrix*)fMatrices->UncheckedAt(level);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return node in branch at LEVEL. If not specified, return last leaf.
+
 TGeoNode *TGeoPhysicalNode::GetNode(Int_t level) const
 {
-// Return node in branch at LEVEL. If not specified, return last leaf.
    if (level<0) return (TGeoNode*)fNodes->UncheckedAt(fLevel);
    if (level>fLevel) return 0;
    return (TGeoNode*)fNodes->UncheckedAt(level);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return volume associated with node at LEVEL in the branch
+
 TGeoVolume *TGeoPhysicalNode::GetVolume(Int_t level) const
 {
-// Return volume associated with node at LEVEL in the branch
    TGeoNode *node = GetNode(level);
    if (node) return node->GetVolume();
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return shape associated with volume.
+
 TGeoShape *TGeoPhysicalNode::GetShape(Int_t level) const
 {
-// Return shape associated with volume.
    TGeoVolume *vol = GetVolume(level);
    if (vol) return vol->GetShape();
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this node and its content according to visualization settings.
+
 void TGeoPhysicalNode::Paint(Option_t * /*option*/)
 {
-// Paint this node and its content according to visualization settings.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
 //   painter->PaintNode(this, option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about this node.
+
 void TGeoPhysicalNode::Print(Option_t * /*option*/) const
 {
-// Print info about this node.
    printf("TGeoPhysicalNode: %s level=%d aligned=%d\n", fName.Data(), fLevel, IsAligned());
    for (Int_t i=0; i<=fLevel; i++) {
       printf(" level %d: node %s\n", i, GetNode(i)->GetName());
@@ -434,18 +449,20 @@ void TGeoPhysicalNode::Print(Option_t * /*option*/) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh this physical node. Called for all registered physical nodes
+/// after an Align() call.
+
 void TGeoPhysicalNode::Refresh()
 {
-// Refresh this physical node. Called for all registered physical nodes
-// after an Align() call.
    SetPath(fName.Data());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set node branch according to current state
+
 void TGeoPhysicalNode::SetBranchAsState()
 {
-// Set node branch according to current state
    TGeoNodeCache *cache = gGeoManager->GetCache();
    if (!cache) {
       Error("SetBranchAsState","no state available");
@@ -480,20 +497,22 @@ void TGeoPhysicalNode::SetBranchAsState()
    *fMatrixOrig = node->GetMatrix();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allows PN entries (or users) to preset the local original matrix for the
+/// last node pointed by the path.
+
 void TGeoPhysicalNode::SetMatrixOrig(const TGeoMatrix *local)
 {
-// Allows PN entries (or users) to preset the local original matrix for the
-// last node pointed by the path.
    if (!fMatrixOrig) fMatrixOrig = new TGeoHMatrix();
    if (!local) fMatrixOrig->Clear();
    *fMatrixOrig = local;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify the path for this node.
+
 Bool_t TGeoPhysicalNode::SetPath(const char *path)
 {
-// Specify the path for this node.
    if (!gGeoManager->cd(path)) {
       Error("SetPath","wrong path -> maybe RestoreMasterVolume");
       return kFALSE;
@@ -502,10 +521,11 @@ Bool_t TGeoPhysicalNode::SetPath(const char *path)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if a given navigator state matches this physical node
+
 Bool_t TGeoPhysicalNode::IsMatchingState(TGeoNavigator *nav) const
 {
-// Checks if a given navigator state matches this physical node
    TGeoNodeCache *cache = nav->GetCache();
    if (!cache) {
       Fatal("SetBranchAsState","no state available");
@@ -519,20 +539,22 @@ Bool_t TGeoPhysicalNode::IsMatchingState(TGeoNavigator *nav) const
 
 ClassImp(TGeoPNEntry)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoPNEntry::TGeoPNEntry()
 {
-// Default constructor
    fNode = 0;
    fMatrix = 0;
    fGlobalOrig = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
             :TNamed(name, path)
 {
-// Default constructor
    if (!gGeoManager || !gGeoManager->IsClosed() || !gGeoManager->CheckPath(path)) {
       TString errmsg("Cannot define a physical node link without a closed geometry and a valid path !");
       Error("ctor", "%s", errmsg.Data());
@@ -548,18 +570,20 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
    fMatrix = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoPNEntry::~TGeoPNEntry()
 {
-// Destructor
    if (fMatrix && !fMatrix->IsRegistered()) delete fMatrix;
    delete fGlobalOrig;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setter for the corresponding physical node.
+
 void TGeoPNEntry::SetPhysicalNode(TGeoPhysicalNode *node)
 {
-// Setter for the corresponding physical node.
    if (fNode && node) {
       Warning("SetPhysicalNode", "Physical node changed for entry %s", GetName());
       Warning("SetPhysicalNode", "=== New path: %s", node->GetName());
@@ -567,10 +591,11 @@ void TGeoPNEntry::SetPhysicalNode(TGeoPhysicalNode *node)
    fNode = node;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the additional matrix for this node entry. The matrix will be deleted
+/// by this class unless registered by the user to gGeoManager
+
 void TGeoPNEntry::SetMatrix(const TGeoHMatrix *mat)
 {
-// Set the additional matrix for this node entry. The matrix will be deleted
-// by this class unless registered by the user to gGeoManager
    fMatrix = mat;
 }

@@ -49,7 +49,18 @@ ClassImp(RooNLLVar)
 RooArgSet RooNLLVar::_emptySet ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct likelihood from given p.d.f and (binned or unbinned dataset)
+///
+///  Extended()     -- Include extended term in calculation
+///  NumCPU()       -- Activate parallel processing feature
+///  Range()        -- Fit only selected region
+///  SumCoefRange() -- Set the range in which to interpret the coefficients of RooAddPdf components 
+///  SplitRange()   -- Fit range is split by index catory of simultaneous PDF
+///  ConditionalObservables() -- Define conditional observables 
+///  Verbose()      -- Verbose output of GOF framework classes
+///  CloneData()    -- Clone input dataset for internal use (default is kTRUE)
+
 RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& indata,
 		     const RooCmdArg& arg1, const RooCmdArg& arg2,const RooCmdArg& arg3,
 		     const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6,
@@ -65,17 +76,6 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","CloneData",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))             
 {
-  // Construct likelihood from given p.d.f and (binned or unbinned dataset)
-  //
-  //  Extended()     -- Include extended term in calculation
-  //  NumCPU()       -- Activate parallel processing feature
-  //  Range()        -- Fit only selected region
-  //  SumCoefRange() -- Set the range in which to interpret the coefficients of RooAddPdf components 
-  //  SplitRange()   -- Fit range is split by index catory of simultaneous PDF
-  //  ConditionalObservables() -- Define conditional observables 
-  //  Verbose()      -- Verbose output of GOF framework classes
-  //  CloneData()    -- Clone input dataset for internal use (default is kTRUE)
-
   RooCmdConfig pc("RooNLLVar::RooNLLVar") ;
   pc.allowUndefined() ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
@@ -97,7 +97,10 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct likelihood from given p.d.f and (binned or unbinned dataset)
+/// For internal use.
+
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
 		     Bool_t extended, const char* rangeName, const char* addCoefRangeName,
 		     Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL) : 
@@ -106,9 +109,6 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
   _weightSq(kFALSE),
   _first(kTRUE), _offsetSaveW2(0.), _offsetCarrySaveW2(0.)
 {
-  // Construct likelihood from given p.d.f and (binned or unbinned dataset)
-  // For internal use.
-
   // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
   // for a binned likelihood calculation
   _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
@@ -142,7 +142,10 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct likelihood from given p.d.f and (binned or unbinned dataset)
+/// For internal use.  
+
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
 		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,const char* addCoefRangeName, 
 		     Int_t nCPU,RooFit::MPSplit interleave,Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL) : 
@@ -151,9 +154,6 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
   _weightSq(kFALSE),
   _first(kTRUE), _offsetSaveW2(0.), _offsetCarrySaveW2(0.)
 {
-  // Construct likelihood from given p.d.f and (binned or unbinned dataset)
-  // For internal use.  
-
   // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
   // for a binned likelihood calculation
   _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
@@ -184,7 +184,9 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) : 
   RooAbsOptTestStatistic(other,name),
   _extended(other._extended),
@@ -192,24 +194,24 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
   _first(kTRUE), _offsetSaveW2(other._offsetSaveW2),
   _offsetCarrySaveW2(other._offsetCarrySaveW2),
   _binw(other._binw) {
-  // Copy constructor
-
   _binnedPdf = other._binnedPdf ? (RooRealSumPdf*)_funcClone : 0 ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNLLVar::~RooNLLVar()
 {
-  // Destructor
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooNLLVar::applyWeightSquared(Bool_t flag) 
 { 
   if (_gofOpMode==Slave) {
@@ -230,14 +232,14 @@ void RooNLLVar::applyWeightSquared(Bool_t flag)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return likelihood on subset of data from firstEvent to lastEvent
+/// processed with a step size of 'stepSize'. If this an extended likelihood and
+/// and the zero event is processed the extended term is added to the return
+/// likelihood.
+
 Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
 {
-  // Calculate and return likelihood on subset of data from firstEvent to lastEvent
-  // processed with a step size of 'stepSize'. If this an extended likelihood and
-  // and the zero event is processed the extended term is added to the return
-  // likelihood.
-
   // Throughout the calculation, we use Kahan's algorithm for summing to
   // prevent loss of precision - this is a factor four more expensive than
   // straight addition, but since evaluating the PDF is usually much more

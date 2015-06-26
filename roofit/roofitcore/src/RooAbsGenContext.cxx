@@ -47,7 +47,9 @@ ClassImp(RooAbsGenContext)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars,
 				   const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   TNamed(model), 
@@ -58,8 +60,6 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   _protoOrder(0),
   _genData(0)
 {
-  // Constructor
-
   // Check PDF dependents 
   if (model.recursiveCheckObservables(&vars)) {
     coutE(Generation) << "RooAbsGenContext::ctor: Error in PDF dependents" << endl ;
@@ -107,48 +107,50 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsGenContext::~RooAbsGenContext()
 {
-  // Destructor
-
   if(0 != _theEvent) delete _theEvent;
   if (_protoOrder) delete[] _protoOrder ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to attach given parameters to object in this context
+
 void RooAbsGenContext::attach(const RooArgSet& /*params*/) 
 {
-  // Interface to attach given parameters to object in this context
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an empty dataset to hold the events that will be generated
+
 RooDataSet* RooAbsGenContext::createDataSet(const char* name, const char* title, const RooArgSet& obs)
 {
-  // Create an empty dataset to hold the events that will be generated
   RooDataSet* ret = new RooDataSet(name, title, obs);
   ret->setDirtyProp(kFALSE) ;
   return ret ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate the specified number of events with nEvents>0 and
+/// and return a dataset containing the generated events. With nEvents<=0,
+/// generate the number of events in the prototype dataset, if available,
+/// or else the expected number of events, if non-zero. 
+/// If extendedMode = true generate according to a Poisson(nEvents) 
+/// The returned dataset belongs to the caller. Return zero in case of an error.
+/// Generation of individual events is delegated to a virtual generateEvent()
+/// method. A virtual initGenerator() method is also called just before the
+/// first call to generateEvent().
+
 RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t extendedMode) 
 {
-  // Generate the specified number of events with nEvents>0 and
-  // and return a dataset containing the generated events. With nEvents<=0,
-  // generate the number of events in the prototype dataset, if available,
-  // or else the expected number of events, if non-zero. 
-  // If extendedMode = true generate according to a Poisson(nEvents) 
-  // The returned dataset belongs to the caller. Return zero in case of an error.
-  // Generation of individual events is delegated to a virtual generateEvent()
-  // method. A virtual initGenerator() method is also called just before the
-  // first call to generateEvent().
-  
   if(!isValid()) {
     coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
     return 0;
@@ -264,50 +266,51 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface function to initialize context for generation for given
+/// set of observables
+
 void RooAbsGenContext::initGenerator(const RooArgSet&) 
 {
-  // Interface function to initialize context for generation for given
-  // set of observables
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print name of context
+
 void RooAbsGenContext::printName(ostream& os) const 
 {
-  // Print name of context
-
   os << GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print title of context
+
 void RooAbsGenContext::printTitle(ostream& os) const 
 {
-  // Print title of context
-
   os << GetTitle() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class name of context
+
 void RooAbsGenContext::printClassName(ostream& os) const 
 {
-  // Print class name of context
-
   os << IsA()->GetName() ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print arguments of context, i.e. the observables being generated in this context
+
 void RooAbsGenContext::printArgs(ostream& os) const 
 {
-  // Print arguments of context, i.e. the observables being generated in this context
-
   os << "[ " ;    
   TIterator* iter = _theEvent->createIterator() ;
   RooAbsArg* arg ;
@@ -326,23 +329,24 @@ void RooAbsGenContext::printArgs(ostream& os) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface for multi-line printing
+
 void RooAbsGenContext::printMultiline(ostream &/*os*/, Int_t /*contents*/, Bool_t /*verbose*/, TString /*indent*/) const
 {
-  // Interface for multi-line printing
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the traversal order of prototype data to that in the lookup tables
+/// passed as argument. The LUT must be an array of integers with the same
+/// size as the number of entries in the prototype dataset and must contain
+/// integer values in the range [0,Nevt-1]
+
 void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
 {
-  // Set the traversal order of prototype data to that in the lookup tables
-  // passed as argument. The LUT must be an array of integers with the same
-  // size as the number of entries in the prototype dataset and must contain
-  // integer values in the range [0,Nevt-1]
-
   // Delete any previous lookup table
   if (_protoOrder) {
     delete[] _protoOrder ;
@@ -363,11 +367,11 @@ void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rescale existing output buffer with given ratio
+
 void RooAbsGenContext::resampleData(Double_t& ratio) 
 {
-  // Rescale existing output buffer with given ratio
-
 
   Int_t nOrig = _genData->numEntries() ;
   Int_t nTarg = Int_t(nOrig*ratio+0.5) ;
@@ -392,19 +396,21 @@ void RooAbsGenContext::resampleData(Double_t& ratio)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define default contents when printing
+
 Int_t RooAbsGenContext::defaultPrintContents(Option_t* /*opt*/) const 
 {
-  // Define default contents when printing
   return kName|kClassName|kValue ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define default print style 
+
 RooPrintable::StyleOption RooAbsGenContext::defaultPrintStyle(Option_t* opt) const 
 {
-  // Define default print style 
   if (opt && TString(opt).Contains("v")) {
     return kVerbose ;
   } 

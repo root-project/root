@@ -48,7 +48,9 @@ TMVA::SVEvent::SVEvent()
 {
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SVEvent::SVEvent( const Event* event, Float_t C_par, Bool_t isSignal )
    : fDataVector(event->GetValues()),
      fCweight(C_par*event->GetWeight()),
@@ -63,10 +65,11 @@ TMVA::SVEvent::SVEvent( const Event* event, Float_t C_par, Bool_t isSignal )
      fLine(0),
      fTarget((event->GetNTargets() > 0 ? event->GetTarget(0) : 0))
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Int_t typeFlag, UInt_t ns )
    : fDataVector(*svector),
      fCweight(-1.),
@@ -81,10 +84,11 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Int_
      fLine(0),
      fTarget(0)
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Float_t alpha_p,Int_t typeFlag)
    : fDataVector(*svector),
      fCweight(-1.),
@@ -99,32 +103,34 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Floa
      fLine(0),
      fTarget(0)
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::SVEvent::~SVEvent()
 {
-   // destructor
    if (fLine != 0) {
       delete fLine; 
       fLine = 0;
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// printout 
+
 void TMVA::SVEvent::Print( std::ostream& os ) const
 {
-   // printout 
    os << "type::" << fTypeFlag <<" target::"<< fTarget << " alpha::" << fAlpha <<" alpha_p::"<< fAlpha_p<< " values::" ;
    for (UInt_t j =0; j < fDataVector.size();j++) os<<fDataVector.at(j)<<" ";
    os << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// printout 
+
 void TMVA::SVEvent::PrintData()
 {
-   // printout 
    for (UInt_t i = 0; i < fNVar; i++) std::cout<<fDataVector.at(i)<<" ";
    std::cout<<std::endl;
 }

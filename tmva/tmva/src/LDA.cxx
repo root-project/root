@@ -46,7 +46,9 @@
 #include "TMVA/MsgLogger.h"       
 #endif
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::LDA::LDA( Float_t tolerence, Bool_t debug ) 
    : fTolerence(tolerence),
      fNumParams(0),
@@ -55,20 +57,21 @@ TMVA::LDA::LDA( Float_t tolerence, Bool_t debug )
      fDebug(debug),
      fLogger( new MsgLogger("LDA", (debug?kINFO:kDEBUG)) )
 {
-   // constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::LDA::~LDA()
 {
-   // destructor
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create LDA matrix using local events found by knn method
+
 void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& inputBackgroundEvents)
 {
-   // Create LDA matrix using local events found by knn method
    Log() << kDEBUG << "There are: " << inputSignalEvents.size() << " input signal events " << Endl;
    Log() << kDEBUG << "There are: " << inputBackgroundEvents.size() << " input background events " << Endl;
 
@@ -205,12 +208,13 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Probability value using Gaussian approximation
+///
+
 Float_t TMVA::LDA::FSub(const std::vector<Float_t>& x, Int_t k)
 {
-   //
-   // Probability value using Gaussian approximation
-   //
    Float_t prefactor  = 1.0/(TMath::TwoPi()*TMath::Sqrt(fSigma->Determinant()));
    std::vector<Float_t> m_transPoseTimesSigmaInverse;
   
@@ -232,23 +236,25 @@ Float_t TMVA::LDA::FSub(const std::vector<Float_t>& x, Int_t k)
    return prefactor*TMath::Exp( exponent );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Signal probability with Gaussian approximation
+///
+
 Float_t TMVA::LDA::GetProb(const std::vector<Float_t>& x, Int_t k)
 {
-   //
-   // Signal probability with Gaussian approximation
-   //
    Float_t m_numerator = FSub(x,k)*fEventFraction[k];
    Float_t m_denominator = FSub(x,0)*fEventFraction[0]+FSub(x,1)*fEventFraction[1];
 
    return m_numerator/m_denominator;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Log likelihood function with Gaussian approximation
+///
+
 Float_t TMVA::LDA::GetLogLikelihood( const std::vector<Float_t>& x, Int_t k )
 {
-   //
-   // Log likelihood function with Gaussian approximation
-   //
    return TMath::Log( FSub(x,k)/FSub(x,!k) ) + TMath::Log( fEventFraction[k]/fEventFraction[!k] );
 }

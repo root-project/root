@@ -33,22 +33,22 @@
 
 ClassImp(TAlienResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup object.
+
 TAlienResult::~TAlienResult()
 {
-   // Cleanup object.
-
    TIter next(this);
    while (TMap * obj = (TMap *) next()) {
       obj->DeleteAll();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump result set.
+
 void TAlienResult::DumpResult()
 {
-   // Dump result set.
-
    std::cout << "BEGIN DUMP" << std::endl;
    TIter next(this);
    TMap *map;
@@ -73,11 +73,11 @@ void TAlienResult::DumpResult()
    std::cout << "END DUMP" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Return a file name.
+
 const char *TAlienResult::GetFileName(UInt_t i) const
 {
-   //Return a file name.
-
    if (At(i)) {
       TObjString *entry;
       if ((entry = (TObjString *) ((TMap *) At(i))->GetValue("name"))) {
@@ -87,11 +87,11 @@ const char *TAlienResult::GetFileName(UInt_t i) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the entry list, if evtlist was defined as a tag.
+
 const TEntryList *TAlienResult::GetEntryList(UInt_t i) const
 {
-   // Return the entry list, if evtlist was defined as a tag.
-
    if (At(i)) {
       TEntryList *entry;
       if ((entry = (TEntryList *) ((TMap *) At(i))->GetValue("evlist"))) {
@@ -101,11 +101,11 @@ const TEntryList *TAlienResult::GetEntryList(UInt_t i) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return file name path.
+
 const char *TAlienResult::GetFileNamePath(UInt_t i) const
 {
-   // Return file name path.
-
    if (At(i)) {
       TObjString *entry;
       if ((entry = (TObjString *) ((TMap *) At(i))->GetValue("name"))) {
@@ -120,11 +120,11 @@ const char *TAlienResult::GetFileNamePath(UInt_t i) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return path.
+
 const char *TAlienResult::GetPath(UInt_t i) const
 {
-   // Return path.
-
    if (At(i)) {
       TObjString *entry;
       if ((entry = (TObjString *) ((TMap *) At(i))->GetValue("path"))) {
@@ -134,11 +134,11 @@ const char *TAlienResult::GetPath(UInt_t i) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the key.
+
 const char *TAlienResult::GetKey(UInt_t i, const char *key) const
 {
-   // Return the key.
-
    if (At(i)) {
       TObjString *entry;
       if ((entry = (TObjString *) ((TMap *) At(i))->GetValue(key))) {
@@ -148,11 +148,11 @@ const char *TAlienResult::GetKey(UInt_t i, const char *key) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the key.
+
 Bool_t TAlienResult::SetKey(UInt_t i, const char *key, const char *value)
 {
-   // Set the key.
-
    if (At(i)) {
       TPair *entry;
       if ((entry = (TPair *) ((TMap *) At(i))->FindObject(key))) {
@@ -167,11 +167,11 @@ Bool_t TAlienResult::SetKey(UInt_t i, const char *key, const char *value)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a file info list.
+
 TList *TAlienResult::GetFileInfoList() const
 {
-   // Return a file info list.
-
    TList *newfileinfolist = new TList();
 
    newfileinfolist->SetOwner(kTRUE);
@@ -210,11 +210,11 @@ TList *TAlienResult::GetFileInfoList() const
    return newfileinfolist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the AlienResult info.
+
 void TAlienResult::Print(Option_t * option) const
 {
-   // Print the AlienResult info.
-
    Long64_t totaldata = 0;
    Int_t totalfiles = 0;
 

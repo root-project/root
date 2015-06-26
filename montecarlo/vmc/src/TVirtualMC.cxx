@@ -28,7 +28,11 @@ ClassImp(TVirtualMC)
 
 TMCThreadLocal TVirtualMC* TVirtualMC::fgMC=0;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Standard constructor
+///
+
 TVirtualMC::TVirtualMC(const char *name, const char *title,
                        Bool_t /*isRootGeometrySupported*/)
   : TNamed(name,title),
@@ -38,9 +42,6 @@ TVirtualMC::TVirtualMC(const char *name, const char *title,
     fRandom(0),
     fMagField(0)
 {
-   //
-   // Standard constructor
-   //
    if(fgMC) {
       Warning("TVirtualMC","Cannot initialise twice MonteCarlo class");
    } else {
@@ -56,7 +57,11 @@ TVirtualMC::TVirtualMC(const char *name, const char *title,
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Default constructor
+///
+
 TVirtualMC::TVirtualMC()
   : TNamed(),
     fApplication(0),
@@ -65,17 +70,15 @@ TVirtualMC::TVirtualMC()
     fRandom(0),
     fMagField(0)
 {
-   //
-   // Default constructor
-   //
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Destructor
+///
+
 TVirtualMC::~TVirtualMC()
 {
-   //
-   // Destructor
-   //
    fgMC=0;
 }
 
@@ -83,48 +86,51 @@ TVirtualMC::~TVirtualMC()
 // methods
 //
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static: return virtual MC object
+
 TVirtualMC *TVirtualMC::GetMC()
 {
-   //static: return virtual MC object
    return fgMC;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Set particles stack.
+///
+
 void TVirtualMC::SetStack(TVirtualMCStack* stack)
 {
-//
-// Set particles stack.
-//
-
    fStack = stack;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Set external decayer.
+///
+
 void TVirtualMC::SetExternalDecayer(TVirtualMCDecayer* decayer)
 {
-//
-// Set external decayer.
-//
-
    fDecayer = decayer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Set random number generator.
+///
+
 void TVirtualMC::SetRandom(TRandom* random)
 {
-//
-// Set random number generator.
-//
    gRandom = random;
    fRandom = random;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Set magnetic field.
+///
+
 void TVirtualMC::SetMagField(TVirtualMagField* field)
 {
-//
-// Set magnetic field.
-//
    fMagField = field;
 }

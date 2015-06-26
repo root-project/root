@@ -427,14 +427,15 @@ The results above can be obtained by running the tutorial TestSPlot.C
 //-->End_Html
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor (used by I/O only)
+
 TSPlot::TSPlot() :
  fTree(0),
  fTreename(0),
  fVarexp(0),
  fSelection(0)
 {
-   // default constructor (used by I/O only)
    fNx = 0;
    fNy=0;
    fNevents = 0;
@@ -442,7 +443,8 @@ TSPlot::TSPlot() :
    fNumbersOfEvents=0;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
  fTreename(0),
  fVarexp(0),
@@ -469,11 +471,11 @@ TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
    fNumbersOfEvents = 0;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TSPlot::~TSPlot()
 {
-   // destructor
-
    if (fNumbersOfEvents)
       delete [] fNumbersOfEvents;
    if (!fXvarHists.IsEmpty())
@@ -484,11 +486,11 @@ TSPlot::~TSPlot()
       fYpdfHists.Delete();
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///To browse the histograms
+
 void TSPlot::Browse(TBrowser *b)
 {
-   //To browse the histograms
-
    if (!fSWeightsHists.IsEmpty()) {
       TIter next(&fSWeightsHists);
       TH1D* h = 0;
@@ -518,27 +520,27 @@ void TSPlot::Browse(TBrowser *b)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the initial number of events of each species - used
+///as initial estimates in minuit
+
 void TSPlot::SetInitialNumbersOfSpecies(Int_t *numbers)
 {
-//Set the initial number of events of each species - used
-//as initial estimates in minuit
-
    if (!fNumbersOfEvents)
       fNumbersOfEvents = new Double_t[fNSpecies];
    for (Int_t i=0; i<fNSpecies; i++)
       fNumbersOfEvents[i]=numbers[i];
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Calculates the sWeights
+///The option controls the print level
+///"Q" - no print out
+///"V" - prints the estimated #of events in species - default
+///"VV" - as "V" + the minuit printing + sums of weights for control
+
 void TSPlot::MakeSPlot(Option_t *option)
 {
-//Calculates the sWeights
-//The option controls the print level
-//"Q" - no print out
-//"V" - prints the estimated #of events in species - default
-//"VV" - as "V" + the minuit printing + sums of weights for control
-
 
    if (!fNumbersOfEvents){
       Error("MakeSPlot","Initial numbers of events in species have not been set");
@@ -614,11 +616,11 @@ void TSPlot::MakeSPlot(Option_t *option)
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Computes the sWeights from the covariance matrix
+
 void TSPlot::SPlots(Double_t *covmat, Int_t i_excl)
 {
-//Computes the sWeights from the covariance matrix
-
    Int_t i, ispecies, k;
    Double_t numerator, denominator;
    for (i=0; i<fNevents; i++){
@@ -635,21 +637,21 @@ void TSPlot::SPlots(Double_t *covmat, Int_t i_excl)
 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the matrix of sweights
+
 void TSPlot::GetSWeights(TMatrixD &weights)
 {
-//Returns the matrix of sweights
-
    if (weights.GetNcols()!=fNSpecies*(fNy+1) || weights.GetNrows()!=fNevents)
       weights.ResizeTo(fNevents, fNSpecies*(fNy+1));
    weights = fSWeights;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the matrix of sweights. It is assumed that the array passed in the argurment is big enough
+
 void TSPlot::GetSWeights(Double_t *weights)
 {
-//Returns the matrix of sweights. It is assumed that the array passed in the argurment is big enough
-
    for (Int_t i=0; i<fNevents; i++){
       for (Int_t j=0; j<fNSpecies; j++){
          weights[i*fNSpecies+j]=fSWeights(i, j);
@@ -657,11 +659,11 @@ void TSPlot::GetSWeights(Double_t *weights)
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Fills the histograms of x variables (not weighted) with nbins
+
 void TSPlot::FillXvarHists(Int_t nbins)
 {
-//Fills the histograms of x variables (not weighted) with nbins
-
    Int_t i, j;
 
    if (!fXvarHists.IsEmpty()){
@@ -683,13 +685,13 @@ void TSPlot::FillXvarHists(Int_t nbins)
 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the array of histograms of x variables (not weighted)
+///If histograms have not already
+///been filled, they are filled with default binning 100.
+
 TObjArray* TSPlot::GetXvarHists()
 {
-//Returns the array of histograms of x variables (not weighted)
-//If histograms have not already
-//been filled, they are filled with default binning 100.
-
    Int_t nbins = 100;
    if (fXvarHists.IsEmpty())
       FillXvarHists(nbins);
@@ -698,13 +700,13 @@ TObjArray* TSPlot::GetXvarHists()
    return &fXvarHists;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the histogram of variable #ixvar
+///If histograms have not already
+///been filled, they are filled with default binning 100.
+
 TH1D *TSPlot::GetXvarHist(Int_t ixvar)
 {
-//Returns the histogram of variable #ixvar
-//If histograms have not already
-//been filled, they are filled with default binning 100.
-
    Int_t nbins = 100;
    if (fXvarHists.IsEmpty())
       FillXvarHists(nbins);
@@ -714,11 +716,11 @@ TH1D *TSPlot::GetXvarHist(Int_t ixvar)
    return (TH1D*)fXvarHists.UncheckedAt(ixvar);
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Fill the histograms of y variables
+
 void TSPlot::FillYvarHists(Int_t nbins)
 {
-//Fill the histograms of y variables
-
    Int_t i, j;
 
    if (!fYvarHists.IsEmpty()){
@@ -739,12 +741,12 @@ void TSPlot::FillYvarHists(Int_t nbins)
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the array of histograms of y variables. If histograms have not already
+///been filled, they are filled with default binning 100.
+
 TObjArray* TSPlot::GetYvarHists()
 {
-//Returns the array of histograms of y variables. If histograms have not already
-//been filled, they are filled with default binning 100.
-
    Int_t nbins = 100;
    if (fYvarHists.IsEmpty())
       FillYvarHists(nbins);
@@ -753,12 +755,12 @@ TObjArray* TSPlot::GetYvarHists()
    return &fYvarHists;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the histogram of variable iyvar.If histograms have not already
+///been filled, they are filled with default binning 100.
+
 TH1D *TSPlot::GetYvarHist(Int_t iyvar)
 {
-//Returns the histogram of variable iyvar.If histograms have not already
-//been filled, they are filled with default binning 100.
-
    Int_t nbins = 100;
    if (fYvarHists.IsEmpty())
       FillYvarHists(nbins);
@@ -767,11 +769,11 @@ TH1D *TSPlot::GetYvarHist(Int_t iyvar)
    return (TH1D*)fYvarHists.UncheckedAt(iyvar);
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Fills the histograms of pdf-s of y variables with binning nbins
+
 void TSPlot::FillYpdfHists(Int_t nbins)
 {
-//Fills the histograms of pdf-s of y variables with binning nbins
-
    Int_t i, j, ispecies;
 
    if (!fYpdfHists.IsEmpty()){
@@ -794,13 +796,13 @@ void TSPlot::FillYpdfHists(Int_t nbins)
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the array of histograms of pdf's of y variables with binning nbins
+///If histograms have not already
+///been filled, they are filled with default binning 100.
+
 TObjArray* TSPlot::GetYpdfHists()
 {
-//Returns the array of histograms of pdf's of y variables with binning nbins
-//If histograms have not already
-//been filled, they are filled with default binning 100.
-
    Int_t nbins = 100;
    if (fYpdfHists.IsEmpty())
       FillYpdfHists(nbins);
@@ -808,13 +810,13 @@ TObjArray* TSPlot::GetYpdfHists()
    return &fYpdfHists;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the histogram of the pdf of variable #iyvar for species #ispecies, binning nbins
+///If histograms have not already
+///been filled, they are filled with default binning 100.
+
 TH1D *TSPlot::GetYpdfHist(Int_t iyvar, Int_t ispecies)
 {
-//Returns the histogram of the pdf of variable #iyvar for species #ispecies, binning nbins
-//If histograms have not already
-//been filled, they are filled with default binning 100.
-
    Int_t nbins = 100;
    if (fYpdfHists.IsEmpty())
       FillYpdfHists(nbins);
@@ -822,14 +824,14 @@ TH1D *TSPlot::GetYpdfHist(Int_t iyvar, Int_t ispecies)
    return (TH1D*)fYpdfHists.UncheckedAt(fNy*ispecies+iyvar);
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///The order of histograms in the array:
+///x0_species0, x0_species1,..., x1_species0, x1_species1,..., y0_species0, y0_species1,...
+///If the histograms have already been filled with a different binning, they are refilled
+///and all histograms are deleted
+
 void TSPlot::FillSWeightsHists(Int_t nbins)
 {
-   //The order of histograms in the array:
-   //x0_species0, x0_species1,..., x1_species0, x1_species1,..., y0_species0, y0_species1,...
-   //If the histograms have already been filled with a different binning, they are refilled
-   //and all histograms are deleted
-
    if (fSWeights.GetNoElements()==0){
       Error("GetSWeightsHists", "SWeights were not computed");
       return;
@@ -869,14 +871,14 @@ void TSPlot::FillSWeightsHists(Int_t nbins)
    }
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns an array of all histograms of variables, weighted with sWeights
+///If histograms have not been already filled, they are filled with default binning 50
+///The order of histograms in the array:
+///x0_species0, x0_species1,..., x1_species0, x1_species1,..., y0_species0, y0_species1,...
+
 TObjArray *TSPlot::GetSWeightsHists()
 {
-   //Returns an array of all histograms of variables, weighted with sWeights
-   //If histograms have not been already filled, they are filled with default binning 50
-   //The order of histograms in the array:
-   //x0_species0, x0_species1,..., x1_species0, x1_species1,..., y0_species0, y0_species1,...
-
    Int_t nbins = 50; //default binning
    if (fSWeightsHists.IsEmpty())
       FillSWeightsHists(nbins);
@@ -884,18 +886,18 @@ TObjArray *TSPlot::GetSWeightsHists()
    return &fSWeightsHists;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///The Fill...Hist() methods fill the histograms with the real limits on the variables
+///This method allows to refill the specified histogram with user-set boundaries min and max
+///Parameters:
+///type = 1 - histogram of x variable #nvar
+///     = 2 - histogram of y variable #nvar
+///     = 3 - histogram of y_pdf for y #nvar and species #nspecies
+///     = 4 - histogram of x variable #nvar, species #nspecies, WITH sWeights
+///     = 5 - histogram of y variable #nvar, species #nspecies, WITH sWeights
+
 void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Double_t max, Int_t nspecies)
 {
-   //The Fill...Hist() methods fill the histograms with the real limits on the variables
-   //This method allows to refill the specified histogram with user-set boundaries min and max
-   //Parameters:
-   //type = 1 - histogram of x variable #nvar
-   //     = 2 - histogram of y variable #nvar
-   //     = 3 - histogram of y_pdf for y #nvar and species #nspecies
-   //     = 4 - histogram of x variable #nvar, species #nspecies, WITH sWeights
-   //     = 5 - histogram of y variable #nvar, species #nspecies, WITH sWeights
-
    if (type<1 || type>5){
       Error("RefillHist", "type must lie between 1 and 5");
       return;
@@ -951,16 +953,16 @@ void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Doubl
       fSWeightsHists.AddAt(h, fNx*fNSpecies + fNSpecies*nvar+nspecies);
    }
 }
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the histogram of a variable, weithed with sWeights
+///If histograms have not been already filled, they are filled with default binning 50
+///If parameter ixvar!=-1, the histogram of x-variable #ixvar is returned for species ispecies
+///If parameter ixvar==-1, the histogram of y-variable #iyexcl is returned for species ispecies
+///If the histogram has already been filled and the binning is different from the parameter nbins
+///all histograms with old binning will be deleted and refilled.
+
 TH1D *TSPlot::GetSWeightsHist(Int_t ixvar, Int_t ispecies,Int_t iyexcl)
 {
-   //Returns the histogram of a variable, weithed with sWeights
-   //If histograms have not been already filled, they are filled with default binning 50
-   //If parameter ixvar!=-1, the histogram of x-variable #ixvar is returned for species ispecies
-   //If parameter ixvar==-1, the histogram of y-variable #iyexcl is returned for species ispecies
-   //If the histogram has already been filled and the binning is different from the parameter nbins
-   //all histograms with old binning will be deleted and refilled.
-
 
    Int_t nbins = 50; //default binning
    if (fSWeightsHists.IsEmpty())
@@ -974,28 +976,29 @@ TH1D *TSPlot::GetSWeightsHist(Int_t ixvar, Int_t ispecies,Int_t iyexcl)
 }
 
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the input Tree
+
 void TSPlot::SetTree(TTree *tree)
 {
-   // Set the input Tree
    fTree = tree;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Specifies the variables from the tree to be used for splot
+///
+///Variables fNx, fNy, fNSpecies and fNEvents should already be set!
+///
+///In the 1st parameter it is assumed that first fNx variables are x(control variables),
+///then fNy y variables (discriminating variables),
+///then fNy*fNSpecies ypdf variables (probability distribution functions of dicriminating
+///variables for different species). The order of pdfs should be: species0_y0, species0_y1,...
+///species1_y0, species1_y1,...species[fNSpecies-1]_y0...
+///The 2nd parameter allows to make a cut
+///TTree::Draw method description contains more details on specifying expression and selection
+
 void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_t firstentry)
 {
-   //Specifies the variables from the tree to be used for splot
-   //
-   //Variables fNx, fNy, fNSpecies and fNEvents should already be set!
-   //
-   //In the 1st parameter it is assumed that first fNx variables are x(control variables),
-   //then fNy y variables (discriminating variables),
-   //then fNy*fNSpecies ypdf variables (probability distribution functions of dicriminating
-   //variables for different species). The order of pdfs should be: species0_y0, species0_y1,...
-   //species1_y0, species1_y1,...species[fNSpecies-1]_y0...
-   //The 2nd parameter allows to make a cut
-   //TTree::Draw method description contains more details on specifying expression and selection
-
    TTreeFormula **var;
    std::vector<TString> cnames;
    TList *formulaList = new TList();
@@ -1142,11 +1145,11 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
    delete [] var;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FCN-function for Minuit
+
 void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t /*iflag*/)
 {
-// FCN-function for Minuit
-
    Double_t lik;
    Int_t i, ispecies;
 

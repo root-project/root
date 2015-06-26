@@ -46,11 +46,12 @@ TPyReturn::TPyReturn()
    fPyObject = Py_None;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a TPyReturn from a python object. The python object may represent
+/// a ROOT object. Steals reference to given python object.
+
 TPyReturn::TPyReturn( PyObject* pyobject )
 {
-// Construct a TPyReturn from a python object. The python object may represent
-// a ROOT object. Steals reference to given python object.
    if ( ! pyobject ) {
       Py_INCREF( Py_None );
       fPyObject = Py_None;
@@ -58,18 +59,20 @@ TPyReturn::TPyReturn( PyObject* pyobject )
       fPyObject = pyobject;             // steals reference
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor. Applies python object reference counting.
+
 TPyReturn::TPyReturn( const TPyReturn& other )
 {
-// Copy constructor. Applies python object reference counting.
    Py_INCREF( other.fPyObject );
    fPyObject = other.fPyObject;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator. Applies python object reference counting.
+
 TPyReturn& TPyReturn::operator=( const TPyReturn& other )
 {
-// Assignment operator. Applies python object reference counting.
    if ( this != &other ) {
       Py_INCREF( other.fPyObject );
       Py_DECREF( fPyObject );
@@ -79,10 +82,11 @@ TPyReturn& TPyReturn::operator=( const TPyReturn& other )
    return *this;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Reference counting for the held python object is in effect.
+
 TPyReturn::~TPyReturn()
 {
-// Destructor. Reference counting for the held python object is in effect.
    Py_DECREF( fPyObject );
 }
 
@@ -94,10 +98,11 @@ TPyReturn::operator char*() const
    return (char*)((const char*)*this);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cast python return value to C-style string (may fail).
+
 TPyReturn::operator const char*() const
 {
-// Cast python return value to C-style string (may fail).
    if ( fPyObject == Py_None )     // for void returns
       return 0;
 
@@ -110,10 +115,11 @@ TPyReturn::operator const char*() const
    return s;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cast python return value to C++ char (may fail).
+
 TPyReturn::operator Char_t() const
 {
-// Cast python return value to C++ char (may fail).
    std::string s = operator const char*();
    if ( s.size() )
       return s[0];
@@ -121,10 +127,11 @@ TPyReturn::operator Char_t() const
    return '\0';
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cast python return value to C++ long (may fail).
+
 TPyReturn::operator Long_t() const
 {
-// Cast python return value to C++ long (may fail).
    Long_t l = PyLong_AsLong( fPyObject );
 
    if ( PyErr_Occurred() )
@@ -133,10 +140,11 @@ TPyReturn::operator Long_t() const
    return l;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cast python return value to C++ unsigned long (may fail).
+
 TPyReturn::operator ULong_t() const
 {
-// Cast python return value to C++ unsigned long (may fail).
    ULong_t ul = PyLong_AsUnsignedLong( fPyObject );
 
    if ( PyErr_Occurred() )
@@ -146,10 +154,11 @@ TPyReturn::operator ULong_t() const
 }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cast python return value to C++ double (may fail).
+
 TPyReturn::operator Double_t() const
 {
-// Cast python return value to C++ double (may fail).
    Double_t d = PyFloat_AsDouble( fPyObject );
 
    if ( PyErr_Occurred() )
@@ -158,11 +167,12 @@ TPyReturn::operator Double_t() const
    return d;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cast python return value to ROOT object with dictionary (may fail; note that
+/// you have to use the void* converter, as CINT will not call any other).
+
 TPyReturn::operator void*() const
 {
-// Cast python return value to ROOT object with dictionary (may fail; note that
-// you have to use the void* converter, as CINT will not call any other).
    if ( fPyObject == Py_None )
       return 0;
 
@@ -173,10 +183,11 @@ TPyReturn::operator void*() const
       return fPyObject;                 // borrows reference
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Direct return of the held PyObject; note the new reference.
+
 TPyReturn::operator PyObject*() const
 {
-// Direct return of the held PyObject; note the new reference.
    if ( fPyObject == Py_None )
       return 0;
 

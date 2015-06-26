@@ -32,38 +32,38 @@ ClassImp(TFree)
 // segments are merged in one single segment.
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TFree default constructor.
+
 TFree::TFree()
 {
-   // TFree default constructor.
-
    fFirst = fLast = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for a FREE segment.
+
 TFree::TFree(TList *lfree, Long64_t first, Long64_t last)
 {
-   // Constructor for a FREE segment.
-
    fFirst = first;
    fLast  = last;
    lfree->Add(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new free segment to the list of free segments.
+///
+///  If last just precedes an existing free segment, then first becomes
+///     the new starting location of the free segment.
+///  if first just follows an existing free segment, then last becomes
+///     the new ending location of the free segment.
+///  if first just follows an existing free segment AND last just precedes
+///     an existing free segment, these two segments are merged into
+///     one single segment.
+///
+
 TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
 {
-// Add a new free segment to the list of free segments.
-//
-//  If last just precedes an existing free segment, then first becomes
-//     the new starting location of the free segment.
-//  if first just follows an existing free segment, then last becomes
-//     the new ending location of the free segment.
-//  if first just follows an existing free segment AND last just precedes
-//     an existing free segment, these two segments are merged into
-//     one single segment.
-//
-
    TFree *idcur = this;
    while (idcur) {
       Long64_t curfirst = idcur->GetFirst();
@@ -94,18 +94,18 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TFree Destructor.
+
 TFree::~TFree()
 {
-   // TFree Destructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Encode FREE structure into output buffer.
+
 void TFree::FillBuffer(char *&buffer)
 {
-   // Encode FREE structure into output buffer.
-
    Version_t version = TFree::Class_Version();
    if (fLast > TFile::kStartBigFile) version += 1000;
    tobuf(buffer, version);
@@ -119,11 +119,11 @@ void TFree::FillBuffer(char *&buffer)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the best free segment where to store nbytes.
+
 TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
 {
-   // Return the best free segment where to store nbytes.
-
    TFree *idcur = this;
    if (idcur == 0) return 0;
    TFree *idcur1 = 0;
@@ -151,19 +151,19 @@ TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
    return idcur;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List free segment contents.
+
 void TFree::ls(Option_t *) const
 {
-   // List free segment contents.
-
    std::cout <<"Free Segment: "<<fFirst<<"\t"<<fLast<<std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decode one FREE structure from input buffer
+
 void TFree::ReadBuffer(char *&buffer)
 {
-   // Decode one FREE structure from input buffer
-
    Version_t version;
    frombuf(buffer, &version);
    if (version > 1000) {
@@ -176,11 +176,11 @@ void TFree::ReadBuffer(char *&buffer)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return number of bytes occupied by this TFree on permanent storage
+
 Int_t TFree::Sizeof() const
 {
-   // return number of bytes occupied by this TFree on permanent storage
-
    if (fLast > TFile::kStartBigFile) return 18;
    else                              return 10;
 }

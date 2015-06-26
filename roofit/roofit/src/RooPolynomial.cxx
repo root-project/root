@@ -46,15 +46,18 @@ ClassImp(RooPolynomial)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// coverity[UNINIT_CTOR]
+
 RooPolynomial::RooPolynomial()
 {
-  // coverity[UNINIT_CTOR]
   _coefIter = _coefList.createIterator() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooPolynomial::RooPolynomial(const char* name, const char* title, 
 			     RooAbsReal& x, const RooArgList& coefList, Int_t lowestOrder) :
   RooAbsPdf(name, title),
@@ -62,7 +65,6 @@ RooPolynomial::RooPolynomial(const char* name, const char* title,
   _coefList("coefList","List of coefficients",this),
   _lowestOrder(lowestOrder) 
 {
-  // Constructor
   _coefIter = _coefList.createIterator() ;
 
   // Check lowest order
@@ -87,7 +89,8 @@ RooPolynomial::RooPolynomial(const char* name, const char* title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooPolynomial::RooPolynomial(const char* name, const char* title,
                            RooAbsReal& x) :
   RooAbsPdf(name, title),
@@ -100,31 +103,34 @@ RooPolynomial::RooPolynomial(const char* name, const char* title,
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooPolynomial::RooPolynomial(const RooPolynomial& other, const char* name) :
   RooAbsPdf(other, name), 
   _x("x", this, other._x), 
   _coefList("coefList",this,other._coefList),
   _lowestOrder(other._lowestOrder) 
 {
-  // Copy constructor
   _coefIter = _coefList.createIterator() ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooPolynomial::~RooPolynomial()
 {
-  // Destructor
   delete _coefIter ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooPolynomial::evaluate() const 
 {
   Int_t order(_lowestOrder) ;
@@ -146,7 +152,8 @@ Double_t RooPolynomial::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
@@ -155,7 +162,8 @@ Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   R__ASSERT(code==1) ;

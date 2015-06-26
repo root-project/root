@@ -394,11 +394,11 @@ enum EStyleManagerWid {
 const char *kFiletypes[] = { "ROOT macros", "Style_*.C",
                                0,             0 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Create the main window of the style manager.
+
 TStyleManager::TStyleManager(const TGWindow *p) : TGMainFrame(p)
 {
-   // Constructor. Create the main window of the style manager.
-
    SetWindowName("Style Manager");
    SetCleanup(kNoCleanup);
 
@@ -474,11 +474,11 @@ TStyleManager::TStyleManager(const TGWindow *p) : TGMainFrame(p)
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TStyleManager::~TStyleManager()
 {
-   // Destructor.
-
    // Disconnect all widgets
    DisconnectAll();
    DisconnectEditor(fCurTabNum);
@@ -751,18 +751,19 @@ TStyleManager::~TStyleManager()
    fgStyleManager = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///static: return style manager
+
 TStyleManager *&TStyleManager::GetSM()
 {
-   //static: return style manager
    return fgStyleManager;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set up the interface. Called by the ctor or by the 'Show' method.
+
 void TStyleManager::Init()
 {
-   // Set up the interface. Called by the ctor or by the 'Show' method.
-
    // Build the list of available styles and select gStyle.
    BuildList(gStyle);
 
@@ -775,21 +776,21 @@ void TStyleManager::Init()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called to hide the style manager.
+
 void TStyleManager::Hide()
 {
-   // Called to hide the style manager.
-
    if (fgStyleManager) {
       fgStyleManager->UnmapWindow();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called to show the style manager. Static method.
+
 void TStyleManager::Show()
 {
-   // Called to show the style manager. Static method.
-
    if (fgStyleManager) {
       fgStyleManager->Init();
       if (!fgStyleManager->IsMapped()) {
@@ -800,21 +801,21 @@ void TStyleManager::Show()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Called to delete the style manager. Called when the ROOT session is
+/// closed via a canvas' menu.
+
 void TStyleManager::Terminate()
 {
-   //  Called to delete the style manager. Called when the ROOT session is
-   // closed via a canvas' menu.
-
    delete fgStyleManager;
    fgStyleManager = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the menu bar to the frame 'p'.
+
 void TStyleManager::AddMenus(TGCompositeFrame *p)
 {
-   // Add the menu bar to the frame 'p'.
-
    fMenuBar = new TGMenuBar(p);
 
    fMenuStyle = new TGPopupMenu(gClient->GetRoot());
@@ -856,11 +857,11 @@ void TStyleManager::AddMenus(TGCompositeFrame *p)
    p->AddFrame(fMenuBar, fLayoutExpandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new style. Called via the menu bar or the tool bar.
+
 void TStyleManager::DoNew()
 {
-   // Create a new style. Called via the menu bar or the tool bar.
-
    // Open a message box to allow the user to create a new style.
    new TStyleDialog(this, fCurSelStyle, 1, 0);
 
@@ -871,12 +872,12 @@ void TStyleManager::DoNew()
                else BuildList(fCurSelStyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Delete the current selected style from the ROOT session.
+/// Called via the menu or the tool bar.
+
 void TStyleManager::DoDelete()
 {
-   //  Delete the current selected style from the ROOT session.
-   // Called via the menu or the tool bar.
-
    // Protection: the user is NOT allowed to delete gStyle.
    // As a consequence, there is always at least one style in the ROOT session.
    if (fCurSelStyle == gStyle) {
@@ -890,23 +891,23 @@ void TStyleManager::DoDelete()
    BuildList(gStyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rename the current selected style. Called via the menu bar.
+
 void TStyleManager::DoRename()
 {
-   // Rename the current selected style. Called via the menu bar.
-
    new TStyleDialog(this, fCurSelStyle, 2, 0);
 
    // Create the list of styles and select the previous selected style.
    BuildList(fCurSelStyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Save the current selected style in a C++ macro file. Called via the menu
+/// or the tool bar.
+
 void TStyleManager::DoExport()
 {
-   //  Save the current selected style in a C++ macro file. Called via the menu
-   // or the tool bar.
-
    // Create an associated macro and propose a pertinent name to the user.
    CreateMacro();
    TString newName;
@@ -937,20 +938,20 @@ void TStyleManager::DoExport()
    UpdateStatusBar();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the style manager. Called via the menu bar.
+
 void TStyleManager::DoExit()
 {
-   // Close the style manager. Called via the menu bar.
-
 //   SendCloseMessage();   // Doesn't delete the StyleManager. Hides it.
    delete this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open an help window. Called via the menu bar or the tool bar.
+
 void TStyleManager::DoHelp(Int_t i)
 {
-   // Open an help window. Called via the menu bar or the tool bar.
-
    TRootHelpDialog *hd;
    switch (i) {
       case 0:
@@ -992,12 +993,12 @@ void TStyleManager::DoHelp(Int_t i)
    hd->Popup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Create a new style (a copy of gStyle) and import the properties of the
+/// current canvas inside.
+
 void TStyleManager::DoImportCanvas()
 {
-   //  Create a new style (a copy of gStyle) and import the properties of the
-   // current canvas inside.
-
    if ((!fCurPad) || (!fCurObj)) return;
 
    new TStyleDialog(this, gStyle, 3, fCurPad);
@@ -1019,11 +1020,11 @@ void TStyleManager::DoImportCanvas()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TGFileInfo concerning a macro, if it doesn't exist already.
+
 void TStyleManager::CreateMacro()
 {
-   // Create a TGFileInfo concerning a macro, if it doesn't exist already.
-
    if (fCurMacro) delete fCurMacro;
    fCurMacro = new TGFileInfo();
    TString dir(".");
@@ -1032,11 +1033,11 @@ void TStyleManager::CreateMacro()
    fCurMacro->fFilename  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the tool bar to the frame 'p'.
+
 void TStyleManager::AddToolbar(TGCompositeFrame *p)
 {
-   // Add the tool bar to the frame 'p'.
-
    TGLayoutHints *layout1 = new TGLayoutHints(kLHintsNormal, 3);
    fTrashListLayout->Add(layout1);
    TGLayoutHints *layout2 = new TGLayoutHints(kLHintsNormal, 6);
@@ -1091,13 +1092,13 @@ void TStyleManager::AddToolbar(TGCompositeFrame *p)
    fToolBarHelp->SetToolTipText("Help about the top level interface");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Add the top level interface to the frame 'cf'. This part of the
+/// interface will provide all enable functionalities, excluding the
+/// edition of styles.
+
 void TStyleManager::AddTopLevelInterface(TGCompositeFrame *cf)
 {
-   //  Add the top level interface to the frame 'cf'. This part of the
-   // interface will provide all enable functionalities, excluding the
-   // edition of styles.
-
    TGLayoutHints *layout1 = new TGLayoutHints(kLHintsExpandX, 0, 0, 2, 2);
    fTrashListLayout->Add(layout1);
    TGLayoutHints *layout2 = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 15);
@@ -1228,13 +1229,13 @@ void TStyleManager::AddTopLevelInterface(TGCompositeFrame *cf)
    fPreviewRealTime->SetToolTipText("Continuous / Asynchronous update of the preview");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Build the list of styles which will appear in the available styles
+/// combo box. The new style to select is mentioned. If no style has
+/// been specified, the last entry of the list is selected.
+
 void TStyleManager::BuildList(TStyle *style)
 {
-   //  Build the list of styles which will appear in the available styles
-   // combo box. The new style to select is mentioned. If no style has
-   // been specified, the last entry of the list is selected.
-
    // Empty the list.
    fListComboBox->RemoveEntries(1, fListComboBox->GetNumberOfEntries());
 
@@ -1255,12 +1256,12 @@ void TStyleManager::BuildList(TStyle *style)
    fCurStyle->SetText(gStyle->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Update the content of the status bar: show the name of the current
+/// selected style, its title and the macro from which it has been imported.
+
 void TStyleManager::UpdateStatusBar()
 {
-   //  Update the content of the status bar: show the name of the current
-   // selected style, its title and the macro from which it has been imported.
-
    fStatusBar->SetText(fCurSelStyle->GetName(), 0);
    fStatusBar->SetText(fCurSelStyle->GetTitle(), 2);
 
@@ -1277,12 +1278,12 @@ void TStyleManager::UpdateStatusBar()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Update the values of every widget entry in the editor. The new values
+/// are loaded from the current selected style.
+
 void TStyleManager::UpdateEditor(Int_t tabNum)
 {
-   //  Update the values of every widget entry in the editor. The new values
-   // are loaded from the current selected style.
-
    Double_t delta;
    Int_t year;
    Int_t month;
@@ -1737,11 +1738,11 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect every entry in the top level interface to the slot.
+
 void TStyleManager::ConnectAll()
 {
-   // Connect every entry in the top level interface to the slot.
-
    Connect("CloseWindow()", "TStyleManager", this, "CloseWindow()");
    fMenuStyle->Connect("Activated(Int_t)", "TStyleManager", this, "DoMenu(Int_t)");
    fMenuHelp->Connect("Activated(Int_t)", "TStyleManager", this, "DoMenu(Int_t)");
@@ -1771,11 +1772,11 @@ void TStyleManager::ConnectAll()
    TQObject::Connect("TCanvas", "Closed()", "TStyleManager", this, "DoSelectNoCanvas()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect every entry in the top level interface of the slot.
+
 void TStyleManager::DisconnectAll()
 {
-   // Disconnect every entry in the top level interface of the slot.
-
    Disconnect("CloseWindow()");
    fMenuStyle->Disconnect("Activated(Int_t)");
    fMenuHelp->Disconnect("Activated(Int_t)");
@@ -1801,11 +1802,11 @@ void TStyleManager::DisconnectAll()
    TQObject::Disconnect("TCanvas", "Closed()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect every widget entry of the editor to its specific slot.
+
 void TStyleManager::ConnectEditor(Int_t tabNum)
 {
-   // Connect every widget entry of the editor to its specific slot.
-
    if (fSigSlotConnected) return;
    fSigSlotConnected = kTRUE;
 
@@ -2006,12 +2007,12 @@ void TStyleManager::ConnectEditor(Int_t tabNum)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Disconnect every widget entry of the editor from its slot. Must be
+/// called before UpdateEditor() to avoid recursive calls.
+
 void TStyleManager::DisconnectEditor(Int_t tabNum)
 {
-   //  Disconnect every widget entry of the editor from its slot. Must be
-   // called before UpdateEditor() to avoid recursive calls.
-
    if (!fSigSlotConnected) return;
    fSigSlotConnected = kFALSE;
 
@@ -2202,12 +2203,12 @@ void TStyleManager::DisconnectEditor(Int_t tabNum)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Called each time something is changed in the style editor. Thanks to
+/// this method, we can know if the style differs from the original style.
+
 void TStyleManager::DoEditor()
 {
-   //  Called each time something is changed in the style editor. Thanks to
-   // this method, we can know if the style differs from the original style.
-
    fStyleChanged = kTRUE;
 
    // Update the status bar.
@@ -2218,12 +2219,12 @@ void TStyleManager::DoEditor()
       DoEditionUpdatePreview();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Add the editor to the frame 'p'. It contains the tabs allowing the user
+/// to modify every data member of the current TStyle object.
+
 void TStyleManager::AddEdition(TGCompositeFrame *p)
 {
-   //  Add the editor to the frame 'p'. It contains the tabs allowing the user
-   // to modify every data member of the current TStyle object.
-
    TGLayoutHints *layout1 = new TGLayoutHints(kLHintsExpandX, 8, 8, 5, 5);
    fTrashListLayout->Add(layout1);
    TGLayoutHints *layout2 = new TGLayoutHints(kLHintsExpandX, 10, 10);
@@ -2264,11 +2265,11 @@ void TStyleManager::AddEdition(TGCompositeFrame *p)
    fEditionReset->SetToolTipText("Reset the selected style");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the tab 'General' to the editor.
+
 void TStyleManager::CreateTabGeneral(TGCompositeFrame *tab)
 {
-   // Add the tab 'General' to the editor.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsExpandX, 10, 21, 5, 5);
    fTrashListLayout->Add(layout);
 
@@ -2297,11 +2298,11 @@ void TStyleManager::CreateTabGeneral(TGCompositeFrame *tab)
    fScreenFactor->GetNumberEntry()->SetToolTipText("Coefficient for different screen's resolutions");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Fill' group frame to the 'General' tab.
+
 void TStyleManager::AddGeneralFill(TGCompositeFrame *f)
 {
-   // Add the 'Fill' group frame to the 'General' tab.
-
    TGLayoutHints *layout2 = new TGLayoutHints(kLHintsExpandX, 5, 0, 5, 5);
    fTrashListLayout->Add(layout2);
 
@@ -2329,11 +2330,11 @@ void TStyleManager::AddGeneralFill(TGCompositeFrame *f)
    fHatchesSpacing->GetNumberEntry()->SetToolTipText("Spacing between the hatching's lines");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Line' group frame to the 'General' tab.
+
 void TStyleManager::AddGeneralLine(TGCompositeFrame *f)
 {
-   // Add the 'Line' group frame to the 'General' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Line");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h = new TGHorizontalFrame(gf);
@@ -2350,11 +2351,11 @@ void TStyleManager::AddGeneralLine(TGCompositeFrame *f)
 //   fLineColor->SetToolTipText("General line color");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Text' group frame to the 'General' tab.
+
 void TStyleManager::AddGeneralText(TGCompositeFrame *f)
 {
-   // Add the 'Text' group frame to the 'General' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Text");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -2384,11 +2385,11 @@ void TStyleManager::AddGeneralText(TGCompositeFrame *f)
    fTextAngle->GetNumberEntry()->SetToolTipText("General text angle");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Marker' group frame to the 'General' tab.
+
 void TStyleManager::AddGeneralMarker(TGCompositeFrame *f)
 {
-   // Add the 'Marker' group frame to the 'General' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Marker");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h = new TGHorizontalFrame(gf);
@@ -2404,11 +2405,11 @@ void TStyleManager::AddGeneralMarker(TGCompositeFrame *f)
 //   fMarkerStyle->SetToolTipText("Marker shape");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the tab 'Canvas' to the editor.
+
 void TStyleManager::CreateTabCanvas(TGCompositeFrame *tab)
 {
-   // Add the tab 'Canvas' to the editor.
-
    TGHorizontalFrame *h = new TGHorizontalFrame(tab);
    fTrashListFrame->AddFirst(h);
    TGVerticalFrame *v1 = new TGVerticalFrame(h);
@@ -2424,11 +2425,11 @@ void TStyleManager::CreateTabCanvas(TGCompositeFrame *tab)
    tab->AddFrame(h, fLayoutExpandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Fill' group frame to the 'Canvas' tab.
+
 void TStyleManager::AddCanvasFill(TGCompositeFrame *f)
 {
-   // Add the 'Fill' group frame to the 'Canvas' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Fill");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h = new TGHorizontalFrame(gf);
@@ -2441,11 +2442,11 @@ void TStyleManager::AddCanvasFill(TGCompositeFrame *f)
 //   fCanvasColor->SetToolTipText("Color used to fill canvases");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Geometry' group frame to the 'Canvas' tab.
+
 void TStyleManager::AddCanvasGeometry(TGCompositeFrame *f)
 {
-   // Add the 'Geometry' group frame to the 'Canvas' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Geometry");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -2479,20 +2480,20 @@ void TStyleManager::AddCanvasGeometry(TGCompositeFrame *f)
    fCanvasDefH->GetNumberEntry()->SetToolTipText("Canvases' default height");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Border' group frame to the 'Canvas' tab.
+
 void TStyleManager::AddCanvasBorder(TGCompositeFrame *f)
 {
-   // Add the 'Border' group frame to the 'Canvas' tab.
-
    fCanvasBorderMode = AddBorderModeEntry(f, kCanvasBorderModeSunken, kCanvasBorderModeNone, kCanvasBorderModeRaised);
    fCanvasBorderSize = AddLineWidthEntry(fCanvasBorderMode, kCanvasBorderSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Date' group frame to the 'Canvas' tab.
+
 void TStyleManager::AddCanvasDate(TGCompositeFrame *f)
 {
-   // Add the 'Date' group frame to the 'Canvas' tab.
-
    TGLayoutHints *layout2 = new TGLayoutHints(kLHintsExpandX, 10);
    fTrashListLayout->Add(layout2);
 
@@ -2542,11 +2543,11 @@ void TStyleManager::AddCanvasDate(TGCompositeFrame *f)
    fDateY->GetNumberEntry()->SetToolTipText("Date ordinate in percent of pad");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the tab 'Pad' to the editor.
+
 void TStyleManager::CreateTabPad(TGCompositeFrame *tab)
 {
-   // Add the tab 'Pad' to the editor.
-
    TGHorizontalFrame *h1 = new TGHorizontalFrame(tab);
    fTrashListFrame->AddFirst(h1);
    AddPadMargin(h1);
@@ -2563,11 +2564,11 @@ void TStyleManager::CreateTabPad(TGCompositeFrame *tab)
    tab->AddFrame(h2, fLayoutExpandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Margin' group frame to the 'Pad' tab.
+
 void TStyleManager::AddPadMargin(TGCompositeFrame *f)
 {
-   // Add the 'Margin' group frame to the 'Pad' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Margin (% of Pad)");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -2600,20 +2601,20 @@ void TStyleManager::AddPadMargin(TGCompositeFrame *f)
    fPadBottomMargin->GetNumberEntry()->SetToolTipText("Pads' bottom margin");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Border' group frame to the 'Pad' tab.
+
 void TStyleManager::AddPadBorder(TGCompositeFrame *f)
 {
-   // Add the 'Border' group frame to the 'Pad' tab.
-
    fPadBorderMode = AddBorderModeEntry(f, kPadBorderModeSunken, kPadBorderModeNone, kPadBorderModeRaised);
    fPadBorderSize = AddLineWidthEntry(fPadBorderMode, kPadBorderSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Fill' group frame to the 'Pad' tab.
+
 void TStyleManager::AddPadFill(TGCompositeFrame *f)
 {
-   // Add the 'Fill' group frame to the 'Pad' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Fill");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h = new TGHorizontalFrame(gf);
@@ -2626,11 +2627,11 @@ void TStyleManager::AddPadFill(TGCompositeFrame *f)
 //   fPadColor->SetToolTipText("Color used to fill pads");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Ticks' group frame to the 'Pad' tab.
+
 void TStyleManager::AddPadTicks(TGCompositeFrame *f)
 {
-   // Add the 'Ticks' group frame to the 'Pad' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Ticks");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h = new TGHorizontalFrame(gf);
@@ -2650,11 +2651,11 @@ void TStyleManager::AddPadTicks(TGCompositeFrame *f)
    fPadTickY->SetToolTipText("Show / Hide the ticks along Y");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Grid' group frame to the 'Pad' tab.
+
 void TStyleManager::AddPadGrid(TGCompositeFrame *f)
 {
-   // Add the 'Grid' group frame to the 'Pad' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Grid");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -2682,11 +2683,11 @@ void TStyleManager::AddPadGrid(TGCompositeFrame *f)
    fPadGridY->SetToolTipText("Show / Hide the grid along Y");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the tab 'Histos' to the editor.
+
 void TStyleManager::CreateTabHistos(TGCompositeFrame *tab)
 {
-   // Add the tab 'Histos' to the editor.
-
    fHistosTab = new TGTab(tab, 1, 1);
    fHistosTab->Associate(this);
    CreateTabHistosHistos(fHistosTab->AddTab("Histos"));
@@ -2695,11 +2696,11 @@ void TStyleManager::CreateTabHistos(TGCompositeFrame *tab)
    tab->AddFrame(fHistosTab, fLayoutExpandXY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the sub-tab 'Histos' to the tab 'Histos'.
+
 void TStyleManager::CreateTabHistosHistos(TGCompositeFrame *tab)
 {
-   // Add the sub-tab 'Histos' to the tab 'Histos'.
-
    TGHorizontalFrame *h1 = new TGHorizontalFrame(tab);
    fTrashListFrame->AddFirst(h1);
    AddHistosHistosFill(h1);
@@ -2719,11 +2720,11 @@ void TStyleManager::CreateTabHistosHistos(TGCompositeFrame *tab)
    tab->AddFrame(h3, fLayoutExpandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Fill' group frame to the 'Histos - Histos' tab.
+
 void TStyleManager::AddHistosHistosFill(TGCompositeFrame *f)
 {
-   // Add the 'Fill' group frame to the 'Histos - Histos' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Fill");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -2738,11 +2739,11 @@ void TStyleManager::AddHistosHistosFill(TGCompositeFrame *f)
 //   fHistFillStyle->SetToolTipText("Pattern used to fill histograms");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Line' group frame to the 'Histos - Histos' tab.
+
 void TStyleManager::AddHistosHistosLine(TGCompositeFrame *f)
 {
-    // Add the 'Line' group frame to the 'Histos - Histos' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Line");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h = new TGHorizontalFrame(gf);
@@ -2757,11 +2758,11 @@ void TStyleManager::AddHistosHistosLine(TGCompositeFrame *f)
 //   fHistLineColor->SetToolTipText("Color used for histograms' lines");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Bar' group frame to the 'Histos - Histos' tab.
+
 void TStyleManager::AddHistosHistosBar(TGCompositeFrame *f)
 {
-   // Add the 'Bar' group frame to the 'Histos - Histos' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Bar");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h = new TGHorizontalFrame(gf);
@@ -2781,11 +2782,11 @@ void TStyleManager::AddHistosHistosBar(TGCompositeFrame *f)
    fBarOffset->GetNumberEntry()->SetToolTipText("Offset of bars");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Contours' group frame to the 'Histos - Histos' tab.
+
 void TStyleManager::AddHistosHistosContours(TGCompositeFrame *f)
 {
-   // Add the 'Contours' group frame to the 'Histos - Histos' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Contours");
    fTrashListFrame->AddFirst(gf);
    fNumberContours = AddNumberEntry(gf, 0, 0, 0, kHistNumberContours, "Number:",
@@ -2797,11 +2798,11 @@ void TStyleManager::AddHistosHistosContours(TGCompositeFrame *f)
    fNumberContours->GetNumberEntry()->SetToolTipText("Number of level lines to draw");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Axis' group frame to the 'Histos - Histos' tab.
+
 void TStyleManager::AddHistosHistosAxis(TGCompositeFrame *f)
 {
-   // Add the 'Axis' group frame to the 'Histos - Histos' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Axis");
    fTrashListFrame->AddFirst(gf);
    fHistMinimumZero = AddCheckButton(gf, "Minimum zero", kHistMinimumZero);
@@ -2812,11 +2813,11 @@ void TStyleManager::AddHistosHistosAxis(TGCompositeFrame *f)
    fPaintTextFormat->SetToolTipText("Paint format of the axis labels in histograms");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the '3D Cylindrical' group frame to the 'Histos - Histos' tab.
+
 void TStyleManager::AddHistosHistosLegoInnerR(TGCompositeFrame *f)
 {
-   // Add the '3D Cylindrical' group frame to the 'Histos - Histos' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "3D Cylindrical (%)");
    fTrashListFrame->AddFirst(gf);
    fLegoInnerR = AddNumberEntry(gf, 0, 0, 0, kHistLegoInnerR, "Inner radius:",
@@ -2828,11 +2829,11 @@ void TStyleManager::AddHistosHistosLegoInnerR(TGCompositeFrame *f)
    fLegoInnerR->GetNumberEntry()->SetToolTipText("Percent of radius allocated to the tube");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the sub-tab 'Frames' to the tab 'Histos'.
+
 void TStyleManager::CreateTabHistosFrames(TGCompositeFrame *tab)
 {
-   // Add the sub-tab 'Frames' to the tab 'Histos'.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsExpandX, 10, 10, 0, 13);
    fTrashListLayout->Add(layout);
 
@@ -2858,11 +2859,11 @@ void TStyleManager::CreateTabHistosFrames(TGCompositeFrame *tab)
    tab->AddFrame(h1, fLayoutExpandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Fill' group frame to the 'Histos - Frames' tab.
+
 void TStyleManager::AddHistosFramesFill(TGCompositeFrame *f)
 {
-   // Add the 'Fill' group frame to the 'Histos - Frames' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Fill");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -2877,11 +2878,11 @@ void TStyleManager::AddHistosFramesFill(TGCompositeFrame *f)
 //   fFrameFillStyle->SetToolTipText("Pattern used to fill frames");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Line' group frame to the 'Histos - Frames' tab.
+
 void TStyleManager::AddHistosFramesLine(TGCompositeFrame *f)
 {
-   // Add the 'Line' group frame to the 'Histos - Frames' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Line");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h = new TGHorizontalFrame(gf);
@@ -2896,20 +2897,20 @@ void TStyleManager::AddHistosFramesLine(TGCompositeFrame *f)
 //   fFrameLineColor->SetToolTipText("Color of lines in frames");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Border' group frame to the 'Histos - Frames' tab.
+
 void TStyleManager::AddHistosFramesBorder(TGCompositeFrame *f)
 {
-   // Add the 'Border' group frame to the 'Histos - Frames' tab.
-
    fFrameBorderMode = AddBorderModeEntry(f, kFrameBorderModeSunken, kFrameBorderModeNone, kFrameBorderModeRaised);
    fFrameBorderSize = AddLineWidthEntry(fFrameBorderMode, kFrameBorderSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the sub-tab 'Graphs' to the tab 'Histos'.
+
 void TStyleManager::CreateTabHistosGraphs(TGCompositeFrame *tab)
 {
-   // Add the sub-tab 'Graphs' to the tab 'Histos'.
-
    TGHorizontalFrame *h = new TGHorizontalFrame(tab);
    fTrashListFrame->AddFirst(h);
    AddHistosGraphsLine(h);
@@ -2918,11 +2919,11 @@ void TStyleManager::CreateTabHistosGraphs(TGCompositeFrame *tab)
    AddHistosGraphsBorder(tab);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Line' group frame to the 'Histos - Graphs' tab.
+
 void TStyleManager::AddHistosGraphsLine(TGCompositeFrame *f)
 {
-   // Add the 'Line' group frame to the 'Histos - Graphs' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Line");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h = new TGHorizontalFrame(gf);
@@ -2937,11 +2938,11 @@ void TStyleManager::AddHistosGraphsLine(TGCompositeFrame *f)
 //   fFuncColor->SetToolTipText("Color of curves in graphs");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Draw Border' check button to the 'Histos - Graphs' tab.
+
 void TStyleManager::AddHistosGraphsBorder(TGCompositeFrame *f)
 {
-   // Add the 'Draw Border' check button to the 'Histos - Graphs' tab.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsExpandX, 10, 21, 5, 5);
    fTrashListLayout->Add(layout);
 
@@ -2953,11 +2954,11 @@ void TStyleManager::AddHistosGraphsBorder(TGCompositeFrame *f)
    fDrawBorder->SetToolTipText("Show / Hide the border of filled functions");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Errors' group frame to the 'Histos - Graphs' tab.
+
 void TStyleManager::AddHistosGraphsErrors(TGCompositeFrame *f)
 {
-   // Add the 'Errors' group frame to the 'Histos - Graphs' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Errors");
    fTrashListFrame->AddFirst(gf);
    fEndErrorSize = AddNumberEntry(gf, 0, 0, 0, kGraphsEndErrorSize,
@@ -2974,11 +2975,11 @@ void TStyleManager::AddHistosGraphsErrors(TGCompositeFrame *f)
    fErrorX->GetNumberEntry()->SetToolTipText("Percent of the bin width to use for errors along X");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the tab 'Axis' to the editor.
+
 void TStyleManager::CreateTabAxis(TGCompositeFrame *tab)
 {
-   // Add the tab 'Axis' to the editor.
-
    TGLayoutHints *layout =
                   new TGLayoutHints(kLHintsNormal, 10, 13, 3);
    fTrashListLayout->Add(layout);
@@ -3024,11 +3025,11 @@ void TStyleManager::CreateTabAxis(TGCompositeFrame *tab)
    fTimeOffsetTime->GetNumberEntry()->SetToolTipText("Time offset for axis (hh/mm/ss)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the sub-tab 'X Axis' to the tab 'Axis'.
+
 void TStyleManager::CreateTabAxisX(TGCompositeFrame *tab)
 {
-   // Add the sub-tab 'X Axis' to the tab 'Axis'.
-
    TGHorizontalFrame *h1 = new TGHorizontalFrame(tab);
    fTrashListFrame->AddFirst(h1);
    AddAxisXLine(h1);
@@ -3042,11 +3043,11 @@ void TStyleManager::CreateTabAxisX(TGCompositeFrame *tab)
    tab->AddFrame(h2, fLayoutExpandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Line' group frame to the 'Axis - X Axis' tab.
+
 void TStyleManager::AddAxisXLine(TGCompositeFrame *f)
 {
-   // Add the 'Line' group frame to the 'Axis - X Axis' tab.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsExpandX, 20);
    fTrashListLayout->Add(layout);
 
@@ -3072,11 +3073,11 @@ void TStyleManager::AddAxisXLine(TGCompositeFrame *f)
    fOptLogx->SetToolTipText("Draw logarithmic scale");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Title' group frame to the 'Axis - X Axis' tab.
+
 void TStyleManager::AddAxisXTitle(TGCompositeFrame *f)
 {
-   // Add the 'Title' group frame to the 'Axis - X Axis' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Title");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3105,11 +3106,11 @@ void TStyleManager::AddAxisXTitle(TGCompositeFrame *f)
    fXTitleOffset->GetNumberEntry()->SetToolTipText("Offset between axis and title");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Divisions' group frame to the 'Axis - X Axis' tab.
+
 void TStyleManager::AddAxisXDivisions(TGCompositeFrame *f)
 {
-   // Add the 'Divisions' group frame to the 'Axis - X Axis' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Divisions");
    fTrashListFrame->AddFirst(gf);
 
@@ -3141,11 +3142,11 @@ void TStyleManager::AddAxisXDivisions(TGCompositeFrame *f)
    fXNdivisionsOptimize->SetToolTipText("Optimize the number of axis divisions if selected");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Labels' group frame to the 'Axis - X Axis' tab.
+
 void TStyleManager::AddAxisXLabels(TGCompositeFrame *f)
 {
-   // Add the 'Labels' group frame to the 'Axis - X Axis' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Labels");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3174,11 +3175,11 @@ void TStyleManager::AddAxisXLabels(TGCompositeFrame *f)
    fXLabelOffset->GetNumberEntry()->SetToolTipText("Offset between axis and labels");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the sub-tab 'Y Axis' to the tab 'Axis'.
+
 void TStyleManager::CreateTabAxisY(TGCompositeFrame *tab)
 {
-   // Add the sub-tab 'Y Axis' to the tab 'Axis'.
-
    TGHorizontalFrame *h1 = new TGHorizontalFrame(tab);
    fTrashListFrame->AddFirst(h1);
    AddAxisYLine(h1);
@@ -3192,11 +3193,11 @@ void TStyleManager::CreateTabAxisY(TGCompositeFrame *tab)
    tab->AddFrame(h2, fLayoutExpandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Line' group frame to the 'Axis - Y Axis' tab.
+
 void TStyleManager::AddAxisYLine(TGCompositeFrame *f)
 {
-   // Add the 'Line' group frame to the 'Axis - Y Axis' tab.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsExpandX, 20);
    fTrashListLayout->Add(layout);
 
@@ -3222,11 +3223,11 @@ void TStyleManager::AddAxisYLine(TGCompositeFrame *f)
    fOptLogy->SetToolTipText("Draw logarithmic scale");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Title' group frame to the 'Axis - Y Axis' tab.
+
 void TStyleManager::AddAxisYTitle(TGCompositeFrame *f)
 {
-   // Add the 'Title' group frame to the 'Axis - Y Axis' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Title");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3255,11 +3256,11 @@ void TStyleManager::AddAxisYTitle(TGCompositeFrame *f)
    fYTitleOffset->GetNumberEntry()->SetToolTipText("Offset between axis and title");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Divisions' group frame to the 'Axis - Y Axis' tab.
+
 void TStyleManager::AddAxisYDivisions(TGCompositeFrame *f)
 {
-   // Add the 'Divisions' group frame to the 'Axis - Y Axis' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Divisions");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3290,11 +3291,11 @@ void TStyleManager::AddAxisYDivisions(TGCompositeFrame *f)
    fYNdivisionsOptimize->SetToolTipText("Optimize the number of axis divisions");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Labels' group frame to the 'Axis - Y Axis' tab.
+
 void TStyleManager::AddAxisYLabels(TGCompositeFrame *f)
 {
-   // Add the 'Labels' group frame to the 'Axis - Y Axis' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Labels");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3324,11 +3325,11 @@ void TStyleManager::AddAxisYLabels(TGCompositeFrame *f)
    fYLabelOffset->GetNumberEntry()->SetToolTipText("Offset between axis and labels");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the sub-tab 'Z Axis' to the tab 'Axis'.
+
 void TStyleManager::CreateTabAxisZ(TGCompositeFrame *tab)
 {
-   // Add the sub-tab 'Z Axis' to the tab 'Axis'.
-
    TGHorizontalFrame *h1 = new TGHorizontalFrame(tab);
    fTrashListFrame->AddFirst(h1);
    AddAxisZLine(h1);
@@ -3342,11 +3343,11 @@ void TStyleManager::CreateTabAxisZ(TGCompositeFrame *tab)
    tab->AddFrame(h2, fLayoutExpandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Line' group frame to the 'Axis - Z Axis' tab.
+
 void TStyleManager::AddAxisZLine(TGCompositeFrame *f)
 {
-   // Add the 'Line' group frame to the 'Axis - Z Axis' tab.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsExpandX, 20);
    fTrashListLayout->Add(layout);
 
@@ -3372,11 +3373,11 @@ void TStyleManager::AddAxisZLine(TGCompositeFrame *f)
    fOptLogz->SetToolTipText("Draw logarithmic scale");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Title' group frame to the 'Axis - Z Axis' tab.
+
 void TStyleManager::AddAxisZTitle(TGCompositeFrame *f)
 {
-   // Add the 'Title' group frame to the 'Axis - Z Axis' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Title");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3406,11 +3407,11 @@ void TStyleManager::AddAxisZTitle(TGCompositeFrame *f)
    fZTitleOffset->GetNumberEntry()->SetToolTipText("Offset between axis and title");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Divisions' group frame to the 'Axis - Z Axis' tab.
+
 void TStyleManager::AddAxisZDivisions(TGCompositeFrame *f)
 {
-   // Add the 'Divisions' group frame to the 'Axis - Z Axis' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Divisions");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3441,11 +3442,11 @@ void TStyleManager::AddAxisZDivisions(TGCompositeFrame *f)
    fZNdivisionsOptimize->SetToolTipText("Optimize the number of axis divisions");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Labels' group frame to the 'Axis - Z Axis' tab.
+
 void TStyleManager::AddAxisZLabels(TGCompositeFrame *f)
 {
-   // Add the 'Labels' group frame to the 'Axis - Z Axis' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Labels");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3475,11 +3476,11 @@ void TStyleManager::AddAxisZLabels(TGCompositeFrame *f)
    fZLabelOffset->GetNumberEntry()->SetToolTipText("Offset between axis and labels");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the tab 'Title' to the editor.
+
 void TStyleManager::CreateTabTitle(TGCompositeFrame *tab)
 {
-   // Add the tab 'Title' to the editor.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsExpandX, 10, 20, 5, 5);
    fTrashListLayout->Add(layout);
 
@@ -3505,11 +3506,11 @@ void TStyleManager::CreateTabTitle(TGCompositeFrame *tab)
    fOptTitle->SetToolTipText("Show / Hide the title pave");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Fill' group frame to the 'Title' tab.
+
 void TStyleManager::AddTitleFill(TGCompositeFrame *f)
 {
-   // Add the 'Fill' group frame to the 'Title' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Fill");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3524,11 +3525,11 @@ void TStyleManager::AddTitleFill(TGCompositeFrame *f)
 //   fTitleStyle->SetToolTipText("Pattern used to fill the title pave");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Shadow' group frame to the 'Title' tab.
+
 void TStyleManager::AddTitleBorderSize(TGCompositeFrame *f)
 {
-   // Add the 'Shadow' group frame to the 'Title' tab.
-
    TGLayoutHints *layout1 = new TGLayoutHints(kLHintsNormal, 0, 24, 6);
    fTrashListLayout->Add(layout1);
    TGLayoutHints *layout2 = new TGLayoutHints(kLHintsNormal, 0, 5, 6);
@@ -3554,11 +3555,11 @@ void TStyleManager::AddTitleBorderSize(TGCompositeFrame *f)
    f->AddFrame(gf, fLayoutExpandXMargin);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Text' group frame to the 'Title' tab.
+
 void TStyleManager::AddTitleText(TGCompositeFrame *f)
 {
-   // Add the 'Text' group frame to the 'Title' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Text");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3583,11 +3584,11 @@ void TStyleManager::AddTitleText(TGCompositeFrame *f)
    fTitleFontSize->GetNumberEntry()->SetToolTipText("Title's text size (in pixels or in % of pad)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Geometry' group frame to the 'Title' tab.
+
 void TStyleManager::AddTitleGeometry(TGCompositeFrame *f)
 {
-   // Add the 'Geometry' group frame to the 'Title' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Geometry (% of Pad)");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3620,11 +3621,11 @@ void TStyleManager::AddTitleGeometry(TGCompositeFrame *f)
    fTitleH->GetNumberEntry()->SetToolTipText("Title' default height");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the tab 'Stats' to the editor.
+
 void TStyleManager::CreateTabStats(TGCompositeFrame *tab)
 {
-   // Add the tab 'Stats' to the editor.
-
    TGLayoutHints *layout1 = new TGLayoutHints(kLHintsNormal, 0, 5, 6);
    fTrashListLayout->Add(layout1);
    TGLayoutHints *layout2 = new TGLayoutHints(kLHintsExpandX, 10, 21, 5, 5);
@@ -3655,11 +3656,11 @@ void TStyleManager::CreateTabStats(TGCompositeFrame *tab)
    tab->AddFrame(h1, fLayoutExpandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Fill' group frame to the 'Stats' tab.
+
 void TStyleManager::AddStatsFill(TGCompositeFrame *f)
 {
-   // Add the 'Fill' group frame to the 'Stats' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Fill");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h = new TGHorizontalFrame(gf);
@@ -3674,11 +3675,11 @@ void TStyleManager::AddStatsFill(TGCompositeFrame *f)
 //   fStatStyle->SetToolTipText("Pattern used to fill the stats pave");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Text' group frame to the 'Stats' tab.
+
 void TStyleManager::AddStatsText(TGCompositeFrame *f)
 {
-   // Add the 'Text' group frame to the 'Stats' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Text");
    fTrashListFrame->AddFirst(gf);
    TGHorizontalFrame *h1 = new TGHorizontalFrame(gf);
@@ -3702,11 +3703,11 @@ void TStyleManager::AddStatsText(TGCompositeFrame *f)
    fStatFontSize->GetNumberEntry()->SetToolTipText("Stats's text size (in pixels or in % of pad)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Geometry' group frame to the 'Stats' tab.
+
 void TStyleManager::AddStatsGeometry(TGCompositeFrame *f)
 {
-   // Add the 'Geometry' group frame to the 'Stats' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Geometry");
    fTrashListFrame->AddFirst(gf);
 
@@ -3741,11 +3742,11 @@ void TStyleManager::AddStatsGeometry(TGCompositeFrame *f)
    fStatH->GetNumberEntry()->SetToolTipText("Height of stat box.");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Stat Options' group frame to the 'Stats' tab.
+
 void TStyleManager::AddStatsStats(TGCompositeFrame *f)
 {
-   // Add the 'Stat Options' group frame to the 'Stats' tab.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsNormal, 0, 0, 5);
    fTrashListLayout->Add(layout);
 
@@ -3795,11 +3796,11 @@ void TStyleManager::AddStatsStats(TGCompositeFrame *f)
    fStatFormat->SetToolTipText("Paint format of stat options");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Fit Options' group frame to the 'Stats' tab.
+
 void TStyleManager::AddStatsFit(TGCompositeFrame *f)
 {
-   // Add the 'Fit Options' group frame to the 'Stats' tab.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsNormal, 0, 0, 5);
    fTrashListLayout->Add(layout);
 
@@ -3837,11 +3838,11 @@ void TStyleManager::AddStatsFit(TGCompositeFrame *f)
    fFitFormat->SetToolTipText("Paint format of fit options");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the tab 'PS / PDF' to the editor.
+
 void TStyleManager::CreateTabPsPdf(TGCompositeFrame *tab)
 {
-   // Add the tab 'PS / PDF' to the editor.
-
    AddPsPdfHeader(tab);
    AddPsPdfTitle(tab);
    TGHorizontalFrame *h = new TGHorizontalFrame(tab);
@@ -3855,11 +3856,11 @@ void TStyleManager::CreateTabPsPdf(TGCompositeFrame *tab)
    tab->AddFrame(h, fLayoutExpandX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Header' group frame to the 'PS / PDF' tab.
+
 void TStyleManager::AddPsPdfHeader(TGCompositeFrame *f)
 {
-   // Add the 'Header' group frame to the 'PS / PDF' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Header");
    fTrashListFrame->AddFirst(gf);
    fHeaderPS = AddTextEntry(gf, "", kPSPDFHeaderPS);
@@ -3868,11 +3869,11 @@ void TStyleManager::AddPsPdfHeader(TGCompositeFrame *f)
    fHeaderPS->SetToolTipText("PostScript header");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Title' group frame to the 'PS / PDF' tab.
+
 void TStyleManager::AddPsPdfTitle(TGCompositeFrame *f)
 {
-   // Add the 'Title' group frame to the 'PS / PDF' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Title");
    fTrashListFrame->AddFirst(gf);
    fTitlePS = AddTextEntry(gf, "", kPSPDFTitlePS);
@@ -3881,11 +3882,11 @@ void TStyleManager::AddPsPdfTitle(TGCompositeFrame *f)
    fTitlePS->SetToolTipText("PostScript title");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Color Model' group frame to the 'PS / PDF' tab.
+
 void TStyleManager::AddPsPdfColorModel(TGCompositeFrame *f)
 {
-   // Add the 'Color Model' group frame to the 'PS / PDF' tab.
-
    fColorModelPS = new TGButtonGroup(f, "Color Model",
                                     kChildFrame | kHorizontalFrame | kFitWidth);
 
@@ -3903,11 +3904,11 @@ void TStyleManager::AddPsPdfColorModel(TGCompositeFrame *f)
    f->AddFrame(fColorModelPS, layout2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Paper Size' group frame to the 'PS / PDF' tab.
+
 void TStyleManager::AddPsPdfPaperSize(TGCompositeFrame *f)
 {
-   // Add the 'Paper Size' group frame to the 'PS / PDF' tab.
-
    TGGroupFrame *gf = new TGGroupFrame(f, "Paper Size");
    fTrashListFrame->AddFirst(gf);
    fPaperSizePredef = AddPaperSizeEntry(gf, kPSPDFPaperSizePredef);
@@ -3925,11 +3926,11 @@ void TStyleManager::AddPsPdfPaperSize(TGCompositeFrame *f)
    fPaperSizeY->GetNumberEntry()->SetToolTipText("Height of the printing area");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the 'Line scale' number entry to the 'PS / PDF' tab.
+
 void TStyleManager::AddPsPdfLineScale(TGCompositeFrame *f)
 {
-   // Add the 'Line scale' number entry to the 'PS / PDF' tab.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsExpandX, 10, 20, 5, 5);
    fTrashListLayout->Add(layout);
 
@@ -3944,11 +3945,11 @@ void TStyleManager::AddPsPdfLineScale(TGCompositeFrame *f)
    fLineScalePS->GetNumberEntry()->SetToolTipText("Line scale factor when drawing lines on PostScript");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a title to the frame f.
+
 void TStyleManager::AddTitle(TGCompositeFrame *f, const char *s)
 {
-   // Add a title to the frame f.
-
    TGLayoutHints *layout1 = new TGLayoutHints(kLHintsExpandX, 5, 0, 7);
    fTrashListLayout->Add(layout1);
    TGLayoutHints *layout2 = new TGLayoutHints(kLHintsExpandX, 0, 0, 6, 6);
@@ -3968,11 +3969,11 @@ void TStyleManager::AddTitle(TGCompositeFrame *f, const char *s)
    f->AddFrame(h, layout2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a color entry to the frame f.
+
 TGColorSelect *TStyleManager::AddColorEntry(TGCompositeFrame *f, Int_t id)
 {
-   // Add a color entry to the frame f.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsBottom, 0, 5, 3, 3);
    fTrashListLayout->Add(layout);
 
@@ -3982,12 +3983,12 @@ TGColorSelect *TStyleManager::AddColorEntry(TGCompositeFrame *f, Int_t id)
    return cs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a fill style entry to the frame f.
+
 TGedPatternSelect *TStyleManager::AddFillStyleEntry(TGCompositeFrame *f,
                                                     Int_t id)
 {
-   // Add a fill style entry to the frame f.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsBottom, 0, 0, 3, 3);
    fTrashListLayout->Add(layout);
 
@@ -3997,12 +3998,12 @@ TGedPatternSelect *TStyleManager::AddFillStyleEntry(TGCompositeFrame *f,
    return gps;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a marker style entry to the frame f.
+
 TGedMarkerSelect *TStyleManager::AddMarkerStyleEntry(TGCompositeFrame *f,
                                                      Int_t id)
 {
-   // Add a marker style entry to the frame f.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsCenterY, 0, 5, 3, 3);
    fTrashListLayout->Add(layout);
 
@@ -4012,11 +4013,11 @@ TGedMarkerSelect *TStyleManager::AddMarkerStyleEntry(TGCompositeFrame *f,
    return gms;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a marker size entry to the frame f.
+
 TGComboBox *TStyleManager::AddMarkerSizeEntry(TGCompositeFrame *f, Int_t id)
 {
-   // Add a marker size entry to the frame f.
-
    char a[10];
    TGComboBox *cb = new TGComboBox(f, id);
    cb->Associate(this);
@@ -4029,14 +4030,14 @@ TGComboBox *TStyleManager::AddMarkerSizeEntry(TGCompositeFrame *f, Int_t id)
    return cb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a number entry to the frame f. A caption can be added.
+
 TGNumberEntry *TStyleManager::AddNumberEntry(TGCompositeFrame *f, Int_t e1,
          Int_t e2, Int_t e3, Int_t id, const char *s, Double_t init, Int_t digits,
          TGNumberFormat::EStyle nfS, TGNumberFormat::EAttribute nfA,
          TGNumberFormat::ELimit nfL, Double_t min, Double_t max)
 {
-   // Add a number entry to the frame f. A caption can be added.
-
    TGHorizontalFrame *h = new TGHorizontalFrame(f);
    fTrashListFrame->AddFirst(h);
    if (strlen(s)) {
@@ -4072,12 +4073,12 @@ TGNumberEntry *TStyleManager::AddNumberEntry(TGCompositeFrame *f, Int_t e1,
    return ne;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a line width entry to the frame f.
+
 TGLineWidthComboBox *TStyleManager::AddLineWidthEntry(TGCompositeFrame *f,
                                                       Int_t id)
 {
-   // Add a line width entry to the frame f.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsExpandX, 0, 0, 3, 3);
    fTrashListLayout->Add(layout);
 
@@ -4091,12 +4092,12 @@ TGLineWidthComboBox *TStyleManager::AddLineWidthEntry(TGCompositeFrame *f,
    return lwcb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a line style entry to the frame f.
+
 TGLineStyleComboBox *TStyleManager::AddLineStyleEntry(TGCompositeFrame *f,
                                                       Int_t id)
 {
-   // Add a line style entry to the frame f.
-
    TGLineStyleComboBox *lscb = new TGLineStyleComboBox(f, id);
    lscb->Associate(this);
    lscb->Resize(1, 22);
@@ -4104,12 +4105,12 @@ TGLineStyleComboBox *TStyleManager::AddLineStyleEntry(TGCompositeFrame *f,
    return lscb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a text button to the frame f.
+
 TGTextButton *TStyleManager::AddTextButton(TGCompositeFrame *f,
                                            const char *s, Int_t id)
 {
-   // Add a text button to the frame f.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsExpandX, 0, 0, 3, 3);
    fTrashListLayout->Add(layout);
 
@@ -4119,12 +4120,12 @@ TGTextButton *TStyleManager::AddTextButton(TGCompositeFrame *f,
    return tb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a font type combo box to the frame f.
+
 TGFontTypeComboBox *TStyleManager::AddFontTypeEntry(TGCompositeFrame *f,
                                                     Int_t id)
 {
-   // Add a font type combo box to the frame f.
-
    TGFontTypeComboBox *ftcb = new TGFontTypeComboBox(f, id);
    ftcb->Associate(this);
    ftcb->Resize(1, 22);
@@ -4132,11 +4133,11 @@ TGFontTypeComboBox *TStyleManager::AddFontTypeEntry(TGCompositeFrame *f,
    return ftcb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a text align combo box to the frame f.
+
 TGComboBox *TStyleManager::AddTextAlignEntry(TGCompositeFrame *f, Int_t id)
 {
-   // Add a text align combo box to the frame f.
-
    TGComboBox *cb = new TGComboBox(f, id);
    cb->Associate(this);
    cb->AddEntry("11 Bottom, Left",   11);
@@ -4153,12 +4154,12 @@ TGComboBox *TStyleManager::AddTextAlignEntry(TGCompositeFrame *f, Int_t id)
    return cb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a border mode button group to the frame f.
+
 TGButtonGroup *TStyleManager::AddBorderModeEntry(TGCompositeFrame *f,
                                                 Int_t id1, Int_t id2, Int_t id3)
 {
-   // Add a border mode button group to the frame f.
-
    TGButtonGroup *bg = new TGButtonGroup(f, "Border");
    TGRadioButton *sunk = new TGRadioButton(bg, "Sunken", id1);
    sunk->Associate(this);
@@ -4174,11 +4175,11 @@ TGButtonGroup *TStyleManager::AddBorderModeEntry(TGCompositeFrame *f,
    return bg;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a date format combo box to the frame f.
+
 TGComboBox *TStyleManager::AddDateFormatEntry(TGCompositeFrame *f, Int_t id)
 {
-   // Add a date format combo box to the frame f.
-
    TGComboBox *cb = new TGComboBox(f, id);
    cb->Associate(this);
    cb->AddEntry("Wed Sep 25 17:10:35 2002", 1);
@@ -4190,12 +4191,12 @@ TGComboBox *TStyleManager::AddDateFormatEntry(TGCompositeFrame *f, Int_t id)
    return cb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a check button to the frame f.
+
 TGCheckButton *TStyleManager::AddCheckButton(TGCompositeFrame *f, const char *s,
                                              Int_t id, Int_t e1, Int_t e2)
 {
-   // Add a check button to the frame f.
-
    TGLayoutHints *layout = new TGLayoutHints(kLHintsNormal, 0, e1, 4, e2);
    fTrashListLayout->Add(layout);
 
@@ -4208,12 +4209,12 @@ TGCheckButton *TStyleManager::AddCheckButton(TGCompositeFrame *f, const char *s,
    return cb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a text entry to the frame f. A caption can be added.
+
 TGTextEntry *TStyleManager::AddTextEntry(TGCompositeFrame *f,
                                          const char *s, Int_t id)
 {
-   // Add a text entry to the frame f. A caption can be added.
-
    TGHorizontalFrame *h = new TGHorizontalFrame(f);
    fTrashListFrame->AddFirst(h);
    if (strlen(s)) {
@@ -4239,11 +4240,11 @@ TGTextEntry *TStyleManager::AddTextEntry(TGCompositeFrame *f,
    return te;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a prefered paper size combo box to the frame f.
+
 TGComboBox *TStyleManager::AddPaperSizeEntry(TGCompositeFrame *f, Int_t id)
 {
-   // Add a prefered paper size combo box to the frame f.
-
    TGComboBox *cb = new TGComboBox(f, id);
    cb->Associate(this);
    cb->AddEntry("Custom size (cm)",   1);
@@ -4257,11 +4258,11 @@ TGComboBox *TStyleManager::AddPaperSizeEntry(TGCompositeFrame *f, Int_t id)
    return cb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called when an item of the menu is selected.
+
 void TStyleManager::DoMenu(Int_t menuID)
 {
-   // Slot called when an item of the menu is selected.
-
    switch (menuID) {
       case kMenuNew:          DoNew();              break;
       case kMenuDelete:       DoDelete();           break;
@@ -4283,12 +4284,12 @@ void TStyleManager::DoMenu(Int_t menuID)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called to import a style from a C++ macro file. If create=kTRUE,
+/// a new style is created. Otherwise, the current style is reseted.
+
 void TStyleManager::DoImportMacro(Bool_t create)
 {
-   // Slot called to import a style from a C++ macro file. If create=kTRUE,
-   // a new style is created. Otherwise, the current style is reseted.
-
    // Import a style from a macro.
    // If create = kTRUE, a new style is created.
    // Otherwise, the selected style is:
@@ -4347,13 +4348,13 @@ void TStyleManager::DoImportMacro(Bool_t create)
    BuildList();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called when the user select an item in the available styles' list.
+/// Update the preview, the editor, the status bar. The current selected
+/// style is changed.
+
 void TStyleManager::DoListSelect()
 {
-   //  Slot called when the user select an item in the available styles' list.
-   // Update the preview, the editor, the status bar. The current selected
-   // style is changed.
-
    // Select the new style and update the state of the style manager.
    fCurSelStyle = gROOT->GetStyle(((TGTextLBEntry*) fListComboBox->
                                     GetSelectedEntry())->GetText()->GetString());
@@ -4385,12 +4386,12 @@ void TStyleManager::DoListSelect()
    fListComboBox->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called when the user click on the run time update check button.
+/// If b=kTRUE, the user asks for a real time preview.
+
 void TStyleManager::DoRealTime(Bool_t b)
 {
-   //  Slot called when the user click on the run time update check button.
-   // If b=kTRUE, the user asks for a real time preview.
-
    if (b) {
       fEditionUpdatePreview->SetEnabled(kFALSE);
       fRealTimePreview = kTRUE;
@@ -4401,12 +4402,12 @@ void TStyleManager::DoRealTime(Bool_t b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called when the user click on the preview check button. If b=kTRUE,
+/// the user asks for a preview, otherwise they want to close it.
+
 void TStyleManager::DoPreview(Bool_t b)
 {
-   //  Slot called when the user click on the preview check button. If b=kTRUE,
-   // the user asks for a preview, otherwise they want to close it.
-
    if (b) {
       fPreviewButton->SetState(kButtonDown, kFALSE);
       if (fPreviewWindow) {
@@ -4431,12 +4432,12 @@ void TStyleManager::DoPreview(Bool_t b)
    } else DoPreviewClosed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called to close the preview, via the preview check button, or
+/// when the preview window is closed via the window manager.
+
 void TStyleManager::DoPreviewClosed()
 {
-   //  Slot called to close the preview, via the preview check button, or
-   // when the preview window is closed via the window manager.
-
    fPreviewWindow->Disconnect("CloseWindow()");
    fPreviewButton->SetState(kButtonUp, kFALSE);
    fPreviewRealTime->SetEnabled(kFALSE);
@@ -4444,31 +4445,31 @@ void TStyleManager::DoPreviewClosed()
    fPreviewWindow->UnmapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called to make the current selected style (in the ComboBox)
+/// become gStyle.
+
 void TStyleManager::DoMakeDefault()
 {
-   //  Slot called to make the current selected style (in the ComboBox)
-   // become gStyle.
-
    gROOT->SetStyle(fCurSelStyle->GetName());
    fCurStyle->SetText(gStyle->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called to choose on which object(s) the 'Apply' button will
+/// have an effect.
+
 void TStyleManager::DoApplyOnSelect(Int_t i)
 {
-   //  Slot called to choose on which object(s) the 'Apply' button will
-   // have an effect.
-
    fAllAndNotCurrent = (i == kTopApplyOnAll);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called when the user clicks on the 'Apply' button. Apply the
+/// current selected style to the specified object(s)
+
 void TStyleManager::DoApplyOn()
 {
-   //  Slot called when the user clicks on the 'Apply' button. Apply the
-   // current selected style to the specified object(s)
-
    TStyle *tmp = gStyle;
    gStyle = fCurSelStyle;
 
@@ -4501,12 +4502,12 @@ void TStyleManager::DoApplyOn()
    gStyle = tmp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called when the user try to show or hide the editor part of the
+/// style manager.
+
 void TStyleManager::DoMoreLess()
 {
-   //  Slot called when the user try to show or hide the editor part of the
-   // style manager.
-
    fMoreAndNotLess = !fMoreAndNotLess;
    if (fMoreAndNotLess) {
       // Redraw the tabs.
@@ -4534,11 +4535,11 @@ void TStyleManager::DoMoreLess()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called when the user clicks on the 'Update preview' button.
+
 void TStyleManager::DoEditionUpdatePreview()
 {
-   // Slot called when the user clicks on the 'Update preview' button.
-
    if ((!fCurPad) || (!fCurObj)) return;
 
    if (fPreviewWindow) {
@@ -4548,11 +4549,11 @@ void TStyleManager::DoEditionUpdatePreview()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called when the user changes the current tab.
+
 void TStyleManager::DoChangeTab(Int_t i)
 {
-   // Slot called when the user changes the current tab.
-
    //  Disconnect the signal/slots communication mechanism from the previous
    // tab and connect them onto the new one.
    DisconnectEditor(fCurTabNum);
@@ -4561,20 +4562,20 @@ void TStyleManager::DoChangeTab(Int_t i)
    ConnectEditor(fCurTabNum);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called when the user changes the current axis tab.
+
 void TStyleManager::DoChangeAxisTab(Int_t i)
 {
-   // Slot called when the user changes the current axis tab.
-
    fCurTabAxisNum = i;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called when the user close a TCanvas. Update the labels and the
+/// pointers to the current pad and the current object.
+
 void TStyleManager::DoSelectNoCanvas()
 {
-   //  Slot called when the user close a TCanvas. Update the labels and the
-   // pointers to the current pad and the current object.
-
    fCurPad = 0;
    fCurObj = 0;
 
@@ -4591,12 +4592,12 @@ void TStyleManager::DoSelectNoCanvas()
    fEditionUpdatePreview->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called when the user clicks on a TCanvas or on any object inside
+/// a TCanvas. Update the pointers to the current pad and the current object.
+
 void TStyleManager::DoSelectCanvas(TVirtualPad *pad, TObject *obj, Int_t mouseButton)
 {
-   //  Slot called when the user clicks on a TCanvas or on any object inside
-   // a TCanvas. Update the pointers to the current pad and the current object.
-
    if (mouseButton != kButton2Down) return;
 
    if (!pad || !obj) {
@@ -4654,144 +4655,144 @@ void TStyleManager::DoSelectCanvas(TVirtualPad *pad, TObject *obj, Int_t mouseBu
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called to close the style manager via the window manager.
+
 void TStyleManager::CloseWindow()
 {
-   // Slot called to close the style manager via the window manager.
-
    Hide();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the fill color is modified by the user.
+
 void TStyleManager::ModFillColor()
 {
-   // Slot called whenever the fill color is modified by the user.
-
    fCurSelStyle->SetFillColor(TColor::GetColor(fFillColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the fill style is modified by the user.
+
 void TStyleManager::ModFillStyle()
 {
-   // Slot called whenever the fill style is modified by the user.
-
    fCurSelStyle->SetFillStyle(fFillStyle->GetPattern());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the hatches line width is modified by the user.
+
 void TStyleManager::ModHatchesLineWidth()
 {
-   // Slot called whenever the hatches line width is modified by the user.
-
    fCurSelStyle->SetHatchesLineWidth(fHatchesLineWidth->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the hatches spacing is modified by the user.
+
 void TStyleManager::ModHatchesSpacing()
 {
-   // Slot called whenever the hatches spacing is modified by the user.
-
    fCurSelStyle->SetHatchesSpacing(fHatchesSpacing->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the marker color is modified by the user.
+
 void TStyleManager::ModMarkerColor()
 {
-   // Slot called whenever the marker color is modified by the user.
-
    fCurSelStyle->SetMarkerColor(TColor::GetColor(fMarkerColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the marker style is modified by the user.
+
 void TStyleManager::ModMarkerStyle()
 {
-   // Slot called whenever the marker style is modified by the user.
-
    fCurSelStyle->SetMarkerStyle(fMarkerStyle->GetMarkerStyle());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the marker size is modified by the user.
+
 void TStyleManager::ModMarkerSize()
 {
-   // Slot called whenever the marker size is modified by the user.
-
    fCurSelStyle->SetMarkerSize(fMarkerSize->GetSelected() * 0.2);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the screen factor is modified by the user.
+
 void TStyleManager::ModScreenFactor()
 {
-   // Slot called whenever the screen factor is modified by the user.
-
    fCurSelStyle->SetScreenFactor(fScreenFactor->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the line color is modified by the user.
+
 void TStyleManager::ModLineColor()
 {
-   // Slot called whenever the line color is modified by the user.
-
    fCurSelStyle->SetLineColor(TColor::GetColor(fLineColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the line width is modified by the user.
+
 void TStyleManager::ModLineWidth()
 {
-   // Slot called whenever the line width is modified by the user.
-
    fCurSelStyle->SetLineWidth(fLineWidth->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the line style is modified by the user.
+
 void TStyleManager::ModLineStyle()
 {
-   // Slot called whenever the line style is modified by the user.
-
    fCurSelStyle->SetLineStyle(fLineStyle->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the line style editor is opened by the user.
+
 void TStyleManager::ModLineStyleEdit()
 {
-   // Slot called whenever the line style editor is opened by the user.
-
    // TODO Open a LineStyle editor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the text color is modified by the user.
+
 void TStyleManager::ModTextColor()
 {
-   // Slot called whenever the text color is modified by the user.
-
    fCurSelStyle->SetTextColor(TColor::GetColor(fTextColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the text size is modified by the user.
+
 void TStyleManager::ModTextSize()
 {
-   // Slot called whenever the text size is modified by the user.
-
    fCurSelStyle->SetTextSize(fTextSize->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the text size mode is modified by the user.
+
 void TStyleManager::ModTextSizeInPixels(Bool_t b)
 {
-   // Slot called whenever the text size mode is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetTextFont() / 10;
    Int_t mod = fCurSelStyle->GetTextFont() % 10;
    Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
@@ -4814,84 +4815,84 @@ void TStyleManager::ModTextSizeInPixels(Bool_t b)
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the text font is modified by the user.
+
 void TStyleManager::ModTextFont()
 {
-   // Slot called whenever the text font is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetTextFont() % 10;
    fCurSelStyle->SetTextFont(fTextFont->GetSelected() * 10 + tmp);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the text align is modified by the user.
+
 void TStyleManager::ModTextAlign()
 {
-   // Slot called whenever the text align is modified by the user.
-
    fCurSelStyle->SetTextAlign(fTextAlign->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the text angle is modified by the user.
+
 void TStyleManager::ModTextAngle()
 {
-   // Slot called whenever the text angle is modified by the user.
-
    fCurSelStyle->SetTextAngle(fTextAngle->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the canvas color is modified by the user.
+
 void TStyleManager::ModCanvasColor()
 {
-   // Slot called whenever the canvas color is modified by the user.
-
    fCurSelStyle->SetCanvasColor(TColor::GetColor(fCanvasColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the canvas default abscissa is modified by the user.
+
 void TStyleManager::ModCanvasDefX()
 {
-   // Slot called whenever the canvas default abscissa is modified by the user.
-
    fCurSelStyle->SetCanvasDefX(fCanvasDefX->GetIntNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the canvas default ordinate is modified by the user.
+
 void TStyleManager::ModCanvasDefY()
 {
-   // Slot called whenever the canvas default ordinate is modified by the user.
-
    fCurSelStyle->SetCanvasDefY(fCanvasDefY->GetIntNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the canvas default width is modified by the user.
+
 void TStyleManager::ModCanvasDefW()
 {
-   // Slot called whenever the canvas default width is modified by the user.
-
    fCurSelStyle->SetCanvasDefW(fCanvasDefW->GetIntNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the canvas default height is modified by the user.
+
 void TStyleManager::ModCanvasDefH()
 {
-   // Slot called whenever the canvas default height is modified by the user.
-
    fCurSelStyle->SetCanvasDefH(fCanvasDefH->GetIntNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the canvas border mode is modified by the user.
+
 void TStyleManager::ModCanvasBorderMode()
 {
-   // Slot called whenever the canvas border mode is modified by the user.
-
    Int_t i = kCanvasBorderModeSunken;
    TGButton *but = 0;
    while ((but = fCanvasBorderMode->Find(i)) && !but->IsDown())
@@ -4900,20 +4901,20 @@ void TStyleManager::ModCanvasBorderMode()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the canvas border size is modified by the user.
+
 void TStyleManager::ModCanvasBorderSize()
 {
-   // Slot called whenever the canvas border size is modified by the user.
-
    fCurSelStyle->SetCanvasBorderSize(fCanvasBorderSize->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the OptDate boolean is modified by the user.
+
 void TStyleManager::ModOptDateBool()
 {
-   // Slot called whenever the OptDate boolean is modified by the user.
-
    if (fOptDateBool->IsDown())
       fCurSelStyle->SetOptDate(4);
    else
@@ -4924,30 +4925,30 @@ void TStyleManager::ModOptDateBool()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the date text color is modified by the user.
+
 void TStyleManager::ModAttDateTextColor()
 {
-   // Slot called whenever the date text color is modified by the user.
-
    // To modify this entry, the user must have check 'Show'
    fCurSelStyle->GetAttDate()->SetTextColor(TColor::GetColor(fAttDateTextColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the date text size is modified by the user.
+
 void TStyleManager::ModAttDateTextSize()
 {
-   // Slot called whenever the date text size is modified by the user.
-
    fCurSelStyle->GetAttDate()->SetTextSize(fAttDateTextSize->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the date text size mode is modified by the user.
+
 void TStyleManager::ModAttDateTextSizeInPixels(Bool_t b)
 {
-   // Slot called whenever the date text size mode is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetAttDate()->GetTextFont() / 10;
    Int_t mod = fCurSelStyle->GetAttDate()->GetTextFont() % 10;
    Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
@@ -4971,105 +4972,105 @@ void TStyleManager::ModAttDateTextSizeInPixels(Bool_t b)
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the date text format is modified by the user.
+
 void TStyleManager::ModOptDateFormat()
 {
-   // Slot called whenever the date text format is modified by the user.
-
    Int_t formatPrec = fCurSelStyle->GetOptDate() % 10;
    fCurSelStyle->SetOptDate((fOptDateFormat->GetSelected() - 1) * 10
                               + formatPrec);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the date text font is modified by the user.
+
 void TStyleManager::ModAttDateTextFont()
 {
-   // Slot called whenever the date text font is modified by the user.
-
    Int_t fontPrec = fCurSelStyle->GetAttDate()->GetTextFont() % 10;
    fCurSelStyle->GetAttDate()->SetTextFont(fAttDateTextFont->GetSelected() * 10
                                           + fontPrec);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the date text align is modified by the user.
+
 void TStyleManager::ModAttDateTextAlign()
 {
-   // Slot called whenever the date text align is modified by the user.
-
    fCurSelStyle->GetAttDate()->SetTextAlign(fAttDateTextAlign->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the date text angle is modified by the user.
+
 void TStyleManager::ModAttDateTextAngle()
 {
-   // Slot called whenever the date text angle is modified by the user.
-
    fCurSelStyle->GetAttDate()->SetTextAngle(fAttDateTextAngle->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the date abscissa is modified by the user.
+
 void TStyleManager::ModDateX()
 {
-   // Slot called whenever the date abscissa is modified by the user.
-
    fCurSelStyle->SetDateX(fDateX->GetIntNumber() * 0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the date ordinate is modified by the user.
+
 void TStyleManager::ModDateY()
 {
-   // Slot called whenever the date ordinate is modified by the user.
-
    fCurSelStyle->SetDateY(fDateY->GetIntNumber() * 0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad left margin is modified by the user.
+
 void TStyleManager::ModPadLeftMargin()
 {
-   // Slot called whenever the pad left margin is modified by the user.
-
    fCurSelStyle->SetPadLeftMargin(fPadLeftMargin->GetIntNumber() * 0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad right margin is modified by the user.
+
 void TStyleManager::ModPadRightMargin()
 {
-   // Slot called whenever the pad right margin is modified by the user.
-
    fCurSelStyle->SetPadRightMargin(fPadRightMargin->GetIntNumber() * 0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad top margin is modified by the user.
+
 void TStyleManager::ModPadTopMargin()
 {
-   // Slot called whenever the pad top margin is modified by the user.
-
    fCurSelStyle->SetPadTopMargin(fPadTopMargin->GetIntNumber() * 0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad bottom margin is modified by the user.
+
 void TStyleManager::ModPadBottomMargin()
 {
-   // Slot called whenever the pad bottom margin is modified by the user.
-
    fCurSelStyle->SetPadBottomMargin(fPadBottomMargin->GetIntNumber() * 0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad border mode is modified by the user.
+
 void TStyleManager::ModPadBorderMode()
 {
-   // Slot called whenever the pad border mode is modified by the user.
-
    Int_t i = kPadBorderModeSunken;
    TGButton *but = 0;
    while ((but = fPadBorderMode->Find(i)) && !but->IsDown())
@@ -5078,245 +5079,245 @@ void TStyleManager::ModPadBorderMode()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad border size is modified by the user.
+
 void TStyleManager::ModPadBorderSize()
 {
-   // Slot called whenever the pad border size is modified by the user.
-
    fCurSelStyle->SetPadBorderSize(fPadBorderSize->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad color is modified by the user.
+
 void TStyleManager::ModPadColor()
 {
-   // Slot called whenever the pad color is modified by the user.
-
    fCurSelStyle->SetPadColor(TColor::GetColor(fPadColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad tick X boolean is modified by the user.
+
 void TStyleManager::ModPadTickX()
 {
-   // Slot called whenever the pad tick X boolean is modified by the user.
-
    fCurSelStyle->SetPadTickX(fPadTickX->IsDown());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad tick Y boolean is modified by the user.
+
 void TStyleManager::ModPadTickY()
 {
-   // Slot called whenever the pad tick Y boolean is modified by the user.
-
    fCurSelStyle->SetPadTickY(fPadTickY->IsDown());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad grid X boolean is modified by the user.
+
 void TStyleManager::ModPadGridX()
 {
-   // Slot called whenever the pad grid X boolean is modified by the user.
-
    fCurSelStyle->SetPadGridX(fPadGridX->IsDown());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the pad grid Y boolean is modified by the user.
+
 void TStyleManager::ModPadGridY()
 {
-   // Slot called whenever the pad grid Y boolean is modified by the user.
-
    fCurSelStyle->SetPadGridY(fPadGridY->IsDown());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the grid line color is modified by the user.
+
 void TStyleManager::ModGridColor()
 {
-   // Slot called whenever the grid line color is modified by the user.
-
    fCurSelStyle->SetGridColor(TColor::GetColor(fGridColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the grid line width is modified by the user.
+
 void TStyleManager::ModGridWidth()
 {
-   // Slot called whenever the grid line width is modified by the user.
-
    fCurSelStyle->SetGridWidth(fGridWidth->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the grid line style is modified by the user.
+
 void TStyleManager::ModGridStyle()
 {
-   // Slot called whenever the grid line style is modified by the user.
-
    fCurSelStyle->SetGridStyle(fGridStyle->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the histos fill color is modified by the user.
+
 void TStyleManager::ModHistFillColor()
 {
-   // Slot called whenever the histos fill color is modified by the user.
-
    fCurSelStyle->SetHistFillColor(TColor::GetColor(fHistFillColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the histos fill style is modified by the user.
+
 void TStyleManager::ModHistFillStyle()
 {
-   // Slot called whenever the histos fill style is modified by the user.
-
    fCurSelStyle->SetHistFillStyle(fHistFillStyle->GetPattern());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the histos line color is modified by the user.
+
 void TStyleManager::ModHistLineColor()
 {
-   // Slot called whenever the histos line color is modified by the user.
-
    fCurSelStyle->SetHistLineColor(TColor::GetColor(fHistLineColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the histos line width is modified by the user.
+
 void TStyleManager::ModHistLineWidth()
 {
-   // Slot called whenever the histos line width is modified by the user.
-
    fCurSelStyle->SetHistLineWidth(fHistLineWidth->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the histos line style is modified by the user.
+
 void TStyleManager::ModHistLineStyle()
 {
-   // Slot called whenever the histos line style is modified by the user.
-
    fCurSelStyle->SetHistLineStyle(fHistLineStyle->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the histos bar width is modified by the user.
+
 void TStyleManager::ModBarWidth()
 {
-   // Slot called whenever the histos bar width is modified by the user.
-
    fCurSelStyle->SetBarWidth(fBarWidth->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the histos bar offset is modified by the user.
+
 void TStyleManager::ModBarOffset()
 {
-   // Slot called whenever the histos bar offset is modified by the user.
-
    fCurSelStyle->SetBarOffset(fBarOffset->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called whenever the histos minimum zero boolean is modified
+/// by the user.
+
 void TStyleManager::ModHistMinimumZero()
 {
-   //  Slot called whenever the histos minimum zero boolean is modified
-   // by the user.
-
    fCurSelStyle->SetHistMinimumZero(fHistMinimumZero->IsDown());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the paint text format is modified by the user.
+
 void TStyleManager::ModPaintTextFormat()
 {
-   // Slot called whenever the paint text format is modified by the user.
-
    fCurSelStyle->SetPaintTextFormat(fPaintTextFormat->GetText());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the number of contours is modified by the user.
+
 void TStyleManager::ModNumberContours()
 {
-   // Slot called whenever the number of contours is modified by the user.
-
    fCurSelStyle->SetNumberContours(fNumberContours->GetIntNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the lego inner radius is modified by the user.
+
 void TStyleManager::ModLegoInnerR()
 {
-   // Slot called whenever the lego inner radius is modified by the user.
-
    fCurSelStyle->SetLegoInnerR(fLegoInnerR->GetIntNumber() *0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the frame fill color is modified by the user.
+
 void TStyleManager::ModFrameFillColor()
 {
-   // Slot called whenever the frame fill color is modified by the user.
-
    fCurSelStyle->SetFrameFillColor(TColor::GetColor(fFrameFillColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the frame fill style is modified by the user.
+
 void TStyleManager::ModFrameFillStyle()
 {
-   // Slot called whenever the frame fill style is modified by the user.
-
    fCurSelStyle->SetFrameFillStyle(fFrameFillStyle->GetPattern());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the frame line color is modified by the user.
+
 void TStyleManager::ModFrameLineColor()
 {
-   // Slot called whenever the frame line color is modified by the user.
-
    fCurSelStyle->SetFrameLineColor(TColor::GetColor(fFrameLineColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the frame line width is modified by the user.
+
 void TStyleManager::ModFrameLineWidth()
 {
-   // Slot called whenever the frame line width is modified by the user.
-
    fCurSelStyle->SetFrameLineWidth(fFrameLineWidth->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the frame line style is modified by the user.
+
 void TStyleManager::ModFrameLineStyle()
 {
-   // Slot called whenever the frame line style is modified by the user.
-
    fCurSelStyle->SetFrameLineStyle(fFrameLineStyle->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the palette editor is opened by the user.
+
 void TStyleManager::ModPaletteEdit()
 {
-   // Slot called whenever the palette editor is opened by the user.
-
    // TODO Open a palette editor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the frame border mode is modified by the user.
+
 void TStyleManager::ModFrameBorderMode()
 {
-   // Slot called whenever the frame border mode is modified by the user.
-
    Int_t i = kFrameBorderModeSunken;
    TGButton *but = 0;
    while ((but = fFrameBorderMode->Find(i)) && !but->IsDown())
@@ -5325,74 +5326,74 @@ void TStyleManager::ModFrameBorderMode()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the frame border size is modified by the user.
+
 void TStyleManager::ModFrameBorderSize()
 {
-   // Slot called whenever the frame border size is modified by the user.
-
    fCurSelStyle->SetFrameBorderSize(fFrameBorderSize->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the function line color is modified by the user.
+
 void TStyleManager::ModFuncColor()
 {
-   // Slot called whenever the function line color is modified by the user.
-
    fCurSelStyle->SetFuncColor(TColor::GetColor(fFuncColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the function line width is modified by the user.
+
 void TStyleManager::ModFuncWidth()
 {
-   // Slot called whenever the function line width is modified by the user.
-
    fCurSelStyle->SetFuncWidth(fFuncWidth->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the function line style is modified by the user.
+
 void TStyleManager::ModFuncStyle()
 {
-   // Slot called whenever the function line style is modified by the user.
-
    fCurSelStyle->SetFuncStyle(fFuncStyle->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the draw border boolean is modified by the user.
+
 void TStyleManager::ModDrawBorder()
 {
-   // Slot called whenever the draw border boolean is modified by the user.
-
    fCurSelStyle->SetDrawBorder(fDrawBorder->IsDown());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the end error size is modified by the user.
+
 void TStyleManager::ModEndErrorSize()
 {
-   // Slot called whenever the end error size is modified by the user.
-
    fCurSelStyle->SetEndErrorSize(fEndErrorSize->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the error along X is modified by the user.
+
 void TStyleManager::ModErrorX()
 {
-   // Slot called whenever the error along X is modified by the user.
-
    fCurSelStyle->SetErrorX(fErrorX->GetIntNumber() * 0.001);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the time offset is modified by the user.
+
 void TStyleManager::ModTimeOffset()
 {
-   // Slot called whenever the time offset is modified by the user.
-
    Double_t offset = 0;
    Int_t year  =  ((Int_t) fTimeOffsetDate->GetNumber())/10000;
    Int_t month = (((Int_t) fTimeOffsetDate->GetNumber())/100) % 100;
@@ -5440,22 +5441,22 @@ void TStyleManager::ModTimeOffset()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the strip decimal boolean is modified by the user.
+
 void TStyleManager::ModStripDecimals()
 {
-   // Slot called whenever the strip decimal boolean is modified by the user.
-
    fCurSelStyle->SetStripDecimals(!fStripDecimals->IsDown());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called whenever the apply on XYZ button is clicked. The settings of
+/// the current selected axis pad are applyed on all axis.
+/// NB: The logarithmic scale option isn't modified by this method.
+
 void TStyleManager::ModApplyOnXYZ()
 {
-   //  Slot called whenever the apply on XYZ button is clicked. The settings of
-   // the current selected axis pad are applyed on all axis.
-   // NB: The logarithmic scale option isn't modified by this method.
-
    switch (fCurTabAxisNum) {
       case 0: // X axis
          fCurSelStyle->SetAxisColor(fCurSelStyle->GetAxisColor("x"), "yz");
@@ -5505,20 +5506,20 @@ void TStyleManager::ModApplyOnXYZ()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis title size is modified by the user.
+
 void TStyleManager::ModXTitleSize()
 {
-   // Slot called whenever the X axis title size is modified by the user.
-
    fCurSelStyle->SetTitleSize(fXTitleSize->GetNumber(), "X");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis title size mode is modified by the user.
+
 void TStyleManager::ModXTitleSizeInPixels(Bool_t b)
 {
-   // Slot called whenever the X axis title size mode is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetTitleFont("X") / 10;
    Int_t mod = fCurSelStyle->GetTitleFont("X") % 10;
    Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
@@ -5541,48 +5542,48 @@ void TStyleManager::ModXTitleSizeInPixels(Bool_t b)
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis title color is modified by the user.
+
 void TStyleManager::ModXTitleColor()
 {
-   // Slot called whenever the X axis title color is modified by the user.
-
    fCurSelStyle->SetTitleColor(TColor::GetColor(fXTitleColor->GetColor()), "X");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis title offset is modified by the user.
+
 void TStyleManager::ModXTitleOffset()
 {
-   // Slot called whenever the X axis title offset is modified by the user.
-
    fCurSelStyle->SetTitleOffset(fXTitleOffset->GetNumber(), "X");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis title font is modified by the user.
+
 void TStyleManager::ModXTitleFont()
 {
-   // Slot called whenever the X axis title font is modified by the user.
-
    Int_t fontPrec = fCurSelStyle->GetTitleFont("X") % 10;
    fCurSelStyle->SetTitleFont(fXTitleFont->GetSelected() * 10 + fontPrec, "X");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis label size is modified by the user.
+
 void TStyleManager::ModXLabelSize()
 {
-   // Slot called whenever the X axis label size is modified by the user.
-
    fCurSelStyle->SetLabelSize(fXLabelSize->GetNumber(), "X");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis label size mode is modified by the user.
+
 void TStyleManager::ModXLabelSizeInPixels(Bool_t b)
 {
-   // Slot called whenever the X axis label size mode is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetLabelFont("X") / 10;
    Int_t mod = fCurSelStyle->GetLabelFont("X") % 10;
    Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
@@ -5605,68 +5606,68 @@ void TStyleManager::ModXLabelSizeInPixels(Bool_t b)
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis label color is modified by the user.
+
 void TStyleManager::ModXLabelColor()
 {
-   // Slot called whenever the X axis label color is modified by the user.
-
    fCurSelStyle->SetLabelColor(TColor::GetColor(fXLabelColor->GetColor()), "X");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis label offset is modified by the user.
+
 void TStyleManager::ModXLabelOffset()
 {
-   // Slot called whenever the X axis label offset is modified by the user.
-
    fCurSelStyle->SetLabelOffset(fXLabelOffset->GetNumber(), "X");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis label font is modified by the user.
+
 void TStyleManager::ModXLabelFont()
 {
-   // Slot called whenever the X axis label font is modified by the user.
-
    Int_t fontPrec = fCurSelStyle->GetLabelFont("X") % 10;
    fCurSelStyle->SetLabelFont(fXLabelFont->GetSelected() * 10 + fontPrec, "X");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis color is modified by the user.
+
 void TStyleManager::ModXAxisColor()
 {
-   // Slot called whenever the X axis color is modified by the user.
-
    fCurSelStyle->SetAxisColor(TColor::GetColor(fXAxisColor->GetColor()), "X");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the X axis tick length is modified by the user.
+
 void TStyleManager::ModXTickLength()
 {
-   // Slot called whenever the X axis tick length is modified by the user.
-
    fCurSelStyle->SetTickLength(fXTickLength->GetNumber(), "X");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called whenever the X axis log scale boolean is modified
+/// by the user.
+
 void TStyleManager::ModOptLogx()
 {
-   //  Slot called whenever the X axis log scale boolean is modified
-   // by the user.
-
    fCurSelStyle->SetOptLogx(fOptLogx->IsDown());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called whenever the X axis Number of divisions is modified
+/// by the user.
+
 void TStyleManager::ModXNdivisions()
 {
-   //  Slot called whenever the X axis Number of divisions is modified
-   // by the user.
-
    Int_t sgn = -1;
    if (fXNdivisionsOptimize->IsDown()) sgn = 1;
    fCurSelStyle->SetNdivisions(sgn * (fXNdivMain->GetIntNumber()
@@ -5675,20 +5676,20 @@ void TStyleManager::ModXNdivisions()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis title size is modified by the user.
+
 void TStyleManager::ModYTitleSize()
 {
-   // Slot called whenever the Y axis title size is modified by the user.
-
    fCurSelStyle->SetTitleSize(fYTitleSize->GetNumber(), "Y");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis title size mode is modified by the user.
+
 void TStyleManager::ModYTitleSizeInPixels(Bool_t b)
 {
-   // Slot called whenever the Y axis title size mode is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetTitleFont("Y") / 10;
    Int_t mod = fCurSelStyle->GetTitleFont("Y") % 10;
    Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
@@ -5711,48 +5712,48 @@ void TStyleManager::ModYTitleSizeInPixels(Bool_t b)
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis title color is modified by the user.
+
 void TStyleManager::ModYTitleColor()
 {
-   // Slot called whenever the Y axis title color is modified by the user.
-
    fCurSelStyle->SetTitleColor(TColor::GetColor(fYTitleColor->GetColor()), "Y");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis title offset is modified by the user.
+
 void TStyleManager::ModYTitleOffset()
 {
-   // Slot called whenever the Y axis title offset is modified by the user.
-
    fCurSelStyle->SetTitleOffset(fYTitleOffset->GetNumber(), "Y");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis title font is modified by the user.
+
 void TStyleManager::ModYTitleFont()
 {
-   // Slot called whenever the Y axis title font is modified by the user.
-
    Int_t fontPrec = fCurSelStyle->GetTitleFont("Y") % 10;
    fCurSelStyle->SetTitleFont(fYTitleFont->GetSelected() * 10 + fontPrec, "Y");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis label size is modified by the user.
+
 void TStyleManager::ModYLabelSize()
 {
-   // Slot called whenever the Y axis label size is modified by the user.
-
    fCurSelStyle->SetLabelSize(fYLabelSize->GetNumber(), "Y");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis label size mode is modified by the user.
+
 void TStyleManager::ModYLabelSizeInPixels(Bool_t b)
 {
-   // Slot called whenever the Y axis label size mode is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetLabelFont("Y") / 10;
    Int_t mod = fCurSelStyle->GetLabelFont("Y") % 10;
    Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
@@ -5775,67 +5776,67 @@ void TStyleManager::ModYLabelSizeInPixels(Bool_t b)
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis label color is modified by the user.
+
 void TStyleManager::ModYLabelColor()
 {
-   // Slot called whenever the Y axis label color is modified by the user.
-
    fCurSelStyle->SetLabelColor(TColor::GetColor(fYLabelColor->GetColor()), "Y");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis label offset is modified by the user.
+
 void TStyleManager::ModYLabelOffset()
 {
-   // Slot called whenever the Y axis label offset is modified by the user.
-
    fCurSelStyle->SetLabelOffset(fYLabelOffset->GetNumber(), "Y");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis label font is modified by the user.
+
 void TStyleManager::ModYLabelFont()
 {
-   // Slot called whenever the Y axis label font is modified by the user.
-
    Int_t fontPrec = fCurSelStyle->GetLabelFont("Y") % 10;
    fCurSelStyle->SetLabelFont(fYLabelFont->GetSelected() * 10 + fontPrec, "Y");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis color is modified by the user.
+
 void TStyleManager::ModYAxisColor()
 {
-   // Slot called whenever the Y axis color is modified by the user.
-
    fCurSelStyle->SetAxisColor(TColor::GetColor(fYAxisColor->GetColor()), "Y");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis tick length is modified by the user.
+
 void TStyleManager::ModYTickLength()
 {
-   // Slot called whenever the Y axis tick length is modified by the user.
-
    fCurSelStyle->SetTickLength(fYTickLength->GetNumber(), "Y");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Y axis log scale boolean is modified by the user.
+
 void TStyleManager::ModOptLogy()
 {
-   // Slot called whenever the Y axis log scale boolean is modified by the user.
-
    fCurSelStyle->SetOptLogy(fOptLogy->IsDown());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called whenever the Y axis Number of divisions is modified
+/// by the user.
+
 void TStyleManager::ModYNdivisions()
 {
-   //  Slot called whenever the Y axis Number of divisions is modified
-   // by the user.
-
    Int_t sgn = -1;
    if (fYNdivisionsOptimize->IsDown()) sgn = 1;
    fCurSelStyle->SetNdivisions(sgn * (fYNdivMain->GetIntNumber()
@@ -5844,20 +5845,20 @@ void TStyleManager::ModYNdivisions()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis title size is modified by the user.
+
 void TStyleManager::ModZTitleSize()
 {
-   // Slot called whenever the Z axis title size is modified by the user.
-
    fCurSelStyle->SetTitleSize(fZTitleSize->GetNumber(), "Z");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis title size mode is modified by the user.
+
 void TStyleManager::ModZTitleSizeInPixels(Bool_t b)
 {
-   // Slot called whenever the Z axis title size mode is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetTitleFont("Z") / 10;
    Int_t mod = fCurSelStyle->GetTitleFont("Z") % 10;
    Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
@@ -5880,48 +5881,48 @@ void TStyleManager::ModZTitleSizeInPixels(Bool_t b)
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis title color is modified by the user.
+
 void TStyleManager::ModZTitleColor()
 {
-   // Slot called whenever the Z axis title color is modified by the user.
-
    fCurSelStyle->SetTitleColor(TColor::GetColor(fZTitleColor->GetColor()), "Z");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis title offset is modified by the user.
+
 void TStyleManager::ModZTitleOffset()
 {
-   // Slot called whenever the Z axis title offset is modified by the user.
-
    fCurSelStyle->SetTitleOffset(fZTitleOffset->GetNumber(), "Z");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis title font is modified by the user.
+
 void TStyleManager::ModZTitleFont()
 {
-   // Slot called whenever the Z axis title font is modified by the user.
-
    Int_t fontPrec = fCurSelStyle->GetTitleFont("Z") % 10;
    fCurSelStyle->SetTitleFont(fZTitleFont->GetSelected() * 10 + fontPrec, "Z");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis label size is modified by the user.
+
 void TStyleManager::ModZLabelSize()
 {
-   // Slot called whenever the Z axis label size is modified by the user.
-
    fCurSelStyle->SetLabelSize(fZLabelSize->GetNumber(), "Z");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis Label size mode is modified by the user.
+
 void TStyleManager::ModZLabelSizeInPixels(Bool_t b)
 {
-   // Slot called whenever the Z axis Label size mode is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetLabelFont("Z") / 10;
    Int_t mod = fCurSelStyle->GetLabelFont("Z") % 10;
    Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
@@ -5944,67 +5945,67 @@ void TStyleManager::ModZLabelSizeInPixels(Bool_t b)
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis label color is modified by the user.
+
 void TStyleManager::ModZLabelColor()
 {
-   // Slot called whenever the Z axis label color is modified by the user.
-
    fCurSelStyle->SetLabelColor(TColor::GetColor(fZLabelColor->GetColor()), "Z");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis label offset is modified by the user.
+
 void TStyleManager::ModZLabelOffset()
 {
-   // Slot called whenever the Z axis label offset is modified by the user.
-
    fCurSelStyle->SetLabelOffset(fZLabelOffset->GetNumber(), "Z");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis label font is modified by the user.
+
 void TStyleManager::ModZLabelFont()
 {
-   // Slot called whenever the Z axis label font is modified by the user.
-
    Int_t fontPrec = fCurSelStyle->GetLabelFont("Z") % 10;
    fCurSelStyle->SetLabelFont(fZLabelFont->GetSelected() * 10 + fontPrec, "Z");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis color is modified by the user.
+
 void TStyleManager::ModZAxisColor()
 {
-   // Slot called whenever the Z axis color is modified by the user.
-
    fCurSelStyle->SetAxisColor(TColor::GetColor(fZAxisColor->GetColor()), "Z");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis tick length is modified by the user.
+
 void TStyleManager::ModZTickLength()
 {
-   // Slot called whenever the Z axis tick length is modified by the user.
-
    fCurSelStyle->SetTickLength(fZTickLength->GetNumber(), "Z");
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the Z axis log scale boolean is modified by the user.
+
 void TStyleManager::ModOptLogz()
 {
-   // Slot called whenever the Z axis log scale boolean is modified by the user.
-
    fCurSelStyle->SetOptLogz(fOptLogz->IsDown());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Slot called whenever the Z axis Number of divisions is modified
+/// by the user.
+
 void TStyleManager::ModZNdivisions()
 {
-   //  Slot called whenever the Z axis Number of divisions is modified
-   // by the user.
-
    Int_t sgn = -1;
    if (fZNdivisionsOptimize->IsDown()) sgn = 1;
    fCurSelStyle->SetNdivisions(sgn * (fZNdivMain->GetIntNumber()
@@ -6013,11 +6014,11 @@ void TStyleManager::ModZNdivisions()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the OptTitle boolean is modified by the user.
+
 void TStyleManager::ModOptTitle()
 {
-   // Slot called whenever the OptTitle boolean is modified by the user.
-
    fCurSelStyle->SetOptTitle(fOptTitle->IsDown());
    DisconnectEditor(fCurTabNum);
    UpdateEditor(fCurTabNum);
@@ -6025,47 +6026,47 @@ void TStyleManager::ModOptTitle()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the title fill color is modified by the user.
+
 void TStyleManager::ModTitleFillColor()
 {
-   // Slot called whenever the title fill color is modified by the user.
-
    fCurSelStyle->SetTitleFillColor(TColor::GetColor(fTitleColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the title fill style is modified by the user.
+
 void TStyleManager::ModTitleStyle()
 {
-   // Slot called whenever the title fill style is modified by the user.
-
    fCurSelStyle->SetTitleStyle(fTitleStyle->GetPattern());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the title text color is modified by the user.
+
 void TStyleManager::ModTitleTextColor()
 {
-   // Slot called whenever the title text color is modified by the user.
-
    fCurSelStyle->SetTitleTextColor(TColor::GetColor(fTitleTextColor->GetColor()));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the text size is modified by the user.
+
 void TStyleManager::ModTitleFontSize()
 {
-   // Slot called whenever the text size is modified by the user.
-
    fCurSelStyle->SetTitleFontSize(fTitleFontSize->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the text size mode is modified by the user.
+
 void TStyleManager::ModTitleFontSizeInPixels(Bool_t b)
 {
-   // Slot called whenever the text size mode is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetTitleFont() / 10;
    Int_t mod = fCurSelStyle->GetTitleFont() % 10;
    Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
@@ -6088,119 +6089,120 @@ void TStyleManager::ModTitleFontSizeInPixels(Bool_t b)
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the title text font is modified by the user.
+
 void TStyleManager::ModTitleFont()
 {
-   // Slot called whenever the title text font is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetTitleFont() % 10;
    fCurSelStyle->SetTitleFont(fTitleFont->GetSelected() * 10 + tmp);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the title text align is modified by the user.
+
 void TStyleManager::ModTitleAlign()
 {
-   // Slot called whenever the title text align is modified by the user.
-
    fCurSelStyle->SetTitleAlign(fTitleAlign->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the title border size is modified by the user.
+
 void TStyleManager::ModTitleBorderSize()
 {
-   // Slot called whenever the title border size is modified by the user.
-
    fCurSelStyle->SetTitleBorderSize(fTitleBorderSize->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the legend border size is modified by the user.
+
 void TStyleManager::ModLegendBorderSize()
 {
-   // Slot called whenever the legend border size is modified by the user.
-
    fCurSelStyle->SetLegendBorderSize(fLegendBorderSize->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the title abscissa is modified by the user.
+
 void TStyleManager::ModTitleX()
 {
-   // Slot called whenever the title abscissa is modified by the user.
-
    fCurSelStyle->SetTitleX(fTitleX->GetIntNumber() * 0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the title ordinate is modified by the user.
+
 void TStyleManager::ModTitleY()
 {
-   // Slot called whenever the title ordinate is modified by the user.
-
    fCurSelStyle->SetTitleY(fTitleY->GetIntNumber() * 0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the title width is modified by the user.
+
 void TStyleManager::ModTitleW()
 {
-   // Slot called whenever the title width is modified by the user.
-
    fCurSelStyle->SetTitleW(fTitleW->GetIntNumber() * 0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the title height is modified by the user.
+
 void TStyleManager::ModTitleH()
 {
-   // Slot called whenever the title height is modified by the user.
-
    fCurSelStyle->SetTitleH(fTitleH->GetIntNumber() * 0.01);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the stats fill color is modified by the user.
+
 void TStyleManager::ModStatColor(Pixel_t color)
 {
-   // Slot called whenever the stats fill color is modified by the user.
-
    fCurSelStyle->SetStatColor(TColor::GetColor(color));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the stats fill style is modified by the user.
+
 void TStyleManager::ModStatStyle(Style_t pattern)
 {
-   // Slot called whenever the stats fill style is modified by the user.
-
    fCurSelStyle->SetStatStyle(pattern);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the stats text color is modified by the user.
+
 void TStyleManager::ModStatTextColor(Pixel_t color)
 {
-   // Slot called whenever the stats text color is modified by the user.
-
    fCurSelStyle->SetStatTextColor(TColor::GetColor(color));
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the text size is modified by the user.
+
 void TStyleManager::ModStatFontSize()
 {
-   // Slot called whenever the text size is modified by the user.
    fCurSelStyle->SetStatFontSize(fStatFontSize->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the text size mode is modified by the user.
+
 void TStyleManager::ModStatFontSizeInPixels(Bool_t b)
 {
-   // Slot called whenever the text size mode is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetStatFont() / 10;
    Int_t mod = fCurSelStyle->GetStatFont() % 10;
    Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
@@ -6225,66 +6227,66 @@ void TStyleManager::ModStatFontSizeInPixels(Bool_t b)
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the stats text font is modified by the user.
+
 void TStyleManager::ModStatFont()
 {
-   // Slot called whenever the stats text font is modified by the user.
-
    Int_t tmp = fCurSelStyle->GetStatFont() % 10;
    fCurSelStyle->SetStatFont(fStatFont->GetSelected() * 10 + tmp);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the stats abscissa is modified by the user.
+
 void TStyleManager::ModStatX()
 {
-   // Slot called whenever the stats abscissa is modified by the user.
-
    fCurSelStyle->SetStatX((Float_t)fStatX->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the stats ordinate is modified by the user.
+
 void TStyleManager::ModStatY()
 {
-   // Slot called whenever the stats ordinate is modified by the user.
-
    fCurSelStyle->SetStatY((Float_t)fStatY->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the stats width is modified by the user.
+
 void TStyleManager::ModStatW()
 {
-   // Slot called whenever the stats width is modified by the user.
-
    fCurSelStyle->SetStatW((Float_t)fStatW->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the stats height is modified by the user.
+
 void TStyleManager::ModStatH()
 {
-   // Slot called whenever the stats height is modified by the user.
-
    fCurSelStyle->SetStatH((Float_t)fStatH->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the stats border size is modified by the user.
+
 void TStyleManager::ModStatBorderSize()
 {
-   // Slot called whenever the stats border size is modified by the user.
-
    fCurSelStyle->SetStatBorderSize(fStatBorderSize->GetSelected());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever one of the stats options is modified by the user.
+
 void TStyleManager::ModOptStat()
 {
-   // Slot called whenever one of the stats options is modified by the user.
-
    Int_t stat = 0;
    if (fOptStatName->IsDown())        stat +=1;
    if (fOptStatEntries->IsDown())     stat +=10;
@@ -6306,20 +6308,20 @@ void TStyleManager::ModOptStat()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the stats paint format is modified by the user.
+
 void TStyleManager::ModStatFormat(const char *sformat)
 {
-   // Slot called whenever the stats paint format is modified by the user.
-
    fCurSelStyle->SetStatFormat(sformat);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever one of the fit options is modified by the user.
+
 void TStyleManager::ModOptFit()
 {
-   // Slot called whenever one of the fit options is modified by the user.
-
    Int_t fit = 0;
    if (fOptFitValues->IsDown())      fit +=1;
    if (fOptFitErrors->IsDown())      fit +=10;
@@ -6330,38 +6332,38 @@ void TStyleManager::ModOptFit()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the fit paint format is modified by the user.
+
 void TStyleManager::ModFitFormat(const char *fitformat)
 {
-   // Slot called whenever the fit paint format is modified by the user.
-
    fCurSelStyle->SetFitFormat(fitformat);
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the PS header is modified by the user.
+
 void TStyleManager::ModHeaderPS()
 {
-   // Slot called whenever the PS header is modified by the user.
-
    fCurSelStyle->SetHeaderPS(fHeaderPS->GetText());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the PS title is modified by the user.
+
 void TStyleManager::ModTitlePS()
 {
-   // Slot called whenever the PS title is modified by the user.
-
    fCurSelStyle->SetTitlePS(fTitlePS->GetText());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the PS color model is modified by the user.
+
 void TStyleManager::ModColorModelPS()
 {
-   // Slot called whenever the PS color model is modified by the user.
-
    Int_t i = kPSPDFColorModelPSRGB;
    TGButton *but = 0;
    while ((but = fColorModelPS->Find(i)) && !but->IsDown()) i++;
@@ -6369,20 +6371,20 @@ void TStyleManager::ModColorModelPS()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the PS line scale is modified by the user.
+
 void TStyleManager::ModLineScalePS()
 {
-   // Slot called whenever the PS line scale is modified by the user.
-
    fCurSelStyle->SetLineScalePS(fLineScalePS->GetNumber());
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the PS paper size is modified by the user.
+
 void TStyleManager::ModPaperSizePredef()
 {
-   // Slot called whenever the PS paper size is modified by the user.
-
    Float_t papSizeX;
    Float_t papSizeY;
    fCurSelStyle->GetPaperSize(papSizeX, papSizeY);
@@ -6413,11 +6415,11 @@ void TStyleManager::ModPaperSizePredef()
    DoEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot called whenever the PS paper size is modified by the user.
+
 void TStyleManager::ModPaperSizeXY()
 {
-   // Slot called whenever the PS paper size is modified by the user.
-
    if (fPaperSizeEnCm) {
       fCurSelStyle->SetPaperSize(fPaperSizeX->GetNumber(),
                                  fPaperSizeY->GetNumber());

@@ -48,13 +48,13 @@ int ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 
 typedef struct ktc_token AFStoken_t;
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decode the error code returning a pointer to a human
+/// readable string. The two additional messages are taken from the OpenAFS
+/// source (src/kauth/user.c).
+
 char *GetAFSErrorString(afs_int32 rc)
 {
-   // Decode the error code returning a pointer to a human
-   // readable string. The two additional messages are taken from the OpenAFS
-   // source (src/kauth/user.c).
-
    const char *emsg = 0;
    if (rc) {
       switch (rc) {
@@ -80,19 +80,19 @@ char *GetAFSErrorString(afs_int32 rc)
 }
 
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get AFS token for the local cell for 'usr'. The meaning of the
+/// information passed at 'pwd' depends on 'pwlen'. For 'pwlen <= 0'
+/// 'pwd' is interpreted as the plain password (null terminated string).
+/// For 'pwlen > 0', the 'pwlen' bytes at 'pwd' contain the password in
+/// for of encryption key (struct ktc_encryptionKey).
+/// On success a token is returned as opaque information.
+/// On error / failure, 0 is returned; if emsg != 0, *emsg points to an
+/// error message.
+
 void *GetAFSToken(const char *usr, const char *pwd, int pwlen,
                   int life, char **emsg)
 {
-   // Get AFS token for the local cell for 'usr'. The meaning of the
-   // information passed at 'pwd' depends on 'pwlen'. For 'pwlen <= 0'
-   // 'pwd' is interpreted as the plain password (null terminated string).
-   // For 'pwlen > 0', the 'pwlen' bytes at 'pwd' contain the password in
-   // for of encryption key (struct ktc_encryptionKey).
-   // On success a token is returned as opaque information.
-   // On error / failure, 0 is returned; if emsg != 0, *emsg points to an
-   // error message.
-
    // reset the error message, if defined
    if (emsg)
       *emsg = "";
@@ -204,13 +204,13 @@ void *GetAFSToken(const char *usr, const char *pwd, int pwlen,
    return (void *)tkn;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Verify validity an AFS token. The opaque input information is the one
+/// returned by a successful call to GetAFSToken.
+/// The remaining lifetime is returned, i.e. <=0 if expired.
+
 int VerifyAFSToken(void *token)
 {
-   // Verify validity an AFS token. The opaque input information is the one
-   // returned by a successful call to GetAFSToken.
-   // The remaining lifetime is returned, i.e. <=0 if expired.
-
    // Check input
    if (!token)
       return 0;
@@ -223,21 +223,21 @@ int VerifyAFSToken(void *token)
 
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete an AFS token returned by a successful call to GetAFSToken.
+
 void DeleteAFSToken(void *token)
 {
-   // Delete an AFS token returned by a successful call to GetAFSToken.
-
    if (token)
       delete (AFStoken_t *)token;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a pointer to a string with the local cell. The string must
+/// not be freed or deleted.
+
 char *AFSLocalCell()
 {
-   // Returns a pointer to a string with the local cell. The string must
-   // not be freed or deleted.
-
    return ka_LocalCell();
 }
 

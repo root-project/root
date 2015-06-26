@@ -22,7 +22,8 @@ extern "C" void pyname(const Int_t &kf, const char *name, const Int_t len);
 
 ClassImp(TMCParticle)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMCParticle::ls(Option_t *) const
 {
    printf("(%2i,%4i) <-%3i, =>[%3i,%3i]",fKS,fKF,fParent,
@@ -33,11 +34,11 @@ void TMCParticle::ls(Option_t *) const
           fEnergy,fMass,fVx,fVy,fVz,fTime,fLifetime);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return name of this particle via Pythia
+
 const char *TMCParticle::GetName() const
 {
-   // Return name of this particle via Pythia
-
    static char name[20];
    pyname(fKF,name,16); name[15] = 0;
    for (Int_t i=14;i>0;i--) {

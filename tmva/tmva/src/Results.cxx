@@ -34,7 +34,9 @@
 #include "TMVA/Results.h"
 #include "TMVA/MsgLogger.h"
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::Results::Results( const DataSetInfo* dsi, TString resultsName ) 
    : fTreeType(Types::kTraining),
      fDsi(dsi),
@@ -42,22 +44,22 @@ TMVA::Results::Results( const DataSetInfo* dsi, TString resultsName )
      fHistAlias( new std::map<TString, TObject*> ),
      fLogger( new MsgLogger(Form("Results%s",resultsName.Data()), kINFO) )
 {
-   // constructor
    fStorage->SetOwner();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::Results::~Results() 
 {
-   // destructor
-
    // delete result-histograms
    delete fStorage;
    delete fHistAlias;
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::Results::Store( TObject* obj, const char* alias )
 {
    TListIter l(fStorage);
@@ -80,7 +82,8 @@ void TMVA::Results::Store( TObject* obj, const char* alias )
    fHistAlias->insert(std::pair<TString, TObject*>(as,obj));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TObject* TMVA::Results::GetObject(const TString & alias) const 
 {
    std::map<TString, TObject*>::iterator it = fHistAlias->find(alias);
@@ -99,7 +102,8 @@ Bool_t TMVA::Results::DoesExist(const TString & alias) const
    return test;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TH1* TMVA::Results::GetHist(const TString & alias) const 
 {
    TH1* out=dynamic_cast<TH1*>(GetObject(alias));
@@ -107,25 +111,27 @@ TH1* TMVA::Results::GetHist(const TString & alias) const
    return out;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TH2* TMVA::Results::GetHist2D(const TString & alias) const 
 {
    TH2* out=dynamic_cast<TH2*>(GetObject(alias));
    if (!out) Log() <<kWARNING << "You have asked for 2D histogram " << alias << " which does not seem to exist in *Results* .. better don't use it " << Endl;
    return out;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGraph* TMVA::Results::GetGraph(const TString & alias) const 
 {
    return (TGraph*)GetObject(alias);
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete all stored histograms
+
 void TMVA::Results::Delete()
 {
-   // delete all stored histograms
-
    fStorage->Delete();
    fHistAlias->clear();
 }

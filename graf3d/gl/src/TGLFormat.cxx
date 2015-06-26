@@ -30,7 +30,8 @@ ClassImp(TGLFormat);
 
 std::vector<Int_t> TGLFormat::fgAvailableSamples;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLFormat::TGLFormat() :
    fDoubleBuffered(kTRUE),
    fStereo(kFALSE),
@@ -55,7 +56,9 @@ TGLFormat::TGLFormat() :
    //-multi-sampling depends on seeting of "OpenGL.Framebuffer.Multisample"
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Define surface using options.
+
 TGLFormat::TGLFormat(Rgl::EFormatOptions opt) :
    fDoubleBuffered(opt & Rgl::kDoubleBuffer),
    fStereo(kFALSE),
@@ -68,150 +71,168 @@ TGLFormat::TGLFormat(Rgl::EFormatOptions opt) :
    fStencilSize(opt & Rgl::kStencil ? 8 : 0), //I've never tested stencil buffer size.
    fSamples(opt & Rgl::kMultiSample ? GetDefaultSamples() : 0)
 {
-   //Define surface using options.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destructor.
+
 TGLFormat::~TGLFormat()
 {
-   //Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check if two formats are equal.
+
 Bool_t TGLFormat::operator == (const TGLFormat &rhs)const
 {
-   //Check if two formats are equal.
    return fDoubleBuffered == rhs.fDoubleBuffered && fDepthSize == rhs.fDepthSize &&
           fAccumSize == rhs.fAccumSize && fStencilSize == rhs.fStencilSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check for non-equality.
+
 Bool_t TGLFormat::operator != (const TGLFormat &rhs)const
 {
-   //Check for non-equality.
    return !(*this == rhs);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get the size of depth buffer.
+
 Int_t TGLFormat::GetDepthSize()const
 {
-   //Get the size of depth buffer.
    return fDepthSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the size of color buffer.
+
 void TGLFormat::SetDepthSize(Int_t depth)
 {
-   //Set the size of color buffer.
    assert(depth);
    fDepthSize = depth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check, if this surface has depth buffer.
+
 Bool_t TGLFormat::HasDepth()const
 {
-   //Check, if this surface has depth buffer.
    return GetDepthSize() != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get the size of stencil buffer.
+
 Int_t TGLFormat::GetStencilSize()const
 {
-   //Get the size of stencil buffer.
    return fStencilSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the size of stencil buffer.
+
 void TGLFormat::SetStencilSize(Int_t stencil)
 {
-   //Set the size of stencil buffer.
    assert(stencil);
    fStencilSize = stencil;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check, if this surface has stencil buffer.
+
 Bool_t TGLFormat::HasStencil()const
 {
-   //Check, if this surface has stencil buffer.
    return GetStencilSize() != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get the size of accum buffer.
+
 Int_t TGLFormat::GetAccumSize()const
 {
-   //Get the size of accum buffer.
    return fAccumSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the size of accum buffer.
+
 void TGLFormat::SetAccumSize(Int_t accum)
 {
-   //Set the size of accum buffer.
    assert(accum);
    fAccumSize = accum;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check, if this surface has accumulation buffer.
+
 Bool_t TGLFormat::HasAccumBuffer()const
 {
-   //Check, if this surface has accumulation buffer.
    return GetAccumSize() != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check, if the surface is double buffered.
+
 Bool_t TGLFormat::IsDoubleBuffered()const
 {
-   //Check, if the surface is double buffered.
    return fDoubleBuffered;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the surface as double/single buffered.
+
 void TGLFormat::SetDoubleBuffered(Bool_t db)
 {
-   //Set the surface as double/single buffered.
    fDoubleBuffered = db;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check, if the surface is stereo buffered.
+
 Bool_t TGLFormat::IsStereo()const
 {
-   //Check, if the surface is stereo buffered.
    return fStereo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the surface as stereo/non-stereo buffered.
+
 void TGLFormat::SetStereo(Bool_t db)
 {
-   //Set the surface as stereo/non-stereo buffered.
    fStereo = db;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get the number of samples for multi-sampling.
+
 Int_t TGLFormat::GetSamples()const
 {
-   //Get the number of samples for multi-sampling.
    return fSamples;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set the number of samples for multi-sampling.
+
 void TGLFormat::SetSamples(Int_t samples)
 {
-   //Set the number of samples for multi-sampling.
    fSamples = samples;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Check, if multi-sampling is requred.
+
 Bool_t TGLFormat::HasMultiSampling()const
 {
-   //Check, if multi-sampling is requred.
    return fSamples != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default number of samples for multi-sampling.
+
 Int_t TGLFormat::GetDefaultSamples()
 {
-   // Return default number of samples for multi-sampling.
-
    Int_t req = gEnv->GetValue("OpenGL.Framebuffer.Multisample", 0);
 
    // Avoid query of available multi-sample modes when not required.
@@ -236,7 +257,8 @@ Int_t TGLFormat::GetDefaultSamples()
    return *i;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLFormat::InitAvailableSamples()
 {
    std::set<Int_t> ns_set;

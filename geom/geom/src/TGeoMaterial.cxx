@@ -29,7 +29,9 @@
 
 ClassImp(TGeoMaterial)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoMaterial::TGeoMaterial()
              :TNamed(), TAttFill(),
               fIndex(0),
@@ -47,7 +49,6 @@ TGeoMaterial::TGeoMaterial()
               fUserExtension(0),
               fFWExtension(0)
 {
-// Default constructor
    SetUsed(kFALSE);
    fIndex    = -1;
    fTemperature = STP_temperature;
@@ -55,7 +56,9 @@ TGeoMaterial::TGeoMaterial()
    fState = kMatStateUndefined;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoMaterial::TGeoMaterial(const char *name)
              :TNamed(name, ""), TAttFill(),
               fIndex(0),
@@ -73,7 +76,6 @@ TGeoMaterial::TGeoMaterial(const char *name)
               fUserExtension(0),
               fFWExtension(0)
 {
-// constructor
    fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
@@ -87,7 +89,9 @@ TGeoMaterial::TGeoMaterial(const char *name)
    gGeoManager->AddMaterial(this);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
                 Double_t rho, Double_t radlen, Double_t intlen)
              :TNamed(name, ""), TAttFill(),
@@ -106,7 +110,6 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
               fUserExtension(0),
               fFWExtension(0)
 {
-// constructor
    fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
@@ -126,7 +129,9 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
    gGeoManager->AddMaterial(this);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with state, temperature and pressure.
+
 TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho,
                 EGeoMaterialState state, Double_t temperature, Double_t pressure)
              :TNamed(name, ""), TAttFill(),
@@ -145,7 +150,6 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
               fUserExtension(0),
               fFWExtension(0)
 {
-// Constructor with state, temperature and pressure.
    fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
@@ -159,7 +163,9 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
    gGeoManager->AddMaterial(this);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
              :TNamed(name, ""), TAttFill(),
               fIndex(0),
@@ -177,7 +183,6 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
               fUserExtension(0),
               fFWExtension(0)
 {
-// constructor
    fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
@@ -196,7 +201,8 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
    gGeoManager->AddMaterial(this);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
               TNamed(gm),
               TAttFill(gm),
@@ -219,10 +225,11 @@ TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
    //copy constructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm)
 {
-   //assignment operator
    if(this!=&gm) {
       TNamed::operator=(gm);
       TAttFill::operator=(gm);
@@ -244,78 +251,85 @@ TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoMaterial::~TGeoMaterial()
 {
-// Destructor
    if (fUserExtension) {fUserExtension->Release(); fUserExtension=0;}
    if (fFWExtension) {fFWExtension->Release(); fFWExtension=0;}
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect user-defined extension to the material. The material "grabs" a copy, so
+/// the original object can be released by the producer. Release the previously
+/// connected extension if any.
+///==========================================================================
+/// NOTE: This interface is intended for user extensions and is guaranteed not
+/// to be used by TGeo
+///==========================================================================
+
 void TGeoMaterial::SetUserExtension(TGeoExtension *ext)
 {
-// Connect user-defined extension to the material. The material "grabs" a copy, so
-// the original object can be released by the producer. Release the previously
-// connected extension if any.
-//==========================================================================
-// NOTE: This interface is intended for user extensions and is guaranteed not
-// to be used by TGeo
-//==========================================================================
    if (fUserExtension) fUserExtension->Release();
    fUserExtension = 0;
    if (ext) fUserExtension = ext->Grab();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect framework defined extension to the material. The material "grabs" a copy,
+/// so the original object can be released by the producer. Release the previously
+/// connected extension if any.
+///==========================================================================
+/// NOTE: This interface is intended for the use by TGeo and the users should
+///       NOT connect extensions using this method
+///==========================================================================
+
 void TGeoMaterial::SetFWExtension(TGeoExtension *ext)
 {
-// Connect framework defined extension to the material. The material "grabs" a copy,
-// so the original object can be released by the producer. Release the previously
-// connected extension if any.
-//==========================================================================
-// NOTE: This interface is intended for the use by TGeo and the users should
-//       NOT connect extensions using this method
-//==========================================================================
    if (fFWExtension) fFWExtension->Release();
    fFWExtension = 0;
    if (ext) fFWExtension = ext->Grab();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a copy of the user extension pointer. The user must call Release() on
+/// the copy pointer once this pointer is not needed anymore (equivalent to
+/// delete() after calling new())
+
 TGeoExtension *TGeoMaterial::GrabUserExtension() const
 {
-// Get a copy of the user extension pointer. The user must call Release() on
-// the copy pointer once this pointer is not needed anymore (equivalent to
-// delete() after calling new())
    if (fUserExtension) return fUserExtension->Grab();
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a copy of the framework extension pointer. The user must call Release() on
+/// the copy pointer once this pointer is not needed anymore (equivalent to
+/// delete() after calling new())
+
 TGeoExtension *TGeoMaterial::GrabFWExtension() const
 {
-// Get a copy of the framework extension pointer. The user must call Release() on
-// the copy pointer once this pointer is not needed anymore (equivalent to
-// delete() after calling new())
    if (fFWExtension) return fFWExtension->Grab();
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provide a pointer name containing uid.
+
 char *TGeoMaterial::GetPointerName() const
 {
-// Provide a pointer name containing uid.
    static TString name;
    name = TString::Format("pMat%d", GetUniqueID());
    return (char*)name.Data();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set radiation/absorbtion lengths. If the values are negative, their absolute value
+/// is taken, otherwise radlen is recomputed using G3 formula.
+
 void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
 {
-// Set radiation/absorbtion lengths. If the values are negative, their absolute value
-// is taken, otherwise radlen is recomputed using G3 formula.
    fRadLen = TMath::Abs(radlen);
    fIntLen = TMath::Abs(intlen);
    // Check for vacuum
@@ -355,14 +369,14 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function
+///  Compute Coulomb correction for pair production and Brem
+///  REFERENCE : EGS MANUAL SLAC 210 - UC32 - JUNE 78
+///                        FORMULA 2.7.17
+
 Double_t TGeoMaterial::Coulomb(Double_t z)
 {
-   // static function
-   //  Compute Coulomb correction for pair production and Brem
-   //  REFERENCE : EGS MANUAL SLAC 210 - UC32 - JUNE 78
-   //                        FORMULA 2.7.17
-
    const Double_t alpha = 7.29927E-03;
 
    Double_t az    = alpha*z;
@@ -373,10 +387,11 @@ Double_t TGeoMaterial::Coulomb(Double_t z)
    return fp - fm;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return true if the other material has the same physical properties
+
 Bool_t TGeoMaterial::IsEq(const TGeoMaterial *other) const
 {
-// return true if the other material has the same physical properties
    if (other==this) return kTRUE;
    if (other->IsMixture()) return kFALSE;
    if (TMath::Abs(fA-other->GetA())>1E-3) return kFALSE;
@@ -388,18 +403,20 @@ Bool_t TGeoMaterial::IsEq(const TGeoMaterial *other) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print characteristics of this material
+
 void TGeoMaterial::Print(const Option_t * /*option*/) const
 {
-// print characteristics of this material
    printf("Material %s %s   A=%g Z=%g rho=%g radlen=%g intlen=%g index=%i\n", GetName(), GetTitle(),
           fA,fZ,fDensity, fRadLen, fIntLen, fIndex);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoMaterial::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(TGeoMaterial::kMatSavePrimitive)) return;
    char *name = GetPointerName();
    out << "// Material: " << GetName() << std::endl;
@@ -414,47 +431,52 @@ void TGeoMaterial::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""
    SetBit(TGeoMaterial::kMatSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get some default color related to this material.
+
 Int_t TGeoMaterial::GetDefaultColor() const
 {
-// Get some default color related to this material.
    Int_t id = 1+ gGeoManager->GetListOfMaterials()->IndexOf(this);
    return (2+id%6);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a pointer to the element this material is made of.
+
 TGeoElement *TGeoMaterial::GetElement(Int_t) const
 {
-// Get a pointer to the element this material is made of.
    if (fElement) return fElement;
    TGeoElementTable *table = gGeoManager->GetElementTable();
    return table->GetElement(Int_t(fZ));
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Single interface to get element properties.
+
 void TGeoMaterial::GetElementProp(Double_t &a, Double_t &z, Double_t &w, Int_t)
 {
-// Single interface to get element properties.
    a = fA;
    z = fZ;
    w = 1.;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreive material index in the list of materials
+
 Int_t TGeoMaterial::GetIndex()
 {
-// Retreive material index in the list of materials
    if (fIndex>=0) return fIndex;
    TList *matlist = gGeoManager->GetListOfMaterials();
    fIndex = matlist->IndexOf(this);
    return fIndex;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the material representing the decay product of this material at a
+/// given time. The precision represent the minimum cumulative branching ratio for
+/// which decay products are still taken into account.
+
 TGeoMaterial *TGeoMaterial::DecayMaterial(Double_t time, Double_t precision)
 {
-// Create the material representing the decay product of this material at a
-// given time. The precision represent the minimum cumulative branching ratio for
-// which decay products are still taken into account.
    TObjArray *pop = new TObjArray();
    if (!fElement || !fElement->IsRadioNuclide()) return this;
    FillMaterialEvolution(pop, precision);
@@ -497,24 +519,25 @@ TGeoMaterial *TGeoMaterial::DecayMaterial(Double_t time, Double_t precision)
    return mix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a user array with all the elements deriving from the possible
+/// decay of the top element composing the mixture. Each element contained
+/// by <population> may be a radionuclide having a Bateman solution attached.
+/// The precision represent the minimum cumulative branching ratio for
+/// which decay products are still taken into account.
+/// To visualize the time evolution of each decay product one can use:
+///    TGeoElement *elem = population->At(index);
+///    TGeoElementRN *elemrn = 0;
+///    if (elem->IsRadioNuclide()) elemrn = (TGeoElementRN*)elem;
+/// One can get Ni/N1(t=0) at any moment of time. Ni is the number of atoms
+/// of one of the decay products, N1(0) is the number of atoms of the top
+/// element at t=0.
+///    Double_t fraction_weight = elemrn->Ratio()->Concentration(time);
+/// One can also display the time evolution of the fractional weigth:
+///    elemrn->Ratio()->Draw(option);
+
 void TGeoMaterial::FillMaterialEvolution(TObjArray *population, Double_t precision)
 {
-// Fills a user array with all the elements deriving from the possible
-// decay of the top element composing the mixture. Each element contained
-// by <population> may be a radionuclide having a Bateman solution attached.
-// The precision represent the minimum cumulative branching ratio for
-// which decay products are still taken into account.
-// To visualize the time evolution of each decay product one can use:
-//    TGeoElement *elem = population->At(index);
-//    TGeoElementRN *elemrn = 0;
-//    if (elem->IsRadioNuclide()) elemrn = (TGeoElementRN*)elem;
-// One can get Ni/N1(t=0) at any moment of time. Ni is the number of atoms
-// of one of the decay products, N1(0) is the number of atoms of the top
-// element at t=0.
-//    Double_t fraction_weight = elemrn->Ratio()->Concentration(time);
-// One can also display the time evolution of the fractional weigth:
-//    elemrn->Ratio()->Draw(option);
    if (population->GetEntriesFast()) {
       Error("FillMaterialEvolution", "Provide an empty array !");
       return;
@@ -544,10 +567,11 @@ void TGeoMaterial::FillMaterialEvolution(TObjArray *population, Double_t precisi
  *************************************************************************/
 ClassImp(TGeoMixture)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoMixture::TGeoMixture()
 {
-// Default constructor
    fNelements = 0;
    fZmixture  = 0;
    fAmixture  = 0;
@@ -556,11 +580,12 @@ TGeoMixture::TGeoMixture()
    fElements  = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoMixture::TGeoMixture(const char *name, Int_t /*nel*/, Double_t rho)
             :TGeoMaterial(name)
 {
-// constructor
    fZmixture   = 0;
    fAmixture   = 0;
    fWeights    = 0;
@@ -571,7 +596,9 @@ TGeoMixture::TGeoMixture(const char *name, Int_t /*nel*/, Double_t rho)
    if (fDensity < 0) fDensity = 0.001;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeoMixture::TGeoMixture(const TGeoMixture& gm) :
   TGeoMaterial(gm),
   fNelements(gm.fNelements),
@@ -581,13 +608,13 @@ TGeoMixture::TGeoMixture(const TGeoMixture& gm) :
   fNatoms(gm.fNatoms),
   fElements(gm.fElements)
 {
-   //copy constructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoMixture& TGeoMixture::operator=(const TGeoMixture& gm)
 {
-   //assignment operator
    if(this!=&gm) {
       TGeoMaterial::operator=(gm);
       fNelements=gm.fNelements;
@@ -600,10 +627,11 @@ TGeoMixture& TGeoMixture::operator=(const TGeoMixture& gm)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoMixture::~TGeoMixture()
 {
-// Destructor
    if (fZmixture) delete[] fZmixture;
    if (fAmixture) delete[] fAmixture;
    if (fWeights)  delete[] fWeights;
@@ -611,10 +639,11 @@ TGeoMixture::~TGeoMixture()
    if (fElements) delete fElements;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute effective A/Z and radiation length
+
 void TGeoMixture::AverageProperties()
 {
-// Compute effective A/Z and radiation length
    const Double_t alr2av = 1.39621E-03 , al183 =5.20948;
    const Double_t cm = 1.;
    const Double_t g = 6.2415e21; // [gram = 1E-3*joule*s*s/(m*m)]
@@ -644,11 +673,12 @@ void TGeoMixture::AverageProperties()
    fIntLen = (nilinv<=0) ? TGeoShape::Big() : (1./nilinv);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add an element to the mixture using fraction by weight
+/// Check if the element is already defined
+
 void TGeoMixture::AddElement(Double_t a, Double_t z, Double_t weight)
 {
-// add an element to the mixture using fraction by weight
-   // Check if the element is already defined
    TGeoElementTable *table = gGeoManager->GetElementTable();
    if (z<1 || z>table->GetNelements()-1)
       Fatal("AddElement", "Cannot add element having Z=%d to mixture %s", (Int_t)z, GetName());
@@ -696,10 +726,11 @@ void TGeoMixture::AddElement(Double_t a, Double_t z, Double_t weight)
    AverageProperties();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define one component of the mixture as an existing material/mixture.
+
 void TGeoMixture::AddElement(TGeoMaterial *mat, Double_t weight)
 {
-// Define one component of the mixture as an existing material/mixture.
    TGeoElement *elnew, *elem;
    Double_t a,z;
    if (!mat->IsMixture()) {
@@ -742,10 +773,11 @@ void TGeoMixture::AddElement(TGeoMaterial *mat, Double_t weight)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add an element to the mixture using fraction by weight
+
 void TGeoMixture::AddElement(TGeoElement *elem, Double_t weight)
 {
-// add an element to the mixture using fraction by weight
    TGeoElement *elemold;
    TGeoElementTable *table = gGeoManager->GetElementTable();
    if (!fElements) fElements = new TObjArray(128);
@@ -760,10 +792,11 @@ void TGeoMixture::AddElement(TGeoElement *elem, Double_t weight)
    AddElement(elem->A(), elem->Z(), weight);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a mixture element by number of atoms in the chemical formula.
+
 void TGeoMixture::AddElement(TGeoElement *elem, Int_t natoms)
 {
-// Add a mixture element by number of atoms in the chemical formula.
    Int_t i,j;
    Double_t amol;
    TGeoElement *elemold;
@@ -832,10 +865,11 @@ void TGeoMixture::AddElement(TGeoElement *elem, Int_t natoms)
    AverageProperties();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define the mixture element at index iel by number of atoms in the chemical formula.
+
 void TGeoMixture::DefineElement(Int_t /*iel*/, Int_t z, Int_t natoms)
 {
-// Define the mixture element at index iel by number of atoms in the chemical formula.
    TGeoElementTable *table = gGeoManager->GetElementTable();
    TGeoElement *elem = table->GetElement(z);
    if (!elem) {
@@ -845,10 +879,11 @@ void TGeoMixture::DefineElement(Int_t /*iel*/, Int_t z, Int_t natoms)
    AddElement(elem, natoms);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retreive the pointer to the element corresponding to component I.
+
 TGeoElement *TGeoMixture::GetElement(Int_t i) const
 {
-// Retreive the pointer to the element corresponding to component I.
    if (i<0 || i>=fNelements) {
       Error("GetElement", "Mixture %s has only %d elements", GetName(), fNelements);
       return 0;
@@ -860,11 +895,12 @@ TGeoElement *TGeoMixture::GetElement(Int_t i) const
    return table->GetElement(Int_t(fZmixture[i]));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get specific activity (in Bq/gram) for the whole mixture (no argument) or
+/// for a given component.
+
 Double_t TGeoMixture::GetSpecificActivity(Int_t i) const
 {
-// Get specific activity (in Bq/gram) for the whole mixture (no argument) or
-// for a given component.
    if (i>=0 && i<fNelements) return fWeights[i]*GetElement(i)->GetSpecificActivity();
    Double_t sa = 0;
    for (Int_t iel=0; iel<fNelements; iel++) {
@@ -873,10 +909,11 @@ Double_t TGeoMixture::GetSpecificActivity(Int_t i) const
    return sa;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the other material has the same physical properties
+
 Bool_t TGeoMixture::IsEq(const TGeoMaterial *other) const
 {
-// Return true if the other material has the same physical properties
    if (other->IsEqual(this)) return kTRUE;
    if (!other->IsMixture()) return kFALSE;
    TGeoMixture *mix = (TGeoMixture*)other;
@@ -896,10 +933,11 @@ Bool_t TGeoMixture::IsEq(const TGeoMaterial *other) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print characteristics of this material
+
 void TGeoMixture::Print(const Option_t * /*option*/) const
 {
-// print characteristics of this material
    printf("Mixture %s %s   Aeff=%g Zeff=%g rho=%g radlen=%g intlen=%g index=%i\n", GetName(), GetTitle(),
           fA,fZ,fDensity, fRadLen, fIntLen, fIndex);
    for (Int_t i=0; i<fNelements; i++) {
@@ -910,10 +948,11 @@ void TGeoMixture::Print(const Option_t * /*option*/) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoMixture::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(TGeoMaterial::kMatSavePrimitive)) return;
    char *name = GetPointerName();
    out << "// Mixture: " << GetName() << std::endl;
@@ -929,12 +968,13 @@ void TGeoMixture::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*
    SetBit(TGeoMaterial::kMatSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the mixture representing the decay product of this material at a
+/// given time. The precision represent the minimum cumulative branching ratio for
+/// which decay products are still taken into account.
+
 TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
 {
-// Create the mixture representing the decay product of this material at a
-// given time. The precision represent the minimum cumulative branching ratio for
-// which decay products are still taken into account.
    TObjArray *pop = new TObjArray();
    FillMaterialEvolution(pop, precision);
    Int_t ncomp = pop->GetEntriesFast();
@@ -983,24 +1023,25 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
    return mix;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a user array with all the elements deriving from the possible
+/// decay of the top elements composing the mixture. Each element contained
+/// by <population> may be a radionuclide having a Bateman solution attached.
+/// The precision represent the minimum cumulative branching ratio for
+/// which decay products are still taken into account.
+/// To visualize the time evolution of each decay product one can use:
+///    TGeoElement *elem = population->At(index);
+///    TGeoElementRN *elemrn = 0;
+///    if (elem->IsRadioNuclide()) elemrn = (TGeoElementRN*)elem;
+/// One can get Ni/N1(t=0) at any moment of time. Ni is the number of atoms
+/// of one of the decay products, N1(0) is the number of atoms of the first top
+/// element at t=0.
+///    Double_t fraction_weight = elemrn->Ratio()->Concentration(time);
+/// One can also display the time evolution of the fractional weigth:
+///    elemrn->Ratio()->Draw(option);
+
 void TGeoMixture::FillMaterialEvolution(TObjArray *population, Double_t precision)
 {
-// Fills a user array with all the elements deriving from the possible
-// decay of the top elements composing the mixture. Each element contained
-// by <population> may be a radionuclide having a Bateman solution attached.
-// The precision represent the minimum cumulative branching ratio for
-// which decay products are still taken into account.
-// To visualize the time evolution of each decay product one can use:
-//    TGeoElement *elem = population->At(index);
-//    TGeoElementRN *elemrn = 0;
-//    if (elem->IsRadioNuclide()) elemrn = (TGeoElementRN*)elem;
-// One can get Ni/N1(t=0) at any moment of time. Ni is the number of atoms
-// of one of the decay products, N1(0) is the number of atoms of the first top
-// element at t=0.
-//    Double_t fraction_weight = elemrn->Ratio()->Concentration(time);
-// One can also display the time evolution of the fractional weigth:
-//    elemrn->Ratio()->Draw(option);
    if (population->GetEntriesFast()) {
       Error("FillMaterialEvolution", "Provide an empty array !");
       return;
@@ -1023,14 +1064,14 @@ void TGeoMixture::FillMaterialEvolution(TObjArray *population, Double_t precisio
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static function
+///  Compute screening factor for pair production and Bremstrahlung
+///  REFERENCE : EGS MANUAL SLAC 210 - UC32 - JUNE 78
+///                        FORMULA 2.7.22
+
 Double_t TGeoMaterial::ScreenFactor(Double_t z)
 {
-   // static function
-   //  Compute screening factor for pair production and Bremstrahlung
-   //  REFERENCE : EGS MANUAL SLAC 210 - UC32 - JUNE 78
-   //                        FORMULA 2.7.22
-
    const Double_t al183= 5.20948 , al1440 = 7.27239;
    Double_t alz  = TMath::Log(z)/3.;
    Double_t factor = (al1440 - 2*alz) / (al183 - alz - TGeoMaterial::Coulomb(z));

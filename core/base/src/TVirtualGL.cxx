@@ -36,16 +36,17 @@ AddPseudoGlobals() {
 } gAddPseudoGlobals;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLManager::TGLManager() : TNamed("gGLManager", "")
 {
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the global GL Manager.
+
 TGLManager *&TGLManager::Instance()
 {
-   // Return the global GL Manager.
-
    static TGLManager *instance = 0;
 
    if(gPtr2GLManager) {

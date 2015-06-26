@@ -25,12 +25,12 @@
 #include "TMathBase.h"
 #include <math.h>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return next prime number after x, unless x is a prime in which case
+/// x is returned.
+
 Long_t TMath::NextPrime(Long_t x)
 {
-   // Return next prime number after x, unless x is a prime in which case
-   // x is returned.
-
    if (x <= 2)
       return 2;
    if (x == 3)

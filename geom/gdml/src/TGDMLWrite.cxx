@@ -151,7 +151,9 @@ ClassImp(TGDMLWrite)
 
 TGDMLWrite *TGDMLWrite::fgGDMLWrite = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGDMLWrite::TGDMLWrite()
    : TObject(),
      fIsotopeList(0),
@@ -173,15 +175,15 @@ TGDMLWrite::TGDMLWrite()
      fActNameErr(0),
      fSolCnt(0)
 {
-// Default constructor.
    if (fgGDMLWrite) delete fgGDMLWrite;
    fgGDMLWrite = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGDMLWrite::~TGDMLWrite()
 {
-// Destructor.
    delete fIsotopeList;
    delete fElementList;
    delete fAccPatt;
@@ -191,20 +193,21 @@ TGDMLWrite::~TGDMLWrite()
    fgGDMLWrite = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set convetion of naming solids and volumes
+
 void TGDMLWrite::SetNamingSpeed(ENamingType naming)
 {
-// Set convetion of naming solids and volumes
    fgNamingSpeed = naming;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wrapper of all exporting methods
+/// Creates blank GDML file and fills it with gGeoManager structure converted
+/// to GDML structure of xml nodes
+
 void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, TString option)
 {
-// Wrapper of all exporting methods
-// Creates blank GDML file and fills it with gGeoManager structure converted
-// to GDML structure of xml nodes
-
    //option processing
    option.ToLower();
    if (option.Contains("g")) {
@@ -322,11 +325,11 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, T
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method exporting materials
+
 XMLNodePointer_t TGDMLWrite::ExtractMaterials(TList* materialsLst)
 {
-// Method exporting materials
-
    Info("ExtractMaterials", "Extracting materials");
    //crate main <materials> node
    XMLNodePointer_t materialsN = fGdmlE->NewChild(0, 0, "materials", 0);
@@ -354,10 +357,11 @@ XMLNodePointer_t TGDMLWrite::ExtractMaterials(TList* materialsLst)
    return materialsN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method creating solid to xml file and returning its name
+
 TString TGDMLWrite::ExtractSolid(TGeoShape* volShape)
 {
-// Method creating solid to xml file and returning its name
    XMLNodePointer_t solidN;
    TString solname = "";
    solidN = ChooseObject(volShape);  //volume->GetShape()
@@ -371,10 +375,11 @@ TString TGDMLWrite::ExtractSolid(TGeoShape* volShape)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method extracting geometry structure recursively
+
 void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
 {
-// Method extracting geometry structure recursively
    XMLNodePointer_t volumeN, childN;
    TString volname, matname, solname, pattClsName, nodeVolNameBak;
    TGeoPatternFinder *pattFinder = 0;
@@ -530,44 +535,44 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "atom" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateAtomN(Double_t atom, const char * unit)
 {
-// Creates "atom" node for GDML
-
    XMLNodePointer_t atomN = fGdmlE->NewChild(0, 0, "atom", 0);
    fGdmlE->NewAttr(atomN, 0, "unit", unit);
    fGdmlE->NewAttr(atomN, 0, "value", TString::Format("%.12g", atom));
    return atomN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "D" density node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateDN(Double_t density, const char * unit)
 {
-// Creates "D" density node for GDML
-
    XMLNodePointer_t densN = fGdmlE->NewChild(0, 0, "D", 0);
    fGdmlE->NewAttr(densN, 0, "unit", unit);
    fGdmlE->NewAttr(densN, 0, "value", TString::Format("%.12g", density));
    return densN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "fraction" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateFractionN(Double_t percentage, const char * refName)
 {
-// Creates "fraction" node for GDML
-
    XMLNodePointer_t fractN = fGdmlE->NewChild(0, 0, "fraction", 0);
    fGdmlE->NewAttr(fractN, 0, "n", TString::Format("%.12g", percentage));
    fGdmlE->NewAttr(fractN, 0, "ref", refName);
    return fractN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "isotope" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateIsotopN(TGeoIsotope * isotope, const char * name)
 {
-// Creates "isotope" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "isotope", 0);
    fGdmlE->NewAttr(mainN, 0, "name", name);
    fGdmlE->NewAttr(mainN, 0, "N", TString::Format("%i", isotope->GetN()));
@@ -576,11 +581,12 @@ XMLNodePointer_t TGDMLWrite::CreateIsotopN(TGeoIsotope * isotope, const char * n
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "element" node for GDML
+///element node and attribute
+
 XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointer_t materials, const char * name)
 {
-// Creates "element" node for GDML
-   //element node and attribute
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "element", 0);
    fGdmlE->NewAttr(mainN, 0, "name", name);
    //local associative arrays for saving isotopes and their weight
@@ -639,11 +645,11 @@ XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointe
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "material" node for GDML with references to other sub elements
+
 XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointer_t materials, TString mname)
 {
-// Creates "material" node for GDML with references to other sub elements
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "material", 0);
    fGdmlE->NewAttr(mainN, 0, "name", mname);
    fGdmlE->AddChild(mainN, CreateDN(mixture->GetDensity()));
@@ -692,11 +698,11 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "material" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateMaterialN(TGeoMaterial * material, TString mname)
 {
-// Creates "material" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "material", 0);
    fGdmlE->NewAttr(mainN, 0, "name", mname);
    Double_t valZ = material->GetZ();
@@ -722,11 +728,11 @@ XMLNodePointer_t TGDMLWrite::CreateMaterialN(TGeoMaterial * material, TString mn
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "box" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateBoxN(TGeoBBox * geoShape)
 {
-// Creates "box" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "box", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -743,11 +749,11 @@ XMLNodePointer_t TGDMLWrite::CreateBoxN(TGeoBBox * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "paraboloid" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateParaboloidN(TGeoParaboloid * geoShape)
 {
-// Creates "paraboloid" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "paraboloid", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -763,11 +769,11 @@ XMLNodePointer_t TGDMLWrite::CreateParaboloidN(TGeoParaboloid * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "sphere" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateSphereN(TGeoSphere * geoShape)
 {
-// Creates "sphere" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "sphere", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -787,11 +793,11 @@ XMLNodePointer_t TGDMLWrite::CreateSphereN(TGeoSphere * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "arb8" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateArb8N(TGeoArb8 * geoShape)
 {
-// Creates "arb8" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "arb8", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -821,11 +827,11 @@ XMLNodePointer_t TGDMLWrite::CreateArb8N(TGeoArb8 * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "cone" node for GDML from TGeoConeSeg object
+
 XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoConeSeg * geoShape)
 {
-// Creates "cone" node for GDML from TGeoConeSeg object
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "cone", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -846,11 +852,11 @@ XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoConeSeg * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "cone" node for GDML from TGeoCone object
+
 XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoCone * geoShape)
 {
-// Creates "cone" node for GDML from TGeoCone object
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "cone", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -871,11 +877,11 @@ XMLNodePointer_t TGDMLWrite::CreateConeN(TGeoCone * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "para" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateParaN(TGeoPara * geoShape)
 {
-// Creates "para" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "para", 0);
    fGdmlE->NewAttr(mainN, 0, "name", GenName(geoShape->GetName(), TString::Format("%p", geoShape)));
 
@@ -891,11 +897,11 @@ XMLNodePointer_t TGDMLWrite::CreateParaN(TGeoPara * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "trap" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateTrapN(TGeoTrap * geoShape)
 {
-// Creates "trap" node for GDML
-
    XMLNodePointer_t mainN;
 
    //if one base equals 0 create Arb8 instead of trap
@@ -936,11 +942,11 @@ XMLNodePointer_t TGDMLWrite::CreateTrapN(TGeoTrap * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "twistedtrap" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateTwistedTrapN(TGeoGtra * geoShape)
 {
-// Creates "twistedtrap" node for GDML
-
    XMLNodePointer_t mainN;
 
    //if one base equals 0 create Arb8 instead of twisted trap
@@ -995,11 +1001,11 @@ XMLNodePointer_t TGDMLWrite::CreateTwistedTrapN(TGeoGtra * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "trd" node for GDML from object TGeoTrd1
+
 XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd1 * geoShape)
 {
-// Creates "trd" node for GDML from object TGeoTrd1
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "trd", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -1017,11 +1023,11 @@ XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd1 * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "trd" node for GDML from object TGeoTrd2
+
 XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd2 * geoShape)
 {
-// Creates "trd" node for GDML from object TGeoTrd2
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "trd", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -1039,11 +1045,11 @@ XMLNodePointer_t TGDMLWrite::CreateTrdN(TGeoTrd2 * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "tube" node for GDML  from  object TGeoTubeSeg
+
 XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTubeSeg * geoShape)
 {
-// Creates "tube" node for GDML  from  object TGeoTubeSeg
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "tube", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -1063,11 +1069,11 @@ XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTubeSeg * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "cutTube" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateCutTubeN(TGeoCtub * geoShape)
 {
-// Creates "cutTube" node for GDML
-
    XMLNodePointer_t mainN;
 
    mainN = fGdmlE->NewChild(0, 0, "cutTube", 0);
@@ -1107,11 +1113,11 @@ XMLNodePointer_t TGDMLWrite::CreateCutTubeN(TGeoCtub * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "tube" node for GDML from  object TGeoTube
+
 XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTube * geoShape)
 {
-// Creates "tube" node for GDML from  object TGeoTube
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "tube", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -1131,11 +1137,11 @@ XMLNodePointer_t TGDMLWrite::CreateTubeN(TGeoTube * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "zplane" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateZplaneN(Double_t z, Double_t rmin, Double_t rmax)
 {
-// Creates "zplane" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "zplane", 0);
 
    fGdmlE->NewAttr(mainN, 0, "z", TString::Format("%.12g", z));
@@ -1145,11 +1151,11 @@ XMLNodePointer_t TGDMLWrite::CreateZplaneN(Double_t z, Double_t rmin, Double_t r
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "polycone" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreatePolyconeN(TGeoPcon * geoShape)
 {
-// Creates "polycone" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "polycone", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -1197,11 +1203,11 @@ XMLNodePointer_t TGDMLWrite::CreatePolyconeN(TGeoPcon * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "torus" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateTorusN(TGeoTorus * geoShape)
 {
-// Creates "torus" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "torus", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -1221,11 +1227,11 @@ XMLNodePointer_t TGDMLWrite::CreateTorusN(TGeoTorus * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "polyhedra" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreatePolyhedraN(TGeoPgon * geoShape)
 {
-// Creates "polyhedra" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "polyhedra", 0);
    fGdmlE->NewAttr(mainN, 0, "name", GenName(geoShape->GetName(), TString::Format("%p", geoShape)));
 
@@ -1242,11 +1248,11 @@ XMLNodePointer_t TGDMLWrite::CreatePolyhedraN(TGeoPgon * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "eltube" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateEltubeN(TGeoEltu * geoShape)
 {
-// Creates "eltube" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "eltube", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -1265,11 +1271,11 @@ XMLNodePointer_t TGDMLWrite::CreateEltubeN(TGeoEltu * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "hype" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateHypeN(TGeoHype * geoShape)
 {
-// Creates "hype" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "hype", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -1290,11 +1296,11 @@ XMLNodePointer_t TGDMLWrite::CreateHypeN(TGeoHype * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "xtru" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateXtrusionN(TGeoXtru * geoShape)
 {
-// Creates "xtru" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "xtru", 0);
    TString lname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    fGdmlE->NewAttr(mainN, 0, "name", lname);
@@ -1329,14 +1335,14 @@ XMLNodePointer_t TGDMLWrite::CreateXtrusionN(TGeoXtru * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "ellipsoid" node for GDML
+/// this is a special case, because ellipsoid is not defined in ROOT
+/// so when intersection of scaled sphere and TGeoBBox is found,
+/// it is considered as an ellipsoid
+
 XMLNodePointer_t TGDMLWrite::CreateEllipsoidN(TGeoCompositeShape * geoShape, TString elName)
 {
-// Creates "ellipsoid" node for GDML
-// this is a special case, because ellipsoid is not defined in ROOT
-// so when intersection of scaled sphere and TGeoBBox is found,
-// it is considered as an ellipsoid
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "ellipsoid", 0);
    TGeoScaledShape *leftS = (TGeoScaledShape *)geoShape->GetBoolNode()->GetLeftShape(); //ScaledShape
    TGeoBBox *rightS = (TGeoBBox *)geoShape->GetBoolNode()->GetRightShape(); //BBox
@@ -1368,13 +1374,13 @@ XMLNodePointer_t TGDMLWrite::CreateEllipsoidN(TGeoCompositeShape * geoShape, TSt
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "elcone" (elliptical cone) node for GDML
+/// this is a special case, because elliptical cone is not defined in ROOT
+/// so when scaled cone is found, it is considered as a elliptical cone
+
 XMLNodePointer_t TGDMLWrite::CreateElConeN(TGeoScaledShape * geoShape)
 {
-// Creates "elcone" (elliptical cone) node for GDML
-// this is a special case, because elliptical cone is not defined in ROOT
-// so when scaled cone is found, it is considered as a elliptical cone
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "elcone", 0);
    fGdmlE->NewAttr(mainN, 0, "name", GenName(geoShape->GetName(), TString::Format("%p", geoShape)));
    Double_t zcut = ((TGeoCone *) geoShape->GetShape())->GetDz();
@@ -1395,10 +1401,11 @@ XMLNodePointer_t TGDMLWrite::CreateElConeN(TGeoScaledShape * geoShape)
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates common part of union intersection and subtraction nodes
+
 XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
 {
-// Creates common part of union intersection and subtraction nodes
    XMLNodePointer_t mainN, ndR, ndL, childN;
    TString nodeName = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
    TString lboolType;
@@ -1521,11 +1528,11 @@ XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "position" kind of node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreatePositionN(const char * name, Xyz position, const char * type, const char * unit)
 {
-// Creates "position" kind of node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, type, 0);
    fGdmlE->NewAttr(mainN, 0, "name", name);
    fGdmlE->NewAttr(mainN, 0, "x", TString::Format("%.12g", position.x));
@@ -1535,11 +1542,11 @@ XMLNodePointer_t TGDMLWrite::CreatePositionN(const char * name, Xyz position, co
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "rotation" kind of node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateRotationN(const char * name, Xyz rotation, const char * type, const char * unit)
 {
-// Creates "rotation" kind of node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, type, 0);
    fGdmlE->NewAttr(mainN, 0, "name", name);
    fGdmlE->NewAttr(mainN, 0, "x", TString::Format("%.12g", rotation.x));
@@ -1549,11 +1556,11 @@ XMLNodePointer_t TGDMLWrite::CreateRotationN(const char * name, Xyz rotation, co
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "setup" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateSetupN(const char * topVolName, const char * name, const char * version)
 {
-// Creates "setup" node for GDML
-
    XMLNodePointer_t setupN = fGdmlE->NewChild(0, 0, "setup", 0);
    fGdmlE->NewAttr(setupN, 0, "name", name);
    fGdmlE->NewAttr(setupN, 0, "version", version);
@@ -1562,11 +1569,11 @@ XMLNodePointer_t TGDMLWrite::CreateSetupN(const char * topVolName, const char * 
    return setupN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "volume" node for GDML
+
 XMLNodePointer_t TGDMLWrite::StartVolumeN(const char * name, const char * solid, const char * material)
 {
-// Creates "volume" node for GDML
-
    XMLNodePointer_t childN;
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "volume", 0);
    fGdmlE->NewAttr(mainN, 0, "name", name);
@@ -1582,21 +1589,22 @@ XMLNodePointer_t TGDMLWrite::StartVolumeN(const char * name, const char * solid,
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "assembly" node for GDML
+
 XMLNodePointer_t TGDMLWrite::StartAssemblyN(const char * name)
 {
-// Creates "assembly" node for GDML
-
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "assembly", 0);
    fGdmlE->NewAttr(mainN, 0, "name", name);
 
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "physvol" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreatePhysVolN(const char * volref, const char * posref, const char * rotref, XMLNodePointer_t scaleN)
 {
-// Creates "physvol" node for GDML
    fPhysVolCnt++;
    XMLNodePointer_t childN;
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "physvol", 0);
@@ -1622,11 +1630,11 @@ XMLNodePointer_t TGDMLWrite::CreatePhysVolN(const char * volref, const char * po
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "divisionvol" node for GDML
+
 XMLNodePointer_t TGDMLWrite::CreateDivisionN(Double_t offset, Double_t width, Int_t number, const char * axis, const char * unit, const char * volref)
 {
-// Creates "divisionvol" node for GDML
-
    XMLNodePointer_t childN = 0;
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "divisionvol", 0);
    fGdmlE->NewAttr(mainN, 0, "axis", axis);
@@ -1656,10 +1664,11 @@ XMLNodePointer_t TGDMLWrite::CreateDivisionN(Double_t offset, Double_t width, In
    return mainN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Chooses the object and method that should be used for processing object
+
 XMLNodePointer_t TGDMLWrite::ChooseObject(TGeoShape *geoShape)
 {
-// Chooses the object and method that should be used for processing object
    const char * clsname = geoShape->ClassName();
    XMLNodePointer_t solidN;
 
@@ -1747,10 +1756,11 @@ XMLNodePointer_t TGDMLWrite::ChooseObject(TGeoShape *geoShape)
    return solidN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieves X Y Z angles from rotation matrix
+
 TGDMLWrite::Xyz TGDMLWrite::GetXYZangles(const Double_t * rotationMatrix)
 {
-// Retrieves X Y Z angles from rotation matrix
    TGDMLWrite::Xyz lxyz;
    Double_t a, b, c;
    Double_t rad = 180.0 / TMath::ACos(-1.0);
@@ -1771,11 +1781,12 @@ TGDMLWrite::Xyz TGDMLWrite::GetXYZangles(const Double_t * rotationMatrix)
    return lxyz;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method creating cutTube as an intersection of tube and two boxes
+/// - not used anymore because cutube is supported in Geant4 9.5
+
 TGeoCompositeShape* TGDMLWrite::CreateFakeCtub(TGeoCtub* geoShape)
 {
-// Method creating cutTube as an intersection of tube and two boxes
-// - not used anymore because cutube is supported in Geant4 9.5
    Double_t rmin = geoShape->GetRmin();
    Double_t rmax = geoShape->GetRmax();
    Double_t z = geoShape->GetDz();
@@ -1849,21 +1860,21 @@ TGeoCompositeShape* TGDMLWrite::CreateFakeCtub(TGeoCtub* geoShape)
    return cs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks whether name2check is in (NameList) list
+
 Bool_t TGDMLWrite::IsInList(NameList list, TString name2check)
 {
-// Checks whether name2check is in (NameList) list
-
    Bool_t isIN = list[name2check];
    return isIN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///NCNAME basic restrictions
+///Replace "$" character with empty character etc.
+
 TString TGDMLWrite::GenName(TString oldname)
 {
-//NCNAME basic restrictions
-//Replace "$" character with empty character etc.
-
    TString newname = oldname.ReplaceAll("$", "");
    newname = newname.ReplaceAll(" ", "_");
    // :, @, $, %, &, /, +, ,, ;, whitespace characters or different parenthesis
@@ -1889,10 +1900,11 @@ TString TGDMLWrite::GenName(TString oldname)
    return newname;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Important function which is responsible for naming volumes, solids and materials
+
 TString TGDMLWrite::GenName(TString oldname, TString objPointer)
 {
-// Important function which is responsible for naming volumes, solids and materials
    TString newname = GenName(oldname);
    if (newname != oldname) {
       if (fgkMaxNameErr > fActNameErr) {
@@ -1932,20 +1944,22 @@ TString TGDMLWrite::GenName(TString oldname, TString objPointer)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method which tests whether solids can be processed
+
 Bool_t TGDMLWrite::CanProcess(TObject *pointer)
 {
-// Method which tests whether solids can be processed
    Bool_t isProcessed = kFALSE;
    isProcessed = pointer->TestBit(fgkProcBit);
    pointer->SetBit(fgkProcBit, kTRUE);
    return !(isProcessed);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method that retrieves axis and unit along which object is divided
+
 TString TGDMLWrite::GetPattAxis(Int_t divAxis, const char * pattName, TString& unit)
 {
-// Method that retrieves axis and unit along which object is divided
    TString resaxis;
    unit = "cm";
    switch (divAxis) {
@@ -1976,10 +1990,11 @@ TString TGDMLWrite::GetPattAxis(Int_t divAxis, const char * pattName, TString& u
    return "kUndefined";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check for null parameter to skip the NULL objects
+
 Bool_t TGDMLWrite::IsNullParam(Double_t parValue, TString parName, TString objName)
 {
-// Check for null parameter to skip the NULL objects
    if (parValue == 0.) {
       Info("IsNullParam", "ERROR! %s is NULL due to %s = %.12g, Volume based on this shape will be skipped",
            objName.Data(),
@@ -1990,11 +2005,12 @@ Bool_t TGDMLWrite::IsNullParam(Double_t parValue, TString parName, TString objNa
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unsetting bits that were changed in gGeoManager during export so that export
+/// can be run more times with the same instance of gGeoManager.
+
 void TGDMLWrite::UnsetTemporaryBits(TGeoManager * geoMng)
 {
-// Unsetting bits that were changed in gGeoManager during export so that export
-// can be run more times with the same instance of gGeoManager.
    TIter next(geoMng->GetListOfVolumes());
    TGeoVolume *vol;
    while ((vol = (TGeoVolume *)next())) {

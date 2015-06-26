@@ -24,22 +24,22 @@
 
 ClassImp(TAlienMasterJobStatus)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TAlienMasterJobStatus::~TAlienMasterJobStatus()
 {
-   // Cleanup.
-
    fJobs.DeleteAll();
 
    if (fMasterJob)
       delete fMasterJob;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browser interface.
+
 void TAlienMasterJobStatus::Browse(TBrowser* b)
 {
-   // Browser interface.
-
    if (b) {
      //      TString status("");
      //      status += GetStatus();
@@ -62,24 +62,24 @@ void TAlienMasterJobStatus::Browse(TBrowser* b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the status of the master job reduced to the subset defined
+/// in TGridJobStatus.
+
 TGridJobStatus::EGridJobStatus TAlienMasterJobStatus::GetStatus() const
 {
-   // Returns the status of the master job reduced to the subset defined
-   // in TGridJobStatus.
-
    if (!fMasterJob)
       return kUNKNOWN;
 
    return fMasterJob->GetStatus();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the percentage of finished subjobs, only DONE is considered
+/// as finished.
+
 Float_t TAlienMasterJobStatus::PercentFinished()
 {
-   // Returns the percentage of finished subjobs, only DONE is considered
-   // as finished.
-
    if (fJobs.GetSize() == 0)
       return 0;
 
@@ -103,11 +103,11 @@ Float_t TAlienMasterJobStatus::PercentFinished()
    return (Float_t) done / fJobs.GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints information of the master job and the sub job. Only the status is printed.
+
 void TAlienMasterJobStatus::Print(Option_t *) const
 {
-   // Prints information of the master job and the sub job. Only the status is printed.
-
    if (fMasterJob) {
       printf("Printing information for the master job: ");
       fMasterJob->PrintJob(kFALSE);

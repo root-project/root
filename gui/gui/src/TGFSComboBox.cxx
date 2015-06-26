@@ -57,16 +57,16 @@ static struct Lbc_t gLbc[32];
 ClassImp(TGTreeLBEntry)
 ClassImp(TGFSComboBox)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a tree (i.e. entry can be indented) listbox entry.
+/// The strings text and path are adopted by the entry.
+
 TGTreeLBEntry::TGTreeLBEntry(const TGWindow *p, TGString *text,
                              const TGPicture *pic, Int_t id, TGString *path,
                              GContext_t norm, FontStruct_t font, UInt_t options,
                              ULong_t back) :
    TGLBEntry(p, id, options, back)
 {
-   // Create a tree (i.e. entry can be indented) listbox entry.
-   // The strings text and path are adopted by the entry.
-
    if (text && !pic)
       Error("TGTreeLBEntry", "icon not found for entry %s", text->GetString());
 
@@ -89,21 +89,21 @@ TGTreeLBEntry::TGTreeLBEntry(const TGWindow *p, TGString *text,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete tree listbox entry.
+
 TGTreeLBEntry::~TGTreeLBEntry()
 {
-   // Delete tree listbox entry.
-
    delete fText;
    delete fPath;
    delete fSelPic;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make entry active (highlight picture).
+
 void TGTreeLBEntry::Activate(Bool_t a)
 {
-   // Make entry active (highlight picture).
-
    if (fActive == a) return;
    fActive = a;
 
@@ -116,11 +116,11 @@ void TGTreeLBEntry::Activate(Bool_t a)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw the tree listbox entry on pixmap/window.
+
 void TGTreeLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // Redraw the tree listbox entry on pixmap/window.
-
    int ix, iy, lx, ly;
 
    ix = x;
@@ -146,19 +146,19 @@ void TGTreeLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
    fText->Draw(id, fNormGC, lx, ly + max_ascent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw the tree listbox entry.
+
 void TGTreeLBEntry::DoRedraw()
 {
-   // Redraw the tree listbox entry.
-
    DrawCopy(fId, 0, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default size of tree listbox entry.
+
 TGDimension TGTreeLBEntry::GetDefaultSize() const
 {
-   // Return default size of tree listbox entry.
-
    TGDimension isize(fPic->GetWidth(), fPic->GetHeight());
    TGDimension lsize(fTWidth, fTHeight+1);
 
@@ -166,11 +166,11 @@ TGDimension TGTreeLBEntry::GetDefaultSize() const
                       TMath::Max(isize.fHeight, lsize.fHeight) + 2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update text and picture of a listbox entry.
+
 void TGTreeLBEntry::Update(TGLBEntry *e)
 {
-   // Update text and picture of a listbox entry.
-
    TGTreeLBEntry *te = (TGTreeLBEntry *) e;
 
    if (fText) delete fText;
@@ -181,34 +181,34 @@ void TGTreeLBEntry::Update(TGLBEntry *e)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure.
+
 FontStruct_t TGTreeLBEntry::GetDefaultFontStruct()
 {
-   // Return default font structure.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context.
+
 const TGGC &TGTreeLBEntry::GetDefaultGC()
 {
-   // Return default graphics context.
-
    if (!fgDefaultGC)
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
    return *fgDefaultGC;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a file system combobox showing system directories.
+
 TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
                            ULong_t back) :
    TGComboBox(parent, id, options | kOwnBackground, back)
 {
-   // Create a file system combobox showing system directories.
-
    int   i, indent;
    const TGPicture *pic;
    char  *p;
@@ -405,11 +405,11 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update file system combo box.
+
 void TGFSComboBox::Update(const char *path)
 {
-   // Update file system combo box.
-
    char dirname[1024], mpath[1024];
    const char *tailpath = 0;
    int  i, indent_lvl = 0, afterID = -1, sel = -1;
@@ -474,11 +474,11 @@ void TGFSComboBox::Update(const char *path)
    if (sel > 0) Select(sel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a file system combo box as a C++ statement(s) on output stream out.
+
 void TGFSComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a file system combo box as a C++ statement(s) on output stream out.
-
    if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
 
    out << std::endl << "   // file system combo box" << std::endl;

@@ -61,22 +61,22 @@ const Int_t kDimension = 3;
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3-D polymarker default constructor.
+
 TPolyMarker3D::TPolyMarker3D()
 {
-   // 3-D polymarker default constructor.
-
    fN = 0;
    fP = 0;
    fLastPoint = -1;
    fName = "TPolyMarker3D";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3-D polymarker normal constructor with initialization to 0.
+
 TPolyMarker3D::TPolyMarker3D(Int_t n, Marker_t marker, Option_t *option)
 {
-   // 3-D polymarker normal constructor with initialization to 0.
-
    fName = "TPolyMarker3D";
    fOption = option;
    SetMarkerStyle(marker);
@@ -93,12 +93,12 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Marker_t marker, Option_t *option)
    for (Int_t i = 0; i < kDimension*fN; i++)  fP[i] = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3-D polymarker constructor. Polymarker is initialized with p.
+
 TPolyMarker3D::TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker,
                              Option_t *option)
 {
-   // 3-D polymarker constructor. Polymarker is initialized with p.
-
    fName = "TPolyMarker3D";
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
@@ -120,13 +120,13 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker,
       memset(fP,0,kDimension*fN*sizeof(Float_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3-D polymarker constructor. Polymarker is initialized with p
+/// (cast to float).
+
 TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
                              Option_t *option)
 {
-   // 3-D polymarker constructor. Polymarker is initialized with p
-   // (cast to float).
-
    fName = "TPolyMarker3D";
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
@@ -148,10 +148,11 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
       memset(fP,0,kDimension*fN*sizeof(Float_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TPolyMarker3D& TPolyMarker3D::operator=(const TPolyMarker3D& tp3)
 {
-   //assignement operator
    if(this!=&tp3) {
       TObject::operator=(tp3);
       TAttMarker::operator=(tp3);
@@ -165,33 +166,33 @@ TPolyMarker3D& TPolyMarker3D::operator=(const TPolyMarker3D& tp3)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3-D polymarker destructor.
+
 TPolyMarker3D::~TPolyMarker3D()
 {
-   // 3-D polymarker destructor.
-
    fN = 0;
    if (fP) delete [] fP;
    fLastPoint = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 3-D polymarker copy ctor.
+
 TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) :
    TObject(p), TAttMarker(p), TAtt3D(p)
 {
-   // 3-D polymarker copy ctor.
-
    fN = 0;
    fP = 0;
    fLastPoint = -1;
    p.Copy(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy polymarker to polymarker obj.
+
 void TPolyMarker3D::Copy(TObject &obj) const
 {
-   // Copy polymarker to polymarker obj.
-
    TObject::Copy(obj);
    ((TPolyMarker3D&)obj).fN = fN;
    if (fN > 0) {
@@ -206,15 +207,15 @@ void TPolyMarker3D::Copy(TObject &obj) const
    ((TPolyMarker3D&)obj).fName   = fName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a 3-D polymarker.
+/// Compute the closest distance of approach from point px,py to each segment
+/// of the polymarker.
+/// Returns when the distance found is below DistanceMaximum.
+/// The distance is computed in pixels units.
+
 Int_t TPolyMarker3D::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a 3-D polymarker.
-   // Compute the closest distance of approach from point px,py to each segment
-   // of the polymarker.
-   // Returns when the distance found is below DistanceMaximum.
-   // The distance is computed in pixels units.
-
    const Int_t inaxis = 7;
    Int_t dist = 9999;
 
@@ -250,21 +251,21 @@ Int_t TPolyMarker3D::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draws 3-D polymarker with its current attributes.
+
 void TPolyMarker3D::Draw(Option_t *option)
 {
-   // Draws 3-D polymarker with its current attributes.
-
    AppendPad(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this 3-D polymartker with new coordinates. Creates a new
+/// polymarker which will be adopted by the pad in which it is drawn.
+/// Does not change the original polymarker (should be static method).
+
 void TPolyMarker3D::DrawPolyMarker(Int_t n, Float_t *p, Marker_t, Option_t *option)
 {
-   // Draw this 3-D polymartker with new coordinates. Creates a new
-   // polymarker which will be adopted by the pad in which it is drawn.
-   // Does not change the original polymarker (should be static method).
-
    TPolyMarker3D *newpolymarker = new TPolyMarker3D();
    newpolymarker->fN = n;
    newpolymarker->fP = new Float_t [kDimension*fN];
@@ -276,29 +277,29 @@ void TPolyMarker3D::DrawPolyMarker(Int_t n, Float_t *p, Marker_t, Option_t *opti
    newpolymarker->AppendPad(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+
 void TPolyMarker3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-
    if (!gPad) return;
    if (gPad->GetView()) gPad->GetView()->ExecuteRotateView(event, px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List this 3-D polymarker.
+
 void TPolyMarker3D::ls(Option_t *option) const
 {
-   // List this 3-D polymarker.
-
    TROOT::IndentLevel();
    std::cout << "    TPolyMarker3D  N=" << Size() <<" Option="<<option<<std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge polymarkers in the collection in this polymarker
+
 Int_t TPolyMarker3D::Merge(TCollection *li)
 {
-// Merge polymarkers in the collection in this polymarker
-
    if (!li) return 0;
    TIter next(li);
 
@@ -329,11 +330,11 @@ Int_t TPolyMarker3D::Merge(TCollection *li)
    return npoints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a TPolyMarker3D.
+
 void TPolyMarker3D::Paint(Option_t * /*option*/ )
 {
-   // Paint a TPolyMarker3D.
-
    // No need to continue if there is nothing to paint
    if (Size() <= 0) return;
 
@@ -400,11 +401,11 @@ void TPolyMarker3D::Paint(Option_t * /*option*/ )
    viewer3D->AddObject(buffer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint 3-d histogram h with 3-d polymarkers.
+
 void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
 {
-   // Paint 3-d histogram h with 3-d polymarkers.
-
    const Int_t kMaxEntry = 100000;
    Int_t in, bin, binx, biny, binz;
 
@@ -479,11 +480,11 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
    delete pm3d;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print 3-D polymarker with its attributes on stdout.
+
 void TPolyMarker3D::Print(Option_t *option) const
 {
-   // Print 3-D polymarker with its attributes on stdout.
-
    printf("TPolyMarker3D N=%d, Option=%s\n",fN,option);
    TString opt = option;
    opt.ToLower();
@@ -495,11 +496,11 @@ void TPolyMarker3D::Print(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream.
+
 void TPolyMarker3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream.
-
    char quote = '"';
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPolyMarker3D::Class())) {
@@ -518,36 +519,36 @@ void TPolyMarker3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   pmarker3D->Draw();"<<std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change (i.e. set) the name of the TNamed.
+/// WARNING: if the object is a member of a THashTable or THashList container
+/// the container must be Rehash()'ed after SetName(). For example the list
+/// of objects in the current directory is a THashList.
+
 void TPolyMarker3D::SetName(const char *name)
 {
-   // Change (i.e. set) the name of the TNamed.
-   // WARNING: if the object is a member of a THashTable or THashList container
-   // the container must be Rehash()'ed after SetName(). For example the list
-   // of objects in the current directory is a THashList.
-
    fName = name;
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set point following LastPoint to x, y, z.
+/// Returns index of the point (new last point).
+
 Int_t TPolyMarker3D::SetNextPoint(Double_t x, Double_t y, Double_t z)
 {
-   // Set point following LastPoint to x, y, z.
-   // Returns index of the point (new last point).
-
    fLastPoint++;
    SetPoint(fLastPoint, x, y, z);
    return fLastPoint;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set point n to x, y, z.
+/// If n is more then the current TPolyMarker3D size (n > fN) then
+/// the polymarker will be resized to contain at least n points.
+
 void TPolyMarker3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 {
-   // Set point n to x, y, z.
-   // If n is more then the current TPolyMarker3D size (n > fN) then
-   // the polymarker will be resized to contain at least n points.
-
    if (n < 0) return;
    if (!fP || n >= fN) {
       // re-allocate the object
@@ -567,12 +568,12 @@ void TPolyMarker3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
    fLastPoint = TMath::Max(fLastPoint,n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Re-initialize polymarker with n points from p. If p=0 initialize with 0.
+/// if n <= 0 the current array of points is deleted.
+
 void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option)
 {
-   // Re-initialize polymarker with n points from p. If p=0 initialize with 0.
-   // if n <= 0 the current array of points is deleted.
-
    SetMarkerStyle(marker);
    fOption = option;
    if (n <= 0) {
@@ -597,12 +598,12 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t
    fLastPoint = fN-1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Re-initialize polymarker with n points from p. If p=0 initialize with 0.
+/// if n <= 0 the current array of points is deleted.
+
 void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_t *option)
 {
-   // Re-initialize polymarker with n points from p. If p=0 initialize with 0.
-   // if n <= 0 the current array of points is deleted.
-
    SetMarkerStyle(marker);
    fOption = option;
    if (n <= 0) {
@@ -627,11 +628,11 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_
    fLastPoint = fN-1;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a 3-D polymarker object.
+
 void TPolyMarker3D::Streamer(TBuffer &b)
 {
-   // Stream a 3-D polymarker object.
-
    UInt_t R__s, R__c;
    if (b.IsReading()) {
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -659,12 +660,12 @@ void TPolyMarker3D::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the parameters x, y, z with the coordinate of the n-th point
+/// n must be between 0 and Size() - 1.
+
 void TPolyMarker3D::GetPoint(Int_t n, Float_t &x, Float_t &y, Float_t &z) const
 {
-   // Fills the parameters x, y, z with the coordinate of the n-th point
-   // n must be between 0 and Size() - 1.
-
    if (n < 0 || n >= Size()) return;
    if (!fP) return;
    x = fP[kDimension*n  ];
@@ -672,12 +673,12 @@ void TPolyMarker3D::GetPoint(Int_t n, Float_t &x, Float_t &y, Float_t &z) const
    z = fP[kDimension*n+2];
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the parameters x, y, z with the coordinate of the n-th point
+/// n must be between 0 and Size() - 1.
+
 void TPolyMarker3D::GetPoint(Int_t n, Double_t &x, Double_t &y, Double_t &z) const
 {
-   // Fills the parameters x, y, z with the coordinate of the n-th point
-   // n must be between 0 and Size() - 1.
-
    if (n < 0 || n >= Size()) return;
    if (!fP) return;
    x = (Double_t)fP[kDimension*n  ];

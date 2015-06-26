@@ -128,7 +128,11 @@ ClassImp(RooFFTConvPdf)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for convolution of pdf1 (x) pdf2 in observable convVar. The binning used for the FFT sampling is controlled
+/// by the binning named "cache" in the convolution observable. The resulting FFT convolved histogram is interpolated at
+/// order 'ipOrder' A minimum binning of 1000 bins is recommended.
+
 RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder) :
   RooAbsCachedPdf(name,title,ipOrder),
   _x("!x","Convolution Variable",this,convVar),
@@ -142,10 +146,6 @@ RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar& co
   _shift2(0),
   _cacheObs("!cacheObs","Cached observables",this,kFALSE,kFALSE)
  { 
-   // Constructor for convolution of pdf1 (x) pdf2 in observable convVar. The binning used for the FFT sampling is controlled
-   // by the binning named "cache" in the convolution observable. The resulting FFT convolved histogram is interpolated at
-   // order 'ipOrder' A minimum binning of 1000 bins is recommended.
-
    if (!convVar.hasBinning("cache")) {
      convVar.setBinning(convVar.getBinning(),"cache") ;
    }
@@ -158,7 +158,11 @@ RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar& co
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for convolution of pdf1 (x) pdf2 in observable convVar. The binning used for the FFT sampling is controlled
+/// by the binning named "cache" in the convolution observable. The resulting FFT convolved histogram is interpolated at
+/// order 'ipOrder' A minimum binning of 1000 bins is recommended.
+
 RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooAbsReal& pdfConvVar, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder) :
   RooAbsCachedPdf(name,title,ipOrder),
   _x("!x","Convolution Variable",this,convVar,kFALSE,kFALSE),
@@ -172,10 +176,6 @@ RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooAbsReal& pd
   _shift2(0),
   _cacheObs("!cacheObs","Cached observables",this,kFALSE,kFALSE)
  { 
-   // Constructor for convolution of pdf1 (x) pdf2 in observable convVar. The binning used for the FFT sampling is controlled
-   // by the binning named "cache" in the convolution observable. The resulting FFT convolved histogram is interpolated at
-   // order 'ipOrder' A minimum binning of 1000 bins is recommended.
-
    if (!convVar.hasBinning("cache")) {
      convVar.setBinning(convVar.getBinning(),"cache") ;
    }
@@ -187,7 +187,9 @@ RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooAbsReal& pd
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooFFTConvPdf::RooFFTConvPdf(const RooFFTConvPdf& other, const char* name) :  
   RooAbsCachedPdf(other,name),
   _x("!x",this,other._x),
@@ -201,24 +203,24 @@ RooFFTConvPdf::RooFFTConvPdf(const RooFFTConvPdf& other, const char* name) :
   _shift2(other._shift2),
   _cacheObs("!cacheObs",this,other._cacheObs)
  { 
-   // Copy constructor
  } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor 
+
 RooFFTConvPdf::~RooFFTConvPdf() 
 {
-  // Destructor 
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return base name component for cache components in this case 'PDF1_CONV_PDF2'
+
 const char* RooFFTConvPdf::inputBaseName() const 
 {
-  // Return base name component for cache components in this case 'PDF1_CONV_PDF2'
-
   static TString name ;
   name = _pdf1.arg().GetName() ;
   name.Append("_CONV_") ;
@@ -229,22 +231,24 @@ const char* RooFFTConvPdf::inputBaseName() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return specialized cache subclass for FFT calculations
+
 RooFFTConvPdf::PdfCacheElem* RooFFTConvPdf::createCache(const RooArgSet* nset) const 
 {
-  // Return specialized cache subclass for FFT calculations
   return new FFTCacheElem(*this,nset) ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone input pdf and attach to dataset
+
 RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooArgSet* nsetIn) : 
   PdfCacheElem(self,nsetIn),
   fftr2c1(0),fftr2c2(0),fftc2r(0) 
 {
-  // Clone input pdf and attach to dataset
   RooAbsPdf* clonePdf1 = (RooAbsPdf*) self._pdf1.arg().cloneTree() ;
   RooAbsPdf* clonePdf2 = (RooAbsPdf*) self._pdf2.arg().cloneTree() ;
   clonePdf1->attachDataSet(*hist()) ;
@@ -324,19 +328,21 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Suffix for cache histogram (added in addition to suffix for cache name)
+
 TString RooFFTConvPdf::histNameSuffix() const
 {
-  // Suffix for cache histogram (added in addition to suffix for cache name)
   return TString(Form("_BufFrac%3.1f_BufStrat%d",_bufFrac,_bufStrat)) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all RooAbsArg objects contained in the cache element
+
 RooArgList RooFFTConvPdf::FFTCacheElem::containedArgs(Action a) 
 {
-  // Returns all RooAbsArg objects contained in the cache element
   RooArgList ret(PdfCacheElem::containedArgs(a)) ;
 
   ret.add(*pdf1Clone) ;
@@ -352,7 +358,8 @@ RooArgList RooFFTConvPdf::FFTCacheElem::containedArgs(Action a)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooFFTConvPdf::FFTCacheElem::~FFTCacheElem() 
 { 
   delete fftr2c1 ; 
@@ -370,10 +377,11 @@ RooFFTConvPdf::FFTCacheElem::~FFTCacheElem()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the contents of the cache the FFT convolution output
+
 void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const 
 {
-  // Fill the contents of the cache the FFT convolution output
   RooDataHist& cacheHist = *cache.hist() ;
   
   ((FFTCacheElem&)cache).pdf1Clone->setOperMode(ADirty,kTRUE) ;
@@ -457,11 +465,11 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill a slice of cachePdf with the output of the FFT convolution calculation
+
 void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos) const 
 {
-  // Fill a slice of cachePdf with the output of the FFT convolution calculation
-
   // Extract histogram that is the basis of the RooHistPdf
   RooDataHist& cacheHist = *aux.hist() ;
 
@@ -543,15 +551,15 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan the values of 'pdf' in observable 'obs' using the bin values stored in 'hist' at slice position 'slicePos'
+/// N is filled with the number of bins defined in hist, N2 is filled with N plus the number of buffer bins
+/// The return value is an array of doubles of length N2 with the sampled values. The caller takes ownership
+/// of the array
+
 Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, 
 				  Int_t& N, Int_t& N2, Int_t& zeroBin, Double_t shift) const
 {
-  // Scan the values of 'pdf' in observable 'obs' using the bin values stored in 'hist' at slice position 'slicePos'
-  // N is filled with the number of bins defined in hist, N2 is filled with N plus the number of buffer bins
-  // The return value is an array of doubles of length N2 with the sampled values. The caller takes ownership
-  // of the array
-
 
   RooRealVar* histX = (RooRealVar*) hist.get()->find(obs.GetName()) ;
 
@@ -651,21 +659,21 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the observables to be cached given the normalization set nset
+///
+/// If the cache observables is in nset then this is 
+///    - the convolution observable plus 
+///    - any member of nset that is either a RooCategory, 
+///    - or was previously specified through setCacheObservables().
+///
+/// In case the cache observable is _not_ in nset, then it is
+///    - the convolution observable plus 
+///    - all member of nset are observables of this p.d.f.
+/// 
+
 RooArgSet* RooFFTConvPdf::actualObservables(const RooArgSet& nset) const 
 {
-  // Return the observables to be cached given the normalization set nset
-  //
-  // If the cache observables is in nset then this is 
-  //    - the convolution observable plus 
-  //    - any member of nset that is either a RooCategory, 
-  //    - or was previously specified through setCacheObservables().
-  //
-  // In case the cache observable is _not_ in nset, then it is
-  //    - the convolution observable plus 
-  //    - all member of nset are observables of this p.d.f.
-  // 
-
   // Get complete list of observables 
   RooArgSet* obs1 = _pdf1.arg().getObservables(nset) ;
   RooArgSet* obs2 = _pdf2.arg().getObservables(nset) ;
@@ -721,13 +729,13 @@ RooArgSet* RooFFTConvPdf::actualObservables(const RooArgSet& nset) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the parameters on which the cache depends given normalization
+/// set nset. For this p.d.f these are the parameters of the input p.d.f.
+/// but never the convolution variable, it case it is not part of nset
+
 RooArgSet* RooFFTConvPdf::actualParameters(const RooArgSet& nset) const 
 {  
-  // Return the parameters on which the cache depends given normalization
-  // set nset. For this p.d.f these are the parameters of the input p.d.f.
-  // but never the convolution variable, it case it is not part of nset
-
   RooArgSet* vars = getVariables() ;
   RooArgSet* obs = actualObservables(nset) ;
   vars->remove(*obs) ;
@@ -738,12 +746,12 @@ RooArgSet* RooFFTConvPdf::actualParameters(const RooArgSet& nset) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return p.d.f. observable (which can be a function) to substitute given
+/// p.d.f. observable. Substitute x by xprime if xprime is set
+
 RooAbsArg& RooFFTConvPdf::pdfObservable(RooAbsArg& histObservable) const 
 {
-  // Return p.d.f. observable (which can be a function) to substitute given
-  // p.d.f. observable. Substitute x by xprime if xprime is set
-
   if (_xprime.absArg() && string(histObservable.GetName())==_x.absArg()->GetName()) {
     return (*_xprime.absArg()) ;
   }
@@ -752,16 +760,16 @@ RooAbsArg& RooFFTConvPdf::pdfObservable(RooAbsArg& histObservable) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create appropriate generator context for this convolution. If both input p.d.f.s support
+/// internal generation, if it is safe to use them and if no observables other than the convolution
+/// observable are requested for generation, use the specialized convolution generator context
+/// which implements a smearing strategy in the convolution observable. If not return the
+/// regular accept/reject generator context
+
 RooAbsGenContext* RooFFTConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					    const RooArgSet* auxProto, Bool_t verbose) const 
 {
-  // Create appropriate generator context for this convolution. If both input p.d.f.s support
-  // internal generation, if it is safe to use them and if no observables other than the convolution
-  // observable are requested for generation, use the specialized convolution generator context
-  // which implements a smearing strategy in the convolution observable. If not return the
-  // regular accept/reject generator context
-
   RooArgSet vars2(vars) ;
   vars2.remove(_x.arg(),kTRUE,kTRUE) ;
   Int_t numAddDep = vars2.getSize() ;
@@ -803,12 +811,12 @@ RooAbsGenContext* RooFFTConvPdf::genContext(const RooArgSet &vars, const RooData
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the size of the buffer on either side of the observable range to frac times the
+/// size of the range of the convolution observable
+
 void RooFFTConvPdf::setBufferFraction(Double_t frac) 
 {
-  // Change the size of the buffer on either side of the observable range to frac times the
-  // size of the range of the convolution observable
-
   if (frac<0) {
     coutE(InputArguments) << "RooFFTConvPdf::setBufferFraction(" << GetName() << ") fraction should be greater than or equal to zero" << endl ;
     return ;
@@ -820,40 +828,40 @@ void RooFFTConvPdf::setBufferFraction(Double_t frac)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change strategy to fill the overflow buffer on either side of the convolution observable range.
+///
+/// 'Extend' means is that the input p.d.f convolution observable range is widened to include the buffer range
+/// 'Flat' means that the buffer is filled with the p.d.f. value at the boundary of the observable range
+/// 'Mirror' means that the buffer is filled with a ,irror image of the p.d.f. around the convolution observable boundary 
+///
+/// The default strategy is extend. If one of the input p.d.f.s is a RooAddPdf, it is configured so that the interpretation
+/// range of the fraction coefficients is kept at the nominal convolutions observable range (instead of interpreting coefficients
+/// in the widened range including the buffer)
+
 void RooFFTConvPdf::setBufferStrategy(BufStrat bs) 
 {
-  // Change strategy to fill the overflow buffer on either side of the convolution observable range.
-  //
-  // 'Extend' means is that the input p.d.f convolution observable range is widened to include the buffer range
-  // 'Flat' means that the buffer is filled with the p.d.f. value at the boundary of the observable range
-  // 'Mirror' means that the buffer is filled with a ,irror image of the p.d.f. around the convolution observable boundary 
-  //
-  // The default strategy is extend. If one of the input p.d.f.s is a RooAddPdf, it is configured so that the interpretation
-  // range of the fraction coefficients is kept at the nominal convolutions observable range (instead of interpreting coefficients
-  // in the widened range including the buffer)
-
   _bufStrat = bs ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Customized printing of arguments of a RooNumConvPdf to more intuitively reflect the contents of the
+/// product operator construction
+
 void RooFFTConvPdf::printMetaArgs(ostream& os) const 
 {
-  // Customized printing of arguments of a RooNumConvPdf to more intuitively reflect the contents of the
-  // product operator construction
-
   os << _pdf1.arg().GetName() << "(" << _x.arg().GetName() << ") (*) " << _pdf2.arg().GetName() << "(" << _x.arg().GetName() << ") " ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// (Re)calculate effective parameters of this p.d.f.
+
 void RooFFTConvPdf::calcParams() 
 {
-  // (Re)calculate effective parameters of this p.d.f.
-
   RooArgSet* params1 = _pdf1.arg().getParameters(_x.arg()) ;
   RooArgSet* params2 = _pdf2.arg().getParameters(_x.arg()) ;
   _params.removeAll() ;
@@ -865,9 +873,10 @@ void RooFFTConvPdf::calcParams()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///calcParams() ;
+
 Bool_t RooFFTConvPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
-  //calcParams() ;
   return kFALSE ;
 }

@@ -63,11 +63,11 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor. An argument "ptr" is a main pointer of type "clname", which should be shown in the viewer
+
 TStructViewer::TStructViewer(void* ptr, const char * clname)
 {
-   // Default constructor. An argument "ptr" is a main pointer of type "clname", which should be shown in the viewer
-
    fPointer = NULL;
    fPointerClass = NULL;
    fTopNode = NULL;
@@ -81,21 +81,21 @@ TStructViewer::TStructViewer(void* ptr, const char * clname)
    SetPointer(ptr, clname);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Clean all object after closing the viewer
+
 TStructViewer::~TStructViewer()
 {
-   // Destructor. Clean all object after closing the viewer
-
    Reset();
    fColors.SetOwner();
    fColors.Clear();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find list with nodes on specified level and add node to this list and increment list of sizes and list of members
+
 void TStructViewer::AddNode(TStructNode* node, ULong_t size)
 {
-   // Find list with nodes on specified level and add node to this list and increment list of sizes and list of members
-
    TList* list = (TList*)fLevelArray[node->GetLevel()];
    // if list doesn't exist -> create one
    if(!list) {
@@ -109,11 +109,11 @@ void TStructViewer::AddNode(TStructNode* node, ULong_t size)
    fLevelSize(node->GetLevel()) += size;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Count allocated memory, increase member counters, find child nodes
+
 void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
 {
-   // Count allocated memory, increase member counters, find child nodes
-
    if(!cl) {
       return;
    }
@@ -336,11 +336,11 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw object if there is valid pointer
+
 void TStructViewer::Draw(Option_t *option)
 {
-   // Draw object if there is valid pointer
-
    TString opt(option);
    if(opt == "count") {
 
@@ -356,57 +356,58 @@ void TStructViewer::Draw(Option_t *option)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns canvas used to keep TGeoVolumes
+
 TCanvas* TStructViewer::GetCanvas()
 {
-   // Returns canvas used to keep TGeoVolumes
-
    return fGUI->GetCanvas();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns pointer to main window
+
 TGMainFrame* TStructViewer::GetFrame()
 {
-   // Returns pointer to main window
-
    return fGUI;
 }
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return main pointer
+
 void* TStructViewer::GetPointer() const
 {
-   // Return main pointer
-
    return fPointer;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns TExMap with pairs <level number, number of objects>
+
 TExMap TStructViewer::GetLevelMembersCount() const
 {
-   // Returns TExMap with pairs <level number, number of objects>
-
    return fLevelMembersCount;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns TExMap with pairs <level number, size of level in bytes>
+
 TExMap TStructViewer::GetLevelSize() const
 {
-   // Returns TExMap with pairs <level number, size of level in bytes>
-
    return fLevelSize;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get visibility of links between objects
+
 Bool_t TStructViewer::GetLinksVisibility() const
 {
-   // Get visibility of links between objects
-
    return fGUI->GetLinksVisibility();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create top node and find all member nodes
+
 void TStructViewer::Prepare()
 {
-   // Create top node and find all member nodes
    if (fTopNode) {
       Reset();
    }
@@ -422,11 +423,11 @@ void TStructViewer::Prepare()
    CountMembers(fPointerClass, fTopNode, fPointer);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deleting nodes, maps and array
+
 void TStructViewer::Reset()
 {
-   // Deleting nodes, maps and array
-
    TList* lst;
    TIter it(&fLevelArray);
    while ((lst = (TList*) it() )) {
@@ -443,11 +444,11 @@ void TStructViewer::Reset()
    fTopNode = NULL;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets color for the class "name" to color "color"
+
 void TStructViewer::SetColor(TString name, Int_t color)
 {
-   // Sets color for the class "name" to color "color"
-
    TIter it(&fColors);
    TStructNodeProperty* prop;
    while ((prop = (TStructNodeProperty*) it() )) {
@@ -465,19 +466,19 @@ void TStructViewer::SetColor(TString name, Int_t color)
    fColors.Sort();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ISets links visibility
+
 void TStructViewer::SetLinksVisibility(Bool_t val)
 {
-   // ISets links visibility
-
    fGUI->SetLinksVisibility(val);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set main pointer of class "clname"
+
 void TStructViewer::SetPointer(void* ptr, const char* clname)
 {
-   // Set main pointer of class "clname"
-
    if (ptr) {
       TA* a = (TA*) ptr;
       if (clname) {
@@ -496,11 +497,11 @@ void TStructViewer::SetPointer(void* ptr, const char* clname)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns color associated with type "typeName"
+
 TColor TStructViewer::GetColor(const char* typeName)
 {
-   // Returns color associated with type "typeName"
-
    TIter it(&fColors);
    TStructNodeProperty* prop;
    while((prop = (TStructNodeProperty*) it())) {

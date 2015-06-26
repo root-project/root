@@ -37,11 +37,11 @@ ClassImp(TGraph2DPainter)
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2DPainter default constructor
+
 TGraph2DPainter::TGraph2DPainter()
 {
-   // TGraph2DPainter default constructor
-
    fX        = 0;
    fY        = 0;
    fZ        = 0;
@@ -70,11 +70,11 @@ TGraph2DPainter::TGraph2DPainter()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2DPainter constructor
+
 TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
 {
-   // TGraph2DPainter constructor
-
    fDelaunay = gd;
    fGraph2D  = fDelaunay->GetGraph2D();
    fNpoints  = fGraph2D->GetN();
@@ -103,19 +103,20 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2DPainter destructor.
+
 TGraph2DPainter::~TGraph2DPainter()
 {
-   // TGraph2DPainter destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find triangles in fDelaunay and initialise the TGraph2DPainter values
+/// needed to paint triangles or find contours.
+
 void TGraph2DPainter::FindTriangles()
 {
-   // Find triangles in fDelaunay and initialise the TGraph2DPainter values
-   // needed to paint triangles or find contours.
-
    fDelaunay->FindAllTriangles();
    fNdt    = fDelaunay->GetNdt();
    fXN     = fDelaunay->GetXN();
@@ -130,13 +131,13 @@ void TGraph2DPainter::FindTriangles()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the X and Y graphs building a contour. A contour level may
+/// consist in several parts not connected to each other. This function
+/// finds them and returns them in a graphs' list.
+
 TList *TGraph2DPainter::GetContourList(Double_t contour)
 {
-   // Returns the X and Y graphs building a contour. A contour level may
-   // consist in several parts not connected to each other. This function
-   // finds them and returns them in a graphs' list.
-
    // Exit if the contour is outisde the Z range.
    Double_t zmin = gCurrentHist->GetMinimum();
    Double_t zmax = gCurrentHist->GetMaximum();
@@ -368,26 +369,26 @@ L02:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a TGraphDelaunay according to the value of "option":
+///
+///   "TRI"  : The Delaunay triangles are drawn using filled area.
+///            An hidden surface drawing technique is used. The surface is
+///            painted with the current fill area color. The edges of each
+///            triangles are painted with the current line color.
+///   "TRIW" : The Delaunay triangles are drawn as wire frame
+///   "TRI1" : The Delaunay triangles are painted with color levels. The edges
+///            of each triangles are painted with the current line color.
+///   "TRI2" : the Delaunay triangles are painted with color levels.
+///   "P"    : Draw a marker at each vertex
+///   "P0"   : Draw a circle at each vertex. Each circle background is white.
+///   "PCOL" : Draw a marker at each vertex. The color of each marker is
+///            defined according to its Z position.
+///   "CONT" : Draw contours
+///   "LINE" : Draw a 3D polyline
+
 void TGraph2DPainter::Paint(Option_t *option)
 {
-   // Paint a TGraphDelaunay according to the value of "option":
-   //
-   //   "TRI"  : The Delaunay triangles are drawn using filled area.
-   //            An hidden surface drawing technique is used. The surface is
-   //            painted with the current fill area color. The edges of each
-   //            triangles are painted with the current line color.
-   //   "TRIW" : The Delaunay triangles are drawn as wire frame
-   //   "TRI1" : The Delaunay triangles are painted with color levels. The edges
-   //            of each triangles are painted with the current line color.
-   //   "TRI2" : the Delaunay triangles are painted with color levels.
-   //   "P"    : Draw a marker at each vertex
-   //   "P0"   : Draw a circle at each vertex. Each circle background is white.
-   //   "PCOL" : Draw a marker at each vertex. The color of each marker is
-   //            defined according to its Z position.
-   //   "CONT" : Draw contours
-   //   "LINE" : Draw a 3D polyline
-
    TString opt = option;
    opt.ToLower();
    Bool_t triangles = opt.Contains("tri")  ||
@@ -427,12 +428,12 @@ void TGraph2DPainter::Paint(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paints the 2D graph as a contour plot. Delaunay triangles are used
+/// to compute the contours.
+
 void TGraph2DPainter::PaintContour(Option_t * /*option*/)
 {
-   // Paints the 2D graph as a contour plot. Delaunay triangles are used
-   // to compute the contours.
-
    // Initialize the levels on the Z axis
    Int_t ncolors  = gStyle->GetNumberOfColors();
    Int_t ndiv   = gCurrentHist->GetContour();
@@ -469,11 +470,11 @@ void TGraph2DPainter::PaintContour(Option_t * /*option*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paints the 2D graph as error bars
+
 void TGraph2DPainter::PaintErrors(Option_t * /* option */)
 {
-   // Paints the 2D graph as error bars
-
    Double_t temp1[3],temp2[3];
 
    TView *view = gPad->GetView();
@@ -571,14 +572,14 @@ void TGraph2DPainter::PaintErrors(Option_t * /* option */)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paints one triangle.
+/// nblev  = 0 : paint the color levels
+/// nblev != 0 : paint the grid
+
 void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
                            Int_t nblev, Double_t *glev)
 {
-   // Paints one triangle.
-   // nblev  = 0 : paint the color levels
-   // nblev != 0 : paint the grid
-
    Int_t i, fillColor, ncolors, theColor0, theColor2;
 
    Int_t p0=t[0]-1;
@@ -758,11 +759,11 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paints the 2D graph as PaintPolyMarker
+
 void TGraph2DPainter::PaintPolyMarker(Option_t *option)
 {
-   // Paints the 2D graph as PaintPolyMarker
-
    Double_t temp1[3],temp2[3];
 
    TView *view = gPad->GetView();
@@ -840,11 +841,11 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paints the 2D graph as PaintPolyLine
+
 void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
 {
-   // Paints the 2D graph as PaintPolyLine
-
    Double_t temp1[3],temp2[3];
 
    TView *view = gPad->GetView();
@@ -886,11 +887,11 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paints a circle at each vertex. Each circle background is white.
+
 void TGraph2DPainter::PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y)
 {
-   // Paints a circle at each vertex. Each circle background is white.
-
    fGraph2D->SetMarkerSize(fGraph2D->GetMarkerSize());
    Int_t mc = fGraph2D->GetMarkerColor();
    Int_t ms = fGraph2D->GetMarkerStyle();
@@ -908,11 +909,11 @@ void TGraph2DPainter::PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paints the 2D graph as triangles
+
 void TGraph2DPainter::PaintTriangles(Option_t *option)
 {
-   // Paints the 2D graph as triangles
-
    Double_t x[4], y[4], temp1[3],temp2[3];
    Int_t it,t[3];
    Int_t *order = 0;

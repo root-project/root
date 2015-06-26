@@ -26,46 +26,46 @@
 
 ClassImp(TWin32Mutex)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Win32 mutex lock.
+
 TWin32Mutex::TWin32Mutex(Bool_t recursive) : TMutexImp()
 {
-   // Create a Win32 mutex lock.
-
    ::InitializeCriticalSection(&fCritSect);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TMutex dtor.
+
 TWin32Mutex::~TWin32Mutex()
 {
-   // TMutex dtor.
-
    ::DeleteCriticalSection(&fCritSect);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lock the mutex.
+
 Int_t TWin32Mutex::Lock()
 {
-   // Lock the mutex.
-
    ::EnterCriticalSection(&fCritSect);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try locking the mutex. Returns 0 if mutex can be locked.
+
 Int_t TWin32Mutex::TryLock()
 {
-   // Try locking the mutex. Returns 0 if mutex can be locked.
-
    if (::TryEnterCriticalSection(&fCritSect))
       return 0;
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock the mutex.
+
 Int_t TWin32Mutex::UnLock(void)
 {
-   // Unlock the mutex.
-
    ::LeaveCriticalSection(&fCritSect);
    return 0;
 }

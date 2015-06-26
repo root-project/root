@@ -100,7 +100,8 @@
 ClassImp(TQuaternion)
 
 /****************** CONSTRUCTORS ****************************************************/
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQuaternion::TQuaternion(const TQuaternion & q) : TObject(q),
   fRealPart(q.fRealPart), fVectorPart(q.fVectorPart) {}
 
@@ -118,9 +119,10 @@ TQuaternion::TQuaternion(Double_t real, Double_t X, Double_t Y, Double_t Z)
 
 TQuaternion::~TQuaternion() {}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///dereferencing operator const
+
 Double_t TQuaternion::operator () (int i) const {
-   //dereferencing operator const
    switch(i) {
       case 0:
       case 1:
@@ -134,9 +136,10 @@ Double_t TQuaternion::operator () (int i) const {
    return 0.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///dereferencing operator
+
 Double_t & TQuaternion::operator () (int i) {
-   //dereferencing operator
    switch(i) {
       case 0:
       case 1:
@@ -149,21 +152,21 @@ Double_t & TQuaternion::operator () (int i) {
    }
    return fRealPart;
 }
-//_____________________________________
-Double_t TQuaternion::GetQAngle() const {
-   // Get angle of quaternion (rad)
-   // N.B : this angle is half of the corresponding rotation angle
+////////////////////////////////////////////////////////////////////////////////
+/// Get angle of quaternion (rad)
+/// N.B : this angle is half of the corresponding rotation angle
 
+Double_t TQuaternion::GetQAngle() const {
    if (fRealPart == 0) return TMath::PiOver2();
    Double_t denominator = fVectorPart.Mag();
    return atan(denominator/fRealPart);
 }
 
-//_____________________________________
-TQuaternion& TQuaternion::SetQAngle(Double_t angle) {
-   // Set angle of quaternion (rad) - keep quaternion norm
-   // N.B : this angle is half of the corresponding rotation angle
+////////////////////////////////////////////////////////////////////////////////
+/// Set angle of quaternion (rad) - keep quaternion norm
+/// N.B : this angle is half of the corresponding rotation angle
 
+TQuaternion& TQuaternion::SetQAngle(Double_t angle) {
    Double_t norm = Norm();
    Double_t normSinV = fVectorPart.Mag();
    if (normSinV != 0) fVectorPart *= (sin(angle)*norm/normSinV);
@@ -172,12 +175,12 @@ TQuaternion& TQuaternion::SetQAngle(Double_t angle) {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion& TQuaternion::SetAxisQAngle(TVector3& v,Double_t QAngle) {
-   // set quaternion from vector and angle (rad)
-   // quaternion is set as unitary
-   // N.B : this angle is half of the corresponding rotation angle
+////////////////////////////////////////////////////////////////////////////////
+/// set quaternion from vector and angle (rad)
+/// quaternion is set as unitary
+/// N.B : this angle is half of the corresponding rotation angle
 
+TQuaternion& TQuaternion::SetAxisQAngle(TVector3& v,Double_t QAngle) {
    fVectorPart = v;
    double norm = v.Mag();
    if (norm>0) fVectorPart*=(1./norm);
@@ -189,32 +192,32 @@ TQuaternion& TQuaternion::SetAxisQAngle(TVector3& v,Double_t QAngle) {
 
 /**************** REAL TO QUATERNION ALGEBRA ****************************************/
 
-//_____________________________________
-TQuaternion TQuaternion::operator+(Double_t real) const {
-   // sum of quaternion with a real
+////////////////////////////////////////////////////////////////////////////////
+/// sum of quaternion with a real
 
+TQuaternion TQuaternion::operator+(Double_t real) const {
    return TQuaternion(fVectorPart, fRealPart + real);
 }
 
-//_____________________________________
-TQuaternion TQuaternion::operator-(Double_t real) const {
-   // substraction of real to quaternion
+////////////////////////////////////////////////////////////////////////////////
+/// substraction of real to quaternion
 
+TQuaternion TQuaternion::operator-(Double_t real) const {
    return TQuaternion(fVectorPart, fRealPart - real);
 }
 
-//_____________________________________
-TQuaternion TQuaternion::operator*(Double_t real) const {
-   // product of quaternion with a real
+////////////////////////////////////////////////////////////////////////////////
+/// product of quaternion with a real
 
+TQuaternion TQuaternion::operator*(Double_t real) const {
    return TQuaternion(fRealPart*real,fVectorPart.x()*real,fVectorPart.y()*real,fVectorPart.z()*real);
 }
 
 
-//_____________________________________
-TQuaternion TQuaternion::operator/(Double_t real) const {
-   // division by a real
+////////////////////////////////////////////////////////////////////////////////
+/// division by a real
 
+TQuaternion TQuaternion::operator/(Double_t real) const {
    if (real !=0 ) {
       return TQuaternion(fRealPart/real,fVectorPart.x()/real,fVectorPart.y()/real,fVectorPart.z()/real);
    } else {
@@ -231,24 +234,24 @@ TQuaternion operator / (Double_t r, const TQuaternion & q) { return (q.Invert()*
 
 /**************** VECTOR TO QUATERNION ALGEBRA ****************************************/
 
-//_____________________________________
-TQuaternion TQuaternion::operator+(const TVector3 &vect) const {
-   // sum of quaternion with a real
+////////////////////////////////////////////////////////////////////////////////
+/// sum of quaternion with a real
 
+TQuaternion TQuaternion::operator+(const TVector3 &vect) const {
    return TQuaternion(fVectorPart + vect, fRealPart);
 }
 
-//_____________________________________
-TQuaternion TQuaternion::operator-(const TVector3 &vect) const {
-   // substraction of real to quaternion
+////////////////////////////////////////////////////////////////////////////////
+/// substraction of real to quaternion
 
+TQuaternion TQuaternion::operator-(const TVector3 &vect) const {
    return TQuaternion(fVectorPart - vect, fRealPart);
 }
 
-//_____________________________________
-TQuaternion& TQuaternion::MultiplyLeft(const TVector3 &vect) {
-   // left multitplication
+////////////////////////////////////////////////////////////////////////////////
+/// left multitplication
 
+TQuaternion& TQuaternion::MultiplyLeft(const TVector3 &vect) {
    Double_t savedRealPart = fRealPart;
    fRealPart = - (fVectorPart * vect);
    fVectorPart = vect.Cross(fVectorPart);
@@ -257,10 +260,10 @@ TQuaternion& TQuaternion::MultiplyLeft(const TVector3 &vect) {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion& TQuaternion::operator*=(const TVector3 &vect) {
-   // right multiplication
+////////////////////////////////////////////////////////////////////////////////
+/// right multiplication
 
+TQuaternion& TQuaternion::operator*=(const TVector3 &vect) {
    Double_t savedRealPart = fRealPart;
    fRealPart = -(fVectorPart * vect);
    fVectorPart = fVectorPart.Cross(vect);
@@ -269,24 +272,24 @@ TQuaternion& TQuaternion::operator*=(const TVector3 &vect) {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion TQuaternion::LeftProduct(const TVector3 &vect) const {
-   // left product
+////////////////////////////////////////////////////////////////////////////////
+/// left product
 
+TQuaternion TQuaternion::LeftProduct(const TVector3 &vect) const {
    return TQuaternion(vect * fRealPart + vect.Cross(fVectorPart), -(fVectorPart * vect));
 }
 
-//_____________________________________
-TQuaternion TQuaternion::operator*(const TVector3 &vect) const {
-   // right product
+////////////////////////////////////////////////////////////////////////////////
+/// right product
 
+TQuaternion TQuaternion::operator*(const TVector3 &vect) const {
    return TQuaternion(vect * fRealPart + fVectorPart.Cross(vect), -(fVectorPart * vect));
 }
 
-//_____________________________________
-TQuaternion& TQuaternion::DivideLeft(const TVector3 &vect) {
-   // left division
+////////////////////////////////////////////////////////////////////////////////
+/// left division
 
+TQuaternion& TQuaternion::DivideLeft(const TVector3 &vect) {
    Double_t norm2 = vect.Mag2();
    MultiplyLeft(vect);
    if (norm2 > 0 ) {
@@ -298,10 +301,10 @@ TQuaternion& TQuaternion::DivideLeft(const TVector3 &vect) {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion& TQuaternion::operator/=(const TVector3 &vect) {
-   // right division
+////////////////////////////////////////////////////////////////////////////////
+/// right division
 
+TQuaternion& TQuaternion::operator/=(const TVector3 &vect) {
    Double_t norm2 = vect.Mag2();
    (*this) *= vect;
    if (norm2 > 0 ) {
@@ -313,10 +316,10 @@ TQuaternion& TQuaternion::operator/=(const TVector3 &vect) {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion TQuaternion::LeftQuotient(const TVector3 &vect) const {
-   // left quotient
+////////////////////////////////////////////////////////////////////////////////
+/// left quotient
 
+TQuaternion TQuaternion::LeftQuotient(const TVector3 &vect) const {
    Double_t norm2 = vect.Mag2();
 
    if (norm2>0) {
@@ -329,10 +332,10 @@ TQuaternion TQuaternion::LeftQuotient(const TVector3 &vect) const {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion TQuaternion::operator/(const TVector3 &vect) const {
-   //  right quotient
+////////////////////////////////////////////////////////////////////////////////
+///  right quotient
 
+TQuaternion TQuaternion::operator/(const TVector3 &vect) const {
    Double_t norm2 = vect.Mag2();
 
    if (norm2>0) {
@@ -358,10 +361,10 @@ TQuaternion operator / (const TVector3 &vect, const TQuaternion &quat) {
 
 /**************** QUATERNION ALGEBRA ****************************************/
 
-//_____________________________________
-TQuaternion& TQuaternion::operator*=(const TQuaternion &quaternion) {
-   // right multiplication
+////////////////////////////////////////////////////////////////////////////////
+/// right multiplication
 
+TQuaternion& TQuaternion::operator*=(const TQuaternion &quaternion) {
    Double_t saveRP = fRealPart;
    TVector3 cross(fVectorPart.Cross(quaternion.fVectorPart));
 
@@ -373,10 +376,10 @@ TQuaternion& TQuaternion::operator*=(const TQuaternion &quaternion) {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion& TQuaternion::MultiplyLeft(const TQuaternion &quaternion) {
-   // left multiplication
+////////////////////////////////////////////////////////////////////////////////
+/// left multiplication
 
+TQuaternion& TQuaternion::MultiplyLeft(const TQuaternion &quaternion) {
    Double_t saveRP = fRealPart;
    TVector3 cross(quaternion.fVectorPart.Cross(fVectorPart));
 
@@ -389,28 +392,28 @@ TQuaternion& TQuaternion::MultiplyLeft(const TQuaternion &quaternion) {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion TQuaternion::LeftProduct(const TQuaternion &quaternion) const {
-   // left product
+////////////////////////////////////////////////////////////////////////////////
+/// left product
 
+TQuaternion TQuaternion::LeftProduct(const TQuaternion &quaternion) const {
    return TQuaternion( fVectorPart*quaternion.fRealPart + quaternion.fVectorPart*fRealPart
                                  + quaternion.fVectorPart.Cross(fVectorPart),
                                    fRealPart*quaternion.fRealPart - fVectorPart*quaternion.fVectorPart );
 }
 
-//_____________________________________
-TQuaternion TQuaternion::operator*(const TQuaternion &quaternion) const {
-   // right product
+////////////////////////////////////////////////////////////////////////////////
+/// right product
 
+TQuaternion TQuaternion::operator*(const TQuaternion &quaternion) const {
    return TQuaternion(fVectorPart*quaternion.fRealPart + quaternion.fVectorPart*fRealPart
                     + fVectorPart.Cross(quaternion.fVectorPart),
                       fRealPart*quaternion.fRealPart - fVectorPart*quaternion.fVectorPart );
 }
 
-//_____________________________________
-TQuaternion& TQuaternion::DivideLeft(const TQuaternion &quaternion) {
-   // left division
+////////////////////////////////////////////////////////////////////////////////
+/// left division
 
+TQuaternion& TQuaternion::DivideLeft(const TQuaternion &quaternion) {
    Double_t norm2 = quaternion.Norm2();
 
    if (norm2 > 0 ) {
@@ -422,10 +425,10 @@ TQuaternion& TQuaternion::DivideLeft(const TQuaternion &quaternion) {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion& TQuaternion::operator/=(const TQuaternion& quaternion) {
-   // right division
+////////////////////////////////////////////////////////////////////////////////
+/// right division
 
+TQuaternion& TQuaternion::operator/=(const TQuaternion& quaternion) {
    Double_t norm2 = quaternion.Norm2();
 
    if (norm2 > 0 ) {
@@ -438,10 +441,10 @@ TQuaternion& TQuaternion::operator/=(const TQuaternion& quaternion) {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion TQuaternion::LeftQuotient(const TQuaternion& quaternion) const {
-   // left quotient
+////////////////////////////////////////////////////////////////////////////////
+/// left quotient
 
+TQuaternion TQuaternion::LeftQuotient(const TQuaternion& quaternion) const {
    Double_t norm2 = quaternion.Norm2();
 
    if (norm2 > 0 ) {
@@ -456,10 +459,10 @@ TQuaternion TQuaternion::LeftQuotient(const TQuaternion& quaternion) const {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion TQuaternion::operator/(const TQuaternion &quaternion) const {
-   // right quotient
+////////////////////////////////////////////////////////////////////////////////
+/// right quotient
 
+TQuaternion TQuaternion::operator/(const TQuaternion &quaternion) const {
    Double_t norm2 = quaternion.Norm2();
 
    if (norm2 > 0 ) {
@@ -474,10 +477,10 @@ TQuaternion TQuaternion::operator/(const TQuaternion &quaternion) const {
    return (*this);
 }
 
-//_____________________________________
-TQuaternion TQuaternion::Invert() const {
-   // invert
+////////////////////////////////////////////////////////////////////////////////
+/// invert
 
+TQuaternion TQuaternion::Invert() const {
    double norm2 = Norm2();
    if (norm2 > 0 ) {
       double invNorm2 = 1./norm2;
@@ -488,17 +491,17 @@ TQuaternion TQuaternion::Invert() const {
    return (*this);
 }
 
-//_____________________________________
-void TQuaternion::Rotate(TVector3 & vect) const {
-   // rotate vect by current quaternion
+////////////////////////////////////////////////////////////////////////////////
+/// rotate vect by current quaternion
 
+void TQuaternion::Rotate(TVector3 & vect) const {
    vect = Rotation(vect);
 }
 
-//_____________________________________
-TVector3 TQuaternion::Rotation(const TVector3 & vect) const {
-   // rotation of vect by current quaternion
+////////////////////////////////////////////////////////////////////////////////
+/// rotation of vect by current quaternion
 
+TVector3 TQuaternion::Rotation(const TVector3 & vect) const {
    // Vres = (*this) * vect * (this->Invert());
    double norm2 = Norm2();
 
@@ -522,10 +525,11 @@ TVector3 TQuaternion::Rotation(const TVector3 & vect) const {
    return vect;
 }
 
-//_____________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Print Quaternion parameters
+
 void TQuaternion::Print(Option_t*) const
 {
-   //Print Quaternion parameters
    Printf("%s %s (r,x,y,z)=(%f,%f,%f,%f) \n (alpha,rho,theta,phi)=(%f,%f,%f,%f)",GetName(),GetTitle(),
             fRealPart,fVectorPart.X(),fVectorPart.Y(),fVectorPart.Z(),
             GetQAngle()*TMath::RadToDeg(),fVectorPart.Mag(),fVectorPart.Theta()*TMath::RadToDeg(),fVectorPart.Phi()*TMath::RadToDeg());

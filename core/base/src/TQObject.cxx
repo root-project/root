@@ -92,18 +92,18 @@ ClassImpQ(TQClass)
 
 ////////////////////////////// internal functions //////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes "const" words and blanks from full (with prototype)
+/// method name and resolve any typedefs in the method signature.
+/// If a null or empty string is passed in, an empty string
+/// is returned.
+///
+/// Example: CompressName(" Draw(const char *, const char *,
+///                              Option_t * , Int_t , Int_t)");
+/// returns the string "Draw(char*,char*,char*,int,int)".
+
 TString TQObject::CompressName(const char *method_name)
 {
-   // Removes "const" words and blanks from full (with prototype)
-   // method name and resolve any typedefs in the method signature.
-   // If a null or empty string is passed in, an empty string
-   // is returned.
-   //
-   // Example: CompressName(" Draw(const char *, const char *,
-   //                              Option_t * , Int_t , Int_t)");
-   // returns the string "Draw(char*,char*,char*,int,int)".
-
    TString res(method_name);
    if (res.IsNull())
       return res;
@@ -152,12 +152,12 @@ TString TQObject::CompressName(const char *method_name)
 
 namespace {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Almost the same as TClass::GetMethodWithPrototype().
+
 TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
                                 const char *proto, Int_t &nargs)
 {
-   // Almost the same as TClass::GetMethodWithPrototype().
-
    nargs = 0;
 
    if (!gInterpreter || cl == 0) return 0;
@@ -167,11 +167,11 @@ TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
    return m;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Almost the same as TClass::GetMethod().
+
 static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
 {
-   // Almost the same as TClass::GetMethod().
-
    if (!gInterpreter || cl == 0) return 0;
    return cl->GetMethod(method,params);
 }
@@ -180,15 +180,15 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
 ////////////////////////// end of internal functions ///////////////////////////
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checking of consitency of sender/receiver methods/arguments.
+/// Returns -1 on error, otherwise number or arguments of signal function.
+/// Static method.
+
 Int_t TQObject::CheckConnectArgs(TQObject *sender,
                                  TClass *sender_class, const char *signal,
                                  TClass *receiver_class, const char *slot)
 {
-   // Checking of consitency of sender/receiver methods/arguments.
-   // Returns -1 on error, otherwise number or arguments of signal function.
-   // Static method.
-
    char *signal_method = new char[strlen(signal)+1];
    if (signal_method) strcpy(signal_method, signal);
 
@@ -329,11 +329,11 @@ public:
    void   ls(Option_t *option = "") const;
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TQConnectionList::~TQConnectionList()
 {
-   // Destructor.
-
    TIter next(this);
    TQConnection *connection;
 
@@ -345,12 +345,12 @@ TQConnectionList::~TQConnectionList()
    Clear("nodelete");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove connection from the list. For more info see
+/// TQObject::Disconnect()
+
 Bool_t TQConnectionList::Disconnect(void *receiver, const char *slot_name)
 {
-   // Remove connection from the list. For more info see
-   // TQObject::Disconnect()
-
    TQConnection *connection = 0;
    Bool_t return_value = kFALSE;
 
@@ -380,37 +380,37 @@ Bool_t TQConnectionList::Disconnect(void *receiver, const char *slot_name)
    return return_value;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List signal name and list all connections in this signal list.
+
 void TQConnectionList::ls(Option_t *option) const
 {
-   // List signal name and list all connections in this signal list.
-
    std::cout <<  "TQConnectionList:" << "\t" << GetName() << std::endl;
    ((TQConnectionList*)this)->R__FOR_EACH(TQConnection,Print)(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQObject Constructor.
+/// Comment:
+///  - In order to minimize memory allocation fListOfSignals and
+///    fListOfConnections are allocated only if it is neccesary
+///  - When fListOfSignals/fListOfConnections are empty they will
+///    be deleted
+
 TQObject::TQObject()
 {
-   // TQObject Constructor.
-   // Comment:
-   //  - In order to minimize memory allocation fListOfSignals and
-   //    fListOfConnections are allocated only if it is neccesary
-   //  - When fListOfSignals/fListOfConnections are empty they will
-   //    be deleted
-
    fListOfSignals     = 0;
    fListOfConnections = 0;
    fSignalsBlocked    = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQObject Destructor.
+///    - delete all connections and signal list
+
 TQObject::~TQObject()
 {
-   // TQObject Destructor.
-   //    - delete all connections and signal list
-
    if (!gROOT) return;
 
    Destroyed();   // emit "Destroyed()" signal
@@ -437,11 +437,11 @@ TQObject::~TQObject()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns pointer to list of signals of this class.
+
 TList *TQObject::GetListOfClassSignals() const
 {
-   // Returns pointer to list of signals of this class.
-
    TQClass *qcl = 0;
 
    qcl = dynamic_cast<TQClass*>(IsA());
@@ -449,15 +449,15 @@ TList *TQObject::GetListOfClassSignals() const
    return qcl ? qcl->fListOfSignals : 0; //!!
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect class signal lists from class cls and all its
+/// base-classes.
+///
+/// The recursive traversal is not performed for classes not
+/// deriving from TQClass.
+
 void TQObject::CollectClassSignalLists(TList& list, TClass* cls)
 {
-   // Collect class signal lists from class cls and all its
-   // base-classes.
-   //
-   // The recursive traversal is not performed for classes not
-   // deriving from TQClass.
-
    TQClass *qcl = dynamic_cast<TQClass*>(cls);
    if (qcl)
    {
@@ -474,16 +474,16 @@ void TQObject::CollectClassSignalLists(TList& list, TClass* cls)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 1. If slot_name = 0 => makes signal defined by the signal_name
+///    to be the first in the fListOfSignals, this decreases
+///    the time for lookup.
+/// 2. If slot_name != 0 => makes slot defined by the slot_name
+///    to be executed first when signal_name is emitted.
+/// Signal name is not compressed.
+
 void TQObject::HighPriority(const char *signal_name, const char *slot_name)
 {
-   // 1. If slot_name = 0 => makes signal defined by the signal_name
-   //    to be the first in the fListOfSignals, this decreases
-   //    the time for lookup.
-   // 2. If slot_name != 0 => makes slot defined by the slot_name
-   //    to be executed first when signal_name is emitted.
-   // Signal name is not compressed.
-
    TQConnectionList *clist = (TQConnectionList*)
       fListOfSignals->FindObject(signal_name);
 
@@ -500,16 +500,16 @@ void TQObject::HighPriority(const char *signal_name, const char *slot_name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 1. If slot_name = 0 => makes signal defined by the signal_name
+///    to be the last in the fListOfSignals, this increase the time
+///    for lookup.
+/// 2. If slot_name != 0 => makes slot defined by the slot_name
+///    to  be executed last when signal_name is emitted.
+/// Signal name is not compressed.
+
 void TQObject::LowPriority(const char *signal_name, const char *slot_name)
 {
-   // 1. If slot_name = 0 => makes signal defined by the signal_name
-   //    to be the last in the fListOfSignals, this increase the time
-   //    for lookup.
-   // 2. If slot_name != 0 => makes slot defined by the slot_name
-   //    to  be executed last when signal_name is emitted.
-   // Signal name is not compressed.
-
    TQConnectionList *clist = (TQConnectionList*)
       fListOfSignals->FindObject(signal_name);
 
@@ -526,12 +526,12 @@ void TQObject::LowPriority(const char *signal_name, const char *slot_name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if there is any object connected to this signal.
+/// Only checks for object signals.
+
 Bool_t TQObject::HasConnection(const char *signal_name) const
 {
-   // Return true if there is any object connected to this signal.
-   // Only checks for object signals.
-
    if (!fListOfSignals)
       return kFALSE;
 
@@ -540,34 +540,34 @@ Bool_t TQObject::HasConnection(const char *signal_name) const
    return (fListOfSignals->FindObject(signal) != 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of signals for this object.
+/// Only checks for object signals.
+
 Int_t TQObject::NumberOfSignals() const
 {
-   // Return number of signals for this object.
-   // Only checks for object signals.
-
    if (fListOfSignals)
       return fListOfSignals->GetSize();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of connections for this object.
+
 Int_t TQObject::NumberOfConnections() const
 {
-   // Return number of connections for this object.
-
    if (fListOfConnections)
       return fListOfConnections->GetSize();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Acitvate signal without args.
+/// Example:
+///          theButton->Emit("Clicked()");
+
 void TQObject::Emit(const char *signal_name)
 {
-   // Acitvate signal without args.
-   // Example:
-   //          theButton->Emit("Clicked()");
-
    if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
@@ -602,13 +602,13 @@ void TQObject::Emit(const char *signal_name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate signal with single parameter.
+/// Example:
+///          theButton->Emit("Clicked(int)",id)
+
 void TQObject::Emit(const char *signal_name, Long_t param)
 {
-   // Activate signal with single parameter.
-   // Example:
-   //          theButton->Emit("Clicked(int)",id)
-
    if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
@@ -643,13 +643,13 @@ void TQObject::Emit(const char *signal_name, Long_t param)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate signal with single parameter.
+/// Example:
+///          theButton->Emit("Progress(Long64_t)",processed)
+
 void TQObject::Emit(const char *signal_name, Long64_t param)
 {
-   // Activate signal with single parameter.
-   // Example:
-   //          theButton->Emit("Progress(Long64_t)",processed)
-
    if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
@@ -684,13 +684,13 @@ void TQObject::Emit(const char *signal_name, Long64_t param)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate signal with single parameter.
+/// Example:
+///          theButton->Emit("Scale(float)",factor)
+
 void TQObject::Emit(const char *signal_name, Double_t param)
 {
-   // Activate signal with single parameter.
-   // Example:
-   //          theButton->Emit("Scale(float)",factor)
-
    if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
@@ -725,13 +725,13 @@ void TQObject::Emit(const char *signal_name, Double_t param)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate signal with parameter text string.
+/// Example:
+///          myObject->Emit("Error(char*)","Fatal error");
+
 void TQObject::Emit(const char *signal_name, const char *params)
 {
-   // Activate signal with parameter text string.
-   // Example:
-   //          myObject->Emit("Error(char*)","Fatal error");
-
    if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
@@ -766,25 +766,25 @@ void TQObject::Emit(const char *signal_name, const char *params)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit a signal with a varying number of arguments,
+/// paramArr is an array of the parameters.
+/// Note: any parameter should be converted to long type.
+/// Example:
+///    TQObject *processor; // data processor
+///    TH1F     *hist;      // filled with processor results
+///
+///    processor->Connect("Evaluated(Float_t,Float_t)",
+///                       "TH1F",hist,"Fill12(Axis_t,Axis_t)");
+///
+///    Long_t args[2];
+///    args[0] = (Long_t)processor->GetValue(1);
+///    args[1] = (Long_t)processor->GetValue(2);
+///
+///    processor->Emit("Evaluated(Float_t,Float_t)",args);
+
 void TQObject::Emit(const char *signal_name, Long_t *paramArr)
 {
-   // Emit a signal with a varying number of arguments,
-   // paramArr is an array of the parameters.
-   // Note: any parameter should be converted to long type.
-   // Example:
-   //    TQObject *processor; // data processor
-   //    TH1F     *hist;      // filled with processor results
-   //
-   //    processor->Connect("Evaluated(Float_t,Float_t)",
-   //                       "TH1F",hist,"Fill12(Axis_t,Axis_t)");
-   //
-   //    Long_t args[2];
-   //    args[0] = (Long_t)processor->GetValue(1);
-   //    args[1] = (Long_t)processor->GetValue(2);
-   //
-   //    processor->Emit("Evaluated(Float_t,Float_t)",args);
-
    if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
@@ -822,16 +822,16 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create connection between sender and receiver.
+/// Receiver class needs to have a dictionary.
+
 Bool_t TQObject::ConnectToClass(TQObject *sender,
                                 const char *signal,
                                 TClass *cl,
                                 void *receiver,
                                 const char *slot)
 {
-   // Create connection between sender and receiver.
-   // Receiver class needs to have a dictionary.
-
    // sender should be TQObject
    if (!sender->IsA()->InheritsFrom(TQObject::Class()))
       return kFALSE;
@@ -877,17 +877,17 @@ Bool_t TQObject::ConnectToClass(TQObject *sender,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method allows to make connection from any object
+/// of the same class to the receiver object.
+/// Receiver class needs to have a dictionary.
+
 Bool_t TQObject::ConnectToClass(const char *class_name,
                                 const char *signal,
                                 TClass *cl,
                                 void *receiver,
                                 const char *slot)
 {
-   // This method allows to make connection from any object
-   // of the same class to the receiver object.
-   // Receiver class needs to have a dictionary.
-
    TClass *sender = TClass::GetClass(class_name);
 
    // sender class should be TQObject (i.e. TQClass)
@@ -934,42 +934,42 @@ Bool_t TQObject::ConnectToClass(const char *class_name,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create connection between sender and receiver.
+/// Signal and slot string must have a form:
+///    "Draw(char*, Option_t* ,Int_t)"
+/// All blanks and "const" words will be removed,
+///
+/// cl != 0 - class name, it can be class with or
+///           without dictionary, e.g interpreted class.
+/// Example:
+///       TGButton *myButton;
+///       TH2F     *myHist;
+///
+///       TQObject::Connect(myButton,"Clicked()",
+///                         "TH2F", myHist,"Draw(Option_t*)");
+///
+/// cl == 0 - corresponds to function (interpereted or global)
+///           the name of the function is defined by the slot string,
+///           parameter receiver should be 0.
+/// Example:
+///       TGButton *myButton;
+///       TH2F     *myHist;
+///
+///       TQObject::Connect(myButton,"Clicked()",
+///                         0, 0,"hsimple()");
+///
+/// Warning:
+///  If receiver is class not derived from TQObject and going to be
+///  deleted, disconnect all connections to this receiver.
+///  In case of class derived from TQObject it is done automatically.
+
 Bool_t TQObject::Connect(TQObject *sender,
                          const char *signal,
                          const char *cl,
                          void *receiver,
                          const char *slot)
 {
-   // Create connection between sender and receiver.
-   // Signal and slot string must have a form:
-   //    "Draw(char*, Option_t* ,Int_t)"
-   // All blanks and "const" words will be removed,
-   //
-   // cl != 0 - class name, it can be class with or
-   //           without dictionary, e.g interpreted class.
-   // Example:
-   //       TGButton *myButton;
-   //       TH2F     *myHist;
-   //
-   //       TQObject::Connect(myButton,"Clicked()",
-   //                         "TH2F", myHist,"Draw(Option_t*)");
-   //
-   // cl == 0 - corresponds to function (interpereted or global)
-   //           the name of the function is defined by the slot string,
-   //           parameter receiver should be 0.
-   // Example:
-   //       TGButton *myButton;
-   //       TH2F     *myHist;
-   //
-   //       TQObject::Connect(myButton,"Clicked()",
-   //                         0, 0,"hsimple()");
-   //
-   // Warning:
-   //  If receiver is class not derived from TQObject and going to be
-   //  deleted, disconnect all connections to this receiver.
-   //  In case of class derived from TQObject it is done automatically.
-
    if (cl) {
       TClass *rcv_cl = TClass::GetClass(cl);
       if (rcv_cl) return ConnectToClass(sender, signal, rcv_cl, receiver, slot);
@@ -1022,43 +1022,43 @@ Bool_t TQObject::Connect(TQObject *sender,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method allows to make a connection from any object
+/// of the same class to a single slot.
+/// Signal and slot string must have a form:
+///    "Draw(char*, Option_t* ,Int_t)"
+/// All blanks and "const" words will be removed,
+///
+/// cl != 0 - class name, it can be class with or
+///           without dictionary, e.g interpreted class.
+/// Example:
+///       TGButton *myButton;
+///       TH2F     *myHist;
+///
+///       TQObject::Connect("TGButton", "Clicked()",
+///                         "TH2F", myHist, "Draw(Option_t*)");
+///
+/// cl == 0 - corresponds to function (interpereted or global)
+///           the name of the function is defined by the slot string,
+///           parameter receiver should be 0.
+/// Example:
+///       TGButton *myButton;
+///       TH2F     *myHist;
+///
+///       TQObject::Connect("TGButton", "Clicked()",
+///                         0, 0, "hsimple()");
+///
+/// Warning:
+///  If receiver class not derived from TQObject and going to be
+///  deleted, disconnect all connections to this receiver.
+///  In case of class derived from TQObject it is done automatically.
+
 Bool_t TQObject::Connect(const char *class_name,
                          const char *signal,
                          const char *cl,
                          void *receiver,
                          const char *slot)
 {
-   // This method allows to make a connection from any object
-   // of the same class to a single slot.
-   // Signal and slot string must have a form:
-   //    "Draw(char*, Option_t* ,Int_t)"
-   // All blanks and "const" words will be removed,
-   //
-   // cl != 0 - class name, it can be class with or
-   //           without dictionary, e.g interpreted class.
-   // Example:
-   //       TGButton *myButton;
-   //       TH2F     *myHist;
-   //
-   //       TQObject::Connect("TGButton", "Clicked()",
-   //                         "TH2F", myHist, "Draw(Option_t*)");
-   //
-   // cl == 0 - corresponds to function (interpereted or global)
-   //           the name of the function is defined by the slot string,
-   //           parameter receiver should be 0.
-   // Example:
-   //       TGButton *myButton;
-   //       TH2F     *myHist;
-   //
-   //       TQObject::Connect("TGButton", "Clicked()",
-   //                         0, 0, "hsimple()");
-   //
-   // Warning:
-   //  If receiver class not derived from TQObject and going to be
-   //  deleted, disconnect all connections to this receiver.
-   //  In case of class derived from TQObject it is done automatically.
-
    if (cl) {
       TClass *rcv_cl = TClass::GetClass(cl);
       if (rcv_cl) return ConnectToClass(class_name, signal, rcv_cl, receiver,
@@ -1117,21 +1117,21 @@ Bool_t TQObject::Connect(const char *class_name,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Non-static method is used to connect from the signal
+/// of this object to the receiver slot.
+///
+/// Warning! No check on consistency of sender/receiver
+/// classes/methods.
+///
+/// This method makes possible to have connection/signals from
+/// interpreted class. See also RQ_OBJECT.h.
+
 Bool_t TQObject::Connect(const char *signal,
                          const char *receiver_class,
                          void *receiver,
                          const char *slot)
 {
-   // Non-static method is used to connect from the signal
-   // of this object to the receiver slot.
-   //
-   // Warning! No check on consistency of sender/receiver
-   // classes/methods.
-   //
-   // This method makes possible to have connection/signals from
-   // interpreted class. See also RQ_OBJECT.h.
-
    // remove "const" and strip blanks
    TString signal_name = CompressName(signal);
    TString slot_name   = CompressName(slot);
@@ -1175,48 +1175,48 @@ Bool_t TQObject::Connect(const char *signal,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnects signal in object sender from slot_method in
+/// object receiver. For objects derived from TQObject signal-slot
+/// connection is removed when either of the objects involved
+/// are destroyed.
+///
+/// Disconnect() is typically used in three ways, as the following
+/// examples shows:
+///
+///  - Disconnect everything connected to an object's signals:
+///       Disconnect(myObject);
+///  - Disconnect everything connected to a signal:
+///       Disconnect(myObject, "mySignal()");
+///  - Disconnect a specific receiver:
+///       Disconnect(myObject, 0, myReceiver, 0);
+///
+/// 0 may be used as a wildcard in three of the four arguments,
+/// meaning "any signal", "any receiving object" or
+/// "any slot in the receiving object", respectively.
+///
+/// The sender has no default and may never be 0
+/// (you cannot disconnect signals from more than one object).
+///
+/// If signal is 0, it disconnects receiver and slot_method
+/// from any signal. If not, only the specified signal is
+/// disconnected.
+///
+/// If  receiver is 0, it disconnects anything connected to signal.
+/// If not, slots in objects other than receiver are not
+/// disconnected
+///
+/// If slot_method is 0, it disconnects anything that is connected
+/// to receiver.  If not, only slots named slot_method will be
+/// disconnected, and all other slots are left alone.
+/// The slot_method must be 0 if receiver is left out, so you
+/// cannot disconnect a specifically-named slot on all objects.
+
 Bool_t TQObject::Disconnect(TQObject *sender,
                             const char *signal,
                             void *receiver,
                             const char *slot)
 {
-   // Disconnects signal in object sender from slot_method in
-   // object receiver. For objects derived from TQObject signal-slot
-   // connection is removed when either of the objects involved
-   // are destroyed.
-   //
-   // Disconnect() is typically used in three ways, as the following
-   // examples shows:
-   //
-   //  - Disconnect everything connected to an object's signals:
-   //       Disconnect(myObject);
-   //  - Disconnect everything connected to a signal:
-   //       Disconnect(myObject, "mySignal()");
-   //  - Disconnect a specific receiver:
-   //       Disconnect(myObject, 0, myReceiver, 0);
-   //
-   // 0 may be used as a wildcard in three of the four arguments,
-   // meaning "any signal", "any receiving object" or
-   // "any slot in the receiving object", respectively.
-   //
-   // The sender has no default and may never be 0
-   // (you cannot disconnect signals from more than one object).
-   //
-   // If signal is 0, it disconnects receiver and slot_method
-   // from any signal. If not, only the specified signal is
-   // disconnected.
-   //
-   // If  receiver is 0, it disconnects anything connected to signal.
-   // If not, slots in objects other than receiver are not
-   // disconnected
-   //
-   // If slot_method is 0, it disconnects anything that is connected
-   // to receiver.  If not, only slots named slot_method will be
-   // disconnected, and all other slots are left alone.
-   // The slot_method must be 0 if receiver is left out, so you
-   // cannot disconnect a specifically-named slot on all objects.
-
    Bool_t return_value = kFALSE;
    Bool_t next_return  = kFALSE;
 
@@ -1256,15 +1256,15 @@ Bool_t TQObject::Disconnect(TQObject *sender,
    return return_value;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnects "class signal". The class is defined by class_name.
+/// See also Connect(class_name,signal,receiver,slot).
+
 Bool_t TQObject::Disconnect(const char *class_name,
                             const char *signal,
                             void *receiver,
                             const char *slot)
 {
-   // Disconnects "class signal". The class is defined by class_name.
-   // See also Connect(class_name,signal,receiver,slot).
-
    TClass *sender = TClass::GetClass(class_name);
 
    // sender should be TQClass (which derives from TQObject)
@@ -1275,22 +1275,22 @@ Bool_t TQObject::Disconnect(const char *class_name,
    return Disconnect(qcl, signal, receiver, slot);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnects signal of this object from slot of receiver.
+/// Equivalent to Disconnect(this, signal, receiver, slot)
+
 Bool_t TQObject::Disconnect(const char *signal,
                             void *receiver,
                             const char *slot)
 {
-   // Disconnects signal of this object from slot of receiver.
-   // Equivalent to Disconnect(this, signal, receiver, slot)
-
    return Disconnect(this, signal, receiver, slot);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TQObject.
+
 void TQObject::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TQObject.
-
    if (R__b.IsReading()) {
       // nothing to read
    } else {
@@ -1298,19 +1298,19 @@ void TQObject::Streamer(TBuffer &R__b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if all signals are blocked.
+
 Bool_t TQObject::AreAllSignalsBlocked()
 {
-   // Returns true if all signals are blocked.
-
    return fgAllSignalsBlocked;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Block or unblock all signals. Returns the previous block status.
+
 Bool_t TQObject::BlockAllSignals(Bool_t b)
 {
-   // Block or unblock all signals. Returns the previous block status.
-
    Bool_t ret = fgAllSignalsBlocked;
    fgAllSignalsBlocked = b;
    return ret;
@@ -1321,7 +1321,8 @@ Bool_t TQObject::BlockAllSignals(Bool_t b)
 //
 //  ConnectCINT      - connects to interpreter(CINT) command
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t ConnectCINT(TQObject *sender, const char *signal, const char *slot)
 {
    TString str = "ProcessLine(=";

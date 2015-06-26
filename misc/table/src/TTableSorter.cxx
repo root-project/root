@@ -102,117 +102,118 @@ TTableSorter::TTableSorter() : fsimpleArray(0),fParentTable(0)
    fColSize        = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// TTableSorter ctor sorts the input table along its column defined with colName
+///
+///    - colName    - may be followed by the square brackets with integer number inside,
+///                   if that columm is an array (for example "phys[3]").
+///                   NO expression inside of [], only a single integer number allowed !
+///    - firstRow   - the first table row to sort from (=0 by default)
+///    - numberRows - the number of the table rows to sort (=0 by default)
+///                   = 0 means sort all rows from the "firstRow" by the end of table
+///
+
 TTableSorter::TTableSorter(const TTable &table, TString &colName,Int_t firstRow
                                ,Int_t numberRows):fsimpleArray(0),fParentTable(&table)
 {
-  //
-  // TTableSorter ctor sorts the input table along its column defined with colName
-  //
-  //    - colName    - may be followed by the square brackets with integer number inside,
-  //                   if that columm is an array (for example "phys[3]").
-  //                   NO expression inside of [], only a single integer number allowed !
-  //    - firstRow   - the first table row to sort from (=0 by default)
-  //    - numberRows - the number of the table rows to sort (=0 by default)
-  //                   = 0 means sort all rows from the "firstRow" by the end of table
-  //
-
    fCompareMethod =  0;
    fSearchMethod  =  0;
 
    BuildSorter(colName, firstRow, numberRows);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// TTableSorter ctor sorts the input table along its column defined with colName
+///
+///    - colName    - may be followed by the square brackets with integer number inside,
+///                   if that columm is an array (for example "phys[3]").
+///                   NO expression inside of [], only a single integer number allowed !
+///    - firstRow   - the first table row to sort from (=0 by default)
+///    - numberRows - the number of the table rows to sort (=0 by default)
+///                   = 0 means sort all rows from the "firstRow" by the end of table
+///
+
 TTableSorter::TTableSorter(const TTable *table, TString &colName,Int_t firstRow
                                ,Int_t numberRows):fsimpleArray(0),fParentTable(table)
 {
-  //
-  // TTableSorter ctor sorts the input table along its column defined with colName
-  //
-  //    - colName    - may be followed by the square brackets with integer number inside,
-  //                   if that columm is an array (for example "phys[3]").
-  //                   NO expression inside of [], only a single integer number allowed !
-  //    - firstRow   - the first table row to sort from (=0 by default)
-  //    - numberRows - the number of the table rows to sort (=0 by default)
-  //                   = 0 means sort all rows from the "firstRow" by the end of table
-  //
-
    fCompareMethod =  0;
    fSearchMethod  =  0;
 
    BuildSorter(colName, firstRow, numberRows);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// TTableSorter ctor sorts the input table according the function "search"
+///
+///    - search     - the function to compare the "key" and the table rows during sorting
+///                   typedef Int_t (*SEARCHMETHOD) (const void *, const void **);
+///
+///    - compare    - the function to compare two table rows during searching
+///                   typedef Int_t (*COMPAREMETHOD)(const void **, const void **);
+///
+///    - firstRow   - the first table row to sort from (=0 by default)
+///    - numberRows - the number of the table rows to sort (=0 by default)
+///                   = 0 means sort all rows from the "firstRow" by the end of table
+///  Note:  This is a base class. If one fears it is not safe
+///  -----  to allow "void *" one may potect the end-user code
+///         providing a derived class with the appropriated type
+///         of the parameters.
+///
+
 TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search,
                            COMPAREMETHOD compare, Int_t firstRow,Int_t numberRows)
                           :fsimpleArray(0),fParentTable(&table)
 {
-  //
-  // TTableSorter ctor sorts the input table according the function "search"
-  //
-  //    - search     - the function to compare the "key" and the table rows during sorting
-  //                   typedef Int_t (*SEARCHMETHOD) (const void *, const void **);
-  //
-  //    - compare    - the function to compare two table rows during searching
-  //                   typedef Int_t (*COMPAREMETHOD)(const void **, const void **);
-  //
-  //    - firstRow   - the first table row to sort from (=0 by default)
-  //    - numberRows - the number of the table rows to sort (=0 by default)
-  //                   = 0 means sort all rows from the "firstRow" by the end of table
-  //  Note:  This is a base class. If one fears it is not safe
-  //  -----  to allow "void *" one may potect the end-user code
-  //         providing a derived class with the appropriated type
-  //         of the parameters.
-  //
    fCompareMethod =  compare;
    fSearchMethod  =  search;
    TString colName = "user's defined";
    BuildSorter(colName, firstRow, numberRows);
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// TTableSorter ctor sorts the input table according the function "search"
+///
+///    - search     - the function to compare the "key" and the table rows during sorting
+///                   typedef Int_t (*SEARCHMETHOD) (const void *, const void **);
+///
+///    - compare    - the function to compare two table rows during searching
+///                   typedef Int_t (*COMPAREMETHOD)(const void **, const void **);
+///
+///    - firstRow   - the first table row to sort from (=0 by default)
+///    - numberRows - the number of the table rows to sort (=0 by default)
+///                   = 0 means sort all rows from the "firstRow" by the end of table
+///  Note:  This is a base class. If one fears it is not safe
+///  -----  to allow "void *" one may potect the end-user code
+///         providing a derived class with the appropriated type
+///         of the parameters.
+///
+
 TTableSorter::TTableSorter(const TTable *table, SEARCHMETHOD search,
                            COMPAREMETHOD compare, Int_t firstRow,Int_t numberRows)
                           :fsimpleArray(0),fParentTable(table)
 {
-  //
-  // TTableSorter ctor sorts the input table according the function "search"
-  //
-  //    - search     - the function to compare the "key" and the table rows during sorting
-  //                   typedef Int_t (*SEARCHMETHOD) (const void *, const void **);
-  //
-  //    - compare    - the function to compare two table rows during searching
-  //                   typedef Int_t (*COMPAREMETHOD)(const void **, const void **);
-  //
-  //    - firstRow   - the first table row to sort from (=0 by default)
-  //    - numberRows - the number of the table rows to sort (=0 by default)
-  //                   = 0 means sort all rows from the "firstRow" by the end of table
-  //  Note:  This is a base class. If one fears it is not safe
-  //  -----  to allow "void *" one may potect the end-user code
-  //         providing a derived class with the appropriated type
-  //         of the parameters.
-  //
-
    fCompareMethod =  compare;
    fSearchMethod  =  search;
    TString colName = "user's defined";
    BuildSorter(colName, firstRow, numberRows);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// BuildSorter backs TTableSorter ctor
+///
+///    - colName    - may be followed by the square brackets with integer number inside,
+///                   if that columm is an array (for example "phys[3]").
+///                   NO expression inside of [], only a single integer number allowed !
+///    - firstRow   - the first table row to sort from (=0 by default)
+///    - numberRows - the number of the table rows to sort (=0 by default)
+///                   = 0 means sort all rows from the "firstRow" by the end of table
+///
+
 void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRows)
 {
-  //
-  // BuildSorter backs TTableSorter ctor
-  //
-  //    - colName    - may be followed by the square brackets with integer number inside,
-  //                   if that columm is an array (for example "phys[3]").
-  //                   NO expression inside of [], only a single integer number allowed !
-  //    - firstRow   - the first table row to sort from (=0 by default)
-  //    - numberRows - the number of the table rows to sort (=0 by default)
-  //                   = 0 means sort all rows from the "firstRow" by the end of table
-  //
-
    assert(fParentTable!=0);
 
    fLastFound     = -1;
@@ -286,21 +287,21 @@ void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRow
    if (!FillIndexArray()) QSort();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// TTableSorter ctor sort the input "simpleArray"
+///
+///    - arraySize  - the size of the full array
+///    - firstRow   - the first table row to sort from (=0 by default)
+///    - numberRows - the number of the table rows to sort (=0 by default)
+///                   = 0 means sort all rows from the "firstRow" by the end of table
+///
+
 TTableSorter::TTableSorter(const Float_t *simpleArray, Int_t arraySize, Int_t firstRow
                                ,Int_t numberRows)
                                :fsimpleArray((const Char_t*)simpleArray)
                                ,fParentTable(0)
 {
-  //
-  // TTableSorter ctor sort the input "simpleArray"
-  //
-  //    - arraySize  - the size of the full array
-  //    - firstRow   - the first table row to sort from (=0 by default)
-  //    - numberRows - the number of the table rows to sort (=0 by default)
-  //                   = 0 means sort all rows from the "firstRow" by the end of table
-  //
-
    fLastFound    = -1;
 
    SetSimpleArray(arraySize,firstRow,numberRows);
@@ -330,21 +331,21 @@ TTableSorter::TTableSorter(const Float_t *simpleArray, Int_t arraySize, Int_t fi
    if (!isPreSorted) QSort();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// TTableSorter ctor sort the input "simpleArray"
+///
+///    - arraySize  - the size of the full array
+///    - firstRow   - the first table row to sort from (=0 by default)
+///    - numberRows - the number of the table rows to sort (=0 by default)
+///                   = 0 means sort all rows from the "firstRow" by the end of table
+///
+
 TTableSorter::TTableSorter(const Double_t *simpleArray, Int_t arraySize, Int_t firstRow
                                ,Int_t numberRows)
                                :fsimpleArray((const Char_t*)simpleArray)
                                ,fParentTable(0)
 {
-  //
-  // TTableSorter ctor sort the input "simpleArray"
-  //
-  //    - arraySize  - the size of the full array
-  //    - firstRow   - the first table row to sort from (=0 by default)
-  //    - numberRows - the number of the table rows to sort (=0 by default)
-  //                   = 0 means sort all rows from the "firstRow" by the end of table
-  //
-
    fLastFound    = -1;
 
    SetSimpleArray(arraySize,firstRow,numberRows);
@@ -374,21 +375,21 @@ TTableSorter::TTableSorter(const Double_t *simpleArray, Int_t arraySize, Int_t f
    if (!isPreSorted) QSort();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// TTableSorter ctor sort the input "simpleArray"
+///
+///    - arraySize  - the sie of the full array
+///    - firstRow   - the first table row to sort from (=0 by default)
+///    - numberRows - the number of the table rows to sort (=0 by default)
+///                   = 0 means sort all rows from the "firstRow" by the end of table
+///
+
 TTableSorter::TTableSorter(const Long_t *simpleArray, Int_t arraySize, Int_t firstRow
                                ,Int_t numberRows)
                                :fsimpleArray((const Char_t*)simpleArray)
                                ,fParentTable(0)
 {
-  //
-  // TTableSorter ctor sort the input "simpleArray"
-  //
-  //    - arraySize  - the sie of the full array
-  //    - firstRow   - the first table row to sort from (=0 by default)
-  //    - numberRows - the number of the table rows to sort (=0 by default)
-  //                   = 0 means sort all rows from the "firstRow" by the end of table
-  //
-
    fLastFound    = -1;
 
    SetSimpleArray(arraySize,firstRow,numberRows);
@@ -418,10 +419,11 @@ TTableSorter::TTableSorter(const Long_t *simpleArray, Int_t arraySize, Int_t fir
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set some common parameteres for the "simple" arrays
+
 void TTableSorter::SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRows)
 {
-   // Set some common parameteres for the "simple" arrays
    SetName("Array");
 
    fSortIndex     = 0;
@@ -443,10 +445,11 @@ void TTableSorter::SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRo
    if (fNumberOfRows > 0) fSortIndex = new void*[fNumberOfRows];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TTableSorter::~TTableSorter()
 {
-   //to be documented
    delete [] fSortIndex; fSortIndex = 0; fNumberOfRows=0;
    delete [] fIndexArray;
 }
@@ -576,7 +579,8 @@ int TTableSorter::Compare##valuetype  (const void **elem1, const void **elem2) {
 }                                                     \
 BINARYSEARCH(valuetype)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #define COMPAREVALUES(valuetype)  \
 int TTableSorter::Search##valuetype  (const void *elem1, const void **elem2) { \
          valuetype *value1 = (valuetype *)(elem1);    \
@@ -607,10 +611,11 @@ BINARYSEARCH(valuetype)
 #define COMPAREORDER(valuetype) Compare##valuetype
 #define SEARCHORDER(valuetype) Search##valuetype
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Int_t TTableSorter::BSearch(const void *value) const
 {
-   //to be documented
    Int_t index = -1;
    if (fSearchMethod) {
       void **p = (void **)::bsearch((void *) value,  // Object to search for
@@ -632,10 +637,11 @@ Int_t TTableSorter::BSearch(const void *value) const
    return index;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the original index of the row by its sorted index
+
 Int_t TTableSorter::GetIndex(UInt_t sortedIndex) const
 {
-   // returns the original index of the row by its sorted index
    Int_t indx = -1;
    if (sortedIndex < UInt_t(fNumberOfRows) )  {
       void *p = fSortIndex[sortedIndex];
@@ -652,37 +658,39 @@ Int_t TTableSorter::GetIndex(UInt_t sortedIndex) const
 }
 
 #if 0
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 int TTableSorter::CompareUChar  (const void *elem1, const void *elem2)
 {
-   //to be documented
    UChar_t *value1 = (UChar_t *)(*elem1);
    UChar_t *value2 = (UChar_t *)(*elem2);
    COMPAREVALUES(value1,value2)
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 int TTableSorter::CompareChar   (const void *elem1, const void *elem2)
 {
-   //to be documented
    Char_t *value1 = (Char_t *)(*elem1);
    Char_t *value2 = (Char_t *)(*elem2);
    COMPAREVALUES(value1,value2)
 }
 #endif
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  CountKey counts the number of rows with the key value equal "key"
+///
+///  key      - it is a POINTER to the key value
+///  fistIndx - the first index within sorted array to star search
+///              = 0 by default
+///  bSearch  = kTRUE - binary search (by default) is used otherwise linear one
+///
+
 Int_t TTableSorter::CountKey(const void *key, Int_t firstIndx, Bool_t bSearch, Int_t *firstRow) const
 {
- //
- //  CountKey counts the number of rows with the key value equal "key"
- //
- //  key      - it is a POINTER to the key value
- //  fistIndx - the first index within sorted array to star search
- //              = 0 by default
- //  bSearch  = kTRUE - binary search (by default) is used otherwise linear one
- //
-
    Int_t count = 0;
    if (firstRow) *firstRow = -1;
    if (fSearchMethod) {
@@ -707,12 +715,13 @@ Int_t TTableSorter::CountKey(const void *key, Int_t firstIndx, Bool_t bSearch, I
    return count;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Counts the number of different key values
+///
+
 Int_t TTableSorter::CountKeys() const
 {
-   //
-   // Counts the number of different key values
-   //
    Int_t count = 0;
    if (fSortIndex && fSortIndex[0]) {
       void *key = fSortIndex[0];
@@ -726,15 +735,16 @@ Int_t TTableSorter::CountKeys() const
    return count;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+/// File the array of the pointers and check whether
+/// the original table has been sorted to avoid an extra job.
+///
+/// Return: kTRUE  - the table has been sorted
+///         kFALSE - otherwise
+///////////////////////////////////////////////////////////////
+
 Bool_t TTableSorter::FillIndexArray(){
-  //////////////////////////////////////////////////////////////
-  // File the array of the pointers and check whether
-  // the original table has been sorted to avoid an extra job.
-  //
-  // Return: kTRUE  - the table has been sorted
-  //         kFALSE - otherwise
-  //////////////////////////////////////////////////////////////
    assert(fSortIndex!=0);
    const char *row = At(fFirstRow) + fColOffset;
    Bool_t isPreSorted = kTRUE;
@@ -750,23 +760,24 @@ Bool_t TTableSorter::FillIndexArray(){
    return isPreSorted;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Looks for the first index of the "key"
+/// within SORTED table AFTER sorting
+///
+/// Returns: = -1 if the "key" was not found
+///
+/// Note: This method has no sense for
+/// ====  the float and double key
+///
+///       To get the index within the original
+///       unsorted table the GetIndex() method
+///       may be used like this:
+///       GetIndex(FindFirstKey(key))
+///
+
 Int_t TTableSorter::FindFirstKey(const void *key) const
 {
- //
- // Looks for the first index of the "key"
- // within SORTED table AFTER sorting
- //
- // Returns: = -1 if the "key" was not found
- //
- // Note: This method has no sense for
- // ====  the float and double key
- //
- //       To get the index within the original
- //       unsorted table the GetIndex() method
- //       may be used like this:
- //       GetIndex(FindFirstKey(key))
- //
    Int_t indx = -1;
    if (BSearch(key)>=0) {
       indx = GetLastFound();
@@ -776,38 +787,43 @@ Int_t TTableSorter::FindFirstKey(const void *key) const
    return indx;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 const char * TTableSorter::GetTableName() const
 {
-   //to be documented
    return fParentTable ? fParentTable->GetName():"";
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 const char * TTableSorter::GetTableTitle() const
 {
-   //to be documented
    return fParentTable ? fParentTable->GetTitle():"";
 }
 
- //_____________________________________________________________________________
+ ///////////////////////////////////////////////////////////////////////////////
+ ///to be documented
+
 const char * TTableSorter::GetTableType() const
 {
-   //to be documented
    return fParentTable ? fParentTable->GetType():"";
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TTable *TTableSorter::GetTable() const
 {
-   //to be documented
    return (TTable *)fParentTable;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select search function at once
+
 void  TTableSorter::SetSearchMethod()
 {
-   // Select search function at once
    if (!fSearchMethod) {
       switch (fColType) {
          case  TTable::kFloat:
@@ -861,10 +877,11 @@ void  TTableSorter::SetSearchMethod()
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call the standard C run-time library "qsort" function
+///
+
 void  TTableSorter::QSort(){
- // Call the standard C run-time library "qsort" function
- //
    if (fCompareMethod)
       ::qsort(fSortIndex,       //Start of target array
               fNumberOfRows,       //Array size in elements
@@ -872,16 +889,17 @@ void  TTableSorter::QSort(){
               CALLQSORT(fCompareMethod));
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  LearnTable() allows the TTableSorter to learn the structure of the
+///  tables used to fill the ntuple.
+///  table     - the name of the table
+///  buildTree - if kTRUE, then add TBranches to the TTree for each table
+///              column (default=kFALSE)
+///
+
 void TTableSorter::LearnTable()
 {
-//
-//  LearnTable() allows the TTableSorter to learn the structure of the
-//  tables used to fill the ntuple.
-//  table     - the name of the table
-//  buildTree - if kTRUE, then add TBranches to the TTree for each table
-//              column (default=kFALSE)
-//
    TClass *classPtr = fParentTable->GetRowClass();
    if (!classPtr) return;
 

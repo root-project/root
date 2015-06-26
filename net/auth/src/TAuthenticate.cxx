@@ -124,11 +124,11 @@ Int_t StdCheckSecCtx(const char *, TRootSecContext *);
 
 ClassImp(TAuthenticate)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// rand() implementation using /udev/random or /dev/random, if available
+
 static int auth_rand()
 {
-   // rand() implementation using /udev/random or /dev/random, if available
-
 #ifndef WIN32
    int frnd = open("/dev/urandom", O_RDONLY);
    if (frnd < 0) frnd = open("/dev/random", O_RDONLY);
@@ -156,12 +156,12 @@ static int auth_rand()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create authentication object.
+
 TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
                              const char *proto, const char *user)
 {
-   // Create authentication object.
-
    if (gDebug > 2 && gAuthenticateMutex)
       Info("Authenticate", "locking mutex (pid:  %d)",gSystem->GetPid());
    R__LOCKGUARD2(gAuthenticateMutex);
@@ -381,11 +381,11 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called in connection with a timer timeout
+
 void TAuthenticate::CatchTimeOut()
 {
-   // Called in connection with a timer timeout
-
    Info("CatchTimeOut", "%d sec timeout expired (protocol: %s)",
         fgAuthTO, fgAuthMeth[fSecurity].Data());
 
@@ -396,12 +396,12 @@ void TAuthenticate::CatchTimeOut()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Authenticate to remote rootd or proofd server. Return kTRUE if
+/// authentication succeeded.
+
 Bool_t TAuthenticate::Authenticate()
 {
-   // Authenticate to remote rootd or proofd server. Return kTRUE if
-   // authentication succeeded.
-
    if (gDebug > 2 && gAuthenticateMutex)
       Info("Authenticate", "locking mutex (pid:  %d)",gSystem->GetPid());
    R__LOCKGUARD2(gAuthenticateMutex);
@@ -846,12 +846,12 @@ negotia:
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default authentication environment. The values are inferred
+/// from fSecurity and fDetails.
+
 void TAuthenticate::SetEnvironment()
 {
-   // Set default authentication environment. The values are inferred
-   // from fSecurity and fDetails.
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    if (gDebug > 2)
@@ -1032,12 +1032,12 @@ void TAuthenticate::SetEnvironment()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to get user name and passwd from several sources.
+
 Bool_t TAuthenticate::GetUserPasswd(TString &user, TString &passwd,
                                     Bool_t &pwhash, Bool_t srppwd)
 {
-   // Try to get user name and passwd from several sources.
-
    if (gDebug > 3)
       Info("GetUserPasswd", "Enter: User: '%s' Hash:%d SRP:%d",
            user.Data(),(Int_t)pwhash,(Int_t)srppwd);
@@ -1098,13 +1098,13 @@ Bool_t TAuthenticate::GetUserPasswd(TString &user, TString &passwd,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to get user name and passwd from the ~/.rootnetrc or
+/// ~/.netrc files. For more info see the version with 4 arguments.
+/// This version is maintained for backward compatability reasons.
+
 Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd)
 {
-   // Try to get user name and passwd from the ~/.rootnetrc or
-   // ~/.netrc files. For more info see the version with 4 arguments.
-   // This version is maintained for backward compatability reasons.
-
    Bool_t hash, srppwd;
 
    // Set srppwd flag
@@ -1113,35 +1113,35 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd)
    return CheckNetrc(user, passwd, hash, srppwd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to get user name and passwd from the ~/.rootnetrc or
+/// ~/.netrc files. First ~/.rootnetrc is tried, after that ~/.netrc.
+/// These files will only be used when their access masks are 0600.
+/// Returns kTRUE if user and passwd were found for the machine
+/// specified in the URL. If kFALSE, user and passwd are "".
+/// If srppwd == kTRUE then a SRP ('secure') pwd is searched for in
+/// the files.
+/// The boolean pwhash is set to kTRUE if the returned passwd is to
+/// be understood as password hash, i.e. if the 'password-hash' keyword
+/// is found in the 'machine' lines; not implemented for 'secure'
+/// and the .netrc file.
+/// The format of these files are:
+///
+/// # this is a comment line
+/// machine <machine fqdn> login <user> password <passwd>
+/// machine <machine fqdn> login <user> password-hash <passwd>
+///
+/// and in addition ~/.rootnetrc also supports:
+///
+/// secure <machine fqdn> login <user> password <passwd>
+///
+/// <machine fqdn> may be a domain name or contain the wild card '*'.
+///
+/// for the secure protocols. All lines must start in the first column.
+
 Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
                                  Bool_t &pwhash, Bool_t srppwd)
 {
-   // Try to get user name and passwd from the ~/.rootnetrc or
-   // ~/.netrc files. First ~/.rootnetrc is tried, after that ~/.netrc.
-   // These files will only be used when their access masks are 0600.
-   // Returns kTRUE if user and passwd were found for the machine
-   // specified in the URL. If kFALSE, user and passwd are "".
-   // If srppwd == kTRUE then a SRP ('secure') pwd is searched for in
-   // the files.
-   // The boolean pwhash is set to kTRUE if the returned passwd is to
-   // be understood as password hash, i.e. if the 'password-hash' keyword
-   // is found in the 'machine' lines; not implemented for 'secure'
-   // and the .netrc file.
-   // The format of these files are:
-   //
-   // # this is a comment line
-   // machine <machine fqdn> login <user> password <passwd>
-   // machine <machine fqdn> login <user> password-hash <passwd>
-   //
-   // and in addition ~/.rootnetrc also supports:
-   //
-   // secure <machine fqdn> login <user> password <passwd>
-   //
-   // <machine fqdn> may be a domain name or contain the wild card '*'.
-   //
-   // for the secure protocols. All lines must start in the first column.
-
    Bool_t result = kFALSE;
    Bool_t first = kTRUE;
    TString remote = fRemote;
@@ -1230,75 +1230,75 @@ again:
       return result;
    }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the global user.
+
 const char *TAuthenticate::GetGlobalUser()
 {
-   // Static method returning the global user.
-
    return fgUser;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the global password hash flag.
+
 Bool_t TAuthenticate::GetGlobalPwHash()
 {
-   // Static method returning the global password hash flag.
-
    return fgPwHash;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the global SRP password flag.
+
 Bool_t TAuthenticate::GetGlobalSRPPwd()
 {
-   // Static method returning the global SRP password flag.
-
    return fgSRPPwd;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning default expiring date for new validity contexts
+
 TDatime TAuthenticate::GetGlobalExpDate()
 {
-   // Static method returning default expiring date for new validity contexts
-
    return fgExpDate;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the default user information.
+
 const char *TAuthenticate::GetDefaultUser()
 {
-   // Static method returning the default user information.
-
    return fgDefaultUser;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the principal to be used to init Krb5 tickets.
+
 const char *TAuthenticate::GetKrb5Principal()
 {
-    // Static method returning the principal to be used to init Krb5 tickets.
-
    return fgKrb5Principal;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the authentication reuse settings.
+
 Bool_t TAuthenticate::GetAuthReUse()
 {
-   // Static method returning the authentication reuse settings.
-
    return fgAuthReUse;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the prompt user settings.
+
 Bool_t TAuthenticate::GetPromptUser()
 {
-   // Static method returning the prompt user settings.
-
    return fgPromptUser;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the method corresponding to idx.
+
 const char *TAuthenticate::GetAuthMethod(Int_t idx)
 {
-   // Static method returning the method corresponding to idx.
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    if (idx < 0 || idx > kMAXSEC-1) {
@@ -1308,12 +1308,12 @@ const char *TAuthenticate::GetAuthMethod(Int_t idx)
    return fgAuthMeth[idx];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the method index (which can be used to find
+/// the method in GetAuthMethod()). Returns -1 in case meth is not found.
+
 Int_t TAuthenticate::GetAuthMethodIdx(const char *meth)
 {
-   // Static method returning the method index (which can be used to find
-   // the method in GetAuthMethod()). Returns -1 in case meth is not found.
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    if (meth && meth[0]) {
@@ -1326,14 +1326,14 @@ Int_t TAuthenticate::GetAuthMethodIdx(const char *meth)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to prompt for the user name to be used for authentication
+/// to rootd or proofd. User is asked to type user name.
+/// Returns user name (which must be deleted by caller) or 0.
+/// If non-interactive run (eg ProofServ) returns default user.
+
 char *TAuthenticate::PromptUser(const char *remote)
 {
-   // Static method to prompt for the user name to be used for authentication
-   // to rootd or proofd. User is asked to type user name.
-   // Returns user name (which must be deleted by caller) or 0.
-   // If non-interactive run (eg ProofServ) returns default user.
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    const char *user;
@@ -1366,14 +1366,14 @@ char *TAuthenticate::PromptUser(const char *remote)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to prompt for the user's passwd to be used for
+/// authentication to rootd or proofd. Uses non-echoing command line
+/// to get passwd. Returns passwd (which must de deleted by caller) or 0.
+/// If non-interactive run (eg ProofServ) returns -1
+
 char *TAuthenticate::PromptPasswd(const char *prompt)
 {
-   // Static method to prompt for the user's passwd to be used for
-   // authentication to rootd or proofd. Uses non-echoing command line
-   // to get passwd. Returns passwd (which must de deleted by caller) or 0.
-   // If non-interactive run (eg ProofServ) returns -1
-
    if (isatty(0) == 0 || isatty(1) == 0) {
       ::Warning("TAuthenticate::PromptPasswd",
                 "not tty: cannot prompt for passwd, returning -1");
@@ -1421,53 +1421,53 @@ char *TAuthenticate::PromptPasswd(const char *prompt)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the globus authorization hook.
+
 GlobusAuth_t TAuthenticate::GetGlobusAuthHook()
 {
-   // Static method returning the globus authorization hook.
-
    return fgGlobusAuthHook;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the RSA public keys.
+
 const char *TAuthenticate::GetRSAPubExport(Int_t key)
 {
-   // Static method returning the RSA public keys.
-
    key = (key >= 0 && key <= 1) ? key : 0;
    return fgRSAPubExport[key].keys;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the RSA initialization flag.
+
 Int_t TAuthenticate::GetRSAInit()
 {
-   // Static method returning the RSA initialization flag.
-
    return fgRSAInit;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method setting the default type of RSA key.
+
 void TAuthenticate::SetDefaultRSAKeyType(Int_t key)
 {
-   // Static method setting the default type of RSA key.
-
    if (key >= 0 && key <= 1)
       fgRSAKey = key;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method setting RSA initialization flag.
+
 void TAuthenticate::SetRSAInit(Int_t init)
 {
-   // Static method setting RSA initialization flag.
-
    fgRSAInit = init;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the list with authentication details.
+
 TList *TAuthenticate::GetAuthInfo()
 {
-   // Static method returning the list with authentication details.
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    if (!fgAuthInfo)
@@ -1475,12 +1475,12 @@ TList *TAuthenticate::GetAuthInfo()
    return fgAuthInfo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the list with authentication directives
+/// to be sent to proof.
+
 TList *TAuthenticate::GetProofAuthInfo()
 {
-   // Static method returning the list with authentication directives
-   // to be sent to proof.
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    if (!fgProofAuthInfo)
@@ -1488,11 +1488,11 @@ TList *TAuthenticate::GetProofAuthInfo()
    return fgProofAuthInfo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print error string depending on error code.
+
 void TAuthenticate::AuthError(const char *where, Int_t err)
 {
-   // Print error string depending on error code.
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    // Make sure it is in range
@@ -1522,11 +1522,11 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
    fgLastError = err;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set global user name to be used for authentication to rootd or proofd.
+
 void TAuthenticate::SetGlobalUser(const char *user)
 {
-   // Set global user name to be used for authentication to rootd or proofd.
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    if (fgUser != "")
@@ -1536,11 +1536,11 @@ void TAuthenticate::SetGlobalUser(const char *user)
       fgUser = user;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set global passwd to be used for authentication to rootd or proofd.
+
 void TAuthenticate::SetGlobalPasswd(const char *passwd)
 {
-   // Set global passwd to be used for authentication to rootd or proofd.
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    if (fgPasswd != "")
@@ -1550,45 +1550,45 @@ void TAuthenticate::SetGlobalPasswd(const char *passwd)
       fgPasswd = passwd;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set global passwd hash flag to be used for authentication to rootd or proofd.
+
 void TAuthenticate::SetGlobalPwHash(Bool_t pwhash)
 {
-   // Set global passwd hash flag to be used for authentication to rootd or proofd.
-
    fgPwHash = pwhash;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set global SRP passwd flag to be used for authentication to rootd or proofd.
+
 void TAuthenticate::SetGlobalSRPPwd(Bool_t srppwd)
 {
-   // Set global SRP passwd flag to be used for authentication to rootd or proofd.
-
    fgSRPPwd = srppwd;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set flag controlling the reading of $HOME/.rootauthrc.
+/// In PROOF the administrator may want to switch off private settings.
+/// Always true, may only be set false via option to proofd.
+
 void TAuthenticate::SetReadHomeAuthrc(Bool_t readhomeauthrc)
 {
-   // Set flag controlling the reading of $HOME/.rootauthrc.
-   // In PROOF the administrator may want to switch off private settings.
-   // Always true, may only be set false via option to proofd.
-
    fgReadHomeAuthrc = readhomeauthrc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default expiring date for new validity contexts
+
 void TAuthenticate::SetGlobalExpDate(TDatime expdate)
 {
-   // Set default expiring date for new validity contexts
-
    fgExpDate = expdate;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default user name.
+
 void TAuthenticate::SetDefaultUser(const char *defaultuser)
 {
-   // Set default user name.
-
    if (fgDefaultUser != "")
       fgDefaultUser = "";
 
@@ -1596,64 +1596,64 @@ void TAuthenticate::SetDefaultUser(const char *defaultuser)
       fgDefaultUser = defaultuser;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set timeout (active if > 0)
+
 void TAuthenticate::SetTimeOut(Int_t to)
 {
-   // Set timeout (active if > 0)
-
    fgAuthTO = (to <= 0) ? -1 : to;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set global AuthReUse flag
+
 void TAuthenticate::SetAuthReUse(Bool_t authreuse)
 {
-   // Set global AuthReUse flag
-
    fgAuthReUse = authreuse;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set global PromptUser flag
+
 void TAuthenticate::SetPromptUser(Bool_t promptuser)
 {
-   // Set global PromptUser flag
-
    fgPromptUser = promptuser;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set secure authorization function. Automatically called when libSRPAuth
+/// is loaded.
+
 void TAuthenticate::SetSecureAuthHook(SecureAuth_t func)
 {
-   // Set secure authorization function. Automatically called when libSRPAuth
-   // is loaded.
-
    fgSecAuthHook = func;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set kerberos5 authorization function. Automatically called when
+/// libKrb5Auth is loaded.
+
 void TAuthenticate::SetKrb5AuthHook(Krb5Auth_t func)
 {
-   // Set kerberos5 authorization function. Automatically called when
-   // libKrb5Auth is loaded.
-
    fgKrb5AuthHook = func;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Globus authorization function. Automatically called when
+/// libGlobusAuth is loaded.
+
 void TAuthenticate::SetGlobusAuthHook(GlobusAuth_t func)
 {
-   // Set Globus authorization function. Automatically called when
-   // libGlobusAuth is loaded.
-
    fgGlobusAuthHook = func;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SSH error parsing: returns
+///     0  :  no error or fatal
+///     1  :  should retry (eg 'connection closed by remote host')
+
 Int_t TAuthenticate::SshError(const char *errorfile)
 {
-   // SSH error parsing: returns
-   //     0  :  no error or fatal
-   //     1  :  should retry (eg 'connection closed by remote host')
-
    Int_t error = 0;
 
    if (!gSystem->AccessPathName(errorfile, kReadPermission)) {
@@ -1698,11 +1698,11 @@ Int_t TAuthenticate::SshError(const char *errorfile)
    return error;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SSH client authentication code.
+
 Int_t TAuthenticate::SshAuth(TString &user)
 {
-   // SSH client authentication code.
-
    // No control on credential forwarding in case of SSH authentication;
    // switched it off on PROOF servers, unless the user knows what they
    // are doing
@@ -2160,13 +2160,13 @@ Int_t TAuthenticate::SshAuth(TString &user)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method returning the user to be used for the ssh login.
+/// Looks first at SSH.Login and finally at env USER.
+/// If SSH.LoginPrompt is set to 'yes' it prompts for the 'login name'
+
 const char *TAuthenticate::GetSshUser(TString user) const
 {
-   // Method returning the user to be used for the ssh login.
-   // Looks first at SSH.Login and finally at env USER.
-   // If SSH.LoginPrompt is set to 'yes' it prompts for the 'login name'
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    static TString usr = "";
@@ -2191,14 +2191,14 @@ const char *TAuthenticate::GetSshUser(TString user) const
    return usr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if 'host' matches 'href':
+/// this means either equal or "containing" it, even with wild cards *
+/// in the first field (in the case 'href' is a name, ie not IP address)
+/// Returns kTRUE if the two matches.
+
 Bool_t TAuthenticate::CheckHost(const char *host, const char *href)
 {
-   // Check if 'host' matches 'href':
-   // this means either equal or "containing" it, even with wild cards *
-   // in the first field (in the case 'href' is a name, ie not IP address)
-   // Returns kTRUE if the two matches.
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    Bool_t retval = kTRUE;
@@ -2252,14 +2252,14 @@ Bool_t TAuthenticate::CheckHost(const char *host, const char *href)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// UidGid client authentication code.
+/// Returns 0 in case authentication failed
+///         1 in case of success
+///        <0 in case of system error
+
 Int_t TAuthenticate::RfioAuth(TString &username)
 {
-   // UidGid client authentication code.
-   // Returns 0 in case authentication failed
-   //         1 in case of success
-   //        <0 in case of system error
-
    if (gDebug > 2)
       Info("RfioAuth", "enter ... username %s", username.Data());
 
@@ -2346,13 +2346,13 @@ Int_t TAuthenticate::RfioAuth(TString &username)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// UsrPwd client authentication code.
+/// Returns 0 in case authentication failed
+///         1 in case of success
+
 Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
 {
-   // UsrPwd client authentication code.
-   // Returns 0 in case authentication failed
-   //         1 in case of success
-
    R__LOCKGUARD2(gAuthenticateMutex);
 
    if (gDebug > 2)
@@ -2807,15 +2807,15 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets fUser=user and search fgAuthInfo for the entry pertaining to
+/// (host,user), setting fHostAuth accordingly.
+/// If opt = "P" use fgProofAuthInfo list instead
+/// If no entry is found fHostAuth is not changed
+
 THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user,
                                       Option_t *opt, Int_t *exact)
 {
-   // Sets fUser=user and search fgAuthInfo for the entry pertaining to
-   // (host,user), setting fHostAuth accordingly.
-   // If opt = "P" use fgProofAuthInfo list instead
-   // If no entry is found fHostAuth is not changed
-
    if (exact)
       *exact = 0;
 
@@ -2884,15 +2884,15 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user,
    return rHA;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if a THostAuth with exact match for {host,user} exists
+/// in the fgAuthInfo list
+/// If opt = "P" use ProofAuthInfo list instead
+/// Returns pointer to it or 0
+
 THostAuth *TAuthenticate::HasHostAuth(const char *host, const char *user,
                                       Option_t *opt)
 {
-   // Checks if a THostAuth with exact match for {host,user} exists
-   // in the fgAuthInfo list
-   // If opt = "P" use ProofAuthInfo list instead
-   // Returns pointer to it or 0
-
    if (gDebug > 2)
       ::Info("TAuthenticate::HasHostAuth", "enter ... %s ... %s", host, user);
 
@@ -2929,13 +2929,13 @@ THostAuth *TAuthenticate::HasHostAuth(const char *host, const char *user,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expands include directives found in fexp files
+/// The expanded, temporary file, is pointed to by 'ftmp'
+/// and should be already open. To be called recursively.
+
 void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
 {
-   // Expands include directives found in fexp files
-   // The expanded, temporary file, is pointed to by 'ftmp'
-   // and should be already open. To be called recursively.
-
    FILE *fin;
    char line[kMAXPATHLEN];
    char cinc[20], fileinc[kMAXPATHLEN];
@@ -3009,12 +3009,12 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
    fclose(fin);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine default authentication details for method 'sec' and user 'usr'.
+/// Checks .rootrc family files. Returned string must be deleted by the user.
+
 char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 {
-   // Determine default authentication details for method 'sec' and user 'usr'.
-   // Checks .rootrc family files. Returned string must be deleted by the user.
-
    char temp[kMAXPATHLEN] = { 0 };
    const char copt[2][5] = { "no", "yes" };
 
@@ -3078,11 +3078,11 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
    return StrDup(temp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove THostAuth instance from the list
+
 void TAuthenticate::RemoveHostAuth(THostAuth * ha, Option_t *opt)
 {
-   // Remove THostAuth instance from the list
-
    if (!strncasecmp(opt,"P",1))
       GetProofAuthInfo()->Remove(ha);
    else
@@ -3091,14 +3091,14 @@ void TAuthenticate::RemoveHostAuth(THostAuth * ha, Option_t *opt)
    delete ha;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about the authentication sector.
+/// If 'opt' contains 's' or 'S' prints information about established TSecContext,
+/// else prints information about THostAuth (if 'opt' is 'p' or 'P', prints
+/// Proof related information)
+
 void TAuthenticate::Show(Option_t *opt)
 {
-   // Print info about the authentication sector.
-   // If 'opt' contains 's' or 'S' prints information about established TSecContext,
-   // else prints information about THostAuth (if 'opt' is 'p' or 'P', prints
-   // Proof related information)
-
    TString sopt(opt);
 
    if (sopt.Contains("s",TString::kIgnoreCase)) {
@@ -3148,16 +3148,16 @@ void TAuthenticate::Show(Option_t *opt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if we have a valid established sec context in memory
+/// Retrieves relevant info and negotiates with server.
+/// options = "Opt,strlen(username),username.Data()"
+/// message = kROOTD_USER, ...
+
 Int_t TAuthenticate::AuthExists(TString username, Int_t method, const char *options,
                                 Int_t *message, Int_t *rflag,
                                 CheckSecCtx_t checksecctx)
 {
-   // Check if we have a valid established sec context in memory
-   // Retrieves relevant info and negotiates with server.
-   // options = "Opt,strlen(username),username.Data()"
-   // message = kROOTD_USER, ...
-
    // Welcome message, if requested ...
    if (gDebug > 2)
       Info("AuthExists","%d: enter: msg: %d options: '%s'",
@@ -3347,12 +3347,12 @@ Int_t TAuthenticate::AuthExists(TString username, Int_t method, const char *opti
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize random machine using seed from /dev/urandom
+/// (or current time if /dev/urandom not available).
+
 void TAuthenticate::InitRandom()
 {
-   // Initialize random machine using seed from /dev/urandom
-   // (or current time if /dev/urandom not available).
-
    static Bool_t notinit = kTRUE;
 
    if (notinit) {
@@ -3375,12 +3375,12 @@ void TAuthenticate::InitRandom()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate a valid pair of private/public RSA keys to protect for
+/// authentication token exchange
+
 Int_t TAuthenticate::GenRSAKeys()
 {
-   // Generate a valid pair of private/public RSA keys to protect for
-   // authentication token exchange
-
    if (gDebug > 2)
       Info("GenRSAKeys", "enter");
 
@@ -3615,16 +3615,16 @@ Int_t TAuthenticate::GenRSAKeys()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocates and fills a 0 terminated buffer of length len+1 with
+/// len random characters.
+/// Returns pointer to the buffer (to be deleted by the caller)
+/// opt = 0      any non dangerous char
+///       1      letters and numbers  (upper and lower case)
+///       2      hex characters       (upper and lower case)
+
 char *TAuthenticate::GetRandString(Int_t opt, Int_t len)
 {
-   // Allocates and fills a 0 terminated buffer of length len+1 with
-   // len random characters.
-   // Returns pointer to the buffer (to be deleted by the caller)
-   // opt = 0      any non dangerous char
-   //       1      letters and numbers  (upper and lower case)
-   //       2      hex characters       (upper and lower case)
-
    unsigned int iimx[4][4] = {
       {0x0, 0xffffff08, 0xafffffff, 0x2ffffffe}, // opt = 0
       {0x0, 0x3ff0000, 0x7fffffe, 0x7fffffe},    // opt = 1
@@ -3675,15 +3675,15 @@ char *TAuthenticate::GetRandString(Int_t opt, Int_t len)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Encode null terminated str using the session private key indicated by enc
+/// and sends it over the network
+/// Returns number of bytes sent, or -1 in case of error.
+/// enc = 1 for private encoding, enc = 2 for public encoding
+
 Int_t TAuthenticate::SecureSend(TSocket *sock, Int_t enc,
                                 Int_t key, const char *str)
 {
-   // Encode null terminated str using the session private key indicated by enc
-   // and sends it over the network
-   // Returns number of bytes sent, or -1 in case of error.
-   // enc = 1 for private encoding, enc = 2 for public encoding
-
    char buftmp[kMAXSECBUF];
    char buflen[20];
 
@@ -3737,13 +3737,13 @@ Int_t TAuthenticate::SecureSend(TSocket *sock, Int_t enc,
    return nsen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive str from sock and decode it using key indicated by key type
+/// Return number of received bytes or -1 in case of error.
+/// dec = 1 for private decoding, dec = 2 for public decoding
+
 Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
 {
-   // Receive str from sock and decode it using key indicated by key type
-   // Return number of received bytes or -1 in case of error.
-   // dec = 1 for private decoding, dec = 2 for public decoding
-
 
    char buftmp[kMAXSECBUF];
    char buflen[20];
@@ -3806,12 +3806,12 @@ Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
    return nrec;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store RSA public keys from export string rsaPubExport.
+
 Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n,
                                      rsa_NUMBER &rsa_d, char **rsassl)
 {
-   // Store RSA public keys from export string rsaPubExport.
-
    if (!rsaPubExport)
       return -1;
 
@@ -3910,12 +3910,12 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n
    return keytype;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store RSA public keys from export string rsaPubExport.
+/// Returns type of stored key, or -1 is not recognized
+
 Int_t TAuthenticate::SetRSAPublic(const char *rsaPubExport, Int_t klen)
 {
-   // Store RSA public keys from export string rsaPubExport.
-   // Returns type of stored key, or -1 is not recognized
-
    if (gDebug > 2)
       ::Info("TAuthenticate::SetRSAPublic",
              "enter: string length %ld bytes", (Long_t)strlen(rsaPubExport));
@@ -3988,12 +3988,12 @@ Int_t TAuthenticate::SetRSAPublic(const char *rsaPubExport, Int_t klen)
    return rsakey;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receives server RSA Public key
+/// Sends local RSA public key encoded
+
 Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
 {
-   // Receives server RSA Public key
-   // Sends local RSA public key encoded
-
    // Receive server public key
    char serverPubKey[kMAXSECBUF];
    int kind, nr = 0;
@@ -4081,14 +4081,14 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
    return nsen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read authentication directives from $ROOTAUTHRC, $HOME/.rootauthrc or
+/// <Root_etc_dir>/system.rootauthrc and create related THostAuth objects.
+/// Files are read only if they changed since last reading
+/// If 'proofconf' is defined, check also file proofconf for directives
+
 Int_t TAuthenticate::ReadRootAuthrc()
 {
-   // Read authentication directives from $ROOTAUTHRC, $HOME/.rootauthrc or
-   // <Root_etc_dir>/system.rootauthrc and create related THostAuth objects.
-   // Files are read only if they changed since last reading
-   // If 'proofconf' is defined, check also file proofconf for directives
-
    // rootauthrc family
    char *authrc = 0;
    if (gSystem->Getenv("ROOTAUTHRC") != 0) {
@@ -4422,11 +4422,11 @@ Int_t TAuthenticate::ReadRootAuthrc()
    return authinfo->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the authentication method can be attempted for the client.
+
 Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &out)
 {
-   // Check if the authentication method can be attempted for the client.
-
    Bool_t rc = kFALSE;
    const char sshid[3][20] = { "/.ssh/identity", "/.ssh/id_dsa", "/.ssh/id_rsa" };
    const char netrc[2][20] = { "/.netrc", "/.rootnetrc" };
@@ -4538,14 +4538,14 @@ Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &out)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Standard version of CheckSecCtx to be passed to TAuthenticate::AuthExists
+/// Check if User is matches the one in Ctx
+/// Returns: 1 if ok, 0 if not
+/// Deactivates Ctx is not valid
+
 Int_t StdCheckSecCtx(const char *user, TRootSecContext *ctx)
 {
-   // Standard version of CheckSecCtx to be passed to TAuthenticate::AuthExists
-   // Check if User is matches the one in Ctx
-   // Returns: 1 if ok, 0 if not
-   // Deactivates Ctx is not valid
-
    Int_t rc = 0;
 
    if (ctx->IsActive()) {
@@ -4556,17 +4556,17 @@ Int_t StdCheckSecCtx(const char *user, TRootSecContext *ctx)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tool for updating fgAuthInfo or fgProofAuthInfo
+/// 'nin' contains list of last input information through (re)reading
+/// of a rootauthrc-alike file. 'nin' info has priority.
+/// 'std' is cleaned from inactive members.
+/// 'nin' members used to update existing members in 'std' are
+/// removed from 'nin', do that they do not leak
+/// opt = "P" for proofauthinfo.
+
 void TAuthenticate::MergeHostAuthList(TList *std, TList *nin, Option_t *opt)
 {
-   // Tool for updating fgAuthInfo or fgProofAuthInfo
-   // 'nin' contains list of last input information through (re)reading
-   // of a rootauthrc-alike file. 'nin' info has priority.
-   // 'std' is cleaned from inactive members.
-   // 'nin' members used to update existing members in 'std' are
-   // removed from 'nin', do that they do not leak
-   // opt = "P" for proofauthinfo.
-
    // Remove inactive from the 'std'
    TIter nxstd(std);
    THostAuth *ha;
@@ -4611,12 +4611,12 @@ void TAuthenticate::MergeHostAuthList(TList *std, TList *nin, Option_t *opt)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tool for removing SecContext ctx from THostAuth listed in
+/// fgAuthInfo or fgProofAuthInfo
+
 void TAuthenticate::RemoveSecContext(TRootSecContext *ctx)
 {
-   // Tool for removing SecContext ctx from THostAuth listed in
-   // fgAuthInfo or fgProofAuthInfo
-
    THostAuth *ha = 0;
 
    // authinfo first
@@ -4647,14 +4647,14 @@ void TAuthenticate::RemoveSecContext(TRootSecContext *ctx)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Authentication related stuff setup in TProofServ.
+/// This is the place where the buffer send by the client / master is
+/// decoded. It contains also password information, if the case requires.
+/// Return 0 on success, -1 on failure.
+
 Int_t TAuthenticate::ProofAuthSetup()
 {
-   // Authentication related stuff setup in TProofServ.
-   // This is the place where the buffer send by the client / master is
-   // decoded. It contains also password information, if the case requires.
-   // Return 0 on success, -1 on failure.
-
    static Bool_t done = kFALSE;
 
    // Only once
@@ -4770,13 +4770,13 @@ Int_t TAuthenticate::ProofAuthSetup()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup of authetication related stuff in PROOF run after a
+/// successful authentication.
+/// Return 0 on success, -1 on failure.
+
 Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t client)
 {
-   // Setup of authetication related stuff in PROOF run after a
-   // successful authentication.
-   // Return 0 on success, -1 on failure.
-
    // Fill some useful info
    TSecContext *sc    = sock->GetSecContext();
    TString user       = sc->GetUser();
@@ -4855,11 +4855,11 @@ Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t client)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning supported client protocol.
+
 Int_t TAuthenticate::GetClientProtocol()
 {
-   // Static method returning supported client protocol.
-
    return TSocket::GetClientProtocol();
 }
 
@@ -4868,17 +4868,17 @@ Int_t TAuthenticate::GetClientProtocol()
 // compatibility.
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sends the list of the relevant THostAuth objects to the master or
+/// to the active slaves, typically data servers external to the proof
+/// cluster. The list is of THostAuth to be sent is specified by
+/// TAuthenticate::fgProofAuthInfo after directives found in the
+/// .rootauthrc family files ('proofserv' key)
+/// Returns -1 if a problem sending THostAuth has occured, -2 in case
+/// of problems closing the transmission.
+
 static Int_t SendHostAuth(TSocket *s)
 {
-   // Sends the list of the relevant THostAuth objects to the master or
-   // to the active slaves, typically data servers external to the proof
-   // cluster. The list is of THostAuth to be sent is specified by
-   // TAuthenticate::fgProofAuthInfo after directives found in the
-   // .rootauthrc family files ('proofserv' key)
-   // Returns -1 if a problem sending THostAuth has occured, -2 in case
-   // of problems closing the transmission.
-
    Int_t retval = 0, ns = 0;
 
    if (!s) {
@@ -4909,14 +4909,14 @@ static Int_t SendHostAuth(TSocket *s)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive from client/master directives for authentications, create
+/// related THostAuth and add them to the TAuthenticate::ProofAuthInfo
+/// list. Opt = "M" or "m" if Master, "S" or "s" if Proof slave.
+/// The 'proofconf' file is read only if Master
+
 static Int_t RecvHostAuth(TSocket *s, Option_t *opt)
 {
-   // Receive from client/master directives for authentications, create
-   // related THostAuth and add them to the TAuthenticate::ProofAuthInfo
-   // list. Opt = "M" or "m" if Master, "S" or "s" if Proof slave.
-   // The 'proofconf' file is read only if Master
-
    if (!s) {
       Error("RecvHostAuth","invalid input: socket undefined");
       return -1;
@@ -5021,14 +5021,14 @@ static Int_t RecvHostAuth(TSocket *s, Option_t *opt)
 
 extern "C" {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup of authetication in PROOF run after successful opening
+/// of the socket. Provided for backward compatibility.
+/// Return 0 on success, -1 on failure.
+
 Int_t OldSlaveAuthSetup(TSocket *sock,
                         Bool_t master, TString ord, TString conf)
 {
-   // Setup of authetication in PROOF run after successful opening
-   // of the socket. Provided for backward compatibility.
-   // Return 0 on success, -1 on failure.
-
 
    // Fill some useful info
    TSecContext *sc    = sock->GetSecContext();
@@ -5127,14 +5127,14 @@ Int_t OldSlaveAuthSetup(TSocket *sock,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Authentication related setup in TProofServ run after successful
+/// startup. Provided for backward compatibility.
+/// Return 0 on success, -1 on failure.
+
 Int_t OldProofServAuthSetup(TSocket *sock, Bool_t master, Int_t protocol,
                             TString &user, TString &ord, TString &conf)
 {
-   // Authentication related setup in TProofServ run after successful
-   // startup. Provided for backward compatibility.
-   // Return 0 on success, -1 on failure.
-
    // First receive, decode and store the public part of RSA key
    Int_t retval, kind;
    if (sock->Recv(retval, kind) != 2*sizeof(Int_t)) {

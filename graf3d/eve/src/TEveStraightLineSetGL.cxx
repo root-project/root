@@ -27,63 +27,63 @@
 
 ClassImp(TEveStraightLineSetGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveStraightLineSetGL::TEveStraightLineSetGL() : TGLObject(), fM(0)
 {
-   // Constructor.
-
    // fDLCache = false; // Disable display list.
    fMultiColor = kTRUE;
 }
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveStraightLineSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveStraightLineSet>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup bounding box information.
+
 void TEveStraightLineSetGL::SetBBox()
 {
-   // Setup bounding box information.
-
    SetAxisAlignedBBox(((TEveStraightLineSet*)fExternalObj)->AssertBBox());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override from TGLObject.
+/// To account for large point-sizes we modify the projection matrix
+/// during selection and thus we need a direct draw.
+
 Bool_t TEveStraightLineSetGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
-   // Override from TGLObject.
-   // To account for large point-sizes we modify the projection matrix
-   // during selection and thus we need a direct draw.
-
    if (rnrCtx.Selection()) return kFALSE;
    return TGLObject::ShouldDLCache(rnrCtx);
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw function for TEveStraightLineSetGL. Skips line-pass of outline mode.
+
 void TEveStraightLineSetGL::Draw(TGLRnrCtx& rnrCtx) const
 {
-   // Draw function for TEveStraightLineSetGL. Skips line-pass of outline mode.
-
    if (rnrCtx.IsDrawPassOutlineLine())
       return;
 
    TGLObject::Draw(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render the line-set with GL.
+
 void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
-   // Render the line-set with GL.
-
    // printf("TEveStraightLineSetGL::DirectDraw LOD %d\n", rnrCtx.ShapeLOD());
 
    TEveStraightLineSet& mL = * fM;
@@ -194,12 +194,12 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process results of the secondary selection.
+
 void TEveStraightLineSetGL::ProcessSelection(TGLRnrCtx& /*rnrCtx*/,
                                              TGLSelectRecord& rec)
 {
-   // Process results of the secondary selection.
-
    if (rec.GetN() != 3) return;
    if (rec.GetItem(1) == 1)
    {

@@ -36,12 +36,12 @@
 ClassImp(TDrawFeedback)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
   : fAll(kFALSE)
 {
-   // Constructor
-
    fNames = new THashList;
    fNames->SetOwner();
 
@@ -75,20 +75,20 @@ TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
    fOption = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TDrawFeedback::~TDrawFeedback()
 {
-   // Destructor
-
    delete fNames;
    fProof->Disconnect("Feedback(TList*)", this, "Feedback(TList*");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display feedback
+
 void TDrawFeedback::Feedback(TList *objs)
 {
-   // Display feedback
-
    TSeqCollection *canvases = gROOT->GetListOfCanvases();
    TVirtualPad *save = gPad;
 

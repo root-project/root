@@ -29,50 +29,50 @@
 
 ClassImp(TEveCalo3DGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveCalo3DGL::TEveCalo3DGL() :
    TGLObject(), fM(0)
 {
-   // Constructor.
-
    fMultiColor = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveCalo3DGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveCalo3D>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEveCalo3DGL::SetBBox()
 {
-   // Set bounding box.
-
    // !! This ok if master sub-classed from TAttBBox
    SetAxisAlignedBBox(((TEveCalo3D*)fExternalObj)->AssertBBox());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override from TGLObject.
+/// To account for large point-sizes we modify the projection matrix
+/// during selection and thus we need a direct draw.
+
 Bool_t TEveCalo3DGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
-   // Override from TGLObject.
-   // To account for large point-sizes we modify the projection matrix
-   // during selection and thus we need a direct draw.
-
    if (rnrCtx.Highlight() || rnrCtx.Selection()) return kFALSE;
    return TGLObject::ShouldDLCache(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate cross-product.
+
 inline void TEveCalo3DGL::CrossProduct(const Float_t a[3], const Float_t b[3],
                                        const Float_t c[3], Float_t out[3]) const
 {
-   // Calculate cross-product.
-
    const Float_t v1[3] = { a[0] - c[0], a[1] - c[1], a[2] - c[2] };
    const Float_t v2[3] = { b[0] - c[0], b[1] - c[1], b[2] - c[2] };
 
@@ -81,11 +81,11 @@ inline void TEveCalo3DGL::CrossProduct(const Float_t a[3], const Float_t b[3],
    out[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render end cap grid.
+
 void TEveCalo3DGL::RenderGridEndCap() const
 {
-   // Render end cap grid.
-
    using namespace TMath;
 
    Float_t  rB = fM->GetBarrelRadius();
@@ -193,11 +193,11 @@ void TEveCalo3DGL::RenderGridEndCap() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render barrel grid.
+
 void TEveCalo3DGL::RenderGridBarrel() const
 {
-   // Render barrel grid.
-
    using namespace TMath;
 
    Float_t etaMin = fM->GetEtaMin();
@@ -268,11 +268,11 @@ void TEveCalo3DGL::RenderGridBarrel() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw frame reading eta, phi axis.
+
 void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
 {
-   // Draw frame reading eta, phi axis.
-
    if (rnrCtx.Highlight() || rnrCtx.Selection() || rnrCtx.IsDrawPassOutlineLine()) return;
 
    Bool_t transparent_p = fM->fFrameTransparency > 0;
@@ -316,11 +316,11 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render box with given points.
+
 void TEveCalo3DGL::RenderBox(const Float_t pnts[8]) const
 {
-   // Render box with given points.
-
    //    z
    //    |
    //    |
@@ -392,11 +392,11 @@ void TEveCalo3DGL::RenderBox(const Float_t pnts[8]) const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render barrel cell.
+
 void TEveCalo3DGL::RenderBarrelCell(const TEveCaloData::CellGeom_t &cellData, Float_t towerH, Float_t& offset ) const
 {
-   // Render barrel cell.
-
    using namespace TMath;
 
    Float_t r1 = fM->GetBarrelRadius() + offset;
@@ -462,11 +462,11 @@ void TEveCalo3DGL::RenderBarrelCell(const TEveCaloData::CellGeom_t &cellData, Fl
 
 }// end RenderBarrelCell
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render an endcap cell.
+
 void TEveCalo3DGL::RenderEndCapCell(const TEveCaloData::CellGeom_t &cellData, Float_t towerH, Float_t& offset ) const
 {
-   // Render an endcap cell.
-
    using namespace TMath;
    Float_t z1, r1In, r1Out, z2, r2In, r2Out;
 
@@ -536,11 +536,11 @@ void TEveCalo3DGL::RenderEndCapCell(const TEveCaloData::CellGeom_t &cellData, Fl
 } // end RenderEndCapCell
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GL rendering.
+
 void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
 {
-   // GL rendering.
-
    if ( fM->GetValueIsColor())  fM->AssertPalette();
 
    // check if eta phi range has changed
@@ -596,11 +596,11 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    glPopAttrib();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw polygons in highlight mode.
+
 void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* /*pshp*/, Int_t /*lvl*/) const
 {
-   // Draw polygons in highlight mode.
-
    if (fM->fData->GetCellsSelected().empty() && fM->fData->GetCellsHighlighted().empty())
    {
       return;
@@ -633,7 +633,8 @@ void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* /*p
    glPopAttrib();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TEveCalo3DGL::DrawSelectedCells(TEveCaloData::vCellId_t cells) const
 {
    TEveCaloData::CellData_t cellData;
@@ -665,12 +666,12 @@ void TEveCalo3DGL::DrawSelectedCells(TEveCaloData::vCellId_t cells) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Processes tower selection.
+/// Virtual function from TGLogicalShape. Called from TGLViewer.
+
 void TEveCalo3DGL::ProcessSelection(TGLRnrCtx& /*rnrCtx*/, TGLSelectRecord& rec)
 {
-   // Processes tower selection.
-   // Virtual function from TGLogicalShape. Called from TGLViewer.
-
    TEveCaloData::vCellId_t sel;
    if (rec.GetN() > 1)
    {

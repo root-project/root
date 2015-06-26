@@ -32,55 +32,57 @@
 
 ClassImp(TMCVerbose)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Standard constructor
+/// ---
+
 TMCVerbose::TMCVerbose(Int_t level)
   : TObject(),
     fLevel(level),
     fStepNumber(0)
 {
-// Standard constructor
-// ---
-
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+/// ---
+
 TMCVerbose::TMCVerbose()
   : TObject(),
     fLevel(0),
     fStepNumber(0)
 {
-// Default constructor
-// ---
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+/// ---
+
 TMCVerbose::~TMCVerbose()
 {
-// Destructor
-// ---
 }
 
 //
 // private methods
 //
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints banner for track information
+/// ---
+
 void TMCVerbose::PrintBanner() const
 {
-// Prints banner for track information
-// ---
-
    std::cout << std::endl;
    for (Int_t i=0; i<10; i++) std::cout << "**********";
    std::cout << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints track information
+/// ---
+
 void TMCVerbose::PrintTrackInfo() const
 {
-// Prints track information
-// ---
-
    // Particle
    //
    std::cout << "  Particle = ";
@@ -99,12 +101,12 @@ void TMCVerbose::PrintTrackInfo() const
    std::cout << "   Parent ID = " << gMC->GetStack()->GetCurrentParentTrackNumber();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints the header for stepping information
+/// ---
+
 void TMCVerbose::PrintStepHeader() const
 {
-// Prints the header for stepping information
-// ---
-
    std::cout << "Step#     "
         << "X(cm)    "
         << "Y(cm)    "
@@ -122,122 +124,122 @@ void TMCVerbose::PrintStepHeader() const
 // public methods
 //
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize MC info.
+/// ---
+
 void TMCVerbose::InitMC()
 {
-// Initialize MC info.
-// ---
-
    if (fLevel>0)
       std::cout << "--- Init MC " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MC run info.
+/// ---
+
 void TMCVerbose::RunMC(Int_t nofEvents)
 {
-// MC run info.
-// ---
-
    if (fLevel>0)
       std::cout << "--- Run MC for " << nofEvents << " events" << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finish MC run info.
+/// ---
+
 void TMCVerbose::FinishRun()
 {
-// Finish MC run info.
-// ---
-
    if (fLevel>0)
       std::cout << "--- Finish Run MC " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct geometry info
+/// ---
+
 void TMCVerbose::ConstructGeometry()
 {
-// Construct geometry info
-// ---
-
    if (fLevel>0)
       std::cout << "--- Construct geometry " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct geometry for optical physics info
+/// ---
+
 void TMCVerbose::ConstructOpGeometry()
 {
-// Construct geometry for optical physics info
-// ---
-
    if (fLevel>0)
       std::cout << "--- Construct geometry for optical processes" << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize geometry info
+/// ---
+
 void TMCVerbose::InitGeometry()
 {
-// Initialize geometry info
-// ---
-
    if (fLevel>0)
       std::cout << "--- Init geometry " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add particles info
+/// ---
+
 void TMCVerbose::AddParticles()
 {
-// Add particles info
-// ---
-
    if (fLevel>0)
       std::cout << "--- Add particles " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add ions info
+/// ---
+
 void TMCVerbose::AddIons()
 {
-// Add ions info
-// ---
-
    if (fLevel>0)
       std::cout << "--- Add ions " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate primaries info
+/// ---
+
 void TMCVerbose::GeneratePrimaries()
 {
-// Generate primaries info
-// ---
-
    if (fLevel>0)
       std::cout << "--- Generate primaries " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Begin event info
+/// ---
+
 void TMCVerbose::BeginEvent()
 {
-// Begin event info
-// ---
-
    if (fLevel>0)
       std::cout << "--- Begin event " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Begin of a primary track info
+/// ---
+
 void TMCVerbose::BeginPrimary()
 {
-// Begin of a primary track info
-// ---
-
    if (fLevel>1)
       std::cout << "--- Begin primary " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Begin of each track info
+/// ---
+
 void TMCVerbose::PreTrack()
 {
-// Begin of each track info
-// ---
-
    if (fLevel>2) {
       PrintBanner();
       PrintTrackInfo();
@@ -253,12 +255,12 @@ void TMCVerbose::PreTrack()
       std::cout << "--- Pre track " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stepping info
+/// ---
+
 void TMCVerbose::Stepping()
 {
-// Stepping info
-// ---
-
    if (fLevel>2) {
 
 #if __GNUC__ >= 3
@@ -314,32 +316,32 @@ void TMCVerbose::Stepping()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finish of each track info
+/// ---
+
 void TMCVerbose::PostTrack()
 {
-// Finish of each track info
-// ---
-
    if (fLevel==2)
       std::cout << "--- Post track " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finish of a primary track info
+/// ---
+
 void TMCVerbose::FinishPrimary()
 {
-// Finish of a primary track info
-// ---
-
    if (fLevel==2)
       std::cout << "--- Finish primary " << std::endl;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finish of an event info
+/// ---
+
 void TMCVerbose::FinishEvent()
 {
-// Finish of an event info
-// ---
-
    if (fLevel>0)
       std::cout << "--- Finish event " << std::endl;
 }

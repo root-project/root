@@ -58,11 +58,11 @@ Int_t          TCollection::fgGarbageStack      = 0;
 ClassImp(TCollection)
 ClassImp(TIter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add all objects from collection col to this collection.
+
 void TCollection::AddAll(const TCollection *col)
 {
-   // Add all objects from collection col to this collection.
-
    TIter next(col);
    TObject *obj;
 
@@ -70,12 +70,12 @@ void TCollection::AddAll(const TCollection *col)
       Add(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add all arguments to the collection. The list of objects must be
+/// temrinated by 0, e.g.: l.AddVector(o1, o2, o3, o4, 0);
+
 void TCollection::AddVector(TObject *va_(obj1), ...)
 {
-   // Add all arguments to the collection. The list of objects must be
-   // temrinated by 0, e.g.: l.AddVector(o1, o2, o3, o4, 0);
-
    va_list ap;
    va_start(ap, va_(obj1));
    TObject *obj;
@@ -86,11 +86,11 @@ void TCollection::AddVector(TObject *va_(obj1), ...)
    va_end(ap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure all objects in this collection inherit from class cl.
+
 Bool_t TCollection::AssertClass(TClass *cl) const
 {
-   // Make sure all objects in this collection inherit from class cl.
-
    TObject *obj;
    TIter    next(this);
    Bool_t   error = kFALSE;
@@ -109,13 +109,13 @@ Bool_t TCollection::AssertClass(TClass *cl) const
    return error;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse this collection (called by TBrowser).
+/// If b=0, there is no Browse call TObject::Browse(0) instead.
+///         This means TObject::Inspect() will be invoked indirectly
+
 void TCollection::Browse(TBrowser *b)
 {
-   // Browse this collection (called by TBrowser).
-   // If b=0, there is no Browse call TObject::Browse(0) instead.
-   //         This means TObject::Inspect() will be invoked indirectly
-
    TIter next(this);
    TObject *obj;
 
@@ -125,33 +125,33 @@ void TCollection::Browse(TBrowser *b)
       TObject::Browse(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of an collection using the Streamer facility.
+/// If newname is specified, this will be the name of the new collection.
+
 TObject *TCollection::Clone(const char *newname) const
 {
-   // Make a clone of an collection using the Streamer facility.
-   // If newname is specified, this will be the name of the new collection.
-
    TCollection *new_collection = (TCollection*)TObject::Clone(newname);
    if (newname && strlen(newname)) new_collection->SetName(newname);
    return new_collection;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare two TCollection objects. Returns 0 when equal, -1 when this is
+/// smaller and +1 when bigger (like strcmp()).
+
 Int_t TCollection::Compare(const TObject *obj) const
 {
-   // Compare two TCollection objects. Returns 0 when equal, -1 when this is
-   // smaller and +1 when bigger (like strcmp()).
-
    if (this == obj) return 0;
    return fName.CompareTo(obj->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw all objects in this collection.
+
 void TCollection::Draw(Option_t *option)
 {
-   // Draw all objects in this collection.
-
    TIter next(this);
    TObject *object;
 
@@ -160,11 +160,11 @@ void TCollection::Draw(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump all objects in this collection.
+
 void TCollection::Dump() const
 {
-   // Dump all objects in this collection.
-
    TIter next(this);
    TObject *object;
 
@@ -173,13 +173,13 @@ void TCollection::Dump() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find an object in this collection using its name. Requires a sequential
+/// scan till the object has been found. Returns 0 if object with specified
+/// name is not found.
+
 TObject *TCollection::FindObject(const char *name) const
 {
-   // Find an object in this collection using its name. Requires a sequential
-   // scan till the object has been found. Returns 0 if object with specified
-   // name is not found.
-
    TIter next(this);
    TObject *obj;
 
@@ -188,23 +188,23 @@ TObject *TCollection::FindObject(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find an object in this collection by name.
+
 TObject *TCollection::operator()(const char *name) const
 {
-  // Find an object in this collection by name.
-
    return FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find an object in this collection using the object's IsEqual()
+/// member function. Requires a sequential scan till the object has
+/// been found. Returns 0 if object is not found.
+/// Typically this function is overridden by a more efficient version
+/// in concrete collection classes (e.g. THashTable).
+
 TObject *TCollection::FindObject(const TObject *obj) const
 {
-   // Find an object in this collection using the object's IsEqual()
-   // member function. Requires a sequential scan till the object has
-   // been found. Returns 0 if object is not found.
-   // Typically this function is overridden by a more efficient version
-   // in concrete collection classes (e.g. THashTable).
-
    TIter next(this);
    TObject *ob;
 
@@ -213,21 +213,21 @@ TObject *TCollection::FindObject(const TObject *obj) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return name of this collection.
+/// if no name, return the collection class name.
+
 const char *TCollection::GetName() const
 {
-  // Return name of this collection.
-  // if no name, return the collection class name.
-
    if (fName.Length() > 0) return fName.Data();
    return ClassName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increase the collection's capacity by delta slots.
+
 Int_t TCollection::GrowBy(Int_t delta) const
 {
-  // Increase the collection's capacity by delta slots.
-
    if (delta < 0) {
       Error("GrowBy", "delta < 0");
       delta = Capacity();
@@ -235,21 +235,21 @@ Int_t TCollection::GrowBy(Int_t delta) const
    return Capacity() + TMath::Range(2, kMaxInt - Capacity(), delta);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if object is a null pointer.
+
 Bool_t  TCollection::IsArgNull(const char *where, const TObject *obj) const
 {
-   // Returns true if object is a null pointer.
-
    return obj ? kFALSE : (Error(where, "argument is a null pointer"), kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List (ls) all objects in this collection.
+/// Wildcarding supported, eg option="xxx*" lists only objects
+/// with names xxx*.
+
 void TCollection::ls(Option_t *option) const
 {
-   // List (ls) all objects in this collection.
-   // Wildcarding supported, eg option="xxx*" lists only objects
-   // with names xxx*.
-
    TROOT::IndentLevel();
    std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
         << Int_t(TestBit(kCanDelete)) << std::endl;
@@ -271,39 +271,39 @@ void TCollection::ls(Option_t *option) const
    TROOT::DecreaseDirLevel();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint all objects in this collection.
+
 void TCollection::Paint(Option_t *option)
 {
-   // Paint all objects in this collection.
-
    this->R__FOR_EACH(TObject,Paint)(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the collection header.
+
 void TCollection::PrintCollectionHeader(Option_t*) const
 {
-   // Print the collection header.
-
    TROOT::IndentLevel();
    printf("Collection name='%s', class='%s', size=%d\n",
           GetName(), ClassName(), GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For given collection entry return the string that is used to
+/// identify the object and, potentially, perform wildcard/regexp
+/// filtering on.
+
 const char* TCollection::GetCollectionEntryName(TObject* entry) const
 {
-   // For given collection entry return the string that is used to
-   // identify the object and, potentially, perform wildcard/regexp
-   // filtering on.
-
    return entry->GetName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the collection entry.
+
 void TCollection::PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const
 {
-   // Print the collection entry.
-
    TCollection* coll = dynamic_cast<TCollection*>(entry);
    if (coll) {
       coll->Print(option, recurse);
@@ -313,38 +313,38 @@ void TCollection::PrintCollectionEntry(TObject* entry, Option_t* option, Int_t r
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default print for collections, calls Print(option, 1).
+/// This will print the collection header and Print() methods of
+/// all the collection entries.
+///
+/// If you want to override Print() for a collection class, first
+/// see if you can accomplish it by overriding the following protected
+/// methods:
+///   void        PrintCollectionHeader(Option_t* option) const;
+///   const char* GetCollectionEntryName(TObject* entry) const;
+///   void        PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
+/// Otherwise override the Print(Option_t *option, Int_t)
+/// variant. Remember to declare:
+///   using TCollection::Print;
+/// somewhere close to the method declaration.
+
 void TCollection::Print(Option_t *option) const
 {
-   // Default print for collections, calls Print(option, 1).
-   // This will print the collection header and Print() methods of
-   // all the collection entries.
-   //
-   // If you want to override Print() for a collection class, first
-   // see if you can accomplish it by overriding the following protected
-   // methods:
-   //   void        PrintCollectionHeader(Option_t* option) const;
-   //   const char* GetCollectionEntryName(TObject* entry) const;
-   //   void        PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
-   // Otherwise override the Print(Option_t *option, Int_t)
-   // variant. Remember to declare:
-   //   using TCollection::Print;
-   // somewhere close to the method declaration.
-
    Print(option, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the collection header and its elements.
+///
+/// If recurse is non-zero, descend into printing of
+/// collection-entries with recurse - 1.
+/// This means, if recurse is negative, the recursion is infinite.
+///
+/// Option is passed recursively.
+
 void TCollection::Print(Option_t *option, Int_t recurse) const
 {
-   // Print the collection header and its elements.
-   //
-   // If recurse is non-zero, descend into printing of
-   // collection-entries with recurse - 1.
-   // This means, if recurse is negative, the recursion is infinite.
-   //
-   // Option is passed recursively.
-
    PrintCollectionHeader(option);
 
    if (recurse != 0)
@@ -360,18 +360,18 @@ void TCollection::Print(Option_t *option, Int_t recurse) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the collection header and its elements that match the wildcard.
+///
+/// If recurse is non-zero, descend into printing of
+/// collection-entries with recurse - 1.
+/// This means, if recurse is negative, the recursion is infinite.
+///
+/// Option is passed recursively, but wildcard is only used on the
+/// first level.
+
 void TCollection::Print(Option_t *option, const char* wildcard, Int_t recurse) const
 {
-   // Print the collection header and its elements that match the wildcard.
-   //
-   // If recurse is non-zero, descend into printing of
-   // collection-entries with recurse - 1.
-   // This means, if recurse is negative, the recursion is infinite.
-   //
-   // Option is passed recursively, but wildcard is only used on the
-   // first level.
-
    PrintCollectionHeader(option);
 
    if (recurse != 0)
@@ -393,18 +393,18 @@ void TCollection::Print(Option_t *option, const char* wildcard, Int_t recurse) c
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the collection header and its elements that match the regexp.
+///
+/// If recurse is non-zero, descend into printing of
+/// collection-entries with recurse - 1.
+/// This means, if recurse is negative, the recursion is infinite.
+///
+/// Option is passed recursively, but regexp is only used on the
+/// first level.
+
 void TCollection::Print(Option_t *option, TPRegexp& regexp, Int_t recurse) const
 {
-   // Print the collection header and its elements that match the regexp.
-   //
-   // If recurse is non-zero, descend into printing of
-   // collection-entries with recurse - 1.
-   // This means, if recurse is negative, the recursion is infinite.
-   //
-   // Option is passed recursively, but regexp is only used on the
-   // first level.
-
    PrintCollectionHeader(option);
 
    if (recurse != 0)
@@ -423,12 +423,12 @@ void TCollection::Print(Option_t *option, TPRegexp& regexp, Int_t recurse) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from this collection and recursively remove the object
+/// from all other objects (and collections).
+
 void TCollection::RecursiveRemove(TObject *obj)
 {
-   // Remove object from this collection and recursively remove the object
-   // from all other objects (and collections).
-
    if (!obj) return;
 
    // Scan list and remove obj in the list itself
@@ -444,11 +444,11 @@ void TCollection::RecursiveRemove(TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects in collection col from this collection.
+
 void TCollection::RemoveAll(TCollection *col)
 {
-   // Remove all objects in collection col from this collection.
-
    TIter next(col);
    TObject *obj;
 
@@ -456,11 +456,11 @@ void TCollection::RemoveAll(TCollection *col)
       Remove(obj);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream all objects in the collection to or from the I/O buffer.
+
 void TCollection::Streamer(TBuffer &b)
 {
-   // Stream all objects in the collection to or from the I/O buffer.
-
    Int_t nobjects;
    TObject *obj;
    UInt_t R__s, R__c;
@@ -493,16 +493,16 @@ void TCollection::Streamer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write all objects in this collection. By default all objects in
+/// the collection are written individually (each object gets its
+/// own key). Note, this is recursive, i.e. objects in collections
+/// in the collection are also written individually. To write all
+/// objects using a single key specify a name and set option to
+/// TObject::kSingleKey (i.e. 1).
+
 Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize) const
 {
-   // Write all objects in this collection. By default all objects in
-   // the collection are written individually (each object gets its
-   // own key). Note, this is recursive, i.e. objects in collections
-   // in the collection are also written individually. To write all
-   // objects using a single key specify a name and set option to
-   // TObject::kSingleKey (i.e. 1).
-
    if ((option & kSingleKey)) {
       return TObject::Write(name, option, bsize);
    } else {
@@ -517,41 +517,41 @@ Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write all objects in this collection. By default all objects in
+/// the collection are written individually (each object gets its
+/// own key). Note, this is recursive, i.e. objects in collections
+/// in the collection are also written individually. To write all
+/// objects using a single key specify a name and set option to
+/// TObject::kSingleKey (i.e. 1).
+
 Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
 {
-   // Write all objects in this collection. By default all objects in
-   // the collection are written individually (each object gets its
-   // own key). Note, this is recursive, i.e. objects in collections
-   // in the collection are also written individually. To write all
-   // objects using a single key specify a name and set option to
-   // TObject::kSingleKey (i.e. 1).
-
    return ((const TCollection*)this)->Write(name,option,bsize);
 }
 
 // -------------------- Static data members access -----------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the globally accessible collection.
+
 TCollection *TCollection::GetCurrentCollection()
 {
-   // Return the globally accessible collection.
-
    return fgCurrentCollection;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set this collection to be the globally accesible collection.
+
 void TCollection::SetCurrentCollection()
 {
-   // Set this collection to be the globally accesible collection.
-
    fgCurrentCollection = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set up for garbage collection.
+
 void TCollection::StartGarbageCollection()
 {
-   // Set up for garbage collection.
-
    R__LOCKGUARD2(gCollectionMutex);
    if (!fgGarbageCollection) {
       fgGarbageCollection = new TObjectTable;
@@ -561,11 +561,11 @@ void TCollection::StartGarbageCollection()
    fgGarbageStack++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do the garbage collection.
+
 void TCollection::EmptyGarbageCollection()
 {
-   // Do the garbage collection.
-
    R__LOCKGUARD2(gCollectionMutex);
    if (fgGarbageStack > 0) fgGarbageStack--;
    if (fgGarbageCollection && fgGarbageStack == 0 && fgEmptyingGarbage == kFALSE) {
@@ -576,11 +576,11 @@ void TCollection::EmptyGarbageCollection()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the list of things to be cleaned up.
+
 void TCollection::GarbageCollect(TObject *obj)
 {
-   // Add to the list of things to be cleaned up.
-
    {
       R__LOCKGUARD2(gCollectionMutex);
       if (fgGarbageCollection) {
@@ -593,27 +593,27 @@ void TCollection::GarbageCollect(TObject *obj)
    delete obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set whether this collection is the owner (enable==true)
+/// of its content.  If it is the owner of its contents,
+/// these objects will be deleted whenever the collection itself
+/// is delete.   The objects might also be deleted or destructed when Clear
+/// is called (depending on the collection).
+
 void TCollection::SetOwner(Bool_t enable)
 {
-   // Set whether this collection is the owner (enable==true)
-   // of its content.  If it is the owner of its contents,
-   // these objects will be deleted whenever the collection itself
-   // is delete.   The objects might also be deleted or destructed when Clear
-   // is called (depending on the collection).
-
    if (enable)
       SetBit(kIsOwner);
    else
       ResetBit(kIsOwner);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a TIter. This involves allocating a new TIterator of the right
+/// sub class and assigning it with the original.
+
 TIter::TIter(const TIter &iter)
 {
-   // Copy a TIter. This involves allocating a new TIterator of the right
-   // sub class and assigning it with the original.
-
    if (iter.fIterator) {
       fIterator = iter.GetCollection()->MakeIterator();
       fIterator->operator=(*iter.fIterator);
@@ -621,12 +621,12 @@ TIter::TIter(const TIter &iter)
       fIterator = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assigning an TIter to another. This involves allocatiing a new TIterator
+/// of the right sub class and assigning it with the original.
+
 TIter &TIter::operator=(const TIter &rhs)
 {
-   // Assigning an TIter to another. This involves allocatiing a new TIterator
-   // of the right sub class and assigning it with the original.
-
    if (this != &rhs) {
       if (rhs.fIterator) {
          delete fIterator;
@@ -637,20 +637,20 @@ TIter &TIter::operator=(const TIter &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pointing to the first element of the container.
+
 TIter &TIter::Begin()
 {
-   // Pointing to the first element of the container.
-
    fIterator->Reset();
    fIterator->Next();
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pointing to the element after the last - to a nullptr value in our case.
+
 TIter TIter::End()
 {
-   // Pointing to the element after the last - to a nullptr value in our case.
-
    return TIter(static_cast<TIterator*>(nullptr));
 }

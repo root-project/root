@@ -155,13 +155,14 @@ void TMVA::StatDialogBDT::GetNtrees()
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// recursively puts an entries in the histogram for the node and its daughters
+///
+
 void TMVA::StatDialogBDT::DrawNode( TMVA::DecisionTreeNode *n, 
                                Double_t x, Double_t y, 
                                Double_t xscale,  Double_t yscale, TString * vars) 
 {
-   // recursively puts an entries in the histogram for the node and its daughters
-   //
    Float_t xsize=xscale*1.5;
    Float_t ysize=yscale/3;
    if (xsize>0.15) xsize=0.1; //xscale/2;
@@ -284,7 +285,8 @@ TMVA::DecisionTree* TMVA::StatDialogBDT::ReadTree( TString* &vars, Int_t itree )
    return d;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::StatDialogBDT::DrawTree( Int_t itree )
 {
    TString *vars;   

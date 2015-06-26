@@ -29,25 +29,27 @@ ClassImp(TGSimpleTableInterface)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGSimpleTableInterfac constructor.
+
 TGSimpleTableInterface::TGSimpleTableInterface (Double_t **data,
                                                 UInt_t nrows, UInt_t ncolumns)
    : TVirtualTableInterface(), fData(data), fNRows(nrows), fNColumns(ncolumns)
 {
-   // TGSimpleTableInterfac constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGSimpleTableInterface destructor.
+
 TGSimpleTableInterface::~TGSimpleTableInterface()
 {
-   // TGSimpleTableInterface destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the value of the double in row,column of the data.
+
 Double_t TGSimpleTableInterface::GetValue(UInt_t row, UInt_t column)
 {
-   // Return the value of the double in row,column of the data.
-
    if ((row > fNRows) || (column > fNColumns)) {
       Error("TGSimpleTableInterface","Non existing value requested.");
       return 0;
@@ -57,28 +59,28 @@ Double_t TGSimpleTableInterface::GetValue(UInt_t row, UInt_t column)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the value of the double in row,column of the data as a string.
+
 const char *TGSimpleTableInterface::GetValueAsString(UInt_t row, UInt_t column)
 {
-   // Return the value of the double in row,column of the data as a string.
-
    // FIXME use template string for string format instead of hardcoded format
 
    return StrDup(TString::Format("%5.2f", GetValue(row, column)));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a name for the header at row.
+
 const char *TGSimpleTableInterface::GetRowHeader(UInt_t row)
 {
-   // Return a name for the header at row.
-
    return StrDup(TString::Format("DRow %d", row));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a name for the header at column.
+
 const char *TGSimpleTableInterface::GetColumnHeader(UInt_t column)
 {
-   // Return a name for the header at column.
-
    return StrDup(TString::Format("DCol %d", column));
 }

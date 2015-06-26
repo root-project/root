@@ -62,10 +62,11 @@ namespace {
 // for convenience
    using namespace PyROOT;
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prevents calls to Py_TYPE(pyclass)->tp_getattr, which is unnecessary for our
+/// purposes here and could tickle problems w/ spurious lookups into ROOT meta
+
    Bool_t HasAttrDirect( PyObject* pyclass, PyObject* pyname, Bool_t mustBePyROOT = kFALSE ) {
-   // prevents calls to Py_TYPE(pyclass)->tp_getattr, which is unnecessary for our
-   // purposes here and could tickle problems w/ spurious lookups into ROOT meta
       PyObject* attr = PyType_Type.tp_getattro( pyclass, pyname );
       if ( attr != 0 && ( ! mustBePyROOT || MethodProxy_Check( attr ) ) ) {
          Py_DECREF( attr );
@@ -76,18 +77,20 @@ namespace {
       return kFALSE;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// prevents calls to descriptors
+
    PyObject* PyObject_GetAttrFromDict( PyObject* pyclass, PyObject* pyname ) {
-   // prevents calls to descriptors
       PyObject* dict = PyObject_GetAttr( pyclass, PyStrings::gDict );
       PyObject* attr = PyObject_GetItem( dict, pyname );
       Py_DECREF( dict );
       return attr;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan the name of the class and determine whether it is a template instantiation.
+
    inline Bool_t IsTemplatedSTLClass( const std::string& name, const std::string& klass ) {
-   // Scan the name of the class and determine whether it is a template instantiation.
       const int nsize = (int)name.size();
       const int ksize = (int)klass.size();
 
@@ -106,10 +109,11 @@ namespace {
       return result;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper; call method with signature: obj->meth( arg1 ).
+
    inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1 )
    {
-   // Helper; call method with signature: obj->meth( arg1 ).
       Py_INCREF( obj );
       PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "O" ), arg1 );
@@ -117,11 +121,12 @@ namespace {
       return result;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper; call method with signature: obj->meth( arg1, arg2 ).
+
    inline PyObject* CallPyObjMethod(
       PyObject* obj, const char* meth, PyObject* arg1, PyObject* arg2 )
    {
-   // Helper; call method with signature: obj->meth( arg1, arg2 ).
       Py_INCREF( obj );
       PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "OO" ), arg1, arg2 );
@@ -129,10 +134,11 @@ namespace {
       return result;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper; call method with signature: obj->meth( arg1, int ).
+
    inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1, int arg2 )
    {
-   // Helper; call method with signature: obj->meth( arg1, int ).
       Py_INCREF( obj );
       PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "Oi" ), arg1, arg2 );
@@ -165,10 +171,11 @@ namespace {
       return pyindex;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper; call method with signature: meth( pyindex ).
+
    inline PyObject* CallSelfIndex( ObjectProxy* self, PyObject* idx, const char* meth )
    {
-   // Helper; call method with signature: meth( pyindex ).
       Py_INCREF( (PyObject*)self );
       PyObject* pyindex = PyStyleIndex( (PyObject*)self, idx );
       if ( ! pyindex ) {
@@ -182,10 +189,11 @@ namespace {
       return result;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper; convert generic python object into a boolean value.
+
    inline PyObject* BoolNot( PyObject* value )
    {
-   // Helper; convert generic python object into a boolean value.
       if ( PyObject_IsTrue( value ) == 1 ) {
          Py_INCREF( Py_False );
          Py_DECREF( value );
@@ -227,11 +235,12 @@ namespace {
       return result;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Follow operator->() if present (available in python as __follow__), so that
+/// smart pointers behave as expected.
+
    PyObject* FollowGetAttr( PyObject* self, PyObject* name )
    {
-   // Follow operator->() if present (available in python as __follow__), so that
-   // smart pointers behave as expected.
       if ( ! PyROOT_PyUnicode_Check( name ) )
          PyErr_SetString( PyExc_TypeError, "getattr(): attribute name must be string" );
 
@@ -257,43 +266,47 @@ namespace {
       return result;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement python's __cmp__ with TObject::Compare.
+
    PyObject* TObjectCompare( PyObject* self, PyObject* obj )
    {
-   // Implement python's __cmp__ with TObject::Compare.
       if ( ! ObjectProxy_Check( obj ) )
          return PyInt_FromLong( -1l );
 
       return CallPyObjMethod( self, "Compare", obj );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement python's __eq__ with TObject::IsEqual.
+
    PyObject* TObjectIsEqual( PyObject* self, PyObject* obj )
    {
-   // Implement python's __eq__ with TObject::IsEqual.
       if ( ! ObjectProxy_Check( obj ) || ! ((ObjectProxy*)obj)->fObject )
          return ObjectProxy_Type.tp_richcompare( self, obj, Py_EQ );
 
       return CallPyObjMethod( self, "IsEqual", obj );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement python's __ne__ in terms of not TObject::IsEqual.
+
    PyObject* TObjectIsNotEqual( PyObject* self, PyObject* obj )
    {
-   // Implement python's __ne__ in terms of not TObject::IsEqual.
       if ( ! ObjectProxy_Check( obj ) || ! ((ObjectProxy*)obj)->fObject )
          return ObjectProxy_Type.tp_richcompare( self, obj, Py_NE );
 
       return BoolNot( CallPyObjMethod( self, "IsEqual", obj ) );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Contrary to TObjectIsEqual, it can now not be relied upon that the only
+/// non-ObjectProxy obj is None, as any operator==(), taking any object (e.g.
+/// an enum) can be implemented. However, those cases will yield an exception
+/// if presented with None.
+
    PyObject* GenObjectIsEqual( PyObject* self, PyObject* obj )
    {
-   // Contrary to TObjectIsEqual, it can now not be relied upon that the only
-   // non-ObjectProxy obj is None, as any operator==(), taking any object (e.g.
-   // an enum) can be implemented. However, those cases will yield an exception
-   // if presented with None.
       PyObject* result = CallPyObjMethod( self, "__cpp_eq__", obj );
       if ( ! result ) {
          PyErr_Clear();
@@ -303,10 +316,11 @@ namespace {
       return result;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reverse of GenObjectIsEqual, if operator!= defined.
+
    PyObject* GenObjectIsNotEqual( PyObject* self, PyObject* obj )
    {
-   // Reverse of GenObjectIsEqual, if operator!= defined.
       PyObject* result = CallPyObjMethod( self, "__cpp_ne__", obj );
       if ( ! result ) {
          PyErr_Clear();
@@ -372,12 +386,13 @@ namespace {
       return BindCppObjectNoCast( result, Cppyy::GetScope( to->GetName() ) );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TClass::DynamicCast returns a void* that the user still has to cast (it
+/// will have the proper offset, though). Fix this by providing the requested
+/// binding if the cast succeeded.
+
    PyObject* TClassDynamicCast( ObjectProxy* self, PyObject* args )
    {
-   // TClass::DynamicCast returns a void* that the user still has to cast (it
-   // will have the proper offset, though). Fix this by providing the requested
-   // binding if the cast succeeded.
       ObjectProxy* pyclass = 0; PyObject* pyobject = 0;
       Long_t up = 1;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O|l:DynamicCast" ),
@@ -433,10 +448,11 @@ namespace {
       return Py_None;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement a python-style remove with TCollection::Add.
+
    PyObject* TCollectionRemove( PyObject* self, PyObject* obj )
    {
-   // Implement a python-style remove with TCollection::Add.
       PyObject* result = CallPyObjMethod( self, "Remove", obj );
       if ( ! result )
          return 0;
@@ -452,10 +468,11 @@ namespace {
       return Py_None;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement python's __add__ with the pythonized extend for TCollections.
+
    PyObject* TCollectionAdd( PyObject* self, PyObject* other )
    {
-   // Implement python's __add__ with the pythonized extend for TCollections.
       PyObject* l = CallPyObjMethod( self, "Clone" );
       if ( ! l )
          return 0;
@@ -469,10 +486,11 @@ namespace {
       return l;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement python's __mul__ with the pythonized extend for TCollections.
+
    PyObject* TCollectionMul( ObjectProxy* self, PyObject* pymul )
    {
-   // Implement python's __mul__ with the pythonized extend for TCollections.
       Long_t imul = PyLong_AsLong( pymul );
       if ( imul == -1 && PyErr_Occurred() )
          return 0;
@@ -493,10 +511,11 @@ namespace {
       return nseq;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement python's __imul__ with the pythonized extend for TCollections.
+
    PyObject* TCollectionIMul( PyObject* self, PyObject* pymul )
    {
-   // Implement python's __imul__ with the pythonized extend for TCollections.
       Long_t imul = PyLong_AsLong( pymul );
       if ( imul == -1 && PyErr_Occurred() )
          return 0;
@@ -511,10 +530,11 @@ namespace {
       return self;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement a python-style count for TCollections.
+
    PyObject* TCollectionCount( PyObject* self, PyObject* obj )
    {
-   // Implement a python-style count for TCollections.
       Py_ssize_t count = 0;
       for ( Py_ssize_t i = 0; i < PySequence_Size( self ); ++i ) {
          PyObject* item = PySequence_GetItem( self, i );
@@ -533,9 +553,10 @@ namespace {
       return PyInt_FromSsize_t( count );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Python __iter__ protocol for TCollections.
+
    PyObject* TCollectionIter( ObjectProxy* self ) {
-   // Python __iter__ protocol for TCollections.
       if ( ! self->GetObject() ) {
          PyErr_SetString( PyExc_TypeError, "iteration over non-sequence" );
          return 0;
@@ -578,10 +599,11 @@ namespace {
       return CallSelfIndex( self, (PyObject*)index, "At" );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Python-style indexing and size checking for setting objects in a TCollection.
+
    PyObject* TSeqCollectionSetItem( ObjectProxy* self, PyObject* args )
    {
-   // Python-style indexing and size checking for setting objects in a TCollection.
       PyObject* index = 0, *obj = 0;
       if ( ! PyArg_ParseTuple( args,
                 const_cast< char* >( "OO:__setitem__" ), &index, &obj ) )
@@ -629,10 +651,11 @@ namespace {
       return result;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement python's __del__ with TCollection::RemoveAt.
+
    PyObject* TSeqCollectionDelItem( ObjectProxy* self, PySliceObject* index )
    {
-   // Implement python's __del__ with TCollection::RemoveAt.
       if ( PySlice_Check( index ) ) {
          if ( ! self->GetObject() ) {
             PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
@@ -661,10 +684,11 @@ namespace {
       return Py_None;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Python-style insertion implemented with TCollection::AddAt.
+
    PyObject* TSeqCollectionInsert( PyObject* self, PyObject* args )
    {
-   // Python-style insertion implemented with TCollection::AddAt.
       PyObject* obj = 0; Long_t idx = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "lO:insert" ), &idx, &obj ) )
          return 0;
@@ -678,10 +702,11 @@ namespace {
       return CallPyObjMethod( self, "AddAt", obj, idx );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement a python-style pop for TCollections.
+
    PyObject* TSeqCollectionPop( ObjectProxy* self, PyObject* args )
    {
-   // Implement a python-style pop for TCollections.
       int nArgs = PyTuple_GET_SIZE( args );
       if ( nArgs == 0 ) {
       // create the default argument 'end of sequence'
@@ -698,10 +723,11 @@ namespace {
       return CallSelfIndex( self, PyTuple_GET_ITEM( args, 0 ), "RemoveAt" );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement a python-style reverse for TCollections.
+
    PyObject* TSeqCollectionReverse( PyObject* self )
    {
-   // Implement a python-style reverse for TCollections.
       PyObject* tup = PySequence_Tuple( self );
       if ( ! tup )
          return 0;
@@ -718,10 +744,11 @@ namespace {
       return Py_None;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement a python-style sort for TCollections.
+
    PyObject* TSeqCollectionSort( PyObject* self, PyObject* args, PyObject* kw )
    {
-   // Implement a python-style sort for TCollections.
       if ( PyTuple_GET_SIZE( args ) == 0 && ! kw ) {
       // no specialized sort, use ROOT one
          return CallPyObjMethod( self, "Sort" );
@@ -754,10 +781,11 @@ namespace {
       }
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement a python-style index with TCollection::IndexOf.
+
    PyObject* TSeqCollectionIndex( PyObject* self, PyObject* obj )
    {
-   // Implement a python-style index with TCollection::IndexOf.
       PyObject* index = CallPyObjMethod( self, "IndexOf", obj );
       if ( ! index )
          return 0;
@@ -1190,10 +1218,11 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 //- TObjString behavior --------------------------------------------------------
    PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( TObjString, TObj )
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation of python __len__ for TObjString.
+
    PyObject* TObjStringLength( PyObject* self )
    {
-   // Implementation of python __len__ for TObjString.
       PyObject* data = CallPyObjMethod( self, "GetName" );
       Py_ssize_t size = PySequence_Size( data );
       Py_DECREF( data );
@@ -1253,21 +1282,23 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
       return next;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called if operator== not available (e.g. if a global overload as under gcc).
+/// An exception is raised as the user should fix the dictionary.
+
    PyObject* StlIterIsEqual( PyObject* self, PyObject* other )
    {
-   // Called if operator== not available (e.g. if a global overload as under gcc).
-   // An exception is raised as the user should fix the dictionary.
       return PyErr_Format( PyExc_LookupError,
          "No operator==(const %s&, const %s&) available in the dictionary!",
          Utility::ClassName( self ).c_str(), Utility::ClassName( other ).c_str()  );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called if operator!= not available (e.g. if a global overload as under gcc).
+/// An exception is raised as the user should fix the dictionary.
+
    PyObject* StlIterIsNotEqual( PyObject* self, PyObject* other )
    {
-   // Called if operator!= not available (e.g. if a global overload as under gcc).
-   // An exception is raised as the user should fix the dictionary.
       return PyErr_Format( PyExc_LookupError,
          "No operator!=(const %s&, const %s&) available in the dictionary!",
          Utility::ClassName( self ).c_str(), Utility::ClassName( other ).c_str()  );
@@ -1304,11 +1335,12 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Type-safe version of TDirectory::WriteObjectAny, which is a template for
+/// the same reason on the C++ side.
+
    PyObject* TDirectoryWriteObject( ObjectProxy* self, PyObject* args )
    {
-   // Type-safe version of TDirectory::WriteObjectAny, which is a template for
-   // the same reason on the C++ side.
       ObjectProxy *wrt = 0; PyObject *name = 0, *option = 0;
       Int_t bufsize = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!|O!i:TDirectory::WriteObject" ),
@@ -1444,7 +1476,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    class TTreeMemberFunction : public PyCallable {
    protected:
       TTreeMemberFunction( MethodProxy* org ) { Py_INCREF( org ); fOrg = org; }
@@ -1483,7 +1516,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       MethodProxy* fOrg;
    };
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    class TTreeBranch : public TTreeMemberFunction {
    public:
       TTreeBranch( MethodProxy* org ) : TTreeMemberFunction( org ) {}
@@ -1604,7 +1638,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       }
    };
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    class TTreeSetBranchAddress : public TTreeMemberFunction {
    public:
       TTreeSetBranchAddress( MethodProxy* org ) : TTreeMemberFunction( org ) {}
@@ -1788,7 +1823,8 @@ namespace {
    }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    class TPretendInterpreted: public PyCallable {
    public:
       TPretendInterpreted( int nArgs ) : fNArgs( nArgs ) {}
@@ -1823,7 +1859,8 @@ namespace {
       Int_t fNArgs;
    };
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    class TF1InitWithPyFunc : public TPretendInterpreted {
    public:
       TF1InitWithPyFunc( int ntf = 1 ) : TPretendInterpreted( 2 + 2*ntf ) {}
@@ -1901,7 +1938,8 @@ namespace {
       }
    };
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    class TF2InitWithPyFunc : public TF1InitWithPyFunc {
    public:
       TF2InitWithPyFunc() : TF1InitWithPyFunc( 2 ) {}
@@ -1918,7 +1956,8 @@ namespace {
       virtual PyCallable* Clone() { return new TF2InitWithPyFunc( *this ); }
    };
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    class TF3InitWithPyFunc : public TF1InitWithPyFunc {
    public:
       TF3InitWithPyFunc() : TF1InitWithPyFunc( 3 ) {}

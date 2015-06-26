@@ -30,11 +30,11 @@
 
 ClassImp(TGGC)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a graphics context (only called via TGGCPool::GetGC()).
+
 TGGC::TGGC(GCValues_t *values, Bool_t)
 {
-   // Create a graphics context (only called via TGGCPool::GetGC()).
-
    fContext = 0;
    if (values) {
       fValues = *values;
@@ -54,11 +54,11 @@ TGGC::TGGC(GCValues_t *values, Bool_t)
    SetRefCount(1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a graphics context, registers GC in GCPool.
+
 TGGC::TGGC(GCValues_t *values)
 {
-   // Create a graphics context, registers GC in GCPool.
-
    fContext = 0;
    // case of default ctor at program startup before gClient exists
    if (!values) {
@@ -76,11 +76,11 @@ TGGC::TGGC(GCValues_t *values)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a graphics context.
+
 TGGC::TGGC(const TGGC &g) : TObject(g), TRefCnt()
 {
-   // Copy a graphics context.
-
    fValues = g.fValues;
    if (g.fContext) {
       fContext = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &fValues);
@@ -95,11 +95,11 @@ TGGC::TGGC(const TGGC &g) : TObject(g), TRefCnt()
       gClient->GetGCPool()->fList->Add(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete graphics context.
+
 TGGC::~TGGC()
 {
-   // Delete graphics context.
-
    if (gClient)
       gClient->GetGCPool()->ForceFreeGC(this);
 
@@ -107,11 +107,11 @@ TGGC::~TGGC()
       gVirtualX->DeleteGC(fContext);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graphics context assignment operator.
+
 TGGC &TGGC::operator=(const TGGC &rhs)
 {
-   // Graphics context assignment operator.
-
    if (this != &rhs) {
       if (!fContext && gClient) {
          TGGC *gc = gClient->GetGCPool()->FindGC(this);
@@ -130,19 +130,19 @@ TGGC &TGGC::operator=(const TGGC &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not inline due to a bug in g++ 2.96 20000731 (Red Hat Linux 7.0).
+
 GContext_t TGGC::operator()() const
 {
-   // Not inline due to a bug in g++ 2.96 20000731 (Red Hat Linux 7.0).
-
    return fContext;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update values + mask.
+
 void TGGC::UpdateValues(GCValues_t *values)
 {
-   // Update values + mask.
-
    fValues.fMask |= values->fMask;
 
    for (Mask_t bit = 1; bit <= fValues.fMask; bit <<= 1) {
@@ -227,11 +227,11 @@ void TGGC::UpdateValues(GCValues_t *values)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set attributes as specified in the values structure.
+
 void TGGC::SetAttributes(GCValues_t *values)
 {
-   // Set attributes as specified in the values structure.
-
    if (!fContext && gClient) {
       TGGC *gc = gClient->GetGCPool()->FindGC(this);
       if (!gc)
@@ -248,243 +248,243 @@ void TGGC::SetAttributes(GCValues_t *values)
                            fValues.fDashLen);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set graphics context drawing function.
+
 void TGGC::SetFunction(EGraphicsFunction v)
 {
-   // Set graphics context drawing function.
-
    GCValues_t values;
    values.fFunction = v;
    values.fMask     = kGCFunction;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set plane mask.
+
 void TGGC::SetPlaneMask(ULong_t v)
 {
-   // Set plane mask.
-
    GCValues_t values;
    values.fPlaneMask = v;
    values.fMask      = kGCPlaneMask;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set foreground color.
+
 void TGGC::SetForeground(ULong_t v)
 {
-   // Set foreground color.
-
    GCValues_t values;
    values.fForeground = v;
    values.fMask       = kGCForeground;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set background color.
+
 void TGGC::SetBackground(ULong_t v)
 {
-   // Set background color.
-
    GCValues_t values;
    values.fBackground = v;
    values.fMask       = kGCBackground;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line width.
+
 void TGGC::SetLineWidth(Int_t v)
 {
-   // Set line width.
-
    GCValues_t values;
    values.fLineWidth = v;
    values.fMask      = kGCLineWidth;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line style (kLineSolid, kLineOnOffDash, kLineDoubleDash).
+
 void TGGC::SetLineStyle(Int_t v)
 {
-   // Set line style (kLineSolid, kLineOnOffDash, kLineDoubleDash).
-
    GCValues_t values;
    values.fLineStyle = v;
    values.fMask      = kGCLineStyle;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set cap style (kCapNotLast, kCapButt, kCapRound, kCapProjecting).
+
 void TGGC::SetCapStyle(Int_t v)
 {
-   // Set cap style (kCapNotLast, kCapButt, kCapRound, kCapProjecting).
-
    GCValues_t values;
    values.fCapStyle = v;
    values.fMask     = kGCCapStyle;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line join style (kJoinMiter, kJoinRound, kJoinBevel).
+
 void TGGC::SetJoinStyle(Int_t v)
 {
-   // Set line join style (kJoinMiter, kJoinRound, kJoinBevel).
-
    GCValues_t values;
    values.fJoinStyle = v;
    values.fMask      = kGCJoinStyle;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill style (kFillSolid, kFillTiled, kFillStippled,
+/// kFillOpaeueStippled).
+
 void TGGC::SetFillStyle(Int_t v)
 {
-   // Set fill style (kFillSolid, kFillTiled, kFillStippled,
-   // kFillOpaeueStippled).
-
    GCValues_t values;
    values.fFillStyle = v;
    values.fMask      = kGCFillStyle;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill rule (kEvenOddRule, kWindingRule).
+
 void TGGC::SetFillRule(Int_t v)
 {
-   // Set fill rule (kEvenOddRule, kWindingRule).
-
    GCValues_t values;
    values.fFillRule = v;
    values.fMask     = kGCFillRule;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tile pixmap for tiling operations.
+
 void TGGC::SetTile(Pixmap_t v)
 {
-   // Set tile pixmap for tiling operations.
-
    GCValues_t values;
    values.fTile = v;
    values.fMask = kGCTile;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set 1 plane pixmap for stippling.
+
 void TGGC::SetStipple(Pixmap_t v)
 {
-   // Set 1 plane pixmap for stippling.
-
    GCValues_t values;
    values.fStipple = v;
    values.fMask    = kGCStipple;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// X offset for tile or stipple operations.
+
 void TGGC::SetTileStipXOrigin(Int_t v)
 {
-   // X offset for tile or stipple operations.
-
    GCValues_t values;
    values.fTsXOrigin = v;
    values.fMask      = kGCTileStipXOrigin;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Y offset for tile or stipple operations.
+
 void TGGC::SetTileStipYOrigin(Int_t v)
 {
-   // Y offset for tile or stipple operations.
-
    GCValues_t values;
    values.fTsYOrigin = v;
    values.fMask      = kGCTileStipYOrigin;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set font.
+
 void TGGC::SetFont(FontH_t v)
 {
-   // Set font.
-
    GCValues_t values;
    values.fFont = v;
    values.fMask = kGCFont;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set sub window mode (kClipByChildren, kIncludeInferiors).
+
 void TGGC::SetSubwindowMode(Int_t v)
 {
-   // Set sub window mode (kClipByChildren, kIncludeInferiors).
-
    GCValues_t values;
    values.fSubwindowMode = v;
    values.fMask          = kGCSubwindowMode;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// True if graphics exposure should be generated.
+
 void TGGC::SetGraphicsExposures(Bool_t v)
 {
-   // True if graphics exposure should be generated.
-
    GCValues_t values;
    values.fGraphicsExposures = v;
    values.fMask              = kGCGraphicsExposures;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// X origin for clipping.
+
 void TGGC::SetClipXOrigin(Int_t v)
 {
-   // X origin for clipping.
-
    GCValues_t values;
    values.fClipXOrigin = v;
    values.fMask        = kGCClipXOrigin;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Y origin for clipping.
+
 void TGGC::SetClipYOrigin(Int_t v)
 {
-   // Y origin for clipping.
-
    GCValues_t values;
    values.fClipYOrigin = v;
    values.fMask        = kGCClipYOrigin;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bitmap for clipping.
+
 void TGGC::SetClipMask(Pixmap_t v)
 {
-   // Bitmap for clipping.
-
    GCValues_t values;
    values.fClipMask = v;
    values.fMask     = kGCClipMask;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Patterned/dashed line offset.
+
 void TGGC::SetDashOffset(Int_t v)
 {
-   // Patterned/dashed line offset.
-
    GCValues_t values;
    values.fDashOffset = v;
    values.fMask       = kGCDashOffset;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set dash pattern. First use SetDashOffset() if not 0.
+
 void TGGC::SetDashList(const char v[], Int_t len)
 {
-   // Set dash pattern. First use SetDashOffset() if not 0.
-
    GCValues_t values;
    if (len > (Int_t)sizeof(values.fDashes))
       Warning("SetDashList", "dash list can have only up to %ld elements",
@@ -495,31 +495,31 @@ void TGGC::SetDashList(const char v[], Int_t len)
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set arc mode (kArcChord, kArcPieSlice).
+
 void TGGC::SetArcMode(Int_t v)
 {
-   // Set arc mode (kArcChord, kArcPieSlice).
-
    GCValues_t values;
    values.fArcMode = v;
    values.fMask    = kGCArcMode;
    SetAttributes(&values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print graphics contexts info.
+
 void TGGC::Print(Option_t *) const
 {
-   // Print graphics contexts info.
-
    Printf("TGGC: mask = %x, handle = %lx, ref cnt = %u", fValues.fMask,
           fContext, References());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns GC mask as a string - used in SavePrimitive().
+
 TString TGGC::GetMaskString() const
 {
-   // Returns GC mask as a string - used in SavePrimitive().
-
    TString mask;
 
    Mask_t fmask = GetMask();
@@ -619,11 +619,11 @@ TString TGGC::GetMaskString() const
    return mask;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save graphics context info as a C++ statement(s) on output stream out
+
 void TGGC::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save graphics context info as a C++ statement(s) on output stream out
-
    if (gROOT->ClassSaved(TGGC::Class())) {
       out << std::endl;
    } else {
@@ -877,29 +877,29 @@ void TGGC::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 ClassImp(TGGCPool)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create graphics context pool.
+
 TGGCPool::TGGCPool(TGClient *client)
 {
-   // Create graphics context pool.
-
    fClient = client;
    fList   = new THashTable;
    fList->SetOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete graphics context pool.
+
 TGGCPool::~TGGCPool()
 {
-   // Delete graphics context pool.
-
    delete fList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force remove graphics context from list. Is only called via ~TGGC().
+
 void TGGCPool::ForceFreeGC(const TGGC *gct)
 {
-   // Force remove graphics context from list. Is only called via ~TGGC().
-
    TGGC *gc = (TGGC *) fList->FindObject(gct);
 
    if (gc) {
@@ -910,11 +910,11 @@ void TGGCPool::ForceFreeGC(const TGGC *gct)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete graphics context if it is not used anymore.
+
 void TGGCPool::FreeGC(const TGGC *gct)
 {
-   // Delete graphics context if it is not used anymore.
-
    TGGC *gc = (TGGC *) fList->FindObject(gct);
 
    if (gc) {
@@ -925,11 +925,11 @@ void TGGCPool::FreeGC(const TGGC *gct)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete graphics context if it is not used anymore.
+
 void TGGCPool::FreeGC(GContext_t gct)
 {
-   // Delete graphics context if it is not used anymore.
-
    TIter next(fList);
 
    while (TGGC *gc = (TGGC *) next()) {
@@ -943,20 +943,20 @@ void TGGCPool::FreeGC(GContext_t gct)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find graphics context. Returns 0 in case gc is not found.
+
 TGGC *TGGCPool::FindGC(const TGGC *gct)
 {
-   // Find graphics context. Returns 0 in case gc is not found.
-
    return (TGGC*) fList->FindObject(gct);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find graphics context based on its GContext_t handle. Returns 0
+/// in case gc is not found.
+
 TGGC *TGGCPool::FindGC(GContext_t gct)
 {
-   // Find graphics context based on its GContext_t handle. Returns 0
-   // in case gc is not found.
-
    TIter next(fList);
 
    while (TGGC *gc = (TGGC *) next()) {
@@ -966,24 +966,24 @@ TGGC *TGGCPool::FindGC(GContext_t gct)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns graphics context based on its GContext_t handle.
+
 TGGC *TGGCPool::GetGC(GContext_t gct)
 {
-   // returns graphics context based on its GContext_t handle.
-
    GCValues_t gval;
    gVirtualX->GetGCValues(gct, gval);
    return GetGC(&gval, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the best matching graphics context depending on values.
+/// If rw is false only a readonly, not modifiable graphics context
+/// is returned. If rw is true a new modifiable graphics context is
+/// returned.
+
 TGGC *TGGCPool::GetGC(GCValues_t *values, Bool_t rw)
 {
-   // Get the best matching graphics context depending on values.
-   // If rw is false only a readonly, not modifiable graphics context
-   // is returned. If rw is true a new modifiable graphics context is
-   // returned.
-
    TGGC *gc, *best_match = 0;
    Int_t matching_bits, best_matching_bits = -1;
    Bool_t exact = kFALSE;
@@ -1029,13 +1029,13 @@ TGGC *TGGCPool::GetGC(GCValues_t *values, Bool_t rw)
    return gc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to find matching graphics context. On success returns the amount
+/// of matching bits (which may be zero if masks have no common bits),
+/// -1 on failure (when there are common bits but not a single match).
+
 Int_t TGGCPool::MatchGC(const TGGC *gc, GCValues_t *values)
 {
-   // Try to find matching graphics context. On success returns the amount
-   // of matching bits (which may be zero if masks have no common bits),
-   // -1 on failure (when there are common bits but not a single match).
-
    Mask_t bit, common_bits;
    Int_t  matching_bits = -1;
    Bool_t match = kFALSE;
@@ -1145,18 +1145,18 @@ Int_t TGGCPool::MatchGC(const TGGC *gc, GCValues_t *values)
    return matching_bits;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update graphics context with the values spcified in values->fMask.
+
 void TGGCPool::UpdateGC(TGGC *gc, GCValues_t *values)
 {
-   // Update graphics context with the values spcified in values->fMask.
-
    gc->SetAttributes(values);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all graphics contexts in the pool.
+
 void TGGCPool::Print(Option_t *) const
 {
-   // List all graphics contexts in the pool.
-
    fList->Print();
 }

@@ -44,10 +44,11 @@
 
 ClassImp(TParticlePDG)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default constructor
+
 TParticlePDG::TParticlePDG()
 {
-   //default constructor
    fPdgCode      = 0;
    fMass         = 0;
    fCharge       = 0;
@@ -69,14 +70,14 @@ TParticlePDG::TParticlePDG()
    fAntiParticle = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t aMass,
                            Bool_t aStable, Double_t aWidth, Double_t aCharge,
                            const char* aParticleClass, Int_t aPdgCode, Int_t Anti,
                            Int_t aTrackingCode)
   : TNamed(Name,Title)
 {
-
    // empty for the time  being
    fLifetime      = 0;
    fParity        = 0;
@@ -106,7 +107,9 @@ TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t aMass,
    if (fWidth != 0.) fLifetime = kHbar / fWidth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TParticlePDG::TParticlePDG(const TParticlePDG& pdg) :
   TNamed(pdg),
   fPdgCode(pdg.fPdgCode),
@@ -130,13 +133,13 @@ TParticlePDG::TParticlePDG(const TParticlePDG& pdg) :
   fTrackingCode(pdg.fTrackingCode),
   fAntiParticle(pdg.fAntiParticle)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TParticlePDG& TParticlePDG::operator=(const TParticlePDG& pdg)
 {
-   //assignement operator
    if(this!=&pdg) {
       TNamed::operator=(pdg);
       fPdgCode=pdg.fPdgCode;
@@ -163,9 +166,10 @@ TParticlePDG& TParticlePDG::operator=(const TParticlePDG& pdg)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TParticlePDG::~TParticlePDG() {
-   //destructor
    if (fDecayList) {
       fDecayList->Delete();
       delete fDecayList;
@@ -173,14 +177,14 @@ TParticlePDG::~TParticlePDG() {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add new decay channel, Particle owns those...
+
 Int_t TParticlePDG::AddDecayChannel(Int_t        Type,
                                     Double_t     BranchingRatio,
                                     Int_t        NDaughters,
                                     Int_t*       DaughterPdgCode)
 {
-   // add new decay channel, Particle owns those...
-
    Int_t n = NDecayChannels();
    if (NDecayChannels() == 0) {
       fDecayList = new TObjArray(5);
@@ -191,17 +195,19 @@ Int_t TParticlePDG::AddDecayChannel(Int_t        Type,
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return pointer to decay channel object at index i
+
 TDecayChannel* TParticlePDG::DecayChannel(Int_t i)
 {
-   //return pointer to decay channel object at index i
    return (TDecayChannel*) fDecayList->At(i);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///print the list of decays
+
 void TParticlePDG::PrintDecayChannel(TDecayChannel* dc, Option_t* option) const
 {
-   //print the list of decays
    if (strstr(option,"banner")) {
                                 // print banner
 
@@ -228,13 +234,13 @@ void TParticlePDG::PrintDecayChannel(TDecayChannel* dc, Option_t* option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Print the entire information of this kind of particle
+///
+
 void TParticlePDG::Print(Option_t *) const
 {
-//
-//  Print the entire information of this kind of particle
-//
-
    printf("%-20s  %6d\t",GetName(),fPdgCode);
    if (!fStable) {
       printf("Mass:%9.4f Width (GeV):%11.4e\tCharge: %5.1f\n",

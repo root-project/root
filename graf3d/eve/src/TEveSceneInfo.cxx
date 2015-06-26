@@ -22,7 +22,9 @@
 
 ClassImp(TEveSceneInfo)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveSceneInfo::TEveSceneInfo(TEveViewer* viewer, TEveScene* scene, TGLSceneInfo* sinfo) :
    TEveElement (),
    TNamed        (Form("SI - %s", scene->GetName()),
@@ -31,27 +33,26 @@ TEveSceneInfo::TEveSceneInfo(TEveViewer* viewer, TEveScene* scene, TGLSceneInfo*
    fScene        (scene),
    fGLSceneInfo  (sinfo)
 {
-   // Constructor.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the TGLSceneBase represented by this SceneInfo object.
+
 TGLSceneBase* TEveSceneInfo::GetGLScene() const
 {
-   // Return the TGLSceneBase represented by this SceneInfo object.
-
    return fGLSceneInfo->GetScene();
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override from TEveElement.
+/// Process visibility changes and forward them to fGLScene.
+
 void TEveSceneInfo::AddStamp(UChar_t bits)
 {
-   // Override from TEveElement.
-   // Process visibility changes and forward them to fGLScene.
-
    TEveElement::AddStamp(bits);
    if (bits & kCBVisibility)
    {
@@ -61,24 +62,24 @@ void TEveSceneInfo::AddStamp(UChar_t bits)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveElement.
+/// TEveSceneInfo does not accept children.
+
 Bool_t TEveSceneInfo::AcceptElement(TEveElement* /*el*/)
 {
-   // Virtual from TEveElement.
-   // TEveSceneInfo does not accept children.
-
    static const TEveException eH("TEveSceneInfo::AcceptElement ");
 
    gEve->SetStatusLine(eH + "this class does not accept children.");
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveElement.
+/// TEveSceneInfo does not accept children.
+
 Bool_t TEveSceneInfo::HandleElementPaste(TEveElement* /*el*/)
 {
-   // Virtual from TEveElement.
-   // TEveSceneInfo does not accept children.
-
    static const TEveException eH("TEveSceneInfo::HandleElementPaste ");
 
    gEve->SetStatusLine(eH + "this class does not accept children.");

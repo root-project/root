@@ -33,11 +33,11 @@ static FILE *RedirectOutput(TString &logfile, const char *loc);
 
 static const char *gAppName = "roots";
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The main program: start a TApplication which connects back to the client.
+
 int main(int argc, char **argv)
 {
-   // The main program: start a TApplication which connects back to the client.
-
    // Prepare the application
    if (argc < 4) {
       fprintf(stderr, "%s: insufficient input:"
@@ -110,13 +110,13 @@ int main(int argc, char **argv)
    gSystem->Exit(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redirect stdout to 'logfile'. This log file will be flushed to the
+/// client or master after each command.
+/// On success return a pointer to the open log file. Return 0 on failure.
+
 FILE *RedirectOutput(TString &logfile, const char *loc)
 {
-   // Redirect stdout to 'logfile'. This log file will be flushed to the
-   // client or master after each command.
-   // On success return a pointer to the open log file. Return 0 on failure.
-
    if (loc)
       fprintf(stderr,"%s: RedirectOutput: enter\n", loc);
 
@@ -156,12 +156,12 @@ FILE *RedirectOutput(TString &logfile, const char *loc)
    return fLog;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a script that can be executed to cleanup this process in case of
+/// problems. Return 0 on success, -1 in case of any problem.
+
 Int_t MakeCleanupScript(Int_t loglevel)
 {
-   // Create a script that can be executed to cleanup this process in case of
-   // problems. Return 0 on success, -1 in case of any problem.
-
    // The file path
    TString cleanup = Form("%s/roots-%d-%d.cleanup", gSystem->TempDirectory(),
                                                     gSystem->GetUid(), gSystem->GetPid());

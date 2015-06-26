@@ -27,12 +27,12 @@
 
 ClassImp(TGuiBldGeometryFrame)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGuiBldGeometryFrame::TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *ed)
    : TGVerticalFrame(p, 1, 1)
 {
-   // Constructor.
-
    fEditor = ed;
    fBuilder = (TRootGuiBuilder*)TRootGuiBuilder::Instance();
    fDragManager = (TGuiBldDragManager *)gDragManager;
@@ -80,11 +80,11 @@ TGuiBldGeometryFrame::TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *ed)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize and redraw selected frame.
+
 void TGuiBldGeometryFrame::ResizeSelected()
 {
-   // Resize and redraw selected frame.
-
    if (!fEditor)
       return;
 
@@ -111,11 +111,11 @@ void TGuiBldGeometryFrame::ResizeSelected()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update number entries when new frame selected.
+
 void TGuiBldGeometryFrame::ChangeSelected(TGFrame *frame)
 {
-   // Update number entries when new frame selected.
-
    if (!frame) {
       fNEWidth->SetNumber(0);
       fNEHeight->SetNumber(0);

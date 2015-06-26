@@ -23,23 +23,23 @@
 
 ClassImp(TFunctionTemplate)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TFunctionTemplate ctor.
+
 TFunctionTemplate::TFunctionTemplate(FuncTempInfo_t *info, TClass *cl) : TDictionary(),
    fInfo(info), fClass(cl)
 {
-   // Default TFunctionTemplate ctor.
-
    if (fInfo) {
       gCling->FuncTempInfo_Name(fInfo,fName);
       gCling->FuncTempInfo_Title(fInfo,fTitle);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy operator.
+
 TFunctionTemplate::TFunctionTemplate(const TFunctionTemplate &orig) : TDictionary(orig)
 {
-   // Copy operator.
-
    if (orig.fInfo) {
       fInfo = gCling->FuncTempInfo_FactoryCopy(orig.fInfo);
    } else
@@ -47,11 +47,11 @@ TFunctionTemplate::TFunctionTemplate(const TFunctionTemplate &orig) : TDictionar
    fClass = orig.fClass;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TFunctionTemplate& TFunctionTemplate::operator=(const TFunctionTemplate &rhs)
 {
-   // Assignment operator.
-
    if (this != &rhs) {
       gCling->FuncTempInfo_Delete(fInfo);
       if (rhs.fInfo) {
@@ -64,31 +64,31 @@ TFunctionTemplate& TFunctionTemplate::operator=(const TFunctionTemplate &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TFunctionTemplate dtor deletes adopted CINT FuncTempInfo.
+
 TFunctionTemplate::~TFunctionTemplate()
 {
-   // TFunctionTemplate dtor deletes adopted CINT FuncTempInfo.
-
    gCling->FuncTempInfo_Delete(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone method.
+
 TObject *TFunctionTemplate::Clone(const char *newname) const
 {
-   // Clone method.
-
    TNamed *newobj = new TFunctionTemplate(*this);
    if (newname && strlen(newname)) newobj->SetName(newname);
    return newobj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this function template object is pointing to a currently
+/// loaded function.  If a function is unloaded after the TFunction
+/// is created, the TFunction will be set to be invalid.
+
 Bool_t TFunctionTemplate::IsValid()
 {
-   // Return true if this function template object is pointing to a currently
-   // loaded function.  If a function is unloaded after the TFunction
-   // is created, the TFunction will be set to be invalid.
-
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       // Only for global functions. For data member functions TMethod does it.
@@ -102,45 +102,46 @@ Bool_t TFunctionTemplate::IsValid()
    return fInfo != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Number of function arguments.
+
 UInt_t TFunctionTemplate::GetTemplateNargs() const
 {
-   // Number of function arguments.
-
    return fInfo ? gCling->FuncTempInfo_TemplateNargs(fInfo) : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Number of function optional (default) arguments.
+
 UInt_t TFunctionTemplate::GetTemplateMinReqArgs() const
 {
-   // Number of function optional (default) arguments.
-
    // FIXME: when unload this is an over-estimate.
    return fInfo ? gCling->FuncTempInfo_TemplateMinReqArgs(fInfo) : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get property description word. For meaning of bits see EProperty.
+
 Long_t TFunctionTemplate::Property() const
 {
-   // Get property description word. For meaning of bits see EProperty.
-
    return fInfo ? gCling->FuncTempInfo_Property(fInfo) : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDictionary::DeclId_t TFunctionTemplate::GetDeclId() const
 {
    return gInterpreter->GetDeclId(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the TFunctionTemplate to reflect the new info.
+///
+/// This can be used to implement unloading (info == 0) and then reloading
+/// (info being the 'new' decl address).
+
 Bool_t TFunctionTemplate::Update(FuncTempInfo_t *info)
 {
-   // Update the TFunctionTemplate to reflect the new info.
-   //
-   // This can be used to implement unloading (info == 0) and then reloading
-   // (info being the 'new' decl address).
-
    if (info == 0) {
       if (fInfo) gCling->FuncTempInfo_Delete(fInfo);
       fInfo = 0;

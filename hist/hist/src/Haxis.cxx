@@ -8,11 +8,11 @@
 #include "TH1.h"
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Choose an axis according to "axis".
+
 Int_t TH1::AxisChoice( Option_t *axis) const
 {
-   // Choose an axis according to "axis".
-
    char achoice = toupper(axis[0]);
    if (achoice == 'X') return 1;
    if (achoice == 'Y') return 2;
@@ -21,11 +21,11 @@ Int_t TH1::AxisChoice( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of divisions for "axis".
+
 Int_t TH1::GetNdivisions( Option_t *axis) const
 {
-   // Return the number of divisions for "axis".
-
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetNdivisions();
    if (ax == 2) return fYaxis.GetNdivisions();
@@ -34,11 +34,11 @@ Int_t TH1::GetNdivisions( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of divisions for "axis".
+
 Color_t TH1::GetAxisColor( Option_t *axis) const
 {
-   // Return the number of divisions for "axis".
-
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetAxisColor();
    if (ax == 2) return fYaxis.GetAxisColor();
@@ -47,11 +47,11 @@ Color_t TH1::GetAxisColor( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the "axis" label color.
+
 Color_t TH1::GetLabelColor( Option_t *axis) const
 {
-   // Return the "axis" label color.
-
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelColor();
    if (ax == 2) return fYaxis.GetLabelColor();
@@ -60,11 +60,11 @@ Color_t TH1::GetLabelColor( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the "axis" label font.
+
 Style_t TH1::GetLabelFont( Option_t *axis) const
 {
-   // Return the "axis" label font.
-
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelFont();
    if (ax == 2) return fYaxis.GetLabelFont();
@@ -73,11 +73,11 @@ Style_t TH1::GetLabelFont( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the "axis" label offset.
+
 Float_t TH1::GetLabelOffset( Option_t *axis) const
 {
-   // Return the "axis" label offset.
-
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelOffset();
    if (ax == 2) return fYaxis.GetLabelOffset();
@@ -86,11 +86,11 @@ Float_t TH1::GetLabelOffset( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the "axis" label size.
+
 Float_t TH1::GetLabelSize( Option_t *axis) const
 {
-   // Return the "axis" label size.
-
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelSize();
    if (ax == 2) return fYaxis.GetLabelSize();
@@ -99,11 +99,11 @@ Float_t TH1::GetLabelSize( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the "axis" tick length.
+
 Float_t TH1::GetTickLength( Option_t *axis) const
 {
-   // Return the "axis" tick length.
-
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTickLength();
    if (ax == 2) return fYaxis.GetTickLength();
@@ -112,11 +112,11 @@ Float_t TH1::GetTickLength( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the "axis" title font.
+
 Style_t TH1::GetTitleFont( Option_t *axis) const
 {
-   // Return the "axis" title font.
-
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleFont();
    if (ax == 2) return fYaxis.GetTitleFont();
@@ -125,11 +125,11 @@ Style_t TH1::GetTitleFont( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the "axis" title offset.
+
 Float_t TH1::GetTitleOffset( Option_t *axis) const
 {
-   // Return the "axis" title offset.
-
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleOffset();
    if (ax == 2) return fYaxis.GetTitleOffset();
@@ -138,11 +138,11 @@ Float_t TH1::GetTitleOffset( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the "axis" title size.
+
 Float_t TH1::GetTitleSize( Option_t *axis) const
 {
-   // Return the "axis" title size.
-
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleSize();
    if (ax == 2) return fYaxis.GetTitleSize();
@@ -151,23 +151,23 @@ Float_t TH1::GetTitleSize( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the number of divisions to draw an axis.
+///  ndiv      : Number of divisions.
+///
+///       n = N1 + 100*N2 + 10000*N3
+///       N1=number of primary divisions.
+///       N2=number of secondary divisions.
+///       N3=number of 3rd divisions.
+///           e.g.:
+///           nndi=0 --> no tick marks.
+///           nndi=2 --> 2 divisions, one tick mark in the middle
+///                      of the axis.
+/// axis specifies which axis ("x","y","z"), default = "x"
+/// if axis="xyz" set all 3 axes
+
 void TH1::SetNdivisions(Int_t n, Option_t *axis)
 {
-   // Set the number of divisions to draw an axis.
-   //  ndiv      : Number of divisions.
-   //
-   //       n = N1 + 100*N2 + 10000*N3
-   //       N1=number of primary divisions.
-   //       N2=number of secondary divisions.
-   //       N3=number of 3rd divisions.
-   //           e.g.:
-   //           nndi=0 --> no tick marks.
-   //           nndi=2 --> 2 divisions, one tick mark in the middle
-   //                      of the axis.
-   // axis specifies which axis ("x","y","z"), default = "x"
-   // if axis="xyz" set all 3 axes
-
    TString opt = axis;
    opt.ToLower();
 
@@ -177,13 +177,13 @@ void TH1::SetNdivisions(Int_t n, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color to draw the axis line and tick marks.
+/// axis specifies which axis ("x","y","z"), default = "x"
+/// if axis="xyz" set all 3 axes
+
 void TH1::SetAxisColor(Color_t color, Option_t *axis)
 {
-   // Set color to draw the axis line and tick marks.
-   // axis specifies which axis ("x","y","z"), default = "x"
-   // if axis="xyz" set all 3 axes
-
    TString opt = axis;
    opt.ToLower();
 
@@ -193,11 +193,11 @@ void TH1::SetAxisColor(Color_t color, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the "axis" range.
+
 void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
 {
-   // Set the "axis" range.
-
    Int_t ax = AxisChoice(axis);
    TAxis *theAxis = 0;
    if (ax == 1) theAxis = GetXaxis();
@@ -215,13 +215,13 @@ void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set axis labels color.
+/// axis specifies which axis ("x","y","z"), default = "x"
+/// if axis="xyz" set all 3 axes
+
 void TH1::SetLabelColor(Color_t color, Option_t *axis)
 {
-   // Set axis labels color.
-   // axis specifies which axis ("x","y","z"), default = "x"
-   // if axis="xyz" set all 3 axes
-
    TString opt = axis;
    opt.ToLower();
 
@@ -231,18 +231,18 @@ void TH1::SetLabelColor(Color_t color, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set font number used to draw axis labels.
+/// font  : Text font code = 10*fontnumber + precision
+///         Font numbers must be between 1 and 14
+///         precision = 1 fast hardware fonts (steps in the size)
+///         precision = 2 scalable and rotatable hardware fonts
+/// The default font number is 62.
+/// axis specifies which axis ("x","y","z"), default = "x"
+/// if axis="xyz" set all 3 axes
+
 void TH1::SetLabelFont(Style_t font, Option_t *axis)
 {
-   // Set font number used to draw axis labels.
-   // font  : Text font code = 10*fontnumber + precision
-   //         Font numbers must be between 1 and 14
-   //         precision = 1 fast hardware fonts (steps in the size)
-   //         precision = 2 scalable and rotatable hardware fonts
-   // The default font number is 62.
-   // axis specifies which axis ("x","y","z"), default = "x"
-   // if axis="xyz" set all 3 axes
-
    TString opt = axis;
    opt.ToLower();
 
@@ -252,14 +252,14 @@ void TH1::SetLabelFont(Style_t font, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set offset between axis and axis' labels.
+/// The offset is expressed as a percent of the pad height.
+/// axis specifies which axis ("x","y","z"), default = "x"
+/// if axis="xyz" set all 3 axes
+
 void TH1::SetLabelOffset(Float_t offset, Option_t *axis)
 {
-   // Set offset between axis and axis' labels.
-   // The offset is expressed as a percent of the pad height.
-   // axis specifies which axis ("x","y","z"), default = "x"
-   // if axis="xyz" set all 3 axes
-
    TString opt = axis;
    opt.ToLower();
 
@@ -269,14 +269,14 @@ void TH1::SetLabelOffset(Float_t offset, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of axis' labels.
+/// The size is expressed as a percent of the pad height.
+/// axis specifies which axis ("x","y","z"), default = "x"
+/// if axis="xyz" set all 3 axes
+
 void TH1::SetLabelSize(Float_t size, Option_t *axis)
 {
-   // Set size of axis' labels.
-   // The size is expressed as a percent of the pad height.
-   // axis specifies which axis ("x","y","z"), default = "x"
-   // if axis="xyz" set all 3 axes
-
    TString opt = axis;
    opt.ToLower();
 
@@ -286,13 +286,13 @@ void TH1::SetLabelSize(Float_t size, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the axis' tick marks length.
+/// axis specifies which axis ("x","y","z"), default = "x"
+/// if axis="xyz" set all 3 axes
+
 void TH1::SetTickLength(Float_t length, Option_t *axis)
 {
-   // Set the axis' tick marks length.
-   // axis specifies which axis ("x","y","z"), default = "x"
-   // if axis="xyz" set all 3 axes
-
    TString opt = axis;
    opt.ToLower();
 
@@ -302,17 +302,17 @@ void TH1::SetTickLength(Float_t length, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The the axis' title font.
+/// if axis =="x"  set the X axis title font
+/// if axis =="y"  set the Y axis title font
+/// if axis =="z"  set the Z axis title font
+/// any other value of axis will set the pad title font
+///
+/// if axis="xyz" set all 3 axes
+
 void TH1::SetTitleFont(Style_t font, Option_t *axis)
 {
-   // The the axis' title font.
-   // if axis =="x"  set the X axis title font
-   // if axis =="y"  set the Y axis title font
-   // if axis =="z"  set the Z axis title font
-   // any other value of axis will set the pad title font
-   //
-   // if axis="xyz" set all 3 axes
-
    TString opt = axis;
    opt.ToLower();
 
@@ -322,18 +322,18 @@ void TH1::SetTitleFont(Style_t font, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify a parameter offset to control the distance between the axis
+/// and the axis' title.
+/// offset = 1 means : use the default distance
+/// offset = 1.2 means: the distance will be 1.2*(default distance)
+/// offset = 0.8 means: the distance will be 0.8*(default distance)
+///
+/// axis specifies which axis ("x","y","z"), default = "x"
+/// if axis="xyz" set all 3 axes
+
 void TH1::SetTitleOffset(Float_t offset, Option_t *axis)
 {
-   // Specify a parameter offset to control the distance between the axis
-   // and the axis' title.
-   // offset = 1 means : use the default distance
-   // offset = 1.2 means: the distance will be 1.2*(default distance)
-   // offset = 0.8 means: the distance will be 0.8*(default distance)
-   //
-   // axis specifies which axis ("x","y","z"), default = "x"
-   // if axis="xyz" set all 3 axes
-
    TString opt = axis;
    opt.ToLower();
 
@@ -343,16 +343,16 @@ void TH1::SetTitleOffset(Float_t offset, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The the axis' title size.
+/// if axis = "x" set the X axis title size
+/// if axis = "y" set the Y axis title size
+/// if axis = "z" set the Z axis title size
+///
+/// if axis ="xyz" set all 3 axes
+
 void TH1::SetTitleSize(Float_t size, Option_t *axis)
 {
-   // The the axis' title size.
-   // if axis = "x" set the X axis title size
-   // if axis = "y" set the Y axis title size
-   // if axis = "z" set the Z axis title size
-   //
-   // if axis ="xyz" set all 3 axes
-
    TString opt = axis;
    opt.ToLower();
 

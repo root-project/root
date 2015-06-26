@@ -50,10 +50,11 @@
 
 ClassImp(TGeoPolygon)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy constructor.
+
 TGeoPolygon::TGeoPolygon()
 {
-// Dummy constructor.
    fNvert   = 0;
    fNconvex = 0;
    fInd     = 0;
@@ -65,10 +66,11 @@ TGeoPolygon::TGeoPolygon()
    TObject::SetBit(kGeoFinishPolygon, kFALSE);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGeoPolygon::TGeoPolygon(Int_t nvert)
 {
-// Default constructor.
    if (nvert<3) {
       Fatal("Ctor", "Invalid number of vertices %i", nvert);
       return;
@@ -85,10 +87,11 @@ TGeoPolygon::TGeoPolygon(Int_t nvert)
    SetNextIndex();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoPolygon::~TGeoPolygon()
 {
-// Destructor
    if (fInd)  delete [] fInd;
    if (fIndc) delete [] fIndc;
    if (fDaughters) {
@@ -96,10 +99,11 @@ TGeoPolygon::~TGeoPolygon()
       delete fDaughters;
    }
 }
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes area of the polygon in [length^2].
+
 Double_t TGeoPolygon::Area() const
 {
-// Computes area of the polygon in [length^2].
    Int_t ic,i,j;
    Double_t area = 0;
    // Compute area of the convex part
@@ -111,10 +115,11 @@ Double_t TGeoPolygon::Area() const
    return TMath::Abs(area);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a point given by X = point[0], Y = point[1] is inside the polygon.
+
 Bool_t TGeoPolygon::Contains(const Double_t *point) const
 {
-// Check if a point given by X = point[0], Y = point[1] is inside the polygon.
    Int_t i;
    TGeoPolygon *poly;
    for (i=0; i<fNconvex; i++)
@@ -128,10 +133,11 @@ Bool_t TGeoPolygon::Contains(const Double_t *point) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check polygon convexity.
+
 void TGeoPolygon::ConvexCheck()
 {
-// Check polygon convexity.
    if (fNvert==3) {
       SetConvex();
       return;
@@ -148,19 +154,21 @@ void TGeoPolygon::ConvexCheck()
    SetConvex();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the polygon.
+
 void TGeoPolygon::Draw(Option_t *)
 {
-// Draw the polygon.
    if (!gGeoManager) return;
    gGeoManager->GetGeomPainter()->DrawPolygon(this);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decompose polygon in a convex outscribed part and a list of daughter
+/// polygons that have to be substracted to get the actual one.
+
 void TGeoPolygon::FinishPolygon()
 {
-// Decompose polygon in a convex outscribed part and a list of daughter
-// polygons that have to be substracted to get the actual one.
    TObject::SetBit(kGeoFinishPolygon);
    // check convexity
    ConvexCheck();
@@ -207,28 +215,31 @@ void TGeoPolygon::FinishPolygon()
    for (indconv=0; indconv<fNconvex; indconv++) fIndc[indconv] = fInd[fIndc[indconv]];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill list of vertices into provided arrays.
+
 void TGeoPolygon::GetVertices(Double_t *x, Double_t *y) const
 {
-// Fill list of vertices into provided arrays.
    memcpy(x, fX, fNvert*sizeof(Double_t));
    memcpy(y, fY, fNvert*sizeof(Double_t));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill list of vertices of the convex outscribed polygon into provided arrays.
+
 void TGeoPolygon::GetConvexVertices(Double_t *x, Double_t *y) const
 {
-// Fill list of vertices of the convex outscribed polygon into provided arrays.
    for (Int_t ic=0; ic<fNconvex; ic++) {
       x[ic] = fX[fIndc[ic]];
       y[ic] = fY[fIndc[ic]];
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if POINT is right-sided with respect to the segment defined by IND1 and IND2.
+
 Bool_t TGeoPolygon::IsRightSided(const Double_t *point, Int_t ind1, Int_t ind2) const
 {
-// Check if POINT is right-sided with respect to the segment defined by IND1 and IND2.
    Double_t dot = (point[0]-fX[ind1])*(fY[ind2]-fY[ind1]) -
                   (point[1]-fY[ind1])*(fX[ind2]-fX[ind1]);
    if (!IsClockwise()) dot = -dot;
@@ -236,10 +247,11 @@ Bool_t TGeoPolygon::IsRightSided(const Double_t *point, Int_t ind1, Int_t ind2) 
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a segment [0..fNvert-1] belongs to the outscribed convex pgon.
+
 Bool_t TGeoPolygon::IsSegConvex(Int_t i1, Int_t i2) const
 {
-// Check if a segment [0..fNvert-1] belongs to the outscribed convex pgon.
    if (i2<0) i2=(i1+1)%fNvert;
    Double_t point[2];
    for (Int_t i=0; i<fNvert; i++) {
@@ -251,10 +263,11 @@ Bool_t TGeoPolygon::IsSegConvex(Int_t i1, Int_t i2) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check for illegal crossings between non-consecutive segments
+
 Bool_t TGeoPolygon::IsIllegalCheck() const
 {
-// Check for illegal crossings between non-consecutive segments
    if (fNvert<4) return kFALSE;
    Bool_t is_illegal = kFALSE;
    Double_t x1,y1,x2,y2,x3,y3,x4,y4;
@@ -280,10 +293,11 @@ Bool_t TGeoPolygon::IsIllegalCheck() const
    return is_illegal;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute indices for the outscribed convex polygon.
+
 void TGeoPolygon::OutscribedConvex()
 {
-// Compute indices for the outscribed convex polygon.
    fNconvex = 0;
    Int_t iseg = 0;
    Int_t ivnew;
@@ -328,10 +342,11 @@ void TGeoPolygon::OutscribedConvex()
    delete [] indconv;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute minimum distance from POINT to any segment. Returns segment index.
+
 Double_t TGeoPolygon::Safety(const Double_t *point, Int_t &isegment) const
 {
-// Compute minimum distance from POINT to any segment. Returns segment index.
    Int_t i1, i2;
    Double_t p1[2], p2[3];
    Double_t lsq, ssq, dx, dy, dpx, dpy, u;
@@ -384,11 +399,12 @@ Double_t TGeoPolygon::Safety(const Double_t *point, Int_t &isegment) const
    return safe;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the next polygone index. If index<0 sets all indices consecutive
+/// in increasing order.
+
 void TGeoPolygon::SetNextIndex(Int_t index)
 {
-// Sets the next polygone index. If index<0 sets all indices consecutive
-// in increasing order.
    Int_t i;
    if (index <0) {
       for (i=0; i<fNvert; i++) fInd[i] = i;
@@ -408,10 +424,11 @@ void TGeoPolygon::SetNextIndex(Int_t index)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set X/Y array pointer for the polygon and daughters.
+
 void TGeoPolygon::SetXY(Double_t *x, Double_t *y)
 {
-// Set X/Y array pointer for the polygon and daughters.
    Int_t i;
    fX = x;
    fY = y;

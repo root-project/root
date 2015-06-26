@@ -57,11 +57,11 @@
 
 ClassImp(TGondzioSolver)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGondzioSolver::TGondzioSolver()
 {
-// Default constructor
-
    fPrintlevel               = 0;
    fTsig                     = 0.0;
    fMaximum_correctors       = 0;
@@ -80,11 +80,11 @@ TGondzioSolver::TGondzioSolver()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TGondzioSolver::TGondzioSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
 {
-// Constructor
-
    fFactory = of;
    fStep            = fFactory->MakeVariables(prob);
    fCorrector_step  = fFactory->MakeVariables(prob);
@@ -112,22 +112,22 @@ TGondzioSolver::TGondzioSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TGondzioSolver::TGondzioSolver(const TGondzioSolver &another) : TQpSolverBase(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve the quadratic programming problem as formulated through prob, store
+/// the final solution in iterate->fX . Monitor the residuals during the iterations
+/// through resid . The status is returned as defined in TQpSolverBase::ETerminationCode .
+
 Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid)
 {
-// Solve the quadratic programming problem as formulated through prob, store
-// the final solution in iterate->fX . Monitor the residuals during the iterations
-// through resid . The status is returned as defined in TQpSolverBase::ETerminationCode .
-
    Int_t status_code;
    Double_t alpha = 1;
    Double_t sigma = 1;
@@ -269,15 +269,15 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print information about the optimization process and monitor the convergence
+/// status of thye algorithm
+
 void TGondzioSolver::DefMonitor(TQpDataBase* /* data */,TQpVar* /* vars */,
                                 TQpResidual *resid,
                                 Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
                                 Int_t status_code,Int_t level)
 {
-// Print information about the optimization process and monitor the convergence
-// status of thye algorithm
-
    switch (level) {
       case 0 : case 1:
       {
@@ -320,22 +320,22 @@ void TGondzioSolver::DefMonitor(TQpDataBase* /* data */,TQpVar* /* vars */,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deconstructor
+
 TGondzioSolver::~TGondzioSolver()
 {
-// Deconstructor
-
    if (fCorrector_step)  { delete fCorrector_step;  fCorrector_step  = 0; }
    if (fStep)            { delete fStep;            fStep            = 0; }
    if (fCorrector_resid) { delete fCorrector_resid; fCorrector_resid = 0; }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TGondzioSolver &TGondzioSolver::operator=(const TGondzioSolver &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TQpSolverBase::operator=(source);
 

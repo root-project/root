@@ -14,31 +14,31 @@
 
 ClassImp(TSQLiteResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SQLite query result.
+
 TSQLiteResult::TSQLiteResult(void *result)
 {
-   // SQLite query result.
-
    fResult     = (sqlite3_stmt *) result;
 
    // RowCount is -1, as sqlite cannot determine RowCount beforehand:
    fRowCount = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup SQLite query result.
+
 TSQLiteResult::~TSQLiteResult()
 {
-   // Cleanup SQLite query result.
-
    if (fResult)
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close query result.
+
 void TSQLiteResult::Close(Option_t *)
 {
-   // Close query result.
-
    if (!fResult)
       return;
 
@@ -46,11 +46,11 @@ void TSQLiteResult::Close(Option_t *)
    fResult     = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if result set is open and field index within range.
+
 Bool_t TSQLiteResult::IsValid(Int_t field)
 {
-   // Check if result set is open and field index within range.
-
    if (!fResult) {
       Error("IsValid", "result set closed");
       return kFALSE;
@@ -62,11 +62,11 @@ Bool_t TSQLiteResult::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of fields in result.
+
 Int_t TSQLiteResult::GetFieldCount()
 {
-   // Get number of fields in result.
-
    if (!fResult) {
       Error("GetFieldCount", "result set closed");
       return 0;
@@ -74,11 +74,11 @@ Int_t TSQLiteResult::GetFieldCount()
    return sqlite3_column_count(fResult);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name of specified field.
+
 const char *TSQLiteResult::GetFieldName(Int_t field)
 {
-   // Get name of specified field.
-
    if (!fResult) {
       Error("GetFieldName", "result set closed");
       return 0;
@@ -86,12 +86,12 @@ const char *TSQLiteResult::GetFieldName(Int_t field)
    return sqlite3_column_name(fResult, field);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next query result row. The returned object must be
+/// deleted by the user.
+
 TSQLRow *TSQLiteResult::Next()
 {
-   // Get next query result row. The returned object must be
-   // deleted by the user.
-
    if (!fResult) {
       Error("Next", "result set closed");
       return 0;

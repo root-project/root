@@ -15,11 +15,11 @@
 
 ClassImp(TODBCResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TODBCResult::TODBCResult(SQLHSTMT stmt)
 {
-   // Constructor
-
    fHstmt = stmt;
    fFieldCount = 0;
 
@@ -31,28 +31,28 @@ TODBCResult::TODBCResult(SQLHSTMT stmt)
       fFieldCount = columnCount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup ODBC query result.
+
 TODBCResult::~TODBCResult()
 {
-   // Cleanup ODBC query result.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close (cleanup) ODBC result object. Deletes statement
+
 void TODBCResult::Close(Option_t *)
 {
-   // Close (cleanup) ODBC result object. Deletes statement
-
    SQLFreeHandle(SQL_HANDLE_STMT, fHstmt);
    fHstmt = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name of specified field.
+
 const char *TODBCResult::GetFieldName(Int_t field)
 {
-   // Get name of specified field.
-
    SQLCHAR columnName[1024];
 
    SQLSMALLINT nameLength;
@@ -73,12 +73,12 @@ const char *TODBCResult::GetFieldName(Int_t field)
    return fNameBuffer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next query result row. The returned object must be
+/// deleted by the user.
+
 TSQLRow *TODBCResult::Next()
 {
-   // Get next query result row. The returned object must be
-   // deleted by the user.
-
    if (fHstmt==0) return 0;
 
    SQLRETURN retcode = SQLFetch(fHstmt);

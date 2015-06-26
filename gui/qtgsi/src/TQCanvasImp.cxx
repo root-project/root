@@ -22,11 +22,11 @@
 
 ClassImp(TQCanvasImp)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  TQCanvasImp ctor
+
 TQCanvasImp::TQCanvasImp(TCanvas *c, const char *name, UInt_t width, UInt_t height)
 {
-   //  TQCanvasImp ctor
-
    //  @param c (ptr to ROOT TCanvas)
    //  @param name (title for canvas)
    //  @param width
@@ -35,11 +35,11 @@ TQCanvasImp::TQCanvasImp(TCanvas *c, const char *name, UInt_t width, UInt_t heig
    Build(c,name,10,10,width,height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   TQCanvasImp ctor
+
 TQCanvasImp::TQCanvasImp(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   //   TQCanvasImp ctor
-
    //   @param c (ptr to ROOT TCanvas)
    //   @param name (title for canvas)
    //   @param x
@@ -50,26 +50,27 @@ TQCanvasImp::TQCanvasImp(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t 
    Build(c,name,x,y,width,height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQCanvasImp ctor
+
 TQCanvasImp::TQCanvasImp(TCanvas* /*v*/) : TCanvasImp()
 {
-   // TQCanvasImp ctor
-
    fQCanvas = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build the TQRootCanvas
+
 void TQCanvasImp::Build(TCanvas *c, const char *name, Int_t /*x*/, Int_t /*y*/, UInt_t /*width*/,
                         UInt_t /*height*/)
 {
-   // Build the TQRootCanvas
-
    fQCanvas = new TQRootCanvas(0,name,c);
    fCanvas = fQCanvas->GetCanvas();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor
+
 TQCanvasImp::~TQCanvasImp()
 {
-   // dtor
 }

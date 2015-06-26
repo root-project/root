@@ -48,7 +48,8 @@
 
 ClassImp(TGLViewerBase);
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLViewerBase::TGLViewerBase() :
    fRnrCtx    (0),
    fCamera    (0),
@@ -69,11 +70,11 @@ TGLViewerBase::TGLViewerBase() :
    fOLLineW = gEnv->GetValue("OpenGL.OutlineLineScalingFactor", 1.0);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLViewerBase::~TGLViewerBase()
 {
-   // Destructor.
-
    for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
    {
       (*i)->GetScene()->RemoveViewer(this);
@@ -85,11 +86,11 @@ TGLViewerBase::~TGLViewerBase()
    delete fRnrCtx;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Name to print in locking output.
+
 const char* TGLViewerBase::LockIdStr() const
 {
-   // Name to print in locking output.
-
    return "TGLViewerBase";
 }
 
@@ -97,22 +98,22 @@ const char* TGLViewerBase::LockIdStr() const
 // Scene & scene-info management
 /**************************************************************************/
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find scene-info corresponding to scene.
+
 TGLViewerBase::SceneInfoList_i
 TGLViewerBase::FindScene(TGLSceneBase* scene)
 {
-   // Find scene-info corresponding to scene.
-
    SceneInfoList_i i = fScenes.begin();
    while (i != fScenes.end() && (*i)->GetScene() != scene) ++i;
    return i;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new scene, appropriate scene-info is created.
+
 TGLSceneInfo* TGLViewerBase::AddScene(TGLSceneBase* scene)
 {
-   // Add new scene, appropriate scene-info is created.
-
    SceneInfoList_i i = FindScene(scene);
    if (i == fScenes.end()) {
       TGLSceneInfo* sinfo = scene->CreateSceneInfo(this);
@@ -127,11 +128,11 @@ TGLSceneInfo* TGLViewerBase::AddScene(TGLSceneBase* scene)
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove scene from the viewer, its scene-info is deleted.
+
 void TGLViewerBase::RemoveScene(TGLSceneBase* scene)
 {
-   // Remove scene from the viewer, its scene-info is deleted.
-
    SceneInfoList_i i = FindScene(scene);
    if (i != fScenes.end()) {
       delete *i;
@@ -144,11 +145,11 @@ void TGLViewerBase::RemoveScene(TGLSceneBase* scene)
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all scenes from the viewer, their scene-infos are deleted.
+
 void TGLViewerBase::RemoveAllScenes()
 {
-   // Remove all scenes from the viewer, their scene-infos are deleted.
-
    for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
    {
       TGLSceneInfo * sinfo = *i;
@@ -159,13 +160,13 @@ void TGLViewerBase::RemoveAllScenes()
    Changed();
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove scene, its scene-info is deleted.
+/// Called from scene that is being destroyed while still holding
+/// viewer references.
+
 void TGLViewerBase::SceneDestructing(TGLSceneBase* scene)
 {
-   // Remove scene, its scene-info is deleted.
-   // Called from scene that is being destroyed while still holding
-   // viewer references.
-
    SceneInfoList_i i = FindScene(scene);
    if (i != fScenes.end()) {
       delete *i;
@@ -176,11 +177,11 @@ void TGLViewerBase::SceneDestructing(TGLSceneBase* scene)
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find scene-info corresponding to scene.
+
 TGLSceneInfo* TGLViewerBase::GetSceneInfo(TGLSceneBase* scene)
 {
-   // Find scene-info corresponding to scene.
-
    SceneInfoList_i i = FindScene(scene);
    if (i != fScenes.end())
       return *i;
@@ -188,12 +189,12 @@ TGLSceneInfo* TGLViewerBase::GetSceneInfo(TGLSceneBase* scene)
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find logical-shape representing object id in the list of scenes.
+/// Return 0 if not found.
+
 TGLLogicalShape* TGLViewerBase::FindLogicalInScenes(TObject* id)
 {
-   // Find logical-shape representing object id in the list of scenes.
-   // Return 0 if not found.
-
    for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
    {
       TGLLogicalShape *lshp = (*i)->GetScene()->FindLogical(id);
@@ -203,39 +204,39 @@ TGLLogicalShape* TGLViewerBase::FindLogicalInScenes(TObject* id)
    return 0;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add overlay element.
+
 void TGLViewerBase::AddOverlayElement(TGLOverlayElement* el)
 {
-   // Add overlay element.
-
    fOverlay.push_back(el);
    Changed();
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove overlay element.
+
 void TGLViewerBase::RemoveOverlayElement(TGLOverlayElement* el)
 {
-   // Remove overlay element.
-
    OverlayElmVec_i it = std::find(fOverlay.begin(), fOverlay.end(), el);
    if (it != fOverlay.end())
       fOverlay.erase(it);
    Changed();
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete overlay elements that are annotations.
+
 void TGLViewerBase::DeleteOverlayAnnotations()
 {
-   // Delete overlay elements that are annotations.
-
    DeleteOverlayElements(TGLOverlayElement::kAnnotation);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete overlay elements.
+
 void TGLViewerBase::DeleteOverlayElements(TGLOverlayElement::ERole role)
 {
-   // Delete overlay elements.
-
    OverlayElmVec_t ovl;
    fOverlay.swap(ovl);
 
@@ -254,14 +255,14 @@ void TGLViewerBase::DeleteOverlayElements(TGLOverlayElement::ERole role)
 // SceneInfo update / check
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Force rebuild of view-dependent scene-info structures.
+///
+/// This should be called before calling render (draw/select) if
+/// something that affects camera interest has been changed.
+
 void TGLViewerBase::ResetSceneInfos()
 {
-   // Force rebuild of view-dependent scene-info structures.
-   //
-   // This should be called before calling render (draw/select) if
-   // something that affects camera interest has been changed.
-
    SceneInfoList_i i = fScenes.begin();
    while (i != fScenes.end())
    {
@@ -270,11 +271,11 @@ void TGLViewerBase::ResetSceneInfos()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge bounding-boxes of all active registered scenes.
+
 void TGLViewerBase::MergeSceneBBoxes(TGLBoundingBox& bbox)
 {
-   // Merge bounding-boxes of all active registered scenes.
-
    bbox.SetEmpty();
    for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
    {
@@ -291,23 +292,23 @@ void TGLViewerBase::MergeSceneBBoxes(TGLBoundingBox& bbox)
 // Rendering / selection virtuals
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup clip-object. Protected virtual method.
+
 void TGLViewerBase::SetupClipObject()
 {
-   // Setup clip-object. Protected virtual method.
-
    if (fClip)
    {
       fClip->Setup(fOverallBoundingBox);
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize render-context, setup camera, GL, render-area.
+/// Check and lock scenes, determine their visibility.
+
 void TGLViewerBase::PreRender()
 {
-   // Initialize render-context, setup camera, GL, render-area.
-   // Check and lock scenes, determine their visibility.
-
    TGLContextIdentity* cid = TGLContextIdentity::GetCurrent();
    if (cid == 0)
    {
@@ -391,12 +392,12 @@ void TGLViewerBase::PreRender()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call sub-rendering function render_foo on all currently visible
+/// scenes.
+
 void TGLViewerBase::SubRenderScenes(SubRender_foo render_foo)
 {
-   // Call sub-rendering function render_foo on all currently visible
-   // scenes.
-
    Int_t nScenes = fVisScenes.size();
 
    for (Int_t i = 0; i < nScenes; ++i)
@@ -413,22 +414,22 @@ void TGLViewerBase::SubRenderScenes(SubRender_foo render_foo)
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render all scenes. This is done in two main passes:
+/// - render opaque objects from all scenes
+/// - render transparent objects from all scenes
+
 void TGLViewerBase::Render()
 {
-   // Render all scenes. This is done in two main passes:
-   // - render opaque objects from all scenes
-   // - render transparent objects from all scenes
-
    RenderOpaque();
    RenderTransparent();
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render non-selected objects from all scenes.
+
 void TGLViewerBase::RenderNonSelected()
 {
-   // Render non-selected objects from all scenes.
-
    SubRenderScenes(&TGLSceneBase::RenderOpaque);
 
    TGLCapabilityEnabler blend(GL_BLEND, kTRUE);
@@ -442,11 +443,11 @@ void TGLViewerBase::RenderNonSelected()
    TGLUtil::CheckError("TGLViewerBase::RenderNonSelected - pre exit check");
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render selected objects from all scenes.
+
 void TGLViewerBase::RenderSelected()
 {
-   // Render selected objects from all scenes.
-
    SubRenderScenes(&TGLSceneBase::RenderSelOpaque);
 
    TGLCapabilityEnabler blend(GL_BLEND, kTRUE);
@@ -460,11 +461,11 @@ void TGLViewerBase::RenderSelected()
    TGLUtil::CheckError("TGLViewerBase::RenderSelected - pre exit check");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render selected objects from all scenes for highlight.
+
 void TGLViewerBase::RenderSelectedForHighlight()
 {
-   // Render selected objects from all scenes for highlight.
-
    fRnrCtx->SetHighlight(kTRUE);
 
    SubRenderScenes(&TGLSceneBase::RenderSelOpaqueForHighlight);
@@ -480,11 +481,11 @@ void TGLViewerBase::RenderSelectedForHighlight()
    fRnrCtx->SetHighlight(kFALSE);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render opaque objects from all scenes.
+
 void TGLViewerBase::RenderOpaque(Bool_t rnr_non_selected, Bool_t rnr_selected)
 {
-   // Render opaque objects from all scenes.
-
    if (rnr_non_selected)
    {
       SubRenderScenes(&TGLSceneBase::RenderOpaque);
@@ -497,11 +498,11 @@ void TGLViewerBase::RenderOpaque(Bool_t rnr_non_selected, Bool_t rnr_selected)
    TGLUtil::CheckError("TGLViewerBase::RenderOpaque - pre exit check");
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render transparent objects from all scenes.
+
 void TGLViewerBase::RenderTransparent(Bool_t rnr_non_selected, Bool_t rnr_selected)
 {
-   // Render transparent objects from all scenes.
-
    TGLCapabilityEnabler blend(GL_BLEND, kTRUE);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glDepthMask(GL_FALSE);
@@ -520,11 +521,11 @@ void TGLViewerBase::RenderTransparent(Bool_t rnr_non_selected, Bool_t rnr_select
    TGLUtil::CheckError("TGLViewerBase::RenderTransparent - pre exit check");
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render overlay objects.
+
 void TGLViewerBase::RenderOverlay(Int_t state, Bool_t selection)
 {
-   // Render overlay objects.
-
    Int_t nOvl = fOverlay.size();
    for (Int_t i = 0; i < nOvl; ++i)
    {
@@ -538,12 +539,12 @@ void TGLViewerBase::RenderOverlay(Int_t state, Bool_t selection)
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function called after rendering is finished.
+/// Here we just unlock the scenes.
+
 void TGLViewerBase::PostRender()
 {
-   // Function called after rendering is finished.
-   // Here we just unlock the scenes.
-
    for (SceneInfoVec_i i = fVisScenes.begin(); i != fVisScenes.end(); ++i)
    {
       TGLSceneInfo* sinfo = *i;
@@ -555,22 +556,22 @@ void TGLViewerBase::PostRender()
    fChanged = kFALSE;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform minimal initialization for overlay selection.
+/// Here we assume that scene has already been drawn and that
+/// camera and overall bounding box are ok.
+/// Scenes are not locked.
+
 void TGLViewerBase::PreRenderOverlaySelection()
 {
-   // Perform minimal initialization for overlay selection.
-   // Here we assume that scene has already been drawn and that
-   // camera and overall bounding box are ok.
-   // Scenes are not locked.
-
    fCamera->Apply(fOverallBoundingBox, fRnrCtx->GetPickRectangle());
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform cleanup after overlay selection.
+
 void TGLViewerBase::PostRenderOverlaySelection()
 {
-   // Perform cleanup after overlay selection.
-
 }
 
 /**************************************************************************/
@@ -586,18 +587,18 @@ void TGLViewerBase::PostRenderOverlaySelection()
    // For now only in derived classes.
 //}
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process selection record on buffer-position 'recIdx' and
+/// fill the data into 'rec'.
+///
+/// Returns TRUE if scene was demangled and an object identified.
+/// When FALSE is returned it is still possible that scene has been
+/// identified. Check for this if interested in scene-selection.
+///
+/// The select-buffer is taken form fRnrCtx.
+
 Bool_t TGLViewerBase::ResolveSelectRecord(TGLSelectRecord& rec, Int_t recIdx)
 {
-   // Process selection record on buffer-position 'recIdx' and
-   // fill the data into 'rec'.
-   //
-   // Returns TRUE if scene was demangled and an object identified.
-   // When FALSE is returned it is still possible that scene has been
-   // identified. Check for this if interested in scene-selection.
-   //
-   // The select-buffer is taken form fRnrCtx.
-
    TGLSelectBuffer* sb = fRnrCtx->GetSelectBuffer();
    if (recIdx >= sb->GetNRecords())
        return kFALSE;
@@ -614,13 +615,13 @@ Bool_t TGLViewerBase::ResolveSelectRecord(TGLSelectRecord& rec, Int_t recIdx)
    return sinfo->GetScene()->ResolveSelectRecord(rec, 1);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find next select record that can be resolved, starting from
+/// position 'recIdx'.
+/// 'recIdx' is passed as reference and points to found record in the buffer.
+
 Bool_t TGLViewerBase::FindClosestRecord(TGLSelectRecord& rec, Int_t& recIdx)
 {
-   // Find next select record that can be resolved, starting from
-   // position 'recIdx'.
-   // 'recIdx' is passed as reference and points to found record in the buffer.
-
    TGLSelectBuffer* sb = fRnrCtx->GetSelectBuffer();
 
    while (recIdx < sb->GetNRecords())
@@ -632,13 +633,13 @@ Bool_t TGLViewerBase::FindClosestRecord(TGLSelectRecord& rec, Int_t& recIdx)
    return kFALSE;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find next select record that can be resolved and whose result is
+/// not transparent, starting from position 'recIdx'.
+/// 'recIdx' is passed as reference and points to found record in the buffer.
+
 Bool_t TGLViewerBase::FindClosestOpaqueRecord(TGLSelectRecord& rec, Int_t& recIdx)
 {
-   // Find next select record that can be resolved and whose result is
-   // not transparent, starting from position 'recIdx'.
-   // 'recIdx' is passed as reference and points to found record in the buffer.
-
    TGLSelectBuffer* sb = fRnrCtx->GetSelectBuffer();
 
    while (recIdx < sb->GetNRecords())
@@ -650,14 +651,14 @@ Bool_t TGLViewerBase::FindClosestOpaqueRecord(TGLSelectRecord& rec, Int_t& recId
    return kFALSE;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find next overlay-select record that can be resolved, starting from
+/// position 'recIdx'.
+/// 'recIdx' is passed as reference and points to found record in the buffer.
+
 Bool_t TGLViewerBase::FindClosestOverlayRecord(TGLOvlSelectRecord& rec,
                                                Int_t             & recIdx)
 {
-   // Find next overlay-select record that can be resolved, starting from
-   // position 'recIdx'.
-   // 'recIdx' is passed as reference and points to found record in the buffer.
-
    TGLSelectBuffer* sb = fRnrCtx->GetSelectBuffer();
 
    while (recIdx < sb->GetNRecords())

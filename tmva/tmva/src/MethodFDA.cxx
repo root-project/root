@@ -67,7 +67,9 @@ REGISTER_METHOD(FDA)
 
 ClassImp(TMVA::MethodFDA)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::MethodFDA::MethodFDA( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData,
@@ -84,10 +86,11 @@ TMVA::MethodFDA::MethodFDA( const TString& jobName,
      fSumOfWeights   ( 0 ),
      fOutputDimensions( 0 )
 {
-   // standard constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodFDA::MethodFDA( DataSetInfo& theData,
                             const TString& theWeightFile,
                             TDirectory* theTargetDir )
@@ -102,13 +105,13 @@ TMVA::MethodFDA::MethodFDA( DataSetInfo& theData,
      fSumOfWeights   ( 0 ),
      fOutputDimensions( 0 )
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default initialisation
+
 void TMVA::MethodFDA::Init( void )
 {
-   // default initialisation
    fNPars    = 0;
 
    fBestPars.clear();
@@ -130,20 +133,21 @@ void TMVA::MethodFDA::Init( void )
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// define the options (their key words) that can be set in the option string
+///
+/// format of function string:
+///    "x0*(0)+((1)/x1)**(2)..."
+/// where "[i]" are the parameters, and "xi" the input variables
+///
+/// format of parameter string:
+///    "(-1.2,3.4);(-2.3,4.55);..."
+/// where the numbers in "(a,b)" correspond to the a=min, b=max parameter ranges;
+/// each parameter defined in the function string must have a corresponding range
+///
+
 void TMVA::MethodFDA::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string
-   //
-   // format of function string:
-   //    "x0*(0)+((1)/x1)**(2)..."
-   // where "[i]" are the parameters, and "xi" the input variables
-   //
-   // format of parameter string:
-   //    "(-1.2,3.4);(-2.3,4.55);..."
-   // where the numbers in "(a,b)" correspond to the a=min, b=max parameter ranges;
-   // each parameter defined in the function string must have a corresponding range
-   //
    DeclareOptionRef( fFormulaStringP  = "(0)", "Formula",   "The discrimination formula" );
    DeclareOptionRef( fParRangeStringP = "()", "ParRanges", "Parameter ranges" );
 
@@ -159,11 +163,11 @@ void TMVA::MethodFDA::DeclareOptions()
    AddPreDefVal(TString("MINUIT"));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// translate formula string into TFormula, and parameter string into par ranges
+
 void TMVA::MethodFDA::CreateFormula()
 {
-   // translate formula string into TFormula, and parameter string into par ranges
-
    // process transient strings
    fFormulaStringT  = fFormulaStringP;
 
@@ -216,11 +220,11 @@ void TMVA::MethodFDA::CreateFormula()
               << fFormula->GetNpar() << " - compared to maximum allowed: " << fNPars + GetNvar() << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the option string is decoded, for availabel options see "DeclareOptions"
+
 void TMVA::MethodFDA::ProcessOptions()
 {
-   // the option string is decoded, for availabel options see "DeclareOptions"
-
    // process transient strings
    fParRangeStringT = fParRangeStringP;
 
@@ -302,17 +306,19 @@ void TMVA::MethodFDA::ProcessOptions()
    fFitter->CheckForUnusedOptions();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodFDA::~MethodFDA( void )
 {
-   // destructor
    ClearAll();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FDA can handle classification with 2 classes and regression with one regression-target
+
 Bool_t TMVA::MethodFDA::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // FDA can handle classification with 2 classes and regression with one regression-target
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    if (type == Types::kMulticlass ) return kTRUE;
    if (type == Types::kRegression ) return kTRUE;
@@ -320,11 +326,11 @@ Bool_t TMVA::MethodFDA::HasAnalysisType( Types::EAnalysisType type, UInt_t numbe
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete and clear all class members
+
 void TMVA::MethodFDA::ClearAll( void )
 {
-   // delete and clear all class members
-   
    // if there is more than one output dimension, the paramater ranges are the same again (object has been copied).
    // hence, ... erase the copied pointers to assure, that they are deleted only once.
 //   fParRange.erase( fParRange.begin()+(fNPars), fParRange.end() );
@@ -337,11 +343,11 @@ void TMVA::MethodFDA::ClearAll( void )
    fBestPars.clear();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// FDA training 
+
 void TMVA::MethodFDA::Train( void )
 {
-   // FDA training 
-
    // cache training events
    fSumOfWeights    = 0;
    fSumOfWeightsSig = 0;
@@ -393,11 +399,12 @@ void TMVA::MethodFDA::Train( void )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// display fit parameters
+/// check maximum length of variable name
+
 void TMVA::MethodFDA::PrintResults( const TString& fitter, std::vector<Double_t>& pars, const Double_t estimator ) const
 {
-   // display fit parameters
-   // check maximum length of variable name
    Log() << kINFO;
    Log() << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
    std::vector<TString>  parNames;
@@ -408,11 +415,12 @@ void TMVA::MethodFDA::PrintResults( const TString& fitter, std::vector<Double_t>
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute estimator for given parameter set (to be minimised)
+///   const Double_t sumOfWeights[]                = { fSumOfWeightsSig, fSumOfWeightsBkg, fSumOfWeights };
+
 Double_t TMVA::MethodFDA::EstimatorFunction( std::vector<Double_t>& pars )
 {
-   // compute estimator for given parameter set (to be minimised)
-   //   const Double_t sumOfWeights[]                = { fSumOfWeightsSig, fSumOfWeightsBkg, fSumOfWeights };
    const Double_t sumOfWeights[]                = { fSumOfWeightsBkg, fSumOfWeightsSig, fSumOfWeights };
    Double_t estimator[]                         = { 0, 0, 0 };
 
@@ -472,10 +480,11 @@ Double_t TMVA::MethodFDA::EstimatorFunction( std::vector<Double_t>& pars )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// formula interpretation
+
 Double_t TMVA::MethodFDA::InterpretFormula( const Event* event, std::vector<Double_t>::iterator parBegin, std::vector<Double_t>::iterator parEnd )
 {
-   // formula interpretation
    Int_t ipar = 0;
 //    std::cout << "pars ";
    for( std::vector<Double_t>::iterator it = parBegin; it != parEnd; ++it ){
@@ -490,10 +499,11 @@ Double_t TMVA::MethodFDA::InterpretFormula( const Event* event, std::vector<Doub
    return result;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns MVA value for given event
+
 Double_t TMVA::MethodFDA::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // returns MVA value for given event
    const Event* ev = GetEvent();
 
    // cannot determine error
@@ -502,7 +512,8 @@ Double_t TMVA::MethodFDA::GetMvaValue( Double_t* err, Double_t* errUpper )
    return InterpretFormula( ev, fBestPars.begin(), fBestPars.end() );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const std::vector<Float_t>& TMVA::MethodFDA::GetRegressionValues()
 {
    if (fRegressionReturnVal == NULL) fRegressionReturnVal = new std::vector<Float_t>();
@@ -525,7 +536,8 @@ const std::vector<Float_t>& TMVA::MethodFDA::GetRegressionValues()
 }
   
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const std::vector<Float_t>& TMVA::MethodFDA::GetMulticlassValues()
 {
    if (fMulticlassReturnVal == NULL) fMulticlassReturnVal = new std::vector<Float_t>();
@@ -551,10 +563,11 @@ const std::vector<Float_t>& TMVA::MethodFDA::GetMulticlassValues()
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate the values for multiclass
+
 void TMVA::MethodFDA::CalculateMulticlassValues( const TMVA::Event*& evt, std::vector<Double_t>& parameters, std::vector<Float_t>& values)
 {
-   // calculate the values for multiclass
    values.clear();
 
 //    std::copy( parameters.begin(), parameters.end(), std::ostream_iterator<double>( std::cout, " " ) );
@@ -578,11 +591,11 @@ void TMVA::MethodFDA::CalculateMulticlassValues( const TMVA::Event*& evt, std::v
 
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read back the training results from a file (stream)
+
 void  TMVA::MethodFDA::ReadWeightsFromStream( std::istream& istr )
 {
-   // read back the training results from a file (stream)
-
    // retrieve best function parameters
    // coverity[tainted_data_argument]
    istr >> fNPars;
@@ -592,12 +605,12 @@ void  TMVA::MethodFDA::ReadWeightsFromStream( std::istream& istr )
    for (UInt_t ipar=0; ipar<fNPars; ipar++) istr >> fBestPars[ipar];
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create XML description for LD classification and regression
+/// (for arbitrary number of output classes/targets)
+
 void TMVA::MethodFDA::AddWeightsXMLTo( void* parent ) const
 {
-   // create XML description for LD classification and regression
-   // (for arbitrary number of output classes/targets)
-
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NPars",  fNPars );
    gTools().AddAttr( wght, "NDim",   fOutputDimensions );
@@ -611,10 +624,11 @@ void TMVA::MethodFDA::AddWeightsXMLTo( void* parent ) const
    gTools().AddAttr( wght, "Formula", fFormulaStringP );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read coefficients from xml weight file
+
 void TMVA::MethodFDA::ReadWeightsFromXML( void* wghtnode )
 {
-   // read coefficients from xml weight file
    gTools().ReadAttr( wghtnode, "NPars", fNPars );
 
    if(gTools().HasAttr( wghtnode, "NDim")) {
@@ -649,10 +663,11 @@ void TMVA::MethodFDA::ReadWeightsFromXML( void* wghtnode )
    CreateFormula();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write FDA-specific classifier response
+
 void TMVA::MethodFDA::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
-   // write FDA-specific classifier response
    fout << "   double              fParameter[" << fNPars << "];" << std::endl;
    fout << "};" << std::endl;
    fout << "" << std::endl;
@@ -690,13 +705,14 @@ void TMVA::MethodFDA::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "}" << std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get help message text
+///
+/// typical length of text line:
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodFDA::GetHelpMessage() const
 {
-   // get help message text
-   //
-   // typical length of text line:
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;

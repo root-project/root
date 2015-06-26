@@ -45,28 +45,28 @@ namespace
    };
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor: Create system class without connecting to server
+///
+/// param owner: (unused)
+
 TNetXNGSystem::TNetXNGSystem(Bool_t /*owner*/) :
    TSystem("-root", "Net file Helper System"), fUrl(0), fFileSystem(0)
 {
-   // Constructor: Create system class without connecting to server
-   //
-   // param owner: (unused)
-
    // Name must start with '-' to bypass the TSystem singleton check, then
    // be changed to "root"
    SetName("root");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor: Create system class and connect to server
+///
+/// param url:   URL of the entry-point server to be contacted
+/// param owner: (unused)
+
 TNetXNGSystem::TNetXNGSystem(const char *url, Bool_t /*owner*/) :
    TSystem("-root", "Net file Helper System")
 {
-   // Constructor: Create system class and connect to server
-   //
-   // param url:   URL of the entry-point server to be contacted
-   // param owner: (unused)
-
    using namespace XrdCl;
 
    // Name must start with '-' to bypass the TSystem singleton check
@@ -75,24 +75,24 @@ TNetXNGSystem::TNetXNGSystem(const char *url, Bool_t /*owner*/) :
    fFileSystem = new FileSystem(fUrl->GetURL());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TNetXNGSystem::~TNetXNGSystem()
 {
-   // Destructor
-
    delete fFileSystem;
    delete fUrl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory
+///
+/// param dir: the name of the directory to open
+/// returns:   a non-zero pointer (with no special purpose) in case of
+///            success, 0 in case of error
+
 void* TNetXNGSystem::OpenDirectory(const char *dir)
 {
-   // Open a directory
-   //
-   // param dir: the name of the directory to open
-   // returns:   a non-zero pointer (with no special purpose) in case of
-   //            success, 0 in case of error
-
    using namespace XrdCl;
 
    DirectoryInfo *dirInfo = new DirectoryInfo(dir);
@@ -100,14 +100,14 @@ void* TNetXNGSystem::OpenDirectory(const char *dir)
    return (void *) dirInfo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a directory
+///
+/// param dir: the directory name
+/// returns:   0 on success, -1 otherwise
+
 Int_t TNetXNGSystem::MakeDirectory(const char *dir)
 {
-   // Create a directory
-   //
-   // param dir: the directory name
-   // returns:   0 on success, -1 otherwise
-
    using namespace XrdCl;
    URL url(dir);
    XRootDStatus st = fFileSystem->MkDir(url.GetPath(), MkDirFlags::MakePath,
@@ -120,25 +120,25 @@ Int_t TNetXNGSystem::MakeDirectory(const char *dir)
    return 0;
 }
 
-//______________________________________________________________________________----
+////////////////////////////////////////////////////////////////////////////////
+/// Free a directory
+///
+/// param dirp: the pointer to the directory to be freed
+
 void TNetXNGSystem::FreeDirectory(void *dirp)
 {
-   // Free a directory
-   //
-   // param dirp: the pointer to the directory to be freed
-
    fDirPtrs.erase( dirp );
    delete (DirectoryInfo *) dirp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a directory entry.
+///
+/// param dirp: the directory pointer
+/// returns:    0 in case there are no more entries
+
 const char* TNetXNGSystem::GetDirEntry(void *dirp)
 {
-   // Get a directory entry.
-   //
-   // param dirp: the directory pointer
-   // returns:    0 in case there are no more entries
-
    using namespace XrdCl;
    DirectoryInfo *dirInfo = (DirectoryInfo *) dirp;
 
@@ -163,15 +163,15 @@ const char* TNetXNGSystem::GetDirEntry(void *dirp)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file (stat)
+///
+/// param path: the path of the file to stat (in)
+/// param buf:  structure that will hold the stat info (out)
+/// returns:    0 if success, 1 if the file could not be stat'ed
+
 Int_t TNetXNGSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file (stat)
-   //
-   // param path: the path of the file to stat (in)
-   // param buf:  structure that will hold the stat info (out)
-   // returns:    0 if success, 1 if the file could not be stat'ed
-
    using namespace XrdCl;
    StatInfo *info = 0;
    URL target(path);
@@ -217,15 +217,15 @@ Int_t TNetXNGSystem::GetPathInfo(const char *path, FileStat_t &buf)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check consistency of this helper with the one required by 'path' or
+/// 'dirptr'
+///
+/// param path:   the path to check
+/// param dirptr: the directory pointer to check
+
 Bool_t TNetXNGSystem::ConsistentWith(const char *path, void *dirptr)
 {
-   // Check consistency of this helper with the one required by 'path' or
-   // 'dirptr'
-   //
-   // param path:   the path to check
-   // param dirptr: the directory pointer to check
-
    using namespace XrdCl;
 
    if( path )
@@ -256,14 +256,14 @@ Bool_t TNetXNGSystem::ConsistentWith(const char *path, void *dirptr)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlink a file on the remote server
+///
+/// param path: the path of the file to unlink
+/// returns:    0 on success, -1 otherwise
+
 int TNetXNGSystem::Unlink(const char *path)
 {
-   // Unlink a file on the remote server
-   //
-   // param path: the path of the file to unlink
-   // returns:    0 on success, -1 otherwise
-
    using namespace XrdCl;
    StatInfo *info;
    URL url(path);
@@ -290,27 +290,27 @@ int TNetXNGSystem::Unlink(const char *path)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Is this path a local path?
+///
+/// param path: the URL of the path to check
+/// returns:    kTRUE if the path is local, kFALSE otherwise
+
 Bool_t TNetXNGSystem::IsPathLocal(const char *path)
 {
-   // Is this path a local path?
-   //
-   // param path: the URL of the path to check
-   // returns:    kTRUE if the path is local, kFALSE otherwise
-
    return TSystem::IsPathLocal(path);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the endpoint URL of a file.
+///
+/// param path:   the entry-point URL of the file (in)
+/// param endurl: the endpoint URL of the file (out)
+/// returns:      0 in case of success and 1 if the file could not be
+///               stat'ed.
+
 Int_t TNetXNGSystem::Locate(const char *path, TString &endurl)
 {
-   // Get the endpoint URL of a file.
-   //
-   // param path:   the entry-point URL of the file (in)
-   // param endurl: the endpoint URL of the file (out)
-   // returns:      0 in case of success and 1 if the file could not be
-   //               stat'ed.
-
    using namespace XrdCl;
    LocationInfo *info = 0;
    URL pathUrl(path);
@@ -330,31 +330,31 @@ Int_t TNetXNGSystem::Locate(const char *path, TString &endurl)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Issue a stage request for a single file
+///
+/// param path: the path of the file to stage
+/// param opt:  defines 'option' and 'priority' for 'Prepare': the format is
+///             opt = "option=o priority=p"
+/// returns:    0 for success, -1 for error
+
 Int_t TNetXNGSystem::Stage(const char* path, UChar_t priority)
 {
-   // Issue a stage request for a single file
-   //
-   // param path: the path of the file to stage
-   // param opt:  defines 'option' and 'priority' for 'Prepare': the format is
-   //             opt = "option=o priority=p"
-   // returns:    0 for success, -1 for error
-
    TList *files = new TList();
    files->Add((TObject *) new TUrl(path));
    return Stage((TCollection *) files, priority);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Issue stage requests for multiple files
+///
+/// param pathlist: list of paths of files to stage
+/// param opt:      defines 'option' and 'priority' for 'Prepare': the
+///                 format is opt = "option=o priority=p"
+/// returns:        0 for success, -1 for error
+
 Int_t TNetXNGSystem::Stage(TCollection *files, UChar_t priority)
 {
-   // Issue stage requests for multiple files
-   //
-   // param pathlist: list of paths of files to stage
-   // param opt:      defines 'option' and 'priority' for 'Prepare': the
-   //                 format is opt = "option=o priority=p"
-   // returns:        0 for success, -1 for error
-
    using namespace XrdCl;
    std::vector<std::string> fileList;
    TIter it(files);

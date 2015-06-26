@@ -144,7 +144,9 @@ ClassImp(TDocParser);
 
 std::set<std::string>  TDocParser::fgKeywords;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor called for parsing class sources
+
 TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
    fCurrentClass(cl), fRecentClass(0), fCurrentModule(0),
@@ -152,8 +154,6 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
    fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized),
    fCommentAtBOL(kFALSE), fAllowDirectives(kTRUE)
 {
-   // Constructor called for parsing class sources
-
    InitKeywords();
 
    fSourceInfoTags[kInfoLastUpdate] = fHtml->GetLastUpdateTag();
@@ -184,7 +184,9 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor called for parsing text files with Convert()
+
 TDocParser::TDocParser(TDocOutput& docOutput):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
    fCurrentClass(0), fRecentClass(0), fDirectiveCount(0),
@@ -192,7 +194,6 @@ TDocParser::TDocParser(TDocOutput& docOutput):
    fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized),
    fCommentAtBOL(kFALSE), fAllowDirectives(kFALSE)
 {
-   // constructor called for parsing text files with Convert()
    InitKeywords();
 
    fSourceInfoTags[kInfoLastUpdate] = fHtml->GetLastUpdateTag();
@@ -204,10 +205,11 @@ TDocParser::TDocParser(TDocOutput& docOutput):
    TMethodWrapperImpl::SetClass(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor, checking whether all methods have been found for gDebug > 3
+
 TDocParser::~TDocParser()
 {
-   // destructor, checking whether all methods have been found for gDebug > 3
    if (gDebug > 3) {
       for (std::map<std::string, Int_t>::const_iterator iMethod = fMethodCounts.begin();
          iMethod != fMethodCounts.end(); ++iMethod)
@@ -225,13 +227,13 @@ TDocParser::~TDocParser()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add accessible (i.e. non-private) methods of base class bc
+/// and its base classes' methods to methodNames.
+/// If bc==0, we add fCurrentClass's methods (and also private functions).
+
 void TDocParser::AddClassMethodsRecursively(TBaseClass* bc)
 {
-   // Add accessible (i.e. non-private) methods of base class bc
-   // and its base classes' methods to methodNames.
-   // If bc==0, we add fCurrentClass's methods (and also private functions).
-
    // make a loop on member functions
    TClass *cl = fCurrentClass;
    if (bc)
@@ -296,12 +298,12 @@ void TDocParser::AddClassMethodsRecursively(TBaseClass* bc)
       }
 }
 
-//______________________________________________________________________________
-void TDocParser::AddClassDataMembersRecursively(TBaseClass* bc) {
-   // Add data members of fCurrentClass and of bc to datamembers, recursively.
-   // Real data members are in idx 0..2 (public, protected, private access),
-   // enum constants in idx 3..5.
+////////////////////////////////////////////////////////////////////////////////
+/// Add data members of fCurrentClass and of bc to datamembers, recursively.
+/// Real data members are in idx 0..2 (public, protected, private access),
+/// enum constants in idx 3..5.
 
+void TDocParser::AddClassDataMembersRecursively(TBaseClass* bc) {
    // make a loop on member functions
    TClass *cl = fCurrentClass;
    if (bc)
@@ -372,11 +374,11 @@ void TDocParser::AddClassDataMembersRecursively(TBaseClass* bc) {
 }
 
 
-//______________________________________________________________________________
-void TDocParser::AnchorFromLine(const TString& line, TString& anchor) {
-   // Create an anchor from the given line, by hashing it and
-   // convertig the hash into a custom base64 string.
+////////////////////////////////////////////////////////////////////////////////
+/// Create an anchor from the given line, by hashing it and
+/// convertig the hash into a custom base64 string.
 
+void TDocParser::AnchorFromLine(const TString& line, TString& anchor) {
    const char base64String[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.";
 
    // use hash of line instead of e.g. line number.
@@ -393,12 +395,13 @@ void TDocParser::AnchorFromLine(const TString& line, TString& anchor) {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse text file "in", add links etc, and write output to "out".
+/// If "isCode", "in" is assumed to be C++ code.
+
 void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpath,
                          Bool_t isCode, Bool_t interpretDirectives)
 {
-   // Parse text file "in", add links etc, and write output to "out".
-   // If "isCode", "in" is assumed to be C++ code.
    fLineNumber = 0;
    fParseContext.clear();
    if (isCode) fParseContext.push_back(kCode);
@@ -441,23 +444,24 @@ void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpat
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand keywords in text, writing to out.
+
 void TDocParser::DecorateKeywords(std::ostream& out, const char *text)
 {
-   // Expand keywords in text, writing to out.
    TString str(text);
    DecorateKeywords(str);
    out << str;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find keywords in line and create URLs around them. Escape characters with a
+/// special meaning for HTML. Protect "Begin_Html"/"End_Html" pairs, and set the
+/// parsing context. Evaluate sequences like a::b->c.
+/// Skip regions where directives are active.
+
 void TDocParser::DecorateKeywords(TString& line)
 {
-   // Find keywords in line and create URLs around them. Escape characters with a
-   // special meaning for HTML. Protect "Begin_Html"/"End_Html" pairs, and set the
-   // parsing context. Evaluate sequences like a::b->c.
-   // Skip regions where directives are active.
-
    std::list<TClass*> currentType;
 
    enum {
@@ -858,12 +862,12 @@ void TDocParser::DecorateKeywords(TString& line)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reduce method count for method called name,
+/// removing it from fMethodCounts once the count reaches 0.
+
 void TDocParser::DecrementMethodCount(const char* name)
 {
-   // reduce method count for method called name,
-   // removing it from fMethodCounts once the count reaches 0.
-
    typedef std::map<std::string /*method name*/, Int_t > MethodCount_t;
    MethodCount_t::iterator iMethodName = fMethodCounts.find(name);
    if (iMethodName != fMethodCounts.end()) {
@@ -873,12 +877,12 @@ void TDocParser::DecrementMethodCount(const char* name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete output generated by prior runs of all known directives;
+/// the output file names might have changes.
+
 void  TDocParser::DeleteDirectiveOutput() const
 {
-   // Delete output generated by prior runs of all known directives;
-   // the output file names might have changes.
-
    TIter iClass(gROOT->GetListOfClasses());
    TClass* cl = 0;
    while ((cl = (TClass*) iClass()))
@@ -892,20 +896,20 @@ void  TDocParser::DeleteDirectiveOutput() const
       }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand preprocessor statements
+///
+///
+/// Input: line - line containing the CPP statement,
+///        pos  - position of '#'
+///
+///  NOTE: Looks for the #include statements and
+///        creates link to the corresponding file
+///        if such file exists
+///
+
 void TDocParser::ExpandCPPLine(TString& line, Ssiz_t& pos)
 {
-// Expand preprocessor statements
-//
-//
-// Input: line - line containing the CPP statement,
-//        pos  - position of '#'
-//
-//  NOTE: Looks for the #include statements and
-//        creates link to the corresponding file
-//        if such file exists
-//
-
    Bool_t linkExist    = kFALSE;
    Ssiz_t posEndOfLine = line.Length();
    Ssiz_t posHash      = pos;
@@ -957,21 +961,22 @@ void TDocParser::ExpandCPPLine(TString& line, Ssiz_t& pos)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the name of module for which sources are currently parsed.
+
 void TDocParser::GetCurrentModule(TString& out_module) const {
-   // Return the name of module for which sources are currently parsed.
    if (fCurrentModule) out_module = fCurrentModule;
    else if (fCurrentClass) fHtml->GetModuleNameForClass(out_module, fCurrentClass);
    else out_module = "(UNKNOWN MODULE WHILE PARSING)";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process directives to the documentation engine, like "Begin_Html" / "End_Html",
+/// "Begin_Macro" / "End_Macro", and "Begin_Latex" / "End_Latex".
+
 Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
                                    Ssiz_t& copiedToCommentUpTo)
 {
-   // Process directives to the documentation engine, like "Begin_Html" / "End_Html",
-   // "Begin_Macro" / "End_Macro", and "Begin_Latex" / "End_Latex".
-
    Bool_t begin = kTRUE;
    TClass* clDirective = IsDirective(line, pos, word, begin);
    if (!clDirective)
@@ -1144,14 +1149,14 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// checks whether we are in a parse context, return the entry closest
+/// to the current context.
+/// If context is a EParseContextFlag just look for the first match in
+/// the flags
+
 UInt_t TDocParser::InContext(Int_t context) const
 {
-   // checks whether we are in a parse context, return the entry closest
-   // to the current context.
-   // If context is a EParseContextFlag just look for the first match in
-   // the flags
-
    UInt_t lowerContext = context & kParseContextMask;
    UInt_t contextFlag  = context & kParseContextFlagMask;
 
@@ -1164,11 +1169,11 @@ UInt_t TDocParser::InContext(Int_t context) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fill C++ keywords into fgKeywords
+
 void TDocParser::InitKeywords() const
 {
-   // fill C++ keywords into fgKeywords
-
    if (!fgKeywords.empty())
       return;
 
@@ -1237,17 +1242,17 @@ void TDocParser::InitKeywords() const
    fgKeywords.insert("while");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return whether word at line's pos is a valid directive, and returns its
+/// TDocDirective's TClass object, or 0 if it's not a directive. Set begin
+/// to kTRUE for "Begin_..."
+/// You can implement your own handlers by implementing a class deriving
+/// from TDocHandler, and calling it TDocTagDirective for "BEGIN_TAG",
+/// "END_TAG" blocks.
+
 TClass* TDocParser::IsDirective(const TString& line, Ssiz_t pos,
                                         const TString& word, Bool_t& begin) const
 {
-   // return whether word at line's pos is a valid directive, and returns its
-   // TDocDirective's TClass object, or 0 if it's not a directive. Set begin
-   // to kTRUE for "Begin_..."
-   // You can implement your own handlers by implementing a class deriving
-   // from TDocHandler, and calling it TDocTagDirective for "BEGIN_TAG",
-   // "END_TAG" blocks.
-
    // '"' serves as escape char
    if (pos > 0 &&  line[pos - 1] == '"')
       return 0;
@@ -1281,20 +1286,20 @@ TClass* TDocParser::IsDirective(const TString& line, Ssiz_t pos,
    return clDirective;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if c is a valid C++ name character
+///
+///
+///  Input: c - a single character
+///
+/// Output: TRUE if c is a valid C++ name character
+///         and FALSE if it's not.
+///
+///   NOTE: Valid name characters are [a..zA..Z0..9_~],
+///
+
 Bool_t TDocParser::IsName(UChar_t c)
 {
-// Check if c is a valid C++ name character
-//
-//
-//  Input: c - a single character
-//
-// Output: TRUE if c is a valid C++ name character
-//         and FALSE if it's not.
-//
-//   NOTE: Valid name characters are [a..zA..Z0..9_~],
-//
-
    Bool_t ret = kFALSE;
 
    if (isalnum(c) || c == '_' || c == '~')
@@ -1304,20 +1309,20 @@ Bool_t TDocParser::IsName(UChar_t c)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if c is a valid first character for C++ name
+///
+///
+///  Input: c - a single character
+///
+/// Output: TRUE if c is a valid first character for C++ name,
+///         and FALSE if it's not.
+///
+///   NOTE: Valid first characters are [a..zA..Z_~]
+///
+
 Bool_t TDocParser::IsWord(UChar_t c)
 {
-// Check if c is a valid first character for C++ name
-//
-//
-//  Input: c - a single character
-//
-// Output: TRUE if c is a valid first character for C++ name,
-//         and FALSE if it's not.
-//
-//   NOTE: Valid first characters are [a..zA..Z_~]
-//
-
    Bool_t ret = kFALSE;
 
    if (isalpha(c) || c == '_' || c == '~')
@@ -1327,20 +1332,20 @@ Bool_t TDocParser::IsWord(UChar_t c)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for a method starting at posMethodName, and return its return type,
+/// its name, and its arguments. If the end of arguments is not found in the
+/// current line, get a new line from sourceFile, beautify it to srcOut, creating
+/// an anchor as necessary. When this function returns, posMethodName points to the
+/// end of the function declaration, i.e. right after the arguments' closing bracket.
+/// If posMethodName == kNPOS, we look for the first matching method in fMethodCounts.
+
 TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& ret,
                                                TString& name, TString& params,
                                                Bool_t& isconst, std::ostream &srcOut,
                                                TString &anchor, std::ifstream& sourceFile,
                                                Bool_t allowPureVirtual)
 {
-   // Search for a method starting at posMethodName, and return its return type,
-   // its name, and its arguments. If the end of arguments is not found in the
-   // current line, get a new line from sourceFile, beautify it to srcOut, creating
-   // an anchor as necessary. When this function returns, posMethodName points to the
-   // end of the function declaration, i.e. right after the arguments' closing bracket.
-   // If posMethodName == kNPOS, we look for the first matching method in fMethodCounts.
-
    typedef std::map<std::string /*method name*/, Int_t > MethodCount_t;
    isconst = false;
 
@@ -1560,13 +1565,13 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Locate methods, starting in the source file, then inline, then
+/// immediately inside the class declaration. While doing that also
+/// find the class description and special tags like the macro tag etc.
+
 void TDocParser::Parse(std::ostream& out)
 {
-   // Locate methods, starting in the source file, then inline, then
-   // immediately inside the class declaration. While doing that also
-   // find the class description and special tags like the macro tag etc.
-
    fClassDocState = kClassDoc_LookingNothingFound;
 
    DeleteDirectiveOutput();
@@ -1581,7 +1586,24 @@ void TDocParser::Parse(std::ostream& out)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect methods from the source or header file called filename.
+/// It generates a beautified version of the source file on the fly;
+/// the output file is given by the fCurrentClass's name, and sourceExt.
+/// Documentation is extracted to out.
+///   lookForSourceInfo: if set, author, lastUpdate, and copyright are
+///     extracted (i.e. the values contained in fSourceInfo)
+///   useDocxxStyle: if set, documentation can be in front of the method
+///     name, not only inside the method. Useful doc Doc++/Doxygen style,
+///     and inline methods.
+///   lookForClassDescr: if set, the first line matching the class description
+///     rules is assumed to be the class description for fCurrentClass; the
+///     description is written to out.
+///   methodPattern: if set, methods have to be prepended by this tag. Usually
+///     the class name + "::". In header files, looking for in-place function
+///     definitions, this should be 0. In that case, only functions in
+///     fMethodCounts are searched for.
+
 void TDocParser::LocateMethods(std::ostream& out, const char* filename,
                           Bool_t lookForSourceInfo /*= kTRUE*/,
                           Bool_t useDocxxStyle /*= kFALSE*/,
@@ -1589,23 +1611,6 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
                           const char* methodPattern /*= 0*/,
                           const char* sourceExt /*= 0 */)
 {
-   // Collect methods from the source or header file called filename.
-   // It generates a beautified version of the source file on the fly;
-   // the output file is given by the fCurrentClass's name, and sourceExt.
-   // Documentation is extracted to out.
-   //   lookForSourceInfo: if set, author, lastUpdate, and copyright are
-   //     extracted (i.e. the values contained in fSourceInfo)
-   //   useDocxxStyle: if set, documentation can be in front of the method
-   //     name, not only inside the method. Useful doc Doc++/Doxygen style,
-   //     and inline methods.
-   //   lookForClassDescr: if set, the first line matching the class description
-   //     rules is assumed to be the class description for fCurrentClass; the
-   //     description is written to out.
-   //   methodPattern: if set, methods have to be prepended by this tag. Usually
-   //     the class name + "::". In header files, looking for in-place function
-   //     definitions, this should be 0. In that case, only functions in
-   //     fMethodCounts are searched for.
-
    TString sourceFileName(filename);
    fCurrentFile = filename;
    if (!sourceFileName.Length()) {
@@ -1833,13 +1838,13 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
    fCurrentFile = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given fCurrentClass, look for methods in its source file,
+/// and extract documentation to out, while beautifying the source
+/// file in parallel.
+
 void TDocParser::LocateMethodsInSource(std::ostream& out)
 {
-   // Given fCurrentClass, look for methods in its source file,
-   // and extract documentation to out, while beautifying the source
-   // file in parallel.
-
    // for Doc++ style
    Bool_t useDocxxStyle = (fHtml->GetDocStyle() == "Doc++");
 
@@ -1867,12 +1872,12 @@ void TDocParser::LocateMethodsInSource(std::ostream& out)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given fCurrentClass, look for methods in its header file,
+/// and extract documentation to out.
+
 void TDocParser::LocateMethodsInHeaderInline(std::ostream& out)
 {
-   // Given fCurrentClass, look for methods in its header file,
-   // and extract documentation to out.
-
    // for inline methods, always allow doc before func
    Bool_t useDocxxStyle = kTRUE;
 
@@ -1900,28 +1905,28 @@ void TDocParser::LocateMethodsInHeaderInline(std::ostream& out)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given fCurrentClass, look for methods in its header file's
+/// class declaration block, and extract documentation to out,
+/// while beautifying the header file in parallel.
+
 void TDocParser::LocateMethodsInHeaderClassDecl(std::ostream& out)
 {
-   // Given fCurrentClass, look for methods in its header file's
-   // class declaration block, and extract documentation to out,
-   // while beautifying the header file in parallel.
-
    TString declFileName;
    if (fHtml->GetDeclFileName(fCurrentClass, kTRUE, declFileName))
       LocateMethods(out, declFileName, kTRUE/*source info*/, kTRUE /*useDocxxStyle*/,
                     kTRUE /*allowPureVirtual*/, 0, ".h.html");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the current line as a comment, handling directives and re-formatting
+/// the comment: remove "/*", "*/", "//", similar characters surrounding lines,
+/// etc.
+///
+/// Return kFALSE if the line is not a comment.
+
 Bool_t TDocParser::ProcessComment()
 {
-   // Parse the current line as a comment, handling directives and re-formatting
-   // the comment: remove "/*", "*/", "//", similar characters surrounding lines,
-   // etc.
-   //
-   // Return kFALSE if the line is not a comment.
-
    if (!fCommentAtBOL
       && !(fLineStripped[0] == '/'
          && (fLineStripped[1] == '/' || fLineStripped[1] == '*'))
@@ -2049,11 +2054,11 @@ Bool_t TDocParser::ProcessComment()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remove the top-most comment context that matches cxxcomment,
+
 void TDocParser::RemoveCommentContext(Bool_t cxxcomment)
 {
-   // remove the top-most comment context that matches cxxcomment,
-
    UInt_t lookFor = kComment;
    if (cxxcomment) lookFor |= kCXXComment;
    std::list<UInt_t>::iterator iComment = fParseContext.end();
@@ -2064,10 +2069,11 @@ void TDocParser::RemoveCommentContext(Bool_t cxxcomment)
       fParseContext.erase(iComment);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// strips ' ', tabs, and newlines from both sides of str
+
 Bool_t TDocParser::Strip(TString& str)
 {
-   // strips ' ', tabs, and newlines from both sides of str
    Bool_t changed = str[0] == ' ' || str[0] == '\t' || str[0] == '\n';
    changed |= str.Length()
       && (str[str.Length() - 1] == ' ' || str[str.Length() - 1] == '\t'
@@ -2084,11 +2090,11 @@ Bool_t TDocParser::Strip(TString& str)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the class description depending (among others) on fClassDocState.
+
 void TDocParser::WriteClassDoc(std::ostream& out, Bool_t first /*= kTRUE*/)
 {
-   // Write the class description depending (among others) on fClassDocState.
-
    if (fClassDocState == kClassDoc_LookingHaveSomething || fClassDocState == kClassDoc_LookingNothingFound) {
       TString& classDoc = first || !fLastClassDoc.Length() ? fFirstClassDoc : fLastClassDoc;
       static_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, classDoc);
@@ -2230,14 +2236,14 @@ namespace {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write a method, forwarding to TClassDocOutput
+
 void TDocParser::WriteMethod(std::ostream& out, TString& ret,
                              TString& name, TString& params, Bool_t isconst,
                              const char* filename, TString& anchor,
                              TString& codeOneLiner)
 {
-   // Write a method, forwarding to TClassDocOutput
-
    // if we haven't found the class description until now it's too late.
    if (fClassDocState < kClassDoc_Written)
       WriteClassDoc(out);
@@ -2294,12 +2300,12 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
    fDocContext = kIgnore;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write fLineSource to out.
+/// Adjust relative paths first.
+
 void TDocParser::WriteSourceLine(std::ostream& out)
 {
-   // Write fLineSource to out.
-   // Adjust relative paths first.
-
    fDocOutput->AdjustSourcePath(fLineSource);
    out << fLineSource << std::endl;
 

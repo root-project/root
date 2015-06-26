@@ -50,7 +50,9 @@
 
 ClassImp(TMVA::VariableTransformBase)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
 TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
                                                     Types::EVariableTransform tf,
                                                     const TString& trfName )
@@ -72,7 +74,6 @@ TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
      fTMVAVersion(TMVA_VERSION_CODE),
      fLogger( 0 )
 {
-   // standard constructor
    fLogger = new MsgLogger(this, kINFO);
    for (UInt_t ivar = 0; ivar < fDsi.GetNVariables(); ivar++) {
       fVariables.push_back( VariableInfo( fDsi.GetVariableInfo(ivar) ) );
@@ -85,7 +86,8 @@ TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::VariableTransformBase::~VariableTransformBase()
 {
    if (fTransformedEvent!=0)     delete fTransformedEvent;
@@ -94,10 +96,11 @@ TMVA::VariableTransformBase::~VariableTransformBase()
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// select the variables/targets/spectators which serve as input to the transformation
+
 void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, Bool_t putIntoVariables  )
 {
-   // select the variables/targets/spectators which serve as input to the transformation
    TString inputVariables = _inputVariables;
 
    // unselect all variables first
@@ -300,11 +303,11 @@ void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, B
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// select the values from the event
+
 Bool_t TMVA::VariableTransformBase::GetInput( const Event* event, std::vector<Float_t>& input, std::vector<Char_t>& mask, Bool_t backTransformation ) const
 {
-   // select the values from the event
-
    ItVarTypeIdxConst itEntry;
    ItVarTypeIdxConst itEntryEnd;
 
@@ -353,11 +356,11 @@ Bool_t TMVA::VariableTransformBase::GetInput( const Event* event, std::vector<Fl
    return hasMaskedEntries;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// select the values from the event
+
 void TMVA::VariableTransformBase::SetOutput( Event* event, std::vector<Float_t>& output, std::vector<Char_t>& mask, const Event* oldEvent, Bool_t backTransformation ) const
 {
-   // select the values from the event
-   
    std::vector<Float_t>::iterator itOutput = output.begin();
    std::vector<Char_t>::iterator  itMask   = mask.begin();
 
@@ -414,10 +417,11 @@ void TMVA::VariableTransformBase::SetOutput( Event* event, std::vector<Float_t>&
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// count variables, targets and spectators
+
 void TMVA::VariableTransformBase::CountVariableTypes( UInt_t& nvars, UInt_t& ntgts, UInt_t& nspcts ) const
 {
-   // count variables, targets and spectators
    if( fVariableTypesAreCounted ){
       nvars = fNVariables;
       ntgts = fNTargets;
@@ -453,13 +457,13 @@ void TMVA::VariableTransformBase::CountVariableTypes( UInt_t& nvars, UInt_t& ntg
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TODO --> adapt to variable,target,spectator selection
+/// method to calculate minimum, maximum, mean, and RMS for all
+/// variables used in the MVA
+
 void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& events ) 
 {
-   // TODO --> adapt to variable,target,spectator selection
-   // method to calculate minimum, maximum, mean, and RMS for all
-   // variables used in the MVA
-
    if (!IsCreated()) return;
 
    const UInt_t nvars = GetNVariables();
@@ -545,12 +549,13 @@ void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& eve
    Log() << std::setprecision(5); // reset to better value       
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TODO --> adapt to variable,target,spectator selection
+/// default transformation output
+/// --> only indicate that transformation occurred
+
 std::vector<TString>* TMVA::VariableTransformBase::GetTransformationStrings( Int_t /*cls*/ ) const
 {
-   // TODO --> adapt to variable,target,spectator selection
-   // default transformation output
-   // --> only indicate that transformation occurred
    std::vector<TString>* strVec = new std::vector<TString>;
    for (UInt_t ivar=0; ivar<GetNVariables(); ivar++) {
       strVec->push_back( Variables()[ivar].GetLabel() + "_[transformed]");
@@ -559,11 +564,12 @@ std::vector<TString>* TMVA::VariableTransformBase::GetTransformationStrings( Int
    return strVec;   
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TODO --> adapt to variable,target,spectator selection
+/// update min and max of a given variable (target) and a given transformation method
+
 void TMVA::VariableTransformBase::UpdateNorm ( Int_t ivar,  Double_t x ) 
 {
-   // TODO --> adapt to variable,target,spectator selection
-   // update min and max of a given variable (target) and a given transformation method
    Int_t nvars = fDsi.GetNVariables();
    if( ivar < nvars ){
       if (x < Variables().at(ivar).GetMin()) Variables().at(ivar).SetMin(x);
@@ -574,11 +580,11 @@ void TMVA::VariableTransformBase::UpdateNorm ( Int_t ivar,  Double_t x )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create XML description the transformation (write out info of selected variables)
+
 void TMVA::VariableTransformBase::AttachXMLTo(void* parent) 
 {
-   // create XML description the transformation (write out info of selected variables)
-
    void* selxml = gTools().AddChild(parent, "Selection");
 
    void* inpxml = gTools().AddChild(selxml, "Input");
@@ -662,11 +668,11 @@ void TMVA::VariableTransformBase::AttachXMLTo(void* parent)
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the input variables from the XML node
+
 void TMVA::VariableTransformBase::ReadFromXML( void* selnode ) 
 {
-   // Read the input variables from the XML node
-
    void* inpnode = gTools().GetChild( selnode );
    void* outnode = gTools().GetNextChild( inpnode );
 
@@ -776,11 +782,12 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// getinput and setoutput equivalent
+
 void TMVA::VariableTransformBase::MakeFunction( std::ostream& fout, const TString& /*fncName*/, Int_t part,
 						UInt_t /*trCounter*/, Int_t /*cls*/ )
 {
-   // getinput and setoutput equivalent
    if( part == 0 ){ // definitions
       fout << std::endl;
       fout << "   // define the indices of the variables which are transformed by this transformation" << std::endl;

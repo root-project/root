@@ -35,11 +35,11 @@ ClassImp(TPave)
 //
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pave default constructor.
+
 TPave::TPave(): TBox()
 {
-   // Pave default constructor.
-
    fBorderSize   = 4;
    fOption       = "brNDC";
    fName         = "";
@@ -57,32 +57,32 @@ TPave::TPave(): TBox()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pave normal constructor.
+///
+/// a PAVE is a box with a bordersize and a shadow option the border
+/// size is in pixels.
+///
+///  option = "TR" Top and Right shadows are drawn.
+///  option = "TL" Top and Left shadows are drawn.
+///  option = "BR" Bottom and Right shadows are drawn.
+///  option = "BL" Bottom and Left shadows are drawn.
+///
+///  If none of these four above options is specified the default the
+///  option "BR" will be used to draw the border. To produces a pave
+///  without any border it is enough to specify the option "NB" (no border).
+///
+///  option = "NDC" x1,y1,x2,y2 are given in NDC
+///  option = "ARC" corners are rounded
+///
+/// In case of option "ARC", the corner radius is specified
+/// via TPave::SetCornerRadius(rad) where rad is given in percent
+/// of the pave height (default value is 0.2).
+
 TPave::TPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
              Int_t bordersize ,Option_t *option)
        :TBox(x1,y1,x2,y2)
 {
-   // Pave normal constructor.
-   //
-   // a PAVE is a box with a bordersize and a shadow option the border
-   // size is in pixels.
-   //
-   //  option = "TR" Top and Right shadows are drawn.
-   //  option = "TL" Top and Left shadows are drawn.
-   //  option = "BR" Bottom and Right shadows are drawn.
-   //  option = "BL" Bottom and Left shadows are drawn.
-   //
-   //  If none of these four above options is specified the default the
-   //  option "BR" will be used to draw the border. To produces a pave
-   //  without any border it is enough to specify the option "NB" (no border).
-   //
-   //  option = "NDC" x1,y1,x2,y2 are given in NDC
-   //  option = "ARC" corners are rounded
-   //
-   // In case of option "ARC", the corner radius is specified
-   // via TPave::SetCornerRadius(rad) where rad is given in percent
-   // of the pave height (default value is 0.2).
-
    fBorderSize   = bordersize;
    fOption       = option;
    fName         = "";
@@ -99,18 +99,19 @@ TPave::TPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pave default destructor.
+
 TPave::~TPave()
 {
-   // Pave default destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pave copy constructor.
+
 TPave::TPave(const TPave &pave) : TBox(pave)
 {
-   // Pave copy constructor.
-
    fX1NDC        = 0.;
    fY1NDC        = 0.;
    fX2NDC        = 0.;
@@ -124,11 +125,11 @@ TPave::TPave(const TPave &pave) : TBox(pave)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert pave coordinates from NDC to Pad coordinates.
+
 void TPave::ConvertNDCtoPad()
 {
-   // Convert pave coordinates from NDC to Pad coordinates.
-
    Double_t dpx  = gPad->GetX2() - gPad->GetX1();
    Double_t dpy  = gPad->GetY2() - gPad->GetY1();
    Double_t xp1  = gPad->GetX1();
@@ -171,11 +172,11 @@ void TPave::ConvertNDCtoPad()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this pave to pave.
+
 void TPave::Copy(TObject &obj) const
 {
-   // Copy this pave to pave.
-
    TBox::Copy(obj);
    ((TPave&)obj).fX1NDC       = fX1NDC;
    ((TPave&)obj).fY1NDC       = fY1NDC;
@@ -189,15 +190,15 @@ void TPave::Copy(TObject &obj) const
    ((TPave&)obj).fShadowColor = fShadowColor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a pave.
+///
+/// Compute the closest distance of approach from point px,py to the
+/// edges of this pave.
+/// The distance is computed in pixels units.
+
 Int_t TPave::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a pave.
-   //
-   // Compute the closest distance of approach from point px,py to the
-   // edges of this pave.
-   // The distance is computed in pixels units.
-
    Int_t pxl, pyl, pxt, pyt;
    Int_t px1 = gPad->XtoAbsPixel(fX1);
    Int_t py1 = gPad->YtoAbsPixel(fY1);
@@ -215,11 +216,11 @@ Int_t TPave::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pave with its current attributes.
+
 void TPave::Draw(Option_t *option)
 {
-   // Draw this pave with its current attributes.
-
    Option_t *opt;
    if (option && strlen(option)) opt = option;
    else                          opt = GetOption();
@@ -228,25 +229,25 @@ void TPave::Draw(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pave with new coordinates.
+
 void TPave::DrawPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                      Int_t bordersize ,Option_t *option)
 {
-   // Draw this pave with new coordinates.
-
    TPave *newpave = new TPave(x1,y1,x2,y2,bordersize,option);
    newpave->SetBit(kCanDelete);
    newpave->AppendPad(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function is called when a PAVE object is clicked.
+
 void TPave::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a PAVE object is clicked.
-
    if (!gPad) return;
 
    if (!gPad->IsEditable()) return;
@@ -267,37 +268,37 @@ void TPave::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List this pave with its attributes.
+
 void TPave::ls(Option_t *) const
 {
-   // List this pave with its attributes.
-
    TROOT::IndentLevel();
    printf("OBJ: %s\t%s  \tX1= %f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),GetName(),fX1,fY1,fX2,fY2);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this pave with its current attributes.
+///
+///  option = "TR" Top and Right shadows are drawn.
+///  option = "TL" Top and Left shadows are drawn.
+///  option = "BR" Bottom and Right shadows are drawn.
+///  option = "BL" Bottom and Left shadows are drawn.
+///
+///  If none of these four above options is specified the default the
+///  option "BR" will be used to draw the border. To produces a pave
+///  without any border it is enough to specify the option "NB" (no border).
+///
+///  option = "NDC" x1,y1,x2,y2 are given in NDC
+///  option = "ARC" corners are rounded
+///
+/// In case of option "ARC", the corner radius is specified
+/// via TPave::SetCornerRadius(rad) where rad is given in percent
+/// of the pave height (default value is 0.2).
+
 void TPave::Paint(Option_t *option)
 {
-   // Paint this pave with its current attributes.
-   //
-   //  option = "TR" Top and Right shadows are drawn.
-   //  option = "TL" Top and Left shadows are drawn.
-   //  option = "BR" Bottom and Right shadows are drawn.
-   //  option = "BL" Bottom and Left shadows are drawn.
-   //
-   //  If none of these four above options is specified the default the
-   //  option "BR" will be used to draw the border. To produces a pave
-   //  without any border it is enough to specify the option "NB" (no border).
-   //
-   //  option = "NDC" x1,y1,x2,y2 are given in NDC
-   //  option = "ARC" corners are rounded
-   //
-   // In case of option "ARC", the corner radius is specified
-   // via TPave::SetCornerRadius(rad) where rad is given in percent
-   // of the pave height (default value is 0.2).
-
    // Convert from NDC to pad coordinates
    ConvertNDCtoPad();
 
@@ -305,12 +306,12 @@ void TPave::Paint(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pave with new coordinates.
+
 void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                       Int_t bordersize ,Option_t *option)
 {
-   // Draw this pave with new coordinates.
-
    Double_t x[7],y[7];
    TString opt = option;
    opt.ToLower();
@@ -404,12 +405,12 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pave with rounded corners.
+
 void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                       Int_t, Option_t *option)
 {
-   // Draw this pave with rounded corners.
-
    const Int_t kNPARC = 10;
    Double_t x[4*kNPARC+10],   y[4*kNPARC+10];
    Double_t px[4*kNPARC+10], py[4*kNPARC+10];
@@ -606,20 +607,20 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump this pave with its attributes.
+
 void TPave::Print(Option_t *option) const
 {
-   // Dump this pave with its attributes.
-
    TBox::Print(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TPave::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
    if (gROOT->ClassSaved(TPave::Class())) {
       out<<"   ";
@@ -645,11 +646,11 @@ void TPave::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the X1 value
+
 void TPave::SetX1(Double_t x1)
 {
-   // Set the X1 value
-
    fX1 = x1;
    if (gPad) {
       Double_t dpx  = gPad->GetX2() - gPad->GetX1();
@@ -659,11 +660,11 @@ void TPave::SetX1(Double_t x1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the X2 value
+
 void TPave::SetX2(Double_t x2)
 {
-   // Set the X2 value
-
    fX2 = x2;
    if (gPad) {
       Double_t dpx  = gPad->GetX2() - gPad->GetX1();
@@ -673,11 +674,11 @@ void TPave::SetX2(Double_t x2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the Y1 value
+
 void TPave::SetY1(Double_t y1)
 {
-   // Set the Y1 value
-
    fY1 = y1;
    if (gPad) {
       Double_t dpy  = gPad->GetY2() - gPad->GetY1();
@@ -687,11 +688,11 @@ void TPave::SetY1(Double_t y1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the Y2 value
+
 void TPave::SetY2(Double_t y2)
 {
-   // Set the Y2 value
-
    fY2 = y2;
    if (gPad) {
       Double_t dpy  = gPad->GetY2() - gPad->GetY1();
@@ -701,11 +702,11 @@ void TPave::SetY2(Double_t y2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TPave.
+
 void TPave::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TPave.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

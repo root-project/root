@@ -48,27 +48,31 @@ ClassImp(RooImproperIntegrator1D)
 
 // Register this class with RooNumIntConfig
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register RooImproperIntegrator1D, its parameters and capabilities with RooNumIntFactory
+
 void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
-  // Register RooImproperIntegrator1D, its parameters and capabilities with RooNumIntFactory
-
   RooImproperIntegrator1D* proto = new RooImproperIntegrator1D() ;
   fact.storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooImproperIntegrator1D::RooImproperIntegrator1D() :  
   _case(ClosedBothEnds), _xmin(-10), _xmax(10), _useIntegrandLimits(kTRUE),
   _origFunc(0), _function(0), _integrator1(0), _integrator2(0), _integrator3(0)
 {
-  // Default constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with function binding. The integration range is taken from the
+/// definition in the function binding
+
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
   RooAbsIntegrator(function),
   _useIntegrandLimits(kTRUE),
@@ -78,14 +82,15 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
   _integrator2(0),
   _integrator3(0)
 {
-  // Constructor with function binding. The integration range is taken from the
-  // definition in the function binding
   initialize(&function) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with function binding and configuration object. The integration range is taken
+/// from the definition in the function binding
+
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _useIntegrandLimits(kTRUE),
@@ -96,14 +101,14 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, con
   _integrator2(0),
   _integrator3(0)
 {
-  // Constructor with function binding and configuration object. The integration range is taken
-  // from the definition in the function binding
   initialize(&function) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with function binding, definition of integration range and configuration object
+
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _xmin(xmin),
@@ -116,26 +121,26 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, Dou
   _integrator2(0),
   _integrator3(0)
 {
-  // Constructor with function binding, definition of integration range and configuration object
   initialize(&function) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return clone of integrator with given function and configuration. Needed by RooNumIntFactory.
+
 RooAbsIntegrator* RooImproperIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
-  // Return clone of integrator with given function and configuration. Needed by RooNumIntFactory.
   return new RooImproperIntegrator1D(function,config) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the integrator, construct and initialize subintegrators
+
 void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
 {
-  // Initialize the integrator, construct and initialize subintegrators
-
   if(!isValid()) {
     oocoutE((TObject*)0,Integration) << "RooImproperIntegrator: cannot integrate invalid function" << endl;
     return;
@@ -199,11 +204,11 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooImproperIntegrator1D::~RooImproperIntegrator1D() 
 {
-  // Destructor
-
   if(0 != _integrator1) delete _integrator1;
   if(0 != _integrator2) delete _integrator2;
   if(0 != _integrator3) delete _integrator3;
@@ -211,13 +216,13 @@ RooImproperIntegrator1D::~RooImproperIntegrator1D()
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change our integration limits. Return kTRUE if the new limits are
+/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// if this object was constructed to always use our integrand's limits.
+
 Bool_t RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax) 
 {
-  // Change our integration limits. Return kTRUE if the new limits are
-  // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
-  // if this object was constructed to always use our integrand's limits.
-
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
@@ -229,14 +234,14 @@ Bool_t RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the limits are valid. For this integrator all limit configurations
+/// are valid, but if the limits change between two calculate() calls it
+/// may be necessary to reconfigure (e.g. if an open ended range becomes
+/// a closed range
+
 Bool_t RooImproperIntegrator1D::checkLimits() const 
 {
-  // Check if the limits are valid. For this integrator all limit configurations
-  // are valid, but if the limits change between two calculate() calls it
-  // may be necessary to reconfigure (e.g. if an open ended range becomes
-  // a closed range
-
   // Has either limit changed?
   if (_useIntegrandLimits) {
     if(_xmin == integrand()->getMinLimit(0) &&
@@ -278,11 +283,11 @@ Bool_t RooImproperIntegrator1D::checkLimits() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Classify the type of limits we have: OpenBothEnds,ClosedBothEnds,OpenBelow or OpenAbove.
+
 RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const 
 {
-  // Classify the type of limits we have: OpenBothEnds,ClosedBothEnds,OpenBelow or OpenAbove.
-
   // Analyze the specified limits to determine which case applies.
   if(0 == integrand() || !integrand()->isValid()) return Invalid;
 
@@ -321,11 +326,11 @@ RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the integral at the given parameter values of the function binding
+
 Double_t RooImproperIntegrator1D::integral(const Double_t* yvec) 
 {
-  // Calculate the integral at the given parameter values of the function binding
-
   Double_t result(0);
   if(0 != _integrator1) result+= _integrator1->integral(yvec);
   if(0 != _integrator2) result+= _integrator2->integral(yvec);

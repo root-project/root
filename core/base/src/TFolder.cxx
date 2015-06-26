@@ -94,43 +94,43 @@ enum { kOwnFolderList = BIT(15) };
 
 ClassImp(TFolder)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor used by the Input functions.
+///
+/// This constructor should not be called by a user directly.
+/// The normal way to create a folder is by calling TFolder::AddFolder.
+
 TFolder::TFolder() : TNamed()
 {
-   // Default constructor used by the Input functions.
-   //
-   // This constructor should not be called by a user directly.
-   // The normal way to create a folder is by calling TFolder::AddFolder.
-
    fFolders = 0;
    fIsOwner = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a normal folder.
+/// Use Add or AddFolder to add objects or folders to this folder.
+
 TFolder::TFolder(const char *name, const char *title) : TNamed(name,title)
 {
-   // Create a normal folder.
-   // Use Add or AddFolder to add objects or folders to this folder.
-
    fFolders = new TList();
    SetBit(kOwnFolderList);
    fIsOwner = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TFolder::TFolder(const TFolder &folder) : TNamed(folder),fFolders(0),fIsOwner(kFALSE)
 {
-   // Copy constructor.
-
    ((TFolder&)folder).Copy(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Folder destructor. Remove all objects from its lists and delete
+/// all its sub folders.
+
 TFolder::~TFolder()
 {
-   // Folder destructor. Remove all objects from its lists and delete
-   // all its sub folders.
-
    TCollection::StartGarbageCollection();
 
    if (fFolders) {
@@ -159,27 +159,27 @@ TFolder::~TFolder()
       std::cerr << "TFolder dtor called for "<< GetName() << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to this folder. obj must be a TObject or a TFolder.
+
 void TFolder::Add(TObject *obj)
 {
-   // Add object to this folder. obj must be a TObject or a TFolder.
-
    if (obj == 0 || fFolders == 0) return;
    obj->SetBit(kMustCleanup);
    fFolders->Add(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new folder and add it to the list of folders of this folder,
+/// return a pointer to the created folder.
+/// Note that a folder can be added to several folders.
+///
+/// If collection is non NULL, the pointer fFolders is set to the existing
+/// collection, otherwise a default collection (Tlist) is created.
+/// Note that the folder name cannot contain slashes.
+
 TFolder *TFolder::AddFolder(const char *name, const char *title, TCollection *collection)
 {
-   // Create a new folder and add it to the list of folders of this folder,
-   // return a pointer to the created folder.
-   // Note that a folder can be added to several folders.
-   //
-   // If collection is non NULL, the pointer fFolders is set to the existing
-   // collection, otherwise a default collection (Tlist) is created.
-   // Note that the folder name cannot contain slashes.
-
    if (strchr(name,'/')) {
       ::Error("TFolder::TFolder","folder name cannot contain a slash: %s", name);
       return 0;
@@ -206,29 +206,29 @@ TFolder *TFolder::AddFolder(const char *name, const char *title, TCollection *co
    return folder;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse this folder.
+
 void TFolder::Browse(TBrowser *b)
 {
-   // Browse this folder.
-
    if (fFolders) fFolders->Browse(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all objects from a folder list.
+
 void TFolder::Clear(Option_t *option)
 {
-   // Delete all objects from a folder list.
-
    if (fFolders) fFolders->Clear(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the full pathname corresponding to subpath name if the node is
+/// gROOT->GetRootFolder() and return a relative path otherwise.
+/// The returned path will be re-used by the next call to FindFullPathName().
+
 const char *TFolder::FindFullPathName(const char *name) const
 {
-   // Return the full pathname corresponding to subpath name if the node is
-   // gROOT->GetRootFolder() and return a relative path otherwise.
-   // The returned path will be re-used by the next call to FindFullPathName().
-
    TObject *obj = FindObject(name);
    if (obj || !fFolders) {
       gFolderLevel++;
@@ -268,41 +268,41 @@ const char *TFolder::FindFullPathName(const char *name) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the full pathname corresponding to subpath name.
+/// The returned path will be re-used by the next call to FindFullPathName().
+
 const char *TFolder::FindFullPathName(const TObject *) const
 {
-   // Return the full pathname corresponding to subpath name.
-   // The returned path will be re-used by the next call to FindFullPathName().
-
    Error("FindFullPathname","Not yet implemented");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find object in an folder.
+
 TObject *TFolder::FindObject(const TObject *) const
 {
-   // Find object in an folder.
-
    Error("FindObject","Not yet implemented");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search object identified by name in the tree of folders inside
+/// this folder.
+/// Name may be of the forms:
+///   A, Specify a full pathname starting at the top ROOT folder
+///     //root/xxx/yyy/name
+///
+///   B, Specify a pathname starting with a single slash. //root is assumed
+///     /xxx/yyy/name
+///
+///   C, Specify a pathname relative to this folder
+///     xxx/yyy/name
+///     name
+
 TObject *TFolder::FindObject(const char *name) const
 {
-   // Search object identified by name in the tree of folders inside
-   // this folder.
-   // Name may be of the forms:
-   //   A, Specify a full pathname starting at the top ROOT folder
-   //     //root/xxx/yyy/name
-   //
-   //   B, Specify a pathname starting with a single slash. //root is assumed
-   //     /xxx/yyy/name
-   //
-   //   C, Specify a pathname relative to this folder
-   //     xxx/yyy/name
-   //     name
-
    if (!fFolders) return 0;
    if (name == 0) return 0;
    if (name[0] == '/') {
@@ -340,11 +340,11 @@ TObject *TFolder::FindObject(const char *name) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the first object with name starting at this folder.
+
 TObject *TFolder::FindObjectAny(const char *name) const
 {
-   // Return a pointer to the first object with name starting at this folder.
-
    TObject *obj = FindObject(name);
    if (obj || !fFolders) return obj;
 
@@ -364,28 +364,28 @@ TObject *TFolder::FindObjectAny(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Folder ownership has been set via
+///   - TFolder::SetOwner
+///   - TCollection::SetOwner on the collection specified to TFolder::AddFolder
+
 Bool_t TFolder::IsOwner()  const
 {
-   // Folder ownership has been set via
-   //   - TFolder::SetOwner
-   //   - TCollection::SetOwner on the collection specified to TFolder::AddFolder
-
    if (!fFolders) return kFALSE;
    return fFolders->IsOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List folder contents
+///   If option contains "dump",  the Dump function of contained objects is called.
+///   If option contains "print", the Print function of contained objects is called.
+///   By default the ls function of contained objects is called.
+/// Indentation is used to identify the folder tree.
+///
+/// The if option contains a <regexp> it be used to match the name of the objects.
+
 void TFolder::ls(Option_t *option) const
 {
-   // List folder contents
-   //   If option contains "dump",  the Dump function of contained objects is called.
-   //   If option contains "print", the Print function of contained objects is called.
-   //   By default the ls function of contained objects is called.
-   // Indentation is used to identify the folder tree.
-   //
-   // The if option contains a <regexp> it be used to match the name of the objects.
-
    if (!fFolders) return;
    TROOT::IndentLevel();
    std::cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<std::endl;
@@ -417,14 +417,14 @@ void TFolder::ls(Option_t *option) const
    TROOT::DecreaseDirLevel();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return occurence number of object in the list of objects of this folder.
+/// The function returns the number of objects with the same name as object
+/// found in the list of objects in this folder before object itself.
+/// If only one object is found, return 0.
+
 Int_t TFolder::Occurence(const TObject *object) const
 {
-   // Return occurence number of object in the list of objects of this folder.
-   // The function returns the number of objects with the same name as object
-   // found in the list of objects in this folder before object itself.
-   // If only one object is found, return 0.
-
    Int_t n = 0;
    if (!fFolders) return 0;
    TIter next(fFolders);
@@ -442,45 +442,45 @@ Int_t TFolder::Occurence(const TObject *object) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove object from a folder.
+
 void TFolder::RecursiveRemove(TObject *obj)
 {
-   // Recursively remove object from a folder.
-
    if (fFolders) fFolders->RecursiveRemove(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from this folder. obj must be a TObject or a TFolder.
+
 void TFolder::Remove(TObject *obj)
 {
-   // Remove object from this folder. obj must be a TObject or a TFolder.
-
    if (obj == 0 || fFolders == 0) return;
    fFolders->Remove(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save all objects in this folder in filename.
+/// Each object in this folder will have a key in the file where the name of
+/// the key will be the name of the object.
+
 void TFolder::SaveAs(const char *filename, Option_t *option) const
 {
-   // Save all objects in this folder in filename.
-   // Each object in this folder will have a key in the file where the name of
-   // the key will be the name of the object.
-
    if (gDirectory) gDirectory->SaveObjectAs(this,filename,option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ownership.
+/// If the folder is declared owner, when the folder is deleted, all
+/// the objects added via TFolder::Add are deleted via TObject::Delete,
+/// otherwise TObject::Clear is called.
+///
+/// NOTE that folder ownership can be set:
+///   - via TFolder::SetOwner
+///   - or via TCollection::SetOwner on the collection specified to TFolder::AddFolder
+
 void TFolder::SetOwner(Bool_t owner)
 {
-   // Set ownership.
-   // If the folder is declared owner, when the folder is deleted, all
-   // the objects added via TFolder::Add are deleted via TObject::Delete,
-   // otherwise TObject::Clear is called.
-   //
-   // NOTE that folder ownership can be set:
-   //   - via TFolder::SetOwner
-   //   - or via TCollection::SetOwner on the collection specified to TFolder::AddFolder
-
    if (!fFolders) fFolders = new TList();
    fFolders->SetOwner(owner);
 }

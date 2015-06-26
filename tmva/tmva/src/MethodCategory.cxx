@@ -36,7 +36,8 @@
 // categories, different classifiers may be booked and different variab-  //
 // les may be considered. The aim is to account for the difference that   //
 // is due to different locations/angles.                                  //
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #include <algorithm>
 #include <iomanip>
 #include <vector>
@@ -68,7 +69,9 @@ REGISTER_METHOD(Category)
 
 ClassImp(TMVA::MethodCategory)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// standard constructor
+
    TMVA::MethodCategory::MethodCategory( const TString& jobName,
                                          const TString& methodTitle,
                                          DataSetInfo& theData,
@@ -78,10 +81,11 @@ ClassImp(TMVA::MethodCategory)
    fCatTree(0),
    fDataSetManager(NULL)
 {
-   // standard constructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor from weight file
+
 TMVA::MethodCategory::MethodCategory( DataSetInfo& dsi,
                                       const TString& theWeightFile,
                                       TDirectory* theTargetDir )
@@ -89,25 +93,25 @@ TMVA::MethodCategory::MethodCategory( DataSetInfo& dsi,
      fCatTree(0),
      fDataSetManager(NULL)
 {
-   // constructor from weight file
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodCategory::~MethodCategory( void )
 {
-   // destructor
    std::vector<TTreeFormula*>::iterator formIt = fCatFormulas.begin();
    std::vector<TTreeFormula*>::iterator lastF = fCatFormulas.end();
    for(;formIt!=lastF; ++formIt) delete *formIt;
    delete fCatTree;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check whether method category has analysis type
+/// the method type has to be the same for all sub-methods
+
 Bool_t TMVA::MethodCategory::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets )
 {
-   // check whether method category has analysis type
-   // the method type has to be the same for all sub-methods
-
    std::vector<IMethod*>::iterator itrMethod = fMethods.begin();
 
    // iterate over methods and check whether they have the analysis type
@@ -118,21 +122,22 @@ Bool_t TMVA::MethodCategory::HasAnalysisType( Types::EAnalysisType type, UInt_t 
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// options for this method
+
 void TMVA::MethodCategory::DeclareOptions()
 {
-   // options for this method
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// adds sub-classifier for a category
+
 TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
                                                 const TString& theVariables,
                                                 Types::EMVA theMethod ,
                                                 const TString& theTitle,
                                                 const TString& theOptions )
 {
-   // adds sub-classifier for a category
-
    std::string addedMethodName = std::string(Types::Instance().GetMethodName(theMethod));
 
    Log() << kINFO << "Adding sub-classifier: " << addedMethodName << "::" << theTitle << Endl;
@@ -181,13 +186,13 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
    return method;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create a DataSetInfo object for a sub-classifier
+
 TMVA::DataSetInfo& TMVA::MethodCategory::CreateCategoryDSI(const TCut& theCut,
                                                            const TString& theVariables,
                                                            const TString& theTitle)
 {
-   // create a DataSetInfo object for a sub-classifier
-
    // create a new dsi with name: theTitle+"_dsi"
    TString dsiName=theTitle+"_dsi";
    DataSetInfo& oldDSI = DataInfo();
@@ -286,17 +291,18 @@ TMVA::DataSetInfo& TMVA::MethodCategory::CreateCategoryDSI(const TCut& theCut,
    return dsiReference;  
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize the method
+
 void TMVA::MethodCategory::Init()
 {
-   // initialize the method
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialize the circular tree
+
 void TMVA::MethodCategory::InitCircularTree(const DataSetInfo& dsi)
 {
-   // initialize the circular tree
-
    delete fCatTree;
 
    std::vector<VariableInfo>::const_iterator viIt;
@@ -342,11 +348,11 @@ void TMVA::MethodCategory::InitCircularTree(const DataSetInfo& dsi)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// train all sub-classifiers
+
 void TMVA::MethodCategory::Train()
 {
-   // train all sub-classifiers
-
    // specify the minimum # of training events and set 'classification'
    const Int_t  MinNoTrainingEvents = 10;
 
@@ -419,10 +425,11 @@ void TMVA::MethodCategory::Train()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// create XML description of Category classifier
+
 void TMVA::MethodCategory::AddWeightsXMLTo( void* parent ) const
 {
-   // create XML description of Category classifier
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NSubMethods", fMethods.size() );
    void* submethod(0);
@@ -441,10 +448,11 @@ void TMVA::MethodCategory::AddWeightsXMLTo( void* parent ) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read weights of sub-classifiers of MethodCategory from xml weight file
+
 void TMVA::MethodCategory::ReadWeightsFromXML( void* wghtnode )
 {
-   // read weights of sub-classifiers of MethodCategory from xml weight file
    UInt_t nSubMethods;
    TString fullMethodName;
    TString methodType;
@@ -512,19 +520,21 @@ void TMVA::MethodCategory::ReadWeightsFromXML( void* wghtnode )
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process user options
+
 void TMVA::MethodCategory::ProcessOptions() 
 {
-   // process user options
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get help message text
+///
+/// typical length of text line:
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodCategory::GetHelpMessage() const
 {
-   // Get help message text
-   //
-   // typical length of text line:
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;
@@ -535,17 +545,18 @@ void TMVA::MethodCategory::GetHelpMessage() const
    Log() << "be disjoint." << Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// no ranking 
+
 const TMVA::Ranking* TMVA::MethodCategory::CreateRanking()
 { 
-   // no ranking 
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::MethodCategory::PassesCut( const Event* ev, UInt_t methodIdx )
 {
-
    // if it's not a simple 'spectator' variable (0 or 1) that the categories are defined by
    // (but rather some 'formula' (i.e. eta>0), then this formulas are stored in fCatTree and that
    // one will be evaluated.. (the formulae return 'true' or 'false' 
@@ -572,11 +583,11 @@ Bool_t TMVA::MethodCategory::PassesCut( const Event* ev, UInt_t methodIdx )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the mva value of the right sub-classifier
+
 Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // returns the mva value of the right sub-classifier
-
    if (fMethods.empty()) return 0;
 
    UInt_t methodToUse = 0;
@@ -612,11 +623,11 @@ Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err, Double_t* errUpper )
 
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the mva value of the right sub-classifier
+
 const std::vector<Float_t> &TMVA::MethodCategory::GetRegressionValues() 
 {
-   // returns the mva value of the right sub-classifier
-
    if (fMethods.empty()) return MethodBase::GetRegressionValues();
 
    UInt_t methodToUse = 0;

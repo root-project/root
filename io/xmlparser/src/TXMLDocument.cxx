@@ -25,11 +25,11 @@
 
 ClassImp(TXMLDocument);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXMLDocument constructor.
+
 TXMLDocument::TXMLDocument(_xmlDoc *doc) : fXMLDoc(doc)
 {
-   // TXMLDocument constructor.
-
    if (fXMLDoc) {
       fRootNode = new TXMLNode(xmlDocGetRootElement(fXMLDoc));
    } else {
@@ -37,51 +37,51 @@ TXMLDocument::TXMLDocument(_xmlDoc *doc) : fXMLDoc(doc)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TXMLDocument destructor.
+/// Free the global variables that may
+/// have been allocated by the parser.
+
 TXMLDocument::~TXMLDocument()
 {
-   // TXMLDocument destructor.
-   // Free the global variables that may
-   // have been allocated by the parser.
-
    delete fRootNode;
    xmlFreeDoc(fXMLDoc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the root element node.
+
 TXMLNode *TXMLDocument::GetRootNode() const
 {
-   // Returns the root element node.
-
    return fRootNode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the XML version string or 0 in case there is no document set.
+
 const char *TXMLDocument::Version() const
 {
-   // Returns the XML version string or 0 in case there is no document set.
-
    if (fXMLDoc)
       return (const char *) fXMLDoc->version;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns external initial encoding, if any or 0 in case there is no
+/// document set.
+
 const char *TXMLDocument::Encoding() const
 {
-   // Returns external initial encoding, if any or 0 in case there is no
-   // document set.
-
    if (fXMLDoc)
       return (const char *) fXMLDoc->encoding;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the URI for the document or 0 in case there is no document set.
+
 const char *TXMLDocument::URL() const
 {
-   // Returns the URI for the document or 0 in case there is no document set.
-
    if (fXMLDoc)
       return (const char *) fXMLDoc->URL;
    return 0;

@@ -26,17 +26,18 @@ ClassImp(ROOT::TFriendProxy);
 
 namespace ROOT {
 
-   //------------------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    TFriendProxy::TFriendProxy() : fDirector(0,-1), fIndex(-1)
    {
    }
 
-   //------------------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Constructor.
+
    TFriendProxy::TFriendProxy(TBranchProxyDirector *director, TTree *main, Int_t index) :
       fDirector(0,-1), fIndex(index)
    {
-      // Constructor.
-
       if (main && main->GetListOfFriends()) {
          TObject *obj = main->GetListOfFriends()->At(fIndex);
          TFriendElement *element = dynamic_cast<TFriendElement*>( obj );
@@ -45,29 +46,29 @@ namespace ROOT {
       director->Attach(this);
    }
 
-   //------------------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Return the entry number currently being looked at.
+
    Long64_t TFriendProxy::GetReadEntry() const
    {
-      // Return the entry number currently being looked at.
-
       return fDirector.GetReadEntry();
    }
 
-   //------------------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Refresh the cached read entry number from the original tree.
+
    void TFriendProxy::ResetReadEntry()
    {
-      // Refresh the cached read entry number from the original tree.
-
       // The 2nd call to GetTree is to insure we get the 'local' tree's entry in the case of a
       // chain.
       if (fDirector.GetTree()) fDirector.SetReadEntry(fDirector.GetTree()->GetTree()->GetReadEntry());
    }
 
-  //------------------------------------------------------------------------------------
+  //////////////////////////////////////////////////////////////////////////////
+  /// Update the address of the underlying tree.
+
    void TFriendProxy::Update(TTree *newmain)
    {
-      // Update the address of the underlying tree.
-
       if (newmain && newmain->GetListOfFriends()) {
          TObject *obj = newmain->GetListOfFriends()->At(fIndex);
          TFriendElement *element = dynamic_cast<TFriendElement*>( obj );

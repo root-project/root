@@ -63,13 +63,13 @@ Cursor_t TGDragWindow::fgDefaultCursor = kNone;
 
 ClassImp(TGDragWindow)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGDragWindow constructor.
+
 TGDragWindow::TGDragWindow(const TGWindow *p, Pixmap_t pic, Pixmap_t mask,
                            UInt_t options, Pixel_t back) :
    TGFrame(p, 32, 32, options, back)
 {
-   // TGDragWindow constructor.
-
    if (fgDefaultCursor == kNone) {
       fgDefaultCursor = gVirtualX->CreateCursor(kTopLeft);
    }
@@ -108,72 +108,72 @@ TGDragWindow::TGDragWindow(const TGWindow *p, Pixmap_t pic, Pixmap_t mask,
    gVirtualX->SetCursor(fId, fgDefaultCursor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGDragWindow destructor.
+
 TGDragWindow::~TGDragWindow()
 {
-   // TGDragWindow destructor.
-
    //gVirtualX->DestroyWindow(fInput);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map TGDragWindow.
+
 void TGDragWindow::MapWindow()
 {
-   // Map TGDragWindow.
-
    TGFrame::MapWindow();
    //gVirtualX->MapWindow(fInput);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unmap TGDragWindow.
+
 void TGDragWindow::UnmapWindow()
 {
-   // Unmap TGDragWindow.
-
    TGFrame::UnmapWindow();
    //gVirtualX->UnmapWindow(fInput);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Raise TGDragWindow.
+
 void TGDragWindow::RaiseWindow()
 {
-   // Raise TGDragWindow.
-
    TGFrame::RaiseWindow();
    //gVirtualX->RaiseWindow(fInput);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lower TGDragWindow.
+
 void TGDragWindow::LowerWindow()
 {
-   // Lower TGDragWindow.
-
    //gVirtualX->LowerWindow(fInput);
    TGFrame::LowerWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map and Raise TGDragWindow.
+
 void TGDragWindow::MapRaised()
 {
-   // Map and Raise TGDragWindow.
-
    TGFrame::MapRaised();
    //gVirtualX->MapRaised(fInput);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout TGDragWindow.
+
 void TGDragWindow::Layout()
 {
-   // Layout TGDragWindow.
-
    gVirtualX->ShapeCombineMask(fId, 0, 0, fMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw TGDragWindow.
+
 void TGDragWindow::DoRedraw()
 {
-   // Redraw TGDragWindow.
-
    gVirtualX->CopyArea(fPic, fId, GetBckgndGC()(), 0, 0, fWidth, fHeight, 0, 0);
 }
 
@@ -186,11 +186,11 @@ void TGDragWindow::DoRedraw()
 
 ClassImp(TGDNDManager)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGDNDManager constructor.
+
 TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t * /*typelist*/)
 {
-   // TGDNDManager constructor.
-
    if (gDNDManager)
       // coverity[uninit_member]: already done
       return;
@@ -238,11 +238,11 @@ TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t * /*typelist*/)
    gDNDManager = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGDNDManager destructor.
+
 TGDNDManager::~TGDNDManager()
 {
-   // TGDNDManager destructor.
-
    // remove the proxy prop if we own it
    if (fProxyOurs)
       RemoveRootProxy();
@@ -286,11 +286,11 @@ Atom_t TGDNDManager::GetDNDActionList() { return fgDNDActionList; }
 Atom_t TGDNDManager::GetDNDActionDescrip() { return fgDNDActionDescrip; }
 Atom_t TGDNDManager::GetXCDNDData() { return fgXCDNDData; }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize drag and drop atoms.
+
 void TGDNDManager::InitAtoms()
 {
-   // Initialize drag and drop atoms.
-
    // awareness
    fgDNDAware = gVirtualX->InternAtom("XdndAware", kFALSE);
 
@@ -335,19 +335,19 @@ static int ArrayLength(Atom_t *a)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if window win is DND aware.
+
 Bool_t TGDNDManager::IsDNDAware(Window_t win, Atom_t *typelist)
 {
-   // Check if window win is DND aware.
-
    return gVirtualX->IsDNDAware(win, typelist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for DND aware window at position x,y.
+
 Window_t TGDNDManager::FindWindow(Window_t root, int x, int y, int maxd)
 {
-   // Search for DND aware window at position x,y.
-
    if (maxd <= 0) return kNone;
 
    if (fDragWin && fDragWin->HasWindow(root)) return kNone;
@@ -358,11 +358,11 @@ Window_t TGDNDManager::FindWindow(Window_t root, int x, int y, int maxd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get root window proxy.
+
 Window_t TGDNDManager::GetRootProxy()
 {
-   // Get root window proxy.
-
    Atom_t actual;
    Int_t format = 32;
    ULong_t count, remaining;
@@ -407,11 +407,11 @@ Window_t TGDNDManager::GetRootProxy()
    return proxy;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle DND related client messages.
+
 Bool_t TGDNDManager::HandleClientMessage(Event_t *event)
 {
-   // Handle DND related client messages.
-
    if (event->fHandle == fgDNDEnter) {
       HandleDNDEnter((Window_t) event->fUser[0], event->fUser[1],
                      (Atom_t *) &event->fUser[2]);
@@ -449,11 +449,11 @@ Bool_t TGDNDManager::HandleClientMessage(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Drop timeout.
+
 Bool_t TGDNDManager::HandleTimer(TTimer *t)
 {
-   // Handle Drop timeout.
-
    if (t == fDropTimeout) {
       // The drop operation timed out without receiving
       // status confirmation from the target. Send a
@@ -470,11 +470,11 @@ Bool_t TGDNDManager::HandleTimer(TTimer *t)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send DND enter message to target window.
+
 void TGDNDManager::SendDNDEnter(Window_t target)
 {
-   // Send DND enter message to target window.
-
    Int_t i, n;
    Event_t event;
 
@@ -510,11 +510,11 @@ void TGDNDManager::SendDNDEnter(Window_t target)
    gVirtualX->SendEvent(target, &event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send DND leave message to target window.
+
 void TGDNDManager::SendDNDLeave(Window_t target)
 {
-   // Send DND leave message to target window.
-
    Event_t event;
 
    event.fType    = kClientMessage;
@@ -532,12 +532,12 @@ void TGDNDManager::SendDNDLeave(Window_t target)
    gVirtualX->SendEvent(target, &event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send DND position message to target window.
+
 void TGDNDManager::SendDNDPosition(Window_t target, int x, int y,
                                   Atom_t action, Time_t timestamp)
 {
-   // Send DND position message to target window.
-
    Event_t event;
 
    event.fType    = kClientMessage;
@@ -555,11 +555,11 @@ void TGDNDManager::SendDNDPosition(Window_t target, int x, int y,
    gVirtualX->SendEvent(target, &event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send DND status message to source window.
+
 void TGDNDManager::SendDNDStatus(Window_t source, Atom_t action)
 {
-   // Send DND status message to source window.
-
    Event_t event;
 
    event.fType    = kClientMessage;
@@ -577,11 +577,11 @@ void TGDNDManager::SendDNDStatus(Window_t source, Atom_t action)
    gVirtualX->SendEvent(source, &event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send DND drop message to target window.
+
 void TGDNDManager::SendDNDDrop(Window_t target)
 {
-   // Send DND drop message to target window.
-
    Event_t event;
 
    event.fType    = kClientMessage;
@@ -598,11 +598,11 @@ void TGDNDManager::SendDNDDrop(Window_t target)
    gVirtualX->SendEvent(target, &event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send DND finished message to source window.
+
 void TGDNDManager::SendDNDFinished(Window_t source)
 {
-   // Send DND finished message to source window.
-
    Event_t event;
 
    event.fType    = kClientMessage;
@@ -619,11 +619,11 @@ void TGDNDManager::SendDNDFinished(Window_t source)
    gVirtualX->SendEvent(source, &event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle DND enter event.
+
 Bool_t TGDNDManager::HandleDNDEnter(Window_t src, Long_t vers, Atom_t dataTypes[3])
 {
-   // Handle DND enter event.
-
    fSource = src;
 
    if (fDraggerTypes) delete[] fDraggerTypes;
@@ -670,11 +670,11 @@ Bool_t TGDNDManager::HandleDNDEnter(Window_t src, Long_t vers, Atom_t dataTypes[
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle DND leave event.
+
 Bool_t TGDNDManager::HandleDNDLeave(Window_t /*src*/)
 {
-   // Handle DND leave event.
-
    fSource = kNone;
    if (fLocalTarget) fLocalTarget->HandleDNDLeave();
    fLocalTarget = 0;
@@ -685,12 +685,12 @@ Bool_t TGDNDManager::HandleDNDLeave(Window_t /*src*/)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle DND position event.
+
 Bool_t TGDNDManager::HandleDNDPosition(Window_t source, Int_t x_root, Int_t y_root,
                                       Atom_t action, Time_t /*timestamp*/)
 {
-   // Handle DND position event.
-
    Int_t x = 0, y = 0;
    Window_t child;
    TGFrame *f = 0, *main = 0;
@@ -732,12 +732,12 @@ Bool_t TGDNDManager::HandleDNDPosition(Window_t source, Int_t x_root, Int_t y_ro
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle DND status event.
+
 Bool_t TGDNDManager::HandleDNDStatus(Window_t target, Int_t accepted,
                                     Rectangle_t /*area*/, Atom_t action)
 {
-   // Handle DND status event.
-
    if (target) {
       fStatusPending = kFALSE;
       if (accepted) {
@@ -763,11 +763,11 @@ Bool_t TGDNDManager::HandleDNDStatus(Window_t target, Int_t accepted,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle DND drop event.
+
 Bool_t TGDNDManager::HandleDNDDrop(Window_t source, Time_t timestamp)
 {
-   // Handle DND drop event.
-
    // to get the data, we must call XConvertSelection with
    // the timestamp in XdndDrop, wait for SelectionNotify
    // to arrive to retrieve the data, and when we are finished,
@@ -787,20 +787,20 @@ Bool_t TGDNDManager::HandleDNDDrop(Window_t source, Time_t timestamp)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle DND finished event.
+
 Bool_t TGDNDManager::HandleDNDFinished(Window_t /*target*/)
 {
-   // Handle DND finished event.
-
    if (fLocalSource) fLocalSource->HandleDNDFinished();
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle selection request event.
+
 Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
 {
-   // Handle selection request event.
-
    if ((Atom_t)event->fUser[1] == fgDNDSelection) {
       Event_t xevent;
       TDNDData *dnddata = 0;
@@ -837,10 +837,11 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle selection event.
+
 Bool_t TGDNDManager::HandleSelection(Event_t *event)
 {
-   // Handle selection event.
    if ((Atom_t)event->fUser[1] == fgDNDSelection) {
       Atom_t actual = fDropType;
       Int_t format = 8;
@@ -881,24 +882,24 @@ Bool_t TGDNDManager::HandleSelection(Event_t *event)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set drag window pixmaps and hotpoint.
+
 void TGDNDManager::SetDragPixmap(Pixmap_t pic, Pixmap_t mask,
                                 int hot_x, int hot_y)
 {
-   // Set drag window pixmaps and hotpoint.
-
    fPic  = pic;
    fMask = mask;
    fHotx = hot_x;
    fHoty = hot_y;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start dragging.
+
 Bool_t TGDNDManager::StartDrag(TGFrame *src, int x_root, int y_root,
                               Window_t grabWin)
 {
-   // Start dragging.
-
    if (fDragging) return kTRUE;
 
    fLocalSource = src;
@@ -936,11 +937,11 @@ Bool_t TGDNDManager::StartDrag(TGFrame *src, int x_root, int y_root,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop.
+
 Bool_t TGDNDManager::Drop()
 {
-   // Drop.
-
    if (!fDragging) return kFALSE;
 
    if (fTargetIsDNDAware) {
@@ -960,11 +961,11 @@ Bool_t TGDNDManager::Drop()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// End dragging.
+
 Bool_t TGDNDManager::EndDrag()
 {
-   // End dragging.
-
    if (!fDragging) return kFALSE;
 
    gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
@@ -982,11 +983,11 @@ Bool_t TGDNDManager::EndDrag()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process drag event.
+
 Bool_t TGDNDManager::Drag(int x_root, int y_root, Atom_t action, Time_t timestamp)
 {
-   // Process drag event.
-
    if (!fDragging) return kFALSE;
 
    Window_t newTarget = FindWindow(gVirtualX->GetDefaultRootWindow(),
@@ -1029,11 +1030,11 @@ Bool_t TGDNDManager::Drag(int x_root, int y_root, Atom_t action, Time_t timestam
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set root window proxy.
+
 Bool_t TGDNDManager::SetRootProxy()
 {
-   // Set root window proxy.
-
    Window_t mainw = fMain->GetId();
    int result = kFALSE;
 
@@ -1052,11 +1053,11 @@ Bool_t TGDNDManager::SetRootProxy()
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove root window proxy.
+
 Bool_t TGDNDManager::RemoveRootProxy()
 {
-   // Remove root window proxy.
-
    if (!fProxyOurs) return kFALSE;
 
    gVirtualX->DeleteProperty(fMain->GetId(), fgDNDProxy);

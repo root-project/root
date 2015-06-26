@@ -24,7 +24,9 @@
 
 ClassImp(TEveShape);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveShape::TEveShape(const char* n, const char* t) :
    TEveElementList(n, t),
    fFillColor(5),
@@ -34,26 +36,25 @@ TEveShape::TEveShape(const char* n, const char* t) :
    fHighlightFrame(kFALSE),
    fMiniFrame(kTRUE)
 {
-   // Constructor.
-
    fCanEditMainColor        = kTRUE;
    fCanEditMainTransparency = kTRUE;
    SetMainColorPtr(&fFillColor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveShape::~TEveShape()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set main color.
+/// Override so that line-color can also be changed if it is equal
+/// to fill color (which is treated as main color).
+
 void TEveShape::SetMainColor(Color_t color)
 {
-   // Set main color.
-   // Override so that line-color can also be changed if it is equal
-   // to fill color (which is treated as main color).
-
    if (fFillColor == fLineColor) {
       fLineColor = color;
       StampObjProps();
@@ -61,11 +62,11 @@ void TEveShape::SetMainColor(Color_t color)
    TEveElementList::SetMainColor(color);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy visualization parameters from element el.
+
 void TEveShape::CopyVizParams(const TEveElement* el)
 {
-   // Copy visualization parameters from element el.
-
    const TEveShape* m = dynamic_cast<const TEveShape*>(el);
    if (m)
    {
@@ -80,11 +81,11 @@ void TEveShape::CopyVizParams(const TEveElement* el)
    TEveElementList::CopyVizParams(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write visualization parameters.
+
 void TEveShape::WriteVizParams(std::ostream& out, const TString& var)
 {
-   // Write visualization parameters.
-
    TEveElementList::WriteVizParams(out, var);
 
    TString t = "   " + var + "->";
@@ -95,26 +96,26 @@ void TEveShape::WriteVizParams(std::ostream& out, const TString& var)
    out << t << "SetHighlightFrame(" << ToString(fHighlightFrame) << ");\n";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this object. Only direct rendering is supported.
+
 void TEveShape::Paint(Option_t*)
 {
-   // Paint this object. Only direct rendering is supported.
-
    PaintStandard(this);
 }
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determines the convex-hull of points in pin.
+///
+/// Adds the hull points to pout and returns the number of added points.
+/// If size of pout is less then 3 then either the number of input points
+/// was too low or they were degenerate so that the hull is actually a line
+/// segment or even a point.
+
 Int_t TEveShape::FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveElement* caller)
 {
-   // Determines the convex-hull of points in pin.
-   //
-   // Adds the hull points to pout and returns the number of added points.
-   // If size of pout is less then 3 then either the number of input points
-   // was too low or they were degenerate so that the hull is actually a line
-   // segment or even a point.
-
    Int_t N = pin.size();
 
    // Find the minimum (bottom-left) point.
@@ -215,13 +216,13 @@ Int_t TEveShape::FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveEle
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if the first face normal is pointing into the other
+/// direction as the vector pointing towards the opposite face.
+/// This assumes standard box vertex arrangement.
+
 Bool_t TEveShape::IsBoxOrientationConsistentEv(const TEveVector box[8])
 {
-   // Checks if the first face normal is pointing into the other
-   // direction as the vector pointing towards the opposite face.
-   // This assumes standard box vertex arrangement.
-
    TEveVector f1 = box[1] - box[0];
    TEveVector f2 = box[3] - box[0];
    TEveVector up = box[4] - box[0];
@@ -229,13 +230,13 @@ Bool_t TEveShape::IsBoxOrientationConsistentEv(const TEveVector box[8])
    return up.Dot(f1.Cross(f2)) < 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if the first face normal is pointing into the other
+/// direction as the vector pointing towards the opposite face.
+/// This assumes standard box vertex arrangement.
+
 Bool_t TEveShape::IsBoxOrientationConsistentFv(const Float_t box[8][3])
 {
-   // Checks if the first face normal is pointing into the other
-   // direction as the vector pointing towards the opposite face.
-   // This assumes standard box vertex arrangement.
-
    TEveVector b0(box[0]);
    TEveVector f1(box[1]); f1 -= b0;
    TEveVector f2(box[3]); f2 -= b0;
@@ -244,11 +245,11 @@ Bool_t TEveShape::IsBoxOrientationConsistentFv(const Float_t box[8][3])
    return up.Dot(f1.Cross(f2)) < 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure box orientation is consistent with standard arrangement.
+
 void TEveShape::CheckAndFixBoxOrientationEv(TEveVector box[8])
 {
-   // Make sure box orientation is consistent with standard arrangement.
-
    if ( ! IsBoxOrientationConsistentEv(box))
    {
       std::swap(box[1], box[3]);
@@ -256,11 +257,11 @@ void TEveShape::CheckAndFixBoxOrientationEv(TEveVector box[8])
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure box orientation is consistent with standard arrangement.
+
 void TEveShape::CheckAndFixBoxOrientationFv(Float_t box[8][3])
 {
-   // Make sure box orientation is consistent with standard arrangement.
-
    if ( ! IsBoxOrientationConsistentFv(box))
    {
       std::swap(box[1][0], box[3][0]);

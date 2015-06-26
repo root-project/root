@@ -99,11 +99,11 @@ TPluginHandler *TProof::fgLogViewer = 0;      // Log viewer handler
 ClassImp(TProof)
 
 //----- PROOF Interrupt signal handler -----------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TProof interrupt handler.
+
 Bool_t TProofInterruptHandler::Notify()
 {
-   // TProof interrupt handler.
-
    if (!fProof->IsTty() || fProof->GetRemoteProtocol() < 22) {
 
       // Cannot ask the user : abort any remote processing
@@ -137,19 +137,20 @@ Bool_t TProofInterruptHandler::Notify()
 }
 
 //----- Input handler for messages from TProofServ -----------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TProofInputHandler::TProofInputHandler(TProof *p, TSocket *s)
                    : TFileHandler(s->GetDescriptor(),1),
                      fSocket(s), fProof(p)
 {
-   // Constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle input
+
 Bool_t TProofInputHandler::Notify()
 {
-   // Handle input
-
    fProof->CollectInputFrom(fSocket);
    return kTRUE;
 }
@@ -159,11 +160,11 @@ Bool_t TProofInputHandler::Notify()
 
 ClassImp(TSlaveInfo)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used to sort slaveinfos by ordinal.
+
 Int_t TSlaveInfo::Compare(const TObject *obj) const
 {
-   // Used to sort slaveinfos by ordinal.
-
    if (!obj) return 1;
 
    const TSlaveInfo *si = dynamic_cast<const TSlaveInfo*>(obj);
@@ -187,25 +188,25 @@ Int_t TSlaveInfo::Compare(const TObject *obj) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used to compare slaveinfos by ordinal.
+
 Bool_t TSlaveInfo::IsEqual(const TObject* obj) const
 {
-   // Used to compare slaveinfos by ordinal.
-
    if (!obj) return kFALSE;
    const TSlaveInfo *si = dynamic_cast<const TSlaveInfo*>(obj);
    if (!si) return kFALSE;
    return (strcmp(GetOrdinal(), si->GetOrdinal()) == 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print slave info. If opt = "active" print only the active
+/// slaves, if opt="notactive" print only the not active slaves,
+/// if opt = "bad" print only the bad slaves, else
+/// print all slaves.
+
 void TSlaveInfo::Print(Option_t *opt) const
 {
-   // Print slave info. If opt = "active" print only the active
-   // slaves, if opt="notactive" print only the not active slaves,
-   // if opt = "bad" print only the bad slaves, else
-   // print all slaves.
-
    TString stat = fStatus == kActive ? "active" :
                   fStatus == kBad ? "bad" :
                   "not active";
@@ -244,11 +245,11 @@ void TSlaveInfo::Print(Option_t *opt) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setter for fSysInfo
+
 void TSlaveInfo::SetSysInfo(SysInfo_t si)
 {
-   // Setter for fSysInfo
-
    fSysInfo.fOS       = si.fOS;          // OS
    fSysInfo.fModel    = si.fModel;       // computer model
    fSysInfo.fCpuType  = si.fCpuType;     // type of cpu
@@ -265,33 +266,33 @@ TSemaphore    *TProof::fgSemaphore = 0;
 
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TMergerInfo::~TMergerInfo()
 {
-   // Destructor
-
    // Just delete the list, the objects are owned by other list
    if (fWorkers) {
       fWorkers->SetOwner(kFALSE);
       SafeDelete(fWorkers);
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increase number of already merged workers by 1
+
 void TMergerInfo::SetMergedWorker()
 {
-   // Increase number of already merged workers by 1
-
    if (AreAllWorkersMerged())
       Error("SetMergedWorker", "all workers have been already merged before!");
    else
       fMergedWorkers++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new worker to the list of workers to be merged by this merger
+
 void TMergerInfo::AddWorker(TSlave *sl)
 {
-   // Add new worker to the list of workers to be merged by this merger
-
    if (!fWorkers)
       fWorkers = new TList();
    if (fWorkersToMerge == fWorkers->GetSize()) {
@@ -301,35 +302,35 @@ void TMergerInfo::AddWorker(TSlave *sl)
    fWorkers->Add(sl);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return if merger has already merged all workers, i.e. if it has finished its merging job
+
 Bool_t TMergerInfo::AreAllWorkersMerged()
 {
-   // Return if merger has already merged all workers, i.e. if it has finished its merging job
-
    return (fWorkersToMerge == fMergedWorkers);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return if the determined number of workers has been already assigned to this merger
+
 Bool_t TMergerInfo::AreAllWorkersAssigned()
 {
-      // Return if the determined number of workers has been already assigned to this merger
-
       if (!fWorkers)
          return kFALSE;
 
       return (fWorkers->GetSize() == fWorkersToMerge);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This a private API function.
+/// It checks whether the connection string contains a PoD cluster protocol.
+/// If it does, then the connection string will be changed to reflect
+/// a real PROOF connection string for a PROOF cluster managed by PoD.
+/// PoD: http://pod.gsi.de .
+/// Return -1 if the PoD request failed; return 0 otherwise.
+
 static Int_t PoDCheckUrl(TString *_cluster)
 {
-   // This a private API function.
-   // It checks whether the connection string contains a PoD cluster protocol.
-   // If it does, then the connection string will be changed to reflect
-   // a real PROOF connection string for a PROOF cluster managed by PoD.
-   // PoD: http://pod.gsi.de .
-   // Return -1 if the PoD request failed; return 0 otherwise.
-
    if ( !_cluster )
       return 0;
 
@@ -356,22 +357,22 @@ static Int_t PoDCheckUrl(TString *_cluster)
    return 0;
 }
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Create a PROOF environment. Starting PROOF involves either connecting
+/// to a master server, which in turn will start a set of slave servers, or
+/// directly starting as master server (if master = ""). Masterurl is of
+/// the form: [proof[s]://]host[:port]. Conffile is the name of the config
+/// file describing the remote PROOF cluster (this argument alows you to
+/// describe different cluster configurations).
+/// The default is proof.conf. Confdir is the directory where the config
+/// file and other PROOF related files are (like motd and noproof files).
+/// Loglevel is the log level (default = 1). User specified custom config
+/// files will be first looked for in $HOME/.conffile.
+
 TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
                Int_t loglevel, const char *alias, TProofMgr *mgr)
        : fUrl(masterurl)
 {
-   // Create a PROOF environment. Starting PROOF involves either connecting
-   // to a master server, which in turn will start a set of slave servers, or
-   // directly starting as master server (if master = ""). Masterurl is of
-   // the form: [proof[s]://]host[:port]. Conffile is the name of the config
-   // file describing the remote PROOF cluster (this argument alows you to
-   // describe different cluster configurations).
-   // The default is proof.conf. Confdir is the directory where the config
-   // file and other PROOF related files are (like motd and noproof files).
-   // Loglevel is the log level (default = 1). User specified custom config
-   // files will be first looked for in $HOME/.conffile.
-
    // Default initializations
    InitMembers();
 
@@ -486,16 +487,16 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    gProof = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Protected constructor to be used by classes deriving from TProof
+/// (they have to call Init themselves and override StartSlaves
+/// appropriately).
+///
+/// This constructor simply closes any previous gProof and sets gProof
+/// to this instance.
+
 TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
 {
-   // Protected constructor to be used by classes deriving from TProof
-   // (they have to call Init themselves and override StartSlaves
-   // appropriately).
-   //
-   // This constructor simply closes any previous gProof and sets gProof
-   // to this instance.
-
    // Default initializations
    InitMembers();
 
@@ -505,11 +506,11 @@ TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
    gProof = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default initializations
+
 void TProof::InitMembers()
 {
-   // Default initializations
-
    fValid = kFALSE;
    fTty = kFALSE;
    fRecvMessages = 0;
@@ -634,11 +635,11 @@ void TProof::InitMembers()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up PROOF environment.
+
 TProof::~TProof()
 {
-   // Clean up PROOF environment.
-
    if (fChains) {
       while (TChain *chain = dynamic_cast<TChain*> (fChains->First()) ) {
          // remove "chain" from list
@@ -727,17 +728,17 @@ TProof::~TProof()
    Emit("CloseWindow()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start the PROOF environment. Starting PROOF involves either connecting
+/// to a master server, which in turn will start a set of slave servers, or
+/// directly starting as master server (if master = ""). For a description
+/// of the arguments see the TProof ctor. Returns the number of started
+/// master or slave servers, returns 0 in case of error, in which case
+/// fValid remains false.
+
 Int_t TProof::Init(const char *, const char *conffile,
                    const char *confdir, Int_t loglevel, const char *alias)
 {
-   // Start the PROOF environment. Starting PROOF involves either connecting
-   // to a master server, which in turn will start a set of slave servers, or
-   // directly starting as master server (if master = ""). For a description
-   // of the arguments see the TProof ctor. Returns the number of started
-   // master or slave servers, returns 0 in case of error, in which case
-   // fValid remains false.
-
    R__ASSERT(gSystem);
 
    fValid = kFALSE;
@@ -1019,14 +1020,14 @@ Int_t TProof::Init(const char *, const char *conffile,
    return fActiveSlaves->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the sandbox path from ' Proof.Sandbox' or the alternative var 'rc'.
+/// Use the existing setting or the default if nothing is found.
+/// If 'assert' is kTRUE, make also sure that the path exists.
+/// Return 0 on success, -1 on failure
+
 Int_t TProof::GetSandbox(TString &sb, Bool_t assert, const char *rc)
 {
-   // Set the sandbox path from ' Proof.Sandbox' or the alternative var 'rc'.
-   // Use the existing setting or the default if nothing is found.
-   // If 'assert' is kTRUE, make also sure that the path exists.
-   // Return 0 on success, -1 on failure
-
    // Get it from 'rc', if defined
    if (rc && strlen(rc)) sb = gEnv->GetValue(rc, sb);
    // Or use the default 'rc'
@@ -1047,13 +1048,13 @@ Int_t TProof::GetSandbox(TString &sb, Bool_t assert, const char *rc)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The config file field may contain special instructions which need to be
+/// parsed at the beginning, e.g. for debug runs with valgrind.
+/// Several options can be given separated by a ','
+
 void TProof::ParseConfigField(const char *config)
 {
-   // The config file field may contain special instructions which need to be
-   // parsed at the beginning, e.g. for debug runs with valgrind.
-   // Several options can be given separated by a ','
-
    TString sconf(config), opt;
    Ssiz_t from = 0;
    Bool_t cpuPin = kFALSE;
@@ -1270,12 +1271,12 @@ void TProof::ParseConfigField(const char *config)
    #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that 'path' exists; if 'writable' is kTRUE, make also sure
+/// that the path is writable
+
 Int_t TProof::AssertPath(const char *inpath, Bool_t writable)
 {
-   // Make sure that 'path' exists; if 'writable' is kTRUE, make also sure
-   // that the path is writable
-
    if (!inpath || strlen(inpath) <= 0) {
       Error("AssertPath", "undefined input path");
       return -1;
@@ -1302,12 +1303,12 @@ Int_t TProof::AssertPath(const char *inpath, Bool_t writable)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set manager and schedule its destruction after this for clean
+/// operations.
+
 void TProof::SetManager(TProofMgr *mgr)
 {
-   // Set manager and schedule its destruction after this for clean
-   // operations.
-
    fManager = mgr;
 
    if (mgr) {
@@ -1317,16 +1318,16 @@ void TProof::SetManager(TProofMgr *mgr)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Works on the master node only.
+/// It starts workers on the machines in workerList and sets the paths,
+/// packages and macros as on the master.
+/// It is a subbstitute for StartSlaves(...)
+/// The code is mostly the master part of StartSlaves,
+/// with the parallel startup removed.
+
 Int_t TProof::AddWorkers(TList *workerList)
 {
-   // Works on the master node only.
-   // It starts workers on the machines in workerList and sets the paths,
-   // packages and macros as on the master.
-   // It is a subbstitute for StartSlaves(...)
-   // The code is mostly the master part of StartSlaves,
-   // with the parallel startup removed.
-
    if (!IsMaster()) {
       Error("AddWorkers", "AddWorkers can only be called on the master!");
       return -1;
@@ -1530,11 +1531,11 @@ Int_t TProof::AddWorkers(TList *workerList)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set up packages, loaded macros, include and lib paths ...
+
 void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
 {
-   // Set up packages, loaded macros, include and lib paths ...
-
    // Packages
    TList *packs = gProofServ ? gProofServ->GetEnabledPackages() : GetEnabledPackages();
    if (packs->GetSize() > 0) {
@@ -1591,13 +1592,13 @@ void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used for shuting down the workres after a query is finished.
+/// Sends each of the workers from the workerList, a kPROOF_STOP message.
+/// If the workerList == 0, shutdown all the workers.
+
 Int_t TProof::RemoveWorkers(TList *workerList)
 {
-   // Used for shuting down the workres after a query is finished.
-   // Sends each of the workers from the workerList, a kPROOF_STOP message.
-   // If the workerList == 0, shutdown all the workers.
-
    if (!IsMaster()) {
       Error("RemoveWorkers", "RemoveWorkers can only be called on the master!");
       return -1;
@@ -1656,11 +1657,11 @@ Int_t TProof::RemoveWorkers(TList *workerList)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start up PROOF slaves.
+
 Bool_t TProof::StartSlaves(Bool_t attach)
 {
-   // Start up PROOF slaves.
-
    // If this is a master server, find the config file and start slave
    // servers as specified in the config file
    if (TestBit(TProof::kIsMaster)) {
@@ -1791,14 +1792,14 @@ Bool_t TProof::StartSlaves(Bool_t attach)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close all open slave servers.
+/// Client can decide to shutdown the remote session by passing option is 'S'
+/// or 's'. Default for clients is detach, if supported. Masters always
+/// shutdown the remote counterpart.
+
 void TProof::Close(Option_t *opt)
 {
-   // Close all open slave servers.
-   // Client can decide to shutdown the remote session by passing option is 'S'
-   // or 's'. Default for clients is detach, if supported. Masters always
-   // shutdown the remote counterpart.
-
    {  R__LOCKGUARD2(fCloseMutex);
 
       fValid = kFALSE;
@@ -1848,14 +1849,14 @@ void TProof::Close(Option_t *opt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new TSlave of type TSlave::kSlave.
+/// Note: creation of TSlave is private with TProof as a friend.
+/// Derived classes must use this function to create slaves.
+
 TSlave *TProof::CreateSlave(const char *url, const char *ord,
                             Int_t perf, const char *image, const char *workdir)
 {
-   // Create a new TSlave of type TSlave::kSlave.
-   // Note: creation of TSlave is private with TProof as a friend.
-   // Derived classes must use this function to create slaves.
-
    TSlave* sl = TSlave::Create(url, ord, perf, image,
                                this, TSlave::kSlave, workdir, 0);
 
@@ -1870,14 +1871,14 @@ TSlave *TProof::CreateSlave(const char *url, const char *ord,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new TSlave of type TSlave::kMaster.
+/// Note: creation of TSlave is private with TProof as a friend.
+/// Derived classes must use this function to create slaves.
+
 TSlave *TProof::CreateSubmaster(const char *url, const char *ord,
                                 const char *image, const char *msd, Int_t nwk)
 {
-   // Create a new TSlave of type TSlave::kMaster.
-   // Note: creation of TSlave is private with TProof as a friend.
-   // Derived classes must use this function to create slaves.
-
    TSlave *sl = TSlave::Create(url, ord, 100, image, this,
                                TSlave::kMaster, 0, msd, nwk);
 
@@ -1888,11 +1889,11 @@ TSlave *TProof::CreateSubmaster(const char *url, const char *ord,
    return sl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find slave that has TSocket s. Returns 0 in case slave is not found.
+
 TSlave *TProof::FindSlave(TSocket *s) const
 {
-   // Find slave that has TSocket s. Returns 0 in case slave is not found.
-
    TSlave *sl;
    TIter   next(fSlaves);
 
@@ -1903,17 +1904,17 @@ TSlave *TProof::FindSlave(TSocket *s) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the fUniqueSlave list the active slaves that have a unique
+/// (user) file system image. This information is used to transfer files
+/// only once to nodes that share a file system (an image). Submasters
+/// which are not in fUniqueSlaves are put in the fNonUniqueMasters
+/// list. That list is used to trigger the transferring of files to
+/// the submaster's unique slaves without the need to transfer the file
+/// to the submaster.
+
 void TProof::FindUniqueSlaves()
 {
-   // Add to the fUniqueSlave list the active slaves that have a unique
-   // (user) file system image. This information is used to transfer files
-   // only once to nodes that share a file system (an image). Submasters
-   // which are not in fUniqueSlaves are put in the fNonUniqueMasters
-   // list. That list is used to trigger the transferring of files to
-   // the submaster's unique slaves without the need to transfer the file
-   // to the submaster.
-
    fUniqueSlaves->Clear();
    fUniqueMonitor->RemoveAll();
    fAllUniqueSlaves->Clear();
@@ -1975,68 +1976,68 @@ void TProof::FindUniqueSlaves()
    fAllUniqueMonitor->DeActivateAll();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of slaves as described in the config file.
+
 Int_t TProof::GetNumberOfSlaves() const
 {
-   // Return number of slaves as described in the config file.
-
    return fSlaves->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of active slaves, i.e. slaves that are valid and in
+/// the current computing group.
+
 Int_t TProof::GetNumberOfActiveSlaves() const
 {
-   // Return number of active slaves, i.e. slaves that are valid and in
-   // the current computing group.
-
    return fActiveSlaves->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of inactive slaves, i.e. slaves that are valid but not in
+/// the current computing group.
+
 Int_t TProof::GetNumberOfInactiveSlaves() const
 {
-   // Return number of inactive slaves, i.e. slaves that are valid but not in
-   // the current computing group.
-
    return fInactiveSlaves->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of unique slaves, i.e. active slaves that have each a
+/// unique different user files system.
+
 Int_t TProof::GetNumberOfUniqueSlaves() const
 {
-   // Return number of unique slaves, i.e. active slaves that have each a
-   // unique different user files system.
-
    return fUniqueSlaves->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of bad slaves. This are slaves that we in the config
+/// file, but refused to startup or that died during the PROOF session.
+
 Int_t TProof::GetNumberOfBadSlaves() const
 {
-   // Return number of bad slaves. This are slaves that we in the config
-   // file, but refused to startup or that died during the PROOF session.
-
    return fBadSlaves->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask the for the statistics of the slaves.
+
 void TProof::AskStatistics()
 {
-   // Ask the for the statistics of the slaves.
-
    if (!IsValid()) return;
 
    Broadcast(kPROOF_GETSTATS, kActive);
    Collect(kActive, fCollectTimeout);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get statistics about CPU time, real time and bytes read.
+/// If verbose, print the resuls (always available via GetCpuTime(), GetRealTime()
+/// and GetBytesRead()
+
 void TProof::GetStatistics(Bool_t verbose)
 {
-   // Get statistics about CPU time, real time and bytes read.
-   // If verbose, print the resuls (always available via GetCpuTime(), GetRealTime()
-   // and GetBytesRead()
-
    if (fProtocol > 27) {
       // This returns the correct result
       AskStatistics();
@@ -2074,22 +2075,22 @@ void TProof::GetStatistics(Bool_t verbose)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask the for the number of parallel slaves.
+
 void TProof::AskParallel()
 {
-   // Ask the for the number of parallel slaves.
-
    if (!IsValid()) return;
 
    Broadcast(kPROOF_GETPARALLEL, kActive);
    Collect(kActive, fCollectTimeout);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask the master for the list of queries.
+
 TList *TProof::GetListOfQueries(Option_t *opt)
 {
-   // Ask the master for the list of queries.
-
    if (!IsValid() || TestBit(TProof::kIsMaster)) return (TList *)0;
 
    Bool_t all = ((strchr(opt,'A') || strchr(opt,'a'))) ? kTRUE : kFALSE;
@@ -2102,21 +2103,21 @@ TList *TProof::GetListOfQueries(Option_t *opt)
    return fQueries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Number of queries processed by this session
+
 Int_t TProof::GetNumberOfQueries()
 {
-   // Number of queries processed by this session
-
    if (fQueries)
       return fQueries->GetSize() - fOtherQueries;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set max number of draw queries whose results are saved
+
 void TProof::SetMaxDrawQueries(Int_t max)
 {
-   // Set max number of draw queries whose results are saved
-
    if (max > 0) {
       if (fPlayer)
          fPlayer->SetMaxDrawQueries(max);
@@ -2124,49 +2125,49 @@ void TProof::SetMaxDrawQueries(Int_t max)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get max number of queries whose full results are kept in the
+/// remote sandbox
+
 void TProof::GetMaxQueries()
 {
-   // Get max number of queries whose full results are kept in the
-   // remote sandbox
-
    TMessage m(kPROOF_MAXQUERIES);
    m << kFALSE;
    Broadcast(m, kActive);
    Collect(kActive, fCollectTimeout);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to the list of query results in the player
+
 TList *TProof::GetQueryResults()
 {
-   // Return pointer to the list of query results in the player
-
    return (fPlayer ? fPlayer->GetListOfResults() : (TList *)0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to the full TQueryResult instance owned by the player
+/// and referenced by 'ref'. If ref = 0 or "", return the last query result.
+
 TQueryResult *TProof::GetQueryResult(const char *ref)
 {
-   // Return pointer to the full TQueryResult instance owned by the player
-   // and referenced by 'ref'. If ref = 0 or "", return the last query result.
-
    return (fPlayer ? fPlayer->GetQueryResult(ref) : (TQueryResult *)0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask the master for the list of queries.
+/// Options:
+///           "A"     show information about all the queries known to the
+///                   server, i.e. even those processed by other sessions
+///           "L"     show only information about queries locally available
+///                   i.e. already retrieved. If "L" is specified, "A" is
+///                   ignored.
+///           "F"     show all details available about queries
+///           "H"     print help menu
+/// Default ""
+
 void TProof::ShowQueries(Option_t *opt)
 {
-   // Ask the master for the list of queries.
-   // Options:
-   //           "A"     show information about all the queries known to the
-   //                   server, i.e. even those processed by other sessions
-   //           "L"     show only information about queries locally available
-   //                   i.e. already retrieved. If "L" is specified, "A" is
-   //                   ignored.
-   //           "F"     show all details available about queries
-   //           "H"     print help menu
-   // Default ""
-
    Bool_t help = ((strchr(opt,'H') || strchr(opt,'h'))) ? kTRUE : kFALSE;
    if (help) {
 
@@ -2237,11 +2238,11 @@ void TProof::ShowQueries(Option_t *opt)
    Printf("+++");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See if the data is ready to be analyzed.
+
 Bool_t TProof::IsDataReady(Long64_t &totalbytes, Long64_t &bytesready)
 {
-   // See if the data is ready to be analyzed.
-
    if (!IsValid()) return kFALSE;
 
    TList submasters;
@@ -2273,11 +2274,11 @@ Bool_t TProof::IsDataReady(Long64_t &totalbytes, Long64_t &bytesready)
    return fDataReady;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send interrupt to master or slave servers.
+
 void TProof::Interrupt(EUrgent type, ESlaves list)
 {
-   // Send interrupt to master or slave servers.
-
    if (!IsValid()) return;
 
    TList *slaves = 0;
@@ -2300,12 +2301,12 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of slaves active in parallel mode. Returns 0 in case
+/// there are no active slaves. Returns -1 in case of error.
+
 Int_t TProof::GetParallel() const
 {
-   // Returns number of slaves active in parallel mode. Returns 0 in case
-   // there are no active slaves. Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    // iterate over active slaves and return total number of slaves
@@ -2318,11 +2319,11 @@ Int_t TProof::GetParallel() const
    return nparallel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns list of TSlaveInfo's. In case of error return 0.
+
 TList *TProof::GetListOfSlaveInfos()
 {
-   // Returns list of TSlaveInfo's. In case of error return 0.
-
    if (!IsValid()) return 0;
 
    if (fSlaveInfo == 0) {
@@ -2386,11 +2387,11 @@ TList *TProof::GetListOfSlaveInfos()
    return fSlaveInfo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate slave server list.
+
 void TProof::Activate(TList *slaves)
 {
-   // Activate slave server list.
-
    TMonitor *mon = fAllMonitor;
    mon->DeActivateAll();
 
@@ -2404,12 +2405,12 @@ void TProof::Activate(TList *slaves)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate (on == TRUE) or deactivate (on == FALSE) all sockets
+/// monitored by 'mon'.
+
 void TProof::SetMonitor(TMonitor *mon, Bool_t on)
 {
-   // Activate (on == TRUE) or deactivate (on == FALSE) all sockets
-   // monitored by 'mon'.
-
    TMonitor *m = (mon) ? mon : fCurrentMonitor;
    if (m) {
       if (on)
@@ -2419,13 +2420,13 @@ void TProof::SetMonitor(TMonitor *mon, Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast the group priority to all workers in the specified list. Returns
+/// the number of workers the message was successfully sent to.
+/// Returns -1 in case of error.
+
 Int_t TProof::BroadcastGroupPriority(const char *grp, Int_t priority, TList *workers)
 {
-   // Broadcast the group priority to all workers in the specified list. Returns
-   // the number of workers the message was successfully sent to.
-   // Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (workers->GetSize() == 0) return 0;
@@ -2446,13 +2447,13 @@ Int_t TProof::BroadcastGroupPriority(const char *grp, Int_t priority, TList *wor
    return nsent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast the group priority to all workers in the specified list. Returns
+/// the number of workers the message was successfully sent to.
+/// Returns -1 in case of error.
+
 Int_t TProof::BroadcastGroupPriority(const char *grp, Int_t priority, ESlaves list)
 {
-   // Broadcast the group priority to all workers in the specified list. Returns
-   // the number of workers the message was successfully sent to.
-   // Returns -1 in case of error.
-
    TList *workers = 0;
    if (list == kAll)       workers = fSlaves;
    if (list == kActive)    workers = fActiveSlaves;
@@ -2462,21 +2463,21 @@ Int_t TProof::BroadcastGroupPriority(const char *grp, Int_t priority, ESlaves li
    return BroadcastGroupPriority(grp, priority, workers);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the merge progress notificator
+
 void TProof::ResetMergePrg()
 {
-   // Reset the merge progress notificator
-
    fMergePrg.Reset(fActiveSlaves->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a message to all slaves in the specified list. Returns
+/// the number of slaves the message was successfully sent to.
+/// Returns -1 in case of error.
+
 Int_t TProof::Broadcast(const TMessage &mess, TList *slaves)
 {
-   // Broadcast a message to all slaves in the specified list. Returns
-   // the number of slaves the message was successfully sent to.
-   // Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (!slaves || slaves->GetSize() == 0) return 0;
@@ -2497,13 +2498,13 @@ Int_t TProof::Broadcast(const TMessage &mess, TList *slaves)
    return nsent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a message to all slaves in the specified list (either
+/// all slaves or only the active slaves). Returns the number of slaves
+/// the message was successfully sent to. Returns -1 in case of error.
+
 Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
 {
-   // Broadcast a message to all slaves in the specified list (either
-   // all slaves or only the active slaves). Returns the number of slaves
-   // the message was successfully sent to. Returns -1 in case of error.
-
    TList *slaves = 0;
    if (list == kAll)       slaves = fSlaves;
    if (list == kActive)    slaves = fActiveSlaves;
@@ -2513,62 +2514,62 @@ Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
    return Broadcast(mess, slaves);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a character string buffer to all slaves in the specified
+/// list. Use kind to set the TMessage what field. Returns the number of
+/// slaves the message was sent to. Returns -1 in case of error.
+
 Int_t TProof::Broadcast(const char *str, Int_t kind, TList *slaves)
 {
-   // Broadcast a character string buffer to all slaves in the specified
-   // list. Use kind to set the TMessage what field. Returns the number of
-   // slaves the message was sent to. Returns -1 in case of error.
-
    TMessage mess(kind);
    if (str) mess.WriteString(str);
    return Broadcast(mess, slaves);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a character string buffer to all slaves in the specified
+/// list (either all slaves or only the active slaves). Use kind to
+/// set the TMessage what field. Returns the number of slaves the message
+/// was sent to. Returns -1 in case of error.
+
 Int_t TProof::Broadcast(const char *str, Int_t kind, ESlaves list)
 {
-   // Broadcast a character string buffer to all slaves in the specified
-   // list (either all slaves or only the active slaves). Use kind to
-   // set the TMessage what field. Returns the number of slaves the message
-   // was sent to. Returns -1 in case of error.
-
    TMessage mess(kind);
    if (str) mess.WriteString(str);
    return Broadcast(mess, list);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast an object to all slaves in the specified list. Use kind to
+/// set the TMEssage what field. Returns the number of slaves the message
+/// was sent to. Returns -1 in case of error.
+
 Int_t TProof::BroadcastObject(const TObject *obj, Int_t kind, TList *slaves)
 {
-   // Broadcast an object to all slaves in the specified list. Use kind to
-   // set the TMEssage what field. Returns the number of slaves the message
-   // was sent to. Returns -1 in case of error.
-
    TMessage mess(kind);
    mess.WriteObject(obj);
    return Broadcast(mess, slaves);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast an object to all slaves in the specified list. Use kind to
+/// set the TMEssage what field. Returns the number of slaves the message
+/// was sent to. Returns -1 in case of error.
+
 Int_t TProof::BroadcastObject(const TObject *obj, Int_t kind, ESlaves list)
 {
-   // Broadcast an object to all slaves in the specified list. Use kind to
-   // set the TMEssage what field. Returns the number of slaves the message
-   // was sent to. Returns -1 in case of error.
-
    TMessage mess(kind);
    mess.WriteObject(obj);
    return Broadcast(mess, list);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a raw buffer of specified length to all slaves in the
+/// specified list. Returns the number of slaves the buffer was sent to.
+/// Returns -1 in case of error.
+
 Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, TList *slaves)
 {
-   // Broadcast a raw buffer of specified length to all slaves in the
-   // specified list. Returns the number of slaves the buffer was sent to.
-   // Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (slaves->GetSize() == 0) return 0;
@@ -2589,13 +2590,13 @@ Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, TList *slaves)
    return nsent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a raw buffer of specified length to all slaves in the
+/// specified list. Returns the number of slaves the buffer was sent to.
+/// Returns -1 in case of error.
+
 Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
 {
-   // Broadcast a raw buffer of specified length to all slaves in the
-   // specified list. Returns the number of slaves the buffer was sent to.
-   // Returns -1 in case of error.
-
    TList *slaves = 0;
    if (list == kAll)       slaves = fSlaves;
    if (list == kActive)    slaves = fActiveSlaves;
@@ -2605,13 +2606,13 @@ Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
    return BroadcastRaw(buffer, length, slaves);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast file to all workers in the specified list. Returns the number of workers
+/// the buffer was sent to.
+/// Returns -1 in case of error.
+
 Int_t TProof::BroadcastFile(const char *file, Int_t opt, const char *rfile, TList *wrks)
 {
-   // Broadcast file to all workers in the specified list. Returns the number of workers
-   // the buffer was sent to.
-   // Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (wrks->GetSize() == 0) return 0;
@@ -2634,13 +2635,13 @@ Int_t TProof::BroadcastFile(const char *file, Int_t opt, const char *rfile, TLis
    return nsent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast file to all workers in the specified list. Returns the number of workers
+/// the buffer was sent to.
+/// Returns -1 in case of error.
+
 Int_t TProof::BroadcastFile(const char *file, Int_t opt, const char *rfile, ESlaves list)
 {
-   // Broadcast file to all workers in the specified list. Returns the number of workers
-   // the buffer was sent to.
-   // Returns -1 in case of error.
-
    TList *wrks = 0;
    if (list == kAll)       wrks = fSlaves;
    if (list == kActive)    wrks = fActiveSlaves;
@@ -2650,27 +2651,27 @@ Int_t TProof::BroadcastFile(const char *file, Int_t opt, const char *rfile, ESla
    return BroadcastFile(file, opt, rfile, wrks);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release the used monitor to be used, making sure to delete newly created
+/// monitors.
+
 void TProof::ReleaseMonitor(TMonitor *mon)
 {
-   // Release the used monitor to be used, making sure to delete newly created
-   // monitors.
-
    if (mon && (mon != fAllMonitor) && (mon != fActiveMonitor)
            && (mon != fUniqueMonitor) && (mon != fAllUniqueMonitor)) {
       delete mon;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect responses from slave sl. Returns the number of slaves that
+/// responded (=1).
+/// If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
+/// which means wait forever).
+/// If defined (>= 0) endtype is the message that stops this collection.
+
 Int_t TProof::Collect(const TSlave *sl, Long_t timeout, Int_t endtype, Bool_t deactonfail)
 {
-   // Collect responses from slave sl. Returns the number of slaves that
-   // responded (=1).
-   // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
-   // which means wait forever).
-   // If defined (>= 0) endtype is the message that stops this collection.
-
    Int_t rc = 0;
 
    TMonitor *mon = 0;
@@ -2689,15 +2690,15 @@ Int_t TProof::Collect(const TSlave *sl, Long_t timeout, Int_t endtype, Bool_t de
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect responses from the slave servers. Returns the number of slaves
+/// that responded.
+/// If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
+/// which means wait forever).
+/// If defined (>= 0) endtype is the message that stops this collection.
+
 Int_t TProof::Collect(TList *slaves, Long_t timeout, Int_t endtype, Bool_t deactonfail)
 {
-   // Collect responses from the slave servers. Returns the number of slaves
-   // that responded.
-   // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
-   // which means wait forever).
-   // If defined (>= 0) endtype is the message that stops this collection.
-
    Int_t rc = 0;
 
    TMonitor *mon = 0;
@@ -2720,15 +2721,15 @@ Int_t TProof::Collect(TList *slaves, Long_t timeout, Int_t endtype, Bool_t deact
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect responses from the slave servers. Returns the number of slaves
+/// that responded.
+/// If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
+/// which means wait forever).
+/// If defined (>= 0) endtype is the message that stops this collection.
+
 Int_t TProof::Collect(ESlaves list, Long_t timeout, Int_t endtype, Bool_t deactonfail)
 {
-   // Collect responses from the slave servers. Returns the number of slaves
-   // that responded.
-   // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
-   // which means wait forever).
-   // If defined (>= 0) endtype is the message that stops this collection.
-
    Int_t rc = 0;
    TMonitor *mon = 0;
 
@@ -2747,17 +2748,17 @@ Int_t TProof::Collect(ESlaves list, Long_t timeout, Int_t endtype, Bool_t deacto
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect responses from the slave servers. Returns the number of messages
+/// received. Can be 0 if there are no active slaves.
+/// If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
+/// which means wait forever).
+/// If defined (>= 0) endtype is the message that stops this collection.
+/// Collect also stops its execution from time to time to check for new
+/// workers in Dynamic Startup mode.
+
 Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deactonfail)
 {
-   // Collect responses from the slave servers. Returns the number of messages
-   // received. Can be 0 if there are no active slaves.
-   // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
-   // which means wait forever).
-   // If defined (>= 0) endtype is the message that stops this collection.
-   // Collect also stops its execution from time to time to check for new
-   // workers in Dynamic Startup mode.
-
    Int_t collectId = gRandom->Integer(9999);
 
    PDB(kCollect, 3)
@@ -2960,12 +2961,12 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
    return cnt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Asks the PROOF Serv for new workers in Dynamic Startup mode and activates
+/// them. Returns the number of new workers found, or <0 on errors.
+
 Int_t TProof::PollForNewWorkers()
 {
-   // Asks the PROOF Serv for new workers in Dynamic Startup mode and activates
-   // them. Returns the number of new workers found, or <0 on errors.
-
    // Requests for worker updates
    Int_t dummy = 0;
    TList *reqWorkers = new TList();
@@ -3037,11 +3038,11 @@ Int_t TProof::PollForNewWorkers()
    return nNewWorkers;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove links to objects in list 'ol' from gDirectory
+
 void TProof::CleanGDirectory(TList *ol)
 {
-   // Remove links to objects in list 'ol' from gDirectory
-
    if (ol) {
       TIter nxo(ol);
       TObject *o = 0;
@@ -3050,12 +3051,12 @@ void TProof::CleanGDirectory(TList *ol)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect and analyze available input from socket s.
+/// Returns 0 on success, -1 if any failure occurs.
+
 Int_t TProof::CollectInputFrom(TSocket *s, Int_t endtype, Bool_t deactonfail)
 {
-   // Collect and analyze available input from socket s.
-   // Returns 0 on success, -1 if any failure occurs.
-
    TMessage *mess;
 
    Int_t recvrc = 0;
@@ -3094,13 +3095,13 @@ Int_t TProof::CollectInputFrom(TSocket *s, Int_t endtype, Bool_t deactonfail)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Analyze the received message.
+/// Returns 0 on success (1 if this the last message from this socket), -1 if
+/// any failure occurs.
+
 Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
 {
-   // Analyze the received message.
-   // Returns 0 on success (1 if this the last message from this socket), -1 if
-   // any failure occurs.
-
    char str[512];
    TObject *obj;
    Int_t rc = 0;
@@ -4005,11 +4006,11 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a message of type kPROOF_SUBMERGER
+
 void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
 {
-   // Process a message of type kPROOF_SUBMERGER
-
    // Message sub-type
    Int_t type = 0;
    (*mess) >> type;
@@ -4249,11 +4250,11 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redirect output of worker sl to some merger
+
 void TProof::RedirectWorker(TSocket *s, TSlave * sl, Int_t output_size)
 {
-   // Redirect output of worker sl to some merger
-
    Int_t merger_id = -1;
 
    if (fMergersByHost) {
@@ -4294,12 +4295,12 @@ void TProof::RedirectWorker(TSocket *s, TSlave * sl, Int_t output_size)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a merger, which is both active and still accepts some workers to be
+/// assigned to it. It works on the 'round-robin' basis.
+
 Int_t TProof::FindNextFreeMerger()
 {
-   // Return a merger, which is both active and still accepts some workers to be
-   // assigned to it. It works on the 'round-robin' basis.
-
    while (fLastAssignedMerger < fMergers->GetSize() &&
          (!((TMergerInfo*)fMergers->At(fLastAssignedMerger))->IsActive() ||
            ((TMergerInfo*)fMergers->At(fLastAssignedMerger))->AreAllWorkersAssigned())) {
@@ -4325,11 +4326,11 @@ Int_t TProof::FindNextFreeMerger()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Master asks for output from worker sl
+
 void TProof::AskForOutput(TSlave *sl)
 {
-   // Master asks for output from worker sl
-
    TMessage sendoutput(kPROOF_SUBMERGER);
    sendoutput << Int_t(kSendOutput);
 
@@ -4344,11 +4345,11 @@ void TProof::AskForOutput(TSlave *sl)
    if (IsLite()) fMergePrg.IncreaseNWrks();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Final update of the progress dialog
+
 void TProof::UpdateDialog()
 {
-   // Final update of the progress dialog
-
    if (!fPlayer) return;
 
    // Handle abort ...
@@ -4401,11 +4402,11 @@ void TProof::UpdateDialog()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate the a-sync input handler.
+
 void TProof::ActivateAsyncInput()
 {
-   // Activate the a-sync input handler.
-
    TIter next(fSlaves);
    TSlave *sl;
 
@@ -4414,11 +4415,11 @@ void TProof::ActivateAsyncInput()
          sl->GetInputHandler()->Add();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// De-activate a-sync input handler.
+
 void TProof::DeActivateAsyncInput()
 {
-   // De-activate a-sync input handler.
-
    TIter next(fSlaves);
    TSlave *sl;
 
@@ -4427,11 +4428,11 @@ void TProof::DeActivateAsyncInput()
          sl->GetInputHandler()->Remove();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the active mergers count
+
 Int_t TProof::GetActiveMergersCount()
 {
-   // Get the active mergers count
-
    if (!fMergers) return 0;
 
    Int_t active_mergers = 0;
@@ -4445,11 +4446,11 @@ Int_t TProof::GetActiveMergersCount()
    return active_mergers;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new merger
+
 Bool_t TProof::CreateMerger(TSlave *sl, Int_t port)
 {
-   // Create a new merger
-
    PDB(kSubmerger, 2)
       Info("CreateMerger", "worker %s will be merger ", sl->GetOrdinal());
 
@@ -4510,13 +4511,13 @@ Bool_t TProof::CreateMerger(TSlave *sl, Int_t port)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a bad slave server to the bad slave list and remove it from
+/// the active list and from the two monitor objects. Assume that the work
+/// done by this worker was lost and ask packerizer to reassign it.
+
 void TProof::MarkBad(TSlave *wrk, const char *reason)
 {
-   // Add a bad slave server to the bad slave list and remove it from
-   // the active list and from the two monitor objects. Assume that the work
-   // done by this worker was lost and ask packerizer to reassign it.
-
    R__LOCKGUARD2(fCloseMutex);
 
 
@@ -4673,12 +4674,12 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add slave with socket s to the bad slave list and remove if from
+/// the active list and from the two monitor objects.
+
 void TProof::MarkBad(TSocket *s, const char *reason)
 {
-   // Add slave with socket s to the bad slave list and remove if from
-   // the active list and from the two monitor objects.
-
    R__LOCKGUARD2(fCloseMutex);
 
    // We may have been invalidated in the meanwhile: nothing to do in such a case
@@ -4688,11 +4689,11 @@ void TProof::MarkBad(TSocket *s, const char *reason)
    MarkBad(wrk, reason);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask an active worker 'wrk' to terminate, i.e. to shutdown
+
 void TProof::TerminateWorker(TSlave *wrk)
 {
-   // Ask an active worker 'wrk' to terminate, i.e. to shutdown
-
    if (!wrk) {
       Warning("TerminateWorker", "worker instance undefined: protocol error? ");
       return;
@@ -4712,11 +4713,11 @@ void TProof::TerminateWorker(TSlave *wrk)
    MarkBad(wrk, kPROOF_TerminateWorker);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask an active worker 'ord' to terminate, i.e. to shutdown
+
 void TProof::TerminateWorker(const char *ord)
 {
-   // Ask an active worker 'ord' to terminate, i.e. to shutdown
-
    if (ord && strlen(ord) > 0) {
       Bool_t all = (ord[0] == '*') ? kTRUE : kFALSE;
       if (IsMaster()) {
@@ -4736,19 +4737,19 @@ void TProof::TerminateWorker(const char *ord)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ping PROOF. Returns 1 if master server responded.
+
 Int_t TProof::Ping()
 {
-   // Ping PROOF. Returns 1 if master server responded.
-
    return Ping(kActive);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ping PROOF slaves. Returns the number of slaves that responded.
+
 Int_t TProof::Ping(ESlaves list)
 {
-   // Ping PROOF slaves. Returns the number of slaves that responded.
-
    TList *slaves = 0;
    if (list == kAll)       slaves = fSlaves;
    if (list == kActive)    slaves = fActiveSlaves;
@@ -4774,11 +4775,11 @@ Int_t TProof::Ping(ESlaves list)
    return nsent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ping PROOF slaves. Returns the number of slaves that responded.
+
 void TProof::Touch()
 {
-   // Ping PROOF slaves. Returns the number of slaves that responded.
-
    TList *slaves = fSlaves;
 
    if (slaves->GetSize() == 0) return;
@@ -4795,11 +4796,11 @@ void TProof::Touch()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print status of PROOF cluster.
+
 void TProof::Print(Option_t *option) const
 {
-   // Print status of PROOF cluster.
-
    TString secCont;
 
    if (TestBit(TProof::kIsClient)) {
@@ -4891,49 +4892,49 @@ void TProof::Print(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract from opt information about output handling settings.
+/// The understood keywords are:
+///     of=<file>, outfile=<file>         output file location
+///     ds=<dsname>, dataset=<dsname>     dataset name ('of' and 'ds' are
+///                                       mutually exclusive,execution stops
+///                                       if both are found)
+///     sft[=<opt>], savetofile[=<opt>]   control saving to file
+///
+/// For 'mvf', the <opt> integer has the following meaning:
+///     <opt> = <how>*10 + <force>
+///             <force> = 0      save to file if memory threshold is reached
+///                              (the memory threshold is set by the cluster
+///                              admin); in case an output file is defined, the
+///                              files are merged at the end;
+///                       1      save results to file.
+///             <how> =   0      save at the end of the query
+///                       1      save results after each packet (to reduce the
+///                              loss in case of crash).
+///
+/// Setting 'ds' automatically sets 'mvf=1'; it is still possible to set 'mvf=11'
+/// to save results after each packet.
+///
+/// The separator from the next option is either a ' ' or a ';'
+///
+/// All recognized settings are removed from the input string opt.
+/// If action == 0, set up the output file accordingly, if action == 1 clean related
+/// output file settings.
+/// If the final target file is local then 'target' is set to the final local path
+/// when action == 0 and used to retrieve the file with TFile::Cp when action == 1.
+///
+/// Output file settings are in the form
+///
+///       <previous_option>of=name <next_option>
+///       <previous_option>outfile=name,...;<next_option>
+///
+/// The separator from the next option is either a ' ' or a ';'
+/// Called interanally by TProof::Process.
+///
+/// Returns 0 on success, -1 on error.
+
 Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
 {
-   // Extract from opt information about output handling settings.
-   // The understood keywords are:
-   //     of=<file>, outfile=<file>         output file location
-   //     ds=<dsname>, dataset=<dsname>     dataset name ('of' and 'ds' are
-   //                                       mutually exclusive,execution stops
-   //                                       if both are found)
-   //     sft[=<opt>], savetofile[=<opt>]   control saving to file
-   //
-   // For 'mvf', the <opt> integer has the following meaning:
-   //     <opt> = <how>*10 + <force>
-   //             <force> = 0      save to file if memory threshold is reached
-   //                              (the memory threshold is set by the cluster
-   //                              admin); in case an output file is defined, the
-   //                              files are merged at the end;
-   //                       1      save results to file.
-   //             <how> =   0      save at the end of the query
-   //                       1      save results after each packet (to reduce the
-   //                              loss in case of crash).
-   //
-   // Setting 'ds' automatically sets 'mvf=1'; it is still possible to set 'mvf=11'
-   // to save results after each packet.
-   //
-   // The separator from the next option is either a ' ' or a ';'
-   //
-   // All recognized settings are removed from the input string opt.
-   // If action == 0, set up the output file accordingly, if action == 1 clean related
-   // output file settings.
-   // If the final target file is local then 'target' is set to the final local path
-   // when action == 0 and used to retrieve the file with TFile::Cp when action == 1.
-   //
-   // Output file settings are in the form
-   //
-   //       <previous_option>of=name <next_option>
-   //       <previous_option>outfile=name,...;<next_option>
-   //
-   // The separator from the next option is either a ' ' or a ';'
-   // Called interanally by TProof::Process.
-   //
-   // Returns 0 on success, -1 on error.
-
    TString outfile, dsname, stfopt;
    if (action == 0) {
       TString tagf, tagd, tags, oo;
@@ -5212,23 +5213,23 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract from opt in optfb information about wanted feedback settings.
+/// Feedback are removed from the input string opt.
+/// If action == 0, set up feedback accordingly, if action == 1 clean related
+/// feedback settings (using info in optfb, if available, or reparsing opt).
+///
+/// Feedback requirements are in the form
+///
+///       <previous_option>fb=name1,name2,name3,... <next_option>
+///       <previous_option>feedback=name1,name2,name3,...;<next_option>
+///
+/// The special name 'stats' triggers feedback about events and packets.
+/// The separator from the next option is either a ' ' or a ';'.
+/// Called interanally by TProof::Process.
+
 void TProof::SetFeedback(TString &opt, TString &optfb, Int_t action)
 {
-   // Extract from opt in optfb information about wanted feedback settings.
-   // Feedback are removed from the input string opt.
-   // If action == 0, set up feedback accordingly, if action == 1 clean related
-   // feedback settings (using info in optfb, if available, or reparsing opt).
-   //
-   // Feedback requirements are in the form
-   //
-   //       <previous_option>fb=name1,name2,name3,... <next_option>
-   //       <previous_option>feedback=name1,name2,name3,...;<next_option>
-   //
-   // The special name 'stats' triggers feedback about events and packets.
-   // The separator from the next option is either a ' ' or a ';'.
-   // Called interanally by TProof::Process.
-
    Ssiz_t from = 0;
    if (action == 0 || (action == 1 && optfb.IsNull())) {
       TString tag("fb=");
@@ -5290,17 +5291,17 @@ void TProof::SetFeedback(TString &opt, TString &optfb, Int_t action)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a data set (TDSet) using the specified selector (.C) file or
+/// Tselector object
+/// Entry- or event-lists should be set in the data set object using
+/// TDSet::SetEntryList.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
                          Long64_t nentries, Long64_t first)
 {
-   // Process a data set (TDSet) using the specified selector (.C) file or
-   // Tselector object
-   // Entry- or event-lists should be set in the data set object using
-   // TDSet::SetEntryList.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (!IsValid() || !fPlayer) return -1;
 
    // Set PROOF to running state
@@ -5396,17 +5397,17 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
    return rv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a data set (TFileCollection) using the specified selector (.C) file
+/// or TSelector object.
+/// The default tree is analyzed (i.e. the first one found). To specify another
+/// tree, the default tree can be changed using TFileCollection::SetDefaultMetaData .
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProof::Process(TFileCollection *fc, const char *selector,
                          Option_t *option, Long64_t nentries, Long64_t first)
 {
-   // Process a data set (TFileCollection) using the specified selector (.C) file
-   // or TSelector object.
-   // The default tree is analyzed (i.e. the first one found). To specify another
-   // tree, the default tree can be changed using TFileCollection::SetDefaultMetaData .
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (!IsValid() || !fPlayer) return -1;
 
    if (fProtocol < 17) {
@@ -5443,62 +5444,62 @@ Long64_t TProof::Process(TFileCollection *fc, const char *selector,
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a dataset which is stored on the master with name 'dsetname'.
+/// The syntax for dsetname is name[#[dir/]objname], e.g.
+///   "mydset"       analysis of the first tree in the top dir of the dataset
+///                  named "mydset"
+///   "mydset#T"     analysis tree "T" in the top dir of the dataset
+///                  named "mydset"
+///   "mydset#adir/T" analysis tree "T" in the dir "adir" of the dataset
+///                  named "mydset"
+///   "mydset#adir/" analysis of the first tree in the dir "adir" of the
+///                  dataset named "mydset"
+/// The component 'name' in its more general form contains also the group and
+/// user name following "/<group>/<user>/<dsname>". Each of these components
+/// can contain one or more wildcards '*', in which case all the datasets matching
+/// the expression are added together as a global dataset (wildcard support has
+/// been added in version 5.27/02).
+/// The last argument 'elist' specifies an entry- or event-list to be used as
+/// event selection.
+/// It is also possible (starting w/ version 5.27/02) to run on multiple datasets
+/// at once in a more flexible way that the one provided by wildcarding. There
+/// are three possibilities:
+///    1) specifying the dataset names separated by the OR operator '|', e.g.
+///          dsetname = "<dset1>|<dset2>|<dset3>|..."
+///       in this case the datasets are a seen as a global unique dataset
+///    2) specifying the dataset names separated by a ',' or a ' ', e.g.
+///          dsetname = "<dset1>,<dset2> <dset3>,..."
+///       in this case the datasets are processed one after the other and the
+///       selector is notified when switching dataset via a bit in the current
+///       processed element.
+///    3) giving the path of a textfile where the dataset names are specified
+///       on one or multiple lines; the lines found are joined as in 1), unless
+///       the filepath is followed by a ',' (i.e. p->Process("datasets.txt,",...)
+///       with the dataset names listed in 'datasets.txt') in which case they are
+///       treated as in 2); the file is open in raw mode with TFile::Open and
+///       therefore it cane be remote, e.g. on a Web server.
+/// Each <dsetj> has the format specified above for the single dataset processing,
+/// included wildcarding (the name of the tree and subdirectory must be same for
+/// all the datasets).
+/// In the case of multiple datasets, 'elist' is treated a global entry list.
+/// It is possible to specify per-dataset entry lists using the syntax
+///   "mydset[#adir/[T]]?enl=entrylist"
+/// or
+///   "mydset[#adir/[T]]<<entrylist"
+/// Here 'entrylist' is a tag identifying, in the order :
+///   i. a named entry-list in the input list or in the input data list
+///  ii. a named entry-list in memory (in gDirectory)
+/// iii. the path of a file containing the entry-list to be used
+/// In the case ii) and iii) the entry-list object(s) is(are) added to the input
+/// data list.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProof::Process(const char *dsetname, const char *selector,
                          Option_t *option, Long64_t nentries,
                          Long64_t first, TObject *elist)
 {
-   // Process a dataset which is stored on the master with name 'dsetname'.
-   // The syntax for dsetname is name[#[dir/]objname], e.g.
-   //   "mydset"       analysis of the first tree in the top dir of the dataset
-   //                  named "mydset"
-   //   "mydset#T"     analysis tree "T" in the top dir of the dataset
-   //                  named "mydset"
-   //   "mydset#adir/T" analysis tree "T" in the dir "adir" of the dataset
-   //                  named "mydset"
-   //   "mydset#adir/" analysis of the first tree in the dir "adir" of the
-   //                  dataset named "mydset"
-   // The component 'name' in its more general form contains also the group and
-   // user name following "/<group>/<user>/<dsname>". Each of these components
-   // can contain one or more wildcards '*', in which case all the datasets matching
-   // the expression are added together as a global dataset (wildcard support has
-   // been added in version 5.27/02).
-   // The last argument 'elist' specifies an entry- or event-list to be used as
-   // event selection.
-   // It is also possible (starting w/ version 5.27/02) to run on multiple datasets
-   // at once in a more flexible way that the one provided by wildcarding. There
-   // are three possibilities:
-   //    1) specifying the dataset names separated by the OR operator '|', e.g.
-   //          dsetname = "<dset1>|<dset2>|<dset3>|..."
-   //       in this case the datasets are a seen as a global unique dataset
-   //    2) specifying the dataset names separated by a ',' or a ' ', e.g.
-   //          dsetname = "<dset1>,<dset2> <dset3>,..."
-   //       in this case the datasets are processed one after the other and the
-   //       selector is notified when switching dataset via a bit in the current
-   //       processed element.
-   //    3) giving the path of a textfile where the dataset names are specified
-   //       on one or multiple lines; the lines found are joined as in 1), unless
-   //       the filepath is followed by a ',' (i.e. p->Process("datasets.txt,",...)
-   //       with the dataset names listed in 'datasets.txt') in which case they are
-   //       treated as in 2); the file is open in raw mode with TFile::Open and
-   //       therefore it cane be remote, e.g. on a Web server.
-   // Each <dsetj> has the format specified above for the single dataset processing,
-   // included wildcarding (the name of the tree and subdirectory must be same for
-   // all the datasets).
-   // In the case of multiple datasets, 'elist' is treated a global entry list.
-   // It is possible to specify per-dataset entry lists using the syntax
-   //   "mydset[#adir/[T]]?enl=entrylist"
-   // or
-   //   "mydset[#adir/[T]]<<entrylist"
-   // Here 'entrylist' is a tag identifying, in the order :
-   //   i. a named entry-list in the input list or in the input data list
-   //  ii. a named entry-list in memory (in gDirectory)
-   // iii. the path of a file containing the entry-list to be used
-   // In the case ii) and iii) the entry-list object(s) is(are) added to the input
-   // data list.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (fProtocol < 13) {
       Info("Process", "processing 'by name' not supported by the server");
       return -1;
@@ -5707,14 +5708,14 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generic (non-data based) selector processing: the Process() method of the
+/// specified selector (.C) or TSelector object is called 'n' times.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProof::Process(const char *selector, Long64_t n, Option_t *option)
 {
-   // Generic (non-data based) selector processing: the Process() method of the
-   // specified selector (.C) or TSelector object is called 'n' times.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (!IsValid()) return -1;
 
    if (fProtocol < 16) {
@@ -5746,16 +5747,16 @@ Long64_t TProof::Process(const char *selector, Long64_t n, Option_t *option)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a data set (TDSet) using the specified selector object.
+/// Entry- or event-lists should be set in the data set object using
+/// TDSet::SetEntryList.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProof::Process(TDSet *dset, TSelector *selector, Option_t *option,
                          Long64_t nentries, Long64_t first)
 {
-   // Process a data set (TDSet) using the specified selector object.
-   // Entry- or event-lists should be set in the data set object using
-   // TDSet::SetEntryList.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (fProtocol < 34) {
       Error("Process", "server version < 5.33/02:"
                        "processing by object not supported");
@@ -5772,16 +5773,16 @@ Long64_t TProof::Process(TDSet *dset, TSelector *selector, Option_t *option,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a data set (TFileCollection) using the specified selector object
+/// The default tree is analyzed (i.e. the first one found). To specify another
+/// tree, the default tree can be changed using TFileCollection::SetDefaultMetaData .
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProof::Process(TFileCollection *fc, TSelector *selector,
                          Option_t *option, Long64_t nentries, Long64_t first)
 {
-   // Process a data set (TFileCollection) using the specified selector object
-   // The default tree is analyzed (i.e. the first one found). To specify another
-   // tree, the default tree can be changed using TFileCollection::SetDefaultMetaData .
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (fProtocol < 34) {
       Error("Process", "server version < 5.33/02:"
                        "processing by object not supported");
@@ -5798,12 +5799,13 @@ Long64_t TProof::Process(TFileCollection *fc, TSelector *selector,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process with name of dataset and TSelector object
+
 Long64_t TProof::Process(const char *dsetname, TSelector *selector,
                          Option_t *option, Long64_t nentries,
                          Long64_t first, TObject *elist)
 {
-   // Process with name of dataset and TSelector object
    if (fProtocol < 34) {
       Error("Process", "server version < 5.33/02:"
                        "processing by object not supported");
@@ -5820,14 +5822,14 @@ Long64_t TProof::Process(const char *dsetname, TSelector *selector,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generic (non-data based) selector processing: the Process() method of the
+/// specified selector is called 'n' times.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProof::Process(TSelector *selector, Long64_t n, Option_t *option)
 {
-   // Generic (non-data based) selector processing: the Process() method of the
-   // specified selector is called 'n' times.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (fProtocol < 34) {
       Error("Process", "server version < 5.33/02:"
                        "processing by object not supported");
@@ -5844,12 +5846,12 @@ Long64_t TProof::Process(TSelector *selector, Long64_t n, Option_t *option)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get reference for the qry-th query in fQueries (as
+/// displayed by ShowQueries).
+
 Int_t TProof::GetQueryReference(Int_t qry, TString &ref)
 {
-   // Get reference for the qry-th query in fQueries (as
-   // displayed by ShowQueries).
-
    ref = "";
    if (qry > 0) {
       if (!fQueries)
@@ -5867,15 +5869,15 @@ Int_t TProof::GetQueryReference(Int_t qry, TString &ref)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize the qry-th query in fQueries.
+/// If force, force retrieval if the query is found in the local list
+/// but has already been finalized (default kFALSE).
+/// If query < 0, finalize current query.
+/// Return 0 on success, -1 on error
+
 Long64_t TProof::Finalize(Int_t qry, Bool_t force)
 {
-   // Finalize the qry-th query in fQueries.
-   // If force, force retrieval if the query is found in the local list
-   // but has already been finalized (default kFALSE).
-   // If query < 0, finalize current query.
-   // Return 0 on success, -1 on error
-
    if (fPlayer) {
       if (qry > 0) {
          TString ref;
@@ -5892,15 +5894,15 @@ Long64_t TProof::Finalize(Int_t qry, Bool_t force)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize query with reference ref.
+/// If force, force retrieval if the query is found in the local list
+/// but has already been finalized (default kFALSE).
+/// If ref = 0, finalize current query.
+/// Return 0 on success, -1 on error
+
 Long64_t TProof::Finalize(const char *ref, Bool_t force)
 {
-   // Finalize query with reference ref.
-   // If force, force retrieval if the query is found in the local list
-   // but has already been finalized (default kFALSE).
-   // If ref = 0, finalize current query.
-   // Return 0 on success, -1 on error
-
    if (fPlayer) {
       // Get the pointer to the query
       TQueryResult *qr = (ref && strlen(ref) > 0) ? fPlayer->GetQueryResult(ref)
@@ -5935,12 +5937,12 @@ Long64_t TProof::Finalize(const char *ref, Bool_t force)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send retrieve request for the qry-th query in fQueries.
+/// If path is defined save it to path.
+
 Int_t TProof::Retrieve(Int_t qry, const char *path)
 {
-   // Send retrieve request for the qry-th query in fQueries.
-   // If path is defined save it to path.
-
    if (qry > 0) {
       TString ref;
       if (GetQueryReference(qry, ref) == 0)
@@ -5953,13 +5955,13 @@ Int_t TProof::Retrieve(Int_t qry, const char *path)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send retrieve request for the query specified by ref.
+/// If path is defined save it to path.
+/// Generic method working for all queries known by the server.
+
 Int_t TProof::Retrieve(const char *ref, const char *path)
 {
-   // Send retrieve request for the query specified by ref.
-   // If path is defined save it to path.
-   // Generic method working for all queries known by the server.
-
    if (ref) {
       TMessage m(kPROOF_RETRIEVE);
       m << TString(ref);
@@ -6001,11 +6003,11 @@ Int_t TProof::Retrieve(const char *ref, const char *path)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send remove request for the qry-th query in fQueries.
+
 Int_t TProof::Remove(Int_t qry, Bool_t all)
 {
-   // Send remove request for the qry-th query in fQueries.
-
    if (qry > 0) {
       TString ref;
       if (GetQueryReference(qry, ref) == 0)
@@ -6018,15 +6020,15 @@ Int_t TProof::Remove(Int_t qry, Bool_t all)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send remove request for the query specified by ref.
+/// If all = TRUE remove also local copies of the query, if any.
+/// Generic method working for all queries known by the server.
+/// This method can be also used to reset the list of queries
+/// waiting to be processed: for that purpose use ref == "cleanupqueue".
+
 Int_t TProof::Remove(const char *ref, Bool_t all)
 {
-   // Send remove request for the query specified by ref.
-   // If all = TRUE remove also local copies of the query, if any.
-   // Generic method working for all queries known by the server.
-   // This method can be also used to reset the list of queries
-   // waiting to be processed: for that purpose use ref == "cleanupqueue".
-
    if (all) {
       // Remove also local copies, if any
       if (fPlayer)
@@ -6045,11 +6047,11 @@ Int_t TProof::Remove(const char *ref, Bool_t all)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send archive request for the qry-th query in fQueries.
+
 Int_t TProof::Archive(Int_t qry, const char *path)
 {
-   // Send archive request for the qry-th query in fQueries.
-
    if (qry > 0) {
       TString ref;
       if (GetQueryReference(qry, ref) == 0)
@@ -6062,14 +6064,14 @@ Int_t TProof::Archive(Int_t qry, const char *path)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send archive request for the query specified by ref.
+/// Generic method working for all queries known by the server.
+/// If ref == "Default", path is understood as a default path for
+/// archiving.
+
 Int_t TProof::Archive(const char *ref, const char *path)
 {
-   // Send archive request for the query specified by ref.
-   // Generic method working for all queries known by the server.
-   // If ref == "Default", path is understood as a default path for
-   // archiving.
-
    if (ref) {
       TMessage m(kPROOF_ARCHIVE);
       m << TString(ref) << TString(path);
@@ -6080,11 +6082,11 @@ Int_t TProof::Archive(const char *ref, const char *path)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send cleanup request for the session specified by tag.
+
 Int_t TProof::CleanupSession(const char *sessiontag)
 {
-   // Send cleanup request for the session specified by tag.
-
    if (sessiontag) {
       TMessage m(kPROOF_CLEANUPSESSION);
       m << TString(sessiontag);
@@ -6095,11 +6097,11 @@ Int_t TProof::CleanupSession(const char *sessiontag)
    return -1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change query running mode to the one specified by 'mode'.
+
 void TProof::SetQueryMode(EQueryMode mode)
 {
-   // Change query running mode to the one specified by 'mode'.
-
    fQueryMode = mode;
 
    if (gDebug > 0)
@@ -6107,11 +6109,11 @@ void TProof::SetQueryMode(EQueryMode mode)
            "Sync" : "Async");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find out the query mode based on the current setting and 'mode'.
+
 TProof::EQueryMode TProof::GetQueryMode(Option_t *mode) const
 {
-   // Find out the query mode based on the current setting and 'mode'.
-
    EQueryMode qmode = fQueryMode;
 
    if (mode && (strlen(mode) > 0)) {
@@ -6131,16 +6133,16 @@ TProof::EQueryMode TProof::GetQueryMode(Option_t *mode) const
    return qmode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the specified drawing action on a data set (TDSet).
+/// Event- or Entry-lists should be set in the data set object using
+/// TDSet::SetEntryList.
+/// Returns -1 in case of error or number of selected events otherwise.
+
 Long64_t TProof::DrawSelect(TDSet *dset, const char *varexp,
                             const char *selection, Option_t *option,
                             Long64_t nentries, Long64_t first)
 {
-   // Execute the specified drawing action on a data set (TDSet).
-   // Event- or Entry-lists should be set in the data set object using
-   // TDSet::SetEntryList.
-   // Returns -1 in case of error or number of selected events otherwise.
-
    if (!IsValid() || !fPlayer) return -1;
 
    // Make sure that asynchronous processing is not active
@@ -6156,27 +6158,27 @@ Long64_t TProof::DrawSelect(TDSet *dset, const char *varexp,
    return fPlayer->DrawSelect(dset, varexp, selection, opt, nentries, first);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the specified drawing action on a data set which is stored on the
+/// master with name 'dsetname'.
+/// The syntax for dsetname is name[#[dir/]objname], e.g.
+///   "mydset"       analysis of the first tree in the top dir of the dataset
+///                  named "mydset"
+///   "mydset#T"     analysis tree "T" in the top dir of the dataset
+///                  named "mydset"
+///   "mydset#adir/T" analysis tree "T" in the dir "adir" of the dataset
+///                  named "mydset"
+///   "mydset#adir/" analysis of the first tree in the dir "adir" of the
+///                  dataset named "mydset"
+/// The last argument 'enl' specifies an entry- or event-list to be used as
+/// event selection.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProof::DrawSelect(const char *dsetname, const char *varexp,
                             const char *selection, Option_t *option,
                             Long64_t nentries, Long64_t first, TObject *enl)
 {
-   // Execute the specified drawing action on a data set which is stored on the
-   // master with name 'dsetname'.
-   // The syntax for dsetname is name[#[dir/]objname], e.g.
-   //   "mydset"       analysis of the first tree in the top dir of the dataset
-   //                  named "mydset"
-   //   "mydset#T"     analysis tree "T" in the top dir of the dataset
-   //                  named "mydset"
-   //   "mydset#adir/T" analysis tree "T" in the dir "adir" of the dataset
-   //                  named "mydset"
-   //   "mydset#adir/" analysis of the first tree in the dir "adir" of the
-   //                  dataset named "mydset"
-   // The last argument 'enl' specifies an entry- or event-list to be used as
-   // event selection.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (fProtocol < 13) {
       Info("Process", "processing 'by name' not supported by the server");
       return -1;
@@ -6212,11 +6214,11 @@ Long64_t TProof::DrawSelect(const char *dsetname, const char *varexp,
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send STOPPROCESS message to master and workers.
+
 void TProof::StopProcess(Bool_t abort, Int_t timeout)
 {
-   // Send STOPPROCESS message to master and workers.
-
    PDB(kGlobal,2)
       Info("StopProcess","enter %d", abort);
 
@@ -6247,19 +6249,19 @@ void TProof::StopProcess(Bool_t abort, Int_t timeout)
          sl->StopProcess(abort, timeout);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal to disable related switches
+
 void TProof::DisableGoAsyn()
 {
-   // Signal to disable related switches
-
    Emit("DisableGoAsyn()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send GOASYNC message to the master.
+
 void TProof::GoAsynchronous()
 {
-   // Send GOASYNC message to the master.
-
    if (!IsValid()) return;
 
    if (GetRemoteProtocol() < 22) {
@@ -6275,11 +6277,11 @@ void TProof::GoAsynchronous()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive the log file of the slave with socket s.
+
 void TProof::RecvLogFile(TSocket *s, Int_t size)
 {
-   // Receive the log file of the slave with socket s.
-
    const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
    char buf[kMAXBUF];
 
@@ -6345,12 +6347,12 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
       fRedirLog = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify locally 'msg' to the appropriate units (file, stdout, window)
+/// If defined, 'sfx' is added after 'msg' (typically a line-feed);
+
 void TProof::NotifyLogMsg(const char *msg, const char *sfx)
 {
-   // Notify locally 'msg' to the appropriate units (file, stdout, window)
-   // If defined, 'sfx' is added after 'msg' (typically a line-feed);
-
    // Must have somenthing to notify
    Int_t len = 0;
    if (!msg || (len = strlen(msg)) <= 0)
@@ -6402,11 +6404,11 @@ void TProof::NotifyLogMsg(const char *msg, const char *sfx)
       fRedirLog = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Log a message into the appropriate window by emitting a signal.
+
 void TProof::LogMessage(const char *msg, Bool_t all)
 {
-   // Log a message into the appropriate window by emitting a signal.
-
    PDB(kGlobal,1)
       Info("LogMessage","Enter ... %s, 'all: %s", msg ? msg : "",
            all ? "true" : "false");
@@ -6446,13 +6448,13 @@ void TProof::LogMessage(const char *msg, Bool_t all)
    } while (len > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send to all active slaves servers the current slave group size
+/// and their unique id. Returns number of active slaves.
+/// Returns -1 in case of error.
+
 Int_t TProof::SendGroupView()
 {
-   // Send to all active slaves servers the current slave group size
-   // and their unique id. Returns number of active slaves.
-   // Returns -1 in case of error.
-
    if (!IsValid()) return -1;
    if (TestBit(TProof::kIsClient)) return 0;
    if (!fSendGroupView) return 0;
@@ -6481,13 +6483,13 @@ Int_t TProof::SendGroupView()
    return GetNumberOfActiveSlaves();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to extract the filename (if any) form a CINT command.
+/// Returns kTRUE and the filename in 'fn'; returns kFALSE if not found or not
+/// appliable.
+
 Bool_t TProof::GetFileInCmd(const char *cmd, TString &fn)
 {
-   // Static method to extract the filename (if any) form a CINT command.
-   // Returns kTRUE and the filename in 'fn'; returns kFALSE if not found or not
-   // appliable.
-
    TString s = cmd;
    s = s.Strip(TString::kBoth);
 
@@ -6504,28 +6506,28 @@ Bool_t TProof::GetFileInCmd(const char *cmd, TString &fn)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send command to be executed on the PROOF master and/or slaves.
+/// If plusMaster is kTRUE then exeucte on slaves and master too.
+/// Command can be any legal command line command. Commands like
+/// ".x file.C" or ".L file.C" will cause the file file.C to be send
+/// to the PROOF cluster. Returns -1 in case of error, >=0 in case of
+/// succes.
+
 Int_t TProof::Exec(const char *cmd, Bool_t plusMaster)
 {
-   // Send command to be executed on the PROOF master and/or slaves.
-   // If plusMaster is kTRUE then exeucte on slaves and master too.
-   // Command can be any legal command line command. Commands like
-   // ".x file.C" or ".L file.C" will cause the file file.C to be send
-   // to the PROOF cluster. Returns -1 in case of error, >=0 in case of
-   // succes.
-
    return Exec(cmd, kActive, plusMaster);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send command to be executed on the PROOF master and/or slaves.
+/// Command can be any legal command line command. Commands like
+/// ".x file.C" or ".L file.C" will cause the file file.C to be send
+/// to the PROOF cluster. Returns -1 in case of error, >=0 in case of
+/// succes.
+
 Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
 {
-   // Send command to be executed on the PROOF master and/or slaves.
-   // Command can be any legal command line command. Commands like
-   // ".x file.C" or ".L file.C" will cause the file file.C to be send
-   // to the PROOF cluster. Returns -1 in case of error, >=0 in case of
-   // succes.
-
    if (!IsValid()) return -1;
 
    TString s = cmd;
@@ -6571,17 +6573,17 @@ Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
    return SendCommand(cmd, list);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send command to be executed on node of ordinal 'ord' (use "0" for master).
+/// Command can be any legal command line command. Commands like
+/// ".x file.C" or ".L file.C" will cause the file file.C to be send
+/// to the PROOF cluster.
+/// If logtomacro is TRUE the text result of the action is saved in the fMacroLog
+/// TMacro, accessible via TMacro::GetMacroLog();
+/// Returns -1 in case of error, >=0 in case of succes.
+
 Int_t TProof::Exec(const char *cmd, const char *ord, Bool_t logtomacro)
 {
-   // Send command to be executed on node of ordinal 'ord' (use "0" for master).
-   // Command can be any legal command line command. Commands like
-   // ".x file.C" or ".L file.C" will cause the file file.C to be send
-   // to the PROOF cluster.
-   // If logtomacro is TRUE the text result of the action is saved in the fMacroLog
-   // TMacro, accessible via TMacro::GetMacroLog();
-   // Returns -1 in case of error, >=0 in case of succes.
-
    if (!IsValid()) return -1;
 
    TString s = cmd;
@@ -6613,17 +6615,17 @@ Int_t TProof::Exec(const char *cmd, const char *ord, Bool_t logtomacro)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send command to be executed on the PROOF master and/or slaves.
+/// Command can be any legal command line command, however commands
+/// like ".x file.C" or ".L file.C" will not cause the file.C to be
+/// transfered to the PROOF cluster. In that case use TProof::Exec().
+/// Returns the status send by the remote server as part of the
+/// kPROOF_LOGDONE message. Typically this is the return code of the
+/// command on the remote side. Returns -1 in case of error.
+
 Int_t TProof::SendCommand(const char *cmd, ESlaves list)
 {
-   // Send command to be executed on the PROOF master and/or slaves.
-   // Command can be any legal command line command, however commands
-   // like ".x file.C" or ".L file.C" will not cause the file.C to be
-   // transfered to the PROOF cluster. In that case use TProof::Exec().
-   // Returns the status send by the remote server as part of the
-   // kPROOF_LOGDONE message. Typically this is the return code of the
-   // command on the remote side. Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    Broadcast(cmd, kMESS_CINT, list);
@@ -6632,11 +6634,11 @@ Int_t TProof::SendCommand(const char *cmd, ESlaves list)
    return fStatus;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get value of environment variable 'env' on node 'ord'
+
 TString TProof::Getenv(const char *env, const char *ord)
 {
-   // Get value of environment variable 'env' on node 'ord'
-
    // The command to be executed
    TString cmd = TString::Format("gSystem->Getenv(\"%s\")", env);
    if (Exec(cmd.Data(), ord, kTRUE) != 0) return TString("");
@@ -6653,11 +6655,11 @@ TString TProof::Getenv(const char *env, const char *ord)
    return TString("");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get into 'env' the value of integer RC env variable 'rcenv' on node 'ord'
+
 Int_t TProof::GetRC(const char *rcenv, Int_t &env, const char *ord)
 {
-   // Get into 'env' the value of integer RC env variable 'rcenv' on node 'ord'
-
    // The command to be executed
    TString cmd = TString::Format("if (gEnv->Lookup(\"%s\")) { gEnv->GetValue(\"%s\",\"\"); }", rcenv, rcenv);
    // Exectute the command saving the logs to macro
@@ -6679,11 +6681,11 @@ Int_t TProof::GetRC(const char *rcenv, Int_t &env, const char *ord)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get into 'env' the value of double RC env variable 'rcenv' on node 'ord'
+
 Int_t TProof::GetRC(const char *rcenv, Double_t &env, const char *ord)
 {
-   // Get into 'env' the value of double RC env variable 'rcenv' on node 'ord'
-
    // The command to be executed
    TString cmd = TString::Format("if (gEnv->Lookup(\"%s\")) { gEnv->GetValue(\"%s\",\"\"); }", rcenv, rcenv);
    // Exectute the command saving the logs to macro
@@ -6705,11 +6707,11 @@ Int_t TProof::GetRC(const char *rcenv, Double_t &env, const char *ord)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get into 'env' the value of string RC env variable 'rcenv' on node 'ord'
+
 Int_t TProof::GetRC(const char *rcenv, TString &env, const char *ord)
 {
-   // Get into 'env' the value of string RC env variable 'rcenv' on node 'ord'
-
    // The command to be executed
    TString cmd = TString::Format("if (gEnv->Lookup(\"%s\")) { gEnv->GetValue(\"%s\",\"\"); }", rcenv, rcenv);
    // Exectute the command saving the logs to macro
@@ -6728,13 +6730,13 @@ Int_t TProof::GetRC(const char *rcenv, TString &env, const char *ord)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transfer the current state of the master to the active slave servers.
+/// The current state includes: the current working directory, etc.
+/// Returns the number of active slaves. Returns -1 in case of error.
+
 Int_t TProof::SendCurrentState(TList *list)
 {
-   // Transfer the current state of the master to the active slave servers.
-   // The current state includes: the current working directory, etc.
-   // Returns the number of active slaves. Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    // Go to the new directory, reset the interpreter environment and
@@ -6744,13 +6746,13 @@ Int_t TProof::SendCurrentState(TList *list)
    return GetParallel();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transfer the current state of the master to the active slave servers.
+/// The current state includes: the current working directory, etc.
+/// Returns the number of active slaves. Returns -1 in case of error.
+
 Int_t TProof::SendCurrentState(ESlaves list)
 {
-   // Transfer the current state of the master to the active slave servers.
-   // The current state includes: the current working directory, etc.
-   // Returns the number of active slaves. Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    // Go to the new directory, reset the interpreter environment and
@@ -6760,13 +6762,13 @@ Int_t TProof::SendCurrentState(ESlaves list)
    return GetParallel();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transfer the initial (i.e. current) state of the master to all
+/// slave servers. Currently the initial state includes: log level.
+/// Returns the number of active slaves. Returns -1 in case of error.
+
 Int_t TProof::SendInitialState()
 {
-   // Transfer the initial (i.e. current) state of the master to all
-   // slave servers. Currently the initial state includes: log level.
-   // Returns the number of active slaves. Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    SetLogLevel(fLogLevel, gProofDebugMask);
@@ -6774,24 +6776,24 @@ Int_t TProof::SendInitialState()
    return GetNumberOfActiveSlaves();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a file needs to be send to the slave. Use the following
+/// algorithm:
+///   - check if file appears in file map
+///     - if yes, get file's modtime and check against time in map,
+///       if modtime not same get md5 and compare against md5 in map,
+///       if not same return kTRUE.
+///     - if no, get file's md5 and modtime and store in file map, ask
+///       slave if file exists with specific md5, if yes return kFALSE,
+///       if no return kTRUE.
+/// The options 'cpopt' define if to copy things from cache to sandbox and what.
+/// To retrieve from the cache the binaries associated with the file TProof::kCpBin
+/// must be set in cpopt; the default is copy everything.
+/// Returns kTRUE in case file needs to be send, returns kFALSE in case
+/// file is already on remote node.
+
 Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Int_t cpopt)
 {
-   // Check if a file needs to be send to the slave. Use the following
-   // algorithm:
-   //   - check if file appears in file map
-   //     - if yes, get file's modtime and check against time in map,
-   //       if modtime not same get md5 and compare against md5 in map,
-   //       if not same return kTRUE.
-   //     - if no, get file's md5 and modtime and store in file map, ask
-   //       slave if file exists with specific md5, if yes return kFALSE,
-   //       if no return kTRUE.
-   // The options 'cpopt' define if to copy things from cache to sandbox and what.
-   // To retrieve from the cache the binaries associated with the file TProof::kCpBin
-   // must be set in cpopt; the default is copy everything.
-   // Returns kTRUE in case file needs to be send, returns kFALSE in case
-   // file is already on remote node.
-
    Bool_t sendto = kFALSE;
 
    // create worker based filename
@@ -6861,32 +6863,32 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Int_t 
    return sendto;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a file to master or slave servers. Returns number of slaves
+/// the file was sent to, maybe 0 in case master and slaves have the same
+/// file system image, -1 in case of error.
+/// If defined, send to worker 'wrk' only.
+/// If defined, the full path of the remote path will be rfile.
+/// If rfile = "cache" the file is copied to the remote cache instead of the sandbox
+/// (to copy to the cache on a different name use rfile = "cache:newname").
+/// The mask 'opt' is an or of ESendFileOpt:
+///
+///       kAscii  (0x0)      if set true ascii file transfer is used
+///       kBinary (0x1)      if set true binary file transfer is used
+///       kForce  (0x2)      if not set an attempt is done to find out
+///                          whether the file really needs to be downloaded
+///                          (a valid copy may already exist in the cache
+///                          from a previous run); the bit is set by
+///                          UploadPackage, since the check is done elsewhere.
+///       kForward (0x4)     if set, ask server to forward the file to slave
+///                          or submaster (meaningless for slave servers).
+///       kCpBin   (0x8)     Retrieve from the cache the binaries associated
+///                          with the file
+///       kCp      (0x10)    Retrieve the files from the cache
+///
+
 Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *wrk)
 {
-   // Send a file to master or slave servers. Returns number of slaves
-   // the file was sent to, maybe 0 in case master and slaves have the same
-   // file system image, -1 in case of error.
-   // If defined, send to worker 'wrk' only.
-   // If defined, the full path of the remote path will be rfile.
-   // If rfile = "cache" the file is copied to the remote cache instead of the sandbox
-   // (to copy to the cache on a different name use rfile = "cache:newname").
-   // The mask 'opt' is an or of ESendFileOpt:
-   //
-   //       kAscii  (0x0)      if set true ascii file transfer is used
-   //       kBinary (0x1)      if set true binary file transfer is used
-   //       kForce  (0x2)      if not set an attempt is done to find out
-   //                          whether the file really needs to be downloaded
-   //                          (a valid copy may already exist in the cache
-   //                          from a previous run); the bit is set by
-   //                          UploadPackage, since the check is done elsewhere.
-   //       kForward (0x4)     if set, ask server to forward the file to slave
-   //                          or submaster (meaningless for slave servers).
-   //       kCpBin   (0x8)     Retrieve from the cache the binaries associated
-   //                          with the file
-   //       kCp      (0x10)    Retrieve the files from the cache
-   //
-
    if (!IsValid()) return -1;
 
    // Use the active slaves list ...
@@ -7014,39 +7016,39 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    return (fStatus != 0) ? -1 : nsl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sends an object to master and workers and expect them to send back a
+/// message with the output of its TObject::Print(). Returns -1 on error, the
+/// number of workers that received the objects on success.
+
 Int_t TProof::Echo(const TObject *obj)
 {
-   // Sends an object to master and workers and expect them to send back a
-   // message with the output of its TObject::Print(). Returns -1 on error, the
-   // number of workers that received the objects on success.
-
    if (!IsValid() || !obj) return -1;
    TMessage mess(kPROOF_ECHO);
    mess.WriteObject(obj);
    return Broadcast(mess);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sends a string to master and workers and expect them to echo it back to
+/// the client via a message. It is a special case of the generic Echo()
+/// that works with TObjects. Returns -1 on error, the number of workers that
+/// received the message on success.
+
 Int_t TProof::Echo(const char *str)
 {
-   // Sends a string to master and workers and expect them to echo it back to
-   // the client via a message. It is a special case of the generic Echo()
-   // that works with TObjects. Returns -1 on error, the number of workers that
-   // received the message on success.
-
    TObjString *os = new TObjString(str);
    Int_t rv = Echo(os);
    delete os;
    return rv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send object to master or slave servers. Returns number of slaves object
+/// was sent to, -1 in case of error.
+
 Int_t TProof::SendObject(const TObject *obj, ESlaves list)
 {
-   // Send object to master or slave servers. Returns number of slaves object
-   // was sent to, -1 in case of error.
-
    if (!IsValid() || !obj) return -1;
 
    TMessage mess(kMESS_OBJECT);
@@ -7055,23 +7057,23 @@ Int_t TProof::SendObject(const TObject *obj, ESlaves list)
    return Broadcast(mess, list);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send print command to master server. Returns number of slaves message
+/// was sent to. Returns -1 in case of error.
+
 Int_t TProof::SendPrint(Option_t *option)
 {
-   // Send print command to master server. Returns number of slaves message
-   // was sent to. Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    Broadcast(option, kPROOF_PRINT, kActive);
    return Collect(kActive, fCollectTimeout);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set server logging level.
+
 void TProof::SetLogLevel(Int_t level, UInt_t mask)
 {
-   // Set server logging level.
-
    char str[32];
    fLogLevel        = level;
    gProofDebugLevel = level;
@@ -7080,15 +7082,15 @@ void TProof::SetLogLevel(Int_t level, UInt_t mask)
    Broadcast(str, kPROOF_LOGLEVEL, kAll);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch ON/OFF the real-time logging facility. When this option is
+/// ON, log messages from processing are sent back as they come, instead of
+/// being sent back at the end in one go. This may help debugging or monitoring
+/// in some cases, but, depending on the amount of log, it may have significant
+/// consequencies on the load over the network, so it must be used with care.
+
 void TProof::SetRealTimeLog(Bool_t on)
 {
-   // Switch ON/OFF the real-time logging facility. When this option is
-   // ON, log messages from processing are sent back as they come, instead of
-   // being sent back at the end in one go. This may help debugging or monitoring
-   // in some cases, but, depending on the amount of log, it may have significant
-   // consequencies on the load over the network, so it must be used with care.
-
    if (IsValid()) {
       TMessage mess(kPROOF_REALTIMELOG);
       mess << on;
@@ -7098,13 +7100,13 @@ void TProof::SetRealTimeLog(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell PROOF how many slaves to use in parallel. If random is TRUE a random
+/// selection is done (if nodes is less than the available nodes).
+/// Returns the number of parallel slaves. Returns -1 in case of error.
+
 Int_t TProof::SetParallelSilent(Int_t nodes, Bool_t random)
 {
-   // Tell PROOF how many slaves to use in parallel. If random is TRUE a random
-   // selection is done (if nodes is less than the available nodes).
-   // Returns the number of parallel slaves. Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (TestBit(TProof::kIsMaster)) {
@@ -7127,12 +7129,12 @@ Int_t TProof::SetParallelSilent(Int_t nodes, Bool_t random)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell PROOF how many slaves to use in parallel. Returns the number of
+/// parallel slaves. Returns -1 in case of error.
+
 Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
 {
-   // Tell PROOF how many slaves to use in parallel. Returns the number of
-   // parallel slaves. Returns -1 in case of error.
-
    // If delayed startup reset settings, if required
    if (fDynamicStartup && nodes < 0) {
       if (gSystem->Getenv("PROOF_NWORKERS")) gSystem->Unsetenv("PROOF_NWORKERS");
@@ -7155,14 +7157,14 @@ Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add nWorkersToAdd workers to current list of workers. This function is
+/// works on the master only, and only when an analysis is ongoing. A message
+/// is sent back to the client when we go "more" parallel.
+/// Returns -1 on error, number of total (not added!) workers on success.
+
 Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
 {
-   // Add nWorkersToAdd workers to current list of workers. This function is
-   // works on the master only, and only when an analysis is ongoing. A message
-   // is sent back to the client when we go "more" parallel.
-   // Returns -1 on error, number of total (not added!) workers on success.
-
    if (!IsValid() || !IsMaster() || IsIdle()) {
       Error("GoMoreParallel", "can't invoke here -- should not happen!");
       return -1;
@@ -7256,16 +7258,16 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
    return nTotalWorkers;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go in parallel mode with at most "nodes" slaves. Since the fSlaves
+/// list is sorted by slave performace the active list will contain first
+/// the most performant nodes. Returns the number of active slaves.
+/// If random is TRUE, and nodes is less than the number of available workers,
+/// a random selection is done.
+/// Returns -1 in case of error.
+
 Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
 {
-   // Go in parallel mode with at most "nodes" slaves. Since the fSlaves
-   // list is sorted by slave performace the active list will contain first
-   // the most performant nodes. Returns the number of active slaves.
-   // If random is TRUE, and nodes is less than the number of available workers,
-   // a random selection is done.
-   // Returns -1 in case of error.
-
    if (!IsValid()) return -1;
 
    fActiveSlaves->Clear();
@@ -7383,28 +7385,28 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List contents of the data directory in the sandbox.
+/// This is the place where files produced by the client queries are kept
+
 void TProof::ShowData()
 {
-   // List contents of the data directory in the sandbox.
-   // This is the place where files produced by the client queries are kept
-
    if (!IsValid() || !fManager) return;
 
    // This is run via the manager
    fManager->Find("~/data", "-type f", "all");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove files for the data directory.
+/// The option 'what' can take the values:
+///     kPurge                 remove all files and directories under '~/data'
+///     kUnregistered          remove only files not in registered datasets (default)
+///     kDataset               remove files belonging to dataset 'dsname'
+/// User is prompt for confirmation, unless kForceClear is ORed with the option
+
 void TProof::ClearData(UInt_t what, const char *dsname)
 {
-   // Remove files for the data directory.
-   // The option 'what' can take the values:
-   //     kPurge                 remove all files and directories under '~/data'
-   //     kUnregistered          remove only files not in registered datasets (default)
-   //     kDataset               remove files belonging to dataset 'dsname'
-   // User is prompt for confirmation, unless kForceClear is ORed with the option
-
    if (!IsValid() || !fManager) return;
 
    // Check whether we need to prompt
@@ -7636,12 +7638,12 @@ void TProof::ClearData(UInt_t what, const char *dsname)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prompt the question 'p' requiring an answer y,Y,n,N
+/// Return kTRUE is the answer was y or Y, kFALSE in all other cases.
+
 Bool_t TProof::Prompt(const char *p)
 {
-   // Prompt the question 'p' requiring an answer y,Y,n,N
-   // Return kTRUE is the answer was y or Y, kFALSE in all other cases.
-
    TString pp(p);
    if (!pp.Contains("?")) pp += "?";
    if (!pp.Contains("[y/N]")) pp += " [y/N]";
@@ -7658,11 +7660,11 @@ Bool_t TProof::Prompt(const char *p)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Progress bar for clear data
+
 void TProof::ClearDataProgress(Int_t r, Int_t t)
 {
-   // Progress bar for clear data
-
    fprintf(stderr, "[TProof::ClearData] Total %5d files\t|", t);
    for (Int_t l = 0; l < 20; l++) {
       if (r > 0 && t > 0) {
@@ -7678,12 +7680,12 @@ void TProof::ClearDataProgress(Int_t r, Int_t t)
    fprintf(stderr, "| %.02f %%      \r", 100.0*(t ? (r/t) : 1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List contents of file cache. If all is true show all caches also on
+/// slaves. If everything is ok all caches are to be the same.
+
 void TProof::ShowCache(Bool_t all)
 {
-   // List contents of file cache. If all is true show all caches also on
-   // slaves. If everything is ok all caches are to be the same.
-
    if (!IsValid()) return;
 
    TMessage mess(kPROOF_CACHE);
@@ -7701,12 +7703,12 @@ void TProof::ShowCache(Bool_t all)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove file from all file caches. If file is 0 or "" or "*", remove all
+/// the files
+
 void TProof::ClearCache(const char *file)
 {
-   // Remove file from all file caches. If file is 0 or "" or "*", remove all
-   // the files
-
    if (!IsValid()) return;
 
    TMessage mess(kPROOF_CACHE);
@@ -7723,11 +7725,11 @@ void TProof::ClearCache(const char *file)
    fFileMap.clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exec system command 'cmd'. If fdout > -1, append the output to fdout.
+
 void TProof::SystemCmd(const char *cmd, Int_t fdout)
 {
-   // Exec system command 'cmd'. If fdout > -1, append the output to fdout.
-
    if (fdout < 0) {
       // Exec directly the command
       gSystem->Exec(cmd);
@@ -7755,14 +7757,14 @@ void TProof::SystemCmd(const char *cmd, Int_t fdout)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List contents of package directory. If all is true show all package
+/// directories also on slaves. If everything is ok all package directories
+/// should be the same. If redir is kTRUE the result is redirected to the log
+/// file (option available for internal actions).
+
 void TProof::ShowPackages(Bool_t all, Bool_t redirlog)
 {
-   // List contents of package directory. If all is true show all package
-   // directories also on slaves. If everything is ok all package directories
-   // should be the same. If redir is kTRUE the result is redirected to the log
-   // file (option available for internal actions).
-
    if (!IsValid()) return;
 
    Bool_t oldredir = fRedirLog;
@@ -7820,13 +7822,13 @@ void TProof::ShowPackages(Bool_t all, Bool_t redirlog)
    fRedirLog = oldredir;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List which packages are enabled. If all is true show enabled packages
+/// for all active slaves. If everything is ok all active slaves should
+/// have the same packages enabled.
+
 void TProof::ShowEnabledPackages(Bool_t all)
 {
-   // List which packages are enabled. If all is true show enabled packages
-   // for all active slaves. If everything is ok all active slaves should
-   // have the same packages enabled.
-
    if (!IsValid()) return;
 
    if (TestBit(TProof::kIsClient)) {
@@ -7845,12 +7847,12 @@ void TProof::ShowEnabledPackages(Bool_t all)
    Collect(kActive, fCollectTimeout);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all packages.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::ClearPackages()
 {
-   // Remove all packages.
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (UnloadPackages() == -1)
@@ -7862,12 +7864,12 @@ Int_t TProof::ClearPackages()
    return fStatus;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a specific package.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::ClearPackage(const char *package)
 {
-   // Remove a specific package.
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (!package || !package[0]) {
@@ -7890,12 +7892,12 @@ Int_t TProof::ClearPackage(const char *package)
    return fStatus;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a specific package.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::DisablePackage(const char *package)
 {
-   // Remove a specific package.
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (!package || !package[0]) {
@@ -7947,12 +7949,12 @@ Int_t TProof::DisablePackage(const char *package)
    return st;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a specific package 'pack' from the client.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::DisablePackageOnClient(const char *pack)
 {
-   // Remove a specific package 'pack' from the client.
-   // Returns 0 in case of success and -1 in case of error.
-
    TString s;
    if (TestBit(TProof::kIsClient)) {
       // Remove the package directory and the par file locally
@@ -7982,12 +7984,12 @@ Int_t TProof::DisablePackageOnClient(const char *pack)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all packages.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::DisablePackages()
 {
-   // Remove all packages.
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    // remove all packages on client
@@ -8027,19 +8029,19 @@ Int_t TProof::DisablePackages()
    return st;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build specified package. Executes the PROOF-INF/BUILD.sh
+/// script if it exists on all unique nodes. If opt is kBuildOnSlavesNoWait
+/// then submit build command to slaves, but don't wait
+/// for results. If opt is kCollectBuildResults then collect result
+/// from slaves. To be used on the master.
+/// If opt = kBuildAll (default) then submit and wait for results
+/// (to be used on the client).
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::BuildPackage(const char *package,
                            EBuildPackageOpt opt, Int_t chkveropt, TList *workers)
 {
-   // Build specified package. Executes the PROOF-INF/BUILD.sh
-   // script if it exists on all unique nodes. If opt is kBuildOnSlavesNoWait
-   // then submit build command to slaves, but don't wait
-   // for results. If opt is kCollectBuildResults then collect result
-   // from slaves. To be used on the master.
-   // If opt = kBuildAll (default) then submit and wait for results
-   // (to be used on the client).
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (!package || !package[0]) {
@@ -8115,20 +8117,20 @@ Int_t TProof::BuildPackage(const char *package,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build specified package on the client. Executes the PROOF-INF/BUILD.sh
+/// script if it exists on the client.
+/// If opt == 0, both the preparation and building phases are run.
+/// If opt == 1, only the preparation phase (asserting and, eventually, downloading
+///              of the package) is done; '*path' contains the full path to the
+///              package to be passed in the next call
+/// If opt == 2, only the building phase is run using *path .
+/// Returns 0 in case of success and -1 in case of error.
+/// The code is equivalent to the one in TProofServ.cxx (TProof::kBuildPackage
+/// case). Keep in sync in case of changes.
+
 Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path, Int_t chkveropt)
 {
-   // Build specified package on the client. Executes the PROOF-INF/BUILD.sh
-   // script if it exists on the client.
-   // If opt == 0, both the preparation and building phases are run.
-   // If opt == 1, only the preparation phase (asserting and, eventually, downloading
-   //              of the package) is done; '*path' contains the full path to the
-   //              package to be passed in the next call
-   // If opt == 2, only the building phase is run using *path .
-   // Returns 0 in case of success and -1 in case of error.
-   // The code is equivalent to the one in TProofServ.cxx (TProof::kBuildPackage
-   // case). Keep in sync in case of changes.
-
    TString downloaddir;
    downloaddir.Form("%s/%s", fPackageDir.Data(), kPROOF_PackDownloadDir);
 
@@ -8313,18 +8315,18 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path, I
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load specified package. Executes the PROOF-INF/SETUP.C script
+/// on all active nodes. If notOnClient = true, don't load package
+/// on the client. The default is to load the package also on the client.
+/// The argument 'loadopts' specify a list of objects to be passed to the SETUP.
+/// The objects in the list must be streamable; the SETUP macro will be executed
+/// like this: SETUP.C(loadopts).
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient,
    TList *loadopts, TList *workers)
 {
-   // Load specified package. Executes the PROOF-INF/SETUP.C script
-   // on all active nodes. If notOnClient = true, don't load package
-   // on the client. The default is to load the package also on the client.
-   // The argument 'loadopts' specify a list of objects to be passed to the SETUP.
-   // The objects in the list must be streamable; the SETUP macro will be executed
-   // like this: SETUP.C(loadopts).
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (!package || !package[0]) {
@@ -8364,18 +8366,18 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient,
    return fStatus;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load specified package in the client. Executes the PROOF-INF/SETUP.C
+/// script on the client. Returns 0 in case of success and -1 in case of error.
+/// The code is equivalent to the one in TProofServ.cxx (TProof::kLoadPackage
+/// case). Keep in sync in case of changes.
+/// The argument 'loadopts' specify a list of objects to be passed to the SETUP.
+/// The objects in the list must be streamable; the SETUP macro will be executed
+/// like this: SETUP.C(loadopts).
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
 {
-   // Load specified package in the client. Executes the PROOF-INF/SETUP.C
-   // script on the client. Returns 0 in case of success and -1 in case of error.
-   // The code is equivalent to the one in TProofServ.cxx (TProof::kLoadPackage
-   // case). Keep in sync in case of changes.
-   // The argument 'loadopts' specify a list of objects to be passed to the SETUP.
-   // The objects in the list must be streamable; the SETUP macro will be executed
-   // like this: SETUP.C(loadopts).
-   // Returns 0 in case of success and -1 in case of error.
-
    if (TestBit(TProof::kIsClient)) {
       Int_t status = 0;
       TString pdir, ocwd;
@@ -8530,12 +8532,12 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unload specified package.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::UnloadPackage(const char *package)
 {
-   // Unload specified package.
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (!package || !package[0]) {
@@ -8563,14 +8565,14 @@ Int_t TProof::UnloadPackage(const char *package)
    return fStatus;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unload a specific package on the client.
+/// Returns 0 in case of success and -1 in case of error.
+/// The code is equivalent to the one in TProofServ.cxx (TProof::UnloadPackage
+/// case). Keep in sync in case of changes.
+
 Int_t TProof::UnloadPackageOnClient(const char *package)
 {
-   // Unload a specific package on the client.
-   // Returns 0 in case of success and -1 in case of error.
-   // The code is equivalent to the one in TProofServ.cxx (TProof::UnloadPackage
-   // case). Keep in sync in case of changes.
-
    if (TestBit(TProof::kIsClient)) {
       TObjString *pack = (TObjString *) fEnabledPackagesOnClient->FindObject(package);
       if (pack) {
@@ -8600,12 +8602,12 @@ Int_t TProof::UnloadPackageOnClient(const char *package)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unload all packages.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::UnloadPackages()
 {
-   // Unload all packages.
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (TestBit(TProof::kIsClient)) {
@@ -8627,40 +8629,40 @@ Int_t TProof::UnloadPackages()
    return fStatus;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable specified package. Executes the PROOF-INF/BUILD.sh
+/// script if it exists followed by the PROOF-INF/SETUP.C script.
+/// In case notOnClient = true, don't enable the package on the client.
+/// The default is to enable packages also on the client.
+/// If specified, enables packages only on the specified workers.
+/// Returns 0 in case of success and -1 in case of error.
+/// Provided for backward compatibility.
+
 Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient,
    TList *workers)
 {
-   // Enable specified package. Executes the PROOF-INF/BUILD.sh
-   // script if it exists followed by the PROOF-INF/SETUP.C script.
-   // In case notOnClient = true, don't enable the package on the client.
-   // The default is to enable packages also on the client.
-   // If specified, enables packages only on the specified workers.
-   // Returns 0 in case of success and -1 in case of error.
-   // Provided for backward compatibility.
-
    return EnablePackage(package, (TList *)0, notOnClient, workers);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable specified package. Executes the PROOF-INF/BUILD.sh
+/// script if it exists followed by the PROOF-INF/SETUP.C script.
+/// In case notOnClient = true, don't enable the package on the client.
+/// The default is to enable packages also on the client.
+/// It is is possible to specify options for the loading step via 'loadopts';
+/// the string will be passed passed as argument to SETUP.
+/// Special option 'chkv=<o>' (or 'checkversion=<o>') can be used to control
+/// plugin version checking during building: possible choices are:
+///     off         no check; failure may occur at loading
+///     on          check ROOT version [default]
+///     svn         check ROOT version and Git commit SHA1.
+/// (Use ';', ' ' or '|' to separate 'chkv=<o>' from the rest.)
+/// If specified, enables packages only on the specified workers.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::EnablePackage(const char *package, const char *loadopts,
                             Bool_t notOnClient, TList *workers)
 {
-   // Enable specified package. Executes the PROOF-INF/BUILD.sh
-   // script if it exists followed by the PROOF-INF/SETUP.C script.
-   // In case notOnClient = true, don't enable the package on the client.
-   // The default is to enable packages also on the client.
-   // It is is possible to specify options for the loading step via 'loadopts';
-   // the string will be passed passed as argument to SETUP.
-   // Special option 'chkv=<o>' (or 'checkversion=<o>') can be used to control
-   // plugin version checking during building: possible choices are:
-   //     off         no check; failure may occur at loading
-   //     on          check ROOT version [default]
-   //     svn         check ROOT version and Git commit SHA1.
-   // (Use ';', ' ' or '|' to separate 'chkv=<o>' from the rest.)
-   // If specified, enables packages only on the specified workers.
-   // Returns 0 in case of success and -1 in case of error.
-
    TList *optls = 0;
    if (loadopts && strlen(loadopts)) {
       if (fProtocol > 28) {
@@ -8712,18 +8714,18 @@ Int_t TProof::EnablePackage(const char *package, const char *loadopts,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable specified package. Executes the PROOF-INF/BUILD.sh
+/// script if it exists followed by the PROOF-INF/SETUP.C script.
+/// In case notOnClient = true, don't enable the package on the client.
+/// The default is to enable packages also on the client.
+/// It is is possible to specify a list of objects to be passed to the SETUP
+/// functions via 'loadopts'; the objects must be streamable.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::EnablePackage(const char *package, TList *loadopts,
                             Bool_t notOnClient, TList *workers)
 {
-   // Enable specified package. Executes the PROOF-INF/BUILD.sh
-   // script if it exists followed by the PROOF-INF/SETUP.C script.
-   // In case notOnClient = true, don't enable the package on the client.
-   // The default is to enable packages also on the client.
-   // It is is possible to specify a list of objects to be passed to the SETUP
-   // functions via 'loadopts'; the objects must be streamable.
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (!package || !package[0]) {
@@ -8787,16 +8789,16 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Download a PROOF archive (PAR file) from the master package repository.
+/// The PAR file is downloaded in the current directory or in the directory
+/// specified by 'dstdir'. If a package with the same name already exists
+/// at destination, a check on the MD5 sum is done and the user warned or
+/// prompted for action, depending is the file is equal or different.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::DownloadPackage(const char *pack, const char *dstdir)
 {
-   // Download a PROOF archive (PAR file) from the master package repository.
-   // The PAR file is downloaded in the current directory or in the directory
-   // specified by 'dstdir'. If a package with the same name already exists
-   // at destination, a check on the MD5 sum is done and the user warned or
-   // prompted for action, depending is the file is equal or different.
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!fManager || !(fManager->IsValid())) {
       Error("DownloadPackage", "the manager is undefined!");
       return -1;
@@ -8881,30 +8883,30 @@ Int_t TProof::DownloadPackage(const char *pack, const char *dstdir)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Upload a PROOF archive (PAR file). A PAR file is a compressed
+/// tar file with one special additional directory, PROOF-INF
+/// (blatantly copied from Java's jar format). It must have the extension
+/// .par. A PAR file can be directly a binary or a source with a build
+/// procedure. In the PROOF-INF directory there can be a build script:
+/// BUILD.sh to be called to build the package, in case of a binary PAR
+/// file don't specify a build script or make it a no-op. Then there is
+/// SETUP.C which sets the right environment variables to use the package,
+/// like LD_LIBRARY_PATH, etc.
+/// The 'opt' allows to specify whether the .PAR should be just unpacked
+/// in the existing dir (opt = kUntar, default) or a remove of the existing
+/// directory should be executed (opt = kRemoveOld), so triggering a full
+/// re-build. The option if effective only for PROOF protocol > 8 .
+/// The lab 'dirlab' (e.g. 'G0') indicates that the package is to uploaded to
+/// an alternative global directory for global usage. This may require special
+/// privileges.
+/// If download is kTRUE and the package is not found locally, then it is downloaded
+/// from the master repository.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt,
    TList *workers)
 {
-   // Upload a PROOF archive (PAR file). A PAR file is a compressed
-   // tar file with one special additional directory, PROOF-INF
-   // (blatantly copied from Java's jar format). It must have the extension
-   // .par. A PAR file can be directly a binary or a source with a build
-   // procedure. In the PROOF-INF directory there can be a build script:
-   // BUILD.sh to be called to build the package, in case of a binary PAR
-   // file don't specify a build script or make it a no-op. Then there is
-   // SETUP.C which sets the right environment variables to use the package,
-   // like LD_LIBRARY_PATH, etc.
-   // The 'opt' allows to specify whether the .PAR should be just unpacked
-   // in the existing dir (opt = kUntar, default) or a remove of the existing
-   // directory should be executed (opt = kRemoveOld), so triggering a full
-   // re-build. The option if effective only for PROOF protocol > 8 .
-   // The lab 'dirlab' (e.g. 'G0') indicates that the package is to uploaded to
-   // an alternative global directory for global usage. This may require special
-   // privileges.
-   // If download is kTRUE and the package is not found locally, then it is downloaded
-   // from the master repository.
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    TString par(pack), base, name;
@@ -9067,16 +9069,16 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Upload a package on the client in ~/.proof/packages.
+/// The 'opt' allows to specify whether the .PAR should be just unpacked
+/// in the existing dir (opt = kUntar, default) or a remove of the existing
+/// directory should be executed (opt = kRemoveOld), thereby triggering a full
+/// re-build. This option if effective only for PROOF protocol > 8.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::UploadPackageOnClient(const char *parpack, EUploadPackageOpt opt, TMD5 *md5)
 {
-   // Upload a package on the client in ~/.proof/packages.
-   // The 'opt' allows to specify whether the .PAR should be just unpacked
-   // in the existing dir (opt = kUntar, default) or a remove of the existing
-   // directory should be executed (opt = kRemoveOld), thereby triggering a full
-   // re-build. This option if effective only for PROOF protocol > 8.
-   // Returns 0 in case of success and -1 in case of error.
-
    // Strategy:
    // get md5 of package and check if it is different
    // from the one stored in the local package directory. If it is lock
@@ -9186,25 +9188,25 @@ Int_t TProof::UploadPackageOnClient(const char *parpack, EUploadPackageOpt opt, 
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load the specified macro on master, workers and, if notOnClient is
+/// kFALSE, on the client. The macro file is uploaded if new or updated.
+/// Additional files to be uploaded (or updated, if needed) can be specified
+/// after a comma, e.g. "mymacro.C+,thisheader.h,thatheader.h".
+/// If existing in the same directory, a header basename(macro).h or .hh, is also
+/// uploaded.
+/// The default is to load the macro also on the client; notOnClient can be used
+/// to avoid loading on the client.
+/// On masters, if uniqueWorkers is kTRUE, the macro is loaded on unique workers
+/// only, and collection is not done; if uniqueWorkers is kFALSE, collection
+/// from the previous request is done, and broadcasting + collection from the
+/// other workers is done.
+/// The wrks arg can be used on the master to limit the set of workers.
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
                    TList *wrks)
 {
-   // Load the specified macro on master, workers and, if notOnClient is
-   // kFALSE, on the client. The macro file is uploaded if new or updated.
-   // Additional files to be uploaded (or updated, if needed) can be specified
-   // after a comma, e.g. "mymacro.C+,thisheader.h,thatheader.h".
-   // If existing in the same directory, a header basename(macro).h or .hh, is also
-   // uploaded.
-   // The default is to load the macro also on the client; notOnClient can be used
-   // to avoid loading on the client.
-   // On masters, if uniqueWorkers is kTRUE, the macro is loaded on unique workers
-   // only, and collection is not done; if uniqueWorkers is kFALSE, collection
-   // from the previous request is done, and broadcasting + collection from the
-   // other workers is done.
-   // The wrks arg can be used on the master to limit the set of workers.
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (!macro || !macro[0]) {
@@ -9408,15 +9410,15 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add 'libpath' to the lib path search.
+/// Multiple paths can be specified at once separating them with a comma or
+/// a blank.
+/// Return 0 on success, -1 otherwise
+
 Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks,
    Bool_t doCollect)
 {
-   // Add 'libpath' to the lib path search.
-   // Multiple paths can be specified at once separating them with a comma or
-   // a blank.
-   // Return 0 on success, -1 otherwise
-
    if ((!libpath || !libpath[0])) {
       if (gDebug > 0)
          Info("AddDynamicPath", "list is empty - nothing to do");
@@ -9453,15 +9455,15 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add 'incpath' to the inc path search.
+/// Multiple paths can be specified at once separating them with a comma or
+/// a blank.
+/// Return 0 on success, -1 otherwise
+
 Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks,
    Bool_t doCollect)
 {
-   // Add 'incpath' to the inc path search.
-   // Multiple paths can be specified at once separating them with a comma or
-   // a blank.
-   // Return 0 on success, -1 otherwise
-
    if ((!incpath || !incpath[0])) {
       if (gDebug > 0)
          Info("AddIncludePath", "list is empty - nothing to do");
@@ -9498,14 +9500,14 @@ Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove 'libpath' from the lib path search.
+/// Multiple paths can be specified at once separating them with a comma or
+/// a blank.
+/// Return 0 on success, -1 otherwise
+
 Int_t TProof::RemoveDynamicPath(const char *libpath, Bool_t onClient)
 {
-   // Remove 'libpath' from the lib path search.
-   // Multiple paths can be specified at once separating them with a comma or
-   // a blank.
-   // Return 0 on success, -1 otherwise
-
    if ((!libpath || !libpath[0])) {
       if (gDebug > 0)
          Info("RemoveDynamicPath", "list is empty - nothing to do");
@@ -9532,14 +9534,14 @@ Int_t TProof::RemoveDynamicPath(const char *libpath, Bool_t onClient)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove 'incpath' from the inc path search.
+/// Multiple paths can be specified at once separating them with a comma or
+/// a blank.
+/// Return 0 on success, -1 otherwise
+
 Int_t TProof::RemoveIncludePath(const char *incpath, Bool_t onClient)
 {
-   // Remove 'incpath' from the inc path search.
-   // Multiple paths can be specified at once separating them with a comma or
-   // a blank.
-   // Return 0 on success, -1 otherwise
-
    if ((!incpath || !incpath[0])) {
       if (gDebug > 0)
          Info("RemoveIncludePath", "list is empty - nothing to do");
@@ -9566,11 +9568,11 @@ Int_t TProof::RemoveIncludePath(const char *incpath, Bool_t onClient)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle lib, inc search paths modification request
+
 void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
 {
-   // Handle lib, inc search paths modification request
-
    TString type(what);
    TString path(dirs);
 
@@ -9676,11 +9678,11 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get from the master the list of names of the packages available.
+
 TList *TProof::GetListOfPackages()
 {
-   // Get from the master the list of names of the packages available.
-
    if (!IsValid())
       return (TList *)0;
 
@@ -9692,11 +9694,11 @@ TList *TProof::GetListOfPackages()
    return fAvailablePackages;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get from the master the list of names of the packages enabled.
+
 TList *TProof::GetListOfEnabledPackages()
 {
-   // Get from the master the list of names of the packages enabled.
-
    if (!IsValid())
       return (TList *)0;
 
@@ -9708,12 +9710,12 @@ TList *TProof::GetListOfEnabledPackages()
    return fEnabledPackages;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print a progress bar on stderr. Used in batch mode.
+
 void TProof::PrintProgress(Long64_t total, Long64_t processed,
                            Float_t procTime, Long64_t bytesread)
 {
-   // Print a progress bar on stderr. Used in batch mode.
-
    if (fPrintProgress) {
       Bool_t redirlog = fRedirLog;
       fRedirLog = kFALSE;
@@ -9768,12 +9770,12 @@ void TProof::PrintProgress(Long64_t total, Long64_t processed,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get query progress information. Connect a slot to this signal
+/// to track progress.
+
 void TProof::Progress(Long64_t total, Long64_t processed)
 {
-   // Get query progress information. Connect a slot to this signal
-   // to track progress.
-
    if (fPrintProgress) {
       // Call the external function
       return (*fPrintProgress)(total, processed, -1., -1);
@@ -9791,14 +9793,14 @@ void TProof::Progress(Long64_t total, Long64_t processed)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get query progress information. Connect a slot to this signal
+/// to track progress.
+
 void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
                       Float_t initTime, Float_t procTime,
                       Float_t evtrti, Float_t mbrti)
 {
-   // Get query progress information. Connect a slot to this signal
-   // to track progress.
-
    PDB(kGlobal,1)
       Info("Progress","%lld %lld %lld %f %f %f %f", total, processed, bytesread,
                                 initTime, procTime, evtrti, mbrti);
@@ -9813,14 +9815,14 @@ void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get query progress information. Connect a slot to this signal
+/// to track progress.
+
 void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
                       Float_t initTime, Float_t procTime,
                       Float_t evtrti, Float_t mbrti, Int_t actw, Int_t tses, Float_t eses)
 {
-   // Get query progress information. Connect a slot to this signal
-   // to track progress.
-
    PDB(kGlobal,1)
       Info("Progress","%lld %lld %lld %f %f %f %f %d %f", total, processed, bytesread,
                                 initTime, procTime, evtrti, mbrti, actw, eses);
@@ -9835,12 +9837,12 @@ void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of feedback objects. Connect a slot to this signal
+/// to monitor the feedback object.
+
 void TProof::Feedback(TList *objs)
 {
-   // Get list of feedback objects. Connect a slot to this signal
-   // to monitor the feedback object.
-
    PDB(kGlobal,1)
       Info("Feedback","%d objects", objs->GetSize());
    PDB(kFeedback,1) {
@@ -9851,11 +9853,11 @@ void TProof::Feedback(TList *objs)
    Emit("Feedback(TList *objs)", (Long_t) objs);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close progress dialog.
+
 void TProof::CloseProgressDialog()
 {
-   // Close progress dialog.
-
    PDB(kGlobal,1)
       Info("CloseProgressDialog",
            "called: have progress dialog: %d", fProgressDialogStarted);
@@ -9867,12 +9869,12 @@ void TProof::CloseProgressDialog()
    Emit("CloseProgressDialog()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset progress dialog.
+
 void TProof::ResetProgressDialog(const char *sel, Int_t sz, Long64_t fst,
                                  Long64_t ent)
 {
-   // Reset progress dialog.
-
    PDB(kGlobal,1)
       Info("ResetProgressDialog","(%s,%d,%lld,%lld)", sel, sz, fst, ent);
 
@@ -9880,11 +9882,11 @@ void TProof::ResetProgressDialog(const char *sel, Int_t sz, Long64_t fst,
           4, sel, sz, fst, ent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send startup message.
+
 void TProof::StartupMessage(const char *msg, Bool_t st, Int_t done, Int_t total)
 {
-   // Send startup message.
-
    PDB(kGlobal,1)
       Info("StartupMessage","(%s,%d,%d,%d)", msg, st, done, total);
 
@@ -9892,11 +9894,11 @@ void TProof::StartupMessage(const char *msg, Bool_t st, Int_t done, Int_t total)
           4, msg, st, done, total);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send dataset preparation status.
+
 void TProof::DataSetStatus(const char *msg, Bool_t st, Int_t done, Int_t total)
 {
-   // Send dataset preparation status.
-
    PDB(kGlobal,1)
       Info("DataSetStatus","(%s,%d,%d,%d)", msg, st, done, total);
 
@@ -9904,12 +9906,12 @@ void TProof::DataSetStatus(const char *msg, Bool_t st, Int_t done, Int_t total)
           4, msg, st, done, total);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send or notify data set status
+
 void TProof::SendDataSetStatus(const char *action, UInt_t done,
                                UInt_t tot, Bool_t st)
 {
-   // Send or notify data set status
-
    if (IsLite()) {
       if (tot) {
          TString type = "files";
@@ -9937,22 +9939,22 @@ void TProof::SendDataSetStatus(const char *action, UInt_t done,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify availability of a query result.
+
 void TProof::QueryResultReady(const char *ref)
 {
-   // Notify availability of a query result.
-
    PDB(kGlobal,1)
       Info("QueryResultReady","ref: %s", ref);
 
    Emit("QueryResultReady(const char*)",ref);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Validate a TDSet.
+
 void TProof::ValidateDSet(TDSet *dset)
 {
-   // Validate a TDSet.
-
    if (dset->ElementsValid()) return;
 
    TList nodes;
@@ -10086,15 +10088,15 @@ void TProof::ValidateDSet(TDSet *dset)
    SetDSet(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add data objects that might be needed during the processing of
+/// the selector (see Process()). This object can be very large, so they
+/// are distributed in an optimized way using a dedicated file.
+/// If push is TRUE the input data are sent over even if no apparent change
+/// occured to the list.
+
 void TProof::AddInputData(TObject *obj, Bool_t push)
 {
-   // Add data objects that might be needed during the processing of
-   // the selector (see Process()). This object can be very large, so they
-   // are distributed in an optimized way using a dedicated file.
-   // If push is TRUE the input data are sent over even if no apparent change
-   // occured to the list.
-
    if (obj) {
       if (!fInputData) fInputData = new TList;
       if (!fInputData->FindObject(obj)) {
@@ -10105,12 +10107,12 @@ void TProof::AddInputData(TObject *obj, Bool_t push)
    if (push) SetBit(TProof::kNewInputData);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove obj form the input data list; if obj is null (default), clear the
+/// input data info.
+
 void TProof::ClearInputData(TObject *obj)
 {
-   // Remove obj form the input data list; if obj is null (default), clear the
-   // input data info.
-
    if (!obj) {
       if (fInputData) {
          fInputData->SetOwner(kTRUE);
@@ -10140,24 +10142,24 @@ void TProof::ClearInputData(TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove obj 'name' form the input data list;
+
 void TProof::ClearInputData(const char *name)
 {
-   // Remove obj 'name' form the input data list;
-
    TObject *obj = (fInputData && name) ? fInputData->FindObject(name) : 0;
    if (obj) ClearInputData(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the file to be used to optimally distribute the input data objects.
+/// If the file exists the object in the file are added to those in the
+/// fInputData list. If the file path is null, a default file will be created
+/// at the moment of sending the processing request with the content of
+/// the fInputData list. See also SendInputDataFile.
+
 void TProof::SetInputDataFile(const char *datafile)
 {
-   // Set the file to be used to optimally distribute the input data objects.
-   // If the file exists the object in the file are added to those in the
-   // fInputData list. If the file path is null, a default file will be created
-   // at the moment of sending the processing request with the content of
-   // the fInputData list. See also SendInputDataFile.
-
    if (datafile && strlen(datafile) > 0) {
       if (fInputDataFile != datafile && strcmp(datafile, kPROOF_InputDataFile))
          SetBit(TProof::kNewInputData);
@@ -10174,17 +10176,17 @@ void TProof::SetInputDataFile(const char *datafile)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send the input data objects to the master; the objects are taken from the
+/// dedicated list and / or the specified file.
+/// If the fInputData is empty the specified file is sent over.
+/// If there is no specified file, a file named "inputdata.root" is created locally
+/// with the content of fInputData and sent over to the master.
+/// If both fInputData and the specified file are not empty, a copy of the file
+/// is made locally and augmented with the content of fInputData.
+
 void TProof::SendInputDataFile()
 {
-   // Send the input data objects to the master; the objects are taken from the
-   // dedicated list and / or the specified file.
-   // If the fInputData is empty the specified file is sent over.
-   // If there is no specified file, a file named "inputdata.root" is created locally
-   // with the content of fInputData and sent over to the master.
-   // If both fInputData and the specified file are not empty, a copy of the file
-   // is made locally and augmented with the content of fInputData.
-
    // Prepare the file
    TString dataFile;
    PrepareInputDataFile(dataFile);
@@ -10201,17 +10203,17 @@ void TProof::SendInputDataFile()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prepare the file with the input data objects to be sent the master; the
+/// objects are taken from the dedicated list and / or the specified file.
+/// If the fInputData is empty the specified file is sent over.
+/// If there is no specified file, a file named "inputdata.root" is created locally
+/// with the content of fInputData and sent over to the master.
+/// If both fInputData and the specified file are not empty, a copy of the file
+/// is made locally and augmented with the content of fInputData.
+
 void TProof::PrepareInputDataFile(TString &dataFile)
 {
-   // Prepare the file with the input data objects to be sent the master; the
-   // objects are taken from the dedicated list and / or the specified file.
-   // If the fInputData is empty the specified file is sent over.
-   // If there is no specified file, a file named "inputdata.root" is created locally
-   // with the content of fInputData and sent over to the master.
-   // If both fInputData and the specified file are not empty, a copy of the file
-   // is made locally and augmented with the content of fInputData.
-
    // Save info about new data for usage in this call;
    Bool_t newdata = TestBit(TProof::kNewInputData) ? kTRUE : kFALSE;
    // Next time we need some change
@@ -10301,40 +10303,40 @@ void TProof::PrepareInputDataFile(TString &dataFile)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add objects that might be needed during the processing of
+/// the selector (see Process()).
+
 void TProof::AddInput(TObject *obj)
 {
-   // Add objects that might be needed during the processing of
-   // the selector (see Process()).
-
    if (fPlayer) fPlayer->AddInput(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear input object list.
+
 void TProof::ClearInput()
 {
-   // Clear input object list.
-
    if (fPlayer) fPlayer->ClearInput();
 
    // the system feedback list is always in the input list
    AddInput(fFeedback);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get input list.
+
 TList *TProof::GetInputList()
 {
-   // Get input list.
-
    return (fPlayer ? fPlayer->GetInputList() : (TList *)0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get specified object that has been produced during the processing
+/// (see Process()).
+
 TObject *TProof::GetOutput(const char *name)
 {
-   // Get specified object that has been produced during the processing
-   // (see Process()).
-
 
    if (TestBit(TProof::kIsMaster))
       // Can be called by MarkBad on the master before the player is initialized
@@ -10344,11 +10346,11 @@ TObject *TProof::GetOutput(const char *name)
    return (GetOutputList()) ? GetOutputList()->FindObject(name) : (TObject *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find object 'name' in list 'out' or in the files specified in there
+
 TObject *TProof::GetOutput(const char *name, TList *out)
 {
-   // Find object 'name' in list 'out' or in the files specified in there
-
    TObject *o = 0;
    if (!name || (name && strlen(name) <= 0) ||
        !out || (out && out->GetSize() <= 0)) return o;
@@ -10376,11 +10378,11 @@ TObject *TProof::GetOutput(const char *name, TList *out)
    return o;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list with all object created during processing (see Process()).
+
 TList *TProof::GetOutputList()
 {
-   // Get list with all object created during processing (see Process()).
-
    if (fOutputList.GetSize() > 0) return &fOutputList;
    if (fPlayer) {
       fOutputList.AttachList(fPlayer->GetOutputList());
@@ -10389,12 +10391,12 @@ TList *TProof::GetOutputList()
    return (TList *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set input list parameter. If the parameter is already
+/// set it will be set to the new value.
+
 void TProof::SetParameter(const char *par, const char *value)
 {
-   // Set input list parameter. If the parameter is already
-   // set it will be set to the new value.
-
    if (!fPlayer) {
       Warning("SetParameter", "player undefined! Ignoring");
       return;
@@ -10409,11 +10411,11 @@ void TProof::SetParameter(const char *par, const char *value)
    il->Add(new TNamed(par, value));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set an input list parameter.
+
 void TProof::SetParameter(const char *par, Int_t value)
 {
-   // Set an input list parameter.
-
    if (!fPlayer) {
       Warning("SetParameter", "player undefined! Ignoring");
       return;
@@ -10428,11 +10430,11 @@ void TProof::SetParameter(const char *par, Int_t value)
    il->Add(new TParameter<Int_t>(par, value));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set an input list parameter.
+
 void TProof::SetParameter(const char *par, Long_t value)
 {
-   // Set an input list parameter.
-
    if (!fPlayer) {
       Warning("SetParameter", "player undefined! Ignoring");
       return;
@@ -10447,11 +10449,11 @@ void TProof::SetParameter(const char *par, Long_t value)
    il->Add(new TParameter<Long_t>(par, value));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set an input list parameter.
+
 void TProof::SetParameter(const char *par, Long64_t value)
 {
-   // Set an input list parameter.
-
    if (!fPlayer) {
       Warning("SetParameter", "player undefined! Ignoring");
       return;
@@ -10466,11 +10468,11 @@ void TProof::SetParameter(const char *par, Long64_t value)
    il->Add(new TParameter<Long64_t>(par, value));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set an input list parameter.
+
 void TProof::SetParameter(const char *par, Double_t value)
 {
-   // Set an input list parameter.
-
    if (!fPlayer) {
       Warning("SetParameter", "player undefined! Ignoring");
       return;
@@ -10485,12 +10487,12 @@ void TProof::SetParameter(const char *par, Double_t value)
    il->Add(new TParameter<Double_t>(par, value));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get specified parameter. A parameter set via SetParameter() is either
+/// a TParameter or a TNamed or 0 in case par is not defined.
+
 TObject *TProof::GetParameter(const char *par) const
 {
-   // Get specified parameter. A parameter set via SetParameter() is either
-   // a TParameter or a TNamed or 0 in case par is not defined.
-
    if (!fPlayer) {
       Warning("GetParameter", "player undefined! Ignoring");
       return (TObject *)0;
@@ -10500,12 +10502,12 @@ TObject *TProof::GetParameter(const char *par) const
    return il->FindObject(par);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the input list parameters specified by a wildcard (e.g. PROOF_*)
+/// or exact name (e.g. PROOF_MaxSlavesPerNode).
+
 void TProof::DeleteParameters(const char *wildcard)
 {
-   // Delete the input list parameters specified by a wildcard (e.g. PROOF_*)
-   // or exact name (e.g. PROOF_MaxSlavesPerNode).
-
    if (!fPlayer) return;
 
    if (!wildcard) wildcard = "";
@@ -10525,12 +10527,12 @@ void TProof::DeleteParameters(const char *wildcard)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show the input list parameters specified by the wildcard.
+/// Default is the special PROOF control parameters (PROOF_*).
+
 void TProof::ShowParameters(const char *wildcard) const
 {
-   // Show the input list parameters specified by the wildcard.
-   // Default is the special PROOF control parameters (PROOF_*).
-
    if (!fPlayer) return;
 
    if (!wildcard) wildcard = "";
@@ -10557,22 +10559,22 @@ void TProof::ShowParameters(const char *wildcard) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to feedback list.
+
 void TProof::AddFeedback(const char *name)
 {
-   // Add object to feedback list.
-
    PDB(kFeedback, 3)
       Info("AddFeedback", "Adding object \"%s\" to feedback", name);
    if (fFeedback->FindObject(name) == 0)
       fFeedback->Add(new TObjString(name));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from feedback list.
+
 void TProof::RemoveFeedback(const char *name)
 {
-   // Remove object from feedback list.
-
    TObject *obj = fFeedback->FindObject(name);
    if (obj != 0) {
       fFeedback->Remove(obj);
@@ -10580,19 +10582,19 @@ void TProof::RemoveFeedback(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear feedback list.
+
 void TProof::ClearFeedback()
 {
-   // Clear feedback list.
-
    fFeedback->Delete();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show items in feedback list.
+
 void TProof::ShowFeedback() const
 {
-   // Show items in feedback list.
-
    if (fFeedback->GetSize() == 0) {
       Info("","no feedback requested");
       return;
@@ -10601,20 +10603,20 @@ void TProof::ShowFeedback() const
    fFeedback->Print();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return feedback list.
+
 TList *TProof::GetFeedbackList() const
 {
-   // Return feedback list.
-
    return fFeedback;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a tree header (a tree with nonexisting files) object for
+/// the DataSet.
+
 TTree *TProof::GetTreeHeader(TDSet *dset)
 {
-   // Creates a tree header (a tree with nonexisting files) object for
-   // the DataSet.
-
    TList *l = GetListOfActiveSlaves();
    TSlave *sl = (TSlave*) l->First();
    if (sl == 0) {
@@ -10661,36 +10663,36 @@ TTree *TProof::GetTreeHeader(TDSet *dset)
    return t;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw feedback creation proxy. When accessed via TProof avoids
+/// link dependency on libProofPlayer.
+
 TDrawFeedback *TProof::CreateDrawFeedback()
 {
-   // Draw feedback creation proxy. When accessed via TProof avoids
-   // link dependency on libProofPlayer.
-
    return (fPlayer ? fPlayer->CreateDrawFeedback(this) : (TDrawFeedback *)0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set draw feedback option.
+
 void TProof::SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt)
 {
-   // Set draw feedback option.
-
    if (fPlayer) fPlayer->SetDrawFeedbackOption(f, opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete draw feedback object.
+
 void TProof::DeleteDrawFeedback(TDrawFeedback *f)
 {
-   // Delete draw feedback object.
-
    if (fPlayer) fPlayer->DeleteDrawFeedback(f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   FIXME: to be written
+
 TList *TProof::GetOutputNames()
 {
-   //   FIXME: to be written
-
    return 0;
 /*
    TMessage msg(kPROOF_GETOUTPUTLIST);
@@ -10747,11 +10749,11 @@ TList *TProof::GetOutputNames()
 */
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build the PROOF's structure in the browser.
+
 void TProof::Browse(TBrowser *b)
 {
-   // Build the PROOF's structure in the browser.
-
    b->Add(fActiveSlaves, fActiveSlaves->Class(), "fActiveSlaves");
    b->Add(&fMaster, fMaster.Class(), "fMaster");
    b->Add(fFeedback, fFeedback->Class(), "fFeedback");
@@ -10767,23 +10769,23 @@ void TProof::Browse(TBrowser *b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a new PROOF player.
+
 void TProof::SetPlayer(TVirtualProofPlayer *player)
 {
-   // Set a new PROOF player.
-
    if (fPlayer)
       delete fPlayer;
    fPlayer = player;
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a TProofPlayer object. The player string specifies which
+/// player should be created: remote, slave, sm (supermaster) or base.
+/// Default is remote. Socket is needed in case a slave player is created.
+
 TVirtualProofPlayer *TProof::MakePlayer(const char *player, TSocket *s)
 {
-   // Construct a TProofPlayer object. The player string specifies which
-   // player should be created: remote, slave, sm (supermaster) or base.
-   // Default is remote. Socket is needed in case a slave player is created.
-
    if (!player)
       player = "remote";
 
@@ -10791,28 +10793,28 @@ TVirtualProofPlayer *TProof::MakePlayer(const char *player, TSocket *s)
    return GetPlayer();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add chain to data set
+
 void TProof::AddChain(TChain *chain)
 {
-   // Add chain to data set
-
    fChains->Add(chain);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove chain from data set
+
 void TProof::RemoveChain(TChain *chain)
 {
-   // Remove chain from data set
-
    fChains->Remove(chain);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask for remote logs in the range [start, end]. If start == -1 all the
+/// messages not yet received are sent back.
+
 void TProof::GetLog(Int_t start, Int_t end)
 {
-   // Ask for remote logs in the range [start, end]. If start == -1 all the
-   // messages not yet received are sent back.
-
    if (!IsValid() || TestBit(TProof::kIsMaster)) return;
 
    TMessage msg(kPROOF_LOGFILE);
@@ -10823,13 +10825,13 @@ void TProof::GetLog(Int_t start, Int_t end)
    Collect(kActive, fCollectTimeout);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill a TMacro with the log lines since the last reading (fLogFileR)
+/// Return (TMacro *)0 if no line was logged.
+/// The returned TMacro must be deleted by the caller.
+
 TMacro *TProof::GetLastLog()
 {
-   // Fill a TMacro with the log lines since the last reading (fLogFileR)
-   // Return (TMacro *)0 if no line was logged.
-   // The returned TMacro must be deleted by the caller.
-
    TMacro *maclog = 0;
 
    // Save present offset
@@ -10889,11 +10891,11 @@ TMacro *TProof::GetLastLog()
    return maclog;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display log of query pq into the log window frame
+
 void TProof::PutLog(TQueryResult *pq)
 {
-   // Display log of query pq into the log window frame
-
    if (!pq) return;
 
    TList *lines = pq->GetLogFile()->GetListOfLines();
@@ -10905,12 +10907,12 @@ void TProof::PutLog(TQueryResult *pq)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display on screen the content of the temporary log file for query
+/// in reference
+
 void TProof::ShowLog(const char *queryref)
 {
-   // Display on screen the content of the temporary log file for query
-   // in reference
-
    // Make sure we have all info (GetListOfQueries retrieves the
    // head info only)
    Retrieve(queryref);
@@ -10934,16 +10936,16 @@ void TProof::ShowLog(const char *queryref)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display on screen the content of the temporary log file.
+/// If qry == -2 show messages from the last (current) query.
+/// If qry == -1 all the messages not yet displayed are shown (default).
+/// If qry == 0, all the messages in the file are shown.
+/// If qry  > 0, only the messages related to query 'qry' are shown.
+/// For qry != -1 the original file offset is restored at the end
+
 void TProof::ShowLog(Int_t qry)
 {
-   // Display on screen the content of the temporary log file.
-   // If qry == -2 show messages from the last (current) query.
-   // If qry == -1 all the messages not yet displayed are shown (default).
-   // If qry == 0, all the messages in the file are shown.
-   // If qry  > 0, only the messages related to query 'qry' are shown.
-   // For qry != -1 the original file offset is restored at the end
-
    // Save present offset
    off_t nowlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_CUR);
    if (nowlog < 0) {
@@ -11063,12 +11065,12 @@ void TProof::ShowLog(Int_t qry)
       lseek(fileno(fLogFileR), nowlog, SEEK_SET);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set session with 'id' the default one. If 'id' is not found in the list,
+/// the current session is set as default
+
 void TProof::cd(Int_t id)
 {
-   // Set session with 'id' the default one. If 'id' is not found in the list,
-   // the current session is set as default
-
    if (GetManager()) {
       TProofDesc *d = GetManager()->GetProofDesc(id);
       if (d) {
@@ -11085,12 +11087,12 @@ void TProof::cd(Int_t id)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detach this instance to its proofserv.
+/// If opt is 'S' or 's' the remote server is shutdown
+
 void TProof::Detach(Option_t *opt)
 {
-   // Detach this instance to its proofserv.
-   // If opt is 'S' or 's' the remote server is shutdown
-
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) return;
 
@@ -11149,13 +11151,13 @@ void TProof::Detach(Option_t *opt)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set an alias for this session. If reconnection is supported, the alias
+/// will be communicated to the remote coordinator so that it can be recovered
+/// when reconnecting
+
 void TProof::SetAlias(const char *alias)
 {
-   // Set an alias for this session. If reconnection is supported, the alias
-   // will be communicated to the remote coordinator so that it can be recovered
-   // when reconnecting
-
    // Set it locally
    TNamed::SetTitle(alias);
    if (TestBit(TProof::kIsMaster))
@@ -11174,113 +11176,113 @@ void TProof::SetAlias(const char *alias)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// *** This function is deprecated and will disappear in future versions ***
+/// *** It is just a wrapper around TFile::Cp.
+/// *** Please use TProofMgr::UploadFiles.
+///
+/// Upload a set of files and save the list of files by name dataSetName.
+/// The 'files' argument is a list of TFileInfo objects describing the files
+/// as first url.
+/// The mask 'opt' is a combination of EUploadOpt:
+///   kAppend             (0x1)   if set true files will be appended to
+///                               the dataset existing by given name
+///   kOverwriteDataSet   (0x2)   if dataset with given name exited it
+///                               would be overwritten
+///   kNoOverwriteDataSet (0x4)   do not overwirte if the dataset exists
+///   kOverwriteAllFiles  (0x8)   overwrite all files that may exist
+///   kOverwriteNoFiles   (0x10)  overwrite none
+///   kAskUser            (0x0)   ask user before overwriteng dataset/files
+/// The default value is kAskUser.
+/// The user will be asked to confirm overwriting dataset or files unless
+/// specified opt provides the answer!
+/// If kOverwriteNoFiles is set, then a pointer to TList must be passed as
+/// skippedFiles argument. The function will add to this list TFileInfo
+/// objects describing all files that existed on the cluster and were
+/// not uploaded.
+///
+/// Communication Summary
+/// Client                             Master
+///    |------------>DataSetName----------->|
+///    |<-------kMESS_OK/kMESS_NOTOK<-------| (Name OK/file exist)
+/// (*)|-------> call RegisterDataSet ------->|
+/// (*) - optional
+
 Int_t TProof::UploadDataSet(const char *, TList *, const char *, Int_t, TList *)
 {
-   // *** This function is deprecated and will disappear in future versions ***
-   // *** It is just a wrapper around TFile::Cp.
-   // *** Please use TProofMgr::UploadFiles.
-   //
-   // Upload a set of files and save the list of files by name dataSetName.
-   // The 'files' argument is a list of TFileInfo objects describing the files
-   // as first url.
-   // The mask 'opt' is a combination of EUploadOpt:
-   //   kAppend             (0x1)   if set true files will be appended to
-   //                               the dataset existing by given name
-   //   kOverwriteDataSet   (0x2)   if dataset with given name exited it
-   //                               would be overwritten
-   //   kNoOverwriteDataSet (0x4)   do not overwirte if the dataset exists
-   //   kOverwriteAllFiles  (0x8)   overwrite all files that may exist
-   //   kOverwriteNoFiles   (0x10)  overwrite none
-   //   kAskUser            (0x0)   ask user before overwriteng dataset/files
-   // The default value is kAskUser.
-   // The user will be asked to confirm overwriting dataset or files unless
-   // specified opt provides the answer!
-   // If kOverwriteNoFiles is set, then a pointer to TList must be passed as
-   // skippedFiles argument. The function will add to this list TFileInfo
-   // objects describing all files that existed on the cluster and were
-   // not uploaded.
-   //
-   // Communication Summary
-   // Client                             Master
-   //    |------------>DataSetName----------->|
-   //    |<-------kMESS_OK/kMESS_NOTOK<-------| (Name OK/file exist)
-   // (*)|-------> call RegisterDataSet ------->|
-   // (*) - optional
-
    Printf(" *** WARNING: this function is obsolete: it has been replaced by TProofMgr::UploadFiles ***");
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// *** This function is deprecated and will disappear in future versions ***
+/// *** It is just a wrapper around TFile::Cp.
+/// *** Please use TProofMgr::UploadFiles.
+///
+/// Upload a set of files and save the list of files by name dataSetName.
+/// The mask 'opt' is a combination of EUploadOpt:
+///   kAppend             (0x1)   if set true files will be appended to
+///                               the dataset existing by given name
+///   kOverwriteDataSet   (0x2)   if dataset with given name exited it
+///                               would be overwritten
+///   kNoOverwriteDataSet (0x4)   do not overwirte if the dataset exists
+///   kOverwriteAllFiles  (0x8)   overwrite all files that may exist
+///   kOverwriteNoFiles   (0x10)  overwrite none
+///   kAskUser            (0x0)   ask user before overwriteng dataset/files
+/// The default value is kAskUser.
+/// The user will be asked to confirm overwriting dataset or files unless
+/// specified opt provides the answer!
+/// If kOverwriteNoFiles is set, then a pointer to TList must be passed as
+/// skippedFiles argument. The function will add to this list TFileInfo
+/// objects describing all files that existed on the cluster and were
+/// not uploaded.
+///
+
 Int_t TProof::UploadDataSet(const char *, const char *, const char *, Int_t, TList *)
 {
-   // *** This function is deprecated and will disappear in future versions ***
-   // *** It is just a wrapper around TFile::Cp.
-   // *** Please use TProofMgr::UploadFiles.
-   //
-   // Upload a set of files and save the list of files by name dataSetName.
-   // The mask 'opt' is a combination of EUploadOpt:
-   //   kAppend             (0x1)   if set true files will be appended to
-   //                               the dataset existing by given name
-   //   kOverwriteDataSet   (0x2)   if dataset with given name exited it
-   //                               would be overwritten
-   //   kNoOverwriteDataSet (0x4)   do not overwirte if the dataset exists
-   //   kOverwriteAllFiles  (0x8)   overwrite all files that may exist
-   //   kOverwriteNoFiles   (0x10)  overwrite none
-   //   kAskUser            (0x0)   ask user before overwriteng dataset/files
-   // The default value is kAskUser.
-   // The user will be asked to confirm overwriting dataset or files unless
-   // specified opt provides the answer!
-   // If kOverwriteNoFiles is set, then a pointer to TList must be passed as
-   // skippedFiles argument. The function will add to this list TFileInfo
-   // objects describing all files that existed on the cluster and were
-   // not uploaded.
-   //
-
    Printf(" *** WARNING: this function is obsolete: it has been replaced by TProofMgr::UploadFiles ***");
 
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// *** This function is deprecated and will disappear in future versions ***
+/// *** It is just a wrapper around TFile::Cp.
+/// *** Please use TProofMgr::UploadFiles.
+///
+/// Upload files listed in "file" to PROOF cluster.
+/// Where file = name of file containing list of files and
+/// dataset = dataset name and opt is a combination of EUploadOpt bits.
+/// Each file description (line) can include wildcards.
+/// Check TFileInfo compatibility
+
 Int_t TProof::UploadDataSetFromFile(const char *, const char *, const char *, Int_t, TList *)
 {
-   // *** This function is deprecated and will disappear in future versions ***
-   // *** It is just a wrapper around TFile::Cp.
-   // *** Please use TProofMgr::UploadFiles.
-   //
-   // Upload files listed in "file" to PROOF cluster.
-   // Where file = name of file containing list of files and
-   // dataset = dataset name and opt is a combination of EUploadOpt bits.
-   // Each file description (line) can include wildcards.
-   // Check TFileInfo compatibility
-
    Printf(" *** WARNING: this function is obsolete: it has been replaced by TProofMgr::UploadFiles ***");
 
     // Done
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register the 'dataSet' on the cluster under the current
+/// user, group and the given 'dataSetName'.
+/// If a dataset with the same name already exists the action fails unless 'opts'
+/// contains 'O', in which case the old dataset is overwritten, or contains 'U',
+/// in which case 'newDataSet' is added to the existing dataset (duplications are
+/// ignored, if any).
+/// If 'opts' contains 'V' the dataset files are also verified (if the dataset manager
+/// is configured to allow so). By default the dataset is not verified.
+/// If 'opts' contains 'T' the in the dataset object (status bits, meta,...)
+/// is trusted, i.e. not reset (if the dataset manager is configured to allow so).
+/// If 'opts' contains 'S' validation would be run serially (meaningful only if
+/// validation is required).
+/// Returns kTRUE on success.
+
 Bool_t TProof::RegisterDataSet(const char *dataSetName,
                                TFileCollection *dataSet, const char *optStr)
 {
-   // Register the 'dataSet' on the cluster under the current
-   // user, group and the given 'dataSetName'.
-   // If a dataset with the same name already exists the action fails unless 'opts'
-   // contains 'O', in which case the old dataset is overwritten, or contains 'U',
-   // in which case 'newDataSet' is added to the existing dataset (duplications are
-   // ignored, if any).
-   // If 'opts' contains 'V' the dataset files are also verified (if the dataset manager
-   // is configured to allow so). By default the dataset is not verified.
-   // If 'opts' contains 'T' the in the dataset object (status bits, meta,...)
-   // is trusted, i.e. not reset (if the dataset manager is configured to allow so).
-   // If 'opts' contains 'S' validation would be run serially (meaningful only if
-   // validation is required).
-   // Returns kTRUE on success.
-
    // Check TFileInfo compatibility
    if (fProtocol < 17) {
       Info("RegisterDataSet",
@@ -11332,13 +11334,13 @@ Bool_t TProof::RegisterDataSet(const char *dataSetName,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set/Change the name of the default tree. The tree name may contain
+/// subdir specification in the form "subdir/name".
+/// Returns 0 on success, -1 otherwise.
+
 Int_t TProof::SetDataSetTreeName(const char *dataset, const char *treename)
 {
-   // Set/Change the name of the default tree. The tree name may contain
-   // subdir specification in the form "subdir/name".
-   // Returns 0 on success, -1 otherwise.
-
    // Check TFileInfo compatibility
    if (fProtocol < 23) {
       Info("SetDataSetTreeName", "functionality not supported by the server");
@@ -11373,15 +11375,15 @@ Int_t TProof::SetDataSetTreeName(const char *dataset, const char *treename)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lists all datasets that match given uri.
+/// The 'optStr' can contain a comma-separated list of servers for which the
+/// information is wanted. If ':lite:' (case insensitive) is specified in 'optStr'
+/// only the global information in the TFileCollection is retrieved; useful to only
+/// get the list of available datasets.
+
 TMap *TProof::GetDataSets(const char *uri, const char *optStr)
 {
-   // Lists all datasets that match given uri.
-   // The 'optStr' can contain a comma-separated list of servers for which the
-   // information is wanted. If ':lite:' (case insensitive) is specified in 'optStr'
-   // only the global information in the TFileCollection is retrieved; useful to only
-   // get the list of available datasets.
-
    if (fProtocol < 15) {
       Info("GetDataSets",
            "functionality not available: the server does not have dataset support");
@@ -11413,12 +11415,12 @@ TMap *TProof::GetDataSets(const char *uri, const char *optStr)
    return dataSetMap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shows datasets in locations that match the uri.
+/// By default shows the user's datasets and global ones
+
 void TProof::ShowDataSets(const char *uri, const char* optStr)
 {
-   // Shows datasets in locations that match the uri.
-   // By default shows the user's datasets and global ones
-
    if (fProtocol < 15) {
       Info("ShowDataSets",
            "functionality not available: the server does not have dataset support");
@@ -11436,11 +11438,11 @@ void TProof::ShowDataSets(const char *uri, const char* optStr)
       Error("ShowDataSets", "error receiving datasets information");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if 'dataset' exists, kFALSE otherwise
+
 Bool_t TProof::ExistsDataSet(const char *dataset)
 {
-   // Returns kTRUE if 'dataset' exists, kFALSE otherwise
-
    if (fProtocol < 15) {
       Info("ExistsDataSet", "functionality not available: the server has an"
                             " incompatible version of TFileInfo");
@@ -11464,11 +11466,11 @@ Bool_t TProof::ExistsDataSet(const char *dataset)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the content of the dataset cache, if any (matching 'dataset', if defined).
+
 void TProof::ClearDataSetCache(const char *dataset)
 {
-   // Clear the content of the dataset cache, if any (matching 'dataset', if defined).
-
    if (fProtocol < 28) {
       Info("ClearDataSetCache", "functionality not available on server");
       return;
@@ -11482,11 +11484,11 @@ void TProof::ClearDataSetCache(const char *dataset)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display the content of the dataset cache, if any (matching 'dataset', if defined).
+
 void TProof::ShowDataSetCache(const char *dataset)
 {
-   // Display the content of the dataset cache, if any (matching 'dataset', if defined).
-
    if (fProtocol < 28) {
       Info("ShowDataSetCache", "functionality not available on server");
       return;
@@ -11500,16 +11502,16 @@ void TProof::ShowDataSetCache(const char *dataset)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a list of TFileInfo objects describing the files of the specified
+/// dataset.
+/// To get the short version (containing only the global meta information)
+/// specify optStr = "S:" or optStr = "short:".
+/// To get the sub-dataset of files located on a given server(s) specify
+/// the list of servers (comma-separated) in the 'optStr' field.
+
 TFileCollection *TProof::GetDataSet(const char *uri, const char *optStr)
 {
-   // Get a list of TFileInfo objects describing the files of the specified
-   // dataset.
-   // To get the short version (containing only the global meta information)
-   // specify optStr = "S:" or optStr = "short:".
-   // To get the sub-dataset of files located on a given server(s) specify
-   // the list of servers (comma-separated) in the 'optStr' field.
-
    if (fProtocol < 15) {
       Info("GetDataSet", "functionality not available: the server has an"
                          " incompatible version of TFileInfo");
@@ -11545,11 +11547,11 @@ TFileCollection *TProof::GetDataSet(const char *uri, const char *optStr)
    return fileList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// display meta-info for given dataset usi
+
 void TProof::ShowDataSet(const char *uri, const char* opt)
 {
-   // display meta-info for given dataset usi
-
    TFileCollection *fileList = 0;
    if ((fileList = GetDataSet(uri))) {
       fileList->Print(opt);
@@ -11558,12 +11560,12 @@ void TProof::ShowDataSet(const char *uri, const char* opt)
       Warning("ShowDataSet","no such dataset: %s", uri);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the specified dataset from the PROOF cluster.
+/// Files are not deleted.
+
 Int_t TProof::RemoveDataSet(const char *uri, const char* optStr)
 {
-   // Remove the specified dataset from the PROOF cluster.
-   // Files are not deleted.
-
    TMessage nameMess(kPROOF_DATASETS);
    nameMess << Int_t(kRemoveDataSet);
    nameMess << TString(uri?uri:"");
@@ -11578,21 +11580,21 @@ Int_t TProof::RemoveDataSet(const char *uri, const char* optStr)
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find datasets, returns in a TList all found datasets.
+
 TList* TProof::FindDataSets(const char* /*searchString*/, const char* /*optStr*/)
 {
-   // Find datasets, returns in a TList all found datasets.
-
    Error ("FindDataSets", "not yet implemented");
    return (TList *) 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allows users to request staging of a particular dataset. Requests are
+/// saved in a special dataset repository and must be honored by the endpoint.
+
 Bool_t TProof::RequestStagingDataSet(const char *dataset)
 {
-   // Allows users to request staging of a particular dataset. Requests are
-   // saved in a special dataset repository and must be honored by the endpoint.
-
    if (fProtocol < 35) {
       Error("RequestStagingDataSet",
          "functionality not supported by the server");
@@ -11613,12 +11615,12 @@ Bool_t TProof::RequestStagingDataSet(const char *dataset)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cancels a dataset staging request. Returns kTRUE on success, kFALSE on
+/// failure. Dataset not found equals to a failure.
+
 Bool_t TProof::CancelStagingDataSet(const char *dataset)
 {
-   // Cancels a dataset staging request. Returns kTRUE on success, kFALSE on
-   // failure. Dataset not found equals to a failure.
-
    if (fProtocol < 36) {
       Error("CancelStagingDataSet",
          "functionality not supported by the server");
@@ -11639,13 +11641,13 @@ Bool_t TProof::CancelStagingDataSet(const char *dataset)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Obtains a TFileCollection showing the staging status of the specified
+/// dataset. A valid dataset manager and dataset staging requests repository
+/// must be present on the endpoint.
+
 TFileCollection *TProof::GetStagingStatusDataSet(const char *dataset)
 {
-   // Obtains a TFileCollection showing the staging status of the specified
-   // dataset. A valid dataset manager and dataset staging requests repository
-   // must be present on the endpoint.
-
    if (fProtocol < 35) {
       Error("GetStagingStatusDataSet",
          "functionality not supported by the server");
@@ -11684,11 +11686,11 @@ TFileCollection *TProof::GetStagingStatusDataSet(const char *dataset)
    return fc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Like GetStagingStatusDataSet, but displays results immediately.
+
 void TProof::ShowStagingStatusDataSet(const char *dataset, const char *opt)
 {
-   // Like GetStagingStatusDataSet, but displays results immediately.
-
    TFileCollection *fc = GetStagingStatusDataSet(dataset);
    if (fc) {
       fc->Print(opt);
@@ -11696,13 +11698,13 @@ void TProof::ShowStagingStatusDataSet(const char *dataset, const char *opt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Verify if all files in the specified dataset are available.
+/// Print a list and return the number of missing files.
+/// Returns -1 in case of error.
+
 Int_t TProof::VerifyDataSet(const char *uri, const char *optStr)
 {
-   // Verify if all files in the specified dataset are available.
-   // Print a list and return the number of missing files.
-   // Returns -1 in case of error.
-
    if (fProtocol < 15) {
       Info("VerifyDataSet", "functionality not available: the server has an"
                             " incompatible version of TFileInfo");
@@ -11748,12 +11750,12 @@ Int_t TProof::VerifyDataSet(const char *uri, const char *optStr)
    return VerifyDataSetParallel(uri, optStr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal function for parallel dataset verification used TProof::VerifyDataSet and
+/// TProofLite::VerifyDataSet
+
 Int_t TProof::VerifyDataSetParallel(const char *uri, const char *optStr)
 {
-   // Internal function for parallel dataset verification used TProof::VerifyDataSet and
-   // TProofLite::VerifyDataSet
-
    Int_t nmissingfiles = 0;
 
    // Let PROOF master prepare node-files map
@@ -11844,11 +11846,11 @@ Int_t TProof::VerifyDataSetParallel(const char *uri, const char *optStr)
    return nmissingfiles;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns a map of the quotas of all groups
+
 TMap *TProof::GetDataSetQuota(const char* optStr)
 {
-   // returns a map of the quotas of all groups
-
    if (IsLite()) {
       Info("UploadDataSet", "Lite-session: functionality not implemented");
       return (TMap *)0;
@@ -11876,12 +11878,12 @@ TMap *TProof::GetDataSetQuota(const char* optStr)
    return groupQuotaMap;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// shows the quota and usage of all groups
+/// if opt contains "U" shows also distribution of usage on user-level
+
 void TProof::ShowDataSetQuota(Option_t* opt)
 {
-   // shows the quota and usage of all groups
-   // if opt contains "U" shows also distribution of usage on user-level
-
    if (fProtocol < 15) {
       Info("ShowDataSetQuota",
            "functionality not available: the server does not have dataset support");
@@ -11903,64 +11905,65 @@ void TProof::ShowDataSetQuota(Option_t* opt)
       Error("ShowDataSetQuota", "error receiving quota information");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If in active in a monitor set ready state
+
 void TProof::InterruptCurrentMonitor()
 {
-   // If in active in a monitor set ready state
    if (fCurrentMonitor)
       fCurrentMonitor->Interrupt();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that the worker identified by the ordinal number 'ord' is
+/// in the active list. The request will be forwarded to the master
+/// in direct contact with the worker. If needed, this master will move
+/// the worker from the inactive to the active list and rebuild the list
+/// of unique workers.
+/// Use ord = "*" to activate all inactive workers.
+/// The string 'ord' can also be a comma-separated list of ordinal numbers the
+/// status of which will be modified at once.
+/// Return <0 if something went wrong (-2 if at least one worker was not found)
+/// or the number of workers with status change (on master; 0 on client).
+
 Int_t TProof::ActivateWorker(const char *ord, Bool_t save)
 {
-   // Make sure that the worker identified by the ordinal number 'ord' is
-   // in the active list. The request will be forwarded to the master
-   // in direct contact with the worker. If needed, this master will move
-   // the worker from the inactive to the active list and rebuild the list
-   // of unique workers.
-   // Use ord = "*" to activate all inactive workers.
-   // The string 'ord' can also be a comma-separated list of ordinal numbers the
-   // status of which will be modified at once.
-   // Return <0 if something went wrong (-2 if at least one worker was not found)
-   // or the number of workers with status change (on master; 0 on client).
-
    return ModifyWorkerLists(ord, kTRUE, save);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the worker identified by the ordinal number 'ord' from the
+/// the active list. The request will be forwarded to the master
+/// in direct contact with the worker. If needed, this master will move
+/// the worker from the active to the inactive list and rebuild the list
+/// of unique workers.
+/// Use ord = "*" to deactivate all active workers.
+/// The string 'ord' can also be a comma-separated list of ordinal numbers the
+/// status of which will be modified at once.
+/// Return <0 if something went wrong (-2 if at least one worker was not found)
+/// or the number of workers with status change (on master; 0 on client).
+
 Int_t TProof::DeactivateWorker(const char *ord, Bool_t save)
 {
-   // Remove the worker identified by the ordinal number 'ord' from the
-   // the active list. The request will be forwarded to the master
-   // in direct contact with the worker. If needed, this master will move
-   // the worker from the active to the inactive list and rebuild the list
-   // of unique workers.
-   // Use ord = "*" to deactivate all active workers.
-   // The string 'ord' can also be a comma-separated list of ordinal numbers the
-   // status of which will be modified at once.
-   // Return <0 if something went wrong (-2 if at least one worker was not found)
-   // or the number of workers with status change (on master; 0 on client).
-
    return ModifyWorkerLists(ord, kFALSE, save);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify the worker active/inactive list by making the worker identified by
+/// the ordinal number 'ord' active (add == TRUE) or inactive (add == FALSE).
+/// The string 'ord' can also be a comma-separated list of ordinal numbers the
+/// status of which will be modified at once.
+/// If needed, the request will be forwarded to the master in direct contact
+/// with the worker. The end-master will move the worker from one list to the
+/// other active and rebuild the list of unique active workers.
+/// Use ord = "*" to deactivate all active workers.
+/// If save is TRUE the current active list is saved before any modification is
+/// done; re-running with ord = "restore" restores the saved list
+/// Return <0 if something went wrong (-2 if at least one worker was not found)
+/// or the number of workers with status change (on master; 0 on client).
+
 Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
 {
-   // Modify the worker active/inactive list by making the worker identified by
-   // the ordinal number 'ord' active (add == TRUE) or inactive (add == FALSE).
-   // The string 'ord' can also be a comma-separated list of ordinal numbers the
-   // status of which will be modified at once.
-   // If needed, the request will be forwarded to the master in direct contact
-   // with the worker. The end-master will move the worker from one list to the
-   // other active and rebuild the list of unique active workers.
-   // Use ord = "*" to deactivate all active workers.
-   // If save is TRUE the current active list is saved before any modification is
-   // done; re-running with ord = "restore" restores the saved list
-   // Return <0 if something went wrong (-2 if at least one worker was not found)
-   // or the number of workers with status change (on master; 0 on client).
-
    // Make sure the input make sense
    if (!ord || strlen(ord) <= 0) {
       Info("ModifyWorkerLists",
@@ -12109,11 +12112,11 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
    return nwc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save current list of active workers
+
 void TProof::SaveActiveList()
 {
-   // Save current list of active workers
-
    if (!fActiveSlavesSaved.IsNull()) fActiveSlavesSaved = "";
    if (fInactiveSlaves->GetSize() == 0) {
       fActiveSlavesSaved = "*";
@@ -12124,11 +12127,11 @@ void TProof::SaveActiveList()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore saved list of active workers
+
 Int_t TProof::RestoreActiveList()
 {
-   // Restore saved list of active workers
-
    // Clear the current active list
    DeactivateWorker("*", kFALSE);
    // Restore the previous active list
@@ -12138,24 +12141,24 @@ Int_t TProof::RestoreActiveList()
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start a PROOF session on a specific cluster. If cluster is 0 (the
+/// default) then the PROOF Session Viewer GUI pops up and 0 is returned.
+/// If cluster is "lite://" we start a PROOF-lite session.
+/// If cluster is "" (empty string) then we connect to the cluster specified
+/// by 'Proof.LocalDefault', defaulting to "lite://".
+/// If cluster is "pod://" (case insensitive), then we connect to a PROOF cluster
+/// managed by PROOF on Demand (PoD, http://pod.gsi.de ).
+/// Via conffile a specific PROOF config file in the confir directory can be specified.
+/// Use loglevel to set the default loging level for debugging.
+/// The appropriate instance of TProofMgr is created, if not
+/// yet existing. The instantiated TProof object is returned.
+/// Use TProof::cd() to switch between PROOF sessions.
+/// For more info on PROOF see the TProof ctor.
+
 TProof *TProof::Open(const char *cluster, const char *conffile,
                                           const char *confdir, Int_t loglevel)
 {
-   // Start a PROOF session on a specific cluster. If cluster is 0 (the
-   // default) then the PROOF Session Viewer GUI pops up and 0 is returned.
-   // If cluster is "lite://" we start a PROOF-lite session.
-   // If cluster is "" (empty string) then we connect to the cluster specified
-   // by 'Proof.LocalDefault', defaulting to "lite://".
-   // If cluster is "pod://" (case insensitive), then we connect to a PROOF cluster
-   // managed by PROOF on Demand (PoD, http://pod.gsi.de ).
-   // Via conffile a specific PROOF config file in the confir directory can be specified.
-   // Use loglevel to set the default loging level for debugging.
-   // The appropriate instance of TProofMgr is created, if not
-   // yet existing. The instantiated TProof object is returned.
-   // Use TProof::cd() to switch between PROOF sessions.
-   // For more info on PROOF see the TProof ctor.
-
    const char *pn = "TProof::Open";
 
    // Make sure libProof and dependents are loaded and TProof can be created,
@@ -12290,12 +12293,12 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get instance of the effective manager for 'url'
+/// Return 0 on failure.
+
 TProofMgr *TProof::Mgr(const char *url)
 {
-   // Get instance of the effective manager for 'url'
-   // Return 0 on failure.
-
    if (!url)
       return (TProofMgr *)0;
 
@@ -12303,11 +12306,11 @@ TProofMgr *TProof::Mgr(const char *url)
    return TProofMgr::Create(url);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wrapper around TProofMgr::Reset(...).
+
 void TProof::Reset(const char *url, Bool_t hard)
 {
-   // Wrapper around TProofMgr::Reset(...).
-
    if (url) {
       TProofMgr *mgr = TProof::Mgr(url);
       if (mgr && mgr->IsValid())
@@ -12318,20 +12321,20 @@ void TProof::Reset(const char *url, Bool_t hard)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get environemnt variables.
+
 const TList *TProof::GetEnvVars()
 {
-   // Get environemnt variables.
-
    return fgProofEnvList;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an variable to the list of environment variables passed to proofserv
+/// on the master and slaves
+
 void TProof::AddEnvVar(const char *name, const char *value)
 {
-   // Add an variable to the list of environment variables passed to proofserv
-   // on the master and slaves
-
    if (gDebug > 0) ::Info("TProof::AddEnvVar","%s=%s", name, value);
 
    if (fgProofEnvList == 0) {
@@ -12348,12 +12351,12 @@ void TProof::AddEnvVar(const char *name, const char *value)
    fgProofEnvList->Add(new TNamed(name, value));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove an variable from the list of environment variables passed to proofserv
+/// on the master and slaves
+
 void TProof::DelEnvVar(const char *name)
 {
-   // Remove an variable from the list of environment variables passed to proofserv
-   // on the master and slaves
-
    if (fgProofEnvList == 0) return;
 
    TObject *o = fgProofEnvList->FindObject(name);
@@ -12362,24 +12365,24 @@ void TProof::DelEnvVar(const char *name)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the list of environment variables passed to proofserv
+/// on the master and slaves
+
 void TProof::ResetEnvVars()
 {
-   // Clear the list of environment variables passed to proofserv
-   // on the master and slaves
-
    if (fgProofEnvList == 0) return;
 
    SafeDelete(fgProofEnvList);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save information about the worker set in the file .workers in the working
+/// dir. Called each time there is a change in the worker setup, e.g. by
+/// TProof::MarkBad().
+
 void TProof::SaveWorkerInfo()
 {
-   // Save information about the worker set in the file .workers in the working
-   // dir. Called each time there is a change in the worker setup, e.g. by
-   // TProof::MarkBad().
-
    // We must be masters
    if (TestBit(TProof::kIsClient))
       return;
@@ -12488,13 +12491,13 @@ void TProof::SaveWorkerInfo()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the value from the specified parameter from the specified collection.
+/// Returns -1 in case of error (i.e. list is 0, parameter does not exist
+/// or value type does not match), 0 otherwise.
+
 Int_t TProof::GetParameter(TCollection *c, const char *par, TString &value)
 {
-   // Get the value from the specified parameter from the specified collection.
-   // Returns -1 in case of error (i.e. list is 0, parameter does not exist
-   // or value type does not match), 0 otherwise.
-
    TObject *obj = c ? c->FindObject(par) : (TObject *)0;
    if (obj) {
       TNamed *p = dynamic_cast<TNamed*>(obj);
@@ -12507,13 +12510,13 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, TString &value)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the value from the specified parameter from the specified collection.
+/// Returns -1 in case of error (i.e. list is 0, parameter does not exist
+/// or value type does not match), 0 otherwise.
+
 Int_t TProof::GetParameter(TCollection *c, const char *par, Int_t &value)
 {
-   // Get the value from the specified parameter from the specified collection.
-   // Returns -1 in case of error (i.e. list is 0, parameter does not exist
-   // or value type does not match), 0 otherwise.
-
    TObject *obj = c ? c->FindObject(par) : (TObject *)0;
    if (obj) {
       TParameter<Int_t> *p = dynamic_cast<TParameter<Int_t>*>(obj);
@@ -12525,13 +12528,13 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Int_t &value)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the value from the specified parameter from the specified collection.
+/// Returns -1 in case of error (i.e. list is 0, parameter does not exist
+/// or value type does not match), 0 otherwise.
+
 Int_t TProof::GetParameter(TCollection *c, const char *par, Long_t &value)
 {
-   // Get the value from the specified parameter from the specified collection.
-   // Returns -1 in case of error (i.e. list is 0, parameter does not exist
-   // or value type does not match), 0 otherwise.
-
    TObject *obj = c ? c->FindObject(par) : (TObject *)0;
    if (obj) {
       TParameter<Long_t> *p = dynamic_cast<TParameter<Long_t>*>(obj);
@@ -12543,13 +12546,13 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Long_t &value)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the value from the specified parameter from the specified collection.
+/// Returns -1 in case of error (i.e. list is 0, parameter does not exist
+/// or value type does not match), 0 otherwise.
+
 Int_t TProof::GetParameter(TCollection *c, const char *par, Long64_t &value)
 {
-   // Get the value from the specified parameter from the specified collection.
-   // Returns -1 in case of error (i.e. list is 0, parameter does not exist
-   // or value type does not match), 0 otherwise.
-
    TObject *obj = c ? c->FindObject(par) : (TObject *)0;
    if (obj) {
       TParameter<Long64_t> *p = dynamic_cast<TParameter<Long64_t>*>(obj);
@@ -12561,13 +12564,13 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Long64_t &value)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the value from the specified parameter from the specified collection.
+/// Returns -1 in case of error (i.e. list is 0, parameter does not exist
+/// or value type does not match), 0 otherwise.
+
 Int_t TProof::GetParameter(TCollection *c, const char *par, Double_t &value)
 {
-   // Get the value from the specified parameter from the specified collection.
-   // Returns -1 in case of error (i.e. list is 0, parameter does not exist
-   // or value type does not match), 0 otherwise.
-
    TObject *obj = c ? c->FindObject(par) : (TObject *)0;
    if (obj) {
       TParameter<Double_t> *p = dynamic_cast<TParameter<Double_t>*>(obj);
@@ -12579,15 +12582,15 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Double_t &value)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that dataset is in the form to be processed. This may mean
+/// retrieving the relevant info from the dataset manager or from the
+/// attached input list.
+/// Returns 0 on success, -1 on error
+
 Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
                             TDataSetManager *mgr, TString &emsg)
 {
-   // Make sure that dataset is in the form to be processed. This may mean
-   // retrieving the relevant info from the dataset manager or from the
-   // attached input list.
-   // Returns 0 on success, -1 on error
-
    emsg = "";
 
    // We must have something to process
@@ -12878,12 +12881,12 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save input data file from 'cachedir' into the sandbox or create a the file
+/// with input data objects
+
 Int_t TProof::SaveInputData(TQueryResult *qr, const char *cachedir, TString &emsg)
 {
-   // Save input data file from 'cachedir' into the sandbox or create a the file
-   // with input data objects
-
    TList *input = 0;
 
    // We must have got something to process
@@ -12948,11 +12951,11 @@ Int_t TProof::SaveInputData(TQueryResult *qr, const char *cachedir, TString &ems
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send the input data file to the workers
+
 Int_t TProof::SendInputData(TQueryResult *qr, TProof *p, TString &emsg)
 {
-   // Send the input data file to the workers
-
    TList *input = 0;
 
    // We must have got something to process
@@ -12981,11 +12984,11 @@ Int_t TProof::SendInputData(TQueryResult *qr, TProof *p, TString &emsg)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the input data from the file defined in the input list
+
 Int_t TProof::GetInputData(TList *input, const char *cachedir, TString &emsg)
 {
-   // Get the input data from the file defined in the input list
-
    // We must have got something to process
    if (!input || !cachedir || strlen(cachedir) <= 0) return 0;
 
@@ -13038,11 +13041,11 @@ Int_t TProof::GetInputData(TList *input, const char *cachedir, TString &emsg)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start the log viewer window usign the plugin manager
+
 void TProof::LogViewer(const char *url, Int_t idx)
 {
-   // Start the log viewer window usign the plugin manager
-
    if (!gROOT->IsBatch()) {
       // Get the handler, if not yet done
       if (!fgLogViewer) {
@@ -13076,25 +13079,25 @@ void TProof::LogViewer(const char *url, Int_t idx)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/Disable the graphic progress dialog.
+/// By default the dialog is enabled
+
 void TProof::SetProgressDialog(Bool_t on)
 {
-   // Enable/Disable the graphic progress dialog.
-   // By default the dialog is enabled
-
    if (on)
       SetBit(kUseProgressDialog);
    else
       ResetBit(kUseProgressDialog);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show information about missing files during query described by 'qr' or the
+/// last query if qr is null (default).
+/// A short summary is printed in the end.
+
 void TProof::ShowMissingFiles(TQueryResult *qr)
 {
-   // Show information about missing files during query described by 'qr' or the
-   // last query if qr is null (default).
-   // A short summary is printed in the end.
-
    TQueryResult *xqr = (qr) ? qr : GetQueryResult();
    if (!xqr) {
       Warning("ShowMissingFiles", "no (last) query found: do nothing");
@@ -13146,14 +13149,14 @@ void TProof::ShowMissingFiles(TQueryResult *qr)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a TFileCollection with the files missing in the query described by 'qr'
+/// or the last query if qr is null (default).
+/// Return a null pointer if none were found, for whatever reason.
+/// The caller is responsible for the returned object.
+
 TFileCollection *TProof::GetMissingFiles(TQueryResult *qr)
 {
-   // Get a TFileCollection with the files missing in the query described by 'qr'
-   // or the last query if qr is null (default).
-   // Return a null pointer if none were found, for whatever reason.
-   // The caller is responsible for the returned object.
-
    TFileCollection *fc = 0;
 
    TQueryResult *xqr = (qr) ? qr : GetQueryResult();
@@ -13192,11 +13195,11 @@ TFileCollection *TProof::GetMissingFiles(TQueryResult *qr)
    return fc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/Disable saving of the performance tree
+
 void TProof::SetPerfTree(const char *pf, Bool_t withWrks)
 {
-   // Enable/Disable saving of the performance tree
-
    if (pf && strlen(pf) > 0) {
       fPerfTree = pf;
       SetParameter("PROOF_StatsHist", "");
@@ -13212,13 +13215,13 @@ void TProof::SetPerfTree(const char *pf, Bool_t withWrks)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save performance information from TPerfStats to file 'pf'.
+/// If 'ref' is defined, do it for query 'ref'.
+/// Return 0 on sucecss, -1 in case of any error
+
 Int_t TProof::SavePerfTree(const char *pf, const char *ref)
 {
-   // Save performance information from TPerfStats to file 'pf'.
-   // If 'ref' is defined, do it for query 'ref'.
-   // Return 0 on sucecss, -1 in case of any error
-
    if (!IsValid()) {
       Error("SafePerfTree", "this TProof instance is invalid!");
       return -1;

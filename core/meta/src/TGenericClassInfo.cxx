@@ -235,31 +235,34 @@ namespace ROOT {
 
          //---------------------------------------------------------------------
          // Attach the schema evolution information
-         //---------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          CreateRuleSet( fReadRules, true );
          CreateRuleSet( fReadRawRules, false );
       }
       return fClass;
    }
 
-   //---------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// Attach the schema evolution information to TClassObject
+
    void TGenericClassInfo::CreateRuleSet( std::vector<TSchemaHelper>& vect,
                                           Bool_t ProcessReadRules )
    {
-      // Attach the schema evolution information to TClassObject
-
       if ( vect.empty() ) {
          return;
       }
 
       //------------------------------------------------------------------------
       // Get the rules set
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       TSchemaRuleSet* rset = fClass->GetSchemaRules( kTRUE );
 
       //------------------------------------------------------------------------
       // Process the rules
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       TSchemaRule* rule;
       TString errmsg;
       std::vector<TSchemaHelper>::iterator it;

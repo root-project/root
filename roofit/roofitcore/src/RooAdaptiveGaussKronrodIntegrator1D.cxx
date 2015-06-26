@@ -134,12 +134,12 @@ gsl_integration_qagiu (gsl_function * f,
 //-------------------------------------------------------------------
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register this class with RooNumIntConfig as a possible choice of numeric
+/// integrator for one-dimensional integrals over finite and infinite domains
+
 void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
-  // Register this class with RooNumIntConfig as a possible choice of numeric
-  // integrator for one-dimensional integrals over finite and infinite domains
-
   RooRealVar maxSeg("maxSeg","maximum number of segments",100) ;
   RooCategory method("method","Integration method for each segment") ;
   method.defineType("WynnEpsilon",0) ;
@@ -155,17 +155,20 @@ void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& f
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// coverity[UNINIT_CTOR]
+/// Default constructor
+
 RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D() : _x(0), _workspace(0)
 {
-  // coverity[UNINIT_CTOR]
-  // Default constructor
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor taking a function binding and a configuration object
+
 RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, 
 									 const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
@@ -173,8 +176,6 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
   _epsRel(config.epsAbs()),
   _workspace(0)
 {  
-  // Constructor taking a function binding and a configuration object
-  
   // Use this form of the constructor to integrate over the function's default range.
   const RooArgSet& confSet = config.getConfigSection(IsA()->GetName()) ;  
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
@@ -186,7 +187,9 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor taking a function binding, an integration range and a configuration object
+
 RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, 
 									 Double_t xmin, Double_t xmax,
 									 const RooNumIntConfig& config) :
@@ -197,8 +200,6 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
   _xmin(xmin),
   _xmax(xmax)
 {  
-  // Constructor taking a function binding, an integration range and a configuration object
-
   // Use this form of the constructor to integrate over the function's default range.
   const RooArgSet& confSet = config.getConfigSection(IsA()->GetName()) ;  
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
@@ -210,20 +211,21 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual constructor 
+
 RooAbsIntegrator* RooAdaptiveGaussKronrodIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
-  // Virtual constructor 
   return new RooAdaptiveGaussKronrodIntegrator1D(function,config) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize integrator allocate buffers and setup GSL workspace
+
 Bool_t RooAdaptiveGaussKronrodIntegrator1D::initialize()
 {
-  // Initialize integrator allocate buffers and setup GSL workspace
-
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
   _workspace = gsl_integration_workspace_alloc (_maxSeg)  ;
@@ -233,11 +235,11 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::initialize()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 {
-  // Destructor.
-
   if (_workspace) {
     gsl_integration_workspace_free ((gsl_integration_workspace*) _workspace) ;
   }
@@ -248,13 +250,13 @@ RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change our integration limits. Return kTRUE if the new limits are
+/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// if this object was constructed to always use our integrand's limits.
+
 Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax) 
 {
-  // Change our integration limits. Return kTRUE if the new limits are
-  // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
-  // if this object was constructed to always use our integrand's limits.
-
   if(_useIntegrandLimits) {
     coutE(Integration) << "RooAdaptiveGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
@@ -267,12 +269,12 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that our integration range is finite and otherwise return kFALSE.
+/// Update the limits from the integrand if requested.
+
 Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const 
 {
-  // Check that our integration range is finite and otherwise return kFALSE.
-  // Update the limits from the integrand if requested.
-  
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
     _xmin= integrand()->getMinLimit(0);
@@ -299,21 +301,22 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Glue function interacing to GSL code
+
 double RooAdaptiveGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data) 
 {
-  // Glue function interacing to GSL code
   RooAdaptiveGaussKronrodIntegrator1D* instance = (RooAdaptiveGaussKronrodIntegrator1D*) data ;
   return instance->integrand(instance->xvec(x)) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return integral at at given parameter values
+
 Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec) 
 {
-  // Calculate and return integral at at given parameter values
-
   assert(isValid());
 
   // Copy yvec to xvec if provided

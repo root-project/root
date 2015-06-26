@@ -30,65 +30,74 @@
 ClassImp(TStringLong)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TStringLong::TStringLong() : TString()
 {
-   //constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TStringLong::TStringLong(Ssiz_t ic) : TString(ic)
 {
-   //constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TStringLong::TStringLong(const TString& s) : TString(s)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TStringLong::TStringLong(const char* cs) : TString(cs)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor from a char*
+
 TStringLong::TStringLong(const char* cs, Ssiz_t n) : TString(cs,n)
 {
-   //constructor from a char*
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor from a char
+
 TStringLong::TStringLong(char c) : TString(c)
 {
-   //constructor from a char
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor from a char
+
 TStringLong::TStringLong(char c, Ssiz_t n) : TString(c,n)
 {
-   //constructor from a char
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor from a substring
+
 TStringLong::TStringLong(const TSubString& substr) : TString(substr)
 {
-   //constructor from a substring
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TStringLong::~TStringLong()
 {
-   //destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill buffer.
+
 void TStringLong::FillBuffer(char *&buffer) const
 {
-   // Fill buffer.
-
    Int_t nchars = Length();
    tobuf(buffer, nchars);
    const char *data = GetPointer();
@@ -96,11 +105,11 @@ void TStringLong::FillBuffer(char *&buffer) const
    buffer += nchars;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read this string from the buffer.
+
 void TStringLong::ReadBuffer(char *&buffer)
 {
-   // Read this string from the buffer.
-
    UnLink();
    Zero();
 
@@ -112,19 +121,19 @@ void TStringLong::ReadBuffer(char *&buffer)
    for (Int_t i = 0; i < nchars; i++) frombuf(buffer, &data[i]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the sizeof the string.
+
 Int_t TStringLong::Sizeof() const
 {
-   // Return the sizeof the string.
-
    return Length()+sizeof(Int_t);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a long (>255 characters) string object.
+
 void TStringLong::Streamer(TBuffer &b)
 {
-   // Stream a long (>255 characters) string object.
-
    Int_t nwh;
    if (b.IsReading()) {
       b >> nwh;

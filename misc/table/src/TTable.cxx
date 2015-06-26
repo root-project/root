@@ -181,22 +181,22 @@ const char *TTable::fgTypeName[] = {
    "unsigned char", "char", "Ptr_t"
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// ArrayLayout - calculates the array layout recursively
+///
+/// Input:
+/// -----
+/// dim   - dimension of the targeted array
+/// size  - the max index for each dimension
+///
+/// Output:
+/// ------
+/// layout - the "start index" for each dimension of an array
+///
+
 static void ArrayLayout(UInt_t *layout,const UInt_t *size, Int_t dim)
 {
-  //
-  // ArrayLayout - calculates the array layout recursively
-  //
-  // Input:
-  // -----
-  // dim   - dimension of the targeted array
-  // size  - the max index for each dimension
-  //
-  // Output:
-  // ------
-  // layout - the "start index" for each dimension of an array
-  //
-
    if (dim && layout && size) {
       if (++layout[dim-1] >= size[dim-1]) {
          layout[dim-1] = 0;
@@ -208,24 +208,26 @@ static void ArrayLayout(UInt_t *layout,const UInt_t *size, Int_t dim)
 
 ClassImp(TTable)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// protected: create a new TTableDescriptor descriptor for this table
+
 TTableDescriptor *TTable::GetTableDescriptors() const {
- // protected: create a new TTableDescriptor descriptor for this table
    assert(0);
    return new TTableDescriptor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// AsString represents the value provided via "void *b" with type defined
+///          by "name"
+///
+///   void *buf  - the pointer to the value to be printed out.
+///        type  - the basic data type for the value above
+///       width  - the number of psotion to be used to print the value out
+///
+
 void TTable::AsString(void *buf, EColumnType type, Int_t width,std::ostream &out) const
 {
-  //
-  // AsString represents the value provided via "void *b" with type defined
-  //          by "name"
-  //
-  //   void *buf  - the pointer to the value to be printed out.
-  //        type  - the basic data type for the value above
-  //       width  - the number of psotion to be used to print the value out
-  //
    int prevPrec = out.precision();
    const std::ios_base::fmtflags prevFmt = out.flags();
 
@@ -274,29 +276,32 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,std::ostream &out
    out.setf(prevFmt);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return table type name
+
 const char *TTable::GetTypeName(TTable::EColumnType type)
 {
-   //return table type name
    return  fgTypeName[type];
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return the Id of the C basic type by given name
+/// return kNAN if the name provided fits no knwn basic name.
+///
+
 TTable::EColumnType TTable::GetTypeId(const char *typeName)
 {
-   // return the Id of the C basic type by given name
-   // return kNAN if the name provided fits no knwn basic name.
-   //
    Int_t allTypes = sizeof(fgTypeName)/sizeof(const char *);
    for (int i = 0; i < allTypes; i++)
    if (!strcmp(fgTypeName[i],typeName)) return EColumnType(i);
    return kNAN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a pointer to the i-th row of the table
+
 const void *TTable::At(Int_t i) const
 {
-   // Returns a pointer to the i-th row of the table
    if (!BoundsOk("TTable::At", i)) {
        Warning("TTable::At","%s.%s",GetName(),GetType());
       i = 0;
@@ -304,28 +309,28 @@ const void *TTable::At(Int_t i) const
    return (const void *)(fTable+i*fSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CopyRows copies nRows from starting from the srcRow of srcTable
+/// to the dstRow in this table upto nRows or by the end of this table.
+///
+/// This table if automaticaly increased if expand = kTRUE.
+/// The old values of this table rows are to be destroyed and
+/// replaced with the new ones.
+///
+/// PARAMETERS:
+///   srcTable - a pointer to the table "donor"
+///   srcRow   - the index of the first row of the table donor to copy from
+///   dstRow   - the index of the first row of this table to copy to
+///   nRows    - the total number of rows to be copied. This table will be expanded
+///              as needed if expand = kTRUE (it is kFALSE "by default")
+///          = 0 to copy ALL remain rows from the srcTable.
+///   expand   - flag whether this table should reallocated if needed.
+///
+/// RETURN:
+///          the number of the rows been copied
+
 Int_t TTable::CopyRows(const TTable *srcTable, Long_t srcRow, Long_t dstRow, Long_t nRows, Bool_t expand)
 {
- // CopyRows copies nRows from starting from the srcRow of srcTable
- // to the dstRow in this table upto nRows or by the end of this table.
- //
- // This table if automaticaly increased if expand = kTRUE.
- // The old values of this table rows are to be destroyed and
- // replaced with the new ones.
- //
- // PARAMETERS:
- //   srcTable - a pointer to the table "donor"
- //   srcRow   - the index of the first row of the table donor to copy from
- //   dstRow   - the index of the first row of this table to copy to
- //   nRows    - the total number of rows to be copied. This table will be expanded
- //              as needed if expand = kTRUE (it is kFALSE "by default")
- //          = 0 to copy ALL remain rows from the srcTable.
- //   expand   - flag whether this table should reallocated if needed.
- //
- // RETURN:
- //          the number of the rows been copied
-
    assert(!TestBit(kIsNotOwn));
    if (!(srcTable && srcTable->GetNRows()) || srcRow > srcTable->GetNRows()-1   )   return 0;
    if (strcmp(GetType(),srcTable->GetType())) {
@@ -349,132 +354,133 @@ Int_t TTable::CopyRows(const TTable *srcTable, Long_t srcRow, Long_t dstRow, Lon
            ,srcTable->GetType());
    return 0;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete one or several rows from the table
+///
+///  Int_t indx  - index of the first row to be deleted
+///  Int_t nRows - the total number of rows to be deleted
+///              = 1 "by default
+
 void TTable::DeleteRows(Long_t indx, UInt_t nRows)
 {
-  // Delete one or several rows from the table
-  //
-  //  Int_t indx  - index of the first row to be deleted
-  //  Int_t nRows - the total number of rows to be deleted
-  //              = 1 "by default
    if (CopyRows(this, indx+nRows, indx, GetNRows()-indx-nRows))
       SetUsedRows(GetNRows() - nRows);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
+///*-*                  ===========================================
+///
+///   This function accepts TCut objects as arguments.
+///   Useful to use the string operator +
+///         example:
+///            table.Draw("x",cut1+cut2+cut3);
+///
+///   TCutG object with "CUTG" name can be created via the graphics editor.
+///
+
 TH1  *TTable::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
-//*-*                  ===========================================
-//
-//   This function accepts TCut objects as arguments.
-//   Useful to use the string operator +
-//         example:
-//            table.Draw("x",cut1+cut2+cut3);
-//
-//   TCutG object with "CUTG" name can be created via the graphics editor.
-//
-
    return TTable::Draw(varexp.GetTitle(), selection.GetTitle(), option, nentries, firstentry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
+///*-*                  ===========================================
+///
+///  varexp is an expression of the general form e1:e2:e3
+///    where e1,etc is a C++ expression referencing a combination of the TTable columns
+///          One can use two extra meta variable "i$" and "n$" along with the table
+///          column names.
+///          i$ is to involve the current row number
+///          n$ refers the total num,ber of rows of this table provided by TTable::GetNRows()
+///
+///  Example:
+///     varexp = x     simplest case: draw a 1-Dim distribution of column named x
+///            = sqrt(x)            : draw distribution of sqrt(x)
+///            = x*y/z
+///            = y:sqrt(x) 2-Dim dsitribution of y versus sqrt(x)
+///            = i$:sqrt(x) 2-Dim dsitribution of i versus sqrt(x[i])
+///            = phep[0]:sqrt(phep[3]) 2-Dim dsitribution of phep[0] versus sqrt(phep[3])
+///
+///  Note that the variables e1, e2 or e3 may contain a boolean expression as well.
+///  example, if e1= x*(y<0), the value histogrammed will be x if y<0
+///  and will be 0 otherwise.
+///
+///  selection is a C++ expression with a combination of the columns.
+///  The value corresponding to the selection expression is used as a weight
+///  to fill the histogram.
+///  If the expression includes only boolean operations, the result
+///  is 0 or 1. If the result is 0, the histogram is not filled.
+///  In general, the expression may be of the form:
+///
+///      value*(boolean expression)
+///
+///  if boolean expression is true, the histogram is filled with
+///  a weight = value.
+///  Examples:
+///      selection1 = "x<y && sqrt(z)>3.2 && 6 < i$ && i$ < n$"
+///      selection2 = "(x+y)*(sqrt(z)>3.2"
+///      selection3 = "signal*(log(signal)>1.2)"
+///  selection1 returns a weigth = 0 or 1
+///  selection2 returns a weight = x+y if sqrt(z)>3.2
+///             returns a weight = 0 otherwise.
+///  selection3 returns a weight = signal if log(signal)>1.2
+///
+///  option is the drawing option
+///      see TH1::Draw for the list of all drawing options.
+///      If option contains the string "goff", no graphics is generated.
+///
+///  nentries is the number of entries to process (default is all)
+///  first is the first entry to process (default is 0)
+///
+///     Saving the result of Draw to an histogram
+///     =========================================
+///  By default the temporary histogram created is called htemp.
+///  If varexp0 contains >>hnew (following the variable(s) name(s),
+///  the new histogram created is called hnew and it is kept in the current
+///  directory.
+///  Example:
+///    tree.Draw("sqrt(x)>>hsqrt","y>0")
+///    will draw sqrt(x) and save the histogram as "hsqrt" in the current
+///    directory.
+///
+///  By default, the specified histogram is reset.
+///  To continue to append data to an existing histogram, use "+" in front
+///  of the histogram name;
+///    table.Draw("sqrt(x)>>+hsqrt","y>0")
+///      will not reset hsqrt, but will continue filling.
+///
+///     Making a Profile histogram
+///     ==========================
+///  In case of a 2-Dim expression, one can generate a TProfile histogram
+///  instead of a TH2F histogram by specyfying option=prof or option=profs.
+///  The option=prof is automatically selected in case of y:x>>pf
+///  where pf is an existing TProfile histogram.
+///
+///     Saving the result of Draw to a TEventList
+///     =========================================
+///  TTable::Draw can be used to fill a TEventList object (list of entry numbers)
+///  instead of histogramming one variable.
+///  If varexp0 has the form >>elist , a TEventList object named "elist"
+///  is created in the current directory. elist will contain the list
+///  of entry numbers satisfying the current selection.
+///  Example:
+///    tree.Draw(">>yplus","y>0")
+///    will create a TEventList object named "yplus" in the current directory.
+///    In an interactive session, one can type (after TTable::Draw)
+///       yplus.Print("all")
+///    to print the list of entry numbers in the list.
+///
+///  By default, the specified entry list is reset.
+///  To continue to append data to an existing list, use "+" in front
+///  of the list name;
+///    table.Draw(">>+yplus","y>0")
+///      will not reset yplus, but will enter the selected entries at the end
+///      of the existing list.
+///
+
 TH1 *TTable::Draw(const char *varexp00, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
-//*-*                  ===========================================
-//
-//  varexp is an expression of the general form e1:e2:e3
-//    where e1,etc is a C++ expression referencing a combination of the TTable columns
-//          One can use two extra meta variable "i$" and "n$" along with the table
-//          column names.
-//          i$ is to involve the current row number
-//          n$ refers the total num,ber of rows of this table provided by TTable::GetNRows()
-//
-//  Example:
-//     varexp = x     simplest case: draw a 1-Dim distribution of column named x
-//            = sqrt(x)            : draw distribution of sqrt(x)
-//            = x*y/z
-//            = y:sqrt(x) 2-Dim dsitribution of y versus sqrt(x)
-//            = i$:sqrt(x) 2-Dim dsitribution of i versus sqrt(x[i])
-//            = phep[0]:sqrt(phep[3]) 2-Dim dsitribution of phep[0] versus sqrt(phep[3])
-//
-//  Note that the variables e1, e2 or e3 may contain a boolean expression as well.
-//  example, if e1= x*(y<0), the value histogrammed will be x if y<0
-//  and will be 0 otherwise.
-//
-//  selection is a C++ expression with a combination of the columns.
-//  The value corresponding to the selection expression is used as a weight
-//  to fill the histogram.
-//  If the expression includes only boolean operations, the result
-//  is 0 or 1. If the result is 0, the histogram is not filled.
-//  In general, the expression may be of the form:
-//
-//      value*(boolean expression)
-//
-//  if boolean expression is true, the histogram is filled with
-//  a weight = value.
-//  Examples:
-//      selection1 = "x<y && sqrt(z)>3.2 && 6 < i$ && i$ < n$"
-//      selection2 = "(x+y)*(sqrt(z)>3.2"
-//      selection3 = "signal*(log(signal)>1.2)"
-//  selection1 returns a weigth = 0 or 1
-//  selection2 returns a weight = x+y if sqrt(z)>3.2
-//             returns a weight = 0 otherwise.
-//  selection3 returns a weight = signal if log(signal)>1.2
-//
-//  option is the drawing option
-//      see TH1::Draw for the list of all drawing options.
-//      If option contains the string "goff", no graphics is generated.
-//
-//  nentries is the number of entries to process (default is all)
-//  first is the first entry to process (default is 0)
-//
-//     Saving the result of Draw to an histogram
-//     =========================================
-//  By default the temporary histogram created is called htemp.
-//  If varexp0 contains >>hnew (following the variable(s) name(s),
-//  the new histogram created is called hnew and it is kept in the current
-//  directory.
-//  Example:
-//    tree.Draw("sqrt(x)>>hsqrt","y>0")
-//    will draw sqrt(x) and save the histogram as "hsqrt" in the current
-//    directory.
-//
-//  By default, the specified histogram is reset.
-//  To continue to append data to an existing histogram, use "+" in front
-//  of the histogram name;
-//    table.Draw("sqrt(x)>>+hsqrt","y>0")
-//      will not reset hsqrt, but will continue filling.
-//
-//     Making a Profile histogram
-//     ==========================
-//  In case of a 2-Dim expression, one can generate a TProfile histogram
-//  instead of a TH2F histogram by specyfying option=prof or option=profs.
-//  The option=prof is automatically selected in case of y:x>>pf
-//  where pf is an existing TProfile histogram.
-//
-//     Saving the result of Draw to a TEventList
-//     =========================================
-//  TTable::Draw can be used to fill a TEventList object (list of entry numbers)
-//  instead of histogramming one variable.
-//  If varexp0 has the form >>elist , a TEventList object named "elist"
-//  is created in the current directory. elist will contain the list
-//  of entry numbers satisfying the current selection.
-//  Example:
-//    tree.Draw(">>yplus","y>0")
-//    will create a TEventList object named "yplus" in the current directory.
-//    In an interactive session, one can type (after TTable::Draw)
-//       yplus.Print("all")
-//    to print the list of entry numbers in the list.
-//
-//  By default, the specified entry list is reset.
-//  To continue to append data to an existing list, use "+" in front
-//  of the list name;
-//    table.Draw(">>+yplus","y>0")
-//      will not reset yplus, but will enter the selected entries at the end
-//      of the existing list.
-//
-
    if (GetNRows() == 0 || varexp00 == 0 || varexp00[0]==0) return 0;
    TString  opt;
 //   char *hdefault = (char *)"htemp";
@@ -542,7 +548,8 @@ TH1 *TTable::Draw(const char *varexp00, const char *selection, Option_t *option,
    expressions[colIndex] = selection;
 
 
-//--------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
    Printf(" Draw %s for <%s>\n", varexp00, selection);
    Char_t *exprFileName = MakeExpression(expressions,colIndex+1);
    if (!exprFileName) {
@@ -723,14 +730,14 @@ TH1 *TTable::Draw(const char *varexp00, const char *selection, Option_t *option,
    return gCurrentTableHist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Find reasonable bin values*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*              ==========================
+///*-*  This mathod is a straight copy of void TTree::FindGoodLimits method
+///*-*
+
 static void FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &xmax)
 {
-//*-*-*-*-*-*-*-*-*Find reasonable bin values*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              ==========================
-//*-*  This mathod is a straight copy of void TTree::FindGoodLimits method
-//*-*
-
    Double_t binlow=0,binhigh=0,binwidth=0;
    Int_t n;
    Double_t dx = 0.1*(xmax-xmin);
@@ -756,31 +763,32 @@ static void FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &
    newbins = nbins;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// EntryLoop creates a CINT bytecode to evaluate the given expressions for
+/// all table rows in loop and fill the appropriated histograms.
+///
+/// Solution for Byte code
+/// From: Masaharu Goto <MXJ02154@nifty.ne.jp>
+/// To: <fine@bnl.gov>
+/// Cc: <rootdev@hpsalo.cern.ch>
+/// Sent: 13-th august 1999 year  23:01
+///
+///  action =  1  Fill 1-D histogram obj
+///         =  2  Fill 2-D histogram obj
+///         =  3  Fill 3-D histogram obj
+///         =  4  Fill Profile histogram obj
+///         =  5  Fill a TEventlist
+///         = 11  Estimate Limits
+///         = 12  Fill 2-D PolyMarker obj
+///         = 13  Fill 3-D PolyMarker obj
+///  action < 0   Evaluate Limits for case abs(action)
+///
+///  Load file
+
 Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
                           ,Int_t nentries, Int_t firstentry, Option_t *option)
 {
- //
- // EntryLoop creates a CINT bytecode to evaluate the given expressions for
- // all table rows in loop and fill the appropriated histograms.
- //
- // Solution for Byte code
- // From: Masaharu Goto <MXJ02154@nifty.ne.jp>
- // To: <fine@bnl.gov>
- // Cc: <rootdev@hpsalo.cern.ch>
- // Sent: 13-th august 1999 year  23:01
- //
- //  action =  1  Fill 1-D histogram obj
- //         =  2  Fill 2-D histogram obj
- //         =  3  Fill 3-D histogram obj
- //         =  4  Fill Profile histogram obj
- //         =  5  Fill a TEventlist
- //         = 11  Estimate Limits
- //         = 12  Fill 2-D PolyMarker obj
- //         = 13  Fill 3-D PolyMarker obj
- //  action < 0   Evaluate Limits for case abs(action)
- //
- //  Load file
    Double_t rmin[3],rmax[3];
    if (gInterpreter->LoadFile((Char_t *)exprFileName) < 0) {
       Error("EntryLoop","Error: loading file %s",exprFileName);
@@ -1021,46 +1029,49 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TTable ctor.
+
 TTable::TTable(const char *name, Int_t size) : TDataSet(name),
          fSize(size),fN(0), fTable(0),fMaxIndex(0)
 {
-   // Default TTable ctor.
    if (size == 0) Warning("TTable(0)","Wrong table format");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TTable object and set array size to n longs.
+
 TTable::TTable(const char *name, Int_t n,Int_t size) : TDataSet(name),
         fSize(size),fN(0),fTable(0),fMaxIndex(0)
 {
-   // Create TTable object and set array size to n longs.
    if (n > 0) Set(n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TTable object and initialize it with values of array.
+
 TTable::TTable(const char *name, Int_t n, Char_t *table,Int_t size) : TDataSet(name),
          fSize(size),fN(0),fTable(0),fMaxIndex(0)
 {
-   // Create TTable object and initialize it with values of array.
-
    Set(n, table);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create TTable object and initialize it with values of array.
+
 TTable::TTable(const char *name, const char *type, Int_t n, Char_t *array, Int_t size)
          : TDataSet(name),fSize(size),fTable(0),fMaxIndex(0)
 {
-   // Create TTable object and initialize it with values of array.
-
    fTable = array;
    SetType(type);
    SetfN(n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TTable::TTable(const TTable &table):TDataSet(table)
 {
-   // Copy constructor.
    fTable    = 0;
    SetUsedRows(table.GetNRows());
    fSize     = table.GetRowSize();
@@ -1068,13 +1079,13 @@ TTable::TTable(const TTable &table):TDataSet(table)
    Set(table.fN, table.fTable);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TTable assignment operator.
+/// This operator REALLOCATEs this table to fit the number of
+/// the USED rows of the source table if any
+
 TTable &TTable::operator=(const TTable &rhs)
 {
-   // TTable assignment operator.
-   // This operator REALLOCATEs this table to fit the number of
-   // the USED rows of the source table if any
-
    if (strcmp(GetType(),rhs.GetType()) == 0) {
       if (this != &rhs && rhs.GetNRows() >0 ){
          Set(rhs.GetNRows(), rhs.fTable);
@@ -1085,34 +1096,35 @@ TTable &TTable::operator=(const TTable &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete TTable object.
+
 TTable::~TTable()
 {
-   // Delete TTable object.
    Delete();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt array arr into TTable, i.e. don't copy arr but use it directly
+/// in TTable. User may not delete arr, TTable dtor will do it.
+
 void TTable::Adopt(Int_t n, void *arr)
 {
-   // Adopt array arr into TTable, i.e. don't copy arr but use it directly
-   // in TTable. User may not delete arr, TTable dtor will do it.
-
    Clear();
 
    SetfN(n); SetUsedRows(n);
    fTable = (char *)arr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add        the "row" at the GetNRows() position, and
+/// reallocate the table if neccesary,               and
+/// return     the row index the "row" has occupied.
+///
+/// row == 0 see method TTable::AddAt(const void *row, Int_t i)
+
 Int_t TTable::AddAt(const void *row)
 {
-  // Add        the "row" at the GetNRows() position, and
-  // reallocate the table if neccesary,               and
-  // return     the row index the "row" has occupied.
-  //
-  // row == 0 see method TTable::AddAt(const void *row, Int_t i)
-
    Int_t gap = GetTableSize() - GetNRows();
    // do we need to add an extra space?
    if (gap < 1) ReAllocate(GetTableSize() + TMath::Max(1,Int_t(0.3*GetTableSize())));
@@ -1120,15 +1132,15 @@ Int_t TTable::AddAt(const void *row)
    AddAt(row,indx);
    return indx;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add    one element ("row") of structure at position "i".
+/// Check  for out of bounds.
+///
+///        If the row == 0 the "i" cell is still occupied and
+/// filled with the pattern "ff"
+
 void TTable::AddAt(const void *row, Int_t i)
 {
-   // Add    one element ("row") of structure at position "i".
-   // Check  for out of bounds.
-   //
-   //        If the row == 0 the "i" cell is still occupied and
-   // filled with the pattern "ff"
-
    if (!BoundsOk("TTable::AddAt", i))
       i = 0;
    if (row) memcpy(fTable+i*fSize,row,fSize);
@@ -1136,35 +1148,39 @@ void TTable::AddAt(const void *row, Int_t i)
    SetUsedRows(TMath::Max((Int_t)i+1,Int_t(fMaxIndex)));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the C-structure src into the new location
+/// the length of the strucutre is defined by this class descriptor
+
 void TTable::CopyStruct(Char_t *dest, const Char_t *src)
 {
- // Copy the C-structure src into the new location
- // the length of the strucutre is defined by this class descriptor
    ::memcpy(dest,src,fSize*fN);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TTable::CopySet(TTable &array)
 {
-   //to be documented
    array.Set(fN);
    CopyStruct(array.fTable,fTable);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a comment from the table descriptor
+
 const Char_t *TTable::GetColumnComment(Int_t columnIndex) const {
-   // Get a comment from the table descriptor
    TDataSetIter nextComment(GetRowDescriptors()->MakeCommentField(kFALSE));
    TDataSet *nxc = 0;
    for (int i=0; i<= columnIndex; i++) nxc = nextComment();
    return nxc ? nxc->GetTitle() : 0;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append nRows row of the array "row" to the table
+/// return
+///    - the new table size (# of table rows)
+///    - 0 if the object doesn't own the internal array and can not expand it
+
 Long_t TTable::AppendRows(const void *row, UInt_t nRows)
 {
-   // Append nRows row of the array "row" to the table
-   // return
-   //    - the new table size (# of table rows)
-   //    - 0 if the object doesn't own the internal array and can not expand it
    if (!TestBit(kIsNotOwn) && row && nRows ) {
       Int_t indx = GetNRows();
       ReAllocate(nRows);
@@ -1173,22 +1189,23 @@ Long_t TTable::AppendRows(const void *row, UInt_t nRows)
    }
    return TestBit(kIsNotOwn) ? 0 : GetSize();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// void InsertRows(cons void *row, Long_t indx, UInt_t nRows)
+///
+/// Insert one or several rows into the table at "indx" position
+/// The rest table stuff is shifted down
+///
+///  cons void    - a pointer to the array of rows to be inserted
+///  Long_t indx =  The position these rows will be inserted to
+///  Int_t nRows  - the total number of rows to be inserted
+///                 = 1 "by default
+///  return:
+///  The number of the rows has been shifted to accomodate
+///  the new rows.
+///
+
 Long_t TTable::InsertRows(const void *row, Long_t indx, UInt_t nRows)
 {
-  // void InsertRows(cons void *row, Long_t indx, UInt_t nRows)
-  //
-  // Insert one or several rows into the table at "indx" position
-  // The rest table stuff is shifted down
-  //
-  //  cons void    - a pointer to the array of rows to be inserted
-  //  Long_t indx =  The position these rows will be inserted to
-  //  Int_t nRows  - the total number of rows to be inserted
-  //                 = 1 "by default
-  //  return:
-  //  The number of the rows has been shifted to accomodate
-  //  the new rows.
-  //
    Long_t nShifted = 0;
    if (nRows > 0) {
       // Shift the table down
@@ -1199,35 +1216,36 @@ Long_t TTable::InsertRows(const void *row, Long_t indx, UInt_t nRows)
    return nShifted;
 
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reallocate this table leaving only (used rows)+1 allocated
+/// GetTableSize() = GetNRows() + 1
+/// returns a pointer to the first row of the reallocated table
+/// Note:
+/// The table is reallocated if it is an owner of the internal array
+
 void *TTable::ReAllocate()
 {
-  // Reallocate this table leaving only (used rows)+1 allocated
-  // GetTableSize() = GetNRows() + 1
-  // returns a pointer to the first row of the reallocated table
-  // Note:
-  // The table is reallocated if it is an owner of the internal array
-
    ReAlloc(GetNRows()+1);
    return (void *)fTable;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reallocate this table leaving only <newsize> allocated
+/// GetTableSize() = newsize;
+/// returns a pointer to the first row of the reallocated table
+/// Note:
+/// The table is reallocated if it is an owner of the internal array
+
 void *TTable::ReAllocate(Int_t newsize)
 {
-  // Reallocate this table leaving only <newsize> allocated
-  // GetTableSize() = newsize;
-  // returns a pointer to the first row of the reallocated table
-  // Note:
-  // The table is reallocated if it is an owner of the internal array
-
    if (newsize > fN) ReAlloc(newsize);
    return (void *)fTable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The table is reallocated if it is an owner of the internal array
+
 void TTable::ReAlloc(Int_t newsize)
 {
-  // The table is reallocated if it is an owner of the internal array
    if (!TestBit(kIsNotOwn) && newsize > 0) {
       void *arr = 0;
       Int_t sleepCounter = 0;
@@ -1247,11 +1265,12 @@ void TTable::ReAlloc(Int_t newsize)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate a space for the new table, if any
+/// Sleep for a while if space is not available and try again
+
 Char_t *TTable::Create()
 {
-   // Allocate a space for the new table, if any
-   // Sleep for a while if space is not available and try again
    if (!fTable) {
       void *ptr = 0;
       Int_t sleepCounter = 0;
@@ -1273,9 +1292,10 @@ Char_t *TTable::Create()
    return fTable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wrap each table coulumn with TColumnView object to browse.
+
 void TTable::Browse(TBrowser *b){
-   // Wrap each table coulumn with TColumnView object to browse.
    if (!b) return;
    TDataSet::Browse(b);
    Int_t nrows = TMath::Min(Int_t(GetNRows()),6);
@@ -1319,12 +1339,12 @@ void TTable::Browse(TBrowser *b){
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes the internal array of this class
+/// if this object does own its internal table
+
 void TTable::Clear(Option_t *opt)
 {
-   // Deletes the internal array of this class
-   // if this object does own its internal table
-
    if (!fTable) return;
    Bool_t dtor = kFALSE;
    dtor = opt && (strcmp(opt,gDtorName)==0);
@@ -1340,22 +1360,24 @@ void TTable::Clear(Option_t *opt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Delete the internal array and free the memory it occupied
+/// if this object did own this array
+///
+/// Then perform TDataSet::Delete(opt)
+
 void TTable::Delete(Option_t *opt)
 {
-   //
-   // Delete the internal array and free the memory it occupied
-   // if this object did own this array
-   //
-   // Then perform TDataSet::Delete(opt)
    Clear(gDtorName);
    TDataSet::Delete(opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TClass  *TTable::GetRowClass() const
 {
-   //to be documented
    TClass *cl = 0;
    TTableDescriptor *dsc = GetRowDescriptors();
    if (dsc) cl = dsc->RowClass();
@@ -1364,43 +1386,46 @@ TClass  *TTable::GetRowClass() const
    return cl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of the used rows for the wrapped table
+
 Long_t TTable::GetNRows() const {
-// Returns the number of the used rows for the wrapped table
    return fMaxIndex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the size (in bytes) of one table row
+
 Long_t TTable::GetRowSize() const {
-// Returns the size (in bytes) of one table row
    return fSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of the allocated rows
+
 Long_t TTable::GetTableSize() const {
-// Returns the number of the allocated rows
    return fN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Fit a projected item(s) from a TTable*-*-*-*-*-*-*-*-*-*
+///*-*              =======================================
+///
+///  formula is a TF1 expression.
+///
+///  See TTable::Draw for explanations of the other parameters.
+///
+///  By default the temporary histogram created is called htemp.
+///  If varexp contains >>hnew , the new histogram created is called hnew
+///  and it is kept in the current directory.
+///  Example:
+///    table.Fit(pol4,"sqrt(x)>>hsqrt","y>0")
+///    will fit sqrt(x) and save the histogram as "hsqrt" in the current
+///    directory.
+///
+
 void TTable::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Fit a projected item(s) from a TTable*-*-*-*-*-*-*-*-*-*
-//*-*              =======================================
-//
-//  formula is a TF1 expression.
-//
-//  See TTable::Draw for explanations of the other parameters.
-//
-//  By default the temporary histogram created is called htemp.
-//  If varexp contains >>hnew , the new histogram created is called hnew
-//  and it is kept in the current directory.
-//  Example:
-//    table.Fit(pol4,"sqrt(x)>>hsqrt","y>0")
-//    will fit sqrt(x) and save the histogram as "hsqrt" in the current
-//    directory.
-//
-
    TString opt(option);
    opt += "goff";
 
@@ -1418,20 +1443,22 @@ void TTable::Fit(const char *formula ,const char *varexp, const char *selection,
    else      Printf("ERROR hfit=0\n");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Returns the type of the wrapped C-structure kept as the TNamed title
+
 const Char_t *TTable::GetType() const
 {
-//Returns the type of the wrapped C-structure kept as the TNamed title
    return GetTitle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return Folder flag to be used by TBrowse object
+/// The table is a folder if
+///  - it has sub-dataset
+///    or
+///  - GetNRows > 0
+
 Bool_t TTable::IsFolder() const {
-   // return Folder flag to be used by TBrowse object
-   // The table is a folder if
-   //  - it has sub-dataset
-   //    or
-   //  - GetNRows > 0
    return kTRUE; // to provide the "fake" folder bit to workaround TKey::Browse()
 
 #if 0
@@ -1443,14 +1470,14 @@ Bool_t TTable::IsFolder() const {
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// return the total number of the NaN for float/double cells of this table
+/// Thanks Victor Perevoztchikov
+///
+
 Int_t TTable::NaN()
 {
-//
-// return the total number of the NaN for float/double cells of this table
-// Thanks Victor Perevoztchikov
-//
-
    EColumnType code;
    char const *cell,*colname,*table;
    double word;
@@ -1487,11 +1514,11 @@ Int_t TTable::NaN()
    return nerr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This static method creates a new TTable object if provided
+
 TTable *TTable::New(const Char_t *name, const Char_t *type, void *array, UInt_t size)
 {
-  // This static method creates a new TTable object if provided
-
    TTable *table = 0;
    if (type && name) {
       TString tableType(type);
@@ -1512,17 +1539,19 @@ TTable *TTable::New(const Char_t *name, const Char_t *type, void *array, UInt_t 
    }
    return table;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate an out-of-bounds error. Always returns false.
+
 Bool_t TTable::OutOfBoundsError(const char *where, Int_t i) const
 {
-   // Generate an out-of-bounds error. Always returns false.
    Error(where, "index %d out of bounds (size: %d, this: 0x%lx)", i, fN, (Long_t)this);
    return kFALSE;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create IDL table defintion (to be used for XDF I/O)
+
 Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
 {
-   // Create IDL table defintion (to be used for XDF I/O)
    Int_t iOut = 0;
 
    TTableDescriptor *dscT = GetRowDescriptors();
@@ -1590,10 +1619,11 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
    return strbuf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print general table inforamtion
+
 const Char_t *TTable::PrintHeader() const
 {
-  // Print general table inforamtion
    std::cout << std::endl << " ---------------------------------------------------------------------------------------" << std::endl
         <<  " " << Path()
                 <<"  Allocated rows: "<<fN
@@ -1603,21 +1633,22 @@ const Char_t *TTable::PrintHeader() const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *colfirst, const Char_t *collast) const
+///
+///  Print the contents of internal table per COLUMN.
+///
+///  row       - the index of the first row to print (counting from ZERO)
+///  rownumber - the total number of rows to print out (=10 by default)
+///
+///  (No use !) Char_t *colfirst, *collast - the names of the first/last
+///                                          to print out (not implemented yet)
+///
+///--------------------------------------------------------------
+/// Check bounds and adjust it
+
 const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Char_t *) const
 {
-  //const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *colfirst, const Char_t *collast) const
-  //
-  //  Print the contents of internal table per COLUMN.
-  //
-  //  row       - the index of the first row to print (counting from ZERO)
-  //  rownumber - the total number of rows to print out (=10 by default)
-  //
-  //  (No use !) Char_t *colfirst, *collast - the names of the first/last
-  //                                          to print out (not implemented yet)
-  //
-  //--------------------------------------------------------------
-   // Check bounds and adjust it
    Int_t const width = 8;
    Int_t rowStep = 10; // The maximun values to print per line
    Int_t rowNumber = rownumber;
@@ -1742,10 +1773,11 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
    std::cout << "---------------------------------------------------------------------------------------" << std::endl;
    return 0;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TTable::PrintContents(Option_t *) const
 {
-   //to be documented
    TDataSet::PrintContents();
    TROOT::IndentLevel();
    Printf("\tclass %s: public TTable\t --> Allocated rows: %d\t Used rows: %d\t Row size: %d bytes\n",
@@ -1753,17 +1785,17 @@ void TTable::PrintContents(Option_t *) const
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Make a projection of a TTable using selections*-*-*-*-*-*-*
+///*-*              =============================================
+///
+///   Depending on the value of varexp (described in Draw) a 1-D,2-D,etc
+///   projection of the TTable will be filled in histogram hname.
+///   Note that the dimension of hname must match with the dimension of varexp.
+///
+
 void TTable::Project(const char *hname, const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Make a projection of a TTable using selections*-*-*-*-*-*-*
-//*-*              =============================================
-//
-//   Depending on the value of varexp (described in Draw) a 1-D,2-D,etc
-//   projection of the TTable will be filled in histogram hname.
-//   Note that the dimension of hname must match with the dimension of varexp.
-//
-
    TString var;
    var.Form("%s>>%s",varexp,hname);
 
@@ -1773,18 +1805,20 @@ void TTable::Project(const char *hname, const char *varexp, const char *selectio
    Draw(var,selection,opt,nentries,firstentry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shrink the table to free the unused but still allocated rows
+
 Int_t TTable::Purge(Option_t *opt)
 {
-   // Shrink the table to free the unused but still allocated rows
    ReAllocate();
    return TDataSet::Purge(opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   Save a primitive as a C++ statement(s) on output stream "out".
+
 void TTable::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-//   Save a primitive as a C++ statement(s) on output stream "out".
    UInt_t arrayLayout[10],arraySize[10];
    const unsigned char *pointer=0,*startRow=0;
    int i,rowCount;unsigned char ic;
@@ -1922,10 +1956,11 @@ void TTable::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set array size of TTable object to n longs. If n<0 leave array unchanged.
+
 void TTable::Set(Int_t n)
 {
-   // Set array size of TTable object to n longs. If n<0 leave array unchanged.
    if (n < 0) return;
    if (fN != n)  Clear();
    SetfN(n);
@@ -1933,25 +1968,28 @@ void TTable::Set(Int_t n)
    Create();
    if (TTable::GetNRows()) Reset();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TTable::SetTablePointer(void *table)
 {
-   //to be documented
    if (fTable) free(fTable);
    fTable = (Char_t *)table;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TTable::SetType(const char *const type)
 {
-   //to be documented
    SetTitle(type);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a name of the file in the temporary directory if any
+
 static Char_t *GetExpressionFileName()
 {
-   // Create a name of the file in the temporary directory if any
    const Char_t *tempDirs =  gSystem->Getenv("TEMP");
    if (!tempDirs)  tempDirs =  gSystem->Getenv("TMP");
    if (!tempDirs) tempDirs = "/tmp";
@@ -1962,17 +2000,18 @@ static Char_t *GetExpressionFileName()
    return  gSystem->ConcatFileName(tempDirs,fileName.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create CINT macro to evaluate the user-provided expresssion
+/// Expression may contains:
+///   -  the table columen names
+///   - 2 meta names: i$ - the current column index,
+///                   n$ - the total table size provided by TTable::GetNRows() method
+///
+/// return the name of temporary file with the current expressions
+///
+
 Char_t *TTable::MakeExpression(const Char_t *expressions[],Int_t nExpressions)
 {
-  // Create CINT macro to evaluate the user-provided expresssion
-  // Expression may contains:
-  //   -  the table columen names
-  //   - 2 meta names: i$ - the current column index,
-  //                   n$ - the total table size provided by TTable::GetNRows() method
-  //
-  // return the name of temporary file with the current expressions
-  //
    const Char_t *typeNames[] = {"NAN","float", "int",  "long",  "short",         "double"
                                 ,"unsigned int","unsigned long", "unsigned short","unsigned char"
                                 ,"char", "TTableMap &"};
@@ -2036,11 +2075,12 @@ LETSTRY:
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the entire table with byte "c" ;
+////     c=0 "be default"
+
 void TTable::Reset(Int_t c)
 {
-   // Fill the entire table with byte "c" ;
-   ///     c=0 "be default"
    if (fTable) {
       ResetMap(kTRUE);
       ::memset(fTable,c,fSize*fN);
@@ -2048,13 +2088,14 @@ void TTable::Reset(Int_t c)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean all filled columns with the pointers to TTableMap
+/// if any
+///  wipe = kTRUE - delete all object the Map's point to
+///         kFALSE - zero pointer, do not call "delete" though
+
 void TTable::ResetMap(Bool_t wipe)
 {
-   // Clean all filled columns with the pointers to TTableMap
-   // if any
-   //  wipe = kTRUE - delete all object the Map's point to
-   //         kFALSE - zero pointer, do not call "delete" though
    piterator links     = pbegin();
    piterator lastLinks = pend();
    for (;links != lastLinks;links++) {
@@ -2063,12 +2104,12 @@ void TTable::ResetMap(Bool_t wipe)
       *mp = 0;
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set array size of TTable object to n longs and copy array.
+/// If n<0 leave array unchanged.
+
 void TTable::Set(Int_t n, Char_t *array)
 {
-   // Set array size of TTable object to n longs and copy array.
-   // If n<0 leave array unchanged.
-
    if (n < 0) return;
    if (fN < n) Clear();
 
@@ -2080,10 +2121,11 @@ void TTable::Set(Int_t n, Char_t *array)
    fMaxIndex = n;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TTable.
+
 void TTable::StreamerTable(TBuffer &b,Version_t version)
 {
-   // Stream an object of class TTable.
    if (b.IsReading()) {
       TDataSet::Streamer(b);
       b >> fN;
@@ -2097,10 +2139,11 @@ void TTable::StreamerTable(TBuffer &b,Version_t version)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read "table parameters first"
+
 void TTable::StreamerHeader(TBuffer &b, Version_t version)
 {
-   // Read "table parameters first"
    if (b.IsReading()) {
       Long_t rbytes;
       if (version) { }   // version to remove compiler warning
@@ -2135,14 +2178,16 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
       b << fSize;             //  fTableHeader->rbytes;     /* number of bytes per row */
    }
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Int_t TTable::SetfN(Long_t len)
 {
-   //to be documented
    fN = len;
    return fN;
 }
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef StreamElelement
 #define __StreamElelement__ StreamElelement
 #undef StreamElelement
@@ -2181,10 +2226,11 @@ else                                                         \
    R__b << *(_NAME2_(type,_t) *)(row+nextCol->fOffset);      \
 break
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TTableDescriptor  *TTable::GetRowDescriptors() const
 {
-   //to be documented
    TTableDescriptor *dsc = 0;
    if (IsA()) dsc = GetDescriptorPointer();
    if (!dsc) {
@@ -2194,25 +2240,28 @@ TTableDescriptor  *TTable::GetRowDescriptors() const
    }
    return dsc;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TTableDescriptor *TTable::GetDescriptorPointer() const
 {
-   //to be documented
    assert(0);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TTable::SetDescriptorPointer(TTableDescriptor *)
 {
-   //to be documented
    assert(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an array of the "plain" C-structures
+
 void TTable::Streamer(TBuffer &R__b)
 {
-   // Stream an array of the "plain" C-structures
    TTableDescriptor *ioDescriptor = GetRowDescriptors();
    TTableDescriptor *currentDescriptor = ioDescriptor;
    Version_t R__v = 0;
@@ -2332,17 +2381,19 @@ void TTable::Streamer(TBuffer &R__b)
 #undef __StreamElelement__
 #endif
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TTable::Update()
 {
-   //to be documented
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Kill the table current data
+/// and adopt those from set
+
 void TTable::Update(TDataSet *set, UInt_t opt)
 {
- // Kill the table current data
- // and adopt those from set
    if (set->HasData()) {
       // Check whether the new table has the same type
       if (strcmp(GetTitle(),set->GetTitle()) == 0 ) {
@@ -2362,11 +2413,12 @@ void TTable::Update(TDataSet *set, UInt_t opt)
    }
    TDataSet::Update(set,opt);
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Query the TClass instance for the C-stucture dicitonary
+/// This method is to be used  with TableImp CPP macro (see $ROOTSYS/table/inc/Ttypes.h
+
 const char *TTable::TableDictionary(const char *className,const char *structName,TTableDescriptor *&ColDescriptors)
 {
-   // Query the TClass instance for the C-stucture dicitonary
-   // This method is to be used  with TableImp CPP macro (see $ROOTSYS/table/inc/Ttypes.h
    if (className){/*NotUsed*/};
    TClass *r = TClass::GetClass(structName,1);
    ColDescriptors = new TTableDescriptor(r);
@@ -2396,10 +2448,11 @@ TTable::EColumnType  TTable::GetColumnType(Int_t columnIndex)  const {return Get
 TTable::EColumnType  TTable::GetColumnType(const Char_t *columnName) const {return GetRowDescriptors()->ColumnType(columnName); }
 
 //  pointer iterator
-//________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TTable::piterator::piterator(const TTable *t,EColumnType type): fCurrentRowIndex(0),fCurrentColIndex(0),fRowSize(0),fCurrentRowPtr(0),fCurrentColPtr(0)
 {
-   //to be documented
    Int_t sz = 0;
    if (t) sz = t->GetNRows();
    if (sz) {

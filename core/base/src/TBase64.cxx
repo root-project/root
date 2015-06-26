@@ -24,14 +24,14 @@
 ClassImp(TBase64)
 
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Base64 encoding of 3 bytes from in.
+/// Output (4 bytes) saved in out (not null terminated).
+/// Returns 0 on success, -1 if input or output arrays are
+/// not defined.
+
 static int ToB64low(const char *in, char *out, int mod)
 {
-   // Base64 encoding of 3 bytes from in.
-   // Output (4 bytes) saved in out (not null terminated).
-   // Returns 0 on success, -1 if input or output arrays are
-   // not defined.
-
    static char b64ref[64] = {
       'A','B','C','D','E','F','G','H','I','J',
       'K','L','M','N','O','P','Q','R','S','T',
@@ -66,13 +66,13 @@ static int ToB64low(const char *in, char *out, int mod)
    return 0;
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Base64 decoding of 4 bytes from in.
+/// Output (3 bytes) returned in out.
+/// No check for base64-ness of input characters.
+
 static int FromB64low(const char *in, TString &out)
 {
-   // Base64 decoding of 4 bytes from in.
-   // Output (3 bytes) returned in out.
-   // No check for base64-ness of input characters.
-
    static int b64inv[256] = {
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -111,19 +111,19 @@ static int FromB64low(const char *in, TString &out)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transform data into a null terminated base64 string.
+
 TString TBase64::Encode(const char *data)
 {
-   // Transform data into a null terminated base64 string.
-
    return Encode(data, strlen(data));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transform len bytes from data into a null terminated base64 string.
+
 TString TBase64::Encode(const char *data, Int_t len)
 {
-   // Transform len bytes from data into a null terminated base64 string.
-
    TString ret(len * 2);
 
    int mod = 0;
@@ -137,12 +137,12 @@ TString TBase64::Encode(const char *data, Int_t len)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decode a base64 string date into a generic TString.
+/// No check for base64-ness of input characters.
+
 TString TBase64::Decode(const char *data)
 {
-   // Decode a base64 string date into a generic TString.
-   // No check for base64-ness of input characters.
-
    int len = strlen(data);
    TString ret(len);
 

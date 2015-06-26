@@ -138,12 +138,12 @@ Bool_t TPython::Initialize()
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import the named python module and create Cling equivalents for its classes
+/// and methods.
+
 Bool_t TPython::Import( const char* mod_name )
 {
-// Import the named python module and create Cling equivalents for its classes
-// and methods.
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -199,13 +199,13 @@ Bool_t TPython::Import( const char* mod_name )
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the give python script as if it were a macro (effectively an
+/// execfile in __main__), and create Cling equivalents for any newly available
+/// python classes.
+
 void TPython::LoadMacro( const char* name )
 {
-// Execute the give python script as if it were a macro (effectively an
-// execfile in __main__), and create Cling equivalents for any newly available
-// python classes.
-
 // setup
    if ( ! Initialize() )
       return;
@@ -261,19 +261,19 @@ void TPython::LoadMacro( const char* name )
    Py_DECREF( old );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute a python stand-alone script, with argv CLI arguments.
+///
+/// example of use:
+///    const char* argv[] = { "1", "2", "3" };
+///    TPython::ExecScript( "test.py", sizeof(argv)/sizeof(argv[0]), argv );
+
 void TPython::ExecScript( const char* name, int argc, const char**
 #if PY_VERSION_HEX < 0x03000000
        argv
 #endif
    )
 {
-// Execute a python stand-alone script, with argv CLI arguments.
-//
-// example of use:
-//    const char* argv[] = { "1", "2", "3" };
-//    TPython::ExecScript( "test.py", sizeof(argv)/sizeof(argv[0]), argv );
-
 
 // setup
    if ( ! Initialize() )
@@ -333,11 +333,11 @@ void TPython::ExecScript( const char* name, int argc, const char**
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute a python statement (e.g. "import ROOT").
+
 Bool_t TPython::Exec( const char* cmd )
 {
-// Execute a python statement (e.g. "import ROOT").
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -357,15 +357,15 @@ Bool_t TPython::Exec( const char* cmd )
 }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate a python expression (e.g. "ROOT.TBrowser()").
+///
+/// Caution: do not hold on to the return value: either store it in a builtin
+/// type (implicit casting will work), or in a pointer to a ROOT object (explicit
+/// casting to a void* is required).
+
 const TPyReturn TPython::Eval( const char* expr )
 {
-// Evaluate a python expression (e.g. "ROOT.TBrowser()").
-//
-// Caution: do not hold on to the return value: either store it in a builtin
-// type (implicit casting will work), or in a pointer to a ROOT object (explicit
-// casting to a void* is required).
-
 // setup
    if ( ! Initialize() )
       return TPyReturn();
@@ -414,11 +414,11 @@ const TPyReturn TPython::Eval( const char* expr )
    return TPyReturn();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bind a ROOT object with, at the python side, the name "label".
+
 Bool_t TPython::Bind( TObject* object, const char* label )
 {
-// Bind a ROOT object with, at the python side, the name "label".
-
 // check given address and setup
    if ( ! ( object && Initialize() ) )
       return kFALSE;
@@ -439,11 +439,11 @@ Bool_t TPython::Bind( TObject* object, const char* label )
    return kFALSE;
 }
 
-//____________________________________________________________________________
-void TPython::Prompt() {
-// Enter an interactive python session (exit with ^D). State is preserved
-// between successive calls.
+////////////////////////////////////////////////////////////////////////////////
+/// Enter an interactive python session (exit with ^D). State is preserved
+/// between successive calls.
 
+void TPython::Prompt() {
 // setup
    if ( ! Initialize() ) {
       return;
@@ -453,12 +453,12 @@ void TPython::Prompt() {
    PyRun_InteractiveLoop( stdin, const_cast< char* >( "\0" ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test whether the type of the given pyobject is of ObjectProxy type or any
+/// derived type.
+
 Bool_t TPython::ObjectProxy_Check( PyObject* pyobject )
 {
-// Test whether the type of the given pyobject is of ObjectProxy type or any
-// derived type.
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -467,11 +467,11 @@ Bool_t TPython::ObjectProxy_Check( PyObject* pyobject )
    return PyROOT::ObjectProxy_Check( pyobject );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test whether the type of the given pyobject is ObjectProxy type.
+
 Bool_t TPython::ObjectProxy_CheckExact( PyObject* pyobject )
 {
-// Test whether the type of the given pyobject is ObjectProxy type.
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -480,12 +480,12 @@ Bool_t TPython::ObjectProxy_CheckExact( PyObject* pyobject )
    return PyROOT::ObjectProxy_CheckExact( pyobject );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test whether the type of the given pyobject is of MethodProxy type or any
+/// derived type.
+
 Bool_t TPython::MethodProxy_Check( PyObject* pyobject )
 {
-// Test whether the type of the given pyobject is of MethodProxy type or any
-// derived type.
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -494,11 +494,11 @@ Bool_t TPython::MethodProxy_Check( PyObject* pyobject )
    return PyROOT::MethodProxy_Check( pyobject );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test whether the type of the given pyobject is MethodProxy type.
+
 Bool_t TPython::MethodProxy_CheckExact( PyObject* pyobject )
 {
-// Test whether the type of the given pyobject is MethodProxy type.
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -507,11 +507,11 @@ Bool_t TPython::MethodProxy_CheckExact( PyObject* pyobject )
    return PyROOT::MethodProxy_CheckExact( pyobject );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract the object pointer held by the ObjectProxy pyobject.
+
 void* TPython::ObjectProxy_AsVoidPtr( PyObject* pyobject )
 {
-// Extract the object pointer held by the ObjectProxy pyobject.
-
 // setup
    if ( ! Initialize() )
       return 0;
@@ -524,12 +524,12 @@ void* TPython::ObjectProxy_AsVoidPtr( PyObject* pyobject )
    return ((PyROOT::ObjectProxy*)pyobject)->GetObject();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bind the addr to a python object of class defined by classname.
+
 PyObject* TPython::ObjectProxy_FromVoidPtr(
    void* addr, const char* classname, Bool_t python_owns )
 {
-// Bind the addr to a python object of class defined by classname.
-
 // setup
    if ( ! Initialize() )
       return 0;

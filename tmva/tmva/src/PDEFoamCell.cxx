@@ -39,7 +39,9 @@ using namespace std;
 
 ClassImp(TMVA::PDEFoamCell)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer
+
 TMVA::PDEFoamCell::PDEFoamCell()
    : TObject(),
      fDim(0),
@@ -55,10 +57,11 @@ TMVA::PDEFoamCell::PDEFoamCell()
      fDrive(0.0),
      fElement(0)
 {
-   // Default constructor for streamer
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User constructor allocating single empty Cell
+
 TMVA::PDEFoamCell::PDEFoamCell(Int_t kDim)
    : TObject(),
      fDim(kDim),
@@ -74,12 +77,13 @@ TMVA::PDEFoamCell::PDEFoamCell(Int_t kDim)
      fDrive(0.0),
      fElement(0)
 {
-   // User constructor allocating single empty Cell
    if ( kDim <= 0 )
       Error( "PDEFoamCell", "Dimension has to be >0" );
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMVA::PDEFoamCell::PDEFoamCell(const PDEFoamCell &cell)
    : TObject(),
      fDim     (cell.fDim),
@@ -95,21 +99,21 @@ TMVA::PDEFoamCell::PDEFoamCell(const PDEFoamCell &cell)
      fDrive   (cell.fDrive),
      fElement (cell.fElement)
 {
-   // Copy constructor
    Error( "PDEFoamCell", "COPY CONSTRUCTOR NOT IMPLEMENTED" );
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TMVA::PDEFoamCell::~PDEFoamCell()
 {
-   // Destructor
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills in certain data into newly allocated cell
+
 void TMVA::PDEFoamCell::Fill(Int_t status, PDEFoamCell *parent, PDEFoamCell *daugh1, PDEFoamCell *daugh2)
 {
-   // Fills in certain data into newly allocated cell
-
    fStatus  = status;
    fParent  = parent;
    fDaught0 = daugh1;
@@ -120,12 +124,13 @@ void TMVA::PDEFoamCell::Fill(Int_t status, PDEFoamCell *parent, PDEFoamCell *dau
 //              GETTERS/SETTERS
 ////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provides size and position of the cell
+/// These parameter are calculated by analyzing information in all parents
+/// cells up to the root cell. It takes time but saves memory.
+
 void    TMVA::PDEFoamCell::GetHcub( PDEFoamVect &cellPosi, PDEFoamVect &cellSize)  const
 {
-   // Provides size and position of the cell
-   // These parameter are calculated by analyzing information in all parents
-   // cells up to the root cell. It takes time but saves memory.
    if(fDim<1) return;
    const PDEFoamCell *pCell,*dCell;
    cellPosi = 0.0; cellSize=1.0; // load all components
@@ -148,12 +153,13 @@ void    TMVA::PDEFoamCell::GetHcub( PDEFoamVect &cellPosi, PDEFoamVect &cellSize
    }//while
 }//GetHcub
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provides size of the cell
+/// Size parameters are calculated by analyzing information in all parents
+/// cells up to the root cell. It takes time but saves memory.
+
 void    TMVA::PDEFoamCell::GetHSize( PDEFoamVect &cellSize)  const
 {
-   // Provides size of the cell
-   // Size parameters are calculated by analyzing information in all parents
-   // cells up to the root cell. It takes time but saves memory.
    if(fDim<1) return;
    const PDEFoamCell *pCell,*dCell;
    cellSize=1.0; // load all components
@@ -174,11 +180,11 @@ void    TMVA::PDEFoamCell::GetHSize( PDEFoamVect &cellSize)  const
    }//while
 }//GetHSize
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates volume of the cell using size params which are calculated
+
 void TMVA::PDEFoamCell::CalcVolume(void)
 {
-   // Calculates volume of the cell using size params which are calculated
-
    Int_t k;
    Double_t volu=1.0;
    if(fDim>0) {         // h-cubical subspace
@@ -189,12 +195,12 @@ void TMVA::PDEFoamCell::CalcVolume(void)
    fVolume =volu;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get depth of cell in binary tree, where the root cell has depth
+/// 1
+
 UInt_t TMVA::PDEFoamCell::GetDepth()
 {
-   // Get depth of cell in binary tree, where the root cell has depth
-   // 1
-
    // check wheter we are in the root cell
    if (fParent == 0)
       return 1;
@@ -207,11 +213,11 @@ UInt_t TMVA::PDEFoamCell::GetDepth()
    return depth;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get depth of cell tree, starting at this cell.
+
 UInt_t TMVA::PDEFoamCell::GetTreeDepth(UInt_t depth)
 {
-   // Get depth of cell tree, starting at this cell.
-
    if (GetStat() == 1)    // this is an active cell
       return depth + 1;
 
@@ -224,11 +230,11 @@ UInt_t TMVA::PDEFoamCell::GetTreeDepth(UInt_t depth)
    return (depth0 > depth1 ? depth0 : depth1);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printout of the cell geometry parameters for the debug purpose
+
 void TMVA::PDEFoamCell::Print(Option_t *option) const
 {
-   // Printout of the cell geometry parameters for the debug purpose
-
    if (!option) Error( "Print", "No option set\n");
 
    std::cout <<  " Status= "<<     fStatus   <<",";

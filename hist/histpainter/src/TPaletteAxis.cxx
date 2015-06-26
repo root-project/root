@@ -22,7 +22,8 @@
 ClassImp(TPaletteAxis)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /* Begin_Html
 <center><h2>The palette painting class</h2></center>
 
@@ -77,22 +78,22 @@ It is possible to select a range on the axis to set the min/max in z
 End_Html */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Palette default constructor.
+
 TPaletteAxis::TPaletteAxis(): TPave()
 {
-   // Palette default constructor.
-
    fH  = 0;
    SetName("");
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Palette normal constructor.
+
 TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, TH1 *h)
    : TPave(x1, y1, x2, y2)
 {
-   // Palette normal constructor.
-
    fH = h;
    SetName("palette");
    TAxis *zaxis = fH->GetZaxis();
@@ -101,48 +102,49 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Palette destructor.
+
 TPaletteAxis::~TPaletteAxis()
 {
-   // Palette destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Palette copy constructor.
+
 TPaletteAxis::TPaletteAxis(const TPaletteAxis &palette) : TPave(palette)
 {
-   // Palette copy constructor.
-
    ((TPaletteAxis&)palette).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TPaletteAxis& TPaletteAxis::operator=(const TPaletteAxis &orig)
 {
-   // Assignment operator.
-
    orig.Copy( *this );
    return *this;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a palette to a palette.
+
 void TPaletteAxis::Copy(TObject &obj) const
 {
-   // Copy a palette to a palette.
-
    TPave::Copy(obj);
    ((TPaletteAxis&)obj).fH    = fH;
    ((TPaletteAxis&)obj).fName = fName;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if mouse on the axis region.
+
 Int_t TPaletteAxis::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Check if mouse on the axis region.
-
    Int_t plxmax = gPad->XtoAbsPixel(fX2);
    Int_t plymin = gPad->YtoAbsPixel(fY1);
    Int_t plymax = gPad->YtoAbsPixel(fY2);
@@ -153,11 +155,11 @@ Int_t TPaletteAxis::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if mouse on the axis region.
+
 void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Check if mouse on the axis region.
-
    if (!gPad) return;
 
    static Int_t kmode = 0;
@@ -250,36 +252,36 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the color index of the bin (i,j).
+///
+/// This function should be used after an histogram has been plotted with the
+/// option COL or COLZ like in the following example:
+///
+///   h2->Draw("COLZ");
+///   gPad->Update();
+///   TPaletteAxis *palette =
+///      (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+///   Int_t ci = palette->GetBinColor(20,15);
+///
+/// Then it is possible to retrieve the RGB components in the following way:
+///
+///   TColor *c = gROOT->GetColor(ci);
+///   float x,y,z;
+///   c->GetRGB(x,y,z);
+
 Int_t TPaletteAxis::GetBinColor(Int_t i, Int_t j)
 {
-   // Returns the color index of the bin (i,j).
-   //
-   // This function should be used after an histogram has been plotted with the
-   // option COL or COLZ like in the following example:
-   //
-   //   h2->Draw("COLZ");
-   //   gPad->Update();
-   //   TPaletteAxis *palette =
-   //      (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
-   //   Int_t ci = palette->GetBinColor(20,15);
-   //
-   // Then it is possible to retrieve the RGB components in the following way:
-   //
-   //   TColor *c = gROOT->GetColor(ci);
-   //   float x,y,z;
-   //   c->GetRGB(x,y,z);
-
    Double_t zc = fH->GetBinContent(i, j);
    return GetValueColor(zc);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Displays the z value corresponding to cursor position py.
+
 char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
 {
-   // Displays the z value corresponding to cursor position py.
-
    Double_t z;
    static char info[64];
 
@@ -305,26 +307,26 @@ char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the color index of the given z value
+///
+/// This function should be used after an histogram has been plotted with the
+/// option COL or COLZ like in the following example:
+///
+///   h2->Draw("COLZ");
+///   gPad->Update();
+///   TPaletteAxis *palette =
+///      (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+///   Int_t ci = palette->GetValueColor(30.);
+///
+/// Then it is possible to retrieve the RGB components in the following way:
+///
+///   TColor *c = gROOT->GetColor(ci);
+///   float x,y,z;
+///   c->GetRGB(x,y,z);
+
 Int_t TPaletteAxis::GetValueColor(Double_t zc)
 {
-   // Returns the color index of the given z value
-   //
-   // This function should be used after an histogram has been plotted with the
-   // option COL or COLZ like in the following example:
-   //
-   //   h2->Draw("COLZ");
-   //   gPad->Update();
-   //   TPaletteAxis *palette =
-   //      (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
-   //   Int_t ci = palette->GetValueColor(30.);
-   //
-   // Then it is possible to retrieve the RGB components in the following way:
-   //
-   //   TColor *c = gROOT->GetColor(ci);
-   //   float x,y,z;
-   //   c->GetRGB(x,y,z);
-
    Double_t wmin  = fH->GetMinimum();
    Double_t wmax  = fH->GetMaximum();
    Double_t wlmin = wmin;
@@ -354,11 +356,11 @@ Int_t TPaletteAxis::GetValueColor(Double_t zc)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the palette.
+
 void TPaletteAxis::Paint(Option_t *)
 {
-   // Paint the palette.
-
    ConvertNDCtoPad();
 
    SetFillStyle(1001);
@@ -443,11 +445,11 @@ void TPaletteAxis::Paint(Option_t *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out.
+
 void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out.
-
    //char quote = '"';
    out << "   " << std::endl;
    if (gROOT->ClassSaved(TPaletteAxis::Class())) {
@@ -473,11 +475,11 @@ void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unzoom the palette
+
 void TPaletteAxis::UnZoom()
 {
-   // Unzoom the palette
-
    TView *view = gPad->GetView();
    if (view) {
       delete view;

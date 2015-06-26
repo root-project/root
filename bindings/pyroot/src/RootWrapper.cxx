@@ -230,11 +230,11 @@ void PyROOT::InitRoot()
    AddToGlobalScope( "gInterpreter", "TInterpreter.h", gInterpreter, Cppyy::GetScope( gInterpreter->IsA()->GetName() ) );
 }
 
-//____________________________________________________________________________
-static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
-// Collect methods and data for the given scope, and add them to the given python
-// proxy object.
+////////////////////////////////////////////////////////////////////////////////
+/// Collect methods and data for the given scope, and add them to the given python
+/// proxy object.
 
+static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
 // some properties that'll affect building the dictionary
    Bool_t isNamespace = Cppyy::IsNamespace( scope );
    Bool_t hasConstructor = kFALSE;
@@ -435,10 +435,11 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a tuple of python shadow classes of all the bases of the given 'klass'.
+
 static PyObject* BuildCppClassBases( Cppyy::TCppType_t klass )
 {
-// Build a tuple of python shadow classes of all the bases of the given 'klass'.
    size_t nbases = Cppyy::GetNumBases( klass );
 
 // collect bases while removing duplicates
@@ -493,10 +494,11 @@ static PyObject* BuildCppClassBases( Cppyy::TCppType_t klass )
    return pybases;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve scope proxy from the known ones.
+
 PyObject* PyROOT::GetScopeProxy( Cppyy::TCppScope_t scope )
 {
-// Retrieve scope proxy from the known ones.
    PyClassMap_t::iterator pci = gPyClasses.find( scope );
    if ( pci != gPyClasses.end() ) {
       PyObject* pyclass = PyWeakref_GetObject( pci->second );
@@ -509,10 +511,11 @@ PyObject* PyROOT::GetScopeProxy( Cppyy::TCppScope_t scope )
    return nullptr;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convenience function with a lookup first through the known existing proxies.
+
 PyObject* PyROOT::CreateScopeProxy( Cppyy::TCppScope_t scope )
 {
-// Convenience function with a lookup first through the known existing proxies.
    PyObject* pyclass = GetScopeProxy( scope );
    if ( pyclass )
       return pyclass;
@@ -520,10 +523,11 @@ PyObject* PyROOT::CreateScopeProxy( Cppyy::TCppScope_t scope )
    return CreateScopeProxy( Cppyy::GetScopedFinalName( scope ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a python shadow class for the named C++ class.
+
 PyObject* PyROOT::CreateScopeProxy( PyObject*, PyObject* args )
 {
-// Build a python shadow class for the named C++ class.
    std::string cname = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
    if ( PyErr_Occurred() )
       return nullptr;
@@ -531,10 +535,11 @@ PyObject* PyROOT::CreateScopeProxy( PyObject*, PyObject* args )
    return CreateScopeProxy( cname );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a python shadow class for the named C++ class.
+
 PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* parent )
 {
-// Build a python shadow class for the named C++ class.
    if ( scope_name.empty() || scope_name == "std" ) {
    // special cases, as gbl and gbl.std are defined in cppyy.py
       PyObject* mods = PyImport_GetModuleDict();
@@ -753,10 +758,11 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
    return pyclass;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the requested name
+
 PyObject* PyROOT::GetCppGlobal( PyObject*, PyObject* args )
 {
-// get the requested name
    std::string ename = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
 
    if ( PyErr_Occurred() )
@@ -765,10 +771,11 @@ PyObject* PyROOT::GetCppGlobal( PyObject*, PyObject* args )
    return GetCppGlobal( ename );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// try named global variable/enum (first ROOT, then Cling: sync is too slow)
+
 PyObject* PyROOT::GetCppGlobal( const std::string& name )
 {
-// try named global variable/enum (first ROOT, then Cling: sync is too slow)
    Cppyy::TCppIndex_t idata = Cppyy::GetDatamemberIndex( Cppyy::gGlobalScope, name );
    if ( 0 <= idata )
       return (PyObject*)PropertyProxy_New( Cppyy::gGlobalScope, idata );
@@ -795,10 +802,11 @@ PyObject* PyROOT::GetCppGlobal( const std::string& name )
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// only known or knowable objects will be bound (null object is ok)
+
 PyObject* PyROOT::BindCppObjectNoCast(
       Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Bool_t isRef, Bool_t isValue ) {
-// only known or knowable objects will be bound (null object is ok)
    if ( ! klass ) {
       PyErr_SetString( PyExc_TypeError, "attempt to bind ROOT object w/o class" );
       return 0;
@@ -827,10 +835,11 @@ PyObject* PyROOT::BindCppObjectNoCast(
    return (PyObject*)pyobj;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// if the object is a null pointer, return a typed one (as needed for overloading)
+
 PyObject* PyROOT::BindCppObject( Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Bool_t isRef )
 {
-// if the object is a null pointer, return a typed one (as needed for overloading)
    if ( ! address )
       return BindCppObjectNoCast( address, klass, kFALSE );
 
@@ -888,18 +897,20 @@ PyObject* PyROOT::BindCppObject( Cppyy::TCppObject_t address, Cppyy::TCppType_t 
    return (PyObject*)pyobj;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: this function exists for symmetry; need to figure out if it's useful
+
 PyObject* PyROOT::BindCppObjectArray(
       Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, Int_t size ) {
-// TODO: this function exists for symmetry; need to figure out if it's useful
    return TTupleOfInstances_New( address, klass, size );
 }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// gbl == 0 means global does not exist (rather than gbl is NULL pointer)
+
 PyObject* PyROOT::BindCppGlobal( TGlobal* gbl )
 {
-// gbl == 0 means global does not exist (rather than gbl is NULL pointer)
    if ( ! gbl || strcmp(gbl->GetName(), "") == 0 ) {
       Py_INCREF( Py_None );
       return Py_None;

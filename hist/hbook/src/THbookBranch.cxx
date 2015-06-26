@@ -15,28 +15,32 @@
 ClassImp(THbookBranch)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 THbookBranch::THbookBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
             :TBranch(tree, name,address,leaflist,basketsize,compress)
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 THbookBranch::THbookBranch(TBranch *branch, const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
             :TBranch(branch,name,address,leaflist,basketsize,compress)
 {
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 THbookBranch::~THbookBranch()
 {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browser interface.
+
 void THbookBranch::Browse(TBrowser *b)
 {
-   // Browser interface.
    THbookTree *tree = (THbookTree*)GetTree();
    THbookFile *file = tree->GetHbookFile();
    file->cd();
@@ -44,10 +48,11 @@ void THbookBranch::Browse(TBrowser *b)
    TBranch::Browse(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///get one entry from hbook ntuple
+
 Int_t THbookBranch::GetEntry(Long64_t entry, Int_t /*getall*/)
 {
-   //get one entry from hbook ntuple
    THbookTree *tree = (THbookTree*)GetTree();
    THbookFile *file = tree->GetHbookFile();
    if (tree->GetType() == 0) {
@@ -58,12 +63,12 @@ Int_t THbookBranch::GetEntry(Long64_t entry, Int_t /*getall*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set address of this branch
+/// See important remark in the header of THbookTree
+
 void THbookBranch::SetAddress(void *add)
 {
-// Set address of this branch
-// See important remark in the header of THbookTree
-
    TBranch::SetAddress(add);
 
    if (GetUniqueID() != 0) return; //only for first variable of the block

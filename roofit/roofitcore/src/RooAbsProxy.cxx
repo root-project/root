@@ -40,34 +40,38 @@ ClassImp(RooAbsProxy)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsProxy::RooAbsProxy() : _nset(0)
 {
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsProxy::RooAbsProxy(const char* /*name*/, const RooAbsProxy& other) : 
   _nset(other._nset)
 {
-  // Copy constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 void RooAbsProxy::changeNormSet(const RooArgSet* newNormSet) 
 {
-  // Destructor
   _nset = (RooArgSet*) newNormSet ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print proxy name
+
 void RooAbsProxy::print(ostream& os, Bool_t /*addContents*/) const 
 { 
-  // Print proxy name
   os << name() << endl ; 
 }

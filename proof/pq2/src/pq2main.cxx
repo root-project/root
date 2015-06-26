@@ -350,11 +350,11 @@ int main(int argc, char **argv)
    gSystem->Exit(rc);
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display the content of file 'fn'
+
 void showFile(const char *fn, int show, int keep)
 {
-   // Display the content of file 'fn'
-
    if (fn && strlen(fn)) {
       FileStat_t st;
       if (gSystem->GetPathInfo(fn, st) != 0 || !R_ISREG(st.fMode)) {

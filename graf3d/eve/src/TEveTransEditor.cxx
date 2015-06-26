@@ -26,7 +26,9 @@
 
 ClassImp(TEveTransSubEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    TGVerticalFrame (p),
    fTrans          (0),
@@ -40,8 +42,6 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    fAutoUpdate     (0),
    fUpdate         (0)
 {
-   // Constructor.
-
    // --- Top controls
 
    fTopHorFrame = new TGHorizontalFrame(this);
@@ -123,11 +123,11 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveTransSubEditor::SetModel(TEveTrans* t)
 {
-   // Set model object.
-
    fTrans = t;
 
    fUseTrans ->SetState(fTrans->fUseTrans  ? kButtonDown : kButtonUp);
@@ -160,11 +160,11 @@ void TEveTransSubEditor::SetModel(TEveTrans* t)
    fScale->SetValues(x, y, z);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object from widget data.
+
 void TEveTransSubEditor::SetTransFromData()
 {
-   // Set model object from widget data.
-
    Double_t v[3];
    fTrans->UnitTrans();
    fRot->GetValues(v);
@@ -177,48 +177,48 @@ void TEveTransSubEditor::SetTransFromData()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit "UseTrans()" signal.
+
 void TEveTransSubEditor::UseTrans()
 {
-   // Emit "UseTrans()" signal.
-
    Emit("UseTrans()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set transformation values from widget and emit "TransChanged()" signal.
+
 void TEveTransSubEditor::TransChanged()
 {
-   // Set transformation values from widget and emit "TransChanged()" signal.
-
    SetTransFromData();
    Emit("TransChanged()");
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for UseTrans.
+
 void TEveTransSubEditor::DoUseTrans()
 {
-   // Slot for UseTrans.
-
    fTrans->SetUseTrans(fUseTrans->IsOn());
    UseTrans();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for EditTrans.
+
 void TEveTransSubEditor::DoEditTrans()
 {
-   // Slot for EditTrans.
-
    fTrans->SetEditTrans(fEditTrans->IsOn());
    TransChanged();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for TransChanged.
+
 void TEveTransSubEditor::DoTransChanged()
 {
-   // Slot for TransChanged.
-
    if (fAutoUpdate->IsOn())
       TransChanged();
 }
@@ -231,15 +231,15 @@ void TEveTransSubEditor::DoTransChanged()
 
 ClassImp(TEveTransEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTransEditor::TEveTransEditor(const TGWindow *p, Int_t width, Int_t height,
                                  UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM (0),
    fSE(0)
 {
-   // Constructor.
-
    MakeTitle("TEveTrans");
 
    fSE = new TEveTransSubEditor(this);
@@ -250,11 +250,11 @@ TEveTransEditor::TEveTransEditor(const TGWindow *p, Int_t width, Int_t height,
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveTransEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveTrans*>(obj);
    fSE->SetModel(fM);
 }

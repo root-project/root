@@ -35,7 +35,8 @@
 // training the classifier a few times. Everytime the wieghts of the   //
 // events are modified according to how well the classifier performed  //
 // on the test sample.                                                 //
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #include <algorithm>
 #include <iomanip>
 #include <vector>
@@ -75,7 +76,8 @@ REGISTER_METHOD(Boost)
 
 ClassImp(TMVA::MethodBoost)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::MethodBoost::MethodBoost( const TString& jobName,
                                 const TString& methodTitle,
                                 DataSetInfo& theData,
@@ -100,7 +102,8 @@ TMVA::MethodBoost::MethodBoost( const TString& jobName,
    fMVAvalues = new std::vector<Float_t>;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::MethodBoost::MethodBoost( DataSetInfo& dsi,
                                 const TString& theWeightFile,
                                 TDirectory* theTargetDir )
@@ -123,10 +126,11 @@ TMVA::MethodBoost::MethodBoost( DataSetInfo& dsi,
    fMVAvalues = new std::vector<Float_t>;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::MethodBoost::~MethodBoost( void )
 {
-   // destructor
    fMethodWeight.clear();
 
    // the histogram themselves are deleted when the file is closed
@@ -145,17 +149,19 @@ TMVA::MethodBoost::~MethodBoost( void )
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Boost can handle classification with 2 classes and regression with one regression-target
+
 Bool_t TMVA::MethodBoost::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ )
 {
-   // Boost can handle classification with 2 classes and regression with one regression-target
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    //   if (type == Types::kRegression && numberTargets == 1) return kTRUE;
    return kFALSE;
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodBoost::DeclareOptions()
 {
    DeclareOptionRef( fBoostNum = 1, "Boost_Num",
@@ -190,13 +196,13 @@ void TMVA::MethodBoost::DeclareOptions()
    TMVA::MethodCompositeBase::fMethods.reserve(fBoostNum);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// options that are used ONLY for the READER to ensure backward compatibility
+///   they are hence without any effect (the reader is only reading the training 
+///   options that HAD been used at the training of the .xml weightfile at hand
+
 void TMVA::MethodBoost::DeclareCompatibilityOptions()
 {
-   // options that are used ONLY for the READER to ensure backward compatibility
-   //   they are hence without any effect (the reader is only reading the training 
-   //   options that HAD been used at the training of the .xml weightfile at hand
-
 
    MethodBase::DeclareCompatibilityOptions();
 
@@ -226,10 +232,11 @@ void TMVA::MethodBoost::DeclareCompatibilityOptions()
                      "Recalculate the classifier MVA Signallike cut at every boost iteration" );
 
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// just registering the string from which the boosted classifier will be created
+
 Bool_t TMVA::MethodBoost::BookMethod( Types::EMVA theMethod, TString methodTitle, TString theOption )
 {
-   // just registering the string from which the boosted classifier will be created
    fBoostedMethodName     = Types::Instance().GetMethodName( theMethod );
    fBoostedMethodTitle    = methodTitle;
    fBoostedMethodOptions  = theOption;
@@ -240,16 +247,17 @@ Bool_t TMVA::MethodBoost::BookMethod( Types::EMVA theMethod, TString methodTitle
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodBoost::Init()
 { 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialisation routine
+
 void TMVA::MethodBoost::InitHistos()
 {
-   // initialisation routine
-
    
    Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
 
@@ -303,7 +311,8 @@ void TMVA::MethodBoost::InitHistos()
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodBoost::CheckSetup()
 {
    Log() << kDEBUG << "CheckSetup: fBoostType="<<fBoostType << Endl;
@@ -325,7 +334,8 @@ void TMVA::MethodBoost::CheckSetup()
    Log() << kDEBUG << "CheckSetup: trying to repair things" << Endl;
 
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodBoost::Train()
 {
    TDirectory* methodDir( 0 );
@@ -503,13 +513,15 @@ void TMVA::MethodBoost::Train()
    delete timer1;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodBoost::CleanBoostOptions()
 {
    fBoostedMethodOptions=GetOptions(); 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodBoost::CreateMVAHistorgrams()
 {
    if (fBoostNum <=0) Log() << kFATAL << "CreateHistorgrams called before fBoostNum is initialized" << Endl;
@@ -538,17 +550,19 @@ void TMVA::MethodBoost::CreateMVAHistorgrams()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// resetting back the boosted weights of the events to 1
+
 void TMVA::MethodBoost::ResetBoostWeights()
 {
-   // resetting back the boosted weights of the events to 1
    for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
       const Event *ev = Data()->GetEvent(ievt);
       ev->SetBoostWeight( 1.0 );
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodBoost::WriteMonitoringHistosToFile( void ) const
 {
    TDirectory* dir=0;
@@ -577,7 +591,8 @@ void TMVA::MethodBoost::WriteMonitoringHistosToFile( void ) const
    fMonitorTree->Write();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodBoost::TestClassification()
 {
    MethodBase::TestClassification();
@@ -604,7 +619,8 @@ void TMVA::MethodBoost::TestClassification()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::MethodBoost::WriteEvaluationHistosToFile(Types::ETreeType treetype)
 {
    MethodBase::WriteEvaluationHistosToFile(treetype);
@@ -628,27 +644,29 @@ void TMVA::MethodBoost::WriteEvaluationHistosToFile(Types::ETreeType treetype)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process user options
+
 void TMVA::MethodBoost::ProcessOptions()
 {
-   // process user options
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// initialization
+
 void TMVA::MethodBoost::SingleTrain()
 {
-   // initialization
    Data()->SetCurrentType(Types::kTraining);
    MethodBase* meth = dynamic_cast<MethodBase*>(GetLastMethod());
    if (meth) meth->TrainMethod();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// find the CUT on the individual MVA that defines an event as 
+/// correct or misclassified (to be used in the boosting process)
+
 void TMVA::MethodBoost::FindMVACut(MethodBase *method)
 {
-   // find the CUT on the individual MVA that defines an event as 
-   // correct or misclassified (to be used in the boosting process)
-
    if (!method || method->GetMethodType() == Types::kDT ){ return;}
 
    // creating a fine histograms containing the error rate
@@ -803,7 +821,8 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
    // mvaBC->Delete();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TMVA::MethodBoost::SingleBoost(MethodBase* method)
 {
    Double_t returnVal=-1;
@@ -818,11 +837,11 @@ Double_t TMVA::MethodBoost::SingleBoost(MethodBase* method)
    fMethodWeight.push_back(returnVal);
    return returnVal;
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the standard (discrete or real) AdaBoost algorithm 
+
 Double_t TMVA::MethodBoost::AdaBoost(MethodBase* method, Bool_t discreteAdaBoost)
 {
-   // the standard (discrete or real) AdaBoost algorithm 
-
    if (!method) {
       Log() << kWARNING << " AdaBoost called without classifier reference - needed for calulating AdaBoost " << Endl;
       return 0;
@@ -979,10 +998,11 @@ Double_t TMVA::MethodBoost::AdaBoost(MethodBase* method, Bool_t discreteAdaBoost
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bagging or Bootstrap boosting, gives new random poisson weight for every event
+
 Double_t TMVA::MethodBoost::Bagging()
 {
-   // Bagging or Bootstrap boosting, gives new random poisson weight for every event
    TRandom3  *trandom   = new TRandom3(fRandomSeed+fMethods.size());
    for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
       const Event* ev = Data()->GetEvent(ievt);
@@ -993,13 +1013,14 @@ Double_t TMVA::MethodBoost::Bagging()
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get help message text
+///
+/// typical length of text line:
+///         "|--------------------------------------------------------------|"
+
 void TMVA::MethodBoost::GetHelpMessage() const
 {
-   // Get help message text
-   //
-   // typical length of text line:
-   //         "|--------------------------------------------------------------|"
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    Log() << Endl;
@@ -1034,16 +1055,18 @@ void TMVA::MethodBoost::GetHelpMessage() const
    Log() << "macro \"Boost.C\"" <<Endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const TMVA::Ranking* TMVA::MethodBoost::CreateRanking()
 { 
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return boosted MVA response
+
 Double_t TMVA::MethodBoost::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
-   // return boosted MVA response
    Double_t mvaValue = 0;
    Double_t norm = 0;
    Double_t epsilon = TMath::Exp(-1.);
@@ -1084,27 +1107,27 @@ Double_t TMVA::MethodBoost::GetMvaValue( Double_t* err, Double_t* errUpper )
    return mvaValue;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the ROC integral of a single classifier or even the
+/// whole boosted classifier.  The tree type (training or testing
+/// sample) is specified by 'eTT'.
+///
+/// If tree type kTraining is set, the original training sample is
+/// used to compute the ROC integral (original weights).
+///
+/// - singleMethod - if kTRUE, return ROC integral of single (last
+///                  trained) classifier; if kFALSE, return ROC
+///                  integral of full classifier
+///
+/// - eTT - tree type (Types::kTraining / Types::kTesting)
+///
+/// - CalcOverlapIntergral - if kTRUE, the overlap integral of the
+///                          signal/background MVA distributions
+///                          is calculated and stored in
+///                          'fOverlap_integral'
+
 Double_t TMVA::MethodBoost::GetBoostROCIntegral(Bool_t singleMethod, Types::ETreeType eTT, Bool_t CalcOverlapIntergral)
 {
-   // Calculate the ROC integral of a single classifier or even the
-   // whole boosted classifier.  The tree type (training or testing
-   // sample) is specified by 'eTT'.
-   //
-   // If tree type kTraining is set, the original training sample is
-   // used to compute the ROC integral (original weights).
-   //
-   // - singleMethod - if kTRUE, return ROC integral of single (last
-   //                  trained) classifier; if kFALSE, return ROC
-   //                  integral of full classifier
-   //
-   // - eTT - tree type (Types::kTraining / Types::kTesting)
-   //
-   // - CalcOverlapIntergral - if kTRUE, the overlap integral of the
-   //                          signal/background MVA distributions
-   //                          is calculated and stored in
-   //                          'fOverlap_integral'
-
    // set data sample training / testing
    Data()->SetCurrentType(eTT);
 
@@ -1247,14 +1270,14 @@ void TMVA::MethodBoost::CalcMVAValues()
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fill various monitoring histograms from information of the individual classifiers that
+/// have been boosted.
+/// of course.... this depends very much on the individual classifiers, and so far, only for
+/// Decision Trees, this monitoring is actually implemented
+
 void TMVA::MethodBoost::MonitorBoost( Types::EBoostStage stage , UInt_t methodIndex )
 {
-   // fill various monitoring histograms from information of the individual classifiers that
-   // have been boosted.
-   // of course.... this depends very much on the individual classifiers, and so far, only for
-   // Decision Trees, this monitoring is actually implemented
-
    Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
 
    if (GetCurrentMethod(methodIndex)->GetMethodType() == TMVA::Types::kDT) {

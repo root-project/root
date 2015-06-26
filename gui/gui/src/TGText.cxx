@@ -39,21 +39,21 @@ const Int_t kMaxLen = 8000;
 
 ClassImp(TGTextLine)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create empty line of text (default ctor).
+
 TGTextLine::TGTextLine()
 {
-   // Create empty line of text (default ctor).
-
    fLength = 0;
    fString = 0;
    fPrev = fNext = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize line of text with other line of text (not copy ctor).
+
 TGTextLine::TGTextLine(TGTextLine *line)
 {
-   // Initialize line of text with other line of text (not copy ctor).
-
    fLength = line->GetLineLength();
    fString = 0;
    if (fLength > 0)
@@ -61,11 +61,11 @@ TGTextLine::TGTextLine(TGTextLine *line)
    fPrev = fNext = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize line of text with a const char*.
+
 TGTextLine::TGTextLine(const char *string)
 {
-   // Initialize line of text with a const char*.
-
    if (string) {
       fLength = strlen(string);
       fString = new char[fLength+1];
@@ -78,12 +78,12 @@ TGTextLine::TGTextLine(const char *string)
    fPrev = fNext = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGTextLine::TGTextLine(const TGTextLine& tl) : fLength(tl.fLength),
    fPrev(tl.fPrev), fNext(tl.fNext)
 {
-   //copy constructor
-
    fString = 0;
    if (tl.fString) {
       fString = new char[fLength+1];
@@ -92,11 +92,11 @@ TGTextLine::TGTextLine(const TGTextLine& tl) : fLength(tl.fLength),
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGTextLine& TGTextLine::operator=(const TGTextLine& tl)
 {
-   //assignment operator
-
    if (this != &tl) {
       fLength = tl.fLength;
       if (fString) delete [] fString;
@@ -109,31 +109,31 @@ TGTextLine& TGTextLine::operator=(const TGTextLine& tl)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a line of text.
+
 TGTextLine::~TGTextLine()
 {
-   // Delete a line of text.
-
    if (fString)
       delete [] fString;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear a line of text.
+
 void TGTextLine::Clear()
 {
-   // Clear a line of text.
-
    if (fString)
       delete [] fString;
    fString = 0;
    fLength = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete length chars from line starting at position pos.
+
 void TGTextLine::DelText(ULong_t pos, ULong_t length)
 {
-   // Delete length chars from line starting at position pos.
-
    if (fLength == 0 || pos >= fLength)
       return;
    if (pos+length > fLength)
@@ -154,11 +154,11 @@ void TGTextLine::DelText(ULong_t pos, ULong_t length)
    fString[fLength] = '\0';
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert text in line starting at position pos.
+
 void TGTextLine::InsText(ULong_t pos, const char *text)
 {
-   // Insert text in line starting at position pos.
-
    if (pos > fLength || !text)
       return;
 
@@ -175,13 +175,13 @@ void TGTextLine::InsText(ULong_t pos, const char *text)
    fString[fLength] ='\0';
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get length characters from line starting at pos. Returns 0
+/// in case pos and length are out of range. The returned string
+/// must be freed by the user.
+
 char *TGTextLine::GetText(ULong_t pos, ULong_t length)
 {
-   // Get length characters from line starting at pos. Returns 0
-   // in case pos and length are out of range. The returned string
-   // must be freed by the user.
-
    if (pos >= fLength) {
       return 0;
    }
@@ -197,11 +197,11 @@ char *TGTextLine::GetText(ULong_t pos, ULong_t length)
    return retstring;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get word at position. Returned string must be deleted.
+
 char *TGTextLine::GetWord(ULong_t pos)
 {
-   // Get word at position. Returned string must be deleted.
-
    if (pos >= fLength) {
       return 0;
    }
@@ -256,11 +256,11 @@ char *TGTextLine::GetWord(ULong_t pos)
    return retstring;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a character from the line.
+
 void TGTextLine::DelChar(ULong_t pos)
 {
-   // Delete a character from the line.
-
    char *newstring;
    if ((fLength <= 0) || (pos > fLength))
       return;
@@ -275,11 +275,11 @@ void TGTextLine::DelChar(ULong_t pos)
    fLength--;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert a character at the specified position.
+
 void TGTextLine::InsChar(ULong_t pos, char character)
 {
-   // Insert a character at the specified position.
-
    char *newstring;
    if (pos > fLength)
       return;
@@ -295,12 +295,12 @@ void TGTextLine::InsChar(ULong_t pos, char character)
    fLength++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a character at the specified position from the line.
+/// Returns -1 if pos is out of range.
+
 char TGTextLine::GetChar(ULong_t pos)
 {
-   // Get a character at the specified position from the line.
-   // Returns -1 if pos is out of range.
-
    if ((fLength <= 0) || (pos >= fLength))
       return -1;
    return fString[pos];
@@ -309,7 +309,9 @@ char TGTextLine::GetChar(ULong_t pos)
 
 ClassImp(TGText)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGText::TGText(const TGText& gt) :
   fFilename(gt.fFilename),
   fIsSaved(gt.fIsSaved),
@@ -320,13 +322,13 @@ TGText::TGText(const TGText& gt) :
   fColCount(gt.fColCount),
   fLongestLine(gt.fLongestLine)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGText& TGText::operator=(const TGText& gt)
 {
-   //assignment operator
    if(this!=&gt) {
       fFilename=gt.fFilename;
       fIsSaved=gt.fIsSaved;
@@ -340,11 +342,11 @@ TGText& TGText::operator=(const TGText& gt)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common initialization method.
+
 void TGText::Init()
 {
-   // Common initialization method.
-
    fFirst       = new TGTextLine;
    fCurrent     = fFirst;
    fCurrentRow  = 0;
@@ -354,19 +356,19 @@ void TGText::Init()
    fIsSaved     = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create default (empty) text buffer.
+
 TGText::TGText()
 {
-   // Create default (empty) text buffer.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create text buffer and initialize with other text buffer.
+
 TGText::TGText(TGText *text)
 {
-   // Create text buffer and initialize with other text buffer.
-
    TGLongPosition pos, end;
 
    pos.fX = pos.fY = 0;
@@ -376,11 +378,11 @@ TGText::TGText(TGText *text)
    InsText(pos, text, pos, end);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create text buffer and initialize with single line string.
+
 TGText::TGText(const char *string)
 {
-   // Create text buffer and initialize with single line string.
-
    TGLongPosition pos;
 
    pos.fX = pos.fY = 0;
@@ -388,20 +390,20 @@ TGText::TGText(const char *string)
    InsText(pos, string);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy text buffer.
+
 TGText::~TGText()
 {
-   // Destroy text buffer.
-
    Clear();
    delete fFirst;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear text buffer.
+
 void TGText::Clear()
 {
-   // Clear text buffer.
-
    TGTextLine *travel = fFirst->fNext;
    TGTextLine *toDelete;
    while (travel != 0) {
@@ -420,13 +422,13 @@ void TGText::Clear()
    fFilename     = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load text from file fn. Startpos is the begin from where to
+/// load the file and length is the number of characters to read
+/// from the file.
+
 Bool_t TGText::Load(const char *fn, Long_t startpos, Long_t length)
 {
-   // Load text from file fn. Startpos is the begin from where to
-   // load the file and length is the number of characters to read
-   // from the file.
-
    Bool_t      isFirst = kTRUE;
    Bool_t      finished = kFALSE;
    Long_t      count, charcount, i, cnt;
@@ -504,11 +506,11 @@ Bool_t TGText::Load(const char *fn, Long_t startpos, Long_t length)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a 0 terminated buffer. Lines will be split at '\n'.
+
 Bool_t TGText::LoadBuffer(const char *txtbuf)
 {
-   // Load a 0 terminated buffer. Lines will be split at '\n'.
-
    Bool_t      isFirst = kTRUE;
    Bool_t      finished = kFALSE, lastnl = kFALSE;
    Long_t      i, cnt;
@@ -601,11 +603,11 @@ next:
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save text buffer to file fn.
+
 Bool_t TGText::Save(const char *fn)
 {
-   // Save text buffer to file fn.
-
    char *buffer;
    TGTextLine *travel = fFirst;
    FILE *fp;
@@ -642,11 +644,11 @@ Bool_t TGText::Save(const char *fn)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append buffer to file fn.
+
 Bool_t TGText::Append(const char *fn)
 {
-   // Append buffer to file fn.
-
    char *buffer;
    TGTextLine *travel = fFirst;
    FILE *fp;
@@ -682,11 +684,11 @@ Bool_t TGText::Append(const char *fn)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete character at specified position pos.
+
 Bool_t TGText::DelChar(TGLongPosition pos)
 {
-   // Delete character at specified position pos.
-
    if ((pos.fY >= fRowCount) || (pos.fY < 0))
       return kFALSE;
 
@@ -698,11 +700,11 @@ Bool_t TGText::DelChar(TGLongPosition pos)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert character c at the specified position pos.
+
 Bool_t TGText::InsChar(TGLongPosition pos, char c)
 {
-   // Insert character c at the specified position pos.
-
    if ((pos.fY >= fRowCount) || (pos.fY < 0) || (pos.fX < 0))
       return kFALSE;
 
@@ -714,11 +716,11 @@ Bool_t TGText::InsChar(TGLongPosition pos, char c)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get character a position pos. If charcater not valid return -1.
+
 char TGText::GetChar(TGLongPosition pos)
 {
-   // Get character a position pos. If charcater not valid return -1.
-
    if (pos.fY >= fRowCount)
       return -1;
 
@@ -726,12 +728,12 @@ char TGText::GetChar(TGLongPosition pos)
    return fCurrent->GetChar(pos.fX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete text between start and end positions. Returns false in
+/// case of failure (start and end not being within bounds).
+
 Bool_t TGText::DelText(TGLongPosition start, TGLongPosition end)
 {
-   // Delete text between start and end positions. Returns false in
-   // case of failure (start and end not being within bounds).
-
    if ((start.fY < 0) || (start.fY >= fRowCount) ||
        (end.fY < 0)   || (end.fY >= fRowCount)) {
       return kFALSE;
@@ -774,14 +776,14 @@ Bool_t TGText::DelText(TGLongPosition start, TGLongPosition end)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert src text from start_src to end_src into text at position ins_pos.
+/// Returns false in case of failure (start_src, end_src out of range for
+/// src, and ins_pos out of range for this).
+
 Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
                        TGLongPosition start_src, TGLongPosition end_src)
 {
-   // Insert src text from start_src to end_src into text at position ins_pos.
-   // Returns false in case of failure (start_src, end_src out of range for
-   // src, and ins_pos out of range for this).
-
    /*
    if ((start_src.fY < 0) || (start_src.fY >= src->RowCount()) ||
        (end_src.fY < 0)   || (end_src.fY >= src->RowCount()))
@@ -878,12 +880,12 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert single line at specified position. Return false in case position
+/// is out of bounds.
+
 Bool_t TGText::InsText(TGLongPosition pos, const char *buffer)
 {
-   // Insert single line at specified position. Return false in case position
-   // is out of bounds.
-
    if (pos.fY < 0 || pos.fY > fRowCount) {
       return kFALSE;
    }
@@ -902,11 +904,11 @@ Bool_t TGText::InsText(TGLongPosition pos, const char *buffer)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add another text buffer to this buffer.
+
 Bool_t TGText::AddText(TGText *text)
 {
-   // Add another text buffer to this buffer.
-
    TGLongPosition end, start_src, end_src;
 
    end.fY = fRowCount;
@@ -918,12 +920,12 @@ Bool_t TGText::AddText(TGText *text)
    return InsText(end, text, start_src, end_src);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert string before specified position.
+/// Returns false if insertion failed.
+
 Bool_t TGText::InsLine(ULong_t pos, const char *string)
 {
-   // Insert string before specified position.
-   // Returns false if insertion failed.
-
    TGTextLine *previous, *newline;
    if ((Long_t)pos > fRowCount) {
       return kFALSE;
@@ -955,11 +957,11 @@ Bool_t TGText::InsLine(ULong_t pos, const char *string)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete specified row. Returns false if row does not exist.
+
 Bool_t TGText::DelLine(ULong_t pos)
 {
-   // Delete specified row. Returns false if row does not exist.
-
    if (!SetCurrentRow(pos) || (fRowCount == 1)) {
       return kFALSE;
    }
@@ -987,23 +989,23 @@ Bool_t TGText::DelLine(ULong_t pos)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return string at position pos. Returns 0 in case pos is not valid.
+/// The returned string must be deleted by the user.
+
 char *TGText::GetLine(TGLongPosition pos, ULong_t length)
 {
-   // Return string at position pos. Returns 0 in case pos is not valid.
-   // The returned string must be deleted by the user.
-
    if (SetCurrentRow(pos.fY)) {
       return fCurrent->GetText(pos.fX, length);
    }
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Break line at position pos. Returns false if pos is not valid.
+
 Bool_t TGText::BreakLine(TGLongPosition pos)
 {
-   // Break line at position pos. Returns false if pos is not valid.
-
    if (!SetCurrentRow(pos.fY))
       return kFALSE;
    if ((pos.fX < 0) || (pos.fX > (Long_t)fCurrent->fLength))
@@ -1034,23 +1036,23 @@ Bool_t TGText::BreakLine(TGLongPosition pos)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get length of specified line. Returns -1 if row does not exist.
+
 Long_t TGText::GetLineLength(Long_t row)
 {
-   // Get length of specified line. Returns -1 if row does not exist.
-
    if (!SetCurrentRow(row)) {
       return -1;
    }
    return (Long_t)fCurrent->GetLineLength();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make specified row the current row. Returns false if row does not exist.
+/// In which case fCurrent is not changed or set to the last valid line.
+
 Bool_t TGText::SetCurrentRow(Long_t row)
 {
-   // Make specified row the current row. Returns false if row does not exist.
-   // In which case fCurrent is not changed or set to the last valid line.
-
    Long_t count;
    if ((row < 0) || (row >= fRowCount)) {
       return kFALSE;
@@ -1078,11 +1080,11 @@ Bool_t TGText::SetCurrentRow(Long_t row)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redo all tabs in a line. Needed after a new tab is inserted.
+
 void TGText::ReTab(Long_t row)
 {
-   // Redo all tabs in a line. Needed after a new tab is inserted.
-
    if (!SetCurrentRow(row)) {
       return;
    }
@@ -1132,15 +1134,15 @@ void TGText::ReTab(Long_t row)
    delete [] buffer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for string searchString starting at the specified position going
+/// in forward (direction = true) or backward direction. Returns true if
+/// found and foundPos is set accordingly.
+
 Bool_t TGText::Search(TGLongPosition *foundPos, TGLongPosition start,
                       const char *searchString,
                       Bool_t direction, Bool_t caseSensitive)
 {
-   // Search for string searchString starting at the specified position going
-   // in forward (direction = true) or backward direction. Returns true if
-   // found and foundPos is set accordingly.
-
    if (!SetCurrentRow(start.fY))
       return kFALSE;
 
@@ -1188,12 +1190,12 @@ Bool_t TGText::Search(TGLongPosition *foundPos, TGLongPosition start,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace oldText by newText. Returns false if nothing replaced.
+
 Bool_t TGText::Replace(TGLongPosition start, const char *oldText, const char *newText,
                        Bool_t direction, Bool_t caseSensitive)
 {
-   // Replace oldText by newText. Returns false if nothing replaced.
-
    if (!SetCurrentRow(start.fY)) {
       return kFALSE;
    }
@@ -1211,11 +1213,11 @@ Bool_t TGText::Replace(TGLongPosition start, const char *oldText, const char *ne
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set fLongestLine.
+
 void TGText::LongestLine()
 {
-   // Set fLongestLine.
-
    Long_t line_count = 0;
    TGTextLine *travel = fFirst;
    fColCount = 0;
@@ -1229,11 +1231,11 @@ void TGText::LongestLine()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns content as ROOT string
+
 TString TGText::AsString()
 {
-   // Returns content as ROOT string
-
    TString ret;
 
    Long_t line_count = 0;

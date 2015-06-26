@@ -29,39 +29,39 @@
 
 ClassImp(TGLPlot3D);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLPlot3D::TGLPlot3D() : TGLObject(), fPlotPainter(0)
 {
-   // Constructor.
-
    fDLCache = kFALSE; // Disable display list.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLPlot3D::~TGLPlot3D()
 {
-   // Destructor.
-
    delete fPlotPainter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set painter object and destroy the old one.
+
 void TGLPlot3D::SetPainter(TGLPlotPainter* p)
 {
-   // Set painter object and destroy the old one.
-
    delete fPlotPainter;
    fPlotPainter = p;
 }
 
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Instantiate the correct plot-painter for given object.
+/// Protected method.
+
 TGLPlot3D* TGLPlot3D::InstantiatePlot(TObject* obj)
 {
-   // Instantiate the correct plot-painter for given object.
-   // Protected method.
-
    if (obj->InheritsFrom(TH3::Class()))
    {
       return new TH3GL();
@@ -82,23 +82,23 @@ TGLPlot3D* TGLPlot3D::InstantiatePlot(TObject* obj)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GL plot for specified TH3 and polymarker.
+
 TGLPlot3D* TGLPlot3D::CreatePlot(TH3 *th3, TPolyMarker3D *pm)
 {
-   // Create GL plot for specified TH3 and polymarker.
-
    TGLPlot3D* log = new TH3GL(th3, pm);
    log->SetBBox();
 
    return log;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GL plot for specified object and options.
+/// Which axes are logarithmic is determined from a pad.
+
 TGLPlot3D* TGLPlot3D::CreatePlot(TObject* obj, const Option_t* opt, TVirtualPad* pad)
 {
-   // Create GL plot for specified object and options.
-   // Which axes are logarithmic is determined from a pad.
-
    TGLPlot3D* log = InstantiatePlot(obj);
 
    if (log)
@@ -113,12 +113,12 @@ TGLPlot3D* TGLPlot3D::CreatePlot(TObject* obj, const Option_t* opt, TVirtualPad*
    return log;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GL plot for specified object and options.
+/// Which axes are logarithmic is determined from explicit arguments.
+
 TGLPlot3D* TGLPlot3D::CreatePlot(TObject* obj, const Option_t* opt, Bool_t logx, Bool_t logy, Bool_t logz)
 {
-   // Create GL plot for specified object and options.
-   // Which axes are logarithmic is determined from explicit arguments.
-
    TGLPlot3D* log = InstantiatePlot(obj);
 
    if (log)

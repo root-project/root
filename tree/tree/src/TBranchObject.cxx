@@ -35,39 +35,39 @@
 
 ClassImp(TBranchObject)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for BranchObject.
+
 TBranchObject::TBranchObject()
 : TBranch()
 {
-   // Default constructor for BranchObject.
-
    fNleaves = 1;
    fOldObject = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a BranchObject.
+
 TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr /* = kTRUE */)
 : TBranch()
 {
-   // Create a BranchObject.
-
    Init(tree,0,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a BranchObject.
+
 TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr /* = kTRUE */)
 : TBranch()
 {
-   // Create a BranchObject.
-
    Init(0,parent,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization routine (run from the constructor so do not make this function virtual)
+
 void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t /*splitlevel*/, Int_t compress, Bool_t isptrptr)
 {
-   // Initialization routine (run from the constructor so do not make this function virtual)
-
    if (tree==0 && parent!=0) tree = parent->GetTree();
    fTree   = tree;
    fMother = parent ? parent->GetMother() : this;
@@ -145,18 +145,19 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor for a BranchObject.
+
 TBranchObject::~TBranchObject()
 {
-   // Destructor for a BranchObject.
    fBranches.Delete();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the branch content.
+
 void TBranchObject::Browse(TBrowser* b)
 {
-   // Browse the branch content.
-
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches > 1) {
       fBranches.Browse(b);
@@ -166,11 +167,11 @@ void TBranchObject::Browse(TBrowser* b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop on all leaves of this branch to fill Basket buffer.
+
 Int_t TBranchObject::Fill()
 {
-   // Loop on all leaves of this branch to fill Basket buffer.
-
    Int_t nbytes = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches) {
@@ -192,18 +193,18 @@ Int_t TBranchObject::Fill()
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read all branches of a BranchObject and return total number of bytes.
+///
+///   If entry = 0 take current entry number + 1
+///   If entry < 0 reset entry number to 0
+///
+///  The function returns the number of bytes read from the input buffer.
+///  If entry does not exist  the function returns 0.
+///  If an I/O error occurs,  the function returns -1.
+
 Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
 {
-   // Read all branches of a BranchObject and return total number of bytes.
-   //
-   //   If entry = 0 take current entry number + 1
-   //   If entry < 0 reset entry number to 0
-   //
-   //  The function returns the number of bytes read from the input buffer.
-   //  If entry does not exist  the function returns 0.
-   //  If an I/O error occurs,  the function returns -1.
-
    if (TestBit(kDoNotProcess) && !getall) {
       return 0;
    }
@@ -232,14 +233,14 @@ Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill expectedClass and expectedType with information on the data type of the
+/// object/values contained in this branch (and thus the type of pointers
+/// expected to be passed to Set[Branch]Address
+/// return 0 in case of success and > 0 in case of failure.
+
 Int_t TBranchObject::GetExpectedType(TClass *&expectedClass,EDataType &expectedType)
 {
-   // Fill expectedClass and expectedType with information on the data type of the
-   // object/values contained in this branch (and thus the type of pointers
-   // expected to be passed to Set[Branch]Address
-   // return 0 in case of success and > 0 in case of failure.
-
    expectedClass = 0;
    expectedType = kOther_t;
    TLeafObject* lobj = (TLeafObject*) GetListOfLeaves()->At(0);
@@ -251,11 +252,11 @@ Int_t TBranchObject::GetExpectedType(TClass *&expectedClass,EDataType &expectedT
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TRUE if more than one leaf or if fBrowsables, FALSE otherwise.
+
 Bool_t TBranchObject::IsFolder() const
 {
-   // Return TRUE if more than one leaf or if fBrowsables, FALSE otherwise.
-
    Int_t nbranches = fBranches.GetEntriesFast();
 
    if (nbranches >= 1) {
@@ -267,11 +268,11 @@ Bool_t TBranchObject::IsFolder() const
    return browsables && browsables->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print TBranch parameters.
+
 void TBranchObject::Print(Option_t* option) const
 {
-   // Print TBranch parameters.
-
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches) {
       Printf("*Branch  :%-9s : %-54s *", GetName(), GetTitle());
@@ -288,14 +289,14 @@ void TBranchObject::Print(Option_t* option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset a branch.
+///
+/// Existing buffers are deleted.
+/// Entries, max and min are reset.
+
 void TBranchObject::Reset(Option_t* option)
 {
-   // Reset a branch.
-   //
-   // Existing buffers are deleted.
-   // Entries, max and min are reset.
-
    TBranch::Reset(option);
 
    Int_t nbranches = fBranches.GetEntriesFast();
@@ -320,11 +321,11 @@ void TBranchObject::ResetAfterMerge(TFileMergeInfo *info)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set address of this branch.
+
 void TBranchObject::SetAddress(void* add)
 {
-   // Set address of this branch.
-
    if (TestBit(kDoNotProcess)) {
       return;
    }
@@ -495,29 +496,29 @@ void TBranchObject::SetAddress(void* add)
    delete[] fullname;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the AutoDelete bit.
+///
+///  This function can be used to instruct Root in TBranchObject::ReadBasket
+///  to not delete the object referenced by a branchobject before reading a
+///  new entry. By default, the object is deleted.
+///  If autodel is kTRUE, this existing object will be deleted, a new object
+///    created by the default constructor, then object->Streamer called.
+///  If autodel is kFALSE, the existing object is not deleted. Root assumes
+///    that the user is taking care of deleting any internal object or array
+///    This can be done in Streamer itself.
+///  If this branch has sub-branches, the function sets autodel for these
+///  branches as well.
+///  We STRONGLY suggest to activate this option by default when you create
+///  the top level branch. This will make the read phase more efficient
+///  because it minimizes the numbers of new/delete operations.
+///  Once this option has been set and the Tree is written to a file, it is
+///  not necessary to specify the option again when reading, unless you
+///  want to set the opposite mode.
+///
+
 void TBranchObject::SetAutoDelete(Bool_t autodel)
 {
-   // Set the AutoDelete bit.
-   //
-   //  This function can be used to instruct Root in TBranchObject::ReadBasket
-   //  to not delete the object referenced by a branchobject before reading a
-   //  new entry. By default, the object is deleted.
-   //  If autodel is kTRUE, this existing object will be deleted, a new object
-   //    created by the default constructor, then object->Streamer called.
-   //  If autodel is kFALSE, the existing object is not deleted. Root assumes
-   //    that the user is taking care of deleting any internal object or array
-   //    This can be done in Streamer itself.
-   //  If this branch has sub-branches, the function sets autodel for these
-   //  branches as well.
-   //  We STRONGLY suggest to activate this option by default when you create
-   //  the top level branch. This will make the read phase more efficient
-   //  because it minimizes the numbers of new/delete operations.
-   //  Once this option has been set and the Tree is written to a file, it is
-   //  not necessary to specify the option again when reading, unless you
-   //  want to set the opposite mode.
-   //
-
    TBranch::SetAutoDelete(autodel);
 
    Int_t nbranches = fBranches.GetEntriesFast();
@@ -527,11 +528,11 @@ void TBranchObject::SetAutoDelete(Bool_t autodel)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset basket size for all subbranches of this branch.
+
 void TBranchObject::SetBasketSize(Int_t buffsize)
 {
-   // Reset basket size for all subbranches of this branch.
-
    TBranch::SetBasketSize(buffsize);
 
    Int_t nbranches = fBranches.GetEntriesFast();
@@ -541,11 +542,11 @@ void TBranchObject::SetBasketSize(Int_t buffsize)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TBranchObject.
+
 void TBranchObject::Streamer(TBuffer& R__b)
 {
-   // Stream an object of class TBranchObject.
-
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TBranchObject::Class(), this);
    } else {
@@ -585,13 +586,13 @@ void TBranchObject::Streamer(TBuffer& R__b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// -- If the branch address is not set,  we set all addresses starting with
+/// the top level parent branch.  This is required to be done in order for
+/// GetOffset to be correct and for GetEntry to run.
+
 void TBranchObject::SetupAddresses()
 {
-   // -- If the branch address is not set,  we set all addresses starting with
-   // the top level parent branch.  This is required to be done in order for
-   // GetOffset to be correct and for GetEntry to run.
-
    if (fAddress == 0) {
       // try to create object
       if (!TestBit(kWarn)) {
@@ -608,11 +609,11 @@ void TBranchObject::SetupAddresses()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update branch addresses if a new object was created.
+
 void TBranchObject::UpdateAddress()
 {
-   // Update branch addresses if a new object was created.
-
    void** ppointer = (void**) fAddress;
    if (!ppointer) {
       return;

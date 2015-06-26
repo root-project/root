@@ -53,13 +53,13 @@ ClassImp(TStructViewerGUI);
 TGeoMedium* TStructViewerGUI::fgMedium = NULL;
 UInt_t      TStructViewerGUI::fgCounter = 0;
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructs window with "w" as width, "h" as height and given parent "p". Argument "parent" is a pointer to TStructViewer which contains this GUI.
+/// This constructor build window with all controls, build map with colors, init OpenGL Viewer and create TGeoVolumes.
+
 TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, TList* colors, const TGWindow *p,UInt_t w,UInt_t h)
    : TGMainFrame(p, w, h, kHorizontalFrame)
 {
-   // Constructs window with "w" as width, "h" as height and given parent "p". Argument "parent" is a pointer to TStructViewer which contains this GUI.
-   // This constructor build window with all controls, build map with colors, init OpenGL Viewer and create TGeoVolumes.
-
    fParent = parent;
    fNodePtr = nodePtr;
 
@@ -229,39 +229,39 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    fToolTip = new TGToolTip(0, 0, "ToolTip", 500);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TStructViewerGUI::~TStructViewerGUI()
 {
-   // Destructor
-
    delete fCanvas;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activated when user chage condition
+
 void TStructViewerGUI::AutoRefreshButtonSlot(Bool_t on)
 {
-   // Activated when user chage condition
-
    if (on) {
       Update();
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emmited when user changes height of boxes
+
 void TStructViewerGUI::BoxHeightValueSetSlot(Long_t /* h */)
 {
-   // Emmited when user changes height of boxes
-
    if(fAutoRefesh->IsOn()) {
       Update();
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursive method to calculating nodes posistion in 3D space
+
 void TStructViewerGUI::CalculatePosistion(TStructNode* parent)
 {
-   // Recursive method to calculating nodes posistion in 3D space
-
    // choose scaling method
    if (fScaleBySizeButton->GetState() == kButtonDown) {
       TStructNode::SetScaleBy(kSize);
@@ -287,11 +287,11 @@ void TStructViewerGUI::CalculatePosistion(TStructNode* parent)
    Scale(parent);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if all of nodes can be displayed on scene. Hides redendant nodes.
+
 void TStructViewerGUI::CheckMaxObjects(TStructNode* parent)
 {
-   // Check if all of nodes can be displayed on scene. Hides redendant nodes.
-
    UInt_t object = 0;
 
    TList queue;
@@ -331,20 +331,20 @@ void TStructViewerGUI::CheckMaxObjects(TStructNode* parent)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete window
+
 void TStructViewerGUI::CloseWindow()
 {
-   // Delete window
-
    DeleteWindow();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for default color selsect.
+/// Sets default colot to "pixel"
+
 void TStructViewerGUI::ColorSelectedSlot(Pixel_t pixel)
 {
-   // Slot for default color selsect.
-   // Sets default colot to "pixel"
-
    TStructNodeProperty* prop = GetDefaultColor();
    if(prop) {
       prop->SetColor(pixel);
@@ -352,11 +352,11 @@ void TStructViewerGUI::ColorSelectedSlot(Pixel_t pixel)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divides rectangle where the outlining box is placed.
+
 void TStructViewerGUI::Divide(TList* list, Float_t x1, Float_t x2, Float_t y1, Float_t y2)
 {
-   // Divides rectangle where the outlining box is placed.
-
    if (list->GetSize() > 1) { // spliting node into two lists
       ULong_t sum1 = 0, sum = 0;
 
@@ -409,12 +409,12 @@ void TStructViewerGUI::Divide(TList* list, Float_t x1, Float_t x2, Float_t y1, F
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activated when user double click on objects on 3D scene. Sets clicked node to top node
+/// and updates scene with camers reset.
+
 void TStructViewerGUI::DoubleClickedSlot()
 {
-   // Activated when user double click on objects on 3D scene. Sets clicked node to top node
-   // and updates scene with camers reset.
-
    if (fSelectedObject) {
       if(fSelectedObject == fNodePtr) {
          return;
@@ -427,11 +427,11 @@ void TStructViewerGUI::DoubleClickedSlot()
       Update(kTRUE);
    }
 }
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check limits and draws nodes and links
+
 void TStructViewerGUI::Draw(Option_t* /*option*/)
 {
-   // Check limits and draws nodes and links
-
    fVolumes.Clear();
    CheckMaxObjects(fNodePtr);
 
@@ -445,10 +445,11 @@ void TStructViewerGUI::Draw(Option_t* /*option*/)
    UnCheckMaxObjects();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursive method to draw links
+
 void TStructViewerGUI::DrawLink(TStructNode* parent)
 {
-   // Recursive method to draw links
    if(parent->GetLevel() - fNodePtr->GetLevel() >= fNodePtr->GetMaxLevel()) {
       return;
    }
@@ -474,11 +475,11 @@ void TStructViewerGUI::DrawLink(TStructNode* parent)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates and draws TGeoVolume from given "node"
+
 void TStructViewerGUI::DrawNode(TStructNode* node)
 {
-   // Creates and draws TGeoVolume from given "node"
-
    TGeoVolume* vol;
 
    /*if(node->IsCollapsed())
@@ -528,11 +529,11 @@ void TStructViewerGUI::DrawNode(TStructNode* node)
    fTopVolume->AddNode(vol,1, trans);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursive method to draw GeoVolumes
+
 void TStructViewerGUI::DrawVolumes(TStructNode* parent)
 {
-   // Recursive method to draw GeoVolumes
-
    if(parent->GetLevel() - fNodePtr->GetLevel() >= fNodePtr->GetMaxLevel()) {
       return;
    }
@@ -550,12 +551,12 @@ void TStructViewerGUI::DrawVolumes(TStructNode* parent)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns pointer to property associated with node "node". If property is not found
+/// then it returns default property
+
 TStructNodeProperty* TStructViewerGUI::FindNodeProperty(TStructNode* node)
 {
-   // Returns pointer to property associated with node "node". If property is not found
-   // then it returns default property
-
    TIter it(fColors);
    TStructNodeProperty* prop;
    while ((prop = (TStructNodeProperty*) it() )) {
@@ -585,11 +586,11 @@ TCanvas* TStructViewerGUI::GetCanvas()
 
    return fCanvas;
 }
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns color form fColors for given "node"
+
 Int_t TStructViewerGUI::GetColor(TStructNode* node)
 {
-   // Returns color form fColors for given "node"
-
    TStructNodeProperty* prop = FindNodeProperty(node);
    if (prop) {
       return prop->GetColor().GetNumber();
@@ -598,19 +599,19 @@ Int_t TStructViewerGUI::GetColor(TStructNode* node)
    return 2;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default color for nodes
+
 TStructNodeProperty* TStructViewerGUI::GetDefaultColor()
 {
-   // Return default color for nodes
-
    return ((TStructNodeProperty*)(fColors->Last()));
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if links are visible, otherwise return false.
+
 Bool_t TStructViewerGUI::GetLinksVisibility() const
 {
-   // Returns true if links are visible, otherwise return false.
-
    if (fShowLinksCheckButton->GetState() == kButtonDown) {
       return true;
    } else {
@@ -618,19 +619,19 @@ Bool_t TStructViewerGUI::GetLinksVisibility() const
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns top node pointer
+
 TStructNode* TStructViewerGUI::GetNodePtr() const
 {
-   // Returns top node pointer
-
    return fNodePtr;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle events. Sets fMouseX and fMouseY when user move a mouse over viewer and hides ToolTip
+
 void TStructViewerGUI::GLWidgetProcessedEventSlot(Event_t* event)
 {
-   // Handle events. Sets fMouseX and fMouseY when user move a mouse over viewer and hides ToolTip
-
    switch (event->fType) {
       case kMotionNotify:
          fMouseX = event->fXRoot + 15;
@@ -650,22 +651,22 @@ void TStructViewerGUI::GLWidgetProcessedEventSlot(Event_t* event)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emmited when user changes distance between levels
+
 void TStructViewerGUI::LevelDistValueSetSlot(Long_t /* dist */)
 {
-   // Emmited when user changes distance between levels
-
    if(fAutoRefesh->IsOn()) {
       Update(kTRUE);
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MouseOver slot. Activated when user out mouse over object on scene.
+/// Sets ToolTip and updates labels
+
 void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
 {
-   // MouseOver slot. Activated when user out mouse over object on scene.
-   // Sets ToolTip and updates labels
-
    fToolTip->Hide();
    fSelectedObject = NULL;
    if (shape && shape->GetLogical()) {
@@ -687,11 +688,11 @@ void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activated when user click Redo button. Repeat last Undo action.
+
 void TStructViewerGUI::RedoButtonSlot()
 {
-   // Activated when user click Redo button. Repeat last Undo action.
-
    fUndoList.Add(fNodePtr);
    fUndoButton->SetEnabled(true);
    fNodePtr = (TStructNode*) fRedoList.Last();
@@ -703,21 +704,21 @@ void TStructViewerGUI::RedoButtonSlot()
    UpdateLabels(fNodePtr);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resets camera
+
 void TStructViewerGUI::ResetButtonSlot()
 {
-   // Resets camera
-
    fGLViewer->UpdateScene();
    fGLViewer->ResetCurrentCamera();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursive method to scaling all modes on scene. We have to scale nodes to get real ratio between nodes.
+/// Uses fMaxRatio.
+
 void TStructViewerGUI::Scale(TStructNode* parent)
 {
-   // Recursive method to scaling all modes on scene. We have to scale nodes to get real ratio between nodes.
-   // Uses fMaxRatio.
-
    // newRatio = sqrt(ratio/maxratio)
    Float_t newRatio = (Float_t)(TMath::Sqrt(parent->GetRelativeVolumeRatio()/fMaxRatio));
    // set left top conner in the center
@@ -754,20 +755,20 @@ void TStructViewerGUI::Scale(TStructNode* parent)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets top node pointer and updates view
+
 void TStructViewerGUI::SetNodePtr(TStructNode* val)
 {
-   // Sets top node pointer and updates view
-
    fNodePtr = val;
    Update(kTRUE);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets links visibility to "visible"
+
 void TStructViewerGUI::SetLinksVisibility(Bool_t visible)
 {
-   // Sets links visibility to "visible"
-
    if (visible) {
       fShowLinksCheckButton->SetState(kButtonDown);
    } else {
@@ -775,30 +776,30 @@ void TStructViewerGUI::SetLinksVisibility(Bool_t visible)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets pointer given in fPointerTestEntry to the main pointer
+
 void TStructViewerGUI::SetPointerButtonSlot()
 {
-   // Sets pointer given in fPointerTestEntry to the main pointer
-
    void* obj = (void*)gROOT->ProcessLine(fPointerTextEntry->GetText());
    fParent->SetPointer(obj, fPointerTypeTextEntry->GetText());
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes links visibility and refresh view.
+
 void TStructViewerGUI::ShowLinksToggled(Bool_t /*on*/)
 {
-   // Changes links visibility and refresh view.
-
    if (fAutoRefesh->IsOn()) {
       Update();
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shows hidden nodes
+
 void TStructViewerGUI::UnCheckMaxObjects()
 {
-   // Shows hidden nodes
-
    TStructNode* node;
    TIter it(&fVisibleObjects);
 
@@ -810,11 +811,11 @@ void TStructViewerGUI::UnCheckMaxObjects()
    fVisibleObjects.Clear();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Updates view. Clear all the nodes, call draw function and update scene. Doesn't reset camera.
+
 void TStructViewerGUI::Update(Bool_t resetCamera)
 {
-   // Updates view. Clear all the nodes, call draw function and update scene. Doesn't reset camera.
-
    if (!fNodePtr) {
       return;
    }
@@ -830,19 +831,19 @@ void TStructViewerGUI::Update(Bool_t resetCamera)
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update button slot. Updates scene
+
 void TStructViewerGUI::UpdateButtonSlot()
 {
-   // Update button slot. Updates scene
-
    Update();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh information in labels when user put mouse over object
+
 void TStructViewerGUI::UpdateLabels(TStructNode* node)
 {
-   // Refresh information in labels when user put mouse over object
-
    fNodeNameLabel->SetText(node->GetName());
    fNodeTypelabel->SetText(node->GetTypeName());
 
@@ -863,11 +864,11 @@ void TStructViewerGUI::UpdateLabels(TStructNode* node)
    fTotalSizeLabel->SetText(name);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// UndoButton Slot. Activated when user press Undo button. Restore last top node pointer.
+
 void TStructViewerGUI::UndoButtonSlot()
 {
-   // UndoButton Slot. Activated when user press Undo button. Restore last top node pointer.
-
    fRedoList.Add(fNodePtr);
    fRedoButton->SetEnabled(true);
    fNodePtr = (TStructNode*) fUndoList.Last();
@@ -879,11 +880,11 @@ void TStructViewerGUI::UndoButtonSlot()
    UpdateLabels(fNodePtr);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activated when user press radio button
+
 void TStructViewerGUI::ScaleByChangedSlot()
 {
-   // Activated when user press radio button
-
     if (fAutoRefesh->IsOn()) {
        Update();
     }

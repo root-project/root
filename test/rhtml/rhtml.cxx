@@ -100,12 +100,12 @@ const char *HtmlError[] = {
 0
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGHtmlBrowser constructor.
+
 TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, UInt_t h)
              : TGMainFrame(p, w, h)
 {
-   // TGHtmlBrowser constructor.
-
    SetCleanup(kDeepCleanup);
    fNbFavorites = 1000;
    fMenuBar = new TGMenuBar(this, 35, 50, kHorizontalFrame);
@@ -219,21 +219,21 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    Resize(w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close TGHtmlBrowser window.
+
 void TGHtmlBrowser::CloseWindow()
 {
-   // Close TGHtmlBrowser window.
-
    Cleanup();
    delete this;
    gApplication->Terminate(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read (open) remote files.
+
 static char *ReadRemote(const char *url)
 {
-   // Read (open) remote files.
-
    static char *buf = 0;
    TUrl fUrl(url);
 
@@ -264,11 +264,11 @@ static char *ReadRemote(const char *url)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open (browse) selected URL.
+
 void TGHtmlBrowser::Selected(const char *uri)
 {
-   // Open (browse) selected URL.
-
    char *buf = 0;
    FILE *f;
 
@@ -337,22 +337,22 @@ void TGHtmlBrowser::Selected(const char *uri)
    SetWindowName(Form("%s - RHTML",surl.Data()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// URL combobox has changed.
+
 void TGHtmlBrowser::URLChanged()
 {
-   // URL combobox has changed.
-
    const char *string = fURL->GetText();
    if (string) {
       Selected(StrDup(gSystem->UnixPathName(string)));
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Back" navigation button.
+
 void TGHtmlBrowser::Back()
 {
-   // Handle "Back" navigation button.
-
    Int_t index = 0;
    const char *string = fURL->GetText();
    TGLBEntry * lbe1 = fComboBox->FindEntry(string);
@@ -369,11 +369,11 @@ void TGHtmlBrowser::Back()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Forward" navigation button.
+
 void TGHtmlBrowser::Forward()
 {
-   // Handle "Forward" navigation button.
-
    Int_t index = 0;
    const char *string = fURL->GetText();
    TGLBEntry * lbe1 = fComboBox->FindEntry(string);
@@ -390,44 +390,44 @@ void TGHtmlBrowser::Forward()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Reload" navigation button.
+
 void TGHtmlBrowser::Reload()
 {
-   // Handle "Reload" navigation button.
-
    const char *string = fURL->GetText();
    if (string)
       Selected(string);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "Reload" navigation button.
+
 void TGHtmlBrowser::Stop()
 {
-   // Handle "Reload" navigation button.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "MouseOver" TGHtml signal.
+
 void TGHtmlBrowser::MouseOver(char *url)
 {
-   // Handle "MouseOver" TGHtml signal.
-
    fStatusBar->SetText(url, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle "MouseDown" TGHtml signal.
+
 void TGHtmlBrowser::MouseDown(char *url)
 {
-   // Handle "MouseDown" TGHtml signal.
-
    Selected(url);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process Events.
+
 Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process Events.
-
    switch (GET_MSG(msg)) {
    case kC_COMMAND:
       {
@@ -518,11 +518,11 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main application.
+
 int main(int argc, char **argv)
 {
-   // Main application.
-
    TApplication theApp("App", &argc, argv);
    new TGHtmlBrowser("http://root.cern.ch/drupal/");
    theApp.Run();

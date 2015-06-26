@@ -60,123 +60,127 @@ ClassImp(RooArgList)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooArgList::RooArgList() :
   RooAbsCollection()
 {
-  // Default constructor
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a RooArgSet. 
+
 RooArgList::RooArgList(const RooArgSet& set) :
   RooAbsCollection(set.GetName())
 {
-  // Constructor from a RooArgSet. 
-
   add(set) ;
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Empty list constructor
+
 RooArgList::RooArgList(const char *name) :
   RooAbsCollection(name)
 {
-  // Empty list constructor
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for list containing 1 initial object
+
 RooArgList::RooArgList(const RooAbsArg& var1,
 		     const char *name) :
   RooAbsCollection(name)
 {
-  // Constructor for list containing 1 initial object
-
   add(var1);
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for set containing 2 initial objects
+
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
   RooAbsCollection(name)
 {
-  // Constructor for set containing 2 initial objects
-
   add(var1); add(var2);
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for set containing 3 initial objects
+
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3,
 		     const char *name) :
   RooAbsCollection(name)
 {
-  // Constructor for set containing 3 initial objects
-
   add(var1); add(var2); add(var3);
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for set containing 4 initial objects
+
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4,
 		     const char *name) :
   RooAbsCollection(name)
 {
-  // Constructor for set containing 4 initial objects
-
   add(var1); add(var2); add(var3); add(var4);
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for set containing 5 initial objects
+
 RooArgList::RooArgList(const RooAbsArg& var1,
 		     const RooAbsArg& var2, const RooAbsArg& var3,
 		     const RooAbsArg& var4, const RooAbsArg& var5,
 		     const char *name) :
   RooAbsCollection(name)
 {
-  // Constructor for set containing 5 initial objects
-
   add(var1); add(var2); add(var3); add(var4); add(var5);
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for set containing 6 initial objects
+
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4, 
 		     const RooAbsArg& var5, const RooAbsArg& var6,
 		     const char *name) :
   RooAbsCollection(name)
 {
-  // Constructor for set containing 6 initial objects
-
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for set containing 7 initial objects
+
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4, 
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
@@ -184,15 +188,15 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
   RooAbsCollection(name)
 {
-  // Constructor for set containing 7 initial objects
-
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for set containing 8 initial objects
+
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4, 
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
@@ -200,15 +204,15 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
   RooAbsCollection(name)
 {
-  // Constructor for set containing 8 initial objects
-
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for set containing 9 initial objects
+
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4, 
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
@@ -216,22 +220,20 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const RooAbsArg& var9, const char *name) :
   RooAbsCollection(name)
 {
-  // Constructor for set containing 9 initial objects
-
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7); add(var8); add(var9);
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a root TCollection. Elements in the collection that
+/// do not inherit from RooAbsArg will be skipped. A warning message
+/// will be printed for every skipped item.
+
 RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
   RooAbsCollection(name)
 {
-  // Constructor from a root TCollection. Elements in the collection that
-  // do not inherit from RooAbsArg will be skipped. A warning message
-  // will be printed for every skipped item.
-
   TIterator* iter = tcoll.MakeIterator() ;
   TObject* obj ;
   while((obj=iter->Next())) {
@@ -248,36 +250,38 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor. Note that a copy of a list is always non-owning,
+/// even the source list is owning. To create an owning copy of
+/// a list (owning or not), use the snaphot() method.
+
 RooArgList::RooArgList(const RooArgList& other, const char *name) 
   : RooAbsCollection(other,name)
 {
-  // Copy constructor. Note that a copy of a list is always non-owning,
-  // even the source list is owning. To create an owning copy of
-  // a list (owning or not), use the snaphot() method.
   TRACE_CREATE
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooArgList::~RooArgList() 
 {
-  // Destructor
   TRACE_DESTROY
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Array operator. Element in slot 'idx' must already exist, otherwise
+/// code will abort. 
+///
+/// When used as lvalue in assignment operations, the element contained in
+/// the list will not be changed, only the value of the existing element!
+
 RooAbsArg& RooArgList::operator[](Int_t idx) const 
 {     
-  // Array operator. Element in slot 'idx' must already exist, otherwise
-  // code will abort. 
-  //
-  // When used as lvalue in assignment operations, the element contained in
-  // the list will not be changed, only the value of the existing element!
-
   RooAbsArg* arg = at(idx) ;
   if (!arg) {
     coutE(InputArguments) << "RooArgList::operator[](" << GetName() << ") ERROR: index " 
@@ -289,15 +293,15 @@ RooAbsArg& RooArgList::operator[](Int_t idx) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the contents of the argset in ASCII form to given stream.
+/// 
+/// All elements will be printed on a single line separated by a single 
+/// white space. The contents of each element is written by the arguments' 
+/// writeToStream() function
+
 void RooArgList::writeToStream(ostream& os, Bool_t compact) 
 {
-  // Write the contents of the argset in ASCII form to given stream.
-  // 
-  // All elements will be printed on a single line separated by a single 
-  // white space. The contents of each element is written by the arguments' 
-  // writeToStream() function
-
   if (!compact) {
     coutE(InputArguments) << "RooArgList::writeToStream(" << GetName() << ") non-compact mode not supported" << endl ;
     return ;
@@ -315,15 +319,15 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the contents of the argset in ASCII form from given stream.
+/// 
+/// A single line is read, and all elements are assumed to be separated 
+/// by white space. The value of each argument is read by the arguments 
+/// readFromStream function.
+
 Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
-  // Read the contents of the argset in ASCII form from given stream.
-  // 
-  // A single line is read, and all elements are assumed to be separated 
-  // by white space. The value of each argument is read by the arguments 
-  // readFromStream function.
-
   if (!compact) {
     coutE(InputArguments) << "RooArgList::readFromStream(" << GetName() << ") non-compact mode not supported" << endl ;
     return kTRUE ;

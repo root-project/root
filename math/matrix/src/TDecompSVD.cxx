@@ -44,11 +44,11 @@
 
 ClassImp(TDecompSVD)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for (nrows x ncols) matrix
+
 TDecompSVD::TDecompSVD(Int_t nrows,Int_t ncols)
 {
-// Constructor for (nrows x ncols) matrix
-
    if (nrows < ncols) {
       Error("TDecompSVD(Int_t,Int_t","matrix rows should be >= columns");
       return;
@@ -58,11 +58,11 @@ TDecompSVD::TDecompSVD(Int_t nrows,Int_t ncols)
    fV.ResizeTo(nrows,ncols); // In the end we only need the nColxnCol part
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for ([row_lwb..row_upb] x [col_lwb..col_upb]) matrix
+
 TDecompSVD::TDecompSVD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
 {
-// Constructor for ([row_lwb..row_upb] x [col_lwb..col_upb]) matrix
-
    const Int_t nrows = row_upb-row_lwb+1;
    const Int_t ncols = col_upb-col_lwb+1;
 
@@ -77,11 +77,11 @@ TDecompSVD::TDecompSVD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
    fV.ResizeTo(nrows,ncols); // In the end we only need the nColxnCol part
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for general matrix A .
+
 TDecompSVD::TDecompSVD(const TMatrixD &a,Double_t tol)
 {
-// Constructor for general matrix A .
-
    R__ASSERT(a.IsValid());
    if (a.GetNrows() < a.GetNcols()) {
       Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
@@ -106,20 +106,20 @@ TDecompSVD::TDecompSVD(const TMatrixD &a,Double_t tol)
    memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TDecompSVD::TDecompSVD(const TDecompSVD &another): TDecompBase(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SVD decomposition of matrix
+/// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
+
 Bool_t TDecompSVD::Decompose()
 {
-// SVD decomposition of matrix
-// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
-
    if (TestBit(kDecomposed)) return kTRUE;
 
    if ( !TestBit(kMatrixSet) ) {
@@ -154,39 +154,39 @@ Bool_t TDecompSVD::Decompose()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bidiagonalize the (m x n) - matrix a (stored in v) through a series of Householder
+/// transformations applied to the left (Q^T) and to the right (H) of a ,
+/// so that A = Q . C . H^T with matrix C bidiagonal. Q and H are orthogonal matrices .
+///
+/// Output:
+///   v     - (n x n) - matrix H in the (n x n) part of v
+///   u     - (m x m) - matrix Q^T
+///   sDiag - diagonal of the (m x n) C
+///   oDiag - off-diagonal elements of matrix C
+///
+///  Test code for the output:
+///    const Int_t nRow = v.GetNrows();
+///    const Int_t nCol = v.GetNcols();
+///    TMatrixD H(v); H.ResizeTo(nCol,nCol);
+///    TMatrixD E1(nCol,nCol); E1.UnitMatrix();
+///    TMatrixD Ht(TMatrixDBase::kTransposed,H);
+///    Bool_t ok = kTRUE;
+///    ok &= VerifyMatrixIdentity(Ht * H,E1,kTRUE,1.0e-13);
+///    ok &= VerifyMatrixIdentity(H * Ht,E1,kTRUE,1.0e-13);
+///    TMatrixD E2(nRow,nRow); E2.UnitMatrix();
+///    TMatrixD Qt(u);
+///    TMatrixD Q(TMatrixDBase::kTransposed,Qt);
+///    ok &= VerifyMatrixIdentity(Q * Qt,E2,kTRUE,1.0e-13);
+///    TMatrixD C(nRow,nCol);
+///    TMatrixDDiag(C) = sDiag;
+///    for (Int_t i = 0; i < nCol-1; i++)
+///      C(i,i+1) = oDiag(i+1);
+///    TMatrixD A = Q*C*Ht;
+///    ok &= VerifyMatrixIdentity(A,a,kTRUE,1.0e-13);
+
 Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag)
 {
-// Bidiagonalize the (m x n) - matrix a (stored in v) through a series of Householder
-// transformations applied to the left (Q^T) and to the right (H) of a ,
-// so that A = Q . C . H^T with matrix C bidiagonal. Q and H are orthogonal matrices .
-//
-// Output:
-//   v     - (n x n) - matrix H in the (n x n) part of v
-//   u     - (m x m) - matrix Q^T
-//   sDiag - diagonal of the (m x n) C
-//   oDiag - off-diagonal elements of matrix C
-//
-//  Test code for the output:
-//    const Int_t nRow = v.GetNrows();
-//    const Int_t nCol = v.GetNcols();
-//    TMatrixD H(v); H.ResizeTo(nCol,nCol);
-//    TMatrixD E1(nCol,nCol); E1.UnitMatrix();
-//    TMatrixD Ht(TMatrixDBase::kTransposed,H);
-//    Bool_t ok = kTRUE;
-//    ok &= VerifyMatrixIdentity(Ht * H,E1,kTRUE,1.0e-13);
-//    ok &= VerifyMatrixIdentity(H * Ht,E1,kTRUE,1.0e-13);
-//    TMatrixD E2(nRow,nRow); E2.UnitMatrix();
-//    TMatrixD Qt(u);
-//    TMatrixD Q(TMatrixDBase::kTransposed,Qt);
-//    ok &= VerifyMatrixIdentity(Q * Qt,E2,kTRUE,1.0e-13);
-//    TMatrixD C(nRow,nCol);
-//    TMatrixDDiag(C) = sDiag;
-//    for (Int_t i = 0; i < nCol-1; i++)
-//      C(i,i+1) = oDiag(i+1);
-//    TMatrixD A = Q*C*Ht;
-//    ok &= VerifyMatrixIdentity(A,a,kTRUE,1.0e-13);
-
    const Int_t nRow_v = v.GetNrows();
    const Int_t nCol_v = v.GetNcols();
    const Int_t nCol_u = u.GetNcols();
@@ -272,34 +272,34 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Diagonalizes in an iterative fashion the bidiagonal matrix C as described through
+/// sDiag and oDiag, so that S' = U'^T . C . V' is diagonal. U' and V' are orthogonal
+/// matrices .
+///
+/// Output:
+///   v     - (n x n) - matrix H . V' in the (n x n) part of v
+///   u     - (m x m) - matrix U'^T . Q^T
+///   sDiag - diagonal of the (m x n) S'
+///
+///   return convergence flag:  0 -> no convergence
+///                             1 -> convergence
+///
+///  Test code for the output:
+///    const Int_t nRow = v.GetNrows();
+///    const Int_t nCol = v.GetNcols();
+///    TMatrixD tmp = v; tmp.ResizeTo(nCol,nCol);
+///    TMatrixD Vprime  = Ht*tmp;
+///    TMatrixD Vprimet(TMatrixDBase::kTransposed,Vprime);
+///    TMatrixD Uprimet = u*Q;
+///    TMatrixD Uprime(TMatrixDBase::kTransposed,Uprimet);
+///    TMatrixD Sprime(nRow,nCol);
+///    TMatrixDDiag(Sprime) = sDiag;
+///    ok &= VerifyMatrixIdentity(Uprimet * C * Vprime,Sprime,kTRUE,1.0e-13);
+///    ok &= VerifyMatrixIdentity(Q*Uprime * Sprime * Vprimet * Ht,a,kTRUE,1.0e-13);
+
 Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag)
 {
-// Diagonalizes in an iterative fashion the bidiagonal matrix C as described through
-// sDiag and oDiag, so that S' = U'^T . C . V' is diagonal. U' and V' are orthogonal
-// matrices .
-//
-// Output:
-//   v     - (n x n) - matrix H . V' in the (n x n) part of v
-//   u     - (m x m) - matrix U'^T . Q^T
-//   sDiag - diagonal of the (m x n) S'
-//
-//   return convergence flag:  0 -> no convergence
-//                             1 -> convergence
-//
-//  Test code for the output:
-//    const Int_t nRow = v.GetNrows();
-//    const Int_t nCol = v.GetNcols();
-//    TMatrixD tmp = v; tmp.ResizeTo(nCol,nCol);
-//    TMatrixD Vprime  = Ht*tmp;
-//    TMatrixD Vprimet(TMatrixDBase::kTransposed,Vprime);
-//    TMatrixD Uprimet = u*Q;
-//    TMatrixD Uprime(TMatrixDBase::kTransposed,Uprimet);
-//    TMatrixD Sprime(nRow,nCol);
-//    TMatrixDDiag(Sprime) = sDiag;
-//    ok &= VerifyMatrixIdentity(Uprimet * C * Vprime,Sprime,kTRUE,1.0e-13);
-//    ok &= VerifyMatrixIdentity(Q*Uprime * Sprime * Vprimet * Ht,a,kTRUE,1.0e-13);
-
    Bool_t ok    = kTRUE;
    Int_t niter  = 0;
    Double_t bmx = sDiag(0);
@@ -362,11 +362,11 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
    return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Step 1 in the matrix diagonalization
+
 void TDecompSVD::Diag_1(TMatrixD &v,TVectorD &sDiag,TVectorD &oDiag,Int_t k)
 {
-// Step 1 in the matrix diagonalization
-
    const Int_t nCol_v = v.GetNcols();
 
    TMatrixDColumn vc_k = TMatrixDColumn(v,k);
@@ -386,11 +386,11 @@ void TDecompSVD::Diag_1(TMatrixD &v,TVectorD &sDiag,TVectorD &oDiag,Int_t k)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Step 2 in the matrix diagonalization
+
 void TDecompSVD::Diag_2(TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
 {
-// Step 2 in the matrix diagonalization
-
    for (Int_t i = l; i <= k; i++) {
       Double_t h,cs,sn;
       if (i == l)
@@ -404,11 +404,11 @@ void TDecompSVD::Diag_2(TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Step 3 in the matrix diagonalization
+
 void TDecompSVD::Diag_3(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l)
 {
-// Step 3 in the matrix diagonalization
-
    Double_t *pS = sDiag.GetMatrixArray();
    Double_t *pO = oDiag.GetMatrixArray();
 
@@ -478,18 +478,18 @@ void TDecompSVD::Diag_3(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a permutation transformation on the diagonal matrix S', so that
+/// matrix S'' = U''^T . S' . V''  has diagonal elements ordered such that they
+/// do not increase.
+///
+/// Output:
+///   v     - (n x n) - matrix H . V' . V'' in the (n x n) part of v
+///   u     - (m x m) - matrix U''^T . U'^T . Q^T
+///   sDiag - diagonal of the (m x n) S''
+
 void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
 {
-// Perform a permutation transformation on the diagonal matrix S', so that
-// matrix S'' = U''^T . S' . V''  has diagonal elements ordered such that they
-// do not increase.
-//
-// Output:
-//   v     - (n x n) - matrix H . V' . V'' in the (n x n) part of v
-//   u     - (m x m) - matrix U''^T . U'^T . Q^T
-//   sDiag - diagonal of the (m x n) S''
-
    const Int_t nCol_v = v.GetNcols();
    const Int_t nCol_u = u.GetNcols();
 
@@ -545,11 +545,11 @@ void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reconstruct the original matrix using the decomposition parts
+
 const TMatrixD TDecompSVD::GetMatrix()
 {
-// Reconstruct the original matrix using the decomposition parts
-
    if (TestBit(kSingular)) {
       Error("GetMatrix()","Matrix is singular");
       return TMatrixD();
@@ -570,11 +570,11 @@ const TMatrixD TDecompSVD::GetMatrix()
    return fU * s * vt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set matrix to be decomposed
+
 void TDecompSVD::SetMatrix(const TMatrixD &a)
 {
-// Set matrix to be decomposed
-
    R__ASSERT(a.IsValid());
 
    ResetStatus();
@@ -599,15 +599,15 @@ void TDecompSVD::SetMatrix(const TMatrixD &a)
    memcpy(fV.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b assuming the SVD form of A is stored . Solution returned in b.
+/// If A is of size (m x n), input vector b should be of size (m), however,
+/// the solution, returned in b, will be in the first (n) elements .
+///
+/// For m > n , x  is the least-squares solution of min(A . x - b)
+
 Bool_t TDecompSVD::Solve(TVectorD &b)
 {
-// Solve Ax=b assuming the SVD form of A is stored . Solution returned in b.
-// If A is of size (m x n), input vector b should be of size (m), however,
-// the solution, returned in b, will be in the first (n) elements .
-//
-// For m > n , x  is the least-squares solution of min(A . x - b)
-
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
       return kFALSE;
@@ -653,16 +653,16 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b assuming the SVD form of A is stored . Solution returned in the
+/// matrix column cb b.
+/// If A is of size (m x n), input vector b should be of size (m), however,
+/// the solution, returned in b, will be in the first (n) elements .
+///
+/// For m > n , x  is the least-squares solution of min(A . x - b)
+
 Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
 {
-// Solve Ax=b assuming the SVD form of A is stored . Solution returned in the
-// matrix column cb b.
-// If A is of size (m x n), input vector b should be of size (m), however,
-// the solution, returned in b, will be in the first (n) elements .
-//
-// For m > n , x  is the least-squares solution of min(A . x - b)
-
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
@@ -711,11 +711,11 @@ Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve A^T x=b assuming the SVD form of A is stored . Solution returned in b.
+
 Bool_t TDecompSVD::TransSolve(TVectorD &b)
 {
-// Solve A^T x=b assuming the SVD form of A is stored . Solution returned in b.
-
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
       return kFALSE;
@@ -760,11 +760,11 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve A^T x=b assuming the SVD form of A is stored . Solution returned in b.
+
 Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 {
-// Solve A^T x=b assuming the SVD form of A is stored . Solution returned in b.
-
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
@@ -811,11 +811,11 @@ Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix condition number
+
 Double_t TDecompSVD::Condition()
 {
-// Matrix condition number
-
    if ( !TestBit(kCondition) ) {
       fCondition = -1;
       if (TestBit(kSingular))
@@ -834,11 +834,11 @@ Double_t TDecompSVD::Condition()
    return fCondition;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix determinant det = d1*TMath::Power(2.,d2)
+
 void TDecompSVD::Det(Double_t &d1,Double_t &d2)
 {
-// Matrix determinant det = d1*TMath::Power(2.,d2)
-
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )
          Decompose();
@@ -854,7 +854,8 @@ void TDecompSVD::Det(Double_t &d1,Double_t &d2)
    d2 = fDet2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t  TDecompSVD::GetNrows  () const
 {
    return fU.GetNrows();
@@ -865,14 +866,14 @@ Int_t TDecompSVD::GetNcols  () const
    return fV.GetNcols();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+/// The user should always supply a matrix of size (m x m) !
+/// If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
+/// should be used .
+
 Bool_t TDecompSVD::Invert(TMatrixD &inv)
 {
-// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-// The user should always supply a matrix of size (m x m) !
-// If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
-// should be used .
-
    const Int_t rowLwb = GetRowLwb();
    const Int_t colLwb = GetColLwb();
    const Int_t nRows  = fU.GetNrows();
@@ -889,12 +890,12 @@ Bool_t TDecompSVD::Invert(TMatrixD &inv)
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+/// (n x m) Ainv is returned .
+
 TMatrixD TDecompSVD::Invert(Bool_t &status)
 {
-// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
-// (n x m) Ainv is returned .
-
    const Int_t rowLwb = GetRowLwb();
    const Int_t colLwb = GetColLwb();
    const Int_t rowUpb = rowLwb+fU.GetNrows()-1;
@@ -906,22 +907,22 @@ TMatrixD TDecompSVD::Invert(Bool_t &status)
    return inv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class members
+
 void TDecompSVD::Print(Option_t *opt) const
 {
-// Print class members
-
    TDecompBase::Print(opt);
    fU.Print("fU");
    fV.Print("fV");
    fSig.Print("fSig");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TDecompSVD &TDecompSVD::operator=(const TDecompSVD &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TDecompBase::operator=(source);
       fU.ResizeTo(source.fU);

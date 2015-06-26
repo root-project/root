@@ -71,15 +71,15 @@
 ClassImp(TGTripleVSlider)
 ClassImp(TGTripleHSlider)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a vertical slider widget.
+
 TGTripleVSlider::TGTripleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
                                  UInt_t options, ULong_t back,
                                  Bool_t reversed, Bool_t mark_ends,
                                  Bool_t constrained, Bool_t relative)
     : TGDoubleVSlider(p, h, type, id, options, back, reversed, mark_ends)
 {
-   // Create a vertical slider widget.
-
    fPointerPic = fClient->GetPicture("slider1h.xpm");
    if (!fPointerPic)
       Error("TGTripleVSlider", "slider1h.xpm not found");
@@ -91,37 +91,37 @@ TGTripleVSlider::TGTripleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete vertical slider widget.
+
 TGTripleVSlider::~TGTripleVSlider()
 {
-   // Delete vertical slider widget.
-
    if (fPointerPic) fClient->FreePicture(fPointerPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw vertical slider widget.
+
 void TGTripleVSlider::DoRedraw()
 {
-   // Redraw vertical slider widget.
-
    TGDoubleVSlider::DoRedraw();
    // Draw Pointer
    DrawPointer();
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw slider pointer
+
 void TGTripleVSlider::DrawPointer()
 {
-   // Draw slider pointer
-
    if (fPointerPic) fPointerPic->Draw(fId, GetBckgndGC()(), fWidth/2-7, fCz-5);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in vertical slider.
+
 Bool_t TGTripleVSlider::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in vertical slider.
-
    if (event->fType == kButtonPress && event->fCode == kButton1) {
       // constrain to the slider width
       if (event->fX < (Int_t)fWidth/2-7 || event->fX > (Int_t)fWidth/2+7) {
@@ -167,21 +167,21 @@ Bool_t TGTripleVSlider::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handles resize events for this widget.
+
 Bool_t TGTripleVSlider::HandleConfigureNotify(Event_t* event)
 {
-   // Handles resize events for this widget.
-
    TGFrame::HandleConfigureNotify(event);
    SetPointerPosition(fSCz);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in vertical slider.
+
 Bool_t TGTripleVSlider::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in vertical slider.
-
    if (fMove < 3) {
       // if the mouse pointer is on the cursor,
       // and we are not moving anything,
@@ -255,11 +255,11 @@ Bool_t TGTripleVSlider::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pointer position constrained in the slider range.
+
 void TGTripleVSlider::SetConstrained(Bool_t on)
 {
-   // Set pointer position constrained in the slider range.
-
    fConstrained = on;
 
    if (fConstrained) {
@@ -270,11 +270,11 @@ void TGTripleVSlider::SetConstrained(Bool_t on)
    }
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set slider pointer position in pixel value.
+
 void TGTripleVSlider::SetPointerPos(Int_t z, Int_t opt)
 {
-   // Set slider pointer position in pixel value.
-
    static Long64_t was = gSystem->Now();
    Bool_t lcheck = (opt == 1);
    Int_t oldPos = fCz;
@@ -329,11 +329,11 @@ void TGTripleVSlider::SetPointerPos(Int_t z, Int_t opt)
    }
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pointer position in scaled (real) value
+
 void TGTripleVSlider::SetPointerPosition(Float_t pos)
 {
-   // Set pointer position in scaled (real) value
-
    if (fReversedScale) {
       fSCz = fVmin + fVmax - pos;
    }
@@ -344,15 +344,15 @@ void TGTripleVSlider::SetPointerPosition(Float_t pos)
    SetPointerPos((int)(absPos+5.0), 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create horizontal slider widget.
+
 TGTripleHSlider::TGTripleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id,
                                  UInt_t options, ULong_t back,
                                  Bool_t reversed, Bool_t mark_ends,
                                  Bool_t constrained, Bool_t relative)
     : TGDoubleHSlider(p, w, type, id, options, back, reversed, mark_ends)
 {
-   // Create horizontal slider widget.
-
    fPointerPic = fClient->GetPicture("slider1v.xpm");
    if (!fPointerPic)
       Error("TGTripleVSlider", "slider1v.xpm not found");
@@ -364,37 +364,37 @@ TGTripleHSlider::TGTripleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a horizontal slider widget.
+
 TGTripleHSlider::~TGTripleHSlider()
 {
-   // Delete a horizontal slider widget.
-
    if (fPointerPic) fClient->FreePicture(fPointerPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw horizontal slider widget.
+
 void TGTripleHSlider::DoRedraw()
 {
-   // Redraw horizontal slider widget.
-
    TGDoubleHSlider::DoRedraw();
    // Draw Pointer
    DrawPointer();
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw slider pointer
+
 void TGTripleHSlider::DrawPointer()
 {
-   // Draw slider pointer
-
    if (fPointerPic) fPointerPic->Draw(fId, GetBckgndGC()(), fCz-5, fHeight/2-7);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in horizontal slider widget.
+
 Bool_t TGTripleHSlider::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in horizontal slider widget.
-
    if (event->fType == kButtonPress && event->fCode == kButton1) {
       // constrain to the slider height
       if (event->fY < (Int_t)fHeight/2-7 || event->fY > (Int_t)fHeight/2+7) {
@@ -440,21 +440,21 @@ Bool_t TGTripleHSlider::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handles resize events for this widget.
+
 Bool_t TGTripleHSlider::HandleConfigureNotify(Event_t* event)
 {
-   // Handles resize events for this widget.
-
    TGFrame::HandleConfigureNotify(event);
    SetPointerPosition(fSCz);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in horizontal slide widget.
+
 Bool_t TGTripleHSlider::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in horizontal slide widget.
-
    if (fMove < 3) {
       // if the mouse pointer is on the cursor,
       // and we are not moving anything,
@@ -528,11 +528,11 @@ Bool_t TGTripleHSlider::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pointer position constrained in the slider range.
+
 void TGTripleHSlider::SetConstrained(Bool_t on)
 {
-   // Set pointer position constrained in the slider range.
-
    fConstrained = on;
 
    if (fConstrained) {
@@ -543,11 +543,11 @@ void TGTripleHSlider::SetConstrained(Bool_t on)
    }
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set slider pointer position in pixel value.
+
 void TGTripleHSlider::SetPointerPos(Int_t z, Int_t opt)
 {
-   // Set slider pointer position in pixel value.
-
    static Long64_t was = gSystem->Now();
    Bool_t lcheck = (opt == 1);
    Int_t oldPos = fCz;
@@ -602,11 +602,11 @@ void TGTripleHSlider::SetPointerPos(Int_t z, Int_t opt)
    }
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pointer position in scaled (real) value
+
 void TGTripleHSlider::SetPointerPosition(Float_t pos)
 {
-   // Set pointer position in scaled (real) value
-
    if (fReversedScale) {
       fSCz = fVmin + fVmax - pos;
    }
@@ -617,11 +617,11 @@ void TGTripleHSlider::SetPointerPosition(Float_t pos)
    SetPointerPos((int)(absPos+5.0), 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an horizontal slider as a C++ statement(s) on output stream out.
+
 void TGTripleHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an horizontal slider as a C++ statement(s) on output stream out.
-
    SaveUserColor(out, option);
 
    out <<"   TGTripleHSlider *";
@@ -668,11 +668,11 @@ void TGTripleHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
    out << "   " << GetName() << "->SetPointerPosition(" << fSCz << ");" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an horizontal slider as a C++ statement(s) on output stream out.
+
 void TGTripleVSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an horizontal slider as a C++ statement(s) on output stream out.
-
    SaveUserColor(out, option);
 
    out<<"   TGTripleVSlider *";

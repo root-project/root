@@ -24,20 +24,20 @@
 
 ClassImp(TXHandler)
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handler of asynchronous input events
+
 Bool_t TXHandler::HandleInput(const void *)
 {
-   // Handler of asynchronous input events
-
    AbstractMethod("HandleInput");
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handler of asynchronous error events
+
 Bool_t TXHandler::HandleError(const void *)
 {
-   // Handler of asynchronous error events
-
    AbstractMethod("HandleError");
    return kTRUE;
 }

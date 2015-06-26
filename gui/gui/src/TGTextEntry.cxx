@@ -227,7 +227,8 @@ const TGGC   *TGTextEntry::fgDefaultGC = 0;
 
 TGTextEntry *gBlinkingEntry = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TBlinkTimer : public TTimer {
 private:
    TGTextEntry   *fTextEntry;
@@ -236,11 +237,11 @@ public:
    Bool_t Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify when timer times out and reset the timer.
+
 Bool_t TBlinkTimer::Notify()
 {
-   // Notify when timer times out and reset the timer.
-
    fTextEntry->HandleTimer(0);
    Reset();
    return kFALSE;
@@ -249,15 +250,15 @@ Bool_t TBlinkTimer::Notify()
 
 ClassImp(TGTextEntry)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text entry widget. It will adopt the TGTextBuffer object
+/// (i.e. the text buffer will be deleted by the text entry widget).
+
 TGTextEntry::TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id,
                          GContext_t norm, FontStruct_t font, UInt_t options,
                          ULong_t back) :
    TGFrame(p, 1, 1, options | kOwnBackground, back)
 {
-   // Create a text entry widget. It will adopt the TGTextBuffer object
-   // (i.e. the text buffer will be deleted by the text entry widget).
-
    TGGC *normgc   = fClient->GetResourcePool()->GetGCPool()->FindGC(norm);
 
    fWidgetId      = id;
@@ -272,12 +273,12 @@ TGTextEntry::TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id,
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simple text entry constructor.
+
 TGTextEntry::TGTextEntry(const TGWindow *parent, const char *text, Int_t id) :
    TGFrame(parent, 1, 1, kSunkenFrame | kDoubleBorder | kOwnBackground, fgWhitePixel)
 {
-   // Simple text entry constructor.
-
    fWidgetId      = id;
    fMsgWindow     = parent;
    fNormGC        = GetDefaultGC();
@@ -288,14 +289,14 @@ TGTextEntry::TGTextEntry(const TGWindow *parent, const char *text, Int_t id) :
    Init();                             // default initialization
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simple test entry constructor. Notice TString argument comes before the
+/// parent argument (to make this ctor different from the first one taking a
+/// const char*).
+
 TGTextEntry::TGTextEntry(const TString &contents, const TGWindow *parent, Int_t id) :
    TGFrame(parent, 1, 1, kSunkenFrame | kDoubleBorder | kOwnBackground, fgWhitePixel)
 {
-   // Simple test entry constructor. Notice TString argument comes before the
-   // parent argument (to make this ctor different from the first one taking a
-   // const char*).
-
    fWidgetId      = id;
    fMsgWindow     = parent;
    fNormGC        = GetDefaultGC();
@@ -306,11 +307,11 @@ TGTextEntry::TGTextEntry(const TString &contents, const TGWindow *parent, Int_t 
    Init();                             // default initialization
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a text entry widget.
+
 TGTextEntry::~TGTextEntry()
 {
-   // Delete a text entry widget.
-
    delete fText;
    delete fCurBlink;
    delete fTip;
@@ -318,11 +319,11 @@ TGTextEntry::~TGTextEntry()
    if (this == gBlinkingEntry) gBlinkingEntry = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do default initialization.
+
 void TGTextEntry::Init()
 {
-   // Do default initialization.
-
    fWidgetFlags = kWidgetWantFocus | kWidgetIsEnabled;
    fSelGC       = GetDefaultSelectedGC();
    fSelbackGC   = GetDefaultSelectedBackgroundGC()();
@@ -377,114 +378,114 @@ void TGTextEntry::Init()
    fEditDisabled = kEditDisableHeight;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the default / minimal size of the widget.
+
 TGDimension TGTextEntry::GetDefaultSize() const
 {
-   // Return the default / minimal size of the widget.
-
    UInt_t w = (GetOptions() & kFixedWidth)  || (fDefWidth  == 0) ? fWidth  : fDefWidth;
    UInt_t h = (GetOptions() & kFixedHeight) || (fDefHeight == 0) ? fHeight : fDefHeight;
    return TGDimension(w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the default / minimal size of the widget.
+
 void TGTextEntry::SetDefaultSize(UInt_t w, UInt_t h)
 {
-   // Set the default / minimal size of the widget.
-
    fDefWidth  = w;
    fDefHeight = h;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This signal is emitted when the return or enter key is pressed.
+
 void TGTextEntry::ReturnPressed()
 {
-   // This signal is emitted when the return or enter key is pressed.
-
    SendMessage(fMsgWindow, MK_MSG(kC_TEXTENTRY, kTE_ENTER), fWidgetId, 0);
    fClient->ProcessLine(fCommand, MK_MSG(kC_TEXTENTRY, kTE_ENTER),fWidgetId, 0);
 
    Emit("ReturnPressed()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This signal is emitted when <SHIFT> and <TAB> keys are pressed.
+
 void TGTextEntry::ShiftTabPressed()
 {
-   // This signal is emitted when <SHIFT> and <TAB> keys are pressed.
-
    Emit("ShiftTabPressed()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This signal is emitted when the <TAB> key is pressed.
+
 void TGTextEntry::TabPressed()
 {
-   // This signal is emitted when the <TAB> key is pressed.
-
    SendMessage(fMsgWindow, MK_MSG(kC_TEXTENTRY, kTE_TAB), fWidgetId, 0);
    fClient->ProcessLine(fCommand, MK_MSG(kC_TEXTENTRY, kTE_TAB), fWidgetId, 0);
 
    Emit("TabPressed()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This signal is emitted every time the text has changed.
+
 void TGTextEntry::TextChanged(const char *)
 {
-   // This signal is emitted every time the text has changed.
-
    SendMessage(fMsgWindow, MK_MSG(kC_TEXTENTRY, kTE_TEXTCHANGED),fWidgetId, 0);
    fClient->ProcessLine(fCommand, MK_MSG(kC_TEXTENTRY, kTE_TEXTCHANGED),fWidgetId, 0);
 
    Emit("TextChanged(char*)", GetText());  // The argument is the new text.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This signal is emitted when cursor is going out of left side.
+
 void TGTextEntry::CursorOutLeft()
 {
-   // This signal is emitted when cursor is going out of left side.
-
    Emit("CursorOutLeft()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This signal is emitted when cursor is going out of right side.
+
 void TGTextEntry::CursorOutRight()
 {
-   // This signal is emitted when cursor is going out of right side.
-
    Emit("CursorOutRight()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This signal is emitted when cursor is going out of upper side.
+
 void TGTextEntry::CursorOutUp()
 {
-   // This signal is emitted when cursor is going out of upper side.
-
    Emit("CursorOutUp()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This signal is emitted when cursor is going out of bottom side.
+
 void TGTextEntry::CursorOutDown()
 {
-   // This signal is emitted when cursor is going out of bottom side.
-
    Emit("CursorOutDown()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This signal is emitted when widget is double clicked.
+
 void TGTextEntry::DoubleClicked()
 {
-   // This signal is emitted when widget is double clicked.
-
    Emit("DoubleClicked()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the text that's currently displayed.  This is normally
+/// the same as GetText(), but can be e.g.
+/// "*****" if EEchoMode is kPassword or
+/// ""      if it is kNoEcho.
+
 TString TGTextEntry::GetDisplayText() const
 {
-   // Returns the text that's currently displayed.  This is normally
-   // the same as GetText(), but can be e.g.
-   // "*****" if EEchoMode is kPassword or
-   // ""      if it is kNoEcho.
-
    TString res;
 
    switch (GetEchoMode()) {
@@ -501,11 +502,11 @@ TString TGTextEntry::GetDisplayText() const
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set state of widget. If kTRUE=enabled, kFALSE=disabled.
+
 void TGTextEntry::SetState(Bool_t state)
 {
-   // Set state of widget. If kTRUE=enabled, kFALSE=disabled.
-
    if (state) {
       SetFlags(kWidgetIsEnabled);
       SetBackgroundColor(fgWhitePixel);
@@ -518,11 +519,11 @@ void TGTextEntry::SetState(Bool_t state)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the index of the character to whose left edge xcoord is closest.
+
 Int_t TGTextEntry::GetCharacterIndex(Int_t xcoord)
 {
-   // Returns the index of the character to whose left edge xcoord is closest.
-
    int tw, ix, up, down, len;
 
    // check for out of boundaries first...
@@ -553,13 +554,13 @@ Int_t TGTextEntry::GetCharacterIndex(Int_t xcoord)
    return ix;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the text entry to draw itself inside a two-pixel frame if
+/// enable is kTRUE, and to draw itself without any frame if enable is
+/// kFALSE. The default is kTRUE.
+
 void TGTextEntry::SetFrameDrawn(Bool_t enable)
 {
-   // Sets the text entry to draw itself inside a two-pixel frame if
-   // enable is kTRUE, and to draw itself without any frame if enable is
-   // kFALSE. The default is kTRUE.
-
    if (fFrameDrawn == enable) return;
 
    fFrameDrawn = enable;
@@ -567,13 +568,13 @@ void TGTextEntry::SetFrameDrawn(Bool_t enable)
    // ChangedBy("SetFrameDrawn");  // emit signal ChangedBy
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the alignment of the text entry.
+/// Possible values are kTextLeft(default), kTextRight, kTextCenterX.
+/// See also GetAlignment().
+
 void TGTextEntry::SetAlignment(ETextJustification mode)
 {
-   // Sets the alignment of the text entry.
-   // Possible values are kTextLeft(default), kTextRight, kTextCenterX.
-   // See also GetAlignment().
-
    if ((mode == kTextRight ||
         mode == kTextCenterX ||
         mode == kTextLeft)) {
@@ -599,11 +600,11 @@ void TGTextEntry::SetAlignment(ETextJustification mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the mode how characters are entered to the text entry.
+
 void TGTextEntry::SetInsertMode(EInsertMode mode)
 {
-   // Sets the mode how characters are entered to the text entry.
-
    if (fInsertMode == mode) return;
 
    fInsertMode = mode;
@@ -611,14 +612,14 @@ void TGTextEntry::SetInsertMode(EInsertMode mode)
    // ChangedBy("SetInsertMode");  // emit signal ChangedBy
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets text entry to text, clears the selection and moves
+/// the cursor to the end of the line.
+/// If necessary the text is truncated to fit MaxLength().
+/// See also  GetText().
+
 void TGTextEntry::SetText(const char *text, Bool_t emit)
 {
-   // Sets text entry to text, clears the selection and moves
-   // the cursor to the end of the line.
-   // If necessary the text is truncated to fit MaxLength().
-   // See also  GetText().
-
    TString oldText(GetText());
 
    fText->Clear();
@@ -635,15 +636,15 @@ void TGTextEntry::SetText(const char *text, Bool_t emit)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the maximum length of the text in the editor.  If the text is
+/// currently too long, it is chopped off at the limit. Any marked text will
+/// be unmarked.  The cursor position is set to 0 and the first part of the
+/// string is shown.
+/// See  also GetMaxLength().
+
 void TGTextEntry::SetMaxLength(Int_t maxlen)
 {
-   // Set the maximum length of the text in the editor.  If the text is
-   // currently too long, it is chopped off at the limit. Any marked text will
-   // be unmarked.  The cursor position is set to 0 and the first part of the
-   // string is shown.
-   // See  also GetMaxLength().
-
    fMaxLen = maxlen < 0 ? 0 : maxlen; // safety check for maxlen < 0
 
    Int_t dif = fText->GetTextLength() - fMaxLen;
@@ -655,21 +656,21 @@ void TGTextEntry::SetMaxLength(Int_t maxlen)
    // ChangedBy("SetMaxLength");  // emit signal ChangedBy
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The echo modes available are:
+///Begin_Html
+/// <ul>
+/// <li> kNormal   - display characters as they are entered.  This is the default.
+/// <li> kNoEcho   - do not display anything.
+/// <li> kPassword - display asterisks instead of the characters actually entered.
+/// </ul>
+///End_Html
+/// It is always possible to cut and paste any marked text;  only the widget's own
+/// display is affected.
+/// See also GetEchoMode(), GetDisplayText().
+
 void TGTextEntry::SetEchoMode(EEchoMode mode)
 {
-   // The echo modes available are:
-   //Begin_Html
-   // <ul>
-   // <li> kNormal   - display characters as they are entered.  This is the default.
-   // <li> kNoEcho   - do not display anything.
-   // <li> kPassword - display asterisks instead of the characters actually entered.
-   // </ul>
-   //End_Html
-   // It is always possible to cut and paste any marked text;  only the widget's own
-   // display is affected.
-   // See also GetEchoMode(), GetDisplayText().
-
    if (fEchoMode == mode) return;
 
    Int_t offset = IsFrameDrawn() ? 4 : 0;
@@ -682,25 +683,25 @@ void TGTextEntry::SetEchoMode(EEchoMode mode)
    // ChangedBy("SetEchoMode");  // emit signal ChangedBy
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the text marked by the user (e.g. by clicking and
+/// dragging), or zero if no text is marked.
+/// See also HasMarkedText().
+
 TString TGTextEntry::GetMarkedText() const
 {
-   // Returns the text marked by the user (e.g. by clicking and
-   // dragging), or zero if no text is marked.
-   // See also HasMarkedText().
-
    Int_t minP = MinMark();
    Int_t len = MaxMark() - minP;
    TString res(GetText()+minP,len);
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// New character mark at position pos.
+/// See also SetCursorPosition().
+
 void TGTextEntry::NewMark(Int_t newPos)
 {
-   // New character mark at position pos.
-   // See also SetCursorPosition().
-
    TString dt = GetDisplayText();
    Int_t offset = IsFrameDrawn() ? 4 : 0;
    if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
@@ -720,12 +721,12 @@ void TGTextEntry::NewMark(Int_t newPos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the cursor position to newPos.
+/// See also NewMark().
+
 void TGTextEntry::SetCursorPosition(Int_t newPos)
 {
-   // Set the cursor position to newPos.
-   // See also NewMark().
-
    Int_t offset = IsFrameDrawn() ? 4 : 0;
    if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
       offset = 2;
@@ -760,12 +761,12 @@ void TGTextEntry::SetCursorPosition(Int_t newPos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Marks the word nearest to cursor position.
+/// See also HandleDoubleClick().
+
 void TGTextEntry::MarkWord(Int_t pos)
 {
-   // Marks the word nearest to cursor position.
-   // See also HandleDoubleClick().
-
    Int_t i = pos - 1;
    while (i >= 0 && isprint(GetText()[i]) && !isspace(GetText()[i])) i--;
    i++;
@@ -781,12 +782,12 @@ void TGTextEntry::MarkWord(Int_t pos)
    NewMark(i);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes any currently selected text, inserts newText,
+/// sets it as the new contents of the text entry.
+
 void TGTextEntry::Insert(const char *newText)
 {
-   // Removes any currently selected text, inserts newText,
-   // sets it as the new contents of the text entry.
-
    TString old(GetText());
    TString t(newText);
 
@@ -815,12 +816,12 @@ void TGTextEntry::Insert(const char *newText)
    if (old != GetText()) TextChanged();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Moves the cursor rightwards one or more characters.
+/// See also CursorLeft().
+
 void TGTextEntry::CursorRight(Bool_t mark, Int_t steps)
 {
-   // Moves the cursor rightwards one or more characters.
-   // See also CursorLeft().
-
    Int_t cp = fCursorIX + steps;
 
    if (cp == fCursorIX)  {
@@ -837,50 +838,50 @@ void TGTextEntry::CursorRight(Bool_t mark, Int_t steps)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Moves the cursor leftwards one or more characters.
+/// See also CursorRight().
+
 void TGTextEntry::CursorLeft(Bool_t mark, Int_t steps)
 {
-   // Moves the cursor leftwards one or more characters.
-   // See also CursorRight().
-
    CursorRight(mark, -steps);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Moves the cursor one word to the right.  If mark is kTRUE, the text
+/// is marked.
+/// See also CursorWordBackward().
+
 void TGTextEntry::CursorWordForward(Bool_t mark)
 {
-   // Moves the cursor one word to the right.  If mark is kTRUE, the text
-   // is marked.
-   // See also CursorWordBackward().
-
    Int_t i = fCursorIX;
    while (i < (Int_t)fText->GetTextLength() && !isspace(GetText()[i])) ++i;
    while (i < (Int_t)fText->GetTextLength() && isspace(GetText()[i])) ++i;
    CursorRight(mark, i - fCursorIX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Moves the cursor one word to the left.  If mark is kTRUE, the text
+/// is marked.
+/// See also CursorWordForward().
+
 void TGTextEntry::CursorWordBackward(Bool_t mark)
 {
-   // Moves the cursor one word to the left.  If mark is kTRUE, the text
-   // is marked.
-   // See also CursorWordForward().
-
    Int_t i = fCursorIX;
    while (i > 0 && isspace(GetText()[i-1])) --i;
    while (i > 0 && !isspace(GetText()[i-1])) --i;
    CursorLeft(mark,  fCursorIX - i);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes the character on the left side of the text cursor and moves the
+/// cursor one position to the left. If a text has been marked by the user
+/// (e.g. by clicking and dragging) the cursor will be put at the beginning
+/// of the marked text and the marked text will be removed.
+/// See also  Del().
+
 void TGTextEntry::Backspace()
 {
-   // Deletes the character on the left side of the text cursor and moves the
-   // cursor one position to the left. If a text has been marked by the user
-   // (e.g. by clicking and dragging) the cursor will be put at the beginning
-   // of the marked text and the marked text will be removed.
-   // See also  Del().
-
    if (HasMarkedText())  {
       Del();
    } else if (fCursorIX > 0) {
@@ -889,15 +890,15 @@ void TGTextEntry::Backspace()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes the character on the right side of the text cursor. If a text
+/// has been marked by the user (e.g. by clicking and dragging) the cursor
+/// will be put at the beginning of the marked text and the marked text will
+/// be removed.
+/// See also Backspace().
+
 void TGTextEntry::Del()
 {
-   // Deletes the character on the right side of the text cursor. If a text
-   // has been marked by the user (e.g. by clicking and dragging) the cursor
-   // will be put at the beginning of the marked text and the marked text will
-   // be removed.
-   // See also Backspace().
-
    Int_t minP = MinMark();
    Int_t maxP = MaxMark();
    Int_t offset = IsFrameDrawn() ? 4 : 0;
@@ -921,12 +922,12 @@ void TGTextEntry::Del()
    TextChanged();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes all characters on the right side of the cursor.
+/// See also Del() Backspace().
+
 void TGTextEntry::Remove()
 {
-   // Deletes all characters on the right side of the cursor.
-   // See also Del() Backspace().
-
    if (fCursorIX < (Int_t)fText->GetTextLength()) {
       fText->RemoveText(fCursorIX , fText->GetTextLength() - fCursorIX);
       SetCursorPosition(fCursorIX);
@@ -934,13 +935,13 @@ void TGTextEntry::Remove()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copies the marked text to the clipboard, if there is any and
+/// GetEchoMode() is kNormal.
+/// See also  Cut() Paste().
+
 void TGTextEntry::CopyText() const
 {
-   // Copies the marked text to the clipboard, if there is any and
-   // GetEchoMode() is kNormal.
-   // See also  Cut() Paste().
-
    if (HasMarkedText() && GetEchoMode() == kNormal) {
       if (!fgClipboardText) fgClipboardText = new TString();
       *fgClipboardText = GetMarkedText();  // assign
@@ -948,13 +949,13 @@ void TGTextEntry::CopyText() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inserts text at the cursor position, deleting any
+/// previous marked text.
+/// See also CopyText() Cut().
+
 void TGTextEntry::Paste()
 {
-   // Inserts text at the cursor position, deleting any
-   // previous marked text.
-   // See also CopyText() Cut().
-
    if (gVirtualX->GetPrimarySelectionOwner() == kNone) {
       // No primary selection, so use the buffer
       if (fgClipboardText) Insert(fgClipboardText->Data());
@@ -963,34 +964,34 @@ void TGTextEntry::Paste()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copies the marked text to the clipboard and deletes it, if there is any.
+/// See also CopyText() Paste().
+
 void TGTextEntry::Cut()
 {
-   // Copies the marked text to the clipboard and deletes it, if there is any.
-   // See also CopyText() Paste().
-
    if (HasMarkedText()) {
       CopyText();
       Del();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clears up the text entry.
+
 void TGTextEntry::Clear(Option_t *)
 {
-   // Clears up the text entry.
-
    SetText("");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Moves the text cursor to the left end of the line. If mark is kTRUE text
+/// will be marked towards the first position, if not any marked text will
+/// be unmarked if the cursor is moved.
+/// See also End().
+
 void TGTextEntry::Home(Bool_t mark)
 {
-   // Moves the text cursor to the left end of the line. If mark is kTRUE text
-   // will be marked towards the first position, if not any marked text will
-   // be unmarked if the cursor is moved.
-   // See also End().
-
    fOffset = 0;
    if (mark){
       fSelectionOn = kTRUE;
@@ -1003,14 +1004,14 @@ void TGTextEntry::Home(Bool_t mark)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Moves the text cursor to the right end of the line. If mark is kTRUE text
+/// will be marked towards the last position, if not any marked text will
+/// be unmarked if the cursor is moved.
+/// See also Home().
+
 void TGTextEntry::End(Bool_t mark)
 {
-   // Moves the text cursor to the right end of the line. If mark is kTRUE text
-   // will be marked towards the last position, if not any marked text will
-   // be unmarked if the cursor is moved.
-   // See also Home().
-
    TString dt = GetDisplayText();
    Int_t len  = dt.Length();
 
@@ -1028,36 +1029,36 @@ void TGTextEntry::End(Bool_t mark)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Selects all text (i.e. marks it) and moves the cursor to the
+/// end. Useful when a default value has been inserted. If the user
+/// types before clicking on the widget the selected text will be
+/// erased.
+
 void TGTextEntry::SelectAll()
 {
-   // Selects all text (i.e. marks it) and moves the cursor to the
-   // end. Useful when a default value has been inserted. If the user
-   // types before clicking on the widget the selected text will be
-   // erased.
-
    fSelectionOn = kTRUE;
    fStartIX = 0;
    NewMark(fText->GetTextLength());
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deselects all text (i.e. removes marking) and leaves the cursor at the
+/// current position.
+
 void TGTextEntry::Deselect()
 {
-   // Deselects all text (i.e. removes marking) and leaves the cursor at the
-   // current position.
-
    fSelectionOn = kFALSE;
    fEndIX = fStartIX = fCursorIX;
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the border of the text entry widget.
+
 void TGTextEntry::DrawBorder()
 {
-   // Draw the border of the text entry widget.
-
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
          if (gClient->GetStyle() < 2) {
@@ -1078,11 +1079,11 @@ void TGTextEntry::DrawBorder()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the text entry widget.
+
 void TGTextEntry::DoRedraw()
 {
-   // Draw the text entry widget.
-
    Int_t x, y, max_ascent, max_descent, h;
    Int_t offset = IsFrameDrawn() ? 4 : 0;
    if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
@@ -1150,80 +1151,80 @@ void TGTextEntry::DoRedraw()
    if (IsFrameDrawn()) DrawBorder();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The key press event handler converts a key press to some line editor
+/// action. Here are the default key bindings:
+///Begin_Html
+///  <ul>
+///  <li><i> Left Arrow </i>
+///          Move the cursor one character leftwards.
+///          Scroll the text when  cursor is out of frame.
+///  <li><i> Right Arrow </i>
+///          Move the cursor one character rightwards
+///          Scroll the text when  cursor is out of frame.
+///  <li><i> Backspace </i>
+///          Deletes the character on the left side of the text cursor and moves the
+///          cursor one position to the left. If a text has been marked by the user
+///          (e.g. by clicking and dragging) the cursor will be put at the beginning
+///          of the marked text and the marked text will be removed.
+///  <li><i> Home </i>
+///          Moves the text cursor to the left end of the line. If mark is TRUE text
+///          will be marked towards the first position, if not any marked text will
+///          be unmarked if the cursor is moved.
+///  <li><i> End </i>
+///          Moves the text cursor to the right end of the line. If mark is TRUE text
+///          will be marked towards the last position, if not any marked text will
+///          be unmarked if the cursor is moved.
+///  <li><i> Delete </i>
+///          Deletes the character on the right side of the text cursor. If a text
+///          has been marked by the user (e.g. by clicking and dragging) the cursor
+///          will be put at the beginning of the marked text and the marked text will
+///          be removed.
+///  <li><i> Insert </i>
+///          Switches character insert mode.
+///  <li><i> Shift - Left Arrow </i>
+///          Mark text one character leftwards
+///  <li><i> Shift - Right Arrow </i>
+///          Mark text one character rightwards
+///  <li><i> Control - Left Arrow </i>
+///          Move the cursor one word leftwards
+///  <li><i> Control - Right Arrow </i>
+///          Move the cursor one word rightwards.
+///  <li><i> Control - Shift - Left Arrow </i>
+///          Mark text one word leftwards
+///  <li><i> Control - Shift - Right Arrow </i>
+///          Mark text one word rightwards
+///  <li><i> Control-A </i>
+///          Move the cursor to the beginning of the line
+///  <li><i> Control-B </i>
+///          Move the cursor one character leftwards
+///  <li><i> Control-C </i>
+///          Copy the marked text to the clipboard.
+///  <li><i> Control-D </i>
+///          Delete the character to the right of the cursor
+///  <li><i> Control-E </i>
+///          Move the cursor to the end of the line
+///  <li><i> Control-F </i>
+///          Move the cursor one character rightwards
+///  <li><i> Control-H </i>
+///          Delete the character to the left of the cursor
+///  <li><i> Control-K </i>
+///          Delete marked text if any or delete all
+///          characters to the right of the cursor
+///  <li><i> Control-U </i>
+///          Delete all characters on the line
+///  <li><i> Control-V </i>
+///          Paste the clipboard text into line edit.
+///  <li><i> Control-X </i>
+///          Cut the marked text, copy to clipboard.
+///  <li><i> Control-Y </i>
+///          Paste the clipboard text into line edit.
+///  </ul>
+///End_Html
+///  All other keys with valid ASCII codes insert themselves into the line.
+
 Bool_t TGTextEntry::HandleKey(Event_t* event)
 {
-   // The key press event handler converts a key press to some line editor
-   // action. Here are the default key bindings:
-   //Begin_Html
-   //  <ul>
-   //  <li><i> Left Arrow </i>
-   //          Move the cursor one character leftwards.
-   //          Scroll the text when  cursor is out of frame.
-   //  <li><i> Right Arrow </i>
-   //          Move the cursor one character rightwards
-   //          Scroll the text when  cursor is out of frame.
-   //  <li><i> Backspace </i>
-   //          Deletes the character on the left side of the text cursor and moves the
-   //          cursor one position to the left. If a text has been marked by the user
-   //          (e.g. by clicking and dragging) the cursor will be put at the beginning
-   //          of the marked text and the marked text will be removed.
-   //  <li><i> Home </i>
-   //          Moves the text cursor to the left end of the line. If mark is TRUE text
-   //          will be marked towards the first position, if not any marked text will
-   //          be unmarked if the cursor is moved.
-   //  <li><i> End </i>
-   //          Moves the text cursor to the right end of the line. If mark is TRUE text
-   //          will be marked towards the last position, if not any marked text will
-   //          be unmarked if the cursor is moved.
-   //  <li><i> Delete </i>
-   //          Deletes the character on the right side of the text cursor. If a text
-   //          has been marked by the user (e.g. by clicking and dragging) the cursor
-   //          will be put at the beginning of the marked text and the marked text will
-   //          be removed.
-   //  <li><i> Insert </i>
-   //          Switches character insert mode.
-   //  <li><i> Shift - Left Arrow </i>
-   //          Mark text one character leftwards
-   //  <li><i> Shift - Right Arrow </i>
-   //          Mark text one character rightwards
-   //  <li><i> Control - Left Arrow </i>
-   //          Move the cursor one word leftwards
-   //  <li><i> Control - Right Arrow </i>
-   //          Move the cursor one word rightwards.
-   //  <li><i> Control - Shift - Left Arrow </i>
-   //          Mark text one word leftwards
-   //  <li><i> Control - Shift - Right Arrow </i>
-   //          Mark text one word rightwards
-   //  <li><i> Control-A </i>
-   //          Move the cursor to the beginning of the line
-   //  <li><i> Control-B </i>
-   //          Move the cursor one character leftwards
-   //  <li><i> Control-C </i>
-   //          Copy the marked text to the clipboard.
-   //  <li><i> Control-D </i>
-   //          Delete the character to the right of the cursor
-   //  <li><i> Control-E </i>
-   //          Move the cursor to the end of the line
-   //  <li><i> Control-F </i>
-   //          Move the cursor one character rightwards
-   //  <li><i> Control-H </i>
-   //          Delete the character to the left of the cursor
-   //  <li><i> Control-K </i>
-   //          Delete marked text if any or delete all
-   //          characters to the right of the cursor
-   //  <li><i> Control-U </i>
-   //          Delete all characters on the line
-   //  <li><i> Control-V </i>
-   //          Paste the clipboard text into line edit.
-   //  <li><i> Control-X </i>
-   //          Cut the marked text, copy to clipboard.
-   //  <li><i> Control-Y </i>
-   //          Paste the clipboard text into line edit.
-   //  </ul>
-   //End_Html
-   //  All other keys with valid ASCII codes insert themselves into the line.
-
    Int_t  n;
    char   tmp[10];
    UInt_t keysym;
@@ -1347,11 +1348,11 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in text entry widget.
+
 Bool_t TGTextEntry::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in text entry widget.
-
    if (fTip) fTip->Hide();
 
    if (!IsEnabled()) return kTRUE;
@@ -1385,11 +1386,11 @@ Bool_t TGTextEntry::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGTextEntry::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event.
-
    if (event->fType == kEnterNotify) {
       if (fTip) fTip->Reset();
    } else {
@@ -1399,11 +1400,11 @@ Bool_t TGTextEntry::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in the text entry widget.
+
 Bool_t TGTextEntry::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in the text entry widget.
-
    if (!IsEnabled() || (GetEchoMode() == kNoEcho)) return kTRUE;
 
    Int_t offset =  IsFrameDrawn() ? 4 : 0;
@@ -1418,11 +1419,11 @@ Bool_t TGTextEntry::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse double click event in the text entry widget.
+
 Bool_t TGTextEntry::HandleDoubleClick(Event_t *event)
 {
-   // Handle mouse double click event in the text entry widget.
-
    if (!IsEnabled()) return kTRUE;
 
    Int_t offset = IsFrameDrawn() ? 4 : 0;
@@ -1439,11 +1440,11 @@ Bool_t TGTextEntry::HandleDoubleClick(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handles resize events for this widget.
+
 Bool_t TGTextEntry::HandleConfigureNotify(Event_t* event)
 {
-   // Handles resize events for this widget.
-
    TGFrame::HandleConfigureNotify(event);
    Bool_t wasSelection = fSelectionOn;
    Int_t end = fEndIX, start = fStartIX;
@@ -1457,11 +1458,11 @@ Bool_t TGTextEntry::HandleConfigureNotify(Event_t* event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle focus change event in text entry widget.
+
 Bool_t TGTextEntry::HandleFocusChange(Event_t *event)
 {
-   // Handle focus change event in text entry widget.
-
    if (!IsEnabled()) return kTRUE;
 
    // check this when porting to Win32
@@ -1481,31 +1482,31 @@ Bool_t TGTextEntry::HandleFocusChange(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle text selection event.
+
 Bool_t TGTextEntry::HandleSelection(Event_t *event)
 {
-   // Handle text selection event.
-
    PastePrimary((Window_t)event->fUser[0], (Atom_t)event->fUser[3], kTRUE);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle selection clear event.
+
 Bool_t TGTextEntry::HandleSelectionClear(Event_t * /*event*/)
 {
-   // Handle selection clear event.
-
    fSelectionOn = kFALSE;
    fEndIX = fStartIX = fCursorIX;
    fClient->NeedRedraw(this);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request to send current clipboard contents to requestor window.
+
 Bool_t TGTextEntry::HandleSelectionRequest(Event_t *event)
 {
-   // Handle request to send current clipboard contents to requestor window.
-
    Event_t reply;
    char   *buffer;
    Long_t  len;
@@ -1546,12 +1547,12 @@ Bool_t TGTextEntry::HandleSelectionRequest(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paste text from selection (either primary or cut buffer) into
+/// text entry widget.
+
 void TGTextEntry::PastePrimary(Window_t wid, Atom_t property, Bool_t del)
 {
-   // Paste text from selection (either primary or cut buffer) into
-   // text entry widget.
-
    TString data;
    Int_t   nchar;
 
@@ -1563,21 +1564,21 @@ void TGTextEntry::PastePrimary(Window_t wid, Atom_t property, Bool_t del)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle cursor blink timer.
+
 Bool_t TGTextEntry::HandleTimer(TTimer *)
 {
-   // Handle cursor blink timer.
-
    fCursorOn = !fCursorOn;
    DoRedraw();
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if cursor is out of frame.
+
 Bool_t TGTextEntry::IsCursorOutOfFrame()
 {
-   // Returns kTRUE if cursor is out of frame.
-
    //   fCursorX = fOffset + 4 + gVirtualX->TextWidth(fFontStruct,
    //                                  GetDisplayText(), fCursorIX);
 
@@ -1588,11 +1589,11 @@ Bool_t TGTextEntry::IsCursorOutOfFrame()
    return ((fCursorX < offset) || (fCursorX > w-offset));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shift position of cursor by one character.
+
 void TGTextEntry::ScrollByChar()
 {
-   // Shift position of cursor by one character.
-
    if (GetEchoMode() == kNoEcho) return;
 
    TString dt = GetDisplayText();
@@ -1630,13 +1631,13 @@ void TGTextEntry::ScrollByChar()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Updates start text offset according GetAlignment() mode,
+/// if cursor is out of frame => scroll the text.
+/// See also SetAlignment() and ScrollByChar().
+
 void TGTextEntry::UpdateOffset()
 {
-   // Updates start text offset according GetAlignment() mode,
-   // if cursor is out of frame => scroll the text.
-   // See also SetAlignment() and ScrollByChar().
-
    TString dt = GetDisplayText();
    Int_t textWidth = gVirtualX->TextWidth(fFontStruct, dt.Data() , dt.Length());
    Int_t offset = IsFrameDrawn() ? 4 : 0;
@@ -1652,13 +1653,13 @@ void TGTextEntry::UpdateOffset()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tool tip text associated with this text entry. The delay is in
+/// milliseconds (minimum 250). To remove tool tip call method with
+/// text = 0.
+
 void TGTextEntry::SetToolTipText(const char *text, Long_t delayms)
 {
-   // Set tool tip text associated with this text entry. The delay is in
-   // milliseconds (minimum 250). To remove tool tip call method with
-   // text = 0.
-
    if (fTip) {
       delete fTip;
       fTip = 0;
@@ -1668,49 +1669,49 @@ void TGTextEntry::SetToolTipText(const char *text, Long_t delayms)
       fTip = new TGToolTip(fClient->GetDefaultRoot(), this, text, delayms);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set focus to this text entry.
+
 void TGTextEntry::SetFocus()
 {
-   // Set focus to this text entry.
-
    if (gBlinkingEntry && (gBlinkingEntry != this)) {
       gBlinkingEntry->fCurBlink->Remove();
    }
    RequestFocus();
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inserts text at position pos, clears the selection and moves
+/// the cursor to the end of the line.
+/// If necessary the text is truncated to fit MaxLength().
+/// See also GetText(), SetText(), AppendText(), RemoveText().
+
 void TGTextEntry::InsertText(const char *text, Int_t pos)
 {
-   // Inserts text at position pos, clears the selection and moves
-   // the cursor to the end of the line.
-   // If necessary the text is truncated to fit MaxLength().
-   // See also GetText(), SetText(), AppendText(), RemoveText().
-
    Int_t position = TMath::Min((Int_t)fText->GetTextLength(), pos);
    TString newText(GetText());
    newText.Insert(position, text);
    SetText(newText.Data());
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Appends text to the end of text entry, clears the selection
+/// and moves the cursor to the end of the line.
+/// If necessary the text is truncated to fit MaxLength().
+/// See also GetText(), InsertText(), SetText(), RemoveText().
+
 void TGTextEntry::AppendText(const char *text)
 {
-   // Appends text to the end of text entry, clears the selection
-   // and moves the cursor to the end of the line.
-   // If necessary the text is truncated to fit MaxLength().
-   // See also GetText(), InsertText(), SetText(), RemoveText().
-
    InsertText(text, fText->GetTextLength());
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes text at the range, clears the selection and moves
+/// the cursor to the end of the line.
+/// See also GetText(), InsertText(), SetText(), AppendText().
+
 void TGTextEntry::RemoveText(Int_t start, Int_t end)
 {
-   // Removes text at the range, clears the selection and moves
-   // the cursor to the end of the line.
-   // See also GetText(), InsertText(), SetText(), AppendText().
-
    Int_t pos = TMath::Min(start, end);
    Int_t len = TMath::Abs(end-start);
    TString newText(GetText());
@@ -1719,12 +1720,12 @@ void TGTextEntry::RemoveText(Int_t start, Int_t end)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font.
+/// If local is kTRUE font is changed locally.
+
 void TGTextEntry::SetFont(FontStruct_t font, Bool_t local)
 {
-   // Changes text font.
-   // If local is kTRUE font is changed locally.
-
    if (font == fFontStruct) return;
 
    FontH_t v = gVirtualX->GetFontHandle(font);
@@ -1744,35 +1745,35 @@ void TGTextEntry::SetFont(FontStruct_t font, Bool_t local)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font specified by name.
+/// If local is kTRUE font is changed locally.
+
 void TGTextEntry::SetFont(const char *fontName, Bool_t local)
 {
-   // Changes text font specified by name.
-   // If local is kTRUE font is changed locally.
-
    TGFont *font = fClient->GetFont(fontName);
    if (font) {
       SetFont(font->GetFontStruct(), local);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font specified by pointer to TGFont object.
+/// If local is kTRUE font is changed locally.
+
 void TGTextEntry::SetFont(TGFont *font, Bool_t local)
 {
-   // Changes text font specified by pointer to TGFont object.
-   // If local is kTRUE font is changed locally.
-
    if (font) {
       SetFont(font->GetFontStruct(), local);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text color.
+/// If local is true color is changed locally.
+
 void TGTextEntry::SetTextColor(Pixel_t color, Bool_t local)
 {
-   // Changes text color.
-   // If local is true color is changed locally.
-
    if (local) {
       TGGC *gc = new TGGC(fNormGC); // copy
       fHasOwnFont = kTRUE;
@@ -1783,62 +1784,62 @@ void TGTextEntry::SetTextColor(Pixel_t color, Bool_t local)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text color.
+/// If local is true color is changed locally.
+
 void TGTextEntry::SetTextColor(TColor *color, Bool_t local)
 {
-   // Changes text color.
-   // If local is true color is changed locally.
-
    if (color) {
       SetTextColor(color->GetPixel(), local);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure in use.
+
 FontStruct_t TGTextEntry::GetDefaultFontStruct()
 {
-   // Return default font structure in use.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context.
+
 const TGGC &TGTextEntry::GetDefaultGC()
 {
-   // Return default graphics context.
-
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return selection graphics context.
+
 const TGGC &TGTextEntry::GetDefaultSelectedGC()
 {
-   // Return selection graphics context.
-
    if (!fgDefaultSelectedGC)
       fgDefaultSelectedGC = gClient->GetResourcePool()->GetSelectedGC();
    return *fgDefaultSelectedGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return graphics context for highlighted frame background.
+
 const TGGC &TGTextEntry::GetDefaultSelectedBackgroundGC()
 {
-   // Return graphics context for highlighted frame background.
-
    if (!fgDefaultSelectedBackgroundGC)
       fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
    return *fgDefaultSelectedBackgroundGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a text entry widget as a C++ statement(s) on output stream out.
+
 void TGTextEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a text entry widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    // font + GC

@@ -30,13 +30,13 @@
 
 ClassImp(TArchiveFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify the archive name and member name. The member can be a decimal
+/// number which allows to access the n-th sub-file. This method is
+/// normally only called via TFile.
+
 TArchiveFile::TArchiveFile(const char *archive, const char *member, TFile *file)
 {
-   // Specify the archive name and member name. The member can be a decimal
-   // number which allows to access the n-th sub-file. This method is
-   // normally only called via TFile.
-
    if (!file)
       Error("TArchiveFile", "must specify a valid TFile");
 
@@ -51,68 +51,68 @@ TArchiveFile::TArchiveFile(const char *archive, const char *member, TFile *file)
    fCurMember   = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dtor.
+
 TArchiveFile::~TArchiveFile()
 {
-   // Dtor.
-
    delete fMembers;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return position in archive of current member.
+
 Long64_t TArchiveFile::GetMemberFilePosition() const
 {
-   // Return position in archive of current member.
-
    return fCurMember ? fCurMember->GetFilePosition() : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of members in archive.
+
 Int_t TArchiveFile::GetNumberOfMembers() const
 {
-   // Returns number of members in archive.
-
    return fMembers->GetEntriesFast();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitely make the specified member the current member.
+/// Returns -1 in case of error, 0 otherwise.
+
 Int_t TArchiveFile::SetMember(const char *member)
 {
-   // Explicitely make the specified member the current member.
-   // Returns -1 in case of error, 0 otherwise.
-
    fMemberName  = member;
    fMemberIndex = -1;
 
    return SetCurrentMember();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitely make the member with the specified index the current member.
+/// Returns -1 in case of error, 0 otherwise.
+
 Int_t TArchiveFile::SetMember(Int_t idx)
 {
-   // Explicitely make the member with the specified index the current member.
-   // Returns -1 in case of error, 0 otherwise.
-
    fMemberName  = "";
    fMemberIndex = idx;
 
    return SetCurrentMember();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return proper archive file handler depending on passed url.
+/// The handler is loaded via the plugin manager and is triggered by
+/// the extension of the archive file. In case no handler is found 0
+/// is returned. The file argument is used to access the archive.
+/// The archive should be specified as url with the member name as the
+/// anchor, e.g. "root://pcsalo.cern.ch/alice/event_1.zip#tpc.root",
+/// where tpc.root is the file in the archive to be opened.
+/// Alternatively the sub-file can be specified via its index number,
+/// e.g. "root://pcsalo.cern.ch/alice/event_1.zip#3".
+/// This function is normally only called via TFile::Open().
+
 TArchiveFile *TArchiveFile::Open(const char *url, TFile *file)
 {
-   // Return proper archive file handler depending on passed url.
-   // The handler is loaded via the plugin manager and is triggered by
-   // the extension of the archive file. In case no handler is found 0
-   // is returned. The file argument is used to access the archive.
-   // The archive should be specified as url with the member name as the
-   // anchor, e.g. "root://pcsalo.cern.ch/alice/event_1.zip#tpc.root",
-   // where tpc.root is the file in the archive to be opened.
-   // Alternatively the sub-file can be specified via its index number,
-   // e.g. "root://pcsalo.cern.ch/alice/event_1.zip#3".
-   // This function is normally only called via TFile::Open().
-
    if (!file) {
       ::Error("TArchiveFile::Open", "must specify a valid TFile to access %s",
               url);
@@ -135,13 +135,13 @@ TArchiveFile *TArchiveFile::Open(const char *url, TFile *file)
    return f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to determine if url contains an anchor specifying an archive member.
+/// Returns kFALSE in case of an error.
+
 Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member,
                               TString &type)
 {
-   // Try to determine if url contains an anchor specifying an archive member.
-   // Returns kFALSE in case of an error.
-
    TUrl u(url, kTRUE);
 
    archive = "";
@@ -198,11 +198,11 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
 
 ClassImp(TArchiveMember)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TArchiveMember::TArchiveMember()
 {
-   // Default ctor.
-
    fName         = "";
    fComment      = "";
    fPosition     = 0;
@@ -212,11 +212,11 @@ TArchiveMember::TArchiveMember()
    fDirectory    = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an archive member file.
+
 TArchiveMember::TArchiveMember(const char *name)
 {
-   // Create an archive member file.
-
    fName         = name;
    fComment      = "";
    fPosition     = 0;
@@ -226,12 +226,12 @@ TArchiveMember::TArchiveMember(const char *name)
    fDirectory    = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TArchiveMember::TArchiveMember(const TArchiveMember &member)
    : TObject(member)
 {
-   // Copy ctor.
-
    fName         = member.fName;
    fComment      = member.fComment;
    fModTime      = member.fModTime;
@@ -242,11 +242,11 @@ TArchiveMember::TArchiveMember(const TArchiveMember &member)
    fDirectory    = member.fDirectory;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TArchiveMember &TArchiveMember::operator=(const TArchiveMember &rhs)
 {
-   // Assignment operator.
-
    if (this != &rhs) {
       TObject::operator=(rhs);
       fName         = rhs.fName;

@@ -63,11 +63,11 @@ ClassImp(TGTRA)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GTRA shape default constructor.
+
 TGTRA::TGTRA ()
 {
-   // GTRA shape default constructor.
-
    fTwist  = 0.;
    fH1     = 0.;
    fBl1    = 0.;
@@ -80,14 +80,14 @@ TGTRA::TGTRA ()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GTRA shape normal constructor
+
 TGTRA::TGTRA (const char *name, const char *title, const char *material, Float_t dz, Float_t theta,
               Float_t phi, Float_t twist, Float_t h1, Float_t bl1, Float_t tl1, Float_t alpha1,
               Float_t h2, Float_t bl2, Float_t tl2, Float_t alpha2)
       : TBRIK (name, title, material, theta, phi, dz)
 {
-   // GTRA shape normal constructor
-
    fTwist  = twist;
    fH1     = h1;
    fBl1    = bl1;
@@ -100,17 +100,18 @@ TGTRA::TGTRA (const char *name, const char *title, const char *material, Float_t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GTRA shape default destructor
+
 TGTRA::~TGTRA ()
 {
-   // GTRA shape default destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GTRA points
+
 void TGTRA::SetPoints (Double_t *points) const
 {
-   // Create GTRA points
-
    Double_t x, y, dx, dy, dx1, dx2, dz, theta, phi, alpha1, alpha2, twist;
    const Float_t pi = Float_t (TMath::Pi());
 

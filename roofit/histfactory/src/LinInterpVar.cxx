@@ -8,7 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 BEGIN_HTML
 <p>
@@ -39,16 +40,18 @@ ClassImp(RooStats::HistFactory::LinInterpVar)
 using namespace RooStats;
 using namespace HistFactory;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 LinInterpVar::LinInterpVar()
 {
-  // Default constructor
   _paramIter = _paramList.createIterator() ;
   _nominal = 0 ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 LinInterpVar::LinInterpVar(const char* name, const char* title, 
 		       const RooArgList& paramList, 
 		       double nominal, vector<double> low, vector<double> high) :
@@ -56,7 +59,6 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(nominal), _low(low), _high(high)
 {
-
   _paramIter = _paramList.createIterator() ;
 
 
@@ -74,18 +76,19 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of flat polynomial function
+
 LinInterpVar::LinInterpVar(const char* name, const char* title) :
   RooAbsReal(name, title),
   _paramList("paramList","List of coefficients",this), 
   _nominal(0)
 {
-  // Constructor of flat polynomial function
-
   _paramIter = _paramList.createIterator() ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
   RooAbsReal(other, name), 
   _paramList("paramList",this,other._paramList),
@@ -98,21 +101,22 @@ LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 LinInterpVar::~LinInterpVar() 
 {
-  // Destructor
   delete _paramIter ;
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return value of polynomial
+
 Double_t LinInterpVar::evaluate() const 
 {
-  // Calculate and return value of polynomial
-
   Double_t sum(_nominal) ;
   _paramIter->Reset() ;
 

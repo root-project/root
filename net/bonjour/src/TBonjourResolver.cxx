@@ -33,17 +33,18 @@
 
 ClassImp(TBonjourResolver)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TBonjourResolver::TBonjourResolver() : fDNSRef(0), fBonjourSocketHandler(0), fPort(0)
 {
-   // Default ctor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TBonjourResolver::~TBonjourResolver()
 {
-   // Cleanup.
-
    delete fBonjourSocketHandler;
 
    if (fDNSRef) {
@@ -52,12 +53,12 @@ TBonjourResolver::~TBonjourResolver()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resolve Bonjour service to IP address and port.
+/// Returns -1 in case of error, 0 otherwise.
+
 Int_t TBonjourResolver::ResolveBonjourRecord(const TBonjourRecord &record)
 {
-   // Resolve Bonjour service to IP address and port.
-   // Returns -1 in case of error, 0 otherwise.
-
    if (fDNSRef) {
       Warning("ResolveBonjourRecord", "resolve already in process");
       return 0;
@@ -87,11 +88,11 @@ Int_t TBonjourResolver::ResolveBonjourRecord(const TBonjourRecord &record)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit RecordResolved signal.
+
 void TBonjourResolver::RecordResolved(const TInetAddress *hostInfo, Int_t port)
 {
-   // Emit RecordResolved signal.
-
    Long_t args[2];
    args[0] = (Long_t) hostInfo;
    args[1] = port;
@@ -99,13 +100,13 @@ void TBonjourResolver::RecordResolved(const TInetAddress *hostInfo, Int_t port)
    Emit("RecordResolved(TInetAddress*,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Bonjour socket is ready for reading. Tell Bonjour to process the
+/// information on the socket, this will invoke the BonjourResolveReply
+/// callback. This is a private slot, used in ResolveBonjourRecord.
+
 void TBonjourResolver::BonjourSocketReadyRead()
 {
-   // The Bonjour socket is ready for reading. Tell Bonjour to process the
-   // information on the socket, this will invoke the BonjourResolveReply
-   // callback. This is a private slot, used in ResolveBonjourRecord.
-
    // in case the resolver has already been deleted
    if (!fDNSRef) return;
 
@@ -114,7 +115,9 @@ void TBonjourResolver::BonjourSocketReadyRead()
       Error("BonjourSocketReadyRead", "error in DNSServiceProcessResult");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static Bonjour resolver callback function.
+
 void TBonjourResolver::BonjourResolveReply(DNSServiceRef,
                                            DNSServiceFlags, UInt_t,
                                            DNSServiceErrorType errorCode, const char *,
@@ -122,8 +125,6 @@ void TBonjourResolver::BonjourResolveReply(DNSServiceRef,
                                            UShort_t, const char *txtRecord,
                                            void *context)
 {
-   // Static Bonjour resolver callback function.
-
    TBonjourResolver *resolver = static_cast<TBonjourResolver *>(context);
    if (errorCode != kDNSServiceErr_NoError) {
       ::Error("TBonjourResolver::BonjourResolveReply", "error in BonjourResolveReply");

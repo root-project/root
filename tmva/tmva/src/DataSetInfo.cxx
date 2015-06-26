@@ -57,7 +57,9 @@
 #include "TMVA/Event.h"
 #endif
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::DataSetInfo::DataSetInfo(const TString& name)
    : TObject(),
      fDataSetManager(NULL),
@@ -80,14 +82,13 @@ TMVA::DataSetInfo::DataSetInfo(const TString& name)
      fTargetsForMulticlass(0),
      fLogger( new MsgLogger("DataSetInfo", kINFO) )
 {
-   // constructor
-
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TMVA::DataSetInfo::~DataSetInfo()
 {
-   // destructor
    ClearDataSet();
    
    for(UInt_t i=0, iEnd = fClasses.size(); i<iEnd; ++i) {
@@ -99,7 +100,8 @@ TMVA::DataSetInfo::~DataSetInfo()
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DataSetInfo::ClearDataSet() const 
 {
    if(fDataSet!=0) { delete fDataSet; fDataSet=0; }
@@ -111,10 +113,10 @@ TMVA::DataSetInfo::SetMsgType( EMsgType t ) const
    fLogger->SetMinType(t);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::ClassInfo* TMVA::DataSetInfo::AddClass( const TString& className ) 
 {
-
    ClassInfo* theClass = GetClassInfo(className);
    if (theClass) return theClass;
 
@@ -129,7 +131,8 @@ TMVA::ClassInfo* TMVA::DataSetInfo::AddClass( const TString& className )
    return fClasses.back();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::ClassInfo* TMVA::DataSetInfo::GetClassInfo( const TString& name ) const 
 {
    for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
@@ -138,7 +141,8 @@ TMVA::ClassInfo* TMVA::DataSetInfo::GetClassInfo( const TString& name ) const
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::ClassInfo* TMVA::DataSetInfo::GetClassInfo( Int_t cls ) const 
 {
    try {
@@ -149,7 +153,8 @@ TMVA::ClassInfo* TMVA::DataSetInfo::GetClassInfo( Int_t cls ) const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DataSetInfo::PrintClasses() const 
 {
    for (UInt_t cls = 0; cls < GetNClasses() ; cls++) {
@@ -157,13 +162,15 @@ void TMVA::DataSetInfo::PrintClasses() const
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::DataSetInfo::IsSignal( const TMVA::Event* ev ) const 
 {
    return (ev->GetClass()  == fSignalClass); 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::vector<Float_t>*  TMVA::DataSetInfo::GetTargetsForMulticlass( const TMVA::Event* ev ) 
 {
    if( !fTargetsForMulticlass ) fTargetsForMulticlass = new std::vector<Float_t>( GetNClasses() );
@@ -174,7 +181,8 @@ std::vector<Float_t>*  TMVA::DataSetInfo::GetTargetsForMulticlass( const TMVA::E
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::DataSetInfo::HasCuts() const
 {
    Bool_t hasCuts = kFALSE;
@@ -184,14 +192,18 @@ Bool_t TMVA::DataSetInfo::HasCuts() const
    return hasCuts;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const TMatrixD* TMVA::DataSetInfo::CorrelationMatrix( const TString& className ) const
 {
    ClassInfo* ptr = GetClassInfo(className);
    return ptr?ptr->GetCorrelationMatrix():0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add a variable (can be a complex expression) to the set of
+/// variables used in the MV analysis
+
 TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const TString& expression,
                                                     const TString& title,
                                                     const TString& unit,
@@ -200,8 +212,6 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const TString& expression,
                                                     Bool_t normalized,
                                                     void* external )
 {
-   // add a variable (can be a complex expression) to the set of
-   // variables used in the MV analysis
    TString regexpr = expression; // remove possible blanks
    regexpr.ReplaceAll(" ", "" );
    fVariables.push_back(VariableInfo( regexpr, title, unit,
@@ -210,15 +220,19 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const TString& expression,
    return fVariables.back();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add variable with given VariableInfo
+
 TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const VariableInfo& varInfo){
-   // add variable with given VariableInfo
    fVariables.push_back(VariableInfo( varInfo ));
    fNeedsRebuilding = kTRUE;
    return fVariables.back();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add a variable (can be a complex expression) to the set of
+/// variables used in the MV analysis
+
 TMVA::VariableInfo& TMVA::DataSetInfo::AddTarget( const TString& expression,
                                                   const TString& title,
                                                   const TString& unit,
@@ -226,8 +240,6 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddTarget( const TString& expression,
                                                   Bool_t normalized,
                                                   void* external )
 {
-   // add a variable (can be a complex expression) to the set of
-   // variables used in the MV analysis
    TString regexpr = expression; // remove possible blanks
    regexpr.ReplaceAll(" ", "" );
    char type='F';
@@ -238,23 +250,25 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddTarget( const TString& expression,
    return fTargets.back();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add target with given VariableInfo
+
 TMVA::VariableInfo& TMVA::DataSetInfo::AddTarget( const VariableInfo& varInfo){
-   // add target with given VariableInfo
    fTargets.push_back(VariableInfo( varInfo ));
    fNeedsRebuilding = kTRUE;
    return fTargets.back();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add a spectator (can be a complex expression) to the set of spectator variables used in
+/// the MV analysis
+
 TMVA::VariableInfo& TMVA::DataSetInfo::AddSpectator( const TString& expression,
                                                      const TString& title,
                                                      const TString& unit,
                                                      Double_t min, Double_t max, char type,
                                                      Bool_t normalized, void* external )
 {
-   // add a spectator (can be a complex expression) to the set of spectator variables used in
-   // the MV analysis
    TString regexpr = expression; // remove possible blanks
    regexpr.ReplaceAll(" ", "" );
    fSpectators.push_back(VariableInfo( regexpr, title, unit,
@@ -263,18 +277,20 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddSpectator( const TString& expression,
    return fSpectators.back();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// add spectator with given VariableInfo
+
 TMVA::VariableInfo& TMVA::DataSetInfo::AddSpectator( const VariableInfo& varInfo){
-   // add spectator with given VariableInfo
    fSpectators.push_back(VariableInfo( varInfo ));
    fNeedsRebuilding = kTRUE;
    return fSpectators.back();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// find variable by name
+
 Int_t TMVA::DataSetInfo::FindVarIndex(const TString& var) const
 {
-   // find variable by name
    for (UInt_t ivar=0; ivar<GetNVariables(); ivar++) 
       if (var == GetVariableInfo(ivar).GetInternalName()) return ivar;
    
@@ -286,13 +302,13 @@ Int_t TMVA::DataSetInfo::FindVarIndex(const TString& var) const
    return -1;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the weight expressions for the classes
+/// if class name is specified, set only for this class
+/// if class name is unknown, register new class with this name
+
 void TMVA::DataSetInfo::SetWeightExpression( const TString& expr, const TString& className ) 
 {
-   // set the weight expressions for the classes
-   // if class name is specified, set only for this class
-   // if class name is unknown, register new class with this name
-
    if (className != "") {
       TMVA::ClassInfo* ci = AddClass(className);
       ci->SetWeight( expr );
@@ -308,16 +324,18 @@ void TMVA::DataSetInfo::SetWeightExpression( const TString& expr, const TString&
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TMVA::DataSetInfo::SetCorrelationMatrix( const TString& className, TMatrixD* matrix ) 
 {
    GetClassInfo(className)->SetCorrelationMatrix(matrix); 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the cut for the classes
+
 void TMVA::DataSetInfo::SetCut( const TCut& cut, const TString& className ) 
 {
-   // set the cut for the classes
    if (className == "") {  // if no className has been given set the cut for all the classes
       for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
          (*it)->SetCut( cut );
@@ -329,10 +347,11 @@ void TMVA::DataSetInfo::SetCut( const TCut& cut, const TString& className )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the cut for the classes
+
 void TMVA::DataSetInfo::AddCut( const TCut& cut, const TString& className ) 
 {
-   // set the cut for the classes
    if (className == "") {  // if no className has been given set the cut for all the classes
       for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
          const TCut& oldCut = (*it)->GetCut();
@@ -345,10 +364,11 @@ void TMVA::DataSetInfo::AddCut( const TCut& cut, const TString& className )
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns list of variables
+
 std::vector<TString> TMVA::DataSetInfo::GetListOfVariables() const
 {
-   // returns list of variables
    std::vector<TString> vNames;
    std::vector<TMVA::VariableInfo>::const_iterator viIt = GetVariableInfos().begin();
    for(;viIt != GetVariableInfos().end(); viIt++) vNames.push_back( (*viIt).GetExpression() );
@@ -356,16 +376,18 @@ std::vector<TString> TMVA::DataSetInfo::GetListOfVariables() const
    return vNames;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculates the correlation matrices for signal and background, 
+/// prints them to standard output, and fills 2D histograms
+
 void TMVA::DataSetInfo::PrintCorrelationMatrix( const TString& className )
 {
-   // calculates the correlation matrices for signal and background, 
-   // prints them to standard output, and fills 2D histograms
    Log() << kINFO << "Correlation matrix (" << className << "):" << Endl;
    gTools().FormattedOutput( *CorrelationMatrix( className ), GetListOfVariables(), Log() );
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TH2* TMVA::DataSetInfo::CreateCorrelationMatrixHist( const TMatrixD* m,
                                                      const TString&  hName,
                                                      const TString&  hTitle ) const
@@ -427,10 +449,11 @@ TH2* TMVA::DataSetInfo::CreateCorrelationMatrixHist( const TMatrixD* m,
    return h2;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns data set
+
 TMVA::DataSet* TMVA::DataSetInfo::GetDataSet() const
 {
-   // returns data set
    if (fDataSet==0 || fNeedsRebuilding) {
       if(fDataSet!=0) ClearDataSet();
 //      fDataSet = DataSetManager::Instance().CreateDataSet(GetName()); //DSMTEST replaced by following lines
@@ -443,7 +466,8 @@ TMVA::DataSet* TMVA::DataSetInfo::GetDataSet() const
    return fDataSet;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 UInt_t TMVA::DataSetInfo::GetNSpectators(bool all) const
 {
    if(all)
@@ -455,7 +479,8 @@ UInt_t TMVA::DataSetInfo::GetNSpectators(bool all) const
    return nsp;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TMVA::DataSetInfo::GetClassNameMaxLength() const
 {
    Int_t maxL = 0;

@@ -94,11 +94,11 @@ const Char_t *TAxis3D::fgRulerName = "axis3druler";
 ClassImp(TAxis3D)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TAxis3D::TAxis3D() : TNamed(TAxis3D::fgRulerName,"ruler")
 {
-   // Normal constructor.
-
    fSelected = 0;
    fZoomMode = kFALSE;
    fStickyZoom = kFALSE;
@@ -106,11 +106,11 @@ TAxis3D::TAxis3D() : TNamed(TAxis3D::fgRulerName,"ruler")
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+
 TAxis3D::TAxis3D(Option_t *) : TNamed(TAxis3D::fgRulerName,"ruler")
 {
-   // Normal constructor.
-
    fSelected = 0;
    InitSet();
    fZoomMode = kFALSE;
@@ -118,30 +118,30 @@ TAxis3D::TAxis3D(Option_t *) : TNamed(TAxis3D::fgRulerName,"ruler")
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy  constructor.
+
 TAxis3D::TAxis3D(const TAxis3D &axis) : TNamed(axis)
 {
-   // Copy  constructor.
-
    ((TAxis3D&)axis).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy axis3d
+
 void TAxis3D::Copy(TObject &obj) const
 {
-   // Copy axis3d
-
    TNamed::Copy(obj);
    for (Int_t i=0;i<2;i++) fAxis[i].Copy(((TAxis3D&)obj).fAxis[i]);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization.
+
 void TAxis3D::InitSet()
 {
-   // Initialization.
-
    fAxis[0].SetName("xaxis");
    fAxis[1].SetName("yaxis");
    fAxis[2].SetName("zaxis");
@@ -153,20 +153,20 @@ void TAxis3D::InitSet()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add all 3 axes to the TBrowser
+
 void TAxis3D::Browse(TBrowser *b)
 {
-   // Add all 3 axes to the TBrowser
-
    for (Int_t i=0;i<3;i++) b->Add(&fAxis[i],fAxis[i].GetTitle());
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a line.
+
 Int_t TAxis3D::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a line.
-
    Int_t dist = 9;
    for (int i=0;i<3;i++) {
       Int_t axDist = fAxis[i].DistancetoPrimitive(px,py);
@@ -179,13 +179,13 @@ Int_t TAxis3D::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+/// This member function is called when an axis is clicked with the locator
+
 void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   // This member function is called when an axis is clicked with the locator
-
    if (!gPad) return;
 
    if (fSelected) fSelected->ExecuteEvent(event,px,py);
@@ -293,35 +293,35 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Dummy method
+///  returns the const char * to "axis3d"
+
 char *TAxis3D::GetObjectInfo(Int_t , Int_t ) const
 {
-   //  Dummy method
-   //  returns the const char * to "axis3d"
-
    return (char*)"axis3d";
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint axis over 3D view on the TPad
+
 void TAxis3D::Paint(Option_t *)
 {
-   // Paint axis over 3D view on the TPad
-
    TGaxis axis;
    PaintAxis(&axis, 90);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the axis for TView object.
+///
+/// The original idea belongs:
+///
+/// void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
+
 void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
 {
-   // Draw the axis for TView object.
-   //
-   // The original idea belongs:
-   //
-   // void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
-
    static Double_t epsil = 0.001;
 
    Double_t cosa, sina;
@@ -451,12 +451,12 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert "screen pixel" coordinates to some center of 3D WC coordinate
+/// if view and gPad present
+
 Double_t *TAxis3D::PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view)
 {
-   // Convert "screen pixel" coordinates to some center of 3D WC coordinate
-   // if view and gPad present
-
    Double_t *thisPoint = 0;
    if (!view && gPad) view = gPad->GetView();
    if (view) {
@@ -476,22 +476,22 @@ Double_t *TAxis3D::PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TAxis3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    fAxis[0].SaveAttributes(out,GetName(),"->GetXaxis()");
    fAxis[1].SaveAttributes(out,GetName(),"->GetYaxis()");
    fAxis[2].SaveAttributes(out,GetName(),"->GetZaxis()");
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace current attributes by current style.
+
 void TAxis3D::UseCurrentStyle()
 {
-   // Replace current attributes by current style.
-
    if (gStyle->IsReading()) {
       fAxis[0].ResetAttAxis("X");
       fAxis[1].ResetAttAxis("Y");
@@ -541,11 +541,11 @@ void TAxis3D::UseCurrentStyle()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the axis index by its name
+
 Int_t TAxis3D::AxisChoice( Option_t *axis) const
 {
-   // Return the axis index by its name
-
    char achoice = toupper(axis[0]);
    if (achoice == 'X') return 0;
    if (achoice == 'Y') return 1;
@@ -554,95 +554,96 @@ Int_t TAxis3D::AxisChoice( Option_t *axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of divisions.
+
 Int_t TAxis3D::GetNdivisions( Option_t *axis) const
 {
-   // Get number of divisions.
-
    Int_t ax = AxisChoice(axis);
    if (ax < 0) return 0;
    return fAxis[ax].GetNdivisions();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get axis color.
+
 Color_t TAxis3D::GetAxisColor( Option_t *axis) const
 {
-   // Get axis color.
-
    Int_t ax = AxisChoice(axis);
    if (ax < 0) return 0;
    return fAxis[ax].GetAxisColor();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get label color.
+
 Color_t TAxis3D::GetLabelColor( Option_t *axis) const
 {
-   // Get label color.
-
    Int_t ax = AxisChoice(axis);
    if (ax < 0) return 0;
    return fAxis[ax].GetLabelColor();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get label font.
+
 Style_t TAxis3D::GetLabelFont( Option_t *axis) const
 {
-   // Get label font.
-
    Int_t ax = AxisChoice(axis);
    if (ax < 0) return 0;
    return fAxis[ax].GetLabelFont();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get label offset.
+
 Float_t TAxis3D::GetLabelOffset( Option_t *axis) const
 {
-   // Get label offset.
-
    Int_t ax = AxisChoice(axis);
    if (ax < 0) return 0;
    return fAxis[ax].GetLabelOffset();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get label size.
+
 Float_t TAxis3D::GetLabelSize( Option_t *axis) const
 {
-   // Get label size.
-
    Int_t ax = AxisChoice(axis);
    if (ax < 0) return 0;
    return fAxis[ax].GetLabelSize();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get tick mark length.
+
 Float_t TAxis3D::GetTickLength( Option_t *axis) const
 {
-   // Get tick mark length.
-
    Int_t ax = AxisChoice(axis);
    if (ax < 0) return 0;
    return fAxis[ax].GetTickLength();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get title offset.
+
 Float_t TAxis3D::GetTitleOffset( Option_t *axis) const
 {
-   // Get title offset.
-
    Int_t ax = AxisChoice(axis);
    if (ax < 0) return 0;
    return fAxis[ax].GetTitleOffset();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #define AXISCHOICE                \
    Int_t i = AxisChoice(axis);    \
    Int_t nax = 1;                 \
@@ -650,29 +651,29 @@ Float_t TAxis3D::GetTitleOffset( Option_t *axis) const
    for (Int_t ax=i;ax<nax+i;ax++)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of divisions.
+
 void TAxis3D::SetNdivisions(Int_t n, Option_t *axis)
 {
-   // Set number of divisions.
-
    AXISCHOICE {fAxis[ax].SetNdivisions(n);}
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set axis color.
+
 void TAxis3D::SetAxisColor(Color_t color, Option_t *axis)
 {
-   // Set axis color.
-
    AXISCHOICE {fAxis[ax].SetAxisColor(color);}
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set axis range.
+
 void TAxis3D::SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis)
 {
-   // Set axis range.
-
    Int_t ax = AxisChoice(axis);
    if (ax < 0) return;
    TAxis *theAxis = &fAxis[ax];
@@ -682,66 +683,66 @@ void TAxis3D::SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set label color.
+
 void TAxis3D::SetLabelColor(Color_t color, Option_t *axis)
 {
-   // Set label color.
-
    AXISCHOICE { fAxis[ax].SetLabelColor(color); }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set label font.
+
 void TAxis3D::SetLabelFont(Style_t font, Option_t *axis)
 {
-   // Set label font.
-
    AXISCHOICE { fAxis[ax].SetLabelFont(font); }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set label offset.
+
 void TAxis3D::SetLabelOffset(Float_t offset, Option_t *axis)
 {
-   // Set label offset.
-
    AXISCHOICE { fAxis[ax].SetLabelOffset(offset); }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set label size.
+
 void TAxis3D::SetLabelSize(Float_t size, Option_t *axis)
 {
-   // Set label size.
-
    AXISCHOICE { fAxis[ax].SetLabelSize(size); }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tick mark length.
+
 void TAxis3D::SetTickLength(Float_t length, Option_t *axis)
 {
-   // Set tick mark length.
-
    AXISCHOICE { fAxis[ax].SetTickLength(length); }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set title offset.
+
 void TAxis3D::SetTitleOffset(Float_t offset, Option_t *axis)
 {
-   // Set title offset.
-
    AXISCHOICE { fAxis[ax].SetTitleOffset(offset); }
 }
 #undef AXISCHOICE
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the "pad" Axis3D object pointer if any.
+
 TAxis3D *TAxis3D::GetPadAxis(TVirtualPad *pad)
 {
-   // Returns the "pad" Axis3D object pointer if any.
-
    TObject *obj = 0;
    TVirtualPad *thisPad=pad;
    if (!thisPad) thisPad = gPad;
@@ -754,12 +755,12 @@ TAxis3D *TAxis3D::GetPadAxis(TVirtualPad *pad)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn ON / OFF the "Ruler", TAxis3D object attached
+/// to the current pad
+
 TAxis3D *TAxis3D::ToggleRulers(TVirtualPad *pad)
 {
-   // Turn ON / OFF the "Ruler", TAxis3D object attached
-   // to the current pad
-
    TAxis3D *ax = 0;
    TVirtualPad *thisPad=pad;
    if (!thisPad) thisPad = gPad;
@@ -778,17 +779,17 @@ TAxis3D *TAxis3D::ToggleRulers(TVirtualPad *pad)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn ON / OFF the "Ruler" and "zoom mode" of the TAxis3D object attached
+/// to the current pad (if pad = 0; gPad is used "by default")
+///
+/// User is given a chance to either:
+///  1.  move the center of the 3D scene at the cursor position
+///  2.  zoom view with mouse "drugging" the bounder rectangle with "left" mouse
+///  3.  Change the axuce attributes via TContextMenu with "righ mouse button click"
+
 TAxis3D *TAxis3D::ToggleZoom(TVirtualPad *pad)
 {
-   // Turn ON / OFF the "Ruler" and "zoom mode" of the TAxis3D object attached
-   // to the current pad (if pad = 0; gPad is used "by default")
-   //
-   // User is given a chance to either:
-   //  1.  move the center of the 3D scene at the cursor position
-   //  2.  zoom view with mouse "drugging" the bounder rectangle with "left" mouse
-   //  3.  Change the axuce attributes via TContextMenu with "righ mouse button click"
-
    TAxis3D *ax = 0;
    TVirtualPad *thisPad=pad;
    if (!thisPad) thisPad = gPad;

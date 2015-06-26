@@ -25,21 +25,22 @@
 
 ClassImp(TEveTrackProjected);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TEveTrackProjected::TEveTrackProjected() :
    TEveTrack (),
    fOrigPnts (0)
 {
-   // Default constructor.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEveTrackProjected::SetProjection(TEveProjectionManager* mng, TEveProjectable* model)
 {
-   // This is virtual method from base-class TEveProjected.
-
    TEveProjected::SetProjection(mng, model);
    CopyVizParams(dynamic_cast<TEveElement*>(model));
 
@@ -50,11 +51,11 @@ void TEveTrackProjected::SetProjection(TEveProjectionManager* mng, TEveProjectab
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set depth (z-coordinate) of the projected points.
+
 void TEveTrackProjected::SetDepthLocal(Float_t d)
 {
-   // Set depth (z-coordinate) of the projected points.
-
    SetDepthCommon(d, this, fBBox);
 
    Int_t    n = Size();
@@ -70,22 +71,22 @@ void TEveTrackProjected::SetDepthLocal(Float_t d)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual method from base-class TEveProjected.
+
 void TEveTrackProjected::UpdateProjection()
 {
-   // Virtual method from base-class TEveProjected.
-
    MakeTrack(kFALSE); // TEveProjectionManager makes recursive calls
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Findex index of the last point that lies within the same
+/// segment of projected space.
+/// For example, rho-z projection separates upper and lower hemisphere
+/// and tracks break into two lines when crossing the y=0 plane.
+
 Int_t TEveTrackProjected::GetBreakPointIdx(Int_t start)
 {
-   // Findex index of the last point that lies within the same
-   // segment of projected space.
-   // For example, rho-z projection separates upper and lower hemisphere
-   // and tracks break into two lines when crossing the y=0 plane.
-
    TEveProjection *projection = fManager->GetProjection();
 
    Int_t val = fLastPoint;
@@ -114,13 +115,13 @@ Int_t TEveTrackProjected::GetBreakPointIdx(Int_t start)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the points of the track for drawing.
+/// Call base-class, project, find break-points and insert points
+/// required for full representation.
+
 void TEveTrackProjected::MakeTrack(Bool_t recurse)
 {
-   // Calculate the points of the track for drawing.
-   // Call base-class, project, find break-points and insert points
-   // required for full representation.
-
    TEveTrack      *otrack     = dynamic_cast<TEveTrack*>(fProjectable);
    TEveTrans      *trans      = otrack->PtrMainTrans(kFALSE);
    TEveProjection *projection = fManager->GetProjection();
@@ -221,11 +222,11 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print line segments info.
+
 void TEveTrackProjected::PrintLineSegments()
 {
-   // Print line segments info.
-
    printf("%s LineSegments:\n", GetName());
    Int_t start = 0;
    Int_t segment = 0;
@@ -248,11 +249,11 @@ void TEveTrackProjected::PrintLineSegments()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual method from from base-class TEveTrack.
+
 void TEveTrackProjected::SecSelected(TEveTrack* /*track*/)
 {
-    // Virtual method from from base-class TEveTrack.
-
    TEveTrack* t = dynamic_cast<TEveTrack*>(fProjectable);
    if (t)
       t->SecSelected(t);
@@ -270,21 +271,22 @@ void TEveTrackProjected::SecSelected(TEveTrack* /*track*/)
 
 ClassImp(TEveTrackListProjected);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TEveTrackListProjected::TEveTrackListProjected() :
    TEveTrackList (),
    TEveProjected ()
 {
-   // Default constructor.
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEveTrackListProjected::SetProjection(TEveProjectionManager* proj, TEveProjectable* model)
 {
-   // This is virtual method from base-class TEveProjected.
-
    TEveProjected::SetProjection(proj, model);
    CopyVizParams(dynamic_cast<TEveElement*>(model));
 
@@ -292,29 +294,29 @@ void TEveTrackListProjected::SetProjection(TEveProjectionManager* proj, TEveProj
    SetPropagator(tl.GetPropagator());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is not needed for functionality as SetDepth(Float_t d)
+/// is overriden -- but SetDepthLocal() is abstract.
+/// Just emits a warning if called.
+
 void TEveTrackListProjected::SetDepthLocal(Float_t /*d*/)
 {
-   // This is not needed for functionality as SetDepth(Float_t d)
-   // is overriden -- but SetDepthLocal() is abstract.
-   // Just emits a warning if called.
-
    Warning("SetDepthLocal", "This function only exists to fulfill an abstract interface.");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set depth of all children inheriting from TEveTrackProjected.
+
 void TEveTrackListProjected::SetDepth(Float_t d)
 {
-   // Set depth of all children inheriting from TEveTrackProjected.
-
    SetDepth(d, this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set depth of all children of el inheriting from TEveTrackProjected.
+
 void TEveTrackListProjected::SetDepth(Float_t d, TEveElement* el)
 {
-   // Set depth of all children of el inheriting from TEveTrackProjected.
-
    TEveTrackProjected* ptrack;
    for (List_i i = el->BeginChildren(); i != el->EndChildren(); ++i)
    {

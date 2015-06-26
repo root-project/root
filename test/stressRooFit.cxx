@@ -41,10 +41,11 @@ using namespace RooFit ;
 
 Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun) ;
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+
 void StatusPrint(Int_t id,const TString &title,Int_t status)
 {
-  // Print test program number and its title
   const Int_t kMAX = 65;
   Char_t number[4];
   sprintf(number,"%2d",id);
@@ -58,7 +59,8 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 //#include "stressRooFit_tests_direct.cxx"
 #include "stressRooFit_tests.cxx"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
 {
   Int_t retVal = 0;
@@ -344,7 +346,8 @@ int main(int argc,const char *argv[])
   return retVal;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t stressRooFit()
 {
    Bool_t doWrite     = kFALSE ;

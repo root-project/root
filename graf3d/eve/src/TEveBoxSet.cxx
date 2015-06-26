@@ -44,7 +44,8 @@
 
 ClassImp(TEveBoxSet);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveBoxSet::TEveBoxSet(const char* n, const char* t) :
    TEveDigitSet  (n, t),
 
@@ -65,11 +66,11 @@ TEveBoxSet::TEveBoxSet(const char* n, const char* t) :
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return size of data-structure describing a box of type bt.
+
 Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::EBoxType_e bt)
 {
-   // Return size of data-structure describing a box of type bt.
-
    static const TEveException eH("TEveBoxSet::SizeofAtom ");
 
    switch (bt) {
@@ -86,12 +87,12 @@ Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::EBoxType_e bt)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the data containers to zero size.
+/// The arguments describe the basic parameters of data storage.
+
 void TEveBoxSet::Reset(TEveBoxSet::EBoxType_e boxType, Bool_t valIsCol, Int_t chunkSize)
 {
-   // Reset the data containers to zero size.
-   // The arguments describe the basic parameters of data storage.
-
    fBoxType      = boxType;
    fValueIsColor = valIsCol;
    fDefaultValue = valIsCol ? 0 : kMinInt;
@@ -100,12 +101,12 @@ void TEveBoxSet::Reset(TEveBoxSet::EBoxType_e boxType, Bool_t valIsCol, Int_t ch
    fPlex.Reset(SizeofAtom(fBoxType), chunkSize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the data containers to zero size.
+/// Keep the old data-storage parameters.
+
 void TEveBoxSet::Reset()
 {
-   // Reset the data containers to zero size.
-   // Keep the old data-storage parameters.
-
    if (fOwnIds)
       ReleaseIds();
    fPlex.Reset(SizeofAtom(fBoxType), TMath::Max(fPlex.N(), 64));
@@ -113,12 +114,12 @@ void TEveBoxSet::Reset()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new box from a set of 8 vertices.
+/// To be used for box-type kBT_FreeBox.
+
 void TEveBoxSet::AddBox(const Float_t* verts)
 {
-   // Create a new box from a set of 8 vertices.
-   // To be used for box-type kBT_FreeBox.
-
    static const TEveException eH("TEveBoxSet::AddBox ");
 
    if (fBoxType != kBT_FreeBox)
@@ -129,13 +130,13 @@ void TEveBoxSet::AddBox(const Float_t* verts)
    TEveShape::CheckAndFixBoxOrientationFv(b->fVertices);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new axis-aligned box from at a given position and with
+/// specified dimensions.
+/// To be used for box-type kBT_AABox.
+
 void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h, Float_t d)
 {
-   // Create a new axis-aligned box from at a given position and with
-   // specified dimensions.
-   // To be used for box-type kBT_AABox.
-
    static const TEveException eH("TEveBoxSet::AddBox ");
 
    if (fBoxType != kBT_AABox)
@@ -146,12 +147,12 @@ void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h, F
    box->fW = w; box->fH = h; box->fD = d;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new axis-aligned box from at a given position.
+/// To be used for box-type kBT_AABoxFixedDim.
+
 void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c)
 {
-   // Create a new axis-aligned box from at a given position.
-   // To be used for box-type kBT_AABoxFixedDim.
-
    static const TEveException eH("TEveBoxSet::AddBox ");
 
    if (fBoxType != kBT_AABoxFixedDim)
@@ -161,12 +162,12 @@ void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c)
    box->fA = a; box->fB = b; box->fC = c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a cone with apex at pos, axis dir and radius r.
+/// To be used for box-type kBT_Cone.
+
 void TEveBoxSet::AddCone(const TEveVector& pos, const TEveVector& dir, Float_t r)
 {
-   // Create a cone with apex at pos, axis dir and radius r.
-   // To be used for box-type kBT_Cone.
-
    static const TEveException eH("TEveBoxSet::AddCone ");
 
    if (fBoxType != kBT_Cone)
@@ -178,13 +179,13 @@ void TEveBoxSet::AddCone(const TEveVector& pos, const TEveVector& dir, Float_t r
    cone->fR   = r;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a cone with apex at pos, axis dir and radius r.
+/// To be used for box-type kBT_EllipticCone.
+
 void TEveBoxSet::AddEllipticCone(const TEveVector& pos, const TEveVector& dir,
                                  Float_t r, Float_t r2, Float_t angle)
 {
-   // Create a cone with apex at pos, axis dir and radius r.
-   // To be used for box-type kBT_EllipticCone.
-
    static const TEveException eH("TEveBoxSet::AddEllipticCone ");
 
    if (fBoxType != kBT_EllipticCone)
@@ -200,12 +201,12 @@ void TEveBoxSet::AddEllipticCone(const TEveVector& pos, const TEveVector& dir,
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill bounding-box information of the base-class TAttBBox (virtual method).
+/// If member 'TEveFrameBox* fFrame' is set, frame's corners are used as bbox.
+
 void TEveBoxSet::ComputeBBox()
 {
-   // Fill bounding-box information of the base-class TAttBBox (virtual method).
-   // If member 'TEveFrameBox* fFrame' is set, frame's corners are used as bbox.
-
    static const TEveException eH("TEveBoxSet::ComputeBBox ");
 
    if (fFrame != 0)
@@ -300,11 +301,11 @@ void TEveBoxSet::ComputeBBox()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the structure with a random set of boxes.
+
 void TEveBoxSet::Test(Int_t nboxes)
 {
-   // Fill the structure with a random set of boxes.
-
    Reset(kBT_AABox, kTRUE, nboxes);
    TRandom rnd(0);
    const Float_t origin = 10, size = 2;

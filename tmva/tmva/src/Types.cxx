@@ -41,11 +41,12 @@ static std::mutex gTypesMutex;
 TMVA::Types* TMVA::Types::fgTypesPtr = 0;
 #endif
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TMVA::Types::Types()
    : fLogger( new MsgLogger("Types") )
 {
-   // constructor
 }
 
 TMVA::Types::~Types()
@@ -54,10 +55,11 @@ TMVA::Types::~Types()
    delete fLogger;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the the single instance of "Types" if existin already, or create it  (Signleton)
+
 TMVA::Types& TMVA::Types::Instance()
 {
-   // the the single instance of "Types" if existin already, or create it  (Signleton)
 #if __cplusplus > 199711L
   if(!fgTypesPtr) {
     Types* tmp = new Types();
@@ -72,10 +74,11 @@ TMVA::Types& TMVA::Types::Instance()
    return fgTypesPtr ? *fgTypesPtr : *(fgTypesPtr = new Types());
 #endif
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// "destructor" of the single instance
+
 void   TMVA::Types::DestroyInstance()
 {
-   // "destructor" of the single instance
 #if __cplusplus > 199711L
    if (fgTypesPtr != 0) { delete fgTypesPtr.load(); fgTypesPtr = 0; }
 #else
@@ -84,7 +87,8 @@ void   TMVA::Types::DestroyInstance()
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TMVA::Types::AddTypeMapping( Types::EMVA method, const TString& methodname )
 {
 #if __cplusplus > 199711L
@@ -102,7 +106,8 @@ Bool_t TMVA::Types::AddTypeMapping( Types::EMVA method, const TString& methodnam
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMVA::Types::EMVA TMVA::Types::GetMethodType( const TString& method ) const
 {
 #if __cplusplus > 199711L
@@ -117,7 +122,8 @@ TMVA::Types::EMVA TMVA::Types::GetMethodType( const TString& method ) const
    else return it->second;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TString TMVA::Types::GetMethodName( TMVA::Types::EMVA method ) const
 {
 #if __cplusplus > 199711L

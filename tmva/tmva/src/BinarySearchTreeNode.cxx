@@ -49,7 +49,9 @@
 
 ClassImp(TMVA::BinarySearchTreeNode)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor of a node for the search tree
+
 TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e, UInt_t /* signalClass */ ) 
    : TMVA::Node(),
      fEventV  ( std::vector<Float_t>() ),
@@ -58,7 +60,6 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e, UInt_t /* sign
      fClass   ( e==0?0:e->GetClass() ), // see BinarySearchTree.h, line Mean() RMS() Min() and Max()
      fSelector( -1 )
 {
-   // constructor of a node for the search tree
    if (e!=0) {
       for (UInt_t ivar=0; ivar<e->GetNVariables(); ivar++) fEventV.push_back(e->GetValue(ivar));
       for (std::vector<Float_t>::const_iterator it = e->GetTargets().begin(); it < e->GetTargets().end(); it++ ) {
@@ -67,7 +68,9 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e, UInt_t /* sign
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor of a daughter node as a daughter of 'p'
+
 TMVA::BinarySearchTreeNode::BinarySearchTreeNode( BinarySearchTreeNode* parent, char pos ) : 
    TMVA::Node(parent,pos),
    fEventV  ( std::vector<Float_t>() ),
@@ -76,10 +79,12 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode( BinarySearchTreeNode* parent, 
    fClass   ( 0 ),
    fSelector( -1 )
 {
-   // constructor of a daughter node as a daughter of 'p'
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor of a node. It will result in an explicit copy of
+/// the node and recursively all it's daughters
+
 TMVA::BinarySearchTreeNode::BinarySearchTreeNode ( const BinarySearchTreeNode &n,
                                                    BinarySearchTreeNode* parent ) : 
    TMVA::Node(n),
@@ -89,8 +94,6 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode ( const BinarySearchTreeNode &n
    fClass   ( n.fClass    ),
    fSelector( n.fSelector )
 {
-   // copy constructor of a node. It will result in an explicit copy of
-   // the node and recursively all it's daughters
    this->SetParent( parent );
    if (n.GetLeft() == 0 ) this->SetLeft(NULL);
    else this->SetLeft( new BinarySearchTreeNode( *((BinarySearchTreeNode*)(n.GetLeft())),this));
@@ -100,33 +103,37 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode ( const BinarySearchTreeNode &n
 
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// node destructor
+
 TMVA::BinarySearchTreeNode::~BinarySearchTreeNode()
 {
-   // node destructor
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check if the event fed into the node goes/decends to the right daughter
+
 Bool_t TMVA::BinarySearchTreeNode::GoesRight( const TMVA::Event& e ) const 
 {
-   // check if the event fed into the node goes/decends to the right daughter
    if (e.GetValue(fSelector) > GetEventV()[fSelector]) return true;
    else return false;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check if the event fed into the node goes/decends to the left daughter
+
 Bool_t TMVA::BinarySearchTreeNode::GoesLeft(const TMVA::Event& e) const
 {
-   // check if the event fed into the node goes/decends to the left daughter
    if (e.GetValue(fSelector) <= GetEventV()[fSelector]) return true;
    else return false;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check if the event fed into the node actually equals the event
+/// that forms the node (in case of a search tree)
+
 Bool_t TMVA::BinarySearchTreeNode::EqualsMe(const TMVA::Event& e) const
 {
-   // check if the event fed into the node actually equals the event
-   // that forms the node (in case of a search tree)
    Bool_t result = true;
    for (UInt_t i=0; i<GetEventV().size(); i++) {
       result&= (e.GetValue(i) == GetEventV()[i]);
@@ -134,10 +141,11 @@ Bool_t TMVA::BinarySearchTreeNode::EqualsMe(const TMVA::Event& e) const
    return result;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print the node
+
 void TMVA::BinarySearchTreeNode::Print( std::ostream& os ) const
 {
-   // print the node
    os << "< ***  " << std::endl << " node.Data: ";
    std::vector<Float_t>::const_iterator it=fEventV.begin();
    os << fEventV.size() << " vars: ";
@@ -154,10 +162,11 @@ void TMVA::BinarySearchTreeNode::Print( std::ostream& os ) const
    os << " **** > "<< std::endl;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// recursively print the node and its daughters (--> print the 'tree')
+
 void TMVA::BinarySearchTreeNode::PrintRec( std::ostream& os ) const
 {
-   // recursively print the node and its daughters (--> print the 'tree')
    os << this->GetDepth() << " " << this->GetPos() << " " << this->GetSelector()
       << " data: " <<  std::endl;
    std::vector<Float_t>::const_iterator it=fEventV.begin();
@@ -170,10 +179,11 @@ void TMVA::BinarySearchTreeNode::PrintRec( std::ostream& os ) const
    if (this->GetRight() != NULL)this->GetRight()->PrintRec(os);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the data block
+
 Bool_t TMVA::BinarySearchTreeNode::ReadDataRecord( std::istream& is, UInt_t /* Tmva_Version_Code */  ) 
 {
-   // Read the data block
    Int_t       itmp;
    std::string tmp;
    UInt_t      depth, selIdx, nvar;
@@ -205,10 +215,11 @@ Bool_t TMVA::BinarySearchTreeNode::ReadDataRecord( std::istream& is, UInt_t /* T
    return kTRUE;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read attributes from XML
+
 void TMVA::BinarySearchTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_Code */ )
 {
-   // read attributes from XML
    gTools().ReadAttr(node, "selector", fSelector );
    gTools().ReadAttr(node, "weight",   fWeight );
    std::string sb;
@@ -224,9 +235,10 @@ void TMVA::BinarySearchTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Versi
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// adding attributes to tree node
+
 void TMVA::BinarySearchTreeNode::AddAttributesToNode(void* node) const {
-   // adding attributes to tree node
    gTools().AddAttr(node, "selector", fSelector );
    gTools().AddAttr(node, "weight", fWeight );
 //   gTools().AddAttr(node, "type", (IsSignal()?"Signal":"Background"));
@@ -235,20 +247,22 @@ void TMVA::BinarySearchTreeNode::AddAttributesToNode(void* node) const {
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// adding attributes to tree node
+
 void TMVA::BinarySearchTreeNode::AddContentToNode( std::stringstream& s ) const 
 {
-   // adding attributes to tree node
    std::ios_base::fmtflags ff = s.flags();
    s.precision( 16 );
    for (UInt_t i=0; i<fEventV.size();  i++) s << std::scientific << " " << fEventV[i];
    for (UInt_t i=0; i<fTargets.size(); i++) s << std::scientific << " " << fTargets[i];
    s.flags(ff);
 }
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read events from node
+
 void TMVA::BinarySearchTreeNode::ReadContent( std::stringstream& s ) 
 {
-   // read events from node
    Float_t temp=0;
    for (UInt_t i=0; i<fEventV.size(); i++){
       s >> temp;

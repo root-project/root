@@ -41,7 +41,8 @@ ClassImp(RooTFoamBinding)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooTFoamBinding::RooTFoamBinding(const RooAbsReal& pdf, const RooArgSet& observables)
 {
   _nset.add(observables) ;
@@ -49,16 +50,18 @@ RooTFoamBinding::RooTFoamBinding(const RooAbsReal& pdf, const RooArgSet& observa
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooTFoamBinding::~RooTFoamBinding() 
 {
-  // Destructor
   delete _binding ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooTFoamBinding::Density(Int_t ndim, Double_t *xvec) 
 {
   Double_t x[10] ;

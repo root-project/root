@@ -37,7 +37,8 @@ ClassImp(RooLegendre)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 namespace {
     inline double a(int p, int l, int m) {
         double r = TMath::Factorial(l+m)/TMath::Factorial(m+p)/TMath::Factorial(p)/TMath::Factorial(l-m-2*p);
@@ -46,26 +47,28 @@ namespace {
     }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooLegendre::RooLegendre() :
   _l1(1),_m1(1),_l2(0),_m2(0)
 {
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///TODO: for now, we assume that ctheta has a range [-1,1]
+/// should map the ctheta range onto this interval, and adjust integrals...
+
 RooLegendre::RooLegendre(const char* name, const char* title, RooAbsReal& ctheta, int l, int m) 
  : RooAbsReal(name, title)
  , _ctheta("ctheta", "ctheta", this, ctheta)
  , _l1(l),_m1(m),_l2(0),_m2(0)
 {
-  //TODO: for now, we assume that ctheta has a range [-1,1]
-  // should map the ctheta range onto this interval, and adjust integrals...
-
   //TODO: we assume m>=0
   //      should map m<0 back to m>=0...
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooLegendre::RooLegendre(const char* name, const char* title, RooAbsReal& ctheta, int l1, int m1, int l2, int m2) 
  : RooAbsReal(name, title)
  , _ctheta("ctheta", "ctheta", this, ctheta)
@@ -73,7 +76,8 @@ RooLegendre::RooLegendre(const char* name, const char* title, RooAbsReal& ctheta
 {
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooLegendre::RooLegendre(const RooLegendre& other, const char* name) 
     : RooAbsReal(other, name)
     , _ctheta("ctheta", this, other._ctheta)
@@ -82,11 +86,12 @@ RooLegendre::RooLegendre(const RooLegendre& other, const char* name)
 {
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: check that 0<=m_i<=l_i; on the other hand, assoc_legendre already does that ;-)
+/// Note: P_0^0 = 1, so P_l^m = P_l^m P_0^0
+
 Double_t RooLegendre::evaluate() const 
 {
-  // TODO: check that 0<=m_i<=l_i; on the other hand, assoc_legendre already does that ;-)
-  // Note: P_0^0 = 1, so P_l^m = P_l^m P_0^0
 #ifdef R__HAS_MATHMORE  
   double r = 1;
   double ctheta = std::max(-1., std::min((double)_ctheta, +1.));
@@ -100,7 +105,8 @@ Double_t RooLegendre::evaluate() const
 #endif
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 namespace {
     bool fullRange(const RooRealProxy& x ,const char* range) 
     { return range==0 || strlen(range)==0 
@@ -114,11 +120,12 @@ Int_t RooLegendre::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
   return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// this was verified to match mathematica for 
+/// l1 in [0,2], m1 in [0,l1], l2 in [l1,4], m2 in [0,l2]
+
 Double_t RooLegendre::analyticalIntegral(Int_t code, const char* ) const 
 {
-  // this was verified to match mathematica for 
-  // l1 in [0,2], m1 in [0,l1], l2 in [l1,4], m2 in [0,l2]
   R__ASSERT(code==1) ;
   if ( _m1==_m2 )                 return ( _l1 == _l2) ?  TMath::Factorial(_l1+_m2)/TMath::Factorial(_l1-_m1)*double(2)/(2*_l1+1) : 0.;
   if ( (_l1+_l2-_m1-_m2)%2 != 0 ) return 0; // these combinations are odd under x -> -x

@@ -43,50 +43,54 @@ ClassImp(RooUnblindUniform)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooUnblindUniform::RooUnblindUniform()
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
+
 RooUnblindUniform::RooUnblindUniform(const char *name, const char *title,
 					 const char *blindString, Double_t scale, RooAbsReal& cpasym)
   : RooAbsHiddenReal(name,title), 
   _value("value","Uniform blinded value",this,cpasym), 
   _blindEngine(blindString,RooBlindTools::full,0.,scale)
 {  
-  // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooUnblindUniform::RooUnblindUniform(const RooUnblindUniform& other, const char* name) : 
   RooAbsHiddenReal(other, name), 
   _value("asym",this,other._value),
   _blindEngine(other._blindEngine) 
 {
-  // Copy constructor
-
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooUnblindUniform::~RooUnblindUniform() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate RooBlindTools unhide-offset method on blind value
+
 Double_t RooUnblindUniform::evaluate() const
 {
-  // Evaluate RooBlindTools unhide-offset method on blind value
   return _blindEngine.UnHideUniform(_value);
 }
 

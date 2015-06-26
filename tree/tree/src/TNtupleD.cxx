@@ -36,32 +36,32 @@
 
 ClassImp(TNtupleD)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default constructor for Ntuple*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*        ==============================
+
 TNtupleD::TNtupleD(): TTree()
 {
-//*-*-*-*-*-*Default constructor for Ntuple*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ==============================
-
    fNvar = 0;
    fArgs = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*Create an Ntuple*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      ================
+///       The parameter varlist describes the list of the ntuple variables
+///       separated by a colon:
+///         example:  "x:y:z:energy"
+///       For each variable in the list a separate branch is created.
+///
+///      NOTE:
+///       -Use TTree to create branches with variables of different data types.
+///       -Use TTree when the number of branches is large (> 100).
+///*-*
+
 TNtupleD::TNtupleD(const char *name, const char *title, const char *varlist, Int_t bufsize)
        :TTree(name,title)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create an Ntuple*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ================
-//       The parameter varlist describes the list of the ntuple variables
-//       separated by a colon:
-//         example:  "x:y:z:energy"
-//       For each variable in the list a separate branch is created.
-//
-//      NOTE:
-//       -Use TTree to create branches with variables of different data types.
-//       -Use TTree when the number of branches is large (> 100).
-//*-*
-
    Int_t i;
    fNvar = 0;
    fArgs = 0;
@@ -95,22 +95,22 @@ TNtupleD::TNtupleD(const char *name, const char *title, const char *varlist, Int
    delete [] pvars;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*Default destructor for an Ntuple*-*-*-*-*-*-*-*-*-*-*-*
+///*-*        ================================
+
 TNtupleD::~TNtupleD()
 {
-//*-*-*-*-*-*Default destructor for an Ntuple*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ================================
-
    delete [] fArgs;
    fArgs = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the branch addresses to the internal fArgs array. Use this
+/// method when the addresses were changed via calls to SetBranchAddress().
+
 void TNtupleD::ResetBranchAddress(TBranch *branch)
 {
-   // Reset the branch addresses to the internal fArgs array. Use this
-   // method when the addresses were changed via calls to SetBranchAddress().
-
    if (branch) {
       UInt_t index = fBranches.IndexOf(branch);
       if (index>0) {
@@ -119,44 +119,44 @@ void TNtupleD::ResetBranchAddress(TBranch *branch)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the branch addresses to the internal fArgs array. Use this
+/// method when the addresses were changed via calls to SetBranchAddress().
+
 void TNtupleD::ResetBranchAddresses()
 {
-   // Reset the branch addresses to the internal fArgs array. Use this
-   // method when the addresses were changed via calls to SetBranchAddress().
-
    for (Int_t i = 0; i < fNvar; i++) {
       TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
       if (branch) branch->SetAddress(&fArgs[i]);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse content.
+
 void TNtupleD::Browse(TBrowser *b)
 {
-   // Browse content.
-
    fLeaves.Browse( b );
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Fill a Ntuple with current values in fArgs*-*-*-*-*-*-*
+///*-*              ==========================================
+/// Note that this function is protected.
+/// Currently called only by TChain::Merge
+
 Int_t TNtupleD::Fill()
 {
-//*-*-*-*-*-*-*-*-*Fill a Ntuple with current values in fArgs*-*-*-*-*-*-*
-//*-*              ==========================================
-// Note that this function is protected.
-// Currently called only by TChain::Merge
-
    return TTree::Fill();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Fill a Ntuple with an array of floats*-*-*-*-*-*-*-*-*-*
+///*-*              =====================================
+
 Int_t TNtupleD::Fill(const Double_t *x)
 {
-//*-*-*-*-*-*-*-*-*Fill a Ntuple with an array of floats*-*-*-*-*-*-*-*-*-*
-//*-*              =====================================
-
 //*-*- Store array x into buffer
    for (Int_t i=0;i<fNvar;i++)  {
       fArgs[i] = x[i];
@@ -166,14 +166,14 @@ Int_t TNtupleD::Fill(const Double_t *x)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Fill a Ntuple: Each Ntuple item is an argument*-*-*-*-*-*-*
+///*-*              ==============================================
+
 Int_t TNtupleD::Fill(Double_t x0,Double_t x1,Double_t x2,Double_t x3,Double_t x4
               ,Double_t x5,Double_t x6,Double_t x7,Double_t x8,Double_t x9
               ,Double_t x10,Double_t x11,Double_t x12,Double_t x13,Double_t x14)
 {
-//*-*-*-*-*-*-*-*-*Fill a Ntuple: Each Ntuple item is an argument*-*-*-*-*-*-*
-//*-*              ==============================================
-
    if (fNvar >  0) fArgs[0]  = x0;
    if (fNvar >  1) fArgs[1]  = x1;
    if (fNvar >  2) fArgs[2]  = x2;
@@ -193,14 +193,14 @@ Int_t TNtupleD::Fill(Double_t x0,Double_t x1,Double_t x2,Double_t x3,Double_t x4
    return TTree::Fill();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read from filename as many columns as variables in the ntuple
+/// the function returns the number of rows found in the file
+/// The second argument "branchDescriptor" is currently not used.
+/// Lines in the input file starting with "#" are ignored.
+
 Long64_t TNtupleD::ReadStream(std::istream &inputStream, const char * /*branchDescriptor*/, char delimiter)
 {
-// read from filename as many columns as variables in the ntuple
-// the function returns the number of rows found in the file
-// The second argument "branchDescriptor" is currently not used.
-// Lines in the input file starting with "#" are ignored.
-
    /*
    Long64_t nlines = 0;
    char newline = GetNewlineValue(inputStream);
@@ -225,11 +225,12 @@ Long64_t TNtupleD::ReadStream(std::istream &inputStream, const char * /*branchDe
    return ROOT::TreeUtils::FillNtupleFromStream<Double_t, TNtupleD>(inputStream, *this, delimiter, true);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*              =========================================
+
 void TNtupleD::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);

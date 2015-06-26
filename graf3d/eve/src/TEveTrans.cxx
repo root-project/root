@@ -66,7 +66,9 @@
 
 ClassImp(TEveTrans);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TEveTrans::TEveTrans() :
    TObject(),
    fA1(0), fA2(0), fA3(0), fAsOK(kFALSE),
@@ -75,12 +77,12 @@ TEveTrans::TEveTrans() :
    fEditRotation(kTRUE),
    fEditScale(kTRUE)
 {
-   // Default constructor.
-
    UnitTrans();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTrans::TEveTrans(const TEveTrans& t) :
    TObject(),
    fA1(t.fA1), fA2(t.fA2), fA3(t.fA3), fAsOK(t.fAsOK),
@@ -89,12 +91,12 @@ TEveTrans::TEveTrans(const TEveTrans& t) :
    fEditRotation(kTRUE),
    fEditScale(kTRUE)
 {
-   // Constructor.
-
    SetTrans(t, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTrans::TEveTrans(const Double_t arr[16]) :
    TObject(),
    fA1(0), fA2(0), fA3(0), fAsOK(kFALSE),
@@ -103,12 +105,12 @@ TEveTrans::TEveTrans(const Double_t arr[16]) :
    fEditRotation(kTRUE),
    fEditScale(kTRUE)
 {
-   // Constructor.
-
    SetFromArray(arr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTrans::TEveTrans(const Float_t arr[16]) :
    TObject(),
    fA1(0), fA2(0), fA3(0), fAsOK(kFALSE),
@@ -117,52 +119,50 @@ TEveTrans::TEveTrans(const Float_t arr[16]) :
    fEditRotation(kTRUE),
    fEditScale(kTRUE)
 {
-   // Constructor.
-
    SetFromArray(arr);
 }
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset matrix to unity.
+
 void TEveTrans::UnitTrans()
 {
-   // Reset matrix to unity.
-
    memset(fM, 0, 16*sizeof(Double_t));
    fM[F00] = fM[F11] = fM[F22] = fM[F33] = 1;
    fA1 = fA2 = fA3 = 0;
    fAsOK = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset matrix to zero, only the perspective scaling is set to w
+/// (1 by default).
+
 void TEveTrans::ZeroTrans(Double_t w)
 {
-   // Reset matrix to zero, only the perspective scaling is set to w
-   // (1 by default).
-
    memset(fM, 0, 16*sizeof(Double_t));
    fM[F33] = w;
    fA1 = fA2 = fA3 = 0;
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset rotation part of the matrix to unity.
+
 void TEveTrans::UnitRot()
 {
-   // Reset rotation part of the matrix to unity.
-
    memset(fM, 0, 12*sizeof(Double_t));
    fM[F00] = fM[F11] = fM[F22] = 1;
    fA1 = fA2 = fA3 = 0;
    fAsOK = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set matrix from another,
+
 void TEveTrans::SetTrans(const TEveTrans& t, Bool_t copyAngles)
 {
-   // Set matrix from another,
-
    memcpy(fM, t.fM, sizeof(fM));
    if (copyAngles && t.fAsOK) {
       fAsOK = kTRUE;
@@ -172,32 +172,32 @@ void TEveTrans::SetTrans(const TEveTrans& t, Bool_t copyAngles)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set matrix from Double_t array.
+
 void TEveTrans::SetFromArray(const Double_t arr[16])
 {
-   // Set matrix from Double_t array.
-
    for(Int_t i=0; i<16; ++i) fM[i] = arr[i];
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set matrix from Float_t array.
+
 void TEveTrans::SetFromArray(const Float_t arr[16])
 {
-   // Set matrix from Float_t array.
-
    for(Int_t i=0; i<16; ++i) fM[i] = arr[i];
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the matrix as an elementary rotation.
+/// Optimized versions of left/right multiplication with an elementary
+/// rotation matrix are implemented in RotatePF/RotateLF.
+/// Expects identity matrix.
+
 void TEveTrans::SetupRotation(Int_t i, Int_t j, Double_t f)
 {
-   // Setup the matrix as an elementary rotation.
-   // Optimized versions of left/right multiplication with an elementary
-   // rotation matrix are implemented in RotatePF/RotateLF.
-   // Expects identity matrix.
-
    if(i == j) return;
    TEveTrans& t = *this;
    t(i,i) = t(j,j) = TMath::Cos(f);
@@ -206,17 +206,17 @@ void TEveTrans::SetupRotation(Int_t i, Int_t j, Double_t f)
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A function for creating a rotation matrix that rotates a vector called
+/// "from" into another vector called "to".
+/// Input : from[3], to[3] which both must be *normalized* non-zero vectors
+/// Output: mtx[3][3] -- a 3x3 matrix in colum-major form
+/// Authors: Tomas Möller, John Hughes
+///          "Efficiently Building a Matrix to Rotate One Vector to Another"
+///          Journal of Graphics Tools, 4(4):1-4, 1999
+
 void TEveTrans::SetupFromToVec(const TEveVector& from, const TEveVector& to)
 {
-   // A function for creating a rotation matrix that rotates a vector called
-   // "from" into another vector called "to".
-   // Input : from[3], to[3] which both must be *normalized* non-zero vectors
-   // Output: mtx[3][3] -- a 3x3 matrix in colum-major form
-   // Authors: Tomas Möller, John Hughes
-   //          "Efficiently Building a Matrix to Rotate One Vector to Another"
-   //          Journal of Graphics Tools, 4(4):1-4, 1999
-
    static const float kFromToEpsilon = 0.000001f;
 
    ZeroTrans();
@@ -300,11 +300,11 @@ void TEveTrans::SetupFromToVec(const TEveVector& from, const TEveVector& to)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply from left: this = t * this.
+
 void TEveTrans::MultLeft(const TEveTrans& t)
 {
-   // Multiply from left: this = t * this.
-
    Double_t  buf[4];
    Double_t* col = fM;
    for(int c=0; c<4; ++c, col+=4) {
@@ -316,11 +316,11 @@ void TEveTrans::MultLeft(const TEveTrans& t)
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply from right: this = this * t.
+
 void TEveTrans::MultRight(const TEveTrans& t)
 {
-   // Multiply from right: this = this * t.
-
    Double_t  buf[4];
    Double_t* row = fM;
    for(int r=0; r<4; ++r, ++row) {
@@ -332,12 +332,12 @@ void TEveTrans::MultRight(const TEveTrans& t)
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy, multiply from right and return product.
+/// Avoid unless necessary.
+
 TEveTrans TEveTrans::operator*(const TEveTrans& t)
 {
-   // Copy, multiply from right and return product.
-   // Avoid unless necessary.
-
    TEveTrans b(*this);
    b.MultRight(t);
    return b;
@@ -345,11 +345,11 @@ TEveTrans TEveTrans::operator*(const TEveTrans& t)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transpose 3x3 rotation sub-matrix.
+
 void TEveTrans::TransposeRotationPart()
 {
-   // Transpose 3x3 rotation sub-matrix.
-
    Double_t x;
    x = fM[F01]; fM[F01] = fM[F10]; fM[F10] = x;
    x = fM[F02]; fM[F02] = fM[F20]; fM[F20] = x;
@@ -361,30 +361,30 @@ void TEveTrans::TransposeRotationPart()
 // Move & Rotate
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move in local-frame along axis with index ai.
+
 void TEveTrans::MoveLF(Int_t ai, Double_t amount)
 {
-   // Move in local-frame along axis with index ai.
-
    const Double_t *col = fM + 4*--ai;
    fM[F03] += amount*col[0]; fM[F13] += amount*col[1]; fM[F23] += amount*col[2];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General move in local-frame.
+
 void TEveTrans::Move3LF(Double_t x, Double_t y, Double_t z)
 {
-   // General move in local-frame.
-
    fM[F03] += x*fM[0] + y*fM[4] + z*fM[8];
    fM[F13] += x*fM[1] + y*fM[5] + z*fM[9];
    fM[F23] += x*fM[2] + y*fM[6] + z*fM[10];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate in local frame. Does optimised version of MultRight.
+
 void TEveTrans::RotateLF(Int_t i1, Int_t i2, Double_t amount)
 {
-   // Rotate in local frame. Does optimised version of MultRight.
-
    if(i1 == i2) return;
    // Algorithm: TEveTrans a; a.SetupRotation(i1, i2, amount); MultRight(a);
    // Optimized version:
@@ -402,29 +402,29 @@ void TEveTrans::RotateLF(Int_t i1, Int_t i2, Double_t amount)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move in parent-frame along axis index ai.
+
 void TEveTrans::MovePF(Int_t ai, Double_t amount)
 {
-   // Move in parent-frame along axis index ai.
-
    fM[F03 + --ai] += amount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General move in parent-frame.
+
 void TEveTrans::Move3PF(Double_t x, Double_t y, Double_t z)
 {
-   // General move in parent-frame.
-
    fM[F03] += x;
    fM[F13] += y;
    fM[F23] += z;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate in parent frame. Does optimised version of MultLeft.
+
 void TEveTrans::RotatePF(Int_t i1, Int_t i2, Double_t amount)
 {
-   // Rotate in parent frame. Does optimised version of MultLeft.
-
    if(i1 == i2) return;
    // Algorithm: TEveTrans a; a.SetupRotation(i1, i2, amount); MultLeft(a);
 
@@ -443,34 +443,34 @@ void TEveTrans::RotatePF(Int_t i1, Int_t i2, Double_t amount)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move in a's coord-system along axis-index ai.
+
 void TEveTrans::Move(const TEveTrans& a, Int_t ai, Double_t amount)
 {
-   // Move in a's coord-system along axis-index ai.
-
    const Double_t* vec = a.fM + 4*--ai;
    fM[F03] += amount*vec[0];
    fM[F13] += amount*vec[1];
    fM[F23] += amount*vec[2];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General move in a's coord-system.
+
 void TEveTrans::Move3(const TEveTrans& a, Double_t x, Double_t y, Double_t z)
 {
-   // General move in a's coord-system.
-
    const Double_t* m = a.fM;
    fM[F03] += x*m[F00] + y*m[F01] + z*m[F02];
    fM[F13] += x*m[F10] + y*m[F11] + z*m[F12];
    fM[F23] += x*m[F20] + y*m[F21] + z*m[F22];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate in a's coord-system, rotating base vector with index i1
+/// into i2.
+
 void TEveTrans::Rotate(const TEveTrans& a, Int_t i1, Int_t i2, Double_t amount)
 {
-   // Rotate in a's coord-system, rotating base vector with index i1
-   // into i2.
-
    if(i1 == i2) return;
    TEveTrans x(a);
    x.Invert();
@@ -484,31 +484,31 @@ void TEveTrans::Rotate(const TEveTrans& a, Int_t i1, Int_t i2, Double_t amount)
 // Base-vector interface
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set base-vector with index b.
+
 void TEveTrans::SetBaseVec(Int_t b, Double_t x, Double_t y, Double_t z)
 {
-   // Set base-vector with index b.
-
    Double_t* col = fM + 4*--b;
    col[0] = x; col[1] = y; col[2] = z;
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set base-vector with index b.
+
 void TEveTrans::SetBaseVec(Int_t b, const TVector3& v)
 {
-   // Set base-vector with index b.
-
    Double_t* col = fM + 4*--b;
    v.GetXYZ(col);
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get base-vector with index b.
+
 TVector3 TEveTrans::GetBaseVec(Int_t b) const
 {
-   // Get base-vector with index b.
-
    return TVector3(&fM[4*--b]);
 }
 
@@ -524,10 +524,11 @@ void TEveTrans::GetBaseVec(Int_t b, TVector3& v) const
 // Position interface
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position (base-vec 4).
+
 void TEveTrans::SetPos(Double_t x, Double_t y, Double_t z)
 {
-   // Set position (base-vec 4).
    fM[F03] = x; fM[F13] = y; fM[F23] = z;
 }
 
@@ -550,10 +551,11 @@ void TEveTrans::SetPos(const TEveTrans& t)
    fM[F03] = m[F03]; fM[F13] = m[F13]; fM[F23] = m[F23];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get position (base-vec 4).
+
 void TEveTrans::GetPos(Double_t& x, Double_t& y, Double_t& z) const
 {
-   // Get position (base-vec 4).
    x = fM[F03]; y = fM[F13]; z = fM[F23];
 }
 
@@ -615,18 +617,18 @@ void TEveTrans::SetRotByAngles(Float_t a1, Float_t a2, Float_t a3)
    fAsOK = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets Rotation part as given by angles a1, a1, a3 and pattern pat.
+/// Pattern consists of "XxYyZz" characters.
+/// eg: x means rotate about x axis, X means rotate in negative direction
+/// xYz -> R_x(a3) * R_y(-a2) * R_z(a1); (standard Gled representation)
+/// Note that angles and pattern elements have inversed order!
+///
+/// Implements Eulerian/Cardanian angles in a uniform way.
+
 void TEveTrans::SetRotByAnyAngles(Float_t a1, Float_t a2, Float_t a3,
                                   const char* pat)
 {
-   // Sets Rotation part as given by angles a1, a1, a3 and pattern pat.
-   // Pattern consists of "XxYyZz" characters.
-   // eg: x means rotate about x axis, X means rotate in negative direction
-   // xYz -> R_x(a3) * R_y(-a2) * R_z(a1); (standard Gled representation)
-   // Note that angles and pattern elements have inversed order!
-   //
-   // Implements Eulerian/Cardanian angles in a uniform way.
-
    int n = strspn(pat, "XxYyZz"); if(n > 3) n = 3;
    // Build Trans ... assign ...
    Float_t a[] = { a3, a2, a1 };
@@ -642,11 +644,11 @@ void TEveTrans::SetRotByAnyAngles(Float_t a1, Float_t a2, Float_t a3,
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Cardan rotation angles (pattern xYz above).
+
 void TEveTrans::GetRotAngles(Float_t* x) const
 {
-   // Get Cardan rotation angles (pattern xYz above).
-
    if(!fAsOK) {
       Double_t sx, sy, sz;
       GetScale(sx, sy, sz);
@@ -670,52 +672,52 @@ void TEveTrans::GetRotAngles(Float_t* x) const
 // Scaling
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scale matrix. Translation part untouched.
+
 void TEveTrans::Scale(Double_t sx, Double_t sy, Double_t sz)
 {
-   // Scale matrix. Translation part untouched.
-
    fM[F00] *= sx; fM[F10] *= sx; fM[F20] *= sx;
    fM[F01] *= sy; fM[F11] *= sy; fM[F21] *= sy;
    fM[F02] *= sz; fM[F12] *= sz; fM[F22] *= sz;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove scaling, make all base vectors of unit length.
+
 Double_t TEveTrans::Unscale()
 {
-   // Remove scaling, make all base vectors of unit length.
-
    Double_t sx, sy, sz;
    Unscale(sx, sy, sz);
    return (sx + sy + sz)/3;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove scaling, make all base vectors of unit length.
+
 void TEveTrans::Unscale(Double_t& sx, Double_t& sy, Double_t& sz)
 {
-   // Remove scaling, make all base vectors of unit length.
-
    GetScale(sx, sy, sz);
    fM[F00] /= sx; fM[F10] /= sx; fM[F20] /= sx;
    fM[F01] /= sy; fM[F11] /= sy; fM[F21] /= sy;
    fM[F02] /= sz; fM[F12] /= sz; fM[F22] /= sz;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deduce scales from sizes of base vectors.
+
 void TEveTrans::GetScale(Double_t& sx, Double_t& sy, Double_t& sz) const
 {
-   // Deduce scales from sizes of base vectors.
-
    sx = TMath::Sqrt( fM[F00]*fM[F00] + fM[F10]*fM[F10] + fM[F20]*fM[F20] );
    sy = TMath::Sqrt( fM[F01]*fM[F01] + fM[F11]*fM[F11] + fM[F21]*fM[F21] );
    sz = TMath::Sqrt( fM[F02]*fM[F02] + fM[F12]*fM[F12] + fM[F22]*fM[F22] );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set scaling.
+
 void TEveTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
 {
-   // Set scaling.
-
    sx /= TMath::Sqrt( fM[F00]*fM[F00] + fM[F10]*fM[F10] + fM[F20]*fM[F20] );
    sy /= TMath::Sqrt( fM[F01]*fM[F01] + fM[F11]*fM[F11] + fM[F21]*fM[F21] );
    sz /= TMath::Sqrt( fM[F02]*fM[F02] + fM[F12]*fM[F12] + fM[F22]*fM[F22] );
@@ -725,29 +727,29 @@ void TEveTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
    fM[F02] *= sz; fM[F12] *= sz; fM[F22] *= sz;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change x scaling.
+
 void TEveTrans::SetScaleX(Double_t sx)
 {
-   // Change x scaling.
-
    sx /= TMath::Sqrt( fM[F00]*fM[F00] + fM[F10]*fM[F10] + fM[F20]*fM[F20] );
    fM[F00] *= sx; fM[F10] *= sx; fM[F20] *= sx;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change y scaling.
+
 void TEveTrans::SetScaleY(Double_t sy)
 {
-   // Change y scaling.
-
    sy /= TMath::Sqrt( fM[F01]*fM[F01] + fM[F11]*fM[F11] + fM[F21]*fM[F21] );
    fM[F01] *= sy; fM[F11] *= sy; fM[F21] *= sy;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change z scaling.
+
 void TEveTrans::SetScaleZ(Double_t sz)
 {
-   // Change z scaling.
-
    sz /= TMath::Sqrt( fM[F02]*fM[F02] + fM[F12]*fM[F12] + fM[F22]*fM[F22] );
    fM[F02] *= sz; fM[F12] *= sz; fM[F22] *= sz;
 }
@@ -757,73 +759,73 @@ void TEveTrans::SetScaleZ(Double_t sz)
 // Operations on vectors
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply vector in-place.
+
 void TEveTrans::MultiplyIP(TVector3& v, Double_t w) const
 {
-   // Multiply vector in-place.
-
    v.SetXYZ(fM[F00]*v.x() + fM[F01]*v.y() + fM[F02]*v.z() + fM[F03]*w,
             fM[F10]*v.x() + fM[F11]*v.y() + fM[F12]*v.z() + fM[F13]*w,
             fM[F20]*v.x() + fM[F21]*v.y() + fM[F22]*v.z() + fM[F23]*w);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply vector in-place.
+
 void TEveTrans::MultiplyIP(Double_t* v, Double_t w) const
 {
-   // Multiply vector in-place.
-
    Double_t r[3] = { v[0], v[1], v[2] };
    v[0] = fM[F00]*r[0] + fM[F01]*r[1] + fM[F02]*r[2] + fM[F03]*w;
    v[1] = fM[F10]*r[0] + fM[F11]*r[1] + fM[F12]*r[2] + fM[F13]*w;
    v[2] = fM[F20]*r[0] + fM[F21]*r[1] + fM[F22]*r[2] + fM[F23]*w;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply vector in-place.
+
 void TEveTrans::MultiplyIP(Float_t* v, Double_t w) const
 {
-   // Multiply vector in-place.
-
    Double_t r[3] = { v[0], v[1], v[2] };
    v[0] = fM[F00]*r[0] + fM[F01]*r[1] + fM[F02]*r[2] + fM[F03]*w;
    v[1] = fM[F10]*r[0] + fM[F11]*r[1] + fM[F12]*r[2] + fM[F13]*w;
    v[2] = fM[F20]*r[0] + fM[F21]*r[1] + fM[F22]*r[2] + fM[F23]*w;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply vector and return it.
+
 TVector3 TEveTrans::Multiply(const TVector3& v, Double_t w) const
 {
-   // Multiply vector and return it.
-
    return TVector3(fM[F00]*v.x() + fM[F01]*v.y() + fM[F02]*v.z() + fM[F03]*w,
                    fM[F10]*v.x() + fM[F11]*v.y() + fM[F12]*v.z() + fM[F13]*w,
                    fM[F20]*v.x() + fM[F21]*v.y() + fM[F22]*v.z() + fM[F23]*w);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply vector and fill output array vout.
+
 void TEveTrans::Multiply(const Double_t *vin, Double_t* vout, Double_t w) const
 {
-   // Multiply vector and fill output array vout.
-
    vout[0] = fM[F00]*vin[0] + fM[F01]*vin[1] + fM[F02]*vin[2] + fM[F03]*w;
    vout[1] = fM[F10]*vin[0] + fM[F11]*vin[1] + fM[F12]*vin[1] + fM[F13]*w;
    vout[2] = fM[F20]*vin[0] + fM[F21]*vin[1] + fM[F22]*vin[1] + fM[F23]*w;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate vector in-place. Translation is NOT applied.
+
 void TEveTrans::RotateIP(TVector3& v) const
 {
-   // Rotate vector in-place. Translation is NOT applied.
-
    v.SetXYZ(fM[F00]*v.x() + fM[F01]*v.y() + fM[F02]*v.z(),
             fM[F10]*v.x() + fM[F11]*v.y() + fM[F12]*v.z(),
             fM[F20]*v.x() + fM[F21]*v.y() + fM[F22]*v.z());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate vector in-place. Translation is NOT applied.
+
 void TEveTrans::RotateIP(Double_t* v) const
 {
-   // Rotate vector in-place. Translation is NOT applied.
-
    Double_t t[3] = { v[0], v[1], v[2] };
 
    v[0] = fM[F00]*t[0] + fM[F01]*t[1] + fM[F02]*t[2];
@@ -831,11 +833,11 @@ void TEveTrans::RotateIP(Double_t* v) const
    v[2] = fM[F20]*t[0] + fM[F21]*t[1] + fM[F22]*t[2];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate vector in-place. Translation is NOT applied.
+
 void TEveTrans::RotateIP(Float_t* v) const
 {
-   // Rotate vector in-place. Translation is NOT applied.
-
    Double_t t[3] = { v[0], v[1], v[2] };
 
    v[0] = fM[F00]*t[0] + fM[F01]*t[1] + fM[F02]*t[2];
@@ -843,11 +845,11 @@ void TEveTrans::RotateIP(Float_t* v) const
    v[2] = fM[F20]*t[0] + fM[F21]*t[1] + fM[F22]*t[2];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate vector and return the rotated vector. Translation is NOT applied.
+
 TVector3 TEveTrans::Rotate(const TVector3& v) const
 {
-   // Rotate vector and return the rotated vector. Translation is NOT applied.
-
    return TVector3(fM[F00]*v.x() + fM[F01]*v.y() + fM[F02]*v.z(),
                    fM[F10]*v.x() + fM[F11]*v.y() + fM[F12]*v.z(),
                    fM[F20]*v.x() + fM[F21]*v.y() + fM[F22]*v.z());
@@ -857,22 +859,22 @@ TVector3 TEveTrans::Rotate(const TVector3& v) const
 // Normalization, ortogonalization
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Norm 3-vector in column col.
+
 Double_t TEveTrans::Norm3Column(Int_t col)
 {
-   // Norm 3-vector in column col.
-
    Double_t* c = fM + 4*--col;
    const Double_t  l = TMath::Sqrt(c[0]*c[0] + c[1]*c[1] + c[2]*c[2]);
    c[0] /= l; c[1] /= l; c[2] /= l;
    return l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Orto-norm 3-vector in column col with respect to column ref.
+
 Double_t TEveTrans::Orto3Column(Int_t col, Int_t ref)
 {
-   // Orto-norm 3-vector in column col with respect to column ref.
-
    Double_t* c =  fM + 4*--col;
    Double_t* rc = fM + 4*--ref;
    const Double_t dp = c[0]*rc[0] + c[1]*rc[1] + c[2]*rc[2];
@@ -880,11 +882,11 @@ Double_t TEveTrans::Orto3Column(Int_t col, Int_t ref)
    return dp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Orto-norm columns 1 to 3.
+
 void TEveTrans::OrtoNorm3()
 {
-   // Orto-norm columns 1 to 3.
-
    Norm3Column(1);
    Orto3Column(2,1); Norm3Column(2);
    fM[F02] = fM[F10]*fM[F21] - fM[F11]*fM[F20];
@@ -898,12 +900,12 @@ void TEveTrans::OrtoNorm3()
 // Inversion
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invert matrix.
+/// Copied from ROOT's TMatrixFCramerInv.
+
 Double_t TEveTrans::Invert()
 {
-   // Invert matrix.
-   // Copied from ROOT's TMatrixFCramerInv.
-
    static const TEveException eh("TEveTrans::Invert ");
 
    // Find all NECESSARY 2x2 dets:  (18 of them)
@@ -981,11 +983,11 @@ Double_t TEveTrans::Invert()
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TEveTrans.
+
 void TEveTrans::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TEveTrans.
-
    if (R__b.IsReading()) {
       TEveTrans::Class()->ReadBuffer(R__b, this);
       fAsOK = kFALSE;
@@ -997,11 +999,11 @@ void TEveTrans::Streamer(TBuffer &R__b)
 /******************************************************************************/
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print in reasonable format.
+
 void TEveTrans::Print(Option_t* /*option*/) const
 {
-   // Print in reasonable format.
-
    const Double_t* row = fM;
    for(Int_t i=0; i<4; ++i, ++row)
       printf("%8.3f %8.3f %8.3f | %8.3f\n", row[0], row[4], row[8], row[12]);
@@ -1009,11 +1011,11 @@ void TEveTrans::Print(Option_t* /*option*/) const
 
 #include <iomanip>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print to std::ostream.
+
 std::ostream& operator<<(std::ostream& s, const TEveTrans& t)
 {
-   // Print to std::ostream.
-
    s.setf(std::ios::fixed, std::ios::floatfield);
    s.precision(3);
    for(Int_t i=1; i<=4; i++)
@@ -1038,11 +1040,11 @@ void TEveTrans::SetFrom(Double_t* carr)
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize from TGeoMatrix.
+
 void TEveTrans::SetFrom(const TGeoMatrix& mat)
 {
-   // Initialize from TGeoMatrix.
-
    fUseTrans = kTRUE;
    const Double_t *r = mat.GetRotationMatrix();
    const Double_t *t = mat.GetTranslation();
@@ -1065,11 +1067,11 @@ void TEveTrans::SetFrom(const TGeoMatrix& mat)
    fAsOK = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set TGeoHMatrix mat.
+
 void TEveTrans::SetGeoHMatrix(TGeoHMatrix& mat)
 {
-   // Set TGeoHMatrix mat.
-
    Double_t *r = mat.GetRotationMatrix();
    Double_t *t = mat.GetTranslation();
    Double_t *s = mat.GetScale();
@@ -1094,11 +1096,11 @@ void TEveTrans::SetGeoHMatrix(TGeoHMatrix& mat)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill transformation part TBuffer3D core section.
+
 void TEveTrans::SetBuffer3D(TBuffer3D& buff)
 {
-   // Fill transformation part TBuffer3D core section.
-
    buff.fLocalFrame = fUseTrans;
    if (fUseTrans) {
       // In phys-shape ctor the rotation part is transposed, due to
@@ -1114,16 +1116,16 @@ void TEveTrans::SetBuffer3D(TBuffer3D& buff)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test if the transformation is a scale.
+/// To be used by ROOT TGLObject descendants that potentially need to
+/// use GL_NORMALIZE.
+/// The low/high limits are expected to be squares of acutal limits.
+///
+/// Ideally this should be done by the TGLViewer [but is not].
+
 Bool_t TEveTrans::IsScale(Double_t low, Double_t high) const
 {
-   // Test if the transformation is a scale.
-   // To be used by ROOT TGLObject descendants that potentially need to
-   // use GL_NORMALIZE.
-   // The low/high limits are expected to be squares of acutal limits.
-   //
-   // Ideally this should be done by the TGLViewer [but is not].
-
    if (!fUseTrans) return kFALSE;
    Double_t s;
    s = fM[F00]*fM[F00] + fM[F10]*fM[F10] + fM[F20]*fM[F20];

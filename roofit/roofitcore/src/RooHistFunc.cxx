@@ -42,7 +42,9 @@ ClassImp(RooHistFunc)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooHistFunc::RooHistFunc() :
   _dataHist(0),
   _intOrder(0),
@@ -50,7 +52,6 @@ RooHistFunc::RooHistFunc() :
   _totVolume(0),
   _unitNorm(kFALSE)
 {
-  // Default constructor
   TRACE_CREATE 
 
   _histObsIter = _histObsList.createIterator() ;
@@ -58,7 +59,13 @@ RooHistFunc::RooHistFunc() :
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a RooDataHist. The variable listed in 'vars' control the dimensionality of the
+/// function. Any additional dimensions present in 'dhist' will be projected out. RooDataHist dimensions
+/// can be either real or discrete. See RooDataHist::RooDataHist for details on the binning.
+/// RooHistFunc neither owns or clone 'dhist' and the user must ensure the input histogram exists
+/// for the entire life span of this function.
+
 RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& vars, 
 		       const RooDataHist& dhist, Int_t intOrder) :
   RooAbsReal(name,title), 
@@ -70,12 +77,6 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   _totVolume(0),
   _unitNorm(kFALSE)
 {
-  // Constructor from a RooDataHist. The variable listed in 'vars' control the dimensionality of the
-  // function. Any additional dimensions present in 'dhist' will be projected out. RooDataHist dimensions
-  // can be either real or discrete. See RooDataHist::RooDataHist for details on the binning.
-  // RooHistFunc neither owns or clone 'dhist' and the user must ensure the input histogram exists
-  // for the entire life span of this function.
-
   _histObsList.addClone(vars) ;
   _depList.add(vars) ;
 
@@ -104,7 +105,13 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a RooDataHist. The variable listed in 'vars' control the dimensionality of the
+/// function. Any additional dimensions present in 'dhist' will be projected out. RooDataHist dimensions
+/// can be either real or discrete. See RooDataHist::RooDataHist for details on the binning.
+/// RooHistFunc neither owns or clone 'dhist' and the user must ensure the input histogram exists
+/// for the entire life span of this function.
+
 RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& funcObs, const RooArgList& histObs, 
   		       const RooDataHist& dhist, Int_t intOrder) :
   RooAbsReal(name,title), 
@@ -116,12 +123,6 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   _totVolume(0),
   _unitNorm(kFALSE)
 {
-  // Constructor from a RooDataHist. The variable listed in 'vars' control the dimensionality of the
-  // function. Any additional dimensions present in 'dhist' will be projected out. RooDataHist dimensions
-  // can be either real or discrete. See RooDataHist::RooDataHist for details on the binning.
-  // RooHistFunc neither owns or clone 'dhist' and the user must ensure the input histogram exists
-  // for the entire life span of this function.
-
   _histObsList.addClone(histObs) ;
   _depList.add(funcObs) ;
 
@@ -150,7 +151,9 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   RooAbsReal(other,name), 
   _depList("depList",this,other._depList),
@@ -161,7 +164,6 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   _totVolume(other._totVolume),
   _unitNorm(other._unitNorm)
 {
-  // Copy constructor
   TRACE_CREATE 
 
   _histObsList.addClone(other._histObsList) ;
@@ -172,7 +174,8 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooHistFunc::~RooHistFunc() 
 { 
   TRACE_DESTROY 
@@ -184,13 +187,13 @@ RooHistFunc::~RooHistFunc()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current value: The value of the bin enclosing the current coordinates
+/// of the dependents, normalized by the histograms contents. Interpolation
+/// is applied if the RooHistFunc is configured to do that
+
 Double_t RooHistFunc::evaluate() const
 {
-  // Return the current value: The value of the bin enclosing the current coordinates
-  // of the dependents, normalized by the histograms contents. Interpolation
-  // is applied if the RooHistFunc is configured to do that
-
   // Transfer values from   
   if (_depList.getSize()>0) {
     _histObsIter->Reset() ;
@@ -212,10 +215,11 @@ Double_t RooHistFunc::evaluate() const
   return ret ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Only handle case of maximum in all variables
+
 Int_t RooHistFunc::getMaxVal(const RooArgSet& vars) const 
 {
-  // Only handle case of maximum in all variables
   RooAbsCollection* common = _depList.selectCommon(vars) ;
   if (common->getSize()==_depList.getSize()) {
     delete common ;
@@ -225,7 +229,8 @@ Int_t RooHistFunc::getMaxVal(const RooArgSet& vars) const
   return 0 ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooHistFunc::maxVal(Int_t code) const 
 {
   R__ASSERT(code==1) ;
@@ -240,11 +245,11 @@ Double_t RooHistFunc::maxVal(Int_t code) const
   return max*1.05 ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the total volume spanned by the observables of the RooDataHist
+
 Double_t RooHistFunc::totVolume() const
 {
-  // Return the total volume spanned by the observables of the RooDataHist
-
   // Return previously calculated value, if any
   if (_totVolume>0) {
     return _totVolume ;
@@ -269,15 +274,15 @@ Double_t RooHistFunc::totVolume() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine integration scenario. If no interpolation is used,
+/// RooHistFunc can perform all integrals over its dependents
+/// analytically via partial or complete summation of the input
+/// histogram. If interpolation is used, only the integral
+/// over all RooHistPdf observables is implemented.
+
 Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
-  // Determine integration scenario. If no interpolation is used,
-  // RooHistFunc can perform all integrals over its dependents
-  // analytically via partial or complete summation of the input
-  // histogram. If interpolation is used, only the integral
-  // over all RooHistPdf observables is implemented.
-
 
   // Only analytical integrals over the full range are defined
   if (rangeName!=0) {
@@ -322,13 +327,13 @@ Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return integral identified by 'code'. The actual integration
+/// is deferred to RooDataHist::sum() which implements partial
+/// or complete summation over the histograms contents
+
 Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
-  // Return integral identified by 'code'. The actual integration
-  // is deferred to RooDataHist::sum() which implements partial
-  // or complete summation over the histograms contents
-
   // WVE needs adaptation for rangeName feature
 
   // Simplest scenario, integration over all dependents
@@ -371,13 +376,13 @@ Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* /*rangeName*/) 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return sampling hint for making curves of (projections) of this function
+/// as the recursive division strategy of RooCurve cannot deal efficiently
+/// with the vertical lines that occur in a non-interpolated histogram
+
 list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  // Return sampling hint for making curves of (projections) of this function
-  // as the recursive division strategy of RooCurve cannot deal efficiently
-  // with the vertical lines that occur in a non-interpolated histogram
-
   // No hints are required when interpolation is used
   if (_intOrder>1) {
     return 0 ;
@@ -430,13 +435,13 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return sampling hint for making curves of (projections) of this function
+/// as the recursive division strategy of RooCurve cannot deal efficiently
+/// with the vertical lines that occur in a non-interpolated histogram
+
 std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
 {
-  // Return sampling hint for making curves of (projections) of this function
-  // as the recursive division strategy of RooCurve cannot deal efficiently
-  // with the vertical lines that occur in a non-interpolated histogram
-
   // No hints are required when interpolation is used
   if (_intOrder>1) {
     return 0 ;
@@ -527,10 +532,11 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if our datahist is already in the workspace
+
 Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws) 
 {  
-  // Check if our datahist is already in the workspace
   std::list<RooAbsData*> allData = ws.allEmbeddedData() ;
   std::list<RooAbsData*>::const_iterator iter ;
   for (iter = allData.begin() ; iter != allData.end() ; ++iter) {
@@ -589,7 +595,8 @@ Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooHistFunc::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) 
 {
   if (fabs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return kFALSE ;
@@ -605,11 +612,11 @@ Bool_t RooHistFunc::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class RooHistFunc.
+
 void RooHistFunc::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class RooHistFunc.
-
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(RooHistFunc::Class(),this);
       // WVE - interim solution - fix proxies here
@@ -621,13 +628,13 @@ void RooHistFunc::Streamer(TBuffer &R__b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Schema evolution: if histObsList wasn't filled from persistence (v1)
+/// then fill it here. Can't be done in regular schema evolution in LinkDef
+/// as _depList content is not guaranteed to be initialized there
+
 void RooHistFunc::ioStreamerPass2() 
 {
-  // Schema evolution: if histObsList wasn't filled from persistence (v1)
-  // then fill it here. Can't be done in regular schema evolution in LinkDef
-  // as _depList content is not guaranteed to be initialized there
-
   if (_histObsList.getSize()==0) {
     _histObsList.addClone(_depList) ;
   }

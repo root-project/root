@@ -47,29 +47,32 @@
 
 ClassImp(TGLFont);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLFont::TGLFont():
    fFont(0), fManager(0), fDepth(0),
    fSize(0), fFile(0), fMode(kUndef),
    fTrashCount(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLFont::TGLFont(Int_t size, Int_t font, EMode mode, FTFont* f, TGLFontManager* mng):
    fFont(f), fManager(mng), fDepth(0),
    fSize(size), fFile(font), fMode(mode),
    fTrashCount(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TGLFont::TGLFont(const TGLFont &o):
    fFont(0), fManager(0), fDepth(0), fTrashCount(0)
 {
-   // Assignment operator.
    fFont = (FTFont*)o.GetFont();
 
    fSize  = o.fSize;
@@ -79,18 +82,19 @@ TGLFont::TGLFont(const TGLFont &o):
    fTrashCount = o.fTrashCount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destructor
+
 TGLFont::~TGLFont()
 {
-   //Destructor
-
    if (fManager) fManager->ReleaseFont(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 void TGLFont::CopyAttributes(const TGLFont &o)
 {
-   // Assignment operator.
    SetFont(o.fFont);
    SetManager(o.fManager);
 
@@ -106,38 +110,38 @@ void TGLFont::CopyAttributes(const TGLFont &o)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get font's ascent.
+
 Float_t TGLFont::GetAscent() const
 {
-   // Get font's ascent.
-
    return fFont->Ascender();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get font's descent. The returned value is positive.
+
 Float_t TGLFont::GetDescent() const
 {
-   // Get font's descent. The returned value is positive.
-
    return -fFont->Descender();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get font's line-height.
+
 Float_t TGLFont::GetLineHeight() const
 {
-   // Get font's line-height.
-
    return fFont->LineHeight();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Measure font's base-line parameters from the passed text.
+/// Note that the measured parameters are not the same as the ones
+/// returned by get-functions - those were set by the font designer.
+
 void TGLFont::MeasureBaseLineParams(Float_t& ascent, Float_t& descent, Float_t& line_height,
                                     const char* txt) const
 {
-   // Measure font's base-line parameters from the passed text.
-   // Note that the measured parameters are not the same as the ones
-   // returned by get-functions - those were set by the font designer.
-
    Float_t dum, lly, ury;
    const_cast<FTFont*>(fFont)->BBox(txt, dum, lly, dum, dum, ury, dum);
    ascent      =  ury;
@@ -145,34 +149,35 @@ void TGLFont::MeasureBaseLineParams(Float_t& ascent, Float_t& descent, Float_t& 
    line_height =  ury - lly;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get bounding box.
+
 void TGLFont::BBox(const char* txt,
                    Float_t& llx, Float_t& lly, Float_t& llz,
                    Float_t& urx, Float_t& ury, Float_t& urz) const
 {
-   // Get bounding box.
-
    // FTGL is not const correct.
    const_cast<FTFont*>(fFont)->BBox(txt, llx, lly, llz, urx, ury, urz);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get bounding box.
+
 void TGLFont::BBox(const wchar_t* txt,
                    Float_t& llx, Float_t& lly, Float_t& llz,
                    Float_t& urx, Float_t& ury, Float_t& urz) const
 {
-   // Get bounding box.
-
    // FTGL is not const correct.
    const_cast<FTFont*>(fFont)->BBox(txt, llx, lly, llz, urx, ury, urz);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///mgn is simply ignored, because ROOT's TVirtualX TGX11 are complete mess with
+///painting attributes.
+
 template<class Char>
 void TGLFont::RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t angle, Double_t /*mgn*/) const
 {
-   //mgn is simply ignored, because ROOT's TVirtualX TGX11 are complete mess with
-   //painting attributes.
    glPushMatrix();
    //glLoadIdentity();
 
@@ -267,23 +272,25 @@ void TGLFont::RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t ang
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLFont::Render(const wchar_t* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const
 {
    RenderHelper(txt, x, y, angle, mgn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLFont::Render(const char* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const
 {
    RenderHelper(txt, x, y, angle, mgn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render text.
+
 void TGLFont::Render(const TString &txt) const
 {
-   // Render text.
-
    Bool_t scaleDepth = (fMode == kExtrude && fDepth != 1.0f);
 
    if (scaleDepth) {
@@ -301,12 +308,12 @@ void TGLFont::Render(const TString &txt) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render text with given alignmentrepl and at given position.
+
 void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
              ETextAlignH_e alignH, ETextAlignV_e alignV) const
 {
-   // Render text with given alignmentrepl and at given position.
-
    glPushMatrix();
 
    glTranslatef(x, y, z);
@@ -353,11 +360,11 @@ void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set-up GL state before FTFont rendering.
+
 void TGLFont::PreRender(Bool_t autoLight, Bool_t lightOn) const
 {
-   // Set-up GL state before FTFont rendering.
-
    switch (fMode)
    {
       case kBitmap:
@@ -394,11 +401,11 @@ void TGLFont::PreRender(Bool_t autoLight, Bool_t lightOn) const
       glDisable(GL_LIGHTING);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset GL state after FTFont rendering.
+
 void TGLFont::PostRender() const
 {
-   // Reset GL state after FTFont rendering.
-
    glPopAttrib();
 }
 
@@ -417,11 +424,11 @@ Int_t TGLFontManager::fgExtendedFontStart;
 TGLFontManager::FontSizeVec_t TGLFontManager::fgFontSizeArray;
 Bool_t  TGLFontManager::fgStaticInitDone = kFALSE;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLFontManager::~TGLFontManager()
 {
-   // Destructor.
-
    FontMap_i it = fFontMap.begin();
    while (it != fFontMap.end()) {
       delete it->first.GetFont();
@@ -430,11 +437,11 @@ TGLFontManager::~TGLFontManager()
    fFontMap.clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provide font with given size, file and FTGL class.
+
 void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mode, TGLFont &out)
 {
-   // Provide font with given size, file and FTGL class.
-
    if (fgStaticInitDone == kFALSE) InitStatics();
 
    Int_t  size = GetFontSize(sizeIn);
@@ -502,11 +509,11 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
    out.SetManager(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get mapping from ttf id to font names. Table taken from TTF.cxx.
+
 void TGLFontManager::RegisterFont(Int_t size, const char* name, TGLFont::EMode mode, TGLFont &out)
 {
-   // Get mapping from ttf id to font names. Table taken from TTF.cxx.
-
    TObjArray* farr = GetFontFileArray();
    TIter next(farr);
    TObjString* os;
@@ -524,12 +531,12 @@ void TGLFontManager::RegisterFont(Int_t size, const char* name, TGLFont::EMode m
       Error("TGLFontManager::RegisterFont", "unknown font name %s", name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release font with given attributes. Returns false if font has
+/// not been found in the managers font set.
+
 void TGLFontManager::ReleaseFont(TGLFont& font)
 {
-   // Release font with given attributes. Returns false if font has
-   // not been found in the managers font set.
-
    FontMap_i it = fFontMap.find(font);
 
    if (it != fFontMap.end())
@@ -544,25 +551,26 @@ void TGLFontManager::ReleaseFont(TGLFont& font)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get id to file name map.
+
 TObjArray* TGLFontManager::GetFontFileArray()
 {
-   // Get id to file name map.
-
    if (fgStaticInitDone == kFALSE) InitStatics();
    return &fgFontFileArray;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get valid font size vector.
+
 TGLFontManager::FontSizeVec_t* TGLFontManager::GetFontSizeArray()
 {
-   // Get valid font size vector.
-
    if (fgStaticInitDone == kFALSE) InitStatics();
    return &fgFontSizeArray;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TGLFontManager::GetExtendedFontStartIndex()
 {
    if (fgStaticInitDone == kFALSE) InitStatics();
@@ -572,11 +580,11 @@ Int_t TGLFontManager::GetExtendedFontStartIndex()
    return fgExtendedFontStart;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get availabe font size.
+
 Int_t TGLFontManager::GetFontSize(Int_t ds)
 {
-   // Get availabe font size.
-
    if (fgStaticInitDone == kFALSE) InitStatics();
 
    Int_t idx = TMath::BinarySearch(fgFontSizeArray.size(), &fgFontSizeArray[0],
@@ -586,20 +594,21 @@ Int_t TGLFontManager::GetFontSize(Int_t ds)
    return fgFontSizeArray[idx];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get availabe font size.
+
 Int_t TGLFontManager::GetFontSize(Int_t ds, Int_t min, Int_t max)
 {
-   // Get availabe font size.
-
    if (ds < min) ds = min;
    if (ds > max) ds = max;
    return GetFontSize(ds);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get font name from TAttAxis font id.
+
 const char* TGLFontManager::GetFontNameFromId(Int_t id)
 {
-   // Get font name from TAttAxis font id.
    if (fgStaticInitDone == kFALSE) InitStatics();
 
    Int_t fontIndex = id / 10;
@@ -613,10 +622,11 @@ const char* TGLFontManager::GetFontNameFromId(Int_t id)
    return os->String().Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list of available font files and allowed font sizes.
+
 void TGLFontManager::InitStatics()
 {
-   // Create a list of available font files and allowed font sizes.
    fgFontFileArray.Add(new TObjString("timesi"));   //  10
    fgFontFileArray.Add(new TObjString("timesbd"));  //  20
    fgFontFileArray.Add(new TObjString("timesbi"));  //  30
@@ -688,11 +698,11 @@ void TGLFontManager::InitStatics()
    fgStaticInitDone = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete FTFFont objects registered for destruction.
+
 void TGLFontManager::ClearFontTrash()
 {
-   // Delete FTFFont objects registered for destruction.
-
    FontList_i it = fFontTrash.begin();
    while (it != fFontTrash.end())
    {

@@ -35,11 +35,11 @@ TGLLightSet::TGLLightSet() :
    // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Toggle light on/off.
+
 void TGLLightSet::ToggleLight(ELight light)
 {
-   // Toggle light on/off.
-
    if (light == kLightSpecular) {
       fUseSpecular = !fUseSpecular;
    } else if (light >= kLightMask) {
@@ -50,11 +50,11 @@ void TGLLightSet::ToggleLight(ELight light)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a light on/off.
+
 void TGLLightSet::SetLight(ELight light, Bool_t on)
 {
-   // Set a light on/off.
-
    if (light == kLightSpecular) {
       fUseSpecular = on;
    } else if (light >= kLightMask) {
@@ -69,14 +69,14 @@ void TGLLightSet::SetLight(ELight light, Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup lights for current given bounding box and camera.
+/// This is called by standard GL viewer.
+/// Expects matrix-mode to be model-view.
+
 void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
                                  const TGLCamera     & camera, Bool_t debug)
 {
-   // Setup lights for current given bounding box and camera.
-   // This is called by standard GL viewer.
-   // Expects matrix-mode to be model-view.
-
    glPushMatrix();
 
    if (!bbox.IsEmpty())

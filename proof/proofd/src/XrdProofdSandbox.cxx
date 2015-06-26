@@ -31,21 +31,22 @@ int          XrdProofdSandbox::fgMaxOldSessions = 10;
 XrdOucString XrdProofdSandbox::fgWorkdir = "";
 XrdProofUI   XrdProofdSandbox::fgUI;
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assert existence on the sandbox for the user defined by 'ui'.
+/// The sandbox is created under fgWorkdir or $HOME/proof; the boolean
+/// 'full' controls the set of directories to be asserted: the sub-set
+/// {cache, packages, .creds} is always asserted; if full is true also
+/// the sub-dirs {queries, datasets} are asserted.
+/// If 'changeown' is true the sandbox ownership is set to 'ui'; this
+/// requires su-privileges.
+/// The constructor also builds the list of sessions directories in the
+/// sandbox; directories corresponding to terminated sessions are
+/// removed if the total number of session directories is larger than
+/// fgMaxOldSessions .
+
 XrdProofdSandbox::XrdProofdSandbox(XrdProofUI ui, bool full, bool changeown)
                 : fChangeOwn(changeown), fUI(ui)
 {
-   // Assert existence on the sandbox for the user defined by 'ui'.
-   // The sandbox is created under fgWorkdir or $HOME/proof; the boolean
-   // 'full' controls the set of directories to be asserted: the sub-set
-   // {cache, packages, .creds} is always asserted; if full is true also
-   // the sub-dirs {queries, datasets} are asserted.
-   // If 'changeown' is true the sandbox ownership is set to 'ui'; this
-   // requires su-privileges.
-   // The constructor also builds the list of sessions directories in the
-   // sandbox; directories corresponding to terminated sessions are
-   // removed if the total number of session directories is larger than
-   // fgMaxOldSessions .
    XPDLOC(CMGR, "XrdProofdSandbox")
 
    fValid = 0;
@@ -146,11 +147,11 @@ XrdProofdSandbox::XrdProofdSandbox(XrdProofUI ui, bool full, bool changeown)
    TrimSessionDirs();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare times from session tag strings
+
 bool XpdSessionTagComp(XrdOucString *&lhs, XrdOucString *&rhs)
 {
-   // Compare times from session tag strings
-
    if (!lhs || !rhs)
       return 1;
 
@@ -172,13 +173,13 @@ bool XpdSessionTagComp(XrdOucString *&lhs, XrdOucString *&rhs)
 
 #if defined(__sun)
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort ascendingly the list.
+/// Function used on Solaris where std::list::sort() does not support an
+/// alternative comparison algorithm.
+
 static void Sort(std::list<XrdOucString *> *lst)
 {
-   // Sort ascendingly the list.
-   // Function used on Solaris where std::list::sort() does not support an
-   // alternative comparison algorithm.
-
    // Check argument
    if (!lst)
       return;
@@ -234,22 +235,23 @@ static void Sort(std::list<XrdOucString *> *lst)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan the sandbox for sessions working dirs and return their
+/// sorted (according to creation time, first is the newest) list
+/// in 'sdirs'.
+/// The option 'opt' may have 3 values:
+///    0        all working dirs are kept
+///    1        active sessions only
+///    2        terminated sessions only
+///    3        search entry containing 'tag' and fill tag with
+///             the full entry name; if defined, sdirs is filled
+/// Returns -1 otherwise in case of failure.
+/// In case of success returns 0 for opt < 3, 1 if found or 0 if not
+/// found for opt == 3.
+
 int XrdProofdSandbox::GetSessionDirs(int opt, std::list<XrdOucString *> *sdirs,
                                      XrdOucString *tag)
 {
-   // Scan the sandbox for sessions working dirs and return their
-   // sorted (according to creation time, first is the newest) list
-   // in 'sdirs'.
-   // The option 'opt' may have 3 values:
-   //    0        all working dirs are kept
-   //    1        active sessions only
-   //    2        terminated sessions only
-   //    3        search entry containing 'tag' and fill tag with
-   //             the full entry name; if defined, sdirs is filled
-   // Returns -1 otherwise in case of failure.
-   // In case of success returns 0 for opt < 3, 1 if found or 0 if not
-   // found for opt == 3.
    XPDLOC(CMGR, "Sandbox::GetSessionDirs")
 
    // If unknown take all
@@ -314,12 +316,13 @@ int XrdProofdSandbox::GetSessionDirs(int opt, std::list<XrdOucString *> *sdirs,
    return ((opt == 3 && found) ? 1 : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Record entry for new proofserv session tagged 'tag' in the active
+/// sessions file (<SandBox>/.sessions). The file is created if needed.
+/// Return 0 on success, -1 on error.
+
 int XrdProofdSandbox::AddSession(const char *tag)
 {
-   // Record entry for new proofserv session tagged 'tag' in the active
-   // sessions file (<SandBox>/.sessions). The file is created if needed.
-   // Return 0 on success, -1 on error.
    XPDLOC(CMGR, "Sandbox::AddSession")
 
    // Check inputs
@@ -389,13 +392,14 @@ int XrdProofdSandbox::AddSession(const char *tag)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Guess session tag completing 'tag' (typically "-<pid>") by scanning the
+/// active session file or the session dir.
+/// In case of success, tag is filled with the full tag and 0 is returned.
+/// In case of failure, -1 is returned.
+
 int XrdProofdSandbox::GuessTag(XrdOucString &tag, int ridx)
 {
-   // Guess session tag completing 'tag' (typically "-<pid>") by scanning the
-   // active session file or the session dir.
-   // In case of success, tag is filled with the full tag and 0 is returned.
-   // In case of failure, -1 is returned.
    XPDLOC(CMGR, "Sandbox::GuessTag")
 
    TRACE(DBG, "tag: "<<tag);
@@ -495,13 +499,14 @@ int XrdProofdSandbox::GuessTag(XrdOucString &tag, int ridx)
    return ((found) ? 0 : -1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move record for tag from the active sessions file to the old
+/// sessions file (<SandBox>/.sessions). The active file is removed if
+/// empty after the operation. The old sessions file is created if needed.
+/// Return 0 on success, -1 on error.
+
 int XrdProofdSandbox::RemoveSession(const char *tag)
 {
-   // Move record for tag from the active sessions file to the old
-   // sessions file (<SandBox>/.sessions). The active file is removed if
-   // empty after the operation. The old sessions file is created if needed.
-   // Return 0 on success, -1 on error.
    XPDLOC(CMGR, "Sandbox::RemoveSession")
 
    char ln[1024];
@@ -602,14 +607,15 @@ int XrdProofdSandbox::RemoveSession(const char *tag)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the static fgMaxOldLogs > 0, logs for a fgMaxOldLogs number of sessions
+/// are kept in the sandbox; working dirs for sessions in excess are removed.
+/// By default logs for the last 10 sessions are kept; the limit can be changed
+/// via the static method XrdProofdClient::SetMaxOldLogs.
+/// Return 0 on success, -1 on error.
+
 int XrdProofdSandbox::TrimSessionDirs()
 {
-   // If the static fgMaxOldLogs > 0, logs for a fgMaxOldLogs number of sessions
-   // are kept in the sandbox; working dirs for sessions in excess are removed.
-   // By default logs for the last 10 sessions are kept; the limit can be changed
-   // via the static method XrdProofdClient::SetMaxOldLogs.
-   // Return 0 on success, -1 on error.
    XPDLOC(CMGR, "Sandbox::TrimSessionDirs")
 
    TRACE(DBG, "maxold:"<<fgMaxOldSessions);

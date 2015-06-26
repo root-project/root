@@ -37,10 +37,11 @@ ClassImp(TGeoNodeCache)
  *
  *************************************************************************/
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy constructor
+
 TGeoNodeCache::TGeoNodeCache()
 {
-// Dummy constructor
    fGeoCacheMaxLevels    = 100;
    fGeoCacheStackSize    = 10;
    fGeoInfoStackSize     = 100;
@@ -63,10 +64,11 @@ TGeoNodeCache::TGeoNodeCache()
    for (Int_t i=0; i<100; i++) fIdBranch[i] = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
 {
-// Default constructor
    fGeoCacheMaxLevels    = capacity;
    fGeoCacheStackSize    = 10;
    fGeoInfoStackSize     = 100;
@@ -102,10 +104,11 @@ TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
    CdTop();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoNodeCache::~TGeoNodeCache()
 {
-// Destructor
    if (fStack) {
       fStack->Delete();
       delete fStack;
@@ -124,10 +127,11 @@ TGeoNodeCache::~TGeoNodeCache()
    delete fPWInfo;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Builds node id array.
+
 void TGeoNodeCache::BuildIdArray()
 {
-// Builds node id array.
    Int_t nnodes = gGeoManager->GetNNodes();
    //if (nnodes>3E7) return;
    if (fNodeIdArray) delete [] fNodeIdArray;
@@ -140,10 +144,11 @@ void TGeoNodeCache::BuildIdArray()
    fIdBranch[0] = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bulds info branch. Navigation is possible only after this step.
+
 void TGeoNodeCache::BuildInfoBranch()
 {
-// Bulds info branch. Navigation is possible only after this step.
    if (!fInfoBranch) fInfoBranch  = new TGeoStateInfo*[fGeoInfoStackSize];
    else if (fInfoBranch[0]) return;
    for (Int_t i=0; i<fGeoInfoStackSize; i++) {
@@ -151,19 +156,21 @@ void TGeoNodeCache::BuildInfoBranch()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the PW info, if none create one
+
 TGeoStateInfo *TGeoNodeCache::GetMakePWInfo(Int_t nd)
 {
-// Get the PW info, if none create one
    if (fPWInfo) return fPWInfo;
    fPWInfo = new TGeoStateInfo(nd);
    return fPWInfo;
 }   
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change current path to point to the node having this id.
+/// Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
+
 void TGeoNodeCache::CdNode(Int_t nodeid) {
-// Change current path to point to the node having this id.
-// Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
    if (!fNodeIdArray) {
       Error("CdNode", "Navigation based on phisical node unuique id disabled.\n   To enable, use: gGeoManager->GetCache()->BuildIdArray()");
       return;
@@ -197,10 +204,11 @@ void TGeoNodeCache::CdNode(Int_t nodeid) {
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make daughter INDEX of current node the active state. Compute global matrix.
+
 Bool_t TGeoNodeCache::CdDown(Int_t index)
 {
-// Make daughter INDEX of current node the active state. Compute global matrix.
    TGeoNode *newnode = fNode->GetDaughter(index);
    if (!newnode) return kFALSE;
    fLevel++;
@@ -221,10 +229,11 @@ Bool_t TGeoNodeCache::CdDown(Int_t index)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make daughter INDEX of current node the active state. Compute global matrix.
+
 Bool_t TGeoNodeCache::CdDown(TGeoNode *newnode)
 {
-// Make daughter INDEX of current node the active state. Compute global matrix.
    if (!newnode) return kFALSE;
    fLevel++;
    if (fNodeIdArray) {
@@ -245,10 +254,11 @@ Bool_t TGeoNodeCache::CdDown(TGeoNode *newnode)
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make mother of current node the active state.
+
 void TGeoNodeCache::CdUp()
 {
-// Make mother of current node the active state.
    if (!fLevel) return;
    fLevel--;
    if (fNodeIdArray) fIndex = fIdBranch[fLevel];
@@ -256,28 +266,31 @@ void TGeoNodeCache::CdUp()
    fMatrix = fMatrixBranch[fLevel];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a fixed ID for current physical node
+
 Int_t TGeoNodeCache::GetCurrentNodeId() const
 {
-// Returns a fixed ID for current physical node
    if (fNodeIdArray) return fNodeIdArray[fIndex];
    return GetNodeId();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get unique node id.
+
 Int_t TGeoNodeCache::GetNodeId() const
 {
-// Get unique node id.
    Long_t id=0;
    for (Int_t level=0;level<fLevel+1; level++)
       id += (Long_t)fNodeBranch[level];
    return (Int_t)id;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill names with current branch volume names (4 char - used by GEANT3 interface).
+
 void TGeoNodeCache::GetBranchNames(Int_t *names) const
 {
-// Fill names with current branch volume names (4 char - used by GEANT3 interface).
    const char *name;
    for (Int_t i=0; i<fLevel+1; i++) {
       name = fNodeBranch[i]->GetVolume()->GetName();
@@ -285,20 +298,22 @@ void TGeoNodeCache::GetBranchNames(Int_t *names) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill copy numbers of current branch nodes.
+
 void TGeoNodeCache::GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const
 {
-// Fill copy numbers of current branch nodes.
    for (Int_t i=0; i<fLevel+1; i++) {
       copyNumbers[i]   = fNodeBranch[i]->GetNumber();
       volumeNumbers[i] = fNodeBranch[i]->GetVolume()->GetNumber();
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill copy numbers of current branch nodes.
+
 void TGeoNodeCache::GetBranchOnlys(Int_t *isonly) const
 {
-// Fill copy numbers of current branch nodes.
    Bool_t ismany = kFALSE;
    for (Int_t i=0; i<fLevel+1; i++) {
       if (!fNodeBranch[i]->IsOffset()) ismany=fNodeBranch[i]->IsOverlapping();
@@ -306,10 +321,11 @@ void TGeoNodeCache::GetBranchOnlys(Int_t *isonly) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next state info pointer.
+
 TGeoStateInfo *TGeoNodeCache::GetInfo()
 {
-// Get next state info pointer.
    if (fInfoLevel==fGeoInfoStackSize-1) {
       TGeoStateInfo **infoBranch = new TGeoStateInfo*[2*fGeoInfoStackSize];
       memcpy(infoBranch, fInfoBranch, fGeoInfoStackSize*sizeof(TGeoStateInfo*));
@@ -322,17 +338,19 @@ TGeoStateInfo *TGeoNodeCache::GetInfo()
    return fInfoBranch[fInfoLevel++];
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release last used state info pointer.
+
 void TGeoNodeCache::ReleaseInfo()
 {
-// Release last used state info pointer.
    fInfoLevel--;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the current geometry path.
+
 const char *TGeoNodeCache::GetPath()
 {
-// Returns the current geometry path.
    fPath = "";
    for (Int_t level=0;level<fLevel+1; level++) {
       fPath += "/";
@@ -341,10 +359,11 @@ const char *TGeoNodeCache::GetPath()
    return fPath.Data();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Push current state into heap.
+
 Int_t TGeoNodeCache::PushState(Bool_t ovlp, Int_t startlevel, Int_t nmany, Double_t *point)
 {
-// Push current state into heap.
    if (fStackLevel>=fGeoCacheStackSize) {
       for (Int_t ist=0; ist<fGeoCacheStackSize; ist++)
          fStack->Add(new TGeoCacheState(fGeoCacheMaxLevels));
@@ -353,10 +372,11 @@ Int_t TGeoNodeCache::PushState(Bool_t ovlp, Int_t startlevel, Int_t nmany, Doubl
    return ++fStackLevel;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pop next state/point from heap.
+
 Bool_t TGeoNodeCache::PopState(Int_t &nmany, Double_t *point)
 {
-// Pop next state/point from heap.
    if (!fStackLevel) return 0;
    Bool_t ovlp = ((TGeoCacheState*)fStack->At(--fStackLevel))->GetState(fLevel,nmany,point);
    Refresh();
@@ -364,64 +384,72 @@ Bool_t TGeoNodeCache::PopState(Int_t &nmany, Double_t *point)
    return ovlp;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pop next state/point from heap and restore matrices starting from LEVEL.
+
 Bool_t TGeoNodeCache::PopState(Int_t &nmany, Int_t level, Double_t *point)
 {
-// Pop next state/point from heap and restore matrices starting from LEVEL.
    if (level<=0) return 0;
    Bool_t ovlp = ((TGeoCacheState*)fStack->At(level-1))->GetState(fLevel,nmany,point);
    Refresh();
    return ovlp;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pop next state/point from a backed-up state.
+
 Bool_t TGeoNodeCache::RestoreState(Int_t &nmany, TGeoCacheState *state, Double_t *point)
 {
-// Pop next state/point from a backed-up state.
    Bool_t ovlp = state->GetState(fLevel,nmany,point);
    Refresh();
    return ovlp;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Local point converted to master frame defined by current matrix.
+
 void TGeoNodeCache::LocalToMaster(const Double_t *local, Double_t *master) const
 {
-// Local point converted to master frame defined by current matrix.
    fMatrix->LocalToMaster(local, master);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Point in master frame defined by current matrix converted to local one.
+
 void TGeoNodeCache::MasterToLocal(const Double_t *master, Double_t *local) const
 {
-// Point in master frame defined by current matrix converted to local one.
    fMatrix->MasterToLocal(master, local);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Local vector converted to master frame defined by current matrix.
+
 void TGeoNodeCache::LocalToMasterVect(const Double_t *local, Double_t *master) const
 {
-// Local vector converted to master frame defined by current matrix.
    fMatrix->LocalToMasterVect(local, master);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Vector in master frame defined by current matrix converted to local one.
+
 void TGeoNodeCache::MasterToLocalVect(const Double_t *master, Double_t *local) const
 {
-// Vector in master frame defined by current matrix converted to local one.
    fMatrix->MasterToLocalVect(master,local);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Local point converted to master frame defined by current matrix and rescaled with bomb factor.
+
 void TGeoNodeCache::LocalToMasterBomb(const Double_t *local, Double_t *master) const
 {
-// Local point converted to master frame defined by current matrix and rescaled with bomb factor.
    fMatrix->LocalToMasterBomb(local, master);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Point in master frame defined by current matrix converted to local one and rescaled with bomb factor.
+
 void TGeoNodeCache::MasterToLocalBomb(const Double_t *master, Double_t *local) const
 {
-// Point in master frame defined by current matrix converted to local one and rescaled with bomb factor.
    fMatrix->MasterToLocalBomb(master, local);
 }
 
@@ -433,10 +461,11 @@ ClassImp(TGeoCacheState)
 *
 *************************************************************************/
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TGeoCacheState::TGeoCacheState()
 {
-// Default ctor.
    fCapacity = 0;
    fLevel = 0;
    fNmany = 0;
@@ -449,10 +478,11 @@ TGeoCacheState::TGeoCacheState()
    fMatPtr = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ctor.
+
 TGeoCacheState::TGeoCacheState(Int_t capacity)
 {
-// Ctor.
    fCapacity = capacity;
    fLevel = 0;
    fNmany = 0;
@@ -469,7 +499,9 @@ TGeoCacheState::TGeoCacheState(Int_t capacity)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeoCacheState::TGeoCacheState(const TGeoCacheState& gcs) :
   TObject(gcs),
   fCapacity(gcs.fCapacity),
@@ -478,7 +510,6 @@ TGeoCacheState::TGeoCacheState(const TGeoCacheState& gcs) :
   fStart(gcs.fStart),
   fOverlapping(gcs.fOverlapping)
 {
-   //copy constructor
    Int_t i;
    for (i=0; i<3; i++) fPoint[i]=gcs.fPoint[i];
    for(i=0; i<30; i++) fIdBranch[i]=gcs.fIdBranch[i];
@@ -492,10 +523,11 @@ TGeoCacheState::TGeoCacheState(const TGeoCacheState& gcs) :
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoCacheState& TGeoCacheState::operator=(const TGeoCacheState& gcs)
 {
-   //assignment operator
    Int_t i;
    if(this!=&gcs) {
       TObject::operator=(gcs);
@@ -518,10 +550,11 @@ TGeoCacheState& TGeoCacheState::operator=(const TGeoCacheState& gcs)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dtor.
+
 TGeoCacheState::~TGeoCacheState()
 {
-// Dtor.
    if (fNodeBranch) {
       for (Int_t i=0; i<fCapacity; i++) {
          delete fMatrixBranch[i];
@@ -532,10 +565,11 @@ TGeoCacheState::~TGeoCacheState()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill current modeller state.
+
 void TGeoCacheState::SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point)
 {
-// Fill current modeller state.
    fLevel = level;
    fStart = startlevel;
    fNmany = nmany;
@@ -558,10 +592,11 @@ void TGeoCacheState::SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t
    if (point) memcpy(fPoint, point, 3*sizeof(Double_t));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore a modeler state.
+
 Bool_t TGeoCacheState::GetState(Int_t &level, Int_t &nmany, Double_t *point) const
 {
-// Restore a modeler state.
    level = fLevel;
    nmany = fNmany;
    TGeoNodeCache *cache = gGeoManager->GetCache();

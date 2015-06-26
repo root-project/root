@@ -43,38 +43,40 @@
 
 ClassImp(TMVA::PDEFoamKernelGauss)
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer
+
 TMVA::PDEFoamKernelGauss::PDEFoamKernelGauss(Float_t sigma)
    : PDEFoamKernelBase()
    , fSigma(sigma)
 {
-   // Default constructor for streamer
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMVA::PDEFoamKernelGauss::PDEFoamKernelGauss(const PDEFoamKernelGauss &other)
    : PDEFoamKernelBase(other)
    , fSigma(other.fSigma)
 {
-   // Copy constructor
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gaussian kernel estimator.  It returns the cell value 'cv',
+/// corresponding to the event vector 'txvec' (in foam coordinates)
+/// weighted by the cell values of all other cells, where the weight
+/// is a gaussian function.
+///
+/// Parameters:
+///
+/// - foam - the pdefoam to search in
+///
+/// - txvec - event vector in foam coordinates [0,1]
+///
+/// - cv - cell value to estimate
+
 Float_t TMVA::PDEFoamKernelGauss::Estimate(PDEFoam *foam, std::vector<Float_t> &txvec, ECellValue cv)
 {
-   // Gaussian kernel estimator.  It returns the cell value 'cv',
-   // corresponding to the event vector 'txvec' (in foam coordinates)
-   // weighted by the cell values of all other cells, where the weight
-   // is a gaussian function.
-   //
-   // Parameters:
-   //
-   // - foam - the pdefoam to search in
-   //
-   // - txvec - event vector in foam coordinates [0,1]
-   //
-   // - cv - cell value to estimate
-
    if (foam == NULL)
       Log() << kFATAL << "<PDEFoamKernelGauss::Estimate>: PDEFoam not set!" << Endl;
 
@@ -102,21 +104,21 @@ Float_t TMVA::PDEFoamKernelGauss::Estimate(PDEFoam *foam, std::vector<Float_t> &
    return (norm != 0 ? result / norm : 0);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function returns the average value 'cv' of only nearest
+/// neighbor cells.  It is used in cases when a cell value is
+/// undefined and the cell value shall be estimated by the
+/// (well-defined) cell values of the neighbor cells.
+///
+/// Parameters:
+/// - foam - the foam to search in
+/// - txvec - event vector, transformed into foam coordinates [0, 1]
+/// - cv - cell value, see definition of ECellValue
+
 Float_t TMVA::PDEFoamKernelGauss::GetAverageNeighborsValue(PDEFoam *foam,
                                                            std::vector<Float_t> &txvec,
                                                            ECellValue cv)
 {
-   // This function returns the average value 'cv' of only nearest
-   // neighbor cells.  It is used in cases when a cell value is
-   // undefined and the cell value shall be estimated by the
-   // (well-defined) cell values of the neighbor cells.
-   //
-   // Parameters:
-   // - foam - the foam to search in
-   // - txvec - event vector, transformed into foam coordinates [0, 1]
-   // - cv - cell value, see definition of ECellValue
-
    const Float_t xoffset = 1.e-6;
    Float_t norm   = 0; // normalisation
    Float_t result = 0; // return value
@@ -155,25 +157,25 @@ Float_t TMVA::PDEFoamKernelGauss::GetAverageNeighborsValue(PDEFoam *foam,
    return result;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the gauss weight between the 'cell' and a given coordinate 'txvec'.
+///
+/// Parameters:
+/// - cell - the cell
+///
+/// - txvec - the transformed event variables (in [0,1]) (coordinates <0 are
+///   set to 0, >1 are set to 1)
+///
+/// Returns:
+/// exp(-(d/sigma)^2/2), where
+///  - d - is the euclidean distance between 'txvec' and the point of the 'cell'
+///    which is most close to 'txvec' (in order to avoid artefacts because of the
+///    form of the cells).
+///  - sigma = 1/VolFrac
+
 Float_t TMVA::PDEFoamKernelGauss::WeightGaus(PDEFoam *foam, PDEFoamCell* cell,
                                              std::vector<Float_t> &txvec)
 {
-   // Returns the gauss weight between the 'cell' and a given coordinate 'txvec'.
-   //
-   // Parameters:
-   // - cell - the cell
-   //
-   // - txvec - the transformed event variables (in [0,1]) (coordinates <0 are
-   //   set to 0, >1 are set to 1)
-   //
-   // Returns:
-   // exp(-(d/sigma)^2/2), where
-   //  - d - is the euclidean distance between 'txvec' and the point of the 'cell'
-   //    which is most close to 'txvec' (in order to avoid artefacts because of the
-   //    form of the cells).
-   //  - sigma = 1/VolFrac
-
    // get cell coordinates
    PDEFoamVect cellSize(foam->GetTotDim());
    PDEFoamVect cellPosi(foam->GetTotDim());

@@ -13,18 +13,19 @@
 
 ClassImp(THttpEngine)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normal constructor
+
 THttpEngine::THttpEngine(const char *name, const char *title) :
    TNamed(name, title),
    fServer(0)
 {
-   // normal constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 THttpEngine::~THttpEngine()
 {
-   // destructor
-
    fServer = 0;
 }

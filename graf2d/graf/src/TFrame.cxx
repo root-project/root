@@ -22,59 +22,59 @@ ClassImp(TFrame)
 // a TFrame is a TWbox for drawing histogram frames.
 //
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Frame default constructor.
+
 TFrame::TFrame(): TWbox()
 {
-   // Frame default constructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Frame normal constructor.
+
 TFrame::TFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
        :TWbox(x1,y1,x2,y2)
 {
-   // Frame normal constructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Frame copy constructor.
+
 TFrame::TFrame(const TFrame &frame) : TWbox(frame)
 {
-   // Frame copy constructor.
-
    ((TFrame&)frame).Copy(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Frame default destructor.
+
 TFrame::~TFrame()
 {
-   // Frame default destructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this frame to frame.
+
 void TFrame::Copy(TObject &frame) const
 {
-   // Copy this frame to frame.
-
    TWbox::Copy(frame);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this frame with its current attributes.
+
 void TFrame::Draw(Option_t *option)
 {
-   // Draw this frame with its current attributes.
-
    AppendPad(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function is called when a TFrame object is clicked.
+
 void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a TFrame object is clicked.
-
    if (!gPad) return;
 
    if (!gPad->IsEditable()) return;
@@ -121,10 +121,11 @@ void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this wbox with its current attributes.
+
 void TFrame::Paint(Option_t *option)
 {
-   // Paint this wbox with its current attributes.
    const TPickerStackGuard stackGuard(this);
 
    if (!gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && this == gPad->GetSelected())) {
@@ -135,24 +136,25 @@ void TFrame::Paint(Option_t *option)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do not pop frame's, if allowed they would cover the picture they frame.
+
 void TFrame::Pop()
 {
-   // Do not pop frame's, if allowed they would cover the picture they frame.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
+
 void TFrame::SavePrimitive(std::ostream &, Option_t * /*= ""*/)
 {
-    // Save primitive as a C++ statement(s) on output stream out
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace current frame attributes by current style.
+
 void TFrame::UseCurrentStyle()
 {
-   // Replace current frame attributes by current style.
-
    if (gStyle->IsReading()) {
       SetFillColor(gStyle->GetFrameFillColor());
       SetLineColor(gStyle->GetFrameLineColor());

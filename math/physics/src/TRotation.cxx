@@ -236,12 +236,12 @@ TRotation TRotation::operator* (const TRotation & b) const {
                     fzx*b.fxz + fzy*b.fyz + fzz*b.fzz);
 }
 
-//_____________________________________
-TRotation::TRotation(const TQuaternion & Q) {
-   // Constructor for a rotation based on a Quaternion
-   // if magnitude of quaternion is null, creates identity rotation
-   // if quaternion is non-unit, creates rotation corresponding to the normalized (unit) quaternion
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for a rotation based on a Quaternion
+/// if magnitude of quaternion is null, creates identity rotation
+/// if quaternion is non-unit, creates rotation corresponding to the normalized (unit) quaternion
 
+TRotation::TRotation(const TQuaternion & Q) {
 
    double two_r2 = 2 * Q.fRealPart * Q.fRealPart;
    double two_x2 = 2 * Q.fVectorPart.X() * Q.fVectorPart.X();

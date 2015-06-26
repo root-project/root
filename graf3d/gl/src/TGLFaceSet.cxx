@@ -52,13 +52,14 @@ ClassImp(TGLFaceSet);
 
 Bool_t TGLFaceSet::fgEnforceTriangles = kFALSE;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGLFaceSet::TGLFaceSet(const TBuffer3D & buffer) :
    TGLLogicalShape(buffer),
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
    fNormals(0)
 {
-   // constructor
    fNbPols = buffer.NbPols();
 
    if (fNbPols == 0) return;
@@ -127,10 +128,11 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buffer) :
    CalculateNormals();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Should only be done on an empty faceset object
+
 void TGLFaceSet::SetFromMesh(const RootCsg::TBaseMesh *mesh)
 {
-   // Should only be done on an empty faceset object
    assert(fNbPols == 0);
 
    UInt_t nv = mesh->NumberOfVertices();
@@ -164,15 +166,15 @@ void TGLFaceSet::SetFromMesh(const RootCsg::TBaseMesh *mesh)
    CalculateNormals();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use GLU tesselator to replace all polygons with N > 3 with triangles.
+/// After this call polygon descriptions are changed.
+/// New vertices are not expected -- exception is thrown if this is
+/// requested by the triangulator. Support for adding of new vertices can be
+/// provided.
+
 void TGLFaceSet::EnforceTriangles()
 {
-   // Use GLU tesselator to replace all polygons with N > 3 with triangles.
-   // After this call polygon descriptions are changed.
-   // New vertices are not expected -- exception is thrown if this is
-   // requested by the triangulator. Support for adding of new vertices can be
-   // provided.
-
    class TriangleCollector
    {
    protected:
@@ -304,10 +306,11 @@ void TGLFaceSet::EnforceTriangles()
    fNbPols = tc.GetNTrianlges();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Debug tracing
+
 void TGLFaceSet::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Debug tracing
    if (gDebug > 4) {
       Info("TGLFaceSet::DirectDraw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
@@ -343,10 +346,11 @@ void TGLFaceSet::DirectDraw(TGLRnrCtx & rnrCtx) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CheckPoints
+
 Int_t TGLFaceSet::CheckPoints(const Int_t *source, Int_t *dest) const
 {
-   // CheckPoints
    const Double_t * p1 = &fVertices[source[0] * 3];
    const Double_t * p2 = &fVertices[source[1] * 3];
    const Double_t * p3 = &fVertices[source[2] * 3];
@@ -375,21 +379,22 @@ Int_t TGLFaceSet::CheckPoints(const Int_t *source, Int_t *dest) const
    return retVal;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// test equality
+
 Bool_t TGLFaceSet::Eq(const Double_t *p1, const Double_t *p2)
 {
-   // test equality
    Double_t dx = TMath::Abs(p1[0] - p2[0]);
    Double_t dy = TMath::Abs(p1[1] - p2[1]);
    Double_t dz = TMath::Abs(p1[2] - p2[2]);
    return dx < 1e-10 && dy < 1e-10 && dz < 1e-10;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CalculateNormals
+
 void TGLFaceSet::CalculateNormals()
 {
-   // CalculateNormals
-
    fNormals.resize(3 *fNbPols);
    if (fNbPols == 0) return;
    Double_t *pnts = &fVertices[0];
@@ -419,22 +424,22 @@ void TGLFaceSet::CalculateNormals()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current state of static flag EnforceTriangles.
+
 Bool_t TGLFaceSet::GetEnforceTriangles()
 {
-   // Get current state of static flag EnforceTriangles.
-
    return fgEnforceTriangles;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set state of static flag EnforceTriangles.
+/// When this is set, all tesselations will be automatically converted into
+/// triangle-only meshes.
+/// This is needed to export TGeo shapes and CSG meshes to external
+/// triangle-mesh libraries that can not handle arbitrary polygons.
+
 void TGLFaceSet::SetEnforceTriangles(Bool_t e)
 {
-   // Set state of static flag EnforceTriangles.
-   // When this is set, all tesselations will be automatically converted into
-   // triangle-only meshes.
-   // This is needed to export TGeo shapes and CSG meshes to external
-   // triangle-mesh libraries that can not handle arbitrary polygons.
-
    fgEnforceTriangles = e;
 }

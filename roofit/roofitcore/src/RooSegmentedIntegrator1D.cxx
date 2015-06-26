@@ -45,34 +45,35 @@ ClassImp(RooSegmentedIntegrator1D)
 
 // Register this class with RooNumIntConfig
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register RooSegmentedIntegrator1D, its parameters, dependencies and capabilities with RooNumIntFactory
+
 void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
-  // Register RooSegmentedIntegrator1D, its parameters, dependencies and capabilities with RooNumIntFactory
-
   RooRealVar numSeg("numSeg","Number of segments",3) ;
   fact.storeProtoIntegrator(new RooSegmentedIntegrator1D(),numSeg,RooIntegrator1D::Class()->GetName()) ;
 }
  
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+///
+/// coverity[UNINIT_CTOR]
+
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D() : _array(0)
 {
-  // Constructor
-  //
-  // coverity[UNINIT_CTOR]
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of integral on given function binding and with given configuration. The
+/// integration limits are taken from the definition in the function binding
+
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _config(config)
 {
-  // Constructor of integral on given function binding and with given configuration. The
-  // integration limits are taken from the definition in the function binding
-
   _nseg = (Int_t) config.getConfigSection(IsA()->GetName()).getRealValue("numSeg",3) ;
   _useIntegrandLimits= kTRUE;
 
@@ -81,14 +82,14 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, c
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor integral on given function binding, with given configuration and
+/// explicit definition of integration range
+
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 						   const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _config(config) 
 {
-  // Constructor integral on given function binding, with given configuration and
-  // explicit definition of integration range
-
   _nseg = (Int_t) config.getConfigSection(IsA()->GetName()).getRealValue("numSeg",3) ;
   _useIntegrandLimits= kFALSE;
   _xmin= xmin;
@@ -99,11 +100,11 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, D
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual constructor with given function and configuration. Needed by RooNumIntFactory
+
 RooAbsIntegrator* RooSegmentedIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
-  // Virtual constructor with given function and configuration. Needed by RooNumIntFactory
-  
   return new RooSegmentedIntegrator1D(function,config) ;
 }
 
@@ -111,11 +112,11 @@ RooAbsIntegrator* RooSegmentedIntegrator1D::clone(const RooAbsFunc& function, co
 
 typedef RooIntegrator1D* pRooIntegrator1D ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time integrator initialization
+
 Bool_t RooSegmentedIntegrator1D::initialize()
 {
-  // One-time integrator initialization
-
   _array = 0 ;
   
   Bool_t limitsOK = checkLimits(); 
@@ -141,10 +142,11 @@ Bool_t RooSegmentedIntegrator1D::initialize()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
 {  
-  // Destructor
   if (_array) {
     for (Int_t i=0 ; i<_nseg ; i++) {
       delete _array[i] ;
@@ -155,13 +157,13 @@ RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change our integration limits. Return kTRUE if the new limits are
+/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// if this object was constructed to always use our integrand's limits.
+
 Bool_t RooSegmentedIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax) 
 {
-  // Change our integration limits. Return kTRUE if the new limits are
-  // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
-  // if this object was constructed to always use our integrand's limits.
-
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,InputArguments) << "RooSegmentedIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
@@ -173,12 +175,12 @@ Bool_t RooSegmentedIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that our integration range is finite and otherwise return kFALSE.
+/// Update the limits from the integrand if requested.
+
 Bool_t RooSegmentedIntegrator1D::checkLimits() const 
 {
-  // Check that our integration range is finite and otherwise return kFALSE.
-  // Update the limits from the integrand if requested.
-  
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
     _xmin= integrand()->getMinLimit(0);
@@ -206,11 +208,11 @@ Bool_t RooSegmentedIntegrator1D::checkLimits() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate integral at given function binding parameter values
+
 Double_t RooSegmentedIntegrator1D::integral(const Double_t *yvec) 
 {
-  // Evaluate integral at given function binding parameter values
-
   assert(isValid());
 
   Int_t i ;

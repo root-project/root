@@ -107,7 +107,9 @@ static const Float_t kVlow=-FLT_MAX;
 
 using namespace std;
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer, user should not use it.
+
 TMVA::PDEFoam::PDEFoam() :
    fName("PDEFoam"),
    fDim(0),
@@ -139,14 +141,14 @@ TMVA::PDEFoam::PDEFoam() :
    fVariableNames(new TObjArray()),
    fLogger(new MsgLogger("PDEFoam"))
 {
-   // Default constructor for streamer, user should not use it.
-
    // fVariableNames may delete it's heap-based content
    if (fVariableNames)
       fVariableNames->SetOwner(kTRUE);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User constructor, to be employed by the user
+
 TMVA::PDEFoam::PDEFoam(const TString& name) :
    fName(name),
    fDim(0),
@@ -178,7 +180,6 @@ TMVA::PDEFoam::PDEFoam(const TString& name) :
    fVariableNames(new TObjArray()),
    fLogger(new MsgLogger("PDEFoam"))
 {
-   // User constructor, to be employed by the user
    if(strlen(name) > 128)
       Log() << kFATAL << "Name too long " << name.Data() << Endl;
 
@@ -187,11 +188,11 @@ TMVA::PDEFoam::PDEFoam(const TString& name) :
       fVariableNames->SetOwner(kTRUE);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default destructor
+
 TMVA::PDEFoam::~PDEFoam()
 {
-   // Default destructor
-
    delete fVariableNames;
    delete fTimer;
    if (fDistr)  delete fDistr;
@@ -212,7 +213,9 @@ TMVA::PDEFoam::~PDEFoam()
    delete fLogger;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy Constructor  NOT IMPLEMENTED (NEVER USED)
+
 TMVA::PDEFoam::PDEFoam(const PDEFoam &from) :
    TObject(from)
    , fDim(0)
@@ -244,7 +247,6 @@ TMVA::PDEFoam::PDEFoam(const PDEFoam &from) :
    , fVariableNames(0)
    , fLogger(new MsgLogger(*from.fLogger))
 {
-   // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
 
    // fVariableNames may delete it's heap-based content
@@ -252,10 +254,11 @@ TMVA::PDEFoam::PDEFoam(const PDEFoam &from) :
       fVariableNames->SetOwner(kTRUE);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets dimension of cubical space
+
 void TMVA::PDEFoam::SetDim(Int_t kDim)
 {
-   // Sets dimension of cubical space
    if (kDim < 1)
       Log() << kFATAL << "<SetDim>: Dimension is zero or negative!" << Endl;
 
@@ -266,36 +269,38 @@ void TMVA::PDEFoam::SetDim(Int_t kDim)
    fXmax = new Double_t[GetTotDim()];
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set lower foam bound in dimension idim
+
 void TMVA::PDEFoam::SetXmin(Int_t idim, Double_t wmin)
 {
-   // set lower foam bound in dimension idim
    if (idim<0 || idim>=GetTotDim())
       Log() << kFATAL << "<SetXmin>: Dimension out of bounds!" << Endl;
 
    fXmin[idim]=wmin;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set upper foam bound in dimension idim
+
 void TMVA::PDEFoam::SetXmax(Int_t idim, Double_t wmax)
 {
-   // set upper foam bound in dimension idim
    if (idim<0 || idim>=GetTotDim())
       Log() << kFATAL << "<SetXmax>: Dimension out of bounds!" << Endl;
 
    fXmax[idim]=wmax;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Basic initialization of FOAM invoked by the user.
+/// IMPORTANT: Random number generator and the distribution object has to be
+/// provided using SetPseRan and SetRho prior to invoking this initializator!
+///
+/// After the foam is grown, space for 2 variables is reserved in
+/// every cell.  They are used for filling the foam cells.
+
 void TMVA::PDEFoam::Create()
 {
-   // Basic initialization of FOAM invoked by the user.
-   // IMPORTANT: Random number generator and the distribution object has to be
-   // provided using SetPseRan and SetRho prior to invoking this initializator!
-   //
-   // After the foam is grown, space for 2 variables is reserved in
-   // every cell.  They are used for filling the foam cells.
-
    Bool_t addStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
 
@@ -354,12 +359,12 @@ void TMVA::PDEFoam::Create()
    ResetCellElements(); // reset all cell elements
 } // Create
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram used by Create.
+/// It initializes "root part" of the FOAM of the tree of cells.
+
 void TMVA::PDEFoam::InitCells()
 {
-   // Internal subprogram used by Create.
-   // It initializes "root part" of the FOAM of the tree of cells.
-
    fLastCe =-1;                             // Index of the last cell
    if(fCells!= 0) {
       for(Int_t i=0; i<fNCells; i++) delete fCells[i];
@@ -387,12 +392,12 @@ void TMVA::PDEFoam::InitCells()
    }
 }//InitCells
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram used by Create.
+/// It initializes content of the newly allocated active cell.
+
 Int_t TMVA::PDEFoam::CellFill(Int_t status, PDEFoamCell *parent)
 {
-   // Internal subprogram used by Create.
-   // It initializes content of the newly allocated active cell.
-
    PDEFoamCell *cell;
    if (fLastCe==fNCells){
       Log() << kFATAL << "Too many cells" << Endl;
@@ -418,26 +423,26 @@ Int_t TMVA::PDEFoam::CellFill(Int_t status, PDEFoamCell *parent)
    return fLastCe;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram used by Create.
+/// It explores newly defined cell with help of special short MC sampling.
+/// As a result, estimates of kTRUE and drive volume is defined/determined
+/// Average and dispersion of the weight distribution will is found along
+/// each edge and the best edge (minimum dispersion, best maximum weight)
+/// is memorized for future use.
+/// The optimal division point for eventual future cell division is
+/// determined/recorded. Recorded are also minimum and maximum weight etc.
+/// The volume estimate in all (inactive) parent cells is updated.
+/// Note that links to parents and initial volume = 1/2 parent has to be
+/// already defined prior to calling this routine.
+///
+/// If fNmin > 0 then the total number of (training) events found in
+/// the cell during the exploration is stored in the cell.  This
+/// information is used withing PeekMax() to avoid splitting cells
+/// which contain less than fNmin events.
+
 void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
 {
-   // Internal subprogram used by Create.
-   // It explores newly defined cell with help of special short MC sampling.
-   // As a result, estimates of kTRUE and drive volume is defined/determined
-   // Average and dispersion of the weight distribution will is found along
-   // each edge and the best edge (minimum dispersion, best maximum weight)
-   // is memorized for future use.
-   // The optimal division point for eventual future cell division is
-   // determined/recorded. Recorded are also minimum and maximum weight etc.
-   // The volume estimate in all (inactive) parent cells is updated.
-   // Note that links to parents and initial volume = 1/2 parent has to be
-   // already defined prior to calling this routine.
-   //
-   // If fNmin > 0 then the total number of (training) events found in
-   // the cell during the exploration is stored in the cell.  This
-   // information is used withing PeekMax() to avoid splitting cells
-   // which contain less than fNmin events.
-
    Double_t wt, dx, xBest=0, yBest;
    Double_t intOld, driOld;
 
@@ -537,7 +542,8 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
    }
    kBest=-1;
 
-   //------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    nevMC            = ceSum[2];
    Double_t intTrue = ceSum[0]/(nevMC+0.000001);
    Double_t intDriv=0.;
@@ -565,14 +571,14 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
    delete [] xRand;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subrogram used by Create.
+/// In determines the best edge candidate and the position of the cell division plane
+/// in case of the variance reduction for future cell division,
+/// using results of the MC exploration run stored in fHistEdg
+
 void TMVA::PDEFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Double_t &yBest)
 {
-   // Internal subrogram used by Create.
-   // In determines the best edge candidate and the position of the cell division plane
-   // in case of the variance reduction for future cell division,
-   // using results of the MC exploration run stored in fHistEdg
-
    Double_t nent   = ceSum[2];
    // Double_t swAll  = ceSum[0];
    Double_t sswAll = ceSum[1];
@@ -634,26 +640,26 @@ void TMVA::PDEFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Dou
       Log() << kFATAL << "Something wrong with kBest" << Endl;
 }          //PDEFoam::Varedu
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subrogram used by Create.
+/// Provides random vector Alpha  0< Alpha(i) < 1
+
 void TMVA::PDEFoam::MakeAlpha()
 {
-   // Internal subrogram used by Create.
-   // Provides random vector Alpha  0< Alpha(i) < 1
-
    // simply generate and load kDim uniform random numbers
    fPseRan->RndmArray(fDim,fRvec);   // kDim random numbers needed
    for(Int_t k=0; k<fDim; k++) fAlpha[k] = fRvec[k];
 } //MakeAlpha
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram used by Create.  It finds cell with maximal
+/// driver integral for the purpose of the division.  This function
+/// is overridden by the PDEFoam Class to apply cuts on the number
+/// of events in the cell (fNmin) and the cell tree depth
+/// (GetMaxDepth() > 0) during cell buildup.
+
 Long_t TMVA::PDEFoam::PeekMax()
 {
-   // Internal subprogram used by Create.  It finds cell with maximal
-   // driver integral for the purpose of the division.  This function
-   // is overridden by the PDEFoam Class to apply cuts on the number
-   // of events in the cell (fNmin) and the cell tree depth
-   // (GetMaxDepth() > 0) during cell buildup.
-
    Long_t iCell = -1;
 
    Long_t  i;
@@ -705,18 +711,18 @@ Long_t TMVA::PDEFoam::PeekMax()
    return(iCell);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subrogram used by Create.
+/// It divides cell iCell into two daughter cells.
+/// The iCell is retained and tagged as inactive, daughter cells are appended
+/// at the end of the buffer.
+/// New vertex is added to list of vertices.
+/// List of active cells is updated, iCell removed, two daughters added
+/// and their properties set with help of MC sampling (PDEFoam_Explore)
+/// Returns Code RC=-1 of buffer limit is reached,  fLastCe=fnBuf.
+
 Int_t TMVA::PDEFoam::Divide(PDEFoamCell *cell)
 {
-   // Internal subrogram used by Create.
-   // It divides cell iCell into two daughter cells.
-   // The iCell is retained and tagged as inactive, daughter cells are appended
-   // at the end of the buffer.
-   // New vertex is added to list of vertices.
-   // List of active cells is updated, iCell removed, two daughters added
-   // and their properties set with help of MC sampling (PDEFoam_Explore)
-   // Returns Code RC=-1 of buffer limit is reached,  fLastCe=fnBuf.
-
    // Double_t xdiv;
    Int_t   kBest;
 
@@ -744,12 +750,12 @@ Int_t TMVA::PDEFoam::Divide(PDEFoamCell *cell)
    return 1;
 } // PDEFoam_Divide
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subprogram.
+/// Evaluates (training) distribution.
+
 Double_t TMVA::PDEFoam::Eval(Double_t *xRand, Double_t &event_density)
 {
-   // Internal subprogram.
-   // Evaluates (training) distribution.
-
    // Transform variable xRand, since Foam boundaries are [0,1] and
    // fDistr is filled with events which range in [fXmin,fXmax]
    //
@@ -762,14 +768,14 @@ Double_t TMVA::PDEFoam::Eval(Double_t *xRand, Double_t &event_density)
    return GetDistr()->Density(xvec, event_density);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal subrogram used by Create.
+/// It grow new cells by the binary division process.
+/// This function is overridden by the PDEFoam class to stop the foam buildup process
+/// if one of the cut conditions stop the cell split.
+
 void TMVA::PDEFoam::Grow()
 {
-   // Internal subrogram used by Create.
-   // It grow new cells by the binary division process.
-   // This function is overridden by the PDEFoam class to stop the foam buildup process
-   // if one of the cut conditions stop the cell split.
-
    fTimer->Init(fNCells);
 
    Long_t iCell;
@@ -798,13 +804,13 @@ void TMVA::PDEFoam::Grow()
    Log() << kVERBOSE << GetNActiveCells() << " active cells created" << Endl;
 }// Grow
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This can be called before Create, after setting kDim
+/// It defines which variables are excluded in the process of the cell division.
+/// For example 'FoamX->SetInhiDiv(1, 1);' inhibits division of y-variable.
+
 void  TMVA::PDEFoam::SetInhiDiv(Int_t iDim, Int_t inhiDiv)
 {
-   // This can be called before Create, after setting kDim
-   // It defines which variables are excluded in the process of the cell division.
-   // For example 'FoamX->SetInhiDiv(1, 1);' inhibits division of y-variable.
-
    if(fDim==0) Log() << kFATAL << "SetInhiDiv: fDim=0" << Endl;
    if(fInhiDiv == 0) {
       fInhiDiv = new Int_t[ fDim ];
@@ -817,14 +823,14 @@ void  TMVA::PDEFoam::SetInhiDiv(Int_t iDim, Int_t inhiDiv)
       Log() << kFATAL << "Wrong iDim" << Endl;
 }//SetInhiDiv
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  User utility, miscellaneous and debug.
+///  Checks all pointers in the tree of cells. This is useful autodiagnostic.
+///  level=0, no printout, failures causes STOP
+///  level=1, printout, failures lead to WARNINGS only
+
 void TMVA::PDEFoam::CheckAll(Int_t level)
 {
-   //  User utility, miscellaneous and debug.
-   //  Checks all pointers in the tree of cells. This is useful autodiagnostic.
-   //  level=0, no printout, failures causes STOP
-   //  level=1, printout, failures lead to WARNINGS only
-
    Int_t errors, warnings;
    PDEFoamCell *cell;
    Long_t iCell;
@@ -892,12 +898,12 @@ void TMVA::PDEFoam::CheckAll(Int_t level)
    }
 } // Check
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints geometry of and elements of 'iCell', as well as relations
+/// to parent and daughter cells.
+
 void TMVA::PDEFoam::PrintCell(Long_t iCell)
 {
-   // Prints geometry of and elements of 'iCell', as well as relations
-   // to parent and daughter cells.
-
    if (iCell < 0 || iCell > fLastCe) {
       Log() << kWARNING << "<PrintCell(iCell=" << iCell
             << ")>: cell number " << iCell << " out of bounds!"
@@ -940,24 +946,24 @@ void TMVA::PDEFoam::PrintCell(Long_t iCell)
    Log()<<"}"<<Endl;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints geometry of ALL cells of the FOAM
+
 void TMVA::PDEFoam::PrintCells(void)
 {
-   // Prints geometry of ALL cells of the FOAM
-
    for(Long_t iCell=0; iCell<=fLastCe; iCell++)
       PrintCell(iCell);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function fills a weight 'wt' into the PDEFoam cell, which
+/// corresponds to the given event 'ev'.  Per default cell element 0
+/// is filled with the weight 'wt', and cell element 1 is filled
+/// with the squared weight.  This function can be overridden by a
+/// subclass in order to change the values stored in the foam cells.
+
 void TMVA::PDEFoam::FillFoamCells(const Event* ev, Float_t wt)
 {
-   // This function fills a weight 'wt' into the PDEFoam cell, which
-   // corresponds to the given event 'ev'.  Per default cell element 0
-   // is filled with the weight 'wt', and cell element 1 is filled
-   // with the squared weight.  This function can be overridden by a
-   // subclass in order to change the values stored in the foam cells.
-
    // find corresponding foam cell
    std::vector<Float_t> values  = ev->GetValues();
    std::vector<Float_t> tvalues = VarTransform(values);
@@ -969,11 +975,11 @@ void TMVA::PDEFoam::FillFoamCells(const Event* ev, Float_t wt)
    SetCellElement(cell, 1, GetCellElement(cell, 1) + wt*wt);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the cell elements from all cells.
+
 void TMVA::PDEFoam::ResetCellElements()
 {
-   // Remove the cell elements from all cells.
-
    if (!fCells) return;
 
    Log() << kVERBOSE << "Delete cell elements" << Endl;
@@ -986,38 +992,39 @@ void TMVA::PDEFoam::ResetCellElements()
    }
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true, if the value of the given cell is undefined.
+/// Default value: kFALSE.  This function can be overridden by
+/// sub-classes.
+
 Bool_t TMVA::PDEFoam::CellValueIsUndefined( PDEFoamCell* /* cell */ )
 {
-   // Returns true, if the value of the given cell is undefined.
-   // Default value: kFALSE.  This function can be overridden by
-   // sub-classes.
    return kFALSE;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function finds the cell, which corresponds to the given
+/// untransformed event vector 'xvec' and return its value, which is
+/// given by the parameter 'cv'.  If kernel != NULL, then
+/// PDEFoamKernelBase::Estimate() is called on the transformed event
+/// variables.
+///
+/// Parameters:
+///
+/// - xvec - event vector (untransformed, [fXmin,fXmax])
+///
+/// - cv - the cell value to return
+///
+/// - kernel - PDEFoam kernel estimator.  If NULL is given, than the
+///   pure cell value is returned
+///
+/// Return:
+///
+/// The cell value, corresponding to 'xvec', estimated by the given
+/// kernel.
+
 Float_t TMVA::PDEFoam::GetCellValue(const std::vector<Float_t> &xvec, ECellValue cv, PDEFoamKernelBase *kernel)
 {
-   // This function finds the cell, which corresponds to the given
-   // untransformed event vector 'xvec' and return its value, which is
-   // given by the parameter 'cv'.  If kernel != NULL, then
-   // PDEFoamKernelBase::Estimate() is called on the transformed event
-   // variables.
-   //
-   // Parameters:
-   //
-   // - xvec - event vector (untransformed, [fXmin,fXmax])
-   //
-   // - cv - the cell value to return
-   //
-   // - kernel - PDEFoam kernel estimator.  If NULL is given, than the
-   //   pure cell value is returned
-   //
-   // Return:
-   //
-   // The cell value, corresponding to 'xvec', estimated by the given
-   // kernel.
-
    std::vector<Float_t> txvec(VarTransform(xvec));
    if (kernel == NULL)
       return GetCellValue(FindCell(txvec), cv);
@@ -1025,26 +1032,26 @@ Float_t TMVA::PDEFoam::GetCellValue(const std::vector<Float_t> &xvec, ECellValue
       return kernel->Estimate(this, txvec, cv);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function finds all cells, which corresponds to the given
+/// (incomplete) untransformed event vector 'xvec' and returns the
+/// cell values, according to the parameter 'cv'.
+///
+/// Parameters:
+///
+/// - xvec - map for the untransformed vector.  The key (Int_t) is
+///   the dimension, and the value (Float_t) is the event
+///   coordinate.  Note that not all coordinates have to be
+///   specified.
+///
+/// - cv - cell values to return
+///
+/// Return:
+///
+/// cell values from all cells that were found
+
 std::vector<Float_t> TMVA::PDEFoam::GetCellValue( const std::map<Int_t,Float_t>& xvec, ECellValue cv )
 {
-   // This function finds all cells, which corresponds to the given
-   // (incomplete) untransformed event vector 'xvec' and returns the
-   // cell values, according to the parameter 'cv'.
-   //
-   // Parameters:
-   //
-   // - xvec - map for the untransformed vector.  The key (Int_t) is
-   //   the dimension, and the value (Float_t) is the event
-   //   coordinate.  Note that not all coordinates have to be
-   //   specified.
-   //
-   // - cv - cell values to return
-   //
-   // Return:
-   //
-   // cell values from all cells that were found
-
    // transformed event
    std::map<Int_t,Float_t> txvec;
    for (std::map<Int_t,Float_t>::const_iterator it=xvec.begin(); it!=xvec.end(); ++it)
@@ -1063,25 +1070,25 @@ std::vector<Float_t> TMVA::PDEFoam::GetCellValue( const std::map<Int_t,Float_t>&
    return cell_values;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find cell that contains 'xvec' (in foam coordinates [0,1]).
+///
+/// Loop to find cell that contains 'xvec' starting at root cell,
+/// and traversing binary tree to find the cell quickly.  Note, that
+/// if 'xvec' lies outside the foam, the cell which is nearest to
+/// 'xvec' is returned.  (The returned pointer should never be
+/// NULL.)
+///
+/// Parameters:
+///
+/// - xvec - event vector (in foam coordinates [0,1])
+///
+/// Return:
+///
+/// PDEFoam cell corresponding to 'xvec'
+
 TMVA::PDEFoamCell* TMVA::PDEFoam::FindCell( const std::vector<Float_t> &xvec ) const
 {
-   // Find cell that contains 'xvec' (in foam coordinates [0,1]).
-   //
-   // Loop to find cell that contains 'xvec' starting at root cell,
-   // and traversing binary tree to find the cell quickly.  Note, that
-   // if 'xvec' lies outside the foam, the cell which is nearest to
-   // 'xvec' is returned.  (The returned pointer should never be
-   // NULL.)
-   //
-   // Parameters:
-   //
-   // - xvec - event vector (in foam coordinates [0,1])
-   //
-   // Return:
-   //
-   // PDEFoam cell corresponding to 'xvec'
-
    PDEFoamVect  cellPosi0(GetTotDim()), cellSize0(GetTotDim());
    PDEFoamCell *cell, *cell0;
 
@@ -1100,26 +1107,26 @@ TMVA::PDEFoamCell* TMVA::PDEFoam::FindCell( const std::vector<Float_t> &xvec ) c
    return cell;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is a helper function for std::vector<PDEFoamCell*>
+/// FindCells(...) and a generalisation of PDEFoamCell* FindCell().
+/// It saves in 'cells' all cells, which contain the coordinates
+/// specifies in 'txvec'.  Note, that not all coordinates have to be
+/// specified in 'txvec'.
+///
+/// Parameters:
+///
+/// - txvec - event vector in foam coordinates [0,1].  The key is
+///   the dimension and the value is the event coordinate.  Note,
+///   that not all coordinates have to be specified.
+///
+/// - cell - cell to start searching with (usually root cell
+///   fCells[0])
+///
+/// - cells - list of cells that were found
+
 void TMVA::PDEFoam::FindCells(const std::map<Int_t, Float_t> &txvec, PDEFoamCell* cell, std::vector<PDEFoamCell*> &cells) const
 {
-   // This is a helper function for std::vector<PDEFoamCell*>
-   // FindCells(...) and a generalisation of PDEFoamCell* FindCell().
-   // It saves in 'cells' all cells, which contain the coordinates
-   // specifies in 'txvec'.  Note, that not all coordinates have to be
-   // specified in 'txvec'.
-   //
-   // Parameters:
-   //
-   // - txvec - event vector in foam coordinates [0,1].  The key is
-   //   the dimension and the value is the event coordinate.  Note,
-   //   that not all coordinates have to be specified.
-   //
-   // - cell - cell to start searching with (usually root cell
-   //   fCells[0])
-   //
-   // - cells - list of cells that were found
-
    PDEFoamVect  cellPosi0(GetTotDim()), cellSize0(GetTotDim());
    PDEFoamCell *cell0;
    Int_t idim=0;
@@ -1150,23 +1157,23 @@ void TMVA::PDEFoam::FindCells(const std::map<Int_t, Float_t> &txvec, PDEFoamCell
    cells.push_back(cell);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find all cells, that contain txvec.  This function can be used,
+/// when the dimension of the foam is greater than the dimension of
+/// txvec.  E.g. this is the case for multi-target regression.
+///
+/// Parameters:
+///
+/// - txvec - event vector of variables, transformed into foam
+///   coordinates [0,1].  The size of txvec can be smaller than the
+///   dimension of the foam.
+///
+/// Return value:
+///
+/// - vector of cells, that fit txvec
+
 std::vector<TMVA::PDEFoamCell*> TMVA::PDEFoam::FindCells(const std::vector<Float_t> &txvec) const
 {
-   // Find all cells, that contain txvec.  This function can be used,
-   // when the dimension of the foam is greater than the dimension of
-   // txvec.  E.g. this is the case for multi-target regression.
-   //
-   // Parameters:
-   //
-   // - txvec - event vector of variables, transformed into foam
-   //   coordinates [0,1].  The size of txvec can be smaller than the
-   //   dimension of the foam.
-   //
-   // Return value:
-   //
-   // - vector of cells, that fit txvec
-
    // copy the coordinates from 'txvec' into a map
    std::map<Int_t, Float_t> txvec_map;
    for (UInt_t i=0; i<txvec.size(); ++i)
@@ -1181,23 +1188,23 @@ std::vector<TMVA::PDEFoamCell*> TMVA::PDEFoam::FindCells(const std::vector<Float
    return cells;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find all cells, that contain the coordinates specified in txvec.
+/// The key in 'txvec' is the dimension, and the corresponding value
+/// is the coordinate.  Note, that not all coordinates have to be
+/// specified in txvec.
+///
+/// Parameters:
+///
+/// - txvec - map of coordinates (transformed into foam coordinates
+///   [0,1])
+///
+/// Return value:
+///
+/// - vector of cells, that fit txvec
+
 std::vector<TMVA::PDEFoamCell*> TMVA::PDEFoam::FindCells(const std::map<Int_t, Float_t> &txvec) const
 {
-   // Find all cells, that contain the coordinates specified in txvec.
-   // The key in 'txvec' is the dimension, and the corresponding value
-   // is the coordinate.  Note, that not all coordinates have to be
-   // specified in txvec.
-   //
-   // Parameters:
-   //
-   // - txvec - map of coordinates (transformed into foam coordinates
-   //   [0,1])
-   //
-   // Return value:
-   //
-   // - vector of cells, that fit txvec
-
    // the cells found
    std::vector<PDEFoamCell*> cells(0);
 
@@ -1207,19 +1214,19 @@ std::vector<TMVA::PDEFoamCell*> TMVA::PDEFoam::FindCells(const std::map<Int_t, F
    return cells;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draws 1-dimensional foam (= histogram)
+///
+/// Parameters:
+///
+/// - cell_value - the cell value to draw
+///
+/// - nbin - number of bins of result histogram
+///
+/// - kernel - a PDEFoam kernel.
+
 TH1D* TMVA::PDEFoam::Draw1Dim( ECellValue cell_value, Int_t nbin, PDEFoamKernelBase *kernel )
 {
-   // Draws 1-dimensional foam (= histogram)
-   //
-   // Parameters:
-   //
-   // - cell_value - the cell value to draw
-   //
-   // - nbin - number of bins of result histogram
-   //
-   // - kernel - a PDEFoam kernel.
-
    // avoid plotting of wrong dimensions
    if ( GetTotDim()!=1 )
       Log() << kFATAL << "<Draw1Dim>: function can only be used for 1-dimensional foams!"
@@ -1251,27 +1258,27 @@ TH1D* TMVA::PDEFoam::Draw1Dim( ECellValue cell_value, Int_t nbin, PDEFoamKernelB
    return h1;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project foam variable idim1 and variable idim2 to histogram.
+///
+/// Parameters:
+///
+/// - idim1, idim2 - dimensions to project to
+///
+/// - cell_value - the cell value to draw
+///
+/// - kernel - a PDEFoam kernel (optional).  If NULL is given, the
+///            kernel is ignored and the pure cell values are
+///            plotted.
+///
+/// - nbin - number of bins in x and y direction of result histogram
+///          (optional, default is 50).
+///
+/// Returns:
+/// a 2-dimensional histogram
+
 TH2D* TMVA::PDEFoam::Project2( Int_t idim1, Int_t idim2, ECellValue cell_value, PDEFoamKernelBase *kernel, UInt_t nbin )
 {
-   // Project foam variable idim1 and variable idim2 to histogram.
-   //
-   // Parameters:
-   //
-   // - idim1, idim2 - dimensions to project to
-   //
-   // - cell_value - the cell value to draw
-   //
-   // - kernel - a PDEFoam kernel (optional).  If NULL is given, the
-   //            kernel is ignored and the pure cell values are
-   //            plotted.
-   //
-   // - nbin - number of bins in x and y direction of result histogram
-   //          (optional, default is 50).
-   //
-   // Returns:
-   // a 2-dimensional histogram
-
    // avoid plotting of wrong dimensions
    if ((idim1>=GetTotDim()) || (idim1<0) ||
        (idim2>=GetTotDim()) || (idim2<0) ||
@@ -1349,15 +1356,15 @@ TH2D* TMVA::PDEFoam::Project2( Int_t idim1, Int_t idim2, ECellValue cell_value, 
    return h1;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the cell value of 'cell' corresponding to the given
+/// option 'cv'.  This function should be overridden by the subclass
+/// in order to specify which cell elements to return for a given
+/// cell value 'cv'.  By default kValue returns cell element 0, and
+/// kValueError returns cell element 1.
+
 Float_t TMVA::PDEFoam::GetCellValue(const PDEFoamCell* cell, ECellValue cv)
 {
-   // Returns the cell value of 'cell' corresponding to the given
-   // option 'cv'.  This function should be overridden by the subclass
-   // in order to specify which cell elements to return for a given
-   // cell value 'cv'.  By default kValue returns cell element 0, and
-   // kValueError returns cell element 1.
-
    // calculate cell value (depending on the given option 'cv')
    switch (cv) {
 
@@ -1412,12 +1419,12 @@ Float_t TMVA::PDEFoam::GetCellValue(const PDEFoamCell* cell, ECellValue cv)
    return 0;
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns cell element i of cell 'cell'.  If the cell has no
+/// elements or the index 'i' is out of range, than 0 is returned.
+
 Double_t TMVA::PDEFoam::GetCellElement( const PDEFoamCell *cell, UInt_t i ) const
 {
-   // Returns cell element i of cell 'cell'.  If the cell has no
-   // elements or the index 'i' is out of range, than 0 is returned.
-
    // dynamic_cast doesn't seem to work here ?!
    TVectorD *vec = (TVectorD*)cell->GetElement();
 
@@ -1428,12 +1435,12 @@ Double_t TMVA::PDEFoam::GetCellElement( const PDEFoamCell *cell, UInt_t i ) cons
    return (*vec)(i);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set cell element i of cell to value.  If the cell element i does
+/// not exist, it is created.
+
 void TMVA::PDEFoam::SetCellElement( PDEFoamCell *cell, UInt_t i, Double_t value )
 {
-   // Set cell element i of cell to value.  If the cell element i does
-   // not exist, it is created.
-
    TVectorD *vec = NULL;
 
    // if no cell elements are set, create TVectorD with i+1 entries,
@@ -1456,12 +1463,12 @@ void TMVA::PDEFoam::SetCellElement( PDEFoamCell *cell, UInt_t i, Double_t value 
    }
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overridden function of PDEFoam to avoid native foam output.
+/// Draw TMVA-process bar instead.
+
 void TMVA::PDEFoam::OutputGrow( Bool_t finished )
 {
-   // Overridden function of PDEFoam to avoid native foam output.
-   // Draw TMVA-process bar instead.
-
    if (finished) {
       Log() << kINFO << "Elapsed time: " + fTimer->GetElapsedTime()
             << "                                 " << Endl;
@@ -1474,46 +1481,46 @@ void TMVA::PDEFoam::OutputGrow( Bool_t finished )
    if (fLastCe%modulo == 0)   fTimer->DrawProgressBar( fLastCe );
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Debugging tool which plots the cells of a 2-dimensional PDEFoam
+/// as rectangles in C++ format readable for ROOT.
+///
+/// Parameters:
+/// - filename - filename of ouput root macro
+///
+/// - opt - cell_value, rms, rms_ov_mean
+///   If cell_value is set, the following values will be filled into
+///   the result histogram:
+///    - number of events - in case of classification with 2 separate
+///                         foams or multi-target regression
+///    - discriminator    - in case of classification with one
+///                         unified foam
+///    - target           - in case of mono-target regression
+///   If none of {cell_value, rms, rms_ov_mean} is given, the cells
+///   will not be filled.
+///   If 'opt' contains the string 'cellnumber', the index of
+///   each cell is draw in addition.
+///
+/// - createCanvas - whether to create a new canvas or not
+///
+/// - colors - whether to fill cells with colors or shades of grey
+///
+/// Example:
+///
+///   The following commands load a mono-target regression foam from
+///   file 'foam.root' and create a ROOT macro 'output.C', which
+///   draws all PDEFoam cells with little boxes.  The latter are
+///   filled with colors according to the target value stored in the
+///   cell.  Also the cell number is drawn.
+///
+///   TFile file("foam.root");
+///   TMVA::PDEFoam *foam = (TMVA::PDEFoam*) gDirectory->Get("MonoTargetRegressionFoam");
+///   foam->RootPlot2dim("output.C","cell_value,cellnumber");
+///   gROOT->Macro("output.C");
+
 void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
                                   Bool_t createCanvas, Bool_t colors )
 {
-   // Debugging tool which plots the cells of a 2-dimensional PDEFoam
-   // as rectangles in C++ format readable for ROOT.
-   //
-   // Parameters:
-   // - filename - filename of ouput root macro
-   //
-   // - opt - cell_value, rms, rms_ov_mean
-   //   If cell_value is set, the following values will be filled into
-   //   the result histogram:
-   //    - number of events - in case of classification with 2 separate
-   //                         foams or multi-target regression
-   //    - discriminator    - in case of classification with one
-   //                         unified foam
-   //    - target           - in case of mono-target regression
-   //   If none of {cell_value, rms, rms_ov_mean} is given, the cells
-   //   will not be filled.
-   //   If 'opt' contains the string 'cellnumber', the index of
-   //   each cell is draw in addition.
-   //
-   // - createCanvas - whether to create a new canvas or not
-   //
-   // - colors - whether to fill cells with colors or shades of grey
-   //
-   // Example:
-   //
-   //   The following commands load a mono-target regression foam from
-   //   file 'foam.root' and create a ROOT macro 'output.C', which
-   //   draws all PDEFoam cells with little boxes.  The latter are
-   //   filled with colors according to the target value stored in the
-   //   cell.  Also the cell number is drawn.
-   //
-   //   TFile file("foam.root");
-   //   TMVA::PDEFoam *foam = (TMVA::PDEFoam*) gDirectory->Get("MonoTargetRegressionFoam");
-   //   foam->RootPlot2dim("output.C","cell_value,cellnumber");
-   //   gROOT->Macro("output.C");
-
    if (GetTotDim() != 2)
       Log() << kFATAL << "RootPlot2dim() can only be used with "
             << "two-dimensional foams!" << Endl;
@@ -1653,19 +1660,21 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
    outfile.close();
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert event to internal foam's density estimator
+/// PDEFoamDensityBase.
+
 void TMVA::PDEFoam::FillBinarySearchTree( const Event* ev )
 {
-   // Insert event to internal foam's density estimator
-   // PDEFoamDensityBase.
    GetDistr()->FillBinarySearchTree(ev);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the foam's density estimator, which contains the binary
+/// search tree.
+
 void TMVA::PDEFoam::DeleteBinarySearchTree()
 {
-   // Delete the foam's density estimator, which contains the binary
-   // search tree.
    if(fDistr) delete fDistr;
    fDistr = NULL;
 }

@@ -234,42 +234,42 @@ public:
 ClassImp(TGTextEdit)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text edit widget.
+
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
                        UInt_t sboptions, ULong_t back) :
      TGTextView(parent, w, h, id, sboptions, back)
 {
-   // Create a text edit widget.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text edit widget. Initialize it with the specified text buffer.
+
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
                        Int_t id, UInt_t sboptions, ULong_t back) :
      TGTextView(parent, w, h, text, id, sboptions, back)
 {
-   // Create a text edit widget. Initialize it with the specified text buffer.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text edit widget. Initialize it with the specified string.
+
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h,
                        const char *string, Int_t id, UInt_t sboptions,
                        ULong_t back) :
      TGTextView(parent, w, h, string, id, sboptions, back)
 {
-   // Create a text edit widget. Initialize it with the specified string.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup text edit widget.
+
 TGTextEdit::~TGTextEdit()
 {
-   // Cleanup text edit widget.
-
    if (TGSearchDialog::SearchDialog()) {
       TQObject::Disconnect(TGSearchDialog::SearchDialog(), 0, this);
    }
@@ -278,11 +278,11 @@ TGTextEdit::~TGTextEdit()
    delete fHistory;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initiliaze a text edit widget.
+
 void TGTextEdit::Init()
 {
-   // Initiliaze a text edit widget.
-
    fCursor0GC   = GetCursor0GC()();
    fCursor1GC   = GetCursor1GC()();
    fCursorState = 1;
@@ -320,11 +320,11 @@ void TGTextEdit::Init()
    fHistory = new TGTextEditHist();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/disable menu items in function of what is possible.
+
 void TGTextEdit::SetMenuState()
 {
-   // Enable/disable menu items in function of what is possible.
-
    if (fText->RowCount() == 1 && fText->GetLineLength(0) <= 0) {
       fMenu->DisableEntry(kM_FILE_CLOSE);
       fMenu->DisableEntry(kM_FILE_SAVE);
@@ -359,33 +359,33 @@ void TGTextEdit::SetMenuState()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return width of longest line in widget.
+
 Long_t TGTextEdit::ReturnLongestLineWidth()
 {
-   // Return width of longest line in widget.
-
    Long_t linewidth = TGTextView::ReturnLongestLineWidth();
    linewidth += 3*fScrollVal.fX;
    return linewidth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear text edit widget.
+
 void TGTextEdit::Clear(Option_t *)
 {
-   // Clear text edit widget.
-
    fCursorState = 1;
    fCurrent.fY = fCurrent.fX = 0;
    TGTextView::Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save file. If filename==0 ask user via dialog for a filename, if in
+/// addition saveas==kTRUE always ask for new filename. Returns
+/// kTRUE if file was correctly saved, kFALSE otherwise.
+
 Bool_t TGTextEdit::SaveFile(const char *filename, Bool_t saveas)
 {
-   // Save file. If filename==0 ask user via dialog for a filename, if in
-   // addition saveas==kTRUE always ask for new filename. Returns
-   // kTRUE if file was correctly saved, kFALSE otherwise.
-
    if (!filename) {
       Bool_t untitled = !strlen(fText->GetFileName()) ? kTRUE : kFALSE;
       if (untitled || saveas) {
@@ -409,11 +409,11 @@ Bool_t TGTextEdit::SaveFile(const char *filename, Bool_t saveas)
    return fText->Save(filename);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy text.
+
 Bool_t TGTextEdit::Copy()
 {
-   // Copy text.
-
    if (!fIsMarked || ((fMarkedStart.fX == fMarkedEnd.fX) &&
        (fMarkedStart.fY == fMarkedEnd.fY))) {
       return kFALSE;
@@ -435,11 +435,11 @@ Bool_t TGTextEdit::Copy()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cut text.
+
 Bool_t TGTextEdit::Cut()
 {
-   // Cut text.
-
    if (!Copy()) {
       return kFALSE;
    }
@@ -448,11 +448,11 @@ Bool_t TGTextEdit::Cut()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paste text into widget.
+
 Bool_t TGTextEdit::Paste()
 {
-   // Paste text into widget.
-
    if (fReadOnly) {
       return kFALSE;
    }
@@ -470,11 +470,11 @@ Bool_t TGTextEdit::Paste()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send current buffer to printer.
+
 void TGTextEdit::Print(Option_t *) const
 {
-   // Send current buffer to printer.
-
    TString msg;
 
    msg.Form("%s -P%s\n", gPrintCommand, gPrinter);
@@ -525,11 +525,11 @@ void TGTextEdit::Print(Option_t *) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete selection.
+
 void TGTextEdit::Delete(Option_t *)
 {
-   // Delete selection.
-
    if (!fIsMarked || fReadOnly) {
       return;
    }
@@ -626,13 +626,13 @@ void TGTextEdit::Delete(Option_t *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for string in the specified direction. If direction is true
+/// the search will be in forward direction.
+
 Bool_t TGTextEdit::Search(const char *string, Bool_t direction,
                           Bool_t caseSensitive)
 {
-   // Search for string in the specified direction. If direction is true
-   // the search will be in forward direction.
-
    if (!IsMapped()) return kFALSE;
 
    if (gTQSender && (gTQSender == TGSearchDialog::SearchDialog())) {
@@ -689,12 +689,12 @@ Bool_t TGTextEdit::Search(const char *string, Bool_t direction,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace text starting at textPos.
+
 Bool_t TGTextEdit::Replace(TGLongPosition textPos, const char *oldText,
                            const char *newText, Bool_t direction, Bool_t caseSensitive)
 {
-   // Replace text starting at textPos.
-
    TGLongPosition pos;
    if (!fText->Replace(textPos, oldText, newText, direction, caseSensitive)) {
       return kFALSE;
@@ -731,11 +731,11 @@ Bool_t TGTextEdit::Replace(TGLongPosition textPos, const char *oldText,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Goto the specified line.
+
 Bool_t TGTextEdit::Goto(Long_t line, Long_t column)
 {
-   // Goto the specified line.
-
    if (line < 0)
       line = 0;
    if (line >= fText->RowCount())
@@ -767,32 +767,32 @@ Bool_t TGTextEdit::Goto(Long_t line, Long_t column)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the mode how characters are entered.
+
 void TGTextEdit::SetInsertMode(EInsertMode mode)
 {
-   // Sets the mode how characters are entered.
-
    if (fInsertMode == mode) return;
 
    fInsertMode = mode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If cursor if on, turn it off.
+
 void TGTextEdit::CursorOff()
 {
-   // If cursor if on, turn it off.
-
    if (fCursorState == 1) {
       DrawCursor(2);
    }
    fCursorState = 2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn cursor on.
+
 void TGTextEdit::CursorOn()
 {
-   // Turn cursor on.
-
    DrawCursor(1);
    fCursorState = 1;
 
@@ -801,11 +801,11 @@ void TGTextEdit::CursorOn()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make the specified position the current position.
+
 void TGTextEdit::SetCurrent(TGLongPosition new_coord)
 {
-   // Make the specified position the current position.
-
    CursorOff();
 
    fCurrent.fY = new_coord.fY;
@@ -817,11 +817,11 @@ void TGTextEdit::SetCurrent(TGLongPosition new_coord)
    DataChanged();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw cursor. If mode = 1 draw cursor, if mode = 2 erase cursor.
+
 void TGTextEdit::DrawCursor(Int_t mode)
 {
-   // Draw cursor. If mode = 1 draw cursor, if mode = 2 erase cursor.
-
    char count = -1;
    char cursor = ' ';
    if (fCurrent.fY >= fText->RowCount() || fCurrent.fX > fText->GetLineLength(fCurrent.fY) || fReadOnly) {
@@ -894,11 +894,11 @@ void TGTextEdit::DrawCursor(Int_t mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adjust current position.
+
 void TGTextEdit::AdjustPos()
 {
-   // Adjust current position.
-
    TGLongPosition pos;
    pos.fY = fCurrent.fY;
    pos.fX = fCurrent.fX;
@@ -918,11 +918,11 @@ void TGTextEdit::AdjustPos()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle timer cursor blink timer.
+
 Bool_t TGTextEdit::HandleTimer(TTimer *t)
 {
-   // Handle timer cursor blink timer.
-
    if (t != fCurBlink) {
       TGTextView::HandleTimer(t);
       return kTRUE;
@@ -939,11 +939,11 @@ Bool_t TGTextEdit::HandleTimer(TTimer *t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle selection notify event.
+
 Bool_t TGTextEdit::HandleSelection(Event_t *event)
 {
-   // Handle selection notify event.
-
    TString data;
    Int_t   nchar;
 
@@ -1025,11 +1025,11 @@ Bool_t TGTextEdit::HandleSelection(Event_t *event)
 static Bool_t gDbl_clk = kFALSE;
 static Bool_t gTrpl_clk = kFALSE;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in text edit widget.
+
 Bool_t TGTextEdit::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in text edit widget.
-
    if (event->fWindow != fCanvas->GetId()) {
       return kFALSE;
    }
@@ -1084,11 +1084,11 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle double click event.
+
 Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
 {
-   // Handle double click event.
-
    if (event->fWindow != fCanvas->GetId()) {
       return kFALSE;
    }
@@ -1215,11 +1215,11 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in text edit widget.
+
 Bool_t TGTextEdit::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in text edit widget.
-
    TGLongPosition pos;
    if (event->fWindow != fCanvas->GetId()) {
       return kTRUE;
@@ -1254,12 +1254,12 @@ Bool_t TGTextEdit::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The key press event handler converts a key press to some line editor
+/// action.
+
 Bool_t TGTextEdit::HandleKey(Event_t *event)
 {
-   // The key press event handler converts a key press to some line editor
-   // action.
-
    Bool_t mark_ok = kFALSE;
    char   input[10];
    Int_t  n;
@@ -1491,11 +1491,11 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGTextEdit::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event.
-
    if (event->fWindow != fCanvas->GetId()) {
       return kTRUE;
    }
@@ -1523,11 +1523,11 @@ Bool_t TGTextEdit::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle focus change event in text edit widget.
+
 Bool_t TGTextEdit::HandleFocusChange(Event_t *event)
 {
-   // Handle focus change event in text edit widget.
-
    if (event->fWindow != fCanvas->GetId()) {
       return kTRUE;
    }
@@ -1552,11 +1552,11 @@ Bool_t TGTextEdit::HandleFocusChange(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invokes search dialog.
+
 void TGTextEdit::Search(Bool_t close)
 {
-   // Invokes search dialog.
-
    static TGSearchType *srch = 0;
    Int_t ret = 0;
 
@@ -1579,11 +1579,11 @@ void TGTextEdit::Search(Bool_t close)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process context menu messages.
+
 Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Process context menu messages.
-
    TString msg2;
    TGTextView::ProcessMessage(msg, parm1, parm2);
 
@@ -1711,11 +1711,11 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert a character in the text edit widget.
+
 void TGTextEdit::InsChar(char character)
 {
-   // Insert a character in the text edit widget.
-
    if (fReadOnly) return;
 
    char *charstring = 0;
@@ -1807,11 +1807,11 @@ void TGTextEdit::InsChar(char character)
    SetCurrent(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a character from the text edit widget.
+
 void TGTextEdit::DelChar()
 {
-   // Delete a character from the text edit widget.
-
    if (fReadOnly) {
       return;
    }
@@ -1894,11 +1894,11 @@ void TGTextEdit::DelChar()
    SetCurrent(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Break a line.
+
 void TGTextEdit::BreakLine()
 {
-   // Break a line.
-
    if (fReadOnly) return;
 
    TGLongPosition pos;
@@ -1932,11 +1932,11 @@ void TGTextEdit::BreakLine()
    SetCurrent(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scroll the canvas to new_top in the kVertical or kHorizontal direction.
+
 void TGTextEdit::ScrollCanvas(Int_t new_top, Int_t direction)
 {
-   // Scroll the canvas to new_top in the kVertical or kHorizontal direction.
-
    CursorOff();
 
    TGTextView::ScrollCanvas(new_top, direction);
@@ -1944,11 +1944,11 @@ void TGTextEdit::ScrollCanvas(Int_t new_top, Int_t direction)
    CursorOn();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw the text edit widget.
+
 void TGTextEdit::DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   // Redraw the text edit widget.
-
    CursorOff();
 
    TGTextView::DrawRegion(x, y, width, height);
@@ -1956,11 +1956,11 @@ void TGTextEdit::DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height)
    CursorOn();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go to the previous character.
+
 void TGTextEdit::PrevChar()
 {
-   // Go to the previous character.
-
    if (fCurrent.fY == 0 && fCurrent.fX == 0) {
       gVirtualX->Bell(0);
       return;
@@ -2001,11 +2001,11 @@ void TGTextEdit::PrevChar()
    SetCurrent(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go to next character.
+
 void TGTextEdit::NextChar()
 {
-   // Go to next character.
-
    Long_t len = fText->GetLineLength(fCurrent.fY);
 
    if (fCurrent.fY == fText->RowCount()-1 && fCurrent.fX == len) {
@@ -2038,11 +2038,11 @@ void TGTextEdit::NextChar()
    SetCurrent(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make current position first line in window by scrolling up.
+
 void TGTextEdit::LineUp()
 {
-   // Make current position first line in window by scrolling up.
-
    TGLongPosition pos;
    Long_t len;
    if (fCurrent.fY > 0) {
@@ -2072,11 +2072,11 @@ void TGTextEdit::LineUp()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move one line down.
+
 void TGTextEdit::LineDown()
 {
-   // Move one line down.
-
    TGLongPosition pos;
    Long_t len;
    if (fCurrent.fY < fText->RowCount()-1) {
@@ -2105,11 +2105,11 @@ void TGTextEdit::LineDown()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move one screen up.
+
 void TGTextEdit::ScreenUp()
 {
-   // Move one screen up.
-
    TGLongPosition pos;
    pos.fX = fCurrent.fX;
    pos.fY = fCurrent.fY - (ToObjYCoord(fCanvas->GetHeight())-ToObjYCoord(0))-1;
@@ -2125,11 +2125,11 @@ void TGTextEdit::ScreenUp()
    SetCurrent(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move one screen down.
+
 void TGTextEdit::ScreenDown()
 {
-   // Move one screen down.
-
    TGLongPosition pos;
    pos.fX = fCurrent.fX;
    pos.fY = fCurrent.fY + (ToObjYCoord(fCanvas->GetHeight()) - ToObjYCoord(0));
@@ -2145,11 +2145,11 @@ void TGTextEdit::ScreenDown()
    SetCurrent(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move to beginning of line.
+
 void TGTextEdit::Home()
 {
-   // Move to beginning of line.
-
    TGLongPosition pos;
    pos.fY = fCurrent.fY;
    pos.fX = 0;
@@ -2157,11 +2157,11 @@ void TGTextEdit::Home()
    SetCurrent(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move to end of line.
+
 void TGTextEdit::End()
 {
-   // Move to end of line.
-
    TGLongPosition pos;
    pos.fY = fCurrent.fY;
    pos.fX = fText->GetLineLength(pos.fY);
@@ -2171,11 +2171,11 @@ void TGTextEdit::End()
    SetCurrent(pos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return selection graphics context for text cursor.
+
 const TGGC &TGTextEdit::GetCursor0GC()
 {
-   // Return selection graphics context for text cursor.
-
    if (!fgCursor0GC) {
       fgCursor0GC = new TGGC(GetDefaultSelectedGC());
       fgCursor0GC->SetFunction(kGXxor);
@@ -2183,11 +2183,11 @@ const TGGC &TGTextEdit::GetCursor0GC()
    return *fgCursor0GC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context for text cursor.
+
 const TGGC &TGTextEdit::GetCursor1GC()
 {
-   // Return default graphics context for text cursor.
-
    if (!fgCursor1GC) {
       fgCursor1GC = new TGGC(GetDefaultGC());
       fgCursor1GC->SetFunction(kGXand);
@@ -2195,11 +2195,11 @@ const TGGC &TGTextEdit::GetCursor1GC()
    return *fgCursor1GC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a text edit widget as a C++ statement(s) on output stream out
+
 void TGTextEdit::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a text edit widget as a C++ statement(s) on output stream out
-
    char quote = '"';
    out << "   TGTextEdit *";
    out << GetName() << " = new TGTextEdit(" << fParent->GetName()
