@@ -434,7 +434,7 @@ int TMVAClassification( TString myMethodList = "" )
 //       TString layoutString ("Layout=SOFTSIGN|50,SOFTSIGN|20,LINEAR");
        TString layoutString ("Layout=TANH|50,TANH|50,LINEAR");
 
-       TString training0 ("LearningRate=1e-1,Momentum=0.5,Repetitions=1,ConvergenceSteps=100,BatchSize=30,TestRepetitions=7,WeightDecay=0.001,Regularization=NONE,DropConfig=0.2+0.4+0.3,DropRepetitions=2");
+       TString training0 ("LearningRate=1e-1,Momentum=0.5,Repetitions=1,ConvergenceSteps=100,BatchSize=40,TestRepetitions=7,WeightDecay=0.001,Regularization=NONE,DropConfig=0.5+0.5+0.5,DropRepetitions=2");
        TString training1 ("LearningRate=1e-2,Momentum=0.9,Repetitions=1,ConvergenceSteps=20,BatchSize=40,TestRepetitions=7,WeightDecay=0.01,Regularization=L2");
        TString training2 ("LearningRate=1e-2,Momentum=0.3,Repetitions=1,ConvergenceSteps=50,BatchSize=40,TestRepetitions=7,WeightDecay=0.01,Regularization=L2");
        TString training3 ("LearningRate=1e-3,Momentum=0.1,Repetitions=1,ConvergenceSteps=200,BatchSize=100,TestRepetitions=7,WeightDecay=0.0001,Regularization=L1");

@@ -232,12 +232,13 @@ void update (ItSource itSource, ItSource itSourceEnd,
             double alpha = gaussDouble (m_alpha, m_alpha/2.0);
 //            double alpha = m_alpha;
 
-            auto itLocW = begin (localWeights);
-            auto itLocWEnd = end (localWeights);
+            /* auto itLocW = begin (localWeights); */
+            /* auto itLocWEnd = end (localWeights); */
             auto itG = begin (gradients);
+            auto itGEnd = end (gradients);
             auto itPrevG = begin (m_prevGradients);
             double maxGrad = 0.0;
-            for (; itLocW != itLocWEnd; ++itLocW, ++itG, ++itPrevG)
+            for (; itG != itGEnd; ++itG, ++itPrevG)
             {
                 double currGrad = (*itG);
                 double prevGrad = (*itPrevG);
@@ -246,13 +247,13 @@ void update (ItSource itSource, ItSource itSourceEnd,
                 (*itPrevG) = m_beta * (prevGrad + currGrad);
                 (*itG) = currGrad + prevGrad;
 
-                (*itLocW) += (*itG);
+//                (*itLocW) += (*itG);
                 
                 if (std::fabs (currGrad) > maxGrad)
                     maxGrad = currGrad;
             }
 
-            if (maxGrad > 10)
+            if (maxGrad > 1)
             {
                 m_alpha /= 2;
                 std::cout << "learning rate reduced to " << m_alpha << std::endl;
@@ -263,7 +264,21 @@ void update (ItSource itSource, ItSource itSourceEnd,
                 m_prevGradients.clear ();
             }
             else
-                std::copy (std::begin (localWeights), std::end (localWeights), std::begin (weights));
+            {
+                auto itW = std::begin (weights);
+                std::for_each (std::begin (gradients), std::end (gradients), [&itW](double& g)
+                               {
+                                   *itW += g;
+                                   ++itW;
+                               });
+//                std::copy (std::begin (localWeights), std::end (localWeights), std::begin (weights));
+                /* for (auto itL = std::begin (localWeights), itLEnd = std::end (localWeights), itW = std::begin (weights), itG = std::begin (gradients); */
+                /*      itL != itLEnd; ++itL, ++itW, ++itG) */
+                /* { */
+                /*     if (*itG > maxGrad/2.0) */
+                /*         *itW = *itL; */
+                /* } */
+            }
 
             ++currentRepetition;
         }
@@ -646,13 +661,23 @@ void update (const LAYERDATA& prevLayerData, LAYERDATA& currLayerData, double fa
         auto itDrop = std::begin (drops);
         auto itDropEnd = std::end (drops);
 	size_t numNodes = inputSize ();
-        for (const auto& layer : layers ())
+        for (auto itLayer = std::begin (layers ()), itLayerEnd = std::end (layers ()); itLayer != itLayerEnd; ++itLayer)
         {
+            const Layer& layer = *itLayer;
             if (itDrop == itDropEnd)
                 break;
 
             double dropFraction = *itDrop;
             double p = 1.0 - dropFraction;
+
+            if (itLayer+1 != itLayerEnd && itDrop+1 != itDropEnd) // if not the last layer
+            {
+                double dropFractionNext  = *(itDrop+1);
+                double pNext = 1.0 - dropFractionNext;
+
+                p *= pNext;
+            }
+            
             if (inverse)
             {
                 p = 1.0/p;
