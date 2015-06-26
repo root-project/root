@@ -127,6 +127,7 @@ if(MACOSX_TMPNAM_DEPRECATED)
   add_definitions(-Wno-constant-logical-operand)
 endif()
 
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-strict-aliasing)
 
 #---Define libraries and executables to be build------------------------------------------------------------
 

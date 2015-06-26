@@ -87,6 +87,7 @@ endif()
 
 #---Check for other compiler flags-------------------------------------------------------------------
 CHECK_CXX_COMPILER_FLAG("-Wno-array-bounds" CXX_HAS_Wno-array-bounds)
+CHECK_CXX_COMPILER_FLAG("-Wno-strict-aliasing" CXX_HAS_Wno-strict-aliasing)
 
 #---Need to locate thead libraries and options to set properly some compilation flags---------------- 
 find_package(Threads)

@@ -262,6 +262,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                      COMMAND ${rootcint_cmd} -cint -f  ${dictionary}.cxx 
                                           -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef} 
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
+
+  if(CXX_HAS_Wno-strict-aliasing)
+    set_source_files_properties( ${dictionary}.cxx COMPILE_FLAGS -Wno-strict-aliasing)
+  endif()
+
 endfunction()
 
 

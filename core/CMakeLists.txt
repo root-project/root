@@ -129,8 +129,11 @@ foreach(src ${LibCore_SRCS})
   endif()
 endforeach()
 
+if(CXX_HAS_Wno-strict-aliasing)
+  set_source_files_properties(${CORE_DICTIONARIES} COMPILE_FLAGS -Wno-strict-aliasing)
+endif()
 
-ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} ${CORE_DICTIONARIES} 
+ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} ${CORE_DICTIONARIES}
                     LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
                     DEPENDENCIES Cint)
 add_Dependencies(Core CLIB_DICTIONARY CONT_DICTIONARY  META_DICTIONARY METAUTILS_DICTIONARY BASE_DICTIONARY)
