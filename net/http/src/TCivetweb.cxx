@@ -11,11 +11,17 @@
 #include "THttpServer.h"
 #include "TUrl.h"
 
-TCivetweb* TCivetweb::fTemp = 0;
-
 static int log_message_handler(const struct mg_connection *conn, const char *message)
 {
-   return TCivetweb::ProcessLogMessage(mg_get_request_info((struct mg_connection *)conn)->user_data, message);
+   TCivetweb* engine = (TCivetweb*) mg_get_request_info((struct mg_connection *)conn)->user_data;
+
+   if (engine) return engine->ProcessLog(message);
+
+   // provide debug output
+   if ((gDebug>0) || (strstr(message,"cannot bind to")!=0))
+      fprintf(stderr, "Error in <TCivetweb::Log> %s\n",message);
+
+   return 0;
 }
 
 
@@ -191,8 +197,7 @@ TCivetweb::TCivetweb() :
    fCtx(0),
    fCallbacks(0),
    fTopName(),
-   fDebug(kFALSE),
-   fStartError(kFALSE)
+   fDebug(kFALSE)
 {
    // constructor
 }
@@ -209,38 +214,11 @@ TCivetweb::~TCivetweb()
 }
 
 //______________________________________________________________________________
-Int_t TCivetweb::ProcessLogMessage(void *instance, const char* message)
-{
-   // static method to process log messages from civetweb server
-   // introduced to resolve civetweb problem, that messages cannot be delivered directly
-   // during mg_start() call
-
-   TCivetweb* engine = (TCivetweb*) instance;
-
-   if (engine==0) engine = fTemp;
-
-   if (engine) return engine->ProcessLog(message);
-
-   // provide debug output
-   if (gDebug>0) printf("<TCivetweb::Log> %s\n",message);
-
-   return 0;
-}
-
-//______________________________________________________________________________
 Int_t TCivetweb::ProcessLog(const char* message)
 {
-   // process civetweb log message, used to detect critical errors
+   // process civetweb log message, can be used to detect critical errors
 
-   Bool_t critical = kFALSE;
-
-   if ((strstr(message,"cannot bind to")!=0) &&
-       (strstr(message,"(Address already in use)")!=0)) {
-      fStartError = kTRUE;
-      critical = kTRUE;
-   }
-
-   if (critical || (gDebug>0)) Error("Log", "%s", message);
+   if (gDebug>0) Error("Log", "%s", message);
 
    return 0;
 }
@@ -331,16 +309,9 @@ Bool_t TCivetweb::Create(const char *args)
 
    options[op++] = 0;
 
-   // workaround for civetweb
-   if (fTemp==0) fTemp = this;
-
    // Start the web server.
    fCtx = mg_start((struct mg_callbacks *) fCallbacks, this, options);
 
-   if (fTemp==this) fTemp = 0;
-
-   if (fStartError) return kFALSE;
-
-   return kTRUE;
+   return fCtx != 0;
 }
 
